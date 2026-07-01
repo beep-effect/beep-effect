@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "initiative-manifest/v1",
+  "initiative": {
+    "id": "uspto-mcp",
+    "title": "USPTO MCP",
+    "status": "active",
+    "created": "2026-07-01",
+    "updated": "2026-07-01",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/uspto-mcp",
+  "lifecycle": "active",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/mcp-auth-gated-registration",
+    "graduated": "2026-07-01"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/uspto-mcp/README.md",
+    "goals/uspto-mcp/SPEC.md",
+    "goals/uspto-mcp/PLAN.md",
+    "goals/uspto-mcp/GOAL.md",
+    "goals/uspto-mcp/research/SOURCES.md",
+    "goals/mcp-kit/SPEC.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/mcp-auth-gated-registration/research/SOURCES.md",
+    "../../explorations/mcp-auth-gated-registration/reviews/2026-07-01-codex-verification.md"
+  ],
+  "links": {
+    "goals": ["mcp-kit", "mcp-host-retrofit"]
+  },
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/uspto-mcp/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/uspto-mcp/GOAL.md)\" -le 4000",
+    "jq . goals/uspto-mcp/ops/manifest.json",
+    "rg -n \"uspto-mcp|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/uspto-mcp",
+    "git diff --check -- goals/uspto-mcp",
+    "bun run beep yeet verify",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "@beep/mcp-kit's shipped surface has drifted from the deliverable contracts this host depends on.",
+    "The implementation would exceed named scope (nlp-mcp/m365-mcp retrofit, gov-legal driver depth, write operations).",
+    "Verification requires a real USPTO_API_KEY, a live network call, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
