@@ -1,8 +1,9 @@
 import { CoreVocab, CurieFromIri, contract, expand, expandPredicate } from "@beep/identity";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
-import { describe, expect, expectTypeOf, it } from "vitest";
+import { expectTypeOf } from "vitest";
 
 const decodeCurie = S.decodeUnknownEffect(CurieFromIri);
 const encodeIri = S.encodeUnknownEffect(CurieFromIri);

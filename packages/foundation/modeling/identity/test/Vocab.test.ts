@@ -1,5 +1,6 @@
 import { CoreVocab, mergeVocab } from "@beep/identity";
-import { describe, expect, expectTypeOf, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
+import { expectTypeOf } from "vitest";
 import type { Curie, Expand, Predicate } from "@beep/identity";
 
 type CoreCurie = Curie<typeof CoreVocab>;

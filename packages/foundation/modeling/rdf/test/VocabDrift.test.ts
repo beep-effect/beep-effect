@@ -4,7 +4,7 @@ import { OWL_NAMESPACE, OWL_TERMS } from "@beep/rdf/Vocab/Owl";
 import { RDF_NAMESPACE, RDF_TERMS } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE, RDFS_TERMS } from "@beep/rdf/Vocab/Rdfs";
 import { SKOS_NAMESPACE, SKOS_TERMS } from "@beep/rdf/Vocab/Skos";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 
 const vocabCases = [
   {

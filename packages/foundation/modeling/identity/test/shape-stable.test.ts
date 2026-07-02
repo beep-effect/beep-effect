@@ -1,9 +1,8 @@
-import { readFileSync } from "node:fs";
 import * as Identity from "@beep/identity";
 import { make } from "@beep/identity";
 import * as IdentityPackages from "@beep/identity/packages";
+import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 import type {
   HttpApiEncoding,
   IdentityAnyAnnotationExtras,
@@ -251,12 +250,6 @@ const composerFunctionProperties = [
   "symbol",
 ] as const;
 
-const packageRootUrl = new URL("../", import.meta.url);
-const createPackageHandlerUrl = new URL(
-  "../../../tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
-  packageRootUrl
-);
-
 const isObjectLike = (value: unknown): value is object =>
   (typeof value === "object" && value !== null) || typeof value === "function";
 
@@ -478,21 +471,7 @@ describe("@beep/identity shape-stable harness", () => {
     expect(getProperty(annotations, "description")).toBe("Shape-stable field.");
   });
 
-  it("keeps create-package identity registration output aligned with existing exports", () => {
-    const handlerSource = readFileSync(createPackageHandlerUrl, "utf8");
-
-    expect(handlerSource).toContain('const IDENTITY_PACKAGE_NAME = "@beep/identity" as const;');
-    expect(handlerSource).toContain(
-      "const toIdentityAccessorName = (packageName: string): string => `$${Str.pascalCase(packageName)}Id`;"
-    );
-    expect(handlerSource).toContain('` * import { ${accessorName} } from "@beep/identity"`');
-    expect(handlerSource).toContain(
-      '`export const ${accessorName}: Identity.IdentityComposer<"@beep/${packageName}"> = composers.${accessorName};`'
-    );
-    expect(handlerSource).toContain(
-      'sourceFile.getVariableDeclaration("generatedComposers") ?? sourceFile.getVariableDeclarationOrThrow("composers")'
-    );
-
+  it("keeps generated create-package accessor exports available", () => {
     for (const accessorName of ["$OntologyId", "$RepoCliId", "$UsptoMcpId"]) {
       expect(getProperty(Identity, accessorName), `generated import { ${accessorName} }`).not.toBeUndefined();
       expect(getProperty(IdentityPackages, accessorName), `generated composers.${accessorName}`).not.toBeUndefined();

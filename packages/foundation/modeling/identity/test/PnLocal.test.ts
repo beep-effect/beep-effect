@@ -1,6 +1,6 @@
 import { acceptsEscapedLocal, escapeLocal, isSafeLocal, prefixedNameOrIri, unescapeLocal } from "@beep/identity";
+import { describe, expect, it } from "@effect/vitest";
 import { FastCheck as fc } from "effect/testing";
-import { describe, expect, it } from "vitest";
 
 const escapableLocalCharacters = [
   "_",
