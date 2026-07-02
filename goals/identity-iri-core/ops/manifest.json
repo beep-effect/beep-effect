@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "initiative-manifest/v1",
+  "initiative": {
+    "id": "identity-iri-core",
+    "title": "Identity IRI Core",
+    "status": "active",
+    "created": "2026-07-02",
+    "updated": "2026-07-02",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/identity-iri-core",
+  "lifecycle": "active",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/identity-as-iri",
+    "graduated": "2026-07-02"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/identity-iri-core/README.md",
+    "goals/identity-iri-core/SPEC.md",
+    "goals/identity-iri-core/PLAN.md",
+    "goals/identity-iri-core/GOAL.md",
+    "goals/identity-iri-core/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/identity-as-iri/RESEARCH.md",
+    "../../explorations/identity-as-iri/research/20-repo-mining-synthesis.md",
+    "../../explorations/identity-as-iri/research/21-synthesis-adversarial-review.md",
+    "../../explorations/identity-as-iri/research/11-audit-identity-coupling.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/identity-iri-core/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/identity-iri-core/GOAL.md)\" -le 4000",
+    "jq . goals/identity-iri-core/ops/manifest.json",
+    "rg -n \"identity-iri-core|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/identity-iri-core",
+    "git diff --check -- goals/identity-iri-core",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope.",
+    "Authority host remains unconfirmed at merge time.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

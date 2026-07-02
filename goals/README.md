@@ -181,6 +181,10 @@ commands below as the source of truth when the snapshot drifts.
   triage, and remediation queue.
 - `file-processing-capability` — schema-first file processing contracts,
   Tika/libpff driver split, and `beep files process` proof packet.
+- `identity-iri-core` — rewrite `@beep/identity` as a literal-preserving
+  IRI/CURIE composer (graduated from
+  [`explorations/identity-as-iri`](../explorations/identity-as-iri); first of
+  three; `identity-iri-fold` and `identity-iri-fibered` queue behind it).
 - `ip-law-knowledge-graph`
 - `oip-web-production-hardening`
 - `ontology-modeling-foundation` — superseded/reference-only (its

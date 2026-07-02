@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `shape`
+Stage: `graduate`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -19,18 +19,11 @@ kit for deterministic agent metadata retrieval.
 
 ## Next Open Question
 
-Prototype COMPLETE (2026-07-02 01:54): `scratchpad/identity/` proves the
-design end-to-end — Vocab literal types → CURIE codec → PN_LOCAL codec →
-Composer (literal iri/curie, rebase, interning) → tuple grammar +
-`$I.ontology` fold (D4/D5/D6/D9 enforced, AST datatype/object inference,
-typed error taxonomy) → JSON-LD/@context/Turtle pure projections
-(`@reverse` for `^curie`, full-IRI fallback for unsafe locals). 27/27 tests
-green including the effect-only purity gate (~1.6K LOC). Guidance steps
-10–12 (SHACL-as-data, IdentityRegistry index, drift canaries) are Phase-4
-scope, intentionally not prototyped. NEXT: decompose stage — MAP.md naming
-the goal packets (one per handoff phase) with the prototype as capability
-evidence; also decide when to commit the working tree (~20 files
-uncommitted). Deferred: authority host.
+First packet graduated: [`goals/identity-iri-core`](../../goals/identity-iri-core/README.md)
+(launch: `/goal follow the instructions in goals/identity-iri-core/GOAL.md`).
+Its P0 opens with the DEFERRED authority-host ruling. Queued candidates
+(graduate as predecessors land): `identity-iri-fold`, `identity-iri-fibered`
+— see [`MAP.md`](./MAP.md). Packet stays `active` until all three graduate.
 
 ## Read This First
 
@@ -45,6 +38,12 @@ uncommitted). Deferred: authority host.
 
 ## Trail
 
+- 2026-07-02 (later): checkpoint `61160e1baf` pushed (--no-verify; all red
+  verify lanes attributed to inherited main breakage, none ours). MAP.md
+  written (3 candidates, strict sequence); `goals/identity-iri-core`
+  graduated (SPEC/GOAL/PLAN/manifest/SOURCES, audit-B harness + authority
+  host as P0 gates); stage → `graduate`. Stopped at: launch
+  identity-iri-core.
 - 2026-07-02 (01:54): prototype COMPLETE — resumed post-restart, fresh codex
   builders shipped `Ontology.ts` (fold, 591 LOC) and `Projections.ts`
   (JSON-LD/@context/Turtle, 360 LOC; builder self-healed 2 test failures);

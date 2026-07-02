@@ -131,9 +131,14 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   citations + in-repo bricks), registered in its manifest and cross-linked
   exploration↔goal (2026-06-30). Next: `/grill-with-docs` the four graduate-now wedges → shape → decompose → graduate.
 - [`identity-as-iri`](./identity-as-iri/README.md) (opened 2026-07-01, at
-  `shape`; research + align complete in two days — 3 spec docs, 12 repo-mining
-  reports, 3 audits, adversarially-verified synthesis, 6 decisions logged,
-  `goals/ontology-modeling-foundation` superseded) — merge `IdentityComposer`, the ontology layer, and fibered
+  `graduate`; capture→graduate in two days — 3 spec docs, 12 repo-mining
+  reports, 3 audits, adversarially-verified synthesis, 6 decisions,
+  `goals/ontology-modeling-foundation` superseded, design proven by the
+  effect-only `scratchpad/identity` prototype at 27/27). First packet
+  graduated 2026-07-02:
+  [`goals/identity-iri-core`](../goals/identity-iri-core/README.md);
+  `identity-iri-fold` + `identity-iri-fibered` queue behind it
+  ([`MAP.md`](./identity-as-iri/MAP.md)) — merge `IdentityComposer`, the ontology layer, and fibered
   metadata retrieval: identity path and IRI as two literal-typed encodings of
   one value, borrowed RDF vocab as CURIE literal types, `$I.ontology` fold
   over triples-as-tuples, `Fibered` kit from the `JSDocTagDefinition.make`

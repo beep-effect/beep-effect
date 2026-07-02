@@ -4,18 +4,17 @@
     "slug": "identity-as-iri",
     "title": "Identity as IRI",
     "status": "active",
-    "stage": "shape",
+    "stage": "graduate",
     "openQuestions": [
-      "DEFERRED — authority host: https://ns.beep.sh/ placeholder stands; confirm before the composer-binding phase merges (DECISIONS 2026-07-02)",
-      "BRIEF.md review: does the shaped pitch match elpresidank's picture?"
+      "DEFERRED — authority host: https://ns.beep.sh/ placeholder stands; confirm before goals/identity-iri-core merges (DECISIONS 2026-07-02)"
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [],
+      "goals": ["goals/identity-iri-core"],
       "docs": [],
       "supersededBy": null
     },
     "created": "2026-07-01",
-    "updated": "2026-07-01"
+    "updated": "2026-07-02"
   }
 }
