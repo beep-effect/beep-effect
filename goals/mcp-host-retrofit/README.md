@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -36,8 +36,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Verify complete. Both hosts are retrofitted and green; next is P3 Yeet
-(PR to mergeable, coordinated with `uspto-mcp` on the shared branch).
+P4 Close complete. Both hosts shipped: `bun run beep yeet repair` and
+`bun run beep yeet verify` were green locally, then the user merged the
+shared-branch changes directly into `origin/main` — a deliberate user
+decision, not the standard `/yeet publish --pr` path (no PR was opened for
+this packet). See `PLAN.md`'s P3/P4 rows for the actual outcome.
 
 ## Latest Evidence
 
@@ -49,6 +52,19 @@ P0-P2 (2026-07-01): see `PLAN.md` phase table. Added `@beep/mcp-kit`'s new
 finding). New proof tests green in `mcp-kit`, `nlp-mcp`, `m365-mcp`; existing
 suites unchanged. `@beep/mcp-kit/README.md` consumer table updated to
 **Landed** for both hosts.
+
+P3-P4 (2026-07-02): merged directly into `origin/main` (tip `9f0e410d8d`) by
+the user after local verification, no PR. Two pre-existing-on-main red
+categories were observed around this shipping window and are recorded as
+environment context, not goal debt: (1) a repo-wide `@beep/schema`
+JSON-Schema `$ref`/decode-error identifier-rendering regression spanning
+multiple packages (`@beep/repo-utils`, `@beep/schema`, `@beep/agents-domain`,
+and a fourth affected package observed during this slice's verify runs — see
+[`goals/mcp-kit/history/2026-07-01-unrelated-failures.md`](../mcp-kit/history/2026-07-01-unrelated-failures.md)
+for the traced repro, pre-dating this slice via commit `cabf5df4a7`); (2)
+pre-existing `cspell` findings in the ontology package, unrelated to this
+packet's target surfaces. Closeout reflection:
+[`history/reflections/2026-07-02-codex.md`](./history/reflections/2026-07-02-codex.md).
 
 ## Notes
 

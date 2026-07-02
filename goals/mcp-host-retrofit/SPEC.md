@@ -146,25 +146,34 @@ Back-links, not copies — rationale lives in the exploration:
 
 ## Acceptance Criteria
 
-- [ ] `packages/drivers/nlp-mcp` adopts `@beep/mcp-kit`'s `SanitizedSpan`
+- [x] `packages/drivers/nlp-mcp` adopts `@beep/mcp-kit`'s `SanitizedSpan`
       wrapper; proof test confirms raw tool `parameters` do not reach span
       attributes.
-- [ ] `packages/drivers/m365-mcp` adopts `@beep/mcp-kit`'s `SanitizedSpan`
+- [x] `packages/drivers/m365-mcp` adopts `@beep/mcp-kit`'s `SanitizedSpan`
       wrapper; equivalent proof test passes.
-- [ ] `StreamingToolkit` (and `NlpToolkit`, if found unannotated at P0) tools
+- [x] `StreamingToolkit` (and `NlpToolkit`, if found unannotated at P0) tools
       carry accurate four-hint annotations via `@beep/mcp-kit`'s
-      `ToolAnnotations` helper.
-- [ ] `M365Tools.ts` uses `@beep/mcp-kit`'s `ToolAnnotations` helper in place
+      `ToolAnnotations` helper. Note: P0 found `NlpToolkit` also unannotated,
+      but it lives in `@beep/nlp-processing`, outside this goal's Target
+      Surfaces — correctly deferred rather than silently annotated
+      out-of-scope; that annotation work is now `goals/mcp-write-wall`
+      deliverable #1.
+- [x] `M365Tools.ts` uses `@beep/mcp-kit`'s `ToolAnnotations` helper in place
       of inline `.annotate(...)` chains, with identical hint values preserved.
-- [ ] Tier-gate wrapper adoption is either applied to a genuine write/gateable
+- [x] Tier-gate wrapper adoption is either applied to a genuine write/gateable
       tool found at P0, or explicitly recorded as not-applicable with
-      rationale (no invented gate).
-- [ ] `@beep/mcp-kit`'s package README consumer table names both this goal's
+      rationale (no invented gate). Recorded not-applicable per the P0
+      finding in `PLAN.md` (neither in-scope toolkit has a write/destructive
+      tool; `NlpToolkit`'s stateful tools are out of Target Surfaces).
+- [x] `@beep/mcp-kit`'s package README consumer table names both this goal's
       packages and `uspto-mcp` as landed/real consumers (coordinated with the
       `uspto-mcp` goal's completion).
-- [ ] Existing `nlp-mcp` and `m365-mcp` test suites pass unchanged in
+- [x] Existing `nlp-mcp` and `m365-mcp` test suites pass unchanged in
       observable behavior.
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
+
+Verified 2026-07-02 at closeout: all criteria satisfied per `PLAN.md`'s P2
+evidence, with the `NlpToolkit`/tier-gate scope boundaries noted above.
 
 ## Verification Matrix
 

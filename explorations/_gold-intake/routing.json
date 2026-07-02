@@ -251,11 +251,7 @@
         "P2": 6,
         "P3": 3
       },
-      "themeSpan": [
-        "data-ingestion",
-        "governance-ops",
-        "provenance-evidence"
-      ],
+      "themeSpan": ["data-ingestion", "governance-ops", "provenance-evidence"],
       "netNew": [
         "page_needs_ocr gating heuristic: empty text / '(cid:' broken-font maps / FreeText+Widget annotations / embedded images / curve-count > 10 -> skip expensive OCR (doctor#2)",
         "Layout-aware PDF extraction: top/bottom margin crop + skew/transform-matrix filtering (is_skewed strips circular stamps, perpendicular court text) for stable provenance char spans (doctor#1)",
@@ -301,10 +297,7 @@
         "lawyergpt#1",
         "legalmind-ai#2"
       ],
-      "alreadyCoveredIds": [
-        "doctor#7",
-        "doctor#12"
-      ]
+      "alreadyCoveredIds": ["doctor#7", "doctor#12"]
     },
     {
       "cluster": "Citation lookup + verbatim-span grounding (hallucination guard)",
@@ -336,11 +329,7 @@
         "P2": 3,
         "P3": 1
       },
-      "themeSpan": [
-        "governance-ops",
-        "legal-nlp",
-        "provenance-evidence"
-      ],
+      "themeSpan": ["governance-ops", "legal-nlp", "provenance-evidence"],
       "netNew": [
         "eyecite-style legal citation parser: detect citations in text and emit exact char spans (no parser exists; rg for eyecite/citation/reporter returns only test-reporter and unrelated hits)",
         "UnmatchedCitation candidate->resolved RESOLUTION lifecycle (resolving a parsed citation to an authority/reporter) — distinct from the generic claim-admission ClaimLifecycle",
@@ -608,10 +597,7 @@
         "P2": 2,
         "P3": 1
       },
-      "themeSpan": [
-        "effect-ts",
-        "governance-ops"
-      ],
+      "themeSpan": ["effect-ts", "governance-ops"],
       "netNew": [
         "Centralized Effect Schedule retry-policy library (DRY extraction: today retry policies are inline per-driver as Schedule.exponential in packages/drivers/anthropic/src/Anthropic.service.ts:106, Anthropic.repair.ts:105, and openai-compat; no shared foundation/common retry-policy module exists)",
         "Layer.unwrapEffect-based provider selection (zero usages of Layer.unwrapEffect anywhere under packages/**/src; provider wiring is currently static Layer composition via ai-provider-cli/openai-compat, not effectful provider selection)"
@@ -675,10 +661,7 @@
         "P2": 12,
         "P3": 5
       },
-      "themeSpan": [
-        "governance-ops",
-        "mcp-design"
-      ],
+      "themeSpan": ["governance-ops", "mcp-design"],
       "netNew": [
         "Conditional/credential-keyed Toolkit composition — build the Toolkit only from driver Layers whose Effect Config resolved successfully (CourtListener public vs USPTO/GovInfo/DOL keyed)",
         "Tier-gating of write-vs-read tools at the candidate->approved wall (no real src implements requiresAuth/tier-gate today)",
@@ -696,7 +679,37 @@
       "rationale": "beep already ships both MCP servers named as gold beep-targets (packages/drivers/nlp-mcp and m365-mcp confirmed present with the full Toolkit + layerStdio scaffold), so the bare-scaffold lessons are dups; the GOLD_SYNTHESIS itself (lines 1572-1697) flags the high-value gaps as conditional/auth-gated registration, progressive-disclosure field tiers, and a structured api_key_required helper. Grep over goals/*/SPEC.md and packages confirms no existing goal owns these and no real src implements requiresAuth/tier-gate/api_key_required, so this is a genuine cross-cutting gap warranting a new packet that coordinates the existing MCP drivers and future per-driver (USPTO) servers rather than extending the NLP- or M365-specific goals.",
       "cautions": [
         "PatentsView API sunset: api.patentsview.org 301-redirects to data.uspto.gov/odp (HTML not JSON) — encode in @beep/uspto base-URL + UsptoEndpointSunset tagged error; target ODP from the start. Licensing: patents-mcp-server / mcp-uspto / uspto_pfw are MIT and portable; mike is unknown-license and screenpipe/harvest-mcp flagged unknown — reimplement-don't-copy. Scope note: the 'multi-provider auth/LLM fallback layer' strand in this cluster's title spans the four LLM drivers (@beep/anthropic, openai-compat, xai, venice-ai) and is arguably a separate provider-abstraction cluster; keep this packet focused on MCP-side credential-keyed registration + progressive disclosure and cross-link the LLM-fallback work rather than absorbing it."
-      ]
+      ],
+      "shipped": {
+        "note": "goals/mcp-kit + goals/uspto-mcp + goals/mcp-host-retrofit graduated 2026-07-01 and merged directly into origin/main 2026-07-02 (deliberate user decision, no PR); goals/mcp-write-wall is queued to prove the remaining write-wall wiring against a real write-capable host.",
+        "netNewStatus": [
+          {
+            "item": "Conditional/credential-keyed Toolkit composition",
+            "status": "done",
+            "evidence": "goals/uspto-mcp (SourceAuth + ToolkitComposition)"
+          },
+          {
+            "item": "Tier-gating of write-vs-read tools at the candidate->approved wall",
+            "status": "partial",
+            "evidence": "TierGate primitive shipped in @beep/mcp-kit (fail-closed dispatchWithTierGate + fromApprovedToolsPolicy); not yet wired to a live host -- goals/mcp-write-wall"
+          },
+          {
+            "item": "Graceful 'API key missing' as structured content",
+            "status": "done",
+            "evidence": "goals/uspto-mcp (ApiKeyRequired envelope)"
+          },
+          {
+            "item": "Progressive-disclosure named field tiers",
+            "status": "done",
+            "evidence": "goals/uspto-mcp (FieldTier projector)"
+          },
+          {
+            "item": "readOnly/idempotent tool-def hint conventions",
+            "status": "partial",
+            "evidence": "annotateFourHints/ToolAnnotations landed in nlp-mcp StreamingToolkit + m365-mcp (goals/mcp-host-retrofit); untrusted-context description-suffix prose (mike#7) still open, optional goals/mcp-write-wall deliverable"
+          }
+        ]
+      }
     },
     {
       "cluster": "RAG ingestion + char-span chunking",
@@ -791,10 +804,7 @@
         "P2": 7,
         "P3": 2
       },
-      "themeSpan": [
-        "governance-ops",
-        "provenance-evidence"
-      ],
+      "themeSpan": ["governance-ops", "provenance-evidence"],
       "netNew": [
         "Prompt-injection / instruction-override + examiner-disclosure regex detector at the retrieval boundary (flag-not-block, char-span findings) in @beep/file-processing",
         "Ordered secure-storage->env secret-resolution chain with placeholder-string + too-short-key rejection",
@@ -845,10 +855,7 @@
         "P2": 7,
         "P3": 1
       },
-      "themeSpan": [
-        "governance-ops",
-        "mcp-design"
-      ],
+      "themeSpan": ["governance-ops", "mcp-design"],
       "netNew": [
         "Shared Effect dispatch Layer owning user-key>env>CLI precedence + Layer.orElse graceful fallback across @beep/{anthropic,openai-compat,xai,venice-ai}",
         "Per-provider OWN env-driven default-model resolution so a fallback never inherits an incompatible model name",
@@ -900,11 +907,7 @@
         "P2": 2,
         "P3": 0
       },
-      "themeSpan": [
-        "agent-memory",
-        "governance-ops",
-        "legal-nlp"
-      ],
+      "themeSpan": ["agent-memory", "governance-ops", "legal-nlp"],
       "netNew": [
         "Concrete cost-tiered tool-routing Skill + mandatory not-legal-advice gate (today Skill/approvalGates are name-only stubs)",
         "DI-injected CurrentUser Context.Tag + RpcMiddleware + matter-scoped query filter (ThreadStore hardcodes orgId=1; only m365 auth exists)",
@@ -955,10 +958,7 @@
         "P2": 3,
         "P3": 5
       },
-      "themeSpan": [
-        "ip-domain-models",
-        "provenance-evidence"
-      ],
+      "themeSpan": ["ip-domain-models", "provenance-evidence"],
       "netNew": [
         "ClaimElement value object: Claim -> elements -> cited PriorArtReference with spans (no element-level decomposition today)",
         "PTAB validity-challenge entity (IPR/PGR/CBM) + controlled outcome/challenge-type vocab",
@@ -980,10 +980,7 @@
     },
     {
       "cluster": "Governance control plane (bulk-mutation dry-run, audit trace)",
-      "nuggetIds": [
-        "agentmemory#10",
-        "research-squad#12"
-      ],
+      "nuggetIds": ["agentmemory#10", "research-squad#12"],
       "route": "extend-goal",
       "primaryTarget": "goals/agent-governance-control-plane",
       "targetExists": true,
@@ -998,9 +995,7 @@
         "P2": 1,
         "P3": 1
       },
-      "themeSpan": [
-        "governance-ops"
-      ],
+      "themeSpan": ["governance-ops"],
       "netNew": [
         "Previewable filter-gated bulk-mutation op (>=1 filter for non-dryRun) with dryRun preview + audit trail over the authoritative graph",
         "Tamper-evident agent activity / LLM+tool-call audit trace (behind the ethical wall)"
@@ -1015,11 +1010,7 @@
     },
     {
       "cluster": "Claim-lifecycle gate (SHACL severity, transition guard, deterministic scoring)",
-      "nuggetIds": [
-        "TalentScore#5",
-        "research-squad#14",
-        "research-squad#6"
-      ],
+      "nuggetIds": ["TalentScore#5", "research-squad#14", "research-squad#6"],
       "route": "mixed",
       "primaryTarget": "goals/epistemic-claim-lifecycle-gate",
       "targetExists": true,
@@ -1034,11 +1025,7 @@
         "P2": 2,
         "P3": 1
       },
-      "themeSpan": [
-        "governance-ops",
-        "provenance-evidence",
-        "serendipity"
-      ],
+      "themeSpan": ["governance-ops", "provenance-evidence", "serendipity"],
       "netNew": [
         "SHACL severity reporting + non-blocking warnings with source-span metadata on validation results (research-squad#14)"
       ],
@@ -1063,36 +1050,25 @@
       "route": "dup-skip",
       "primaryTarget": "packages/drivers/nlp-mcp",
       "targetExists": true,
-      "secondaryTargets": [
-        "packages/drivers/m365-mcp"
-      ],
+      "secondaryTargets": ["packages/drivers/m365-mcp"],
       "wave": "P3",
       "waveHistogram": {
         "P1": 0,
         "P2": 0,
         "P3": 4
       },
-      "themeSpan": [
-        "effect-ts",
-        "governance-ops",
-        "mcp-design"
-      ],
+      "themeSpan": ["effect-ts", "governance-ops", "mcp-design"],
       "netNew": [],
       "alreadyCovered": [
         "Minimal stdio MCP scaffold (Server/ListTools/CallTool stubs), hand-rolled ~90-line JSON-RPC transport, dual library+./mcp packaging, interface-segregated tool contexts == already shipped by @beep/nlp-mcp + @beep/m365-mcp on McpServer.toolkit/layerStdio with Tools/Handlers split"
       ],
       "proposedSlug": null,
       "rationale": "Dup-skip: every nugget is a bare-MCP-scaffold/transport/packaging lesson already owned by the two shipped Effect-native MCP servers. Reference-only; the high-value MCP gaps (auth-gated registration, progressive disclosure) live in mcp-auth-gated-registration.",
-      "cautions": [
-        "Reference only — do not re-scaffold the MCP servers."
-      ]
+      "cautions": ["Reference only — do not re-scaffold the MCP servers."]
     },
     {
       "cluster": "Secure document download proxy (opaque TTL-gated links)",
-      "nuggetIds": [
-        "patents-mcp-server#11",
-        "uspto_pfw_mcp#11"
-      ],
+      "nuggetIds": ["patents-mcp-server#11", "uspto_pfw_mcp#11"],
       "route": "new-exploration",
       "primaryTarget": "secure-document-download-proxy",
       "targetExists": false,
@@ -1106,9 +1082,7 @@
         "P2": 2,
         "P3": 0
       },
-      "themeSpan": [
-        "desktop-portal"
-      ],
+      "themeSpan": ["desktop-portal"],
       "netNew": [
         "Edge-gated secure resource route (strict-UUID guard, no-store private PDFs) as the desktop-sidecar @beep/uspto File-Wrapper download proxy",
         "Encrypted opaque TTL-gated download links (Fernet/DPAPI analog) over the desktop sidecar"
@@ -1123,9 +1097,7 @@
     },
     {
       "cluster": "Relational grounded-extraction grid (per-cell citations)",
-      "nuggetIds": [
-        "mike#13"
-      ],
+      "nuggetIds": ["mike#13"],
       "route": "extend-goal",
       "primaryTarget": "goals/law-practice-office-action-extraction-rung",
       "targetExists": true,
@@ -1140,9 +1112,7 @@
         "P2": 1,
         "P3": 0
       },
-      "themeSpan": [
-        "legal-nlp"
-      ],
+      "themeSpan": ["legal-nlp"],
       "netNew": [
         "Relational grounded-extraction grid: tabular columns_config + cells (content + citations jsonb + status per document x column) — a grid of GroundedExtractions with per-cell provenance at scale"
       ],
@@ -1156,9 +1126,7 @@
     },
     {
       "cluster": "IPC/CPC classification SKOS taxonomy seed",
-      "nuggetIds": [
-        "patents-mcp-server#7"
-      ],
+      "nuggetIds": ["patents-mcp-server#7"],
       "route": "extend-goal",
       "primaryTarget": "goals/ip-law-knowledge-graph",
       "targetExists": true,
@@ -1174,9 +1142,7 @@
         "P2": 1,
         "P3": 0
       },
-      "themeSpan": [
-        "kg-ontology-reasoning"
-      ],
+      "themeSpan": ["kg-ontology-reasoning"],
       "netNew": [
         "WIPO-IPC / CPC classification taxonomy (section+class hierarchical lookup) as an IP controlled-vocabulary / SKOS-taxonomy seed"
       ],
@@ -1189,24 +1155,18 @@
     },
     {
       "cluster": "Conversation branching (branchIndex sibling ordering)",
-      "nuggetIds": [
-        "LegalEase#7"
-      ],
+      "nuggetIds": ["LegalEase#7"],
       "route": "extend-goal",
       "primaryTarget": "goals/workspace-thread-domain",
       "targetExists": true,
-      "secondaryTargets": [
-        "packages/workspace/domain"
-      ],
+      "secondaryTargets": ["packages/workspace/domain"],
       "wave": "P2",
       "waveHistogram": {
         "P1": 0,
         "P2": 1,
         "P3": 0
       },
-      "themeSpan": [
-        "agent-memory"
-      ],
+      "themeSpan": ["agent-memory"],
       "netNew": [
         "Conversation branching via branchIndex sibling-ordering alongside the existing Turn.parentTurnId"
       ],
@@ -1215,15 +1175,11 @@
       ],
       "proposedSlug": null,
       "rationale": "Extends goals/workspace-thread-domain: adds a branchIndex sibling-ordering variant to the existing parent_id Turn branching model.",
-      "cautions": [
-        "Additive field on the existing Turn model; no new packet."
-      ]
+      "cautions": ["Additive field on the existing Turn model; no new packet."]
     },
     {
       "cluster": "Local-first projection sync (EventStreamHub)",
-      "nuggetIds": [
-        "TalentScore#10"
-      ],
+      "nuggetIds": ["TalentScore#10"],
       "route": "new-exploration",
       "primaryTarget": "local-first-projection-sync",
       "targetExists": false,
@@ -1238,9 +1194,7 @@
         "P2": 1,
         "P3": 0
       },
-      "themeSpan": [
-        "desktop-portal"
-      ],
+      "themeSpan": ["desktop-portal"],
       "netNew": [
         "Per-user live connection hub (EventStreamHub) refreshing projections after an authority write — zero EventStreamHub exists today"
       ],
@@ -1253,9 +1207,7 @@
     },
     {
       "cluster": "Contract-first RPC + OTLP tracing (already shipped)",
-      "nuggetIds": [
-        "TalentScore#11"
-      ],
+      "nuggetIds": ["TalentScore#11"],
       "route": "dup-skip",
       "primaryTarget": "packages/agents/use-cases",
       "targetExists": true,
@@ -1269,25 +1221,18 @@
         "P2": 1,
         "P3": 0
       },
-      "themeSpan": [
-        "effect-ts"
-      ],
+      "themeSpan": ["effect-ts"],
       "netNew": [],
       "alreadyCovered": [
         "Contract-first RPC (Chat.rpc.ts) + OTLP tracing (@beep/observability) already shipped"
       ],
       "proposedSlug": null,
       "rationale": "Dup-skip: contract-first RPC + OTLP tracing already owned.",
-      "cautions": [
-        "Reference only."
-      ]
+      "cautions": ["Reference only."]
     },
     {
       "cluster": "LLM HttpClient wrapper + JSON repair (already owned)",
-      "nuggetIds": [
-        "LegalEase#2",
-        "google-patents-mcp#3"
-      ],
+      "nuggetIds": ["LegalEase#2", "google-patents-mcp#3"],
       "route": "dup-skip",
       "primaryTarget": "packages/drivers/anthropic",
       "targetExists": true,
@@ -1302,170 +1247,124 @@
         "P2": 1,
         "P3": 1
       },
-      "themeSpan": [
-        "data-ingestion",
-        "legal-nlp"
-      ],
+      "themeSpan": ["data-ingestion", "legal-nlp"],
       "netNew": [],
       "alreadyCovered": [
         "AbortController timeout + URLSearchParams + Redacted key log-redaction == existing LLM HttpClient wrapper; balanced-bracket JSON recovery == Anthropic.repair.ts / AnthropicTurnKernel BlockRepair"
       ],
       "proposedSlug": null,
       "rationale": "Dup-skip: HTTP driver-wrapper + chatty-LLM JSON repair already owned by @beep/anthropic.",
-      "cautions": [
-        "Reference only."
-      ]
+      "cautions": ["Reference only."]
     },
     {
       "cluster": "Env-first Redacted secret resolution (already owned)",
-      "nuggetIds": [
-        "google-patents-mcp#4"
-      ],
+      "nuggetIds": ["google-patents-mcp#4"],
       "route": "dup-skip",
       "primaryTarget": "packages/drivers/uspto",
       "targetExists": true,
-      "secondaryTargets": [
-        "packages/foundation/modeling/schema"
-      ],
+      "secondaryTargets": ["packages/foundation/modeling/schema"],
       "wave": "P3",
       "waveHistogram": {
         "P1": 0,
         "P2": 0,
         "P3": 1
       },
-      "themeSpan": [
-        "governance-ops"
-      ],
+      "themeSpan": ["governance-ops"],
       "netNew": [],
       "alreadyCovered": [
         "Env-first fail-fast Redacted secret resolution == Uspto.config.ts S.RedactedFromValue + Effect Config"
       ],
       "proposedSlug": null,
       "rationale": "Dup-skip: env-first Redacted secret resolution already owned by @beep/uspto config.",
-      "cautions": [
-        "Reference only; not the uspto-patent-driver-depth packet."
-      ]
+      "cautions": ["Reference only; not the uspto-patent-driver-depth packet."]
     },
     {
       "cluster": "Closed-struct extraction contracts (already owned)",
-      "nuggetIds": [
-        "courtlistener#6"
-      ],
+      "nuggetIds": ["courtlistener#6"],
       "route": "dup-skip",
       "primaryTarget": "packages/epistemic/domain",
       "targetExists": true,
-      "secondaryTargets": [
-        "packages/foundation/modeling/schema"
-      ],
+      "secondaryTargets": ["packages/foundation/modeling/schema"],
       "wave": "P3",
       "waveHistogram": {
         "P1": 0,
         "P2": 0,
         "P3": 1
       },
-      "themeSpan": [
-        "legal-nlp"
-      ],
+      "themeSpan": ["legal-nlp"],
       "netNew": [],
       "alreadyCovered": [
         "extra='forbid' closed-struct + annotated-description extraction discipline == schema kit + epistemic.CandidateClaim"
       ],
       "proposedSlug": null,
       "rationale": "Dup-skip: closed-struct extraction contracts already owned.",
-      "cautions": [
-        "Reference only."
-      ]
+      "cautions": ["Reference only."]
     },
     {
       "cluster": "Boundary validation -> structured result (already owned)",
-      "nuggetIds": [
-        "agentmemory#13"
-      ],
+      "nuggetIds": ["agentmemory#13"],
       "route": "dup-skip",
       "primaryTarget": "packages/foundation/modeling/schema",
       "targetExists": true,
-      "secondaryTargets": [
-        "packages/epistemic/domain"
-      ],
+      "secondaryTargets": ["packages/epistemic/domain"],
       "wave": "P2",
       "waveHistogram": {
         "P1": 0,
         "P2": 1,
         "P3": 0
       },
-      "themeSpan": [
-        "effect-ts"
-      ],
+      "themeSpan": ["effect-ts"],
       "netNew": [],
       "alreadyCovered": [
         "Boundary validation returning structured result == S.decodeUnknownEffect field-path-prefixed ParseError at the retrieval->logic wall"
       ],
       "proposedSlug": null,
       "rationale": "Dup-skip: boundary validation -> structured result already the core schema-kit pattern.",
-      "cautions": [
-        "Reference only."
-      ]
+      "cautions": ["Reference only."]
     },
     {
       "cluster": "35 USC 101/102/103/112 rejection taxonomy (already owned)",
-      "nuggetIds": [
-        "patent-search-mcp-server#1",
-        "patents-mcp-server#5"
-      ],
+      "nuggetIds": ["patent-search-mcp-server#1", "patents-mcp-server#5"],
       "route": "dup-skip",
       "primaryTarget": "packages/law-practice/domain",
       "targetExists": true,
-      "secondaryTargets": [
-        "packages/law-practice/use-cases"
-      ],
+      "secondaryTargets": ["packages/law-practice/use-cases"],
       "wave": "P2",
       "waveHistogram": {
         "P1": 0,
         "P2": 2,
         "P3": 0
       },
-      "themeSpan": [
-        "ip-domain-models"
-      ],
+      "themeSpan": ["ip-domain-models"],
       "netNew": [],
       "alreadyCovered": [
         "35 USC 101/102/103/112 vocabulary == RejectionGround tagged union (Rejection.values.ts) + OfficeActionReview loop"
       ],
       "proposedSlug": null,
       "rationale": "Dup-skip: the office-action rejection taxonomy already shipped as RejectionGround.",
-      "cautions": [
-        "Reference only."
-      ]
+      "cautions": ["Reference only."]
     },
     {
       "cluster": "Typed-JSONB persistence (already owned)",
-      "nuggetIds": [
-        "TalentScore#8"
-      ],
+      "nuggetIds": ["TalentScore#8"],
       "route": "dup-skip",
       "primaryTarget": "packages/workspace/server",
       "targetExists": true,
-      "secondaryTargets": [
-        "packages/foundation/modeling/schema"
-      ],
+      "secondaryTargets": ["packages/foundation/modeling/schema"],
       "wave": "P2",
       "waveHistogram": {
         "P1": 0,
         "P2": 1,
         "P3": 0
       },
-      "themeSpan": [
-        "effect-ts"
-      ],
+      "themeSpan": ["effect-ts"],
       "netNew": [],
       "alreadyCovered": [
         "Typed-JSONB persistence == ThreadStore Drizzle repo + EntitySchema.persist.jsonb read-revalidation"
       ],
       "proposedSlug": null,
       "rationale": "Dup-skip: typed-JSONB persistence already owned.",
-      "cautions": [
-        "Reference only."
-      ]
+      "cautions": ["Reference only."]
     }
   ],
   "waveBasis": "wave = the MODE of each cluster's member-nugget catalog priorities (data-driven, reproducible). Graduate-now scope is a separate STRATEGIC decision — see graduateNow.",
@@ -1482,9 +1381,7 @@
       "effect-orchestration-patterns",
       "Agent skills + cost-tiered routing + ethical-wall identity (extend goals/agentic-professional-runtime)"
     ],
-    "overlap": [
-      "gov-legal-data-driver-codegen"
-    ],
+    "overlap": ["gov-legal-data-driver-codegen"],
     "promotionCandidates": [
       "citation-grounding-hallucination-guard (7×P1 nuggets; GOLD_SYNTHESIS Wave-1 explicitly lists the courtlistener+mike citation guardrail)",
       "effect-orchestration-patterns (5×P1 nuggets)"

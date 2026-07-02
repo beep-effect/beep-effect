@@ -107,7 +107,11 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   [`mcp-auth-gated-registration`](./mcp-auth-gated-registration/README.md) (grilled+decomposed+
   graduated first goal 2026-07-01: Q1–Q7 resolved, BRIEF+MAP written,
   [`goals/mcp-kit`](../goals/mcp-kit/README.md) scaffolded at `foundation/capability`;
-  `uspto-mcp`/`mcp-host-retrofit`/`mcp-write-wall` queue behind it),
+  [`goals/uspto-mcp`](../goals/uspto-mcp/README.md) and
+  [`goals/mcp-host-retrofit`](../goals/mcp-host-retrofit/README.md) shipped
+  2026-07-01, merged to `origin/main` 2026-07-02; only
+  [`goals/mcp-write-wall`](../goals/mcp-write-wall/README.md) still queues
+  behind them),
   [`citation-grounding-hallucination-guard`](./citation-grounding-hallucination-guard/README.md).
   **Queued (P2/P3, research-complete):**
   [`effect-orchestration-patterns`](./effect-orchestration-patterns/README.md),

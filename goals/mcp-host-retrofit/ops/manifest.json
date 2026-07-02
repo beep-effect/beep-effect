@@ -3,13 +3,13 @@
   "initiative": {
     "id": "mcp-host-retrofit",
     "title": "MCP Host Retrofit",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-01",
-    "updated": "2026-07-01",
+    "updated": "2026-07-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/mcp-host-retrofit",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -21,7 +21,8 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "actualOutcome": "Verified green locally via 'bun run beep yeet repair' + 'bun run beep yeet verify', then merged directly into origin/main by the user without opening a PR -- a deliberate user decision, not an agent shortcut and not a gate waiver. The standard requiresPullRequest/requiresMergeable gate was not exercised for this packet; recorded here rather than silently marked as satisfied."
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -69,12 +70,13 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete",
+      "note": "Deviated from plan: merged directly into origin/main by the user, no PR opened. See completionGate.actualOutcome."
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

@@ -9,20 +9,20 @@ and MCP protocol `2025-06-18`.
 ## Consumer plan (`foundation/capability` ≥2-consumer gate)
 
 Per `standards/architecture/07-non-slice-families.md:56`, `foundation/capability`
-requires ≥2 named consumers. The `mcp-host-retrofit` goal landed two real,
-grep-verifiable importers; `uspto-mcp` is in progress as the third.
+requires ≥2 named consumers. The `mcp-host-retrofit` and `uspto-mcp` goals
+have both landed, giving the kit three real, grep-verifiable importers.
 
 | Consumer | Status | Uses it for |
 | --- | --- | --- |
 | `packages/drivers/nlp-mcp` | **Landed** (`mcp-host-retrofit`) | `Server.ts` mounts `NlpToolkit`/`StreamingToolkit` via `sanitizedToolkit` (replacing `McpServer.toolkit`); `StreamingTools.ts`'s 17 tools carry `annotateFourHints(..., readOnlyToolHints)`. |
 | `packages/drivers/m365-mcp` | **Landed** (`mcp-host-retrofit`) | `Server.ts` mounts `M365Toolkit` via `sanitizedToolkit`; `M365Tools.ts`'s 11 tools use `annotateFourHints(..., readOnlyToolHints)` in place of inline `.annotate(...)` chains. |
-| `packages/drivers/uspto-mcp` | In progress (`uspto-mcp` goal) | The thin USPTO MCP proving host — exercises the `SourceAuth` gate registry, credential-keyed composition, and the `api_key_required` envelope against USPTO's `soft`-gated credential. |
+| `packages/drivers/uspto-mcp` | **Landed** (`uspto-mcp`) | The thin USPTO MCP proving host — exercises the `SourceAuth` gate registry, credential-keyed composition, and the `api_key_required` envelope against USPTO's `soft`-gated credential (`Server.ts`, `UsptoTools.ts`, `UsptoHandlers.ts`, `UsptoSourceAuth.ts`, `UsptoDocumentTiers.ts`). |
 
-**Removal condition status**: two of the three named consumers are landed
-with grep-verifiable `@beep/mcp-kit` imports (`rg -n "@beep/mcp-kit"
-packages/drivers/{nlp-mcp,m365-mcp}/src`), matching the `@beep/api-transport`
-promotion-record precedent; the `SPEC.md` exception ledger entry is discharged
-once `uspto-mcp` also lands.
+**Removal condition status**: all three named consumers are landed with
+grep-verifiable `@beep/mcp-kit` imports (`rg -n "@beep/mcp-kit"
+packages/drivers/{nlp-mcp,m365-mcp,uspto-mcp}/src`), matching the
+`@beep/api-transport` promotion-record precedent; the `SPEC.md` exception
+ledger entry is discharged as of 2026-07-02.
 
 ## Deliverables
 

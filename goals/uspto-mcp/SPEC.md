@@ -142,21 +142,24 @@ Back-links, not copies — rationale lives in the exploration:
 
 ## Acceptance Criteria
 
-- [ ] `packages/drivers/uspto-mcp` exists, builds, lints, and docgens clean.
-- [ ] Fixture test: with `USPTO_API_KEY` absent, the mounted USPTO tool
+- [x] `packages/drivers/uspto-mcp` exists, builds, lints, and docgens clean.
+- [x] Fixture test: with `USPTO_API_KEY` absent, the mounted USPTO tool
       returns the kit's `api_key_required` envelope (`isError:false`, JSON in
       `content[].text`).
-- [ ] Fixture test: with `USPTO_API_KEY` present (fixture/mocked
+- [x] Fixture test: with `USPTO_API_KEY` present (fixture/mocked
       `HttpClient`, no real credential), the same tool returns real
       `@beep/uspto` data end-to-end.
-- [ ] Fixture test: a `>25,000`-token `documentBag`-shaped fixture response is
+- [x] Fixture test: a `>25,000`-token `documentBag`-shaped fixture response is
       reshaped under a configured budget via a named field tier
       (minimal/balanced).
-- [ ] The server composes exclusively through `@beep/mcp-kit`'s exported
+- [x] The server composes exclusively through `@beep/mcp-kit`'s exported
       `SourceAuth`/`ToolkitComposition`/`ApiKeyRequired`/`FieldTier` — no
       parallel reimplementation of kit logic in this package.
-- [ ] Package README documents itself as a named `@beep/mcp-kit` consumer.
-- [ ] No unrelated refactors or formatting churn.
+- [x] Package README documents itself as a named `@beep/mcp-kit` consumer.
+- [x] No unrelated refactors or formatting churn.
+
+Verified 2026-07-02 at closeout: all six criteria satisfied per `PLAN.md`'s
+P2 evidence and the shipped `packages/drivers/uspto-mcp` package.
 
 ## Verification Matrix
 
