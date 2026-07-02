@@ -143,7 +143,8 @@ const generatedComposers = $I.compose(
   "dol",
   "courtlistener",
   "api-transport",
-  "mcp-kit"
+  "mcp-kit",
+  "uspto-mcp"
 );
 
 const composers = {
@@ -1613,3 +1614,19 @@ export const $ApiTransportId: Identity.IdentityComposer<"@beep/api-transport"> =
  * @category configuration
  */
 export const $McpKitId: Identity.IdentityComposer<"@beep/mcp-kit"> = composers.$McpKitId;
+
+/**
+ * Identity composer for `@beep/uspto-mcp`.
+ *
+ * @example
+ * ```typescript
+ * import { $UsptoMcpId } from "@beep/identity"
+ *
+ * const id = $UsptoMcpId.make("UsptoMcp")
+ * void id
+ * ```
+ *
+ * @since 0.0.0
+ * @category configuration
+ */
+export const $UsptoMcpId: Identity.IdentityComposer<"@beep/uspto-mcp"> = composers.$UsptoMcpId;

@@ -2,15 +2,15 @@
 
 ## Status
 
-Status: `pending`
+Status: `in-progress`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Confirm `@beep/mcp-kit`'s shipped surface (`SourceAuth`, `ToolkitComposition`, `ApiKeyRequired`, `FieldTier`) matches this host's expected call shape; run the `create-package` wiring checklist. | Kit surface confirmed compatible or drift documented; new-package scaffold plan recorded. |
-| P1 Implement | pending | Scaffold `packages/drivers/uspto-mcp` and wire `@beep/uspto` through the kit per `SPEC.md` deliverables. | Acceptance criteria are met (three fixture tests, kit-only composition, consumer-plan README). |
-| P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
+| P0 Research | complete | Confirm `@beep/mcp-kit`'s shipped surface (`SourceAuth`, `ToolkitComposition`, `ApiKeyRequired`, `FieldTier`) matches this host's expected call shape; run the `create-package` wiring checklist. | Kit surface confirmed compatible; scaffolded via `bun run beep create-package uspto-mcp --family drivers`. One correction to `SPEC.md`: `drivers` is a flat, individually-listed workspace family (not globbed like `foundation/capability`), so `create-package` DID edit root `package.json`'s `workspaces` array — not a SKIP as originally assumed. |
+| P1 Implement | complete | Scaffold `packages/drivers/uspto-mcp` and wire `@beep/uspto` through the kit per `SPEC.md` deliverables. | Acceptance criteria met: `UsptoSourceAuth.ts` (soft gate), `UsptoDocumentTiers.ts` (array-level field-tier budget projector composed from kit primitives), `UsptoTools.ts` + `UsptoHandlers.ts` (two tools: `uspto_search_applications`, `uspto_get_documents`), `Server.ts` (`composeGatedLayers`/`gatedLayer`/`sanitizedToolkit` seam mirroring nlp-mcp), `bin.ts`. Also adopted the kit's new `sanitizedToolkit` (added during `mcp-host-retrofit`, see that goal's P0/P1) proactively since it is a zero-cost drop-in for `McpServer.toolkit` — a deviation beyond the literal SPEC list, noted here rather than silently expanding scope. |
+| P2 Verify | complete | Run required checks and capture evidence. | `bunx tsgo -b`, `biome check`, `bun run beep docgen local --package=@beep/uspto-mcp`, and `TURBO_FORCE=1 bunx turbo run check test lint --filter=@beep/uspto-mcp` all green. Three fixture tests pass (`test/Server.test.ts`): api_key_required when absent, real data when present, documentBag reshaped under the 8000-byte default budget — all via fixture-mocked `HttpClient`, no real network or credential. |
 | P3 Yeet: PR to mergeable | pending | Drive the shared-branch PR to mergeable via `/yeet` (coordinated with `mcp-host-retrofit`). | PR open and mergeable; hosted checks green or inherited baseline reds documented. |
 | P4 Close | pending | Prepare review response, write the closeout reflection, and final readiness. | Packet status and evidence are updated; a closeout reflection exists. |
 

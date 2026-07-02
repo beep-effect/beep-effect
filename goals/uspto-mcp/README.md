@@ -35,12 +35,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started. Confirm `@beep/mcp-kit`'s shipped surface before
-scaffolding `packages/drivers/uspto-mcp`.
+P2 Verify complete. `packages/drivers/uspto-mcp` is built, tested, and green;
+next is P3 Yeet (PR to mergeable, coordinated with `mcp-host-retrofit` on the
+shared branch).
 
 ## Latest Evidence
 
-Not started.
+P0-P2 (2026-07-01): see `PLAN.md` phase table. `packages/drivers/uspto-mcp`
+built with the `uspto_search_applications`/`uspto_get_documents` toolkit,
+three fixture tests green (`test/Server.test.ts`), `bunx tsgo -b`/`biome
+check`/`bun run beep docgen local` clean, `TURBO_FORCE=1 bunx turbo run check
+test lint --filter=@beep/uspto-mcp` green.
 
 ## Notes
 

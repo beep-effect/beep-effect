@@ -148,6 +148,9 @@
       "path": "packages/drivers/uspto"
     },
     {
+      "path": "packages/drivers/uspto-mcp"
+    },
+    {
       "path": "packages/drivers/venice-ai"
     },
     {
