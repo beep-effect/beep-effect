@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "initiative-manifest/v1",
+  "initiative": {
+    "id": "mcp-write-wall",
+    "title": "MCP Write Wall",
+    "status": "active",
+    "created": "2026-07-02",
+    "updated": "2026-07-02",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/mcp-write-wall",
+  "lifecycle": "active",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/mcp-auth-gated-registration",
+    "graduated": "2026-07-02"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/mcp-write-wall/README.md",
+    "goals/mcp-write-wall/SPEC.md",
+    "goals/mcp-write-wall/PLAN.md",
+    "goals/mcp-write-wall/GOAL.md",
+    "goals/mcp-write-wall/research/SOURCES.md",
+    "goals/mcp-kit/SPEC.md",
+    "goals/mcp-host-retrofit/PLAN.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "../../explorations/mcp-auth-gated-registration/research/SOURCES.md",
+    "../../explorations/mcp-auth-gated-registration/research/tier-gating-and-tool-governance-ethical-wall.md"
+  ],
+  "links": {
+    "goals": ["mcp-kit", "uspto-mcp", "mcp-host-retrofit"],
+    "exploration": "explorations/mcp-auth-gated-registration"
+  },
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/mcp-write-wall/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/mcp-write-wall/GOAL.md)\" -le 4000",
+    "jq . goals/mcp-write-wall/ops/manifest.json",
+    "rg -n \"mcp-write-wall|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/mcp-write-wall",
+    "git diff --check -- goals/mcp-write-wall",
+    "bun run beep yeet verify",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "@beep/mcp-kit's shipped TierGate/SanitizedSpan/ToolAnnotations surface has drifted from the deliverable contracts this goal depends on.",
+    "Wiring the gate would require behavior changes to NlpToolkit's tools themselves beyond annotation.",
+    "A tool's real destructive/read-only semantics cannot be judged confidently from evidence.",
+    "Verification requires a live network call, cost, or destructive production side effects.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
