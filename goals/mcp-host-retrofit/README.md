@@ -36,13 +36,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started. Confirm `@beep/mcp-kit`'s shipped
-`SanitizedSpan`/`ToolAnnotations`/`TierGate` surface and audit both hosts'
-tool surfaces before retrofitting.
+P2 Verify complete. Both hosts are retrofitted and green; next is P3 Yeet
+(PR to mergeable, coordinated with `uspto-mcp` on the shared branch).
 
 ## Latest Evidence
 
-Not started.
+P0-P2 (2026-07-01): see `PLAN.md` phase table. Added `@beep/mcp-kit`'s new
+`sanitizedToolkit` export (empirically-verified fix for the
+`Toolkit.ts:263-265` span leak); `nlp-mcp`/`m365-mcp` `Server.ts` now use it;
+17 `StreamingToolkit` tools and 11 `M365Tools` tools carry
+`annotateFourHints`; tier-gate recorded not-applicable (see `PLAN.md` P0
+finding). New proof tests green in `mcp-kit`, `nlp-mcp`, `m365-mcp`; existing
+suites unchanged. `@beep/mcp-kit/README.md` consumer table updated to
+**Landed** for both hosts.
 
 ## Notes
 

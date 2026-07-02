@@ -6,6 +6,7 @@
  */
 
 import { $M365McpId } from "@beep/identity/packages";
+import { sanitizedToolkit } from "@beep/mcp-kit";
 import { Layer } from "effect";
 import * as S from "effect/Schema";
 import * as McpServer from "effect/unstable/ai/McpServer";
@@ -43,7 +44,7 @@ export class M365McpServerConfig extends S.Class<M365McpServerConfig>($I`M365Mcp
  * @since 0.1.0
  */
 export const makeServerLayer = (config: M365McpServerConfig): Layer.Layer<never, never, M365 | Stdio> =>
-  McpServer.toolkit(M365Toolkit).pipe(
+  sanitizedToolkit(M365Toolkit).pipe(
     Layer.provide(M365ToolkitHandlersLive),
     Layer.provide(
       McpServer.layerStdio({
