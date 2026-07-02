@@ -52,22 +52,22 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "P4",

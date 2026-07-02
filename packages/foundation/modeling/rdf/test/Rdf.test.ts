@@ -574,7 +574,7 @@ describe("@beep/rdf semantic metadata", () => {
         ...semanticMetadataInput,
         kind: "unknown",
       })
-    ).toThrow("Expected SemanticSchemaMetadataKind");
+    ).toThrow("SemanticSchemaMetadataKind");
   });
 
   it("annotates schemas in direct and curried forms and finds nested metadata", () => {
