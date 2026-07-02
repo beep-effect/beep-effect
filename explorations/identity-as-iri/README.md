@@ -19,11 +19,13 @@ kit for deterministic agent metadata retrieval.
 
 ## Next Open Question
 
-First packet graduated: [`goals/identity-iri-core`](../../goals/identity-iri-core/README.md)
-(launch: `/goal follow the instructions in goals/identity-iri-core/GOAL.md`).
-Its P0 opens with the DEFERRED authority-host ruling. Queued candidates
-(graduate as predecessors land): `identity-iri-fold`, `identity-iri-fibered`
-— see [`MAP.md`](./MAP.md). Packet stays `active` until all three graduate.
+`identity-iri-core` is COMPLETE (merged
+[PR #289](https://github.com/beep-effect/beep-effect/pull/289); authority
+resolved `https://ns.beep.sh/`). Next: graduate
+[`identity-iri-fold`](./MAP.md) (its dependency is satisfied) — repopulate
+`@beep/ontology` with the fold + projections and run the §8 FOLIO
+migrations. Then `identity-iri-fibered`. Packet stays `active` until all
+three graduate.
 
 ## Read This First
 
@@ -38,6 +40,12 @@ Its P0 opens with the DEFERRED authority-host ruling. Queued candidates
 
 ## Trail
 
+- 2026-07-02 (merged): `goals/identity-iri-core` COMPLETE — implementation
+  landed via [PR #289](https://github.com/beep-effect/beep-effect/pull/289)
+  (shape-stable harness, vocab/CURIE/PN_LOCAL modules, bound composer with
+  literal `.iri`/`.curie`, zero call-site changes; blast radius negligible).
+  Authority host RESOLVED: `https://ns.beep.sh/`. Closeout reflection
+  written. Next: graduate `identity-iri-fold`.
 - 2026-07-02 (later): checkpoint `61160e1baf` pushed (--no-verify; all red
   verify lanes attributed to inherited main breakage, none ours). MAP.md
   written (3 candidates, strict sequence); `goals/identity-iri-core`

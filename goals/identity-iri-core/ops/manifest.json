@@ -3,13 +3,13 @@
   "initiative": {
     "id": "identity-iri-core",
     "title": "Identity IRI Core",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-02",
     "updated": "2026-07-02",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/identity-iri-core",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -67,12 +67,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in_progress"
+      "status": "completed"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "completed"
     }
   ],
   "verificationCommands": [

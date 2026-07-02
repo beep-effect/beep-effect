@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
+
+Status: `COMPLETE` — merged as [PR #289](https://github.com/beep-effect/beep-effect/pull/289) (2026-07-02).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -37,9 +39,10 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P3 Yeet: PR to mergeable — [PR #289](https://github.com/beep-effect/beep-effect/pull/289)
-open; monitoring checks. Inherited main-red lanes are documented in the SPEC
-Exception Ledger and the PR body. Then P4 Close (reflection + status flip).
+CLOSED. All phases complete; closeout reflection at
+[`history/reflections/2026-07-02-claude.md`](./history/reflections/2026-07-02-claude.md)
+(reflection lint: blocking_findings=0). Successor packet to graduate next:
+`identity-iri-fold`.
 
 ## Latest Evidence
 
