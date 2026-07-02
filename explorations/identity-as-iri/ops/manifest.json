@@ -4,14 +4,15 @@
     "slug": "identity-as-iri",
     "title": "Identity as IRI",
     "status": "active",
-    "stage": "research",
+    "stage": "align",
     "openQuestions": [
-      "D7: relational facts inline on $I.class (is:), fold-only triples, or both channels?",
+      "Packaging seam: all-in-@beep/identity (user lean, cycle argument) vs pure-kernel/runtime split (mining-corpus lean, synthesis §5) — where does the vocab registry live?",
+      "D7: relational facts inline on $I.class (is:), fold-only triples, or both channels? (fold-first regardless; corpus gives hybrid pressure, stays open by authority)",
+      "SemanticSchemaMetadata fate: absorb/layer/deprecate — audit recommendation on file in research/10-audit-semantic-schema-metadata.md",
       "Authority host: https://ns.beep.sh/ is a placeholder — confirm before composer-binding phase merges",
-      "Packaging: all-in-@beep/identity (pure, effect + @beep/types only) vs the handoff's identity/rdf/ontology split — decide after scratchpad prototype",
-      "SemanticSchemaMetadata (@beep/rdf) vs composer-derived iri/curie annotations: absorb, layer, or deprecate? (audit in research)",
       "$I.key: keep curried typed-path form (annoteKey<Parent>()) or struct-key default only?",
-      "Registry service naming + placement (OntologyRegistry? IdentityRegistry?)"
+      "Registry service naming + placement (OntologyRegistry? IdentityRegistry?)",
+      "Apply goals/ontology-modeling-foundation supersession edit (specified in research/12-audit-goals-supersession.md)?"
     ],
     "sources": [
       "research/SOURCES.md"

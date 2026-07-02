@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `research`
+Stage: `align`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -19,11 +19,13 @@ kit for deterministic agent metadata retrieval.
 
 ## Next Open Question
 
-Research in flight: collect official spec prose (RFC 3986/3987, CURIE 1.0,
-RDF/Turtle, JSON-LD 1.1, SKOS/OWL/SHACL/DCMI/PROV-O) and run the repo audits
-(SemanticSchemaMetadata call sites; Id.ts coupling + create-package codegen;
-ontology-modeling-foundation supersession). Then: effect-only scratchpad
-prototype before any align call on packaging.
+Research complete (specs + 12-repo mining + audits + verified synthesis).
+Next: align session on the packaging seam — the mining corpus recommends a
+pure-kernel/runtime split and pushes back on all-in-`@beep/identity`
+([`research/20-repo-mining-synthesis.md`](./research/20-repo-mining-synthesis.md)
+§5 + arbitration in [`RESEARCH.md`](./RESEARCH.md)) — plus
+SemanticSchemaMetadata fate (audit recommendation on file) and D7. Then the
+`scratchpad/identity` prototype per the corrected 12-step guidance.
 
 ## Read This First
 
@@ -38,6 +40,15 @@ prototype before any align call on packaging.
 
 ## Trail
 
+- 2026-07-01 (night): research stage completed — 3 spec docs
+  ([`research/specs/`](./research/specs/)), 12 repo-mining reports
+  ([`research/repos/`](./research/repos/), licenses verified, 3
+  reference-only), 3 repo audits, synthesis
+  ([`20`](./research/20-repo-mining-synthesis.md)) + adversarial review
+  ([`21`](./research/21-synthesis-adversarial-review.md), 7 corrections
+  accepted, license ledger clean), all folded into
+  [`RESEARCH.md`](./RESEARCH.md) + [`SOURCES.md`](./research/SOURCES.md).
+  Stopped at: align on packaging seam.
 - 2026-07-01 (later): prototype home decided —
   [`scratchpad/identity/`](../../scratchpad/identity/README.md), effect-only
   imports enforced by test ([`DECISIONS.md`](./DECISIONS.md) pre-seeded);
