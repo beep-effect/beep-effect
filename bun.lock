@@ -662,6 +662,7 @@
       "dependencies": {
         "@beep/identity": "workspace:^",
         "@beep/m365": "workspace:^",
+        "@beep/mcp-kit": "workspace:^",
         "@effect/platform-node": "catalog:",
         "effect": "catalog:",
       },
@@ -676,6 +677,7 @@
       "dependencies": {
         "@beep/file-processing": "workspace:^",
         "@beep/identity": "workspace:^",
+        "@beep/mcp-kit": "workspace:^",
         "@beep/nlp-processing": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/wink": "workspace:^",
@@ -835,6 +837,23 @@
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+      },
+    },
+    "packages/drivers/uspto-mcp": {
+      "name": "@beep/uspto-mcp",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/mcp-kit": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/uspto": "workspace:^",
+        "@effect/platform-node": "catalog:",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -2322,6 +2341,8 @@
     "@beep/ui": ["@beep/ui@workspace:packages/foundation/ui-system/ui"],
 
     "@beep/uspto": ["@beep/uspto@workspace:packages/drivers/uspto"],
+
+    "@beep/uspto-mcp": ["@beep/uspto-mcp@workspace:packages/drivers/uspto-mcp"],
 
     "@beep/utils": ["@beep/utils@workspace:packages/foundation/modeling/utils"],
 

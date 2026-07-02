@@ -1325,7 +1325,9 @@
       "@beep/mcp-kit": [
         "./packages/foundation/capability/mcp-kit/src/index.ts"
       ],
-      "@beep/mcp-kit/*": ["./packages/foundation/capability/mcp-kit/src/*"]
+      "@beep/mcp-kit/*": ["./packages/foundation/capability/mcp-kit/src/*"],
+      "@beep/uspto-mcp": ["./packages/drivers/uspto-mcp/src/index.ts"],
+      "@beep/uspto-mcp/*": ["./packages/drivers/uspto-mcp/src/*"]
     }
   }
 }

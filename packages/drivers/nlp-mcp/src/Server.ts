@@ -19,6 +19,7 @@
  */
 
 import { $NlpMcpId } from "@beep/identity";
+import { sanitizedToolkit } from "@beep/mcp-kit";
 import { NlpToolkit } from "@beep/nlp-processing/Tools/NlpToolkit";
 import { WinkNlpToolkitLive } from "@beep/wink";
 import { Layer } from "effect";
@@ -102,6 +103,6 @@ export const makeServerLayer = (
   config: NlpMcpServerConfig
 ): Layer.Layer<never, never, FileSystem.FileSystem | HttpClient.HttpClient | Path.Path | Stdio> =>
   Layer.mergeAll(
-    McpServer.toolkit(NlpToolkit).pipe(Layer.provide(WinkNlpToolkitLive)),
-    McpServer.toolkit(StreamingToolkit).pipe(Layer.provide(StreamingToolkitHandlersLive))
+    sanitizedToolkit(NlpToolkit).pipe(Layer.provide(WinkNlpToolkitLive)),
+    sanitizedToolkit(StreamingToolkit).pipe(Layer.provide(StreamingToolkitHandlersLive))
   ).pipe(Layer.provide(McpServer.layerStdio({ name: config.name, version: config.version })), Layer.orDie);

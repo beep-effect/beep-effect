@@ -439,6 +439,7 @@
     "packages/drivers/federal-register",
     "packages/drivers/ecfr",
     "packages/drivers/dol",
-    "packages/drivers/courtlistener"
+    "packages/drivers/courtlistener",
+    "packages/drivers/uspto-mcp"
   ]
 }

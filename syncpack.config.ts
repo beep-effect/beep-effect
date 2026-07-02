@@ -75,6 +75,7 @@ const config = {
     "packages/drivers/ecfr/package.json",
     "packages/drivers/dol/package.json",
     "packages/drivers/courtlistener/package.json",
+    "packages/drivers/uspto-mcp/package.json",
   ],
   customTypes: {
     catalog: {

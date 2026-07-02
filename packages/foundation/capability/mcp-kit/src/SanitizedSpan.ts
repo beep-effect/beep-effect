@@ -20,8 +20,16 @@
  * @since 0.0.0
  */
 
-import { Effect } from "effect";
+import { Cause, Context, Effect, Layer, Sink, Stream } from "effect";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import { CallToolResult, Tool as WireTool } from "effect/unstable/ai/McpSchema";
+import * as McpServer from "effect/unstable/ai/McpServer";
+import * as AiTool from "effect/unstable/ai/Tool";
 import type * as Tracer from "effect/Tracer";
+import type { McpServerClient } from "effect/unstable/ai/McpSchema";
+import type * as Toolkit from "effect/unstable/ai/Toolkit";
 
 /**
  * Span attribute keys suppressed by default: the raw, undecoded tool call
@@ -158,3 +166,113 @@ export const withSanitizedToolSpan = <A, E, R>(
       sanitizeTracerAttributes(tracer, options?.sanitizedKeys ?? defaultSanitizedSpanKeys)
     )
   );
+
+const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Record<string, AiTool.Any>>(
+  toolkit: Toolkit.Toolkit<Tools>
+) {
+  const registry = yield* McpServer.McpServer;
+  const built = yield* toolkit as unknown as Effect.Effect<
+    Toolkit.WithHandler<Tools>,
+    never,
+    Exclude<AiTool.HandlersFor<Tools>, McpServerClient>
+  >;
+  const services = yield* Effect.context<never>();
+  for (const tool of R.values(built.tools) as ReadonlyArray<AiTool.Any>) {
+    const annotations = tool.annotations;
+    const toolMeta = Context.getOrUndefined(annotations, AiTool.Meta);
+    const wireTool = WireTool.make({
+      name: tool.name,
+      description: AiTool.getDescription(tool),
+      inputSchema: AiTool.getJsonSchema(tool),
+      annotations: {
+        ...Context.getOption(annotations, AiTool.Title).pipe(
+          O.map((title) => ({ title })),
+          O.getOrUndefined
+        ),
+        readOnlyHint: Context.get(annotations, AiTool.Readonly),
+        destructiveHint: Context.get(annotations, AiTool.Destructive),
+        idempotentHint: Context.get(annotations, AiTool.Idempotent),
+        openWorldHint: Context.get(annotations, AiTool.OpenWorld),
+      },
+      _meta: toolMeta,
+    });
+    yield* registry.addTool({
+      tool: wireTool,
+      annotations,
+      // Contextually typed from `addTool`'s own `handle: (payload: any) => ...`
+      // parameter position (mirrors upstream McpServer.registerToolkit,
+      // effect/unstable/ai/McpServer.ts:711); dispatch is looked up by tool
+      // name at runtime, so no narrower parameter type is available here.
+      handle: (payload) =>
+        withSanitizedToolSpan(`mcp.tool.call.${tool.name}`, built.handle(tool.name, payload)).pipe(
+          Stream.unwrap,
+          Stream.run(Sink.last()),
+          Effect.flatMap(Effect.fromOption),
+          Effect.provideContext(services),
+          Effect.matchCause({
+            onFailure: (cause) =>
+              CallToolResult.make({ isError: true, content: [{ type: "text", text: Cause.pretty(cause) }] }),
+            onSuccess: (result: { readonly encodedResult: unknown }) =>
+              CallToolResult.make({
+                isError: false,
+                structuredContent: P.isObject(result.encodedResult) ? result.encodedResult : undefined,
+                content: [{ type: "text", text: JSON.stringify(result.encodedResult) }],
+              }),
+          }),
+          Effect.tapCause(Effect.log)
+        ) as Effect.Effect<CallToolResult, never, McpServerClient>,
+    });
+  }
+});
+
+/**
+ * Registers an `effect/unstable/ai` `Toolkit` with the ambient `McpServer`,
+ * wrapping every tool's dispatch in {@link withSanitizedToolSpan} so raw,
+ * undecoded call parameters never reach span attributes.
+ *
+ * **Why this exists**
+ *
+ * Upstream `McpServer.toolkit` (`effect/unstable/ai/McpServer.ts:749-758`)
+ * registers each tool's dispatch closure once, at layer-construction time,
+ * with no seam for a consumer to wrap the closure's own later invocation.
+ * Wrapping only the *outer* `Layer.launch(...)`/`server.callTool(...)` call
+ * site does not help: the closure's `Effect.provideContext(services)`
+ * restores whatever context was ambient at construction, and `services` does
+ * not carry forward a build-time span/tracer override to later, separately
+ * dispatched calls (verified empirically — a build-time-only wrap still
+ * leaked `parameters`). Wrapping `built.handle(tool.name, payload)` *inside*
+ * the stored `handle` closure — the only place proven, empirically, to
+ * suppress the leak regardless of when or how the closure is later invoked
+ * (matching the `12-observability.md` §3 fix this module exists for) —
+ * requires mirroring `registerToolkit`'s per-tool registration loop, since
+ * upstream offers no dispatch-wrapping hook.
+ *
+ * **When to use**
+ *
+ * Drop-in replacement for `McpServer.toolkit(toolkit)` wherever a host wants
+ * its tool dispatch spans sanitized; same signature, same registration
+ * semantics (McpTool wire shape, hint annotations, `CallToolResult` mapping),
+ * only the dispatch wrapping differs.
+ *
+ * @example
+ * ```ts
+ * import { Effect, Layer } from "effect"
+ * import { sanitizedToolkit } from "@beep/mcp-kit"
+ * import { Tool, Toolkit } from "effect/unstable/ai"
+ * import * as S from "effect/Schema"
+ *
+ * const ExampleTool = Tool.make("example_tool", { success: S.String })
+ * const ExampleToolkit = Toolkit.make(ExampleTool)
+ * const ExampleHandlersLive = ExampleToolkit.toLayer({ example_tool: () => Effect.succeed("ok") })
+ *
+ * const registered = sanitizedToolkit(ExampleToolkit).pipe(Layer.provide(ExampleHandlersLive))
+ * console.log(registered)
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export const sanitizedToolkit = <Tools extends Record<string, AiTool.Any>>(
+  toolkit: Toolkit.Toolkit<Tools>
+): Layer.Layer<never, never, AiTool.HandlersFor<Tools> | Exclude<AiTool.HandlerServices<Tools>, McpServerClient>> =>
+  Layer.effectDiscard(registerSanitizedToolkit(toolkit)).pipe(Layer.provide(McpServer.McpServer.layer));

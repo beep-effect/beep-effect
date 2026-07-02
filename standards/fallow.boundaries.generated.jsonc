@@ -540,6 +540,12 @@
         ]
       },
       {
+        "name": "@beep/uspto-mcp",
+        "patterns": [
+          "packages/drivers/uspto-mcp/src/**"
+        ]
+      },
+      {
         "name": "@beep/utils",
         "patterns": [
           "packages/foundation/modeling/utils/src/**"
@@ -1436,12 +1442,14 @@
         "allow": [
           "@beep/identity",
           "@beep/m365",
-          "@beep/m365-mcp"
+          "@beep/m365-mcp",
+          "@beep/mcp-kit"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/m365",
-          "@beep/m365-mcp"
+          "@beep/m365-mcp",
+          "@beep/mcp-kit"
         ]
       },
       {
@@ -1494,6 +1502,7 @@
         "allow": [
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/mcp-kit",
           "@beep/nlp-mcp",
           "@beep/nlp-processing",
           "@beep/schema",
@@ -1502,6 +1511,7 @@
         "allowTypeOnly": [
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/mcp-kit",
           "@beep/nlp-mcp",
           "@beep/nlp-processing",
           "@beep/schema",
@@ -2092,6 +2102,25 @@
           "@beep/test-utils",
           "@beep/uspto",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/uspto-mcp",
+        "allow": [
+          "@beep/identity",
+          "@beep/mcp-kit",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/uspto",
+          "@beep/uspto-mcp"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/mcp-kit",
+          "@beep/schema",
+          "@beep/test-utils",
+          "@beep/uspto",
+          "@beep/uspto-mcp"
         ]
       },
       {

@@ -61,6 +61,7 @@
   "dependencies": {
     "@beep/file-processing": "workspace:^",
     "@beep/identity": "workspace:^",
+    "@beep/mcp-kit": "workspace:^",
     "@beep/nlp-processing": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/wink": "workspace:^",
