@@ -4,19 +4,12 @@
     "slug": "identity-as-iri",
     "title": "Identity as IRI",
     "status": "active",
-    "stage": "align",
+    "stage": "shape",
     "openQuestions": [
-      "Packaging seam: all-in-@beep/identity (user lean, cycle argument) vs pure-kernel/runtime split (mining-corpus lean, synthesis §5) — where does the vocab registry live?",
-      "D7: relational facts inline on $I.class (is:), fold-only triples, or both channels? (fold-first regardless; corpus gives hybrid pressure, stays open by authority)",
-      "SemanticSchemaMetadata fate: absorb/layer/deprecate — audit recommendation on file in research/10-audit-semantic-schema-metadata.md",
-      "Authority host: https://ns.beep.sh/ is a placeholder — confirm before composer-binding phase merges",
-      "$I.key: keep curried typed-path form (annoteKey<Parent>()) or struct-key default only?",
-      "Registry service naming + placement (OntologyRegistry? IdentityRegistry?)",
-      "Apply goals/ontology-modeling-foundation supersession edit (specified in research/12-audit-goals-supersession.md)?"
+      "DEFERRED — authority host: https://ns.beep.sh/ placeholder stands; confirm before the composer-binding phase merges (DECISIONS 2026-07-02)",
+      "BRIEF.md review: does the shaped pitch match elpresidank's picture?"
     ],
-    "sources": [
-      "research/SOURCES.md"
-    ],
+    "sources": ["research/SOURCES.md"],
     "links": {
       "goals": [],
       "docs": [],

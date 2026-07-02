@@ -2,7 +2,7 @@
 
 ## Status
 
-Stage: `align`
+Stage: `shape`
 Status: `active`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -19,13 +19,18 @@ kit for deterministic agent metadata retrieval.
 
 ## Next Open Question
 
-Research complete (specs + 12-repo mining + audits + verified synthesis).
-Next: align session on the packaging seam — the mining corpus recommends a
-pure-kernel/runtime split and pushes back on all-in-`@beep/identity`
-([`research/20-repo-mining-synthesis.md`](./research/20-repo-mining-synthesis.md)
-§5 + arbitration in [`RESEARCH.md`](./RESEARCH.md)) — plus
-SemanticSchemaMetadata fate (audit recommendation on file) and D7. Then the
-`scratchpad/identity` prototype per the corrected 12-step guidance.
+Prototype COMPLETE (2026-07-02 01:54): `scratchpad/identity/` proves the
+design end-to-end — Vocab literal types → CURIE codec → PN_LOCAL codec →
+Composer (literal iri/curie, rebase, interning) → tuple grammar +
+`$I.ontology` fold (D4/D5/D6/D9 enforced, AST datatype/object inference,
+typed error taxonomy) → JSON-LD/@context/Turtle pure projections
+(`@reverse` for `^curie`, full-IRI fallback for unsafe locals). 27/27 tests
+green including the effect-only purity gate (~1.6K LOC). Guidance steps
+10–12 (SHACL-as-data, IdentityRegistry index, drift canaries) are Phase-4
+scope, intentionally not prototyped. NEXT: decompose stage — MAP.md naming
+the goal packets (one per handoff phase) with the prototype as capability
+evidence; also decide when to commit the working tree (~20 files
+uncommitted). Deferred: authority host.
 
 ## Read This First
 
@@ -40,6 +45,28 @@ SemanticSchemaMetadata fate (audit recommendation on file) and D7. Then the
 
 ## Trail
 
+- 2026-07-02 (01:54): prototype COMPLETE — resumed post-restart, fresh codex
+  builders shipped `Ontology.ts` (fold, 591 LOC) and `Projections.ts`
+  (JSON-LD/@context/Turtle, 360 LOC; builder self-healed 2 test failures);
+  27/27 tests green, purity gate holds. The superseded
+  `goals/ontology-modeling-foundation` GOAL mission (annotated schemas →
+  JSON-LD/Turtle) is now demonstrated by the superseding design. Stopped
+  at: decompose (MAP.md).
+- 2026-07-02 (01:30, paused for PC restart): prototype build launched under
+  `/goal` (treated as BRIEF approval; goal = superseded
+  `goals/ontology-modeling-foundation` → redirect here). Codex builders
+  shipped `scratchpad/identity/{Vocab,Curie,PnLocal,Composer}.ts` + tests —
+  20/20 green, purity gate enforced. Fold builder (Ontology.ts) was in
+  flight when paused; relaunch fresh. Then projections. All work
+  uncommitted in the working tree.
+- 2026-07-02: align completed in one grilling session — packaging seam (pure
+  core in identity, runtime downstream), SemanticSchemaMetadata (layer +
+  deprecate address fields), D7 (fold-first, inline as strict sugar), $I.key
+  (struct-key only), IdentityRegistry naming, authority host DEFERRED; all in
+  [`DECISIONS.md`](./DECISIONS.md). Applied the
+  `goals/ontology-modeling-foundation` supersession (README/SPEC/manifest +
+  `goals/README.md` index + interop-roadmap caveat). Drafted
+  [`BRIEF.md`](./BRIEF.md); stage → `shape`. Stopped at: BRIEF review.
 - 2026-07-01 (night): research stage completed — 3 spec docs
   ([`research/specs/`](./research/specs/)), 12 repo-mining reports
   ([`research/repos/`](./research/repos/), licenses verified, 3

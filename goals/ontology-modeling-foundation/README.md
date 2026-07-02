@@ -2,7 +2,17 @@
 
 ## Status
 
-**ACTIVE - POC implementation in progress**
+Lifecycle: `reference`
+
+Status: `superseded`
+
+Superseded by:
+[`explorations/identity-as-iri`](../../explorations/identity-as-iri) — the
+identity-as-IRI design replaces this packet's `Ontology.create(...)` authoring
+API with composer-derived `$I.key` / `$I.class` / `$I.ontology`; the
+projections, assembly pipeline, and error taxonomy survive as salvage (see the
+handoff in that packet's `assets/`). Supersession audit:
+[`research/12-audit-goals-supersession.md`](../../explorations/identity-as-iri/research/12-audit-goals-supersession.md).
 
 ## Owner
 

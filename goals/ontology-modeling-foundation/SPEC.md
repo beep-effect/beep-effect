@@ -2,7 +2,9 @@
 
 ## Status
 
-**ACTIVE**
+**SUPERSEDED / reference only** — superseded by
+[`explorations/identity-as-iri`](../../explorations/identity-as-iri). Do not
+implement from this SPEC.
 
 ## Mission
 
@@ -47,6 +49,13 @@ capabilities can live here without forcing ontology authoring into the same
 package.
 
 ## Authoring Contract
+
+> **DEAD PRIOR ART.** The `Ontology.create(...)` authoring API below is
+> retained only as prior-art context. It is replaced by composer-derived
+> `$I.key` / `$I.class` / `$I.ontology`
+> ([`explorations/identity-as-iri`](../../explorations/identity-as-iri)); the
+> handoff explicitly kills `Ontology.create`, `createOntologyIdentity`, the
+> reference synonym set, and runtime draft sniffing.
 
 The public POC syntax is:
 

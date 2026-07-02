@@ -221,7 +221,7 @@
       "status": "candidate",
       "owner": "@beep/mcp-kit",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 156,
+      "line": 158,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual"]

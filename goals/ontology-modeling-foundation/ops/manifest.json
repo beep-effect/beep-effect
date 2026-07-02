@@ -3,11 +3,14 @@
   "initiative": {
     "id": "ontology-modeling-foundation",
     "title": "Ontology Modeling Foundation",
-    "status": "active",
+    "status": "superseded-reference",
     "created": "2026-06-04",
-    "updated": "2026-06-04",
-    "packetAnchorDocument": "SPEC.md"
+    "updated": "2026-07-02",
+    "packetAnchorDocument": "SPEC.md",
+    "supersededBy": "explorations/identity-as-iri"
   },
+  "lifecycle": "reference",
+  "executionCapable": false,
   "mission": "Promote the ontology builder into foundation modeling packages built around @beep/rdf and @beep/ontology while preserving @beep/semantic-web compatibility.",
   "currentSourceOfTruth": "SPEC.md",
   "currentTargetPhase": "P3",

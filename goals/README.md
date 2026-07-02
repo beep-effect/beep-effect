@@ -183,9 +183,10 @@ commands below as the source of truth when the snapshot drifts.
   Tika/libpff driver split, and `beep files process` proof packet.
 - `ip-law-knowledge-graph`
 - `oip-web-production-hardening`
-- `ontology-modeling-foundation` — foundation modeling packet for the
-  `@beep/rdf` and `@beep/ontology` package split and schema-annotation ontology
-  builder POC.
+- `ontology-modeling-foundation` — superseded/reference-only (its
+  `Ontology.create` authoring POC is dead prior art); replaced by
+  [`explorations/identity-as-iri`](../explorations/identity-as-iri). The
+  `@beep/rdf`/`@beep/ontology` package-split evidence remains useful.
 - `oip-web-launch` — implementation complete; launch review pending.
 - `repo-codegraph` — deterministic-first codegraph lookup and retrieval
   implementation packet.

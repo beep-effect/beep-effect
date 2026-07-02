@@ -18,7 +18,14 @@ Lifecycle: `completed-retained`
 ## Purpose
 
 This packet plans the next ontology interop phase after
-[`goals/ontology-modeling-foundation`](../ontology-modeling-foundation). It
+[`goals/ontology-modeling-foundation`](../ontology-modeling-foundation)
+(now superseded/reference-only). Authoring-surface caveat: wherever this
+packet's research treats `Ontology.create(...)` helpers as current surface,
+read them as dead prior art — the authoring API is replaced by
+composer-derived `$I.key` / `$I.class` / `$I.ontology` per
+[`explorations/identity-as-iri`](../../explorations/identity-as-iri); this
+packet's SKOS/docs/schema/provenance interop findings and package-boundary
+assignments remain valid. It
 keeps the implementation target inside the existing foundation modeling
 packages:
 
