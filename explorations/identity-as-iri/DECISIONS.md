@@ -127,14 +127,22 @@ fiber source among several (annotations, docs, provenance). Rejected:
 `OntologyRegistry` (names one use case, reads narrower than the interface),
 bare `Registry` (leans entirely on package namespace).
 
-## 2026-07-02 — authority host (DEFERRED)
+## 2026-07-02 — authority host (RESOLVED)
 
 **Question:** What real authority host replaces the `https://ns.beep.sh/`
 placeholder?
 
-**Answer:** DEFERRED by elpresidank (2026-07-01): keep the placeholder;
-decide before the composer-binding phase merges. `rebase` makes this safe to
-defer — the default just should be right before it ships.
+**Answer:** `https://ns.beep.sh/` CONFIRMED as the real authority
+(elpresidank, 2026-07-02, at `goals/identity-iri-core` P0). Every beep
+identity derives its IRI from this root; published vocabularies may still
+`rebase` per-module (e.g. opip.law namespaces).
+
+**Rationale:** Purpose-built `ns.` subdomain on a beep-owned domain; matches
+the handoff, prototype, and spec examples; slash-style per-term dereference
+remains servable there. Rejected: oip.law namespace (anchors repo-wide
+identity to one client vertical); deciding at PR review (no new information
+would arrive). Originally DEFERRED 2026-07-01; resolved when the core packet
+launched.
 
 ## 2026-07-02 — apply goals supersession now
 

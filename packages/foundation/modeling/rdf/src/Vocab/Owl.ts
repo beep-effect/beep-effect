@@ -25,6 +25,47 @@ import { makeNamedNode } from "../Rdf.ts";
 export const OWL_NAMESPACE = "http://www.w3.org/2002/07/owl#" as const;
 
 /**
+ * OWL local-name inventory mirrored by `@beep/identity`.
+ *
+ * @example
+ * ```ts
+ * import { OWL_TERMS } from "@beep/rdf/Vocab/Owl"
+ *
+ * console.log(OWL_TERMS.includes("ObjectProperty")) // true
+ * ```
+ *
+ * @since 0.0.0
+ * @category constants
+ */
+export const OWL_TERMS = [
+  "AnnotationProperty",
+  "AsymmetricProperty",
+  "Class",
+  "DatatypeProperty",
+  "FunctionalProperty",
+  "InverseFunctionalProperty",
+  "IrreflexiveProperty",
+  "NamedIndividual",
+  "Nothing",
+  "ObjectProperty",
+  "Ontology",
+  "ReflexiveProperty",
+  "SymmetricProperty",
+  "Thing",
+  "TransitiveProperty",
+  "backwardCompatibleWith",
+  "deprecated",
+  "equivalentClass",
+  "equivalentProperty",
+  "imports",
+  "incompatibleWith",
+  "inverseOf",
+  "priorVersion",
+  "sameAs",
+  "versionInfo",
+] as const;
+
+/**
  * `owl:Class`
  *
  * @example

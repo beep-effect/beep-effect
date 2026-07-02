@@ -15,6 +15,20 @@
  */
 
 /**
+ * CURIE expansion, contraction, and schema codecs for identity vocabularies.
+ *
+ * @example
+ * ```typescript
+ * import { expand } from "@beep/identity"
+ *
+ * console.log(expand("skos:prefLabel"))
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export * from "./Curie.ts";
+/**
  * Identity system core -- composers, annotations, and branded types.
  *
  * @example
@@ -30,6 +44,20 @@
  */
 export * from "./Id.ts";
 /**
+ * Turtle PN_LOCAL parser-side helpers and safe emission fallback.
+ *
+ * @example
+ * ```typescript
+ * import { prefixedNameOrIri } from "@beep/identity"
+ *
+ * console.log(prefixedNameOrIri("skos", "prefLabel", "http://www.w3.org/2004/02/skos/core#prefLabel"))
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
+export * from "./PnLocal.ts";
+/**
  * Pre-built identity composers for every `@beep/*` workspace package.
  *
  * @example
@@ -43,3 +71,17 @@ export * from "./Id.ts";
  * @since 0.0.0
  */
 export * from "./packages.ts";
+/**
+ * Static borrowed vocabulary registry and literal CURIE type helpers.
+ *
+ * @example
+ * ```typescript
+ * import { CoreVocab } from "@beep/identity"
+ *
+ * console.log(CoreVocab.rdf.iri)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export * from "./Vocab.ts";

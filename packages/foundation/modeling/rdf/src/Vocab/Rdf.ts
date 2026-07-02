@@ -25,6 +25,39 @@ import { makeNamedNode } from "../Rdf.ts";
 export const RDF_NAMESPACE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#" as const;
 
 /**
+ * Finite RDF local-name inventory mirrored by `@beep/identity`.
+ *
+ * @example
+ * ```ts
+ * import { RDF_TERMS } from "@beep/rdf/Vocab/Rdf"
+ *
+ * console.log(RDF_TERMS.includes("type")) // true
+ * ```
+ *
+ * @since 0.0.0
+ * @category constants
+ */
+export const RDF_TERMS = [
+  "Alt",
+  "Bag",
+  "HTML",
+  "List",
+  "Property",
+  "Seq",
+  "Statement",
+  "XMLLiteral",
+  "first",
+  "langString",
+  "nil",
+  "object",
+  "predicate",
+  "rest",
+  "subject",
+  "type",
+  "value",
+] as const;
+
+/**
  * `rdf:type`
  *
  * @example

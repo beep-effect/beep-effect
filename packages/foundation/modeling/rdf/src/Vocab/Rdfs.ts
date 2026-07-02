@@ -25,6 +25,37 @@ import { makeNamedNode } from "../Rdf.ts";
 export const RDFS_NAMESPACE = "http://www.w3.org/2000/01/rdf-schema#" as const;
 
 /**
+ * Complete RDFS local-name inventory mirrored by `@beep/identity`.
+ *
+ * @example
+ * ```ts
+ * import { RDFS_TERMS } from "@beep/rdf/Vocab/Rdfs"
+ *
+ * console.log(RDFS_TERMS.includes("subClassOf")) // true
+ * ```
+ *
+ * @since 0.0.0
+ * @category constants
+ */
+export const RDFS_TERMS = [
+  "Class",
+  "Container",
+  "ContainerMembershipProperty",
+  "Datatype",
+  "Literal",
+  "Resource",
+  "comment",
+  "domain",
+  "isDefinedBy",
+  "label",
+  "member",
+  "range",
+  "seeAlso",
+  "subClassOf",
+  "subPropertyOf",
+] as const;
+
+/**
  * `rdfs:label`
  *
  * @example

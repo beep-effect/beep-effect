@@ -5,9 +5,7 @@
     "title": "Identity as IRI",
     "status": "active",
     "stage": "graduate",
-    "openQuestions": [
-      "DEFERRED — authority host: https://ns.beep.sh/ placeholder stands; confirm before goals/identity-iri-core merges (DECISIONS 2026-07-02)"
-    ],
+    "openQuestions": [],
     "sources": ["research/SOURCES.md"],
     "links": {
       "goals": ["goals/identity-iri-core"],

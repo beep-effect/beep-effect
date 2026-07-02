@@ -26,6 +26,54 @@ import { makeNamedNode } from "../Rdf.ts";
 export const SKOS_NAMESPACE = "http://www.w3.org/2004/02/skos/core#" as const;
 
 /**
+ * Complete SKOS core local-name inventory mirrored by `@beep/identity`.
+ *
+ * @example
+ * ```ts
+ * import { SKOS_TERMS } from "@beep/rdf/Vocab/Skos"
+ *
+ * console.log(SKOS_TERMS.includes("prefLabel")) // true
+ * ```
+ *
+ * @since 0.0.0
+ * @category constants
+ */
+export const SKOS_TERMS = [
+  "Collection",
+  "Concept",
+  "ConceptScheme",
+  "OrderedCollection",
+  "altLabel",
+  "broadMatch",
+  "broader",
+  "broaderTransitive",
+  "changeNote",
+  "closeMatch",
+  "definition",
+  "editorialNote",
+  "exactMatch",
+  "example",
+  "hasTopConcept",
+  "hiddenLabel",
+  "historyNote",
+  "inScheme",
+  "mappingRelation",
+  "member",
+  "memberList",
+  "narrowMatch",
+  "narrower",
+  "narrowerTransitive",
+  "notation",
+  "note",
+  "prefLabel",
+  "related",
+  "relatedMatch",
+  "scopeNote",
+  "semanticRelation",
+  "topConceptOf",
+] as const;
+
+/**
  * `skos:Concept`
  *
  * @example
