@@ -130,6 +130,18 @@ The lego pieces already built. Authoritative inventories (link, never copy):
   provenance ledger (mined nuggets + upstream repos/licenses + external
   citations + in-repo bricks), registered in its manifest and cross-linked
   exploration↔goal (2026-06-30). Next: `/grill-with-docs` the four graduate-now wedges → shape → decompose → graduate.
+- [`identity-as-iri`](./identity-as-iri/README.md) (opened 2026-07-01, at
+  `research`) — merge `IdentityComposer`, the ontology layer, and fibered
+  metadata retrieval: identity path and IRI as two literal-typed encodings of
+  one value, borrowed RDF vocab as CURIE literal types, `$I.ontology` fold
+  over triples-as-tuples, `Fibered` kit from the `JSDocTagDefinition.make`
+  pattern. Seeded from a locked design handoff
+  ([`assets/identity-iri-fibration-handoff.md`](./identity-as-iri/assets/identity-iri-fibration-handoff.md),
+  D1–D9). Exploration's job: first-principles spec grounding (RFC/W3C prose),
+  repo audits (`SemanticSchemaMetadata`, `Id.ts` coupling, supersede
+  `goals/ontology-modeling-foundation`), and an effect-only scratchpad
+  prototype proving types/ergonomics before the packaging call
+  (all-in-`@beep/identity` vs identity/rdf/ontology split).
 
 ### Proposed
 

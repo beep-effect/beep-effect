@@ -1,0 +1,2786 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<agent_context_packet version="1.0" xml:lang="en">
+  <metadata>
+    <title>Identity as IRI, Ontology Specifications, and Fibered Metadata Retrieval</title>
+    <created_at>2026-07-01</created_at>
+    <source_file path="/home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/Exploring ontology specifications and semantic standards.md" line_count="1829" byte_size="136259" />
+    <handoff_file path="/home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/identity-iri-fibration-handoff.md" present="true" />
+    <intended_consumers>
+      <consumer>Fable / Claude Code on elpresidank workstation</consumer>
+      <consumer>Codex or other repo agents working in beep-effect</consumer>
+    </intended_consumers>
+    <status>Curated from pasted conversation; use distilled sections as the main task brief and raw turns as provenance.</status>
+  </metadata>
+
+  <research_basis>
+    <source name="Anthropic Prompting Best Practices" url="https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/claude-prompting-best-practices">
+      <takeaway>Use clear, descriptive XML tags; nest naturally; wrap examples; put long document data near the top; put the query/instructions after the long context; use explicit output constraints.</takeaway>
+    </source>
+    <source name="Anthropic Effective Context Engineering for AI Agents" url="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">
+      <takeaway>Treat context as finite and curated; agents perform better when relevant state is organized, scoped, and retrievable rather than dumped as an undifferentiated transcript.</takeaway>
+    </source>
+  </research_basis>
+
+  <how_to_use>
+    <priority_order>
+      <step order="1">Read &lt;distilled_summary&gt;, &lt;decision_log&gt;, and &lt;open_questions&gt; before reading raw transcript turns.</step>
+      <step order="2">Use &lt;attachments&gt; to locate live source files. Verify repo claims against current checkout before implementation.</step>
+      <step order="3">Treat &lt;model_trace&gt; sections as provenance only. They may explain how an idea emerged, but they are not authoritative facts.</step>
+      <step order="4">Use &lt;raw_conversation&gt; only when the distilled handoff omits nuance.</step>
+    </priority_order>
+    <agent_instructions>
+      <instruction>Preserve the existing beep-effect house style: Effect-first, schema-first, typed errors, literal-preserving identity helpers, and narrow source verification.</instruction>
+      <instruction>Do not treat @beep identity strings and external RDF IRIs as the same annotation key. Owned identity belongs in identifier/schemaId/iri/curie; borrowed RDF vocabulary belongs in a dedicated term slot.</instruction>
+      <instruction>Do not resurrect the old Ontology.create authoring API or synonym helpers as peers of the new general triple channel.</instruction>
+      <instruction>Implement fold-level triples first; inline relationship syntax remains open until the user decides.</instruction>
+    </agent_instructions>
+  </how_to_use>
+
+  <attachments>
+    <attachment index="1"><![CDATA[[Ontology.model.ts](/home/elpresidank/YeeBois/projects/beep-effect3/packages/foundation/modeling/ontology/src/Ontology.models.ts)]]></attachment>
+    <attachment index="2"><![CDATA[old version of [@beep/ontology](/home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/)]]></attachment>
+    <attachment index="3"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/annotations.ts]]></attachment>
+    <attachment index="4"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/assembly.ts]]></attachment>
+    <attachment index="5"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/create.ts]]></attachment>
+    <attachment index="6"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/index.ts]]></attachment>
+    <attachment index="7"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/model.ts]]></attachment>
+    <attachment index="8"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/references.ts]]></attachment>
+    <attachment index="9"><![CDATA[- projections]]></attachment>
+    <attachment index="10"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/projections/jsonld.ts]]></attachment>
+    <attachment index="11"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/projections/markdown.ts]]></attachment>
+    <attachment index="12"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/projections/skos.ts]]></attachment>
+    <attachment index="13"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/projections/turtle.ts]]></attachment>
+    <attachment index="14"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/test/Ontology.test.ts]]></attachment>
+    <attachment index="15"><![CDATA[current [@beep/identity](/home/elpresidank/YeeBois/projects/beep-effect3/packages/foundation/modeling/identity/src/Id.ts)]]></attachment>
+    <attachment index="16" role="existing_handoff" path="/home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/identity-iri-fibration-handoff.md">Existing Markdown handoff distilled during the source conversation.</attachment>
+  </attachments>
+
+  <distilled_summary>
+    <mission><![CDATA[Promote IdentityComposer from a type-safe @beep path builder into a literal-preserving IRI/CURIE authority. Bake core RDF vocabulary into the composer as type-safe CURIE strings, expose terse $I.key/$I.class/$I.ontology APIs, model ontology relations as triples-as-tuples, and generalize the JSDoc display-map metadata pattern into a Fibered kit for deterministic agent context retrieval.]]></mission>
+    <core_insights>
+      <insight id="i1">$I is an IRI minting authority with an interned in-memory identity handle, not merely a string path helper.</insight>
+      <insight id="i2">Effect Schema annotations can act as RDF predicate metadata: one AST can project to JSON-LD contexts, SHACL shapes, Turtle, docs, OpenAPI, and MCP/agent retrieval surfaces.</insight>
+      <insight id="i3">Borrowed vocabularies should be data, not import-heavy helper constants at authoring sites. CURIE literals such as skos:prefLabel and ^rdfs:subClassOf preserve terseness, static extraction, and spec-native notation.</insight>
+      <insight id="i4">The desired ontology module shape is a graph fold, not a bespoke tree. The tree browser is a projection over triples.</insight>
+      <insight id="i5">The JSDoc metadata pattern factors constant fibers out of fat Sigma-types: runtime values remain thin while metadata is recovered deterministically through the display map and schema AST annotations.</insight>
+    </core_insights>
+  </distilled_summary>
+
+  <decision_log>
+    <decision id="d1" status="locked">Authority binding belongs at the root make() call and is inherited through create().</decision>
+    <decision id="d2" status="default">Use slash IRIs for the mechanical @beep mapping; allow hash IRIs through rebase for published vocabularies.</decision>
+    <decision id="d3" status="locked">Borrowed vocabulary is a built-in CURIE literal type. Use SPARQL inverse path syntax with ^ for reverse direction.</decision>
+    <decision id="d4" status="locked">Relation endpoints should be schema handles, known CURIEs, or absolute IRI literals. Do not use string reference wrappers.</decision>
+    <decision id="d5" status="locked">Predicate local names default to the struct key; explicit overrides are only for custom cases.</decision>
+    <decision id="d6" status="locked">Relational facts are triples-as-tuples: [Subject, Predicate, Object].</decision>
+    <decision id="d7" status="open">Decide whether relational facts live only in the $I.ontology fold, inline at class sites, or both with one tuple grammar.</decision>
+    <decision id="d8" status="locked">Extract the discrete Grothendieck fibration/display-map metadata pattern into a reusable Fibered kit.</decision>
+    <decision id="d9" status="locked">Owned identity metadata and borrowed RDF vocabulary must use separate annotation channels.</decision>
+  </decision_log>
+
+  <open_questions>
+    <question id="q1">What real public authority host should replace placeholder values such as https://ns.beep.sh/ when publishing @beep IRIs?</question>
+    <question id="q2">Should relationship triples be fold-only, inline-only, or both? Current recommendation is both eventually, but implement fold-level triples first.</question>
+    <question id="q3">Should the Fibered kit live in @beep/ontology or a vocabulary-agnostic shared schema package after the first implementation proves its shape?</question>
+  </open_questions>
+
+  <implementation_packet>
+    <phase id="p1" name="RDF vocabulary and CURIE codec">
+      <task>Create a core vocab registry with literal term unions for rdf, rdfs, skos, owl, dcterms, xsd, and extension support.</task>
+      <task>Implement Curie, Predicate, Expand, and value-level expand/contract codecs with schema errors for unknown prefixes.</task>
+    </phase>
+    <phase id="p2" name="IdentityComposer IRI projection">
+      <task>Add authority/prefix binding at make(); thread vocab and binding through create().</task>
+      <task>Add literal typed iri/curie projections and rebase without changing identifier or schemaId.</task>
+      <task>Add $I.key for borrowed predicates with term metadata separate from identifier.</task>
+    </phase>
+    <phase id="p3" name="Ontology fold">
+      <task>Implement $I.ontology({ label, schemas, triples }) as the primary graph fold.</task>
+      <task>Resurrect JSON-LD, Turtle, Markdown, and SKOS projections from the old ontology package where useful.</task>
+      <task>Infer datatype/object properties from schema AST instead of requiring author declarations.</task>
+    </phase>
+    <phase id="p4" name="Fibered metadata retrieval">
+      <task>Generalize JSDocTagDefinition.make into a Fibered kit for base literals, per-case schemas, sections, and projections.</task>
+      <task>Wire deterministic metadata retrieval: value -> display map -> identity/IRI -> local annotation fiber + graph/docs/provenance fibers.</task>
+      <task>Expose task-indexed projection policies for agent context injection and structured output grounding.</task>
+    </phase>
+  </implementation_packet>
+
+  <handoff_markdown path="/home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/identity-iri-fibration-handoff.md">
+<![CDATA[# Identity as IRI — Design Handoff
+
+**Merging `IdentityComposer`, the ontology layer, and fibered metadata retrieval**
+
+> Handoff target: Fable (Claude Code) working in `beep-effect`.
+> Author of record: elpresidank, distilled from a design session on 2026-07-01.
+> Status: design locked except where marked **OPEN**. Defaults below stand unless vetoed.
+
+---
+
+## 0. Mission
+
+Promote `@beep/identity`'s `IdentityComposer` from a typesafe path builder into a
+**fully compliant, literal-preserving IRI builder**, bake borrowed RDF vocabulary
+(SKOS/RDFS/OWL/DC/RDF) into the composer as a **CURIE literal type** (zero import
+duty at usage sites), replace the deleted `@beep/ontology` authoring API with a
+terse `$I.ontology` fold over **triples-as-tuples**, and extract the
+**Grothendieck-fibration metadata pattern** already proven in
+`JSDocTagDefinition.make` into a reusable `Fibered` kit that gives O(path-length)
+deterministic metadata retrieval for agents (context injection, structured
+output grounding).
+
+One sentence: **the identity path and the IRI become two literal-typed encodings
+of the same value; annotations become sections over the base category `$I`
+mints; retrieval becomes dereference.**
+
+---
+
+## 1. Context and constraints
+
+- **Effect v4** (`effect@4.x`). Service identity via `ServiceMap.Service` —
+  `Context.Tag` does not exist in v4. Do not import from `@effect/schema`
+  (deprecated); use `effect/Schema` as `S`.
+- House conventions are non-negotiable and enforced by the
+  `jsdoc-annotation-specialist` skill (`.patterns/jsdoc-documentation.md` is the
+  source of truth). Every export: JSDoc with `@example`, `@category` (lowercase),
+  `@since 0.0.0`. Every schema: `$I.annote` / `$I.annoteSchema` / `.annotate($I.annote(...))`
+  per shape. Same-name type alias after every non-class schema export. Run
+  `bun run docgen` until green.
+- The file-local convention `const $I = $SomePackageId.create("path/to/module")`
+  as the first constant of nearly every file **must not change shape**. All new
+  power arrives through the root `make()` call and new methods on the composer.
+- The interpolation ban on identity template tags is **load-bearing**: every
+  identity and every borrowed-vocab reference must remain a static literal,
+  statically extractable without executing code (`grep`-harvestable). No design
+  below may introduce runtime-computed IRIs or CURIEs.
+- Prior art to resurrect selectively: the deleted `@beep/ontology` package
+  (draft→assembly pipeline, JSON-LD/Turtle/Markdown projections, SKOS profiles,
+  `OntologyAssemblyError` taxonomy). The projections and assembly walker are
+  good; the authoring API (`Ontology.create`, `createOntologyIdentity`, the
+  eight-way `ref`/`parent`/`child`/`exact`/... synonym set, runtime draft
+  sniffing, string term references) is dead and stays dead.
+- Existing vocab constant modules `@beep/rdf/Vocab/{Skos,Rdfs,Owl,Rdf,Xsd}`
+  become the **source** for the type-level vocab registry (generate the literal
+  unions from them, or move both to a shared generated artifact). They stop
+  appearing at authoring call sites.
+
+### Packages touched
+
+| Package | Change |
+|---|---|
+| `@beep/identity` | Root binding (`authority`, `prefix`, `vocab`), IRI/CURIE derivation, `rebase`, `key`, `class`, `ontology`, second type param `V` |
+| `@beep/rdf` | Vocab registry as data + literal types; CURIE expand/contract codec; PN_LOCAL escaping util |
+| `@beep/ontology` (new) | The fold, projections (resurrected), `Fibered` kit, registry service |
+| `@beep/schema` | Possibly hosts `Fibered` if it is deemed vocabulary-agnostic (judgment call — see Open Questions) |
+
+---
+
+## 2. Decisions
+
+Marked **LOCKED** (agreed in session), **DEFAULT** (recommended, proceed unless
+vetoed), or **OPEN** (blocked on elpresidank).
+
+- **D1 — Authority binding is total, at the root. LOCKED.**
+  `make("beep", { authority: "https://ns.beep.sh/", prefix: "beep", vocab })`.
+  Every composer monorepo-wide derives `.iri`/`.curie` mechanically from its
+  path. Even never-published identities get canonical IRIs (provenance needs
+  them).
+- **D2 — Slash IRIs for the mechanical mapping; hash allowed via `rebase`. DEFAULT.**
+  Internal: `https://ns.beep.sh/ontology/Ontology.models/HttpUrl`. Published
+  vocabularies may rebase to hash namespaces
+  (`https://opip.law/ns/patent#Claim`). Rationale: slash → per-term
+  dereference/docs pages (explore/tree ambition); hash → single-document
+  vocabularies, friendlier Turtle prefixed names.
+- **D3 — Borrowed vocabulary is a CURIE literal type baked into the composer. LOCKED.**
+  `"skos:prefLabel"`, `"rdfs:subClassOf"`, with SPARQL property-path inverse
+  syntax `"^rdfs:subClassOf"` for reverse direction (replaces any
+  `reverse: true` flag; makes the `parent_class_of` direction bug
+  unrepresentable). Zero imports at usage sites. Turtle-isomorphic notation.
+  Extensible at the root (`vocab: { folio: ... }`) — inherited silently through
+  every `create`.
+- **D4 — References are handles, never strings. LOCKED.**
+  Relation endpoints accept: a schema (resolved via `schemaId`), a known CURIE,
+  or an absolute IRI literal. No `Ont.ref`-style wrappers. Typos in schema
+  references are compile errors.
+- **D5 — Predicate local names default to the struct key. LOCKED.**
+  `$I.key("skos:prefLabel")` in a pipe needs no name argument; the assembly
+  walker reads the field name (the old assembly already did —
+  `unsupportedFieldName` proves it). Explicit override for custom-IRI cases.
+- **D6 — Relational facts are triples-as-tuples. LOCKED.**
+  `[Subject, Predicate, Object]` where `Predicate` is the CURIE literal type.
+  The relation set is predicate-open; the metadata model stays tiny (kills the
+  old 18-field draft records). Datatype-vs-object property is **inferred** from
+  the AST at fold time (scalar-valued key → `owl:DatatypeProperty`,
+  schema-valued key → `owl:ObjectProperty`), never declared.
+- **D7 — Where relational facts live: OPEN.**
+  (a) inline at the class site as predicate–object pairs
+  (`$I.class("Claim", { is: [["rdfs:subClassOf", "folio:Document"]] })`),
+  (b) only at the `$I.ontology` fold (`triples: [...]`), or (c) both channels,
+  one tuple grammar, fold merges. Recommendation on file: **(c)** — intrinsic
+  facts read best at the class, cross-module wiring at the fold, and it dodges
+  import cycles. Risk: two-ways-to-do-everything. **Implement the fold channel
+  first regardless** (it is required either way); add the inline channel only
+  after D7 is answered.
+- **D8 — The fibration pattern becomes a first-class kit. LOCKED.**
+  Generalize `JSDocTagDefinition.make`'s factoring (constant-per-tag metadata
+  moved from the value Σ-type into per-case AST annotations, recovered via the
+  display map) into `Fibered` (§6).
+- **D9 — Owned/borrowed annotation channels never share a key. LOCKED.**
+  The `identifier` annotation belongs to owned `@beep` identities exclusively.
+  Borrowed predicates ride a dedicated `term` slot (written by `$I.key`). This
+  retro-fixes the `Ontology_models.ts` overloading (§8).
+
+---
+
+## 3. Type-level machinery (`@beep/rdf` + `@beep/identity`)
+
+### 3.1 Vocab registry
+
+One generated/curated data module; literal types derived from it. The registry
+is itself a **section over the discrete base of prefixes** — model it as data
+first, types second (the schema is truth):
+
+```ts
+// @beep/rdf — shape sketch (names final, term lists per the W3C specs)
+type VocabShape = Record<string, { readonly iri: string; readonly terms: string }>;
+
+interface CoreVocab extends VocabShape {
+  rdf:     { iri: "http://www.w3.org/1999/02/22-rdf-syntax-ns#"; terms: "type" | "value" | "first" | "rest" | /* … */ };
+  rdfs:    { iri: "http://www.w3.org/2000/01/rdf-schema#";       terms: "label" | "comment" | "subClassOf" | "subPropertyOf" | "domain" | "range" | "seeAlso" | "isDefinedBy" | /* … */ };
+  skos:    { iri: "http://www.w3.org/2004/02/skos/core#";        terms: "prefLabel" | "altLabel" | "hiddenLabel" | "definition" | "note" | "scopeNote" | "editorialNote" | "historyNote" | "example" | "broader" | "narrower" | "related" | "exactMatch" | "closeMatch" | "broadMatch" | "narrowMatch" | "relatedMatch" | "inScheme" | "topConceptOf" | "hasTopConcept" | /* … */ };
+  owl:     { iri: "http://www.w3.org/2002/07/owl#";              terms: "Class" | "ObjectProperty" | "DatatypeProperty" | "sameAs" | "equivalentClass" | "inverseOf" | "deprecated" | /* … */ };
+  dcterms: { iri: "http://purl.org/dc/terms/";                   terms: "identifier" | "description" | "source" | "title" | "creator" | /* … */ };
+}
+```
+
+Use **`dcterms:`** (not legacy `dc/elements/1.1/`) as the default Dublin Core
+namespace (see §8 migrations).
+
+### 3.2 CURIE types
+
+```ts
+type Curie<V extends VocabShape>     = { [P in keyof V & string]: `${P}:${V[P]["terms"]}` }[keyof V & string];
+type Predicate<V extends VocabShape> = Curie<V> | `^${Curie<V>}`;
+type Expand<C extends string, V extends VocabShape> =
+  C extends `${infer P}:${infer L}` ? P extends keyof V ? `${V[P]["iri"]}${L}` : never : never;
+```
+
+Value-level `expand`/`contract` must be a **codec** (`{ decode, encode }` —
+optic-shaped, per house doctrine) with literal-preserving overloads. Both
+directions total over the registry; unknown prefixes are schema errors, never
+silent pass-through.
+
+### 3.3 Identity → IRI derivation
+
+New members of the `TitleFromIdentifier` family:
+
+```ts
+type IriFromIdentity<Authority extends string, Path extends string> = /* "@beep/a/b" → `${Authority}a/b` */;
+type CurieFromIdentity<Prefix extends string, Path extends string>  = /* "@beep/a/b" → `${Prefix}:a/b` */;
+type SlugFromIdentifier<I extends string>                           = /* kebab-case, for markdown anchors */;
+```
+
+`IdentityComposer` gains a second type parameter and three literal-typed
+getters, with the binding threaded from `make`:
+
+```ts
+export const { $BeepId } = make("beep", {
+  authority: "https://ns.beep.sh/",
+  prefix: "beep",
+  // vocab?: extensions merged into CoreVocab
+});
+
+interface IdentityComposer<Value extends string, V extends VocabShape = CoreVocab> {
+  // existing surface unchanged …
+  readonly iri:   IdentityString<IriFromIdentity<Authority, Value>>;
+  readonly curie: CurieFromIdentity<Prefix, Value>;
+  rebase<const Iri extends string, const P extends string>(opts: { iri: Iri; prefix: P }): /* IRI projection rebased; identity + symbol untouched */;
+  // new methods §4
+}
+```
+
+`rebase` changes **only** the IRI/CURIE projection. `identifier` and the
+interned symbol are immutable — renaming a public namespace must never touch
+the interning table. Annotation records written by `annote`/`annoteSchema`
+grow `iri` and `curie` fields (owned identity), all literal-typed.
+
+Turtle caveat: `/` and `.` in PN_LOCAL need escaping (`\/`) or full-IRI
+emission — this is a **projection concern** in the Turtle writer, never a model
+concern. JSON-LD contexts handle slash CURIEs natively.
+
+---
+
+## 4. Authoring API surface
+
+The composer absorbs the dead `Ontology.create` scope. Everything below derives
+`baseIri`/`prefix` from the (possibly rebased) composer — **zero plumbing**.
+
+```ts
+const $I = $SomePackageId.create("patent"); // convention unchanged
+
+// ── field predicates ───────────────────────────────────────────────
+prefLabel: S.String.pipe($I.key("skos:prefLabel")),
+children:  S.Array(S.String).pipe($I.key("^rdfs:subClassOf")),   // JSON-LD @reverse
+text:      S.NonEmptyString.pipe($I.key({ description: "Claim text." })),
+// name defaults to the struct key (D5); CURIE arg optional when the predicate
+// is owned (minted from the key name); extras bag mirrors annoteKey's.
+
+// ── classes ────────────────────────────────────────────────────────
+export class Claim extends S.Class<Claim>($I`Claim`)(
+  { /* fields */ },
+  $I.class("Claim", {
+    description: "A patent claim.",
+    // is: [["rdfs:subClassOf", "folio:Document"]],   // only if D7 = (a)|(c)
+  })
+) {}
+
+// ── the fold ───────────────────────────────────────────────────────
+const mod = $I.ontology({
+  label: "Patent Core",
+  schemas: [Claim, Spec, ClaimSet],
+  triples: [
+    [Claim,    "rdfs:subClassOf", "folio:Document"],
+    [Claim,    "owl:sameAs",      "https://schema.org/CreativeWork"],
+    [ClaimSet, "skos:related",    Spec],
+  ],
+});
+mod.toJsonLD(); mod.toTurtle(); mod.toMarkdown(); mod.context(); // + toShacl() later
+```
+
+Rules:
+
+1. `$I.key`, `$I.class`, `$I.ontology` are **nominal entrypoints with distinct
+   payload schemas** — no runtime overload sniffing, no type-guard forensics.
+2. The `triples` array is **schema-validated**
+   (`S.Tuple([Subject, Predicate, Object])` with the CURIE literal type as
+   `Predicate`; `Subject`/`Object` = schema handle | CURIE | absolute-IRI
+   literal | typed literal). The ontology definition is an instance of
+   schema-is-truth, not an exception.
+3. No synonym methods (`exact`, `sameAs`, `parent`, …). If sugar is ever
+   wanted, it is a one-line tuple factory over the general channel — never a
+   peer of it.
+4. `$I.ontology` returns an assembled value (resurrect `AssembledOntology` +
+   error taxonomy from the deleted package) whose projections are pure
+   catamorphisms. Keep the propose→gate→record split: fold validates (SKOS
+   hard failures vs warnings, unresolved handles → typed `OntologyAssemblyError`),
+   projections never fail.
+5. SKOS profiles survive as opt-in payloads on `$I.class` (`skosProfile:`),
+   ported from the old drafts but with reference targets = handles/CURIEs (D4).
+
+---
+
+## 5. Retrieval identities (why this is one system)
+
+- `$I` mints the **base category**: interned symbols are its object set at
+  runtime; IRIs are the same points on the wire. `Symbol.for` round-trips are
+  the in-memory canonical form; the CURIE/IRI codec is the transport form.
+- The fiber over an identity is a **union across stores sharing one index**:
+
+  ```
+  fiber(x) = annotations(x)      — local AST walk
+           ∪ DESCRIBE iri(x)     — Oxigraph / SPARQL
+           ∪ docs(slug(x))       — generated markdown
+           ∪ prov(x)             — PROV-O bitemporal records
+  ```
+
+  Local annotation lookup and `DESCRIBE` are the same operation over different
+  stores. Address computation is O(path length), independent of corpus size —
+  dereference, not search.
+
+---
+
+## 6. The `Fibered` kit (D8)
+
+Generalize the `JSDocTagDefinition.make` pattern. Given a discrete base, a
+functor of fiber schemas, and a constant-per-tag section, produce the tagged
+union with the section soldered onto each base point:
+
+```ts
+const JSDocTag = Fibered({
+  base:    TagName,                 // literal schema — the discrete base B
+  fibers:  TagValue.cases,          // F : B → Schemas   (varies per instance)
+  section: JSDocTagDefinitions,     // M : B → Meta      (constant per tag; schema-validated record)
+});
+
+JSDocTag.union                       // S.Union of thin members: { _tag, value } — Σ(t) F(t)
+JSDocTag.meta("param")               // M(t) — O(1), from the case map
+JSDocTag.fiberOf(value)              // display map ∘ section: value → _tag → M(t)
+JSDocTag.project(value, policy)      // task-indexed sub-section (see below)
+```
+
+Implementation notes:
+
+1. Mechanism = exactly what `make` does today: decode the section entry once
+   (validated), `mapFields` to pin `_tag` via `S.tag`, `.annotate({ …meta })`
+   on the member. The kit standardizes the annotation key and provides the
+   accessors, and builds an O(1) case map (tag → member AST) at construction.
+2. `section` must itself be schema-validated (a record schema keyed by the base
+   literals — total: every base point has a section value, enforced at the type
+   level).
+3. **`project(value, policy)`**: policies are named sub-sections of the fiber —
+   the skill's Agent Context Lifting Rules (`callSite` lifts
+   `@deprecated`/`@effects`/`@precondition`/`@throws`/`@remarks`;
+   `implementation` lifts `@postcondition`/`@invariant`/`@remarks`/`@effects`;
+   `selection` lifts stability tags) become data: a policy is a list of fiber
+   component keys. This is the deterministic agent-context-injection hook.
+4. **Change of base**: `Fibered.pullback(f)` restricts to a sub-base (subset of
+   tags / sub-vocabulary / sub-module) and fibers come along automatically.
+   This is the principled form of context budgeting.
+5. Migrate `JSDocTagDefinition.make` to the kit as the first consumer
+   (behavior-preserving; annotation key may stay `jsDocTagMetadata` behind an
+   option for compat). Second consumer: the vocab registry itself (base =
+   prefixes, section = `{iri, terms}`). Third: RDF term definitions
+   (elpresidank's `RdfDefinition` sketch).
+6. **Registry service**: a `ServiceMap.Service` (v4!) exposing
+   `resolve(identity | iri | curie) → fiber parts`, backed by (a) the interning
+   table + case maps locally, (b) optional Oxigraph layer for the graph store.
+   Same interface, two layers — the store is swappable, the index is not.
+7. Scope discipline: everything here is the **discrete** case (Set-valued
+   functor, category of elements) — exact, no pseudofunctor coherence. Fibers
+   with morphisms (schema **versions** + migrations, cartesian lifts as
+   transport along version maps, `@since`/PROV-O as sections over a version
+   poset) are real but **out of scope for this handoff** — do not build 2-cells.
+
+---
+
+## 7. Projections
+
+Resurrect from the deleted package and adapt:
+
+- **JSON-LD**: `projectJsonLdOntology` / `projectJsonLdContext` /
+  `parseJsonLdOntology` (round-trip tested before). `^curie` emits `@reverse`
+  (the old projection already did this for `children`). The context is
+  derivable from annotations alone — every `$I.key` CURIE and owned IRI is a
+  context entry; ship `mod.context()` early, it is the cheapest win.
+- **Turtle**: `projectTurtle` — port; add PN_LOCAL escaping for slash/dot
+  locals or fall back to full IRIs; keep canonical boolean literals and string
+  escaping tests.
+- **Markdown**: `projectMarkdown` (plain + obsidian link modes) — port; anchor
+  slugs via `SlugFromIdentifier`.
+- **SHACL** (new, phase 4): each `$I.key` → `sh:property` with `sh:path` =
+  expanded CURIE, `sh:datatype` from the AST, `sh:minCount` from
+  `OptionFromOptional*` optionality. Output feeds the existing shacl-engine
+  gate.
+
+---
+
+## 8. Migrations / retro-fixes (do these regardless of phases)
+
+In `Ontology_models.ts` (the FOLIO OpenAPI models):
+
+1. **`identifier` overloading (D9)**: every `annotateKey({ identifier: "https://…" })`
+   carrying a *borrowed* predicate migrates to `$I.key("skos:…" | "rdfs:…" | …)`.
+   Owned `identifier` is reserved for `$I`.
+2. **Direction bug**: `parent_class_of` currently carries `rdfs:subClassOf`
+   (same as `sub_class_of`) — wrong direction. Becomes `"^rdfs:subClassOf"`.
+3. **Dublin Core**: `purl.org/dc/elements/1.1/*` → `dcterms:*`.
+4. **MADS `country`**: the identifier points at an XML-outline HTML anchor
+   (`mads-outline-2-1.html#country`) — not a dereferenceable RDF predicate.
+   Either map to a real MADS/RDF construct (`http://www.loc.gov/mads/rdf/v1#`
+   geographic authorities) or mark the field vocab-less until resolved.
+
+---
+
+## 9. Phased plan
+
+Each phase independently shippable; gates green (`bun run docgen`, tests, lint)
+before the next.
+
+**Phase 1 — Vocab + CURIE types** (`@beep/rdf`)
+Registry data module (generated from / reconciled with existing `Vocab/*`
+constants), `Curie`/`Predicate`/`Expand` types, expand↔contract codec,
+PN_LOCAL escaper. *Accept*: `"skos:prefLabl"` is a compile error;
+`Expand<"skos:prefLabel">` is the exact literal IRI; codec round-trips;
+property-based tests over the registry.
+
+**Phase 2 — Composer binding** (`@beep/identity`)
+`make` gains `{ authority, prefix, vocab? }`; `iri`/`curie` getters
+(literal-typed); `rebase`; vocab type param threads through `create`/`compose`;
+`annote*` records gain `iri`/`curie`. *Accept*: zero changes required at any
+existing `$I = $PkgId.create(...)` call site; type-level tests pin the literal
+IRIs; interning behavior unchanged under `rebase`.
+
+**Phase 3 — `$I.key` / `$I.class` / `$I.ontology` fold** (`@beep/ontology`)
+Nominal entrypoints, schema-validated triples, assembly walker (port + adapt:
+handles resolve via `schemaId`; predicate names default to struct keys;
+datatype/object inference), error taxonomy, JSON-LD + context + Turtle +
+Markdown projections, SKOS profiles. *Accept*: the old test suite's semantic
+assertions pass against the new API (round-trip JSON-LD, `@reverse` children,
+Turtle escaping, SKOS hard-fail vs warning split); §8 migrations applied to
+`Ontology_models.ts`; a FOLIO-derived module renders through all projections.
+
+**Phase 4 — `Fibered` + retrieval** (`@beep/ontology` or `@beep/schema`)
+The kit, `JSDocTagDefinition.make` migrated onto it, policy projections
+encoding the skill's lifting rules, `pullback`, registry `ServiceMap.Service`
+(local layer now; Oxigraph layer stubbed behind the same interface). SHACL
+projection. *Accept*: `fiberOf`/`meta`/`project` O(1) after construction;
+JSDoc behavior byte-identical; a demo: value → fiber → assembled agent-context
+block, deterministic across runs.
+
+---
+
+## 10. Open questions for elpresidank
+
+1. **D7** — inline `is:` pairs on `$I.class`, fold-only `triples`, or both?
+   (Fold channel ships in Phase 3 regardless.)
+2. Authority host: `https://ns.beep.sh/` is a placeholder — confirm the real
+   authority before Phase 2 lands (it is `rebase`-able later, but the default
+   should be right).
+3. Where does `Fibered` live — `@beep/schema` (vocab-agnostic, near
+   `LiteralKit`) or `@beep/ontology` (near its consumers)? Lean: `@beep/schema`
+   if it can be expressed without importing the vocab registry.
+4. Should `$I.key` also accept the existing typed-path curried form
+   (`annoteKey<Parent>()`) for parent-scoped key checking, or is the
+   struct-key default enough?
+5. Registry service name + package placement (`OntologyRegistry`?
+   `IdentityRegistry`?) — naming call.
+
+---
+
+## 11. Testing strategy
+
+- **Type-level**: `expect-type`-style assertions for every literal transform
+  (`IriFromIdentity`, `CurieFromIdentity`, `Expand`, `Predicate` rejection of
+  unknown prefixes/terms, `rebase` literal propagation).
+- **Property-based**: CURIE expand↔contract round-trip over the whole registry;
+  Turtle PN_LOCAL escaping; identity path grammar (existing segment checks).
+- **Golden files**: JSON-LD, `@context`, Turtle, Markdown projections of a
+  fixture module (port the old suite's fixtures — `Parent`/`Child`/`RichClass`/
+  `PracticeScheme`/`PatentConcept` translate almost mechanically to the new
+  API and double as a before/after ergonomics demonstration).
+- **Behavioral**: `JSDocTagDefinition` pre/post `Fibered` migration —
+  annotation payloads byte-identical; decode/encode unchanged.
+- **Static-extraction invariant**: a repo-wide grep harness proving every
+  identity and CURIE in the codebase is a static literal (CI-check the
+  interpolation ban's downstream promise).
+
+---
+
+## Appendix — one-screen mental model
+
+```
+            make("beep", {authority, prefix, vocab})
+                          │  mints base category (interned symbols ≅ IRIs)
+                          ▼
+   $I = $PkgId.create("module")          ← convention unchanged
+        │ .iri  .curie  .rebase          ← literal-typed codecs of the path
+        │
+        ├─ $I.key("skos:prefLabel")      ← borrowed vocab: CURIE literal, ^ = inverse
+        ├─ $I.class("Claim", {...})      ← owned class node + annotations (a section value)
+        └─ $I.ontology({schemas, triples})
+                 │ fold = validation gate (propose→gate→record)
+                 ▼
+          AssembledOntology ──catamorphisms──▶ JSON-LD / @context / Turtle / Markdown / SHACL
+
+   Fibered({base, fibers, section})      ← Grothendieck kit (discrete case, exact)
+        value ──display map──▶ tag ──section──▶ metadata ──iri──▶ DESCRIBE / docs / PROV-O
+        retrieval = O(path length) dereference; policies = task-indexed sub-sections
+```
+]]>
+  </handoff_markdown>
+
+  <handoff_sections>
+    <section index="1" title="0. Mission">
+<![CDATA[Promote `@beep/identity`'s `IdentityComposer` from a typesafe path builder into a
+**fully compliant, literal-preserving IRI builder**, bake borrowed RDF vocabulary
+(SKOS/RDFS/OWL/DC/RDF) into the composer as a **CURIE literal type** (zero import
+duty at usage sites), replace the deleted `@beep/ontology` authoring API with a
+terse `$I.ontology` fold over **triples-as-tuples**, and extract the
+**Grothendieck-fibration metadata pattern** already proven in
+`JSDocTagDefinition.make` into a reusable `Fibered` kit that gives O(path-length)
+deterministic metadata retrieval for agents (context injection, structured
+output grounding).
+
+One sentence: **the identity path and the IRI become two literal-typed encodings
+of the same value; annotations become sections over the base category `$I`
+mints; retrieval becomes dereference.**
+
+---]]>
+    </section>
+    <section index="2" title="1. Context and constraints">
+<![CDATA[- **Effect v4** (`effect@4.x`). Service identity via `ServiceMap.Service` —
+  `Context.Tag` does not exist in v4. Do not import from `@effect/schema`
+  (deprecated); use `effect/Schema` as `S`.
+- House conventions are non-negotiable and enforced by the
+  `jsdoc-annotation-specialist` skill (`.patterns/jsdoc-documentation.md` is the
+  source of truth). Every export: JSDoc with `@example`, `@category` (lowercase),
+  `@since 0.0.0`. Every schema: `$I.annote` / `$I.annoteSchema` / `.annotate($I.annote(...))`
+  per shape. Same-name type alias after every non-class schema export. Run
+  `bun run docgen` until green.
+- The file-local convention `const $I = $SomePackageId.create("path/to/module")`
+  as the first constant of nearly every file **must not change shape**. All new
+  power arrives through the root `make()` call and new methods on the composer.
+- The interpolation ban on identity template tags is **load-bearing**: every
+  identity and every borrowed-vocab reference must remain a static literal,
+  statically extractable without executing code (`grep`-harvestable). No design
+  below may introduce runtime-computed IRIs or CURIEs.
+- Prior art to resurrect selectively: the deleted `@beep/ontology` package
+  (draft→assembly pipeline, JSON-LD/Turtle/Markdown projections, SKOS profiles,
+  `OntologyAssemblyError` taxonomy). The projections and assembly walker are
+  good; the authoring API (`Ontology.create`, `createOntologyIdentity`, the
+  eight-way `ref`/`parent`/`child`/`exact`/... synonym set, runtime draft
+  sniffing, string term references) is dead and stays dead.
+- Existing vocab constant modules `@beep/rdf/Vocab/{Skos,Rdfs,Owl,Rdf,Xsd}`
+  become the **source** for the type-level vocab registry (generate the literal
+  unions from them, or move both to a shared generated artifact). They stop
+  appearing at authoring call sites.
+
+### Packages touched
+
+| Package | Change |
+|---|---|
+| `@beep/identity` | Root binding (`authority`, `prefix`, `vocab`), IRI/CURIE derivation, `rebase`, `key`, `class`, `ontology`, second type param `V` |
+| `@beep/rdf` | Vocab registry as data + literal types; CURIE expand/contract codec; PN_LOCAL escaping util |
+| `@beep/ontology` (new) | The fold, projections (resurrected), `Fibered` kit, registry service |
+| `@beep/schema` | Possibly hosts `Fibered` if it is deemed vocabulary-agnostic (judgment call — see Open Questions) |
+
+---]]>
+    </section>
+    <section index="3" title="2. Decisions">
+<![CDATA[Marked **LOCKED** (agreed in session), **DEFAULT** (recommended, proceed unless
+vetoed), or **OPEN** (blocked on elpresidank).
+
+- **D1 — Authority binding is total, at the root. LOCKED.**
+  `make("beep", { authority: "https://ns.beep.sh/", prefix: "beep", vocab })`.
+  Every composer monorepo-wide derives `.iri`/`.curie` mechanically from its
+  path. Even never-published identities get canonical IRIs (provenance needs
+  them).
+- **D2 — Slash IRIs for the mechanical mapping; hash allowed via `rebase`. DEFAULT.**
+  Internal: `https://ns.beep.sh/ontology/Ontology.models/HttpUrl`. Published
+  vocabularies may rebase to hash namespaces
+  (`https://opip.law/ns/patent#Claim`). Rationale: slash → per-term
+  dereference/docs pages (explore/tree ambition); hash → single-document
+  vocabularies, friendlier Turtle prefixed names.
+- **D3 — Borrowed vocabulary is a CURIE literal type baked into the composer. LOCKED.**
+  `"skos:prefLabel"`, `"rdfs:subClassOf"`, with SPARQL property-path inverse
+  syntax `"^rdfs:subClassOf"` for reverse direction (replaces any
+  `reverse: true` flag; makes the `parent_class_of` direction bug
+  unrepresentable). Zero imports at usage sites. Turtle-isomorphic notation.
+  Extensible at the root (`vocab: { folio: ... }`) — inherited silently through
+  every `create`.
+- **D4 — References are handles, never strings. LOCKED.**
+  Relation endpoints accept: a schema (resolved via `schemaId`), a known CURIE,
+  or an absolute IRI literal. No `Ont.ref`-style wrappers. Typos in schema
+  references are compile errors.
+- **D5 — Predicate local names default to the struct key. LOCKED.**
+  `$I.key("skos:prefLabel")` in a pipe needs no name argument; the assembly
+  walker reads the field name (the old assembly already did —
+  `unsupportedFieldName` proves it). Explicit override for custom-IRI cases.
+- **D6 — Relational facts are triples-as-tuples. LOCKED.**
+  `[Subject, Predicate, Object]` where `Predicate` is the CURIE literal type.
+  The relation set is predicate-open; the metadata model stays tiny (kills the
+  old 18-field draft records). Datatype-vs-object property is **inferred** from
+  the AST at fold time (scalar-valued key → `owl:DatatypeProperty`,
+  schema-valued key → `owl:ObjectProperty`), never declared.
+- **D7 — Where relational facts live: OPEN.**
+  (a) inline at the class site as predicate–object pairs
+  (`$I.class("Claim", { is: [["rdfs:subClassOf", "folio:Document"]] })`),
+  (b) only at the `$I.ontology` fold (`triples: [...]`), or (c) both channels,
+  one tuple grammar, fold merges. Recommendation on file: **(c)** — intrinsic
+  facts read best at the class, cross-module wiring at the fold, and it dodges
+  import cycles. Risk: two-ways-to-do-everything. **Implement the fold channel
+  first regardless** (it is required either way); add the inline channel only
+  after D7 is answered.
+- **D8 — The fibration pattern becomes a first-class kit. LOCKED.**
+  Generalize `JSDocTagDefinition.make`'s factoring (constant-per-tag metadata
+  moved from the value Σ-type into per-case AST annotations, recovered via the
+  display map) into `Fibered` (§6).
+- **D9 — Owned/borrowed annotation channels never share a key. LOCKED.**
+  The `identifier` annotation belongs to owned `@beep` identities exclusively.
+  Borrowed predicates ride a dedicated `term` slot (written by `$I.key`). This
+  retro-fixes the `Ontology_models.ts` overloading (§8).
+
+---]]>
+    </section>
+    <section index="4" title="3. Type-level machinery (`@beep/rdf` + `@beep/identity`)">
+<![CDATA[### 3.1 Vocab registry
+
+One generated/curated data module; literal types derived from it. The registry
+is itself a **section over the discrete base of prefixes** — model it as data
+first, types second (the schema is truth):
+
+```ts
+// @beep/rdf — shape sketch (names final, term lists per the W3C specs)
+type VocabShape = Record<string, { readonly iri: string; readonly terms: string }>;
+
+interface CoreVocab extends VocabShape {
+  rdf:     { iri: "http://www.w3.org/1999/02/22-rdf-syntax-ns#"; terms: "type" | "value" | "first" | "rest" | /* … */ };
+  rdfs:    { iri: "http://www.w3.org/2000/01/rdf-schema#";       terms: "label" | "comment" | "subClassOf" | "subPropertyOf" | "domain" | "range" | "seeAlso" | "isDefinedBy" | /* … */ };
+  skos:    { iri: "http://www.w3.org/2004/02/skos/core#";        terms: "prefLabel" | "altLabel" | "hiddenLabel" | "definition" | "note" | "scopeNote" | "editorialNote" | "historyNote" | "example" | "broader" | "narrower" | "related" | "exactMatch" | "closeMatch" | "broadMatch" | "narrowMatch" | "relatedMatch" | "inScheme" | "topConceptOf" | "hasTopConcept" | /* … */ };
+  owl:     { iri: "http://www.w3.org/2002/07/owl#";              terms: "Class" | "ObjectProperty" | "DatatypeProperty" | "sameAs" | "equivalentClass" | "inverseOf" | "deprecated" | /* … */ };
+  dcterms: { iri: "http://purl.org/dc/terms/";                   terms: "identifier" | "description" | "source" | "title" | "creator" | /* … */ };
+}
+```
+
+Use **`dcterms:`** (not legacy `dc/elements/1.1/`) as the default Dublin Core
+namespace (see §8 migrations).
+
+### 3.2 CURIE types
+
+```ts
+type Curie<V extends VocabShape>     = { [P in keyof V & string]: `${P}:${V[P]["terms"]}` }[keyof V & string];
+type Predicate<V extends VocabShape> = Curie<V> | `^${Curie<V>}`;
+type Expand<C extends string, V extends VocabShape> =
+  C extends `${infer P}:${infer L}` ? P extends keyof V ? `${V[P]["iri"]}${L}` : never : never;
+```
+
+Value-level `expand`/`contract` must be a **codec** (`{ decode, encode }` —
+optic-shaped, per house doctrine) with literal-preserving overloads. Both
+directions total over the registry; unknown prefixes are schema errors, never
+silent pass-through.
+
+### 3.3 Identity → IRI derivation
+
+New members of the `TitleFromIdentifier` family:
+
+```ts
+type IriFromIdentity<Authority extends string, Path extends string> = /* "@beep/a/b" → `${Authority}a/b` */;
+type CurieFromIdentity<Prefix extends string, Path extends string>  = /* "@beep/a/b" → `${Prefix}:a/b` */;
+type SlugFromIdentifier<I extends string>                           = /* kebab-case, for markdown anchors */;
+```
+
+`IdentityComposer` gains a second type parameter and three literal-typed
+getters, with the binding threaded from `make`:
+
+```ts
+export const { $BeepId } = make("beep", {
+  authority: "https://ns.beep.sh/",
+  prefix: "beep",
+  // vocab?: extensions merged into CoreVocab
+});
+
+interface IdentityComposer<Value extends string, V extends VocabShape = CoreVocab> {
+  // existing surface unchanged …
+  readonly iri:   IdentityString<IriFromIdentity<Authority, Value>>;
+  readonly curie: CurieFromIdentity<Prefix, Value>;
+  rebase<const Iri extends string, const P extends string>(opts: { iri: Iri; prefix: P }): /* IRI projection rebased; identity + symbol untouched */;
+  // new methods §4
+}
+```
+
+`rebase` changes **only** the IRI/CURIE projection. `identifier` and the
+interned symbol are immutable — renaming a public namespace must never touch
+the interning table. Annotation records written by `annote`/`annoteSchema`
+grow `iri` and `curie` fields (owned identity), all literal-typed.
+
+Turtle caveat: `/` and `.` in PN_LOCAL need escaping (`\/`) or full-IRI
+emission — this is a **projection concern** in the Turtle writer, never a model
+concern. JSON-LD contexts handle slash CURIEs natively.
+
+---]]>
+    </section>
+    <section index="5" title="4. Authoring API surface">
+<![CDATA[The composer absorbs the dead `Ontology.create` scope. Everything below derives
+`baseIri`/`prefix` from the (possibly rebased) composer — **zero plumbing**.
+
+```ts
+const $I = $SomePackageId.create("patent"); // convention unchanged
+
+// ── field predicates ───────────────────────────────────────────────
+prefLabel: S.String.pipe($I.key("skos:prefLabel")),
+children:  S.Array(S.String).pipe($I.key("^rdfs:subClassOf")),   // JSON-LD @reverse
+text:      S.NonEmptyString.pipe($I.key({ description: "Claim text." })),
+// name defaults to the struct key (D5); CURIE arg optional when the predicate
+// is owned (minted from the key name); extras bag mirrors annoteKey's.
+
+// ── classes ────────────────────────────────────────────────────────
+export class Claim extends S.Class<Claim>($I`Claim`)(
+  { /* fields */ },
+  $I.class("Claim", {
+    description: "A patent claim.",
+    // is: [["rdfs:subClassOf", "folio:Document"]],   // only if D7 = (a)|(c)
+  })
+) {}
+
+// ── the fold ───────────────────────────────────────────────────────
+const mod = $I.ontology({
+  label: "Patent Core",
+  schemas: [Claim, Spec, ClaimSet],
+  triples: [
+    [Claim,    "rdfs:subClassOf", "folio:Document"],
+    [Claim,    "owl:sameAs",      "https://schema.org/CreativeWork"],
+    [ClaimSet, "skos:related",    Spec],
+  ],
+});
+mod.toJsonLD(); mod.toTurtle(); mod.toMarkdown(); mod.context(); // + toShacl() later
+```
+
+Rules:
+
+1. `$I.key`, `$I.class`, `$I.ontology` are **nominal entrypoints with distinct
+   payload schemas** — no runtime overload sniffing, no type-guard forensics.
+2. The `triples` array is **schema-validated**
+   (`S.Tuple([Subject, Predicate, Object])` with the CURIE literal type as
+   `Predicate`; `Subject`/`Object` = schema handle | CURIE | absolute-IRI
+   literal | typed literal). The ontology definition is an instance of
+   schema-is-truth, not an exception.
+3. No synonym methods (`exact`, `sameAs`, `parent`, …). If sugar is ever
+   wanted, it is a one-line tuple factory over the general channel — never a
+   peer of it.
+4. `$I.ontology` returns an assembled value (resurrect `AssembledOntology` +
+   error taxonomy from the deleted package) whose projections are pure
+   catamorphisms. Keep the propose→gate→record split: fold validates (SKOS
+   hard failures vs warnings, unresolved handles → typed `OntologyAssemblyError`),
+   projections never fail.
+5. SKOS profiles survive as opt-in payloads on `$I.class` (`skosProfile:`),
+   ported from the old drafts but with reference targets = handles/CURIEs (D4).
+
+---]]>
+    </section>
+    <section index="6" title="5. Retrieval identities (why this is one system)">
+<![CDATA[- `$I` mints the **base category**: interned symbols are its object set at
+  runtime; IRIs are the same points on the wire. `Symbol.for` round-trips are
+  the in-memory canonical form; the CURIE/IRI codec is the transport form.
+- The fiber over an identity is a **union across stores sharing one index**:
+
+  ```
+  fiber(x) = annotations(x)      — local AST walk
+           ∪ DESCRIBE iri(x)     — Oxigraph / SPARQL
+           ∪ docs(slug(x))       — generated markdown
+           ∪ prov(x)             — PROV-O bitemporal records
+  ```
+
+  Local annotation lookup and `DESCRIBE` are the same operation over different
+  stores. Address computation is O(path length), independent of corpus size —
+  dereference, not search.
+
+---]]>
+    </section>
+    <section index="7" title="6. The `Fibered` kit (D8)">
+<![CDATA[Generalize the `JSDocTagDefinition.make` pattern. Given a discrete base, a
+functor of fiber schemas, and a constant-per-tag section, produce the tagged
+union with the section soldered onto each base point:
+
+```ts
+const JSDocTag = Fibered({
+  base:    TagName,                 // literal schema — the discrete base B
+  fibers:  TagValue.cases,          // F : B → Schemas   (varies per instance)
+  section: JSDocTagDefinitions,     // M : B → Meta      (constant per tag; schema-validated record)
+});
+
+JSDocTag.union                       // S.Union of thin members: { _tag, value } — Σ(t) F(t)
+JSDocTag.meta("param")               // M(t) — O(1), from the case map
+JSDocTag.fiberOf(value)              // display map ∘ section: value → _tag → M(t)
+JSDocTag.project(value, policy)      // task-indexed sub-section (see below)
+```
+
+Implementation notes:
+
+1. Mechanism = exactly what `make` does today: decode the section entry once
+   (validated), `mapFields` to pin `_tag` via `S.tag`, `.annotate({ …meta })`
+   on the member. The kit standardizes the annotation key and provides the
+   accessors, and builds an O(1) case map (tag → member AST) at construction.
+2. `section` must itself be schema-validated (a record schema keyed by the base
+   literals — total: every base point has a section value, enforced at the type
+   level).
+3. **`project(value, policy)`**: policies are named sub-sections of the fiber —
+   the skill's Agent Context Lifting Rules (`callSite` lifts
+   `@deprecated`/`@effects`/`@precondition`/`@throws`/`@remarks`;
+   `implementation` lifts `@postcondition`/`@invariant`/`@remarks`/`@effects`;
+   `selection` lifts stability tags) become data: a policy is a list of fiber
+   component keys. This is the deterministic agent-context-injection hook.
+4. **Change of base**: `Fibered.pullback(f)` restricts to a sub-base (subset of
+   tags / sub-vocabulary / sub-module) and fibers come along automatically.
+   This is the principled form of context budgeting.
+5. Migrate `JSDocTagDefinition.make` to the kit as the first consumer
+   (behavior-preserving; annotation key may stay `jsDocTagMetadata` behind an
+   option for compat). Second consumer: the vocab registry itself (base =
+   prefixes, section = `{iri, terms}`). Third: RDF term definitions
+   (elpresidank's `RdfDefinition` sketch).
+6. **Registry service**: a `ServiceMap.Service` (v4!) exposing
+   `resolve(identity | iri | curie) → fiber parts`, backed by (a) the interning
+   table + case maps locally, (b) optional Oxigraph layer for the graph store.
+   Same interface, two layers — the store is swappable, the index is not.
+7. Scope discipline: everything here is the **discrete** case (Set-valued
+   functor, category of elements) — exact, no pseudofunctor coherence. Fibers
+   with morphisms (schema **versions** + migrations, cartesian lifts as
+   transport along version maps, `@since`/PROV-O as sections over a version
+   poset) are real but **out of scope for this handoff** — do not build 2-cells.
+
+---]]>
+    </section>
+    <section index="8" title="7. Projections">
+<![CDATA[Resurrect from the deleted package and adapt:
+
+- **JSON-LD**: `projectJsonLdOntology` / `projectJsonLdContext` /
+  `parseJsonLdOntology` (round-trip tested before). `^curie` emits `@reverse`
+  (the old projection already did this for `children`). The context is
+  derivable from annotations alone — every `$I.key` CURIE and owned IRI is a
+  context entry; ship `mod.context()` early, it is the cheapest win.
+- **Turtle**: `projectTurtle` — port; add PN_LOCAL escaping for slash/dot
+  locals or fall back to full IRIs; keep canonical boolean literals and string
+  escaping tests.
+- **Markdown**: `projectMarkdown` (plain + obsidian link modes) — port; anchor
+  slugs via `SlugFromIdentifier`.
+- **SHACL** (new, phase 4): each `$I.key` → `sh:property` with `sh:path` =
+  expanded CURIE, `sh:datatype` from the AST, `sh:minCount` from
+  `OptionFromOptional*` optionality. Output feeds the existing shacl-engine
+  gate.
+
+---]]>
+    </section>
+    <section index="9" title="8. Migrations / retro-fixes (do these regardless of phases)">
+<![CDATA[In `Ontology_models.ts` (the FOLIO OpenAPI models):
+
+1. **`identifier` overloading (D9)**: every `annotateKey({ identifier: "https://…" })`
+   carrying a *borrowed* predicate migrates to `$I.key("skos:…" | "rdfs:…" | …)`.
+   Owned `identifier` is reserved for `$I`.
+2. **Direction bug**: `parent_class_of` currently carries `rdfs:subClassOf`
+   (same as `sub_class_of`) — wrong direction. Becomes `"^rdfs:subClassOf"`.
+3. **Dublin Core**: `purl.org/dc/elements/1.1/*` → `dcterms:*`.
+4. **MADS `country`**: the identifier points at an XML-outline HTML anchor
+   (`mads-outline-2-1.html#country`) — not a dereferenceable RDF predicate.
+   Either map to a real MADS/RDF construct (`http://www.loc.gov/mads/rdf/v1#`
+   geographic authorities) or mark the field vocab-less until resolved.
+
+---]]>
+    </section>
+    <section index="10" title="9. Phased plan">
+<![CDATA[Each phase independently shippable; gates green (`bun run docgen`, tests, lint)
+before the next.
+
+**Phase 1 — Vocab + CURIE types** (`@beep/rdf`)
+Registry data module (generated from / reconciled with existing `Vocab/*`
+constants), `Curie`/`Predicate`/`Expand` types, expand↔contract codec,
+PN_LOCAL escaper. *Accept*: `"skos:prefLabl"` is a compile error;
+`Expand<"skos:prefLabel">` is the exact literal IRI; codec round-trips;
+property-based tests over the registry.
+
+**Phase 2 — Composer binding** (`@beep/identity`)
+`make` gains `{ authority, prefix, vocab? }`; `iri`/`curie` getters
+(literal-typed); `rebase`; vocab type param threads through `create`/`compose`;
+`annote*` records gain `iri`/`curie`. *Accept*: zero changes required at any
+existing `$I = $PkgId.create(...)` call site; type-level tests pin the literal
+IRIs; interning behavior unchanged under `rebase`.
+
+**Phase 3 — `$I.key` / `$I.class` / `$I.ontology` fold** (`@beep/ontology`)
+Nominal entrypoints, schema-validated triples, assembly walker (port + adapt:
+handles resolve via `schemaId`; predicate names default to struct keys;
+datatype/object inference), error taxonomy, JSON-LD + context + Turtle +
+Markdown projections, SKOS profiles. *Accept*: the old test suite's semantic
+assertions pass against the new API (round-trip JSON-LD, `@reverse` children,
+Turtle escaping, SKOS hard-fail vs warning split); §8 migrations applied to
+`Ontology_models.ts`; a FOLIO-derived module renders through all projections.
+
+**Phase 4 — `Fibered` + retrieval** (`@beep/ontology` or `@beep/schema`)
+The kit, `JSDocTagDefinition.make` migrated onto it, policy projections
+encoding the skill's lifting rules, `pullback`, registry `ServiceMap.Service`
+(local layer now; Oxigraph layer stubbed behind the same interface). SHACL
+projection. *Accept*: `fiberOf`/`meta`/`project` O(1) after construction;
+JSDoc behavior byte-identical; a demo: value → fiber → assembled agent-context
+block, deterministic across runs.
+
+---]]>
+    </section>
+    <section index="11" title="10. Open questions for elpresidank">
+<![CDATA[1. **D7** — inline `is:` pairs on `$I.class`, fold-only `triples`, or both?
+   (Fold channel ships in Phase 3 regardless.)
+2. Authority host: `https://ns.beep.sh/` is a placeholder — confirm the real
+   authority before Phase 2 lands (it is `rebase`-able later, but the default
+   should be right).
+3. Where does `Fibered` live — `@beep/schema` (vocab-agnostic, near
+   `LiteralKit`) or `@beep/ontology` (near its consumers)? Lean: `@beep/schema`
+   if it can be expressed without importing the vocab registry.
+4. Should `$I.key` also accept the existing typed-path curried form
+   (`annoteKey<Parent>()`) for parent-scoped key checking, or is the
+   struct-key default enough?
+5. Registry service name + package placement (`OntologyRegistry`?
+   `IdentityRegistry`?) — naming call.
+
+---]]>
+    </section>
+    <section index="12" title="11. Testing strategy">
+<![CDATA[- **Type-level**: `expect-type`-style assertions for every literal transform
+  (`IriFromIdentity`, `CurieFromIdentity`, `Expand`, `Predicate` rejection of
+  unknown prefixes/terms, `rebase` literal propagation).
+- **Property-based**: CURIE expand↔contract round-trip over the whole registry;
+  Turtle PN_LOCAL escaping; identity path grammar (existing segment checks).
+- **Golden files**: JSON-LD, `@context`, Turtle, Markdown projections of a
+  fixture module (port the old suite's fixtures — `Parent`/`Child`/`RichClass`/
+  `PracticeScheme`/`PatentConcept` translate almost mechanically to the new
+  API and double as a before/after ergonomics demonstration).
+- **Behavioral**: `JSDocTagDefinition` pre/post `Fibered` migration —
+  annotation payloads byte-identical; decode/encode unchanged.
+- **Static-extraction invariant**: a repo-wide grep harness proving every
+  identity and CURIE in the codebase is a static literal (CI-check the
+  interpolation ban's downstream promise).
+
+---]]>
+    </section>
+    <section index="13" title="Appendix — one-screen mental model">
+<![CDATA[```
+            make("beep", {authority, prefix, vocab})
+                          │  mints base category (interned symbols ≅ IRIs)
+                          ▼
+   $I = $PkgId.create("module")          ← convention unchanged
+        │ .iri  .curie  .rebase          ← literal-typed codecs of the path
+        │
+        ├─ $I.key("skos:prefLabel")      ← borrowed vocab: CURIE literal, ^ = inverse
+        ├─ $I.class("Claim", {...})      ← owned class node + annotations (a section value)
+        └─ $I.ontology({schemas, triples})
+                 │ fold = validation gate (propose→gate→record)
+                 ▼
+          AssembledOntology ──catamorphisms──▶ JSON-LD / @context / Turtle / Markdown / SHACL
+
+   Fibered({base, fibers, section})      ← Grothendieck kit (discrete case, exact)
+        value ──display map──▶ tag ──section──▶ metadata ──iri──▶ DESCRIBE / docs / PROV-O
+        retrieval = O(path length) dereference; policies = task-indexed sub-sections
+```]]>
+    </section>
+  </handoff_sections>
+
+  <raw_conversation source="/home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/Exploring ontology specifications and semantic standards.md">
+    <turn index="1">
+      <section index="1" kind="assistant_response" source_label="response 1">
+<![CDATA[You've stumbled onto something with a name, and reading your own file back to you is the fastest way to see it. Look at the `identifier` you attached to each field of `OWLClass`:
+
+- `iri` → `owl:Class`, `deprecated` → `owl:deprecated`
+- `label`, `sub_class_of`, `see_also`, `comment`, `is_defined_by` → `rdfs:*`
+- `preferred_label`, `alternative_labels`, `hidden_label`, `definition`, `notes`, `history_note`, `in_scheme` → `skos:*`
+- `identifier`, `description`, `source` → `dc:*` (Dublin Core)
+- `country` → MADS
+
+A single FOLIO "class" is not one thing from one standard. It's an **OWL class wearing annotations borrowed from five different vocabularies**. That interweaving you're sensing isn't a coincidence of FOLIO's design — it's the entire operating principle of the Semantic Web: you don't invent terms, you reuse them from a layered stack where each layer does one job. Your file is a clean cross-section through that stack.
+
+## The stack, bottom to top
+
+**RDF** is the substrate. Everything is a triple: subject–predicate–object. There is no other data structure. Every field on your `OWLClass`, once decoded, is really the object of a triple whose predicate is that `identifier` IRI. Hold that thought — it's the whole trick.
+
+**RDFS** is the thinnest possible schema layer on top: a minimal type system. `rdfs:Class`, `rdfs:subClassOf`, `rdfs:domain`, `rdfs:range`, plus the human-facing `rdfs:label`, `rdfs:comment`, `rdfs:seeAlso`, `rdfs:isDefinedBy`. Note the split already present in your `OWLObjectProperty`: `domain`, `range`, `sub_property_of` are *logically loaded* (a reasoner acts on them), while `label`/`comment` are inert decoration.
+
+**OWL** adds real logic — the machinery that lets a reasoner *derive* triples you didn't write: `owl:inverseOf`, restrictions, cardinality, disjointness, equivalence, and the profiles (EL/QL/RL/DL/Full) you're already carving your two-zone reasoner out of. The distinction that matters most for you as a reasoner-builder: **annotation properties vs. axioms**. `skos:definition`, `dc:source`, `rdfs:label`, `country` are annotations — a reasoner ignores them entirely for inference. Only `sub_class_of`, `domain`, `range`, `inverse_of` (and arguably `deprecated`) feed the saturation kernel. When you lift a decoded `OWLClass` into your integer-interned edge set, that's exactly the partition: axiom-bearing fields become edges, everything else is metadata you carry alongside but never saturate on.
+
+**SKOS** is where people get tripped up, because it's a *different philosophy*, not just more terms. OWL is for formal ontologies (classes with necessary-and-sufficient conditions). SKOS is for knowledge-organization systems — thesauri, taxonomies, subject headings — and it's *deliberately weaker*. A `skos:Concept` is a "unit of thought," and critically `skos:broader` is **not** `rdfs:subClassOf`: it carries no class-membership semantics and isn't transitive the way subsumption is. FOLIO makes the common pragmatic choice: use RDFS/OWL for the actual hierarchy (your `sub_class_of`), and pull in SKOS only for the *lexical* layer — `prefLabel`/`altLabel`/`hiddenLabel`/`definition`. That recipe (OWL for structure, SKOS for labels, DC/MADS for provenance) is the mainstream pattern for exactly this kind of legal/domain ontology.
+
+**Dublin Core** is the tiny ubiquitous vocabulary for describing *resources* (any document, dataset, thing): title, creator, source, identifier, description, date. One seam to know: your file uses the **legacy** namespace `purl.org/dc/elements/1.1/` (the original 15 elements, all with loose/undefined ranges). There's a newer `purl.org/dc/terms/` that refines those with proper domains and ranges and adds many more. For a system that's going to reason and validate, `dcterms:` is usually the better citizen — worth knowing before the choice ossifies.
+
+**MADS** is Library-of-Congress authority control: describing the *authorities* (people, places, organizations, topics) you use as controlled values, with variant names, dates, affiliations. Two things here. First, MADS has two incarnations — **MADS/RDF** (`loc.gov/mads/rdf/v1#`, the actual ontology) and **MADS/XML** (the `mads-outline-2-1.html` you linked, an XML schema). Second, your `country` identifier points at the *XML outline HTML page* with a `#country` fragment — that's a documentation anchor, not a dereferenceable RDF property, and MADS/RDF doesn't expose a bare `country` predicate (geography lives inside `madsrdf:Geographic` authorities). So that one field is a placeholder IRI rather than a real one. Which is a good illustration of why this precision matters the moment annotations stop being decoration and start being predicates you emit.
+
+**DID** is the outlier in your list — it isn't a description vocabulary at all. It's an identifier scheme plus PKI: `did:method:id` resolves to a DID Document holding public keys, verification methods, and service endpoints. Its relevance to your world is twofold: (1) DIDs give you globally-unique, resolvable, *registry-independent* IRIs for subjects, and (2) DID Documents are themselves JSON-LD, so they're graphs too. For your provenance/bitemporal side, DIDs are the natural way to answer "*which* verifiable agent asserted this triple, and can I check their signature" — they slot in beside PROV-O rather than beside SKOS.
+
+## What Effect Schema is actually doing for you
+
+Here's the meta-point stated precisely. That `identifier` annotation isn't documentation — **it's the RDF predicate**. Which means a field like:
+
+```ts
+definition: S.String.pipe(
+  S.annotateKey({ identifier: "…skos/core#definition" })
+)
+
+is simultaneously three things: a JSON codec entry, a **JSON-LD `@context` entry** (`"definition": "http://www.w3.org/2004/02/skos/core#definition"` is *literally* a context mapping), and a triple template (`<thisClass> skos:definition "…"`). Your annotated struct is a JSON-LD context wearing a trench coat. Emit the `@context` and your decoded FOLIO objects become valid JSON-LD — i.e., RDF — for free, with no separate mapping layer.
+
+That's the "agnostic" quality you're feeling, and Effect Schema fits it for three concrete reasons the alternatives don't:
+
+1. The schema is a **reified, traversable AST**, so you can *walk* it and compile it to other targets (unlike validators where introspection is an afterthought).
+2. Annotations are **open** — you can hang an arbitrary IRI on any node, which is precisely what a projection compiler needs.
+3. The **codec duality** (encode ↔ decode) is the same read/write duality you already articulated in the "Schema as codec" thesis — and it's what lets one schema serve both the write side (lift objects → triples) and the read side (parse triples/JSON → objects).
+
+So "one schema, many renderers" is exactly right, and it generalizes further than you said: the *same* annotated AST compiles to a **JSON-LD context**, a **SHACL shape** (each field → `sh:property` with `sh:path` = the IRI, `sh:datatype`, `sh:minCount` derived from your `OptionFromOptional` optionality — which drops straight into your shacl-engine gate), **OWL annotation-property declarations**, the **OpenAPI/JSON-Schema** that feeds Scalar/Swagger, and the **MCP tool surface** an agent queries. The FOLIO tree explorer, a Swagger UI, and an MCP server aren't three integrations — they're three renderers over one self-describing AST.
+
+## Two things to catch before they bite
+
+Both `sub_class_of` and `parent_class_of` carry `rdfs:subClassOf` as their identifier. That can't be right for both: `parent_class_of` is the *inverse* direction (superclass → subclass), and RDFS has no forward predicate for that — you'd invert `subClassOf`. If you naively lift both fields with the same predicate, you'll emit wrong-direction edges and your reasoner will happily saturate garbage. That's the canonical failure mode of turning annotations into a triple-lifter: the annotation says "this field relates to subClassOf," but *direction* and *annotation-vs-axiom* status are semantics the string IRI alone doesn't capture.
+
+And the `country`/MADS-outline caveat above is the same lesson in a second key: an `identifier` that points at a spec's HTML documentation is fine as a human breadcrumb but breaks the moment you treat it as a resolvable predicate.
+
+If it'd be useful, I'm happy to sketch the AST-walk that emits the JSON-LD `@context` from these annotations, or the one that emits SHACL `NodeShape`/`PropertyShape` — those two are the highest-leverage projections and they'd let you check the round-trip (decode FOLIO JSON → lift to triples → validate against the generated shape) end to end.
+```]]>
+      </section>
+    </turn>
+    <turn index="2">
+      <section index="2" kind="user_prompt" source_label="prompt 2">
+<![CDATA[So you've noticed my `$I` pattern. Here is the definition of that:
+
+```ts
+/**
+ * Hierarchical identity system for the `@beep` namespace.
+ *
+ * Provides composable, type-safe identity strings and symbols for schema
+ * annotations, error tagging, and service identification throughout the
+ * Effect codebase. Identities follow a `@beep/{package}/{path}` convention
+ * and are validated at construction time.
+ *
+ * @example
+ * ```typescript
+ * import { make } from "@beep/identity"
+ *
+ * // Create a package-level identity composer
+ * const { $MyPkgId } = make("my-pkg")
+ *
+ * // Derive child identifiers for schemas and services
+ * const userId = $MyPkgId.make("UserId")
+ * const sym = $MyPkgId.symbol()
+ *
+ * console.log(userId)// "@beep/my-pkg/UserId"
+ * console.log(sym)// Symbol.for("@beep/my-pkg")
+ * ```
+*
+* @packageDocumentation
+* @since 0.0.0
+  */
+
+import { Function as Fn, flow, pipe } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import type { TString } from "@beep/types";
+import type * as Multipart_ from "effect/unstable/http/Multipart";
+import type { Get, Paths } from "type-fest";
+
+const BeepNamespace = S.Literal("@beep");
+type BeepNamespace = typeof BeepNamespace.Type;
+
+const BeepBase = S.Literal("beep");
+type BeepBase = typeof BeepBase.Type;
+
+const IdentityVersion = S.Literal("0.0.0");
+
+const isBeepNamespace = S.is(BeepNamespace);
+const isBeepBase = S.is(BeepBase);
+
+const beepNamespace = S.decodeUnknownSync(BeepNamespace)("@beep");
+const beepBase = S.decodeUnknownSync(BeepBase)("beep");
+const MODULE_CHARACTERS = /^[A-Za-z0-9_-]+$/;
+const MODULE_LEADING_ALPHA = /^[A-Za-z]/;
+const BASE_CHARACTERS = /^[A-Za-z0-9](?:[A-Za-z0-9_-]*[A-Za-z0-9])?$/;
+const SCHEMA_PROTOCOL_KEYS: ReadonlyArray<PropertyKey> = [
+"~effect/Schema/Schema",
+"annotate",
+"annotateKey",
+"ast",
+"check",
+"make",
+"makeEffect",
+"makeOption",
+"pipe",
+"rebuild",
+];
+
+const preserveSchemaStatics = <Schema extends S.Top>(
+source: Schema,
+annotated: Schema["Rebuild"]
+): AnnotatedSchema<Schema> => {
+for (const key of Reflect.ownKeys(source)) {
+if (A.contains(SCHEMA_PROTOCOL_KEYS, key) || Reflect.getOwnPropertyDescriptor(annotated, key) !== undefined) {
+continue;
+}
+
+    const descriptor = Reflect.getOwnPropertyDescriptor(source, key);
+
+    if (descriptor !== undefined) {
+      Reflect.defineProperty(annotated, key, descriptor);
+    }
+}
+
+return annotated as AnnotatedSchema<Schema>;
+};
+
+/**
+* Error thrown when an identity template tag receives interpolation values.
+*
+* Identity template tags must be called with a single static string literal,
+* for example by calling the `$I` template tag with a static segment.
+* Passing interpolated expressions is forbidden because identity strings
+* must be statically deterministic.
+*
+* @example
+* ```typescript
+* import { make, IdentityInterpolationError } from "@beep/identity"
+*
+* const { $MyPkgId } = make("my-pkg")
+*
+* try {
+*   $MyPkgId`User${"Name"}`
+* } catch (error) {
+*   console.log(error instanceof IdentityInterpolationError)
+* }
+* ```
+*
+* @since 0.0.0
+* @category error-handling
+  */
+  export class IdentityInterpolationError extends S.TaggedErrorClass<IdentityInterpolationError>(
+  "@beep/identity/errors/IdentityInterpolationError"
+  )(
+  "IdentityInterpolationError",
+  {},
+  {
+  title: "Identity Interpolation Error",
+  description: "Identity template tags do not allow interpolations.",
+  }
+  ) {
+  override get message() {
+  return "Identity template tags do not allow interpolations.";
+  }
+  }
+
+/**
+* Error thrown when an identity template tag receives more or fewer than one literal segment.
+*
+* Template tags must be called with exactly one static string segment.
+*
+* @example
+* ```typescript
+* import { IdentitySegmentCountError } from "@beep/identity"
+*
+* const error = IdentitySegmentCountError.make()
+* console.log(error.message) // "Identity template tags must use a single literal segment."
+* ```
+*
+* @since 0.0.0
+* @category error-handling
+  */
+  export class IdentitySegmentCountError extends S.TaggedErrorClass<IdentitySegmentCountError>(
+  "@beep/identity/errors/IdentitySegmentCountError"
+  )(
+  "IdentitySegmentCountError",
+  {},
+  {
+  title: "Identity Segment Count Error",
+  description: "Identity template tags must use a single literal segment.",
+  }
+  ) {
+  /**
+    * Human-readable error message.
+    *
+    * @since 0.0.0
+    * @category getters
+      */
+      override get message(): string {
+      return "Identity template tags must use a single literal segment.";
+      }
+      }
+
+/**
+* Current version of the `@beep/identity` package.
+*
+* @example
+* ```typescript
+* import { VERSION } from "@beep/identity"
+*
+* console.log(VERSION) // "0.0.0"
+* ```
+*
+* @since 0.0.0
+* @category configuration
+  */
+  export const VERSION = S.decodeUnknownSync(IdentityVersion)("0.0.0");
+
+/**
+* Type-level constraint ensuring an identity segment does not start or end with a slash.
+*
+* Resolves to `never` when the segment starts or ends with `/`, preventing
+* invalid identity paths at compile time.
+*
+* @example
+* ```typescript
+* import type { SegmentValue } from "@beep/identity"
+*
+* type Valid = SegmentValue<"UserService">
+* type Invalid = SegmentValue<"/leading">
+* ```
+*
+* @since 0.0.0
+* @category models
+  */
+  export type SegmentValue<S extends TString.NonEmpty> = S extends `/${string}`
+  ? never
+  : S extends `${string}/`
+  ? never
+  : S;
+
+type InvalidModuleChar =
+| "/"
+| "\\"
+| "."
+| ":"
+| ";"
+| ","
+| "'"
+| '"'
+| "["
+| "]"
+| "{"
+| "}"
+| "("
+| ")"
+| "@"
+| "#"
+| "$"
+| "%"
+| "^"
+| "&"
+| "*"
+| "+"
+| "="
+| "!"
+| "~"
+| "|"
+| "?"
+| "<"
+| ">"
+| " "
+| "\t"
+| "\n"
+| "\r";
+
+type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+
+type PascalCaseWord<Word extends string> = Word extends "" ? "" : Capitalize<Lowercase<Word>>;
+
+type TitleWord<Word extends string> = Capitalize<Word>;
+
+type NormalizeTitleSeparators<Value extends string> = Value extends `${infer Head}_${infer Tail}`
+? `${NormalizeTitleSeparators<Head>} ${NormalizeTitleSeparators<Tail>}`
+: Value extends `${infer Head}-${infer Tail}`
+? `${NormalizeTitleSeparators<Head>} ${NormalizeTitleSeparators<Tail>}`
+: Value;
+
+type TrimTitleSpaces<Value extends string> = Value extends ` ${infer Rest}`
+? TrimTitleSpaces<Rest>
+: Value extends `${infer Rest} `
+? TrimTitleSpaces<Rest>
+: Value;
+
+type SplitTitleWords<Value extends string> = Value extends `${infer Head} ${infer Tail}`
+? Head extends ""
+? SplitTitleWords<Tail>
+: readonly [Head, ...SplitTitleWords<Tail>]
+: Value extends ""
+? readonly []
+: readonly [Value];
+
+type JoinTitleWords<Words extends ReadonlyArray<string>> = Words extends readonly [infer Head extends string]
+? TitleWord<Head>
+: Words extends readonly [infer Head extends string, ...infer Tail extends ReadonlyArray<string>]
+? `${TitleWord<Head>} ${JoinTitleWords<Tail>}`
+: "";
+
+/**
+* Derive a human-readable title from a kebab-case or snake_case identifier.
+*
+* Converts `"my-service"` to `"My Service"` and `"user_account"` to `"User Account"`.
+*
+* @example
+* ```typescript
+* import type { TitleFromIdentifier } from "@beep/identity"
+*
+* type Title = TitleFromIdentifier<"my-service"> // "My Service"
+* ```
+*
+* @since 0.0.0
+* @category models
+  */
+  export type TitleFromIdentifier<Identifier extends string> = JoinTitleWords
+  SplitTitleWords<TrimTitleSpaces<NormalizeTitleSeparators<Identifier>>>
+>;
+
+type PascalCaseValue<Value extends string> = Value extends `${infer A}-${infer B}-${infer C}-${infer D}`
+? `${PascalCaseWord<A>}${PascalCaseWord<B>}${PascalCaseWord<C>}${PascalCaseWord<D>}`
+: Value extends `${infer A}-${infer B}-${infer C}`
+? `${PascalCaseWord<A>}${PascalCaseWord<B>}${PascalCaseWord<C>}`
+: Value extends `${infer A}-${infer B}`
+? `${PascalCaseWord<A>}${PascalCaseWord<B>}`
+: Value extends `${infer A}_${infer B}_${infer C}_${infer D}`
+? `${PascalCaseWord<A>}${PascalCaseWord<B>}${PascalCaseWord<C>}${PascalCaseWord<D>}`
+: Value extends `${infer A}_${infer B}_${infer C}`
+? `${PascalCaseWord<A>}${PascalCaseWord<B>}${PascalCaseWord<C>}`
+: Value extends `${infer A}_${infer B}`
+? `${PascalCaseWord<A>}${PascalCaseWord<B>}`
+: PascalCaseWord<Value>;
+
+type InvalidModulePrefix<S extends string> = S extends `${Digit}${string}` | `-${string}` | `_${string}` ? true : false;
+
+type HasInvalidModuleChar<S extends string> = S extends `${string}${InvalidModuleChar}${string}` ? true : false;
+
+/**
+* Type-level constraint for module-safe identity segments.
+*
+* In addition to the basic {@link SegmentValue} rules, module segments must start
+* with an alphabetic character and contain only alphanumerics, hyphens, or underscores.
+* Resolves to `never` when violated.
+*
+* @example
+* ```typescript
+* import type { ModuleSegmentValue } from "@beep/identity"
+*
+* type Valid = ModuleSegmentValue<"auth">
+* type Invalid = ModuleSegmentValue<"1bad">
+* ```
+*
+* @since 0.0.0
+* @category models
+  */
+  export type ModuleSegmentValue<S extends TString.NonEmpty> =
+  InvalidModulePrefix<S> extends true ? never : HasInvalidModuleChar<S> extends true ? never : SegmentValue<S>;
+
+/**
+* Derive a PascalCase accessor name suffixed with `Id` from a module segment.
+*
+* `"my-service"` becomes `"MyServiceId"`.
+*
+* @example
+* ```typescript
+* import type { ModuleAccessor } from "@beep/identity"
+*
+* type Acc = ModuleAccessor<"my-service"> // "MyServiceId"
+* ```
+*
+* @since 0.0.0
+* @category models
+  */
+  export type ModuleAccessor<S extends TString.NonEmpty> = `${PascalCaseValue<ModuleSegmentValue<S>>}Id`;
+
+/**
+* Derive a `$`-prefixed PascalCase accessor key from a module segment.
+*
+* `"my-service"` becomes `"$MyServiceId"`.
+*
+* @example
+* ```typescript
+* import type { TaggedAccessor } from "@beep/identity"
+*
+* type Tag = TaggedAccessor<"my-service"> // "$MyServiceId"
+* ```
+*
+* @since 0.0.0
+* @category models
+  */
+  export type TaggedAccessor<S extends TString.NonEmpty> = `$${ModuleAccessor<S>}`;
+
+/**
+* Branded string type for identity values, preventing accidental use of raw strings.
+*
+* @example
+* ```typescript
+* import type { IdentityString } from "@beep/identity"
+*
+* declare const id: IdentityString<"@beep/utils/Service">
+* ```
+*
+* @since 0.0.0
+* @category models
+  */
+  export type IdentityString<Value extends string> = Value & {
+  readonly __brand: unique symbol;
+  };
+
+/**
+* Branded symbol type for identity values, created via `Symbol.for` for interning.
+*
+* @example
+* ```typescript
+* import type { IdentitySymbol } from "@beep/identity"
+*
+* declare const sym: IdentitySymbol<"@beep/utils">
+* ```
+*
+* @since 0.0.0
+* @category models
+  */
+  export type IdentitySymbol<Value extends string> = symbol & {
+  readonly description: Value;
+  };
+
+/**
+* Additional schema annotation fields that identity annotation helpers accept.
+*
+* Mirrors `S.Annotations.Bottom` so callers can supply `description`, `documentation`,
+* and other Effect Schema annotation keys alongside identity metadata.
+*
+* @example
+* ```typescript
+* import type { SchemaAnnotationExtras } from "@beep/identity"
+*
+* type Extras = SchemaAnnotationExtras<string>
+* ```
+*
+* @since 0.0.0
+* @category models
+  */
+  export type SchemaAnnotationExtras
+  SchemaType,
+  TypeParameters extends ReadonlyArray<S.Top> = readonly [],
+> = S.Annotations.Bottom<SchemaType, TypeParameters>;
+
+/**
+* Annotation fields accepted by `annoteKey`, mirroring `S.Annotations.Key`.
+*
+* @example
+* ```typescript
+* import type { KeyAnnotationExtras } from "@beep/identity"
+*
+* type Extras = KeyAnnotationExtras<string>
+* ```
+*
+* @since 0.0.0
+* @category models
+  */
+  export type KeyAnnotationExtras<SchemaType> = S.Annotations.Key<SchemaType>;
+
+/**
+* Mirrors the raw HTTP encoding annotation shape used by Effect's HttpApiSchema.
+*
+* The installed `effect@4.0.0-beta.28` runtime supports `~httpApiEncoding`, but
+* its published `.d.ts` does not currently export the upstream `Encoding` alias.
+*
+* @example
+* ```typescript
+* import type { HttpApiEncoding } from "@beep/identity"
+*
+* const enc: HttpApiEncoding = { _tag: "Json", contentType: "application/json" }
+* ```
+*
+* @since 0.0.0
+* @category models
+  */
+  export type HttpApiEncoding =
+  | {
+  readonly _tag: "Multipart";
+  readonly mode: "buffered" | "stream";
+  readonly contentType: string;
+  readonly limits?: Multipart_.withLimits.Options | undefined;
+  }
+  | {
+  readonly _tag: "Json" | "FormUrlEncoded" | "Uint8Array" | "Text";
+  readonly contentType: string;
+  };
+
+/**
+* Annotation fields accepted by `annoteHttp`, extending schema extras with HTTP API metadata.
+*
+* Supports optional `httpApiStatus` and `~httpApiEncoding` for Effect HTTP API annotations.
+*
+* @example
+* ```typescript
+* import type { HttpAnnotationExtras } from "@beep/identity"
+*
+* type Extras = HttpAnnotationExtras<string>
+* ```
+*
+* @since 0.0.0
+* @category models
+  */
+  export type HttpAnnotationExtras
+  SchemaType,
+  TypeParameters extends ReadonlyArray<S.Top> = readonly [],
+> = SchemaAnnotationExtras<SchemaType, TypeParameters> & {
+readonly httpApiStatus?: number | undefined;
+readonly "~httpApiEncoding"?: HttpApiEncoding | undefined;
+};
+
+/**
+* Union of all annotation extras accepted by the `annote` family of helpers.
+*
+* Combines key-level and HTTP-level annotation fields into a single constraint.
+*
+* @example
+* ```typescript
+* import type { IdentityAnyAnnotationExtras } from "@beep/identity"
+*
+* type Extras = IdentityAnyAnnotationExtras<string>
+* ```
+*
+* @since 0.0.0
+* @category models
+  */
+  export type IdentityAnyAnnotationExtras
+  SchemaType,
+  TypeParameters extends ReadonlyArray<S.Top> = readonly [],
+> = KeyAnnotationExtras<SchemaType> & HttpAnnotationExtras<SchemaType, TypeParameters>;
+
+/**
+* Fully resolved identity annotation record applied to Effect schemas.
+*
+* Contains a full-path `identifier` string, an interned `schemaId` symbol, and a
+* human-readable `title` derived from the local identifier segment.
+*
+* @example
+* ```typescript
+* import type { IdentityAnnotation } from "@beep/identity"
+*
+* type Ann = IdentityAnnotation<"@beep/utils/User", "User">
+* ```
+*
+* @since 0.0.0
+* @category models
+  */
+  export type IdentityAnnotation<Value extends string, Identifier extends string> = S.Annotations.Annotations & {
+  readonly identifier: IdentityString<Value>;
+  readonly schemaId: IdentitySymbol<Value>;
+  readonly title: TitleFromIdentifier<Identifier>;
+  };
+
+type IdentityAnnotationMetadataKeys = "identifier" | "schemaId" | "title";
+
+/**
+* Result of calling `annote` -- the identity annotation merged with any caller-supplied extras,
+* with identity metadata keys taking precedence.
+*
+* @example
+* ```typescript
+* import type { IdentityAnnotationResult } from "@beep/identity"
+*
+* type Result = IdentityAnnotationResult<"@beep/utils/User", "User">
+* ```
+*
+* @since 0.0.0
+* @category models
+  */
+  export type IdentityAnnotationResult
+  Value extends string,
+  Identifier extends string,
+  Extras extends object = {},
+> = IdentityAnnotation<Value, Identifier> & Omit<Extras, IdentityAnnotationMetadataKeys>;
+
+type SchemaPath<Struct extends object> = Extract<Paths<Struct>, string>;
+
+type KeyIdentifierPath<Identifier extends string> = Identifier extends `${string}.${infer Rest}` ? Rest : Identifier;
+
+type StrictKeyIdentifier<Struct extends object, Identifier extends TString.NonEmpty> =
+KeyIdentifierPath<SegmentValue<Identifier>> extends SchemaPath<Struct> ? SegmentValue<Identifier> : never;
+
+type KeyIdentifierValue<Struct extends object, Identifier extends string> = Get<Struct, KeyIdentifierPath<Identifier>>;
+
+type SchemaStatics<Schema extends S.Top> = Omit<Schema, keyof Schema["Rebuild"] | keyof S.Top>;
+
+type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<Schema>;
+
+/**
+* Record mapping `$`-prefixed accessor keys to child {@link IdentityComposer} instances,
+* produced by calling `compose` with one or more module segment names.
+*
+* @example
+* ```typescript
+* import type { TaggedModuleRecord } from "@beep/identity"
+*
+* type Modules = TaggedModuleRecord<"@beep/pkg", readonly ["auth", "billing"]>
+* ```
+*
+* @since 0.0.0
+* @category models
+  */
+  export type TaggedModuleRecord<Value extends string, Segments extends ReadonlyArray<TString.NonEmpty>> = {
+  readonly [K in Segments[number] as TaggedAccessor<K>]: IdentityComposer<`${Value}/${ModuleSegmentValue<K>}`>;
+  };
+
+/**
+* Composable identity builder for constructing hierarchical `@beep/` identity paths.
+*
+* An `IdentityComposer` holds a current identity path and provides methods to:
+* - Extend the path with child segments (`create`, `make`, template tag)
+* - Produce annotation records for Effect schemas (`annote`, `annoteSchema`, `annoteHttp`, `annoteKey`)
+* - Batch-create named child composers (`compose`)
+*
+* @example
+* ```typescript
+* import { make } from "@beep/identity"
+*
+* // Create a root composer for "my-pkg"
+* const { $MyPkgId } = make("my-pkg")
+*
+* // Template tag: derive a child identity string
+* const serviceId = $MyPkgId`UserService`
+* console.log(serviceId)// "@beep/my-pkg/UserService"
+*
+* // make: one-shot string creation
+* const modelId = $MyPkgId.make("UserModel")
+* console.log(modelId)// "@beep/my-pkg/UserModel"
+*
+* // create: derive a child composer for further nesting
+* const sub = $MyPkgId.create("domain")
+* const nested = sub.make("Entity")
+* console.log(nested)// "@beep/my-pkg/domain/Entity"
+*
+* // compose: batch-create tagged child composers
+* const modules = $MyPkgId.compose("auth", "billing")
+* const authId = modules.$AuthId.make("Session")
+* console.log(authId)// "@beep/my-pkg/auth/Session"
+*
+* // annote: produce an annotation record for Effect schemas
+* const annotation = $MyPkgId.annote("UserSchema", {
+*
+* })
+* console.log(annotation.identifier)// "@beep/my-pkg/UserSchema"
+* console.log(annotation.title)// "UserSchema"
+* ```
+*
+* @since 0.0.0
+* @category models
+  */
+  export interface IdentityComposer<Value extends string> {
+  /**
+    * Produce an identity annotation record for an Effect schema.
+    *
+    * Returns an object containing `schemaId`, `identifier`, `title`, and any
+    * caller-supplied extras. Use this with `S.Class`, `S.TaggedErrorClass`, or
+    * similar constructors that accept an annotation record.
+    *
+    * @example
+    * ```typescript
+    * import { make } from "@beep/identity"
+    *
+    * const { $MyPkgId } = make("my-pkg")
+    * const ann = $MyPkgId.annote("UserCreated", { description: "A user was created." })
+    *
+    * console.log(ann.identifier)// "@beep/my-pkg/UserCreated"
+    * console.log(ann.title)// "UserCreated"
+    * console.log(ann.description)// "A user was created."
+    * ```
+    *
+    * @since 0.0.0
+    * @category combinators
+      */
+      annote
+      const Next extends TString.NonEmpty = TString.NonEmpty,
+      const Extras extends IdentityAnyAnnotationExtras<unknown> = {},
+>(
+identifier: SegmentValue<Next>,
+extras?: undefined | Extras
+): IdentityAnnotationResult<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>, Extras>;
+
+/**
+* Produce a schema annotation function with HTTP API metadata.
+*
+* Returns a function that annotates an Effect schema with identity metadata
+* plus optional `httpApiStatus` and encoding fields.
+*
+* @since 0.0.0
+* @category combinators
+  */
+  annoteHttp<Schema extends S.Top, const Next extends TString.NonEmpty = TString.NonEmpty>(
+  identifier: SegmentValue<Next>,
+  extras?: undefined | HttpAnnotationExtras<Schema["Type"]>
+  ): (self: Schema) => AnnotatedSchema<Schema>;
+
+/**
+* Produce a type-safe key annotation function scoped to a parent struct.
+*
+* When called with zero arguments, returns a curried builder that constrains
+* the identifier to valid paths within `Parent`.
+*
+* @since 0.0.0
+* @category combinators
+  */
+  annoteKey<Parent extends object>():
+  const Next extends TString.NonEmpty = TString.NonEmpty,
+  Schema extends S.Top & { readonly Type: KeyIdentifierValue<Parent, SegmentValue<Next>> } = S.Top & {
+  readonly Type: KeyIdentifierValue<Parent, SegmentValue<Next>>;
+  },
+>(
+identifier: SegmentValue<Next> & StrictKeyIdentifier<Parent, Next>,
+extras?: undefined | KeyAnnotationExtras<KeyIdentifierValue<Parent, SegmentValue<Next>>>
+) => (self: Schema) => Schema["Rebuild"];
+
+/**
+* Produce a key annotation function for an untyped parent.
+*
+* @since 0.0.0
+* @category combinators
+  */
+  annoteKey(
+  identifier: TString.NonEmpty,
+  extras?: undefined | KeyAnnotationExtras<unknown>
+  ): <Schema extends S.Top>(self: Schema) => Schema["Rebuild"];
+
+/**
+* Produce a generic schema annotation function.
+*
+* Returns a function that calls `self.annotate(...)` with identity metadata
+* merged with any caller-supplied extras.
+*
+* @since 0.0.0
+* @category combinators
+  */
+  annoteSchema<Schema extends S.Top, const Next extends TString.NonEmpty = TString.NonEmpty>(
+  identifier: SegmentValue<Next>,
+  extras?: undefined | S.Annotations.Bottom<Schema["Type"], Schema["~type.parameters"]>
+  ): (self: Schema) => AnnotatedSchema<Schema>;
+
+/**
+* Batch-create child {@link IdentityComposer} instances for multiple module segments.
+*
+* Returns a record whose keys are `$`-prefixed PascalCase accessors (e.g. `$AuthId`)
+* mapped to child composers rooted at `{Value}/{segment}`.
+*
+* @example
+* ```typescript
+* import { make } from "@beep/identity"
+*
+* const { $MyPkgId } = make("my-pkg")
+* const modules = $MyPkgId.compose("auth", "billing")
+*
+* const authId = modules.$AuthId.make("Session")
+* console.log(authId)// "@beep/my-pkg/auth/Session"
+* ```
+*
+* @since 0.0.0
+* @category constructors
+  */
+  compose
+  const Segments extends readonly [ModuleSegmentValue<TString.NonEmpty>, ...ModuleSegmentValue<TString.NonEmpty>[]],
+>(...segments: Segments): TaggedModuleRecord<Value, Segments>;
+
+/**
+* Create a child {@link IdentityComposer} for further path extension.
+*
+* Unlike `make` (which returns a plain string), `create` returns a full
+* composer that supports further nesting, annotation, and composition.
+*
+* @example
+* ```typescript
+* import { make } from "@beep/identity"
+*
+* const { $MyPkgId } = make("my-pkg")
+* const sub = $MyPkgId.create("domain")
+* const entityId = sub.make("Entity")
+* console.log(entityId)// "@beep/my-pkg/domain/Entity"
+* ```
+*
+* @since 0.0.0
+* @category constructors
+  */
+  create<const Next extends TString.NonEmpty>(
+  segment: SegmentValue<Next>
+  ): IdentityComposer<`${Value}/${SegmentValue<Next>}`>;
+
+/**
+* The identity string for this composer's current path.
+*
+* @since 0.0.0
+* @category getters
+  */
+  readonly identifier: IdentityString<Value>;
+
+/**
+* Create a child identity string by appending one segment.
+*
+* @example
+* ```typescript
+* import { make } from "@beep/identity"
+*
+* const { $MyPkgId } = make("my-pkg")
+* const id = $MyPkgId.make("UserModel")
+* console.log(id)// "@beep/my-pkg/UserModel"
+* ```
+*
+* @since 0.0.0
+* @category constructors
+  */
+  make<const Next extends TString.NonEmpty>(
+  segment: SegmentValue<Next>
+  ): IdentityString<`${Value}/${SegmentValue<Next>}`>;
+
+/**
+* Return this composer's identity as a branded string.
+*
+* @since 0.0.0
+* @category getters
+  */
+  string(): IdentityString<Value>;
+
+/**
+* Return this composer's identity as an interned symbol via `Symbol.for`.
+*
+* @since 0.0.0
+* @category getters
+  */
+  symbol(): IdentitySymbol<Value>;
+
+/**
+* Alias for {@link identifier}.
+*
+* @since 0.0.0
+* @category getters
+  */
+  readonly value: IdentityString<Value>;
+
+/**
+* Template tag call signature for creating child identity strings.
+*
+* Must be called with a single static string literal and no interpolations.
+*
+* @example
+* ```typescript
+* import { make } from "@beep/identity"
+*
+* const { $MyPkgId } = make("my-pkg")
+* const id = $MyPkgId`UserService`
+* console.log(id)// "@beep/my-pkg/UserService"
+* ```
+*
+* @since 0.0.0
+* @category constructors
+  */
+  (strings: TemplateStringsArray, ...values: ReadonlyArray<unknown>): IdentityString<`${Value}/${string}`>;
+  }
+
+type NormalizedBase<Base extends TString.NonEmpty> = Base extends `@beep/${infer Rest extends TString.NonEmpty}`
+? Rest
+: Base extends "@beep"
+? "beep"
+: Base extends `@${infer Rest extends TString.NonEmpty}`
+? Rest
+: Base;
+
+type BaseIdentity<Base extends TString.NonEmpty> =
+NormalizedBase<Base> extends BeepBase ? BeepNamespace : `${BeepNamespace}/${NormalizedBase<Base>}`;
+
+const SegmentCheck = S.makeFilterGroup(
+[
+S.isNonEmpty({
+identifier: "@beep/identity/check/non-empty-segment",
+message: "Identity segments cannot be empty.",
+}),
+S.makeFilter((segment: string) => !pipe(segment, Str.startsWith("/")), {
+identifier: "@beep/identity/check/no-leading-slash",
+message: 'Identity segments cannot start with "/".',
+}),
+S.makeFilter((segment: string) => !pipe(segment, Str.endsWith("/")), {
+identifier: "@beep/identity/check/no-trailing-slash",
+message: 'Identity segments cannot end with "/".',
+}),
+],
+{
+title: "Identity Segment",
+description: "Identity segments are non-empty and do not start or end with a slash.",
+}
+);
+
+const SegmentSchema = S.String.check(SegmentCheck);
+
+const ModuleSegmentCheck = S.makeFilterGroup(
+[
+S.isPattern(MODULE_CHARACTERS, {
+identifier: "@beep/identity/check/module-characters",
+message: "Module segments must contain only alphanumeric characters, hyphens, or underscores.",
+}),
+S.isPattern(MODULE_LEADING_ALPHA, {
+identifier: "@beep/identity/check/module-leading-alpha",
+message: "Module segments must start with an alphabetic character to create valid accessors.",
+}),
+],
+{
+title: "Identity Module Segment",
+description: "Module segments are identity segments that are safe for generated module accessor names.",
+}
+);
+
+const ModuleSegmentSchema = SegmentSchema.check(ModuleSegmentCheck);
+
+const BaseSegmentSchema = S.String.check(
+S.isNonEmpty({
+identifier: "@beep/identity/check/non-empty-base",
+message: "Identity bases cannot be empty.",
+}),
+S.isPattern(BASE_CHARACTERS, {
+identifier: "@beep/identity/check/base-characters",
+message: "Identity bases must use alphanumeric, hyphen, or underscore characters and start/end with alphanumeric.",
+})
+);
+
+const toIdentityString = <Value extends string>(value: Value): IdentityString<Value> => value as IdentityString<Value>;
+
+const toIdentitySymbol = <Value extends string>(value: Value): IdentitySymbol<Value> =>
+Symbol.for(value) as IdentitySymbol<Value>;
+
+function appendIdentityValue<Value extends string, Next extends string>(value: Value, next: Next): `${Value}/${Next}`;
+function appendIdentityValue(value: string, next: string): string {
+return `${value}/${next}`;
+}
+
+const toTitle = <const Identifier extends TString.NonEmpty>(identifier: Identifier): TitleFromIdentifier<Identifier> =>
+pipe(
+identifier,
+Str.replace(/[_-]+/g, " "),
+Str.trim,
+Str.split(" "),
+A.filter(Str.isNonEmpty),
+A.map((segment) => `${Str.toUpperCase(Str.slice(0, 1)(segment))}${Str.slice(1)(segment)}`),
+A.join(" ")
+) as TitleFromIdentifier<Identifier>;
+
+type ModulePascal<Segment extends TString.NonEmpty> =
+ModuleAccessor<Segment> extends `${infer Pascal}Id` ? Pascal : never;
+
+const toPascalIdentifier = <const Segment extends TString.NonEmpty>(segment: Segment): ModulePascal<Segment> =>
+pipe(segment, toTitle, Str.replace(/\s+/g, "")) as ModulePascal<Segment>;
+
+const toTaggedKey = <const Segment extends TString.NonEmpty>(segment: Segment): TaggedAccessor<Segment> =>
+`$${toPascalIdentifier(segment)}Id` as TaggedAccessor<Segment>;
+
+const validateSegment = <const Segment extends TString.NonEmpty>(segment: Segment): Segment => {
+S.decodeUnknownSync(SegmentSchema)(segment);
+return segment;
+};
+
+const validateModuleSegment = <const Segment extends TString.NonEmpty>(segment: Segment): Segment => {
+S.decodeUnknownSync(ModuleSegmentSchema)(segment);
+return segment;
+};
+
+const validateTemplateInterpolations = (values: ReadonlyArray<unknown>): void =>
+A.match(values, {
+onEmpty: Fn.constVoid,
+onNonEmpty: () => {
+throw IdentityInterpolationError.make({});
+},
+});
+
+const validateTemplateSegmentCount = (strings: TemplateStringsArray): void =>
+A.match(strings, {
+onEmpty: () => {
+throw IdentitySegmentCountError.make({});
+},
+onNonEmpty: () =>
+A.match(A.drop(strings, 1), {
+onEmpty: Fn.constVoid,
+onNonEmpty: () => {
+throw IdentitySegmentCountError.make({});
+},
+}),
+});
+
+const stripPrefix = (prefix: string) =>
+flow(O.liftPredicate(Str.startsWith(prefix)), O.map(Str.slice(Str.length(prefix))));
+
+const normalizeBase = <const Base extends TString.NonEmpty>(base: Base): NormalizedBase<Base> => {
+const value = S.decodeUnknownSync(S.String)(base);
+const namespaceBaseOption = O.as(O.liftPredicate(isBeepNamespace)(value), beepBase);
+const scopedNamespaceOption = stripPrefix(`${beepNamespace}/`)(value);
+const atPrefixNamespaceOption = stripPrefix(beepNamespace)(value);
+const withoutNamespace = pipe(
+[namespaceBaseOption, scopedNamespaceOption, atPrefixNamespaceOption],
+O.firstSomeOf,
+O.getOrElse(() => value)
+);
+const withoutAtPrefix = pipe(
+stripPrefix("@")(withoutNamespace),
+O.getOrElse(() => withoutNamespace)
+);
+
+return S.decodeUnknownSync(BaseSegmentSchema)(withoutAtPrefix) as NormalizedBase<Base>;
+};
+
+const createBaseIdentity = <const Base extends TString.NonEmpty>(base: NormalizedBase<Base>): BaseIdentity<Base> =>
+O.match(O.liftPredicate(isBeepBase)(base), {
+onNone: () => `${beepNamespace}/${base}` as BaseIdentity<Base>,
+onSome: () => beepNamespace as BaseIdentity<Base>,
+});
+
+const createComposer = <const Value extends string>(value: Value): IdentityComposer<Value> => {
+const identityValue = toIdentityString(value);
+
+function createTemplateIdentity(strings: TemplateStringsArray, ...values: ReadonlyArray<unknown>) {
+validateTemplateInterpolations(values);
+validateTemplateSegmentCount(strings);
+
+    return pipe(strings[0], S.decodeUnknownSync(ModuleSegmentSchema), (segment) =>
+      toIdentityString(appendIdentityValue(value, segment))
+    );
+}
+
+function toTaggedComposerEntry(segment: ModuleSegmentValue<TString.NonEmpty>) {
+const ensured = validateModuleSegment(segment);
+return [toTaggedKey(ensured), composeNext(ensured)] as const;
+}
+
+const composeNext = <const Next extends TString.NonEmpty>(
+segment: SegmentValue<Next>
+): IdentityComposer<`${Value}/${SegmentValue<Next>}`> => {
+const next = validateSegment(segment);
+const composed = appendIdentityValue(value, next);
+return createComposer(composed);
+};
+
+const identityAnnotation = <const Next extends TString.NonEmpty = TString.NonEmpty>(
+identifier: SegmentValue<Next>
+): IdentityAnnotation<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>> => {
+const next = validateSegment(identifier);
+const composer = composeNext(next);
+
+    return {
+      schemaId: composer.symbol(),
+      identifier: composer.string(),
+      title: toTitle(next),
+    } satisfies IdentityAnnotation<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>>;
+};
+
+const annote =
+const Next extends TString.NonEmpty = TString.NonEmpty,
+const Extras extends IdentityAnyAnnotationExtras<unknown> = {},
+>(
+identifier: SegmentValue<Next>,
+extras?: undefined | Extras
+): IdentityAnnotationResult<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>, Extras> =>
+pipe(identityAnnotation(identifier), (annotation) =>
+O.match(O.fromUndefinedOr(extras), {
+onNone: () =>
+annotation as IdentityAnnotationResult<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>, Extras>,
+onSome: (currentExtras) =>
+({
+...currentExtras,
+schemaId: annotation.schemaId,
+identifier: annotation.identifier,
+title: annotation.title,
+}) as IdentityAnnotationResult<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>, Extras>,
+})
+);
+
+const annoteSchema = <Schema extends S.Top, const Next extends TString.NonEmpty = TString.NonEmpty>(
+identifier: SegmentValue<Next>,
+extras?: undefined | S.Annotations.Bottom<Schema["Type"], Schema["~type.parameters"]>
+): ((self: Schema) => AnnotatedSchema<Schema>) => {
+const annotation = annote(identifier, extras);
+
+    return (self: Schema): AnnotatedSchema<Schema> => preserveSchemaStatics(self, self.annotate(annotation));
+};
+
+function annoteKey<Parent extends object>():
+const Next extends TString.NonEmpty = TString.NonEmpty,
+Schema extends S.Top & { readonly Type: KeyIdentifierValue<Parent, SegmentValue<Next>> } = S.Top & {
+readonly Type: KeyIdentifierValue<Parent, SegmentValue<Next>>;
+},
+>(
+identifier: SegmentValue<Next> & StrictKeyIdentifier<Parent, Next>,
+extras?: undefined | KeyAnnotationExtras<KeyIdentifierValue<Parent, SegmentValue<Next>>>
+) => (self: Schema) => Schema["Rebuild"];
+function annoteKey(
+identifier: TString.NonEmpty,
+extras?: undefined | KeyAnnotationExtras<unknown>
+): <Schema extends S.Top>(self: Schema) => Schema["Rebuild"];
+function annoteKey(identifier?: TString.NonEmpty, extras?: undefined | KeyAnnotationExtras<unknown>): unknown {
+return O.match(O.fromUndefinedOr(identifier), {
+onNone:
+() =>
+<const StrictNext extends TString.NonEmpty = TString.NonEmpty>(
+strictIdentifier: SegmentValue<StrictNext>,
+strictExtras?: undefined | KeyAnnotationExtras<unknown>
+) =>
+annoteKey(strictIdentifier, strictExtras),
+onSome:
+(currentIdentifier) =>
+<Schema extends S.Top>(self: Schema): Schema["Rebuild"] =>
+self.annotateKey(annote(currentIdentifier, extras)),
+});
+}
+
+const annoteHttp = <Schema extends S.Top, const Next extends TString.NonEmpty = TString.NonEmpty>(
+identifier: SegmentValue<Next>,
+extras?: undefined | HttpAnnotationExtras<Schema["Type"]>
+): ((self: Schema) => AnnotatedSchema<Schema>) => {
+const annotation = annote(identifier, extras);
+
+    return (self: Schema): AnnotatedSchema<Schema> => preserveSchemaStatics(self, self.annotate(annotation));
+};
+
+return Object.defineProperties(createTemplateIdentity, {
+value: {
+value: identityValue,
+enumerable: true,
+writable: true,
+configurable: true,
+},
+identifier: {
+value: identityValue,
+enumerable: true,
+writable: true,
+configurable: true,
+},
+compose: {
+value:
+const Segments extends readonly [
+ModuleSegmentValue<TString.NonEmpty>,
+...ModuleSegmentValue<TString.NonEmpty>[],
+],
+>(
+...segments: Segments
+) => {
+const entries = pipe(segments, A.map(toTaggedComposerEntry));
+return R.fromEntries(entries) as unknown as TaggedModuleRecord<Value, Segments>;
+},
+enumerable: true,
+writable: true,
+configurable: true,
+},
+create: {
+value: composeNext,
+enumerable: true,
+writable: true,
+configurable: true,
+},
+make: {
+value: <const Next extends TString.NonEmpty>(segment: SegmentValue<Next>) => composeNext(segment).string(),
+enumerable: true,
+writable: true,
+configurable: true,
+},
+string: {
+value: () => identityValue,
+enumerable: true,
+writable: true,
+configurable: true,
+},
+symbol: {
+value: () => toIdentitySymbol(value),
+enumerable: true,
+writable: true,
+configurable: true,
+},
+annote: {
+value: annote,
+enumerable: true,
+writable: true,
+configurable: true,
+},
+annoteSchema: {
+value: annoteSchema,
+enumerable: true,
+writable: true,
+configurable: true,
+},
+annoteKey: {
+value: annoteKey,
+enumerable: true,
+writable: true,
+configurable: true,
+},
+annoteHttp: {
+value: annoteHttp,
+enumerable: true,
+writable: true,
+configurable: true,
+},
+}) as unknown as IdentityComposer<Value>;
+};
+
+type MakeReturn<Base extends TString.NonEmpty> = {
+readonly [K in `$${PascalCaseValue<ModuleSegmentValue<NormalizedBase<Base>>>}Id`]: IdentityComposer
+BaseIdentity<Base>
+>;
+};
+
+/**
+* Create a root identity composer for a `@beep` package namespace.
+*
+* Accepts a base string (with or without the `@beep/` prefix) and returns
+* a record containing a single `$`-prefixed PascalCase accessor mapped to
+* the root {@link IdentityComposer} for that package.
+*
+* @example
+* ```typescript
+* import { make } from "@beep/identity"
+*
+* // Bare name -- "@beep/" prefix is added automatically
+* const { $MyPkgId } = make("my-pkg")
+* const id = $MyPkgId.make("Service")
+* console.log(id)// "@beep/my-pkg/Service"
+* ```
+*
+* @example
+* ```typescript
+* import { make } from "@beep/identity"
+*
+* // Full scoped name works too
+* const { $UtilsId } = make("@beep/utils")
+* const sym = $UtilsId.symbol()
+* console.log(sym)// Symbol.for("@beep/utils")
+* ```
+*
+* @since 0.0.0
+* @category constructors
+  */
+  export const make = flow(<const Base extends TString.NonEmpty>(base: Base): MakeReturn<Base> => {
+  const normalized = normalizeBase(base);
+  const baseIdentity = createBaseIdentity(normalized);
+  const composer = createComposer(baseIdentity);
+  const key = toTaggedKey(normalized);
+
+return Fn.cast
+{
+[x: string]: IdentityComposer<BaseIdentity<Base>>;
+},
+MakeReturn<Base>
+>({
+[key]: composer,
+});
+});
+
+
+Originally I made it just to be a typesafe path builder with schema helpers/combinators to fill in annotations. I'm now seeing a bigger story. What about you?
+```]]>
+      </section>
+      <section index="3" kind="model_trace" source_label="thinking 2">
+<![CDATA[I'm examining what the Id.ts file actually does at its core—it's a typesafe hierarchical identity system that builds paths with schema annotations, and the user is sensing there's a deeper architectural pattern here that connects to the semantic web concepts we've been discussing. Let me trace through what's really happening in this code to understand the bigger picture they're pointing toward. The validation rules ensure segments are valid identifiers and template tags are static literals, making identities deterministic. What's really happening here is that $I isn't just a path builder—it's an IRI minting and interning system for the semantic web, where each annotated schema field becomes an RDF predicate IRI that can be projected into JSON-LD contexts, triple templates, OpenAPI specs, and more from a single AST.
+The parallel is striking: IRIs in RDF are globally unique, hierarchically structured, stable through interning, and the foundation of Linked Data. $I produces exactly that—globally unique, hierarchically namespaced identifiers under @beep/..., interned through JavaScript's global symbol registry, which guarantees the same IRI always denotes the same resource.
+So what's really happened is the user has built an IRI scheme without explicitly naming it. The @beep/ namespace functions like an ontology prefix, the path structure mirrors IRI paths, and Symbol.for acts as the interning mechanism. In the Ontology.models file, they're already mixing external IRIs like skos:prefLabel and dc:source with their own internal ones—they've constructed the subject/predicate identifier layer that underpins a knowledge graph.
+Now I'm seeing the deeper pattern: $I is the minting side of this duality. Where the previous conversation showed how external vocabularies become projections through the identifier annotation, $I is the machinery for creating your own terms in your own namespace. Together they form a complete system—borrowing external terms while minting internal ones.
+The real insight is that Symbol.for is what transforms this from a simple string builder into a true identity system. Because the global symbol registry ensures that two independently-created identities with the same IRI path are actually === to each other, which means the identity is stable and canonical across the entire system.
+This mirrors how RDF stores handle IRIs — the same IRI in different documents refers to the same resource. By interning symbols this way, the user has achieved that same referential transparency at the JavaScript runtime level. And that matters practically: these symbols can serve as map keys in a registry, which opens up the ability to build things like an MCP endpoint that resolves IRIs to their schemas or documentation.
+The final piece is closing the loop on self-description and dereferenceability — the idea that when you encounter an IRI, you should be able to follow it to get its definition. The codebase itself becomes an ontology where every schema, check, error, and service gets a minted IRI and symbol, turning the entire monorepo into RDF resources. The create/compose hierarchy naturally maps to semantic relationships like broader/narrower concepts, so you could export the whole thing as a SKOS or OWL ontology where each identity becomes a formal knowledge resource.
+Since these identities are stable and interned, they're perfect anchors for provenance tracking—every proposed change to a schema references that schema's identity, and the full audit trail (who proposed it, when, what SHACL rules gated it) hangs off that same IRI, making $I the foundation for the bitemporal provenance pipeline.
+The determinism constraint—forbidding template interpolation and requiring static literal segments—isn't just a guardrail; it's what makes these identities usable as IRIs in the first place. By ensuring identities are statically determinable at build time, they remain stable and referentially transparent, which means static analysis tools can extract them without executing code, and that's what enables the whole system to work.
+There's still a gap though: the namespace is currently a CURIE-like identifier rather than a dereferenceable HTTP IRI. For real interoperability with RDF tooling like Oxigraph or SPARQL processors, I'd need to map @beep/ to an actual base IRI—something like https://beep.dev/ns/ontology/ or a urn:beep: scheme—so the prefix declarations work cleanly in RDF contexts.
+The bigger picture is that $I acts as the CURIE authority, and with just one resolve(identity) → IRI function plus a @context entry mapping "beep" to the full IRI, the internal identities become proper RDF IRIs on the wire. The interned symbol is the in-memory canonical form; the IRI is what gets serialized. It mirrors that same in-memory-versus-serialized duality from their schema-as-codec approach.
+Let me double-check I'm reading the code correctly here—Symbol.for does create globally interned symbols where Symbol.for(x) === Symbol.for(x) always holds, and the template tag syntax forbids interpolation and requires a single segment. The user is asking me to reflect on the bigger picture they're seeing in the code — they want me to articulate the synthesis of what $I really is as a system. I'm recognizing that this is an IRI-minting and interning layer, essentially the identity and namespace-authority foundation of their ontology, and I should frame that insight clearly for them while staying grounded in what the code actually demonstrates. So the missing piece is mapping the @beep/ CURI to a real base IRI for RDF-tool interop. I need to be careful here—this person is operating at a high level of sophistication and doesn't need basic explanations or cheerleading, just substantive peer-level engagement with the pattern itself. I should stay dense and precise, mostly prose, and avoid the traps of being sycophantic, over-formatted, or vague about what this actually accomplishes.
+The core reframe is that the path builder is really an IRI minter and interning layer. Symbol.for is the keystone because it gives referential transparency—the same string always returns the same symbol. That duality between minting and reuse connects directly to what we discussed before. The determinism constraint isn't just a nice property; it's what makes static extraction possible. And all of this ties back to their actual flywheel and provenance work—the codebase becomes a graph you can reason about. The concrete gap is just CURIE to dereferenceable IRI, and the bridge is surprisingly small. The bigger story is that this is a CURIE authority plus interning layer, and there's probably something they haven't quite seen yet about how that positioning unlocks the rest. it means their whole codebase becomes a triple factory once annotated this way — $I provides the subject IRIs, the ontology annotations provide the predicates, and the decoded data provides the objects. But I need to be careful here: in OWLClass, the identifier on each field is actually the predicate, and the subject comes from the class's own IRI field (a FOLIO IRI), not from $I. So for externally-sourced data like FOLIO, the subject is already determined by FOLIO's own identity system.
+For internally-defined schemas though — the checks, the schema definitions themselves, the errors and services — that's where $I becomes the subject IRI. The schema definitions get $I IRIs through annoteSchema, making them meta-level resources that describe what the schema itself is. The checks also get their own $I IRIs, functioning as distinct resources in the ontology.
+What's becoming clearer is that there are really two layers at play: the schema/TBox level where `I‘mintsidentifiersforthedefinitionsthemselves(schemas,checks,errors,services),andtheinstance/ABoxlevelwhereactualdataflowsthroughwithIRIsfromthesourcesystemandexternalpredicates.So‘I` mints identifiers for the definitions themselves (schemas, checks, errors, services), and the instance/ABox level where actual data flows through with IRIs from the source system and external predicates. So `
+I‘mintsidentifiersforthedefinitionsthemselves(schemas,checks,errors,services),andtheinstance/ABoxlevelwhereactualdataflowsthroughwithIRIsfromthesourcesystemandexternalpredicates.So‘I` isn't just minting subjects arbitrarily — it's specifically identifying the definitions and metadata that make up the ontology and shape catalog. I'm settling on a conversational, prose-heavy approach without headers—just direct intellectual dialogue about what their code actually represents. I'll open by naming the core reframe immediately and then walk through the correspondence between their IRI minting system and Linked Data semantics, keeping the language tight and peer-level.
+The key insight is that Symbol.for creates a global interning table—the runtime's answer to RDF canonicalization—which means two schemas minting the same path don't just produce equal strings but resolve to identical handles. That's the move that transforms this from a naming convention into a genuine identity system, one where you can hang a global registry on schemaId and get dereferencing for free. Now I need to connect that back to what it means for their broader architecture. ance triples tie data to borrowed predicates, while definitional triples anchor the schema, constraints, and service identities back to $I IRIs — so the codebase itself becomes a graph. The interpolation ban is the key: by forcing static literals instead of runtime-computed identities, every IRI becomes statically harvestable, which means docgen, registry builders, and SPARQL exporters can extract the full identity landscape without execution, and provenance stays intact.
+The remaining piece is straightforward — converting @beep/... CURIEs into dereferenceable HTTP IRIs through a simple resolver function and @context mapping, so internal identities become first-class in SPARQL and Oxigraph. The interned symbol stays the in-memory form while the HTTP IRI handles the wire protocol, mirroring the encode/decode pattern already in place. This closes the loop: $I anchors the identity layer of the @beep ontology and completes the flywheel. The concrete endpoint—turning the interning table into a dereference function—is the missing piece, and that's exactly what explore/tree does in FOLIO. I'm leaning toward ending on that insight rather than offering to sketch it out, since the user was asking for reflection, not another build task. The punchline lands better if I let "you've already minted them, you just haven't published the registry" sit as the core realization. They're already seeing the bigger picture themselves—they built it as a path builder and now recognize the larger pattern. I should affirm what they're discovering rather than position myself as revealing something hidden. The two genuinely new angles are the interpolation restriction and the interning-as-referential-transparency insight. For tone, I'll keep it conversational and dense with strategic bold on key concepts, no headers or lists—that matches both the guidance and the substance of what we're discussing.]]>
+      </section>
+      <section index="4" kind="assistant_response" source_label="response 2">
+<![CDATA[Here's what I see: you didn't build a path builder. You built an **IRI minting authority with an interning table**, scoped to your own namespace — and that's a much bigger object than "typesafe strings with annotation helpers."
+
+Walk the correspondence. An IRI in the Linked Data sense has to be globally unique, hierarchical under some authority, and — the part everyone forgets — *referentially transparent*: the same IRI in two documents denotes the same resource, always. Your identities are namespaced under `@beep`, path-structured, validated at the boundary… and then `Symbol.for` does the thing that actually carries the weight. `Symbol.for(x) === Symbol.for(x)` across the entire runtime. That global registry is a literal interning table — the in-memory analogue of what an RDF store does when it canonicalizes IRIs. That one choice is what promotes this from a naming *convention* to an identity *system*. Two schemas that mint the same path don't merely have equal strings; they resolve to the same handle, so you can key a global registry on `schemaId` and get a dereference function for free.
+
+Now connect it to last time. In `Ontology.models` the move was: borrow predicates you don't own — `skos:prefLabel`, `dc:source`, `rdfs:subClassOf` — and hang them on fields. That's the *vocabulary* half. `$I` is the other half: it mints the subjects you *do* own. And notice *which* subjects. Not the instance data — a decoded FOLIO class keeps its `R8pN…` IRI — but the **definitions**: the `HttpUrl` schema, the `HttpUrlMinLengthCheck` constraint, the error tags, the service identities. That's your TBox, your shape catalog, and your service registry, each handed a stable, resolvable name. So the full picture is a triple factory running at two levels: instance triples (`<data-IRI> <borrowed-predicate> <value>`) and definitional triples (`<$I-IRI> rdfs:isDefinedBy <module>`, `<$I-IRI> a sh:NodeShape`, and so on). The codebase stops being *described by* a graph and starts *being* one.
+
+And here's the piece I suspect you built without clocking why it mattered: the interpolation ban. Forbidding `` $I`User${x}` `` and demanding a single static literal isn't fussiness — it's what makes every identity **statically extractable**. A docgen pass, an MCP registry builder, or a SPARQL exporter can harvest every IRI in the monorepo without executing a line. A runtime-varying IRI would break both static tooling *and* provenance — you can't anchor a bitemporal PROV-O record on a subject that isn't stable. So that guardrail is load-bearing ontology infrastructure wearing a type-safety costume. The `IdentitySegmentCountError` is really a "your IRIs must be denotationally fixed at build time" invariant.
+
+The one seam left to close is trivial next to all that: `@beep/…` is a CURIE, not yet a dereferenceable IRI. One `resolve(identity) → https://…/ns/…` function plus a `"beep": "https://…"` entry in a `@context`, and your internal identities become first-class in Oxigraph and SPARQL. The interned symbol is your in-memory canonical form; the http IRI is the on-the-wire form — the same encode/decode duality you already live inside.
+
+So the bigger story, stated flatly: `$I` is the **identity layer of the `@beep` ontology**, and it's the anchor the flywheel has been missing. The write side (JSDoc/graph generation) needs stable subject IRIs to *emit*; the read side (MCP retrieval, SHACL gating, provenance) needs them to *resolve against*. You already minted them, and you already made them referentially transparent. The thing you haven't done yet is **publish the registry** — promote that interning table into a dereference endpoint. That's `explore/tree`, pointed at your own code.]]>
+      </section>
+    </turn>
+    <turn index="3">
+      <section index="5" kind="user_prompt" source_label="prompt 3">
+<![CDATA[attachment: /home/elpresidank/Downloads/ontology.md
+This is exactly where I'm going next "The one seam left to close is trivial next to all that: @beep/… is a CURIE, not yet a dereferenceable IRI." you're on the money. Now I want to make the construction of the identity composers a fully compliant typesafe (literals preserved) Iri builder and leverage that along with the typesafe string transforms to derive other annotations properties from the IdentityComposer. Now this was also something I played with a while back but I deleted it because I wasn't satisfied with its ergonomics/api. Maybe you can help me here. If you could go back and forth with me to make this more ergonomic and composable with solid naming and merge it with my IdentityComposer system I think this would be a banger.]]>
+      </section>
+      <section index="6" kind="model_trace" source_label="reasonging 3">
+<![CDATA[````md
+- I'm checking the ontology.md file to look at the old IRI builder implementation they removed.
+- Reading the uploaded ontology.md containing the old IRI builder design the user deleted
+- I need to examine the key files that define the old API structure—model.ts, references.ts, create.ts, assembly.ts, and index.ts—to understand how it's organized and what the current ergonomics look like. Since the file is over 4600 lines with a large truncated section in the middle, I'll need to search strategically for these section boundaries to pull out the relevant parts.
+- That's a big dump with the middle truncated — let me actually read the core of what you deleted before I opine on its ergonomics.
+- Diagnosed ergonomic failures and architected merged IRI-identity system
+- Finding the file section boundaries in the packed markdown dump
+  bash
+
+grep -n "^\`src/\|^\`test/" /mnt/user-data/uploads/ontology.md
+Output
+
+24:`src/annotations.ts`:
+589:`src/assembly.ts`:
+1338:`src/create.ts`:
+1441:`src/index.ts`:
+1502:`src/model.ts`:
+2420:`src/projections/jsonld.ts`:
+2893:`src/projections/markdown.ts`:
+3251:`src/projections/skos.ts`:
+3342:`src/projections/turtle.ts`:
+3600:`src/references.ts`:
+3846:`test/Ontology.test.ts`:
+
+I'm examining how the old API was actually used in the tests to understand what made it feel awkward, particularly looking at the test setup and how annotations were applied to class drafts, and how $I was wrapped through createOntologyIdentity.Reading the test file's setup to see the old API in real usage — this reveals the ergonomicsScriptI'm looking at how the old API works, then checking the annotations to understand the identity wrapper and how IRIs are constructed from the term name and base IRI, before tracing through the assembly logic to see where IRIs get generated.Locating IRI derivation logic and the createOntologyIdentity wrapperScriptReading createOntologyIdentity wrapper and finding makeTermIri definitionScriptI'm seeing the core issues with the old system now—it had two separate identity mechanisms running in parallel that were stitched together at runtime, creating friction. Let me lay out what failed and sketch a better approach, then ask some clarifying questions to make sure we're aligned on the direction. plate and drift-prone. The Ont.* combinator functions like ref, parent, child, equivalentClass, and exactMatch are all aliases for the same underlying makeReferenceTarget function — they're just documentation-by-name with no real semantic difference, since the actual predicate gets determined by which field you place them in. Runtime type guards discriminate between regular annotations and drafts, but this clever approach muddies type inference and smuggles drafts through the generic channel, losing literal type information. Meanwhile, IRIs are branded types rather than template literals, so they don't preserve the full path like the new IdentityComposer does.
+The old ontology package widened everything to plain string at the boundary, and references like Ont.parent("Parent") only resolve at assembly time by string matching — typos become runtime failures. With literal-preserving composers, those term references could be checked at compile time instead. What's needed is for the IdentityComposer itself to act as an IRI builder with full type safety and literal preservation, carrying both the internal identity and the dereferenceable IRI as a dual-form identity, then deriving annotation properties from that.
+The @beep/... CURIE and https://.../ns/... IRI are really just two encodings of the same path — it's an encode/decode duality. The composer should become namespace-aware, bound to a namespace declaration with prefix and base IRI, so every derived path has three canonical literal-typed forms: the internal CURIE, the dereferenceable IRI, and an interned symbol. The transformation from internal form to IRI is mechanical and deterministic.
+There's a real design choice here between hash and slash namespaces — hash works when the whole vocabulary is one document, but slash is better if each term dereferences individually, which fits their explore-and-tree vision. Rather than keeping the parallel $I wrapper, I'd extend the identity composer itself with an optional namespace parameter, eliminating the need for a separate Ontology.create wrapper.
+The cleanest approach might be centralizing namespace binding at the @beep root level, mapping it once to an authority like https://ns.beep.sh/, so every composer becomes an IRI builder automatically through a pure function of the path. That said, they might want per-package vocabulary IRIs that don't mirror the internal structure — like publishing a clean public ontology under a different domain.
+So the solution is a default mechanical mapping from the root binding with per-composer override capability, where the override rebases the IRI while preserving the internal identity. The real ergonomic win comes from treating terms as first-class values instead of strings: mint a term once with $I.class("Parent", {...}) and pass that term object around, which carries its IRI, CURIE, symbol, and annotations, making it directly usable in schemas and references.
+Beyond that, I want to extend the derivation system so that instead of repeating annotations, I derive them from the identifier: rdfs:label and skos:prefLabel both come from the title transform, the IRI is computed from namespace and path, the CURIE from prefix and local name, and I add slug derivations like kebab-case for markdown anchors and camelCase for JSON-LD context terms.
+For naming conventions, I'm thinking about adopting RDF vocabulary directly—calling a bound root a Namespace and a leaf a Term, so the API reads as ns.term("Parent") following the rdflib/N3.js pattern. The composer is already callable as a template tag, so I could extend that to something like $I.t`Parent` to return the term identity, keeping the interface clean and consistent.
+Now I'm sketching out what the merged implementation looks like in practice: the root minting gains a namespace argument that establishes the authority binding, and downstream calls inherit the IRI automatically. The getter returns both the full IRI with a literal type and the CURIE form, though I'm realizing CURIE syntax doesn't allow forward slashes in local names, so that needs rethinking. There's a naming collision here — they're using identifier for borrowed vocabulary predicates like skos:prefLabel, but that field should be reserved for the schema's own identifier. I should propose a dedicated annotation channel instead, maybe something like rdf: { predicate, datatype, container } or a top-level term: field, and leverage the existing vocab constant modules to provide clean references to standard predicates.
+This same channel approach also fixes the sub_class_of/parent_class_of direction issue — I can express reversals with {term: RDFS_SUB_CLASS_OF, reverse: true} using JSON-LD's @reverse semantics, which their old projection already supported for children anyway.
+From the old design, I want to preserve the draft/assembly split with its propose-gate-record pattern, projections, and SKOS profiles, but strip out the eight synonym combinators, runtime type sniffing, the triple return from Ontology.create, and string-based key paths.
+Now sketching out what authoring looks like after the merge — I'm setting up an ontology ID with a custom vocab namespace and prefix, then defining a class with typed properties that use the channel system to attach predicates and relations, keeping names appearing only once per position.
+The field name repetition is a real friction point though. Since the schema doesn't know its own key at pipe time, I can't automatically derive the predicate name from the struct field. But there's a cleaner path: make the name optional in the annotator and derive it during assembly from the actual struct key, just like the old system already does when it reads field names. That way $I.predicate({range}) works without redundant naming.
+For this design conversation, I should focus on diagnosing what felt clunky about the old approach, laying out the merged model clearly, and then presenting the real decision points to you as concrete options rather than a flood of questions.
+````]]>
+      </section>
+      <section index="7" kind="assistant_response" source_label="response 3">
+<![CDATA[That's a big dump with the middle truncated — let me actually read the core of what you deleted before I opine on its ergonomics.Alright, I've read the corpse. Good news: the autopsy is conclusive, and the disease wasn't the architecture — the draft→assembly pipeline, the projections, the SKOS profiles are all sound. The ergonomic rot came from four specific decisions, and every one of them traces back to a single root cause: **the identity system and the IRI system never actually merged**. They ran side-by-side and got joined at assembly time by string lookup. Everything you hated follows from that.
+
+## The diagnosis
+
+**Symptom 1: literal amnesia at the front door.** `createOntologyIdentity(identity: IdentityComposer<string>)` — right there. Your composer painstakingly threads `IdentityString<"@beep/ontology/Parent">` through template-literal types, and the ontology package widened it to `string` in its first parameter. From that point on, nothing downstream *could* be literal-typed, so IRIs became runtime-branded strings (`makeIri`), term references became strings resolved at build time, and typos became `unresolvedReferenceTarget` failures instead of red squiggles. `Ont.parent("Parent")` is stringly-typed *by construction* because the type information was discarded upstream.
+
+**Symptom 2: quadruple naming.** `class Parent extends S.Class<Parent>($I`Parent`)({...}, $I.annote("Parent", Ont.class({...})))` — the name appears four times, and per-field it's worse: `$I.annoteKey("Child.parent", Ont.objectPredicate({...}))` restates the field name as a dotted string. This is the tax you pay when the annotator doesn't know where it is: the composer can't see the struct key, and the class draft can't see the class name, so you re-tell everyone everything.
+
+**Symptom 3: the synonym zoo.** `ref`, `parent`, `child`, `equivalentClass`, `exactMatch`, `exact`, `closeMatch`, `sameAs` — I checked: **all eight are literally the same function**, `makeReferenceTarget`. The actual predicate is chosen by which *field* of `Ont.class({...})` the target lands in, so `exactMatches: [Ont.exact(...)]` names the relationship twice and enforces it zero times. That's API surface impersonating semantics. This is the kind of thing that feels wrong before you can say why — now you can say why.
+
+**Symptom 4: runtime overload sniffing.** `annote(identifier, extras | ClassDraft)` discriminated by `isOntologyClassAnnotationDraft` at runtime. Drafts smuggled through the generic annotation channel means inference degrades exactly where you want it sharpest, and the two-headed signature makes the API feel haunted.
+
+One more latent bug the merge should fix while we're in here: in `Ontology_models.ts` you overload the key `identifier` annotation to carry *borrowed* predicate IRIs (`skos:prefLabel`). But `identifier` is also what your composer writes for *owned* identities. Same slot, two meanings, and it's precisely how the `sub_class_of`/`parent_class_of` direction bug slipped through — there was no channel to say "this is `rdfs:subClassOf`, *reversed*."
+
+## The merged model
+
+Here's my proposal, stated as one sentence first: **bind a namespace authority at the root composer, make IRI/CURIE derived forms of the identity path (literal-typed, via the same template-literal machinery as `TitleFromIdentifier`), and mint ontology terms as first-class handles instead of strings.**
+
+**1. Root binding, monorepo-wide dereference for free.**
+
+```ts
+// identity root — ONE new field
+export const { $BeepId } = make("beep", {
+  authority: "https://ns.beep.sh/",
+  prefix: "beep",
+})
+
+Every composer everywhere is now an IRI builder with zero call-site changes, because resolution is a pure, type-level function of the path:
+
+```ts
+const $I = $OntologyId.create("Ontology.models")
+$I.identifier  // "@beep/ontology/Ontology.models"          (internal, unchanged)
+$I.iri         // "https://ns.beep.sh/ontology/Ontology.models"  (literal type!)
+$I.curie       // "beep:ontology/Ontology.models"
+```
+
+This is the encode/decode duality landing exactly where you predicted: `identifier` is the in-memory canonical form, `iri` is the wire form, and the transform between them is a codec you can write once at both the type level and value level. Your `TitleFromIdentifier` machinery already proves the pattern — this adds `IriFromIdentity<Authority, Path>` and friends (`SlugFromIdentifier` for markdown anchors, camelCase for JSON-LD context terms) to the same family.
+
+**2. Rebasing for published vocabularies.** The mechanical mapping is right for internal identities, but you won't want `https://ns.beep.sh/ip-ontology/patent/Claim` on opip.law. So one combinator:
+
+```ts
+const $Pat = $OntologyId.create("patent").rebase({
+  iri: "https://opip.law/ns/patent#",
+  prefix: "pat",
+})
+```
+
+`rebase` changes **only** the IRI projection; the `@beep/...` identity and interned symbol are untouched. Internal identity is forever; public vocabulary address is a presentation decision. This separation is also what makes it safe — renaming a public namespace never breaks the interning table.
+
+**3. Terms as handles, not strings.** This kills the synonym zoo and the string references in one move. `$I.class(...)` returns something you *hold*:
+
+```ts
+export class Parent extends S.Class<Parent>($I`Parent`)(
+  {
+    label: S.NonEmptyString.pipe(
+      $I.predicate({ range: XSD_STRING, description: "Parent label." })
+    ),
+  },
+  $I.class("Parent", { description: "Parent ontology class." })
+)
+
+// elsewhere — no strings, no Ont.parent()
+$I.class("Child", {
+  subClassOf: [Parent],          // schema handle: typo-proof, compile-time
+  exactMatch: [schemaOrg.Thing], // vocab constant: already an IRI-typed term
+})
+```
+
+References accept exactly two shapes: a schema (resolved via `schemaId` as today) or an IRI-typed term constant from your `@beep/rdf/Vocab/*` modules. No `Ont.ref`/`Ont.exact` wrappers — the *field name* is the predicate, full stop, which is how it already worked; now the API admits it.
+
+**4. Predicate names default to the struct key.** Notice `$I.predicate({...})` above has no name argument. Your old assembly *already read field names* (the `unsupportedFieldName` error proves it). So let the local name default to the struct key at assembly time, with an optional explicit override for the `RichClass`-style custom-IRI cases. That deletes the `"Child.parent"` dotted-string repetition entirely. Combined with the class-name dedup below, quadruple naming drops to double (the unavoidable `class X ... $I`X`` pair — and even that could collapse if `$I.class` returned the annotation *and* the identity for `S.Class`, worth exploring).
+
+**5. A proper channel for borrowed vocabulary.** Stop overloading `identifier`. Key annotations get a dedicated slot:
+
+```ts
+prefLabel: S.String.pipe(
+  $I.annoteKey({ term: SKOS.prefLabel })
+)
+children: S.Array(S.String).pipe(
+  $I.annoteKey({ term: RDFS.subClassOf, reverse: true })  // JSON-LD @reverse — your old projection already emitted this!
+)
+```
+
+`term` for the predicate, `reverse` for direction, later `datatype`/`container` as needed. Owned identity and borrowed vocabulary stop sharing a bed, and the `parent_class_of` bug becomes unrepresentable.
+
+**6. What dies:** `Ontology.create` returning `{Ont, $I, metadata}`, `createOntologyIdentity` and its property-descriptor mirror dance, the eight-way synonym set, runtime draft sniffing (class/predicate drafts get their own named entrypoints — `$I.class`, `$I.predicate`, `$I.relation` — so overload resolution is nominal, not forensic). **What survives untouched:** draft→assembly (your propose→gate→record house pattern), all four projections, SKOS profiles, the error taxonomy.
+
+## The decisions I need from you
+
+Three forks, with my recommendation on each so you can just veto:
+
+**(a) Hash vs slash for the derived IRIs.** Slash (`.../ontology/Ontology.models/HttpUrl`) means every term can dereference to its own document — which is what your explore/tree/docs-site ambition wants — and it composes trivially with the existing path grammar. Hash (`...#HttpUrl`) means one document per vocabulary, friendlier for small published ontologies and for Turtle prefixed names (raw `/` in a PN_LOCAL needs escaping, which is why `beep:ontology/Ontology.models` above is fine in JSON-LD contexts but ugly in Turtle). My recommendation: **slash for the mechanical `@beep` mapping, hash allowed via `rebase`** — internal graph uses slash, published vocabularies like opip.law choose per-namespace.
+
+**(b) Where the authority binding lives.** Baked into `make()` at the `@beep` root (one binding to rule them all, IRIs are total — every identity has one), versus opt-in per package via `.rebase`/`.bind` (IRIs are partial — only bound composers have `.iri`, and the type system tracks boundness). Total is simpler and matches "the codebase *is* a graph"; partial is more honest if some packages should never be published. I lean **total with rebase**, since even never-published identities benefit from having a canonical IRI for provenance records.
+
+**(c) How far to collapse the class-name repetition.** Conservative: keep `S.Class<Parent>($I`Parent`)(fields, $I.class("Parent", {...}))` shape, two names. Aggressive: `$I.class("Parent")` returns a bundle usable in both positions so the name is written exactly once — cooler, but it changes the visual grammar of every model file you've written and fights the `S.Class` API's expectations a bit.
+
+Which way do you want to go on (a)? — that one gates the type-level `IriFromIdentity` transform, so it's the first domino; (b) and (c) I can prototype behind whichever answer you give.
+```]]>
+      </section>
+    </turn>
+    <turn index="4">
+      <section index="8" kind="user_prompt" source_label="prompt 4">
+<![CDATA[````
+So here is my thing that kind made me unhappy with it. I use schema's every where. I actually use them more than interfaces & type aliases in my repo as I can capture so much noise (null checks, default values, pure rich behavior, etc) with effect/Schema in a single .make or decode then the business logic becomes "childs play" This x.com [post](https://raw.githubusercontent.com/beep-effect/beep-effect/refs/heads/main/THE_SCHEMA_IS_TRUTH_A_CATEGORICAL_FEVER_DREAM_FOR_THOSE_WITH_THE_HUEVOS.md) I wrote summarizes this pretty well.
+
+The proper channel for borrowed vocabulary gave me a little to much import duty & boilerplate requirements at the scale I intended on using this system.
+The extra SKOS & RDFS imports where burdensome. I want to some how bake it in to the system itself. maybe with some discriminated magic. Essentially what I really like is the simplicity and tersness of `$I` I want to figure out an api that really emboddies that simplicity
+
+import { SKOS, RDFS, $SomeModuleId } from "@beep/ontology"; // even more cumbersome at scale
+
+prefLabel: S.String.pipe(
+  $I.annoteKey({ term: SKOS.prefLabel })
+)
+children: S.Array(S.String).pipe(
+  $I.annoteKey({ term: RDFS.subClassOf, reverse: true })  // JSON-LD @reverse — your old projection already emitted this!
+)
+
+
+my convention is exteremely consistent throughout beep-effect:
+
+```ts
+const $I = $SomePackageId.create("path/to/module") // first constant in nearly every file
+```
+
+To point 6. Ontology.create was my attempt to produce primitives that would allow me to compose and define their relationships by folding them into a tree sort of shape for a given module. What I wanted was maybe something more like:
+
+```ts
+
+const $I = $SomePackageId.create("path/to/module");
+
+const Schema1 = S.String.pipe( /* annotations... */);
+const Schema2 = S.String.pipe( /* annotations... */);
+
+const mod = $I.ontology( /* ...define relationships by composing schemas into some data structure  */  );
+```
+
+
+Then maybe mod could both house the relationships and provide the abillity to project out to something like jsonld
+
+I'm still not quite sure though...
+
+I'm maybe thinking something like:
+
+```ts
+$I.rdf
+$I.subcassOf("RDFS")
+$I.class
+$I.ontology
+$I.exact
+$I.sameAs
+```
+
+Do you see where my head is let me know what your opinions and tastes lean towards
+````]]>
+      </section>
+      <section index="9" kind="model_trace" source_label="ai thinks 4">
+<![CDATA[````
+I need to look at their GitHub markdown to understand what they're building. The core challenge is making borrowed vocabulary from standard ontologies like SKOS, RDFS, Dublin Core, and OWL accessible directly through $I without requiring separate imports, while keeping the syntax terse. They're also designing a module-level $I.ontology(...) construct that would consolidate relationships and projections in one place.
+The approach uses discriminated string literals as CURIEs — so you'd write "skos:prefLabel" as a type-validated string where the prefix is known and the key is autocompleted. This works by generating a union type of all valid CURIE strings like "skos:prefLabel" | "rdfs:subClassOf" | ... and baking that into the composer's method signatures. The type system validates the prefix and key at compile time, then expands to the full IRI. It mirrors Turtle and SPARQL syntax exactly, so skos:prefLabel in RDF becomes "skos:prefLabel" in TypeScript — zero imports, full autocomplete, and type-safe.
+For inverse properties, you'd use the SPARQL syntax "^rdfs:subClassOf" where the caret indicates direction, discriminated as `^${KnownCurie}`. The API could use a method like $I.key() that accepts these CURIE strings, keeping it terse and aligned with how SPARQL users already think about property paths. A template tag syntax like $I.key`skos:prefLabel` would fit their interpolation-ban style, though a function call with string literals preserves the type information just as well.
+For the module-level fold, $I.ontology() would take a collection of schemas and walk their ASTs to read annotations and assemble everything into an object with methods like .toJsonLD(), .toTurtle(), and .classes. Since $I already knows the module path, baseIri, and prefix, there's no need for separate configuration — it collapses what used to be Ontology.create() into a zero-config call.
+Relationships between schemas can live either on class annotations or at the fold site. The fold-site approach is cleaner because it keeps wiring concerns separate from the class definition itself and avoids circular imports. I'm sketching out a structure where you pass schemas as a record to $I.ontology() along with an axioms array that defines relationships like subclass and related-term connections between them.
+The axioms are just triples in tuple form—subject, predicate, object—where subjects and objects are schema handles or CURIEs and predicates are known CURIEs. This feels very RDF-native and typesafe, essentially an abstract Turtle document embedded in the code. The tree of schemas becomes the graph itself. I'm considering a hybrid approach: inline annotations for intrinsic facts like prefLabels, and fold-site triples for relational wiring like class hierarchies across modules.
+Now I'm thinking through the API surface—methods like subClassOf, sameAs, equivalentClass, exactMatch, inScheme. Each could be a curried triple-maker returning a partial predicate-object pair, but that risks recreating the synonym zoo with unbounded methods for every SKOS and OWL relation. Using CURIE strings with a single general method scales better, though dedicated sugar for the top 6-8 relations would be nice. I'm leaning toward the general channel as the foundation.
+For vocab knowledge, I'd store a WellKnownPrefixes map in a dedicated RDF module that identity imports type-only, keeping the usage sites clean. Users could extend it with withPrefixes() to add custom namespaces, which would widen the CURIE type union and let the composer recognize new prefixes.
+The type system uses a discriminated union where the prefix itself determines which term-set gets validated against the local part. I'm defining a Vocab type that maps each prefix to its allowed terms, then building a Curie type as a union of all valid prefix:term combinations, with support for inverse paths using the ^ operator. Expansion happens at the type level by parsing the prefix and concatenating it with the base IRI.
+For the API, they'd probably prefer $I.key("skos:prefLabel") over overloading their existing annoteKey method — they like terseness, though their current annoteKey already has some identifier handling I should check. I'm realizing that datatype versus object property distinction matters here—the old system tracked this explicitly, but I can infer it from the schema during assembly based on whether a field is scalar or class-valued, which means less API surface. I should also look at the schema-is-truth philosophy the user linked to, and then respond directly to their question about where their head is at, offering my own tastes while keeping this collaborative and ending with a sharp question about the core tradeoff.Show less
+
+So the core insight is that the schema itself should be the source of truth—the vocab import approach broke that principle by externalizing the vocabulary. The better path is using CURIEs as literal types, where the string like "skos:prefLabel" serves as both the term and its discriminator, with the type system validating against a built-in vocab map, and the ^ prefix handling inverse relations.
+I should also flag that their sketch reintroduces the synonym problem with multiple similar functions like $I.exact and $I.sameAs—though that's acceptable if it's syntactic sugar over a single underlying mechanism rather than eight independent peers. On the accessor chains versus CURIE strings question: accessor chains like $I.skos.prefLabel offer better IDE autocomplete and discovery, but they fragment the API surface per vocabulary and can't compose into actual data structures. CURIE strings, by contrast, are data themselves—they can live in tuples, be parsed at the type level, and work seamlessly with Turtle notation and copy-paste workflows. For their use case, strings align better with their philosophy of typesafe string transforms and static extraction, keeping the entire ontology surface greppable without runtime dependencies.
+Now I'm sketching out the type structure for a vocabulary registry that maps namespace prefixes to their IRIs and available terms, along with utility types for constructing and expanding CURIEs with optional inverse property syntax. The question becomes whether to extend this registry through module augmentation or through an explicit .withVocab() method that widens the type parameter—the latter is more transparent and avoids global-augmentation concerns, though it means each file needs its own $I instance.
+The key insight is that vocabularies could be registered at the package root during initialization, so every .create() call downstream inherits that vocab set without repetition. For the actual usage syntax, I'm considering whether to add a dedicated .key() method for predicates since they're the most frequent operation, potentially even supporting template tag syntax, or whether to overload the existing annoteKey to accept a plain CURIE string as shorthand.
+For distinguishing datatypes from object properties, the schema AST at fold time tells us everything we need — scalars become DatatypeProperties and class/struct references become ObjectProperties, so no explicit declaration is required.
+Now I'm setting up the ontology fold structure, which takes a label, the schemas to include, and a triples array that establishes relationships between those schemas using standard RDF predicates.
+Adding export methods...
+The key insight here is that triples-as-tuples is exactly the data structure they were looking for — the subject can be a schema handle, CURIE, or IRI; the predicate is a CURIE; and the object can be any of those plus literals. This is how you compose schemas into RDF, and the tree exploration they wanted is just a projection or catamorphism over the graph. The ontology module itself becomes another schema-truth instance, where the module is data and projections are folds over it.
+I'm also thinking about making the axiom list itself schema-validated so the ontology definition becomes an instance of the schema-is-truth principle. For the identity operations, I'd keep $I.class as a real constructor but drop $I.exact and $I.sameAs as methods since they're just triples — instead, allow a triples field in the class payload where you can define these relationships inline, with field names mapped through CURIEs.
+The key insight is separating lexical facts (labels, definitions) which live in annotations from relational facts which live in triples — either embedded in the class draft as pairs like [["rdfs:subClassOf", Parent]] or at the fold level. Using pairs instead of named fields keeps the model open and avoids the schema bloat that came from enumerating every possible relation. The tradeoff is that a literal-union CURIE type spanning multiple vocabularies could generate hundreds of literals.
+Now I'm wrestling with where relational facts should live: inline in the class draft, only at the ontology fold, or both. My instinct is both — same tuple grammar, with the fold merging them together. But cross-module references create a puzzle: if a class in one module references another via CURIE like "pat:Doc", the system still needs to import that handle to avoid circular dependencies, and static type-checking becomes tricky since the ontology fold can't know all referenced terms ahead of time.
+One approach: schemas carry literal identifier types, the ontology fold infers a union of term names from the tuple of schemas, and validates triple endpoints using either local references like "#Doc" or full CURIEs — this gets fancy with const generics but feels like a stretch goal worth mentioning.
+````]]>
+      </section>
+      <section index="10" kind="assistant_response" source_label="response 4">
+<![CDATA[````
+Read the fever dream. And it sharpens your complaint into something I can actually design against: the `import { SKOS, RDFS }` proposal failed your own creed. It moved truth out of the annotation and into a constellation of imported constants — helper soup, the exact thing you deleted 1,206 lines of. The vocabulary was behaving like *code* when it should behave like *data*. So here's my taste, stated up front: **the borrowed vocabulary should be a closed literal type baked into the composer, and the notation should be CURIEs — because the CURIE is already the domain's native string form, and typesafe literal strings are already your house material.**
+
+## Discriminated magic: the CURIE *is* the discriminant
+
+You don't need to invent a discriminated union. RDF shipped one in 2004. `skos:prefLabel` — the prefix is the tag, the local name is the payload. So:
+
+prefLabel: S.String.pipe($I.key("skos:prefLabel")),
+children:  S.Array(S.String).pipe($I.key("^rdfs:subClassOf")),
+
+Zero imports. And every piece of that is type-level machinery you already own the pattern for:
+
+```ts
+type Vocab = {
+  rdf:  { iri: "http://www.w3.org/1999/02/22-rdf-syntax-ns#"; terms: "type" | "value" | /* … */ };
+  rdfs: { iri: "http://www.w3.org/2000/01/rdf-schema#"; terms: "label" | "subClassOf" | "domain" | "range" | /* … */ };
+  skos: { iri: "http://www.w3.org/2004/02/skos/core#"; terms: "prefLabel" | "altLabel" | "definition" | /* … */ };
+  owl:  { /* … */ }; dcterms: { /* … */ };
+};
+
+type Curie<V> = { [P in keyof V & string]: `${P}:${V[P]["terms"]}` }[keyof V & string];
+type Predicate<V> = Curie<V> | `^${Curie<V>}`;
+type Expand<C, V> = C extends `${infer P}:${infer L}`
+  ? P extends keyof V ? `${V[P]["iri"]}${L}` : never
+  : never;
+```
+
+`"skos:prefLabl"` is a compile error. Autocomplete gives you the entire SKOS surface after you type `skos:`. `Expand` is a pure type-level codec from CURIE to absolute IRI — the same literal-string-transform family as `TitleFromIdentifier`, so the annotation record can carry *both* forms at literal precision. And the `^` for inverse isn't invented syntax: it's **SPARQL property-path inverse**, verbatim. Anyone who reads your annotations and knows SPARQL already knows what `^rdfs:subClassOf` means — which retires the `reverse: true` flag *and* makes the `parent_class_of` direction bug unrepresentable in three characters.
+
+Two properties of this that I think you'll care about more than the terseness:
+
+**It's Turtle-isomorphic.** You can copy a predicate out of a FOLIO Turtle file and paste it into your annotation unchanged. The notation in your codebase and the notation in the specs you're studying are the same notation. That's a real cost reducer at the scale you're describing.
+
+**It preserves your static-extraction invariant.** Your interpolation ban exists so every identity is harvestable without executing code. CURIEs-as-literals extend that guarantee to the *borrowed* vocabulary: `grep -r '"skos:'` enumerates every SKOS usage in the monorepo. Imported constants can be aliased, re-exported, computed — strings in annotations cannot. The whole ontology surface stays denotationally fixed at build time.
+
+Extension follows your existing convention — bake at the root, once, and every `create` inherits:
+
+```ts
+export const { $OntologyId } = make("ontology", {
+  authority: "https://ns.beep.sh/",
+  vocab: { folio: { iri: "https://folio.openlegalstandard.org/ns#", terms: FolioTerms } },
+});
+// every file: const $I = $OntologyId.create("path/to/module") — unchanged, now speaks "folio:*"
+```
+
+The composer grows a second type parameter, `IdentityComposer<Value, V extends Vocab = CoreVocab>`, and the vocab travels silently through `create`. Your first-constant-in-every-file convention doesn't move an inch.
+
+On `$I.skos.prefLabel`-style accessor chains, since your `$I.rdf` sketch gestures at it: I'd pass. Accessors are better for *discovery*, but they're API surface per vocab, they can't be pasted from Turtle, and — decisive for the next section — **an accessor is code, but a CURIE is data**. It can sit in a tuple.
+
+## `$I.ontology`: the fold, and the data structure you were groping for
+
+You said "define relationships by composing schemas into some data structure… a tree sort of shape." Here's the thing: the data structure that composes RDF entities *is definitionally a set of triples*. The tree you want to render (explore/tree) is a projection — a catamorphism over the graph, to use your own lens. So don't design a bespoke tree shape; write triples where subjects and objects are **schema handles**:
+
+```ts
+const $I = $SomePackageId.create("patent");
+
+const Claim    = /* S.Class / struct, annotated via $I */;
+const Spec     = /* … */;
+const ClaimSet = /* … */;
+
+const mod = $I.ontology({
+  label: "Patent Core",
+  schemas: [Claim, Spec, ClaimSet],
+  triples: [
+    [Claim,    "rdfs:subClassOf", "folio:Document"],
+    [Claim,    "owl:sameAs",      "https://schema.org/CreativeWork"],
+    [ClaimSet, "skos:related",    Spec],
+  ],
+});
+
+mod.toJsonLD(); mod.toTurtle(); mod.toMarkdown(); mod.context();
+```
+
+Notice what happened to the config. Old `Ontology.create` needed `{identity, baseIri, preferredPrefix, label}` because the IRI world was parallel to the identity world. Once the composer *is* the IRI builder, `baseIri` and `prefix` derive from `$I` — the fold needs a label and the payload. Zero plumbing.
+
+And notice what happened to your `$I.exact` / `$I.sameAs` sketch — gently, because it's the synonym zoo trying to reincarnate: `exact` and `sameAs` aren't operations, they're **rows**. `[Claim, "owl:sameAs", X]`. The moment relations are predicate-open tuples, the old draft model's eighteen enumerated fields (`parents`, `children`, `exactMatches`, `closeMatches`…) collapse too — that enumeration existed only because relations were *fields*, so every new relation meant growing the model. Tuples make the relation set open while the model stays tiny. Keep `$I.class` and `$I.key` as real constructors with distinct payloads; if you find yourself typing `"rdfs:subClassOf"` fifty times and want `subClassOf(Parent)` sugar, fine — but as a one-line tuple factory over the general channel, never a peer of it.
+
+This shape is also maximally on-creed. The `triples` array is itself schema-validated (`S.Tuple([Subject, Predicate, Object])` with the CURIE literal type as `Predicate`) — the ontology definition is an *instance* of schema-is-truth, not an exception to it. `toTurtle` and `toJsonLD` are catamorphisms over it. Datatype-vs-object property needs no declaration at all: the fold reads the AST — scalar-valued key → `owl:DatatypeProperty`, schema-valued key → `owl:ObjectProperty`. Behavior precipitating from the data, as the pamphlet says.
+
+## The one fork I'd resolve before writing code
+
+Relational facts now have two possible homes: inline at the class site (`$I.class("Claim", { is: [["rdfs:subClassOf", "folio:Document"]] })` — predicate–object pairs, subject implied) or at the fold (`triples`). My taste is **both channels, one tuple grammar, fold merges** — intrinsic facts read best next to the class, cross-module wiring reads best at the fold and dodges import cycles — but "both" is also how APIs get two ways to do everything and start feeling haunted again. The disciplined alternative is fold-only: one place to look for every edge in a module, at the cost of class definitions that don't tell their own story.
+
+Given you'll be authoring hundreds of these for FOLIO-adjacent IP terms — which failure mode do you fear more: edges scattered across two sites, or class definitions that are mute about their own hierarchy?
+````]]>
+      </section>
+    </turn>
+    <turn index="5">
+      <section index="11" kind="user_prompt" source_label="prompt 5">
+<![CDATA[- attached [JSDoc.ts](/home/elpresidank/YeeBois/projects/beep-effect3/packages/tooling/library/repo-utils/src/JSDoc
+/JSDoc.ts)
+- attached [JSDocTagDefinition.model.ts](/home/elpresidank/YeeBois/projects/beep-effect3/packages/tooling/library
+/repo-utils/src/JSDoc/models/JSDocTagDefinition.model.ts)
+````
+Ok so I want to graduate this into an artifact that I can handoff to Fable on my workstation. However, I have one more concept that I want to explore that to me seems relevant but I'm not quite sure how....Grothendieck fibrations
+
+Take a look at what I attached. I'm able to factor constant fibers out of an Σ-type into a section of the base, turning a fat product into a grothendieck fibration where metadata is recoverable via the display map.
+
+Imagine you have:
+
+
+class RdfDefintion extends S.Class<RdfDefinition>("http://www.w3.org/1999/02/22-rdf-syntax-ns#")({
+ _tag: S.String, 
+ properties: S.Union([
+  RdfTypeDef, // each containing their own annotations
+  RdfValueDef, // 
+ ]).pipe(S.toTaggedUnion("_tag"))
+}, { title: "RdfDefinition" }) {
+  static readonly make () => {/*...*/}
+}
+
+How far could you take this. One thing that's interesting with this pattern is that essentially any amount of metadata is retrievable on demand at runtime via the display map. Tying all of this together I think you could essentially have O(n) look up time to retrieve an arbitrarily large amount of metadata for say an llm to use in their structure output or injected into context via hook an literally have a deterministic way via an AST to retrieve the exact subset of documentation, graph data, vocab defintions etc. I don't know how well I put that but I'm curious if you think there is something here and how we tie it all the way back to `$I`
+````]]>
+      </section>
+      <section index="12" kind="model_trace" source_label="thinking 5">
+<![CDATA[````
+The user is asking me to connect Grothendieck fibrations to their JSDoc pattern and prepare something for handoff to their local Claude Code setup. I'm looking at how the make function in JSDocTagDefinition.model.ts takes a tag with metadata, validates it through decoding, and then generates a schema that structures the output with a tagged discriminant and associated value.
+The key insight is that the metadata—overview, specifications, applicableTo, astDerivable, parameters, relatedTags—isn't stored in the runtime value itself. Instead, it's factored out and attached as an annotation to the schema. At runtime, the fiber only carries the tag and payload; the metadata becomes recoverable through the schema's annotation layer. This mirrors the Grothendieck construction in reverse: rather than bundling everything into a fat total space, the value stays thin (tag + payload) while metadata becomes a functor or section over the base, accessible via the display map. The annotation mechanism acts as the inverse of straightening—un-straightening the presheaf structure back into the fibration. The fiber over each tag splits into a varying part (the value) and a constant part (the metadata), with the constant parts projecting down to the base. Effect Schema's annotation system realizes this: annotations attach to AST nodes as sections, and recovery works by tracing from instance through the tag to the matching schema node—giving the O(1) per hop retrieval the user wanted. Now I'm connecting this back to $I and the ontology: $I generates the base category's objects (IRIs), schemas form fibers over those identities, and annotations like title, description, and vocabulary terms are presheaves on that base.
+The whole setup is a Grothendieck construction glued over the identity base. RDF itself follows this exact pattern—a resource (IRI) is the base point, all triples about it form the fiber, and SPARQL DESCRIBE retrieves that fiber. The user's goal of deterministic metadata retrieval for LLM context becomes: take a runtime value, walk the display map to its base point (the IRI via $I), then dereference the fiber—whether that's local annotations or a remote knowledge graph, it's the same operation because the IRI is the shared anchor. Local annotation lookup and SPARQL queries become the same catamorphism over different stores, creating a flywheel where the schema AST is a local graph fragment and Oxigraph is the global graph.
+IRIs are the base category objects that index everything. The indexed view (a functor mapping to metadata sets) versus the fibered view (one total space) is their "Context as Topology" thesis—storing meaning structurally. Effect Schema lets you author in indexed form with annotations per node, then project to fibered form as JSON-LD. For LLMs, this means giving the model a thin fiber schema for generation while hydrating metadata on demand through the display map. The context injection hook works deterministically: a value arrives, gets tagged, the annotation fiber is retrieved, and relevant docs or graph neighborhoods are injected—all through AST walks and interned symbol lookups.
+This instantiates their "Price of Meaning" thesis: retrieval happens by following structure (pointer chasing) rather than similarity search. Fibrations compose naturally—their identity hierarchy forms a tower where terms sit over modules over packages over root, and Cartesian lifts might correspond to rebasing operations. The union-with-tagged-members pattern generalizes too: a "cases" record is literally the functor mapping the base to schemas, and the union combinator with toTaggedUnion is its integral. They could build a general combinator...
+Writing the combinator... They want me to produce a markdown design document that covers the full conversation arc—identity merging, CURIE vocabulary, the ontology fold, and the fibration layer with metadata retrieval and LLM hooks—as a handoff artifact for Fable (Claude Code on their workstation). Before creating the file, I need to check the markdown skill documentation. The response should address their core question about whether there's something meaningful here and how it connects back to the fibration concept, then move into building the comprehensive design doc that ties together the whole conversation. For the chat part, I need to clarify what they actually built: the runtime schema stays minimal with just the tag and value, while the full JSDocTagDefinition gets decoded once and stored as metadata. The base category is the discrete set of tag names, and the metadata functor maps from base to sets of definitions. Since the metadata is constant along each fiber, it factors out cleanly — descending to the base rather than living in the fat record.
+The key insight is that the display map projects from the total space back to the base (extracting the tag), and the section recovers the annotation, which is exactly straightening — converting fibered data into indexed data. Annotations belong in Effect Schema because they attach to AST nodes as base points, not to instances. The AST itself becomes the reified base category at runtime, and S.tag makes that fiber's base point explicit and literal.
+The RDF connection is the critical move: an RDF graph is fundamentally a fibration over the discrete category of IRIs, and DESCRIBE retrieves the fiber over a given IRI. By making $I identify schema base points with graph base points — interning symbols as IRIs through the codec — local metadata lookup via AST walk and remote graph lookup via SPARQL become the same operation, just operating over different stores.
+The LLM hook chains value through the display map to get the base IRI, then unions the fiber: annotations from the schema, DESCRIBE results from the graph, and documentation slugs. It's deterministic pointer-chasing retrieval, topology rather than geometry.
+This scales up through a tower of fibrations across the monorepo structure — root, package, module, term — where $I.create extends the base, and the whole thing is a fibration over the identity tree. The generic combinator formalizes what their JSDoc pattern hand-rolls: base literals plus fiber record plus metadata record yields a tagged union with per-case annotations, which is exactly the Grothendieck construction. TagValue.cases is already the functor; it just needs to be made explicit.
+Filtering to a sub-vocabulary or sub-spec is a pullback of the fibration, giving principled subset operations — LLM context budgeting becomes choosing a sub-base and the fibers follow automatically. For structured output, I give the LLM the thin total space schema to keep tokens cheap, then post-decode hydrate via section; the generation schema and grounding metadata are the same object, just indexed versus fibered. The analogy is exact in the discrete case — this is precisely the category of elements, a discrete fibration with no pseudo-functor complications. It gets genuinely 2-categorical when fibers are themselves schema categories with migrations, where versioning and @since annotations become sections over a versioned base, touching on bitemporality and PROV-O over the identity base.
+The lookup is actually O(depth) proportional to path length, not corpus size — Symbol.for interning and tag matching make each hop O(1)-ish, which is the real advantage over embedding search. Now I need to put together a handoff document for Fable that covers the mission, the repo context with the relevant packages, Effect v4 constraints around ServiceMap.Service versus Context.Tag, and the locked decisions from our conversation about authority binding at the root with rebase and using slash IRIs internally with hash via rebase.
+I realize they answered the vocab question implicitly but didn't explicitly confirm the a/b/c path decisions or weigh in on inline versus fold triples, so I should mark my recommendations as defaults with open-question flags rather than presenting them as settled. The design section needs to cover the Vocab registry, Curie types, IdentityComposer extensions for iri/curie/rebase/key/class/ontology, type-level transforms, the fibration layer with Grothendieck kit and display-map retrieval service, and projections including JSON-LD context.
+I need to check their JSDoc and markdown conventions before writing the artifact, then balance a substantive chat response on fibrations with the full spec in the artifact itself.Show less
+
+This is the piece that makes the whole thing click shut, and yes — there's something real here. Let me name what you built precisely, then take it as far as I think it goes, then package the entire arc for Fable. First let me check the house skills so the handoff doc tells Fable to follow them:
+
+I need to structure the response with the fibration analysis and then create a markdown design document as an artifact. Let me work through the fibration section carefully—I'm analyzing how JSDocTagDefinition.make constructs a fibration where the base category consists of discrete tag names, and for each tag there's a fiber capturing its structure and behavior.
+The key insight is that instead of bundling metadata with every instance (the naive fat product), the schema factors metadata out as a section of a trivial bundle. Each parsed node carries only its tag and value, then recovers metadata by projecting back to the tag and applying the metadata functor. The Effect Schema implementation materializes this abstractly by storing the metadata annotation at the AST node itself—the base point becomes reified in the tree structure, so the section isn't just theoretical but embedded in the decoder's own data.
+This is the Grothendieck correspondence made concrete: the fat record presentation (fibered) and the indexed presentation (metadata as a functor) are dual, and they're converting between them. The retrieval cost is O(path length) rather than O(corpus size)—read the tag, match the union member, fetch the annotation, optionally jump to a registry via Symbol.for interning. Meaning stored structurally means retrieval by pointer chasing, not probabilistic embedding search. And $I is the mechanism that mints the tag values themselves.
+The interned symbol registry is the base category's object set realized; the IRI codec unifies local and graph base points. So the fiber at any point is the union of its annotations, the DESCRIBE result from its IRI, and its documentation—three stores, one index. For the LLM: value flows through the display map to a base point, the fiber assembles deterministically, and context gets injected.
+The whole monorepo is a fibration over the identity poset; each create extends the base. Restricting to a subtree is a change of base via pullback, and context budgeting for an LLM means choosing a sub-base and pulling back the fibration. Vocab restrictions like CoreVocab versus +folio are also pullbacks. The JSDoc pattern they're using is hand-rolled, but it generalizes to a Fibered kit that takes base literals and fiber records as input.
+For structured LLM output, generation uses the thin total space (tag, value pair) to keep tokens cheap and constraints tight, while grounding injects the full section as needed. The same object has two presentations: indexed for retrieval, fibered for generation. Their agent context lifting rules—projecting @deprecated, @effects, and other fiber components based on task—are just choosing which parts of the fiber to expose.
+I should be honest about where this is exact (discrete base, Set-valued functor, category of elements) versus genuinely fibrational (fibers with morphisms, like schema versions with migrations where cartesian lifts pull back definitions along version maps). The 2-categorical machinery is future work. RDF itself fits this pattern: a graph is roughly the category of elements of the functor mapping IRIs to their property sets, DESCRIBE queries return fibers, and rdf:type is the display map to the class base. OWL punning and similar features live in this space too.
+Now I'm sketching the artifact structure for the handoff document — a design and implementation guide covering the mission, context with Effect v4 and ServiceMap constraints, and the locked design decisions around authority binding, IRI slash/hash conventions, CURIE vocabulary, and term handling.
+I'm also mapping out the type-level machinery (Vocab shape, Curie, Predicate, Expand, IriFromIdentity, and the composer type parameter), the API surface with $I projections, and the fibration layer including the display-map retrieval and registry service integration for agent context assembly.
+Then there's the projections layer covering jsonld context, turtle with PN_LOCAL escaping, SHACL, and markdown — I can resurrect the old projection code that's already documented. I need to note the migration fixes for Ontology_models.ts around identifier overloading, class hierarchy direction, and the dcterms namespace updates. I'm planning this as a phased rollout with acceptance criteria, open questions for the team, and a testing strategy, all compressed into a tight 300-450 line markdown document written as a single coherent file.
+````]]>
+      </section>
+      <section index="13" kind="assistant_response" source_label="response 5">
+<![CDATA[````
+This is the piece that makes the whole thing click shut, and yes — there's something real here. Let me name what you built precisely, then take it as far as I think it goes, then package the entire arc for Fable. First let me check the house skills so the handoff doc tells Fable to follow them:Skill absorbed — and it turns out to matter more than expected, because your "Agent Context Lifting Rules" section is secretly part of the answer. Now, the fibrations.
+
+## What you built, named precisely
+
+Strip `JSDocTagDefinition.make` to its skeleton. The naive model of "a JSDoc tag instance" is the fat Σ-type:
+
+Σ (t : TagName) . Value(t) × Meta(t)
+
+Every parsed `@param` node would drag along `overview`, `specifications`, `astDerivable`, `parameters` — the whole definition record. Your observation: **`Meta` doesn't vary along the fiber.** Two `@param` instances differ in `Value` but carry identical `Meta`. When a component of the fiber is constant per base point, it isn't fiber data at all — it's a functor on the base, `M : TagName → Set`, and it factors out. What remains at runtime is the thin total space `E = Σ(t) Value(t)`, the projection `p : E → TagName` (read `_tag`) is your display map, and metadata recovery is just `M ∘ p`.
+
+The move has a name: you converted the **fibered presentation** (one big total space, ∫(V×M)) into the **indexed presentation** (a functor assigning data to each base point) — that's the Grothendieck correspondence, straightening/unstraightening. And because your base is a *discrete* category (a set of tag literals, no morphisms), the correspondence is exact with no pseudofunctor coherence to sweat: ∫M is precisely the category of elements of a Set-valued functor. You're standing on the floor of the theory, where it's all theorems and no caveats.
+
+What makes this *real* rather than notional is an Effect Schema fact you exploited without ceremony: **annotations attach to AST nodes, and after `S.tag(t)`, the union member's AST node is the base point `t`, reified as a runtime object.** So `.annotate({ jsDocTagMetadata: def })` stores `M(t)` *at* the base point, in the same tree the decoder walks. The section isn't a lookup table beside the schema — it's soldered onto the base. The display map and the section live in one data structure. That's why retrieval feels free.
+
+## How far it goes
+
+**1. Your complexity claim, sharpened.** It's better than O(n) — the address computation is **O(path length), independent of corpus size**. Value → `_tag` (O(1)) → union member (O(1) with a case map) → annotation (O(1)) → `Symbol.for` interned jump into the global registry (O(1)) → IRI. The *volume* of metadata sitting at the end of that pointer chase can be arbitrarily large; the cost of computing its address never grows with the size of the monorepo. Contrast embedding retrieval: O(corpus) similarity scan, probabilistic, no guarantee the right fiber comes back. This is your "Context as Topology" thesis operationalized in eight machine instructions: meaning stored structurally means retrieval is dereference, not search.
+
+**2. The tie back to `$I` — and this is the whole ballgame.** A fibration needs a base category. `$I` *is the base category's minting authority*: the interned symbol registry is its object set, realized at runtime, and the IRI codec we designed makes the schema-side base points and the graph-side base points **the same points**. Which means the fiber over an identity is a union across stores that all share the index:
+
+```
+fiber(x) = annotations(x)          — local, AST walk
+         ∪ DESCRIBE iri(x)         — Oxigraph, SPARQL
+         ∪ docs(slug(x))           — generated markdown
+         ∪ prov(x)                 — bitemporal PROV-O records
+```
+
+Local annotation lookup and `DESCRIBE <iri>` are the *same operation over different stores* — change of store, not change of shape. An RDF graph is itself the category of elements of "IRI ↦ everything asserted about it"; SPARQL DESCRIBE is fiber extraction. Your two worlds were always the same construction; `$I` just makes the base points literally coincide.
+
+**3. The LLM hook is a section, and you already wrote the policy for it.** The agent-facing flow: a value arrives in context (or is about to be generated) → display map → base point → assemble fiber → inject. Deterministic, auditable, cheap. And here's the part I flagged up top: your skill's Agent Context Lifting Rules — "when generating a call site, lift `@deprecated`, `@effects`, `@precondition`; skip `@example`" — are **task-indexed projections of the fiber**. You didn't just build the fibration; you already wrote three named sections over it (call-site, implementation, selection). The design was waiting for its vocabulary. Structured output gets the dual benefit: hand the model the *thin* total space schema (`Σ tag, value` — minimal tokens, maximal constraint), hydrate the section after decode. Indexed presentation for retrieval, fibered presentation for generation — one object, two projections, and `S.link` between them is your optic.
+
+**4. Change of base = context budgeting.** Pulling back a fibration along `f : B' → B` restricts it to a sub-base and the fibers come along automatically. Concretely: "only tsdocCore tags," "only the `patent` module's terms," "only CoreVocab, no folio" are all pullbacks. An agent's context budget becomes a principled operation — *choose the sub-base, the fibration restricts itself* — rather than ad-hoc filtering. Same construction covers vocab scoping in the composer's type parameter.
+
+**5. The generic combinator you should extract.** `JSDocTagDefinition.make` hand-rolls a construction that deserves to be a kit — you already have the functor sitting there as `TagValue.cases`:
+
+```ts
+const JSDocTag = Fibered({
+  base: TagName,                    // discrete base
+  fibers: TagValue.cases,           // F : B → Schemas  (varying part)
+  section: JSDocTagDefinition,      // M : B → Meta     (constant part, schema-validated)
+})
+// JSDocTag.union, JSDocTag.meta("param"), JSDocTag.fiberOf(value), JSDocTag.project(value, "callSite")
+```
+
+One kit, and the pattern becomes reusable for `TagValue`, `LiteralKit`-style enums with rich metadata, RDF term definitions (your `RdfDefinition` sketch is exactly this with base = the RDF vocab), and the CURIE registry itself — the Vocab type from last round *is* a section over the discrete base of prefixes. It's fibrations all the way down, which is the correct amount of fibrations.
+
+**6. Honest boundary.** Everything above is the discrete case, where the math is exact. It becomes *genuinely* fibrational — cartesian lifts doing real work — the moment your fibers acquire morphisms: schema **versions** with migrations. A cartesian lift is then "transport this definition along a version map," and your `@since` annotations plus PROV-O bitemporality are sections over a base that's a poset of versions rather than a set. That's real future machinery, not decoration — but it's phase-N, and I've marked it that way in the doc rather than letting it infect phase 1.
+
+Now let me build the handoff.The handoff doc consolidates the whole arc: the four-phase plan (vocab/CURIE types → composer binding → the fold → `Fibered` + retrieval), every decision tagged LOCKED/DEFAULT/OPEN, the `Ontology_models.ts` retro-fixes, the resurrection map for the old projections, and testing strategy including a CI check for the static-extraction invariant. It also tells Fable the fibration layer stays strictly in the discrete case — no building 2-cells before the version-migration story actually needs them.
+
+Two things still flagged OPEN in §10 that only you can answer, D7 (inline vs fold-only triples — you never picked, so Phase 3 ships the fold channel either way and the inline channel waits) and the real authority host, since `https://ns.beep.sh/` is my placeholder.
+
+One parting thought on the fibration insight, because I think it's the deepest thing in this whole session: you've now got the same construction appearing at three scales — a JSDoc tag's metadata over its tag, a schema's annotations over its `$I` identity, and the knowledge graph's triples over its IRIs. Same base-and-section shape, three stores, one index. When Fable builds `project(value, policy)`, your skill's context-lifting rules stop being documentation about how agents *should* use metadata and become the executable sections themselves. The skill was the spec all along.
+````
+
+/home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/identity-iri-fibration-handoff.md]]>
+      </section>
+    </turn>
+  </raw_conversation>
+</agent_context_packet>

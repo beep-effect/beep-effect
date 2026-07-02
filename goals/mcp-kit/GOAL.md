@@ -1,6 +1,8 @@
 # GOAL: Ship @beep/mcp-kit (MCP auth-gating + progressive-disclosure kit)
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect`.
+Repo root: the current working directory — the `beep-effect` checkout you are
+running in. Do not assume an absolute path; several checkouts exist. All paths
+below are repo-relative.
 
 Outcome: `packages/foundation/capability/mcp-kit` exists, builds green through
 repo gates, and exports the seven kit deliverables named in `SPEC.md`, each

@@ -1,6 +1,8 @@
 # GOAL: <short imperative outcome>
 
-Repo: `/home/elpresidank/YeeBois/projects/beep-effect`.
+Repo root: the current working directory — the `beep-effect` checkout you are
+running in. Do not assume an absolute path; several checkouts exist. All paths
+below are repo-relative.
 
 Outcome: <one sentence describing the final state this execution must reach>.
 

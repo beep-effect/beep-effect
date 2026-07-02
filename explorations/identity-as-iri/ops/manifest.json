@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "identity-as-iri",
+    "title": "Identity as IRI",
+    "status": "active",
+    "stage": "research",
+    "openQuestions": [
+      "D7: relational facts inline on $I.class (is:), fold-only triples, or both channels?",
+      "Authority host: https://ns.beep.sh/ is a placeholder — confirm before composer-binding phase merges",
+      "Packaging: all-in-@beep/identity (pure, effect + @beep/types only) vs the handoff's identity/rdf/ontology split — decide after scratchpad prototype",
+      "SemanticSchemaMetadata (@beep/rdf) vs composer-derived iri/curie annotations: absorb, layer, or deprecate? (audit in research)",
+      "$I.key: keep curried typed-path form (annoteKey<Parent>()) or struct-key default only?",
+      "Registry service naming + placement (OntologyRegistry? IdentityRegistry?)"
+    ],
+    "sources": [
+      "research/SOURCES.md"
+    ],
+    "links": {
+      "goals": [],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-07-01",
+    "updated": "2026-07-01"
+  }
+}
