@@ -13,6 +13,7 @@
  */
 
 import { $NlpMcpId } from "@beep/identity";
+import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { AiToolError } from "@beep/nlp-processing/Tools";
 import * as S from "effect/Schema";
 import { Tool, Toolkit } from "effect/unstable/ai";
@@ -711,14 +712,17 @@ const CountJsonlParameters = S.Class<{ readonly options?: unknown; readonly path
  * @since 0.0.0
  * @category tools
  */
-export const ReadLines = Tool.make("stream_read_lines", {
-  description:
-    "Read lines from a text file. Memory efficient for large files. Supports head/tail windowing, skipping, and trimming.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: ReadLinesParameters,
-  success: LinesOutput,
-});
+export const ReadLines = annotateFourHints(
+  Tool.make("stream_read_lines", {
+    description:
+      "Read lines from a text file. Memory efficient for large files. Supports head/tail windowing, skipping, and trimming.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: ReadLinesParameters,
+    success: LinesOutput,
+  }),
+  readOnlyToolHints
+);
 
 /**
  * Tool: report whether a file exists plus its size and line count.
@@ -733,13 +737,16 @@ export const ReadLines = Tool.make("stream_read_lines", {
  * @since 0.0.0
  * @category tools
  */
-export const FileInfo = Tool.make("stream_file_info", {
-  description: "Get information about a text file: existence, byte size, and line count.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: FileInfoParameters,
-  success: FileInfoOutput,
-});
+export const FileInfo = annotateFourHints(
+  Tool.make("stream_file_info", {
+    description: "Get information about a text file: existence, byte size, and line count.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: FileInfoParameters,
+    success: FileInfoOutput,
+  }),
+  readOnlyToolHints
+);
 
 /**
  * Tool: compute aggregate line-length and byte statistics for a file.
@@ -754,13 +761,16 @@ export const FileInfo = Tool.make("stream_file_info", {
  * @since 0.0.0
  * @category tools
  */
-export const TextStats = Tool.make("stream_text_stats", {
-  description: "Compute detailed statistics about a text file: line counts, byte size, and line-length distribution.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: TextStatsParameters,
-  success: TextStatsOutput,
-});
+export const TextStats = annotateFourHints(
+  Tool.make("stream_text_stats", {
+    description: "Compute detailed statistics about a text file: line counts, byte size, and line-length distribution.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: TextStatsParameters,
+    success: TextStatsOutput,
+  }),
+  readOnlyToolHints
+);
 
 /**
  * Tool: sample random lines from a text file.
@@ -775,13 +785,16 @@ export const TextStats = Tool.make("stream_text_stats", {
  * @since 0.0.0
  * @category tools
  */
-export const SampleLines = Tool.make("stream_sample_lines", {
-  description: "Sample random lines from a text file. Useful for building test or validation subsets.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: SampleLinesParameters,
-  success: LinesOutput,
-});
+export const SampleLines = annotateFourHints(
+  Tool.make("stream_sample_lines", {
+    description: "Sample random lines from a text file. Useful for building test or validation subsets.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: SampleLinesParameters,
+    success: LinesOutput,
+  }),
+  readOnlyToolHints
+);
 
 /**
  * Tool: read JSONL/NDJSON records from a file.
@@ -796,13 +809,16 @@ export const SampleLines = Tool.make("stream_sample_lines", {
  * @since 0.0.0
  * @category tools
  */
-export const ReadJsonl = Tool.make("stream_read_jsonl", {
-  description: "Read JSON Lines (JSONL/NDJSON) records from a file. Memory efficient and supports error collection.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: ReadJsonlParameters,
-  success: JsonlOutput,
-});
+export const ReadJsonl = annotateFourHints(
+  Tool.make("stream_read_jsonl", {
+    description: "Read JSON Lines (JSONL/NDJSON) records from a file. Memory efficient and supports error collection.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: ReadJsonlParameters,
+    success: JsonlOutput,
+  }),
+  readOnlyToolHints
+);
 
 /**
  * Tool: compute JSONL parse statistics for a file.
@@ -817,13 +833,16 @@ export const ReadJsonl = Tool.make("stream_read_jsonl", {
  * @since 0.0.0
  * @category tools
  */
-export const JsonlStats = Tool.make("stream_jsonl_stats", {
-  description: "Compute statistics about a JSONL file: total, success, error, and skipped line counts.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: JsonlStatsParameters,
-  success: JsonlStatsOutput,
-});
+export const JsonlStats = annotateFourHints(
+  Tool.make("stream_jsonl_stats", {
+    description: "Compute statistics about a JSONL file: total, success, error, and skipped line counts.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: JsonlStatsParameters,
+    success: JsonlStatsOutput,
+  }),
+  readOnlyToolHints
+);
 
 /**
  * Tool: validate a JSONL file and collect parse errors.
@@ -838,13 +857,16 @@ export const JsonlStats = Tool.make("stream_jsonl_stats", {
  * @since 0.0.0
  * @category tools
  */
-export const ValidateJsonl = Tool.make("stream_validate_jsonl", {
-  description: "Validate a JSONL file, returning parsed records and collected parse errors.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: ValidateJsonlParameters,
-  success: JsonlOutput,
-});
+export const ValidateJsonl = annotateFourHints(
+  Tool.make("stream_validate_jsonl", {
+    description: "Validate a JSONL file, returning parsed records and collected parse errors.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: ValidateJsonlParameters,
+    success: JsonlOutput,
+  }),
+  readOnlyToolHints
+);
 
 /**
  * Tool: sample random JSONL records from a file.
@@ -859,13 +881,16 @@ export const ValidateJsonl = Tool.make("stream_validate_jsonl", {
  * @since 0.0.0
  * @category tools
  */
-export const SampleJsonl = Tool.make("stream_sample_jsonl", {
-  description: "Sample random records from a JSONL file.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: SampleJsonlParameters,
-  success: JsonlOutput,
-});
+export const SampleJsonl = annotateFourHints(
+  Tool.make("stream_sample_jsonl", {
+    description: "Sample random records from a JSONL file.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: SampleJsonlParameters,
+    success: JsonlOutput,
+  }),
+  readOnlyToolHints
+);
 
 /**
  * Tool: load text from a local file or remote URL.
@@ -880,13 +905,16 @@ export const SampleJsonl = Tool.make("stream_sample_jsonl", {
  * @since 0.0.0
  * @category tools
  */
-export const LoadText = Tool.make("stream_load_text", {
-  description: "Load text content from a local file or remote URL. Auto-detects the source type.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: LoadTextParameters,
-  success: DataOutput,
-});
+export const LoadText = annotateFourHints(
+  Tool.make("stream_load_text", {
+    description: "Load text content from a local file or remote URL. Auto-detects the source type.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: LoadTextParameters,
+    success: DataOutput,
+  }),
+  readOnlyToolHints
+);
 
 /**
  * Tool: load lines from a local file or remote URL.
@@ -901,13 +929,16 @@ export const LoadText = Tool.make("stream_load_text", {
  * @since 0.0.0
  * @category tools
  */
-export const LoadLines = Tool.make("stream_load_lines", {
-  description: "Load text as an array of lines from a local file or remote URL.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: LoadLinesParameters,
-  success: DataOutput,
-});
+export const LoadLines = annotateFourHints(
+  Tool.make("stream_load_lines", {
+    description: "Load text as an array of lines from a local file or remote URL.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: LoadLinesParameters,
+    success: DataOutput,
+  }),
+  readOnlyToolHints
+);
 
 /**
  * Tool: load JSONL records from a local file or remote URL.
@@ -922,13 +953,16 @@ export const LoadLines = Tool.make("stream_load_lines", {
  * @since 0.0.0
  * @category tools
  */
-export const LoadJsonl = Tool.make("stream_load_jsonl", {
-  description: "Load JSONL/NDJSON records from a local file or remote URL. Auto-detects the source type.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: LoadJsonlParameters,
-  success: DataOutput,
-});
+export const LoadJsonl = annotateFourHints(
+  Tool.make("stream_load_jsonl", {
+    description: "Load JSONL/NDJSON records from a local file or remote URL. Auto-detects the source type.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: LoadJsonlParameters,
+    success: DataOutput,
+  }),
+  readOnlyToolHints
+);
 
 /**
  * Tool: load and parse JSON from a local file or remote URL.
@@ -943,13 +977,16 @@ export const LoadJsonl = Tool.make("stream_load_jsonl", {
  * @since 0.0.0
  * @category tools
  */
-export const LoadJson = Tool.make("stream_load_json", {
-  description: "Load and parse a JSON document from a local file or remote URL.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: LoadJsonParameters,
-  success: DataOutput,
-});
+export const LoadJson = annotateFourHints(
+  Tool.make("stream_load_json", {
+    description: "Load and parse a JSON document from a local file or remote URL.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: LoadJsonParameters,
+    success: DataOutput,
+  }),
+  readOnlyToolHints
+);
 
 /**
  * Tool: run a line-transform pipeline over a file.
@@ -964,13 +1001,16 @@ export const LoadJson = Tool.make("stream_load_json", {
  * @since 0.0.0
  * @category tools
  */
-export const ProcessFile = Tool.make("stream_process_file", {
-  description: "Run a line-transform pipeline over a file, applying ordered stages to each line.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: ProcessFileParameters,
-  success: PipelineOutput,
-});
+export const ProcessFile = annotateFourHints(
+  Tool.make("stream_process_file", {
+    description: "Run a line-transform pipeline over a file, applying ordered stages to each line.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: ProcessFileParameters,
+    success: PipelineOutput,
+  }),
+  readOnlyToolHints
+);
 
 /**
  * Tool: filter file lines by a regex pattern.
@@ -985,13 +1025,16 @@ export const ProcessFile = Tool.make("stream_process_file", {
  * @since 0.0.0
  * @category tools
  */
-export const FilterLines = Tool.make("stream_filter_lines", {
-  description: "Filter lines from a file that match a regex pattern, with optional inversion.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: FilterLinesParameters,
-  success: LinesOutput,
-});
+export const FilterLines = annotateFourHints(
+  Tool.make("stream_filter_lines", {
+    description: "Filter lines from a file that match a regex pattern, with optional inversion.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: FilterLinesParameters,
+    success: LinesOutput,
+  }),
+  readOnlyToolHints
+);
 
 /**
  * Tool: extract regex matches from a file.
@@ -1006,13 +1049,16 @@ export const FilterLines = Tool.make("stream_filter_lines", {
  * @since 0.0.0
  * @category tools
  */
-export const ExtractMatches = Tool.make("stream_extract_matches", {
-  description: "Extract regex matches from a file, returning matched substrings or full matching lines.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: ExtractMatchesParameters,
-  success: LinesOutput,
-});
+export const ExtractMatches = annotateFourHints(
+  Tool.make("stream_extract_matches", {
+    description: "Extract regex matches from a file, returning matched substrings or full matching lines.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: ExtractMatchesParameters,
+    success: LinesOutput,
+  }),
+  readOnlyToolHints
+);
 
 /**
  * Tool: count total lines in a file.
@@ -1027,13 +1073,16 @@ export const ExtractMatches = Tool.make("stream_extract_matches", {
  * @since 0.0.0
  * @category tools
  */
-export const CountLines = Tool.make("stream_count_lines", {
-  description: "Count the total lines in a file. Memory efficient for large files.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: CountLinesParameters,
-  success: CountOutput,
-});
+export const CountLines = annotateFourHints(
+  Tool.make("stream_count_lines", {
+    description: "Count the total lines in a file. Memory efficient for large files.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: CountLinesParameters,
+    success: CountOutput,
+  }),
+  readOnlyToolHints
+);
 
 /**
  * Tool: count valid JSONL records in a file.
@@ -1048,13 +1097,16 @@ export const CountLines = Tool.make("stream_count_lines", {
  * @since 0.0.0
  * @category tools
  */
-export const CountJsonl = Tool.make("stream_count_jsonl", {
-  description: "Count JSONL records in a file, optionally counting only valid records.",
-  failure: AiToolError,
-  failureMode: "return",
-  parameters: CountJsonlParameters,
-  success: CountWithErrorsOutput,
-});
+export const CountJsonl = annotateFourHints(
+  Tool.make("stream_count_jsonl", {
+    description: "Count JSONL records in a file, optionally counting only valid records.",
+    failure: AiToolError,
+    failureMode: "return",
+    parameters: CountJsonlParameters,
+    success: CountWithErrorsOutput,
+  }),
+  readOnlyToolHints
+);
 
 /**
  * The complete streaming toolkit grouping all 17 streaming tools.

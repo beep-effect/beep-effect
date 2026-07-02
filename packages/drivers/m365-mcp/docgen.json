@@ -41,7 +41,13 @@
         "../../../packages/foundation/modeling/identity/src/packages.ts"
       ],
       "@beep/m365": ["../../../packages/drivers/m365/src/index.ts"],
-      "@beep/m365/*": ["../../../packages/drivers/m365/src/*.ts"]
+      "@beep/m365/*": ["../../../packages/drivers/m365/src/*.ts"],
+      "@beep/mcp-kit": [
+        "../../../packages/foundation/capability/mcp-kit/src/index.ts"
+      ],
+      "@beep/mcp-kit/*": [
+        "../../../packages/foundation/capability/mcp-kit/src/*.ts"
+      ]
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-01",
+  "generatedOn": "2026-07-02",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "enforcedRoots": [
     "packages/tooling/tool/cli/src/commands/Laws/DualArity.ts",
@@ -155,6 +155,18 @@
       "diagnostics": ["missing-dual"]
     },
     {
+      "file": "packages/drivers/uspto-mcp/src/UsptoDocumentTiers.ts",
+      "qualifiedName": "projectDocumentsWithinBudget",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/uspto-mcp",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 144,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
       "file": "packages/drivers/wink/src/WinkObservability.ts",
       "qualifiedName": "makeWinkToolError",
       "kind": "exported-const-function",
@@ -185,7 +197,7 @@
       "status": "candidate",
       "owner": "@beep/mcp-kit",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 164,
+      "line": 165,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual"]
@@ -197,10 +209,10 @@
       "status": "candidate",
       "owner": "@beep/mcp-kit",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function. Public 3-parameter helper APIs must use a strict ObjectLike third parameter.",
-      "line": 212,
+      "line": 285,
       "column": 14,
       "parameterCount": 3,
-      "diagnostics": ["missing-dual", "third-param-not-object-like"]
+      "diagnostics": ["missing-dual"]
     },
     {
       "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
@@ -209,7 +221,7 @@
       "status": "candidate",
       "owner": "@beep/mcp-kit",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 150,
+      "line": 156,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual"]
@@ -221,7 +233,7 @@
       "status": "candidate",
       "owner": "@beep/mcp-kit",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 349,
+      "line": 441,
       "column": 14,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]

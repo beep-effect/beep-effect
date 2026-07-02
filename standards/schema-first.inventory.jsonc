@@ -1,11 +1,7 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-01",
-  "scope": [
-    "apps/**/*.{ts,tsx}",
-    "packages/**/*.{ts,tsx}",
-    "infra/**/*.ts"
-  ],
+  "generatedOn": "2026-07-02",
+  "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
       "file": "apps/professional-desktop/src/chat/UsageRecordSink.ts",
@@ -480,6 +476,14 @@
       "status": "exception",
       "owner": "@beep/sanity",
       "reason": "Type alias contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/src/UsptoDocumentTiers.ts",
+      "symbol": "usptoDocumentFieldTiers",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/uspto-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
     },
     {
       "file": "packages/drivers/uspto/src/Uspto.service.ts",
