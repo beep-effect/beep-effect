@@ -22,6 +22,8 @@
 
 import { Cause, Context, Effect, Layer, Sink, Stream } from "effect";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import { CallToolResult, Tool as WireTool } from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import * as AiTool from "effect/unstable/ai/Tool";
@@ -175,7 +177,7 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
     Exclude<AiTool.HandlersFor<Tools>, McpServerClient>
   >;
   const services = yield* Effect.context<never>();
-  for (const tool of Object.values(built.tools) as ReadonlyArray<AiTool.Any>) {
+  for (const tool of R.values(built.tools) as ReadonlyArray<AiTool.Any>) {
     const annotations = tool.annotations;
     const toolMeta = Context.getOrUndefined(annotations, AiTool.Meta);
     const wireTool = WireTool.make({
@@ -213,10 +215,7 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
             onSuccess: (result: { readonly encodedResult: unknown }) =>
               CallToolResult.make({
                 isError: false,
-                structuredContent:
-                  typeof result.encodedResult === "object" && result.encodedResult !== null
-                    ? (result.encodedResult as Record<string, unknown>)
-                    : undefined,
+                structuredContent: P.isObject(result.encodedResult) ? result.encodedResult : undefined,
                 content: [{ type: "text", text: JSON.stringify(result.encodedResult) }],
               }),
           }),

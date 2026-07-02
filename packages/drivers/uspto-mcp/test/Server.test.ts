@@ -10,9 +10,14 @@
  */
 
 import { composeGatedLayers, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit";
-import { provideScopedLayer } from "@beep/test-utils";
-import { Uspto, UsptoConfigInput } from "@beep/uspto";
-import { UsptoSourceAuthRegistration, UsptoToolkit, UsptoToolkitHandlersLive } from "@beep/uspto-mcp";
+import { assertSchemaArbitraryDecodesToSelf, provideScopedLayer } from "@beep/test-utils";
+import { Uspto, UsptoApplicationMetadata, UsptoConfigInput } from "@beep/uspto";
+import {
+  DocumentsProjectionOutput,
+  UsptoSourceAuthRegistration,
+  UsptoToolkit,
+  UsptoToolkitHandlersLive,
+} from "@beep/uspto-mcp";
 import { assert, describe, it } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer, Redacted } from "effect";
 import * as S from "effect/Schema";
@@ -155,4 +160,14 @@ describe("uspto-mcp fixture proofs", () => {
       assert.isAtMost(raw.length, 8000);
     })
   );
+});
+
+describe("uspto-mcp schema-derived arbitraries", () => {
+  it("only generates UsptoApplicationMetadata values that decode to themselves", () => {
+    assertSchemaArbitraryDecodesToSelf(UsptoApplicationMetadata);
+  });
+
+  it("only generates DocumentsProjectionOutput values that decode to themselves", () => {
+    assertSchemaArbitraryDecodesToSelf(DocumentsProjectionOutput);
+  });
 });
