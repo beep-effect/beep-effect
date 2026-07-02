@@ -37,14 +37,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — next concrete action: confirm the authority host with
-elpresidank (blocking input; `https://ns.beep.sh/` is a placeholder), then
-build the audit-B shape-stable harness before touching `Id.ts`.
+P3 Yeet: PR to mergeable — [PR #289](https://github.com/beep-effect/beep-effect/pull/289)
+open; monitoring checks. Inherited main-red lanes are documented in the SPEC
+Exception Ledger and the PR body. Then P4 Close (reflection + status flip).
 
 ## Latest Evidence
 
-Not started. Design proof: `scratchpad/identity/` prototype (27/27 tests,
-effect-only) at checkpoint `61160e1baf`.
+[PR #289](https://github.com/beep-effect/beep-effect/pull/289). Local gates:
+identity 51 tests (incl. shape-stable harness) + rdf 26, check/docgen/biome
+green. Blast radius: [`history/p2-blast-radius.md`](./history/p2-blast-radius.md)
+(+6% in-package instantiations, ~noise downstream). Full phase evidence under
+[`history/`](./history/).
 
 ## Notes
 
