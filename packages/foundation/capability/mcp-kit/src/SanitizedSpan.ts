@@ -20,12 +20,8 @@
  * @since 0.0.0
  */
 
-import { Effect, Layer } from "effect";
-import * as Cause from "effect/Cause";
-import * as Context from "effect/Context";
-import * as Option from "effect/Option";
-import * as Sink from "effect/Sink";
-import * as Stream from "effect/Stream";
+import { Cause, Context, Effect, Layer, Sink, Stream } from "effect";
+import * as O from "effect/Option";
 import { CallToolResult, Tool as WireTool } from "effect/unstable/ai/McpSchema";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import * as AiTool from "effect/unstable/ai/Tool";
@@ -188,8 +184,8 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
       inputSchema: AiTool.getJsonSchema(tool),
       annotations: {
         ...Context.getOption(annotations, AiTool.Title).pipe(
-          Option.map((title) => ({ title })),
-          Option.getOrUndefined
+          O.map((title) => ({ title })),
+          O.getOrUndefined
         ),
         readOnlyHint: Context.get(annotations, AiTool.Readonly),
         destructiveHint: Context.get(annotations, AiTool.Destructive),

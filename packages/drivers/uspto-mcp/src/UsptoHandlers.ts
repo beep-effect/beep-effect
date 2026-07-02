@@ -15,10 +15,8 @@
 import { apiKeyRequiredFailure, FetchableHandle, resolveSourceCredential } from "@beep/mcp-kit";
 import { NonNegativeInt } from "@beep/schema";
 import { Uspto } from "@beep/uspto";
-import { Effect } from "effect";
-import * as DateTime from "effect/DateTime";
+import { DateTime, Effect, Random } from "effect";
 import * as O from "effect/Option";
-import * as Random from "effect/Random";
 import { projectDocumentsWithinBudget } from "./UsptoDocumentTiers.ts";
 import { UsptoSourceAuthRegistration } from "./UsptoSourceAuth.ts";
 import { UsptoGetDocumentsTool, UsptoSearchApplicationsTool, UsptoToolError, UsptoToolkit } from "./UsptoTools.ts";
