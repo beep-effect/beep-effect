@@ -37,7 +37,7 @@ import * as Identity from "./Id.ts";
  * @since 0.0.0
  * @category configuration
  */
-export const $I = Identity.make("beep").$BeepId;
+export const $I = Identity.make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" }).$BeepId;
 
 const generatedComposers = $I.compose(
   // IaC Infra Package

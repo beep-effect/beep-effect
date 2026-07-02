@@ -34,6 +34,7 @@ import * as Str from "effect/String";
 import type { TString } from "@beep/types";
 import type * as Multipart_ from "effect/unstable/http/Multipart";
 import type { Get, Paths } from "type-fest";
+import type { CoreVocab, VocabShape } from "./Vocab.ts";
 
 const BeepNamespace = S.Literal("@beep");
 type BeepNamespace = typeof BeepNamespace.Type;
@@ -42,6 +43,8 @@ const BeepBase = S.Literal("beep");
 type BeepBase = typeof BeepBase.Type;
 
 const IdentityVersion = S.Literal("0.0.0");
+type DefaultIdentityAuthority = "https://ns.beep.sh/";
+type DefaultIdentityPrefix = "beep";
 
 const isBeepNamespace = S.is(BeepNamespace);
 const isBeepBase = S.is(BeepBase);
@@ -264,6 +267,47 @@ type JoinTitleWords<Words extends ReadonlyArray<string>> = Words extends readonl
     ? `${TitleWord<Head>} ${JoinTitleWords<Tail>}`
     : "";
 
+type IdentityTail<Value extends string> = string extends Value
+  ? string
+  : Value extends "@beep"
+    ? ""
+    : Value extends `@beep/${infer Tail}`
+      ? Tail
+      : Value extends `@${string}/${infer Tail}`
+        ? Tail
+        : Value;
+
+type SlugSeparator = "/" | "." | "_" | "-" | " ";
+type SlugState = "start" | "separator" | "lower-or-digit" | "other";
+type IsUppercaseLetter<Character extends string> =
+  Character extends Lowercase<Character> ? false : Character extends Uppercase<Character> ? true : false;
+type IsLowercaseLetterOrDigit<Character extends string> = Character extends Digit
+  ? true
+  : Character extends Lowercase<Character>
+    ? Character extends Uppercase<Character>
+      ? false
+      : true
+    : false;
+type SlugStateAfter<Character extends string> =
+  IsLowercaseLetterOrDigit<Character> extends true ? "lower-or-digit" : "other";
+type SlugJoin<Value extends string, State extends SlugState = "start"> = Value extends `${infer Character}${infer Rest}`
+  ? Character extends SlugSeparator
+    ? State extends "start" | "separator"
+      ? SlugJoin<Rest, "separator">
+      : `-${SlugJoin<Rest, "separator">}`
+    : IsUppercaseLetter<Character> extends true
+      ? State extends "lower-or-digit"
+        ? `-${Lowercase<Character>}${SlugJoin<Rest, "other">}`
+        : `${Lowercase<Character>}${SlugJoin<Rest, "other">}`
+      : `${Lowercase<Character>}${SlugJoin<Rest, SlugStateAfter<Character>>}`
+  : "";
+type TrimSlugHyphens<Value extends string> = Value extends `-${infer Rest}`
+  ? TrimSlugHyphens<Rest>
+  : Value extends `${infer Rest}-`
+    ? TrimSlugHyphens<Rest>
+    : Value;
+type StripLeadingAt<Value extends string> = Value extends `@${infer Rest}` ? Rest : Value;
+
 /**
  * Derive a human-readable title from a kebab-case or snake_case identifier.
  *
@@ -282,6 +326,81 @@ type JoinTitleWords<Words extends ReadonlyArray<string>> = Words extends readonl
 export type TitleFromIdentifier<Identifier extends string> = JoinTitleWords<
   SplitTitleWords<TrimTitleSpaces<NormalizeTitleSeparators<Identifier>>>
 >;
+
+/**
+ * Derive an exact IRI literal from an identity path and authority prefix.
+ *
+ * Converts `"@beep/a/b"` to `"https://ns.beep.sh/a/b"` when the authority is
+ * `"https://ns.beep.sh/"`. Widened string inputs intentionally widen to `string`.
+ *
+ * @example
+ * ```typescript
+ * import type { IriFromIdentity } from "@beep/identity"
+ *
+ * type Iri = IriFromIdentity<"https://ns.beep.sh/", "@beep/schema/Entity">
+ * const iri: Iri = "https://ns.beep.sh/schema/Entity"
+ * console.log(iri)
+ * ```
+ *
+ * @since 0.0.0
+ * @category type-level
+ */
+export type IriFromIdentity<Authority extends string, Identity extends string> = string extends Authority
+  ? string
+  : string extends Identity
+    ? string
+    : IdentityTail<Identity> extends ""
+      ? Authority
+      : `${Authority}${IdentityTail<Identity>}`;
+
+/**
+ * Derive an exact CURIE literal from an identity path and owned prefix.
+ *
+ * Converts `"@beep/a/b"` to `"beep:a/b"` when the prefix is `"beep"`. Widened
+ * string inputs intentionally widen to `string`.
+ *
+ * @example
+ * ```typescript
+ * import type { CurieFromIdentity } from "@beep/identity"
+ *
+ * type Curie = CurieFromIdentity<"beep", "@beep/schema/Entity">
+ * const curie: Curie = "beep:schema/Entity"
+ * console.log(curie)
+ * ```
+ *
+ * @since 0.0.0
+ * @category type-level
+ */
+export type CurieFromIdentity<Prefix extends string, Identity extends string> = string extends Prefix
+  ? string
+  : string extends Identity
+    ? string
+    : IdentityTail<Identity> extends ""
+      ? `${Prefix}:`
+      : `${Prefix}:${IdentityTail<Identity>}`;
+
+/**
+ * Derive a kebab-case slug literal from an identity or identifier.
+ *
+ * The type-level transform mirrors the runtime slug getter for static identity
+ * paths, including slash, dot, underscore, hyphen, space, and lower-to-upper
+ * word boundaries.
+ *
+ * @example
+ * ```typescript
+ * import type { SlugFromIdentifier } from "@beep/identity"
+ *
+ * type Slug = SlugFromIdentifier<"@beep/Ontology.models/HttpUrl">
+ * const slug: Slug = "beep-ontology-models-http-url"
+ * console.log(slug)
+ * ```
+ *
+ * @since 0.0.0
+ * @category type-level
+ */
+export type SlugFromIdentifier<Identifier extends string> = string extends Identifier
+  ? string
+  : TrimSlugHyphens<SlugJoin<StripLeadingAt<Identifier>>>;
 
 type PascalCaseValue<Value extends string> = Value extends `${infer A}-${infer B}-${infer C}-${infer D}`
   ? `${PascalCaseWord<A>}${PascalCaseWord<B>}${PascalCaseWord<C>}${PascalCaseWord<D>}`
@@ -513,13 +632,45 @@ export type IdentityAnyAnnotationExtras<
  * @since 0.0.0
  * @category models
  */
-export type IdentityAnnotation<Value extends string, Identifier extends string> = S.Annotations.Annotations & {
+export type IdentityAnnotation<
+  Value extends string,
+  Identifier extends string,
+  Authority extends string | undefined = undefined,
+  Prefix extends string | undefined = undefined,
+> = S.Annotations.Annotations & {
   readonly identifier: IdentityString<Value>;
   readonly schemaId: IdentitySymbol<Value>;
   readonly title: TitleFromIdentifier<Identifier>;
-};
+} & IdentityProjection<Value, Authority, Prefix>;
 
-type IdentityAnnotationMetadataKeys = "identifier" | "schemaId" | "title";
+type IdentityProjection<
+  Value extends string,
+  Authority extends string | undefined,
+  Prefix extends string | undefined,
+> = Authority extends string
+  ? Prefix extends string
+    ? {
+        readonly iri: IriFromIdentity<Authority, Value>;
+        readonly curie: CurieFromIdentity<Prefix, Value>;
+      }
+    : {
+        readonly iri?: undefined;
+        readonly curie?: undefined;
+      }
+  : {
+      readonly iri?: undefined;
+      readonly curie?: undefined;
+    };
+
+type BoundComposerIri<Authority extends string | undefined, Value extends string> = Authority extends string
+  ? IriFromIdentity<Authority, Value>
+  : undefined;
+
+type BoundComposerCurie<Prefix extends string | undefined, Value extends string> = Prefix extends string
+  ? CurieFromIdentity<Prefix, Value>
+  : undefined;
+
+type IdentityAnnotationMetadataKeys = "identifier" | "schemaId" | "title" | "iri" | "curie";
 
 /**
  * Result of calling `annote` -- the identity annotation merged with any caller-supplied extras,
@@ -539,7 +690,11 @@ export type IdentityAnnotationResult<
   Value extends string,
   Identifier extends string,
   Extras extends object = {},
-> = IdentityAnnotation<Value, Identifier> & Omit<Extras, IdentityAnnotationMetadataKeys>;
+  Authority extends string | undefined = undefined,
+  Prefix extends string | undefined = undefined,
+> = IdentityAnnotation<Value, Identifier> &
+  IdentityProjection<Value, Authority, Prefix> &
+  Omit<Extras, IdentityAnnotationMetadataKeys>;
 
 type SchemaPath<Struct extends object> = Extract<Paths<Struct>, string>;
 
@@ -568,8 +723,19 @@ type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<S
  * @since 0.0.0
  * @category models
  */
-export type TaggedModuleRecord<Value extends string, Segments extends ReadonlyArray<TString.NonEmpty>> = {
-  readonly [K in Segments[number] as TaggedAccessor<K>]: IdentityComposer<`${Value}/${ModuleSegmentValue<K>}`>;
+export type TaggedModuleRecord<
+  Value extends string,
+  Segments extends ReadonlyArray<TString.NonEmpty>,
+  Authority extends string | undefined = DefaultIdentityAuthority,
+  Prefix extends string | undefined = DefaultIdentityPrefix,
+  Vocab extends VocabShape = CoreVocab,
+> = {
+  readonly [K in Segments[number] as TaggedAccessor<K>]: IdentityComposer<
+    `${Value}/${ModuleSegmentValue<K>}`,
+    Authority,
+    Prefix,
+    Vocab
+  >;
 };
 
 /**
@@ -616,7 +782,12 @@ export type TaggedModuleRecord<Value extends string, Segments extends ReadonlyAr
  * @since 0.0.0
  * @category models
  */
-export interface IdentityComposer<Value extends string> {
+export interface IdentityComposer<
+  Value extends string,
+  Authority extends string | undefined = DefaultIdentityAuthority,
+  Prefix extends string | undefined = DefaultIdentityPrefix,
+  Vocab extends VocabShape = CoreVocab,
+> {
   /**
    * Produce an identity annotation record for an Effect schema.
    *
@@ -645,7 +816,7 @@ export interface IdentityComposer<Value extends string> {
   >(
     identifier: SegmentValue<Next>,
     extras?: undefined | Extras
-  ): IdentityAnnotationResult<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>, Extras>;
+  ): IdentityAnnotationResult<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>, Extras, Authority, Prefix>;
 
   /**
    * Produce a schema annotation function with HTTP API metadata.
@@ -727,7 +898,7 @@ export interface IdentityComposer<Value extends string> {
    */
   compose<
     const Segments extends readonly [ModuleSegmentValue<TString.NonEmpty>, ...ModuleSegmentValue<TString.NonEmpty>[]],
-  >(...segments: Segments): TaggedModuleRecord<Value, Segments>;
+  >(...segments: Segments): TaggedModuleRecord<Value, Segments, Authority, Prefix, Vocab>;
 
   /**
    * Create a child {@link IdentityComposer} for further path extension.
@@ -750,7 +921,24 @@ export interface IdentityComposer<Value extends string> {
    */
   create<const Next extends TString.NonEmpty>(
     segment: SegmentValue<Next>
-  ): IdentityComposer<`${Value}/${SegmentValue<Next>}`>;
+  ): IdentityComposer<`${Value}/${SegmentValue<Next>}`, Authority, Prefix, Vocab>;
+
+  /**
+   * CURIE projection for this composer's current path, or `undefined` when unbound.
+   *
+   * @example
+   * ```typescript
+   * import { make } from "@beep/identity"
+   *
+   * const { $BeepId } = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" })
+   * const curie = $BeepId.create("schema").curie
+   * console.log(curie) // "beep:schema"
+   * ```
+   *
+   * @since 0.0.0
+   * @category getters
+   */
+  readonly curie: BoundComposerCurie<Prefix, Value>;
 
   /**
    * The identity string for this composer's current path.
@@ -759,6 +947,28 @@ export interface IdentityComposer<Value extends string> {
    * @category getters
    */
   readonly identifier: IdentityString<Value>;
+
+  /**
+   * IRI projection for this composer's current path, or `undefined` when unbound.
+   *
+   * @remarks
+   * One-argument `make(...)` calls intentionally produce unbound composers, so
+   * callers must handle `undefined` there. Root-bound package composers derive
+   * exact literals from the configured authority.
+   *
+   * @example
+   * ```typescript
+   * import { make } from "@beep/identity"
+   *
+   * const { $BeepId } = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" })
+   * const iri = $BeepId.create("schema").iri
+   * console.log(iri) // "https://ns.beep.sh/schema"
+   * ```
+   *
+   * @since 0.0.0
+   * @category getters
+   */
+  readonly iri: BoundComposerIri<Authority, Value>;
 
   /**
    * Create a child identity string by appending one segment.
@@ -778,6 +988,44 @@ export interface IdentityComposer<Value extends string> {
   make<const Next extends TString.NonEmpty>(
     segment: SegmentValue<Next>
   ): IdentityString<`${Value}/${SegmentValue<Next>}`>;
+
+  /**
+   * Rebind IRI and CURIE projections without changing the identity path or symbol.
+   *
+   * @example
+   * ```typescript
+   * import { make } from "@beep/identity"
+   *
+   * const { $BeepId } = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" })
+   * const patent = $BeepId.create("ontology").create("patent")
+   * const rebased = patent.rebase({ iri: "https://opip.law/ns/patent#", prefix: "patent" })
+   * console.log(rebased.iri) // "https://opip.law/ns/patent#ontology/patent"
+   * ```
+   *
+   * @since 0.0.0
+   * @category combinators
+   */
+  rebase<const Iri extends string, const NextPrefix extends string>(options: {
+    readonly iri: Iri;
+    readonly prefix: NextPrefix;
+  }): IdentityComposer<Value, Iri, NextPrefix, Vocab>;
+
+  /**
+   * Kebab-case slug projection for this composer's current path.
+   *
+   * @example
+   * ```typescript
+   * import { make } from "@beep/identity"
+   *
+   * const { $BeepId } = make("beep")
+   * const slug = $BeepId.create("Ontology.models").create("HttpUrl").slug
+   * console.log(slug) // "beep-ontology-models-http-url"
+   * ```
+   *
+   * @since 0.0.0
+   * @category getters
+   */
+  readonly slug: SlugFromIdentifier<Value>;
 
   /**
    * Return this composer's identity as a branded string.
@@ -908,6 +1156,34 @@ const toTitle = <const Identifier extends TString.NonEmpty>(identifier: Identifi
     A.join(" ")
   ) as TitleFromIdentifier<Identifier>;
 
+const localPathFromIdentity = (identity: string): string => pipe(identity, Str.split("/"), A.drop(1), A.join("/"));
+
+const toIri = <const Authority extends string, const Value extends string>(
+  authority: Authority,
+  identity: Value
+): IriFromIdentity<Authority, Value> => {
+  const localPath = localPathFromIdentity(identity);
+  return (Str.isEmpty(localPath) ? authority : `${authority}${localPath}`) as IriFromIdentity<Authority, Value>;
+};
+
+const toCurie = <const Prefix extends string, const Value extends string>(
+  prefix: Prefix,
+  identity: Value
+): CurieFromIdentity<Prefix, Value> => {
+  const localPath = localPathFromIdentity(identity);
+  return (Str.isEmpty(localPath) ? `${prefix}:` : `${prefix}:${localPath}`) as CurieFromIdentity<Prefix, Value>;
+};
+
+const toSlug = <const Identifier extends string>(identifier: Identifier): SlugFromIdentifier<Identifier> =>
+  pipe(
+    identifier,
+    Str.replace(/^@/, ""),
+    Str.replace(/([a-z0-9])([A-Z])/g, "$1-$2"),
+    Str.replace(/[/. _-]+/g, "-"),
+    Str.replace(/^-+|-+$/g, ""),
+    Str.toLowerCase
+  ) as SlugFromIdentifier<Identifier>;
+
 type ModulePascal<Segment extends TString.NonEmpty> =
   ModuleAccessor<Segment> extends `${infer Pascal}Id` ? Pascal : never;
 
@@ -976,8 +1252,33 @@ const createBaseIdentity = <const Base extends TString.NonEmpty>(base: Normalize
     onSome: () => beepNamespace as BaseIdentity<Base>,
   });
 
-const createComposer = <const Value extends string>(value: Value): IdentityComposer<Value> => {
+type IdentityBinding<Authority extends string, Prefix extends string, Vocab extends VocabShape> = {
+  readonly authority: Authority;
+  readonly prefix: Prefix;
+  readonly vocab?: Vocab | undefined;
+};
+
+const createComposer = <
+  const Value extends string,
+  const Authority extends string | undefined,
+  const Prefix extends string | undefined,
+  const Vocab extends VocabShape,
+>(
+  value: Value,
+  binding: IdentityBinding<string, string, Vocab> | undefined
+): IdentityComposer<Value, Authority, Prefix, Vocab> => {
   const identityValue = toIdentityString(value);
+  const iri = pipe(
+    O.fromUndefinedOr(binding),
+    O.map((currentBinding) => toIri(currentBinding.authority, value)),
+    O.getOrUndefined
+  ) as BoundComposerIri<Authority, Value>;
+  const curie = pipe(
+    O.fromUndefinedOr(binding),
+    O.map((currentBinding) => toCurie(currentBinding.prefix, value)),
+    O.getOrUndefined
+  ) as BoundComposerCurie<Prefix, Value>;
+  const slug = toSlug(value);
 
   function createTemplateIdentity(strings: TemplateStringsArray, ...values: ReadonlyArray<unknown>) {
     validateTemplateInterpolations(values);
@@ -995,23 +1296,29 @@ const createComposer = <const Value extends string>(value: Value): IdentityCompo
 
   const composeNext = <const Next extends TString.NonEmpty>(
     segment: SegmentValue<Next>
-  ): IdentityComposer<`${Value}/${SegmentValue<Next>}`> => {
+  ): IdentityComposer<`${Value}/${SegmentValue<Next>}`, Authority, Prefix, Vocab> => {
     const next = validateSegment(segment);
     const composed = appendIdentityValue(value, next);
-    return createComposer(composed);
+    return createComposer(composed, binding);
   };
 
   const identityAnnotation = <const Next extends TString.NonEmpty = TString.NonEmpty>(
     identifier: SegmentValue<Next>
-  ): IdentityAnnotation<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>> => {
+  ): IdentityAnnotation<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>, Authority, Prefix> => {
     const next = validateSegment(identifier);
     const composer = composeNext(next);
 
     return {
       schemaId: composer.symbol(),
       identifier: composer.string(),
+      ...(composer.iri === undefined || composer.curie === undefined
+        ? {}
+        : {
+            iri: composer.iri,
+            curie: composer.curie,
+          }),
       title: toTitle(next),
-    } satisfies IdentityAnnotation<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>>;
+    } as IdentityAnnotation<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>, Authority, Prefix>;
   };
 
   const annote = <
@@ -1020,18 +1327,36 @@ const createComposer = <const Value extends string>(value: Value): IdentityCompo
   >(
     identifier: SegmentValue<Next>,
     extras?: undefined | Extras
-  ): IdentityAnnotationResult<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>, Extras> =>
+  ): IdentityAnnotationResult<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>, Extras, Authority, Prefix> =>
     pipe(identityAnnotation(identifier), (annotation) =>
       O.match(O.fromUndefinedOr(extras), {
         onNone: () =>
-          annotation as IdentityAnnotationResult<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>, Extras>,
+          annotation as IdentityAnnotationResult<
+            `${Value}/${SegmentValue<Next>}`,
+            SegmentValue<Next>,
+            Extras,
+            Authority,
+            Prefix
+          >,
         onSome: (currentExtras) =>
           ({
             ...currentExtras,
             schemaId: annotation.schemaId,
             identifier: annotation.identifier,
+            ...(annotation.iri === undefined || annotation.curie === undefined
+              ? {}
+              : {
+                  iri: annotation.iri,
+                  curie: annotation.curie,
+                }),
             title: annotation.title,
-          }) as IdentityAnnotationResult<`${Value}/${SegmentValue<Next>}`, SegmentValue<Next>, Extras>,
+          }) as unknown as IdentityAnnotationResult<
+            `${Value}/${SegmentValue<Next>}`,
+            SegmentValue<Next>,
+            Extras,
+            Authority,
+            Prefix
+          >,
       })
     );
 
@@ -1095,6 +1420,24 @@ const createComposer = <const Value extends string>(value: Value): IdentityCompo
       writable: true,
       configurable: true,
     },
+    iri: {
+      value: iri,
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    },
+    curie: {
+      value: curie,
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    },
+    slug: {
+      value: slug,
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    },
     compose: {
       value: <
         const Segments extends readonly [
@@ -1105,7 +1448,7 @@ const createComposer = <const Value extends string>(value: Value): IdentityCompo
         ...segments: Segments
       ) => {
         const entries = pipe(segments, A.map(toTaggedComposerEntry));
-        return R.fromEntries(entries) as unknown as TaggedModuleRecord<Value, Segments>;
+        return R.fromEntries(entries) as unknown as TaggedModuleRecord<Value, Segments, Authority, Prefix, Vocab>;
       },
       enumerable: true,
       writable: true,
@@ -1135,6 +1478,20 @@ const createComposer = <const Value extends string>(value: Value): IdentityCompo
       writable: true,
       configurable: true,
     },
+    rebase: {
+      value: <const Iri extends string, const NextPrefix extends string>(options: {
+        readonly iri: Iri;
+        readonly prefix: NextPrefix;
+      }) =>
+        createComposer<Value, Iri, NextPrefix, Vocab>(value, {
+          authority: options.iri,
+          prefix: options.prefix,
+          vocab: binding?.vocab,
+        }),
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    },
     annote: {
       value: annote,
       enumerable: true,
@@ -1159,12 +1516,20 @@ const createComposer = <const Value extends string>(value: Value): IdentityCompo
       writable: true,
       configurable: true,
     },
-  }) as unknown as IdentityComposer<Value>;
+  }) as unknown as IdentityComposer<Value, Authority, Prefix, Vocab>;
 };
 
-type MakeReturn<Base extends TString.NonEmpty> = {
+type MakeReturn<
+  Base extends TString.NonEmpty,
+  Authority extends string | undefined = DefaultIdentityAuthority,
+  Prefix extends string | undefined = DefaultIdentityPrefix,
+  Vocab extends VocabShape = CoreVocab,
+> = {
   readonly [K in `$${PascalCaseValue<ModuleSegmentValue<NormalizedBase<Base>>>}Id`]: IdentityComposer<
-    BaseIdentity<Base>
+    BaseIdentity<Base>,
+    Authority,
+    Prefix,
+    Vocab
   >;
 };
 
@@ -1198,18 +1563,36 @@ type MakeReturn<Base extends TString.NonEmpty> = {
  * @since 0.0.0
  * @category constructors
  */
-export const make = flow(<const Base extends TString.NonEmpty>(base: Base): MakeReturn<Base> => {
+export function make<const Base extends TString.NonEmpty>(base: Base): MakeReturn<Base, undefined, undefined>;
+export function make<
+  const Base extends TString.NonEmpty,
+  const Authority extends string,
+  const Prefix extends string,
+  const Vocab extends VocabShape = CoreVocab,
+>(base: Base, options: IdentityBinding<Authority, Prefix, Vocab>): MakeReturn<Base, Authority, Prefix, Vocab>;
+export function make<
+  const Base extends TString.NonEmpty,
+  const Authority extends string,
+  const Prefix extends string,
+  const Vocab extends VocabShape = CoreVocab,
+>(
+  base: Base,
+  options?: IdentityBinding<Authority, Prefix, Vocab>
+): MakeReturn<Base, Authority | undefined, Prefix | undefined, Vocab> {
   const normalized = normalizeBase(base);
   const baseIdentity = createBaseIdentity(normalized);
-  const composer = createComposer(baseIdentity);
+  const composer = createComposer<BaseIdentity<Base>, Authority | undefined, Prefix | undefined, Vocab>(
+    baseIdentity,
+    options
+  );
   const key = toTaggedKey(normalized);
 
   return Fn.cast<
     {
-      [x: string]: IdentityComposer<BaseIdentity<Base>>;
+      [x: string]: IdentityComposer<BaseIdentity<Base>, Authority | undefined, Prefix | undefined, Vocab>;
     },
-    MakeReturn<Base>
+    MakeReturn<Base, Authority | undefined, Prefix | undefined, Vocab>
   >({
     [key]: composer,
   });
-});
+}

@@ -17,7 +17,7 @@
     "lint:fix": "bun run beep:lint:fix",
     "beep:build": "tsc -b tsconfig.json && bun run babel",
     "beep:check": "tsgo -b tsconfig.json",
-    "beep:test": "bunx --bun vitest run",
+    "beep:test": "bunx vitest run",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:audit": "bun run beep:build && bun run beep:check && bun run beep:test && bun run beep:lint",
