@@ -18,6 +18,8 @@ Tika = "Tika"
 ALIS = "ALIS"
 Definely = "Definely"
 LOV = "LOV"
+# Intentional misspelling in identity Vocab negative test (asserts typo'd predicate is rejected)
+Clas = "Clas"
 
 # Biome rule names
 Inferrable = "Inferrable"

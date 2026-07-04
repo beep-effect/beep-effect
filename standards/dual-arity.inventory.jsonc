@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-02",
+  "generatedOn": "2026-07-04",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "enforcedRoots": [
     "packages/tooling/tool/cli/src/commands/Laws/DualArity.ts",
@@ -382,6 +382,30 @@
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["invalid-dual-arity", "third-param-not-object-like"]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/PnLocal.ts",
+      "qualifiedName": "prefixedNameOrIri",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/identity",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function. Public 3-parameter helper APIs must use a strict ObjectLike third parameter.",
+      "line": 234,
+      "column": 14,
+      "parameterCount": 3,
+      "diagnostics": ["missing-dual", "third-param-not-object-like"]
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/Vocab.ts",
+      "qualifiedName": "mergeVocab",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/identity",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 361,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
     },
     {
       "file": "packages/foundation/modeling/nlp/src/Algebra/Monoid.ts",

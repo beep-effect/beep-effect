@@ -290,17 +290,21 @@ type IsLowercaseLetterOrDigit<Character extends string> = Character extends Digi
     : false;
 type SlugStateAfter<Character extends string> =
   IsLowercaseLetterOrDigit<Character> extends true ? "lower-or-digit" : "other";
-type SlugJoin<Value extends string, State extends SlugState = "start"> = Value extends `${infer Character}${infer Rest}`
+type SlugJoin<
+  Value extends string,
+  State extends SlugState = "start",
+  Acc extends string = "",
+> = Value extends `${infer Character}${infer Rest}`
   ? Character extends SlugSeparator
     ? State extends "start" | "separator"
-      ? SlugJoin<Rest, "separator">
-      : `-${SlugJoin<Rest, "separator">}`
+      ? SlugJoin<Rest, "separator", Acc>
+      : SlugJoin<Rest, "separator", `${Acc}-`>
     : IsUppercaseLetter<Character> extends true
       ? State extends "lower-or-digit"
-        ? `-${Lowercase<Character>}${SlugJoin<Rest, "other">}`
-        : `${Lowercase<Character>}${SlugJoin<Rest, "other">}`
-      : `${Lowercase<Character>}${SlugJoin<Rest, SlugStateAfter<Character>>}`
-  : "";
+        ? SlugJoin<Rest, "other", `${Acc}-${Lowercase<Character>}`>
+        : SlugJoin<Rest, "other", `${Acc}${Lowercase<Character>}`>
+      : SlugJoin<Rest, SlugStateAfter<Character>, `${Acc}${Lowercase<Character>}`>
+  : Acc;
 type TrimSlugHyphens<Value extends string> = Value extends `-${infer Rest}`
   ? TrimSlugHyphens<Rest>
   : Value extends `${infer Rest}-`
@@ -1156,7 +1160,7 @@ const toTitle = <const Identifier extends TString.NonEmpty>(identifier: Identifi
     A.join(" ")
   ) as TitleFromIdentifier<Identifier>;
 
-const localPathFromIdentity = (identity: string): string => pipe(identity, Str.split("/"), A.drop(1), A.join("/"));
+const localPathFromIdentity: (identity: string) => string = flow(Str.split("/"), A.drop(1), A.join("/"));
 
 const toIri = <const Authority extends string, const Value extends string>(
   authority: Authority,
