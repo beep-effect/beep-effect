@@ -38,18 +38,19 @@ import {
 } from "@beep/file-processing/Strategy";
 import { $RepoCliId } from "@beep/identity/packages";
 import { makePffexportFileProcessingEngine, PffexportEngineConfig } from "@beep/libpff";
-import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
+import { NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { makeTikaAppFileProcessingEngine, TikaAppEngineConfig } from "@beep/tika";
 import { makeUsptoError, normalizeUsptoApplicationNumber, normalizeUsptoPatentNumber, Uspto } from "@beep/uspto";
-import { A, Str } from "@beep/utils";
 import {
   Console,
   Context,
+  DateTime,
   Effect,
   FileSystem,
   Layer,
   Match,
+  MutableHashMap,
   MutableHashSet,
   Order,
   Path,
@@ -57,13 +58,26 @@ import {
   Result,
   Stream,
 } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { printLines } from "../../internal/cli/Printer.js";
-import { CorpusCommandError } from "./Corpus.errors.js";
+import {
+  CorpusArchiveMoveDestinationConflictError,
+  CorpusArchiveMoveDigestMismatchError,
+  CorpusArchiveMoveUncoveredFileError,
+  CorpusCommandError,
+} from "./Corpus.errors.js";
 import { classifyRecycleBinName, pairRecycleBinEntries, parseRecycleBinMetadata } from "./Corpus.recyclebin.js";
 import {
+  CorpusArchiveMoveManifestRecord,
+  CorpusArchiveMoveSummary,
+  CorpusCatalogDigestRow,
+  CorpusCatalogRunSummary,
+  CorpusCatalogSourceFileRecord,
   CorpusCatalogSummary,
   CorpusDuplicateSetRecord,
   CorpusEnrichmentRecord,
@@ -71,9 +85,13 @@ import {
   CorpusExtractSummary,
   CorpusOrganizeRecord,
   CorpusOrganizeSummary,
+  CorpusProvenanceRecord,
   CorpusRestorationRecord,
+  CorpusSalvageOriginFile,
   CorpusSalvageSummary,
   decodeCorpusProvenanceRecordJson,
+  encodeCorpusArchiveMoveManifestRecordJson,
+  encodeCorpusCatalogSourceFileRecordJson,
   encodeCorpusCatalogSummaryJson,
   encodeCorpusDuplicateSetReportJson,
   encodeCorpusEnrichmentRecordJson,
@@ -81,6 +99,7 @@ import {
   encodeCorpusExtractSummaryJson,
   encodeCorpusOrganizeRecordJson,
   encodeCorpusOrganizeSummaryJson,
+  encodeCorpusProvenanceRecordJson,
   encodeCorpusRestorationRecordJson,
   encodeCorpusSalvageSummaryJson,
   MatchedRestorationRecord,
@@ -97,15 +116,18 @@ import type {
 import type { FileProcessingEngineShape, FileProcessingService } from "@beep/file-processing/Service";
 import type { FileFormatFamily, FileProcessingEngineFamily, SelectedStrategy } from "@beep/file-processing/Strategy";
 import type * as Crypto from "effect/Crypto";
+import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { CorpusArchiveMoveError } from "./Corpus.errors.js";
 import type {
+  CorpusArchiveMoveOptions,
   CorpusCatalogOptions,
   CorpusEnrichOptions,
   CorpusExtractOptions,
   CorpusOrganizeCategory,
   CorpusOrganizeOptions,
-  CorpusProvenanceRecord,
   CorpusSalvageOptions,
+  CorpusSalvageSourceSpec,
 } from "./Corpus.schemas.js";
 
 const $I = $RepoCliId.create("commands/Corpus/Corpus.service");
@@ -130,6 +152,16 @@ type CorpusCommandServiceRequirements =
  * @since 0.0.0
  */
 export interface CorpusCommandServiceShape {
+  /**
+   * Move provenance-covered source files into an archive root after validating
+   * every raw digest referenced by the supplied run manifests.
+   *
+   * @since 0.0.0
+   */
+  readonly archiveMove: (
+    options: CorpusArchiveMoveOptions
+  ) => Effect.Effect<CorpusArchiveMoveSummary, CorpusArchiveMoveError>;
+
   /**
    * Build the corpus DuckDB catalog, duplicate-set report, and recycle-bin
    * name-restoration manifest from a salvaged corpus root.
@@ -158,6 +190,13 @@ export interface CorpusCommandServiceShape {
    * @since 0.0.0
    */
   readonly organizeCorpus: (options: CorpusOrganizeOptions) => Effect.Effect<CorpusOrganizeSummary, CorpusCommandError>;
+
+  /**
+   * Copy labeled source files into corpus raw storage and write provenance.
+   *
+   * @since 0.0.0
+   */
+  readonly salvageCorpus: (options: CorpusSalvageOptions) => Effect.Effect<CorpusSalvageSummary, CorpusCommandError>;
 
   /**
    * Re-hash salvaged raw/ files against the provenance manifest.
@@ -192,10 +231,14 @@ const sqlStringLiteral = (value: string): string => `'${value.replaceAll("'", "'
 const createSourceFilesTable = (manifestPath: string): string => `
 CREATE OR REPLACE TABLE corpus_source_files AS
 SELECT
+  runLabel AS run_label,
+  copyMode AS copy_mode,
   sourceLabel AS source_label,
   originPath AS origin_path,
   relativePath AS relative_path,
   destPath AS dest_path,
+  dedupeOfPath AS dedupe_of_path,
+  referencedRawPath AS referenced_raw_path,
   sizeBytes AS size_bytes,
   mtimeEpoch AS mtime_epoch,
   mtimeIso AS mtime_iso,
@@ -204,10 +247,14 @@ SELECT
   'sha256:' || sha256 AS digest,
   'artifact:' || sha256 AS artifact_id
 FROM read_json(${sqlStringLiteral(manifestPath)}, format='newline_delimited', columns={
+  runLabel: 'VARCHAR',
+  copyMode: 'VARCHAR',
   sourceLabel: 'VARCHAR',
   originPath: 'VARCHAR',
   relativePath: 'VARCHAR',
   destPath: 'VARCHAR',
+  dedupeOfPath: 'VARCHAR',
+  referencedRawPath: 'VARCHAR',
   sizeBytes: 'BIGINT',
   mtimeEpoch: 'BIGINT',
   mtimeIso: 'VARCHAR',
@@ -220,8 +267,16 @@ CREATE OR REPLACE VIEW corpus_duplicate_sets AS
 SELECT
   digest,
   COUNT(*)::INTEGER AS copies,
+  CASE WHEN COUNT(DISTINCT run_label) > 1 THEN 'cross-run' ELSE 'intra-run' END AS duplicate_scope,
+  COUNT(DISTINCT run_label)::INTEGER AS run_count,
+  STRING_AGG(DISTINCT run_label, ' | ' ORDER BY run_label) AS run_labels,
   MIN(size_bytes) AS size_bytes,
-  STRING_AGG(source_label || '/' || relative_path, ' | ' ORDER BY source_label, relative_path) AS members
+  CASE
+    WHEN COUNT(DISTINCT run_label) > 1 THEN
+      STRING_AGG(run_label || ':' || source_label || '/' || relative_path, ' | ' ORDER BY run_label, source_label, relative_path)
+    ELSE
+      STRING_AGG(source_label || '/' || relative_path, ' | ' ORDER BY source_label, relative_path)
+  END AS members
 FROM corpus_source_files
 GROUP BY digest
 HAVING COUNT(*) > 1`;
@@ -262,10 +317,22 @@ const duplicateSetRowsStatement = `
 SELECT
   digest,
   copies,
+  duplicate_scope AS "duplicateScope",
+  run_count AS "runCount",
+  run_labels AS "runLabels",
   CAST(size_bytes AS DOUBLE) AS "sizeBytes",
   members
 FROM corpus_duplicate_sets
 ORDER BY (copies - 1) * size_bytes DESC, digest`;
+
+const catalogDigestRowsStatement = `
+SELECT
+  sha256,
+  MIN(referenced_raw_path) AS "destPath"
+FROM corpus_source_files
+WHERE sha256 IS NOT NULL AND referenced_raw_path IS NOT NULL
+GROUP BY sha256
+ORDER BY sha256, "destPath"`;
 
 class SourceTotalsRow extends S.Class<SourceTotalsRow>($I`SourceTotalsRow`)(
   {
@@ -292,6 +359,7 @@ class DuplicateTotalsRow extends S.Class<DuplicateTotalsRow>($I`DuplicateTotalsR
 const decodeSourceTotalsRows = S.decodeUnknownEffect(S.Array(SourceTotalsRow));
 const decodeDuplicateTotalsRows = S.decodeUnknownEffect(S.Array(DuplicateTotalsRow));
 const decodeDuplicateSetRecords = S.decodeUnknownEffect(S.Array(CorpusDuplicateSetRecord));
+const decodeCatalogDigestRows = S.decodeUnknownEffect(S.Array(CorpusCatalogDigestRow));
 
 const runWithCorpusDb = <A, E>(
   databasePath: string,
@@ -384,16 +452,102 @@ const decodeProvenanceLines = Effect.fn("CorpusCommandService.decodeProvenanceLi
   );
 });
 
+const baseCatalogRunLabel = "base";
+
+class CatalogManifest extends S.Class<CatalogManifest>($I`CatalogManifest`)(
+  {
+    manifestPath: S.NonEmptyString,
+    runLabel: S.NonEmptyString,
+  },
+  $I.annote("CatalogManifest", {
+    description: "A provenance manifest selected for corpus catalog unioning.",
+  })
+) {}
+
+const catalogCopyModeFor = (record: CorpusProvenanceRecord): "copied" | "provenance-only" =>
+  O.getOrElse(O.fromUndefinedOr(record.copyMode), () => "copied");
+
+const catalogDigestPathKey = (sha256: string, rawPath: string): string => `${sha256}\u0000${rawPath}`;
+
+const discoverCatalogManifests = Effect.fn("CorpusCommandService.discoverCatalogManifests")(function* (
+  rawRoot: string
+): Effect.fn.Return<ReadonlyArray<CatalogManifest>, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const rawExists = yield* fs
+    .exists(rawRoot)
+    .pipe(CorpusCommandError.mapError(`Failed checking raw root "${rawRoot}".`));
+  if (!rawExists) {
+    return A.empty<CatalogManifest>();
+  }
+
+  const baseManifestPath = path.join(rawRoot, "provenance.jsonl");
+  const baseExists = yield* fs
+    .exists(baseManifestPath)
+    .pipe(CorpusCommandError.mapError(`Failed checking base provenance manifest "${baseManifestPath}".`));
+  const baseManifests = baseExists
+    ? [CatalogManifest.make({ manifestPath: baseManifestPath, runLabel: baseCatalogRunLabel })]
+    : A.empty<CatalogManifest>();
+
+  const entries = yield* fs
+    .readDirectory(rawRoot)
+    .pipe(CorpusCommandError.mapError(`Failed reading raw catalog root "${rawRoot}".`));
+  const runManifestOptions = yield* Effect.forEach(A.sort(entries, Order.String), (entry) => {
+    const entryPath = path.join(rawRoot, entry);
+    return fs.stat(entryPath).pipe(
+      Effect.flatMap((info) => {
+        if (info.type !== "Directory") {
+          return Effect.succeed(O.none<CatalogManifest>());
+        }
+        const manifestPath = path.join(entryPath, "provenance.jsonl");
+        return fs.exists(manifestPath).pipe(
+          CorpusCommandError.mapError(`Failed checking run provenance manifest "${manifestPath}".`),
+          Effect.map((exists) =>
+            exists ? O.some(CatalogManifest.make({ manifestPath, runLabel: entry })) : O.none<CatalogManifest>()
+          )
+        );
+      }),
+      Effect.catchTag("PlatformError", () => Effect.succeed(O.none<CatalogManifest>()))
+    );
+  });
+
+  return [...baseManifests, ...A.getSomes(runManifestOptions)];
+});
+
+const buildCatalogRunSummaries = (
+  records: ReadonlyArray<CorpusCatalogSourceFileRecord>
+): ReadonlyArray<CorpusCatalogRunSummary> => {
+  const seenDigests = MutableHashSet.empty<string>();
+  const runLabels = A.dedupe(A.map(records, (record) => record.runLabel));
+  return A.map(runLabels, (runLabel) => {
+    const runRecords = A.filter(records, (record) => record.runLabel === runLabel);
+    const digests = A.dedupe(A.map(runRecords, (record) => record.sha256));
+    const newDistinctDigests = A.reduce(digests, 0, (total, digest) => {
+      if (MutableHashSet.has(seenDigests, digest)) {
+        return total;
+      }
+      MutableHashSet.add(seenDigests, digest);
+      return total + 1;
+    });
+    return CorpusCatalogRunSummary.make({
+      distinctDigests: NonNegativeInt.make(A.length(digests)),
+      newDistinctDigests: NonNegativeInt.make(newDistinctDigests),
+      recordCount: NonNegativeInt.make(A.length(runRecords)),
+      runLabel,
+    });
+  });
+};
+
 const buildRestorationRecords = Effect.fn("CorpusCommandService.buildRestorationRecords")(function* (
   rawRoot: string,
-  records: ReadonlyArray<CorpusProvenanceRecord>
+  records: ReadonlyArray<CorpusCatalogSourceFileRecord>
 ): Effect.fn.Return<ReadonlyArray<CorpusRestorationRecord>, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const destByLabelAndPath = new Map<string, string>();
   const groups = new Map<string, { sourceLabel: string; entries: Array<RecycleBinScanEntry> }>();
 
   for (const record of records) {
-    destByLabelAndPath.set(`${record.sourceLabel}\u0000${record.relativePath}`, record.destPath);
+    destByLabelAndPath.set(`${record.sourceLabel}\u0000${record.relativePath}`, record.referencedRawPath);
     const classified = classifyRecycleBinName(basenameOf(record.relativePath));
     if (O.isNone(classified)) {
       continue;
@@ -490,20 +644,18 @@ const catalogCorpusImpl = Effect.fn("CorpusCommandService.catalogCorpus")(functi
   const path = yield* Path.Path;
 
   const rawRoot = path.join(options.corpusRoot, "raw");
-  const manifestPath = path.join(rawRoot, "provenance.jsonl");
   const catalogDir = path.join(options.corpusRoot, "catalog");
   const reportsDir = path.join(catalogDir, "reports");
   const databasePath = path.join(catalogDir, "corpus.duckdb");
+  const catalogSourceManifestPath = path.join(catalogDir, "source-files.jsonl");
   const restorationManifestPath = path.join(catalogDir, "restoration-manifest.jsonl");
   const duplicateReportPath = path.join(reportsDir, "duplicate-sets.json");
   const summaryReportPath = path.join(reportsDir, "catalog-summary.json");
 
-  const manifestExists = yield* fs
-    .exists(manifestPath)
-    .pipe(CorpusCommandError.mapError(`Failed checking provenance manifest at "${manifestPath}".`));
-  if (!manifestExists) {
+  const manifests = yield* discoverCatalogManifests(rawRoot);
+  if (A.length(manifests) === 0) {
     return yield* CorpusCommandError.make({
-      message: `Provenance manifest not found at "${manifestPath}". Run salvage before catalog.`,
+      message: `No provenance manifests found under "${rawRoot}". Run salvage before catalog.`,
     });
   }
 
@@ -511,13 +663,84 @@ const catalogCorpusImpl = Effect.fn("CorpusCommandService.catalogCorpus")(functi
     .makeDirectory(reportsDir, { recursive: true })
     .pipe(CorpusCommandError.mapError(`Failed creating catalog reports directory "${reportsDir}".`));
 
-  const manifestText = yield* fs
-    .readFileString(manifestPath)
-    .pipe(CorpusCommandError.mapError(`Failed reading provenance manifest "${manifestPath}".`));
-  const provenance = yield* decodeProvenanceLines(manifestText);
-  yield* Console.log(`corpus catalog: ${provenance.length} provenance records validated`);
+  const manifestRecordGroups = yield* Effect.forEach(
+    manifests,
+    Effect.fn("CorpusCommandService.catalogCorpus.loadManifest")(function* (manifest) {
+      const manifestText = yield* fs
+        .readFileString(manifest.manifestPath)
+        .pipe(CorpusCommandError.mapError(`Failed reading provenance manifest "${manifest.manifestPath}".`));
+      const records = yield* decodeProvenanceLines(manifestText);
+      return A.map(records, (record) => ({ manifest, record }));
+    })
+  );
+  const manifestRecords = A.flatten(manifestRecordGroups);
+  const copiedDigestPaths = MutableHashSet.empty<string>();
+  A.forEach(manifestRecords, ({ record }) => {
+    if (catalogCopyModeFor(record) === "copied") {
+      MutableHashSet.add(copiedDigestPaths, catalogDigestPathKey(record.sha256, record.destPath));
+    }
+  });
 
-  const restorations = yield* buildRestorationRecords(rawRoot, provenance);
+  const catalogRecords = yield* Effect.forEach(
+    manifestRecords,
+    Effect.fn("CorpusCommandService.catalogCorpus.toCatalogRecord")(function* ({ manifest, record }) {
+      const copyMode = catalogCopyModeFor(record);
+      const dedupeOfPath = O.fromUndefinedOr(record.dedupeOfPath);
+      if (copyMode === "provenance-only" && O.isNone(dedupeOfPath)) {
+        return yield* CorpusCommandError.make({
+          message: `Provenance-only record ${record.sourceLabel}/${record.relativePath} in run "${manifest.runLabel}" is missing dedupeOfPath.`,
+        });
+      }
+      const referencedRawPath =
+        copyMode === "provenance-only" && O.isSome(dedupeOfPath) ? dedupeOfPath.value : record.destPath;
+      if (
+        copyMode === "provenance-only" &&
+        !MutableHashSet.has(copiedDigestPaths, catalogDigestPathKey(record.sha256, referencedRawPath))
+      ) {
+        return yield* CorpusCommandError.make({
+          message: `Provenance-only record ${record.sourceLabel}/${record.relativePath} in run "${manifest.runLabel}" references missing canonical raw path "${referencedRawPath}" for digest ${record.sha256}.`,
+        });
+      }
+      return CorpusCatalogSourceFileRecord.make({
+        copyMode,
+        destPath: record.destPath,
+        mtimeEpoch: record.mtimeEpoch,
+        mtimeIso: record.mtimeIso,
+        originPath: record.originPath,
+        referencedRawPath,
+        relativePath: record.relativePath,
+        runLabel: manifest.runLabel,
+        salvagedAt: record.salvagedAt,
+        sha256: record.sha256,
+        sizeBytes: record.sizeBytes,
+        sourceLabel: record.sourceLabel,
+        ...(O.isSome(dedupeOfPath) ? { dedupeOfPath: dedupeOfPath.value } : {}),
+      });
+    })
+  );
+  const catalogRecordLines = yield* Effect.forEach(catalogRecords, (record) =>
+    encodeCorpusCatalogSourceFileRecordJson(record).pipe(
+      CorpusCommandError.mapError("Catalog source-file occurrence failed JSONL encoding.")
+    )
+  );
+  yield* fs
+    .writeFileString(catalogSourceManifestPath, jsonlContent(catalogRecordLines))
+    .pipe(CorpusCommandError.mapError(`Failed writing catalog source manifest "${catalogSourceManifestPath}".`));
+
+  const runSummaries = buildCatalogRunSummaries(catalogRecords);
+  yield* Console.log(
+    `corpus catalog: ${A.length(catalogRecords)} provenance records validated across ${A.length(manifests)} run manifests`
+  );
+  yield* Effect.forEach(
+    runSummaries,
+    (run) =>
+      Console.log(
+        `corpus catalog: run=${run.runLabel} records=${run.recordCount} distinctDigests=${run.distinctDigests} newDistinctDigests=${run.newDistinctDigests}`
+      ),
+    { discard: true }
+  );
+
+  const restorations = yield* buildRestorationRecords(rawRoot, catalogRecords);
   const matchedCount = A.length(A.filter(restorations, (record) => record.matchStatus === "matched"));
   const unmatchedMetadataCount = A.length(
     A.filter(restorations, (record) => record.matchStatus === "unmatched-metadata")
@@ -531,7 +754,7 @@ const catalogCorpusImpl = Effect.fn("CorpusCommandService.catalogCorpus")(functi
 
   const duckDbWork = Effect.gen(function* () {
     const db = yield* DuckDb;
-    yield* db.run(createSourceFilesTable(manifestPath));
+    yield* db.run(createSourceFilesTable(catalogSourceManifestPath));
     yield* db.run(createDuplicateSetsView);
     yield* db.run(createRestorationsTable);
     yield* Effect.forEach(restorations, (record) => db.run(insertRestorationStatement, restorationToRow(record)), {
@@ -581,6 +804,7 @@ const catalogCorpusImpl = Effect.fn("CorpusCommandService.catalogCorpus")(functi
     duplicateSets: NonNegativeInt.make(duplicateTotals.duplicateSets),
     matchedRestorations: NonNegativeInt.make(matchedCount),
     redundantBytes: NonNegativeInt.make(duplicateTotals.redundantBytes),
+    runs: runSummaries,
     sourceFiles: NonNegativeInt.make(sourceTotals.sourceFiles),
     totalBytes: NonNegativeInt.make(sourceTotals.totalBytes),
     unmatchedContentFiles: NonNegativeInt.make(unmatchedContentCount),
@@ -632,10 +856,12 @@ const decodePosixPath = S.decodeUnknownEffect(PosixPath);
 const decodeArtifactId = S.decodeUnknownEffect(ArtifactId);
 const decodeContentDigest = S.decodeUnknownEffect(ContentDigest);
 const decodeOperationId = S.decodeUnknownEffect(OperationId);
+const decodeSha256Hex = S.decodeUnknownEffect(Sha256Hex);
 const decodeSha256FromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const decodeSourceArtifact = S.decodeUnknownEffect(SourceArtifact);
 const encodeMetadataRecordJson = S.encodeUnknownEffect(S.fromJsonString(S.Record(S.String, S.String)));
 const operationTextEncoder = new TextEncoder();
+const jsonlTextEncoder = new TextEncoder();
 
 const deriveCorpusOperationId = Effect.fn("CorpusCommandService.deriveCorpusOperationId")(function* (
   text: string
@@ -683,6 +909,18 @@ const writeCorpusStringFile = Effect.fn("CorpusCommandService.writeCorpusStringF
       Effect.andThen(fs.writeFileString(outputPath, content)),
       CorpusCommandError.mapError(`Failed writing corpus output "${outputPath}".`)
     );
+});
+
+const hashFileSha256 = Effect.fn("CorpusCommandService.hashFileSha256")(function* (
+  filePath: string
+): Effect.fn.Return<string, CorpusCommandError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const hash = createHash("sha256");
+  yield* fs.stream(filePath).pipe(
+    Stream.runForEach((chunk) => Effect.sync(() => hash.update(chunk))),
+    CorpusCommandError.mapError(`Failed hashing file "${filePath}".`)
+  );
+  return hash.digest("hex");
 });
 
 interface CorpusExtractOutcome {
@@ -735,6 +973,34 @@ const failedOutcome = (
 
 const jsonlContent = (lines: ReadonlyArray<string>): string =>
   A.length(lines) === 0 ? "" : `${A.join(lines, "\n")}\n`;
+
+const appendCorpusJsonLines = Effect.fn("CorpusCommandService.appendCorpusJsonLines")(function* (
+  manifestPath: string,
+  lines: ReadonlyArray<string>
+): Effect.fn.Return<void, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs
+    .makeDirectory(path.dirname(manifestPath), { recursive: true })
+    .pipe(CorpusCommandError.mapError(`Failed creating manifest directory for "${manifestPath}".`));
+
+  yield* Effect.scoped(
+    Effect.gen(function* () {
+      const file = yield* fs
+        .open(manifestPath, { flag: "a" })
+        .pipe(CorpusCommandError.mapError(`Failed opening append-only manifest "${manifestPath}".`));
+      yield* Effect.forEach(
+        lines,
+        (line) =>
+          file
+            .writeAll(jsonlTextEncoder.encode(`${line}\n`))
+            .pipe(CorpusCommandError.mapError(`Failed appending manifest record to "${manifestPath}".`)),
+        { discard: true, concurrency: 1 }
+      );
+      yield* file.sync.pipe(CorpusCommandError.mapError(`Failed syncing manifest "${manifestPath}".`));
+    })
+  );
+});
 
 const prepareExtractOutputDir = Effect.fn("CorpusCommandService.prepareExtractOutputDir")(function* (
   outDir: string,
@@ -1122,6 +1388,335 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
   return summary;
 });
 
+interface ArchiveProvenanceMatch {
+  readonly provenancePath: string;
+  readonly rawRoot: string;
+  readonly record: CorpusProvenanceRecord;
+}
+
+interface ArchiveValidatedFile {
+  readonly copyMode: "copied" | "provenance-only";
+  readonly originPath: string;
+}
+
+const zeroSha256 = "0000000000000000000000000000000000000000000000000000000000000000";
+
+const isSafePathSegment = (value: string): boolean =>
+  value !== "." && value !== ".." && !Str.includes("/")(value) && !Str.includes("\\")(value);
+
+const validatePathSegment = Effect.fn("CorpusCommandService.validatePathSegment")(function* (
+  label: string,
+  value: string
+): Effect.fn.Return<void, CorpusCommandError> {
+  if (isSafePathSegment(value)) {
+    return;
+  }
+  return yield* CorpusCommandError.make({
+    message: `${label} must be a single path segment; received "${value}".`,
+  });
+});
+
+const fileMtimeFields = (info: FileSystem.File.Info): { readonly mtimeEpoch: number; readonly mtimeIso: string } => {
+  const dateTime = O.map(info.mtime, DateTime.makeUnsafe);
+  return {
+    mtimeEpoch: O.getOrElse(
+      O.map(dateTime, (mtime) => Math.floor(DateTime.toEpochMillis(mtime) / 1000)),
+      () => 0
+    ),
+    mtimeIso: O.getOrElse(O.map(dateTime, DateTime.formatIso), () => "1970-01-01T00:00:00.000Z"),
+  };
+};
+
+const collectSalvageSourceFiles = Effect.fn("CorpusCommandService.collectSalvageSourceFiles")(function* (
+  spec: CorpusSalvageSourceSpec
+): Effect.fn.Return<ReadonlyArray<CorpusSalvageOriginFile>, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* validatePathSegment("Salvage source label", spec.sourceLabel);
+
+  const sourceRoot = path.resolve(spec.sourcePath);
+  const sourceInfo = yield* fs
+    .stat(sourceRoot)
+    .pipe(CorpusCommandError.mapError(`Failed inspecting salvage source "${sourceRoot}".`));
+  const relativeRoot = sourceInfo.type === "Directory" ? sourceRoot : path.dirname(sourceRoot);
+
+  const makeFile = Effect.fn("CorpusCommandService.makeSalvageOriginFile")(function* (
+    filePath: string,
+    info: FileSystem.File.Info
+  ) {
+    // Keep source filenames opaque: Bun's realpath can reject otherwise valid
+    // POSIX names such as paths containing literal backslashes.
+    const originPath = path.resolve(filePath);
+    const rawRelative =
+      sourceInfo.type === "Directory" ? path.relative(relativeRoot, filePath) : path.basename(filePath);
+    const mtime = fileMtimeFields(info);
+    return CorpusSalvageOriginFile.make({
+      mtimeEpoch: mtime.mtimeEpoch,
+      mtimeIso: mtime.mtimeIso,
+      originPath,
+      relativePath: rawRelative,
+      sizeBytes: NonNegativeInt.make(Number(info.size)),
+      sourceLabel: spec.sourceLabel,
+    });
+  });
+
+  const collectAt: (
+    currentPath: string
+  ) => Effect.Effect<ReadonlyArray<CorpusSalvageOriginFile>, CorpusCommandError, FileSystem.FileSystem | Path.Path> =
+    Effect.fn("CorpusCommandService.collectSalvageSourceFiles.collectAt")(function* (currentPath) {
+      const info = yield* fs
+        .stat(currentPath)
+        .pipe(CorpusCommandError.mapError(`Failed inspecting salvage source entry "${currentPath}".`));
+      if (info.type === "File") {
+        return [yield* makeFile(currentPath, info)];
+      }
+      if (info.type !== "Directory") {
+        return A.empty<CorpusSalvageOriginFile>();
+      }
+      const entries = yield* fs
+        .readDirectory(currentPath)
+        .pipe(CorpusCommandError.mapError(`Failed reading salvage source directory "${currentPath}".`));
+      const childFiles = yield* Effect.forEach(A.sort(entries, Order.String), (entry) =>
+        collectAt(path.join(currentPath, entry))
+      );
+      return A.flatten(childFiles);
+    });
+
+  return yield* collectAt(sourceRoot);
+});
+
+const addDigestRows = (
+  index: MutableHashMap.MutableHashMap<string, string>,
+  rows: ReadonlyArray<CorpusCatalogDigestRow>
+): void => {
+  A.forEach(rows, (row) => {
+    if (O.isNone(MutableHashMap.get(index, row.sha256))) {
+      MutableHashMap.set(index, row.sha256, row.destPath);
+    }
+  });
+};
+
+const loadCatalogDigestRows = Effect.fn("CorpusCommandService.loadCatalogDigestRows")(function* (
+  databasePath: string
+): Effect.fn.Return<O.Option<ReadonlyArray<CorpusCatalogDigestRow>>, never, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const exists = yield* fs.exists(databasePath).pipe(Effect.orElseSucceed(() => false));
+  if (!exists) {
+    return O.none();
+  }
+  return yield* runWithCorpusDb(
+    databasePath,
+    `Failed reading existing corpus catalog digest index at "${databasePath}".`,
+    Effect.gen(function* () {
+      const db = yield* DuckDb;
+      const rows = yield* db.query(catalogDigestRowsStatement);
+      return yield* decodeCatalogDigestRows(rows).pipe(
+        CorpusCommandError.mapError("Catalog digest rows failed schema validation.")
+      );
+    })
+  ).pipe(Effect.option);
+});
+
+const findRawProvenanceManifests = Effect.fn("CorpusCommandService.findRawProvenanceManifests")(function* (
+  rawRoot: string
+): Effect.fn.Return<ReadonlyArray<string>, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const exists = yield* fs.exists(rawRoot).pipe(CorpusCommandError.mapError(`Failed checking raw root "${rawRoot}".`));
+  if (!exists) {
+    return A.empty<string>();
+  }
+
+  const collectAt: (
+    directory: string
+  ) => Effect.Effect<ReadonlyArray<string>, CorpusCommandError, FileSystem.FileSystem | Path.Path> = Effect.fn(
+    "CorpusCommandService.findRawProvenanceManifests.collectAt"
+  )(function* (directory) {
+    const entries = yield* fs
+      .readDirectory(directory)
+      .pipe(CorpusCommandError.mapError(`Failed reading raw manifest directory "${directory}".`));
+    const manifests = yield* Effect.forEach(A.sort(entries, Order.String), (entry) => {
+      const entryPath = path.join(directory, entry);
+      return fs.stat(entryPath).pipe(
+        Effect.flatMap((info) => {
+          if (info.type === "File" && entry === "provenance.jsonl") {
+            return Effect.succeed([entryPath]);
+          }
+          if (info.type === "Directory") {
+            return collectAt(entryPath);
+          }
+          return Effect.succeed(A.empty<string>());
+        }),
+        Effect.catchTag("PlatformError", () => Effect.succeed(A.empty<string>()))
+      );
+    });
+    return A.flatten(manifests);
+  });
+
+  return yield* collectAt(rawRoot);
+});
+
+const loadManifestDigestRows = Effect.fn("CorpusCommandService.loadManifestDigestRows")(function* (
+  manifestPath: string
+): Effect.fn.Return<ReadonlyArray<CorpusCatalogDigestRow>, CorpusCommandError, FileSystem.FileSystem> {
+  const fs = yield* FileSystem.FileSystem;
+  const manifestText = yield* fs
+    .readFileString(manifestPath)
+    .pipe(CorpusCommandError.mapError(`Failed reading existing provenance manifest "${manifestPath}".`));
+  const records = yield* decodeProvenanceLines(manifestText);
+  return A.map(records, (record) => CorpusCatalogDigestRow.make({ destPath: record.destPath, sha256: record.sha256 }));
+});
+
+const loadSalvageDigestIndex = Effect.fn("CorpusCommandService.loadSalvageDigestIndex")(function* (
+  corpusRoot: string
+): Effect.fn.Return<
+  MutableHashMap.MutableHashMap<string, string>,
+  CorpusCommandError,
+  FileSystem.FileSystem | Path.Path
+> {
+  const path = yield* Path.Path;
+  const rawRoot = path.join(corpusRoot, "raw");
+  const databasePath = path.join(corpusRoot, "catalog", "corpus.duckdb");
+  const index = MutableHashMap.empty<string, string>();
+
+  const catalogRows = yield* loadCatalogDigestRows(databasePath);
+  if (O.isSome(catalogRows)) {
+    addDigestRows(index, catalogRows.value);
+    yield* Console.log(`corpus salvage: loaded ${MutableHashMap.size(index)} digest entries from DuckDB catalog`);
+    return index;
+  }
+
+  const manifestPaths = yield* findRawProvenanceManifests(rawRoot);
+  const manifestRows = yield* Effect.forEach(manifestPaths, loadManifestDigestRows);
+  addDigestRows(index, A.flatten(manifestRows));
+  yield* Console.log(
+    `corpus salvage: loaded ${MutableHashMap.size(index)} digest entries from raw provenance manifests`
+  );
+  return index;
+});
+
+const salvageCorpusImpl = Effect.fn("CorpusCommandService.salvageCorpus")(function* (
+  options: CorpusSalvageOptions
+): Effect.fn.Return<CorpusSalvageSummary, CorpusCommandError, CorpusCommandServiceRequirements> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const rawRoot = path.join(options.corpusRoot, "raw");
+  const runRoot = O.getOrElse(
+    O.map(O.fromUndefinedOr(options.runLabel), (runLabel) => path.join(rawRoot, runLabel)),
+    () => rawRoot
+  );
+  yield* fs
+    .makeDirectory(rawRoot, { recursive: true })
+    .pipe(CorpusCommandError.mapError(`Failed creating corpus raw root "${rawRoot}".`));
+  const runLabel = O.fromUndefinedOr(options.runLabel);
+  if (O.isSome(runLabel)) {
+    yield* validatePathSegment("Salvage run label", runLabel.value);
+  }
+  const safeRunRoot = yield* resolveWithinRoot(rawRoot, runRoot, "Salvage run root escapes corpus raw directory");
+  const manifestPath = path.join(safeRunRoot, "provenance.jsonl");
+  const sources = O.getOrElse(O.fromUndefinedOr(options.sources), A.empty<CorpusSalvageSourceSpec>);
+
+  yield* fs
+    .makeDirectory(safeRunRoot, { recursive: true })
+    .pipe(CorpusCommandError.mapError(`Failed creating salvage run root "${safeRunRoot}".`));
+
+  const sourceFiles = A.flatten(yield* Effect.forEach(sources, collectSalvageSourceFiles));
+  const digestIndex =
+    options.dedupe === true
+      ? yield* loadSalvageDigestIndex(options.corpusRoot)
+      : MutableHashMap.empty<string, string>();
+  const salvagedAt = DateTime.formatIso(yield* DateTime.now);
+
+  const records = yield* Effect.forEach(
+    sourceFiles,
+    Effect.fn("CorpusCommandService.salvageCorpus.processFile")(function* (originFile) {
+      const sha256Text = yield* hashFileSha256(originFile.originPath);
+      const sha256 = yield* decodeSha256Hex(sha256Text).pipe(
+        CorpusCommandError.mapError("Computed salvage digest failed SHA-256 validation.")
+      );
+      const knownDestPath = options.dedupe === true ? MutableHashMap.get(digestIndex, sha256) : O.none<string>();
+      if (O.isSome(knownDestPath)) {
+        return CorpusProvenanceRecord.make({
+          copyMode: "provenance-only",
+          dedupeOfPath: knownDestPath.value,
+          destPath: knownDestPath.value,
+          mtimeEpoch: originFile.mtimeEpoch,
+          mtimeIso: originFile.mtimeIso,
+          originPath: originFile.originPath,
+          relativePath: originFile.relativePath,
+          salvagedAt,
+          sha256,
+          sizeBytes: originFile.sizeBytes,
+          sourceLabel: originFile.sourceLabel,
+        });
+      }
+
+      const destCandidate = path.join(safeRunRoot, originFile.sourceLabel, originFile.relativePath);
+      const safeDestPath = yield* resolveWithinRoot(
+        safeRunRoot,
+        destCandidate,
+        "Salvage destination escapes the run raw directory"
+      );
+      const destExists = yield* fs
+        .exists(safeDestPath)
+        .pipe(CorpusCommandError.mapError(`Failed checking salvage destination "${safeDestPath}".`));
+      if (destExists) {
+        return yield* CorpusCommandError.make({
+          message: `Salvage destination already exists; refusing to overwrite "${safeDestPath}".`,
+        });
+      }
+      yield* fs
+        .makeDirectory(path.dirname(safeDestPath), { recursive: true })
+        .pipe(CorpusCommandError.mapError(`Failed creating salvage destination directory "${safeDestPath}".`));
+      yield* fs
+        .copy(originFile.originPath, safeDestPath, { preserveTimestamps: true })
+        .pipe(CorpusCommandError.mapError(`Failed copying salvage source "${originFile.originPath}".`));
+      const copiedSha256 = yield* hashFileSha256(safeDestPath);
+      if (copiedSha256 !== sha256) {
+        return yield* CorpusCommandError.make({
+          message: `Salvage copy digest mismatch for "${originFile.originPath}".`,
+        });
+      }
+      MutableHashMap.set(digestIndex, sha256, safeDestPath);
+      return CorpusProvenanceRecord.make({
+        copyMode: "copied",
+        destPath: safeDestPath,
+        mtimeEpoch: originFile.mtimeEpoch,
+        mtimeIso: originFile.mtimeIso,
+        originPath: originFile.originPath,
+        relativePath: originFile.relativePath,
+        salvagedAt,
+        sha256,
+        sizeBytes: originFile.sizeBytes,
+        sourceLabel: originFile.sourceLabel,
+      });
+    }),
+    { concurrency: 1 }
+  );
+
+  const manifestLines = yield* Effect.forEach(records, (record) =>
+    encodeCorpusProvenanceRecordJson(record).pipe(
+      CorpusCommandError.mapError("Provenance record failed JSONL encoding.")
+    )
+  );
+  yield* appendCorpusJsonLines(manifestPath, manifestLines);
+
+  const provenanceOnly = A.length(A.filter(records, (record) => record.copyMode === "provenance-only"));
+  const copied = A.length(A.filter(records, (record) => record.copyMode === "copied"));
+  const bytesChecked = A.reduce(records, 0, (total, record) => total + record.sizeBytes);
+  const summary = CorpusSalvageSummary.make({
+    bytesChecked: NonNegativeInt.make(bytesChecked),
+    matched: NonNegativeInt.make(A.length(records)),
+    mismatched: NonNegativeInt.make(0),
+    missing: NonNegativeInt.make(0),
+    recordsChecked: NonNegativeInt.make(A.length(records)),
+  });
+  yield* Console.log(
+    `corpus salvage: sources=${A.length(sources)} records=${A.length(records)} copied=${copied} provenanceOnly=${provenanceOnly} manifest="${manifestPath}"`
+  );
+  return summary;
+});
+
 const verifySalvageImpl = Effect.fn("CorpusCommandService.verifySalvage")(function* (
   options: CorpusSalvageOptions
 ): Effect.fn.Return<CorpusSalvageSummary, CorpusCommandError, CorpusCommandServiceRequirements> {
@@ -1142,15 +1737,6 @@ const verifySalvageImpl = Effect.fn("CorpusCommandService.verifySalvage")(functi
     `corpus salvage: verifying ${A.length(sampled)}/${A.length(allRecords)} records (stride ${stride})`
   );
 
-  const hashFile = Effect.fn("CorpusCommandService.hashFile")(function* (filePath: string) {
-    const hash = createHash("sha256");
-    yield* fs.stream(filePath).pipe(
-      Stream.runForEach((chunk) => Effect.sync(() => hash.update(chunk))),
-      CorpusCommandError.mapError(`Failed hashing salvaged file "${filePath}".`)
-    );
-    return hash.digest("hex");
-  });
-
   const results = yield* Effect.forEach(
     sampled,
     Effect.fnUntraced(function* (record) {
@@ -1169,7 +1755,7 @@ const verifySalvageImpl = Effect.fn("CorpusCommandService.verifySalvage")(functi
         yield* Console.log(`corpus salvage: MISSING ${record.sourceLabel}/${record.relativePath}`);
         return { kind: "missing" as const, sizeBytes: 0 };
       }
-      const actual = yield* hashFile(safeDestPath);
+      const actual = yield* hashFileSha256(safeDestPath);
       if (actual !== record.sha256) {
         yield* Console.log(`corpus salvage: MISMATCH ${record.sourceLabel}/${record.relativePath}`);
         return { kind: "mismatched" as const, sizeBytes: record.sizeBytes };
@@ -1205,6 +1791,328 @@ const verifySalvageImpl = Effect.fn("CorpusCommandService.verifySalvage")(functi
     });
   }
 
+  return summary;
+});
+
+const archiveRawRootForProvenance = (path: Path.Path, provenancePath: string): string => {
+  const runRoot = path.dirname(provenancePath);
+  const parent = path.dirname(runRoot);
+  return path.basename(runRoot) === "raw" ? runRoot : path.basename(parent) === "raw" ? parent : runRoot;
+};
+
+const archiveCopyModeFor = (record: CorpusProvenanceRecord): "copied" | "provenance-only" =>
+  O.getOrElse(O.fromUndefinedOr(record.copyMode), () => "copied");
+
+const referencedRawPathForArchive = (record: CorpusProvenanceRecord): string =>
+  archiveCopyModeFor(record) === "provenance-only"
+    ? O.getOrElse(O.fromUndefinedOr(record.dedupeOfPath), () => record.destPath)
+    : record.destPath;
+
+const collectArchiveSourceFiles = Effect.fn("CorpusCommandService.collectArchiveSourceFiles")(function* (
+  sourcePath: string
+): Effect.fn.Return<ReadonlyArray<string>, CorpusArchiveMoveError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const absoluteSource = path.resolve(sourcePath);
+
+  const collectAt: (
+    currentPath: string
+  ) => Effect.Effect<ReadonlyArray<string>, CorpusArchiveMoveError, FileSystem.FileSystem | Path.Path> = Effect.fn(
+    "CorpusCommandService.collectArchiveSourceFiles.collectAt"
+  )(function* (currentPath) {
+    const info = yield* fs
+      .stat(currentPath)
+      .pipe(CorpusCommandError.mapError(`Failed inspecting archive-move source entry "${currentPath}".`));
+    if (info.type === "File") {
+      // Keep source filenames opaque: Bun's realpath can reject otherwise valid
+      // POSIX names such as paths containing literal backslashes.
+      return [path.resolve(currentPath)];
+    }
+    if (info.type !== "Directory") {
+      return A.empty<string>();
+    }
+    const entries = yield* fs
+      .readDirectory(currentPath)
+      .pipe(CorpusCommandError.mapError(`Failed reading archive-move source directory "${currentPath}".`));
+    const childFiles = yield* Effect.forEach(A.sort(entries, Order.String), (entry) =>
+      collectAt(path.join(currentPath, entry))
+    );
+    return A.flatten(childFiles);
+  });
+
+  return yield* collectAt(absoluteSource);
+});
+
+const loadArchiveProvenanceIndex = Effect.fn("CorpusCommandService.loadArchiveProvenanceIndex")(function* (
+  provenancePaths: ReadonlyArray<string>
+): Effect.fn.Return<
+  MutableHashMap.MutableHashMap<string, ArchiveProvenanceMatch>,
+  CorpusArchiveMoveError,
+  FileSystem.FileSystem | Path.Path
+> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const index = MutableHashMap.empty<string, ArchiveProvenanceMatch>();
+
+  yield* Effect.forEach(
+    provenancePaths,
+    Effect.fn("CorpusCommandService.loadArchiveProvenanceIndex.manifest")(function* (provenancePath) {
+      const rawRoot = archiveRawRootForProvenance(path, provenancePath);
+      const manifestText = yield* fs
+        .readFileString(provenancePath)
+        .pipe(CorpusCommandError.mapError(`Failed reading archive-move provenance "${provenancePath}".`));
+      const records = yield* decodeProvenanceLines(manifestText);
+      yield* Effect.forEach(
+        records,
+        Effect.fn("CorpusCommandService.loadArchiveProvenanceIndex.record")(function* (record) {
+          MutableHashMap.set(index, path.resolve(record.originPath), { provenancePath, rawRoot, record });
+        }),
+        { discard: true }
+      );
+    }),
+    { discard: true }
+  );
+
+  return index;
+});
+
+const digestMismatch = Effect.fn("CorpusCommandService.digestMismatch")(function* (input: {
+  readonly actualSha256: string;
+  readonly expectedSha256: string;
+  readonly message: string;
+  readonly originPath: string;
+  readonly rawPath: string;
+}): Effect.fn.Return<never, CorpusArchiveMoveError> {
+  const actualSha256 = yield* decodeSha256Hex(input.actualSha256).pipe(
+    CorpusCommandError.mapError("Archive-move actual digest failed SHA-256 validation.")
+  );
+  const expectedSha256 = yield* decodeSha256Hex(input.expectedSha256).pipe(
+    CorpusCommandError.mapError("Archive-move expected digest failed SHA-256 validation.")
+  );
+  return yield* CorpusArchiveMoveDigestMismatchError.make({
+    actualSha256,
+    expectedSha256,
+    message: input.message,
+    originPath: input.originPath,
+    rawPath: input.rawPath,
+  });
+});
+
+const validateArchiveFile = Effect.fn("CorpusCommandService.validateArchiveFile")(function* (
+  sourcePath: string,
+  originPath: string,
+  provenanceByOrigin: MutableHashMap.MutableHashMap<string, ArchiveProvenanceMatch>
+): Effect.fn.Return<ArchiveValidatedFile, CorpusArchiveMoveError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const match = MutableHashMap.get(provenanceByOrigin, originPath);
+  if (O.isNone(match)) {
+    return yield* CorpusArchiveMoveUncoveredFileError.make({
+      message: `Archive-move source file is not covered by provenance: "${originPath}".`,
+      originPath,
+      sourcePath,
+    });
+  }
+
+  const record = match.value.record;
+  const rawPath = yield* resolveWithinRoot(
+    match.value.rawRoot,
+    referencedRawPathForArchive(record),
+    "Archive-move raw provenance path escapes the corpus raw directory"
+  );
+  const rawExists = yield* fs
+    .exists(rawPath)
+    .pipe(CorpusCommandError.mapError(`Failed checking archive-move raw file "${rawPath}".`));
+  if (!rawExists) {
+    return yield* digestMismatch({
+      actualSha256: zeroSha256,
+      expectedSha256: record.sha256,
+      message: `Archive-move raw file does not exist for provenance record from "${match.value.provenancePath}".`,
+      originPath,
+      rawPath,
+    });
+  }
+
+  const actualSha256 = yield* hashFileSha256(rawPath);
+  if (actualSha256 !== record.sha256) {
+    return yield* digestMismatch({
+      actualSha256,
+      expectedSha256: record.sha256,
+      message: `Archive-move raw file digest mismatch for "${originPath}".`,
+      originPath,
+      rawPath,
+    });
+  }
+
+  return { copyMode: archiveCopyModeFor(record), originPath };
+});
+
+const isCrossDeviceRename = (error: PlatformError.PlatformError): boolean => {
+  const cause = error.reason.cause;
+  return P.hasProperty(cause, "code") && cause.code === "EXDEV";
+};
+
+const copyVerifyAndRemoveFile = Effect.fn("CorpusCommandService.copyVerifyAndRemoveFile")(function* (
+  sourcePath: string,
+  archivePath: string
+): Effect.fn.Return<void, CorpusArchiveMoveError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const sourceSha256 = yield* hashFileSha256(sourcePath);
+  yield* fs
+    .makeDirectory(path.dirname(archivePath), { recursive: true })
+    .pipe(CorpusCommandError.mapError(`Failed creating archive-move destination directory "${archivePath}".`));
+  yield* fs
+    .copy(sourcePath, archivePath, { preserveTimestamps: true })
+    .pipe(CorpusCommandError.mapError(`Failed copying archive-move file "${sourcePath}".`));
+  const archiveSha256 = yield* hashFileSha256(archivePath);
+  if (archiveSha256 !== sourceSha256) {
+    return yield* digestMismatch({
+      actualSha256: archiveSha256,
+      expectedSha256: sourceSha256,
+      message: `Archive-move copied file digest mismatch for "${sourcePath}".`,
+      originPath: sourcePath,
+      rawPath: archivePath,
+    });
+  }
+  yield* fs
+    .remove(sourcePath)
+    .pipe(CorpusCommandError.mapError(`Failed removing source file after archive-move copy "${sourcePath}".`));
+});
+
+const moveSourceAcrossDevice = Effect.fn("CorpusCommandService.moveSourceAcrossDevice")(function* (
+  sourcePath: string,
+  archivePath: string
+): Effect.fn.Return<void, CorpusArchiveMoveError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const files = yield* collectArchiveSourceFiles(sourcePath);
+  const sourceInfo = yield* fs
+    .stat(sourcePath)
+    .pipe(CorpusCommandError.mapError(`Failed inspecting archive-move source "${sourcePath}".`));
+  if (sourceInfo.type === "File") {
+    yield* copyVerifyAndRemoveFile(sourcePath, archivePath);
+    return;
+  }
+  yield* fs
+    .makeDirectory(archivePath, { recursive: true })
+    .pipe(CorpusCommandError.mapError(`Failed creating archive-move directory "${archivePath}".`));
+  yield* Effect.forEach(
+    files,
+    Effect.fn("CorpusCommandService.moveSourceAcrossDevice.file")(function* (filePath) {
+      const relativePath = path.relative(sourcePath, filePath);
+      yield* copyVerifyAndRemoveFile(filePath, path.join(archivePath, relativePath));
+    }),
+    { discard: true, concurrency: 1 }
+  );
+});
+
+const moveArchiveSource = Effect.fn("CorpusCommandService.moveArchiveSource")(function* (
+  sourcePath: string,
+  archivePath: string
+): Effect.fn.Return<void, CorpusArchiveMoveError, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  yield* fs.rename(sourcePath, archivePath).pipe(
+    Effect.catchTag("PlatformError", (error) =>
+      isCrossDeviceRename(error)
+        ? moveSourceAcrossDevice(sourcePath, archivePath)
+        : Effect.fail(
+            CorpusCommandError.make({
+              cause: error,
+              message: `Failed moving archive source "${sourcePath}" to "${archivePath}".`,
+            })
+          )
+    )
+  );
+});
+
+const archiveMoveImpl = Effect.fn("CorpusCommandService.archiveMove")(function* (
+  options: CorpusArchiveMoveOptions
+): Effect.fn.Return<CorpusArchiveMoveSummary, CorpusArchiveMoveError, CorpusCommandServiceRequirements> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const archiveRoot = path.resolve(options.archiveRoot);
+  const provenanceByOrigin = yield* loadArchiveProvenanceIndex(options.provenancePaths);
+  const usedArchiveTargets = MutableHashSet.empty<string>();
+
+  const plans = yield* Effect.forEach(
+    options.sourcePaths,
+    Effect.fn("CorpusCommandService.archiveMove.planSource")(function* (sourcePathInput) {
+      const sourcePath = path.resolve(sourcePathInput);
+      const archivePath = path.join(archiveRoot, path.basename(sourcePath));
+      if (MutableHashSet.has(usedArchiveTargets, archivePath)) {
+        return yield* CorpusArchiveMoveDestinationConflictError.make({
+          archivePath,
+          message: `Archive destination is selected by more than one source: "${archivePath}".`,
+          sourcePath,
+        });
+      }
+      MutableHashSet.add(usedArchiveTargets, archivePath);
+      const archiveExists = yield* fs
+        .exists(archivePath)
+        .pipe(CorpusCommandError.mapError(`Failed checking archive destination "${archivePath}".`));
+      if (archiveExists) {
+        return yield* CorpusArchiveMoveDestinationConflictError.make({
+          archivePath,
+          message: `Archive destination already exists: "${archivePath}".`,
+          sourcePath,
+        });
+      }
+      const sourceFiles = yield* collectArchiveSourceFiles(sourcePath);
+      const validatedFiles = yield* Effect.forEach(sourceFiles, (originPath) =>
+        validateArchiveFile(sourcePath, originPath, provenanceByOrigin)
+      );
+      return {
+        archivePath,
+        copiedCount: A.length(A.filter(validatedFiles, (file) => file.copyMode === "copied")),
+        files: validatedFiles,
+        originPath: sourcePath,
+        provenanceOnlyCount: A.length(A.filter(validatedFiles, (file) => file.copyMode === "provenance-only")),
+      };
+    }),
+    { concurrency: 1 }
+  );
+
+  yield* fs
+    .makeDirectory(archiveRoot, { recursive: true })
+    .pipe(CorpusCommandError.mapError(`Failed creating archive root "${archiveRoot}".`));
+  yield* Effect.forEach(plans, (plan) => moveArchiveSource(plan.originPath, plan.archivePath), {
+    discard: true,
+    concurrency: 1,
+  });
+
+  const movedAt = DateTime.formatIso(yield* DateTime.now);
+  const records = A.map(plans, (plan) =>
+    CorpusArchiveMoveManifestRecord.make({
+      archivePath: plan.archivePath,
+      copiedCount: NonNegativeInt.make(plan.copiedCount),
+      fileCount: NonNegativeInt.make(A.length(plan.files)),
+      movedAt,
+      originPath: plan.originPath,
+      provenanceOnlyCount: NonNegativeInt.make(plan.provenanceOnlyCount),
+    })
+  );
+  const manifestLines = yield* Effect.forEach(records, (record) =>
+    encodeCorpusArchiveMoveManifestRecordJson(record).pipe(
+      CorpusCommandError.mapError("Archive move manifest record failed JSONL encoding.")
+    )
+  );
+  const manifestPath = path.join(path.dirname(options.provenancePaths[0]), "move-manifest.jsonl");
+  yield* fs
+    .writeFileString(manifestPath, jsonlContent(manifestLines))
+    .pipe(CorpusCommandError.mapError(`Failed writing archive move manifest "${manifestPath}".`));
+
+  const filesCovered = A.reduce(plans, 0, (total, plan) => total + A.length(plan.files));
+  const copiedRecords = A.reduce(plans, 0, (total, plan) => total + plan.copiedCount);
+  const provenanceOnlyRecords = A.reduce(plans, 0, (total, plan) => total + plan.provenanceOnlyCount);
+  const summary = CorpusArchiveMoveSummary.make({
+    copiedRecords: NonNegativeInt.make(copiedRecords),
+    filesCovered: NonNegativeInt.make(filesCovered),
+    provenanceOnlyRecords: NonNegativeInt.make(provenanceOnlyRecords),
+    sourcesMoved: NonNegativeInt.make(A.length(plans)),
+  });
+  yield* Console.log(
+    `corpus archive-move: sources=${summary.sourcesMoved} files=${summary.filesCovered} copied=${summary.copiedRecords} provenanceOnly=${summary.provenanceOnlyRecords} manifest="${manifestPath}"`
+  );
   return summary;
 });
 
@@ -1985,6 +2893,9 @@ const makeCorpusCommandService = Effect.fn("CorpusCommandService.make")(function
   const runtimeContext = yield* Effect.context<CorpusCommandServiceRequirements>();
 
   return CorpusCommandService.of({
+    archiveMove: Effect.fn("CorpusCommandService.archiveMove")((options) =>
+      archiveMoveImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
     catalogCorpus: Effect.fn("CorpusCommandService.catalogCorpus")((options) =>
       catalogCorpusImpl(options).pipe(Effect.provide(runtimeContext))
     ),
@@ -1996,6 +2907,9 @@ const makeCorpusCommandService = Effect.fn("CorpusCommandService.make")(function
     ),
     organizeCorpus: Effect.fn("CorpusCommandService.organizeCorpus")((options) =>
       organizeCorpusImpl(options).pipe(Effect.provide(runtimeContext))
+    ),
+    salvageCorpus: Effect.fn("CorpusCommandService.salvageCorpus")((options) =>
+      salvageCorpusImpl(options).pipe(Effect.provide(runtimeContext))
     ),
     verifySalvage: Effect.fn("CorpusCommandService.verifySalvage")((options) =>
       verifySalvageImpl(options).pipe(Effect.provide(runtimeContext))
@@ -2018,6 +2932,35 @@ const makeCorpusCommandService = Effect.fn("CorpusCommandService.make")(function
  */
 export const CorpusCommandServiceLive: Layer.Layer<CorpusCommandService, never, CorpusCommandServiceRequirements> =
   Layer.effect(CorpusCommandService, makeCorpusCommandService());
+
+/**
+ * Move provenance-covered source files into an archive root.
+ *
+ * @param options - Archive move options naming sources, archive root, and run provenance manifests.
+ * @returns Summary counts for the archive move.
+ * @effects Delegates to `CorpusCommandService`; the live service validates provenance coverage and raw digests before moving any selected source.
+ * @example
+ * ```ts
+ * import { archiveMoveCorpus, CorpusArchiveMoveOptions } from "@beep/repo-cli/commands/Corpus"
+ * import { Effect } from "effect"
+ *
+ * const options = CorpusArchiveMoveOptions.make({
+ *   archiveRoot: "/tmp/archive",
+ *   provenancePaths: ["/tmp/corpus/raw/run-a/provenance.jsonl"],
+ *   sourcePaths: ["/tmp/source-a"]
+ * })
+ * const moved = archiveMoveCorpus(options).pipe(Effect.map((summary) => summary.sourcesMoved))
+ * console.log(moved.pipe !== undefined) // true
+ * ```
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const archiveMoveCorpus = Effect.fn("Corpus.archiveMoveCorpus")(function* (
+  options: CorpusArchiveMoveOptions
+): Effect.fn.Return<CorpusArchiveMoveSummary, CorpusArchiveMoveError, CorpusCommandService> {
+  const corpus = yield* CorpusCommandService;
+  return yield* corpus.archiveMove(options);
+});
 
 /**
  * Build the corpus catalog, duplicate-set report, and restoration manifest.
@@ -2126,6 +3069,34 @@ export const organizeCorpus = Effect.fn("Corpus.organizeCorpus")(function* (
 });
 
 /**
+ * Copy labeled source files into corpus raw storage and write provenance.
+ *
+ * @param options - Salvage options naming corpus root, optional run label, dedupe mode, and generic source labels.
+ * @returns Summary counts for the salvage copy run.
+ * @effects Delegates to `CorpusCommandService`; the live service hashes sources, optionally dedupes by catalog/manifests, copies bytes, and writes JSONL provenance.
+ * @example
+ * ```ts
+ * import { salvageCorpus, CorpusSalvageOptions, CorpusSalvageSourceSpec } from "@beep/repo-cli/commands/Corpus"
+ * import { Effect } from "effect"
+ *
+ * const options = CorpusSalvageOptions.make({
+ *   corpusRoot: "/tmp/corpus",
+ *   sources: [CorpusSalvageSourceSpec.make({ sourceLabel: "source-a", sourcePath: "/tmp/source-a" })]
+ * })
+ * const records = salvageCorpus(options).pipe(Effect.map((summary) => summary.recordsChecked))
+ * console.log(records.pipe !== undefined) // true
+ * ```
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const salvageCorpus = Effect.fn("Corpus.salvageCorpus")(function* (
+  options: CorpusSalvageOptions
+): Effect.fn.Return<CorpusSalvageSummary, CorpusCommandError, CorpusCommandService> {
+  const corpus = yield* CorpusCommandService;
+  return yield* corpus.salvageCorpus(options);
+});
+
+/**
  * Re-hash salvaged raw/ files against the provenance manifest.
  *
  * @param options - Verification options naming the corpus root.
@@ -2165,7 +3136,9 @@ export const verifySalvage = Effect.fn("Corpus.verifySalvage")(function* (
  */
 export const printCorpusIndex = printLines([
   "Corpus commands:",
+  "- bun run beep corpus salvage --corpus-root /path/to/corpus --source source-a=/path/to/source --dedupe",
   "- bun run beep corpus salvage --corpus-root /path/to/corpus",
+  "- bun run beep corpus archive-move --source /path/to/source --archive-root /path/to/archive --provenance /path/to/provenance.jsonl",
   "- bun run beep corpus catalog --corpus-root /path/to/corpus",
   "- bun run beep corpus extract --corpus-root /path/to/corpus --tika-jar /path/to/tika-app.jar --export-children",
   "- bun run beep corpus organize --corpus-root /path/to/corpus",

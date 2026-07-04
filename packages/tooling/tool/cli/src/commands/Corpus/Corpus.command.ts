@@ -6,66 +6,131 @@
  */
 
 import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
 import { Command, Flag } from "effect/unstable/cli";
+import { CorpusCommandError } from "./Corpus.errors.js";
 import {
+  CorpusArchiveMoveOptions,
   CorpusCatalogOptions,
   CorpusEnrichOptions,
   CorpusExtractOptions,
   CorpusOrganizeOptions,
   CorpusSalvageOptions,
+  CorpusSalvageSourceSpec,
 } from "./Corpus.schemas.js";
 import {
+  archiveMoveCorpus,
   CorpusCommandServiceLive,
   catalogCorpus,
   enrichCorpus,
   extractCorpus,
   organizeCorpus,
   printCorpusIndex,
+  salvageCorpus,
   verifySalvage,
 } from "./Corpus.service.js";
 
+/** @since 0.0.0 */
 const corpusRootFlag = Flag.directory("corpus-root", { mustExist: true }).pipe(
   Flag.withDescription(
     "Salvaged corpus root containing raw/provenance.jsonl; outputs land under <corpus-root>/catalog and <corpus-root>/staging"
   )
 );
+/** @since 0.0.0 */
 const tikaJarFlag = Flag.file("tika-jar", { mustExist: true }).pipe(
   Flag.withDescription("Apache tika-app jar used for text and metadata extraction")
 );
+/** @since 0.0.0 */
 const pffexportFlag = Flag.string("pffexport").pipe(
   Flag.withDescription("pffexport binary used for PST archive export"),
   Flag.optional
 );
+/** @since 0.0.0 */
 const javaFlag = Flag.string("java").pipe(
   Flag.withDescription("java binary used to run the tika-app jar"),
   Flag.optional
 );
+/** @since 0.0.0 */
 const exportChildrenFlag = Flag.boolean("export-children").pipe(
   Flag.withDescription("Export per-message child artifacts and attachments from PST archives")
 );
+/** @since 0.0.0 */
 const includeDuplicatesFlag = Flag.boolean("include-duplicates").pipe(
   Flag.withDescription("Process every manifest record instead of one representative per content digest")
 );
+/** @since 0.0.0 */
 const sourceLabelFlag = Flag.string("source").pipe(
   Flag.withDescription("Restrict extraction to one salvage source label"),
   Flag.optional
 );
+/** @since 0.0.0 */
 const extractConcurrencyFlag = Flag.integer("concurrency").pipe(
   Flag.withDefault(4),
   Flag.withDescription("Bounded number of concurrent extraction subprocesses")
 );
+/** @since 0.0.0 */
 const maxFilesFlag = Flag.integer("max-files").pipe(
   Flag.withDescription("Process at most this many sources (smoke runs)"),
   Flag.optional
 );
+/** @since 0.0.0 */
 const extractOverwriteFlag = Flag.boolean("overwrite").pipe(
   Flag.withDescription("Replace an existing staging/extract output tree")
 );
+/** @since 0.0.0 */
 const sampleStrideFlag = Flag.integer("sample-stride").pipe(
   Flag.withDescription("Verify every Nth provenance record instead of all records"),
   Flag.optional
 );
+/** @since 0.0.0 */
+const salvageRunLabelFlag = Flag.string("run-label").pipe(
+  Flag.withDescription("Write copied files and provenance under raw/<run-label>/"),
+  Flag.optional
+);
+/** @since 0.0.0 */
+const salvageDedupeFlag = Flag.boolean("dedupe").pipe(
+  Flag.withDescription("Hash each origin before copy and write provenance-only rows for already-known digests")
+);
+/** @since 0.0.0 */
+const salvageSourceFlag = Flag.string("source").pipe(
+  Flag.withDescription("Generic salvage source mapping in source-a=/path form; repeat for source-b, source-c, ..."),
+  Flag.atMost(Number.MAX_SAFE_INTEGER)
+);
+/** @since 0.0.0 */
+const archiveMoveSourceFlag = Flag.path("source", { mustExist: true, pathType: "either" }).pipe(
+  Flag.withDescription("Source directory or file to archive after provenance verification; repeat for each source"),
+  Flag.atLeast(1)
+);
+/** @since 0.0.0 */
+const archiveRootFlag = Flag.directory("archive-root").pipe(
+  Flag.withDescription("Archive root that will receive <source-basename> destinations")
+);
+/** @since 0.0.0 */
+const archiveMoveProvenanceFlag = Flag.file("provenance", { mustExist: true }).pipe(
+  Flag.withDescription("Run provenance.jsonl used to prove every source file before moving; repeat if needed"),
+  Flag.atLeast(1)
+);
+
+const parseSalvageSourceSpec = Effect.fn("CorpusCommand.parseSalvageSourceSpec")(function* (
+  value: string
+): Effect.fn.Return<CorpusSalvageSourceSpec, CorpusCommandError> {
+  const separator = Str.indexOf("=")(value);
+  if (O.isNone(separator)) {
+    return yield* CorpusCommandError.make({
+      message: `Salvage --source must use source-label=/path form; received "${value}".`,
+    });
+  }
+  const sourceLabel = Str.slice(0, separator.value)(value);
+  const sourcePath = Str.slice(separator.value + 1)(value);
+  if (Str.isEmpty(sourceLabel) || Str.isEmpty(sourcePath)) {
+    return yield* CorpusCommandError.make({
+      message: `Salvage --source must include both source label and path; received "${value}".`,
+    });
+  }
+  return CorpusSalvageSourceSpec.make({ sourceLabel, sourcePath });
+});
 
 const corpusCatalogCommand = Command.make(
   "catalog",
@@ -191,18 +256,46 @@ const corpusSalvageCommand = Command.make(
   "salvage",
   {
     corpusRoot: corpusRootFlag,
+    dedupe: salvageDedupeFlag,
+    runLabel: salvageRunLabelFlag,
     sampleStride: sampleStrideFlag,
+    source: salvageSourceFlag,
   },
-  Effect.fn(function* ({ corpusRoot, sampleStride }) {
-    yield* verifySalvage(
-      CorpusSalvageOptions.make({
-        corpusRoot,
-        ...(O.isNone(sampleStride) ? {} : { sampleStride: sampleStride.value }),
+  Effect.fn(function* ({ corpusRoot, dedupe, runLabel, sampleStride, source }) {
+    const sources = yield* Effect.forEach(source, parseSalvageSourceSpec);
+    const options = CorpusSalvageOptions.make({
+      corpusRoot,
+      dedupe,
+      ...(O.isNone(runLabel) ? {} : { runLabel: runLabel.value }),
+      ...(O.isNone(sampleStride) ? {} : { sampleStride: sampleStride.value }),
+      ...(A.length(sources) === 0 ? {} : { sources }),
+    });
+    yield* (A.length(sources) === 0 ? verifySalvage(options) : salvageCorpus(options)).pipe(Effect.asVoid);
+  })
+).pipe(
+  Command.withDescription("Copy labeled sources into raw/ with provenance, or verify an existing raw/provenance.jsonl"),
+  Command.provide(CorpusCommandServiceLive)
+);
+
+/** @since 0.0.0 */
+const corpusArchiveMoveCommand = Command.make(
+  "archive-move",
+  {
+    archiveRoot: archiveRootFlag,
+    provenance: archiveMoveProvenanceFlag,
+    source: archiveMoveSourceFlag,
+  },
+  Effect.fn(function* ({ archiveRoot, provenance, source }) {
+    yield* archiveMoveCorpus(
+      CorpusArchiveMoveOptions.make({
+        archiveRoot,
+        provenancePaths: provenance,
+        sourcePaths: source,
       })
     ).pipe(Effect.asVoid);
   })
 ).pipe(
-  Command.withDescription("Re-hash salvaged raw/ files against the provenance manifest"),
+  Command.withDescription("Move fully provenance-covered source directories or files into an archive root"),
   Command.provide(CorpusCommandServiceLive)
 );
 
@@ -222,6 +315,7 @@ const corpusSalvageCommand = Command.make(
 export const corpusCommand = Command.make("corpus", {}, () => printCorpusIndex).pipe(
   Command.withDescription("Corpus salvage and curation commands"),
   Command.withSubcommands([
+    corpusArchiveMoveCommand,
     corpusCatalogCommand,
     corpusEnrichCommand,
     corpusExtractCommand,

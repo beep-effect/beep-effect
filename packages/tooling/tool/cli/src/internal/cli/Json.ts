@@ -28,6 +28,7 @@ const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
  */
 export class CliJsonError extends CauseTaggedError<CliJsonError>($I`CliJsonError`)(
   "CliJsonError",
+  {},
   $I.annote("CliJsonError", {
     description: "Failure raised when a repo-cli command cannot encode a JSON payload.",
   })

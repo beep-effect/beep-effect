@@ -1,21 +1,32 @@
 import {
+  archiveMoveCorpus,
+  CorpusArchiveMoveManifestRecord,
+  CorpusArchiveMoveOptions,
   CorpusCatalogOptions,
   CorpusCommandServiceLive,
   CorpusExtractOptions,
+  CorpusProvenanceRecord,
   CorpusSalvageOptions,
+  CorpusSalvageSourceSpec,
   catalogCorpus,
   classifyRecycleBinName,
+  decodeCorpusProvenanceRecordJson,
+  encodeCorpusProvenanceRecordJson,
   extractCorpus,
   pairRecycleBinEntries,
   parseRecycleBinMetadata,
   RecycleBinScanEntry,
+  salvageCorpus,
   verifySalvage,
 } from "@beep/repo-cli/commands/Corpus";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path } from "effect";
+import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const testLayer = Layer.mergeAll(
   CorpusCommandServiceLive.pipe(
@@ -228,6 +239,176 @@ const writeStub = Effect.fn("CorpusTest.writeStub")(function* (script: string, s
   yield* fs.chmod(stubPath, 0o755);
 });
 
+const alphaDigest = "8ed3f6ad685b959ead7022518e1af76cd816f8e8ec7ccdda1ed4018e8f2223f8";
+
+const sourceSpec = (sourceLabel: string, sourcePath: string): CorpusSalvageSourceSpec =>
+  CorpusSalvageSourceSpec.make({ sourceLabel, sourcePath });
+
+const provenanceRecord = (input: {
+  readonly copyMode?: "copied" | "provenance-only";
+  readonly dedupeOfPath?: string;
+  readonly destPath: string;
+  readonly originPath: string;
+  readonly relativePath: string;
+  readonly sha256: string;
+  readonly sizeBytes: number;
+  readonly sourceLabel: string;
+}): CorpusProvenanceRecord =>
+  CorpusProvenanceRecord.make({
+    destPath: input.destPath,
+    mtimeEpoch: 1_700_000_000,
+    mtimeIso: "2023-11-14T22:13:20Z",
+    originPath: input.originPath,
+    relativePath: input.relativePath,
+    salvagedAt: "2026-06-11T15:00:00Z",
+    sha256: input.sha256,
+    sizeBytes: input.sizeBytes,
+    sourceLabel: input.sourceLabel,
+    ...(input.copyMode === undefined ? {} : { copyMode: input.copyMode }),
+    ...(input.dedupeOfPath === undefined ? {} : { dedupeOfPath: input.dedupeOfPath }),
+  });
+
+const encodeProvenanceLine = Effect.fn("CorpusTest.encodeProvenanceLine")(function* (record: CorpusProvenanceRecord) {
+  return yield* encodeCorpusProvenanceRecordJson(record);
+});
+
+const readProvenanceLines = Effect.fn("CorpusTest.readProvenanceLines")(function* (manifestPath: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const text = yield* fs.readFileString(manifestPath);
+  return A.filter(Str.split(text, "\n"), Str.isNonEmpty);
+});
+
+const readProvenanceRecords = Effect.fn("CorpusTest.readProvenanceRecords")(function* (manifestPath: string) {
+  const lines = yield* readProvenanceLines(manifestPath);
+  return yield* Effect.forEach(lines, decodeCorpusProvenanceRecordJson);
+});
+
+const decodeArchiveMoveManifestRecordJson = S.decodeUnknownEffect(S.fromJsonString(CorpusArchiveMoveManifestRecord));
+
+const readArchiveMoveManifestRecords = Effect.fn("CorpusTest.readArchiveMoveManifestRecords")(function* (
+  manifestPath: string
+) {
+  const lines = yield* readProvenanceLines(manifestPath);
+  return yield* Effect.forEach(lines, decodeArchiveMoveManifestRecordJson);
+});
+
+describe("corpus catalog run manifests", () => {
+  it.effect("unions base and run-labeled manifests with provenance-only occurrences and per-run digest deltas", () =>
+    Effect.gen(function* () {
+      const digestB = "b".repeat(64);
+      const digestC = "c".repeat(64);
+      const digestD = "d".repeat(64);
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const corpusRoot = yield* fs.makeTempDirectoryScoped({ prefix: "corpus-catalog-runs-test-" });
+      const rawRoot = path.join(corpusRoot, "raw");
+      const baseSourceDir = path.join(rawRoot, "source-a");
+      const runLabel = "2026-07-refresh";
+      const runSourceDir = path.join(rawRoot, runLabel, "source-c");
+      yield* fs.makeDirectory(baseSourceDir, { recursive: true });
+      yield* fs.makeDirectory(runSourceDir, { recursive: true });
+
+      const baseAlphaPath = path.join(baseSourceDir, "alpha.txt");
+      const baseBravoPath = path.join(baseSourceDir, "bravo.txt");
+      const runCharliePath = path.join(runSourceDir, "charlie.txt");
+      const runDeltaOnePath = path.join(runSourceDir, "delta-one.txt");
+      const runDeltaTwoPath = path.join(runSourceDir, "delta-two.txt");
+      yield* fs.writeFileString(baseAlphaPath, "alpha");
+      yield* fs.writeFileString(baseBravoPath, "bravo");
+      yield* fs.writeFileString(runCharliePath, "charlie");
+      yield* fs.writeFileString(runDeltaOnePath, "delta");
+      yield* fs.writeFileString(runDeltaTwoPath, "delta");
+
+      const baseLines = yield* Effect.forEach(
+        [
+          provenanceRecord({
+            copyMode: "copied",
+            destPath: baseAlphaPath,
+            originPath: path.join(corpusRoot, "origin", "base-alpha.txt"),
+            relativePath: "alpha.txt",
+            sha256: alphaDigest,
+            sizeBytes: 5,
+            sourceLabel: "source-a",
+          }),
+          provenanceRecord({
+            copyMode: "copied",
+            destPath: baseBravoPath,
+            originPath: path.join(corpusRoot, "origin", "base-bravo.txt"),
+            relativePath: "bravo.txt",
+            sha256: digestB,
+            sizeBytes: 5,
+            sourceLabel: "source-a",
+          }),
+        ],
+        encodeProvenanceLine
+      );
+      const runLines = yield* Effect.forEach(
+        [
+          provenanceRecord({
+            copyMode: "provenance-only",
+            dedupeOfPath: baseAlphaPath,
+            destPath: path.join(runSourceDir, "cross-run-alpha.txt"),
+            originPath: path.join(corpusRoot, "origin", "refresh-alpha.txt"),
+            relativePath: "cross-run-alpha.txt",
+            sha256: alphaDigest,
+            sizeBytes: 5,
+            sourceLabel: "source-c",
+          }),
+          provenanceRecord({
+            copyMode: "copied",
+            destPath: runCharliePath,
+            originPath: path.join(corpusRoot, "origin", "refresh-charlie.txt"),
+            relativePath: "charlie.txt",
+            sha256: digestC,
+            sizeBytes: 7,
+            sourceLabel: "source-c",
+          }),
+          provenanceRecord({
+            copyMode: "copied",
+            destPath: runDeltaOnePath,
+            originPath: path.join(corpusRoot, "origin", "refresh-delta-one.txt"),
+            relativePath: "delta-one.txt",
+            sha256: digestD,
+            sizeBytes: 5,
+            sourceLabel: "source-c",
+          }),
+          provenanceRecord({
+            copyMode: "copied",
+            destPath: runDeltaTwoPath,
+            originPath: path.join(corpusRoot, "origin", "refresh-delta-two.txt"),
+            relativePath: "delta-two.txt",
+            sha256: digestD,
+            sizeBytes: 5,
+            sourceLabel: "source-c",
+          }),
+        ],
+        encodeProvenanceLine
+      );
+      yield* fs.writeFileString(path.join(rawRoot, "provenance.jsonl"), `${A.join(baseLines, "\n")}\n`);
+      yield* fs.writeFileString(path.join(rawRoot, runLabel, "provenance.jsonl"), `${A.join(runLines, "\n")}\n`);
+
+      const summary = yield* catalogCorpus(CorpusCatalogOptions.make({ corpusRoot }));
+      const duplicateText = yield* fs.readFileString(
+        path.join(corpusRoot, "catalog", "reports", "duplicate-sets.json")
+      );
+      const summaryText = yield* fs.readFileString(path.join(corpusRoot, "catalog", "reports", "catalog-summary.json"));
+      const refreshRun = yield* Effect.fromOption(A.findFirst(summary.runs, (run) => run.runLabel === runLabel));
+
+      expect(summary.sourceFiles).toBe(6);
+      expect(summary.distinctDigests).toBe(4);
+      expect(summary.duplicateSets).toBe(2);
+      expect(refreshRun.recordCount).toBe(4);
+      expect(refreshRun.distinctDigests).toBe(3);
+      expect(refreshRun.newDistinctDigests).toBe(2);
+      expect(duplicateText).toContain('"duplicateScope":"cross-run"');
+      expect(duplicateText).toContain(`${runLabel}:source-c/cross-run-alpha.txt`);
+      expect(duplicateText).toContain('"duplicateScope":"intra-run"');
+      expect(summaryText).toContain(`"runLabel":"${runLabel}"`);
+      expect(summaryText).toContain('"newDistinctDigests":2');
+    }).pipe(Effect.scoped, provideTestLayer)
+  );
+});
+
 describe("corpus extract and salvage", () => {
   it.effect("extracts a synthetic corpus through stub engines and verifies salvage", () =>
     Effect.gen(function* () {
@@ -304,6 +485,448 @@ describe("corpus extract and salvage", () => {
       expect(salvage.matched).toBe(3);
       expect(salvage.mismatched).toBe(0);
       expect(salvage.missing).toBe(0);
+    }).pipe(Effect.scoped, provideTestLayer)
+  );
+});
+
+describe("corpus salvage run labels and dedupe", () => {
+  it.effect("writes copied files and provenance under the requested run label", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "corpus-run-label-test-" });
+      const corpusRoot = path.join(root, "corpus");
+      const sourceDir = path.join(root, "source-a");
+      yield* fs.makeDirectory(sourceDir, { recursive: true });
+      yield* fs.writeFileString(path.join(sourceDir, "a.txt"), "alpha");
+
+      const summary = yield* salvageCorpus(
+        CorpusSalvageOptions.make({
+          corpusRoot,
+          runLabel: "run-a",
+          sources: [sourceSpec("source-a", sourceDir)],
+        })
+      );
+
+      const copiedExists = yield* fs.exists(path.join(corpusRoot, "raw", "run-a", "source-a", "a.txt"));
+      const runManifestExists = yield* fs.exists(path.join(corpusRoot, "raw", "run-a", "provenance.jsonl"));
+      const rootManifestExists = yield* fs.exists(path.join(corpusRoot, "raw", "provenance.jsonl"));
+      const records = yield* readProvenanceRecords(path.join(corpusRoot, "raw", "run-a", "provenance.jsonl"));
+
+      expect(summary.recordsChecked).toBe(1);
+      expect(copiedExists).toBe(true);
+      expect(runManifestExists).toBe(true);
+      expect(rootManifestExists).toBe(false);
+      expect(A.head(records).pipe(O.map((record) => record.copyMode))).toStrictEqual(O.some("copied"));
+    }).pipe(Effect.scoped, provideTestLayer)
+  );
+
+  it.effect("writes every multi-source salvage provenance line as parseable JSON", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "corpus-multi-source-manifest-test-" });
+      const corpusRoot = path.join(root, "corpus");
+      const sourceADir = path.join(root, "source-a");
+      const sourceBDir = path.join(root, "source-b");
+      const sourceCDir = path.join(root, "source-c");
+      const sourceDDir = path.join(root, "source-d");
+      yield* Effect.forEach([sourceADir, sourceBDir, sourceCDir, sourceDDir], (sourceDir) =>
+        fs.makeDirectory(sourceDir, { recursive: true })
+      );
+
+      const firstFileName = "~first-walked.pst.tmp";
+      const firstFileBytes = new Uint8Array(131_072);
+      firstFileBytes.fill(0x41);
+      yield* fs.writeFile(path.join(sourceADir, firstFileName), firstFileBytes);
+
+      const sharedFiles = [
+        { body: "shared-zero", name: "shared-0.txt" },
+        { body: "shared-one", name: "shared-1.txt" },
+        { body: "shared-two", name: "shared-2.txt" },
+        { body: "shared-three", name: "shared-3.txt" },
+      ];
+      yield* Effect.forEach(
+        [sourceBDir, sourceCDir, sourceDDir],
+        (sourceDir) =>
+          Effect.forEach(sharedFiles, (file) => fs.writeFileString(path.join(sourceDir, file.name), file.body), {
+            discard: true,
+          }),
+        { discard: true }
+      );
+
+      const summary = yield* salvageCorpus(
+        CorpusSalvageOptions.make({
+          corpusRoot,
+          dedupe: true,
+          runLabel: "run-multi-source",
+          sources: [
+            sourceSpec("source-a", sourceADir),
+            sourceSpec("source-b", sourceBDir),
+            sourceSpec("source-c", sourceCDir),
+            sourceSpec("source-d", sourceDDir),
+          ],
+        })
+      );
+
+      const manifestPath = path.join(corpusRoot, "raw", "run-multi-source", "provenance.jsonl");
+      const lines = yield* readProvenanceLines(manifestPath);
+      const records = yield* Effect.forEach(lines, decodeCorpusProvenanceRecordJson);
+      const firstLine = yield* Effect.fromOption(A.head(lines));
+      const firstRecord = yield* Effect.fromOption(A.head(records));
+
+      expect(A.length(lines)).toBe(summary.recordsChecked);
+      expect(A.length(records)).toBe(summary.recordsChecked);
+      expect(firstLine.startsWith("{")).toBe(true);
+      expect(firstLine.includes("\u0000")).toBe(false);
+      expect(firstRecord.relativePath).toBe(firstFileName);
+      expect(firstRecord.sizeBytes).toBe(131_072);
+      expect(firstRecord.copyMode).toBe("copied");
+      expect(A.length(A.filter(records, (record) => record.copyMode === "provenance-only"))).toBe(8);
+    }).pipe(Effect.scoped, provideTestLayer)
+  );
+
+  it.effect("preserves POSIX filenames with punctuation and literal backslashes", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "corpus-weird-path-test-" });
+      const corpusRoot = path.join(root, "corpus");
+      const sourceDir = path.join(root, "source-d");
+      const nestedDirName = "nested files";
+      const nestedDir = path.join(sourceDir, nestedDirName);
+      const weirdName = "weird; (name) [x].docx";
+      const backslashName = "back\\slash.txt";
+      const weirdRelativePath = path.join(nestedDirName, weirdName);
+      const backslashRelativePath = path.join(nestedDirName, backslashName);
+      yield* fs.makeDirectory(nestedDir, { recursive: true });
+      yield* fs.writeFileString(path.join(sourceDir, weirdRelativePath), "punctuation");
+      yield* fs.writeFileString(path.join(sourceDir, backslashRelativePath), "backslash");
+
+      const summary = yield* salvageCorpus(
+        CorpusSalvageOptions.make({
+          corpusRoot,
+          dedupe: true,
+          runLabel: "run-weird",
+          sources: [sourceSpec("source-d", sourceDir)],
+        })
+      );
+
+      const weirdDest = path.join(corpusRoot, "raw", "run-weird", "source-d", weirdRelativePath);
+      const backslashDest = path.join(corpusRoot, "raw", "run-weird", "source-d", backslashRelativePath);
+      const weirdExists = yield* fs.exists(weirdDest);
+      const backslashExists = yield* fs.exists(backslashDest);
+      const provenancePath = path.join(corpusRoot, "raw", "run-weird", "provenance.jsonl");
+      const records = yield* readProvenanceRecords(provenancePath);
+      const weirdRecord = yield* Effect.fromOption(
+        A.findFirst(records, (record) => record.relativePath === weirdRelativePath)
+      );
+      const backslashRecord = yield* Effect.fromOption(
+        A.findFirst(records, (record) => record.relativePath === backslashRelativePath)
+      );
+
+      expect(summary.recordsChecked).toBe(2);
+      expect(weirdExists).toBe(true);
+      expect(backslashExists).toBe(true);
+      expect(weirdRecord.copyMode).toBe("copied");
+      expect(weirdRecord.destPath).toBe(weirdDest);
+      expect(weirdRecord.originPath).toBe(path.join(sourceDir, weirdRelativePath));
+      expect(weirdRecord.sourceLabel).toBe("source-d");
+      expect(backslashRecord.copyMode).toBe("copied");
+      expect(backslashRecord.destPath).toBe(backslashDest);
+      expect(backslashRecord.originPath).toBe(path.join(sourceDir, backslashRelativePath));
+      expect(backslashRecord.sourceLabel).toBe("source-d");
+
+      const archiveRoot = path.join(root, "archive");
+      const archiveSummary = yield* archiveMoveCorpus(
+        CorpusArchiveMoveOptions.make({
+          archiveRoot,
+          provenancePaths: [provenancePath],
+          sourcePaths: [sourceDir],
+        })
+      );
+
+      const sourceStillExists = yield* fs.exists(sourceDir);
+      const weirdArchiveExists = yield* fs.exists(path.join(archiveRoot, "source-d", weirdRelativePath));
+      const backslashArchiveExists = yield* fs.exists(path.join(archiveRoot, "source-d", backslashRelativePath));
+      const moveManifestPath = path.join(corpusRoot, "raw", "run-weird", "move-manifest.jsonl");
+      const moveRecords = yield* readArchiveMoveManifestRecords(moveManifestPath);
+      const moveRecord = yield* Effect.fromOption(A.head(moveRecords));
+
+      expect(archiveSummary.sourcesMoved).toBe(1);
+      expect(archiveSummary.filesCovered).toBe(2);
+      expect(archiveSummary.copiedRecords).toBe(2);
+      expect(archiveSummary.provenanceOnlyRecords).toBe(0);
+      expect(sourceStillExists).toBe(false);
+      expect(weirdArchiveExists).toBe(true);
+      expect(backslashArchiveExists).toBe(true);
+      expect(A.length(moveRecords)).toBe(1);
+      expect(moveRecord.originPath).toBe(sourceDir);
+      expect(moveRecord.archivePath).toBe(path.join(archiveRoot, "source-d"));
+      expect(moveRecord.fileCount).toBe(2);
+    }).pipe(Effect.scoped, provideTestLayer)
+  );
+
+  it.effect("uses the DuckDB catalog for dedupe-aware provenance-only salvage", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "corpus-catalog-dedupe-test-" });
+      const corpusRoot = path.join(root, "corpus");
+      const rawSourceDir = path.join(corpusRoot, "raw", "source-a");
+      yield* fs.makeDirectory(rawSourceDir, { recursive: true });
+      const existingRawPath = path.join(rawSourceDir, "existing.txt");
+      yield* fs.writeFileString(existingRawPath, "alpha");
+      const existingLine = yield* encodeProvenanceLine(
+        provenanceRecord({
+          copyMode: "copied",
+          destPath: existingRawPath,
+          originPath: path.join(root, "origin-a", "existing.txt"),
+          relativePath: "existing.txt",
+          sha256: alphaDigest,
+          sizeBytes: 5,
+          sourceLabel: "source-a",
+        })
+      );
+      yield* fs.writeFileString(path.join(corpusRoot, "raw", "provenance.jsonl"), `${existingLine}\n`);
+      yield* catalogCorpus(CorpusCatalogOptions.make({ corpusRoot }));
+
+      const sourceDir = path.join(root, "source-b");
+      yield* fs.makeDirectory(sourceDir, { recursive: true });
+      yield* fs.writeFileString(path.join(sourceDir, "duplicate.txt"), "alpha");
+
+      yield* salvageCorpus(
+        CorpusSalvageOptions.make({
+          corpusRoot,
+          dedupe: true,
+          sources: [sourceSpec("source-b", sourceDir)],
+        })
+      );
+
+      const records = yield* readProvenanceRecords(path.join(corpusRoot, "raw", "provenance.jsonl"));
+      const deduped = A.findFirst(records, (record) => record.sourceLabel === "source-b");
+      const duplicateCopyExists = yield* fs.exists(path.join(corpusRoot, "raw", "source-b", "duplicate.txt"));
+
+      expect(O.isSome(deduped)).toBe(true);
+      if (O.isSome(deduped)) {
+        expect(deduped.value.copyMode).toBe("provenance-only");
+        expect(deduped.value.destPath).toBe(existingRawPath);
+        expect(deduped.value.dedupeOfPath).toBe(existingRawPath);
+      }
+      expect(duplicateCopyExists).toBe(false);
+    }).pipe(Effect.scoped, provideTestLayer)
+  );
+
+  it.effect("falls back to scanning raw provenance manifests when the catalog is absent", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "corpus-manifest-dedupe-test-" });
+      const corpusRoot = path.join(root, "corpus");
+      const priorRawDir = path.join(corpusRoot, "raw", "run-one", "source-a");
+      yield* fs.makeDirectory(priorRawDir, { recursive: true });
+      const existingRawPath = path.join(priorRawDir, "existing.txt");
+      yield* fs.writeFileString(existingRawPath, "alpha");
+      const existingLine = yield* encodeProvenanceLine(
+        provenanceRecord({
+          copyMode: "copied",
+          destPath: existingRawPath,
+          originPath: path.join(root, "origin-a", "existing.txt"),
+          relativePath: "existing.txt",
+          sha256: alphaDigest,
+          sizeBytes: 5,
+          sourceLabel: "source-a",
+        })
+      );
+      yield* fs.writeFileString(path.join(corpusRoot, "raw", "run-one", "provenance.jsonl"), `${existingLine}\n`);
+
+      const sourceDir = path.join(root, "source-b");
+      yield* fs.makeDirectory(sourceDir, { recursive: true });
+      yield* fs.writeFileString(path.join(sourceDir, "duplicate.txt"), "alpha");
+      yield* salvageCorpus(
+        CorpusSalvageOptions.make({
+          corpusRoot,
+          dedupe: true,
+          runLabel: "run-two",
+          sources: [sourceSpec("source-b", sourceDir)],
+        })
+      );
+
+      const records = yield* readProvenanceRecords(path.join(corpusRoot, "raw", "run-two", "provenance.jsonl"));
+      const record = yield* Effect.fromOption(A.head(records));
+      const duplicateCopyExists = yield* fs.exists(
+        path.join(corpusRoot, "raw", "run-two", "source-b", "duplicate.txt")
+      );
+
+      expect(record.copyMode).toBe("provenance-only");
+      expect(record.destPath).toBe(existingRawPath);
+      expect(duplicateCopyExists).toBe(false);
+    }).pipe(Effect.scoped, provideTestLayer)
+  );
+
+  it.effect("dedupes files already recorded earlier in the same salvage run", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "corpus-same-run-dedupe-test-" });
+      const corpusRoot = path.join(root, "corpus");
+      const sourceDir = path.join(root, "source-a");
+      yield* fs.makeDirectory(sourceDir, { recursive: true });
+      yield* fs.writeFileString(path.join(sourceDir, "a.txt"), "alpha");
+      yield* fs.writeFileString(path.join(sourceDir, "b.txt"), "alpha");
+
+      yield* salvageCorpus(
+        CorpusSalvageOptions.make({
+          corpusRoot,
+          dedupe: true,
+          sources: [sourceSpec("source-a", sourceDir)],
+        })
+      );
+
+      const records = yield* readProvenanceRecords(path.join(corpusRoot, "raw", "provenance.jsonl"));
+      const copiedExists = yield* fs.exists(path.join(corpusRoot, "raw", "source-a", "a.txt"));
+      const duplicateCopyExists = yield* fs.exists(path.join(corpusRoot, "raw", "source-a", "b.txt"));
+
+      expect(A.length(A.filter(records, (record) => record.copyMode === "copied"))).toBe(1);
+      expect(A.length(A.filter(records, (record) => record.copyMode === "provenance-only"))).toBe(1);
+      expect(copiedExists).toBe(true);
+      expect(duplicateCopyExists).toBe(false);
+    }).pipe(Effect.scoped, provideTestLayer)
+  );
+
+  it.effect("decodes old-shape provenance records without copyMode or dedupeOfPath", () =>
+    Effect.gen(function* () {
+      const line =
+        '{"destPath":"/tmp/corpus/raw/source-a/a.txt","mtimeEpoch":1700000000,"mtimeIso":"2023-11-14T22:13:20Z","originPath":"/tmp/source-a/a.txt","relativePath":"a.txt","salvagedAt":"2026-06-11T15:00:00Z","sha256":"8ed3f6ad685b959ead7022518e1af76cd816f8e8ec7ccdda1ed4018e8f2223f8","sizeBytes":5,"sourceLabel":"source-a"}';
+      const record = yield* decodeCorpusProvenanceRecordJson(line);
+
+      expect(record.sourceLabel).toBe("source-a");
+      expect(O.isNone(O.fromUndefinedOr(record.copyMode))).toBe(true);
+      expect(O.isNone(O.fromUndefinedOr(record.dedupeOfPath))).toBe(true);
+    })
+  );
+});
+
+describe("corpus archive-move", () => {
+  it.effect("moves provenance-covered sources and writes a move manifest", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "corpus-archive-move-test-" });
+      const corpusRoot = path.join(root, "corpus");
+      const sourceADir = path.join(root, "source-a");
+      const sourceBDir = path.join(root, "source-b");
+      yield* fs.makeDirectory(sourceADir, { recursive: true });
+      yield* fs.makeDirectory(sourceBDir, { recursive: true });
+      yield* fs.writeFileString(path.join(sourceADir, "a.txt"), "alpha");
+      yield* fs.writeFileString(path.join(sourceBDir, "b.txt"), "alpha");
+
+      yield* salvageCorpus(
+        CorpusSalvageOptions.make({
+          corpusRoot,
+          dedupe: true,
+          runLabel: "run-a",
+          sources: [sourceSpec("source-a", sourceADir), sourceSpec("source-b", sourceBDir)],
+        })
+      );
+
+      const archiveRoot = path.join(root, "archive");
+      const provenancePath = path.join(corpusRoot, "raw", "run-a", "provenance.jsonl");
+      const summary = yield* archiveMoveCorpus(
+        CorpusArchiveMoveOptions.make({
+          archiveRoot,
+          provenancePaths: [provenancePath],
+          sourcePaths: [sourceADir, sourceBDir],
+        })
+      );
+
+      const sourceAExists = yield* fs.exists(sourceADir);
+      const sourceBExists = yield* fs.exists(sourceBDir);
+      const archiveAExists = yield* fs.exists(path.join(archiveRoot, "source-a", "a.txt"));
+      const archiveBExists = yield* fs.exists(path.join(archiveRoot, "source-b", "b.txt"));
+      const moveManifestExists = yield* fs.exists(path.join(corpusRoot, "raw", "run-a", "move-manifest.jsonl"));
+
+      expect(summary.sourcesMoved).toBe(2);
+      expect(summary.filesCovered).toBe(2);
+      expect(summary.copiedRecords).toBe(1);
+      expect(summary.provenanceOnlyRecords).toBe(1);
+      expect(sourceAExists).toBe(false);
+      expect(sourceBExists).toBe(false);
+      expect(archiveAExists).toBe(true);
+      expect(archiveBExists).toBe(true);
+      expect(moveManifestExists).toBe(true);
+    }).pipe(Effect.scoped, provideTestLayer)
+  );
+
+  it.effect("fails archive-move without moving anything when a source file is uncovered", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "corpus-archive-uncovered-test-" });
+      const corpusRoot = path.join(root, "corpus");
+      const sourceDir = path.join(root, "source-a");
+      yield* fs.makeDirectory(sourceDir, { recursive: true });
+      yield* fs.writeFileString(path.join(sourceDir, "a.txt"), "alpha");
+
+      yield* salvageCorpus(
+        CorpusSalvageOptions.make({
+          corpusRoot,
+          runLabel: "run-a",
+          sources: [sourceSpec("source-a", sourceDir)],
+        })
+      );
+      yield* fs.writeFileString(path.join(sourceDir, "extra.txt"), "bravo");
+
+      const archiveRoot = path.join(root, "archive");
+      const error = yield* archiveMoveCorpus(
+        CorpusArchiveMoveOptions.make({
+          archiveRoot,
+          provenancePaths: [path.join(corpusRoot, "raw", "run-a", "provenance.jsonl")],
+          sourcePaths: [sourceDir],
+        })
+      ).pipe(Effect.flip);
+      const sourceStillExists = yield* fs.exists(sourceDir);
+      const archiveExists = yield* fs.exists(path.join(archiveRoot, "source-a"));
+
+      expect(error._tag).toBe("CorpusArchiveMoveUncoveredFileError");
+      expect(sourceStillExists).toBe(true);
+      expect(archiveExists).toBe(false);
+    }).pipe(Effect.scoped, provideTestLayer)
+  );
+
+  it.effect("fails archive-move without moving anything when a raw digest mismatches", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "corpus-archive-mismatch-test-" });
+      const corpusRoot = path.join(root, "corpus");
+      const sourceDir = path.join(root, "source-a");
+      yield* fs.makeDirectory(sourceDir, { recursive: true });
+      yield* fs.writeFileString(path.join(sourceDir, "a.txt"), "alpha");
+
+      yield* salvageCorpus(
+        CorpusSalvageOptions.make({
+          corpusRoot,
+          runLabel: "run-a",
+          sources: [sourceSpec("source-a", sourceDir)],
+        })
+      );
+      yield* fs.writeFileString(path.join(corpusRoot, "raw", "run-a", "source-a", "a.txt"), "changed");
+
+      const archiveRoot = path.join(root, "archive");
+      const error = yield* archiveMoveCorpus(
+        CorpusArchiveMoveOptions.make({
+          archiveRoot,
+          provenancePaths: [path.join(corpusRoot, "raw", "run-a", "provenance.jsonl")],
+          sourcePaths: [sourceDir],
+        })
+      ).pipe(Effect.flip);
+      const sourceStillExists = yield* fs.exists(sourceDir);
+      const archiveExists = yield* fs.exists(path.join(archiveRoot, "source-a"));
+
+      expect(error._tag).toBe("CorpusArchiveMoveDigestMismatchError");
+      expect(sourceStillExists).toBe(true);
+      expect(archiveExists).toBe(false);
     }).pipe(Effect.scoped, provideTestLayer)
   );
 });

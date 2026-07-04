@@ -12,6 +12,107 @@ import * as S from "effect/Schema";
 const $I = $RepoCliId.create("commands/Corpus/Corpus.schemas");
 
 /**
+ * Copy disposition recorded for a salvaged corpus file.
+ *
+ * @example
+ * ```ts
+ * import { CorpusCopyMode } from "@beep/repo-cli/commands/Corpus"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(CorpusCopyMode)("copied")) // true
+ * console.log(S.is(CorpusCopyMode)("provenance-only")) // true
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CorpusCopyMode = LiteralKit(["copied", "provenance-only"]).pipe(
+  $I.annoteSchema("CorpusCopyMode", {
+    title: "Corpus Copy Mode",
+    description:
+      "Whether salvage copied bytes into raw storage or only recorded provenance for content already present by digest.",
+  })
+);
+
+/**
+ * Type for {@link CorpusCopyMode}. {@inheritDoc CorpusCopyMode}
+ *
+ * @example
+ * ```ts
+ * import type { CorpusCopyMode } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const mode: CorpusCopyMode = "copied"
+ * console.log(mode)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CorpusCopyMode = typeof CorpusCopyMode.Type;
+
+/**
+ * Digest-to-raw-path row loaded from the corpus catalog or provenance manifests.
+ *
+ * @example
+ * ```ts
+ * import { CorpusCatalogDigestRow } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const row = CorpusCatalogDigestRow.make({
+ *   destPath: "/tmp/corpus/raw/source-a/a.txt",
+ *   sha256: "8ed3f6ad685b959ead7022518e1af76cd816f8e8ec7ccdda1ed4018e8f2223f8"
+ * })
+ * console.log(row.destPath)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CorpusCatalogDigestRow extends S.Class<CorpusCatalogDigestRow>($I`CorpusCatalogDigestRow`)(
+  {
+    destPath: S.NonEmptyString,
+    sha256: Sha256Hex,
+  },
+  $I.annote("CorpusCatalogDigestRow", {
+    title: "Corpus Catalog Digest Row",
+    description: "Digest-to-raw-path row loaded from the corpus DuckDB catalog or raw provenance manifests.",
+  })
+) {}
+
+/**
+ * Duplicate-set scope reported by the catalog.
+ *
+ * @example
+ * ```ts
+ * import { CorpusDuplicateScope } from "@beep/repo-cli/commands/Corpus"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(CorpusDuplicateScope)("cross-run")) // true
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CorpusDuplicateScope = LiteralKit(["intra-run", "cross-run"]).pipe(
+  $I.annoteSchema("CorpusDuplicateScope", {
+    title: "Corpus Duplicate Scope",
+    description: "Whether a duplicate digest occurs within one catalog run or across multiple run labels.",
+  })
+);
+
+/**
+ * Type for {@link CorpusDuplicateScope}. {@inheritDoc CorpusDuplicateScope}
+ *
+ * @example
+ * ```ts
+ * import type { CorpusDuplicateScope } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const scope: CorpusDuplicateScope = "cross-run"
+ * console.log(scope)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CorpusDuplicateScope = typeof CorpusDuplicateScope.Type;
+
+/**
  * One salvaged-file row of the corpus provenance manifest.
  *
  * @example
@@ -37,6 +138,8 @@ const $I = $RepoCliId.create("commands/Corpus/Corpus.schemas");
  */
 export class CorpusProvenanceRecord extends S.Class<CorpusProvenanceRecord>($I`CorpusProvenanceRecord`)(
   {
+    copyMode: S.optionalKey(CorpusCopyMode),
+    dedupeOfPath: S.optionalKey(S.NonEmptyString),
     destPath: S.NonEmptyString,
     mtimeEpoch: S.Int,
     mtimeIso: S.NonEmptyString,
@@ -48,6 +151,7 @@ export class CorpusProvenanceRecord extends S.Class<CorpusProvenanceRecord>($I`C
     sourceLabel: S.NonEmptyString,
   },
   $I.annote("CorpusProvenanceRecord", {
+    title: "Corpus Provenance Record",
     description: "JSONL-safe provenance record written for one verified salvaged corpus file.",
   })
 ) {}
@@ -78,6 +182,118 @@ export class CorpusProvenanceRecord extends S.Class<CorpusProvenanceRecord>($I`C
  * @since 0.0.0
  */
 export const decodeCorpusProvenanceRecordJson = S.decodeUnknownEffect(S.fromJsonString(CorpusProvenanceRecord));
+
+/**
+ * JSONL encoder for {@link CorpusProvenanceRecord}.
+ *
+ * @example
+ * ```ts
+ * import { CorpusProvenanceRecord, encodeCorpusProvenanceRecordJson } from "@beep/repo-cli/commands/Corpus"
+ * import { Effect } from "effect"
+ *
+ * const record = CorpusProvenanceRecord.make({
+ *   copyMode: "copied",
+ *   destPath: "/corpus/raw/source-a/a.txt",
+ *   mtimeEpoch: 1718000000,
+ *   mtimeIso: "2024-06-10T06:13:20Z",
+ *   originPath: "/origin/a.txt",
+ *   relativePath: "a.txt",
+ *   salvagedAt: "2026-06-11T15:00:00Z",
+ *   sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *   sizeBytes: 0,
+ *   sourceLabel: "source-a"
+ * })
+ *
+ * Effect.runPromise(encodeCorpusProvenanceRecordJson(record)).then((json) => console.log(json.includes("copied"))) // true
+ * ```
+ * @category codecs
+ * @since 0.0.0
+ */
+export const encodeCorpusProvenanceRecordJson = S.encodeUnknownEffect(S.fromJsonString(CorpusProvenanceRecord));
+
+/**
+ * One catalog occurrence row after provenance manifests are unioned by run.
+ *
+ * @example
+ * ```ts
+ * import { CorpusCatalogSourceFileRecord } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const record = CorpusCatalogSourceFileRecord.make({
+ *   copyMode: "copied",
+ *   destPath: "/corpus/raw/source-a/a.txt",
+ *   mtimeEpoch: 1718000000,
+ *   mtimeIso: "2024-06-10T06:13:20Z",
+ *   originPath: "/origin/a.txt",
+ *   referencedRawPath: "/corpus/raw/source-a/a.txt",
+ *   relativePath: "a.txt",
+ *   runLabel: "base",
+ *   salvagedAt: "2026-06-11T15:00:00Z",
+ *   sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *   sizeBytes: 0,
+ *   sourceLabel: "source-a"
+ * })
+ * console.log(record.runLabel) // "base"
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CorpusCatalogSourceFileRecord extends S.Class<CorpusCatalogSourceFileRecord>(
+  $I`CorpusCatalogSourceFileRecord`
+)(
+  {
+    copyMode: CorpusCopyMode,
+    dedupeOfPath: S.optionalKey(S.NonEmptyString),
+    destPath: S.NonEmptyString,
+    mtimeEpoch: S.Int,
+    mtimeIso: S.NonEmptyString,
+    originPath: S.NonEmptyString,
+    referencedRawPath: S.NonEmptyString,
+    relativePath: S.NonEmptyString,
+    runLabel: S.NonEmptyString,
+    salvagedAt: S.NonEmptyString,
+    sha256: Sha256Hex,
+    sizeBytes: NonNegativeInt,
+    sourceLabel: S.NonEmptyString,
+  },
+  $I.annote("CorpusCatalogSourceFileRecord", {
+    title: "Corpus Catalog Source File Record",
+    description:
+      "One source-file occurrence loaded into the catalog after adding the provenance run label and canonical raw-byte path.",
+  })
+) {}
+
+/**
+ * JSONL encoder for {@link CorpusCatalogSourceFileRecord}.
+ *
+ * @example
+ * ```ts
+ * import { CorpusCatalogSourceFileRecord, encodeCorpusCatalogSourceFileRecordJson } from "@beep/repo-cli/commands/Corpus"
+ * import { Effect } from "effect"
+ *
+ * const record = CorpusCatalogSourceFileRecord.make({
+ *   copyMode: "provenance-only",
+ *   dedupeOfPath: "/corpus/raw/source-a/a.txt",
+ *   destPath: "/corpus/raw/refresh/source-b/a.txt",
+ *   mtimeEpoch: 1718000000,
+ *   mtimeIso: "2024-06-10T06:13:20Z",
+ *   originPath: "/origin/b.txt",
+ *   referencedRawPath: "/corpus/raw/source-a/a.txt",
+ *   relativePath: "a.txt",
+ *   runLabel: "refresh",
+ *   salvagedAt: "2026-07-01T15:00:00Z",
+ *   sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *   sizeBytes: 0,
+ *   sourceLabel: "source-b"
+ * })
+ *
+ * Effect.runPromise(encodeCorpusCatalogSourceFileRecordJson(record)).then((json) => console.log(json.includes("refresh"))) // true
+ * ```
+ * @category codecs
+ * @since 0.0.0
+ */
+export const encodeCorpusCatalogSourceFileRecordJson = S.encodeUnknownEffect(
+  S.fromJsonString(CorpusCatalogSourceFileRecord)
+);
 
 /**
  * Recycle-bin metadata format version family.
@@ -327,8 +543,11 @@ export const encodeCorpusRestorationRecordJson = S.encodeUnknownEffect(S.fromJso
  *
  * const record = S.decodeUnknownSync(CorpusDuplicateSetRecord)({
  *   copies: 2,
+ *   duplicateScope: "cross-run",
  *   digest: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  *   members: "source-a/a.txt | source-b/a.txt",
+ *   runCount: 2,
+ *   runLabels: "base | refresh",
  *   sizeBytes: 11
  * })
  * console.log(record.copies) // 2
@@ -339,12 +558,16 @@ export const encodeCorpusRestorationRecordJson = S.encodeUnknownEffect(S.fromJso
 export class CorpusDuplicateSetRecord extends S.Class<CorpusDuplicateSetRecord>($I`CorpusDuplicateSetRecord`)(
   {
     copies: NonNegativeInt,
+    duplicateScope: CorpusDuplicateScope,
     digest: S.NonEmptyString,
     members: S.NonEmptyString,
+    runCount: NonNegativeInt,
+    runLabels: S.NonEmptyString,
     sizeBytes: NonNegativeInt,
   },
   $I.annote("CorpusDuplicateSetRecord", {
-    description: "A digest shared by multiple salvaged files, with the member paths joined for reporting.",
+    description:
+      "A digest shared by multiple salvaged file occurrences, with member paths and run labels joined for reporting.",
   })
 ) {}
 
@@ -358,8 +581,11 @@ export class CorpusDuplicateSetRecord extends S.Class<CorpusDuplicateSetRecord>(
  *
  * const rows = [{
  *   copies: 2,
+ *   duplicateScope: "intra-run",
  *   digest: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
  *   members: "source-a/a.txt | source-b/a.txt",
+ *   runCount: 1,
+ *   runLabels: "base",
  *   sizeBytes: 11
  * }]
  *
@@ -480,6 +706,67 @@ export class RecycleBinPairing extends S.Class<RecycleBinPairing>($I`RecycleBinP
   },
   $I.annote("RecycleBinPairing", {
     description: "Matched pairs plus unmatched $I and $R leftovers for one pairing pass.",
+  })
+) {}
+
+/**
+ * One labeled source passed to a corpus salvage copy run.
+ *
+ * @example
+ * ```ts
+ * import { CorpusSalvageSourceSpec } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const spec = CorpusSalvageSourceSpec.make({ sourceLabel: "source-a", sourcePath: "/tmp/source-a" })
+ * console.log(spec.sourceLabel) // "source-a"
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CorpusSalvageSourceSpec extends S.Class<CorpusSalvageSourceSpec>($I`CorpusSalvageSourceSpec`)(
+  {
+    sourceLabel: S.NonEmptyString,
+    sourcePath: S.NonEmptyString,
+  },
+  $I.annote("CorpusSalvageSourceSpec", {
+    title: "Corpus Salvage Source Spec",
+    description:
+      "Generic source label plus filesystem path for a salvage copy run; labels should be source-a/source-b style aliases.",
+  })
+) {}
+
+/**
+ * One source file selected for a corpus salvage copy run.
+ *
+ * @example
+ * ```ts
+ * import { CorpusSalvageOriginFile } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const origin = CorpusSalvageOriginFile.make({
+ *   mtimeEpoch: 1700000000,
+ *   mtimeIso: "2023-11-14T22:13:20Z",
+ *   originPath: "/tmp/source-a/a.txt",
+ *   relativePath: "a.txt",
+ *   sizeBytes: NonNegativeInt.make(5),
+ *   sourceLabel: "source-a"
+ * })
+ * console.log(origin.relativePath)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CorpusSalvageOriginFile extends S.Class<CorpusSalvageOriginFile>($I`CorpusSalvageOriginFile`)(
+  {
+    mtimeEpoch: S.Int,
+    mtimeIso: S.NonEmptyString,
+    originPath: S.NonEmptyString,
+    relativePath: S.NonEmptyString,
+    sizeBytes: NonNegativeInt,
+    sourceLabel: S.NonEmptyString,
+  },
+  $I.annote("CorpusSalvageOriginFile", {
+    title: "Corpus Salvage Origin File",
+    description: "One source file selected for a corpus salvage copy run.",
   })
 ) {}
 
@@ -971,10 +1258,14 @@ export const encodeCorpusEnrichSummaryJson = S.encodeUnknownEffect(S.fromJsonStr
 export class CorpusSalvageOptions extends S.Class<CorpusSalvageOptions>($I`CorpusSalvageOptions`)(
   {
     corpusRoot: S.String,
+    dedupe: S.optionalKey(S.Boolean),
+    runLabel: S.optionalKey(S.NonEmptyString),
     sampleStride: S.optionalKey(S.Finite),
+    sources: S.optionalKey(CorpusSalvageSourceSpec.pipe(S.Array)),
   },
   $I.annote("CorpusSalvageOptions", {
-    description: "Validated options used by corpus salvage verification.",
+    title: "Corpus Salvage Options",
+    description: "Validated options used by corpus salvage verification or copy runs.",
   })
 ) {}
 
@@ -1036,11 +1327,169 @@ export class CorpusSalvageSummary extends S.Class<CorpusSalvageSummary>($I`Corpu
 export const encodeCorpusSalvageSummaryJson = S.encodeUnknownEffect(S.fromJsonString(CorpusSalvageSummary));
 
 /**
+ * Validated options used by `corpus archive-move`.
+ *
+ * @example
+ * ```ts
+ * import { CorpusArchiveMoveOptions } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const options = CorpusArchiveMoveOptions.make({
+ *   archiveRoot: "/tmp/archive",
+ *   provenancePaths: ["/tmp/corpus/raw/run-a/provenance.jsonl"],
+ *   sourcePaths: ["/tmp/source-a"]
+ * })
+ * console.log(options.sourcePaths.length) // 1
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CorpusArchiveMoveOptions extends S.Class<CorpusArchiveMoveOptions>($I`CorpusArchiveMoveOptions`)(
+  {
+    archiveRoot: S.NonEmptyString,
+    provenancePaths: S.Array(S.NonEmptyString),
+    sourcePaths: S.Array(S.NonEmptyString),
+  },
+  $I.annote("CorpusArchiveMoveOptions", {
+    title: "Corpus Archive Move Options",
+    description: "Validated source, archive-root, and provenance manifest paths used by corpus archive-move.",
+  })
+) {}
+
+/**
+ * One JSONL row written after a successful archive move.
+ *
+ * @example
+ * ```ts
+ * import { CorpusArchiveMoveManifestRecord } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const record = CorpusArchiveMoveManifestRecord.make({
+ *   archivePath: "/tmp/archive/source-a",
+ *   copiedCount: NonNegativeInt.make(1),
+ *   fileCount: NonNegativeInt.make(1),
+ *   movedAt: "2026-06-11T15:00:00Z",
+ *   originPath: "/tmp/source-a",
+ *   provenanceOnlyCount: NonNegativeInt.make(0)
+ * })
+ * console.log(record.fileCount) // 1
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CorpusArchiveMoveManifestRecord extends S.Class<CorpusArchiveMoveManifestRecord>(
+  $I`CorpusArchiveMoveManifestRecord`
+)(
+  {
+    archivePath: S.NonEmptyString,
+    copiedCount: NonNegativeInt,
+    fileCount: NonNegativeInt,
+    movedAt: S.NonEmptyString,
+    originPath: S.NonEmptyString,
+    provenanceOnlyCount: NonNegativeInt,
+  },
+  $I.annote("CorpusArchiveMoveManifestRecord", {
+    title: "Corpus Archive Move Manifest Record",
+    description: "JSONL-safe archive move record for one source moved after provenance verification.",
+  })
+) {}
+
+/**
+ * JSONL encoder for {@link CorpusArchiveMoveManifestRecord}.
+ *
+ * @example
+ * ```ts
+ * import { CorpusArchiveMoveManifestRecord, encodeCorpusArchiveMoveManifestRecordJson } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { Effect } from "effect"
+ *
+ * const record = CorpusArchiveMoveManifestRecord.make({
+ *   archivePath: "/tmp/archive/source-a",
+ *   copiedCount: NonNegativeInt.make(1),
+ *   fileCount: NonNegativeInt.make(1),
+ *   movedAt: "2026-06-11T15:00:00Z",
+ *   originPath: "/tmp/source-a",
+ *   provenanceOnlyCount: NonNegativeInt.make(0)
+ * })
+ *
+ * Effect.runPromise(encodeCorpusArchiveMoveManifestRecordJson(record)).then((json) => console.log(json.includes("source-a"))) // true
+ * ```
+ * @category codecs
+ * @since 0.0.0
+ */
+export const encodeCorpusArchiveMoveManifestRecordJson = S.encodeUnknownEffect(
+  S.fromJsonString(CorpusArchiveMoveManifestRecord)
+);
+
+/**
+ * Summary counts returned by `corpus archive-move`.
+ *
+ * @example
+ * ```ts
+ * import { CorpusArchiveMoveSummary } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const summary = CorpusArchiveMoveSummary.make({
+ *   copiedRecords: NonNegativeInt.make(1),
+ *   filesCovered: NonNegativeInt.make(1),
+ *   provenanceOnlyRecords: NonNegativeInt.make(0),
+ *   sourcesMoved: NonNegativeInt.make(1)
+ * })
+ * console.log(summary.sourcesMoved) // 1
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CorpusArchiveMoveSummary extends S.Class<CorpusArchiveMoveSummary>($I`CorpusArchiveMoveSummary`)(
+  {
+    copiedRecords: NonNegativeInt,
+    filesCovered: NonNegativeInt,
+    provenanceOnlyRecords: NonNegativeInt,
+    sourcesMoved: NonNegativeInt,
+  },
+  $I.annote("CorpusArchiveMoveSummary", {
+    title: "Corpus Archive Move Summary",
+    description: "Summary counts returned by corpus archive-move after moving provenance-covered sources.",
+  })
+) {}
+
+/**
+ * Per-run counts included in the corpus catalog summary.
+ *
+ * @example
+ * ```ts
+ * import { CorpusCatalogRunSummary } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const run = CorpusCatalogRunSummary.make({
+ *   distinctDigests: NonNegativeInt.make(2),
+ *   newDistinctDigests: NonNegativeInt.make(1),
+ *   recordCount: NonNegativeInt.make(3),
+ *   runLabel: "2026-07-refresh"
+ * })
+ * console.log(run.newDistinctDigests) // 1
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CorpusCatalogRunSummary extends S.Class<CorpusCatalogRunSummary>($I`CorpusCatalogRunSummary`)(
+  {
+    distinctDigests: NonNegativeInt,
+    newDistinctDigests: NonNegativeInt,
+    recordCount: NonNegativeInt,
+    runLabel: S.NonEmptyString,
+  },
+  $I.annote("CorpusCatalogRunSummary", {
+    title: "Corpus Catalog Run Summary",
+    description: "Per-run record, distinct-digest, and incremental distinct-digest counts emitted by corpus catalog.",
+  })
+) {}
+
+/**
  * Summary counts returned by `corpus catalog`.
  *
  * @example
  * ```ts
- * import { CorpusCatalogSummary } from "@beep/repo-cli/commands/Corpus"
+ * import { CorpusCatalogRunSummary, CorpusCatalogSummary } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = CorpusCatalogSummary.make({
@@ -1049,6 +1498,14 @@ export const encodeCorpusSalvageSummaryJson = S.encodeUnknownEffect(S.fromJsonSt
  *   duplicateSets: NonNegativeInt.make(0),
  *   matchedRestorations: NonNegativeInt.make(1),
  *   redundantBytes: NonNegativeInt.make(0),
+ *   runs: [
+ *     CorpusCatalogRunSummary.make({
+ *       distinctDigests: NonNegativeInt.make(1),
+ *       newDistinctDigests: NonNegativeInt.make(1),
+ *       recordCount: NonNegativeInt.make(1),
+ *       runLabel: "base"
+ *     })
+ *   ],
  *   sourceFiles: NonNegativeInt.make(1),
  *   totalBytes: NonNegativeInt.make(11),
  *   unmatchedContentFiles: NonNegativeInt.make(0),
@@ -1066,6 +1523,7 @@ export class CorpusCatalogSummary extends S.Class<CorpusCatalogSummary>($I`Corpu
     duplicateSets: NonNegativeInt,
     matchedRestorations: NonNegativeInt,
     redundantBytes: NonNegativeInt,
+    runs: S.Array(CorpusCatalogRunSummary),
     sourceFiles: NonNegativeInt,
     totalBytes: NonNegativeInt,
     unmatchedContentFiles: NonNegativeInt,
@@ -1081,7 +1539,7 @@ export class CorpusCatalogSummary extends S.Class<CorpusCatalogSummary>($I`Corpu
  *
  * @example
  * ```ts
- * import { CorpusCatalogSummary, encodeCorpusCatalogSummaryJson } from "@beep/repo-cli/commands/Corpus"
+ * import { CorpusCatalogRunSummary, CorpusCatalogSummary, encodeCorpusCatalogSummaryJson } from "@beep/repo-cli/commands/Corpus"
  * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
@@ -1091,6 +1549,14 @@ export class CorpusCatalogSummary extends S.Class<CorpusCatalogSummary>($I`Corpu
  *   duplicateSets: NonNegativeInt.make(0),
  *   matchedRestorations: NonNegativeInt.make(0),
  *   redundantBytes: NonNegativeInt.make(0),
+ *   runs: [
+ *     CorpusCatalogRunSummary.make({
+ *       distinctDigests: NonNegativeInt.make(1),
+ *       newDistinctDigests: NonNegativeInt.make(1),
+ *       recordCount: NonNegativeInt.make(1),
+ *       runLabel: "base"
+ *     })
+ *   ],
  *   sourceFiles: NonNegativeInt.make(1),
  *   totalBytes: NonNegativeInt.make(11),
  *   unmatchedContentFiles: NonNegativeInt.make(0),
