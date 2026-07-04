@@ -66,6 +66,11 @@ const sourceLabelFlag = Flag.string("source").pipe(
   Flag.optional
 );
 /** @since 0.0.0 */
+const extractOutLabelFlag = Flag.string("out-label").pipe(
+  Flag.withDescription("Write extraction output under staging/<out-label> instead of staging/extract"),
+  Flag.optional
+);
+/** @since 0.0.0 */
 const extractConcurrencyFlag = Flag.integer("concurrency").pipe(
   Flag.withDefault(4),
   Flag.withDescription("Bounded number of concurrent extraction subprocesses")
@@ -156,6 +161,7 @@ const corpusExtractCommand = Command.make(
     includeDuplicates: includeDuplicatesFlag,
     java: javaFlag,
     maxFiles: maxFilesFlag,
+    outLabel: extractOutLabelFlag,
     overwrite: extractOverwriteFlag,
     pffexport: pffexportFlag,
     source: sourceLabelFlag,
@@ -168,6 +174,7 @@ const corpusExtractCommand = Command.make(
     includeDuplicates,
     java,
     maxFiles,
+    outLabel,
     overwrite,
     pffexport,
     source,
@@ -183,6 +190,7 @@ const corpusExtractCommand = Command.make(
         tikaJarPath: tikaJar,
         ...(O.isNone(java) ? {} : { javaPath: java.value }),
         ...(O.isNone(maxFiles) ? {} : { maxFiles: maxFiles.value }),
+        ...(O.isNone(outLabel) ? {} : { outLabel: outLabel.value }),
         ...(O.isNone(pffexport) ? {} : { pffexportPath: pffexport.value }),
         ...(O.isNone(source) ? {} : { sourceLabel: source.value }),
       })

@@ -1087,17 +1087,20 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
   const path = yield* Path.Path;
 
   const rawRoot = path.join(options.corpusRoot, "raw");
-  const manifestPath = path.join(rawRoot, "provenance.jsonl");
-  const outDir = path.join(options.corpusRoot, "staging", "extract");
+  const outDir = path.join(options.corpusRoot, "staging", options.outLabel ?? "extract");
   const childrenRoot = path.join(outDir, "children");
   const concurrency = Math.max(1, Math.floor(options.concurrency ?? 4));
 
   yield* prepareExtractOutputDir(outDir, childrenRoot, options.overwrite);
 
-  const manifestText = yield* fs
-    .readFileString(manifestPath)
-    .pipe(CorpusCommandError.mapError(`Failed reading provenance manifest "${manifestPath}".`));
-  const allRecords = yield* decodeProvenanceLines(manifestText);
+  const manifests = yield* discoverCatalogManifests(rawRoot);
+  const recordBatches = yield* Effect.forEach(manifests, (manifest) =>
+    fs
+      .readFileString(manifest.manifestPath)
+      .pipe(CorpusCommandError.mapError(`Failed reading provenance manifest "${manifest.manifestPath}".`))
+      .pipe(Effect.flatMap(decodeProvenanceLines))
+  );
+  const allRecords = A.flatten(recordBatches);
   const { duplicatesSkipped, selected } = selectExtractRecords(allRecords, options);
   yield* Console.log(
     `corpus extract: ${A.length(selected)} sources selected (${duplicatesSkipped} duplicate copies skipped, ${A.length(allRecords)} manifest records)`
