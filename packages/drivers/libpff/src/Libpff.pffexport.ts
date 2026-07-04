@@ -209,7 +209,9 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
 
       if (stat.type === "Directory") {
         const nested = yield* walkFiles(root, absolutePath);
-        collected.push(...nested);
+        for (const file of nested) {
+          collected.push(file);
+        }
       } else if (stat.type === "File") {
         collected.push({
           absolutePath,
