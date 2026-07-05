@@ -54,10 +54,11 @@ export type CorpusCopyMode = typeof CorpusCopyMode.Type;
  * @example
  * ```ts
  * import { CorpusCatalogDigestRow } from "@beep/repo-cli/commands/Corpus"
+ * import { Sha256Hex } from "@beep/schema"
  *
  * const row = CorpusCatalogDigestRow.make({
  *   destPath: "/tmp/corpus/raw/source-a/a.txt",
- *   sha256: "8ed3f6ad685b959ead7022518e1af76cd816f8e8ec7ccdda1ed4018e8f2223f8"
+ *   sha256: Sha256Hex.make("8ed3f6ad685b959ead7022518e1af76cd816f8e8ec7ccdda1ed4018e8f2223f8")
  * })
  * console.log(row.destPath)
  * ```
@@ -187,6 +188,7 @@ export const decodeCorpusProvenanceRecordJson = S.decodeUnknownEffect(S.fromJson
  * @example
  * ```ts
  * import { CorpusProvenanceRecord, encodeCorpusProvenanceRecordJson } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const record = CorpusProvenanceRecord.make({
@@ -197,8 +199,8 @@ export const decodeCorpusProvenanceRecordJson = S.decodeUnknownEffect(S.fromJson
  *   originPath: "/origin/a.txt",
  *   relativePath: "a.txt",
  *   salvagedAt: "2026-06-11T15:00:00Z",
- *   sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
- *   sizeBytes: 0,
+ *   sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+ *   sizeBytes: NonNegativeInt.make(0),
  *   sourceLabel: "source-a"
  * })
  *
@@ -215,6 +217,7 @@ export const encodeCorpusProvenanceRecordJson = S.encodeUnknownEffect(S.fromJson
  * @example
  * ```ts
  * import { CorpusCatalogSourceFileRecord } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
  *
  * const record = CorpusCatalogSourceFileRecord.make({
  *   copyMode: "copied",
@@ -226,8 +229,8 @@ export const encodeCorpusProvenanceRecordJson = S.encodeUnknownEffect(S.fromJson
  *   relativePath: "a.txt",
  *   runLabel: "base",
  *   salvagedAt: "2026-06-11T15:00:00Z",
- *   sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
- *   sizeBytes: 0,
+ *   sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+ *   sizeBytes: NonNegativeInt.make(0),
  *   sourceLabel: "source-a"
  * })
  * console.log(record.runLabel) // "base"
@@ -266,6 +269,7 @@ export class CorpusCatalogSourceFileRecord extends S.Class<CorpusCatalogSourceFi
  * @example
  * ```ts
  * import { CorpusCatalogSourceFileRecord, encodeCorpusCatalogSourceFileRecordJson } from "@beep/repo-cli/commands/Corpus"
+ * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const record = CorpusCatalogSourceFileRecord.make({
@@ -279,8 +283,8 @@ export class CorpusCatalogSourceFileRecord extends S.Class<CorpusCatalogSourceFi
  *   relativePath: "a.txt",
  *   runLabel: "refresh",
  *   salvagedAt: "2026-07-01T15:00:00Z",
- *   sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
- *   sizeBytes: 0,
+ *   sha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+ *   sizeBytes: NonNegativeInt.make(0),
  *   sourceLabel: "source-b"
  * })
  *

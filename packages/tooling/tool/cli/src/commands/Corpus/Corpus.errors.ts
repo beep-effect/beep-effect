@@ -87,10 +87,11 @@ export class CorpusArchiveMoveUncoveredFileError extends TaggedErrorClass<Corpus
  * @example
  * ```ts
  * import { CorpusArchiveMoveDigestMismatchError } from "@beep/repo-cli/commands/Corpus/index"
+ * import { Sha256Hex } from "@beep/schema"
  *
  * const error = CorpusArchiveMoveDigestMismatchError.make({
- *   actualSha256: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
- *   expectedSha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *   actualSha256: Sha256Hex.make("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"),
+ *   expectedSha256: Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
  *   message: "Digest mismatch.",
  *   originPath: "/tmp/source-a/a.txt",
  *   rawPath: "/tmp/corpus/raw/source-a/a.txt"
