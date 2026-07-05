@@ -51,6 +51,9 @@
     "packages/canvas/client/**",
     "packages/canvas/ui/**",
     "**/test/fixtures/mock-monorepo/**",
+    // Identity-as-IRI exploration prototype assets are packet evidence, not
+    // package/app entrypoints in the production dead-code graph.
+    "explorations/identity-as-iri/assets/ontology-prototype/**",
     // @beep/html: generated AST (one TaggedClass per HTML element) is intentionally
     // repetitive; the codegen script and vendored spec data are tooling, not
     // hand-authored source subject to dead-code/duplication/complexity review.
