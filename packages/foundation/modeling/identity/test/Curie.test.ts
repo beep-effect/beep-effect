@@ -49,25 +49,25 @@ describe("CURIE codec", () => {
     );
   });
 
-  it("decodes and encodes known CURIEs", async () => {
-    await expect(Effect.runPromise(decodeCurie("skos:prefLabel"))).resolves.toBe(
-      "http://www.w3.org/2004/02/skos/core#prefLabel"
-    );
-    await expect(Effect.runPromise(encodeIri("http://www.w3.org/2004/02/skos/core#prefLabel"))).resolves.toBe(
-      "skos:prefLabel"
-    );
-  });
+  it.effect("decodes and encodes known CURIEs", () =>
+    Effect.gen(function* () {
+      expect(yield* decodeCurie("skos:prefLabel")).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
+      expect(yield* encodeIri("http://www.w3.org/2004/02/skos/core#prefLabel")).toBe("skos:prefLabel");
+    })
+  );
 
-  it("fails schema decoding for unknown prefixes and known-prefix unknown terms", async () => {
-    await expect(Effect.runPromise(decodeCurie("nope:term"))).rejects.toMatchObject({ _tag: "SchemaError" });
-    await expect(Effect.runPromise(decodeCurie("skos:nope"))).rejects.toMatchObject({ _tag: "SchemaError" });
-  });
+  it.effect("fails schema decoding for unknown prefixes and known-prefix unknown terms", () =>
+    Effect.gen(function* () {
+      expect((yield* Effect.flip(decodeCurie("nope:term")))._tag).toBe("SchemaError");
+      expect((yield* Effect.flip(decodeCurie("skos:nope")))._tag).toBe("SchemaError");
+    })
+  );
 
-  it("fails schema encoding for unregistered IRIs", async () => {
-    await expect(Effect.runPromise(encodeIri("http://www.w3.org/2004/02/skos/core#nope"))).rejects.toMatchObject({
-      _tag: "SchemaError",
-    });
-  });
+  it.effect("fails schema encoding for unregistered IRIs", () =>
+    Effect.gen(function* () {
+      expect((yield* Effect.flip(encodeIri("http://www.w3.org/2004/02/skos/core#nope")))._tag).toBe("SchemaError");
+    })
+  );
 
   it("expands inverse predicates", () => {
     expect(expandPredicate("^rdfs:subClassOf")).toEqual({

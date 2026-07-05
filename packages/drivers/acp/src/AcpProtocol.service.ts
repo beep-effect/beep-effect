@@ -406,7 +406,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     Queue.offer(notificationQueue, notification).pipe(
       Effect.andThen(
         options.onNotification !== undefined
-          ? options.onNotification(notification).pipe(Effect.catch(() => Effect.void))
+          ? options.onNotification(notification).pipe(Effect.ignore)
           : Effect.void
       ),
       Effect.asVoid

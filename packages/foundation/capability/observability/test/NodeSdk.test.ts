@@ -4,7 +4,7 @@ import {
   makeNodeSdkServerTraceConfig,
   ServerObservabilityConfig,
 } from "@beep/observability/server";
-import * as OtelTracer from "@effect/opentelemetry/Tracer";
+import * as OtelTracer from "@effect/opentelemetry/OtelTracer";
 import { InMemorySpanExporter, SimpleSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { Effect, Layer } from "effect";
 import { describe, expect, it } from "vitest";

@@ -53,7 +53,8 @@ describe("CoreVocab runtime invariants", () => {
 
   it("has no duplicate terms", () => {
     for (const [prefix, vocab] of Object.entries(CoreVocab)) {
-      const duplicates = vocab.terms.filter((term, index) => vocab.terms.indexOf(term) !== index);
+      const terms: ReadonlyArray<string> = vocab.terms;
+      const duplicates = terms.filter((term, index) => terms.indexOf(term) !== index);
 
       expect(duplicates, prefix).toEqual([]);
     }

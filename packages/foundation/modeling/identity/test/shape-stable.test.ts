@@ -256,7 +256,10 @@ const isObjectLike = (value: unknown): value is object =>
 const getProperty = (value: unknown, key: PropertyKey): unknown =>
   isObjectLike(value) ? Reflect.get(value, key) : undefined;
 
-const expectFunction = (value: unknown, label: string): asserts value is (...args: Array<unknown>) => unknown => {
+const expectFunction: (value: unknown, label: string) => asserts value is (...args: Array<unknown>) => unknown = (
+  value,
+  label
+) => {
   expect(typeof value, label).toBe("function");
 };
 
@@ -265,7 +268,7 @@ const callFunction = (value: unknown, label: string, ...args: Array<unknown>): u
   return value(...args);
 };
 
-const expectRecord = (value: unknown, label: string): asserts value is Record<string, unknown> => {
+const expectRecord: (value: unknown, label: string) => asserts value is Record<string, unknown> = (value, label) => {
   expect(isObjectLike(value), label).toBe(true);
 };
 

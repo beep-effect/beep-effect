@@ -191,10 +191,7 @@ const releaseConnection = Effect.fn("DuckDb.releaseConnection")(
         instance.closeSync();
       },
       catch: thunkUndefined,
-    }).pipe(
-      Effect.asVoid,
-      Effect.catch(() => Effect.void)
-    )
+    }).pipe(Effect.ignore)
 );
 
 const runOnConnection = Effect.fn("DuckDb.runOnConnection")(
@@ -350,9 +347,7 @@ const makeConnectionClient = (
               );
             }
 
-            yield* runOnConnection("withTransaction", options, connection, "ROLLBACK").pipe(
-              Effect.catch(() => Effect.void)
-            );
+            yield* runOnConnection("withTransaction", options, connection, "ROLLBACK").pipe(Effect.ignore);
             return yield* Effect.failCause(exit.cause);
           })
         ).pipe(

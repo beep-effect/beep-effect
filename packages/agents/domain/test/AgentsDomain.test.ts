@@ -22,6 +22,7 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { PlatformError } from "effect";
@@ -40,6 +41,7 @@ const assistantContentSchemaId = (schema: {
 };
 const legacyTurnImportPattern = /^\s*import\s+(?:type\s+)?[\s\S]*?\s+from\s+["']@beep\/agents-domain\/turn["'];?/gmu;
 const ignoredAgentsDirEntries = new Set(["dist", "docs", "node_modules"]);
+const decodeJsonPointerSegment = (segment: string): string => segment.replaceAll("~1", "/").replaceAll("~0", "~");
 const isIgnoredAgentsDirEntry = (entry: string): boolean => ignoredAgentsDirEntries.has(entry) || entry.startsWith(".");
 const isAgentsSourceFile = (entryPath: string, sep: string): boolean =>
   entryPath.endsWith(".ts") && entryPath.includes(`${sep}src${sep}`);
@@ -88,6 +90,7 @@ describe("@beep/agents-domain", () => {
 
   it("preserves assistant content exports from the canonical value-object path", () => {
     const assistantContentDocument = S.toJsonSchemaDocument(AssistantContent);
+    const assistantContentSchema = assistantContentDocument.schema;
 
     expect(RootAssistantBlock).toBe(AssistantBlock);
     expect(RootAssistantContent).toBe(AssistantContent);
@@ -95,8 +98,16 @@ describe("@beep/agents-domain", () => {
     expect(AssistantContentSubpath.AssistantContent).toBe(AssistantContent);
     expect(assistantContentSchemaId(RootAssistantBlock)).toBe(assistantContentSchemaId(AssistantBlock));
     expect(assistantContentSchemaId(RootAssistantContent)).toBe(assistantContentSchemaId(AssistantContent));
-    expect(assistantContentDocument.schema).toStrictEqual({ $ref: "#/$defs/AssistantContent" });
-    expect(assistantContentDocument.definitions).toHaveProperty("AssistantContent");
+    expect(assistantContentSchema).toHaveProperty("$ref");
+    if (!("$ref" in assistantContentSchema) || typeof assistantContentSchema.$ref !== "string") {
+      throw new Error("expected AssistantContent JSON schema document root to be a $ref");
+    }
+
+    const assistantContentDefinitionName = decodeJsonPointerSegment(
+      assistantContentSchema.$ref.slice("#/$defs/".length)
+    );
+    expect(assistantContentSchema.$ref).toMatch(/^#\/\$defs\/.+AssistantContent$/);
+    expect(R.has(assistantContentDocument.definitions, assistantContentDefinitionName)).toBe(true);
     expect(S.toJsonSchemaDocument(RootAssistantBlock)).toStrictEqual(S.toJsonSchemaDocument(AssistantBlock));
     expect(S.toJsonSchemaDocument(AssistantContentSubpath.AssistantBlock)).toStrictEqual(
       S.toJsonSchemaDocument(AssistantBlock)

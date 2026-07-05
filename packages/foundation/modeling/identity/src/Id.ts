@@ -696,9 +696,7 @@ export type IdentityAnnotationResult<
   Extras extends object = {},
   Authority extends string | undefined = undefined,
   Prefix extends string | undefined = undefined,
-> = IdentityAnnotation<Value, Identifier> &
-  IdentityProjection<Value, Authority, Prefix> &
-  Omit<Extras, IdentityAnnotationMetadataKeys>;
+> = IdentityAnnotation<Value, Identifier, Authority, Prefix> & Omit<Extras, IdentityAnnotationMetadataKeys>;
 
 type SchemaPath<Struct extends object> = Extract<Paths<Struct>, string>;
 
