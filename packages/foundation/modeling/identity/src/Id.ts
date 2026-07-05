@@ -7,7 +7,7 @@
  * and are validated at construction time.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { make } from "@beep/identity"
  *
  * // Create a package-level identity composer
@@ -95,7 +95,7 @@ const preserveSchemaStatics = <Schema extends S.Top>(
  * must be statically deterministic.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { make, IdentityInterpolationError } from "@beep/identity"
  *
  * const { $MyPkgId } = make("my-pkg")
@@ -131,7 +131,7 @@ export class IdentityInterpolationError extends S.TaggedErrorClass<IdentityInter
  * Template tags must be called with exactly one static string segment.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { IdentitySegmentCountError } from "@beep/identity"
  *
  * const error = IdentitySegmentCountError.make()
@@ -166,7 +166,7 @@ export class IdentitySegmentCountError extends S.TaggedErrorClass<IdentitySegmen
  * Current version of the `@beep/identity` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { VERSION } from "@beep/identity"
  *
  * console.log(VERSION) // "0.0.0"
@@ -184,7 +184,7 @@ export const VERSION = S.decodeUnknownSync(IdentityVersion)("0.0.0");
  * invalid identity paths at compile time.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { SegmentValue } from "@beep/identity"
  *
  * type Valid = SegmentValue<"UserService">
@@ -318,7 +318,7 @@ type StripLeadingAt<Value extends string> = Value extends `@${infer Rest}` ? Res
  * Converts `"my-service"` to `"My Service"` and `"user_account"` to `"User Account"`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { TitleFromIdentifier } from "@beep/identity"
  *
  * type Title = TitleFromIdentifier<"my-service"> // "My Service"
@@ -338,7 +338,7 @@ export type TitleFromIdentifier<Identifier extends string> = JoinTitleWords<
  * `"https://ns.beep.sh/"`. Widened string inputs intentionally widen to `string`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { IriFromIdentity } from "@beep/identity"
  *
  * type Iri = IriFromIdentity<"https://ns.beep.sh/", "@beep/schema/Entity">
@@ -364,7 +364,7 @@ export type IriFromIdentity<Authority extends string, Identity extends string> =
  * string inputs intentionally widen to `string`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { CurieFromIdentity } from "@beep/identity"
  *
  * type Curie = CurieFromIdentity<"beep", "@beep/schema/Entity">
@@ -391,7 +391,7 @@ export type CurieFromIdentity<Prefix extends string, Identity extends string> = 
  * word boundaries.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { SlugFromIdentifier } from "@beep/identity"
  *
  * type Slug = SlugFromIdentifier<"@beep/Ontology.models/HttpUrl">
@@ -432,7 +432,7 @@ type HasInvalidModuleChar<S extends string> = S extends `${string}${InvalidModul
  * Resolves to `never` when violated.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { ModuleSegmentValue } from "@beep/identity"
  *
  * type Valid = ModuleSegmentValue<"auth">
@@ -451,7 +451,7 @@ export type ModuleSegmentValue<S extends TString.NonEmpty> =
  * `"my-service"` becomes `"MyServiceId"`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { ModuleAccessor } from "@beep/identity"
  *
  * type Acc = ModuleAccessor<"my-service"> // "MyServiceId"
@@ -468,7 +468,7 @@ export type ModuleAccessor<S extends TString.NonEmpty> = `${PascalCaseValue<Modu
  * `"my-service"` becomes `"$MyServiceId"`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { TaggedAccessor } from "@beep/identity"
  *
  * type Tag = TaggedAccessor<"my-service"> // "$MyServiceId"
@@ -483,7 +483,7 @@ export type TaggedAccessor<S extends TString.NonEmpty> = `$${ModuleAccessor<S>}`
  * Branded string type for identity values, preventing accidental use of raw strings.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { IdentityString } from "@beep/identity"
  *
  * declare const id: IdentityString<"@beep/utils/Service">
@@ -500,7 +500,7 @@ export type IdentityString<Value extends string> = Value & {
  * Branded symbol type for identity values, created via `Symbol.for` for interning.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { IdentitySymbol } from "@beep/identity"
  *
  * declare const sym: IdentitySymbol<"@beep/utils">
@@ -520,7 +520,7 @@ export type IdentitySymbol<Value extends string> = symbol & {
  * and other Effect Schema annotation keys alongside identity metadata.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { SchemaAnnotationExtras } from "@beep/identity"
  *
  * type Extras = SchemaAnnotationExtras<string>
@@ -538,7 +538,7 @@ export type SchemaAnnotationExtras<
  * Annotation fields accepted by `annoteKey`, mirroring `S.Annotations.Key`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { KeyAnnotationExtras } from "@beep/identity"
  *
  * type Extras = KeyAnnotationExtras<string>
@@ -556,7 +556,7 @@ export type KeyAnnotationExtras<SchemaType> = S.Annotations.Key<SchemaType>;
  * its published `.d.ts` does not currently export the upstream `Encoding` alias.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { HttpApiEncoding } from "@beep/identity"
  *
  * const enc: HttpApiEncoding = { _tag: "Json", contentType: "application/json" }
@@ -583,7 +583,7 @@ export type HttpApiEncoding =
  * Supports optional `httpApiStatus` and `~httpApiEncoding` for Effect HTTP API annotations.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { HttpAnnotationExtras } from "@beep/identity"
  *
  * type Extras = HttpAnnotationExtras<string>
@@ -606,7 +606,7 @@ export type HttpAnnotationExtras<
  * Combines key-level and HTTP-level annotation fields into a single constraint.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { IdentityAnyAnnotationExtras } from "@beep/identity"
  *
  * type Extras = IdentityAnyAnnotationExtras<string>
@@ -627,7 +627,7 @@ export type IdentityAnyAnnotationExtras<
  * human-readable `title` derived from the local identifier segment.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { IdentityAnnotation } from "@beep/identity"
  *
  * type Ann = IdentityAnnotation<"@beep/utils/User", "User">
@@ -681,7 +681,7 @@ type IdentityAnnotationMetadataKeys = "identifier" | "schemaId" | "title" | "iri
  * with identity metadata keys taking precedence.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { IdentityAnnotationResult } from "@beep/identity"
  *
  * type Result = IdentityAnnotationResult<"@beep/utils/User", "User">
@@ -716,7 +716,7 @@ type AnnotatedSchema<Schema extends S.Top> = Schema["Rebuild"] & SchemaStatics<S
  * produced by calling `compose` with one or more module segment names.
  *
  * @example
- * ```typescript
+ * ```ts
  * import type { TaggedModuleRecord } from "@beep/identity"
  *
  * type Modules = TaggedModuleRecord<"@beep/pkg", readonly ["auth", "billing"]>
@@ -749,7 +749,7 @@ export type TaggedModuleRecord<
  * - Batch-create named child composers (`compose`)
  *
  * @example
- * ```typescript
+ * ```ts
  * import { make } from "@beep/identity"
  *
  * // Create a root composer for "my-pkg"
@@ -798,7 +798,7 @@ export interface IdentityComposer<
    * similar constructors that accept an annotation record.
    *
    * @example
-   * ```typescript
+   * ```ts
    * import { make } from "@beep/identity"
    *
    * const { $MyPkgId } = make("my-pkg")
@@ -839,6 +839,21 @@ export interface IdentityComposer<
    *
    * When called with zero arguments, returns a curried builder that constrains
    * the identifier to valid paths within `Parent`.
+   *
+   * @example
+   * ```ts
+   * import { make } from "@beep/identity"
+   * import * as S from "effect/Schema";
+   * const { $MyPkgId } = make("my-pkg")
+   * const modules = $MyPkgId.compose("auth", "billing")
+   *
+   * const $I = modules.$AuthId.create("Session")
+   * console.log($I.string())// "@beep/my-pkg/auth/Session"
+   *
+   * const MyStruct = S.Struct({
+   *  prop1: S.String.annotateKey($I.annoteKey("MyStruct.prop1", { description: "A string" }))
+   * })
+   * ```
    *
    * @since 0.0.0
    * @category combinators
@@ -885,7 +900,7 @@ export interface IdentityComposer<
    * mapped to child composers rooted at `{Value}/{segment}`.
    *
    * @example
-   * ```typescript
+   * ```ts
    * import { make } from "@beep/identity"
    *
    * const { $MyPkgId } = make("my-pkg")
@@ -909,7 +924,7 @@ export interface IdentityComposer<
    * composer that supports further nesting, annotation, and composition.
    *
    * @example
-   * ```typescript
+   * ```ts
    * import { make } from "@beep/identity"
    *
    * const { $MyPkgId } = make("my-pkg")
@@ -929,7 +944,7 @@ export interface IdentityComposer<
    * CURIE projection for this composer's current path, or `undefined` when unbound.
    *
    * @example
-   * ```typescript
+   * ```ts
    * import { make } from "@beep/identity"
    *
    * const { $BeepId } = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" })
@@ -959,7 +974,7 @@ export interface IdentityComposer<
    * exact literals from the configured authority.
    *
    * @example
-   * ```typescript
+   * ```ts
    * import { make } from "@beep/identity"
    *
    * const { $BeepId } = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" })
@@ -976,7 +991,7 @@ export interface IdentityComposer<
    * Create a child identity string by appending one segment.
    *
    * @example
-   * ```typescript
+   * ```ts
    * import { make } from "@beep/identity"
    *
    * const { $MyPkgId } = make("my-pkg")
@@ -995,7 +1010,7 @@ export interface IdentityComposer<
    * Rebind IRI and CURIE projections without changing the identity path or symbol.
    *
    * @example
-   * ```typescript
+   * ```ts
    * import { make } from "@beep/identity"
    *
    * const { $BeepId } = make("beep", { authority: "https://ns.beep.sh/", prefix: "beep" })
@@ -1016,7 +1031,7 @@ export interface IdentityComposer<
    * Kebab-case slug projection for this composer's current path.
    *
    * @example
-   * ```typescript
+   * ```ts
    * import { make } from "@beep/identity"
    *
    * const { $BeepId } = make("beep")
@@ -1059,7 +1074,7 @@ export interface IdentityComposer<
    * Must be called with a single static string literal and no interpolations.
    *
    * @example
-   * ```typescript
+   * ```ts
    * import { make } from "@beep/identity"
    *
    * const { $MyPkgId } = make("my-pkg")
@@ -1543,7 +1558,7 @@ type MakeReturn<
  * the root {@link IdentityComposer} for that package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { make } from "@beep/identity"
  *
  * // Bare name -- "@beep/" prefix is added automatically
@@ -1553,7 +1568,7 @@ type MakeReturn<
  * ```
  *
  * @example
- * ```typescript
+ * ```ts
  * import { make } from "@beep/identity"
  *
  * // Full scoped name works too

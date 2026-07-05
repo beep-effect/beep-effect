@@ -1,4 +1,5 @@
 import { fileURLToPath } from "node:url";
+import { provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem } from "effect";
@@ -22,6 +23,6 @@ describe("create-package identity template", () => {
       expect(handlerSource).toContain(
         'sourceFile.getVariableDeclaration("generatedComposers") ?? sourceFile.getVariableDeclarationOrThrow("composers")'
       );
-    }).pipe(Effect.provide(NodeServices.layer))
+    }).pipe(provideScopedLayer(NodeServices.layer))
   );
 });

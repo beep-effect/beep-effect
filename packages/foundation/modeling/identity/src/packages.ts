@@ -6,7 +6,7 @@
  * error tags, and service keys without manually calling `make`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $I, $SchemaId } from "@beep/identity/packages"
  *
  * const serviceId = $SchemaId`TenantService`
@@ -27,7 +27,7 @@ import * as Identity from "./Id.ts";
  * All other package composers are derived from this root via `compose`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $I } from "@beep/identity/packages"
  *
  * const id = $I.make("CustomSegment")
@@ -158,7 +158,7 @@ const composers = {
  * Identity composer for the `@beep/data` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $DataId } from "@beep/identity"
  *
  * const id = $DataId.make("Calendar")
@@ -173,7 +173,7 @@ export const $DataId = composers.$DataId;
  * Identity composer for the `@beep/identity` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $IdentityId } from "@beep/identity"
  *
  * const id = $IdentityId.make("Composer")
@@ -203,7 +203,7 @@ export const $SchemaId = composers.$SchemaId;
  * Identity composer for the `@beep/provenance` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $ProvenanceId } from "@beep/identity"
  *
  * const id = $ProvenanceId.make("TextAnchor")
@@ -218,7 +218,7 @@ export const $ProvenanceId: Identity.IdentityComposer<"@beep/provenance"> = comp
  * Identity composer for the `@beep/rdf` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $RdfId } from "@beep/identity"
  *
  * const id = $RdfId.make("Iri")
@@ -233,7 +233,7 @@ export const $RdfId: Identity.IdentityComposer<"@beep/rdf"> = composers.$RdfId;
  * Identity composer for the `@beep/ontology` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $OntologyId } from "@beep/identity/packages"
  *
  * const id = $OntologyId.make("Ontology")
@@ -248,7 +248,7 @@ export const $OntologyId: Identity.IdentityComposer<"@beep/ontology"> = composer
  * Identity composer for the `@beep/types` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $TypesId } from "@beep/identity"
  *
  * const id = $TypesId.make("NonEmpty")
@@ -263,7 +263,7 @@ export const $TypesId = composers.$TypesId;
  * Identity composer for the `@beep/utils` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $UtilsId } from "@beep/identity"
  *
  * const id = $UtilsId.make("Retry")
@@ -297,7 +297,7 @@ export const $UiId = composers.$UiId;
  * Identity composer for the `@beep/repo-ai-metrics` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $RepoAiMetricsId } from "@beep/identity"
  *
  * const id = $RepoAiMetricsId.make("AgentTask")
@@ -312,7 +312,7 @@ export const $RepoAiMetricsId = composers.$RepoAiMetricsId;
  * Identity composer for the `@beep/repo-cli` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $RepoCliId } from "@beep/identity"
  *
  * const id = $RepoCliId.make("Command")
@@ -327,7 +327,7 @@ export const $RepoCliId = composers.$RepoCliId;
  * Identity composer for the `@beep/repo-configs` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $RepoConfigsId } from "@beep/identity"
  *
  * const id = $RepoConfigsId.make("Command")
@@ -342,7 +342,7 @@ export const $RepoConfigsId = composers.$RepoConfigsId;
  * Identity composer for the `@beep/repo-utils` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $RepoUtilsId } from "@beep/identity"
  *
  * const id = $RepoUtilsId.make("FileTree")
@@ -357,7 +357,7 @@ export const $RepoUtilsId = composers.$RepoUtilsId;
  * Identity composer for the `@beep/test-utils` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $TestUtilsId } from "@beep/identity"
  *
  * const id = $TestUtilsId.make("Fixture")
@@ -374,7 +374,7 @@ export const $TestUtilsId = composers.$TestUtilsId;
  * Identity composer for the `@beep/shared-domain` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $SharedDomainId } from "@beep/identity"
  *
  * const id = $SharedDomainId.make("TenantId")
@@ -389,7 +389,7 @@ export const $SharedDomainId = composers.$SharedDomainId;
  * Identity composer for the `@beep/shared-tables` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $SharedTablesId } from "@beep/identity"
  *
  * const id = $SharedTablesId.make("AuditColumns")
@@ -404,7 +404,7 @@ export const $SharedTablesId = composers.$SharedTablesId;
  * Identity composer for the `@beep/semantic-web` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $SemanticWebId } from "@beep/identity"
  *
  * const id = $SemanticWebId.make("Triple")
@@ -419,7 +419,7 @@ export const $SemanticWebId: Identity.IdentityComposer<"@beep/semantic-web"> = c
  * Identity composer for the `@beep/nlp` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $NlpId } from "@beep/identity"
  *
  * const id = $NlpId.make("Tokenizer")
@@ -434,7 +434,7 @@ export const $NlpId: Identity.IdentityComposer<"@beep/nlp"> = composers.$NlpId;
  * Identity composer for the `@beep/nlp-processing` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $NlpProcessingId } from "@beep/identity/packages"
  *
  * const id = $NlpProcessingId.make("Tokenizer")
@@ -449,7 +449,7 @@ export const $NlpProcessingId: Identity.IdentityComposer<"@beep/nlp-processing">
  * Identity composer for the `@beep/langextract` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $LangExtractId } from "@beep/identity"
  *
  * const id = $LangExtractId.make("Extraction")
@@ -464,7 +464,7 @@ export const $LangExtractId: Identity.IdentityComposer<"@beep/langextract"> = co
  * Identity composer for the `@beep/observability` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $ObservabilityId } from "@beep/identity"
  *
  * const id = $ObservabilityId.make("Tracer")
@@ -479,7 +479,7 @@ export const $ObservabilityId: Identity.IdentityComposer<"@beep/observability"> 
  * Identity composer for the `@beep/colors` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $ColorsId } from "@beep/identity"
  *
  * const id = $ColorsId.make("Palette")
@@ -494,7 +494,7 @@ export const $ColorsId: Identity.IdentityComposer<"@beep/colors"> = composers.$C
  * Identity composer for the `@beep/chalk` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $ChalkId } from "@beep/identity"
  *
  * const id = $ChalkId.make("Formatter")
@@ -509,7 +509,7 @@ export const $ChalkId: Identity.IdentityComposer<"@beep/chalk"> = composers.$Cha
  * Identity composer for the `@beep/repo-docgen` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $RepoDocgenId } from "@beep/identity"
  *
  * const id = $RepoDocgenId.make("Generator")
@@ -524,7 +524,7 @@ export const $RepoDocgenId: Identity.IdentityComposer<"@beep/repo-docgen"> = com
  * Identity composer for the `@beep/infra` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $InfraId } from "@beep/identity"
  *
  * const id = $InfraId.make("Deploy")
@@ -541,7 +541,7 @@ export const $InfraId: Identity.IdentityComposer<"@beep/infra"> = composers.$Inf
  * Identity composer for the `@beep/workspace-domain` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $WorkspaceDomainId } from "@beep/identity"
  *
  * const id = $WorkspaceDomainId.make("ContextPacket")
@@ -556,7 +556,7 @@ export const $WorkspaceDomainId: Identity.IdentityComposer<"@beep/workspace-doma
  * Identity composer for the `@beep/epistemic-domain` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $EpistemicDomainId } from "@beep/identity"
  *
  * const id = $EpistemicDomainId.make("Evidence")
@@ -571,7 +571,7 @@ export const $EpistemicDomainId: Identity.IdentityComposer<"@beep/epistemic-doma
  * Identity composer for the `@beep/epistemic-use-cases` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $EpistemicUseCasesId } from "@beep/identity"
  *
  * const id = $EpistemicUseCasesId.make("ClaimGate")
@@ -588,7 +588,7 @@ export const $EpistemicUseCasesId: Identity.IdentityComposer<"@beep/epistemic-us
  * Identity composer for the `@beep/agents-domain` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $AgentsDomainId } from "@beep/identity"
  *
  * const id = $AgentsDomainId.make("Agent")
@@ -603,7 +603,7 @@ export const $AgentsDomainId: Identity.IdentityComposer<"@beep/agents-domain"> =
  * Identity composer for the `@beep/agents-server` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $AgentsServerId } from "@beep/identity"
  *
  * const id = $AgentsServerId.make("Agent")
@@ -618,7 +618,7 @@ export const $AgentsServerId: Identity.IdentityComposer<"@beep/agents-server"> =
  * Identity composer for the `@beep/agents-use-cases` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $AgentsUseCasesId } from "@beep/identity"
  *
  * const id = $AgentsUseCasesId.make("RuntimeScope")
@@ -633,7 +633,7 @@ export const $AgentsUseCasesId: Identity.IdentityComposer<"@beep/agents-use-case
  * Identity composer for the `@beep/law-practice-domain` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $LawPracticeDomainId } from "@beep/identity"
  *
  * const id = $LawPracticeDomainId.make("Matter")
@@ -649,7 +649,7 @@ export const $LawPracticeDomainId: Identity.IdentityComposer<"@beep/law-practice
  * Identity composer for the `@beep/law-practice-use-cases` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $LawPracticeUseCasesId } from "@beep/identity"
  *
  * const id = $LawPracticeUseCasesId.make("OfficeActionReview")
@@ -666,7 +666,7 @@ export const $LawPracticeUseCasesId: Identity.IdentityComposer<"@beep/law-practi
  * Identity composer for the `@beep/law-practice-server` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $LawPracticeServerId } from "@beep/identity"
  *
  * const id = $LawPracticeServerId.make("LawPracticeServerLive")
@@ -683,7 +683,7 @@ export const $LawPracticeServerId: Identity.IdentityComposer<"@beep/law-practice
  * Identity composer for the `@beep/professional-desktop` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $ProfessionalDesktopId } from "@beep/identity"
  *
  * const id = $ProfessionalDesktopId.make("Workbench")
@@ -826,7 +826,7 @@ export const $PostgresId: Identity.IdentityComposer<"@beep/postgres"> = composer
  * Identity composer for `@beep/anthropic`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $AnthropicId } from "@beep/identity"
  *
  * const id = $AnthropicId.make("Anthropic")
@@ -874,7 +874,7 @@ export const $XaiId: Identity.IdentityComposer<"@beep/xai"> = composers.$XaiId;
  * Identity composer for `@beep/acp`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $AcpId } from "@beep/identity"
  *
  * const id = $AcpId.make("AcpClient")
@@ -890,7 +890,7 @@ export const $AcpId: Identity.IdentityComposer<"@beep/acp"> = composers.$AcpId;
  * Identity composer for `@beep/openai-compat`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $OpenaiCompatId } from "@beep/identity"
  *
  * const id = $OpenaiCompatId.make("LanguageModel")
@@ -906,7 +906,7 @@ export const $OpenaiCompatId: Identity.IdentityComposer<"@beep/openai-compat"> =
  * Identity composer for `@beep/workspace-tables`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $WorkspaceTablesId } from "@beep/identity"
  *
  * const id = $WorkspaceTablesId.make("WorkspaceTable")
@@ -922,7 +922,7 @@ export const $WorkspaceTablesId: Identity.IdentityComposer<"@beep/workspace-tabl
  * Identity composer for `@beep/workspace-use-cases`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $WorkspaceUseCasesId } from "@beep/identity"
  *
  * const id = $WorkspaceUseCasesId.make("ThreadStore")
@@ -939,7 +939,7 @@ export const $WorkspaceUseCasesId: Identity.IdentityComposer<"@beep/workspace-us
  * Identity composer for `@beep/workspace-server`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $WorkspaceServerId } from "@beep/identity"
  *
  * const id = $WorkspaceServerId.make("ThreadStoreLive")
@@ -955,7 +955,7 @@ export const $WorkspaceServerId: Identity.IdentityComposer<"@beep/workspace-serv
  * Identity composer for `@beep/architecture-lab-domain`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $ArchitectureLabDomainId } from "@beep/identity"
  *
  * const id = $ArchitectureLabDomainId.make("WorkItem")
@@ -972,7 +972,7 @@ export const $ArchitectureLabDomainId: Identity.IdentityComposer<"@beep/architec
  * Identity composer for `@beep/architecture-lab-use-cases`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $ArchitectureLabUseCasesId } from "@beep/identity"
  *
  * const id = $ArchitectureLabUseCasesId.make("WorkItemService")
@@ -989,7 +989,7 @@ export const $ArchitectureLabUseCasesId: Identity.IdentityComposer<"@beep/archit
  * Identity composer for `@beep/architecture-lab-config`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $ArchitectureLabConfigId } from "@beep/identity"
  *
  * const id = $ArchitectureLabConfigId.make("Config")
@@ -1006,7 +1006,7 @@ export const $ArchitectureLabConfigId: Identity.IdentityComposer<"@beep/architec
  * Identity composer for `@beep/architecture-lab-server`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $ArchitectureLabServerId } from "@beep/identity"
  *
  * const id = $ArchitectureLabServerId.make("Layer")
@@ -1023,7 +1023,7 @@ export const $ArchitectureLabServerId: Identity.IdentityComposer<"@beep/architec
  * Identity composer for `@beep/architecture-lab-tables`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $ArchitectureLabTablesId } from "@beep/identity"
  *
  * const id = $ArchitectureLabTablesId.make("WorkItemTable")
@@ -1040,7 +1040,7 @@ export const $ArchitectureLabTablesId: Identity.IdentityComposer<"@beep/architec
  * Identity composer for `@beep/architecture-lab-client`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $ArchitectureLabClientId } from "@beep/identity"
  *
  * const id = $ArchitectureLabClientId.make("WorkItemClient")
@@ -1057,7 +1057,7 @@ export const $ArchitectureLabClientId: Identity.IdentityComposer<"@beep/architec
  * Identity composer for `@beep/architecture-lab-ui`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $ArchitectureLabUiId } from "@beep/identity"
  *
  * const id = $ArchitectureLabUiId.make("WorkItemViewModel")
@@ -1074,7 +1074,7 @@ export const $ArchitectureLabUiId: Identity.IdentityComposer<"@beep/architecture
  * Identity composer for `@beep/architecture-lab-proof`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $ArchitectureLabProofId } from "@beep/identity"
  *
  * const id = $ArchitectureLabProofId.make("Proof")
@@ -1091,7 +1091,7 @@ export const $ArchitectureLabProofId: Identity.IdentityComposer<"@beep/architect
  * Identity composer for `@beep/runpod`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $RunpodId } from "@beep/identity"
  *
  * const id = $RunpodId.make("Runpod")
@@ -1107,7 +1107,7 @@ export const $RunpodId: Identity.IdentityComposer<"@beep/runpod"> = composers.$R
  * Identity composer for `@beep/onepassword-cli`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $OnepasswordCliId } from "@beep/identity"
  *
  * const id = $OnepasswordCliId.make("OnepasswordCli")
@@ -1123,7 +1123,7 @@ export const $OnepasswordCliId: Identity.IdentityComposer<"@beep/onepassword-cli
  * Identity composer for `@beep/discord`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $DiscordId } from "@beep/identity"
  *
  * const id = $DiscordId.make("Discord")
@@ -1139,7 +1139,7 @@ export const $DiscordId: Identity.IdentityComposer<"@beep/discord"> = composers.
  * Identity composer for `@beep/ai-provider-cli`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $AiProviderCliId } from "@beep/identity"
  *
  * const id = $AiProviderCliId.make("AiProviderCli")
@@ -1155,7 +1155,7 @@ export const $AiProviderCliId: Identity.IdentityComposer<"@beep/ai-provider-cli"
  * Identity composer for `@beep/sanity`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $SanityId } from "@beep/identity"
  *
  * const id = $SanityId.make("Sanity")
@@ -1171,7 +1171,7 @@ export const $SanityId: Identity.IdentityComposer<"@beep/sanity"> = composers.$S
  * Identity composer for `@beep/hubspot`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $HubspotId } from "@beep/identity"
  *
  * const id = $HubspotId.make("Hubspot")
@@ -1187,7 +1187,7 @@ export const $HubspotId: Identity.IdentityComposer<"@beep/hubspot"> = composers.
  * Identity composer for `@beep/phoenix`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $PhoenixId } from "@beep/identity"
  *
  * const id = $PhoenixId.make("Phoenix")
@@ -1203,7 +1203,7 @@ export const $PhoenixId: Identity.IdentityComposer<"@beep/phoenix"> = composers.
  * Identity composer for `@beep/ai-sync`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $AiSyncId } from "@beep/identity"
  *
  * const id = $AiSyncId.make("AiSync")
@@ -1219,7 +1219,7 @@ export const $AiSyncId: Identity.IdentityComposer<"@beep/ai-sync"> = composers.$
  * Identity composer for `@beep/box`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $BoxId } from "@beep/identity"
  *
  * const id = $BoxId.make("Box")
@@ -1235,7 +1235,7 @@ export const $BoxId: Identity.IdentityComposer<"@beep/box"> = composers.$BoxId;
  * Identity composer for `@beep/nlp-mcp`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $NlpMcpId } from "@beep/identity"
  *
  * const id = $NlpMcpId.make("NlpMcp")
@@ -1251,7 +1251,7 @@ export const $NlpMcpId: Identity.IdentityComposer<"@beep/nlp-mcp"> = composers.$
  * Identity composer for `@beep/rdf-canonize`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $RdfCanonizeId } from "@beep/identity/packages"
  *
  * const id = $RdfCanonizeId.make("Canonicalization")
@@ -1267,7 +1267,7 @@ export const $RdfCanonizeId: Identity.IdentityComposer<"@beep/rdf-canonize"> = c
  * Identity composer for `@beep/wink`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $WinkId } from "@beep/identity"
  *
  * const id = $WinkId.make("Wink")
@@ -1283,7 +1283,7 @@ export const $WinkId: Identity.IdentityComposer<"@beep/wink"> = composers.$WinkI
  * Identity composer for `@beep/file-processing`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $FileProcessingId } from "@beep/identity"
  *
  * const id = $FileProcessingId.make("FileProcessing")
@@ -1299,7 +1299,7 @@ export const $FileProcessingId: Identity.IdentityComposer<"@beep/file-processing
  * Identity composer for `@beep/tika`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $TikaId } from "@beep/identity"
  *
  * const id = $TikaId.make("Tika")
@@ -1315,7 +1315,7 @@ export const $TikaId: Identity.IdentityComposer<"@beep/tika"> = composers.$TikaI
  * Identity composer for `@beep/libpff`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $LibpffId } from "@beep/identity"
  *
  * const id = $LibpffId.make("Libpff")
@@ -1331,7 +1331,7 @@ export const $LibpffId: Identity.IdentityComposer<"@beep/libpff"> = composers.$L
  * Identity composer for `@beep/firecrawl`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $FirecrawlId } from "@beep/identity"
  *
  * const id = $FirecrawlId.make("Firecrawl")
@@ -1347,7 +1347,7 @@ export const $FirecrawlId: Identity.IdentityComposer<"@beep/firecrawl"> = compos
  * Identity composer for the `@beep/uspto` package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $UsptoId } from "@beep/identity"
  *
  * const id = $UsptoId.make("Uspto")
@@ -1363,7 +1363,7 @@ export const $UsptoId: Identity.IdentityComposer<"@beep/uspto"> = composers.$Usp
  * Identity composer for `@beep/lexical-schema`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $LexicalSchemaId } from "@beep/identity"
  *
  * const id = $LexicalSchemaId.make("LexicalSchema")
@@ -1379,7 +1379,7 @@ export const $LexicalSchemaId: Identity.IdentityComposer<"@beep/lexical-schema">
  * Identity composer for `@beep/editor`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $EditorId } from "@beep/identity"
  *
  * const id = $EditorId.make("Editor")
@@ -1395,7 +1395,7 @@ export const $EditorId: Identity.IdentityComposer<"@beep/editor"> = composers.$E
  * Identity composer for `@beep/scratchpad`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $ScratchpadId } from "@beep/identity"
  *
  * const id = $ScratchpadId.make("Scratchpad")
@@ -1411,7 +1411,7 @@ export const $ScratchpadId: Identity.IdentityComposer<"@beep/scratchpad"> = comp
  * Identity composer for `@beep/html`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $HtmlId } from "@beep/identity"
  *
  * const id = $HtmlId.make("Html")
@@ -1427,7 +1427,7 @@ export const $HtmlId: Identity.IdentityComposer<"@beep/html"> = composers.$HtmlI
  * Identity composer for `@beep/pandoc-ast`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $PandocAstId } from "@beep/identity"
  *
  * const id = $PandocAstId.make("PandocAst")
@@ -1443,7 +1443,7 @@ export const $PandocAstId: Identity.IdentityComposer<"@beep/pandoc-ast"> = compo
  * Identity composer for `@beep/form`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $FormId } from "@beep/identity"
  *
  * const id = $FormId.make("Form")
@@ -1459,7 +1459,7 @@ export const $FormId: Identity.IdentityComposer<"@beep/form"> = composers.$FormI
  * Identity composer for `@beep/pglite`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $PgliteId } from "@beep/identity"
  *
  * const id = $PgliteId.make("Pglite")
@@ -1475,7 +1475,7 @@ export const $PgliteId: Identity.IdentityComposer<"@beep/pglite"> = composers.$P
  * Identity composer for `@beep/m365`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $M365Id } from "@beep/identity"
  *
  * const id = $M365Id.make("M365")
@@ -1491,7 +1491,7 @@ export const $M365Id: Identity.IdentityComposer<"@beep/m365"> = composers.$M365I
  * Identity composer for `@beep/m365-mcp`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $M365McpId } from "@beep/identity"
  *
  * const id = $M365McpId.make("M365Mcp")
@@ -1507,7 +1507,7 @@ export const $M365McpId: Identity.IdentityComposer<"@beep/m365-mcp"> = composers
  * Identity composer for `@beep/govinfo`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $GovinfoId } from "@beep/identity"
  *
  * const id = $GovinfoId.make("Govinfo")
@@ -1523,7 +1523,7 @@ export const $GovinfoId: Identity.IdentityComposer<"@beep/govinfo"> = composers.
  * Identity composer for `@beep/federal-register`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $FederalRegisterId } from "@beep/identity"
  *
  * const id = $FederalRegisterId.make("FederalRegister")
@@ -1539,7 +1539,7 @@ export const $FederalRegisterId: Identity.IdentityComposer<"@beep/federal-regist
  * Identity composer for `@beep/ecfr`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $EcfrId } from "@beep/identity"
  *
  * const id = $EcfrId.make("Ecfr")
@@ -1555,7 +1555,7 @@ export const $EcfrId: Identity.IdentityComposer<"@beep/ecfr"> = composers.$EcfrI
  * Identity composer for `@beep/dol`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $DolId } from "@beep/identity"
  *
  * const id = $DolId.make("Dol")
@@ -1571,7 +1571,7 @@ export const $DolId: Identity.IdentityComposer<"@beep/dol"> = composers.$DolId;
  * Identity composer for `@beep/courtlistener`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $CourtlistenerId } from "@beep/identity"
  *
  * const id = $CourtlistenerId.make("Courtlistener")
@@ -1587,7 +1587,7 @@ export const $CourtlistenerId: Identity.IdentityComposer<"@beep/courtlistener"> 
  * Identity composer for `@beep/api-transport`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $ApiTransportId } from "@beep/identity"
  *
  * const id = $ApiTransportId.make("ApiTransport")
@@ -1603,7 +1603,7 @@ export const $ApiTransportId: Identity.IdentityComposer<"@beep/api-transport"> =
  * Identity composer for `@beep/mcp-kit`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $McpKitId } from "@beep/identity"
  *
  * const id = $McpKitId.make("McpKit")
@@ -1619,7 +1619,7 @@ export const $McpKitId: Identity.IdentityComposer<"@beep/mcp-kit"> = composers.$
  * Identity composer for `@beep/uspto-mcp`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $UsptoMcpId } from "@beep/identity"
  *
  * const id = $UsptoMcpId.make("UsptoMcp")

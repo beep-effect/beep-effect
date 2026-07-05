@@ -10,6 +10,7 @@ import {
   TerritoryCode as TerritoryCodeSchema,
   TerritoryNameFromCode as TerritoryNameFromCodeSchema,
 } from "./TerritoryCode.ts";
+import type { TerritoryCode as TerritoryCodeType } from "./TerritoryCode.ts";
 
 /**
  * Country code schema backed by generated CLDR territory codes.
@@ -26,7 +27,7 @@ import {
  * @since 0.0.0
  * @category schemas
  */
-export const CountryCode = TerritoryCodeSchema;
+export const CountryCode: typeof TerritoryCodeSchema = TerritoryCodeSchema;
 
 /**
  * {@inheritDoc CountryCode}
@@ -43,7 +44,7 @@ export const CountryCode = TerritoryCodeSchema;
  * @since 0.0.0
  * @category models
  */
-export type CountryCode = typeof CountryCode.Type;
+export type CountryCode = TerritoryCodeType;
 
 /**
  * Reverse codec from country display name to country code.
@@ -60,7 +61,7 @@ export type CountryCode = typeof CountryCode.Type;
  * @since 0.0.0
  * @category schemas
  */
-export const CountryCodeFromName = TerritoryCodeFromNameSchema;
+export const CountryCodeFromName: typeof TerritoryCodeFromNameSchema = TerritoryCodeFromNameSchema;
 
 /**
  * Reversible country code/name codec.
@@ -77,4 +78,4 @@ export const CountryCodeFromName = TerritoryCodeFromNameSchema;
  * @since 0.0.0
  * @category schemas
  */
-export const CountryNameFromCode = TerritoryNameFromCodeSchema;
+export const CountryNameFromCode: typeof TerritoryNameFromCodeSchema = TerritoryNameFromCodeSchema;

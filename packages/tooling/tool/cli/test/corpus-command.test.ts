@@ -19,6 +19,7 @@ import {
   salvageCorpus,
   verifySalvage,
 } from "@beep/repo-cli/commands/Corpus";
+import { NonNegativeInt, Sha256Hex } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -261,8 +262,8 @@ const provenanceRecord = (input: {
     originPath: input.originPath,
     relativePath: input.relativePath,
     salvagedAt: "2026-06-11T15:00:00Z",
-    sha256: input.sha256,
-    sizeBytes: input.sizeBytes,
+    sha256: Sha256Hex.make(input.sha256),
+    sizeBytes: NonNegativeInt.make(input.sizeBytes),
     sourceLabel: input.sourceLabel,
     ...(input.copyMode === undefined ? {} : { copyMode: input.copyMode }),
     ...(input.dedupeOfPath === undefined ? {} : { dedupeOfPath: input.dedupeOfPath }),
@@ -280,7 +281,7 @@ const readProvenanceLines = Effect.fn("CorpusTest.readProvenanceLines")(function
 
 const readProvenanceRecords = Effect.fn("CorpusTest.readProvenanceRecords")(function* (manifestPath: string) {
   const lines = yield* readProvenanceLines(manifestPath);
-  return yield* Effect.forEach(lines, decodeCorpusProvenanceRecordJson);
+  return yield* Effect.forEach(lines, (line) => decodeCorpusProvenanceRecordJson(line));
 });
 
 const decodeArchiveMoveManifestRecordJson = S.decodeUnknownEffect(S.fromJsonString(CorpusArchiveMoveManifestRecord));
@@ -289,7 +290,7 @@ const readArchiveMoveManifestRecords = Effect.fn("CorpusTest.readArchiveMoveMani
   manifestPath: string
 ) {
   const lines = yield* readProvenanceLines(manifestPath);
-  return yield* Effect.forEach(lines, decodeArchiveMoveManifestRecordJson);
+  return yield* Effect.forEach(lines, (line) => decodeArchiveMoveManifestRecordJson(line));
 });
 
 describe("corpus catalog run manifests", () => {
@@ -571,7 +572,7 @@ describe("corpus salvage run labels and dedupe", () => {
 
       const manifestPath = path.join(corpusRoot, "raw", "run-multi-source", "provenance.jsonl");
       const lines = yield* readProvenanceLines(manifestPath);
-      const records = yield* Effect.forEach(lines, decodeCorpusProvenanceRecordJson);
+      const records = yield* Effect.forEach(lines, (line) => decodeCorpusProvenanceRecordJson(line));
       const firstLine = yield* Effect.fromOption(A.head(lines));
       const firstRecord = yield* Effect.fromOption(A.head(records));
 

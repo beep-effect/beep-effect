@@ -2,7 +2,7 @@
  * Barrel re-exports for `@beep/identity`.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { make } from "@beep/identity"
  *
  * const { $MyPkgId } = make("my-pkg")
@@ -18,7 +18,7 @@
  * CURIE expansion, contraction, and schema codecs for identity vocabularies.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { expand } from "@beep/identity"
  *
  * console.log(expand("skos:prefLabel"))
@@ -32,7 +32,7 @@ export * from "./Curie.ts";
  * Identity system core -- composers, annotations, and branded types.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { make } from "@beep/identity"
  *
  * const { $MyPkgId } = make("my-pkg")
@@ -47,7 +47,7 @@ export * from "./Id.ts";
  * Turtle PN_LOCAL parser-side helpers and safe emission fallback.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { prefixedNameOrIri } from "@beep/identity"
  *
  * console.log(prefixedNameOrIri("skos", "prefLabel", "http://www.w3.org/2004/02/skos/core#prefLabel"))
@@ -61,7 +61,7 @@ export * from "./PnLocal.ts";
  * Pre-built identity composers for every `@beep/*` workspace package.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { $DataId } from "@beep/identity"
  *
  * console.log($DataId.make("CurrencyCodes"))
@@ -75,7 +75,7 @@ export * from "./packages.ts";
  * Static borrowed vocabulary registry and literal CURIE type helpers.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { CoreVocab } from "@beep/identity"
  *
  * console.log(CoreVocab.rdf.iri)

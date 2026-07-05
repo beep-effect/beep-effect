@@ -1097,8 +1097,10 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
   const recordBatches = yield* Effect.forEach(manifests, (manifest) =>
     fs
       .readFileString(manifest.manifestPath)
-      .pipe(CorpusCommandError.mapError(`Failed reading provenance manifest "${manifest.manifestPath}".`))
-      .pipe(Effect.flatMap(decodeProvenanceLines))
+      .pipe(
+        CorpusCommandError.mapError(`Failed reading provenance manifest "${manifest.manifestPath}".`),
+        Effect.flatMap(decodeProvenanceLines)
+      )
   );
   const allRecords = A.flatten(recordBatches);
   const { duplicatesSkipped, selected } = selectExtractRecords(allRecords, options);
