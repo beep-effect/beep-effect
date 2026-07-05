@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "repo-crispening-progress/v1",
+  "generatedOn": "2026-07-05",
+  "legend": {
+    "phaseStatus": ["pending", "in_progress", "blocked", "done"],
+    "packageDiscoveryStatus": ["pending", "in_progress", "done"],
+    "packageRemediationStatus": ["pending", "in_progress", "blocked", "exception", "done"]
+  },
+  "phases": {
+    "P0_enforce": "pending",
+    "P1_baseline": "pending",
+    "P1_5_mechanize": "pending",
+    "P2_waves": "pending",
+    "P3_catalog": "pending",
+    "P4_close": "pending"
+  },
+  "novelLintCards": {
+    "SFV4-fn-schema": { "status": "pending", "owner": "S1" },
+    "SFV4-normalization": { "status": "pending", "owner": "S2" },
+    "SFV4-null-return": { "status": "pending", "owner": "S2" },
+    "SFV4-getsomes-struct": {
+      "status": "pending",
+      "owner": "S3",
+      "blockedBy": "law-20-47-amendment"
+    }
+  },
+  "lawAmendment": {
+    "id": "law-20-47-amendment",
+    "status": "pending",
+    "targets": [
+      ".claude/skills/effect-first-development/SKILL.md:99",
+      ".claude/skills/effect-first-development/SKILL.md:126",
+      ".claude/skills/schema-first-development/SKILL.md:96"
+    ],
+    "decisionsEntry": "standards/architecture/DECISIONS.md",
+    "note": "D5: must merge before any SFV4-getsomes-struct sweep or codemod runs."
+  },
+  "policyRatchet": {
+    "path": "standards/schema-crispening.policy.jsonc",
+    "status": "pending",
+    "note": "G4: per-owner/family blocking flag consulted by schemaFirstLintHasFailures (packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts:1464-1477). New cards land non-blocking; each family flips to blocking after its wave goes yeet-verify-green."
+  },
+  "catalog": {
+    "path": "standards/schema-catalog.generated.jsonc",
+    "status": "pending"
+  },
+  "waveOrder": ["foundation", "drivers", "tooling", "apps-slices"],
+  "sharedAssignment": "TBD-P1",
+  "infraAssignment": "TBD-P1",
+  "pilot": {
+    "family": "foundation",
+    "package": "TBD (foundation/modeling exemplar, e.g. @beep/md or @beep/lexical)",
+    "status": "pending"
+  },
+  "packages": {},
+  "_note": "Populated during P1 baseline, one entry per package touched, mirroring goals/effect-native-migration/ops/progress.json's resumable per-package model. Each package entry shape: { \"path\": \"packages/...\", \"sanitized\": \"beep__<name>\", \"family\": \"foundation|drivers|tooling|apps-slices\", \"discovery\": \"pending|in_progress|done\", \"remediation\": \"pending|in_progress|blocked|exception|done\", \"findingsByDomain\": { \"S1\": 0, \"S2\": 0, \"S3\": 0, \"S4\": 0, \"S5\": 0 }, \"actionableCount\": 0, \"exceptionCount\": 0, \"parityProofRef\": null, \"policyFlipped\": false, \"remediationNote\": \"\" }. Reconcile against this file before each wave; skip packages already \"done\". `findingsByDomain` counts come from the §5.5 inventory records at ops/inventory/<Sn>/<sanitized-pkg>.json; `actionableCount` excludes ledgered exceptions; `policyFlipped` tracks whether this package's family has had its lint cards flipped advisory->blocking in standards/schema-crispening.policy.jsonc (G4/§5.7).",
+  "activeBlockers": [],
+  "scopeNotes": {
+    "targetSurfaces": "First-party source under packages/**, apps/**, and infra/** (infra/**/*.ts is inside SchemaFirst.ts INCLUDED_GLOBS), minus generated code (.repos/**, **/dist/**, **/build/**, node_modules/**, docgen output).",
+    "canonicalFamilyKeys": "foundation | drivers | tooling | apps-slices — machine keys used by this file, standards/schema-crispening.policy.jsonc, and ops/inventory/; 'apps/slices' in prose is display-only.",
+    "sharedKernelSeam": "packages/shared/* and infra/** wave assignments are decided during P1 baseline, not pre-assigned here (see sharedAssignment/infraAssignment above); until assigned they are non-blocking, and every finding must end up inside some family's ratchet.",
+    "populationMethod": "P1 discovery agents (S1-S5) populate packages{} from their per-package inventories; do not hand-author entries before P1 runs."
+  }
+}

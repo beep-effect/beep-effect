@@ -53,6 +53,12 @@ fence is a review-blocking defect and a stop condition.
 8. Touch-scoped waves: each wave edits only its family's packages.
 9. No public-form change without the same-PR consumer sweep (§5.4).
 
+Fence 8 scopes **source edits**. Updating the orchestrator-owned artifacts —
+`standards/schema-crispening.policy.jsonc` (family flip),
+`standards/schema-first.inventory.jsonc` (exception ledger), and this
+packet's own `ops/` files (`progress.json`, burndown) — from a wave PR is
+required bookkeeping, not a fence violation.
+
 ## Source Hierarchy
 
 1. User objective (the 2026-07-05 authoring prompt, archived in
@@ -70,9 +76,14 @@ Higher sources outrank lower sources when they conflict.
 
 ## Target Surfaces
 
-- First-party source under `packages/**` and `apps/**`, minus generated code.
-  Hard exclusions (never edit or scan): `.repos/**`, `**/dist/**`,
-  `**/build/**`, `node_modules/**`, docgen output, and any generated files.
+- First-party source under `packages/**` and `apps/**` (plus `infra/**`,
+  which is inside the schema-first lint scope — `INCLUDED_GLOBS` in
+  `SchemaFirst.ts` includes `infra/**/*.ts`), minus generated code. Hard
+  exclusions (never edit, never scan for findings): `.repos/**`,
+  `**/dist/**`, `**/build/**`, `node_modules/**`, docgen output, and any
+  generated files. The exclusion bars smell-scanning and edits only —
+  **read-only API verification against `.repos/effect-v4` is required and
+  explicitly allowed**; the two instructions are not in conflict.
 - Enforcement surfaces (P0):
   `packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts` (novel cards),
   `standards/schema-crispening.policy.jsonc` (new),
@@ -128,6 +139,14 @@ Additional binding constraints:
   is the source of truth. Every discovery and remediation agent embeds the
   Verified API Corrections table below and re-verifies symbols with `rg`
   before citing them.
+- Canonical machine family keys: `foundation` / `drivers` / `tooling` /
+  `apps-slices` ("apps/slices" is display prose only). The policy file,
+  `ops/progress.json`, and `ops/inventory/` use the machine keys everywhere.
+  `packages/shared/**` and `infra/**` receive their wave-family assignment at
+  P1 baseline, recorded in `ops/progress.json`; until assigned they are
+  non-blocking, and no finding may end up outside the ratchet. Policy shape
+  and the owner→family resolution rule live in `PLAN.md` "Policy Ratchet
+  Shape (G4)".
 
 ## Rule Cards — Specialist Domains S1–S5
 
