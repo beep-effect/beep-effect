@@ -297,7 +297,9 @@ describe("Graph FromSelf schemas", () => {
       })
     );
 
-    expect(() => S.decodeUnknownSync(schema)(graph)).toThrow("Expected GraphFromSelf, got Graph(directed, 2, 1)");
+    expect(() => S.decodeUnknownSync(schema)(graph)).toThrow(
+      "Expected @beep/schema/Graph/GraphFromSelf, got Graph(directed, 2, 1)"
+    );
   });
 
   it("validates existing mutable directed graphs and preserves mutability", () => {

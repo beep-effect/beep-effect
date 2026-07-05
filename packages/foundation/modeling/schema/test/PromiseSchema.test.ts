@@ -28,11 +28,15 @@ describe("PromiseSchema", () => {
     };
 
     expect(isPromise(thenable)).toBe(false);
-    expect(() => S.decodeUnknownSync(PromiseSchema)(thenable)).toThrow(/Expected Promise/);
+    expect(() => S.decodeUnknownSync(PromiseSchema)(thenable)).toThrow(
+      /Expected @beep\/schema\/PromiseSchema\/PromiseSchema/
+    );
   });
 
   it("rejects non-promise values", () => {
     expect(isPromise("nope")).toBe(false);
-    expect(() => S.decodeUnknownSync(PromiseSchema)("nope")).toThrow(/Expected Promise/);
+    expect(() => S.decodeUnknownSync(PromiseSchema)("nope")).toThrow(
+      /Expected @beep\/schema\/PromiseSchema\/PromiseSchema/
+    );
   });
 });

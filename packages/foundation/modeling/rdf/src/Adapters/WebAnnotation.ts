@@ -57,7 +57,7 @@ export class WebAnnotationTextQuoteSelector extends S.Class<WebAnnotationTextQuo
   $I`WebAnnotationTextQuoteSelector`
 )(
   {
-    type: S.Literal("TextQuoteSelector"),
+    type: S.tag("TextQuoteSelector"),
     exact: S.NonEmptyString,
     prefix: S.OptionFromOptionalKey(S.String),
     suffix: S.OptionFromOptionalKey(S.String),
@@ -94,7 +94,7 @@ export class WebAnnotationTextPositionSelector extends S.Class<WebAnnotationText
   $I`WebAnnotationTextPositionSelector`
 )(
   {
-    type: S.Literal("TextPositionSelector"),
+    type: S.tag("TextPositionSelector"),
     start: NonNegativeInt,
     end: NonNegativeInt,
   },
@@ -129,7 +129,7 @@ export class WebAnnotationFragmentSelector extends S.Class<WebAnnotationFragment
   $I`WebAnnotationFragmentSelector`
 )(
   {
-    type: S.Literal("FragmentSelector"),
+    type: S.tag("FragmentSelector"),
     value: S.NonEmptyString,
     conformsTo: S.OptionFromOptionalKey(IRIReference),
   },
@@ -163,6 +163,7 @@ export const WebAnnotationSelector = S.Union([
   WebAnnotationTextPositionSelector,
   WebAnnotationFragmentSelector,
 ]).pipe(
+  S.toTaggedUnion("type"),
   $I.annoteSchema("WebAnnotationSelector", {
     description: "Web Annotation selector union.",
   })
@@ -239,7 +240,7 @@ export class WebAnnotationTarget extends S.Class<WebAnnotationTarget>($I`WebAnno
 export class WebAnnotation extends S.Class<WebAnnotation>($I`WebAnnotation`)(
   {
     id: IRIReference,
-    type: S.Literal("Annotation"),
+    type: S.tag("Annotation"),
     bodyValue: S.OptionFromOptionalKey(S.String),
     target: WebAnnotationTarget,
   },

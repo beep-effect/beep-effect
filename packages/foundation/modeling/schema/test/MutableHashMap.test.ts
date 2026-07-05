@@ -30,7 +30,9 @@ describe("MutableHashMapFromSelf", () => {
       value: S.FiniteFromString,
     });
 
-    expect(() => S.decodeUnknownSync(schema)(null)).toThrow("Expected MutableHashMapFromSelf, got null");
+    expect(() => S.decodeUnknownSync(schema)(null)).toThrow(
+      "Expected @beep/schema/MutableHashMap/MutableHashMapFromSelf, got null"
+    );
   });
 
   it("reports entry decode failures at the entries path", () => {

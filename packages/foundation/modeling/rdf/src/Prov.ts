@@ -61,7 +61,7 @@ const provDateTimeChecks = S.makeFilterGroup(
  * PROV object reference encoded as an IRI, CURIE, or local identifier.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ObjectRef } from "@beep/rdf/Prov"
  *
@@ -245,7 +245,7 @@ export class LifecycleTimes extends S.Class<LifecycleTimes>($I`LifecycleTimes`)(
  * PROV entity.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Entity } from "@beep/rdf/Prov"
  *
@@ -261,7 +261,7 @@ export class LifecycleTimes extends S.Class<LifecycleTimes>($I`LifecycleTimes`)(
  */
 export class Entity extends S.Class<Entity>($I`Entity`)(
   {
-    provType: S.Literal("Entity"),
+    provType: S.tag("Entity"),
     id: S.OptionFromOptionalKey(ObjectRef),
     wasGeneratedBy: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey),
     wasAttributedTo: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey),
@@ -291,7 +291,7 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
  * PROV activity.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Activity } from "@beep/rdf/Prov"
  *
@@ -307,7 +307,7 @@ export class Entity extends S.Class<Entity>($I`Entity`)(
  */
 export class Activity extends S.Class<Activity>($I`Activity`)(
   {
-    provType: S.Literal("Activity"),
+    provType: S.tag("Activity"),
     id: S.OptionFromOptionalKey(ObjectRef),
     used: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey),
     wasAssociatedWith: ObjectRef.pipe(S.Array, S.OptionFromOptionalKey),
@@ -332,7 +332,7 @@ export class Activity extends S.Class<Activity>($I`Activity`)(
  * PROV agent.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Agent } from "@beep/rdf/Prov"
  *
@@ -348,7 +348,7 @@ export class Activity extends S.Class<Activity>($I`Activity`)(
  */
 export class Agent extends S.Class<Agent>($I`Agent`)(
   {
-    provType: S.Literal("Agent"),
+    provType: S.tag("Agent"),
     id: S.OptionFromOptionalKey(ObjectRef),
     name: S.OptionFromOptionalKey(S.String),
   },
@@ -387,7 +387,7 @@ export class Agent extends S.Class<Agent>($I`Agent`)(
  */
 export class SoftwareAgent extends S.Class<SoftwareAgent>($I`SoftwareAgent`)(
   {
-    provType: S.Literal("SoftwareAgent"),
+    provType: S.tag("SoftwareAgent"),
     id: S.OptionFromOptionalKey(ObjectRef),
     name: S.OptionFromOptionalKey(S.String),
   },
@@ -426,7 +426,7 @@ export class SoftwareAgent extends S.Class<SoftwareAgent>($I`SoftwareAgent`)(
  */
 export class Plan extends S.Class<Plan>($I`Plan`)(
   {
-    provType: S.Literal("Plan"),
+    provType: S.tag("Plan"),
     id: S.OptionFromOptionalKey(ObjectRef),
     name: S.OptionFromOptionalKey(S.String),
   },
@@ -465,7 +465,7 @@ export class Plan extends S.Class<Plan>($I`Plan`)(
  */
 export class Collection extends S.Class<Collection>($I`Collection`)(
   {
-    provType: S.Literal("Collection"),
+    provType: S.tag("Collection"),
     id: S.OptionFromOptionalKey(ObjectRef),
     hadMember: S.Array(ObjectRef),
   },
@@ -504,7 +504,7 @@ export class Collection extends S.Class<Collection>($I`Collection`)(
  */
 export class Person extends S.Class<Person>($I`Person`)(
   {
-    provType: S.Literal("Person"),
+    provType: S.tag("Person"),
     id: S.OptionFromOptionalKey(ObjectRef),
     name: S.OptionFromOptionalKey(S.String),
   },
@@ -543,7 +543,7 @@ export class Person extends S.Class<Person>($I`Person`)(
  */
 export class Organization extends S.Class<Organization>($I`Organization`)(
   {
-    provType: S.Literal("Organization"),
+    provType: S.tag("Organization"),
     id: S.OptionFromOptionalKey(ObjectRef),
     name: S.OptionFromOptionalKey(S.String),
   },
@@ -905,7 +905,7 @@ export class End extends S.Class<End>($I`End`)(
  * Public PROV record union for the stable semantic-web surface.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { Agent, ProvRecord } from "@beep/rdf/Prov"
  *
@@ -974,7 +974,7 @@ export type ProvRecord = typeof ProvRecord.Type;
  * Bounded provenance bundle exported by the semantic-web surface.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { ProvBundle } from "@beep/rdf/Prov"
  *

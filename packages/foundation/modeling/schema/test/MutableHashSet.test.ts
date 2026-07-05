@@ -19,7 +19,9 @@ describe("MutableHashSetFromSelf", () => {
   it("rejects non-mutable-hash-set inputs", () => {
     const schema = MutableHashSetFromSelf(S.FiniteFromString);
 
-    expect(() => S.decodeUnknownSync(schema)(null)).toThrow("Expected MutableHashSetFromSelf, got null");
+    expect(() => S.decodeUnknownSync(schema)(null)).toThrow(
+      "Expected @beep/schema/MutableHashSet/MutableHashSetFromSelf, got null"
+    );
   });
 
   it("reports member decode failures at the values path", () => {

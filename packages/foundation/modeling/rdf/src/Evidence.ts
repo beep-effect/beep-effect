@@ -18,7 +18,7 @@ const $I = $RdfId.create("evidence");
  * Evidence selector discriminator.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { EvidenceSelectorKind } from "@beep/rdf/Evidence"
  *
@@ -55,7 +55,7 @@ export type EvidenceSelectorKind = typeof EvidenceSelectorKind.Type;
  * Text-quote selector for evidence anchors.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { TextQuoteSelector } from "@beep/rdf/Evidence"
  *
@@ -73,7 +73,7 @@ export type EvidenceSelectorKind = typeof EvidenceSelectorKind.Type;
  */
 export class TextQuoteSelector extends S.Class<TextQuoteSelector>($I`TextQuoteSelector`)(
   {
-    kind: S.Literal("text-quote"),
+    kind: S.tag("text-quote"),
     exact: S.NonEmptyString,
     prefix: S.OptionFromOptionalKey(S.String),
     suffix: S.OptionFromOptionalKey(S.String),
@@ -98,7 +98,7 @@ export class TextQuoteSelector extends S.Class<TextQuoteSelector>($I`TextQuoteSe
  * Text-position selector for evidence anchors.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { TextPositionSelector } from "@beep/rdf/Evidence"
  *
@@ -115,7 +115,7 @@ export class TextQuoteSelector extends S.Class<TextQuoteSelector>($I`TextQuoteSe
  */
 export class TextPositionSelector extends S.Class<TextPositionSelector>($I`TextPositionSelector`)(
   {
-    kind: S.Literal("text-position"),
+    kind: S.tag("text-position"),
     start: NonNegativeInt,
     end: NonNegativeInt,
   },
@@ -139,7 +139,7 @@ export class TextPositionSelector extends S.Class<TextPositionSelector>($I`TextP
  * Fragment selector for evidence anchors.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { FragmentSelector } from "@beep/rdf/Evidence"
  *
@@ -155,7 +155,7 @@ export class TextPositionSelector extends S.Class<TextPositionSelector>($I`TextP
  */
 export class FragmentSelector extends S.Class<FragmentSelector>($I`FragmentSelector`)(
   {
-    kind: S.Literal("fragment"),
+    kind: S.tag("fragment"),
     value: S.NonEmptyString,
     conformsTo: S.OptionFromOptionalKey(IRIReference),
   },
@@ -177,7 +177,7 @@ export class FragmentSelector extends S.Class<FragmentSelector>($I`FragmentSelec
  * Evidence selector union.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { EvidenceSelector } from "@beep/rdf/Evidence"
  *

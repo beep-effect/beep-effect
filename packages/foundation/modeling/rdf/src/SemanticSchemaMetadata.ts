@@ -25,7 +25,7 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  * Closed v1 metadata kind domain for semantic-web schemas.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { SemanticSchemaMetadataKind } from "@beep/rdf/SemanticSchemaMetadata"
  *
@@ -325,7 +325,7 @@ declare module "effect/Schema" {
  * Validate a metadata payload before attaching it to a public schema.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { makeSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata"
  *
  * const metadata = makeSemanticSchemaMetadata({
@@ -353,7 +353,7 @@ export const makeSemanticSchemaMetadata = (
  * Attach validated semantic metadata to any Effect schema.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { annotateSemanticSchema } from "@beep/rdf/SemanticSchemaMetadata"
  *
@@ -444,7 +444,7 @@ const findSemanticSchemaMetadata = (
  * Read semantic metadata from any Effect schema, if present.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { getSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata"
  *

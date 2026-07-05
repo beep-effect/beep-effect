@@ -36,8 +36,8 @@ describe("Identity", () => {
     const tenantId = $EntitiesId.make("Tenant");
     const serviceId = $SchemaId`TenantService`;
 
-    expect($BeepId).type.toBeAssignableTo<IdentityComposer<"@beep">>();
-    expect($SchemaId).type.toBeAssignableTo<IdentityComposer<"@beep/schema">>();
+    expect($BeepId).type.toBeAssignableTo<IdentityComposer<"@beep", undefined, undefined>>();
+    expect($SchemaId).type.toBeAssignableTo<IdentityComposer<"@beep/schema", undefined, undefined>>();
     expect(tenantId).type.toBe<IdentityString<"@beep/schema/entities/Tenant">>();
     expect(serviceId).type.toBe<IdentityString<`@beep/schema/${string}`>>();
     expect($SchemaId.string()).type.toBe<IdentityString<"@beep/schema">>();
@@ -187,7 +187,7 @@ describe("Identity", () => {
     class FsUtils extends Context.Service<FsUtils, FsUtilsShape>()($I`MyService`) {}
 
     expect(FsUtils.key).type.toBe<IdentityString<`@beep/module/${string}`>>();
-    expect($PathI).type.toBeAssignableTo<IdentityComposer<"@beep/lib/graphiti/client">>();
+    expect($PathI).type.toBeAssignableTo<IdentityComposer<"@beep/lib/graphiti/client", undefined, undefined>>();
   });
 
   it("enforces segment invariants at compile time", () => {

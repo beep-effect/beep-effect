@@ -404,11 +404,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
 
   const dispatchNotification = Effect.fn($I`dispatchNotification`)((notification: AcpIncomingNotification) =>
     Queue.offer(notificationQueue, notification).pipe(
-      Effect.andThen(
-        options.onNotification !== undefined
-          ? options.onNotification(notification).pipe(Effect.ignore)
-          : Effect.void
-      ),
+      Effect.andThen(options.onNotification !== undefined ? options.onNotification(notification).pipe(Effect.ignore) : Effect.void),
       Effect.asVoid
     )
   );

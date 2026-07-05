@@ -191,7 +191,7 @@ const uriChecks = makeNonEmptyReferenceChecks("URI", "URI", "An RFC 3986 URI.", 
  * RFC 3986 `URI-reference` schema, including absolute and relative forms.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { URIReference } from "@beep/rdf/Uri"
  *
@@ -230,7 +230,7 @@ export type URIReference = typeof URIReference.Type;
  * RFC 3986 `relative-ref` schema.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { RelativeURIReference } from "@beep/rdf/Uri"
  *
@@ -269,7 +269,7 @@ export type RelativeURIReference = typeof RelativeURIReference.Type;
  * RFC 3986 `absolute-URI` schema without a fragment component.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { AbsoluteURI } from "@beep/rdf/Uri"
  *
@@ -308,7 +308,7 @@ export type AbsoluteURI = typeof AbsoluteURI.Type;
  * RFC 3986 `URI` schema.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { URI } from "@beep/rdf/Uri"
  *
@@ -347,7 +347,7 @@ export type URI = typeof URI.Type;
  * Normalize a URI or URI reference for transport-oriented comparisons.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { normalizeUriReference } from "@beep/rdf/Uri"
  *
  * const normalized = normalizeUriReference("HTTP://Example.COM:80/Path")
@@ -366,7 +366,7 @@ export const normalizeUriReference = (value: URIReference | string): string =>
  * Resolve a URI reference against an absolute base URI.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { resolveUriReference } from "@beep/rdf/Uri"
  *
  * const resolved = resolveUriReference("https://example.com/a/b", "../c")
@@ -390,7 +390,7 @@ export const resolveUriReference: {
  * Compare two URI values using URI-family normalization rules.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { areUrisEquivalent } from "@beep/rdf/Uri"
  *
  * const same = areUrisEquivalent("HTTP://Example.COM/", "http://example.com/")

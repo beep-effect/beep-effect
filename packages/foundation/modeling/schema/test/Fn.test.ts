@@ -37,7 +37,7 @@ describe("Fn schema", () => {
   it("rejects non-function inputs", () => {
     const schema = Fn({ output: S.String });
 
-    expect(() => S.decodeUnknownSync(schema)(null)).toThrow("Expected Fn, got null");
+    expect(() => S.decodeUnknownSync(schema)(null)).toThrow("Expected @beep/schema/Fn/Fn, got null");
   });
 
   it("defaults errorSchema to Schema.Never", () => {

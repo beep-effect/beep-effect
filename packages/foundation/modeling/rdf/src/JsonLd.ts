@@ -40,7 +40,7 @@ const jsonLdBlankNodeIdentifierChecks = S.makeFilterGroup(
  * JSON-LD keyword surface used by the bounded v1 model.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { JsonLdKeyword } from "@beep/rdf/JsonLd"
  *
@@ -86,7 +86,7 @@ export type JsonLdKeyword = typeof JsonLdKeyword.Type;
  * Normalized JSON-LD term definition used by the bounded context model.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { JsonLdTermDefinition } from "@beep/rdf/JsonLd"
  *
@@ -417,7 +417,7 @@ export class JsonLdNodeObject extends S.Class<JsonLdNodeObject>($I`JsonLdNodeObj
  * Bounded JSON-LD document model with normalized context and graph content.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { JsonLdDocument } from "@beep/rdf/JsonLd"
  *

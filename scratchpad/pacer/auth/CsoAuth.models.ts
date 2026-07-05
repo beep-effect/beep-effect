@@ -31,9 +31,9 @@ export class CsoAuthRequest extends S.Class<CsoAuthRequest>($I`CsoAuthRequest`)(
   {
     loginId: S.String,
     password: S.String,
-    clientCode: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    otpCode: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    redactFlag: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    clientCode: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    otpCode: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    redactFlag: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("CsoAuthRequest", {
     description: "PACER cso-auth login request body.",
@@ -54,7 +54,7 @@ export class CsoAuthResponse extends S.Class<CsoAuthResponse>($I`CsoAuthResponse
   {
     nextGenCSO: S.String,
     loginResult: S.String,
-    errorDescription: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    errorDescription: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("CsoAuthResponse", {
     description: "PACER cso-auth login response body.",
@@ -84,9 +84,9 @@ export class CsoLogoutRequest extends S.Class<CsoLogoutRequest>($I`CsoLogoutRequ
  */
 export class CsoLogoutResponse extends S.Class<CsoLogoutResponse>($I`CsoLogoutResponse`)(
   {
-    loginResult: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    errorDescription: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-    nextGenCSO: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    loginResult: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    errorDescription: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    nextGenCSO: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("CsoLogoutResponse", {
     description: "PACER cso-logout response body.",

@@ -873,7 +873,7 @@ const iriChecks = makeNonEmptyReferenceChecks("IRI", "IRI", "An RFC 3987 IRI.", 
  * RFC 3987 `IRI-reference` schema, including absolute and relative forms.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { IRIReference } from "@beep/rdf"
  *
@@ -915,7 +915,7 @@ export type IRIReference = typeof IRIReference.Type;
  * RFC 3987 `irelative-ref` schema.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { RelativeIRIReference } from "@beep/rdf"
  *
@@ -957,7 +957,7 @@ export type RelativeIRIReference = typeof RelativeIRIReference.Type;
  * RFC 3987 `absolute-IRI` schema without a fragment component.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { AbsoluteIRI } from "@beep/rdf"
  *
@@ -999,7 +999,7 @@ export type AbsoluteIRI = typeof AbsoluteIRI.Type;
  * RFC 3987 `IRI` schema.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { IRI } from "@beep/rdf"
  *

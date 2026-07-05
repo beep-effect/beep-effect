@@ -201,7 +201,7 @@ const BlankNodeLabelChecks = S.makeFilterGroup(
  * Prefix label used by RDF namespace bindings.
  *
  * @example
- * ```typescript
+ * ```ts
  * import * as S from "effect/Schema"
  * import { PrefixLabel } from "@beep/rdf/Rdf"
  *
@@ -494,7 +494,7 @@ export class Literal extends S.Class<Literal>($I`Literal`)(
 export class DefaultGraph extends S.Class<DefaultGraph>($I`DefaultGraph`)(
   {
     termType: S.tag("DefaultGraph"),
-    value: S.Literal(""),
+    value: S.tag(""),
   },
   $I.annote("DefaultGraph", {
     description: "RDF default graph term aligned with RDF/JS.",
@@ -851,7 +851,7 @@ export type PrefixMap = typeof PrefixMap.Type;
  * Build a named node from an IRI string.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { makeNamedNode } from "@beep/rdf/Rdf"
  *
  * const node = makeNamedNode("https://schema.org/Person")
@@ -877,7 +877,7 @@ export const makeNamedNode = (value: string): NamedNode =>
  * Build a blank node from a non-empty label.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { makeBlankNode } from "@beep/rdf/Rdf"
  *
  * const node = makeBlankNode("b0")
@@ -938,7 +938,7 @@ const makeLiteralInternal = (value: string, datatype: string, options: MakeLiter
  * Build an RDF literal.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { makeLiteral } from "@beep/rdf/Rdf"
  *
  * const lit = makeLiteral("hello", "http://www.w3.org/2001/XMLSchema#string", { language: "en" })
@@ -998,7 +998,7 @@ const makeDefaultGraph = (): DefaultGraph =>
  * Build an RDF quad.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { makeNamedNode, makeLiteral, makeQuad } from "@beep/rdf/Rdf"
  *
  * const subject = makeNamedNode("https://example.org/alice")
@@ -1034,7 +1034,7 @@ export const makeQuad: {
  * Build a dataset from quads.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { makeNamedNode, makeLiteral, makeQuad, makeDataset } from "@beep/rdf/Rdf"
  *
  * const quad = makeQuad(
@@ -1091,7 +1091,7 @@ const encodeBlankNodeLabel: (value: string) => string = Str.replaceAllWith(/[^A-
  * Serialize an RDF term to a deterministic lexical form.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { makeNamedNode, serializeTerm } from "@beep/rdf/Rdf"
  *
  * const serialized = serializeTerm(makeNamedNode("https://example.org/x"))
@@ -1118,7 +1118,7 @@ export const serializeTerm = (term: Term): string =>
  * Serialize an RDF quad to a deterministic lexical form.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { makeNamedNode, makeLiteral, makeQuad, serializeQuad } from "@beep/rdf/Rdf"
  *
  * const quad = makeQuad(
@@ -1143,7 +1143,7 @@ const byQuadLexicalAscending: Order.Order<Quad> = Order.mapInput(Order.String, s
  * Sort dataset quads by deterministic quad serialization.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { makeDataset, sortDatasetQuads } from "@beep/rdf/Rdf"
  *
  * const dataset = makeDataset([])
@@ -1163,7 +1163,7 @@ export const sortDatasetQuads = (dataset: Dataset): ReadonlyArray<Quad> =>
  * Compare datasets by sorted quad serialization.
  *
  * @example
- * ```typescript
+ * ```ts
  * import { makeDataset, areDatasetsEquivalent } from "@beep/rdf/Rdf"
  *
  * const a = makeDataset([])

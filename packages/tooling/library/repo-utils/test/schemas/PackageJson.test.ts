@@ -20,6 +20,7 @@ import * as Struct from "effect/Struct";
 import { FastCheck as fc } from "effect/testing";
 
 const objectKeys = (value: unknown): ReadonlyArray<string> => (P.isObject(value) ? Struct.keys(value) : A.empty());
+const decodeJsonPointerSegment = (segment: string): string => segment.replaceAll("~1", "/").replaceAll("~0", "~");
 const PackageJsonNameArbitrary = S.toArbitrary(PackageJson.fields.name);
 
 describe("PackageJson schema", () => {
@@ -790,8 +791,17 @@ describe("PackageJson schema", () => {
 
   describe("artifacts and diagnostics", () => {
     it("exports a JSON Schema document with strict object definitions", () => {
-      expect(packageJsonJsonSchema.schema.$ref).toBe("#/$defs/PackageJson");
-      expect(packageJsonJsonSchema.definitions.PackageJson.additionalProperties).toBe(false);
+      const packageJsonSchema = packageJsonJsonSchema.schema;
+      expect(packageJsonSchema).toHaveProperty("$ref");
+      if (!("$ref" in packageJsonSchema) || typeof packageJsonSchema.$ref !== "string") {
+        throw new Error("expected PackageJson JSON schema document root to be a $ref");
+      }
+
+      const packageJsonDefinitionName = decodeJsonPointerSegment(packageJsonSchema.$ref.slice("#/$defs/".length));
+      const packageJsonDefinition = packageJsonJsonSchema.definitions[packageJsonDefinitionName];
+
+      expect(packageJsonSchema.$ref).toMatch(/^#\/\$defs\/.+PackageJson$/);
+      expect(packageJsonDefinition?.additionalProperties).toBe(false);
     });
 
     it.effect(
