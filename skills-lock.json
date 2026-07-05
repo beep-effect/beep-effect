@@ -4,7 +4,7 @@
     "atom-reactivity-specialist": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "e0598ccea752054a805074c75d8da1e29d3a0d54d5ab8ea088b86ea9c685bbbe"
+      "computedHash": "a87b7f054119d2031ca502ae169cd8172fb589c039e6b6f58769be3d423394ef"
     },
     "claude-frontend-lane": {
       "source": "repo-local",
@@ -14,12 +14,12 @@
     "crispen": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "179df76a4755b1dee3dc57820d061a9f54f0a57a2b54362f8448d5c6ea47fce7"
+      "computedHash": "cc4f223b9f9dd54842bf32ebb375c01ef69ed2f0cb2b3e3d4736d316ce2c29f9"
     },
     "effect-first-development": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "d29ef6cf4dd28a2296acef6d79fb12a410993df952c44cda316b396569c18d83"
+      "computedHash": "095507d23e0a189dc6f04e25a3ae6c09694e266582b10ea1b6149085b673b67e"
     },
     "effect-services": {
       "source": "repo-local",
@@ -51,7 +51,7 @@
     "jsdoc-annotation-specialist": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "4c1842aa34fb4f7b5f2933979209cb6de5171e3da6a142d4e940d1314aabd1f8"
+      "computedHash": "10416ab9cef6cae0dfb84e3725ab40147fa876f5e9e62b83f8025be5eabb7c7b"
     },
     "mcp-graphiti-memory": {
       "source": "repo-local",
@@ -118,7 +118,7 @@
     "quality-review-fix-loop": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "8b00fdb9e28f25e92b3001a056b8ec6d67757ddb42ab349ffab84ea1067db0da"
+      "computedHash": "2a5126c4758ee910984735a5f3b82341f730d682e2078c82d705efdd3e26510f"
     },
     "reflect": {
       "source": "repo-local",
@@ -138,7 +138,7 @@
     "schema-model-specialist": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "570f0448d604cafb9cbaca124b5251ce6b20270f69ea62533a7830e8ddb9dadc"
+      "computedHash": "56e3ed8a3b57aff0c01216b489f7c6ed322f7fbfd24b2c9c0c447b68f8d07d5a"
     },
     "shadcn": {
       "source": "shadcn-ui/ui",
@@ -155,11 +155,9 @@
       "skillPath": "skills/productivity/teach/SKILL.md"
     },
     "turborepo": {
-      "source": "vercel/turborepo",
-      "sourceType": "github",
-      "computedHash": "74f2a38a9bdd188ff8b2fbabefd931e804bde56e665a852f5a079dad9847b20f",
-      "ref": "main",
-      "skillPath": "skills/turborepo/SKILL.md"
+      "source": "repo-local",
+      "sourceType": "local",
+      "computedHash": "fcb48d60cfe43a1486f1e82b0ac27423493b6004e1e2d518eec153bb83fcac0e"
     },
     "yeet": {
       "source": "repo-local",

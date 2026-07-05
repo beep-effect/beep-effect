@@ -1,34 +1,11 @@
-# {{scopedName}} Agent Guide
+# {{scopedName}}
 
-## Purpose & Fit
-- {{description}}
+{{description}}
 
-## Surface Map
-| Surface | Key exports | Notes |
-| --- | --- | --- |
-| entry module | VERSION | package entry point |
+## Surface
+
+- See `src/index.ts` barrel — do not hand-maintain inventory tables here.
 
 ## Laws
-- Follow repository laws through command discovery.
-- Run `bun run beep docs laws`.
-- Prefer tersest equivalent helper forms when behavior is unchanged.
-- In `test/` and `dtslint/`, import package source through `{{scopedName}}` or other `@beep/*` package aliases; keep relative imports for local helpers, fixtures, and snapshots only.
-- Keep package guidance concise and avoid duplicating long policy prose.
 
-## Quick Recipes
-```ts
-import { VERSION } from "{{scopedName}}"
-```
-
-## Verifications
-- `bunx turbo run test --filter={{scopedName}}`
-- `bunx turbo run test:integration --filter={{scopedName}}`
-- `bunx turbo run lint --filter={{scopedName}}`
-- `bunx turbo run check --filter={{scopedName}}`
-
-## Contributor Checklist
-- [ ] New exports include jsdoc metadata
-- [ ] Tests added or updated for behavior changes
-- [ ] `bun run check` passes
-- [ ] `bun run test` passes
-- [ ] `bun run lint` passes
+- Root `AGENTS.md` and `standards/ARCHITECTURE.md` govern this package; record only genuinely package-specific deltas here.
