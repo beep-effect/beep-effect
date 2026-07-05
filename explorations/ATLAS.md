@@ -168,6 +168,17 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`agent-pipeline-velocity`](./agent-pipeline-velocity/README.md) — graduated
+  2026-07-05 (same-day compressed ceremony) into a single goal packet
+  [`agent-pipeline-velocity`](../goals/agent-pipeline-velocity/README.md):
+  agent context economy (single-sourced instruction laws, progressive-disclosure
+  skills, permission allowlist + hooks) + time-to-mergeable-PR (greptile-only
+  reviews, read-only PR turbo cache, green main, yeet instrumentation/parity,
+  `beep worktree`), one PR. Absorbs/supersedes 4 packets
+  (agent-effectiveness-{phoenix-enrichment,workflow-integration},
+  yeet-{operator-clarity,pr-closeout-loop}); continues repo-quality-throughput
+  numbering at rqt-011. Grounded by 3 baseline sweeps + 2 in-repo audits +
+  an 11-finding adversarially-verified deep-research report.
 - [`microsoft-365-integration`](./microsoft-365-integration/README.md) —
   graduated 2026-06-18 into two goal packets:
   [`m365-driver`](../goals/m365-driver/README.md) (the `@beep/m365` native

@@ -3,9 +3,9 @@
   "initiative": {
     "id": "yeet-operator-clarity",
     "title": "Yeet Operator Clarity",
-    "status": "active",
+    "status": "superseded",
     "created": "2026-06-11",
-    "updated": "2026-06-11",
+    "updated": "2026-07-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/yeet-operator-clarity",
@@ -20,6 +20,8 @@
     "grandfathered": false
   },
   "mission": "Add local-first Yeet status, opt-in compact summaries, and failure-local remediation hints for autonomous operators.",
+  "supersededBy": "goals/agent-pipeline-velocity",
+  "supersededNote": "2026-07-05: P0-P4 completed and retained as evidence; residual P5 closeout scope absorbed into agent-pipeline-velocity (ledger-surgery decision, explorations/agent-pipeline-velocity/DECISIONS.md).",
   "relatedPackets": [
     {
       "id": "yeet-agent-ergonomics",
