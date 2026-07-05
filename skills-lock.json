@@ -11,6 +11,11 @@
       "sourceType": "local",
       "computedHash": "c2ab8c801870e92749c966002199e42f1f54091d034aac98a3a7a2749b4fa9e2"
     },
+    "crispen": {
+      "source": "repo-local",
+      "sourceType": "local",
+      "computedHash": "179df76a4755b1dee3dc57820d061a9f54f0a57a2b54362f8448d5c6ea47fce7"
+    },
     "effect-first-development": {
       "source": "repo-local",
       "sourceType": "local",
@@ -29,7 +34,7 @@
     "explore": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "33e288509aee1b8d6f152b6e4a32c0c2cd016b25b0173456b070a3773021cb0c"
+      "computedHash": "8d247c47a64b47db2fd037467191dd5224ceac638e4f47eb442af44341a7c7cb"
     },
     "grill-me": {
       "source": "mattpocock/skills",
@@ -94,7 +99,7 @@
     "ponytail-help": {
       "source": "DietrichGebert/ponytail",
       "sourceType": "github",
-      "computedHash": "1bba40d525f7fc8cf6f5c853ae78bf308ac0662e4e74512f11dac844af3598a3",
+      "computedHash": "98e3c7053fa38c6d84712f4da14fa6c0209773f7fa0cc3cfab06aafaa515f2bc",
       "ref": "main",
       "skillPath": "skills/ponytail-help/SKILL.md"
     },
@@ -152,14 +157,14 @@
     "turborepo": {
       "source": "vercel/turborepo",
       "sourceType": "github",
-      "computedHash": "3af080d5d9bc1fe3e4a9bbb8efb2e0a019685088986eaed4d6dc92865293305b",
+      "computedHash": "74f2a38a9bdd188ff8b2fbabefd931e804bde56e665a852f5a079dad9847b20f",
       "ref": "main",
       "skillPath": "skills/turborepo/SKILL.md"
     },
     "yeet": {
       "source": "repo-local",
       "sourceType": "local",
-      "computedHash": "079a73fc57128bb663079c44232fd06d3d1f8d24c8f57d821d810757238a1a8e"
+      "computedHash": "b5eeeb79bea73339040a6b2cd859a9657cc95e2093448d58b372935fa4c21913"
     }
   }
 }

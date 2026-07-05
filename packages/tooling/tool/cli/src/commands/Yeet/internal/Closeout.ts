@@ -798,6 +798,7 @@ const closeoutGateStates = (
   botComments: ReadonlyArray<GhComment>,
   reviewThreads: ReadonlyArray<GhReviewThread>
 ): ReadonlyArray<PrCloseoutGateState> => {
+  const enabledBots = normalizedTokens(options.bots);
   const greptileBlocked =
     (Str.isNonEmpty(Str.trim(options.requireGreptileScore)) && greptile.score !== options.requireGreptileScore) ||
     greptileIssueLimitExceeded(greptile.issueCount, options.requireGreptileIssues);
@@ -816,37 +817,49 @@ const closeoutGateStates = (
           : "No unresolved actionable review threads.",
       count: actionableReviewThreadCount,
     }),
-    PrCloseoutGateState.make({
-      name: "greptile",
-      status: greptileBlocked ? "blocked" : options.retriggerGreptile ? "written" : "passed",
-      detail: options.retriggerGreptile
-        ? "Greptile retrigger comment was posted explicitly."
-        : `Greptile score=${greptile.score ?? "unknown"} issues=${greptile.issueCount ?? "unknown"}.`,
-      count: greptile.issueCount,
-      url: greptile.url,
-    }),
-    PrCloseoutGateState.make({
-      name: "coderabbit",
-      status: coderabbitActiveThreads > 0 ? "blocked" : coderabbitComments > 0 ? "passed" : "unknown",
-      detail:
-        coderabbitActiveThreads > 0
-          ? `${coderabbitActiveThreads} unresolved CodeRabbit-authored review thread(s).`
-          : coderabbitComments > 0
-            ? "CodeRabbit comments are present and no active CodeRabbit-authored thread remains."
-            : "No CodeRabbit signal was found in fetched bot comments.",
-      count: coderabbitActiveThreads,
-    }),
-    PrCloseoutGateState.make({
-      name: "chatgpt",
-      status: chatgptActiveThreads > 0 ? "blocked" : chatgptComments > 0 ? "passed" : "unknown",
-      detail:
-        chatgptActiveThreads > 0
-          ? `${chatgptActiveThreads} unresolved ChatGPT-authored review thread(s).`
-          : chatgptComments > 0
-            ? "ChatGPT comments are present and no active ChatGPT-authored thread remains."
-            : "No ChatGPT signal was found in fetched bot comments.",
-      count: chatgptActiveThreads,
-    }),
+    ...(A.contains(enabledBots, "greptile")
+      ? [
+          PrCloseoutGateState.make({
+            name: "greptile",
+            status: greptileBlocked ? "blocked" : options.retriggerGreptile ? "written" : "passed",
+            detail: options.retriggerGreptile
+              ? "Greptile retrigger comment was posted explicitly."
+              : `Greptile score=${greptile.score ?? "unknown"} issues=${greptile.issueCount ?? "unknown"}.`,
+            count: greptile.issueCount,
+            url: greptile.url,
+          }),
+        ]
+      : []),
+    ...(A.contains(enabledBots, "coderabbit")
+      ? [
+          PrCloseoutGateState.make({
+            name: "coderabbit",
+            status: coderabbitActiveThreads > 0 ? "blocked" : coderabbitComments > 0 ? "passed" : "unknown",
+            detail:
+              coderabbitActiveThreads > 0
+                ? `${coderabbitActiveThreads} unresolved CodeRabbit-authored review thread(s).`
+                : coderabbitComments > 0
+                  ? "CodeRabbit comments are present and no active CodeRabbit-authored thread remains."
+                  : "No CodeRabbit signal was found in fetched bot comments.",
+            count: coderabbitActiveThreads,
+          }),
+        ]
+      : []),
+    ...(A.contains(enabledBots, "chatgpt")
+      ? [
+          PrCloseoutGateState.make({
+            name: "chatgpt",
+            status: chatgptActiveThreads > 0 ? "blocked" : chatgptComments > 0 ? "passed" : "unknown",
+            detail:
+              chatgptActiveThreads > 0
+                ? `${chatgptActiveThreads} unresolved ChatGPT-authored review thread(s).`
+                : chatgptComments > 0
+                  ? "ChatGPT comments are present and no active ChatGPT-authored thread remains."
+                  : "No ChatGPT signal was found in fetched bot comments.",
+            count: chatgptActiveThreads,
+          }),
+        ]
+      : []),
     PrCloseoutGateState.make({
       name: "hosted-checks",
       status: "unknown",
