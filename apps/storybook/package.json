@@ -42,6 +42,7 @@
     "@storybook/addon-vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@tailwindcss/postcss": "catalog:",
+    "effect": "catalog:",
     "emojibase-data": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

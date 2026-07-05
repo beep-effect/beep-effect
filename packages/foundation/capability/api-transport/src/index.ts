@@ -9,7 +9,7 @@
  * The shared transport transformer (auth, rate-limit, retry) and its models.
  *
  * @since 0.0.0
- * @category transport
+ * @category ports
  */
 export * from "./Transport.ts";
 

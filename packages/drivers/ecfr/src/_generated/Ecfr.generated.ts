@@ -108,7 +108,7 @@ export class TitlesResponse extends S.Class<TitlesResponse>($I`TitlesResponse`)(
 /**
  * Descriptor for a single eCFR REST operation.
  *
- * @category operations
+ * @category endpoints
  * @since 0.0.0
  */
 export class EcfrOperationDescriptor extends S.Class<EcfrOperationDescriptor>($I`EcfrOperationDescriptor`)(
@@ -125,7 +125,7 @@ export class EcfrOperationDescriptor extends S.Class<EcfrOperationDescriptor>($I
 /**
  * The `listAgencies` eCFR operation descriptor.
  *
- * @category operations
+ * @category endpoints
  * @since 0.0.0
  */
 export const listAgenciesOperation = EcfrOperationDescriptor.make({
@@ -137,7 +137,7 @@ export const listAgenciesOperation = EcfrOperationDescriptor.make({
 /**
  * The `listTitles` eCFR operation descriptor.
  *
- * @category operations
+ * @category endpoints
  * @since 0.0.0
  */
 export const listTitlesOperation = EcfrOperationDescriptor.make({
@@ -149,7 +149,7 @@ export const listTitlesOperation = EcfrOperationDescriptor.make({
 /**
  * All generated eCFR operation descriptors keyed by operation id.
  *
- * @category operations
+ * @category endpoints
  * @since 0.0.0
  */
 export const ECFR_OPERATIONS = {

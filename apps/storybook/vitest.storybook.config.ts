@@ -4,11 +4,19 @@ import { playwright } from "@vitest/browser-playwright";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  optimizeDeps: {
+    include: ["effect/Number", "effect/Utils"],
+  },
   plugins: [
     storybookTest({
       configDir: fileURLToPath(new URL(".storybook", import.meta.url)),
     }),
   ],
+  resolve: {
+    alias: [
+      { find: /^@beep\/utils$/, replacement: fileURLToPath(new URL(".storybook/utils-browser.ts", import.meta.url)) },
+    ],
+  },
   test: {
     name: "storybook",
     fileParallelism: false,

@@ -138,7 +138,7 @@ const renderOperationConst = (entry: {
   `/**
  * The \`${entry.op.operationId}\` eCFR operation descriptor.
  *
- * @category operations
+ * @category endpoints
  * @since 0.0.0
  */
 export const ${entry.op.operationId}Operation = EcfrOperationDescriptor.make({
@@ -180,7 +180,7 @@ ${models}
 /**
  * Descriptor for a single eCFR REST operation.
  *
- * @category operations
+ * @category endpoints
  * @since 0.0.0
  */
 export class EcfrOperationDescriptor extends S.Class<EcfrOperationDescriptor>($I\`EcfrOperationDescriptor\`)(
@@ -199,7 +199,7 @@ ${operationConsts}
 /**
  * All generated eCFR operation descriptors keyed by operation id.
  *
- * @category operations
+ * @category endpoints
  * @since 0.0.0
  */
 export const ECFR_OPERATIONS = {
