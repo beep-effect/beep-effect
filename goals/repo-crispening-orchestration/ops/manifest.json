@@ -1,20 +1,20 @@
 {
   "schemaVersion": "initiative-manifest/v1",
   "initiative": {
-    "id": "<slug>",
-    "title": "<Goal Title>",
+    "id": "repo-crispening-orchestration",
+    "title": "Repo Crispening Orchestration",
     "status": "active",
-    "created": "YYYY-MM-DD",
-    "updated": "YYYY-MM-DD",
+    "created": "2026-07-05",
+    "updated": "2026-07-05",
     "packetAnchorDocument": "SPEC.md"
   },
-  "packetPath": "goals/<slug>",
+  "packetPath": "goals/repo-crispening-orchestration",
   "lifecycle": "active",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
-    "exploration": "explorations/<slug>",
-    "graduated": "YYYY-MM-DD"
+    "source": "research/prompt-2026-07-05.md (grounded authoring prompt; decisions D1-D5 and grill outcomes G1-G7 locked in research/decisions-locked.md before authorship)",
+    "recorded": "2026-07-05"
   },
   "completionGate": {
     "operator": "yeet",
@@ -26,11 +26,13 @@
   "currentSourceOfTruth": [
     "AGENTS.md",
     "CLAUDE.md",
-    "goals/<slug>/README.md",
-    "goals/<slug>/SPEC.md",
-    "goals/<slug>/PLAN.md",
-    "goals/<slug>/GOAL.md",
-    "goals/<slug>/research/SOURCES.md"
+    "goals/repo-crispening-orchestration/README.md",
+    "goals/repo-crispening-orchestration/SPEC.md",
+    "goals/repo-crispening-orchestration/PLAN.md",
+    "goals/repo-crispening-orchestration/GOAL.md",
+    "goals/repo-crispening-orchestration/research/SOURCES.md",
+    "goals/repo-crispening-orchestration/research/decisions-locked.md",
+    "goals/repo-crispening-orchestration/research/prompt-2026-07-05.md"
   ],
   "researchReports": [
     "research/SOURCES.md"
@@ -41,28 +43,33 @@
       "path": "GOAL.md",
       "targetChars": 3500,
       "maxChars": 4000,
-      "command": "/goal follow the instructions in goals/<slug>/GOAL.md"
+      "command": "/goal follow the instructions in goals/repo-crispening-orchestration/GOAL.md"
     }
   ],
   "phases": [
     {
       "id": "P0",
-      "name": "Research",
+      "name": "Enforce foundations",
       "status": "pending"
     },
     {
       "id": "P1",
-      "name": "Implement",
+      "name": "Baseline & rank",
+      "status": "pending"
+    },
+    {
+      "id": "P1.5",
+      "name": "Mechanize",
       "status": "pending"
     },
     {
       "id": "P2",
-      "name": "Verify",
+      "name": "Remediation waves",
       "status": "pending"
     },
     {
       "id": "P3",
-      "name": "Yeet: PR to mergeable",
+      "name": "Catalog & ship",
       "status": "pending"
     },
     {
@@ -72,16 +79,18 @@
     }
   ],
   "verificationCommands": [
-    "test \"$(wc -m < goals/<slug>/GOAL.md)\" -le 4000",
-    "jq . goals/<slug>/ops/manifest.json",
-    "rg -n \"<slug>|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/<slug>",
-    "git diff --check -- goals/<slug>",
+    "test \"$(wc -m < goals/repo-crispening-orchestration/GOAL.md)\" -le 4000",
+    "jq . goals/repo-crispening-orchestration/ops/manifest.json",
+    "rg -n \"repo-crispening-orchestration|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/repo-crispening-orchestration",
+    "git diff --check -- goals/repo-crispening-orchestration",
     "bun run beep lint reflection-artifacts"
   ],
   "stopConditions": [
-    "Required source files are missing or materially contradictory.",
-    "The implementation would exceed named scope.",
-    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
-    "The same blocker repeats after reasonable investigation."
+    "A §5.3 behavior-parity proof fails: the encoded/wire snapshot is not byte-identical, or a persisted model's SQL row shape drifts.",
+    "The §5.4 ripple sweep would exceed the wave's family packages (fence 8): stop and re-scope the wave rather than widen the touch set.",
+    "Any Non-Goals fence (1-9) would be violated by the proposed change.",
+    "bun run beep yeet verify is red at the wave gate and repair does not restore green within the wave.",
+    "The SFV4-getsomes-struct sweep is reached before the Law 20/47 amendment has merged (D5 ordering).",
+    "Required source files are missing or materially contradictory, the work would exceed named scope, verification requires unnamed credentials/cost/destructive side effects/policy approval, or the same blocker repeats after reasonable investigation."
   ]
 }
