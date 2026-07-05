@@ -34,7 +34,7 @@ export const CorpusCopyMode = LiteralKit(["copied", "provenance-only"]).pipe(
 );
 
 /**
- * Type for {@link CorpusCopyMode}. {@inheritDoc CorpusCopyMode}
+ * Copy disposition type recorded for a salvaged corpus file.
  *
  * @example
  * ```ts
@@ -43,7 +43,6 @@ export const CorpusCopyMode = LiteralKit(["copied", "provenance-only"]).pipe(
  * const mode: CorpusCopyMode = "copied"
  * console.log(mode)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
@@ -97,7 +96,7 @@ export const CorpusDuplicateScope = LiteralKit(["intra-run", "cross-run"]).pipe(
 );
 
 /**
- * Type for {@link CorpusDuplicateScope}. {@inheritDoc CorpusDuplicateScope}
+ * Duplicate-set scope type reported by the catalog.
  *
  * @example
  * ```ts
@@ -106,7 +105,6 @@ export const CorpusDuplicateScope = LiteralKit(["intra-run", "cross-run"]).pipe(
  * const scope: CorpusDuplicateScope = "cross-run"
  * console.log(scope)
  * ```
- *
  * @category models
  * @since 0.0.0
  */

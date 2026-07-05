@@ -2,6 +2,7 @@
  * Legal contact entity and role export surface.
  *
  * @packageDocumentation
+ * @category entities
  * @since 0.0.0
  */
 

@@ -11,7 +11,7 @@
  * endpoint into the contract surface consumed by the GovInfo service client.
  *
  * @since 0.0.0
- * @category Contracts
+ * @category protocols
  */
 export * from "./Api.ts";
 /**
@@ -19,6 +19,6 @@ export * from "./Api.ts";
  * responses, and error schemas for the `POST /search` endpoint.
  *
  * @since 0.0.0
- * @category Models
+ * @category models
  */
 export * as Search from "./Search/Search.contract.ts";

@@ -308,3 +308,14 @@ okrs
 reqs
 tulpn
 parameterizes
+CDTF
+DCMI
+DCTERMS
+dcterms
+Dcterms
+Eqky
+Irreflexive
+LCSH
+Qbhqb
+qohv
+unioned

@@ -23,7 +23,7 @@ import * as Search from "./Search/index.ts";
  * console.log(GovinfoApiGroup.identifier)
  * ```
  *
- * @category contracts
+ * @category protocols
  * @since 0.0.0
  */
 export const GovinfoApiGroup = HttpApiGroup.make("govinfo", { topLevel: true }).add(Search.Http);
@@ -38,7 +38,7 @@ export const GovinfoApiGroup = HttpApiGroup.make("govinfo", { topLevel: true }).
  * console.log(GovinfoApi.identifier)
  * ```
  *
- * @category contracts
+ * @category protocols
  * @since 0.0.0
  */
 export const GovinfoApi = HttpApi.make("govinfo").add(GovinfoApiGroup);

@@ -252,7 +252,7 @@ export const makeCurieFromIri = <const V extends VocabShape>(vocab: V) =>
 export const CurieFromIri = makeCurieFromIri(CoreVocab);
 
 /**
- * Type for {@link CurieFromIri}. {@inheritDoc CurieFromIri}
+ * {@inheritDoc CurieFromIri}
  *
  * @example
  * ```ts

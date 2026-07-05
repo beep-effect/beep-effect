@@ -2,6 +2,7 @@
  * Rejection entity and ground export surface.
  *
  * @packageDocumentation
+ * @category entities
  * @since 0.0.0
  */
 

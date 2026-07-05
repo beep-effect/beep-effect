@@ -2,6 +2,7 @@
  * Legal client entity and status export surface.
  *
  * @packageDocumentation
+ * @category entities
  * @since 0.0.0
  */
 

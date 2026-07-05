@@ -57,6 +57,7 @@
           "anyUnknownInErrorContext": "error",
           "asyncFunction": "error",
           "catchAllToMapError": "error",
+          "catchToIgnore": "error",
           "catchToOrElseSucceed": "error",
           "catchUnfailableEffect": "error",
           "classSelfMismatch": "error",

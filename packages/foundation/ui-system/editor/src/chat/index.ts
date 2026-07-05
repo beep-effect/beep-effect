@@ -8,6 +8,12 @@
  * @since 0.0.0
  */
 
+/**
+ * Chat state atoms for the feature-flagged composer.
+ *
+ * @category atoms
+ * @since 0.0.0
+ */
 export * from "./atoms.ts";
 /**
  * The pure attachment model and capture-time validation for the chat composer.

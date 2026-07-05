@@ -1,3 +1,10 @@
+/**
+ * GovInfo search HTTP endpoint descriptor.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
 import { HttpApiEndpoint, HttpApiSchema } from "effect/unstable/httpapi";
 import * as Contract from "./Search.contract.ts";
 
