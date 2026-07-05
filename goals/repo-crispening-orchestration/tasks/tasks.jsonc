@@ -196,7 +196,7 @@
       "proofCommands": [
         "bun run beep lint schema-first",
         "bun run beep yeet verify"
-        // Plus the S5.3 evidence in the wave PR: byte-identical encoded/wire
+        // Plus the §5.3 evidence in the wave PR: byte-identical encoded/wire
         // snapshot before vs after, and at least one S.toArbitrary round-trip
         // law per absorbed invariant.
       ],
@@ -213,7 +213,7 @@
         "bun run beep yeet verify"
       ],
       "evidence": [
-        "goals/repo-crispening-orchestration/SPEC.md (G2 constraint row, S5.3/S5.4 disciplines, Stop Conditions)",
+        "goals/repo-crispening-orchestration/SPEC.md (G2 constraint row, §5.3/§5.4 disciplines, Stop Conditions)",
         "goals/repo-crispening-orchestration/PLAN.md (P2)",
         "goals/repo-crispening-orchestration/research/decisions-locked.md (G2, D2, D3)",
         "goals/repo-crispening-orchestration/ops/prompts/remediation.agent.md",
