@@ -1,20 +1,23 @@
 {
   "schemaVersion": "initiative-manifest/v1",
   "initiative": {
-    "id": "<slug>",
-    "title": "<Goal Title>",
-    "status": "active",
-    "created": "YYYY-MM-DD",
-    "updated": "YYYY-MM-DD",
+    "id": "repo-crispening-orchestration",
+    "title": "Repo Crispening Orchestration",
+    "status": "bootstrapped-p0-pending",
+    "created": "2026-07-05",
+    "updated": "2026-07-05",
     "packetAnchorDocument": "SPEC.md"
   },
-  "packetPath": "goals/<slug>",
+  "mission": "Orchestrate a repo-wide schema crispening of first-party packages/** and apps/** — pushing invariants and pure behavior into effect/Schema — to a durable self-enforcing end state of four novel lint cards, a per-owner blocking policy ratchet, the Law 20/47 amendment, and a tracked schema catalog.",
+  "packetPath": "goals/repo-crispening-orchestration",
   "lifecycle": "active",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
-    "exploration": "explorations/<slug>",
-    "graduated": "YYYY-MM-DD"
+    "exploration": null,
+    "authoredDirectly": true,
+    "authoredFrom": "research/prompt-2026-07-05.md",
+    "graduated": "2026-07-05"
   },
   "completionGate": {
     "operator": "yeet",
@@ -26,14 +29,17 @@
   "currentSourceOfTruth": [
     "AGENTS.md",
     "CLAUDE.md",
-    "goals/<slug>/README.md",
-    "goals/<slug>/SPEC.md",
-    "goals/<slug>/PLAN.md",
-    "goals/<slug>/GOAL.md",
-    "goals/<slug>/research/SOURCES.md"
+    "goals/repo-crispening-orchestration/README.md",
+    "goals/repo-crispening-orchestration/SPEC.md",
+    "goals/repo-crispening-orchestration/PLAN.md",
+    "goals/repo-crispening-orchestration/GOAL.md",
+    "goals/repo-crispening-orchestration/research/SOURCES.md",
+    "goals/repo-crispening-orchestration/research/decisions-locked.md"
   ],
   "researchReports": [
-    "research/SOURCES.md"
+    "research/SOURCES.md",
+    "research/decisions-locked.md",
+    "research/prompt-2026-07-05.md"
   ],
   "agentLaunchers": [
     {
@@ -41,28 +47,33 @@
       "path": "GOAL.md",
       "targetChars": 3500,
       "maxChars": 4000,
-      "command": "/goal follow the instructions in goals/<slug>/GOAL.md"
+      "command": "/goal follow the instructions in goals/repo-crispening-orchestration/GOAL.md"
     }
   ],
   "phases": [
     {
       "id": "P0",
-      "name": "Research",
+      "name": "Enforce foundations",
       "status": "pending"
     },
     {
       "id": "P1",
-      "name": "Implement",
+      "name": "Baseline & rank",
+      "status": "pending"
+    },
+    {
+      "id": "P1.5",
+      "name": "Mechanize",
       "status": "pending"
     },
     {
       "id": "P2",
-      "name": "Verify",
+      "name": "Remediation waves",
       "status": "pending"
     },
     {
       "id": "P3",
-      "name": "Yeet: PR to mergeable",
+      "name": "Catalog & ship",
       "status": "pending"
     },
     {
@@ -72,16 +83,26 @@
     }
   ],
   "verificationCommands": [
-    "test \"$(wc -m < goals/<slug>/GOAL.md)\" -le 4000",
-    "jq . goals/<slug>/ops/manifest.json",
-    "rg -n \"<slug>|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/<slug>",
-    "git diff --check -- goals/<slug>",
-    "bun run beep lint reflection-artifacts"
+    "test \"$(wc -m < goals/repo-crispening-orchestration/GOAL.md)\" -le 4000",
+    "jq . goals/repo-crispening-orchestration/ops/manifest.json",
+    "rg -n \"repo-crispening-orchestration|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/repo-crispening-orchestration",
+    "git diff --check -- goals/repo-crispening-orchestration",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep lint schema-first",
+    "bun run beep yeet verify"
   ],
   "stopConditions": [
     "Required source files are missing or materially contradictory.",
     "The implementation would exceed named scope.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
-    "The same blocker repeats after reasonable investigation."
+    "The same blocker repeats after reasonable investigation.",
+    "A §5.3 parity proof fails or a §6 fence would be violated (see SPEC.md Stop Conditions).",
+    "The SFV4-getsomes-struct sweep is reached before the Law 20/47 amendment has merged (D5)."
+  ],
+  "crossLinks": [
+    "goals/schema-first-v4-capabilities",
+    "goals/schema-first-zero-actionables",
+    "goals/effect-native-migration",
+    "goals/beep-schema-topology"
   ]
 }

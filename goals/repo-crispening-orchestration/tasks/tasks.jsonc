@@ -1,0 +1,224 @@
+{
+  // Ranked task inventory for goals/repo-crispening-orchestration.
+  // Vocabulary follows the goals/repo-quality-throughput/tasks precedent
+  // (commandsOrChecks / benefitGate / proofCommands / acceptanceCommands /
+  // rollbackPlan / rollbackCommands / evidence). Decisions D1-D5 and grill
+  // outcomes G1-G7 are locked in research/decisions-locked.md.
+  "schemaVersion": "repo-crispening-orchestration/tasks/v1",
+  "updated": "2026-07-05",
+  "rankingMethod": "P0 enforcement tasks rank first in dependency order (D3: enforce-first, no remediation before enforcement + baseline exist), followed by the P2 pilot wave; within P0, rank follows PLAN.md step order because each step consumes the previous one's surface.",
+  "tasks": [
+    {
+      "id": "rco-001",
+      "rank": 1,
+      "status": "pending",
+      "lane": "lint-enforcement",
+      "title": "Author the 4 novel lint cards as real AST detectors in SchemaFirst.ts, with fixtures",
+      "commandsOrChecks": [
+        "bun run beep lint schema-first",
+        "bun run beep yeet verify"
+      ],
+      "benefitGate": "SFV4-fn-schema, SFV4-getsomes-struct, SFV4-normalization, and SFV4-null-return exist as recognized rule ids with real detectors (G3), so P1 discovery and the P2 ratchet have an enforcement surface to land on.",
+      "correctnessRisk": "medium",
+      "implementationScope": [
+        "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
+        // ruleId LiteralKit entry at :113-123, detector fns modeled on
+        // :447/:460/:508, remediation branches at :320-343, wiring at :1076.
+        "packages/tooling/tool/cli/test/**" // fixture violations per card
+      ],
+      "proofCommands": [
+        "bun run beep lint schema-first"
+        // Each fixture violation must surface as a structured
+        // [schema-first:issue] finding carrying the novel ruleId.
+      ],
+      "acceptanceCommands": [
+        "bun run beep lint schema-first",
+        "bun run beep yeet verify"
+      ],
+      "rollbackPlan": "Revert the task commit (cards, detectors, remediation branches, fixtures land as one commit) and re-run the proof commands to confirm the lint surface returns to the nine pre-existing rule ids.",
+      "rollbackCommands": [
+        "git revert <task-commit>",
+        "bun run beep lint schema-first",
+        "bun run beep yeet verify"
+      ],
+      "evidence": [
+        "goals/repo-crispening-orchestration/SPEC.md#rule-cards--specialist-domains-s1s5",
+        "goals/repo-crispening-orchestration/PLAN.md (P0 step 1)",
+        "goals/repo-crispening-orchestration/research/decisions-locked.md (G3)"
+      ]
+    },
+    {
+      "id": "rco-002",
+      "rank": 2,
+      "status": "pending",
+      "lane": "policy-ratchet",
+      "title": "Build standards/schema-crispening.policy.jsonc and extend schemaFirstLintHasFailures to consult it",
+      "commandsOrChecks": [
+        "jq . <(grep -v '^\\s*//' standards/schema-crispening.policy.jsonc)",
+        "bun run beep lint schema-first",
+        "bun run beep yeet verify"
+      ],
+      "benefitGate": "Per-owner/family blocking policy (G4) lets the four novel cards land non-blocking repo-wide and flip to blocking per family after its wave goes green, instead of today's all-or-nothing hard fail on activeAdvisories.",
+      "correctnessRisk": "medium",
+      "implementationScope": [
+        "standards/schema-crispening.policy.jsonc", // new file
+        "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts"
+        // schemaFirstLintHasFailures at :1464-1477 extended to consult the
+        // policy; existing repo-wide behavior preserved for existing cards.
+      ],
+      "proofCommands": [
+        "bun run beep lint schema-first"
+        // Novel-card advisories are non-blocking while their family flag is
+        // advisory; a deliberate regression fixture hard-fails once a family
+        // flag is set to blocking.
+      ],
+      "acceptanceCommands": [
+        "bun run beep lint schema-first",
+        "bun run beep yeet verify"
+      ],
+      "rollbackPlan": "Two-step rollback: first the cheap policy-flag revert (set the offending family flag back to advisory in standards/schema-crispening.policy.jsonc and re-run lint); if the extension itself is defective, git revert the task commit and re-run the proof commands.",
+      "rollbackCommands": [
+        "git checkout <task-commit>^ -- standards/schema-crispening.policy.jsonc", // policy-flag revert
+        "git revert <task-commit>", // full revert if the code extension is defective
+        "bun run beep lint schema-first",
+        "bun run beep yeet verify"
+      ],
+      "evidence": [
+        "goals/repo-crispening-orchestration/SPEC.md (G4 constraint row, Acceptance Criteria)",
+        "goals/repo-crispening-orchestration/PLAN.md (P0 step 2)",
+        "goals/repo-crispening-orchestration/research/decisions-locked.md (G4)"
+      ]
+    },
+    {
+      "id": "rco-003",
+      "rank": 3,
+      "status": "pending",
+      "lane": "doctrine",
+      "title": "Amend effect-first Law 20 and Law 47 plus mirrors: prefer O.getSomesStruct for heterogeneous struct-spreads, keep R.getSomes for homogeneous dictionaries",
+      "commandsOrChecks": [
+        "rg -n 'getSomesStruct' .claude/skills/effect-first-development/SKILL.md standards/effect-first-development.md .claude/skills/schema-first-development/SKILL.md",
+        "bun run beep yeet verify"
+      ],
+      "benefitGate": "D5 ordering: the doctrine amendment must merge before the SFV4-getsomes-struct sweep runs; without it the highest-confidence codemod class (triage row 1) stays blocked.",
+      "correctnessRisk": "low",
+      "implementationScope": [
+        ".claude/skills/effect-first-development/SKILL.md", // Law 20 at :99, Law 47 at :126
+        "standards/effect-first-development.md", // mirror at :75
+        ".claude/skills/schema-first-development/SKILL.md" // mirror at :96, related guidance near lines 34/571
+      ],
+      "proofCommands": [
+        "rg -n 'getSomesStruct' .claude/skills/effect-first-development/SKILL.md standards/effect-first-development.md .claude/skills/schema-first-development/SKILL.md"
+        // Amendment text present at every anchor and mirror; no anchor missed.
+      ],
+      "acceptanceCommands": [
+        "bun run beep yeet verify"
+      ],
+      "rollbackPlan": "Revert the task commit to restore the pre-amendment law text in all mirrors, then re-run the rg proof to confirm no partial amendment survives; the SFV4-getsomes-struct sweep re-blocks automatically (D5).",
+      "rollbackCommands": [
+        "git revert <task-commit>",
+        "rg -n 'getSomesStruct' .claude/skills/effect-first-development/SKILL.md standards/effect-first-development.md .claude/skills/schema-first-development/SKILL.md",
+        "bun run beep yeet verify"
+      ],
+      "evidence": [
+        "goals/repo-crispening-orchestration/SPEC.md (D5 constraint row, Stop Conditions)",
+        "goals/repo-crispening-orchestration/PLAN.md (P0 step 3)",
+        "goals/repo-crispening-orchestration/research/decisions-locked.md (D5, G6)"
+      ]
+    },
+    {
+      "id": "rco-004",
+      "rank": 4,
+      "status": "pending",
+      "lane": "doctrine",
+      "title": "Author the consolidated ADR entry in standards/architecture/DECISIONS.md",
+      "commandsOrChecks": [
+        "rg -n '2026-..-..: ' standards/architecture/DECISIONS.md",
+        "bun run beep yeet verify"
+      ],
+      "benefitGate": "One consolidated decision-log entry (G6) sanctions family-scoped waves vs the cleanup-on-touch bucket rule, the per-owner blocking policy, and the Law 20/47 amendment, making the doctrine survivable without this packet.",
+      "correctnessRisk": "low",
+      "implementationScope": [
+        "standards/architecture/DECISIONS.md"
+        // One entry, ADR format `## YYYY-MM-DD: Title` / Status / Decision /
+        // Rationale, covering sanctions (a)-(c) from G6.
+      ],
+      "proofCommands": [
+        "rg -n 'crispening' standards/architecture/DECISIONS.md"
+        // Entry present, ADR format matches the file's existing entries.
+      ],
+      "acceptanceCommands": [
+        "bun run beep yeet verify"
+      ],
+      "rollbackPlan": "Revert the task commit to drop the ADR entry; note that reverting the sanction also re-opens G6 and any dependent wave must halt until a superseding entry lands.",
+      "rollbackCommands": [
+        "git revert <task-commit>",
+        "bun run beep yeet verify"
+      ],
+      "evidence": [
+        "goals/repo-crispening-orchestration/SPEC.md (G6 constraint row)",
+        "goals/repo-crispening-orchestration/PLAN.md (P0 step 4)",
+        "goals/repo-crispening-orchestration/research/decisions-locked.md (G6)"
+      ]
+    },
+    {
+      "id": "rco-005",
+      "rank": 5,
+      "status": "pending",
+      "lane": "remediation-wave",
+      "title": "P2 pilot wave: full per-package remediation protocol on one foundation/modeling exemplar (@beep/md or @beep/lexical - decide at wave start)",
+      "dependsOn": [
+        "rco-001",
+        "rco-002",
+        "rco-003",
+        "rco-004"
+        // Plus the P1 baseline: 5 specialist inventories for the pilot package
+        // in ops/inventory/<Sn>/<pkg>.json, false-positive audit done, and
+        // baseline advisories landed in standards/schema-first.inventory.jsonc
+        // (PLAN.md P1 acceptance). D3 forbids remediation before enforcement +
+        // baseline exist.
+      ],
+      "commandsOrChecks": [
+        "bun run beep lint schema-first",
+        "bun run beep lint schema-topology",
+        "bun run beep yeet verify"
+      ],
+      "benefitGate": "The first wave doubles as the pilot (G2): it proves the full protocol end to end - tiered codemods, per-diff review, §5.3 parity proofs, §5.4 ripple sweep, family flip to blocking - before any wider wave is allowed to run.",
+      "correctnessRisk": "high",
+      "implementationScope": [
+        // Exactly one writer agent (D2), touch-scoped to the pilot package
+        // chosen at wave start (fence 8):
+        "packages/foundation/modeling/md/**", // if @beep/md is chosen
+        "packages/foundation/modeling/lexical/**", // if @beep/lexical is chosen
+        "standards/schema-crispening.policy.jsonc", // family flip after green
+        "standards/schema-first.inventory.jsonc", // exceptions + burndown
+        "goals/repo-crispening-orchestration/ops/progress.json"
+      ],
+      "proofCommands": [
+        "bun run beep lint schema-first",
+        "bun run beep yeet verify"
+        // Plus the S5.3 evidence in the wave PR: byte-identical encoded/wire
+        // snapshot before vs after, and at least one S.toArbitrary round-trip
+        // law per absorbed invariant.
+      ],
+      "acceptanceCommands": [
+        "bun run beep lint schema-first",
+        "bun run beep lint schema-topology",
+        "bun run beep yeet verify"
+      ],
+      "rollbackPlan": "Halt the wave per SPEC.md Stop Conditions, set the pilot package to remediation: blocked in ops/progress.json with the failing output, revert the wave commits, and flip any prematurely-blocking family flag back to advisory in the policy.",
+      "rollbackCommands": [
+        "git revert <task-commit>",
+        "git checkout <task-commit>^ -- standards/schema-crispening.policy.jsonc",
+        "bun run beep lint schema-first",
+        "bun run beep yeet verify"
+      ],
+      "evidence": [
+        "goals/repo-crispening-orchestration/SPEC.md (G2 constraint row, S5.3/S5.4 disciplines, Stop Conditions)",
+        "goals/repo-crispening-orchestration/PLAN.md (P2)",
+        "goals/repo-crispening-orchestration/research/decisions-locked.md (G2, D2, D3)",
+        "goals/repo-crispening-orchestration/ops/prompts/remediation.agent.md",
+        "goals/repo-crispening-orchestration/ops/codemods/README.md"
+      ]
+    }
+  ]
+}
