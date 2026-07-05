@@ -31,9 +31,14 @@ Effect/Schema APIs. Re-`rg` every symbol before applying it.
 ## Target surfaces
 
 Scope your edits to `{{PACKAGE_PATH}}` only (fence 8: touch-scoped waves —
-each wave edits only its family's packages). Never edit `.repos/**`,
-`**/dist/**`, `**/build/**`, `node_modules/**`, docgen output, or any generated
-file.
+each wave edits only its family's packages). Exception — orchestrator-owned
+artifacts are required bookkeeping, not a fence-8 violation: you MUST also
+update `standards/schema-crispening.policy.jsonc` (family flip),
+`standards/schema-first.inventory.jsonc` (exception ledger), and
+`goals/repo-crispening-orchestration/ops/progress.json` where the procedure
+says so. Never edit `.repos/**`, `**/dist/**`, `**/build/**`,
+`node_modules/**`, docgen output, or any generated file (reading
+`.repos/effect-v4` for API verification is required and allowed).
 
 ## Verified API Corrections (embed verbatim)
 

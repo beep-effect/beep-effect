@@ -7,13 +7,14 @@
 {
   "schemaVersion": "repo-crispening-orchestration/tasks/v1",
   "updated": "2026-07-05",
-  "rankingMethod": "P0 enforcement tasks first (novel lint cards must exist before any discovery or remediation per D3 'no remediation before enforcement + baseline exist'), then the Law 20/47 doctrine amendment (D5, must precede the getsomes-struct sweep), then P1 discovery (one task per specialist S1-S5), then P1.5 mechanization, then the P2 pilot wave.",
+  "rankingMethod": "P0 enforcement first, policy BEFORE detectors (rco-005 lands the per-owner exemption so the novel cards can land repo-green — see PLAN.md Policy Ratchet Shape), then the four detectors, then the Law 20/47 doctrine amendment (D5, must be MERGED via the standalone P0 PR before the getsomes-struct sweep), then P1 discovery (one task per specialist S1-S5), then P1.5 mechanization, then the P2 pilot wave.",
   "tasks": [
     {
       "id": "rco-001",
-      "rank": 1,
+      "rank": 2,
       "phase": "P0",
       "status": "pending",
+      "blockedBy": ["rco-005"],
       "lane": "schema-first-lint",
       "specialist": "S1",
       "title": "Author SFV4-fn-schema AST detector + fixture",
@@ -32,9 +33,10 @@
     },
     {
       "id": "rco-002",
-      "rank": 2,
+      "rank": 3,
       "phase": "P0",
       "status": "pending",
+      "blockedBy": ["rco-005"],
       "lane": "schema-first-lint",
       "specialist": "S2",
       "title": "Author SFV4-normalization AST detector + fixture",
@@ -53,9 +55,10 @@
     },
     {
       "id": "rco-003",
-      "rank": 3,
+      "rank": 4,
       "phase": "P0",
       "status": "pending",
+      "blockedBy": ["rco-005"],
       "lane": "schema-first-lint",
       "specialist": "S2",
       "title": "Author SFV4-null-return AST detector + fixture",
@@ -74,9 +77,10 @@
     },
     {
       "id": "rco-004",
-      "rank": 4,
+      "rank": 5,
       "phase": "P0",
       "status": "pending",
+      "blockedBy": ["rco-005"],
       "lane": "schema-first-lint",
       "specialist": "S3",
       "title": "Author SFV4-getsomes-struct AST detector + fixture",
@@ -95,13 +99,13 @@
     },
     {
       "id": "rco-005",
-      "rank": 5,
+      "rank": 1,
       "phase": "P0",
       "status": "pending",
       "lane": "schema-first-ratchet",
       "specialist": "orchestration",
-      "title": "Build standards/schema-crispening.policy.jsonc and extend schemaFirstLintHasFailures",
-      "description": "G4: add the per-owner/family blocking-flag policy file and wire schemaFirstLintHasFailures (packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts:1464-1477) to consult it. New cards land non-blocking everywhere; a family's flag flips to blocking only after its P2 wave goes yeet-verify-green (§5.7).",
+      "title": "Build standards/schema-crispening.policy.jsonc and extend schemaFirstLintHasFailures (LANDS FIRST)",
+      "description": "G4: add the per-owner/family blocking-flag policy file (shape in PLAN.md 'Policy Ratchet Shape') and wire schemaFirstLintHasFailures (packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts:1464-1477) to consult it. MUST land before any novel detector (rco-001..004 are blockedBy this task): findings whose ruleId is a policy card and whose family/owner is non-blocking are fully exempt from hasFailures — excluded from enforcedCandidates, missingEntries, and activeAdvisories — so the detectors land repo-green before the P1 baseline exists. A family's flag flips to blocking only after its P2 wave goes yeet-verify-green (§5.7).",
       "implementationScope": [
         "standards/schema-crispening.policy.jsonc",
         "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts"
@@ -136,7 +140,7 @@
       "rollbackCommands": [
         "git checkout -- .claude/skills/effect-first-development/SKILL.md .claude/skills/schema-first-development/SKILL.md standards/architecture/DECISIONS.md"
       ],
-      "notes": "This task must land before rco-013 (the SFV4-getsomes-struct sweep) is allowed to run. See rco-013.blockedBy."
+      "notes": "This task must land before rco-013 (the SFV4-getsomes-struct sweep) is allowed to run — and 'land' means MERGED to main via the standalone P0 PR (PLAN.md P0 exit criteria), not merely committed on the goal branch. See rco-013.blockedBy."
     },
     {
       "id": "rco-007",

@@ -34,7 +34,9 @@ Effect/Schema APIs. Re-`rg` every symbol before writing it into a finding.
 Scan only first-party source under `{{PACKAGE_PATH}}` (itself under
 `packages/**` or `apps/**`), minus generated code. Hard exclusions — never edit
 or scan: `.repos/**`, `**/dist/**`, `**/build/**`, `node_modules/**`, docgen
-output, and any generated files.
+output, and any generated files. The exclusion bars smell-scanning and
+edits only — read-only API verification against `.repos/effect-v4` is
+required and allowed.
 
 ## SPEC Rule Card — S4 (verbatim, `SPEC.md` "Rule Cards — Specialist Domains S1–S5")
 

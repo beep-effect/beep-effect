@@ -36,7 +36,9 @@ Effect/Schema APIs. Re-`rg` every symbol before writing it into a finding.
 Scan only first-party source under `{{PACKAGE_PATH}}` (itself under
 `packages/**` or `apps/**`), minus generated code. Hard exclusions — never edit
 or scan: `.repos/**`, `**/dist/**`, `**/build/**`, `node_modules/**`, docgen
-output, and any generated files.
+output, and any generated files. The exclusion bars smell-scanning and
+edits only — read-only API verification against `.repos/effect-v4` is
+required and allowed.
 
 ## SPEC Rule Card — S1 (verbatim, `SPEC.md` "Rule Cards — Specialist Domains S1–S5")
 
@@ -192,8 +194,10 @@ rank up; judgment-only findings rank down).
 
 In addition to the per-package inventory, maintain the shared note at
 `ops/inventory/S1/RULE-CARD-NOTES.md` (create it on your first run, extend it
-on later runs) documenting, for the P0 implementer who wires the actual AST
-detector into `packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts`:
+on later runs). The `SFV4-fn-schema` detector **already landed in P0** (G3)
+as a real AST detector in
+`packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts`, non-blocking
+via the per-owner policy. Your note documents, for its maintainer:
 
 - **Detector heuristic:** an exported function in a schema-modeled file (a
   file that already exports at least one `S.Class`/`S.Struct`/`Fn` schema)
@@ -203,8 +207,10 @@ detector into `packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts`:
   examples of functions that *look* like a match but are legitimate (service
   methods, overloads, generic utilities, test/fixture helpers, 3rd-party
   boundary adapters).
-- You draft heuristics and escape hatches only — **you do not write the
-  detector code.** That is P0 implementation work, out of scope here.
+- You draft heuristic refinements and escape hatches only — **you do not
+  edit the detector code.** The detector landed in P0 (G3); your note feeds
+  its next tuning pass (heuristics, escape hatches, fixture candidates), not
+  its initial implementation.
 
 ## You must verify
 
