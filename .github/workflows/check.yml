@@ -92,13 +92,18 @@ jobs:
             uses_turbo: "false"
             install_typos: "false"
     env:
-      # The verify matrix runs PR-controlled code (turbo build/check/test/docgen),
-      # so the Turbo remote-cache credentials are scoped to push events only —
-      # never exposed to a fork/PR job (CSF-001). PR runs use the local cache,
-      # which also avoids the Vercel remote-cache 429 storms that were
-      # interrupting (SIGINT/exit 130) the Test Unit lane.
-      TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
+      # CSF-001, amended 2026-07-05 (goals/agent-pipeline-velocity, B2): the
+      # verify matrix runs PR-controlled code, so same-repo PR jobs now get
+      # READ-ONLY remote cache (TURBO_CACHE=local:rw,remote:r) — they consume
+      # push-warmed artifacts but can never write, preserving the
+      # cache-poisoning defense this rule exists for (lineage:
+      # vercel/turborepo#1188 -> vercel/turbo#6624). Fork PRs still get no
+      # credentials; push events keep read-write. Read-only also skips uploads,
+      # halving the request volume behind the historical Vercel 429 storms that
+      # SIGINTed Test Unit (exit 130) — if 429s resurface, revert this grant.
+      TURBO_TOKEN: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && secrets.TURBO_TOKEN || '' }}
+      TURBO_TEAM: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
+      TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw,remote:r' || '' }}
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
       EMAIL_RESEND_API_KEY: ${{ secrets.EMAIL_RESEND_API_KEY }}
@@ -375,12 +380,14 @@ jobs:
         id: fallow
         shell: bash
         env:
-          # Fallow runs PR-controlled `bun run beep` code, so Turbo remote cache
-          # credentials are only exposed on trusted push events. On pull_request
-          # runs these are empty to prevent secret exfiltration through the
-          # checked-out code or the uploaded .beep/fallow/** artifact.
-          TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-          TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
+          # Fallow runs PR-controlled `bun run beep` code. CSF-001 amendment
+          # (2026-07-05, goals/agent-pipeline-velocity B2): same-repo PRs get
+          # READ-ONLY remote cache (consume-only; writes impossible), fork PRs
+          # get nothing, push stays read-write. See the verify-matrix env
+          # comment for the full rationale and rollback trigger.
+          TURBO_TOKEN: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && secrets.TURBO_TOKEN || '' }}
+          TURBO_TEAM: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
+          TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw,remote:r' || '' }}
         run: |
           set -euo pipefail
 
