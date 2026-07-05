@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "repo-crispening-progress/v1",
+  "updated": "2026-07-05",
+  "legend": {
+    "phaseStatus": ["pending", "in_progress", "done"],
+    "packageStatus": ["pending", "discovery", "remediation", "blocked", "done"],
+    "familyStatus": ["advisory", "blocking"]
+  },
+  "phases": {
+    "p0_enforce": "pending",
+    "p1_baseline": "pending",
+    "p1_5_mechanize": "pending",
+    "p2_waves": "pending",
+    "p3_catalog": "pending",
+    "p4_close": "pending"
+  },
+  "families": {
+    "foundation": { "waveOrder": 1, "policy": "advisory", "status": "pending" },
+    "drivers": { "waveOrder": 2, "policy": "advisory", "status": "pending" },
+    "tooling": { "waveOrder": 3, "policy": "advisory", "status": "pending" },
+    "apps": { "waveOrder": 4, "policy": "advisory", "status": "pending" }
+  },
+  "topoOrder": [],
+  "topoOrderNote": "P1 populates this from `bun run topo-sort`. Do not copy the effect-native-migration list — it drifts.",
+  "packages": {},
+  "burndown": {
+    "S1": { "foundation": "pending", "drivers": "pending", "tooling": "pending", "apps": "pending" },
+    "S2": { "foundation": "pending", "drivers": "pending", "tooling": "pending", "apps": "pending" },
+    "S3": { "foundation": "pending", "drivers": "pending", "tooling": "pending", "apps": "pending" },
+    "S4": { "foundation": "pending", "drivers": "pending", "tooling": "pending", "apps": "pending" },
+    "S5": { "foundation": "pending", "drivers": "pending", "tooling": "pending", "apps": "pending" }
+  },
+  "notes": "P1 populates topoOrder (from `bun run topo-sort`) and the packages map. Each package entry should look like: { \"path\": \"packages/...\", \"sanitized\": \"beep__...\", \"discovery\": \"pending\", \"remediation\": \"pending\", \"findingsBySpecialist\": { \"S1\": 0, \"S2\": 0, \"S3\": 0, \"S4\": 0, \"S5\": 0 }, \"exceptions\": 0 }. Reconcile against this file before each wave; skip packages already \"done\"."
+}
