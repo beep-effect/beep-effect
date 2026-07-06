@@ -58,7 +58,7 @@ env:
   repo_root: .
   stub_scorer: false
   max_turns: 1
-  exec_timeout: 120
+  exec_timeout: 600
   score_timeout: 600
   task_timeout: 900
   workers: 1

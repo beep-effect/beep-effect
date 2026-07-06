@@ -40,14 +40,17 @@ before generalizing anything.
 
 ## Latest Evidence
 
-2026-07-06: **P1 complete — both gate branches proven.** Accept run: the
-optimizer learned a generalizable rule from a train failure and the gate
-recorded `accept_new_best` (val 0.6667 → 1.0000). Reject run: a
-non-improving candidate edit was refused on the strict-improvement rule and
-the skill reverted. Design + logs + artifacts in
-[`history/p1-gate/`](./history/p1-gate/FINDINGS.md); loop-proof smoke and
-integration findings in [`history/p1-spike/`](./history/p1-spike/FINDINGS.md).
-Custom-env seam for P3 confirmed (`_ENV_REGISTRY` injection, no fork).
+2026-07-06: **P2 + P3 complete — full production stack proven live.**
+12-task corpus (4 SFV4 rule classes) baseline-calibrated at 0.146–0.25 by
+the real scorer (`history/p3-smoke/baseline-scores.jsonl`); `beep
+agent-effectiveness evals score` deterministic with violation breakdowns;
+beeplaw env adapter ran the whole loop twice (stub + real reward, exit 0),
+both runs ending in a correct gate REJECT of a validation-regressing edit
+([`history/p3-smoke/`](./history/p3-smoke/FINDINGS.md)). Two upstream
+SkillOpt 0.2.0 bugs fixed durably in `tools/skillopt/` (missing wheel
+prompts; TimeoutExpired bytes crash). Earlier: P1 gate accept/reject proofs
+([`history/p1-gate/`](./history/p1-gate/FINDINGS.md)), loop-proof smoke
+([`history/p1-spike/`](./history/p1-spike/FINDINGS.md)).
 
 ## Notes
 

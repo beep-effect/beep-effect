@@ -93,17 +93,17 @@
     {
       "id": "P2",
       "name": "Corpus",
-      "status": "in_progress"
+      "status": "completed"
     },
     {
       "id": "P3",
       "name": "Scorer + runner hardening",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "P4",
       "name": "Ship harness",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "P5",

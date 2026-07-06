@@ -50,8 +50,30 @@ def materialize_vendored_prompts() -> int:
     return copied
 
 
+def _patch_codex_artifact_bytes() -> None:
+    """Shield skillopt's codex-timeout path from CPython's bytes-typed TimeoutExpired output.
+
+    subprocess.TimeoutExpired.stdout/.stderr are bytes even under text=True, and
+    skillopt 0.2.0's _persist_codex_artifacts writes them to a text-mode file,
+    raising TypeError and killing the whole training run on a single slow rollout.
+    """
+    from skillopt.model import codex_harness
+
+    original = codex_harness._persist_codex_artifacts
+
+    def _safe(work_dir, raw, last_message):
+        if isinstance(raw, bytes):
+            raw = raw.decode("utf-8", "replace")
+        if isinstance(last_message, bytes):
+            last_message = last_message.decode("utf-8", "replace")
+        return original(work_dir, raw, last_message)
+
+    codex_harness._persist_codex_artifacts = _safe
+
+
 def main() -> None:
     materialize_vendored_prompts()
+    _patch_codex_artifact_bytes()
 
     import scripts.train as train_script
 
