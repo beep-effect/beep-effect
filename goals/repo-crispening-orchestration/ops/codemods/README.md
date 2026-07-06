@@ -71,9 +71,9 @@ exceptions out of 3,252 records.
 
 | Smell | Target | Measured tier split (≥0.9 / 0.6–0.9 / <0.6) | Sites | Golden-diff status |
 | --- | --- | --- | --- | --- |
-| `R.getSomes({...})` on heterogeneous Option-structs (`SFV4-getsomes-struct`, S3+S2) | `O.getSomesStruct({...})` (`packages/foundation/modeling/utils/src/Option.ts:102`) | 0 / 22 / 0 — discovery measured **assisted**, not the ≥0.9 the P0 estimate assumed; call-site heterogeneity needs per-diff review | 22 | not started |
-| Schema-default absorption: `?? d` fallbacks and `...somethingDefaults` spreads (`SFV4-defaults`, S2) | `SchemaUtils.withConstantDefault` / `withKeyDefaults` / `withEncodeDefault` (`packages/foundation/modeling/schema/src/SchemaUtils/`) | 36 / 246 / 27 | 309 | not started |
-| Statics colocation: guard/decode walls, statics detached from schemas, non-dual helpers (`SFV4-static-api`, S4) | `SchemaUtils.withCodecStatics` or in-body `static readonly is = S.is(Self)`; `dual`; `flow(...)` | 85 / 392 / 38 | 515 | not started |
+| `R.getSomes({...})` on heterogeneous Option-structs (`SFV4-getsomes-struct`, S3+S2) | `O.getSomesStruct({...})` (`packages/foundation/modeling/utils/src/Option.ts:102`) | 0 / 22 / 0 — discovery measured **assisted**, not the ≥0.9 the P0 estimate assumed; call-site heterogeneity needs per-diff review | 22 | **green** (`getsomes-struct.codemod.ts`) |
+| Schema-default absorption: `?? d` fallbacks and `...somethingDefaults` spreads (`SFV4-defaults`, S2) | `SchemaUtils.withConstantDefault` / `withKeyDefaults` / `withEncodeDefault` (`packages/foundation/modeling/schema/src/SchemaUtils/`) | 36 / 246 / 27 | 309 | **green** (`defaults-fallback.codemod.ts`) |
+| Statics colocation: guard/decode walls, statics detached from schemas, non-dual helpers (`SFV4-static-api`, S4) | `SchemaUtils.withCodecStatics` or in-body `static readonly is = S.is(Self)`; `dual`; `flow(...)` | 85 / 392 / 38 | 515 | **green** (`static-api-colocation.codemod.ts`) |
 | Manual discriminator branching: `switch`/if-chains over `_tag`-like discriminators (`SFV4-static-api`, S3) | Derived `match` / `Match.tagsExhaustive` / `Match.discriminatorsExhaustive` (`effect/Match`) | 17 / 115 / 9 | 141 | not started |
 | Body-level normalization: trim/case/clamp/coerce (`SFV4-normalization`, S2) | Transformation schema (`S.decodeTo` + `SchemaTransformation.transform`/`transformOrFail`, or `SchemaGetter`) | 2 / 51 / 9 — measured mostly **assisted**, not judgment-only as estimated | 62 | not started |
 | `null`/`undefined`-returning domain helpers (`SFV4-null-return`, S2) | `effect/Option` (`O.some`/`O.none`/`O.fromNullishOr`) | 4 / 29 / 1 — measured mostly **assisted**, not judgment-only as estimated | 34 | not started |
@@ -92,12 +92,117 @@ satisfied:** the amendment and the consolidated
 (#294, commit 5fd9f35220). The sweep may proceed in P2 — at the measured
 **assisted** tier (agent reviews each diff), not unattended.
 
-## What P1.5 must add here
+## P1.5 scope resolution (2026-07-06)
 
-- One `ops/codemods/<transform-name>.codemod.ts` per ≥ 0.6-confidence row,
-  each built on `TSMorphService.updateSourceFile`.
-- One `ops/codemods/__fixtures__/<transform-name>/{before,after}.ts` pair per
-  codemod, exercised by a golden-diff dry-run test before the codemod is
-  allowed to run against a real wave.
-- Updated counts in the triage table above, replacing every "TBD — P1" with
-  the measured P1 baseline.
+SPEC P1.5 scopes codemod authoring to "the mechanical, high-count
+transforms". The three rows above marked **green** are those transforms
+(886 of 1,783 actionable sites): `getsomes-struct` (AST-mechanical),
+`defaults-fallback` and `static-api-colocation` (high-count proposers,
+same-file-conservative — precision over recall; every skipped site falls
+back to assisted hand-apply, see the matcher-scope sections below). The
+remaining rows stay **not started** by design: they are scaffold- or
+judgment-shaped (writing property tests, choosing brands, restructuring
+discriminator branches into `Match`) where a mechanical transform would be
+"a second bug wearing a smaller diff" — P2 remediation agents hand-apply
+those per the G5 assisted/judgment procedure in
+`ops/prompts/remediation.agent.md`. Each codemod ships a
+`__fixtures__/<name>/{before,after}.ts.txt` pair exercised by its
+golden-diff dry-run test; no codemod touches a wave before its test is
+green.
+
+## Running the codemod tests
+
+`goals/` is **not** a workspace package, so the root `vitest.config.ts`
+`projects` globs never pick it up. Rather than restructure any package, each
+codemod ships a local `vitest.config.ts` here that `mergeConfig`s the repo
+`vitest.shared.ts` (which is where `@beep/*` alias resolution lives) and pins
+`root` to this directory so `*.test.ts` resolves. Run all codemod golden-diff
+tests with:
+
+```
+npx vitest run --config goals/repo-crispening-orchestration/ops/codemods/vitest.config.ts
+```
+
+(Use `npx vitest run` — never `bun test`; the suite uses `@effect/vitest`
+`layer()`/`it.effect`.) The golden-diff test copies the `before` fixture into a
+throwaway in-repo temp dir alongside a minimal `tsconfig.json` (the
+`TSMorphService` scope resolver walks up from the subject file to the nearest
+`tsconfig.json`, and its `workspaceOnly` policy rejects files outside the repo,
+so the subject **must** live inside the repo tree — not `/tmp`), runs the
+codemod through the real `TSMorphService.updateSourceFile`, asserts the saved
+file is byte-identical to the `after` fixture, and asserts the homogeneous-dict
+negative case is a no-op (`changed: false`, text untouched). The temp dir is
+always removed.
+
+Each codemod is also runnable standalone against a file list (the shape the P2
+wave drives), which is the least-surprising invocation for a repo `.ts` script:
+
+```
+bun goals/repo-crispening-orchestration/ops/codemods/getsomes-struct.codemod.ts <file...>
+```
+
+It prints `changed`/`unchanged` per file and is idempotent (a second run is a
+no-op). Run it in a temp copy for dry-runs; against real source it is P2's tool.
+
+### `getsomes-struct` matcher scope (conservative, assisted-tier)
+
+`getsomes-struct.codemod.ts` rewrites **only** `<R>.getSomes(<inline object
+literal>)` where `<R>` is the `import * as R from "effect/Record"` namespace and
+the literal has fixed, non-computed keys (property/shorthand assignments, no
+spreads, non-empty). It retargets the file's `effect/Option` namespace import to
+`@beep/utils/Option` (a superset re-export) or reuses an existing `@beep/utils`
+`O` binding, then drops the now-unused `effect/Record` import. It deliberately
+skips: `R.getSomes(variable)` (homogeneous dictionary), any non-literal
+argument, and files under `packages/foundation/modeling/utils/` (self-import).
+Because it keys off an **existing** `R.getSomes` call, 6 of the 22 inventory
+findings (`chalk` SupportsColor:464, `ffmpeg` FFmpeg.service:262, `langextract`
+Alignment:36 & Handoff:59, `mcp-kit` SanitizedSpan:188, `repo-configs`
+SharedNextConfig.model:377) are **not** transformed by this codemod — their
+source has no `R.getSomes` today (mutable-record / spread-group /
+`Context.getOption` shapes) and remains a judgment-tier hand refactor for the P2
+agent. The remaining sites carry live `R.getSomes({...})` calls this codemod
+proposes edits for, per-diff reviewed at the assisted tier.
+
+### `static-api-colocation` matcher scope (conservative, assisted-tier)
+
+`static-api-colocation.codemod.ts` relocates **only** a non-exported module
+const of the exact shape `const x = <S>.<method>(<Owner>)` where `<S>` is the
+`import * as S from "effect/Schema"` namespace, `<method>` is one of `is`,
+`decodeUnknownSync`, `decodeUnknownOption`, `encodeSync`, and `<Owner>` is a
+single identifier naming an `S.Class`-family declaration **in the same file**
+(detected by the class `extends` call chain rooting at the `S` namespace). It
+adds an in-body `static readonly <method> = S.<method>(<Owner>)` and rewrites
+local reads `x(v)` → `Owner.<method>(v)`. It deliberately **skips** (hand-apply
+in P2): exported consts (public API — a §5.4 ripple, P2's judgment call);
+owners whose schema is imported from another file; owners that are not the
+`S.Class` family (e.g. branded `S.String.check(...).pipe(S.brand(...))` values
+like `DockerResolver`'s `StableDockerTag`, which are not classes and cannot hold
+a static); and any const whose target static name would collide with an existing
+class member (or with another relocation already claiming that static on the
+same owner). ts-morph inserts the static at its default indentation (four
+spaces); the P2 apply reformats via biome, so the proposed diff's indentation is
+cosmetic, not load-bearing. Shorthand object keys reading the const
+(`{ isHeading }`) cannot hold a member access, so the rewrite expands them to
+full assignments (`{ isHeading: Heading.is }`) instead of producing invalid
+syntax.
+
+### `defaults-fallback` matcher scope (conservative, assisted-tier)
+
+`defaults-fallback.codemod.ts` absorbs **only** `<object>.<field> ?? <literal>`
+reads where `<literal>` is a string / number / `true` / `false` literal and
+`<field>` maps to **exactly one** same-file `S.optionalKey(...)` field (on an
+`S.Class` heritage `{ field: schema }` object or an `S.Struct({...})`) that
+carries **no** default combinator yet. It pipes
+`SchemaUtils.withKeyDefaults(<literal>)` onto that field (adding the
+`@beep/schema` `SchemaUtils` import if missing) and simplifies the body read to
+the plain field access. It deliberately **skips** (hand-apply in P2): computed
+or non-literal defaults (`?? computeDefault()`, `?? Duration.minutes(10)`, `??
+someIdentifier`); fields whose owning schema is imported from another file (the
+field name resolves to no same-file `optionalKey` field); fields that already
+carry a default (`withKeyDefaults` / `withConstantDefault` /
+`withConstructorDefault` / …); and any field name that matches more than one
+same-file `optionalKey` field or is targeted by multiple bodies (a single schema
+default cannot serve divergent call-site defaults). Because the field↔schema
+link is **name-based**, not type-resolved, the P2 reviewer must confirm the
+`<object>` actually has the matched schema's type before accepting each diff —
+that confirmation is exactly the assisted-tier contract.

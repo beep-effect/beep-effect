@@ -15,8 +15,8 @@
   "phases": {
     "P0_enforce": "done",
     "P1_baseline": "done",
-    "P1_5_mechanize": "in_progress",
-    "P2_waves": "pending",
+    "P1_5_mechanize": "done",
+    "P2_waves": "in_progress",
     "P3_catalog": "pending",
     "P4_close": "pending"
   },
