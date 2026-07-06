@@ -181,7 +181,10 @@ a static); and any const whose target static name would collide with an existing
 class member (or with another relocation already claiming that static on the
 same owner). ts-morph inserts the static at its default indentation (four
 spaces); the P2 apply reformats via biome, so the proposed diff's indentation is
-cosmetic, not load-bearing.
+cosmetic, not load-bearing. Shorthand object keys reading the const
+(`{ isHeading }`) cannot hold a member access, so the rewrite expands them to
+full assignments (`{ isHeading: Heading.is }`) instead of producing invalid
+syntax.
 
 ### `defaults-fallback` matcher scope (conservative, assisted-tier)
 

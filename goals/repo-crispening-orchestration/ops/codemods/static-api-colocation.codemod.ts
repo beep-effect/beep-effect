@@ -221,9 +221,21 @@ export const rewriteStaticApiColocation = (sourceFile: SourceFile): void => {
   }
 
   // Phase C: rewrite local reads `constName(...)` -> `Owner.method(...)`.
+  // Shorthand object keys (`{ constName }`) cannot hold a member access, so
+  // they expand to full assignments (`{ constName: Owner.method }`) instead.
+  // Re-find after every replacement: replaceWithText invalidates node handles.
   for (const target of targets) {
-    for (const identifier of findUsageIdentifiers(sourceFile, target.constName)) {
-      identifier.replaceWithText(`${target.ownerName}.${target.method}`);
+    for (;;) {
+      const identifier = findUsageIdentifiers(sourceFile, target.constName)[0];
+      if (identifier === undefined) {
+        break;
+      }
+      const parent = identifier.getParent();
+      if (Node.isShorthandPropertyAssignment(parent)) {
+        parent.replaceWithText(`${target.constName}: ${target.ownerName}.${target.method}`);
+      } else {
+        identifier.replaceWithText(`${target.ownerName}.${target.method}`);
+      }
     }
   }
 };

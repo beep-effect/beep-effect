@@ -21,3 +21,5 @@ export const classify = (value: unknown): string => {
   }
   return "unknown";
 };
+
+export const headingCapabilities = { isHeading: Heading.is, kind: "heading" };

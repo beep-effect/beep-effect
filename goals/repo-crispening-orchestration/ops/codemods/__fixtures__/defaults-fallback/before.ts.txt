@@ -5,6 +5,7 @@ import { ImportedConfig } from "./imported.ts";
 export class ChunkOptions extends S.Class<ChunkOptions>("ChunkOptions")({
   size: S.optionalKey(S.Finite),
   label: S.optionalKey(S.String),
+  retries: S.optionalKey(S.Finite),
 }) {}
 
 export const resolveSize = (input: ChunkOptions): number => input.size ?? 1024;
@@ -14,3 +15,7 @@ export const resolveLabel = (input: ChunkOptions): string => input.label ?? comp
 export const resolveLimit = (input: ImportedConfig): number => input.limit ?? 512;
 
 const computeDefault = (): string => "fallback";
+
+export const resolveRetries = (input: ChunkOptions): number => input.retries ?? 3;
+
+export const resolveRetriesAggressive = (input: ChunkOptions): number => input.retries ?? 5;

@@ -153,7 +153,12 @@ const resolveOptionAlias = (sourceFile: SourceFile): string => {
       return alias;
     }
   }
-  const alias = isNameBound(sourceFile, "O") ? "OptionUtils" : "O";
+  let alias = "O";
+  // Walk O -> OptionUtils -> OptionUtils1 -> ... until the name is free, so a
+  // file that already binds both candidates never gains a duplicate identifier.
+  for (let attempt = 0; isNameBound(sourceFile, alias); attempt++) {
+    alias = attempt === 0 ? "OptionUtils" : `OptionUtils${attempt}`;
+  }
   sourceFile.addImportDeclaration({ moduleSpecifier: OPTION_UTILS_MODULE, namespaceImport: alias });
   return alias;
 };

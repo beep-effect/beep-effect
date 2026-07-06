@@ -205,8 +205,13 @@ export const rewriteDefaultsFallback = (sourceFile: SourceFile): void => {
     readonly defaultText: string;
     readonly lhsText: string;
   };
-  const edits: Array<Edit> = [];
-  const claimedFields = new Set<PropertyAssignment>();
+  // Two-pass: collect every candidate first, then drop ALL candidates whose
+  // field is claimed more than once — a single schema default cannot serve
+  // multiple (possibly divergent) call-site defaults, and absorbing only the
+  // first would leave the file half-transformed (schema default added while a
+  // redundant `??` survives in another body).
+  const candidates: Array<Edit> = [];
+  const claimCounts = new Map<PropertyAssignment, number>();
 
   for (const binary of sourceFile.getDescendantsOfKind(SyntaxKind.BinaryExpression)) {
     const fallback = asFallback(binary);
@@ -214,14 +219,14 @@ export const rewriteDefaultsFallback = (sourceFile: SourceFile): void => {
       continue;
     }
     const field = findUniqueOptionalField(fieldObjects, fallback.fieldName, schemaAlias);
-    // Skip when the same field is targeted by multiple bodies with (possibly)
-    // divergent defaults — a single schema default cannot serve both.
-    if (field === undefined || claimedFields.has(field)) {
+    if (field === undefined) {
       continue;
     }
-    claimedFields.add(field);
-    edits.push({ binary, field, defaultText: fallback.defaultText, lhsText: fallback.lhsText });
+    claimCounts.set(field, (claimCounts.get(field) ?? 0) + 1);
+    candidates.push({ binary, field, defaultText: fallback.defaultText, lhsText: fallback.lhsText });
   }
+
+  const edits = candidates.filter((candidate) => claimCounts.get(candidate.field) === 1);
 
   if (edits.length === 0) {
     return;
