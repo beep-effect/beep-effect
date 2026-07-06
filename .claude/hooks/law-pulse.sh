@@ -6,7 +6,11 @@
 # is the reliable channel; this pulse is the cheap middle ground for laws
 # without lint rules yet. Always exits 0; emits ~30 tokens every 5th edit.
 set -euo pipefail
-counter="${TMPDIR:-/tmp}/beep-law-pulse-$(id -u)"
+# Counter scoped per user AND per checkout/worktree (cksum of $PWD): parallel
+# sessions in sibling worktrees must not share pulse cadence. Same-worktree
+# concurrent sessions still share one counter — acceptable under the
+# one-agent-per-worktree convention (standards/git-worktrees.md).
+counter="${TMPDIR:-/tmp}/beep-law-pulse-$(id -u)-$(printf '%s' "$PWD" | cksum | cut -d' ' -f1)"
 n=$(( $(cat "$counter" 2>/dev/null || echo 0) + 1 ))
 printf '%s' "$n" > "$counter"
 if (( n % 5 == 0 )); then
