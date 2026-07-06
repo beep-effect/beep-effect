@@ -1,0 +1,16 @@
+import { SchemaUtils } from "@beep/schema";
+import * as S from "effect/Schema";
+import { ImportedConfig } from "./imported.ts";
+
+export class ChunkOptions extends S.Class<ChunkOptions>("ChunkOptions")({
+  size: S.optionalKey(S.Finite).pipe(SchemaUtils.withKeyDefaults(1024)),
+  label: S.optionalKey(S.String),
+}) {}
+
+export const resolveSize = (input: ChunkOptions): number => input.size;
+
+export const resolveLabel = (input: ChunkOptions): string => input.label ?? computeDefault();
+
+export const resolveLimit = (input: ImportedConfig): number => input.limit ?? 512;
+
+const computeDefault = (): string => "fallback";
