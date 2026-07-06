@@ -2,46 +2,17 @@
   {
     "ruleId": "schema-first-inventory",
     "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
-    "line": 83,
-    "symbol": "StyleName",
-    "smell": "Exported type alias union (ModifierStyleName | ForegroundStyleName | BackgroundStyleName) with a parallel hand-assembled runtime array styleNameValues (ChalkRuntime.ts:118) typed as widened ReadonlyArray<StyleName>; the full style-name literal domain has no runtime schema while sibling domains (ColorName, ChalkSchema.ts:392) are LiteralKits built from the same value arrays.",
-    "proposedTarget": "Add `styleNameValues = [...modifierNameValues, ...colorNameValues] as const` and `StyleName = LiteralKit(styleNameValues).pipe($I.annoteSchema(...))` in ChalkSchema.ts, mirroring the existing ColorName kit; derive the type via `typeof StyleName.Type` and reuse `.Options` in ChalkRuntime instead of the widened array.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 12
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
-    "line": 496,
-    "symbol": "getModelAnsi",
-    "smell": "Exported function in a schema-modeled file whose contract is built from inline string-literal unions (\"rgb\"|\"hex\"|\"ansi256\", \"ansi\"|\"ansi256\"|\"ansi16m\", \"color\"|\"bgColor\") duplicated across renderRgbModel/renderHexModel/renderAnsi256Model (AnsiStyles.ts:450-480) and ChalkRuntime.ts levelMapping:117 and createPrototype:286 — literal domains bypassing plainly warranted schemas. Missed by the current detector because isInlineTypeLiteralNode only matches TypeLiteral nodes, not literal-union type nodes.",
-    "proposedTarget": "LiteralKit consts in ChalkSchema.ts (e.g. ColorModelName = LiteralKit([\"rgb\",\"hex\",\"ansi256\"]), AnsiRenderLevel = LiteralKit([\"ansi\",\"ansi256\",\"ansi16m\"]), StyleChannel = LiteralKit([\"color\",\"bgColor\"])); type the params via `typeof Kit.Type`. Overlaps the S3 duplicate-literal-family collapse; keep single-writer coordination with the S3 wave.",
-    "confidence": 0.55,
-    "mechanization": "judgment",
-    "roiRank": 8
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
     "line": 335,
     "symbol": "hexToRgb",
     "smell": "Hand-rolled hex-color parsing (parseHexMatch regex at :264 + canonicalizeHex:273 + toRgbTuple bit-shifts:275) where a schema codec is a direct fit; invalid input silently falls back to [0, 0, 0] for upstream-chalk parity. No existing hex codec in @beep/colors to reuse (verified: zero hex matches in packages/foundation/capability/colors/src).",
     "proposedTarget": "Branded HexColorString schema (3-or-6-hex-digit check) with an S.decodeTo transform to an RgbTuple (S.Tuple of range-checked channels); decode via S.decodeUnknownOption + O.getOrElse(() => [0,0,0]) to keep the silent-fallback behavior byte-identical (section 5.3 parity).",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 6
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
-    "line": 341,
-    "symbol": "parseWindowsRelease",
-    "smell": "Hand-rolled \"major.minor.build\" parse (Str.split + Number.parseInt with \"0.0.0\" fallback) constructing a WindowsRelease Encoded literal, bypassing the already-defined WindowsReleaseModel (SupportsColor.ts:94) as a codec; the parse invariant lives beside, not on, the model.",
-    "proposedTarget": "A string-to-WindowsReleaseModel transform codec (S.String.pipe(S.decodeTo(...))) colocated with the model, decoded via S.decodeUnknownOption with the existing fallback semantics preserved.",
-    "confidence": 0.5,
-    "mechanization": "judgment",
-    "roiRank": 5
+    "roiRank": 6,
+    "exception": {
+      "reason": "Malformed hex input deliberately falls back to black for upstream chalk API compatibility; a validating HexColor schema would either reject public hex()/bgHex() inputs or hide that compatibility policy in a boundary transform. Deferred to a dedicated chalk color-argument codec sweep.",
+      "boundary": "public chalk-compatible hex/bgHex color argument behavior"
+    }
   },
   {
     "ruleId": "schema-first-inventory",
@@ -52,18 +23,11 @@
     "proposedTarget": "A ColorSupportLevelFromForceColorString transform codec colocated with ColorSupportLevel in ChalkSchema.ts, decoded with S.decodeUnknownOption to keep the O.Option result and chalk-compatible clamping semantics.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
-    "line": 409,
-    "symbol": "toTermProgramInfo",
-    "smell": "Hand-rolled TERM_PROGRAM/TERM_PROGRAM_VERSION parse (firstVersionSegment:401 + Number.parseInt) constructing a TermProgramInfo Encoded literal, bypassing the already-defined TermProgramInfoModel (SupportsColor.ts:106) as a codec.",
-    "proposedTarget": "An env-record-to-TermProgramInfoModel transform codec colocated with the model, preserving the \"0\" default for missing/unparseable versions.",
-    "confidence": 0.45,
-    "mechanization": "judgment",
-    "roiRank": 4
+    "roiRank": 5,
+    "exception": {
+      "reason": "FORCE_COLOR parsing is a third-party environment heuristic with chalk-compatible literal, empty-string, integer, and clamp semantics. A true codec belongs in a focused supports-color boundary redesign so the public ColorSupportLevel schema is not overloaded with env-only parsing policy.",
+      "boundary": "Node.js environment compatibility heuristic"
+    }
   },
   {
     "ruleId": "schema-first-inventory",

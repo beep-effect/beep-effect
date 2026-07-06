@@ -6,7 +6,7 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
-import { LiteralKit, Sha256Hex, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, Sha256Hex, TaggedErrorClass } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import { Dataset } from "../rdf.ts";
@@ -54,6 +54,34 @@ export const CanonicalizationAlgorithm = LiteralKit(["rdfc-1.0", "lexical-sort-v
 );
 
 /**
+ * Canonicalization error reason.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import * as S from "effect/Schema"
+ * import { CanonicalizationErrorReason } from "@beep/semantic-web/services/canonicalization"
+ *
+ * const reason = S.decodeUnknownSync(CanonicalizationErrorReason)("unsupportedAlgorithm")
+ * strictEqual(reason, "unsupportedAlgorithm")
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CanonicalizationErrorReason = LiteralKit([
+  "workLimitExceeded",
+  "unsupportedAlgorithm",
+  "canonicalizationFailure",
+  "fingerprintFailure",
+]).pipe(
+  $I.annoteSchema("CanonicalizationErrorReason", {
+    description: "Canonicalization error reason.",
+    semanticSchemaMetadata: serviceContractMetadata("CanonicalizationErrorReason", "Canonicalization error reason."),
+  })
+);
+
+/**
  * Typed canonicalization error.
  *
  * @example
@@ -74,7 +102,7 @@ export const CanonicalizationAlgorithm = LiteralKit(["rdfc-1.0", "lexical-sort-v
 export class CanonicalizationError extends TaggedErrorClass<CanonicalizationError>($I`CanonicalizationError`)(
   "CanonicalizationError",
   {
-    reason: LiteralKit(["workLimitExceeded", "unsupportedAlgorithm", "canonicalizationFailure", "fingerprintFailure"]),
+    reason: CanonicalizationErrorReason,
     message: S.String,
   },
   $I.annote("CanonicalizationError", {
@@ -106,7 +134,7 @@ export class CanonicalizeDatasetRequest extends S.Class<CanonicalizeDatasetReque
   {
     dataset: Dataset,
     algorithm: CanonicalizationAlgorithm,
-    workLimit: S.OptionFromOptionalKey(S.Finite),
+    workLimit: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("CanonicalizeDatasetRequest", {
     description: "Dataset canonicalization request.",
@@ -140,7 +168,7 @@ export class FingerprintDatasetRequest extends S.Class<FingerprintDatasetRequest
   {
     dataset: Dataset,
     algorithm: CanonicalizationAlgorithm,
-    workLimit: S.OptionFromOptionalKey(S.Finite),
+    workLimit: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("FingerprintDatasetRequest", {
     description: "Dataset fingerprint request.",

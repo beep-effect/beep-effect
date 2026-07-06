@@ -8,7 +8,11 @@
     "proposedTarget": "Add S.toTaggedUnion(\"provType\") to @beep/rdf ProvRecord (records already define provType with S.tag; Effect v4 S.tag is verified at .repos/effect-v4/packages/effect/src/Schema.ts:5919 and S.toTaggedUnion at :6094), then replace the semantic-web guard wall with ProvRecord.match / derived guards or a small provType category table. This keeps the PROV classes separate, preserves the encoded provType field, and requires the same-PR consumer sweep because the canonical schema lives in @beep/rdf (packages/foundation/modeling/rdf/src/Prov.ts:922).",
     "confidence": 0.72,
     "mechanization": "assisted",
-    "roiRank": 2.88
+    "roiRank": 2.88,
+    "exception": {
+      "reason": "The proposed ProvRecord.toTaggedUnion(\"provType\") change belongs to the public @beep/rdf ProvRecord schema. Fence 8 forbids this package writer from changing that public form; defer the consumer sweep to the family-close pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

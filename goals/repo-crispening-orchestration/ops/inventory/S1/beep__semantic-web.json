@@ -128,7 +128,11 @@
     "proposedTarget": "Move guards onto the `@beep/rdf/Prov` S.Class definitions (`Entity` at `packages/foundation/modeling/rdf/src/Prov.ts:262`, `Activity` at line 308, `Agent` at line 349, etc.) as `static readonly is = S.is(Self)`, then use `Entity.is`, `Activity.is`, and the class statics in `extensionTierRecordGuards`. Verified in-body class guard exemplars: `packages/foundation/modeling/md/src/Md.model.ts:873` and `packages/foundation/modeling/nlp/src/Core/Pattern.ts:596`.",
     "confidence": 0.84,
     "mechanization": "assisted",
-    "roiRank": 0.74
+    "roiRank": 0.74,
+    "exception": {
+      "reason": "The proposed statics belong on @beep/rdf PROV classes outside @beep/semantic-web. Fence 8 forbids this package writer from editing that package; defer the guard-colocation sweep to the family-close pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "schema-first-inventory",
@@ -199,7 +203,11 @@
     "proposedTarget": "Move the guard onto `JsonLdReferenceValue` in `packages/foundation/modeling/rdf/src/JsonLd.ts:276` as `static readonly is = S.is(JsonLdReferenceValue)`, then use `JsonLdReferenceValue.is(value)` at current call sites. Verified class guard exemplars: `packages/foundation/modeling/md/src/Md.model.ts:873` and `packages/foundation/modeling/nlp/src/Core/Pattern.ts:596`.",
     "confidence": 0.84,
     "mechanization": "assisted",
-    "roiRank": 0.61
+    "roiRank": 0.61,
+    "exception": {
+      "reason": "The proposed guard static belongs on @beep/rdf JsonLdReferenceValue outside @beep/semantic-web. Fence 8 forbids this package writer from editing that package; defer the guard-colocation sweep to the family-close pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "schema-first-inventory",

@@ -1,39 +1,6 @@
 [
   {
     "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/mcp-kit/src/SourceAuth.ts",
-    "line": 105,
-    "symbol": "SourceAuthRegistration",
-    "smell": "Option-transform field `signupUrl: S.OptionFromNullOr(S.String)` on an S.Class without `SchemaUtils.withNoneDefault`; every in-package `make` call site passes `signupUrl: O.none()` explicitly (test/ApiKeyRequired.test.ts:25, test/ToolkitComposition.test.ts:32, plus 7 doc examples across SourceAuth.ts/ApiKeyRequired.ts/ToolkitComposition.ts) — exactly the per-call `O.none()` boilerplate Appendix A says withNoneDefault erases.",
-    "proposedTarget": "`signupUrl: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault, S.annotateKey({ description: ... }))` — combinator verified at packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46 (constructor-only default; decode/wire contract unchanged per its own doc lines 22-25), pipe-with-annotateKey exemplar at packages/foundation/modeling/ontology/src/Ontology.models.ts:150-156. `SchemaUtils` joins the existing `{ LiteralKit }` import from `@beep/schema` (barrel export verified at packages/foundation/modeling/schema/src/index.ts:303). Call sites may then drop `signupUrl: O.none()`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 1.8
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
-    "line": 107,
-    "symbol": "apiKeyRequiredFailure",
-    "smell": "`error: \"api_key_required\"` passed explicitly to `ApiKeyRequiredFailure.make` even though the field is `S.tag(\"api_key_required\")` (line 55), which already carries the constructor default — verified .repos/effect-v4/packages/effect/src/Schema.ts:5919: `tag = Literal(literal).pipe(withConstructorDefault(Effect.succeed(literal)))`. The schema captured the default; the call site re-supplies it. Doc example at line 36 repeats the same redundancy.",
-    "proposedTarget": "Drop the `error:` key from the `make` call (and from the JSDoc example at line 36); `S.tag` auto-fills it. Behavior-identical, single-site mechanical deletion.",
-    "confidence": 0.92,
-    "mechanization": "codemod",
-    "roiRank": 1.4
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
-    "line": 100,
-    "symbol": "TierGateAuditRecord",
-    "smell": "Option-transform field `toolCallId: S.OptionFromNullOr(S.String)` on an S.Class without `SchemaUtils.withNoneDefault`; doc examples pass `toolCallId: O.none()` explicitly (TierGate.ts:76, 166, 211, 243). Production call site `fromApprovedToolsPolicy` (line 352) passes the live `request.toolCallId`, so the default erases example/test boilerplate only.",
-    "proposedTarget": "`toolCallId: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault, S.annotateKey({ description: ... }))`, same mechanics as the SourceAuth.ts:105 finding. Assisted rather than codemod: an audit record silently defaulting `toolCallId` to none could mask a forgotten field at future hand-written audit call sites, so a reviewer should confirm the audit-completeness tradeoff is acceptable for this security-audit model.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 1.1
-  },
-  {
-    "ruleId": "SFV4-defaults",
     "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
     "line": 166,
     "symbol": "withSanitizedToolSpan",
@@ -41,7 +8,11 @@
     "proposedTarget": "Two directions, needing a design call: (a) schema-model the options bag as an S.Class via $McpKitId with `sanitizedKeys: S.Array(S.String).pipe(SchemaUtils.withConstantDefault([\"parameters\"]))` (withConstructorDefaults.ts:80), collapsing this site and sanitizeTracerAttributes' default param in one change; or (b) accept as-is: this is a generic tracer combinator whose `(name, effect, options?)` surface mirrors effect core's own plain-options style (`Effect.withSpan`), the constant is deliberately exported, documented public API, and no schema exists anywhere near the Tracer plumbing. Judgment: (b) may be the correct crispening outcome.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 0.4
+    "roiRank": 0.4,
+    "exception": {
+      "reason": "Remediation audit (@beep/mcp-kit): declined. withSanitizedToolSpan is a thin Effect.withSpan-style tracer combinator with an optional plain options bag; schema-modeling that bag would author a new public options schema for runtime tracer plumbing rather than absorb an existing data-model invariant. The helper was instead made pipeable/dual while preserving the documented exported default key list.",
+      "boundary": "public tracer-combinator options surface, not a schema-modeled payload"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -52,7 +23,11 @@
     "proposedTarget": "Same design call as the line-166 finding: either both defaulting sites collapse into one schema-modeled options class carrying `SchemaUtils.withConstantDefault([\"parameters\"])`, or both stay as idiomatic plain-combinator defaults over the exported public constant. Resolve the pair together, not independently.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 0.4
+    "roiRank": 0.4,
+    "exception": {
+      "reason": "Remediation audit (@beep/mcp-kit): declined. sanitizeTracerAttributes is a pure Tracer -> Tracer wrapper whose default parameter mirrors the exported defaultSanitizedSpanKeys constant. There is no owning schema or boundary payload for this default; introducing one would be new authoring, not crispening. The helper was made dual/pipeable instead.",
+      "boundary": "public tracer-combinator default parameter, not a schema-modeled payload"
+    }
   },
   {
     "ruleId": "SFV4-normalization",

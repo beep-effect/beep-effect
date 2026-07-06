@@ -8,7 +8,11 @@
     "proposedTarget": "Add MAX_REQUEST_TARGETS to the existing bounds block and cap the field: targets: S.NonEmptyArray(ExtractionTarget).pipe(S.check(S.isMaxLength(MAX_REQUEST_TARGETS, { message: ... }))) — the identical array-cap pattern already used for examples at line 276; S.isMaxLength verified .repos/effect-v4/packages/effect/src/Schema.ts:7995, S.NonEmptyArray at 4533. Narrowing accepted inputs on a public schema: same-PR consumer sweep of the one known consumer (§5.4).",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Adding a max target count tightens the exported request schema consumed by @beep/law-practice target builders; cap choice and consumer proof belong in that sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -19,7 +23,11 @@
     "proposedTarget": "Mirror the candidate bounds on attributes/label/text (S.isMaxProperties verified .repos/effect-v4/packages/effect/src/Schema.ts:8250, S.isMaxLength at 7995). CAUTION for matchedText: it is a source slice, and with a caller-supplied low fuzzyThreshold a fuzzy window can legally span up to MAX_FUZZY_SOURCE_LENGTH=100,000 chars (src/Alignment/index.ts:30,174-204), so cap matchedText at the fuzzy source bound (or a dedicated MAX_MATCHED_TEXT_LENGTH), NOT at MAX_CANDIDATE_TEXT_LENGTH, or makeGrounded can throw at runtime on pathological-but-legal inputs.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening GroundedExtraction bounds changes the exported result schema embedded in @beep/law-practice IrToLaw ports and services; defer to the consumer sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -30,7 +38,11 @@
     "proposedTarget": "Bound name/description and each attribute entry with S.isMaxLength (verified .repos/effect-v4/packages/effect/src/Schema.ts:7995) and cap the attributes array count (array-form isMaxLength, same pattern as Extraction/index.ts:276), introducing MAX_* consts in the spirit of the Extraction module's bounds block (Extraction/index.ts:26-30). Cap values are a writer judgment call; the mechanical pattern is established in-package.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Target prompt-field bounds tighten a public schema constructed by @beep/law-practice; cap values and prompt snapshots need that consumer sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -41,7 +53,11 @@
     "proposedTarget": "Reuse the candidate-scale caps: label/text .check(S.isMaxLength(MAX_CANDIDATE_TEXT_LENGTH, ...)) and attributes .check(S.isMaxProperties(MAX_CANDIDATE_ATTRIBUTES, ...)) (verified .repos/effect-v4/packages/effect/src/Schema.ts:7995/8250), either by exporting the bounds consts from the Extraction module or hoisting them to a shared internal module — writer's call on placement.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Few-shot example field caps are public prompt-schema tightening and need cap-value/product agreement plus prompt snapshot parity; defer to the prompt-schema sweep.",
+      "boundary": "public-form precision, deferred prompt-schema sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -52,7 +68,11 @@
     "proposedTarget": "Cap with a dedicated MAX_EXAMPLE_TEXT_LENGTH via .check(S.isMaxLength(...)) (verified .repos/effect-v4/packages/effect/src/Schema.ts:7995); few-shot example texts are conventionally short, so a candidate-scale (4,096) rather than request-scale bound is the sensible default — value is a writer judgment call.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Example text caps are public prompt-schema tightening and need cap-value/product agreement plus prompt snapshot parity; defer to the prompt-schema sweep.",
+      "boundary": "public-form precision, deferred prompt-schema sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -63,29 +83,11 @@
     "proposedTarget": "Per-field annotations via the pipeable identity helper, e.g. text: S.String.check(...).pipe($I.annoteKey(\"LangExtractRequest.text\", { description: \"Source text to extract from; capped at 1,000,000 chars.\" })) — $I.annoteKey verified packages/foundation/modeling/identity/src/Id.ts:1398-1414 (exposed at 1524), plain .annotateKey({ description }) fallback verified .repos/effect-v4/packages/effect/src/Schema.ts:185/605 — plus examples added to the existing $I.annote extras. Start with the two externally-constructed schemas (LangExtractRequest, ExtractionTarget) and the result envelope; purely additive, no shape change.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
-    "line": 420,
-    "symbol": "parseModelOutput",
-    "smell": "The package's schemas absorb many invariants (max lengths lines 196-213/274-288, max candidates 374-378, max properties 196-202, JSON-fence stripping 395-399, object-vs-array output union 389) but test/ contains zero schema-derived property tests — Extraction.test.ts covers parseModelOutput with four static fixtures only (fenced object, top-level array, two failure shapes). No S.toArbitrary round-trip law exists for the model-output codec boundary, the invariant-densest surface in the package.",
-    "proposedTarget": "Additive property test in test/Extraction.test.ts: fc.assert over S.toArbitrary(S.Array(ExtractionCandidate)) (S.toArbitrary verified .repos/effect-v4/packages/effect/src/Schema.ts:12970 — deriving from the checked schema respects the caps), render to wire text via S.encodeUnknownEffect(S.fromJsonString(S.Array(ExtractionCandidate))) (fromJsonString verified Schema.ts:10983) for both the top-level-array shape and the {\"extractions\": [...]} envelope, assert parseModelOutput round-trips the candidates under S.toEquivalence(S.Array(ExtractionCandidate)) (toEquivalence verified Schema.ts:13201). The existing static fixtures stay (static-fixture carve-out); the law is additive coverage.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/foundation/capability/langextract/src/Alignment/index.ts",
-    "line": 222,
-    "symbol": "alignCandidate",
-    "smell": "Domain-wide alignment laws are covered only by hand fixtures (test/Alignment.test.ts: seven point examples): the invariants 'if span is defined then 0 <= span.start <= span.end <= sourceText.length and matchedText === sourceText.slice(span.start, span.end)' and 'alignCandidates yields at most min(candidates.length, maxExtractions ?? 256) results' hold across the whole schema domain but are asserted at single points only. No S.toArbitrary-driven property exercises the exact/lesser/fuzzy/unaligned lattice.",
-    "proposedTarget": "Additive property test: fc.assert over S.toArbitrary(ExtractionCandidate) (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) paired with arbitrary source strings (including sources embedding the candidate text to hit the match branches), asserting the span/slice consistency law and the alignCandidates cap law. STRICTLY additive under fence 4: the Unicode lowercase-expansion regression fixtures (test/Alignment.test.ts:28-50) are trust-boundary/regression reproductions and must stay.",
-    "confidence": 0.6,
-    "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 3,
+    "exception": {
+      "reason": "Runtime field annotations span every exported class in the package; this additive catalog work is deferred to a focused annotation/catalog sweep rather than mixed into behavioral remediation.",
+      "boundary": "documentation/catalog sweep deferred"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -126,6 +128,10 @@
     "proposedTarget": "Mirror the request bound: text: S.String.check(S.isMaxLength(MAX_REQUEST_TEXT_LENGTH, ...)) (verified .repos/effect-v4/packages/effect/src/Schema.ts:7995). Construction-safe by definition: the service copies request.text (src/Service/index.ts:210), which already satisfies the bound. Low urgency — the result is currently produced in-process, not decoded from a wire; the cap only matters if results are ever persisted/re-decoded.",
     "confidence": 0.6,
     "mechanization": "assisted",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "Tightening LangExtractResult.text changes the exported result schema consumed by law-practice service contracts; defer to the consumer sweep with result fixtures.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   }
 ]

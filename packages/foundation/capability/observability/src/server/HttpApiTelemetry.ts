@@ -5,9 +5,10 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
+import { HttpMethod } from "@beep/schema/HttpMethod";
 import { A } from "@beep/utils";
-import { Cause, Clock, Duration, Effect, Exit, Layer, Metric, pipe, Result, SchemaAST } from "effect";
+import { Cause, Clock, Duration, Effect, Exit, Layer, Metric, pipe, SchemaAST } from "effect";
 import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -19,20 +20,37 @@ import type * as HttpServerResponse from "effect/unstable/http/HttpServerRespons
 import type { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 
 const $I = $ObservabilityId.create("server/HttpApiTelemetry");
-const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
-  cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
-const decodeNonNegativeInt = (input: unknown) =>
-  Result.getOrThrowWith(S.decodeUnknownResult(NonNegativeInt)(input), schemaIssueToError);
 const resolveHttpApiStatus = SchemaAST.resolveAt<number>("httpApiStatus");
 
+/**
+ * HTTP status code in the standard 100-599 range.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HttpStatusCode = NonNegativeInt.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
+  $I.annoteSchema("HttpStatusCode", {
+    description: "HTTP status code in the standard 100-599 range.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * HTTP status code in the standard 100-599 range.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type HttpStatusCode = typeof HttpStatusCode.Type;
+
 class HttpApiStatusField extends S.Class<HttpApiStatusField>($I`HttpApiStatusField`)(
-  { status: NonNegativeInt },
+  { status: HttpStatusCode },
   $I.annote("HttpApiStatusField", {
     description: "Internal helper schema for decoding runtime HTTP status fields.",
   })
-) {}
-
-const decodeStatusField = S.decodeUnknownOption(HttpApiStatusField);
+) {
+  static readonly decodeOption = S.decodeUnknownOption(HttpApiStatusField);
+}
 
 /**
  * Shared HTTP API telemetry descriptor.
@@ -60,12 +78,12 @@ const decodeStatusField = S.decodeUnknownOption(HttpApiStatusField);
  */
 export class HttpApiTelemetryDescriptor extends S.Class<HttpApiTelemetryDescriptor>($I`HttpApiTelemetryDescriptor`)(
   {
-    apiName: S.String,
-    groupName: S.String,
-    endpointName: S.String,
-    method: S.String,
-    route: S.String,
-    successStatus: NonNegativeInt,
+    apiName: S.NonEmptyString,
+    groupName: S.NonEmptyString,
+    endpointName: S.NonEmptyString,
+    method: HttpMethod,
+    route: S.NonEmptyString,
+    successStatus: HttpStatusCode,
   },
   $I.annote("HttpApiTelemetryDescriptor", {
     description: "Shared HTTP API telemetry descriptor.",
@@ -132,6 +150,8 @@ const isHttpApiHandlerEffect = <
   value: unknown
 ): value is Effect.Effect<A, E, R> => Effect.isEffect(value);
 
+const isHttpApiSuccessStatusDataFirst = (args: IArguments): boolean => args.length >= 2 || S.isSchema(args[0]);
+
 /**
  * Resolve the declared success status from an HttpApiSchema value.
  *
@@ -147,11 +167,17 @@ const isHttpApiHandlerEffect = <
  * @since 0.0.0
  * @category observability
  */
-export const httpApiSuccessStatus = (schema: S.Top, fallback = 200): NonNegativeInt =>
-  decodeNonNegativeInt(resolveHttpApiStatus(schema.ast) ?? fallback);
+export const httpApiSuccessStatus: {
+  (schema: S.Top, fallback?: number): NonNegativeInt;
+  (fallback: number): (schema: S.Top) => NonNegativeInt;
+} = dual(
+  isHttpApiSuccessStatusDataFirst,
+  (schema: S.Top, fallback = 200): NonNegativeInt =>
+    HttpStatusCode.fromUnknown(resolveHttpApiStatus(schema.ast) ?? fallback)
+);
 
 const httpApiErrorStatus = (schema: S.Top, fallback = 500): NonNegativeInt =>
-  decodeNonNegativeInt(resolveHttpApiStatus(schema.ast) ?? fallback);
+  HttpStatusCode.fromUnknown(resolveHttpApiStatus(schema.ast) ?? fallback);
 
 const endpointSuccessSchemas = (endpoint: HttpApiEndpoint.AnyWithProps): ReadonlyArray<S.Top> => {
   const schemas = A.fromIterable(endpoint.success);
@@ -232,19 +258,22 @@ const annotateHttpApiOutcome = Effect.fn("annotateHttpApiOutcome")(function* (
   options: {
     readonly durationMs: number;
     readonly failureKind?: "failure" | "defect" | "interrupted" | undefined;
-    readonly status?: number | undefined;
+    readonly status: O.Option<number>;
   }
 ): Effect.fn.Return<void> {
-  const statusLabel = P.isUndefined(options.status) ? "unknown" : statusClass(options.status);
+  const statusLabel = O.match(options.status, {
+    onNone: () => "unknown",
+    onSome: statusClass,
+  });
   return yield* Effect.annotateCurrentSpan({
     ...descriptorAnnotations(descriptor),
     ...(P.isUndefined(options.failureKind) ? {} : { http_failure_kind: options.failureKind }),
-    ...(P.isUndefined(options.status)
+    ...(O.isNone(options.status)
       ? {
           http_status_class: statusLabel,
         }
       : {
-          http_status: options.status,
+          http_status: options.status.value,
           http_status_class: statusLabel,
         }),
     http_request_duration_ms: options.durationMs,
@@ -306,20 +335,21 @@ export const makeHttpApiTelemetryDescriptor: {
  *   error: S.Struct({ message: S.String }).pipe(HttpApiSchema.status(503))
  * })
  * const status = httpApiFailureStatus(endpoint, new Error("not found"))
- * console.log(status) // undefined
+ * console.log(status) // Option.none()
  * ```
  *
  * @since 0.0.0
  * @category observability
  */
 export const httpApiFailureStatus: {
-  (endpoint: HttpApiEndpoint.AnyWithProps, error: unknown): number | undefined;
-  (error: unknown): (endpoint: HttpApiEndpoint.AnyWithProps) => number | undefined;
-} = dual(2, (endpoint: HttpApiEndpoint.AnyWithProps, error: unknown): number | undefined =>
-  O.getOrUndefined(
-    decodeStatusField(error).pipe(
+  (endpoint: HttpApiEndpoint.AnyWithProps, error: unknown): O.Option<NonNegativeInt>;
+  (error: unknown): (endpoint: HttpApiEndpoint.AnyWithProps) => O.Option<NonNegativeInt>;
+} = dual(
+  2,
+  (endpoint: HttpApiEndpoint.AnyWithProps, error: unknown): O.Option<NonNegativeInt> =>
+    HttpApiStatusField.decodeOption(error).pipe(
       O.map(({ status }) => status),
-      O.orElse(() => (S.isSchemaError(error) ? O.some(400) : O.none())),
+      O.orElse(() => (S.isSchemaError(error) ? O.some(HttpStatusCode.fromUnknown(400)) : O.none())),
       O.orElse(() => {
         for (const schema of endpointErrorSchemas(endpoint)) {
           if (S.is(schema)(error)) {
@@ -331,7 +361,6 @@ export const httpApiFailureStatus: {
         return O.none();
       })
     )
-  )
 );
 
 /**
@@ -371,7 +400,7 @@ const observeHttpApiEffectImpl = <E, R>(
       Effect.fnUntraced(function* (startedAt) {
         return yield* Effect.annotateCurrentSpan({
           ...descriptorAnnotations(options.descriptor),
-          http_success_status: decodeNonNegativeInt(options.descriptor.successStatus),
+          http_success_status: HttpStatusCode.fromUnknown(options.descriptor.successStatus),
         }).pipe(
           Effect.andThen(effect.pipe(Effect.annotateLogs(descriptorAnnotations(options.descriptor)))),
           Effect.exit,
@@ -384,7 +413,7 @@ const observeHttpApiEffectImpl = <E, R>(
                     if (Exit.isSuccess(exit)) {
                       return yield* annotateHttpApiOutcome(options.descriptor, {
                         durationMs,
-                        status: exit.value.status,
+                        status: O.some(exit.value.status),
                       }).pipe(
                         Effect.andThen(
                           updateHttpApiMetrics(
@@ -399,9 +428,7 @@ const observeHttpApiEffectImpl = <E, R>(
                     }
 
                     const failure = Cause.findErrorOption(exit.cause);
-                    const status = O.isSome(failure)
-                      ? httpApiFailureStatus(options.endpoint, failure.value)
-                      : undefined;
+                    const status = O.flatMap(failure, (error) => httpApiFailureStatus(options.endpoint, error));
                     const failureKind = pipe(
                       [
                         pipe(Cause.hasInterruptsOnly(exit.cause), O.liftPredicate(P.isTruthy), O.as("interrupted")),
@@ -410,7 +437,10 @@ const observeHttpApiEffectImpl = <E, R>(
                       O.firstSomeOf,
                       O.getOrElse(() => "defect" as const)
                     );
-                    const statusLabel = P.isUndefined(status) ? "unknown" : statusClass(status);
+                    const statusLabel = O.match(status, {
+                      onNone: () => "unknown",
+                      onSome: statusClass,
+                    });
 
                     return yield* annotateHttpApiOutcome(options.descriptor, {
                       durationMs,
@@ -622,7 +652,7 @@ const observeHttpApiHandlerImpl = Effect.fn("observeHttpApiHandlerImpl")(functio
       http_endpoint: options.descriptor.endpointName,
       http_method: options.descriptor.method,
       http_route: options.descriptor.route,
-      http_success_status: decodeNonNegativeInt(options.descriptor.successStatus),
+      http_success_status: HttpStatusCode.fromUnknown(options.descriptor.successStatus),
     }).pipe(
       Effect.andThen(
         effect.pipe(

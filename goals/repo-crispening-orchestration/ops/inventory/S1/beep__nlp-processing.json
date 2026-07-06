@@ -2,79 +2,17 @@
   {
     "ruleId": "schema-first-inventory",
     "file": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-    "line": 71,
-    "symbol": "AnnotatedNode",
-    "smell": "Exported type alias unions six S.Class node schemas (TextNode | POSNode | EntityNode | LemmaNode | DependencyNode | RelationNode) with no runtime union schema; the union exists only at the type level while every member is already a schema.",
-    "proposedTarget": "export const AnnotatedNode = S.Union([TextNode, POSNode, EntityNode, LemmaNode, DependencyNode, RelationNode]).pipe($I.annoteSchema(...)); type AnnotatedNode = typeof AnnotatedNode.Type. Consider S.toTaggedUnion / a kit so folds like countNodesByType (line 753, if-chain over guards returning loose Record<string, number>) become exhaustive matches with a precise counts schema.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
     "line": 90,
     "symbol": "isTextNode, isPOSNode, isEntityNode, isLemmaNode, isDependencyNode, isRelationNode",
     "smell": "Top-of-file wall of six exported `const isX = S.is(X)` guards (lines 90-195) re-exporting what the member schemas already express; consumed in-file at lines 402, 450, 758-767 (an if-chain fold) and in tests only.",
     "proposedTarget": "Derive guards from the runtime AnnotatedNode union schema (or use S.is(TextNode) at call sites / static is on the node classes); replace the countNodesByType conditional chain with an exhaustive match over the union. Public-form change: needs the same-PR consumer sweep (in-package + test consumers only; no external src consumers found).",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
-    "line": 345,
-    "symbol": "fromDocumentAnnotated",
-    "smell": "Manual defaults spread `const resolved = { ...AnnotationOptions.make(), ...options }` re-applies defaults that AnnotationOptions already owns via SchemaUtils.withKeyDefaults on all four fields (lines 272-290); the schema constructor is the defaulting authority being duplicated.",
-    "proposedTarget": "Let the schema own defaulting: accept the constructor input and normalize via AnnotationOptions.make(options) (constructor defaults fill missing keys), dropping the hand-rolled spread.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Executor.ts",
-    "line": 401,
-    "symbol": "execute / ExecutionOptions",
-    "smell": "Manual defaults spread `const opts = { ...Types.ExecutionOptions.default(), ...options }` over a `Partial<Types.ExecutionOptions>` parameter; defaults live in an ad-hoc `default()` static plus call-site spread instead of on the schema fields, and the public contract uses the type-level Partial<> of a schema class (GraphExecutorShape.execute, lines 83-95).",
-    "proposedTarget": "Move per-field defaults onto ExecutionOptions fields (SchemaUtils.withKeyDefaults / constructor defaults) so ExecutionOptions.make(options) performs the merge; type the options parameter as the schema's constructor input instead of Partial<Type>.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/capability/nlp-processing/src/Backend/Composition.ts",
-    "line": 268,
-    "symbol": "withCaching / CachingOptions",
-    "smell": "Hand-applied option defaults `options?.capacity ?? 1024` and `options?.timeToLive ?? Duration.minutes(10)` bypass the CachingOptions schema (S.optionalKey fields, lines 208-216), which carries no defaults, so the invariant lives at the call site instead of on the schema.",
-    "proposedTarget": "Attach the defaults to CachingOptions fields (SchemaUtils.withKeyDefaults(1024) / withKeyDefaults(Duration.minutes(10)) or constructor defaults) and normalize via CachingOptions.make(options ?? {}), removing the ?? fallbacks.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts",
-    "line": 402,
-    "symbol": "notSupported, initError, operationError",
-    "smell": "Exported free-floating constructor helpers (lines 402, 423, 444) in a schema-modeled file whose parameter lists duplicate the TaggedErrorClass fields (backend/operation/message/cause) and merely wrap X.make with default-message formatting - behavior belonging to the error schemas floats beside them.",
-    "proposedTarget": "Colocate as statics on the error classes (cf. ExportedToolError.fromCause in Tools/ToolExport.ts, or CauseTaggedError.new from @beep/schema for the cause+message pair in BackendInitError/BackendOperationError); sweep call sites (Composition.ts, NLPService.ts examples, @beep/wink driver).",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 6
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
-    "line": 685,
-    "symbol": "makeExecutionId",
-    "smell": "Exported `Brand.nominal<ExecutionId>()` constructor duplicates the branded schema's own constructor (`ExecutionId.make`, cf. NodeId.make used directly in EffectGraph.ts:98); two parallel construction paths for one schema-branded type.",
-    "proposedTarget": "Delete makeExecutionId and use ExecutionId.make at the single internal call site (generateExecutionId, line 706); no external consumers found.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 7
+    "roiRank": 2,
+    "exception": {
+      "reason": "Per-type refinement statics belong on the upstream @beep/nlp node schemas; this package now owns the AnnotatedNode runtime union and keeps public guard aliases for compatibility.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "schema-first-inventory",
@@ -85,7 +23,11 @@
     "proposedTarget": "Push the bound onto the schema field (S.Int + S.between(1, MAX_PARALLEL_CONCURRENCY), or a clamping decode transform to preserve the documented clamp-not-reject security posture); design decision required on clamp-vs-reject semantics, hence judgment.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 8
+    "roiRank": 8,
+    "exception": {
+      "reason": "ExecutionStrategy intentionally accepts finite public values while the executor clamps concurrency at runtime; tightening constructors would reject previously accepted persisted/public options.",
+      "boundary": "public clamp semantics preserved for family-close review"
+    }
   },
   {
     "ruleId": "SFV4-fn-schema",
@@ -96,7 +38,11 @@
     "proposedTarget": "Model the descriptor as an S.Class with an Fn-schema field for handle (Fn({ input: ..., output: S.Unknown }) + .implementEffect) or split manifest (S.Class) from behavior; cross-package contract consumed by @beep/wink, so a design pass plus consumer sweep is required.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 9
+    "roiRank": 9,
+    "exception": {
+      "reason": "ExportedTool is the positional integration adapter surface; replacing handle with an Fn schema would change the public adapter contract and ripple through non-Effect-tool callers.",
+      "boundary": "public adapter contract, deferred to adapter-family sweep"
+    }
   },
   {
     "ruleId": "schema-first-inventory",
@@ -107,7 +53,11 @@
     "proposedTarget": "Carry parameter ordering on the schemas themselves (per-tool annotation on parametersSchema, or rely on declared field order of each S.Class) so the ordering cannot diverge from the schema; judgment because Tool.make schemas are the shared source consumed by effect/unstable/ai.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 10
+    "roiRank": 10,
+    "exception": {
+      "reason": "The explicit positional parameter table is the adapter ABI for callers that cannot reflect Effect Tool schemas; it remains the schema-to-position boundary.",
+      "boundary": "public adapter contract, deferred to adapter-family sweep"
+    }
   },
   {
     "ruleId": "schema-first-inventory",

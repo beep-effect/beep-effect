@@ -12,8 +12,29 @@ import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
+
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
+  const arbitrary = S.toArbitrary(schema);
+  const decode = S.decodeUnknownSync(schema);
+  const encode = S.encodeSync(schema);
+  const equals = S.toEquivalence(schema);
+
+  fc.assert(
+    fc.property(arbitrary, (value) => {
+      expect(equals(decode(encode(value)), value)).toBe(true);
+    }),
+    { numRuns: 50 }
+  );
+};
 
 describe("EffectGraph construction", () => {
+  it("round-trips schema-derived node ids and metadata", () => {
+    assertSchemaRoundTrip(EG.NodeId);
+    assertSchemaRoundTrip(EG.NodeMetadata);
+  });
+
   it.effect(
     "singleton has one root node",
     Effect.fnUntraced(function* () {

@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import { AiToolError } from "./_schemas.ts";
@@ -26,7 +27,7 @@ class StemParameters extends S.Class<StemParameters>($I`StemParameters`)(
 
 class StemSuccess extends S.Class<StemSuccess>($I`StemSuccess`)(
   {
-    count: S.Finite,
+    count: NonNegativeInt,
     stems: S.Array(S.String),
   },
   $I.annote("StemSuccess", {

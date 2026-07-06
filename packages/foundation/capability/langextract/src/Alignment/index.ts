@@ -8,12 +8,12 @@
 import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { Contract } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema";
+import { O } from "@beep/utils";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import type { ExtractionCandidate, LangExtractOptions } from "@beep/langextract/Extraction";
-import type { UnitInterval } from "@beep/nlp/Handoff";
 
 const DEFAULT_FUZZY_THRESHOLD = 0.82;
 
@@ -32,42 +32,13 @@ const MAX_FUZZY_QUERY_LENGTH = 4_096;
 const DEFAULT_MAX_EXTRACTIONS = 256;
 
 const lower = Str.toLowerCase;
+type AlignedStatus = "match_exact" | "match_lesser" | "match_fuzzy";
+type AlignedMatch = readonly [status: AlignedStatus, start: number, text: string];
+type MatchedText = readonly [start: number, text: string];
+type ScoredMatch = readonly [start: number, text: string, score: number];
 
-const makeGrounded = (
-  candidate: ExtractionCandidate,
-  status: GroundedExtraction["alignmentStatus"],
-  span?: Contract.Span,
-  matchedText?: string
-): GroundedExtraction => {
-  const input: {
-    alignmentStatus: GroundedExtraction["alignmentStatus"];
-    attributes?: Readonly<Record<string, string>>;
-    confidence?: UnitInterval;
-    label: ExtractionCandidate["label"];
-    matchedText?: string;
-    span?: Contract.Span;
-    text: ExtractionCandidate["text"];
-  } = {
-    alignmentStatus: status,
-    label: candidate.label,
-    text: candidate.text,
-  };
-
-  if (candidate.attributes !== undefined) {
-    input.attributes = candidate.attributes;
-  }
-  if (candidate.confidence !== undefined) {
-    input.confidence = candidate.confidence;
-  }
-  if (matchedText !== undefined) {
-    input.matchedText = matchedText;
-  }
-  if (span !== undefined) {
-    input.span = span;
-  }
-
-  return GroundedExtraction.make(input);
-};
+const alignedMatch = (status: AlignedStatus, [start, text]: MatchedText): AlignedMatch => [status, start, text];
+const matchedText = (start: number, text: string): MatchedText => [start, text];
 
 const spanFromMatch = (start: number, matchedText: string): Contract.Span =>
   Contract.Span.make({
@@ -75,9 +46,9 @@ const spanFromMatch = (start: number, matchedText: string): Contract.Span =>
     start: NonNegativeInt.make(start),
   });
 
-const findExact = (sourceText: string, query: string): undefined | readonly [number, string] => {
+const findExact = (sourceText: string, query: string): O.Option<MatchedText> => {
   const start = sourceText.indexOf(query);
-  return start >= 0 ? [start, query] : undefined;
+  return start >= 0 ? O.some(matchedText(start, query)) : O.none();
 };
 
 const lowerWithSourceOffsets = (
@@ -106,26 +77,22 @@ const lowerWithSourceOffsets = (
   return { ends, starts, text };
 };
 
-const findLesser = (sourceText: string, query: string): undefined | readonly [number, string] => {
+const findLesser = (sourceText: string, query: string): O.Option<MatchedText> => {
   const normalizedQuery = lower(query);
   if (normalizedQuery.length === 0) {
-    return undefined;
+    return O.none();
   }
 
   const normalizedSource = lowerWithSourceOffsets(sourceText);
   const normalizedStart = normalizedSource.text.indexOf(normalizedQuery);
   if (normalizedStart < 0) {
-    return undefined;
+    return O.none();
   }
 
   const normalizedEnd = normalizedStart + normalizedQuery.length - 1;
-  const start = normalizedSource.starts[normalizedStart];
-  const end = normalizedSource.ends[normalizedEnd];
-  if (start === undefined || end === undefined) {
-    return undefined;
-  }
-
-  return [start, sourceText.slice(start, end)];
+  return O.flatMap(A.get(normalizedSource.starts, normalizedStart), (start) =>
+    O.map(A.get(normalizedSource.ends, normalizedEnd), (end) => matchedText(start, sourceText.slice(start, end)))
+  );
 };
 
 const toCodePoints = (value: string): ReadonlyArray<string> => [...value];
@@ -170,22 +137,22 @@ const wordsWithOffsets = (sourceText: string): ReadonlyArray<readonly [number, n
   return words;
 };
 
-const findFuzzy = (sourceText: string, query: string, threshold: number): undefined | readonly [number, string] => {
+const findFuzzy = (sourceText: string, query: string, threshold: number): O.Option<MatchedText> => {
   if (sourceText.length > MAX_FUZZY_SOURCE_LENGTH || query.length > MAX_FUZZY_QUERY_LENGTH) {
-    return undefined;
+    return O.none();
   }
 
   const queryWordCount = query.trim().split(/\s+/u).filter(Boolean).length;
   if (queryWordCount === 0) {
-    return undefined;
+    return O.none();
   }
 
   const words = wordsWithOffsets(sourceText);
   if (words.length < queryWordCount) {
-    return undefined;
+    return O.none();
   }
 
-  let best: undefined | readonly [number, string, number];
+  let best: O.Option<ScoredMatch> = O.none();
   for (let index = 0; index <= words.length - queryWordCount; index += 1) {
     const start = words[index]?.[0];
     const end = words[index + queryWordCount - 1]?.[1];
@@ -195,12 +162,18 @@ const findFuzzy = (sourceText: string, query: string, threshold: number): undefi
 
     const candidate = sourceText.slice(start, end);
     const score = similarity(candidate, query);
-    if (score >= threshold && (best === undefined || score > best[2])) {
-      best = [start, candidate, score];
+    if (
+      score >= threshold &&
+      O.match(best, {
+        onNone: () => true,
+        onSome: (current) => score > current[2],
+      })
+    ) {
+      best = O.some([start, candidate, score]);
     }
   }
 
-  return best === undefined ? undefined : [best[0], best[1]];
+  return O.map(best, ([start, text]) => matchedText(start, text));
 };
 
 /**
@@ -229,22 +202,20 @@ export const alignCandidate: {
     candidate: ExtractionCandidate,
     options?: LangExtractOptions
   ): GroundedExtraction {
-    const exact = findExact(sourceText, candidate.text);
-    if (exact !== undefined) {
-      return makeGrounded(candidate, "match_exact", spanFromMatch(exact[0], exact[1]), exact[1]);
-    }
-
-    const lesser = findLesser(sourceText, candidate.text);
-    if (lesser !== undefined) {
-      return makeGrounded(candidate, "match_lesser", spanFromMatch(lesser[0], lesser[1]), lesser[1]);
-    }
-
-    const fuzzy = findFuzzy(sourceText, candidate.text, options?.fuzzyThreshold ?? DEFAULT_FUZZY_THRESHOLD);
-    if (fuzzy !== undefined) {
-      return makeGrounded(candidate, "match_fuzzy", spanFromMatch(fuzzy[0], fuzzy[1]), fuzzy[1]);
-    }
-
-    return makeGrounded(candidate, "unaligned");
+    return O.match(
+      O.firstSomeOf([
+        O.map(findExact(sourceText, candidate.text), (match) => alignedMatch("match_exact", match)),
+        O.map(findLesser(sourceText, candidate.text), (match) => alignedMatch("match_lesser", match)),
+        O.map(findFuzzy(sourceText, candidate.text, options?.fuzzyThreshold ?? DEFAULT_FUZZY_THRESHOLD), (match) =>
+          alignedMatch("match_fuzzy", match)
+        ),
+      ]),
+      {
+        onNone: () => GroundedExtraction.fromCandidate(candidate, "unaligned"),
+        onSome: ([status, start, text]) =>
+          GroundedExtraction.fromCandidate(candidate, status, spanFromMatch(start, text), text),
+      }
+    );
   }
 );
 

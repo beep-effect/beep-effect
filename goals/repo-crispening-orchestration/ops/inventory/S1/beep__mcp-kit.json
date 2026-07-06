@@ -1,16 +1,5 @@
 [
   {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
-    "line": 246,
-    "symbol": "FieldProjectionOutcome",
-    "smell": "Exported tagged-union type alias for a wire-adjacent tool-result payload (Inline projected value vs Fetchable handle) modeled as a plain type alias with `as const` object-literal construction at projectWithinBudget's return sites (FieldTier.ts:293/301), while every member payload is already a schema in the same file (FieldTierName LiteralKit, UnknownRecord, FetchableHandle S.Class). The downstream consumer already models the identical outcome as a schema tagged union: @beep/uspto-mcp DocumentsProjectionOutput = LiteralKit([\"Inline\",\"Fetchable\"]).toTaggedUnion(\"_tag\")({...}) with .make construction (packages/drivers/uspto-mcp/src/UsptoDocumentTiers.ts:89-98,158,167). Invisible to current lint: the exported-type-alias detector skips non-TypeLiteral aliases (SchemaFirst.ts:1622 continues on a UnionType node).",
-    "proposedTarget": "LiteralKit([\"Inline\", \"Fetchable\"]).toTaggedUnion(\"_tag\")({ Inline: { tier: FieldTierName, value: UnknownRecord }, Fetchable: { handle: FetchableHandle } }).pipe($I.annoteSchema(\"FieldProjectionOutcome\", {...})) — the exact in-repo pattern of TierGateVerdict (same package, TierGate.ts:142-149) and DocumentsProjectionOutput (uspto-mcp) — then `type FieldProjectionOutcome = typeof FieldProjectionOutcome.Type`; S.TaggedUnion (verified .repos/effect-v4/packages/effect/src/Schema.ts:6204) is the non-kit alternative. Return sites become FieldProjectionOutcome.make({ _tag: \"Inline\", tier, value: projected }) / .make({ _tag: \"Fetchable\", handle }) via Bottom.make (Schema.ts:~205-211). Type stays structurally compatible for consumers matching on _tag (uspto-mcp handlers, FieldTier.test.ts:94 read fields structurally); constructor sites are in-package only, so no §5.4 cross-family sweep is forced.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 3.4
-  },
-  {
     "ruleId": "SFV4-fn-schema",
     "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
     "line": 234,
@@ -19,7 +8,11 @@
     "proposedTarget": "Declare `export const MintFetchableHandle = Fn({ input: OversizedFieldProjection, output: FetchableHandle }).pipe($I.annoteSchema(...))` (Fn verified at packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:637 unary overload; .Type is FnType<Input[\"Type\"], Output[\"Type\"]> = (input: OversizedFieldProjection) => FetchableHandle per Fn.schema.ts:130-136) + `type MintFetchableHandle = typeof MintFetchableHandle.Type`, then reference it in ProjectWithinBudgetOptions and in uspto-mcp's duplicated options bag. Exemplar: colors Formatter (packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66). Type-only change — existing consumer lambdas remain assignable; consumers may optionally adopt .implementSync for runtime-validated minters. The uspto-mcp type-reference update crosses the foundation→drivers family boundary, so schedule it with the drivers wave or leave the duplicated literal in place until then (fence 8).",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 1.9
+    "roiRank": 1.9,
+    "exception": {
+      "reason": "Remediation audit (@beep/mcp-kit): declined for this wave. The warranted Fn schema/type-reference cleanup crosses into @beep/uspto-mcp, which redeclares the same mintFetchableHandle function type in its own options bag. Per SPEC §5.4 and the orchestrator ripple override, this public-form/type-reference sweep is deferred to the family-close consumer pass rather than edited by the single @beep/mcp-kit writer.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-boundary-codec",
@@ -30,7 +23,11 @@
     "proposedTarget": "S.DateTimeUtcFromString (verified .repos/effect-v4/packages/effect/src/Schema.ts:12024: decodes an ISO string to DateTime.Utc, encodes DateTime.Utc back to a UTC ISO-8601 string), letting fromApprovedToolsPolicy pass `now` directly and the codec own ISO formatting. Judgment-tier trade-off: the class doc deliberately promises 'a plain JSON-serializable record so it can be stored directly in the UsageRecord.metadata jsonb column' — moving to DateTime.Utc in Type requires consumers to S.encode before persisting (doctrinally correct encode-at-boundary, but a stated-contract change). Type-stable alternative: keep the string field but make the invariant executable with an ISO-8601 refinement/check so wire shape and Type are untouched. §5.3 parity: DateTime.formatIso vs DateTimeUtcFromString encode output must be proven byte-identical with fixtures before the codec form lands.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 0.9
+    "roiRank": 0.9,
+    "exception": {
+      "reason": "Remediation audit (@beep/mcp-kit): declined. TierGateAuditRecord is intentionally a plain JSON-serializable audit record for a jsonb metadata sink; the proposed S.DateTimeUtcFromString form would change the public decoded Type from string to DateTime.Utc and require consumer persistence encode discipline. The package-local safe absorption for this wave was toolCallId absence/non-empty handling plus round-trip parity; timestamp typing needs a dedicated public-form sweep.",
+      "boundary": "public audit-record Type/wire boundary; DateTime public-form change deferred"
+    }
   },
   {
     "ruleId": "SFV4-boundary-codec",
@@ -41,7 +38,11 @@
     "proposedTarget": "S.DateTimeUtcFromString (Schema.ts:12024) so the codec owns ISO formatting and Type carries DateTime.Utc TTL semantics. Higher ripple than occurredAt: FetchableHandle.make call sites exist in @beep/uspto-mcp (UsptoHandlers.ts:67-70, UsptoDocumentTiers.ts JSDoc/impl) — a public-form change crossing the foundation→drivers family boundary, so per §5.4/fence 8 either schedule with the drivers wave or use the Type-stable ISO refinement alternative in the foundation wave.",
     "confidence": 0.45,
     "mechanization": "judgment",
-    "roiRank": 0.7
+    "roiRank": 0.7,
+    "exception": {
+      "reason": "Remediation audit (@beep/mcp-kit): declined for this wave. The proposed DateTime codec keeps the encoded wire string but changes the public decoded Type; @beep/uspto-mcp currently mints FetchableHandle values with string expiresAt fields. Per SPEC §5.4 and the orchestrator ripple override, the typed-time consumer sweep is deferred.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "schema-first-inventory",

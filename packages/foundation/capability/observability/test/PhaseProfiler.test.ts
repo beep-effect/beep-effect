@@ -1,7 +1,9 @@
-import { profilePhase } from "@beep/observability";
-import { TaggedErrorClass } from "@beep/schema";
-import { Effect, Metric } from "effect";
+import { PhaseProfile, profilePhase } from "@beep/observability";
+import { NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { Effect, Equal, Metric } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
 class TestPhaseError extends TaggedErrorClass<TestPhaseError>()("TestPhaseError", {
@@ -9,6 +11,29 @@ class TestPhaseError extends TaggedErrorClass<TestPhaseError>()("TestPhaseError"
 }) {}
 
 describe("PhaseProfiler", () => {
+  it("round-trips schema-derived phase profiles", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(PhaseProfile), (profile) => {
+        const decoded = O.flatMap(S.encodeOption(PhaseProfile)(profile), S.decodeUnknownOption(PhaseProfile));
+        expect(O.exists(decoded, (value) => Equal.equals(value, profile))).toBe(true);
+      }),
+      { numRuns: 50 }
+    );
+  });
+
+  it("rejects empty phase labels", () => {
+    expect(
+      O.isNone(
+        S.decodeUnknownOption(PhaseProfile)({
+          phase: "",
+          outcome: "completed",
+          durationMs: NonNegativeInt.make(1),
+          attributes: {},
+        })
+      )
+    ).toBe(true);
+  });
+
   it("tracks phase metrics on success", () =>
     Effect.runPromise(
       Effect.gen(function* () {

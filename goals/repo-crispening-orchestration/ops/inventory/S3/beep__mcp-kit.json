@@ -1,104 +1,5 @@
 [
   {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
-    "line": 112,
-    "symbol": "TierGateVerdictTag",
-    "smell": "Duplicate literal family: the identical LiteralKit([\"approved\", \"refused\"]) is built twice in the same module (TierGateOutcomeTag at TierGate.ts:35, TierGateVerdictTag at TierGate.ts:112), and TierGateOutcome's own JSDoc says it deliberately mirrors TierGateVerdict's tag -- two parallel kit instances for one approved/refused family.",
-    "proposedTarget": "Delete TierGateVerdictTag and derive TierGateVerdict from the single TierGateOutcomeTag kit: TierGateOutcomeTag.toTaggedUnion(\"verdict\")({ approved: { audit: TierGateAuditRecord }, refused: { audit: TierGateAuditRecord } }). kit.toTaggedUnion verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:667 (type) and :761-801 (impl); the swap is a one-identifier substitution checked by the compiler.",
-    "confidence": 0.92,
-    "mechanization": "codemod",
-    "roiRank": 2.2
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
-    "line": 246,
-    "symbol": "FieldProjectionOutcome",
-    "smell": "Hand-rolled _tag union FieldProjectionOutcome (Inline | Fetchable) modeled as a plain TS type, constructed with raw object literals at FieldTier.ts:293 and :301, and branched via projected._tag === \"Inline\"/\"Fetchable\" in test/FieldTier.test.ts:67-68 and :92-93 with no derived guards or matcher anywhere. This is a value model (a tool-result projection outcome whose sibling shapes OversizedFieldProjection/FetchableHandle are already S.Class) kept outside the schema.",
-    "proposedTarget": "Model as a schema tagged union: LiteralKit([\"Inline\", \"Fetchable\"]).toTaggedUnion(\"_tag\")({ Inline: { tier: FieldTierName, value: UnknownRecord }, Fetchable: { handle: FetchableHandle } }) deriving .match/.guards/.cases (S.toTaggedUnion utils verified .repos/effect-v4/packages/effect/src/Schema.ts:6037-6068). Ordering caveat: apply $I.annoteSchema to the Union BEFORE S.toTaggedUnion augments it -- Union's annotate rebuild type is bare Union<Members> (Schema.ts:4671-4675), so annotating after derivation types the utils away.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 2.1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/mcp-kit/src/SourceAuth.ts",
-    "line": 155,
-    "symbol": "SourceAuthDecision",
-    "smell": "Hand-rolled _tag union SourceAuthDecision (Mount | Vanish) modeled as a plain TS type with as-const object-literal constructors (SourceAuth.ts:190, :196, :199) and manual downstream branching if (decision._tag === \"Mount\") at ToolkitComposition.ts:118; no derived constructors, guards, or exhaustive matcher exist for the family.",
-    "proposedTarget": "Derive the variant machinery with Data.taggedEnum<SourceAuthDecision>() -- constructors plus $is/$match verified at .repos/effect-v4/packages/effect/src/Data.ts:363-408 (usage example :377) -- and dispatch ToolkitComposition.ts:118 through $is(\"Mount\")/$match. A schema tagged union is NOT proposed: the Mount variant carries O.Option<Redacted.Redacted<string>> secret material that must not enter a serializable schema value model (same boundary reasoning as the api-transport ApiAuth exception), and the decision is a composition-time value, not wire data.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
-    "line": 372,
-    "symbol": "TierGateDispatchResult",
-    "smell": "Hand-rolled generic _tag union TierGateDispatchResult<A> (Dispatched | Refused) modeled as a plain TS type with as-const object-literal constructors inside dispatchWithTierGate (TierGate.ts:415, :417); consumers branch manually on result._tag (test/TierGate.test.ts:30-31, :52-53, :71-72, :88-89) with no derived guards or exhaustive matcher.",
-    "proposedTarget": "Data.TaggedEnum.WithGenerics<1> definition + Data.taggedEnum for the generic family, deriving constructors and $is/$match (WithGenerics verified at .repos/effect-v4/packages/effect/src/Data.ts:208-266; GenericMatchers at :469-486). The generic payload A rules out a schema tagged union, so the Data.taggedEnum form is the fit -- exactly the shape the api-transport ApiAuth precedent blesses.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 1.8
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/mcp-kit/src/SourceAuth.ts",
-    "line": 189,
-    "symbol": "decideSourceAuthMount",
-    "smell": "If-chain over the gate literal-union field (registration.gate === \"none\" at :189, registration.gate === \"hard\" at :195) where the kit-derived SourceAuthGate.$match exists and survives the annotation pipe (LiteralKit Rebuild self-type preserves statics through .pipe($I.annoteSchema), LiteralKit.schema.ts:690-693; $match built at :601-622). Adding a fourth gate policy compiles silently today instead of failing exhaustiveness.",
-    "proposedTarget": "Dispatch via SourceAuthGate.$match(registration.gate, { none: ..., soft: ..., hard: ... }) with handlers returning Effects (none -> succeed Mount(O.none()); soft -> resolveSourceCredential then Mount; hard -> resolveSourceCredential then O.match onNone Vanish / onSome Mount), so policy growth becomes one kit entry plus a handler. Pairs with the SourceAuthDecision Data.taggedEnum finding; restructure is straightforward but effectful-branch reshaping keeps it assisted.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 1.3
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
-    "line": 413,
-    "symbol": "dispatchWithTierGate",
-    "smell": "Manual discriminator branch if (verdict.verdict === \"approved\") over the toTaggedUnion-derived TierGateVerdict. Root cause: TierGateVerdict pipes $I.annoteSchema AFTER kit.toTaggedUnion (TierGate.ts:142-149), and Union's annotate rebuild type is bare Union<Members> (verified .repos/effect-v4/packages/effect/src/Schema.ts:4671-4675), so the TaggedUnionUtils intersection added by toTaggedUnion (Schema.ts:6065-6104, Object.assign) is typed away on the exported schema -- the derived .match exists at runtime but is invisible at the type level, forcing the raw if.",
-    "proposedTarget": "Restructure the schema so annotation precedes augmentation (e.g. S.Union([...members]).pipe($I.annoteSchema(\"TierGateVerdict\", {...}), S.toTaggedUnion(\"verdict\"))), then dispatch via TierGateVerdict.match(verdict, { approved: ({ audit }) => Effect.map(onApproved, (value) => Dispatched({ value, audit })), refused: ({ audit }) => Effect.succeed(Refused({ audit })) }). Utils .match verified at Schema.ts:6042-6056 and the doc example at :6081-6087.",
-    "confidence": 0.6,
-    "mechanization": "assisted",
-    "roiRank": 1.1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
-    "line": 188,
-    "symbol": "TIER_ORDER",
-    "smell": "Parallel literal array TIER_ORDER = [\"complete\", \"balanced\", \"minimal\"] re-lists the FieldTierName kit family in reverse instead of deriving from the kit; the ReadonlyArray<FieldTierName> annotation checks membership but not completeness or order, so silently dropping a tier from the sweep compiles.",
-    "proposedTarget": "Derive from the kit: const TIER_ORDER = A.reverse(FieldTierName.Options) -- kit .Options survives the annotation pipe via the LiteralKit Rebuild self-type (LiteralKit.schema.ts:657-658, :690-693) and A.reverse is verified at .repos/effect-v4/packages/effect/src/Array.ts:2041 -- so the projection sweep stays tethered to the single literal source.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
-    "line": 446,
-    "symbol": "withEnabledWhenApprovedTool",
-    "smell": "predicate as never defeats type-checking entirely when annotating McpSchema.EnabledWhen. The cast is unnecessary: EnabledWhen's value type is Predicate.Predicate<typeof Initialize.payloadSchema.Type> (verified .repos/effect-v4/packages/effect/src/unstable/ai/McpSchema.ts:2525-2527) and Predicate is contravariant (interface Predicate<in A>, .repos/effect-v4/packages/effect/src/Predicate.ts:46), so the declared P.Predicate<unknown> at TierGate.ts:442 is assignable as-is. (The trailing `as T` on the same line is the separate upstream-widening carve-out ledgered on the annotateFourHints record.)",
-    "proposedTarget": "Drop the as never and pass predicate directly to tool.annotate(McpSchema.EnabledWhen, predicate); if inference balks, type the const as P.Predicate<typeof McpSchema.Initialize.payloadSchema.Type> instead of P.Predicate<unknown>. Needs a typecheck proof, hence assisted.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 0.9
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
-    "line": 180,
-    "symbol": "registerSanitizedToolkit",
-    "smell": "R.values(built.tools) as ReadonlyArray<AiTool.Any> uses a repo-banned as cast to recover the value type from the generic Tools record. Upstream uses Object.values here (McpServer.ts:690); the mirror swapped in R.values but paid for generic-record inference with a cast.",
-    "proposedTarget": "Replace the cast with explicit type application: R.values<string, AiTool.Any>(built.tools). R.values is <K extends string, A>(self: ReadonlyRecord<K, A>) => Array<A> (verified .repos/effect-v4/packages/effect/src/Record.ts:1022) and Tools extends Record<string, AiTool.Any>, so the argument is assignable and the as disappears with no behavior change. Needs a typecheck proof, hence assisted.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 0.9
-  },
-  {
     "ruleId": "SFV4-getsomes-struct",
     "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
     "line": 188,
@@ -107,7 +8,11 @@
     "proposedTarget": "...O.getSomesStruct({ title: Context.getOption(annotations, AiTool.Title) }) using O.getSomesStruct (verified packages/foundation/modeling/utils/src/Option.ts:102). Held at judgment per D5 until the Law 20/47 amendment merges, per the S3 rule card.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 0.7
+    "roiRank": 0.7,
+    "exception": {
+      "reason": "Remediation audit (@beep/mcp-kit): declined for this wave. The codemod could not apply because this site has no live R.getSomes call; the code mirrors upstream McpServer registration and only spreads one optional title field. Rewriting to O.getSomesStruct would add a new @beep/utils direct dependency to @beep/mcp-kit solely for this mirror-only optional struct. The Law 20/47 amendment is merged, but this non-codemod dependency/ripple decision is deferred.",
+      "boundary": "upstream McpServer mirror plus new direct dependency; deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

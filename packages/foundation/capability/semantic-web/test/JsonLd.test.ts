@@ -7,6 +7,7 @@ import { Dataset } from "@beep/semantic-web/rdf";
 import {
   CompactJsonLdIriRequest,
   ExpandJsonLdTermRequest,
+  JsonLdContextError,
   JsonLdContextService,
   MergeJsonLdContextsRequest,
   NormalizeJsonLdContextRequest,
@@ -15,12 +16,18 @@ import {
   CompactJsonLdDocumentRequest,
   ExpandJsonLdDocumentRequest,
   FrameJsonLdDocumentRequest,
+  JsonLdDocumentError,
+  JsonLdDocumentLoaderPolicy,
   JsonLdDocumentService,
   JsonLdFromRdfRequest,
   JsonLdToRdfRequest,
   NormalizeJsonLdDocumentRequest,
 } from "@beep/semantic-web/services/jsonld-document";
-import { JsonLdStreamParseRequest, JsonLdStreamParseService } from "@beep/semantic-web/services/jsonld-stream-parse";
+import {
+  JsonLdStreamParseInput,
+  JsonLdStreamParseRequest,
+  JsonLdStreamParseService,
+} from "@beep/semantic-web/services/jsonld-stream-parse";
 import {
   JsonLdStreamSerializeRequest,
   JsonLdStreamSerializeService,
@@ -173,6 +180,77 @@ describe("JSON-LD", () => {
       ),
       { numRuns: 25 }
     ));
+
+  it("keeps optional JSON-LD service fields absent in encoded wire shapes when omitted", () => {
+    const encodedDocumentError = S.encodeSync(JsonLdDocumentError)(
+      JsonLdDocumentError.make({
+        reason: "loaderPolicyViolation",
+        message: "Remote document loading is disabled for this workflow.",
+      })
+    );
+    const encodedContextError = S.encodeSync(JsonLdContextError)(
+      JsonLdContextError.make({
+        reason: "unknownTerm",
+        message: "The term is not present in the active context.",
+      })
+    );
+    const encodedLoaderPolicy = S.encodeSync(JsonLdDocumentLoaderPolicy)(
+      JsonLdDocumentLoaderPolicy.make({ allowRemoteDocuments: false })
+    );
+    const encodedExpandRequest = S.encodeSync(ExpandJsonLdDocumentRequest)(
+      ExpandJsonLdDocumentRequest.make({
+        document: decodeUnknownSync(JsonLdDocument)(rawDocument),
+      })
+    );
+    const encodedNormalizeRequest = S.encodeSync(NormalizeJsonLdDocumentRequest)(
+      decodeUnknownSync(NormalizeJsonLdDocumentRequest)({
+        document: rawDocument,
+        profile: "bounded-v1",
+      })
+    );
+    const encodedFromRdfRequest = S.encodeSync(JsonLdFromRdfRequest)(
+      JsonLdFromRdfRequest.make({
+        dataset: decodeUnknownSync(Dataset)({ quads: [] }),
+      })
+    );
+    const encodedSerializeRequest = S.encodeSync(JsonLdStreamSerializeRequest)(
+      JsonLdStreamSerializeRequest.make({
+        dataset: decodeUnknownSync(Dataset)({ quads: [] }),
+      })
+    );
+    const encodedParseRequest = S.encodeSync(JsonLdStreamParseRequest)(
+      JsonLdStreamParseRequest.make({
+        input: decodeUnknownSync(JsonLdStreamParseInput)({
+          chunks: ['{"@graph":[]}'],
+          encoding: "utf-8",
+          kind: "text",
+        }),
+      })
+    );
+
+    expect(encodedDocumentError).not.toHaveProperty("subject");
+    expect(encodedContextError).not.toHaveProperty("subject");
+    expect(encodedLoaderPolicy).not.toHaveProperty("maxRemoteDocuments");
+    expect(encodedLoaderPolicy).not.toHaveProperty("baseIri");
+    expect(encodedExpandRequest).not.toHaveProperty("loaderPolicy");
+    expect(encodedNormalizeRequest).not.toHaveProperty("loaderPolicy");
+    expect(encodedFromRdfRequest).not.toHaveProperty("context");
+    expect(encodedSerializeRequest).not.toHaveProperty("context");
+    expect(encodedSerializeRequest).not.toHaveProperty("maxChunkCharacters");
+    expect(encodedParseRequest).not.toHaveProperty("loaderPolicy");
+  });
+
+  it("round-trips schema-derived JSON-LD stream serialize requests through encoded shapes", { timeout: 30000 }, () =>
+    fc.assert(
+      fc.property(S.toArbitrary(JsonLdStreamSerializeRequest), (request) => {
+        const encoded = S.encodeSync(JsonLdStreamSerializeRequest)(request);
+        const decoded = S.decodeSync(JsonLdStreamSerializeRequest)(encoded);
+
+        expect(S.encodeSync(JsonLdStreamSerializeRequest)(decoded)).toEqual(encoded);
+      }),
+      { numRuns: 5 }
+    )
+  );
 
   it("normalizes, expands, compacts, and merges bounded contexts", () =>
     Effect.gen(function* () {

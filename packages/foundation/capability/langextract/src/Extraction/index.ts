@@ -10,6 +10,7 @@ import { ExtractionExample, ExtractionTarget } from "@beep/langextract/Target";
 import { DocumentId } from "@beep/nlp/Core";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
 import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { O } from "@beep/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -246,7 +247,31 @@ export class GroundedExtraction extends S.Class<GroundedExtraction>($I`GroundedE
   $I.annote("GroundedExtraction", {
     description: "Extraction candidate with deterministic source-alignment metadata.",
   })
-) {}
+) {
+  /**
+   * Construct grounded alignment metadata from a parsed model candidate.
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly fromCandidate = (
+    candidate: ExtractionCandidate,
+    status: AlignmentStatus,
+    span?: Contract.Span,
+    matchedText?: string
+  ): GroundedExtraction =>
+    GroundedExtraction.make({
+      alignmentStatus: status,
+      label: candidate.label,
+      text: candidate.text,
+      ...O.getSomesStruct({
+        attributes: O.fromUndefinedOr(candidate.attributes),
+        confidence: O.fromUndefinedOr(candidate.confidence),
+        matchedText: O.fromUndefinedOr(matchedText),
+        span: O.fromUndefinedOr(span),
+      }),
+    });
+}
 
 /**
  * Provider-neutral extraction request.

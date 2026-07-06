@@ -1297,13 +1297,15 @@
           "@beep/identity",
           "@beep/langextract",
           "@beep/nlp",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/langextract",
           "@beep/nlp",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/utils"
         ]
       },
       {

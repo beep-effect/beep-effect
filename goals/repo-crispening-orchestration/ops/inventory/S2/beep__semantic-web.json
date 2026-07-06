@@ -2,90 +2,17 @@
   {
     "ruleId": "SFV4-defaults",
     "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-    "line": 86,
-    "symbol": "JsonLdDocumentError.subject",
-    "smell": "`subject: S.OptionFromOptionalKey(S.String)` lacks `SchemaUtils.withNoneDefault`, so constructors and helpers carry explicit absence: example docs pass `subject: O.none()` at jsonld-document.ts:73 and `makeDocumentError` branches `subject === undefined ? O.none() : O.some(subject)` at adapters/jsonld-document.ts:76.",
-    "proposedTarget": "`subject: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` and simplify `makeDocumentError` to omit `subject` when absent or spread `O.fromUndefinedOr(subject)` via `O.getSomesStruct`. Verified `withNoneDefault` at packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46 and `S.OptionFromOptionalKey` at .repos/effect-v4/packages/effect/src/Schema.ts:8668; in-repo exemplar: packages/foundation/modeling/ontology/src/Ontology.models.ts:152.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/semantic-web/src/services/jsonld-context.ts",
-    "line": 76,
-    "symbol": "JsonLdContextError.subject",
-    "smell": "`subject: S.OptionFromOptionalKey(S.String)` has the same missing-none-default shape; docs pass `subject: O.none()` at jsonld-context.ts:64 and `makeContextError` branches on undefined at adapters/jsonld-context.ts:39.",
-    "proposedTarget": "Apply `SchemaUtils.withNoneDefault` to the error `subject` field and simplify `makeContextError` the same way as `JsonLdDocumentError`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-    "line": 218,
-    "symbol": "JsonLdDocumentLoaderPolicy optional fields",
-    "smell": "`maxRemoteDocuments` and `baseIri` are `S.OptionFromOptionalKey(...)` without `withNoneDefault`, so the Type side requires explicit Option construction for absent policy fields despite the encoded keys already being optional.",
-    "proposedTarget": "Pipe both fields through `SchemaUtils.withNoneDefault`; call sites can construct `JsonLdDocumentLoaderPolicy.make({ allowRemoteDocuments: false })` without explicit `O.none()` while the encoded JSON-LD policy shape remains unchanged.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
     "line": 328,
     "symbol": "NormalizeJsonLdDocumentRequest.safeMode",
     "smell": "`safeMode: S.OptionFromOptionalKey(S.Boolean)` is consumed as `O.getOrElse(() => false)` at adapters/jsonld-document.ts:596-599; false is a constructor/decode default, not meaningful optional data.",
     "proposedTarget": "Use a boolean key default (`safeMode: SchemaUtils.BoolKeyDefaultFalse` or `S.Boolean.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(false))`) so `normalizeJsonLdDocument` reads `request.safeMode` directly. In-repo bool default exemplar: packages/foundation/modeling/md/src/Md.model.ts:1101.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/semantic-web/src/services/jsonld-document.ts",
-    "line": 290,
-    "symbol": "JSON-LD document request Option fields",
-    "smell": "`loaderPolicy` on Expand/Normalize requests and `context` on `JsonLdFromRdfRequest` are `S.OptionFromOptionalKey(...)` without `withNoneDefault`; adapters already treat absence as `O.none()` at boundaries.",
-    "proposedTarget": "Pipe `loaderPolicy` (jsonld-document.ts:290,327) and `context` (jsonld-document.ts:392) through `SchemaUtils.withNoneDefault`; this is a mechanical schema-only cleanup like the ontology/lexical Option defaults.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
-    "line": 77,
-    "symbol": "SHACL request and shape Option fields",
-    "smell": "`minCount`, `maxCount`, `datatype`, `id`, `targetClass`, and `maxResults` are all `S.OptionFromOptionalKey(...)` without `withNoneDefault`; the adapter then projects `targetClass` to `undefined` at adapters/shacl-engine.ts:84.",
-    "proposedTarget": "Pipe these Option fields through `SchemaUtils.withNoneDefault` and keep adapter logic Option-first (`O.exists` / `O.match`) instead of introducing undefined locals. Same `withNoneDefault` exemplar as ontology models.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 6
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/semantic-web/src/services/sparql-query.ts",
-    "line": 75,
-    "symbol": "SparqlQueryRequest.timeoutMs",
-    "smell": "`timeoutMs: S.OptionFromOptionalKey(NonNegativeInt)` lacks `SchemaUtils.withNoneDefault`; absence is represented as a required Option on construction instead of a schema default.",
-    "proposedTarget": "`timeoutMs: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault)`; no encoded/wire change, constructor callers stop passing explicit `O.none()`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 7
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-serialize.ts",
-    "line": 61,
-    "symbol": "stream/canonicalization request Option fields",
-    "smell": "Streaming and canonicalization request schemas use bare `S.OptionFromOptionalKey(...)` for optional controls: serialize `context`/`maxChunkCharacters` at jsonld-stream-serialize.ts:61-62, parse `loaderPolicy` at jsonld-stream-parse.ts:212, and canonicalization `workLimit` at canonicalization.ts:109/143.",
-    "proposedTarget": "Pipe these control fields through `SchemaUtils.withNoneDefault`. For `maxChunkCharacters` and `workLimit`, keep the adapter's semantic checks, but stop requiring explicit `O.none()` at construction.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 8
+    "roiRank": 4,
+    "exception": {
+      "reason": "Changing safeMode from Option<boolean> to a defaulted boolean changes the encoded output for an omitted key from absent to safeMode:false and changes the public Type. That fails the §5.3 byte-identical wire-shape requirement without a dedicated public-form migration.",
+      "boundary": "encoded wire parity and public Type"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -96,7 +23,11 @@
     "proposedTarget": "Root cause is cross-package: move the language-tag normalization/refinement to @beep/rdf (for example a `LanguageTag`/JSON-LD language schema with `S.decodeTo` or a reusable transformation), then this adapter can re-make literals without hand-lowercasing. Actionable only with the @beep/rdf modeling wave.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 9
+    "roiRank": 9,
+    "exception": {
+      "reason": "The normalization belongs in the @beep/rdf JsonLdLiteralValue/language-tag schema, not in @beep/semantic-web. Fence 8 forbids this package writer from editing that owning schema package; defer to the family-close pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",

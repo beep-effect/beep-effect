@@ -18,8 +18,8 @@
  */
 
 import { $McpKitId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
-import { Config, Effect } from "effect";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Config, Data, Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type * as Redacted from "effect/Redacted";
@@ -81,8 +81,7 @@ export type SourceAuthGate = typeof SourceAuthGate.Type;
  * const registration = SourceAuthRegistration.make({
  *   name: "USPTO Open Data Portal",
  *   envVar: "USPTO_API_KEY",
- *   gate: "soft",
- *   signupUrl: O.none()
+ *   gate: "soft"
  * })
  * console.log(registration.envVar)
  * // "USPTO_API_KEY"
@@ -102,9 +101,12 @@ export class SourceAuthRegistration extends S.Class<SourceAuthRegistration>($I`S
     gate: SourceAuthGate.annotateKey({
       description: "Credential gate policy for this source.",
     }),
-    signupUrl: S.OptionFromNullOr(S.String).annotateKey({
-      description: "Optional signup URL surfaced when the credential is missing.",
-    }),
+    signupUrl: S.OptionFromNullOr(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Optional signup URL surfaced when the credential is missing.",
+      })
+    ),
   },
   $I.annote("SourceAuthRegistration", {
     description: "Schema-first per-source credential-gate registration.",
@@ -125,8 +127,7 @@ export class SourceAuthRegistration extends S.Class<SourceAuthRegistration>($I`S
  * const registration = SourceAuthRegistration.make({
  *   name: "Example",
  *   envVar: "MCP_KIT_EXAMPLE_DOES_NOT_EXIST",
- *   gate: "soft",
- *   signupUrl: O.none()
+ *   gate: "soft"
  * })
  *
  * const credential = Effect.runSync(resolveSourceCredential(registration))
@@ -152,9 +153,18 @@ export const resolveSourceCredential = (
  * @category models
  * @since 0.0.0
  */
-export type SourceAuthDecision =
-  | { readonly _tag: "Mount"; readonly credential: O.Option<Redacted.Redacted<string>> }
-  | { readonly _tag: "Vanish" };
+export type SourceAuthDecision = Data.TaggedEnum<{
+  readonly Mount: { readonly credential: O.Option<Redacted.Redacted<string>> };
+  readonly Vanish: {};
+}>;
+
+/**
+ * Tagged-enum constructors and matchers for {@link SourceAuthDecision}.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const SourceAuthDecision = Data.taggedEnum<SourceAuthDecision>();
 
 /**
  * Decides whether a registered source should mount or vanish, applying the
@@ -171,8 +181,7 @@ export type SourceAuthDecision =
  * const registration = SourceAuthRegistration.make({
  *   name: "Example",
  *   envVar: "MCP_KIT_EXAMPLE_DOES_NOT_EXIST",
- *   gate: "hard",
- *   signupUrl: O.none()
+ *   gate: "hard"
  * })
  *
  * const decision = Effect.runSync(decideSourceAuthMount(registration))
@@ -186,15 +195,13 @@ export type SourceAuthDecision =
 export const decideSourceAuthMount = Effect.fn("decideSourceAuthMount")(function* (
   registration: SourceAuthRegistration
 ) {
-  if (registration.gate === "none") {
-    return { _tag: "Mount", credential: O.none() } as const;
-  }
-
-  const credential = yield* resolveSourceCredential(registration);
-
-  if (registration.gate === "hard" && O.isNone(credential)) {
-    return { _tag: "Vanish" } as const;
-  }
-
-  return { _tag: "Mount", credential } as const;
+  return yield* SourceAuthGate.$match(registration.gate, {
+    none: () => Effect.succeed(SourceAuthDecision.Mount({ credential: O.none() })),
+    soft: () =>
+      Effect.map(resolveSourceCredential(registration), (credential) => SourceAuthDecision.Mount({ credential })),
+    hard: () =>
+      Effect.map(resolveSourceCredential(registration), (credential) =>
+        O.isNone(credential) ? SourceAuthDecision.Vanish() : SourceAuthDecision.Mount({ credential })
+      ),
+  });
 });

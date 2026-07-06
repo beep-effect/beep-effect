@@ -1,138 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts",
-    "line": 138,
-    "symbol": "NLPBackendError",
-    "smell": "Union const has S.toTaggedUnion utils (cases/guards/match via preserveSchemaStatics-safe $I.annoteSchema) but is missing SchemaUtils.withCodecStatics; its own JSDoc example falls back to free-floating S.is(NLPBackendError)(error) instead of a colocated guard.",
-    "proposedTarget": "Append SchemaUtils.withCodecStatics to the pipe (after $I.annoteSchema, matching md/src/Md.model.ts:36 exemplar) so NLPBackendError.is / .fromUnknown / .decodeOption exist; update the JSDoc example to NLPBackendError.is(error).",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Errors.ts",
-    "line": 231,
-    "symbol": "GraphOperationError",
-    "smell": "Six-member error union const piped only through $I.annoteSchema, missing SchemaUtils.withCodecStatics; JSDoc example uses S.is(GraphOperationError)(error) — the exact free-floating-guard pattern withCodecStatics exists to delete.",
-    "proposedTarget": "Add SchemaUtils.withCodecStatics to the pipe so GraphOperationError.is / .fromUnknown / .decodeOption are colocated; update the JSDoc example. (Adding S.toTaggedUnion like sibling NLPBackendError is S3's call, not required here.)",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/nlp-processing/src/Graph/EffectGraph.ts",
-    "line": 56,
-    "symbol": "NodeId",
-    "smell": "Branded string const (S.String.pipe(S.brand(\"NodeId\"), $I.annoteSchema(...))) missing SchemaUtils.withCodecStatics; only .make is available while sibling consts in this package (AiEntitySource, NGramMode) carry colocated kit statics.",
-    "proposedTarget": "Add SchemaUtils.withCodecStatics to the NodeId pipe (bound S.Top & S.ConstraintDecoder<unknown> is satisfied by a branded string; exemplar S.NonEmptyString.pipe(withCodecStatics) in @beep/schema/SchemaUtils/withCodecStatics.ts).",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
-    "line": 650,
-    "symbol": "ExecutionId",
-    "smell": "Branded string const missing SchemaUtils.withCodecStatics, same shape as NodeId; consumers get only .make while the file already demonstrates the statics idiom via SchemaUtils.withStatics on ExecutionStrategy/OperationCost.",
-    "proposedTarget": "Add SchemaUtils.withCodecStatics to the ExecutionId pipe so is/fromUnknown/decodeOption are colocated with the brand.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Catalog.ts",
-    "line": 251,
-    "symbol": "toLowerCase/toUpperCase/trim (trivial wrapper lambdas)",
-    "smell": "Trivial wrapper lambdas f: (data) => data.toLowerCase() (line 251), (data) => data.toUpperCase() (line 270), (data) => data.trim() (line 289) where direct helper refs exist in effect/String.",
-    "proposedTarget": "Replace with direct refs Str.toLowerCase / Str.toUpperCase / Str.trim (verified at .repos/effect-v4/packages/effect/src/String.ts:175,193,298; for plain string input the Uppercase/Lowercase/Trim mapped return types resolve to string, so (data: string) => string is satisfied).",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
-    "line": 685,
-    "symbol": "makeExecutionId",
-    "smell": "Duplicate constructor: Brand.nominal<ExecutionId>() exported beside the schema-derived ExecutionId.make; the same package's NodeId (EffectGraph.ts:98) uses NodeId.make directly, so the free-floating Brand constructor is the odd one out.",
-    "proposedTarget": "Delete makeExecutionId and use ExecutionId.make in generateExecutionId (Types.ts:706) and doc examples; public-export removal requires same-PR consumer sweep (in-package + doc examples only — no external consumers found).",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 6
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts",
-    "line": 343,
-    "symbol": "supportsCapability",
-    "smell": "Public 2-arg helper (backend, capability) that is not dual; reads BackendCapabilities data yet lives detached from the BackendCapabilities S.Class.",
-    "proposedTarget": "Wrap in dual(2, ...) for data-first/data-last use (non-breaking for existing 2-arg calls); optionally colocate as a static on BackendCapabilities (supports = dual(2, (caps, cap) => caps[cap])) with supportsCapability delegating.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 7
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts",
-    "line": 402,
-    "symbol": "notSupported",
-    "smell": "Free-floating constructor helper wrapping BackendNotSupported.make with message defaulting — behavior separated from its data; the house pattern is an in-class dual static (ExportedToolError.fromCause, Tools/ToolExport.ts:131).",
-    "proposedTarget": "Colocate as a static on BackendNotSupported (e.g. static readonly of/new with default message); keep notSupported as a thin deprecated re-export or sweep consumers (packages/drivers/wink/src/WinkBackend.service.ts:26,129,133) in the same PR per §5.4.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 8
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts",
-    "line": 444,
-    "symbol": "operationError",
-    "smell": "Free-floating constructor helper wrapping BackendOperationError.make with rendered-cause message — behavior separated from its data class.",
-    "proposedTarget": "Colocate as a static on BackendOperationError (cause-first shape mirrors CauseTaggedError.new / ExportedToolError.fromCause); sweep wink driver call sites (WinkBackend.service.ts:57) in the same PR.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 9
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts",
-    "line": 423,
-    "symbol": "initError",
-    "smell": "Free-floating constructor helper wrapping BackendInitError.make with rendered-cause message — behavior separated from its data class.",
-    "proposedTarget": "Colocate as a static on BackendInitError; sweep any driver call sites in the same PR.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 10
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/nlp-processing/src/Backend/Composition.ts",
-    "line": 123,
-    "symbol": "withFallback",
-    "smell": "Public 2-arg backend combinator (primary, secondary) that is not dual, in a module explicitly framed as morphism composition — pipe(primary, withFallback(secondary), ...) is the intended usage shape.",
-    "proposedTarget": "Wrap in dual(2, ...) with self = primary; existing 2-arg call sites keep working.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 11
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/nlp-processing/src/Backend/Composition.ts",
-    "line": 347,
-    "symbol": "selectByCapability",
-    "smell": "Public 2-arg helper that is neither dual nor data-first: the collection (backends) is the last parameter, so it cannot sit in a pipe over the backend list.",
-    "proposedTarget": "Reorder to data-first and dual: selectByCapability(backends, capability) + curried (capability) => (backends) via dual(2, ...); ship the (small) consumer sweep in the same PR per §5.4.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 12
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/foundation/capability/nlp-processing/src/Backend/Composition.ts",
     "line": 264,
     "symbol": "withCaching",
@@ -140,7 +8,11 @@
     "proposedTarget": "Predicate-based dual, dispatching on whether args[0] is a backend (has capabilities/name), mirroring the in-repo precedent GraphExecutor execute (Executor.ts:394-395 uses isEffectGraph); judgment on whether the pipeability win justifies the dispatch complexity.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 13
+    "roiRank": 13,
+    "exception": {
+      "reason": "withCaching is an Effect.fn backend-first wrapper with optional options; adding curried optional dual forms would create ambiguous arity and public API churn.",
+      "boundary": "public effectful combinator compatibility"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -151,7 +23,11 @@
     "proposedTarget": "Cross-package colocation: attach withCodecStatics (or at least .is) to the TextNode union const and in-body static readonly is = S.is(Self)-style guards to POSNode/EntityNode/LemmaNode/DependencyNode/RelationNode in @beep/nlp, then narrow these exports to deprecated aliases; requires @beep/nlp's package-writer wave plus a same-PR sweep here — keep judgment (the local guards also deliberately narrow the input to AnnotatedNode).",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 14
+    "roiRank": 14,
+    "exception": {
+      "reason": "Per-type refinement statics belong on the upstream @beep/nlp node schemas; this package now exposes the AnnotatedNode runtime union and keeps public guard aliases for compatibility.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -162,7 +38,11 @@
     "proposedTarget": "Single colocated constructor: either a SchemaUtils.withStatics fromText/create on the TextNode union const in @beep/nlp (cross-package, aligns with the guard-wall finding) or, minimally, one shared internal helper module in this package; judgment because the canonical home is in the other package.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 15
+    "roiRank": 15,
+    "exception": {
+      "reason": "Canonical TextNode constructor/default statics belong with the upstream @beep/nlp TextNode model; local replacement would require cross-package edits.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

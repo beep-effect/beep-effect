@@ -8,40 +8,11 @@
     "proposedTarget": "Rebuild per the repo build order: AlignmentStatus LiteralKit -> member S.Classes (aligned variants require span + matchedText; unaligned forbids them) -> AlignmentStatus.toTaggedUnion(\"alignmentStatus\")({ ... }) (LiteralKit.toTaggedUnion verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:667; non-_tag discriminator precedent StorageKind.toTaggedUnion(\"storageKind\") at packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.persist.ts:401, kit-form at :176), so Handoff/Service/law-practice branch via derived .match/.guards and the span-presence invariant becomes schema-owned; definedExtractions collapses to the derived unaligned-complement guard. Encoded wire shape is unchanged (discriminator keeps the alignmentStatus key; optional keys are already absent per variant), satisfying the 5.3 parity proof. CAUTION: public-form change whose 5.4 consumer sweep crosses the foundation wave boundary into packages/law-practice/use-cases (IrToLaw.ports.ts:96 embeds S.Array(GroundedExtraction)) — fence 8 means this remodel must be scheduled with or after the law-practice-touching wave, not squeezed into a foundation-only touch set. Not a REQUIRED_TAGGED_UNIONS family (packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts:65).",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 1.7
-  },
-  {
-    "ruleId": "SFV4-getsomes-struct",
-    "file": "packages/foundation/capability/langextract/src/Alignment/index.ts",
-    "line": 36,
-    "symbol": "makeGrounded",
-    "smell": "Heterogeneous optional-key struct assembly via a locally mutated `input` record with four conditional undefined-guarded assignments (`if (candidate.attributes !== undefined) input.attributes = ...` for attributes/confidence/matchedText/span, lines 56-67) plus a hand-written 7-field type annotation, feeding GroundedExtraction.make — the imperative sibling of the R.getSomes struct-spread smell where O.getSomesStruct is the fit. No R.getSomes call exists in this package.",
-    "proposedTarget": "GroundedExtraction.make({ alignmentStatus: status, label: candidate.label, text: candidate.text, ...O.getSomesStruct({ attributes: O.fromUndefinedOr(candidate.attributes), confidence: O.fromUndefinedOr(candidate.confidence), matchedText: O.fromUndefinedOr(matchedText), span: O.fromUndefinedOr(span) }) }) using O.getSomesStruct (verified at packages/foundation/modeling/utils/src/Option.ts:102) and O.fromUndefinedOr (verified at .repos/effect-v4/packages/effect/src/Option.ts:860); deletes the mutable record and its hand-written input type. Behavior-identical for S.optionalKey fields (None keys are omitted entirely, matching exact-optional semantics). Held at judgment per D5 until the Law 20/47 amendment merges.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 1.5
-  },
-  {
-    "ruleId": "SFV4-getsomes-struct",
-    "file": "packages/foundation/capability/langextract/src/Handoff/index.ts",
-    "line": 59,
-    "symbol": "makeEntity",
-    "smell": "Same imperative optional-key assembly pattern as Alignment makeGrounded: locally mutated `input` record with hand-written 6-field type annotation and a conditional `if (extraction.confidence !== undefined) input.confidence = extraction.confidence` (lines 66-84) feeding Contract.Entity.make — the manual variant of the R.getSomes struct-spread smell where O.getSomesStruct is the fit.",
-    "proposedTarget": "Contract.Entity.make({ canonicalName: extraction.text, id: Contract.EntityId.make(`${documentId}:entity:${index}`), mentions: [mentionId], provenance, type: extraction.label, ...O.getSomesStruct({ confidence: O.fromUndefinedOr(extraction.confidence) }) }) using O.getSomesStruct (packages/foundation/modeling/utils/src/Option.ts:102) and O.fromUndefinedOr (.repos/effect-v4/packages/effect/src/Option.ts:860); mechanically simpler single-key transform than the makeGrounded site, held at judgment per D5 until the Law 20/47 amendment merges.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 1.4
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/langextract/test/Service.test.ts",
-    "line": 15,
-    "symbol": "makeLanguageModelLayerFromEffect",
-    "smell": "Four repo-banned type assertions constructing the fake LanguageModel service: `Effect.die(\"generateObject is not used by V1 tests\") as never` (:15), `effect as never` (:16), `Stream.empty as never` (:17), and the object-level `as LanguageModel.Service` (:18) — casts that fabricate the service shape instead of using the provided constructors/testing primitives.",
-    "proposedTarget": "Build the fake with LanguageModel.make({ generateText: () => Effect.map(effect, ({ text }) => [Response.makePart(\"text\", { text }), finishPart]), streamText: () => Stream.empty }) (LanguageModel.make verified at .repos/effect-v4/packages/effect/src/unstable/ai/LanguageModel.ts:748; the package's own docs example already demonstrates exactly this at src/Service/index.ts:232-244, and Effect.never for the stalled-model case is assignable without any cast), or with Layer.mock(LanguageModel.LanguageModel)({ ... }) (verified at .repos/effect-v4/packages/effect/src/Layer.ts:2262) which proxies unimplemented methods such as generateObject to UnimplementedError, removing the die-plus-cast entirely.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 0.8
+    "roiRank": 1.7,
+    "exception": {
+      "reason": "Rebuilding GroundedExtraction as a discriminated union is a public-form change embedded by @beep/law-practice IrToLaw.ports; defer to a scoped family-close sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

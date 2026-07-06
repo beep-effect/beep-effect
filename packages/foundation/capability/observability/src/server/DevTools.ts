@@ -4,11 +4,16 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { $ObservabilityId } from "@beep/identity/packages";
+import { Fn } from "@beep/schema";
 import { Effect, Layer, Match, Tracer } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as DevToolsClient from "effect/unstable/devtools/DevToolsClient";
 import * as Socket from "effect/unstable/socket/Socket";
 import type * as DevToolsSchema from "effect/unstable/devtools/DevToolsSchema";
+
+const $I = $ObservabilityId.create("server/DevTools");
 
 /**
  * Predicate used to decide whether a span should be mirrored to Effect devtools.
@@ -25,7 +30,44 @@ import type * as DevToolsSchema from "effect/unstable/devtools/DevToolsSchema";
  * @since 0.0.0
  * @category models
  */
-export type DevToolsSpanFilter = (name: string) => boolean;
+export const DevToolsSpanFilter = Fn({
+  input: S.String,
+  output: S.Boolean,
+}).pipe(
+  $I.annoteSchema("DevToolsSpanFilter", {
+    description: "Predicate used to decide whether a span should be mirrored to Effect devtools.",
+  })
+);
+
+/**
+ * Runtime type for {@link DevToolsSpanFilter}.
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type DevToolsSpanFilter = typeof DevToolsSpanFilter.Type;
+
+/**
+ * Options for mirroring selected spans to the Effect devtools websocket.
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export class LayerFilteredDevToolsOptions extends S.Class<LayerFilteredDevToolsOptions>(
+  $I`LayerFilteredDevToolsOptions`
+)(
+  {
+    url: S.String.annotateKey({
+      description: "Devtools websocket URL.",
+    }),
+    shouldPublish: DevToolsSpanFilter.annotateKey({
+      description: "Predicate deciding whether a span should be mirrored.",
+    }),
+  },
+  $I.annote("LayerFilteredDevToolsOptions", {
+    description: "Options for mirroring selected spans to the Effect devtools websocket.",
+  })
+) {}
 
 const toDevToolsSpanStatus = Match.type<Tracer.SpanStatus>().pipe(
   Match.withReturnType<DevToolsSchema.SpanStatus>(),
@@ -87,10 +129,7 @@ const toDevToolsSpan = (span: Tracer.Span): DevToolsSchema.Span => ({
  * @since 0.0.0
  * @category layers
  */
-export const layerFilteredDevTools = (options: {
-  readonly url: string;
-  readonly shouldPublish: DevToolsSpanFilter;
-}): Layer.Layer<never> => {
+export const layerFilteredDevTools = (options: LayerFilteredDevToolsOptions): Layer.Layer<never> => {
   const socketClientLayer = DevToolsClient.layer.pipe(
     Layer.provide(Socket.layerWebSocket(options.url)),
     Layer.provide(Socket.layerWebSocketConstructorGlobal)

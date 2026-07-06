@@ -8,7 +8,11 @@
     "proposedTarget": "Promote `NonNegativeInt` in `@beep/schema` to carry codec statics at packages/foundation/modeling/schema/src/Number.ts:196 via `SchemaUtils.withCodecStatics` (verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90 and Effect v4 `S.decodeUnknownSync` at .repos/effect-v4/packages/effect/src/Schema.ts:1718), then replace this helper with `NonNegativeInt.fromUnknown(input)`.",
     "confidence": 0.72,
     "mechanization": "assisted",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "Requires adding codec statics to shared @beep/schema NonNegativeInt outside this package; deferred so this single-package writer does not edit another package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -19,7 +23,11 @@
     "proposedTarget": "After `NonNegativeInt` carries `withCodecStatics`, replace the helper and call sites with `NonNegativeInt.fromUnknown(durationMs)`.",
     "confidence": 0.72,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Requires adding codec statics to shared @beep/schema NonNegativeInt outside this package; deferred so this single-package writer does not edit another package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -30,18 +38,11 @@
     "proposedTarget": "After `NonNegativeInt` carries `withCodecStatics`, replace the helper and all count conversions with `NonNegativeInt.fromUnknown(...)`.",
     "confidence": 0.72,
     "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
-    "line": 24,
-    "symbol": "decodeNonNegativeInt",
-    "smell": "Top-of-file decode-wall helper repeats `S.decodeUnknownResult(NonNegativeInt)` for HTTP status values and telemetry span annotations.",
-    "proposedTarget": "After `NonNegativeInt` carries `withCodecStatics`, replace this helper with `NonNegativeInt.fromUnknown(...)`; keep the dynamic endpoint-schema guard separate because it is not a fixed schema static.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 3,
+    "exception": {
+      "reason": "Requires adding codec statics to shared @beep/schema NonNegativeInt outside this package; deferred so this single-package writer does not edit another package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -52,7 +53,11 @@
     "proposedTarget": "After `NonNegativeInt` carries `withCodecStatics`, replace with `NonNegativeInt.fromUnknown(clock.currentTimeMillisUnsafe())` / `NonNegativeInt.fromUnknown(sizeFromBody(body))`.",
     "confidence": 0.72,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Requires adding codec statics to shared @beep/schema NonNegativeInt outside this package; deferred so this single-package writer does not edit another package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -63,117 +68,11 @@
     "proposedTarget": "After `NonNegativeInt` carries `withCodecStatics`, replace the helper with `NonNegativeInt.fromUnknown(...)` at the four snapshot fields.",
     "confidence": 0.72,
     "mechanization": "assisted",
-    "roiRank": 6
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/observability/src/server/Config.ts",
-    "line": 38,
-    "symbol": "ServerObservabilityConfig",
-    "smell": "S.Class model has its runtime guard detached in NodeSdk.ts:108 as `const isServerObservabilityConfig = S.is(ServerObservabilityConfig)`, then reused by four public dual predicates.",
-    "proposedTarget": "Add in-body `static readonly is = S.is(ServerObservabilityConfig)` as in packages/foundation/modeling/md/src/Md.model.ts:873 and packages/foundation/modeling/lexical/src/Lexical.model.ts:1282; replace NodeSdk predicates with `ServerObservabilityConfig.is`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 7
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/observability/src/server/NodeSdk.ts",
-    "line": 108,
-    "symbol": "isServerObservabilityConfig",
-    "smell": "Free-floating guard `const isServerObservabilityConfig = S.is(ServerObservabilityConfig)` duplicates a class static that belongs on `ServerObservabilityConfig`.",
-    "proposedTarget": "Delete this helper after adding `ServerObservabilityConfig.is`; use `(args) => ServerObservabilityConfig.is(args[0])` at the four dual predicates.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 8
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
-    "line": 28,
-    "symbol": "HttpApiStatusField",
-    "smell": "Internal S.Class exists only to decode a runtime `{ status }` shape, but its decoder is detached immediately below as `decodeStatusField = S.decodeUnknownOption(HttpApiStatusField)`.",
-    "proposedTarget": "Attach an in-body `static readonly decodeOption = S.decodeUnknownOption(HttpApiStatusField)`; `withCodecStatics` docs explicitly reserve in-body statics for S.Class at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:10.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 9
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
-    "line": 35,
-    "symbol": "decodeStatusField",
-    "smell": "Free-floating class decoder `S.decodeUnknownOption(HttpApiStatusField)` is consumed by `httpApiFailureStatus` instead of living on the class it decodes.",
-    "proposedTarget": "Delete this helper after adding `HttpApiStatusField.decodeOption`; call `HttpApiStatusField.decodeOption(error)`.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 10
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/observability/src/Observed.ts",
-    "line": 234,
-    "symbol": "ObservedCause",
-    "smell": "Exported schema const lacks codec statics; tests rebuild its guard with `S.is(ObservedCause)` at test/Observed.test.ts:53.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` so consumers can call `ObservedCause.is`, `ObservedCause.fromUnknown`, and `ObservedCause.decodeOption`.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 11
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/observability/src/Observed.ts",
-    "line": 272,
-    "symbol": "ObservedExit",
-    "smell": "Exported schema const lacks codec statics; tests rebuild its guard with `S.is(ObservedExit)` at test/Observed.test.ts:65.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` and replace test-local guards with `ObservedExit.is`.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 12
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
-    "line": 327,
-    "symbol": "redactCauseSummary",
-    "smell": "Public two-argument helper `(summary, options = defaultOptions)` is data-first only while neighboring `redactString` already uses `dual(2, ...)`; this blocks pipeable `redactCauseSummary(options)(summary)` call sites.",
-    "proposedTarget": "Give it overloads and implement with `dual(2, ...)`, verified against Effect v4 `dual` at .repos/effect-v4/packages/effect/src/Function.ts:102.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 13
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
-    "line": 380,
-    "symbol": "redactCause",
-    "smell": "Public two-argument helper `(input, options = defaultOptions)` is data-first only even though it mirrors the same input/options shape as the dualized `redactString` helper.",
-    "proposedTarget": "Add data-first/data-last overloads and implement with `dual(2, (input, options = defaultOptions) => redactCauseSummary(summarizeCause(toCause(input)), options))`.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 14
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
-    "line": 455,
-    "symbol": "redactCauseEffect",
-    "smell": "Public Effect helper takes `(input, options = defaultOptions)` but is not dualized, unlike neighboring effect wrappers such as `profilePhase` and `observeWorkflow`.",
-    "proposedTarget": "Wrap the `Effect.fn(\"observability.redact_cause\")` body in `dual(2, ...)` with overloads for `(input, options)` and `(options)(input)`, matching the local pattern at PhaseProfiler.ts:287.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 15
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
-    "line": 150,
-    "symbol": "httpApiSuccessStatus",
-    "smell": "Public schema helper takes `(schema, fallback = 200)` but is not dualized; downstream already treats schema as the pipeable self via `schema.pipe(httpApiErrorStatus)` at line 326 for the private sibling.",
-    "proposedTarget": "Expose data-first/data-last overloads and implement with `dual(2, (schema, fallback = 200) => NonNegativeInt.fromUnknown(resolveHttpApiStatus(schema.ast) ?? fallback))` after `NonNegativeInt` codec statics land.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 16
+    "roiRank": 6,
+    "exception": {
+      "reason": "Requires adding codec statics to shared @beep/schema NonNegativeInt outside this package; deferred so this single-package writer does not edit another package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

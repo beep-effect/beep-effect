@@ -50,11 +50,10 @@ describe("Observed", () => {
 
   it("schema-derived arbitrary values are members of ObservedCause", () => {
     const arbitrary = S.toArbitrary(ObservedCause);
-    const isMember = S.is(ObservedCause);
 
     fc.assert(
       fc.property(arbitrary, (cause) => {
-        expect(isMember(cause)).toBe(true);
+        expect(ObservedCause.is(cause)).toBe(true);
       }),
       { numRuns: 50 }
     );
@@ -62,11 +61,10 @@ describe("Observed", () => {
 
   it("schema-derived arbitrary values are members of ObservedExit", () => {
     const arbitrary = S.toArbitrary(ObservedExit);
-    const isMember = S.is(ObservedExit);
 
     fc.assert(
       fc.property(arbitrary, (exit) => {
-        expect(isMember(exit)).toBe(true);
+        expect(ObservedExit.is(exit)).toBe(true);
       }),
       { numRuns: 50 }
     );

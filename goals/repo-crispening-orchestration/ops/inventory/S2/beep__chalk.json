@@ -1,71 +1,5 @@
 [
   {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
-    "line": 535,
-    "symbol": "createSupportsColor",
-    "smell": "Post-decode `??` defaults (`normalizedRuntimeProcessLike.argv ?? []`, `.env ?? {}`) re-apply defaults in business logic even though RuntimeProcessLikeModel already models these keys with S.optionalKey; the missing-key default belongs on the schema key.",
-    "proposedTarget": "Give RuntimeProcessLikeModel.argv `SchemaUtils.withEmptyArrayDefaults` (packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:114) and .env `SchemaUtils.withKeyDefaults({})` so both constructor and decode paths default in the codec; delete the `?? []` / `?? {}` at the call site.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 8
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
-    "line": 442,
-    "symbol": "detectTerminalPatternColorLevel",
-    "smell": "`const term = env.TERM ?? \"\"` collapses absence into an empty-string sentinel before the O.liftPredicate checks; sibling detectors (line 448 env.COLORTERM) already use O.fromNullishOr instead.",
-    "proposedTarget": "`pipe(env.TERM, O.fromNullishOr, O.filter(isAnsi256Terminal), O.as(level2))` (and the level1 arm likewise), mirroring the existing env.COLORTERM pipeline; no sentinel string.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 7
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
-    "line": 242,
-    "symbol": "hasTrueColorTerminalName",
-    "smell": "Helper takes `term: string | undefined` and papers over absence with `term ?? \"\"`; nullish parameter + `??` sentinel in domain code instead of Option.",
-    "proposedTarget": "Change signature to accept O.Option<string> (call site: `pipe(env.TERM, O.fromNullishOr, ...)`) and use `O.exists((term) => A.contains(trueColorTerminals, term))`; absence never becomes a fake empty string.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 7
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/chalk/src/internal/ChalkRuntime.ts",
-    "line": 189,
-    "symbol": "stringIndexOfOrNotFound",
-    "smell": "`O.getOrElse(() => -1)` collapses Str.indexOf's Option into a -1 sentinel that the caller re-checks with `if (lineFeedIndex !== -1)` (line 235); the Option is destroyed only to be reconstructed as a conditional.",
-    "proposedTarget": "Keep the Option: `pipe(rendered, Str.indexOf(\"\\n\"), O.match({ onNone: () => rendered, onSome: (index) => stringEncaseCRLFWithFirstIndex(...) }))` inside applyStyle; delete stringIndexOfOrNotFound.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 6
-  },
-  {
-    "ruleId": "SFV4-normalization",
-    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
-    "line": 342,
-    "symbol": "parseWindowsRelease",
-    "smell": "String-to-parts pipeline in a body: `osRelease ?? \"0.0.0\"` default, destructuring defaults `[major = \"0\", , build = \"0\"]`, and Number.parseInt coercion build a WindowsRelease object by hand even though WindowsReleaseModel (line 94) already exists as a schema.",
-    "proposedTarget": "A `WindowsReleaseFromOsRelease` transformation schema: `S.String.pipe(S.decodeTo(WindowsReleaseModel, SchemaTransformation.transform(...)))` (S.decodeTo verified at .repos/effect-v4/packages/effect/src/Schema.ts:5408, SchemaTransformation.transform at SchemaTransformation.ts:334); the \"0.0.0\" absence default moves to the optional-key codec.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 6
-  },
-  {
-    "ruleId": "SFV4-normalization",
-    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
-    "line": 403,
-    "symbol": "firstVersionSegment",
-    "smell": "`version ?? \"\"` plus split/head/`O.getOrElse(() => \"0\")` plus Number.parseInt in toTermProgramInfo (line 410) is a hand-rolled string-to-parts normalization producing TermProgramInfoModel-shaped data without the schema.",
-    "proposedTarget": "A transformation schema decoding TERM_PROGRAM/TERM_PROGRAM_VERSION into TermProgramInfoModel (`S.decodeTo` + `SchemaTransformation.transform`), with the major-version extraction and \"0\" fallback carried by the codec instead of body helpers.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
     "ruleId": "SFV4-normalization",
     "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
     "line": 339,
@@ -74,7 +8,11 @@
     "proposedTarget": "An `RgbFromHex` transformation schema (`S.String.pipe(S.decodeTo(RgbTuple, SchemaTransformation.transform(...)))`) capturing short-hex expansion and the chalk-parity invalid-hex-to-black policy in the codec; hexToRgb becomes a decode call.",
     "confidence": 0.6,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Same public compatibility boundary as the S1 hexToRgb finding: malformed hex strings intentionally normalize to [0, 0, 0]. Moving this into a schema transform is a public color-argument codec design, not a safe package-local crispening substitution.",
+      "boundary": "public chalk-compatible hex/bgHex color argument behavior"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -85,51 +23,11 @@
     "proposedTarget": "A `ColorSupportLevelFromEnvString` transformation schema (S.String -> ColorSupportLevel via `S.decodeTo` + `SchemaTransformation.transformOrFail`, trim inside the codec) so envForceColor becomes `S.decodeUnknownOption` of that schema.",
     "confidence": 0.6,
     "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
-    "line": 141,
-    "symbol": "normalizeStreamLike",
-    "smell": "Decode-or-default outside the codec: `S.decodeUnknownOption(StreamLikeModel)` then `O.getOrElse(() => StreamLikeModel.make({}))`; the lenient-boundary fallback is a default living in a helper instead of the schema.",
-    "proposedTarget": "Fold the leniency into the codec with `S.catchDecoding(() => O.some(StreamLikeModel.make({})))` (verified at .repos/effect-v4/packages/effect/src/Schema.ts:5245) so callers just decode.",
-    "confidence": 0.6,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
-    "line": 147,
-    "symbol": "normalizeSupportsColorOptions",
-    "smell": "Same decode-or-default pattern as normalizeStreamLike: `O.getOrElse(() => SupportsColorOptionsModel.make({}))` applies the empty-model fallback in a helper instead of the codec.",
-    "proposedTarget": "`S.catchDecoding(() => O.some(SupportsColorOptionsModel.make({})))` on the schema; delete the normalize helper.",
-    "confidence": 0.6,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
-    "line": 153,
-    "symbol": "normalizeRuntimeProcessLike",
-    "smell": "Same decode-or-default pattern: `O.getOrElse(() => RuntimeProcessLikeModel.make({}))` in a helper instead of the codec.",
-    "proposedTarget": "`S.catchDecoding(() => O.some(RuntimeProcessLikeModel.make({})))` on the schema; delete the normalize helper.",
-    "confidence": 0.6,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-normalization",
-    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
-    "line": 464,
-    "symbol": "makeSupportsColorDecisionInput",
-    "smell": "Hand-rolled optional-property omission via four conditional spreads `...(P.isNotUndefined(x) ? { x } : {})`; property-presence transforms are exactly what SchemaGetter/optional-key constructors carry.",
-    "proposedTarget": "Construct via SupportsColorDecisionInputModel.make with S.optionalKey semantics (or SchemaGetter omit/withDefault transforms, SchemaGetter.withDefault verified at .repos/effect-v4/packages/effect/src/SchemaGetter.ts:637) instead of spread-stripping undefined by hand.",
-    "confidence": 0.55,
-    "mechanization": "judgment",
-    "roiRank": 3
+    "roiRank": 5,
+    "exception": {
+      "reason": "Numeric FORCE_COLOR normalization is part of the same env heuristic as envForceColor; preserving chalk-compatible trim, regex, parseInt, and clamp semantics in a schema transform needs a dedicated supports-color codec sweep.",
+      "boundary": "Node.js FORCE_COLOR compatibility heuristic"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -140,7 +38,11 @@
     "proposedTarget": "At minimum `pipe(options?.level, O.fromNullishOr, O.match({ onNone: () => defaultLevel, onSome: normalizeColorSupportLevel }))`; the default is dynamic (per-stream detection) so a constant withKeyDefaults does not fit -- a decode-with-context or factory-scoped schema would be needed to fully absorb it.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "The fallback level is dynamic per detected stdout/stderr color support, not a schema constant or missing-key default. Keeping the dynamic factory default at the builder boundary preserves chalk instance behavior.",
+      "boundary": "runtime-detected Chalk builder factory default"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -151,7 +53,11 @@
     "proposedTarget": "Model the fg->bg name pairing as a literal mapping (MappedLiteralKit or an S.TemplateLiteral `bg${Capitalize}` family) so the property-name domain is schema-owned rather than string-mangled; borderline S2 -- the value feeds a computed property key, not a schema field (see rule-card note).",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "@beep/utils/Str does not expose a current capitalize helper, and replacing the dynamic bgRgb/bgHex/bgAnsi256 property-name derivation with a mapped literal surface would be a larger builder-prototype redesign.",
+      "boundary": "dynamic chalk-compatible builder property names"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -162,7 +68,11 @@
     "proposedTarget": "`parent: S.OptionFromOptionalKey(S.suspend(...))` (verified at .repos/effect-v4/packages/effect/src/Schema.ts:8668) with `SchemaUtils.withNoneDefault`; caution: applyStyle walks the parent chain in a hot do/while loop matching upstream chalk, so the Option-wrapping cost and loop rewrite need judgment.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "The recursive Styler parent chain mirrors upstream chalk and is walked in a hot loop; changing parent to Option would rewrite the recursive schema type and traversal semantics beyond a package-local crispening substitution.",
+      "boundary": "internal recursive styler chain hot path"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -173,7 +83,11 @@
     "proposedTarget": "`styler: S.OptionFromOptionalKey(Styler)` + `SchemaUtils.withNoneDefault`, with O.match at the applyStyle branch; same hot-path caveat as Styler.parent.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "BuilderMeta.styler shares the same upstream-style undefined absence boundary as Styler.parent; Option-wrapping it would require a hot-path traversal rewrite and broader state-model proof.",
+      "boundary": "internal builder metadata hot path"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -184,7 +98,11 @@
     "proposedTarget": "Keep Option through the scan (O.match-driven recursion or a loop over `O.Option<number>` state) so no -1 sentinel exists; judgment because the imperative loops are perf-parity ports of upstream chalk string encasing.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "This sentinel drives a small upstream-parity string replacement loop; replacing the loop state with Option would be a behavior/performance rewrite rather than schema absorption. The duplicated runtime call site in ChalkRuntime was removed separately.",
+      "boundary": "internal string replacement loop ported for chalk rendering parity"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -195,7 +113,11 @@
     "proposedTarget": "Same as indexOfOrNotFound: carry O.Option<number> through the loop state instead of a -1 sentinel.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "This sentinel drives the same upstream-parity string replacement loop as indexOfOrNotFound; replacing the loop state with Option is deferred to a focused renderer-loop rewrite.",
+      "boundary": "internal string replacement loop ported for chalk rendering parity"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -206,7 +128,11 @@
     "proposedTarget": "Decode the variadic model arguments through a tuple schema (e.g. S.Tuple of channels with key defaults / FiniteFromString-style coercion) at the model-builder boundary so render helpers receive typed channels.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "The loose variadic color-builder arguments intentionally preserve chalk-compatible coercion and missing-argument defaults. Tuple-decoding these arguments would change the public rgb/bgRgb builder boundary and needs a dedicated public API sweep.",
+      "boundary": "public chalk-compatible rgb/bgRgb variadic argument behavior"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -217,7 +143,11 @@
     "proposedTarget": "Same tuple-schema decode as renderRgbModel: a single-element hex-string tuple codec feeding the RgbFromHex transformation.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "The loose variadic hex-builder argument preserves chalk-compatible coercion and empty-string fallback before hexToRgb normalizes malformed input to black. A tuple codec would be part of the deferred color-argument codec sweep.",
+      "boundary": "public chalk-compatible hex/bgHex variadic argument behavior"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -228,7 +158,11 @@
     "proposedTarget": "Same tuple-schema decode: single-element ANSI-256 index codec with the default carried by the schema key.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "The loose variadic ansi256-builder argument intentionally preserves chalk-compatible Number(...) coercion and zero default. Tuple-decoding would alter the public ansi256/bgAnsi256 builder boundary.",
+      "boundary": "public chalk-compatible ansi256/bgAnsi256 variadic argument behavior"
+    }
   },
   {
     "ruleId": "SFV4-defaults",

@@ -1,13 +1,16 @@
 import {
   HttpApiTelemetryDescriptor,
+  HttpStatusCode,
   httpApiFailureStatus,
   httpApiSuccessStatus,
   makeHttpApiTelemetryDescriptor,
   observeHttpApiEffect,
   observeHttpApiHandler,
 } from "@beep/observability/server";
-import { Effect, Metric } from "effect";
+import { Effect, Equal, Metric } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import * as HttpServerResponse from "effect/unstable/http/HttpServerResponse";
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi";
 import { describe, expect, it } from "vitest";
@@ -16,6 +19,18 @@ describe("HttpApiTelemetry", () => {
   it("reads explicit HttpApiSchema statuses", () => {
     expect(httpApiSuccessStatus(S.String.pipe(HttpApiSchema.status(201)))).toBe(201);
     expect(httpApiSuccessStatus(S.String)).toBe(200);
+    expect(S.String.pipe(httpApiSuccessStatus(202))).toBe(202);
+    expect(() => httpApiSuccessStatus(S.String.pipe(HttpApiSchema.status(99)))).toThrow();
+  });
+
+  it("round-trips schema-derived HTTP status codes", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(HttpStatusCode), (status) => {
+        const decoded = O.flatMap(S.encodeOption(HttpStatusCode)(status), S.decodeUnknownOption(HttpStatusCode));
+        expect(O.exists(decoded, (value) => Equal.equals(value, status))).toBe(true);
+      }),
+      { numRuns: 50 }
+    );
   });
 
   it("tracks HTTP API request metrics", () =>
@@ -86,7 +101,7 @@ describe("HttpApiTelemetry", () => {
         );
 
         expect(successState.count).toBe(1);
-        expect(httpApiFailureStatus(endpoint, { message: "backend unavailable" })).toBe(503);
+        expect(httpApiFailureStatus(endpoint, { message: "backend unavailable" })).toStrictEqual(O.some(503));
 
         const failureExit = yield* Effect.exit(
           observeHttpApiEffect(

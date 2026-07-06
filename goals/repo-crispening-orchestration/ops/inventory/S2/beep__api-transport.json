@@ -1,16 +1,5 @@
 [
   {
-    "ruleId": "SFV4-null-return",
-    "file": "packages/foundation/capability/api-transport/src/Transport.ts",
-    "line": 116,
-    "symbol": "parseNumberHeader",
-    "smell": "Module-private domain helper typed `(headers, ...keys) => number | undefined` with a bare `return undefined` (line 125); the sole caller immediately re-wraps each result via `O.fromUndefinedOr` (lines 136-138), the wrap-at-call-site tell that the helper should return Option in the first place.",
-    "proposedTarget": "Return `O.Option<number>` directly: iterate keys with `A.findFirst`/`O.flatMap`, use `Str.match` (effect-v4 String.ts:706, returns Option<RegExpMatchArray>) for the numeric extraction, and `O.filter(Number.isFinite)`; the `O.fromUndefinedOr` shims in parseSnapshot then delete. Alternatively absorbed wholesale by the SFV4-normalization companion finding (line 128).",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 1.5
-  },
-  {
     "ruleId": "SFV4-defaults",
     "file": "packages/foundation/capability/api-transport/src/Transport.ts",
     "line": 244,
@@ -19,7 +8,11 @@
     "proposedTarget": "Schema-model the options bag as an `S.Class` (via $ApiTransportId composer) and carry the default with `SchemaUtils.withConstantDefault` (SchemaUtils/withConstructorDefaults.ts:80) or decode-side `SchemaUtils.withKeyDefaults` (SchemaUtils/withKeyDefaults.ts:50); body then reads `options.retryBaseDelay` with no `??`. The `Duration.Input` field needs an `S.Duration`-based codec (effect-v4 Schema.ts:10529) and the `ApiAuth` Data.TaggedEnum + Redacted fields need modeling decisions, so assisted rather than codemod. Note: only the options data bag is in scope — the returned `ApiTransport` port interface stays an interface per fence 1.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 1.3
+    "roiRank": 1.3,
+    "exception": {
+      "reason": "The enclosing ApiTransportOptions constructor-options bag is already a durable schema-first exception: it carries ApiAuth Data.TaggedEnum/Redacted secrets and Duration.Input ergonomics for in-process driver wiring, not a decode-from-wire payload. Absorbing this default requires schema-modeling that public options surface and must be handled with the ApiAuth/options family-close design.",
+      "boundary": "constructor-options exception; cross-package public-form ripple deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -30,7 +23,11 @@
     "proposedTarget": "Same options-schema refactor as the line-244 finding: `retryTimes: S.Finite.pipe(SchemaUtils.withConstantDefault(3))` (or `SchemaUtils.withKeyDefaults(3)` if missing-key-on-decode should also default), collapsing both `??` sites in one change.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 1.3
+    "roiRank": 1.3,
+    "exception": {
+      "reason": "Same constructor-options carve-out as retryBaseDelay: retryTimes is an in-process driver-authored literal on the ledgered ApiTransportOptions interface, and default absorption would require replacing that public options surface with a schema model. Keep the fallback until the deferred options redesign can sweep consumers.",
+      "boundary": "constructor-options exception; cross-package public-form ripple deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -41,7 +38,11 @@
     "proposedTarget": "A `RateLimitSnapshot.fromHeaders` transformation codec: source schema over the header record piped through `S.decodeTo(RateLimitSnapshot, SchemaTransformation.transformOrFail(...))` (effect-v4 Schema.ts:5408, SchemaTransformation.ts:286), with the multi-alias header keys (`x-ratelimit-*` vs `ratelimit-*`) and none-vs-empty handling expressed in the transformation; `parseSnapshot`/`parseNumberHeader` then delete. Judgment: the multi-alias fallback chains and the Option-of-class result may leave the codec no simpler than the current 26 lines — worth a design pass, not a mechanical rewrite.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 1.0
+    "roiRank": 1.0,
+    "exception": {
+      "reason": "The actionable null-return/colocation parts were remediated by RateLimitSnapshot.fromHeaders, an Option-returning parser, Str.match, and the schema-derived S.Finite guard. The remaining regex token extraction is a 3rd-party HTTP header normalization boundary with alias precedence; a SchemaTransformation would not reduce the invariant surface and would obscure the lenient wire contract now pinned by package-local parity tests.",
+      "boundary": "3rd-party HTTP header normalization boundary; static parser retained with parity law"
+    }
   },
   {
     "ruleId": "SFV4-normalization",

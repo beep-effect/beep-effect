@@ -4,15 +4,16 @@
  * Effect v4 `@beep/nlp` implementation notes:
  * each `Data.TaggedError` becomes a {@link @beep/schema#TaggedErrorClass} scoped
  * by a `$NlpProcessingId` composer, `unknown` cause fields become
- * `S.Defect({ includeStack: true })`, and the `NodeId` brand is carried as `S.String`.
+ * `S.Defect({ includeStack: true })`, and node-scoped failures carry the `NodeId` schema.
  *
  * @since 0.0.0
  * @packageDocumentation
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
+import { NodeId } from "../EffectGraph.ts";
 
 const $I = $NlpProcessingId.create("Graph/GraphOperations/Errors");
 
@@ -21,11 +22,12 @@ const $I = $NlpProcessingId.create("Graph/GraphOperations/Errors");
  *
  * @example
  * ```ts
+ * import { NodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { ValidationError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  *
  * const error = ValidationError.make({
  *   operationName: "tokenize",
- *   nodeId: "node-empty",
+ *   nodeId: NodeId.make("node-empty"),
  *   errors: ["Node text is empty"]
  * })
  *
@@ -39,7 +41,7 @@ export class ValidationError extends TaggedErrorClass<ValidationError>($I`Valida
   "ValidationError",
   {
     errors: S.Array(S.String),
-    nodeId: S.String,
+    nodeId: NodeId,
     operationName: S.String,
   },
   $I.annote("ValidationError", {
@@ -52,11 +54,12 @@ export class ValidationError extends TaggedErrorClass<ValidationError>($I`Valida
  *
  * @example
  * ```ts
+ * import { NodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { TimeoutError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  *
  * const error = TimeoutError.make({
  *   operationName: "extractEntities",
- *   nodeId: "node-1",
+ *   nodeId: NodeId.make("node-1"),
  *   timeoutMs: 1_000
  * })
  *
@@ -69,7 +72,7 @@ export class ValidationError extends TaggedErrorClass<ValidationError>($I`Valida
 export class TimeoutError extends TaggedErrorClass<TimeoutError>($I`TimeoutError`)(
   "TimeoutError",
   {
-    nodeId: S.String,
+    nodeId: NodeId,
     operationName: S.String,
     timeoutMs: S.Finite,
   },
@@ -88,11 +91,12 @@ export class TimeoutError extends TaggedErrorClass<TimeoutError>($I`TimeoutError
  *
  * @example
  * ```ts
+ * import { NodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { OperationError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  *
  * const error = OperationError.make({
  *   operationName: "posTag",
- *   nodeId: "node-1",
+ *   nodeId: NodeId.make("node-1"),
  *   cause: new Error("backend defect")
  * })
  *
@@ -106,7 +110,7 @@ export class OperationError extends TaggedErrorClass<OperationError>($I`Operatio
   "OperationError",
   {
     cause: S.Defect({ includeStack: true }),
-    nodeId: S.String,
+    nodeId: NodeId,
     operationName: S.String,
   },
   $I.annote("OperationError", {
@@ -119,12 +123,13 @@ export class OperationError extends TaggedErrorClass<OperationError>($I`Operatio
  *
  * @example
  * ```ts
+ * import { NodeId } from "@beep/nlp-processing/Graph/EffectGraph"
  * import { GraphError } from "@beep/nlp-processing/Graph/GraphOperations/Errors"
  * import * as O from "effect/Option"
  *
  * const error = GraphError.make({
  *   message: "Expected at least one leaf node",
- *   nodeId: O.some("node-root")
+ *   nodeId: O.some(NodeId.make("node-root"))
  * })
  *
  * console.log(error.message) // "Expected at least one leaf node"
@@ -137,7 +142,7 @@ export class GraphError extends TaggedErrorClass<GraphError>($I`GraphError`)(
   "GraphError",
   {
     message: S.String,
-    nodeId: S.OptionFromOptionalKey(S.String),
+    nodeId: S.OptionFromOptionalKey(NodeId),
   },
   $I.annote("GraphError", {
     description: "Raised when a graph has an invalid structure for the requested operation.",
@@ -238,7 +243,8 @@ export const GraphOperationError = S.Union([
 ]).pipe(
   $I.annoteSchema("GraphOperationError", {
     description: "Union of all graph-operation failures.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/observability/src/Metric.ts",
-    "line": 287,
-    "symbol": "observeWorkflowImpl",
-    "smell": "observeWorkflowImpl rebuilds the completed/failed/interrupted outcome family inline (lines 287-295) even though PhaseProfiler.ts owns PhaseOutcome = LiteralKit([\"completed\", \"failed\", \"interrupted\"]) at line 68. The second Match uses Match.orElse for failed, so a future outcome literal would silently increment the failed counter instead of forcing a handler.",
-    "proposedTarget": "Promote a shared observability outcome helper/schema used by both Metric.ts and PhaseProfiler.ts: derive the exit outcome once, type it as PhaseOutcome (or a renamed shared WorkflowOutcome), and dispatch the counters with PhaseOutcome.$match(outcome, { completed, failed, interrupted }). LiteralKit.$match is verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:657-665.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 3.12
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
     "line": 166,
     "symbol": "endpointErrorSchemas",
@@ -19,7 +8,11 @@
     "proposedTarget": "Import HttpApiEndpoint as a value from effect/unstable/httpapi and replace endpointErrorSchemas with HttpApiEndpoint.getErrorSchemas(endpoint). The sibling endpointSuccessSchemas helper can likewise use HttpApiEndpoint.getSuccessSchemas(endpoint). Effect v4 exports the namespace from .repos/effect-v4/packages/effect/src/unstable/httpapi/index.ts:25 and defines getErrorSchemas/getSuccessSchemas at .repos/effect-v4/packages/effect/src/unstable/httpapi/HttpApiEndpoint.ts:227-241.",
     "confidence": 0.9,
     "mechanization": "codemod",
-    "roiRank": 3.6
+    "roiRank": 3.6,
+    "exception": {
+      "reason": "The proposed Effect v4 HttpApiEndpoint.getErrorSchemas/getSuccessSchemas helpers exist in .repos/effect-v4 but are absent from the installed effect package used by package check, so replacing the compatibility helper does not compile in this checkout.",
+      "boundary": "Effect API availability, deferred to dependency-aligned sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

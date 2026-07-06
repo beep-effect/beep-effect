@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "SFV4-fn-schema",
-    "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
-    "line": 92,
-    "symbol": "FileProcessingOperationError.fromReason",
-    "smell": "Static constructor's `options` parameter re-declares six of the error class's schema fields as an inline object type (artifactId?, details?, engine?, format?, message, operationId?) with no transformation beyond `make({ reason, ...options })`. The contract duplicates the schema and can drift from it.",
-    "proposedTarget": "Type options as `Omit<TaggedErrorNewInput<typeof FileProcessingOperationError>, \"reason\">` using the existing schema-derived input type exported from @beep/schema/TaggedErrorClass (packages/foundation/modeling/schema/src/TaggedErrorClass/TaggedErrorClass.errors.ts:84). Type-annotation-only change, structurally identical, no consumer sweep needed (fromReason has ~34 call sites across drivers/tika/libpff/CLI).",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 6.75
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
     "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
     "line": 425,
     "symbol": "classifyFormatFromExtension",
@@ -19,7 +8,11 @@
     "proposedTarget": "Model the contract as `Fn({ input: S.UndefinedOr(S.String), output: FileFormatFamily }).implementSync(...)` (Fn verified at packages/foundation/modeling/schema/src/Fn/Fn.schema.ts; S.UndefinedOr verified at .repos/effect-v4/packages/effect/src/Schema.ts:4867), or collapse the mapping into a declarative extension table colocated with FileFormatFamily with an \"unknown\" fallback. Counter-pressure: repo law prefers Match helpers over conditional chains, and the many-to-one mapping does not fit MappedLiteralKit's reversible code map; consumers are Tika driver, Files CLI service, and the test engine.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "The many-to-one extension classifier is now colocated as FileFormatFamily.fromExtension for S4; Fn wrapping the retained public alias would only change invalid JavaScript input behavior without moving additional schema truth.",
+      "boundary": "manual fn-schema judgment; public compatibility alias retained"
+    }
   },
   {
     "ruleId": "SFV4-fn-schema",
@@ -30,29 +23,11 @@
     "proposedTarget": "Name the outcome pair as a schema, e.g. `SourceProcessingOutcome` S.Class with `failure: S.OptionFromOptionalKey(FileProcessingFailureRecord)` (S.OptionFromOptionalKey verified at .repos/effect-v4/packages/effect/src/Schema.ts:8668), and type the fold via it; at minimum export a schema-derived named type instead of the inline literals. Note: this file exports a Context.Service rather than an S.Class, so the current SFV4-fn-schema detector precondition (schema-modeled file) would not fire here.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 2.2
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-    "line": 93,
-    "symbol": "TextSpan",
-    "smell": "Schema exists but does not carry its own invariants: `startOffset`/`endOffset` are S.Finite (negatives and non-integers accepted) and nothing enforces `endOffset >= startOffset`, though the description says they are byte-or-character offsets. The invariant belongs on the schema, not in downstream consumers.",
-    "proposedTarget": "Add a cross-field refinement via `S.check`/`S.makeFilter` (pattern already used in-package at Artifact/index.ts:27) enforcing endOffset >= startOffset; numeric-domain tightening of the individual fields (S.Finite -> NonNegativeInt) is deferred to the SFV4-numeric-domain card owner. Requires 5.3 behavior-parity proof since it tightens wire acceptance; blast radius is minimal (TextSpan has no consumers outside its defining file).",
-    "confidence": 0.55,
-    "mechanization": "judgment",
-    "roiRank": 1.1
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/foundation/capability/file-processing/src/Service/index.ts",
-    "line": 124,
-    "symbol": "matchesEnginePreference / engineSupportsCapability / engineSupportsFormat / processCapabilityForFormat",
-    "smell": "Cluster of free-floating module-private predicates over FileProcessingEngineDescriptor data (`A.contains(engine.descriptor.capabilities, capability)` etc.) whose behavior could precipitate onto the schema as colocated statics/methods on FileProcessingEngineDescriptor (crispen: colocate behavior with the data). Not a contract-bypass in the strict SFV4-fn-schema sense; recorded as a colocation candidate for the wave writer.",
-    "proposedTarget": "Move support predicates onto the FileProcessingEngineDescriptor S.Class as instance methods or statics (e.g. `descriptor.supportsCapability(c)`, `descriptor.supportsFormat(f)`, `descriptor.matchesPreference(p)`); keep selectEngine as the orchestration helper. Private-only blast radius; purely internal refactor.",
-    "confidence": 0.4,
-    "mechanization": "judgment",
-    "roiRank": 0.8
+    "roiRank": 2.2,
+    "exception": {
+      "reason": "The fold combines already schema-modeled SourceProcessingRecord/FileProcessingFailureRecord values plus an Option; schema-ifying this service combinator would duplicate CLI-local outcome structs instead of modeling a boundary.",
+      "boundary": "manual audit non-detector; service combinator over schema-modeled records"
+    }
   },
   {
     "ruleId": "schema-first-inventory",

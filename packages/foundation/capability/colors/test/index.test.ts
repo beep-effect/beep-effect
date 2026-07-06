@@ -4,9 +4,11 @@ import browserColors, {
   createColors as createBrowserColors,
   isColorSupported as isBrowserColorSupported,
 } from "@beep/colors/Colors.browser";
+import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 describe("supportsColor", () => {
   it("enables colors for TTY terminals with a non-dumb TERM", () => {
@@ -97,10 +99,55 @@ describe("supportsColor", () => {
   });
 
   it("decodes process-like inputs through the schema model", () => {
-    const decode = S.decodeUnknownOption(ProcessLike);
+    expect(O.isSome(ProcessLike.decodeOption({ env: { FORCE_COLOR: "1" } }))).toBe(true);
+    expect(O.isNone(ProcessLike.decodeOption({ stdout: { isTTY: "yes" } }))).toBe(true);
+  });
 
-    expect(O.isSome(decode({ env: { FORCE_COLOR: "1" } }))).toBe(true);
-    expect(O.isNone(decode({ stdout: { isTTY: "yes" } }))).toBe(true);
+  it("round-trips generated process-like values through the schema", () => {
+    const processLikeArbitrary = S.toArbitrary(ProcessLike);
+    const encodeProcessLike = S.encodeUnknownOption(ProcessLike);
+
+    fc.assert(
+      fc.property(processLikeArbitrary, (processLike) => {
+        const encoded = encodeProcessLike(processLike);
+
+        expect(O.isSome(encoded)).toBe(true);
+
+        if (O.isSome(encoded)) {
+          const decoded = ProcessLike.decodeOption(encoded.value);
+
+          expect(O.isSome(decoded)).toBe(true);
+
+          if (O.isSome(decoded)) {
+            expect(decoded.value).toEqual(processLike);
+          }
+        }
+      })
+    );
+  });
+
+  it("honors disable overrides for generated process-like values", () => {
+    const processLikeArbitrary = S.toArbitrary(ProcessLike);
+
+    fc.assert(
+      fc.property(processLikeArbitrary, (processLike) => {
+        expect(
+          supportsColor({
+            ...processLike,
+            env: {
+              ...processLike.env,
+              NO_COLOR: "",
+            },
+          })
+        ).toBe(false);
+        expect(
+          supportsColor({
+            ...processLike,
+            argv: A.append(processLike.argv ?? A.empty(), "--no-color"),
+          })
+        ).toBe(false);
+      })
+    );
   });
 });
 

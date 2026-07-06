@@ -8,7 +8,11 @@
     "proposedTarget": "Use S.NonEmptyString for serviceName/serviceVersion/environment (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420) and add per-field annotateKey descriptions. Sweep CoreConfig.ts, server/Config.ts, and web/Config.ts together so the config shapes stay compatible. Include prometheusPrefix (server/Config.ts:49) in the same NonEmptyString pass.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening shared service identity config fields would alter exported config Type surfaces with out-of-package tooling consumers; this package wave cannot make or verify those consumer edits.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -19,40 +23,11 @@
     "proposedTarget": "Use URLStr from @beep/schema for both fields (verified packages/foundation/modeling/schema/src/URL.ts:44; it validates NonEmptyTrimmedStr through new URL()). URLStr is already the repo's URL-shaped config schema, e.g. drivers/govinfo/src/Govinfo.service.ts:17/65 and drivers/ecfr/src/Ecfr.service.ts:17/55.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
-    "line": 66,
-    "symbol": "HttpApiTelemetryDescriptor",
-    "smell": "method is S.String for a field whose domain is the repo's HTTP method literal family, and apiName/groupName/endpointName/route are broad strings copied into span annotations and metric attributes. successStatus is NonNegativeInt, which still admits values outside the HTTP status-code range.",
-    "proposedTarget": "Use HttpMethod from @beep/schema/HttpMethod for method (verified packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts:67). Use S.NonEmptyString for apiName/groupName/endpointName/route (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420). Consider successStatus: S.Int.check(S.isBetween({ minimum: 100, maximum: 599 })) or a shared HttpStatus schema if available; S.isBetween object syntax is verified at Schema.ts:7401 and examples at Schema.ts:1089.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/foundation/capability/observability/src/PhaseProfiler.ts",
-    "line": 116,
-    "symbol": "PhaseProfile.phase",
-    "smell": "phase is S.String for a phase name that is always a non-empty caller-chosen label and is interpolated into span annotations, logs, and metric attributes. An empty phase produces anonymous, hard-to-group telemetry.",
-    "proposedTarget": "Use S.NonEmptyString (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420). Leave attributes as S.Record(S.String, S.String); those are producer-controlled metric attributes, not a decoded external payload.",
-    "confidence": 0.6,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
-    "line": 276,
-    "symbol": "RedactCauseOptions/redactCauseSummary",
-    "smell": "The redaction pipeline absorbs real invariants: RedactCauseOptions carries constructor defaults for channel and length limits, while redactCauseSummary must keep message/detail within those dynamic limits, drop detail on the client channel, and set truncated consistently. test/CauseRedaction.test.ts has only point fixtures; sibling Observed.test.ts:52-68 already demonstrates the package's S.toArbitrary + FastCheck pattern.",
-    "proposedTarget": "Add an additive property test over S.toArbitrary(RedactCauseOptions) (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) paired with arbitrary raw strings/Causes, asserting that message/detail lengths respect the generated limits, client channel detail is O.none, and truncated matches whether message or detail exceeded its bound. Keep the existing secret/path sanitization fixtures under fence 4; the property law is additive.",
-    "confidence": 0.6,
-    "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "URL-branding exported server config fields would alter the public config Type surface consumed by tooling outside this package; deferred to a scoped consumer sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",

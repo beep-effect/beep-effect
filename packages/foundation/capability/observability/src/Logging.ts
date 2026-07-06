@@ -26,7 +26,7 @@ import bc from "@beep/colors";
 import { $ObservabilityId } from "@beep/identity/packages";
 import { LiteralKit, LogLevel } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Cause, Inspectable, Layer, Logger, Match, References } from "effect";
+import { Cause, Effect, Inspectable, Layer, Logger, Match, References } from "effect";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -161,8 +161,8 @@ export type BannerMode = typeof BannerMode.Type;
  */
 export class PrettyLoggerConfig extends S.Class<PrettyLoggerConfig>($I`PrettyLoggerConfig`)(
   {
-    theme: PrettyLogTheme,
-    bannerMode: BannerMode,
+    theme: PrettyLogTheme.pipe(S.withConstructorDefault(Effect.succeed(PrettyLogTheme.Enum.ocean))),
+    bannerMode: BannerMode.pipe(S.withConstructorDefault(Effect.succeed(BannerMode.Enum.off))),
   },
   $I.annote("PrettyLoggerConfig", {
     description: "Extra configuration for the custom pretty logger.",
@@ -197,6 +197,26 @@ export class LoggingConfig extends S.Class<LoggingConfig>($I`LoggingConfig`)(
   })
 ) {}
 
+/**
+ * Options controlling startup/phase log banner rendering.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RenderLogBannerOptions extends S.Class<RenderLogBannerOptions>($I`RenderLogBannerOptions`)(
+  {
+    kind: S.Literals(["phase", "startup"]).pipe(S.optionalKey).annotateKey({
+      description: "Banner kind used to decide whether the configured banner mode applies.",
+    }),
+    pretty: S.optionalKey(PrettyLoggerConfig).annotateKey({
+      description: "Pretty logger rendering configuration.",
+    }),
+  },
+  $I.annote("RenderLogBannerOptions", {
+    description: "Options controlling startup and phase banner rendering.",
+  })
+) {}
+
 type PaletteFn = (value: string) => string;
 
 type MakePrettyPalette<T extends ReadonlyArray<string>> = {
@@ -204,10 +224,7 @@ type MakePrettyPalette<T extends ReadonlyArray<string>> = {
 };
 type PrettyPalette = MakePrettyPalette<["accent", "dim", "trace", "debug", "info", "warn", "error", "fatal"]>;
 
-const defaultPrettyLoggerConfig = PrettyLoggerConfig.make({
-  theme: "ocean",
-  bannerMode: "off",
-});
+const defaultPrettyLoggerConfig = PrettyLoggerConfig.make({});
 
 const themePalette = (theme: PrettyLogTheme): PrettyPalette =>
   Match.value(theme).pipe(
@@ -294,44 +311,26 @@ const renderBannerGlyph = (kind: "phase" | "startup"): string => (kind === "phas
  * @category observability
  */
 export const renderLogBanner: {
-  (
-    title: string,
-    options?: {
-      readonly kind?: "phase" | "startup" | undefined;
-      readonly pretty?: PrettyLoggerConfig | undefined;
-    }
-  ): string;
-  (options: {
-    readonly kind?: "phase" | "startup" | undefined;
-    readonly pretty?: PrettyLoggerConfig | undefined;
-  }): (title: string) => string;
-} = dual(
-  2,
-  (
-    title: string,
-    options?: {
-      readonly kind?: "phase" | "startup" | undefined;
-      readonly pretty?: PrettyLoggerConfig | undefined;
-    }
-  ): string => {
-    const pretty = options?.pretty ?? defaultPrettyLoggerConfig;
-    const kind = options?.kind ?? "startup";
+  (title: string, options?: RenderLogBannerOptions): string;
+  (options: RenderLogBannerOptions): (title: string) => string;
+} = dual(2, (title: string, options?: RenderLogBannerOptions): string => {
+  const pretty = options?.pretty ?? defaultPrettyLoggerConfig;
+  const kind = options?.kind ?? "startup";
 
-    if (
-      pretty.bannerMode === "off" ||
-      (pretty.bannerMode === "startup" && kind !== "startup") ||
-      (pretty.bannerMode === "phase" && kind !== "phase")
-    ) {
-      return title;
-    }
-
-    const palette = themePalette(pretty.theme);
-    const glyph = renderBannerGlyph(kind);
-    const bannerGlyphs = Str.repeat(glyph, 4);
-    const line = palette.accent(`${bannerGlyphs} ${Str.toUpperCase(title)} ${bannerGlyphs}`);
-    return A.join(A.make(line, palette.dim(Str.repeat("-", Math.max(12, title.length + 10)))), "\n");
+  if (
+    pretty.bannerMode === "off" ||
+    (pretty.bannerMode === "startup" && kind !== "startup") ||
+    (pretty.bannerMode === "phase" && kind !== "phase")
+  ) {
+    return title;
   }
-);
+
+  const palette = themePalette(pretty.theme);
+  const glyph = renderBannerGlyph(kind);
+  const bannerGlyphs = Str.repeat(glyph, 4);
+  const line = palette.accent(`${bannerGlyphs} ${Str.toUpperCase(title)} ${bannerGlyphs}`);
+  return A.join(A.make(line, palette.dim(Str.repeat("-", Math.max(12, title.length + 10)))), "\n");
+});
 
 const makePrettyConsoleLogger = (pretty: PrettyLoggerConfig): Logger.Logger<unknown, void> => {
   const palette = themePalette(pretty.theme);

@@ -1,38 +1,5 @@
 [
   {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/nlp-processing/src/Backend/Composition.ts",
-    "line": 268,
-    "symbol": "withCaching",
-    "smell": "`const capacity = options?.capacity ?? 1024;` — constructor default for a field of the already-existing `CachingOptions` S.Class (Composition.ts:208, `capacity: S.optionalKey(S.Finite)`) lives in the function body instead of the schema.",
-    "proposedTarget": "Move the default onto the schema: `capacity: S.Finite.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(1024))` (in-package exemplar: AnnotatedTextGraph.ts:274-283 include* flags), then have `withCaching` consume `CachingOptions.make(options ?? {})`-style decoded totals so the `??` disappears from the body.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/nlp-processing/src/Backend/Composition.ts",
-    "line": 269,
-    "symbol": "withCaching",
-    "smell": "`const timeToLive = options?.timeToLive ?? Duration.minutes(10);` — same leaked schema default; `timeToLive: S.optionalKey(S.Duration)` at Composition.ts:211 already models the field but not its default.",
-    "proposedTarget": "`timeToLive: S.Duration.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(Duration.minutes(10)))` on the CachingOptions class; body reads the decoded field. Same edit unit as the capacity finding (one schema + one body change).",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/nlp-processing/src/Tools/ToolExport.ts",
-    "line": 115,
-    "symbol": "ExportedToolError",
-    "smell": "`cause: S.Defect({ includeStack: true })` is a required field, so the no-underlying-cause path smuggles absence as a value: `ExportedToolError.fromCause(undefined, tool.name, ...)` at ToolExport.ts:289 passes literal `undefined` into the domain error.",
-    "proposedTarget": "Model absence as Option per the in-package exemplar Graph/GraphOperations/Errors.ts:202: `cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))`; `fromCause` takes `O.Option<unknown>` (or gains a `fromMessage` arm) and the 289 call site stops passing `undefined`.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
     "ruleId": "SFV4-normalization",
     "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Executor.ts",
     "line": 139,
@@ -41,7 +8,11 @@
     "proposedTarget": "Carry the invariant on the schema: a branded/refined `ParallelConcurrency` (int, 1..MAX_PARALLEL_CONCURRENCY) with the clamp expressed as a decode-side SchemaTransformation (or a check + clamping `ExecutionStrategy.Parallel` static at Types.ts:96). Design decision needed: clamp-on-decode vs reject-on-decode, and whether the executor keeps a defense-in-depth clamp (Types.ts:41-48 documents fail-closed semantics). Not a fence-4 trust guard (resource bound, not escaping/sanitization).",
     "confidence": 0.6,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "clampConcurrency preserves legacy runtime semantics for untrusted public strategy input; schema rejection would be a public behavior change.",
+      "boundary": "public clamp semantics preserved for family-close review"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -52,7 +23,11 @@
     "proposedTarget": "Either make USAGE_EXAMPLES total over the tool-name literal domain (keyed `satisfies Record<ToolName, ReadonlyArray<string>>` so lookup is total and the `??` disappears) or at minimum `pipe(R.get(USAGE_EXAMPLES, tool.name), O.getOrElse(A.empty<string>))`. Which of the two is right is a design call (are missing examples a modeling gap or intentional sparsity?).",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "USAGE_EXAMPLES is intentionally sparse documentation metadata; missing entries already normalize to the empty array while parameters and JSON schemas stay total.",
+      "boundary": "public adapter docs metadata"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -63,7 +38,11 @@
     "proposedTarget": "Root cause is cross-package: `TextNode.operation` is `S.optionalKey(S.String)` in @beep/nlp (packages/foundation/modeling/nlp/src/Graph/Schema.ts:85). If upstream moves to `S.OptionFromOptionalKey(S.String)` (+ `SchemaUtils.withNoneDefault`), this helper's optional param and the fromUndefinedOr/getSomesStruct conversion collapse. Actionable only together with the @beep/nlp S2 wave.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 6
+    "roiRank": 6,
+    "exception": {
+      "reason": "TextNode operation-field defaulting belongs on the upstream @beep/nlp TextNode schema; changing it here would require cross-package node-schema edits.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -74,18 +53,11 @@
     "proposedTarget": "Same cross-package fix as TextGraph.ts:93 (upstream @beep/nlp Graph/Schema.ts:85 → OptionFromOptionalKey); also a candidate to dedupe the two identical makeTextNode helpers when touched.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 7
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/nlp-processing/src/Tools/_schemas.ts",
-    "line": 17,
-    "symbol": "describe",
-    "smell": "`extras?: Record<string, unknown>` optional param branched on `P.isUndefined(extras)` through a boolean Match (lines 18-27) — an undefined-check driving annotation behavior that the call shape does not need.",
-    "proposedTarget": "Collapse to a single `schema.annotateKey({ description, ...extras })` (object-spread of `undefined` is a spec-level no-op), which deletes the undefined branch entirely; alternatively take `extras` as a plain defaulted `{}` param. Low blast radius, private helper.",
-    "confidence": 0.45,
-    "mechanization": "judgment",
-    "roiRank": 8
+    "roiRank": 7,
+    "exception": {
+      "reason": "Annotated structural TextNode construction depends on upstream @beep/nlp TextNode optional-operation semantics; changing the canonical model is cross-package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",

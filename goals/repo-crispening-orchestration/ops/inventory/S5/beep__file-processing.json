@@ -1,93 +1,5 @@
 [
   {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
-    "line": 203,
-    "symbol": "isPathWithinRoot",
-    "smell": "Trust-boundary path-containment guard (isPathWithinRoot / validateResolvedPath / resolvePathWithinRoot) has zero tests anywhere in the repo despite consumers in drivers/ffmpeg, drivers/nlp-mcp, tooling/library/ai-metrics, and tooling/tool/cli; fence 4 presumes guards stay explicit AND property-tested.",
-    "proposedTarget": "Add additive property tests (FastCheck via @effect/vitest) for the containment invariants: root itself passes, descendants pass, sibling-prefix paths like /srv/data-evil fail, any surviving `..` segment fails, trailing-separator and backslash normalization are containment-invariant. Never replaces the explicit guard; this is the missing explicit coverage.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 6
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-    "line": 938,
-    "symbol": "encodeProcessRunManifestJson",
-    "smell": "Wire codec S.encodeUnknownEffect(S.fromJsonString(ProcessRunManifest)) has no S.toArbitrary round-trip law; run.json is the package's root proof manifest and only example-based coverage exists.",
-    "proposedTarget": "Extend test/FileProcessing.test.ts property suite: fc.assert over S.toArbitrary(ProcessRunManifest) asserting decode(encodeProcessRunManifestJson(x)) round-trips via S.fromJsonString(ProcessRunManifest).",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-    "line": 974,
-    "symbol": "encodeFileProcessingCoverageSummaryJson",
-    "smell": "Wire codec for FileProcessingCoverageSummary (coverage.json) has no S.toArbitrary round-trip law.",
-    "proposedTarget": "Add fc property over S.toArbitrary(FileProcessingCoverageSummary) asserting JSON string encode/decode round-trip.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-    "line": 1013,
-    "symbol": "encodeSourceProcessingRecordJson",
-    "smell": "JSONL codec for the SourceProcessingRecord tagged union (sources.jsonl) has no S.toArbitrary round-trip law across its three status variants.",
-    "proposedTarget": "Add fc property over S.toArbitrary(SourceProcessingRecord) asserting JSONL string encode/decode round-trip preserves the status discriminant and payload.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-    "line": 1048,
-    "symbol": "encodeFileProcessingFailureRecordJson",
-    "smell": "JSONL codec for the FileProcessingFailureRecord tagged union (failures.jsonl) has no S.toArbitrary round-trip law.",
-    "proposedTarget": "Add fc property over S.toArbitrary(FileProcessingFailureRecord) asserting JSONL string encode/decode round-trip across skipped/failed variants.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-    "line": 1083,
-    "symbol": "encodeChildArtifactRecordJson",
-    "smell": "JSONL codec for ChildArtifactRecord (children/<id>/artifacts.jsonl) has no S.toArbitrary round-trip law.",
-    "proposedTarget": "Add fc property over S.toArbitrary(ChildArtifactRecord) asserting JSONL string encode/decode round-trip.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-numeric-domain",
-    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-    "line": 95,
-    "symbol": "TextSpan.endOffset",
-    "smell": "endOffset: S.Finite — a byte/character offset modeled as any finite number; negative and fractional offsets decode successfully.",
-    "proposedTarget": "NonNegativeInt from @beep/schema (already imported in this file and used for sizeBytes); consider an additional cross-field check endOffset >= startOffset on TextSpan. Zero external consumers of TextSpan found, so blast radius is package-local.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-numeric-domain",
-    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-    "line": 96,
-    "symbol": "TextSpan.startOffset",
-    "smell": "startOffset: S.Finite — offset modeled as any finite number; negative and fractional offsets decode successfully.",
-    "proposedTarget": "NonNegativeInt from @beep/schema.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
     "ruleId": "SFV4-numeric-domain",
     "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
     "line": 172,
@@ -96,7 +8,11 @@
     "proposedTarget": "S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })) (S.isBetween verified at .repos/effect-v4/packages/effect/src/Schema.ts:7401). Public-form tightening; ripple limited to in-range driver emitters, but drivers are a different wave family (fence 8 coordination needed).",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening confidence to a unit interval changes public result acceptance and requires a driver producer sweep even though current known producers emit in-range values.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -107,7 +23,11 @@
     "proposedTarget": "S.optionalKey(NonNegativeInt) from @beep/schema, matching sizeBytes fields across the package.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Switching byte budgets to NonNegativeInt changes the operation constructor type and must be swept through CLI/tooling and driver call sites alongside the deferred Option migration.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -118,7 +38,11 @@
     "proposedTarget": "S.optionalKey(NonNegativeInt) from @beep/schema.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Switching byte budgets to NonNegativeInt changes the operation constructor type and must be swept through CLI/tooling and driver call sites alongside the deferred Option migration.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -129,7 +53,11 @@
     "proposedTarget": "S.optionalKey(NonNegativeInt) from @beep/schema.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Switching byte budgets to NonNegativeInt changes the operation constructor type and must be swept through CLI/tooling and driver call sites alongside the deferred Option migration.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -140,7 +68,11 @@
     "proposedTarget": "Introduce one branded FileProcessingEngineName (S.NonEmptyString.pipe(S.brand(...)) with $I.annoteSchema) in Strategy and reuse it here and for all downstream engine fields. Ripples to drivers/tika, drivers/libpff, and tooling/tool/cli Files commands (cross-family §5.4 sweep).",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Introducing a branded FileProcessingEngineName changes descriptors, result records, manifest rows, and boundary errors consumed by drivers and tooling.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -151,7 +83,11 @@
     "proposedTarget": "Reuse the proposed branded FileProcessingEngineName from Strategy.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Introducing a branded FileProcessingEngineName changes descriptors, result records, manifest rows, and boundary errors consumed by drivers and tooling.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -162,7 +98,11 @@
     "proposedTarget": "Reuse the proposed branded FileProcessingEngineName from Strategy.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Introducing a branded FileProcessingEngineName changes descriptors, result records, manifest rows, and boundary errors consumed by drivers and tooling.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -173,7 +113,11 @@
     "proposedTarget": "Reuse the proposed branded FileProcessingEngineName from Strategy.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Introducing a branded FileProcessingEngineName changes descriptors, result records, manifest rows, and boundary errors consumed by drivers and tooling.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -184,7 +128,11 @@
     "proposedTarget": "Reuse the proposed branded FileProcessingEngineName from Strategy.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Introducing a branded FileProcessingEngineName changes descriptors, result records, manifest rows, and boundary errors consumed by drivers and tooling.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -195,7 +143,11 @@
     "proposedTarget": "Reuse the proposed branded FileProcessingEngineName from Strategy.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Introducing a branded FileProcessingEngineName changes descriptors, result records, manifest rows, and boundary errors consumed by drivers and tooling.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -206,7 +158,11 @@
     "proposedTarget": "S.optionalKey(FileProcessingEngineName) once the Strategy brand exists.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Introducing a branded FileProcessingEngineName changes descriptors, result records, manifest rows, and boundary errors consumed by drivers and tooling.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -217,7 +173,11 @@
     "proposedTarget": "S.optionalKey(FileProcessingEngineName) once the Strategy brand exists.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Introducing a branded FileProcessingEngineName changes descriptors, result records, manifest rows, and boundary errors consumed by drivers and tooling.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -228,7 +188,11 @@
     "proposedTarget": "S.optionalKey(FileProcessingEngineName) once the Strategy brand exists.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Introducing a branded FileProcessingEngineName changes descriptors, result records, manifest rows, and boundary errors consumed by drivers and tooling.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -239,7 +203,11 @@
     "proposedTarget": "S.optionalKey(FileProcessingEngineName) once the Strategy brand exists.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Introducing a branded FileProcessingEngineName changes descriptors, result records, manifest rows, and boundary errors consumed by drivers and tooling.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -250,7 +218,11 @@
     "proposedTarget": "S.optionalKey(FileProcessingEngineName) once the Strategy brand exists.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Introducing a branded FileProcessingEngineName changes descriptors, result records, manifest rows, and boundary errors consumed by drivers and tooling.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -261,7 +233,11 @@
     "proposedTarget": "Reuse the proposed branded FileProcessingEngineName from Strategy.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Introducing a branded FileProcessingEngineName changes descriptors, result records, manifest rows, and boundary errors consumed by drivers and tooling.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -272,7 +248,11 @@
     "proposedTarget": "S.optionalKey(FileProcessingEngineName) once the Strategy brand exists; update the fromReason options type in the same change.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Introducing a branded FileProcessingEngineName changes descriptors, result records, manifest rows, and boundary errors consumed by drivers and tooling.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -283,7 +263,11 @@
     "proposedTarget": "S.optionalKey(S.NonEmptyString) at minimum; a semver-ish pattern is NOT proposed because 3rd-party engines (Tika, libpff) report heterogeneous version formats.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "Tightening engine version input affects driver-owned descriptor literals and should ship with the descriptor consumer sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -294,7 +278,11 @@
     "proposedTarget": "S.NonEmptyString; low value, only worth doing alongside the other ProcessRunManifest tightenings.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "Tightening the run-manifest source label changes a tooling-produced public manifest field and should be swept with the CLI manifest writer.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -305,7 +293,11 @@
     "proposedTarget": "S.NonEmptyArray(FileProcessingCapability) (verified at .repos/effect-v4/packages/effect/src/Schema.ts:4533) IF zero-capability engines are truly invalid; needs a design ruling, hence judgment tier.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "Whether zero-capability descriptors are invalid needs a design ruling; selection can intentionally filter by preference before a capability is supplied.",
+      "boundary": "design-ruling required; engine capability negotiation"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",

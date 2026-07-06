@@ -33,14 +33,12 @@ const $I = $McpKitId.create("ApiKeyRequired");
  * import { ApiKeyRequiredFailure, SourceAuthRegistration } from "@beep/mcp-kit"
  *
  * const failure = ApiKeyRequiredFailure.make({
- *   error: "api_key_required",
  *   tool: "search_patents",
  *   envVar: "USPTO_API_KEY",
  *   registration: SourceAuthRegistration.make({
  *     name: "USPTO Open Data Portal",
  *     envVar: "USPTO_API_KEY",
- *     gate: "soft",
- *     signupUrl: O.none()
+ *     gate: "soft"
  *   })
  * })
  * console.log(failure.error)
@@ -66,7 +64,17 @@ export class ApiKeyRequiredFailure extends S.Class<ApiKeyRequiredFailure>($I`Api
   $I.annote("ApiKeyRequiredFailure", {
     description: "Typed api_key_required tool failure for a source whose credential is absent at call time.",
   })
-) {}
+) {
+  static readonly forTool = (params: {
+    readonly tool: string;
+    readonly registration: SourceAuthRegistration;
+  }): ApiKeyRequiredFailure =>
+    ApiKeyRequiredFailure.make({
+      tool: params.tool,
+      envVar: params.registration.envVar,
+      registration: params.registration,
+    });
+}
 
 /**
  * Builds an {@link ApiKeyRequiredFailure} for the given tool and source
@@ -87,8 +95,7 @@ export class ApiKeyRequiredFailure extends S.Class<ApiKeyRequiredFailure>($I`Api
  * const registration = SourceAuthRegistration.make({
  *   name: "USPTO Open Data Portal",
  *   envVar: "USPTO_API_KEY",
- *   gate: "soft",
- *   signupUrl: O.none()
+ *   gate: "soft"
  * })
  *
  * const failure = apiKeyRequiredFailure({ tool: "search_patents", registration })
@@ -102,10 +109,4 @@ export class ApiKeyRequiredFailure extends S.Class<ApiKeyRequiredFailure>($I`Api
 export const apiKeyRequiredFailure = (params: {
   readonly tool: string;
   readonly registration: SourceAuthRegistration;
-}): ApiKeyRequiredFailure =>
-  ApiKeyRequiredFailure.make({
-    error: "api_key_required",
-    tool: params.tool,
-    envVar: params.registration.envVar,
-    registration: params.registration,
-  });
+}): ApiKeyRequiredFailure => ApiKeyRequiredFailure.forTool(params);

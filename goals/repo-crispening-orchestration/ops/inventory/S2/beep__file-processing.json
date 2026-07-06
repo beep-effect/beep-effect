@@ -8,7 +8,11 @@
     "proposedTarget": "Per field: `S.OptionFromOptionalKey(X).pipe(SchemaUtils.withNoneDefault)` (effect-v4 Schema.ts:8668; @beep/schema SchemaUtils/withConstructorDefaults.ts:46). Wire/JSON contract unchanged (absence stays a missing key); domain side becomes `Option<T>`; make call sites may omit the field thanks to withNoneDefault. Public-form change with wide fan-out (drivers/tika, drivers/libpff, drivers/ffmpeg, tooling/cli Files+Corpus, law-practice) — fence 9 same-PR consumer sweep crosses family boundaries (fence 8), so remediation-wave sequencing must handle it; assisted, not codemod.",
     "confidence": 0.6,
     "mechanization": "assisted",
-    "roiRank": 1.8
+    "roiRank": 1.8,
+    "exception": {
+      "reason": "Changing this optionalKey field to Option changes the package public domain type and requires driver/tooling/law-practice consumer edits in the same sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -19,7 +23,11 @@
     "proposedTarget": "`S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault)` — wire stays a missing key; domain side becomes `Option<number>`; both spread dances delete (the CLI Option flows straight through). Shared fix with the ExportArchiveOperation (line 264) and ProcessFileOperation (line 310) findings; land as one change.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 1.4
+    "roiRank": 1.4,
+    "exception": {
+      "reason": "Changing this optionalKey field to Option changes the package public domain type and requires driver/tooling/law-practice consumer edits in the same sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -30,7 +38,11 @@
     "proposedTarget": "Same as the line-219 finding: `S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault)`; one change collapses all three operation classes and both Service spread sites.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 1.4
+    "roiRank": 1.4,
+    "exception": {
+      "reason": "Changing this optionalKey field to Option changes the package public domain type and requires driver/tooling/law-practice consumer edits in the same sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -41,7 +53,11 @@
     "proposedTarget": "Same as the line-219 finding: `S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault)`; after the change `operation.maxMaterializedBytes` passes through as Option with no `O.fromUndefinedOr`.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 1.4
+    "roiRank": 1.4,
+    "exception": {
+      "reason": "Changing this optionalKey field to Option changes the package public domain type and requires driver/tooling/law-practice consumer edits in the same sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -52,7 +68,11 @@
     "proposedTarget": "`S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` and `S.OptionFromOptionalKey(TextArtifactReference).pipe(SchemaUtils.withNoneDefault)` — JSONL wire unchanged, domain side Option; the law-practice and tika Option shims delete. Fence 9 consumer sweep spans drivers + law-practice + tooling.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 1.3
+    "roiRank": 1.3,
+    "exception": {
+      "reason": "Changing this optionalKey field to Option changes the package public domain type and requires driver/tooling/law-practice consumer edits in the same sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -63,7 +83,11 @@
     "proposedTarget": "Align with PathSafetyError: `S.OptionFromOptionalKey(X).pipe(SchemaUtils.withNoneDefault)` per field; `fromReason`'s options bag then takes `Option` values (or keeps optional props and wraps once inside the static), and driver-side R.getSomes spreads collapse to direct Option passes.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 1.3
+    "roiRank": 1.3,
+    "exception": {
+      "reason": "Changing this optionalKey field to Option changes the package public domain type and requires driver/tooling/law-practice consumer edits in the same sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -74,7 +98,11 @@
     "proposedTarget": "`S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` for both fields; engine constructors that currently omit the keys keep omitting them (withNoneDefault), engines that set them pass `O.some`.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 1.1
+    "roiRank": 1.1,
+    "exception": {
+      "reason": "Changing this optionalKey field to Option changes the package public domain type and requires driver/tooling/law-practice consumer edits in the same sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -85,7 +113,11 @@
     "proposedTarget": "`S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` per field; JSONL rows keep missing-key absence, constructors keep omission ergonomics.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 1.1
+    "roiRank": 1.1,
+    "exception": {
+      "reason": "Changing this optionalKey field to Option changes the package public domain type and requires driver/tooling/law-practice consumer edits in the same sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -96,7 +128,11 @@
     "proposedTarget": "`S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` on all four field sites across SucceededSourceProcessingRecord, SkippedSourceProcessingRecord, and FailedSourceProcessingRecord; the JSONL wire (missing key) and the `S.toTaggedUnion(\"status\")` derivation are unchanged.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 1.1
+    "roiRank": 1.1,
+    "exception": {
+      "reason": "Changing this optionalKey field to Option changes the package public domain type and requires driver/tooling/law-practice consumer edits in the same sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -107,7 +143,11 @@
     "proposedTarget": "`S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` on all four field sites across SkippedFileProcessingFailureRecord and FailedFileProcessingFailureRecord; wire and tagged-union derivation unchanged.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 1.1
+    "roiRank": 1.1,
+    "exception": {
+      "reason": "Changing this optionalKey field to Option changes the package public domain type and requires driver/tooling/law-practice consumer edits in the same sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -118,18 +158,11 @@
     "proposedTarget": "`S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)`; descriptor literals that set version pass `O.some(\"...\")`, ones that omit it stay unchanged.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 0.8
-  },
-  {
-    "ruleId": "SFV4-getsomes-struct",
-    "file": "packages/foundation/capability/file-processing/src/Service/index.ts",
-    "line": 302,
-    "symbol": "makeFileProcessingServiceLayer",
-    "smell": "`...R.getSomes({ maxMaterializedBytes: O.fromUndefinedOr(operation.maxMaterializedBytes) })` spread on a fixed single-key struct (here and the twin at lines 331-333): `R.getSomes` (effect-v4 Record.ts:824) is the homogeneous-dictionary form; the repo struct form is `O.getSomesStruct` (@beep/utils, packages/foundation/modeling/utils/src/Option.ts:102). The whole dance is a symptom of `maxMaterializedBytes: S.optionalKey` on the operation classes.",
-    "proposedTarget": "Root fix is the Operation/index.ts maxMaterializedBytes findings (lines 219/264/310) — after Option-ification both spread sites delete entirely and `operation.maxMaterializedBytes` flows through as Option. If the schema change is deferred, the interim swap is `...O.getSomesStruct({ maxMaterializedBytes: O.fromUndefinedOr(...) })`. Mechanization pinned to judgment per D5 for all SFV4-getsomes-struct findings.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 0.7
+    "roiRank": 0.8,
+    "exception": {
+      "reason": "Changing this optionalKey field to Option changes the package public domain type and requires driver/tooling/law-practice consumer edits in the same sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -140,7 +173,11 @@
     "proposedTarget": "If SourceArtifact.extension becomes `Option<ArtifactExtension>` (Artifact/index.ts:298 finding), retype as `(extension: O.Option<string>) => FileFormatFamily` via `O.match`/`O.getOrElse` feeding the existing Match, or model the mapping as a decode-side transformation schema (`S.decodeTo(FileFormatFamily, SchemaTransformation.transform(...))`) so classification travels with the schema. Many-to-one mapping (htm/html, txt/text, 8 image extensions) rules out MappedLiteralKit's reversible code map; design call, hence judgment.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 0.6
+    "roiRank": 0.6,
+    "exception": {
+      "reason": "The undefined input comes from the deferred SourceArtifact.extension Option migration; the public alias keeps the current absent-extension fallback until that cross-family migration lands.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -151,7 +188,11 @@
     "proposedTarget": "Take `O.Option<FileProcessingCapability>` / `O.Option<FileFormatFamily>` parameters and fold the guards with `O.match`/`O.forall` (predicate holds on None), or model the selection criteria as a small criteria struct. Internal-only, tiny blast radius, and plain optional-parameter ergonomics are defensible — low confidence, judgment.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 0.4
+    "roiRank": 0.4,
+    "exception": {
+      "reason": "Private selector optional parameters are filter ergonomics, not a wire/domain model; converting them to Option adds call-site ceremony without moving a schema-owned invariant.",
+      "boundary": "private service helper; manual low-ROI Option carve-out"
+    }
   },
   {
     "ruleId": "SFV4-normalization",

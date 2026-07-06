@@ -8,7 +8,11 @@
     "proposedTarget": "Add in-body `static readonly is = S.is(Self)` on the owning `@beep/rdf/Prov` classes (Entity at packages/foundation/modeling/rdf/src/Prov.ts:262, Activity at :308, Agent at :349, SoftwareAgent at :388), then replace these helpers with `Entity.is`, `Activity.is`, `Agent.is`, and `SoftwareAgent.is`; S.Class static exemplar: packages/foundation/modeling/md/src/Md.model.ts:873.",
     "confidence": 0.86,
     "mechanization": "assisted",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "The proposed class statics belong on @beep/rdf PROV classes outside @beep/semantic-web. Fence 8 forbids this package writer from editing that package; defer the guard-colocation sweep to the family-close pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -19,7 +23,11 @@
     "proposedTarget": "After the owning `@beep/rdf/Prov` extension classes carry `static readonly is`, replace the array entries with direct refs (`Plan.is`, `Collection.is`, `Person.is`, `Organization.is`, `Attribution.is`, `Delegation.is`, `Derivation.is`, `PrimarySource.is`, `Quotation.is`, `Revision.is`, `Start.is`, `End.is`).",
     "confidence": 0.82,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "The proposed extension-tier guard statics belong on @beep/rdf PROV classes outside @beep/semantic-web. Fence 8 forbids this package writer from editing that package; defer the guard-colocation sweep to the family-close pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -30,18 +38,11 @@
     "proposedTarget": "Add `static readonly is = S.is(JsonLdReferenceValue)` on the owning class at packages/foundation/modeling/rdf/src/JsonLd.ts:276 and replace this helper with `JsonLdReferenceValue.is`.",
     "confidence": 0.86,
     "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
-    "line": 348,
-    "symbol": "takeUpTo",
-    "smell": "Private passthrough helper `(values, limit) => pipe(values, A.take(limit))` wraps a helper that is already dual.",
-    "proposedTarget": "Collapse to `const takeUpTo = A.take` or call `A.take(values, limit)` directly; Effect v4 `Array.take` is dual at .repos/effect-v4/packages/effect/src/Array.ts:1296 and re-exported through `@beep/utils` at packages/foundation/modeling/utils/src/Array.ts:535.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 4
+    "roiRank": 3,
+    "exception": {
+      "reason": "The proposed guard static belongs on @beep/rdf JsonLdReferenceValue outside @beep/semantic-web. Fence 8 forbids this package writer from editing that package; defer the guard-colocation sweep to the family-close pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

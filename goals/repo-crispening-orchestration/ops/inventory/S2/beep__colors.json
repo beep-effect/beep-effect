@@ -8,7 +8,11 @@
     "proposedTarget": "Move the default into the schema: `argv: S.String.pipe(S.Array, SchemaUtils.withKeyDefaults(A.empty()))` (verified: `SchemaUtils.withKeyDefaults` = S.withConstructorDefault + S.withDecodingDefaultKey at packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:50; array-shaped variant `withEmptyArrayDefaults` at :114; import `{ SchemaUtils } from \"@beep/schema\"` per lexical exemplar Lexical.model.ts:21). Wire contract unchanged — missing key still decodes; `?? A.empty()` at :199 is deleted. Call sites passing bare object literals (test/index.test.ts supportsColor fixtures, JSDoc examples) must construct via `ProcessLike.make({...})` since the Type side becomes non-optional; dtslint/Colors.tst.ts type assertions need matching updates.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Defaulting argv in the schema would change the exported ProcessLike Type/make shape from an optional process.argv mirror to a required/defaulted field; supportsColor intentionally accepts structural process-like literals and keeps the fallback at the detection boundary.",
+      "boundary": "public ProcessLike structural contract / third-party runtime process.argv mirror"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -19,7 +23,11 @@
     "proposedTarget": "`env: S.Record(S.String, S.UndefinedOr(S.String)).pipe(SchemaUtils.withKeyDefaults({}))` so decode and `make` default the missing key to `{}` and the `?? {}` at :200 is deleted. Keep the `S.UndefinedOr(S.String)` VALUE type — it faithfully mirrors the 3rd-party `NodeJS.ProcessEnv` wire shape (`Record<string, string | undefined>`); only the missing-KEY fallback is the smell. Same call-site/dtslint blast radius as the argv finding.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Defaulting env in the schema would change the exported ProcessLike Type/make shape and encoded output for a third-party open environment dictionary; the current local fallback preserves the structural input contract while keeping env open.",
+      "boundary": "public ProcessLike structural contract / third-party runtime process.env mirror"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -30,7 +38,11 @@
     "proposedTarget": "`isTTY: SchemaUtils.BoolKeyDefaultFalse` (verified at packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:207 — constructor + decoding-missing-key default `false`; matches the brief exemplar `checked: SchemaUtils.BoolKeyDefaultFalse`). Semantics identical to the current `Boolean(undefined)` coercion (no TTY info = not a TTY); combined with the ProcessLike.stdout finding, :212 collapses to a plain field read. Update dtslint/Colors.tst.ts:26 (`boolean | undefined` becomes `boolean`).",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Changing isTTY to a schema-defaulted required boolean would change the exported ProcessLikeStdout Type from optional TTY metadata to a required/defaulted field; absence is meaningful at the runtime boundary and is locally coerced only for capability detection.",
+      "boundary": "public ProcessLikeStdout structural contract / runtime stdout metadata mirror"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -41,7 +53,11 @@
     "proposedTarget": "Two verified routes, pick with the maintainer: (a) key default — `stdout: ProcessLikeStdout.pipe(SchemaUtils.withKeyDefaults(...))` defaulting to an empty stdout (isTTY defaults false via the isTTY finding), making :212 a plain `processLike.stdout.isTTY` read; note `withKeyDefaults` requires `Type & Encoded`-compatible default, so verify a `ProcessLikeStdout.make({})` instance satisfies the Encoded side, else use S.withConstructorDefault + S.withDecodingDefaultKey directly. (b) Option — `S.OptionFromOptionalKey(ProcessLikeStdout).pipe(SchemaUtils.withNoneDefault)` (verified: S.OptionFromOptionalKey at .repos/effect-v4/packages/effect/src/Schema.ts:8668; withNoneDefault at packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46) with consumption via `O.exists` (verified .repos/effect-v4/packages/effect/src/Option.ts:2312). Route (a) is crisper for this detection use.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Defaulting stdout or Option-modeling it would change the exported ProcessLike Type/Encoded shape and force structural callers through a new representation; optional stdout mirrors runtimes where stdout metadata is absent.",
+      "boundary": "public ProcessLike structural contract / runtime stdout metadata mirror"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -52,7 +68,11 @@
     "proposedTarget": "Model a `ColorEnv` view with per-flag fields (e.g. `NO_COLOR: S.OptionFromOptionalKey(S.String)`, `FORCE_COLOR` decoded to an enabled/disabled/unset discrimination via `S.decodeTo(...)` + SchemaTransformation) so `supportsColor` reads decoded flags instead of re-deriving them per call. Counterweight kept honest: env is a 3rd-party boundary dictionary, the predicates are picocolors-ported detection heuristics in a leaf capability package, and a schema redesign may be over-engineering — hence judgment tier.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "The env predicates are ported color-support heuristics over an intentionally open process.env dictionary; introducing a ColorEnv view would either drop unrelated env keys or add a second public/private shape with no encoded-shape parity gain.",
+      "boundary": "third-party runtime environment dictionary / color-support heuristic"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -63,7 +83,11 @@
     "proposedTarget": "Doctrine-consistent form: `platform: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` with consumption `O.contains(processLike.platform, \"win32\")` (verified: O.contains at .repos/effect-v4/packages/effect/src/Option.ts:2270). Functional gain is near zero — the current equality already handles absence correctly — so this is a consistency-only change; batch it with the other ProcessLike field changes or skip.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "Option-modeling platform would change the exported ProcessLike Type for a consistency-only gain; the current equality check already handles absence without weakening the open runtime platform mirror.",
+      "boundary": "public ProcessLike structural contract / runtime platform mirror"
+    }
   },
   {
     "ruleId": "SFV4-defaults",

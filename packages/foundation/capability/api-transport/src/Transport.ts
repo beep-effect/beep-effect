@@ -19,8 +19,10 @@
 
 import { $ApiTransportId } from "@beep/identity";
 import { O } from "@beep/utils";
-import { Data, Effect, Redacted, Ref, Schedule } from "effect";
+import { Data, Effect, Number as N, Redacted, Ref, Schedule } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as RateLimiter from "effect/unstable/persistence/RateLimiter";
@@ -84,6 +86,35 @@ const applyAuth =
         HttpClientRequest.setHeader(request, "Authorization", `Token ${Redacted.value(key)}`),
     });
 
+const rateLimitHeaderNumberPattern = /-?\d+(?:\.\d+)?/;
+
+const parseHeaderNumber = (raw: string): O.Option<number> =>
+  O.filter(
+    O.flatMap(
+      O.flatMap(Str.match(rateLimitHeaderNumberPattern)(raw), (match) => O.fromUndefinedOr(match[0])),
+      N.parse
+    ),
+    S.is(S.Finite)
+  );
+
+const parseNumberHeader = (headers: Headers.Headers, ...keys: ReadonlyArray<string>): O.Option<number> =>
+  O.flatten(
+    A.findFirst(
+      A.map(keys, (key) => O.flatMap(O.fromUndefinedOr(headers[key]), parseHeaderNumber)),
+      O.isSome
+    )
+  );
+
+const fromRateLimitHeaders = (headers: Headers.Headers): O.Option<RateLimitSnapshot> => {
+  const limit = parseNumberHeader(headers, "x-ratelimit-limit", "ratelimit-limit");
+  const remaining = parseNumberHeader(headers, "x-ratelimit-remaining", "ratelimit-remaining");
+  const reset = parseNumberHeader(headers, "x-ratelimit-reset", "ratelimit-reset", "x-ratelimit-reset-after");
+
+  return O.map(A.findFirst([limit, remaining, reset], O.isSome), () =>
+    RateLimitSnapshot.make(O.getSomesStruct({ limit, remaining, reset }))
+  );
+};
+
 /**
  * Observable snapshot of the latest parsed `X-RateLimit-*` response headers.
  *
@@ -104,42 +135,31 @@ const applyAuth =
  */
 export class RateLimitSnapshot extends S.Class<RateLimitSnapshot>($I`RateLimitSnapshot`)(
   {
-    limit: S.optionalKey(S.Finite),
-    remaining: S.optionalKey(S.Finite),
-    reset: S.optionalKey(S.Finite),
+    limit: S.optionalKey(S.Finite).pipe(
+      $I.annoteKey("RateLimitSnapshot.limit", {
+        description: "Latest rate-limit ceiling reported by the upstream response headers.",
+        examples: [1000],
+      })
+    ),
+    remaining: S.optionalKey(S.Finite).pipe(
+      $I.annoteKey("RateLimitSnapshot.remaining", {
+        description: "Latest remaining request count reported by the upstream response headers.",
+        examples: [42],
+      })
+    ),
+    reset: S.optionalKey(S.Finite).pipe(
+      $I.annoteKey("RateLimitSnapshot.reset", {
+        description: "Latest reset delay or epoch reported by the upstream response headers.",
+        examples: [60],
+      })
+    ),
   },
   $I.annote("RateLimitSnapshot", {
     description: "Latest parsed X-RateLimit-* response headers observed by the shared transport transformer.",
   })
-) {}
-
-const parseNumberHeader = (headers: Headers.Headers, ...keys: ReadonlyArray<string>): number | undefined => {
-  for (const key of keys) {
-    const raw = headers[key];
-    if (raw === undefined) continue;
-    const match = /-?\d+(?:\.\d+)?/.exec(raw);
-    if (match === null) continue;
-    const parsed = Number(match[0]);
-    if (Number.isFinite(parsed)) return parsed;
-  }
-  return undefined;
-};
-
-const parseSnapshot = (headers: Headers.Headers): O.Option<RateLimitSnapshot> => {
-  const limit = parseNumberHeader(headers, "x-ratelimit-limit", "ratelimit-limit");
-  const remaining = parseNumberHeader(headers, "x-ratelimit-remaining", "ratelimit-remaining");
-  const reset = parseNumberHeader(headers, "x-ratelimit-reset", "ratelimit-reset", "x-ratelimit-reset-after");
-  if (limit === undefined && remaining === undefined && reset === undefined) return O.none();
-  return O.some(
-    RateLimitSnapshot.make(
-      O.getSomesStruct({
-        limit: O.fromUndefinedOr(limit),
-        remaining: O.fromUndefinedOr(remaining),
-        reset: O.fromUndefinedOr(reset),
-      })
-    )
-  );
-};
+) {
+  static readonly fromHeaders = fromRateLimitHeaders;
+}
 
 /**
  * Options accepted by {@link makeApiTransport}.
@@ -245,7 +265,7 @@ export const makeApiTransport = Effect.fnUntraced(function* (options: ApiTranspo
   const attachAuth = applyAuth(options.auth);
 
   const recordSnapshot = (response: { readonly headers: Headers.Headers }): Effect.Effect<void> =>
-    O.match(parseSnapshot(response.headers), {
+    O.match(RateLimitSnapshot.fromHeaders(response.headers), {
       onNone: () => Effect.void,
       onSome: (snapshot) => Ref.set(snapshotRef, O.some(snapshot)),
     });
@@ -259,7 +279,7 @@ export const makeApiTransport = Effect.fnUntraced(function* (options: ApiTranspo
         limiter,
         window: options.rateLimit.window,
       }),
-      HttpClient.catchTag("RateLimiterError", (cause) => Effect.die(cause)),
+      HttpClient.catchTag("RateLimiterError", Effect.die),
       HttpClient.retryTransient({
         retryOn: "errors-only",
         schedule: retrySchedule,
