@@ -303,6 +303,20 @@ const accumulatorEntry = (accumulator: PorcelainAccumulator): WorktreeListEntry 
     prunable: accumulator.prunable,
   });
 
+const applyPorcelainAttribute = (current: PorcelainAccumulator, line: string): void => {
+  if (Str.startsWith("HEAD ")(line)) {
+    current.head = line.slice("HEAD ".length);
+  } else if (Str.startsWith("branch ")(line)) {
+    current.branch = stripRefsHeads(line.slice("branch ".length));
+  } else if (line === "detached") {
+    current.detached = true;
+  } else if (line === "locked" || Str.startsWith("locked ")(line)) {
+    current.locked = true;
+  } else if (line === "prunable" || Str.startsWith("prunable ")(line)) {
+    current.prunable = true;
+  }
+};
+
 /**
  * Parse `git worktree list --porcelain` output into structured entries.
  *
@@ -343,17 +357,7 @@ export const parseWorktreePorcelain = (porcelain: string): ReadonlyArray<Worktre
       continue;
     }
 
-    if (Str.startsWith("HEAD ")(line)) {
-      current.head = line.slice("HEAD ".length);
-    } else if (Str.startsWith("branch ")(line)) {
-      current.branch = stripRefsHeads(line.slice("branch ".length));
-    } else if (line === "detached") {
-      current.detached = true;
-    } else if (line === "locked" || Str.startsWith("locked ")(line)) {
-      current.locked = true;
-    } else if (line === "prunable" || Str.startsWith("prunable ")(line)) {
-      current.prunable = true;
-    }
+    applyPorcelainAttribute(current, line);
   }
 
   if (current !== undefined) {
@@ -368,6 +372,20 @@ const isUnderWorktreesRoot = (path: Path.Path, worktreesRoot: string, candidate:
   return relative.length > 0 && !Str.startsWith("..")(relative) && !path.isAbsolute(relative);
 };
 
+const failOnNonZeroExit = Effect.fn("Worktree.failOnNonZeroExit")(function* (
+  commandText: string,
+  failMessage: string,
+  exitCode: number
+): Effect.fn.Return<void, WorktreeCommandError> {
+  if (exitCode !== 0) {
+    return yield* WorktreeCommandError.make({
+      message: `${failMessage} (exit ${exitCode}).`,
+      command: commandText,
+      exitCode,
+    });
+  }
+});
+
 const runGitCapture = Effect.fn("Worktree.runGitCapture")(function* (
   cwd: string,
   args: ReadonlyArray<string>,
@@ -377,13 +395,7 @@ const runGitCapture = Effect.fn("Worktree.runGitCapture")(function* (
   const result = yield* runRepoCommandCapture("git", args, cwd).pipe(
     Effect.mapError(WorktreeCommandError.new(failMessage, { command: commandText }))
   );
-  if (result.exitCode !== 0) {
-    return yield* WorktreeCommandError.make({
-      message: `${failMessage} (git exited ${result.exitCode}).`,
-      command: commandText,
-      exitCode: result.exitCode,
-    });
-  }
+  yield* failOnNonZeroExit(commandText, failMessage, result.exitCode);
   return result.output;
 });
 
@@ -397,13 +409,7 @@ const runStreamingStep = Effect.fn("Worktree.runStreamingStep")(function* (
   const result = yield* runRepoCommandStreamingCapture(command, args, cwd).pipe(
     Effect.mapError(WorktreeCommandError.new(failMessage, { command: commandText }))
   );
-  if (result.exitCode !== 0) {
-    return yield* WorktreeCommandError.make({
-      message: `${failMessage} (exit ${result.exitCode}).`,
-      command: commandText,
-      exitCode: result.exitCode,
-    });
-  }
+  yield* failOnNonZeroExit(commandText, failMessage, result.exitCode);
 });
 
 /**
@@ -653,6 +659,24 @@ const renderCreationSummary = Effect.fn("Worktree.renderCreationSummary")(functi
   yield* Console.log(`  next: cd ${targetPath}`);
 });
 
+const doctorEntryLines = (entry: WorktreeDoctorEntry): ReadonlyArray<string> => {
+  const branchLabel = entry.branch ?? (entry.detached ? "(detached)" : "(unknown)");
+  const statusLabel = entry.clean ? "clean" : `dirty (${entry.changeCount})`;
+  const notes = A.filter(
+    [
+      entry.locked ? "locked" : undefined,
+      entry.prunable ? "prunable" : undefined,
+      entry.hasEnv ? undefined : "missing .env",
+      entry.hasNodeModules ? undefined : "missing node_modules",
+    ],
+    (note): note is string => note !== undefined
+  );
+  return [
+    `- ${entry.path}`,
+    `    branch: ${branchLabel}  status: ${statusLabel}${notes.length === 0 ? "" : `  notes: ${A.join(notes, ", ")}`}`,
+  ];
+};
+
 const renderDoctorReport = Effect.fn("Worktree.renderDoctorReport")(function* (report: WorktreeDoctorReport) {
   yield* Console.log(`Main checkout:  ${report.mainCheckout}`);
   yield* Console.log(`Worktrees root: ${report.worktreesRoot}`);
@@ -660,21 +684,9 @@ const renderDoctorReport = Effect.fn("Worktree.renderDoctorReport")(function* (r
     yield* Console.log("No managed worktrees found under the worktrees root.");
   }
   for (const entry of report.entries) {
-    const branchLabel = entry.branch ?? (entry.detached ? "(detached)" : "(unknown)");
-    const statusLabel = entry.clean ? "clean" : `dirty (${entry.changeCount})`;
-    const notes = A.filter(
-      [
-        entry.locked ? "locked" : undefined,
-        entry.prunable ? "prunable" : undefined,
-        entry.hasEnv ? undefined : "missing .env",
-        entry.hasNodeModules ? undefined : "missing node_modules",
-      ],
-      (note): note is string => note !== undefined
-    );
-    yield* Console.log(`- ${entry.path}`);
-    yield* Console.log(
-      `    branch: ${branchLabel}  status: ${statusLabel}${notes.length === 0 ? "" : `  notes: ${A.join(notes, ", ")}`}`
-    );
+    for (const line of doctorEntryLines(entry)) {
+      yield* Console.log(line);
+    }
   }
   if (report.pruneDryRun.length > 0) {
     yield* Console.log("Prunable metadata (git worktree prune --dry-run):");
