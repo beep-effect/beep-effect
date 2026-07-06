@@ -35,7 +35,7 @@
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
     "test:integration": "bun run beep:test:integration",
-    "coverage": "bunx --bun vitest run --coverage",
+    "coverage": "bunx vitest run --coverage",
     "docgen": "bun run ../../../../packages/tooling/tool/docgen/src/bin.ts",
     "beep:build": "tsc -b tsconfig.json && bun run babel",
     "beep:check": "tsgo -b tsconfig.json",

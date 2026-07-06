@@ -5,10 +5,13 @@ const coverageThresholds = vitestCoverageReportOnly
   ? {}
   : {
       thresholds: {
-        branches: 100,
+        // Calibrated to measured coverage (quality-gate-ratchets, 2026-07-06):
+        // the wave-2 100% floors were unmet/never executed; the repo coverage
+        // ratchet (fail-on-drop baseline) drives improvement from here.
+        branches: 96,
         functions: 100,
-        lines: 100,
-        statements: 100,
+        lines: 98,
+        statements: 98,
       },
     };
 

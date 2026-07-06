@@ -8,7 +8,7 @@
  * @since 0.0.0
  */
 
-const QUALITY_TASK_NAMES: ReadonlyArray<string> = ["build", "check", "test", "lint", "audit"];
+const QUALITY_TASK_NAMES: ReadonlyArray<string> = ["build", "check", "test", "lint", "audit", "coverage"];
 const LINT_POLICY_SUBCOMMANDS: ReadonlyArray<string> = [
   "circular",
   "deprecated-apis",

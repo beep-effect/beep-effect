@@ -26,7 +26,7 @@
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "check:scripts": "bun run beep:check:scripts",
-    "coverage": "bunx --bun vitest run --coverage --passWithNoTests --exclude=test/integration/**",
+    "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
     "docgen": "bun run ../../../../packages/tooling/tool/docgen/src/bin.ts",
     "generate": "bun run scripts/generate.ts && biome check --write src/Html.model.ts src/Html.meta.ts",
     "generate:check": "bun run generate && git diff --exit-code -- src/Html.model.ts src/Html.meta.ts",

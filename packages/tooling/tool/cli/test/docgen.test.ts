@@ -33,12 +33,12 @@ import { verifyDocgenProofManifest, writeDocgenProofManifest } from "@beep/repo-
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { Pod, Runpod, Template } from "@beep/runpod";
 import { A, O } from "@beep/utils";
-import { BunCrypto } from "@effect/platform-bun";
-import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
+import { NodeChildProcessSpawner, NodeCrypto, NodeServices } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { Cause, Duration, Effect, Exit, FileSystem, Layer, Path, pipe, Ref, Runtime } from "effect";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import * as HttpClient from "effect/unstable/http/HttpClient";
@@ -51,14 +51,14 @@ const provideScopedLayer =
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
-const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, BunCrypto.layer);
+const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer, NodeCrypto.layer);
 const TestLayer = Layer.mergeAll(
   PlatformLayer,
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(PlatformLayer)),
   FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer)),
   TSMorphServiceLive.pipe(Layer.provideMerge(PlatformLayer))
 );
-const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer, BunCrypto.layer);
+const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 const CommandTestLayer = Layer.mergeAll(
   CommandPlatformLayer,
   NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(CommandPlatformLayer)),
@@ -4199,4 +4199,17 @@ export const ValidExport = packageDocAnchor;
       )
     )
   );
+});
+
+describe("DocgenQualityWorkerEvalReport schema", () => {
+  it("every schema-derived report round-trips through its JSON codec", () => {
+    const arbitrary = S.toArbitrary(DocgenQualityWorkerEvalReport);
+    const encodeReportJson = S.encodeSync(S.fromJsonString(DocgenQualityWorkerEvalReport));
+    const sameReport = S.toEquivalence(DocgenQualityWorkerEvalReport);
+
+    fc.assert(
+      fc.property(arbitrary, (report) => sameReport(report, decodeWorkerEvalReportJson(encodeReportJson(report)))),
+      { numRuns: 16 }
+    );
+  });
 });

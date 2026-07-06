@@ -196,6 +196,7 @@ const byWorkspacePathLengthDescending = Order.flip(
   Order.mapInput(Order.Number, (workspace: PackageVerifyWorkspace) => Str.length(workspace.dir))
 );
 
+// fallow-ignore-next-line code-duplication
 const commandText = (command: string, args: ReadonlyArray<string>): string => A.join([command, ...args], " ");
 
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>

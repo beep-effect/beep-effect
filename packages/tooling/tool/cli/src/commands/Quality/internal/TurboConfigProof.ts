@@ -374,6 +374,7 @@ export const summarizeTurboQueryAffectedOutput = Effect.fn("TurboConfigProof.sum
  * @category parsing
  * @since 0.0.0
  */
+// fallow-ignore-next-line code-duplication
 export const summarizeTurboDryRunOutput = Effect.fn("TurboConfigProof.summarizeTurboDryRunOutput")(function* (
   output: string
 ): Effect.fn.Return<TurboConfigProofCountSummary, TurboConfigProofError> {
