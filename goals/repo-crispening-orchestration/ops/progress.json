@@ -1336,7 +1336,7 @@
       "sanitized": "beep__md",
       "family": "foundation",
       "discovery": "done",
-      "remediation": "pending",
+      "remediation": "done",
       "findingsByDomain": {
         "S1": 12,
         "S2": 7,
@@ -1344,11 +1344,11 @@
         "S4": 10,
         "S5": 5
       },
-      "actionableCount": 10,
-      "exceptionCount": 24,
-      "parityProofRef": null,
+      "actionableCount": 0,
+      "exceptionCount": 28,
+      "parityProofRef": "packages/foundation/modeling/md/test/Md.test.ts (it: 'colocated escape-schema guards agree with their schemas')",
       "policyFlipped": false,
-      "remediationNote": ""
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S4,S5}/beep__md.json after ledgering: 34 records total, 28 exceptions, 6 without-exception (all RESOLVED fixes) => 0 remaining actionable. Remediation edits complete and green on every @beep/md lane: build (tsc+babel OK), check (tsgo, no md errors), lint (biome clean), docgen (succeeded), tests (16/16 via `npx vitest run` from the package dir), plus `lint schema-first` (0 advisories, live==tracked) and `lint schema-topology` OK. WORK: 6 actionable resolved — colocated codec statics onto StringArray + UnsafeUrlProtocolDestination via SchemaUtils.withCodecStatics and deleted the two free-floating S.is(...) guard walls (S1 lines 55/390 + S4 lines 43/55/38/390, Md.escape.ts). 4 declined and now LEDGERED as `exception` in the inventory: SFV4-fn-schema option-bags (S1 Md.ts:843) + 3 dual-arity DSL constructors taskItem/pre/table (S4 Md.ts:843/896/946) — builder-DSL ergonomics, no pipe consumer, no un-absorbed invariant, byte-identical to main (`laws dual-arity --check`: 0 enforced candidates). Parity: withCodecStatics attaches statics only, so encoded/wire shape is unchanged and all pre-existing round-trip + JSON-boundary laws stay green; added an S.toArbitrary guard-parity law. Family NOT flipped to blocking (pilot, deviation #3). WAVE-GATE STATUS: the repo-wide `yeet verify` is red on a PRE-EXISTING, OUT-OF-SCOPE failure not attributable to @beep/md — packages/foundation/capability/observability/src/server/NodeSdk.ts:208 TS2561 ('exporter' not in type 'LogRecordExporter') from the OTel sdk-logs 2.9.0 bump (commit 67b6315970 / #297), cascading into @beep/firecrawl build+check and the repo-wide check/docgen/test lanes. Fixing it requires editing @beep/observability, forbidden by one-writer-per-package + fence 8. See activeBlockers. Orchestrator to run the gate via `yeet publish`; @beep/md needs no further edits once observability is repaired. Gate blocker (pre-existing OTel 2.9.0 break in @beep/observability) repaired separately and merged as #302; wave gate rerun green on the rebased branch."
     },
     "@beep/nlp": {
       "path": "packages/foundation/modeling/nlp",

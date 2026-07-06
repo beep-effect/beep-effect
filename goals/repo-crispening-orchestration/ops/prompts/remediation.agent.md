@@ -97,14 +97,31 @@ record: stop at the first rung that removes the noise, and only after you
 understand the module and trace the real flow — "absorbing logic into the
 wrong schema is a second bug wearing a smaller diff." If, after investigation,
 a judgment item turns out to be a legitimate carve-out rather than an
-actionable smell, do **not** silently drop it: promote it to
-`standards/schema-first.inventory.jsonc` as a `status: "exception"` entry in
-the shape `{ file, symbol, kind, status, ruleId?, line?, owner, reason }`
-(entry key `file::symbol::kind::ruleId::line`), with `owner` set to
-`{{PACKAGE_NAME}}` and `reason` stating why the exception is correct, not
-merely convenient. `SFV4-getsomes-struct` items specifically must stay
-untouched (judgment, unresolved) if the Law 20/47 amendment has not yet
-merged — see Stop Conditions.
+actionable smell, do **not** silently drop it — but route it to the right
+ledger (pilot lesson, 2026-07-06):
+
+- **Findings the live AST detectors emit** (they would appear in
+  `bun run beep lint schema-first` output once the family's cards are
+  blocking): promote to `standards/schema-first.inventory.jsonc` as a
+  `status: "exception"` entry in the shape
+  `{ file, symbol, kind, status, ruleId?, line?, owner, reason }`
+  (entry key `file::symbol::kind::ruleId::line`), with `owner` set to
+  `{{PACKAGE_NAME}}` and `reason` stating why the exception is correct, not
+  merely convenient.
+- **Deep manual-audit discovery records the live detectors do NOT emit**
+  (specialist judgment findings with no detector counterpart): do NOT add
+  them to `standards/schema-first.inventory.jsonc` — the linter enforces
+  live==tracked and a non-detector entry becomes a `stale_entries` FAILURE.
+  Instead add an `exception` field ({ reason, boundary }) to the record in
+  `goals/repo-crispening-orchestration/ops/inventory/<Sn>/{{SANITIZED_PACKAGE}}.json`
+  and recompute this package's counts in `ops/progress.json`.
+
+Records you actually FIX are removed from the ops/inventory file (the
+inventory is the living burndown list); records you decline gain the
+`exception` field. Either way the package ends at `actionableCount: 0`.
+`SFV4-getsomes-struct` items specifically must stay untouched (judgment,
+unresolved) if the Law 20/47 amendment has not yet merged — see Stop
+Conditions.
 
 **(d) Behavior-parity proof (§5.3).** For every remediated schema: snapshot
 the **encoded/wire shape** before your edit and assert it is **byte-identical
@@ -125,7 +142,15 @@ family (fence 8), **stop** (see Stop Conditions) and re-scope rather than
 widen the touch set; mark the finding `mechanization: "judgment"` +
 `breaking` and defer it to a dedicated scoped sub-task instead.
 
-**(f) Verification gate.** Run, in this order, scoped to the repo (these are
+**(f) Verification gate.** Precondition (pilot lesson): `yeet verify` proves
+the WHOLE repo, so a wave is hostage to unrelated sibling breakage — the
+orchestrator must assert the branch base is already green before launching a
+wave, and an out-of-scope pre-existing failure is a blocker to record, not
+yours to fix (one-writer-per-package). Package-scoped proof first
+(`turbo run build check test docgen --filter={{PACKAGE_NAME}}...` — note the
+root vitest `projects` globs do not reach depth-4 packages like
+`packages/foundation/modeling/*`; run `npx vitest run` from inside the
+package dir instead). Then run, in this order, scoped to the repo (these are
 global commands; there is no per-package flag):
 
 ```sh
