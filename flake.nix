@@ -16,7 +16,7 @@
           buildInputs = with pkgs; [
             # Runtime
             bun
-            nodejs_22
+            nodejs_24
 
             # Quality tools
             typos
