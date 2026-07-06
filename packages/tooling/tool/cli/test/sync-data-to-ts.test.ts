@@ -14,8 +14,7 @@ import {
   syncDataTargets,
 } from "@beep/repo-cli/test/SyncDataToTs";
 import { A, O } from "@beep/utils";
-import { BunCrypto } from "@effect/platform-bun";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { Cause, Effect, Exit, FileSystem, Layer, Path, Runtime } from "effect";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
@@ -29,7 +28,7 @@ const provideScopedLayer =
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const runSyncDataToTsCommand = Command.runWith(syncDataToTsCommand, { version: "0.0.0" });
-const CommandTestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer, BunCrypto.layer);
+const CommandTestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer, NodeCrypto.layer);
 const generatedOutputPath = "packages/foundation/primitive/data/src/generated/iso4217.ts" as const;
 const iso3166GeneratedOutputPath = "packages/foundation/primitive/data/src/generated/iso3166.ts" as const;
 const iso3166CanonicalOutputPath = "packages/foundation/primitive/data/src/generated/iso3166.data.json" as const;

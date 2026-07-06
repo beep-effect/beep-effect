@@ -2,9 +2,8 @@ import { randomUUID } from "node:crypto";
 import { tmpdir } from "node:os";
 import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import { GlobError, layer as GlobLayer, Glob as GlobService } from "@beep/utils/Glob";
-import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import * as BunPath from "@effect/platform-bun/BunPath";
-import { Effect, Layer, Match } from "effect";
+import { NodeServices } from "@effect/platform-node";
+import { Effect, FileSystem, Layer, Match } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -25,20 +24,14 @@ type Fixture = {
   readonly cleanup: TestEffect<void>;
 };
 
-const platformLayer = GlobLayer.pipe(Layer.provide(Layer.mergeAll(BunFileSystem.layer, BunPath.layer)));
+const platformLayer = GlobLayer;
 const joinPath = (base: string, ...segments: ReadonlyArray<string>): string =>
   [Str.replace(/\/+$/u, "")(base), ...segments.map((segment) => Str.replace(/^\/+|\/+$/gu, "")(segment))]
     .filter((segment) => segment.length > 0)
     .join("/");
-const runFileCommand = (command: string, args: ReadonlyArray<string>): TestEffect<void> =>
-  Effect.sync(() => Bun.spawnSync([command, ...args], { stderr: "ignore", stdout: "ignore" })).pipe(
-    Effect.flatMap((result) =>
-      result.exitCode === 0
-        ? Effect.void
-        : Effect.die(new Error(`${command} ${args.join(" ")} failed with exit code ${result.exitCode}`))
-    )
-  );
-const makeDirectory = (path: string) => runFileCommand("mkdir", ["-p", path]);
+const withFileSystem = <E>(use: (fs: FileSystem.FileSystem) => Effect.Effect<void, E>): TestEffect<void> =>
+  provideScopedLayer(NodeServices.layer)(FileSystem.FileSystem.pipe(Effect.flatMap(use), Effect.orDie));
+const makeDirectory = (path: string) => withFileSystem((fs) => fs.makeDirectory(path, { recursive: true }));
 const makeTempDirectory: (prefix: string) => TestEffect<string> = Effect.fn("GlobTest.makeTempDirectory")(function* (
   prefix: string
 ) {
@@ -48,9 +41,9 @@ const makeTempDirectory: (prefix: string) => TestEffect<string> = Effect.fn("Glo
   return dir;
 });
 const writeText = (path: string, content: string): TestEffect<void> =>
-  Effect.promise(() => Bun.write(path, content)).pipe(Effect.asVoid);
-const removePath = (path: string) => runFileCommand("rm", ["-rf", path]);
-const makeSymlink = (target: string, path: string) => runFileCommand("ln", ["-s", target, path]);
+  withFileSystem((fs) => fs.writeFileString(path, content));
+const removePath = (path: string) => withFileSystem((fs) => fs.remove(path, { recursive: true }));
+const makeSymlink = (target: string, path: string) => withFileSystem((fs) => fs.symlink(target, path));
 
 const acquireFixture: TestEffect<Fixture> = Effect.gen(function* () {
   const dir = yield* makeTempDirectory("beep-utils-glob-");

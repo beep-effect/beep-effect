@@ -17,7 +17,7 @@
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "check": "bun run beep:check",
     "test": "bun run beep:test",
-    "coverage": "bunx --bun vitest run --coverage",
+    "coverage": "bunx vitest run --coverage",
     "docgen": "bun run ../../../../packages/tooling/tool/docgen/src/bin.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@beep/types": "workspace:^",
-    "@effect/platform-bun": "catalog:",
+    "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "@types/picomatch": "catalog:",

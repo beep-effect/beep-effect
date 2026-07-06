@@ -42,6 +42,25 @@ const packageSource = `/**
  * @since 0.0.0
  */
 
+import * as S from "effect/Schema";
+
+/**
+ * Demo field helper used by generator fixture tests.
+ *
+ * @param fields - Schema struct fields.
+ * @returns The same schema struct fields.
+ * @example
+ * \`\`\`ts
+ * import { defineFields } from "@beep/demo"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(defineFields({ id: S.String }))
+ * \`\`\`
+ * @category helpers
+ * @since 0.0.0
+ */
+export const defineFields = <Fields extends S.Struct.Fields>(fields: Fields): Fields => fields;
+
 /**
  * Demo value used by generator fixture tests.
  *
@@ -126,7 +145,10 @@ describe("quality artifact generators", () => {
           });
           const inventory = parseJsoncText(yield* fs.readFileString(outputJsonPath)) as {
             readonly generatedAt: string;
-            readonly packages: ReadonlyArray<{ readonly packageName: string }>;
+            readonly packages: ReadonlyArray<{
+              readonly packageName: string;
+              readonly counts: { readonly schemaAnnotationFindings: number };
+            }>;
           };
           const markdown = yield* fs.readFileString(outputMarkdownPath);
 
@@ -134,6 +156,7 @@ describe("quality artifact generators", () => {
           expect(result.outputMarkdownPath).toBe(outputMarkdownPath);
           expect(inventory.generatedAt).toBe(fixedGeneratedAt);
           expect(inventory.packages.map((pkg) => pkg.packageName)).toEqual(["@beep/demo"]);
+          expect(inventory.packages[0]?.counts.schemaAnnotationFindings).toBe(0);
           expect(markdown).toContain("# JSDoc Documentation Compliance Inventory");
         })
       )

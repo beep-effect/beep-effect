@@ -52,10 +52,10 @@
             "minLength": 1
           },
           "sourceClass": {
-            "enum": ["manifest-derived"]
+            "enum": ["manifest-derived", "doctrine-pinned"]
           },
           "enforcementScope": {
-            "const": "declared-dependency-consistency"
+            "enum": ["declared-dependency-consistency", "layer-legality"]
           },
           "sourceRefs": {
             "type": "array",
@@ -63,9 +63,6 @@
             "items": {
               "type": "string",
               "minLength": 1
-            },
-            "contains": {
-              "const": "package.json"
             }
           },
           "doctrineRefs": {
@@ -78,10 +75,6 @@
           },
           "catalogRefs": {
             "type": "array",
-            "minItems": 1,
-            "contains": {
-              "const": "standards/repo-exports.catalog.jsonc"
-            },
             "items": {
               "type": "string",
               "minLength": 1
@@ -118,6 +111,7 @@
   "x-enumValues": {
     "ruleSourceClass": [
       "manifest-derived",
+      "doctrine-pinned",
       "architecture-derived-hard-check",
       "review-gate-only",
       "tool-native",
@@ -125,6 +119,7 @@
     ],
     "boundaryEnforcementScope": [
       "declared-dependency-consistency",
+      "layer-legality",
       "architecture-legal-edge",
       "review-only"
     ]
