@@ -293,7 +293,7 @@ const csvTarget: SyncDataTarget = {
   }).pipe(Effect.withSpan("SyncDataToTsTest.acquireCsv")),
 };
 
-describe.sequential("sync-data-to-ts", () => {
+describe("sync-data-to-ts", { concurrent: false }, () => {
   it("writes the generated ISO 4217 module in write mode", () =>
     Effect.runPromise(
       Effect.gen(function* () {

@@ -38,7 +38,7 @@ import type { JSX } from "react";
 export type SerializedArtifactRefNode = ArtifactRefNodeSchema.Encoded;
 
 /**
- * Schema-derived creation input for {@link $createArtifactRefNode}. It is the
+ * Schema-derived creation input for `$createArtifactRefNode`. It is the
  * construction subset of the serialized artifact-ref wire shape used by runtime
  * Lexical node construction.
  *

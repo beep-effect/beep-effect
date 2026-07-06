@@ -1,3 +1,10 @@
+/**
+ * Patent office metadata value model.
+ *
+ * @packageDocumentation
+ * @category models
+ * @since 0.0.0
+ */
 import { $LawPracticeDomainId } from "@beep/identity";
 import * as S from "effect/Schema";
 import type { O } from "@beep/utils";

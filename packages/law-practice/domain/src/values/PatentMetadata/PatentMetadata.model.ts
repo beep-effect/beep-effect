@@ -22,7 +22,7 @@ import { PatentNumber } from "../PatentNumber/index.js";
 const $I = $LawPracticeDomainId.create("values/PatentMetadata/PatentMetadata");
 
 const PATENT_NUM_RE = /\b([A-Z]{2})\s*((?:RE|PP|D|H)?\d[\d,]{2,})\s*([A-Z]\d?)?\b/iu;
-const ISOISH_DATE_RE = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/u;
+const ISO_LIKE_DATE_RE = /^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/u;
 const CLASSIFICATION_SYMBOL_RE = /\b([A-HY]\d{2}[A-Z]\s?\d{1,4}\/\d{2,})\b/gu;
 const MARKDOWN_IMAGE_RE = /!\[([^\]]*)\]\((https?:\/\/[^)\s]+)\)/gu;
 
@@ -72,7 +72,7 @@ const normalizeDateText = (raw: string): O.Option<string> =>
     toNonEmptyTextOption(raw),
     O.map((trimmed) =>
       pipe(
-        Str.match(ISOISH_DATE_RE)(trimmed),
+        Str.match(ISO_LIKE_DATE_RE)(trimmed),
         O.flatMap((match) => O.all([A.get(match, 1), A.get(match, 2), A.get(match, 3)])),
         O.map(
           ([year, month, day]) => `${year}-${pipe(month, Str.padStart(2, "0"))}-${pipe(day, Str.padStart(2, "0"))}`

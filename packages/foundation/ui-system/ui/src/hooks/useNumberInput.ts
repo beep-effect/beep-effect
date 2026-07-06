@@ -505,10 +505,11 @@ export type NumberInputError = typeof NumberInputError.Type;
  *
  * @example
  * ```ts
+ * import * as O from "effect/Option"
  * import { NumberInputChangeMetadata, NumberInputEventType } from "@beep/ui/hooks/useNumberInput"
  *
  * const metadata = NumberInputChangeMetadata.make({
- *   error: null,
+ *   error: O.none(),
  *   eventType: NumberInputEventType.Enum.change,
  *   valueText: "5"
  * })

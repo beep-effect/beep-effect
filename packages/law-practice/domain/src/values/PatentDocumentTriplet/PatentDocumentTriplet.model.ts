@@ -31,8 +31,8 @@ const CanonicalPatentDocumentNumber = S.String.check(
  * WIPO ST.1 defines the minimum data elements for identifying a patent
  * document as the ST.3 office code, the ST.6 publication number, the ST.16
  * kind-of-document code, and the publication date. This value object captures
- * the common citation/display triplet: `{officeCode} {publicationNumber}
- * {kindCode}`. Publication date remains separate metadata.
+ * the common citation/display triplet of office code, publication number, and
+ * kind code. Publication date remains separate metadata.
  *
  * This schema intentionally uses the repo's canonical display presentation:
  * a valid ST.3 office code, a comma-grouped ST.6 publication number containing

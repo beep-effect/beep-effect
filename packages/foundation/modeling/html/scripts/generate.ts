@@ -553,7 +553,7 @@ const $I = $HtmlId.create("Html.meta");
  * \`\`\`ts
  * import { HtmlCategory } from "@beep/html/Html.meta"
  *
- * console.log(HtmlCategory.is("flow")) // true
+ * console.log(HtmlCategory.is.flow("flow")) // true
  * \`\`\`
  *
  * @category models

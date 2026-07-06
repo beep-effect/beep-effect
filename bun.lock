@@ -728,6 +728,7 @@
       "devDependencies": {
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
+        "bun-types": "catalog:",
       },
     },
     "packages/drivers/pglite": {

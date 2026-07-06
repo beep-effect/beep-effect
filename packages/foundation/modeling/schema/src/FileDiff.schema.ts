@@ -156,7 +156,7 @@ export const Info = S.Union([Added, Deleted, Modified]).pipe(
 );
 
 /**
- * Type for {@link Info}. {@inheritDoc Info}
+ * Type for parsed file-diff information.
  *
  * @example
  * ```ts

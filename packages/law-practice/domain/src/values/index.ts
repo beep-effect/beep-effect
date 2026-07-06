@@ -29,9 +29,30 @@ export * from "./OfficeCode/index.js";
  */
 export * from "./PatentDocumentTriplet/index.js";
 /**
+ * Patent metadata value-object exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./PatentMetadata/index.js";
+/**
  * WIPO ST.6 patent number value-object exports.
  *
  * @category value-objects
  * @since 0.0.0
  */
 export * from "./PatentNumber/index.js";
+/**
+ * Patent office metadata value-object exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./PatentOffice/index.js";
+/**
+ * Lawyer seniority tier value-object exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./SeniorityTier/index.js";

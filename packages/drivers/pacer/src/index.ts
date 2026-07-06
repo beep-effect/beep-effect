@@ -1,6 +1,7 @@
 /**
- * @beep/pacer
+ * PACER API driver package boundary.
  *
+ * @packageDocumentation
  * @since 0.0.0
  */
 
