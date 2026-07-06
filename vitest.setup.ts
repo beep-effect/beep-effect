@@ -7,7 +7,7 @@
 // untouched: it only installs when globalThis.Bun lacks the probed surface
 // (quality-gate-ratchets A1, 2026-07-06).
 import { spawn as nodeSpawn, spawnSync as nodeSpawnSync } from "node:child_process";
-import { readdirSync } from "node:fs";
+import { readdirSync, statSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
 import { join } from "node:path";
@@ -384,10 +384,20 @@ class GlobShim {
         const absolutePath = join(absoluteDirectory, dirent.name);
 
         if (dirent.isSymbolicLink()) {
-          // Bun.Glob lists matching symlinked entries in recursive scans too;
-          // it just does not traverse into symlinked directories.
+          // Bun.Glob parity: recursive scans list symlinks whose target is a
+          // file but neither list nor traverse symlinked directories;
+          // non-recursive scans list any matching symlink.
           if (this.match(relativePath)) {
-            entries.push(outputPath(relativePath, absolutePath));
+            const targetIsFile = (() => {
+              try {
+                return statSync(absolutePath).isFile();
+              } catch {
+                return false;
+              }
+            })();
+            if (targetIsFile || !recursivePattern) {
+              entries.push(outputPath(relativePath, absolutePath));
+            }
           }
         } else if (dirent.isDirectory()) {
           if (includeDirectories && this.match(relativePath)) {

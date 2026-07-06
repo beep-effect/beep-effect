@@ -741,6 +741,8 @@ export const declarationKind = (node: Node): string => {
 /**
  * Fold a byte stream into its decoded text.
  *
+ * @param stream - Byte stream to decode and concatenate.
+ * @returns Effect yielding the accumulated text.
  * @category streams
  * @since 0.0.0
  */
