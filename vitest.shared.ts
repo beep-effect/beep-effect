@@ -20,16 +20,11 @@ const configStringEqualsSync = (name: string, expected: string): boolean =>
     O.exists((value) => value === expected)
   );
 export const vitestCoverageReportOnly = configStringEqualsSync("VITEST_COVERAGE_REPORT_ONLY", "1");
-const vitestCoverageRatchet = configStringEqualsSync("VITEST_COVERAGE_RATCHET", "1");
-const shouldUseCoverageRatchetMode = vitestCoverageReportOnly || vitestCoverageRatchet;
-const coverageThresholds = shouldUseCoverageRatchetMode
-  ? undefined
-  : {
-      branches: 80,
-      functions: 60,
-      lines: 30,
-      statements: 30,
-    };
+// Fixed global coverage floors are retired (quality-gate-ratchets, 2026-07-06):
+// the committed per-package baseline compare (standards/coverage.regression-baseline.jsonc,
+// fail-on-drop) is the sole coverage judge. Package-local floors (e.g.
+// workspace/tables' 100% proof contract) remain package decisions.
+const coverageThresholds = undefined;
 
 const escapeRegExp = Str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -106,7 +101,9 @@ const config: ViteUserConfig = {
     // generous global cap; a genuine hang still fails well within each lane's
     // job timeout, and packages may still override per-test where needed.
     testTimeout: 30_000,
-    passWithNoTests: shouldUseCoverageRatchetMode,
+    // Baseline generation/regeneration must tolerate test-less packages;
+    // the ratchet compare, not vitest, decides coverage outcomes.
+    passWithNoTests: vitestCoverageReportOnly || configStringEqualsSync("VITEST_COVERAGE_RATCHET", "1"),
     exclude: ["**/.context/**", "**/node_modules/**"],
     setupFiles: [new URL("./vitest.setup.ts", import.meta.url).pathname],
     fakeTimers: {
