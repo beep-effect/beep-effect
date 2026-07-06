@@ -12,6 +12,7 @@ import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { Console, DateTime, Effect, FileSystem, flow, HashMap, Order, Path, pipe, SchemaGetter } from "effect";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { parse } from "jsonc-parser";
@@ -22,6 +23,7 @@ import type { TypeElementTypes } from "ts-morph";
 
 const $I = $RepoCliId.create("commands/Lint/SchemaFirst");
 const INVENTORY_PATH = "standards/schema-first.inventory.jsonc";
+const POLICY_PATH = "standards/schema-crispening.policy.jsonc";
 const INCLUDED_GLOBS = ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"] as const;
 const SOURCE_FILE_GLOBS = [...INCLUDED_GLOBS, "!**/docs/**"] as const;
 const IDENTIFIER_PROPERTY_PATTERN = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
@@ -110,7 +112,14 @@ const SCHEMA_DISCRIMINATOR_TOKENS = [
 const stringifyJsonPretty = SchemaGetter.stringifyJson({ space: 2 });
 const stringifyJsonLine = SchemaGetter.stringifyJson({ space: 0 });
 
-const SchemaFirstPolicyRuleId = LiteralKit([
+/**
+ * Stable schema-first policy rule identifiers emitted for lint and Yeet issue routing.
+ *
+ * @internal
+ * @category schema
+ * @since 0.0.0
+ */
+export const SchemaFirstPolicyRuleId = LiteralKit([
   "schema-first-inventory",
   "literal-kit-const-assertion",
   "SFV4-defaults",
@@ -132,7 +141,14 @@ const SchemaFirstPolicySeverity = LiteralKit(["warning", "error"]).pipe(
   })
 );
 
-const SchemaFirstEntryKind = LiteralKit([
+/**
+ * Kinds of schema-first inventory findings.
+ *
+ * @internal
+ * @category schema
+ * @since 0.0.0
+ */
+export const SchemaFirstEntryKind = LiteralKit([
   "exported-interface",
   "exported-type-literal",
   "object-struct-schema",
@@ -143,13 +159,31 @@ const SchemaFirstEntryKind = LiteralKit([
   })
 );
 
-const SchemaFirstEntryStatus = LiteralKit(["candidate", "exception", "advisory"]).pipe(
+/**
+ * Tracked status for a schema-first inventory finding.
+ *
+ * @internal
+ * @category schema
+ * @since 0.0.0
+ */
+export const SchemaFirstEntryStatus = LiteralKit(["candidate", "exception", "advisory"]).pipe(
   $I.annoteSchema("SchemaFirstEntryStatus", {
     description: "Tracked status for a schema-first inventory finding.",
   })
 );
 
-class SchemaFirstInventoryEntry extends S.Class<SchemaFirstInventoryEntry>($I`SchemaFirstInventoryEntry`)(
+/**
+ * Single tracked schema-first inventory finding for a source file symbol.
+ *
+ * @example
+ * ```ts
+ * import { SchemaFirstInventoryEntry } from "@beep/repo-cli/commands/Lint"
+ * console.log(SchemaFirstInventoryEntry)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class SchemaFirstInventoryEntry extends S.Class<SchemaFirstInventoryEntry>($I`SchemaFirstInventoryEntry`)(
   {
     file: S.String,
     symbol: S.String,
@@ -250,10 +284,83 @@ class SchemaFirstLintSummary extends S.Class<SchemaFirstLintSummary>($I`SchemaFi
     precisionAuditAdvisories: S.Finite,
     arbitraryTestsAdvisories: S.Finite,
     numericDomainAdvisories: S.Finite,
+    crispeningPolicyExempt: S.Finite,
     wroteInventory: S.Boolean,
   },
   $I.annote("SchemaFirstLintSummary", {
     description: "Summary of schema-first inventory verification results.",
+  })
+) {}
+
+/**
+ * Wave-family keys used to resolve the schema-crispening policy blocking flag
+ * by path prefix.
+ *
+ * @internal
+ * @category schema
+ * @since 0.0.0
+ */
+export const SchemaCrispeningFamily = LiteralKit(["foundation", "drivers", "tooling", "apps-slices"]).pipe(
+  $I.annoteSchema("SchemaCrispeningFamily", {
+    description: "Wave-family keys used to resolve the schema-crispening policy blocking flag by path prefix.",
+  })
+);
+
+/**
+ * Blocking flag for a schema-crispening wave family or per-owner policy override.
+ *
+ * @example
+ * ```ts
+ * import { SchemaCrispeningFamilyPolicy } from "@beep/repo-cli/commands/Lint"
+ * console.log(SchemaCrispeningFamilyPolicy)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class SchemaCrispeningFamilyPolicy extends S.Class<SchemaCrispeningFamilyPolicy>(
+  $I`SchemaCrispeningFamilyPolicy`
+)(
+  {
+    blocking: S.Boolean,
+  },
+  $I.annote("SchemaCrispeningFamilyPolicy", {
+    description: "Blocking flag for a schema-crispening wave family or per-owner override.",
+  })
+) {}
+
+/**
+ * Schema-crispening policy ratchet document: novel lint cards and the
+ * per-family / per-owner blocking flags that resolve whether a card's
+ * findings currently fail the repo-wide schema-first lint.
+ *
+ * @example
+ * ```ts
+ * import { SchemaCrispeningPolicyDocument } from "@beep/repo-cli/commands/Lint"
+ * console.log(SchemaCrispeningPolicyDocument)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class SchemaCrispeningPolicyDocument extends S.Class<SchemaCrispeningPolicyDocument>(
+  $I`SchemaCrispeningPolicyDocument`
+)(
+  {
+    schemaVersion: S.Literal("schema-crispening-policy/v1"),
+    cards: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<string>())),
+      S.withDecodingDefault(Effect.succeed(A.empty<string>()))
+    ),
+    families: S.Record(S.String, SchemaCrispeningFamilyPolicy).pipe(
+      S.withConstructorDefault(Effect.succeed(R.empty<string, SchemaCrispeningFamilyPolicy>())),
+      S.withDecodingDefault(Effect.succeed(R.empty<string, SchemaCrispeningFamilyPolicy>()))
+    ),
+    ownerOverrides: S.Record(S.String, SchemaCrispeningFamilyPolicy).pipe(
+      S.withConstructorDefault(Effect.succeed(R.empty<string, SchemaCrispeningFamilyPolicy>())),
+      S.withDecodingDefault(Effect.succeed(R.empty<string, SchemaCrispeningFamilyPolicy>()))
+    ),
+  },
+  $I.annote("SchemaCrispeningPolicyDocument", {
+    description: "Schema-crispening policy ratchet: novel lint cards and per-family/per-owner blocking flags.",
   })
 ) {}
 
@@ -273,6 +380,7 @@ class LiteralKitConstAssertionViolation extends S.Class<LiteralKitConstAssertion
 const decodeInventoryDocument = S.decodeUnknownEffect(SchemaFirstInventoryDocument);
 const encodeInventoryDocument = S.encodeUnknownEffect(SchemaFirstInventoryDocument);
 const encodePolicyFinding = S.encodeUnknownEffect(SchemaFirstPolicyFinding);
+const decodeCrispeningPolicyDocument = S.decodeUnknownEffect(SchemaCrispeningPolicyDocument);
 
 const isExcludedFile = isExcludedTypeScriptSourcePath;
 
@@ -378,6 +486,19 @@ const readInventoryDocument = Effect.fn(function* () {
   return yield* decodeInventoryDocument(parse(content)).pipe(Effect.option);
 });
 
+const readCrispeningPolicyDocument = Effect.fn(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const absolutePath = path.resolve(process.cwd(), POLICY_PATH);
+
+  if (!(yield* fs.exists(absolutePath))) {
+    return O.none<SchemaCrispeningPolicyDocument>();
+  }
+
+  const content = yield* fs.readFileString(absolutePath);
+  return yield* decodeCrispeningPolicyDocument(parse(content)).pipe(Effect.option);
+});
+
 const writeInventoryDocument = Effect.fn("writeInventoryDocument")(function* (document: SchemaFirstInventoryDocument) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -413,6 +534,92 @@ const makeOwnerResolver = Effect.fn("makeOwnerResolver")(function* () {
     return "@beep/root";
   };
 });
+
+const SCHEMA_CRISPENING_FAMILY_PREFIXES: ReadonlyArray<readonly [string, typeof SchemaCrispeningFamily.Type]> = [
+  ["packages/foundation/", "foundation"],
+  ["packages/drivers/", "drivers"],
+  ["packages/tooling/", "tooling"],
+  ["apps/", "apps-slices"],
+  ["packages/agents/", "apps-slices"],
+  ["packages/architecture-lab/", "apps-slices"],
+  ["packages/epistemic/", "apps-slices"],
+  ["packages/law-practice/", "apps-slices"],
+  ["packages/workspace/", "apps-slices"],
+] as const;
+
+/**
+ * Resolve the schema-crispening wave family for a repo-relative source file
+ * path by prefix. `packages/shared/**` and `infra/**` are unassigned until
+ * their P1 wave assignment lands and resolve to `O.none` (non-blocking).
+ *
+ * @param file - Repo-relative posix path, e.g. `packages/foundation/modeling/schema/src/Foo.ts`.
+ * @returns The resolved wave family, or `O.none` when the path is unassigned.
+ * @example
+ * ```ts
+ * import { schemaCrispeningFamilyForFile } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(schemaCrispeningFamilyForFile("packages/drivers/postgres/src/Postgres.ts"))
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+export const schemaCrispeningFamilyForFile = (file: string): O.Option<typeof SchemaCrispeningFamily.Type> =>
+  pipe(
+    A.findFirst(SCHEMA_CRISPENING_FAMILY_PREFIXES, ([prefix]) => Str.startsWith(prefix)(file)),
+    O.map(([, family]) => family)
+  );
+
+const resolveSchemaCrispeningPolicyBlocking = (
+  policy: SchemaCrispeningPolicyDocument,
+  entry: SchemaFirstInventoryEntry
+): boolean =>
+  pipe(
+    R.get(policy.ownerOverrides, entry.owner),
+    O.map((override) => override.blocking),
+    O.orElse(() =>
+      pipe(
+        schemaCrispeningFamilyForFile(entry.file),
+        O.flatMap((family) => R.get(policy.families, family)),
+        O.map((familyPolicy) => familyPolicy.blocking)
+      )
+    ),
+    O.getOrElse(() => false)
+  );
+
+/**
+ * Test whether a schema-first inventory entry is exempt from failing the
+ * repo-wide lint under the schema-crispening policy ratchet (G4). An absent
+ * policy document exempts nothing (fail-safe); an entry is only ever exempt
+ * when its `ruleId` is a policy-tracked card AND the resolved blocking flag
+ * (owner override, else family, else non-blocking when unassigned) is `false`.
+ *
+ * @param policyDocument - The decoded `standards/schema-crispening.policy.jsonc` document, if present.
+ * @returns A predicate over inventory entries.
+ * @example
+ * ```ts
+ * import { isSchemaCrispeningPolicyExempt } from "@beep/repo-cli/commands/Lint"
+ * import * as O from "effect/Option"
+ *
+ * console.log(isSchemaCrispeningPolicyExempt(O.none())(entry))
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+export const isSchemaCrispeningPolicyExempt =
+  (policyDocument: O.Option<SchemaCrispeningPolicyDocument>) =>
+  (entry: SchemaFirstInventoryEntry): boolean =>
+    O.match(policyDocument, {
+      onNone: () => false,
+      onSome: (policy) =>
+        pipe(
+          O.fromNullishOr(entry.ruleId),
+          O.filter((ruleId) => A.contains(policy.cards, ruleId)),
+          O.match({
+            onNone: () => false,
+            onSome: () => !resolveSchemaCrispeningPolicyBlocking(policy, entry),
+          })
+        ),
+    });
 
 const isFunctionLikeMember = (member: Node): boolean => {
   if (
@@ -1269,6 +1476,7 @@ type SchemaFirstLintFindings = {
   readonly arbitraryTestsAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly numericDomainAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly activeAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
+  readonly policyExemptCount: number;
 };
 
 const inventoryEntriesByKey = (
@@ -1305,24 +1513,31 @@ const staleInventoryEntries = (
 const collectSchemaFirstLintFindings = (
   liveDocument: SchemaFirstInventoryDocument,
   existingDocument: O.Option<SchemaFirstInventoryDocument>,
-  mergedDocument: SchemaFirstInventoryDocument
+  mergedDocument: SchemaFirstInventoryDocument,
+  policyDocument: O.Option<SchemaCrispeningPolicyDocument>
 ): SchemaFirstLintFindings => {
+  const isExempt = isSchemaCrispeningPolicyExempt(policyDocument);
   const liveByKey = inventoryEntriesByKey(liveDocument.entries);
   const trackedByKey = trackedInventoryEntriesByKey(existingDocument);
-  const missingEntries = inventoryEntriesAbsentFrom(liveDocument.entries, trackedByKey);
-  const staleEntries = staleInventoryEntries(existingDocument, liveByKey);
-  const boundaryCodecAdvisories = A.filter(mergedDocument.entries, isActiveRuleAdvisory("SFV4-boundary-codec"));
-  const defaultsAdvisories = A.filter(mergedDocument.entries, isActiveRuleAdvisory("SFV4-defaults"));
-  const staticApiAdvisories = A.filter(mergedDocument.entries, isActiveRuleAdvisory("SFV4-static-api"));
-  const equivalenceAdvisories = A.filter(mergedDocument.entries, isActiveRuleAdvisory("SFV4-equivalence"));
-  const precisionAuditAdvisories = A.filter(mergedDocument.entries, isActiveRuleAdvisory("SFV4-precision-audit"));
-  const arbitraryTestsAdvisories = A.filter(mergedDocument.entries, isActiveRuleAdvisory("SFV4-arbitrary-tests"));
-  const numericDomainAdvisories = A.filter(mergedDocument.entries, isActiveRuleAdvisory("SFV4-numeric-domain"));
+  const missingEntries = A.filter(
+    inventoryEntriesAbsentFrom(liveDocument.entries, trackedByKey),
+    (entry) => !isExempt(entry)
+  );
+  const staleEntries = A.filter(staleInventoryEntries(existingDocument, liveByKey), (entry) => !isExempt(entry));
+  const policyFilteredEntries = A.filter(mergedDocument.entries, (entry) => !isExempt(entry));
+  const policyExemptCount = A.filter(mergedDocument.entries, isExempt).length;
+  const boundaryCodecAdvisories = A.filter(policyFilteredEntries, isActiveRuleAdvisory("SFV4-boundary-codec"));
+  const defaultsAdvisories = A.filter(policyFilteredEntries, isActiveRuleAdvisory("SFV4-defaults"));
+  const staticApiAdvisories = A.filter(policyFilteredEntries, isActiveRuleAdvisory("SFV4-static-api"));
+  const equivalenceAdvisories = A.filter(policyFilteredEntries, isActiveRuleAdvisory("SFV4-equivalence"));
+  const precisionAuditAdvisories = A.filter(policyFilteredEntries, isActiveRuleAdvisory("SFV4-precision-audit"));
+  const arbitraryTestsAdvisories = A.filter(policyFilteredEntries, isActiveRuleAdvisory("SFV4-arbitrary-tests"));
+  const numericDomainAdvisories = A.filter(policyFilteredEntries, isActiveRuleAdvisory("SFV4-numeric-domain"));
 
   return {
     missingEntries,
     staleEntries,
-    enforcedCandidates: A.filter(mergedDocument.entries, (entry) => entry.status === "candidate"),
+    enforcedCandidates: A.filter(policyFilteredEntries, (entry) => entry.status === "candidate"),
     boundaryCodecAdvisories,
     defaultsAdvisories,
     staticApiAdvisories,
@@ -1339,6 +1554,7 @@ const collectSchemaFirstLintFindings = (
       ...arbitraryTestsAdvisories,
       ...numericDomainAdvisories,
     ],
+    policyExemptCount,
   };
 };
 
@@ -1363,6 +1579,7 @@ const makeSchemaFirstLintSummary = (
     precisionAuditAdvisories: findings.precisionAuditAdvisories.length,
     arbitraryTestsAdvisories: findings.arbitraryTestsAdvisories.length,
     numericDomainAdvisories: findings.numericDomainAdvisories.length,
+    crispeningPolicyExempt: findings.policyExemptCount,
     wroteInventory: options.write,
   });
 
@@ -1380,6 +1597,7 @@ const logSchemaFirstSummary = Effect.fn("logSchemaFirstSummary")(function* (summ
   yield* Console.log(`[schema-first] sfv4_precision_audit_advisories=${summary.precisionAuditAdvisories}`);
   yield* Console.log(`[schema-first] sfv4_arbitrary_tests_advisories=${summary.arbitraryTestsAdvisories}`);
   yield* Console.log(`[schema-first] sfv4_numeric_domain_advisories=${summary.numericDomainAdvisories}`);
+  yield* Console.log(`[schema-first] crispening_policy_exempt=${summary.crispeningPolicyExempt}`);
   if (summary.wroteInventory) {
     yield* Console.log(`[schema-first] wrote ${INVENTORY_PATH}`);
   }
@@ -1461,6 +1679,9 @@ const logActiveAdvisories = Effect.fn("logActiveAdvisories")(function* (
   }
 });
 
+// Findings arriving here are already policy-filtered per
+// standards/schema-crispening.policy.jsonc (see collectSchemaFirstLintFindings);
+// this function does not re-consult the policy itself.
 const schemaFirstLintHasFailures = (
   options: SchemaFirstLintOptions,
   findings: SchemaFirstLintFindings,
@@ -1491,7 +1712,8 @@ export const runSchemaFirstLint = Effect.fn(function* (options: SchemaFirstLintO
   const literalKitConstAssertionViolations = yield* collectLiteralKitConstAssertionViolations();
   const existingDocument = yield* readInventoryDocument();
   const mergedDocument = mergeInventory(liveDocument, existingDocument);
-  const findings = collectSchemaFirstLintFindings(liveDocument, existingDocument, mergedDocument);
+  const policyDocument = yield* readCrispeningPolicyDocument();
+  const findings = collectSchemaFirstLintFindings(liveDocument, existingDocument, mergedDocument, policyDocument);
   const summary = makeSchemaFirstLintSummary(
     liveDocument,
     mergedDocument,

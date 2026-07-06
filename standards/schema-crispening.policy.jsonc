@@ -1,0 +1,16 @@
+{
+  "schemaVersion": "schema-crispening-policy/v1",
+  "cards": [
+    "SFV4-fn-schema",
+    "SFV4-normalization",
+    "SFV4-null-return",
+    "SFV4-getsomes-struct"
+  ],
+  "families": {
+    "foundation": { "blocking": false },
+    "drivers": { "blocking": false },
+    "tooling": { "blocking": false },
+    "apps-slices": { "blocking": false }
+  },
+  "ownerOverrides": {}
+}
