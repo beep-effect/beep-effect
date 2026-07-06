@@ -14,6 +14,7 @@ import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import {
   Cause,
+  Config,
   ConfigProvider,
   Duration,
   Effect,
@@ -62,7 +63,7 @@ const WeeklyReportArbitrary = S.toArbitrary(AiMetricsWeeklyReportResult);
 const decodeUnknownJson = S.decodeUnknownEffect(S.UnknownFromJsonString);
 const isString = (value: unknown): value is string => typeof value === "string";
 const farFutureUntilEpochMs = 4_102_444_800_000;
-const isCoverageRatchetRun = process.env.VITEST_COVERAGE_RATCHET === "1";
+const isCoverageRatchetRun = O.contains(Effect.runSync(Config.option(Config.string("VITEST_COVERAGE_RATCHET"))), "1");
 
 const expectAiMetricsCommandFailure = Effect.fn("AIMetricsCommandTest.expectAiMetricsCommandFailure")(function* (
   args: ReadonlyArray<string>

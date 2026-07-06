@@ -10,8 +10,9 @@ import {
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Cause, Context, Effect, Exit, Layer, pipe, Scope } from "effect";
+import { Cause, Config, Context, Effect, Exit, Layer, pipe, Scope } from "effect";
 import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import type { SqlTestHooks } from "@beep/test-utils";
@@ -22,7 +23,7 @@ const provideScopedLayer =
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const isBunRuntime = process.versions.bun !== undefined;
-const isCoverageRatchetRun = process.env.VITEST_COVERAGE_RATCHET === "1";
+const isCoverageRatchetRun = O.contains(Effect.runSync(Config.option(Config.string("VITEST_COVERAGE_RATCHET"))), "1");
 const localSqliteIt = it.effect.skipIf(isCoverageRatchetRun && !isBunRuntime);
 const expectedDriver = isBunRuntime ? "bun-sqlite" : "node-sqlite";
 const isSqlTestHarnessError = S.is(SqlTestHarnessError);
