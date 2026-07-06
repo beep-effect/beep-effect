@@ -36,7 +36,6 @@
   },
   "devDependencies": {
     "@beep/types": "workspace:^",
-    "@effect/platform-bun": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "@types/picomatch": "catalog:",

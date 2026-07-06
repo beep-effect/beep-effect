@@ -39,6 +39,9 @@
         "lefthook": "catalog:",
         "madge": "catalog:",
         "markdownlint-cli2": "catalog:",
+        "micromark": "catalog:",
+        "micromark-extension-gfm": "catalog:",
+        "picomatch": "catalog:",
         "syncpack": "catalog:",
         "toml": "catalog:",
         "tstyche": "catalog:",
@@ -1289,7 +1292,6 @@
       },
       "devDependencies": {
         "@beep/types": "workspace:^",
-        "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
         "@types/picomatch": "catalog:",

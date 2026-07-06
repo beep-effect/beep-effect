@@ -1,3 +1,11 @@
+// Bun-API shim for NODE-based vitest runs (the coverage lane).
+// WHY: istanbul coverage under `bunx --bun vitest` instruments nothing
+// (measured 0% on packages with passing tests), so per-package `coverage`
+// scripts run plain node vitest (v8 provider) while `test` scripts stay
+// bun-native. Tests that call Bun APIs (spawnSync, Glob, TOML, serve, ...)
+// still execute under node via this shim. The guard below leaves real Bun
+// untouched: it only installs when globalThis.Bun lacks the probed surface
+// (quality-gate-ratchets A1, 2026-07-06).
 import { spawn as nodeSpawn, spawnSync as nodeSpawnSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 import { readFile, writeFile } from "node:fs/promises";

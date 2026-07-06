@@ -20,7 +20,7 @@ const configStringEqualsSync = (name: string, expected: string): boolean =>
     O.exists((value) => value === expected)
   );
 export const vitestCoverageReportOnly = configStringEqualsSync("VITEST_COVERAGE_REPORT_ONLY", "1");
-export const vitestCoverageRatchet = configStringEqualsSync("VITEST_COVERAGE_RATCHET", "1");
+const vitestCoverageRatchet = configStringEqualsSync("VITEST_COVERAGE_RATCHET", "1");
 const shouldUseCoverageRatchetMode = vitestCoverageReportOnly || vitestCoverageRatchet;
 const coverageThresholds = shouldUseCoverageRatchetMode
   ? undefined
