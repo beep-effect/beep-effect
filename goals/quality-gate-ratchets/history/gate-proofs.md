@@ -16,3 +16,16 @@ and the orchestrator's independent re-verifications.
 Known operational note (A6): merge-commit headers >100 chars fail the gate —
 PR titles must stay ≤ ~93 chars (GitHub appends ` (#NNN)`), demonstrated by
 pre-existing commit `2a0fca454c` (101 chars) failing `--last` probes.
+
+## Live catch: A2 fired on the integration itself (2026-07-06)
+
+Beyond the synthetic proofs, the knip gate caught a REAL regression during
+lane integration — merging A1+A3+A4 introduced 5 genuine findings
+(unnecessary `vitestCoverageRatchet` export, three undeclared shim deps,
+dead `@effect/platform-bun` devDependency). The gate failed the integrated
+branch; all five were fixed for real in `4fcaaadd65` (no baseline bump) and
+the gate returned to `ok: current=73 baseline=73 introduced=0`. The same
+commit documents the coverage-lane runtime design in `vitest.setup.ts`
+(istanbul under `--bun` measures 0% — verified 0/555 on modeling/utils —
+so `coverage` scripts run node vitest/v8 behind a guarded Bun-API shim while
+`test` scripts stay bun-native).
