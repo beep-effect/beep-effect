@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained` — merged as [PR #305](https://github.com/beep-effect/beep-effect/pull/305) (`ca9c6ec924`, 2026-07-06); main ruleset 10240248 ACTIVE with 17 required checks + PR-only pushes (direct-push refusal proven).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,12 +31,17 @@ with a real ruleset. One PR + post-merge ruleset enablement.
 
 ## Current Phase
 
-P0 Lanes — codex sub-agent lanes A1–A4, A6 in sibling worktrees; Claude
-(Fable) reviews, integrates, and does all GitHub API writes.
+Closed — all phases completed 2026-07-06.
 
 ## Latest Evidence
 
-Not started — packet scaffolded 2026-07-06.
+2026-07-06: PR #305 merged after 12 CI rounds (every red a real finding;
+taxonomy in [`history/gate-proofs.md`](./history/gate-proofs.md)). Ruleset
+live; direct push to main REFUSED ("17 of 17 required status checks are
+expected"). Reflection:
+[`history/reflections/2026-07-06-claude.md`](./history/reflections/2026-07-06-claude.md).
+Deferred work: [`history/crispen-debt.md`](./history/crispen-debt.md) +
+rqt-015 in gate-proofs.
 
 ## Notes
 

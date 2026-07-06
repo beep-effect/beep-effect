@@ -3,14 +3,14 @@
   "initiative": {
     "id": "quality-gate-ratchets",
     "title": "Quality Gate Ratchets",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-06",
     "updated": "2026-07-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/quality-gate-ratchets",
-  "lifecycle": "active",
-  "executionCapable": true,
+  "lifecycle": "completed-retained",
+  "executionCapable": false,
   "reflectionRequired": true,
   "mission": "Turn declared-but-toothless quality gates into committed-baseline fail-on-regression ratchets (coverage, knip, jsdoc inventory, doctrine-pinned boundaries, commitlint-in-CI) and protect main with a real ruleset — one PR + post-merge ruleset enablement.",
   "provenance": {
@@ -71,11 +71,31 @@
     }
   ],
   "phases": [
-    { "id": "P0", "name": "Lanes", "status": "in_progress" },
-    { "id": "P1", "name": "Proofs", "status": "pending" },
-    { "id": "P2", "name": "Ship", "status": "pending" },
-    { "id": "P3", "name": "Ruleset", "status": "pending" },
-    { "id": "P4", "name": "Close", "status": "pending" }
+    {
+      "id": "P0",
+      "name": "Lanes",
+      "status": "completed"
+    },
+    {
+      "id": "P1",
+      "name": "Proofs",
+      "status": "completed"
+    },
+    {
+      "id": "P2",
+      "name": "Ship",
+      "status": "completed"
+    },
+    {
+      "id": "P3",
+      "name": "Ruleset",
+      "status": "completed"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "completed"
+    }
   ],
   "verificationCommands": [
     "test \"$(wc -m < goals/quality-gate-ratchets/GOAL.md)\" -le 4000",
@@ -90,5 +110,6 @@
     "#294 ratchet machinery proves non-reusable without forking it.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "mergedPullRequest": 305
 }
