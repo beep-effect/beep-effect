@@ -46,7 +46,12 @@ optional typescript-lsp trial, CSF-001 amendment citations.
 
 ## Latest Evidence
 
-Not started — packet graduated 2026-07-05.
+2026-07-05: all build phases complete on `feat/agent-pipeline-velocity`
+(11 commits, rebased on main @ #293). Measured: lint-policy lane 142.4s→32.3s
+(rqt-014); baselines + negative results in
+[`history/rqt-ledger.md`](./history/rqt-ledger.md). Closeout reflection:
+[`history/reflections/2026-07-05-claude.md`](./history/reflections/2026-07-05-claude.md).
+P4 (yeet publish → mergeable PR) in progress.
 
 ## Notes
 

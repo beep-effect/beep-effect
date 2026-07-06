@@ -12,7 +12,7 @@
   "lifecycle": "active",
   "executionCapable": true,
   "reflectionRequired": true,
-  "mission": "Cut agent context friction (Claude + Codex) and time-to-mergeable-PR in one pass: greptile-only reviews, read-only PR turbo cache, green main, single-sourced instruction files, progressive-disclosure skills, permission allowlist, instrumented + rebenchmarked yeet, local/hosted parity, and a beep worktree helper — one goal, one PR.",
+  "mission": "Cut agent context friction (Claude + Codex) and time-to-mergeable-PR in one pass: greptile-only reviews, read-only PR turbo cache, green main, single-sourced instruction files, progressive-disclosure skills, permission allowlist, instrumented + rebenchmarked yeet, local/hosted parity, and a beep worktree helper \u2014 one goal, one PR.",
   "provenance": {
     "exploration": "explorations/agent-pipeline-velocity",
     "graduated": "2026-07-05",
@@ -70,27 +70,27 @@
     {
       "id": "P0",
       "name": "Gate & Quick Strikes",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "P1",
       "name": "Agent Effectiveness",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "P2",
       "name": "Pipeline rqt-011+ (Fable-direct)",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "P3",
       "name": "Worktrees",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "P4",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "P5",
@@ -110,7 +110,7 @@
     "The implementation would exceed named scope (esp. crispen creep beyond optimization-unblocking refactors).",
     "A change would weaken full proof, hosted checks, or closeout gates.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
-    "Concurrency increase causes memory thrash — record the measured ceiling instead of forcing a target.",
+    "Concurrency increase causes memory thrash \u2014 record the measured ceiling instead of forcing a target.",
     "The same blocker repeats after reasonable investigation."
   ]
 }
