@@ -438,42 +438,40 @@ const inventoryEntryFinding = (
     ...optionalProp("line", O.fromUndefinedOr(entry.line)),
   });
 
-const missingEntryRemediation = (entry: SchemaFirstInventoryEntry): string => {
-  if (entry.ruleId === "SFV4-static-api") {
-    return "Prefer schema-derived .match/.guards/.cases or LiteralKit helpers, or run bun run beep lint schema-first --write with a justification when behavior intentionally differs.";
-  }
-  if (entry.ruleId === "SFV4-numeric-domain") {
-    return "Review the numeric domain and replace broad S.Number/S.NumberFromString with S.Finite, S.Int, or checks; then run bun run beep lint schema-first --write if the broad domain is intentional.";
-  }
-  if (entry.ruleId === "SFV4-boundary-codec") {
-    return "Replace direct JSON.parse with S.UnknownFromJsonString or S.fromJsonString(schema) plus an Effect/Result/Option decoder, or inventory the exception when the protocol is intentionally non-standard.";
-  }
-  if (entry.ruleId === "SFV4-defaults") {
-    return "Move option/request fallback values into schema fields with S.withConstructorDefault, S.withDecodingDefault*, or SchemaUtils.withKeyDefaults; inventory the exception only when the fallback intentionally differs from schema construction semantics.";
-  }
-  if (entry.ruleId === "SFV4-equivalence") {
-    return "Derive comparison from S.toEquivalence(schema) or SchemaUtils.toEquivalence(schema); use S.overrideToEquivalence only when schema semantics intentionally differ.";
-  }
-  if (entry.ruleId === "SFV4-precision-audit") {
-    return "Replace broad email S.String fields with @beep/schema Email or a local precise email schema; inventory only external protocol fields that intentionally allow non-email strings.";
-  }
-  if (entry.ruleId === "SFV4-arbitrary-tests") {
-    return "Add a focused property test using S.toArbitrary(sourceSchema) and fast-check, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage.";
-  }
-  if (entry.ruleId === "SFV4-fn-schema") {
-    return "Model inline object parameter/return contracts with Fn({ input, output }) from @beep/schema or an S.Class, or run bun run beep lint schema-first --write with a justification when the shape intentionally stays inline.";
-  }
-  if (entry.ruleId === "SFV4-normalization") {
-    return "Move the trim/case normalization into a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data; inventory the exception only when the call is intentionally imperative.";
-  }
-  if (entry.ruleId === "SFV4-null-return") {
-    return "Return O.Option, Result, Effect, or Exit instead of a null/undefined-typed return; run bun run beep lint schema-first --write when the boundary (3rd-party/react) intentionally returns null/undefined.";
-  }
-  if (entry.ruleId === "SFV4-getsomes-struct") {
-    return "Replace R.getSomes over an inline Option-struct literal with O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; inventory the exception only for intentionally homogeneous dynamic-key dictionaries.";
-  }
-  return "Run bun run beep lint schema-first --write after reviewing the finding, or migrate the symbol to an annotated schema.";
+const DEFAULT_MISSING_ENTRY_REMEDIATION =
+  "Run bun run beep lint schema-first --write after reviewing the finding, or migrate the symbol to an annotated schema.";
+
+const MISSING_ENTRY_REMEDIATIONS: Readonly<Record<string, string>> = {
+  "SFV4-static-api":
+    "Prefer schema-derived .match/.guards/.cases or LiteralKit helpers, or run bun run beep lint schema-first --write with a justification when behavior intentionally differs.",
+  "SFV4-numeric-domain":
+    "Review the numeric domain and replace broad S.Number/S.NumberFromString with S.Finite, S.Int, or checks; then run bun run beep lint schema-first --write if the broad domain is intentional.",
+  "SFV4-boundary-codec":
+    "Replace direct JSON.parse with S.UnknownFromJsonString or S.fromJsonString(schema) plus an Effect/Result/Option decoder, or inventory the exception when the protocol is intentionally non-standard.",
+  "SFV4-defaults":
+    "Move option/request fallback values into schema fields with S.withConstructorDefault, S.withDecodingDefault*, or SchemaUtils.withKeyDefaults; inventory the exception only when the fallback intentionally differs from schema construction semantics.",
+  "SFV4-equivalence":
+    "Derive comparison from S.toEquivalence(schema) or SchemaUtils.toEquivalence(schema); use S.overrideToEquivalence only when schema semantics intentionally differ.",
+  "SFV4-precision-audit":
+    "Replace broad email S.String fields with @beep/schema Email or a local precise email schema; inventory only external protocol fields that intentionally allow non-email strings.",
+  "SFV4-arbitrary-tests":
+    "Add a focused property test using S.toArbitrary(sourceSchema) and fast-check, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage.",
+  "SFV4-fn-schema":
+    "Model inline object parameter/return contracts with Fn({ input, output }) from @beep/schema or an S.Class, or run bun run beep lint schema-first --write with a justification when the shape intentionally stays inline.",
+  "SFV4-normalization":
+    "Move the trim/case normalization into a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data; inventory the exception only when the call is intentionally imperative.",
+  "SFV4-null-return":
+    "Return O.Option, Result, Effect, or Exit instead of a null/undefined-typed return; run bun run beep lint schema-first --write when the boundary (3rd-party/react) intentionally returns null/undefined.",
+  "SFV4-getsomes-struct":
+    "Replace R.getSomes over an inline Option-struct literal with O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; inventory the exception only for intentionally homogeneous dynamic-key dictionaries.",
 };
+
+const missingEntryRemediation = (entry: SchemaFirstInventoryEntry): string =>
+  pipe(
+    O.fromNullishOr(entry.ruleId),
+    O.flatMap((ruleId) => R.get(MISSING_ENTRY_REMEDIATIONS, ruleId)),
+    O.getOrElse(() => DEFAULT_MISSING_ENTRY_REMEDIATION)
+  );
 
 const literalKitConstAssertionFinding = (violation: LiteralKitConstAssertionViolation): SchemaFirstPolicyFinding =>
   SchemaFirstPolicyFinding.make({
