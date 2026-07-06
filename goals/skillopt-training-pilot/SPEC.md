@@ -53,7 +53,7 @@ scores, rejected-edit log, run report) land in this packet's `history/`;
 
 ## Acceptance Criteria
 
-- [ ] `nix develop` (or direnv) provides python3+uv; `uv run --project tools/skillopt skillopt --help` works from a clean checkout.
+- [ ] `nix develop` (or direnv) provides python3+uv; `uv run --project tools/skillopt skillopt-train --help` works from a clean checkout.
 - [ ] ≥10 BenchmarkCase tasks committed with fixtures + completion criteria; corpus derivation documented (which historical violations/cards).
 - [ ] n=1 vertical slice transcript in history/ (one task: worktree → rollout → score → BenchmarkRun row).
 - [ ] `beep agent-effectiveness evals score|run` (naming per family conventions) implemented with tests; scorer deterministic on a fixed diff.
@@ -69,7 +69,7 @@ scores, rejected-edit log, run report) land in this packet's `history/`;
 | --- | --- | --- |
 | Launcher size | `test "$(wc -m < goals/skillopt-training-pilot/GOAL.md)" -le 4000` | Passes |
 | Manifest JSON | `jq . goals/skillopt-training-pilot/ops/manifest.json` | Passes |
-| Provisioning | `uv run --project tools/skillopt skillopt --help` | Exits 0 |
+| Provisioning | `uv run --project tools/skillopt skillopt-train --help` | Exits 0 |
 | Scorer determinism | same fixed diff scored twice → identical output | Passes |
 | n=1 slice | transcript in history/ | Present |
 | Training artifacts | best_skill.md + epoch scores + rejected-edit evidence | Present |

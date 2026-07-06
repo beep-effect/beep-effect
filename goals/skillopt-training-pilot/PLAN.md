@@ -8,7 +8,7 @@ Status: `active`
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Provisioning + skeleton | pending | flake python3+uv; tools/skillopt/ uv project pinning skillopt; `beep agent-effectiveness evals` skeleton. | `uv run --project tools/skillopt skillopt --help` green from clean checkout; skeleton command registered with tests. |
+| P0 Provisioning + skeleton | pending | flake python3+uv; tools/skillopt/ uv project pinning skillopt; `beep agent-effectiveness evals` skeleton. | `uv run --project tools/skillopt skillopt-train --help` green from clean checkout; skeleton command registered with tests. |
 | P1 Vertical slice (n=1) | pending | ONE hand-authored task through worktree → codex-sdk rollout → scorer → BenchmarkRun. | Transcript in history/; every pipe segment proven once. |
 | P2 Corpus (B1) | pending | ≥10 tasks from schema-first inventory history + crispening cards; fixtures + completion criteria; BenchmarkCase rows. | Corpus committed + derivation documented. |
 | P3 Scorer + runner hardening (B2/B3) | pending | Deterministic scalar scorer; generalized runner (serial), teardown-safe. | Scorer determinism proof; runner survives a full corpus sweep. |
@@ -39,7 +39,19 @@ Status: `active`
 test "$(wc -m < goals/skillopt-training-pilot/GOAL.md)" -le 4000
 jq . goals/skillopt-training-pilot/ops/manifest.json
 git diff --check -- goals/skillopt-training-pilot
-uv run --project tools/skillopt skillopt --help
+uv run --project tools/skillopt skillopt-train --help
 bun run beep yeet verify
 bun run beep lint reflection-artifacts
 ```
+
+## P0 Findings (2026-07-06)
+
+- skillopt==0.2.0 resolves via uv (35 packages); console scripts are
+  `skillopt-train`, `skillopt-eval`, `skillopt-sleep` (no bare `skillopt`).
+- **Load-bearing**: `skillopt-train --backend` natively supports
+  `claude_code_exec` and `codex_exec` (plus chat backends) — SkillOpt can
+  drive our harnesses itself. P1/P3 design must FIRST evaluate configuring
+  SkillOpt's native codex_exec backend against a prepared worktree + our
+  scorer as the reward, before building any bespoke runner wrapper; the
+  QualityWorkerEval generalization may reduce to worktree lifecycle + scorer
+  invocation glue.

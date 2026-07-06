@@ -46,7 +46,7 @@ in worktrees and CANNOT call GitHub APIs — deliver uncommitted changes +
 
 Acceptance (SPEC authoritative):
 
-- [ ] `uv run --project tools/skillopt skillopt --help` green from clean checkout.
+- [ ] `uv run --project tools/skillopt skillopt-train --help` green from clean checkout.
 - [ ] n=1 slice transcript; ≥10-task corpus committed with derivation notes.
 - [ ] Scorer deterministic on a fixed diff; evals commands tested.
 - [ ] Training run artifacts in history/ incl. ≥1 validation-rejected edit;
@@ -59,7 +59,7 @@ Verification:
 ```sh
 test "$(wc -m < goals/skillopt-training-pilot/GOAL.md)" -le 4000
 jq . goals/skillopt-training-pilot/ops/manifest.json
-uv run --project tools/skillopt skillopt --help
+uv run --project tools/skillopt skillopt-train --help
 bun run beep yeet verify
 ```
 
