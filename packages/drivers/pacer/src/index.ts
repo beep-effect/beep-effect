@@ -6,7 +6,17 @@
  */
 
 /**
+ * Package version for the PACER driver boundary.
+ *
+ * @example
+ * ```ts
+ * import { VERSION } from "@beep/pacer"
+ *
+ * console.log(VERSION)
+ * // "0.0.0"
+ * ```
+ *
  * @since 0.0.0
- * @category Configuration
+ * @category configuration
  */
 export const VERSION = "0.0.0" as const;

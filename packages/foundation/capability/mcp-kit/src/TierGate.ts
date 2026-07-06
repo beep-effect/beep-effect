@@ -41,6 +41,15 @@ const TierGateOutcomeTag = LiteralKit(["approved", "refused"]);
  * {@link TierGateVerdict}'s own tag so a persisted audit record is
  * self-describing independent of the verdict it was extracted from.
  *
+ * @example
+ * ```ts
+ * import { TierGateOutcome } from "@beep/mcp-kit"
+ *
+ * const outcome = TierGateOutcome.Enum.approved
+ * console.log(TierGateOutcome.is.approved(outcome))
+ * // true
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -52,6 +61,16 @@ export const TierGateOutcome = TierGateOutcomeTag.pipe(
 
 /**
  * Runtime type for {@link TierGateOutcome}.
+ *
+ * @example
+ * ```ts
+ * import { TierGateOutcome } from "@beep/mcp-kit"
+ * import type { TierGateOutcome as TierGateOutcomeType } from "@beep/mcp-kit"
+ *
+ * const outcome: TierGateOutcomeType = TierGateOutcome.Enum.refused
+ * console.log(outcome)
+ * // "refused"
+ * ```
  *
  * @category type-level
  * @since 0.0.0

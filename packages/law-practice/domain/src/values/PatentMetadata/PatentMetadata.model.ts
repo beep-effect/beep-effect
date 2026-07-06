@@ -85,6 +85,20 @@ const normalizeDateText = (raw: string): O.Option<string> =>
 /**
  * Figure metadata extracted from patent content or API image URL maps.
  *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { PatentFigure } from "@beep/law-practice-domain"
+ *
+ * const figure = PatentFigure.make({
+ *   label: O.some("FIG. 1"),
+ *   url: new URL("https://example.com/patents/fig-1.png"),
+ *   alt: O.some("Exploded view")
+ * })
+ * console.log(figure.url.hostname)
+ * // "example.com"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -116,6 +130,19 @@ export class PatentFigure extends S.Class<PatentFigure>($I`PatentFigure`)(
 /**
  * Patent assignee metadata.
  *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { PatentAssignee } from "@beep/law-practice-domain"
+ *
+ * const assignee = PatentAssignee.make({
+ *   name: "Example Robotics LLC",
+ *   location: O.some("Austin, TX")
+ * })
+ * console.log(assignee.name)
+ * // "Example Robotics LLC"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -140,6 +167,20 @@ export class PatentAssignee extends S.Class<PatentAssignee>($I`PatentAssignee`)(
 
 /**
  * Schema-first patent reference parsed from a raw document identifier.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { KindCode, OfficeCode, PatentNumber, PatentReference } from "@beep/law-practice-domain"
+ *
+ * const reference = PatentReference.make({
+ *   country: O.some(OfficeCode.Enum.US),
+ *   number: O.some(PatentNumber.make("7654321")),
+ *   kindCode: O.some(KindCode.Enum.B2)
+ * })
+ * console.log(reference.kindCode)
+ * // { _id: "Option", _tag: "Some", value: "B2" }
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -177,6 +218,20 @@ export class PatentReference extends S.Class<PatentReference>($I`PatentReference
 
 /**
  * Jurisdiction-aware patent metadata.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { KindCode, OfficeCode, PatentMetadata, PatentNumber } from "@beep/law-practice-domain"
+ *
+ * const metadata = PatentMetadata.make({
+ *   patentNumber: O.some(PatentNumber.make("7654321")),
+ *   country: O.some(OfficeCode.Enum.US),
+ *   kindCode: O.some(KindCode.Enum.B2)
+ * })
+ * console.log(O.isSome(metadata.patentNumber))
+ * // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -277,6 +332,15 @@ export class PatentMetadata extends S.Class<PatentMetadata>($I`PatentMetadata`)(
 /**
  * Supported office presentation metadata keys.
  *
+ * @example
+ * ```ts
+ * import { PatentOfficeCode } from "@beep/law-practice-domain"
+ *
+ * const office = PatentOfficeCode.Enum.US
+ * console.log(PatentOfficeCode.is.US(office))
+ * // true
+ * ```
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -289,6 +353,16 @@ export const PatentOfficeCode = LiteralKit(["US", "EP", "WO"]).pipe(
 /**
  * Type-level literal union produced by {@link PatentOfficeCode}.
  *
+ * @example
+ * ```ts
+ * import { PatentOfficeCode } from "@beep/law-practice-domain"
+ * import type { PatentOfficeCode as PatentOfficeCodeType } from "@beep/law-practice-domain"
+ *
+ * const office: PatentOfficeCodeType = PatentOfficeCode.Enum.EP
+ * console.log(office)
+ * // "EP"
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -298,6 +372,15 @@ const toPatentOfficeCodeOption = flow(toUpperTrimmed, S.decodeUnknownOption(Pate
 
 /**
  * Patent document status derived from WIPO ST.16 kind codes.
+ *
+ * @example
+ * ```ts
+ * import { PatentStatus } from "@beep/law-practice-domain"
+ *
+ * const status = PatentStatus.Enum.granted
+ * console.log(PatentStatus.is.granted(status))
+ * // true
+ * ```
  *
  * @category value-objects
  * @since 0.0.0
@@ -320,6 +403,16 @@ export const PatentStatus = LiteralKit([
 /**
  * Type-level literal union produced by {@link PatentStatus}.
  *
+ * @example
+ * ```ts
+ * import { PatentStatus } from "@beep/law-practice-domain"
+ * import type { PatentStatus as PatentStatusType } from "@beep/law-practice-domain"
+ *
+ * const status: PatentStatusType = PatentStatus.Enum.application
+ * console.log(status)
+ * // "application"
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -327,6 +420,21 @@ export type PatentStatus = typeof PatentStatus.Type;
 
 /**
  * Office presentation metadata for patent UI surfaces.
+ *
+ * @example
+ * ```ts
+ * import { PatentOffice, PatentOfficeCode } from "@beep/law-practice-domain"
+ *
+ * const office = PatentOffice.make({
+ *   code: PatentOfficeCode.Enum.US,
+ *   label: "USPTO",
+ *   name: "United States Patent and Trademark Office",
+ *   logo: "/assets/banner/uspto.png",
+ *   flag: "US"
+ * })
+ * console.log(office.label)
+ * // "USPTO"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -367,6 +475,14 @@ export class PatentOffice extends S.Class<PatentOffice>($I`PatentOffice`)(
 /**
  * Office logo and flag metadata used for display.
  *
+ * @example
+ * ```ts
+ * import { PATENT_OFFICES } from "@beep/law-practice-domain"
+ *
+ * console.log(PATENT_OFFICES.EP.label)
+ * // "EPO"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -397,6 +513,22 @@ export const PATENT_OFFICES = {
 /**
  * Metadata accepted by {@link getPatentDisplay}.
  *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { PatentDisplayMetadata } from "@beep/law-practice-domain"
+ *
+ * const metadata = PatentDisplayMetadata.make({
+ *   patent_number: O.some("7654321"),
+ *   patentNumber: O.none(),
+ *   country: O.some("US"),
+ *   kind_code: O.some("B2"),
+ *   kindCode: O.none()
+ * })
+ * console.log(O.isSome(metadata.kind_code))
+ * // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -416,6 +548,19 @@ export class PatentDisplayMetadata extends S.Class<PatentDisplayMetadata>($I`Pat
 /**
  * Companion namespace for {@link PatentDisplayMetadata}.
  *
+ * @example
+ * ```ts
+ * import { PatentDisplayMetadata } from "@beep/law-practice-domain"
+ *
+ * const encoded: PatentDisplayMetadata.Encoded = {
+ *   patent_number: "7654321",
+ *   country: "US",
+ *   kind_code: "B2"
+ * }
+ * console.log(encoded.country)
+ * // "US"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -431,6 +576,31 @@ export declare namespace PatentDisplayMetadata {
 
 /**
  * Jurisdiction-aware display identity for a patent document.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import {
+ *   KindCode,
+ *   OfficeCode,
+ *   PatentDisplay,
+ *   PatentNumber,
+ *   PATENT_OFFICES,
+ *   PatentStatus
+ * } from "@beep/law-practice-domain"
+ *
+ * const display = PatentDisplay.make({
+ *   country: OfficeCode.Enum.US,
+ *   number: O.some(PatentNumber.make("7654321")),
+ *   kindCode: O.some(KindCode.Enum.B2),
+ *   formatted: "US 7,654,321 B2",
+ *   office: PATENT_OFFICES.US,
+ *   status: PatentStatus.Enum.granted,
+ *   statusLabel: "Granted"
+ * })
+ * console.log(display.statusLabel)
+ * // "Granted"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -453,6 +623,18 @@ export class PatentDisplay extends S.Class<PatentDisplay>($I`PatentDisplay`)(
 /**
  * Extracted IPC and CPC classification symbols.
  *
+ * @example
+ * ```ts
+ * import { PatentClassifications } from "@beep/law-practice-domain"
+ *
+ * const classifications = PatentClassifications.make({
+ *   ipc: ["A01B 1/00"],
+ *   cpc: ["Y02E 10/50"]
+ * })
+ * console.log(classifications.ipc.length)
+ * // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -469,6 +651,15 @@ export class PatentClassifications extends S.Class<PatentClassifications>($I`Pat
 /**
  * Patent section names supported by {@link parsePatentSections}.
  *
+ * @example
+ * ```ts
+ * import { PatentSectionKind } from "@beep/law-practice-domain"
+ *
+ * const section = PatentSectionKind.Enum.claims
+ * console.log(PatentSectionKind.is.claims(section))
+ * // true
+ * ```
+ *
  * @category value-objects
  * @since 0.0.0
  */
@@ -481,6 +672,16 @@ export const PatentSectionKind = LiteralKit(["abstract", "claims", "description"
 /**
  * Type-level literal union produced by {@link PatentSectionKind}.
  *
+ * @example
+ * ```ts
+ * import { PatentSectionKind } from "@beep/law-practice-domain"
+ * import type { PatentSectionKind as PatentSectionKindType } from "@beep/law-practice-domain"
+ *
+ * const section: PatentSectionKindType = PatentSectionKind.Enum.abstract
+ * console.log(section)
+ * // "abstract"
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -488,6 +689,22 @@ export type PatentSectionKind = typeof PatentSectionKind.Type;
 
 /**
  * Parsed patent content sections.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { PatentSections } from "@beep/law-practice-domain"
+ *
+ * const sections = PatentSections.make({
+ *   abstract: O.some("A compact energy storage device."),
+ *   claims: O.none(),
+ *   description: O.none(),
+ *   citations: O.none(),
+ *   drawings: O.none()
+ * })
+ * console.log(O.isSome(sections.abstract))
+ * // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -508,6 +725,14 @@ export class PatentSections extends S.Class<PatentSections>($I`PatentSections`)(
 /**
  * Resolve office presentation metadata from a country code.
  *
+ * @example
+ * ```ts
+ * import { getOffice } from "@beep/law-practice-domain"
+ *
+ * console.log(getOffice("EP").label)
+ * // "EPO"
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -521,6 +746,16 @@ export const getOffice = (country?: string): PatentOffice =>
 
 /**
  * Parse a raw patent reference into office, publication number, and kind code.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { parsePatentReference } from "@beep/law-practice-domain"
+ *
+ * const reference = parsePatentReference("US 7,654,321 B2")
+ * console.log(O.isSome(reference.number))
+ * // true
+ * ```
  *
  * @category utilities
  * @since 0.0.0
@@ -555,6 +790,15 @@ const statusFromKindLetter = (letter: string): PatentStatus =>
 
 /**
  * Derive a patent document status from office and kind code.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { getStatusFromKindCode } from "@beep/law-practice-domain"
+ *
+ * console.log(getStatusFromKindCode("US", O.some("B2")))
+ * // "granted"
+ * ```
  *
  * @category utilities
  * @since 0.0.0
@@ -623,6 +867,14 @@ const kindCodeExplanationTable = (country: O.Option<string>): Readonly<Record<st
 /**
  * Explain a WIPO ST.16 kind code in plain language.
  *
+ * @example
+ * ```ts
+ * import { getKindCodeExplanation } from "@beep/law-practice-domain"
+ *
+ * console.log(getKindCodeExplanation("EP", "A1"))
+ * // "European application published with the search report."
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -653,6 +905,14 @@ export const getKindCodeExplanation = (country?: string, kindCode?: string): str
 
 /**
  * Human label for a kind-code-derived status.
+ *
+ * @example
+ * ```ts
+ * import { getStatusLabel, PatentStatus } from "@beep/law-practice-domain"
+ *
+ * console.log(getStatusLabel(PatentStatus.Enum.international))
+ * // "International application"
+ * ```
  *
  * @category utilities
  * @since 0.0.0
@@ -753,6 +1013,19 @@ const patentDisplayFormatted = (
 /**
  * Build a jurisdiction-aware display identity from API metadata and content.
  *
+ * @example
+ * ```ts
+ * import { getPatentDisplay } from "@beep/law-practice-domain"
+ *
+ * const display = getPatentDisplay({
+ *   patent_number: "7654321",
+ *   country: "US",
+ *   kind_code: "B2"
+ * })
+ * console.log(display.formatted)
+ * // "US 7,654,321 B2"
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -780,6 +1053,16 @@ export const getPatentDisplay = (metadata?: PatentDisplayMetadata.Encoded | null
 
 /**
  * Extract a patent abstract from markdown-like patent content.
+ *
+ * @example
+ * ```ts
+ * import { extractPatentAbstract } from "@beep/law-practice-domain"
+ *
+ * const content = "## Abstract\nA solar charging controller coordinates panel input, battery output, and load balancing for portable field systems.\n\n## Claims\n1. A controller."
+ * const abstract = extractPatentAbstract(content)
+ * console.log(abstract.length > 50)
+ * // true
+ * ```
  *
  * @category utilities
  * @since 0.0.0
@@ -841,6 +1124,16 @@ const parseAssignees = (content: string): ReadonlyArray<PatentAssignee> =>
 
 /**
  * Extract structured metadata from patent content.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { parsePatentMetadata } from "@beep/law-practice-domain"
+ *
+ * const metadata = parsePatentMetadata("**Patent Number:** US 7,654,321 B2\n\n**Number of Claims:** 3")
+ * console.log(O.isSome(metadata.claimsCount))
+ * // true
+ * ```
  *
  * @category utilities
  * @since 0.0.0
@@ -908,6 +1201,15 @@ const pickClassifications = (labelRe: RegExp, content: string): ReadonlyArray<st
 /**
  * Extract IPC and CPC classification symbols from content.
  *
+ * @example
+ * ```ts
+ * import { extractClassifications } from "@beep/law-practice-domain"
+ *
+ * const classifications = extractClassifications("IPC: A01B 1/00\n\nCPC: Y02E 10/50")
+ * console.log(classifications.cpc[0])
+ * // "Y02E 10/50"
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -944,6 +1246,17 @@ const figureFromUrl = (url: string, label: O.Option<string>, alt: O.Option<strin
 
 /**
  * Extract patent figures from API image URL maps and markdown images.
+ *
+ * @example
+ * ```ts
+ * import { extractPatentFigures } from "@beep/law-practice-domain"
+ *
+ * const figures = extractPatentFigures(undefined, {
+ *   img1: "https://example.com/patents/fig-1.png"
+ * })
+ * console.log(figures.length)
+ * // 1
+ * ```
  *
  * @category utilities
  * @since 0.0.0
@@ -1018,6 +1331,16 @@ const sectionCapture = (pattern: RegExp, content: string, maxChars: number): O.O
 /**
  * Parse selected patent content sections.
  *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { parsePatentSections } from "@beep/law-practice-domain"
+ *
+ * const sections = parsePatentSections("## Abstract\nA compact tool.\n\n## Claims\n1. A tool.", ["abstract", "claims"], 400)
+ * console.log(O.isSome(sections.claims))
+ * // true
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -1076,6 +1399,14 @@ const formatReference = (reference: PatentReference): O.Option<string> =>
 
 /**
  * Extract a canonical patent number from content and optional title fallback.
+ *
+ * @example
+ * ```ts
+ * import { extractPatentNumber } from "@beep/law-practice-domain"
+ *
+ * console.log(extractPatentNumber("**Patent Number:** US 7,654,321 B2"))
+ * // "US 7654321 B2"
+ * ```
  *
  * @category utilities
  * @since 0.0.0
