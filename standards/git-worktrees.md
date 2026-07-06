@@ -110,6 +110,35 @@ Then restore any local-only files you need:
 
 By default these do **not** follow you into a fresh worktree, which is usually what we want.
 
+## Tooling
+
+`bun run beep worktree` automates the sibling-worktree workflow above. It
+resolves the canonical worktrees root
+(`<main-checkout>-worktrees`) from Git metadata, so the three subcommands work
+from the main checkout or from any linked worktree. The manual commands and
+checklist above remain the reference for what the tooling does under the hood.
+
+```bash
+bun run beep worktree new <name> [--branch <branch>]
+bun run beep worktree remove <name> [--force]
+bun run beep worktree doctor
+```
+
+- `worktree new <name>` creates `<worktrees-root>/<name>` on a new branch
+  (default `feat/<name>`, override with `--branch`/`-b`), then bootstraps it:
+  `git submodule update --init --recursive`, `bun install`, and — when present
+  in the main checkout — copies the local-only files `.env`,
+  `.claude/settings.local.json`, `CLAUDE.local.md`, and `.idea/`. It prints a
+  summary of what was copied, skipped, and the absolute path.
+- `worktree remove <name>` refuses when the target worktree has uncommitted
+  changes unless you pass `--force`. It runs `git worktree remove` and prints
+  the `git branch -D <branch>` command you can run yourself; branch deletion is
+  intentionally left to the operator.
+- `worktree doctor` is read-only. It lists every worktree under the worktrees
+  root with its branch, clean/dirty status, missing bootstrap files (`.env`,
+  `node_modules`), and any prunable metadata from
+  `git worktree prune --dry-run`.
+
 ## Tool Integrations
 
 ### WebStorm

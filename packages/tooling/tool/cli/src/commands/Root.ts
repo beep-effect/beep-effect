@@ -30,6 +30,7 @@ import { syncDataToTsCommand } from "./SyncDataToTs/index.js";
 import { topoSortCommand } from "./TopoSort/index.js";
 import { tsconfigSyncCommand } from "./TsconfigSync/index.js";
 import { versionSyncCommand } from "./VersionSync/index.js";
+import { worktreeCommand } from "./Worktree/index.js";
 import { yeetCommand } from "./Yeet/index.js";
 
 /**
@@ -71,6 +72,7 @@ export const rootCommand = Command.make("beep-cli").pipe(
     syncDataToTsCommand,
     tsconfigSyncCommand,
     versionSyncCommand,
+    worktreeCommand as Command.Command<"worktree", {}, {}, never, never>,
     yeetCommand,
   ])
 ) as Command.Command<"beep-cli", {}, {}, never, never>;

@@ -382,6 +382,21 @@ export {
   versionSyncCommand,
 } from "./commands/VersionSync/index.js";
 /**
+ * Sibling git-worktree management command.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export {
+  /**
+   * Sibling git-worktree management command.
+   *
+   * @category cli-commands
+   * @since 0.0.0
+   */
+  worktreeCommand,
+} from "./commands/Worktree/index.js";
+/**
  * Yeet quality feedback and publish command.
  *
  * @category cli-commands
