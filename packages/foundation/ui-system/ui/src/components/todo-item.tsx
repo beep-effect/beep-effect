@@ -2,7 +2,8 @@
 
 import { A, Str } from "@beep/utils";
 import { ArrowRightIcon, CalendarIcon, CheckIcon, InfoIcon, WarningCircleIcon } from "@phosphor-icons/react";
-import { DateTime, pipe } from "effect";
+import { DateTime } from "effect";
+import { formatShortDate, toUtcDateTime } from "../lib/date-time.ts";
 import { cn } from "../lib/index.ts";
 
 type TodoPriority = "high" | "medium" | "low" | "none";
@@ -76,13 +77,6 @@ const priorityConfig = {
   },
 } as const;
 
-const shortDateFormatter = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-});
-
-const toUtcDateTime = (value: Date | string): DateTime.Utc => pipe(DateTime.makeUnsafe(value), DateTime.toUtc);
-
 const formatDate = (date: Date | string): string => {
   const parsed = toUtcDateTime(date);
   const now = DateTime.nowUnsafe();
@@ -95,7 +89,7 @@ const formatDate = (date: Date | string): string => {
   if (days < 0) return `${Math.abs(days)} days ago`;
   if (days < 7) return `In ${days} days`;
 
-  return shortDateFormatter.format(DateTime.toEpochMillis(parsed));
+  return formatShortDate(parsed);
 };
 
 /**

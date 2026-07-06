@@ -66,6 +66,28 @@ export const SyncDataRunMode = SyncDataRunModeKit.pipe(
  */
 export type SyncDataRunMode = typeof SyncDataRunMode.Type;
 
+const SyncDataTargetAccessKit = LiteralKit(["public", "authenticated"]);
+
+/**
+ * Access class for a checked-in sync target.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const SyncDataTargetAccess = SyncDataTargetAccessKit.pipe(
+  $I.annoteSchema("SyncDataTargetAccess", {
+    description: "Whether a sync target can be fetched publicly or requires configured authenticated source access.",
+  })
+);
+
+/**
+ * Access class for a checked-in sync target.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SyncDataTargetAccess = typeof SyncDataTargetAccess.Type;
+
 /**
  * Stable source metadata recorded in generated sidecars and PR reports.
  *
@@ -136,6 +158,7 @@ export type SyncDataTargetServices = HttpClient.HttpClient | Crypto.Crypto;
  * @since 0.0.0
  */
 export interface SyncDataTarget {
+  readonly access: SyncDataTargetAccess;
   readonly acquire: Effect.Effect<SyncDataTargetProjection, SyncDataToTsError, SyncDataTargetServices>;
   readonly description: string;
   readonly id: string;

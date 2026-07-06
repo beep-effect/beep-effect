@@ -2,6 +2,7 @@ import { LiteralKitKeyCollisionError } from "@beep/schema/LiteralKit";
 import { MappedLiteralDuplicateError, MappedLiteralKit } from "@beep/schema/MappedLiteralKit";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 describe("MappedLiteralKit", () => {
   const SqlState = MappedLiteralKit([
@@ -17,6 +18,20 @@ describe("MappedLiteralKit", () => {
   it("encodes To literals back into From literals", () => {
     expect(S.encodeSync(SqlState)("00000")).toBe("SUCCESSFUL_COMPLETION");
     expect(S.encodeSync(SqlState)("01000")).toBe("WARNING");
+  });
+
+  it("round-trips schema-derived mapped literal samples", () => {
+    const arbitrary = S.toArbitrary(SqlState);
+    const decode = S.decodeUnknownSync(SqlState);
+    const encode = S.encodeSync(SqlState);
+
+    fc.assert(
+      fc.property(arbitrary, (literal) => {
+        expect(SqlState.To.Options).toContain(literal);
+        expect(decode(encode(literal))).toBe(literal);
+      }),
+      { numRuns: 25 }
+    );
   });
 
   it("exposes directional enum maps", () => {

@@ -749,7 +749,7 @@ export class ContentSecurityPolicyResponseHeader extends S.Class<ContentSecurity
 )(
   {
     name: ContentSecurityPolicyHeaderName,
-    value: S.OptionFromUndefinedOr(S.String),
+    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ContentSecurityPolicyResponseHeader", {
     description: "A rendered Content-Security-Policy response header name and optional serialized value.",
@@ -768,7 +768,7 @@ const createContentSecurityPolicyValue = (
         message: P.isError(cause) ? cause.message : `Invalid value for ${headerName}`,
         cause: O.none(),
       }),
-  }).pipe(Effect.map((value) => (P.isUndefined(value) || Str.isEmpty(value) ? O.none<string>() : O.some(value))));
+  });
 
 const decodeContentSecurityPolicyHeader = Effect.fn("Csp.decodeContentSecurityPolicyHeader")(function* (
   input: ContentSecurityPolicyOption | undefined
@@ -802,7 +802,7 @@ const decodeContentSecurityPolicyHeader = Effect.fn("Csp.decodeContentSecurityPo
  * Format a structured CSP option into the serialized header value.
  *
  * @remarks
- * `undefined` and `false` disable output and return `undefined`. Enabled
+ * `undefined` and `false` disable output and return `None`. Enabled
  * options concatenate fetch, document, navigation, and reporting directive
  * groups in that order, omitting empty groups.
  *
@@ -814,8 +814,8 @@ const decodeContentSecurityPolicyHeader = Effect.fn("Csp.decodeContentSecurityPo
  *   directives: { defaultSrc: "'self'", sandbox: true }
  * })
  *
- * console.log(createContentSecurityPolicyOptionHeaderValue(option)) // "default-src 'self'; sandbox"
- * console.log(createContentSecurityPolicyOptionHeaderValue(false)) // undefined
+ * console.log(createContentSecurityPolicyOptionHeaderValue(option)._tag) // "Some"
+ * console.log(createContentSecurityPolicyOptionHeaderValue(false)._tag) // "None"
  * ```
  *
  * @category formatting
@@ -827,11 +827,11 @@ export const createContentSecurityPolicyOptionHeaderValue = (
   documentDirectiveToStringConverter = DocumentDirective.convertToString,
   navigationDirectiveToStringConverter = NavigationDirective.convertToString,
   reportingDirectiveToStringConverter = ReportingDirective.convertToString
-): string | undefined => {
-  if (P.isUndefined(option)) return;
-  if (option === false) return;
+): O.Option<string> => {
+  if (P.isUndefined(option)) return O.none();
+  if (option === false) return O.none();
 
-  return pipe(
+  const value = pipe(
     A.make(
       fetchDirectiveToStringConverter(option.directives),
       documentDirectiveToStringConverter(option.directives),
@@ -841,6 +841,8 @@ export const createContentSecurityPolicyOptionHeaderValue = (
     A.filter(Str.isNonEmpty),
     A.join(directiveValueSeparator)
   );
+
+  return Str.isEmpty(value) ? O.none() : O.some(value);
 };
 
 /**

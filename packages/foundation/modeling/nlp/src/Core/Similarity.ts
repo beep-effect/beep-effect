@@ -133,7 +133,7 @@ export class SimilarityScore extends S.Class<SimilarityScore>($I`SimilarityScore
     document1Id: DocumentId,
     document2Id: DocumentId,
     method: SimilarityMethod,
-    parameters: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)),
+    parameters: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(SchemaUtils.withNoneDefault),
     score: UnitInterval,
   },
   $I.annote("SimilarityScore", {

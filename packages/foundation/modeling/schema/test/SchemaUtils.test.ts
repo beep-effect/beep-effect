@@ -1,11 +1,12 @@
 import { $SchemaId } from "@beep/identity/packages";
 import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
+import { optional } from "@beep/schema/SchemaUtils/optional";
 import { pluck } from "@beep/schema/SchemaUtils/pluck";
 import { split } from "@beep/schema/SchemaUtils/split";
 import { toEquivalence } from "@beep/schema/SchemaUtils/toEquivalence";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { pipe } from "effect";
+import { Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -81,6 +82,45 @@ describe("toEquivalence", () => {
     expect(pipe({ name: "document toEquivalence", tags: ["docs", "tests"] }, sameAsExpected)).toBe(true);
     expect(pipe({ name: "document toEquivalence", tags: ["tests", "docs"] }, sameAsExpected)).toBe(false);
   });
+});
+
+describe("optional", () => {
+  const Patch = S.Struct({
+    file: optional(S.String),
+  });
+  const decode = S.decodeUnknownEffect(Patch);
+  const encode = S.encodeEffect(Patch);
+
+  it("is exported from the SchemaUtils barrel", () => {
+    expect(SchemaUtils.optional).toBe(optional);
+  });
+
+  it.effect(
+    "decodes omitted optional keys as undefined",
+    Effect.fnUntraced(function* () {
+      const decoded = yield* decode({});
+
+      expect(decoded.file).toBeUndefined();
+    })
+  );
+
+  it.effect(
+    "decodes present optional keys with the inner schema",
+    Effect.fnUntraced(function* () {
+      const decoded = yield* decode({ file: "src/schema.ts" });
+
+      expect(decoded.file).toBe("src/schema.ts");
+    })
+  );
+
+  it.effect(
+    "omits undefined values when encoding",
+    Effect.fnUntraced(function* () {
+      expect(yield* encode({})).toEqual({});
+      expect(yield* encode({ file: undefined })).toEqual({});
+      expect(yield* encode({ file: "src/schema.ts" })).toEqual({ file: "src/schema.ts" });
+    })
+  );
 });
 
 describe("withStatics", () => {

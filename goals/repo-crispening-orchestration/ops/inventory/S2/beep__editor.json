@@ -1,16 +1,5 @@
 [
   {
-    "ruleId": "SFV4-normalization",
-    "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
-    "line": 323,
-    "symbol": "ComposerAttachment.fromFile",
-    "smell": "`const effectiveMaxBytes = Math.min(maxBytes, DEFAULT_MAX_ATTACHMENT_BYTES)` - clamp/coerce normalization of the capture limit lives in the class body, adjacent to an already-modeled `AttachmentSizeBytes` schema range (lines 94-104). The default param `maxBytes = DEFAULT_MAX_ATTACHMENT_BYTES` at line 321 is part of the same body-level policy.",
-    "proposedTarget": "Introduce a named `AttachmentCaptureLimitBytes` schema/codec using Effect v4's verified `Schema.decodeTo` + `SchemaTransformation.transform` and `Number.clamp` APIs (verified in .repos/effect-v4: Schema.ts:5408-5416, SchemaTransformation.ts:334, Number.ts:473), or a small options S.Class with a constructor default and clamp transform. `fromFile` should decode/construct that once and compare against the decoded limit. Keep the existing `AttachmentSizeBytes` hard field check as the persisted invariant.",
-    "confidence": 0.6,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
     "ruleId": "SFV4-null-return",
     "file": "packages/foundation/ui-system/editor/src/youtube-node.tsx",
     "line": 78,

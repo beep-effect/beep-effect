@@ -83,17 +83,29 @@ export type SendOn = typeof SendOn.Type;
 export class ComposerFeatures extends S.Class<ComposerFeatures>($I`ComposerFeatures`)(
   {
     /** Mount the fixed formatting toolbar (bold/italic/lists/quote/link/code). */
-    toolbar: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))),
+    toolbar: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))).annotateKey({
+      description: "Mount the fixed formatting toolbar.",
+    }),
     /** Mount the `/` slash command typeahead. */
-    slash: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))),
+    slash: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))).annotateKey({
+      description: "Mount the slash command typeahead.",
+    }),
     /** Mount the `@` mention typeahead. */
-    mentions: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))),
+    mentions: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))).annotateKey({
+      description: "Mount the mention typeahead.",
+    }),
     /** Mount the attachment capture surface (drag-drop + picker + chips). */
-    attachments: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))),
+    attachments: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))).annotateKey({
+      description: "Mount the attachment capture surface.",
+    }),
     /** Show the live character count in the footer. */
-    characterCount: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))),
+    characterCount: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))).annotateKey({
+      description: "Show the live character count in the footer.",
+    }),
     /** Which keystroke submits the message. @defaultValue "enter" */
-    sendOn: SendOn.pipe(S.withConstructorDefault(Effect.succeed("enter" as const))),
+    sendOn: SendOn.pipe(S.withConstructorDefault(Effect.succeed("enter" as const))).annotateKey({
+      description: "Which keystroke submits the message.",
+    }),
   },
   $I.annote("ComposerFeatures", {
     description:
@@ -149,17 +161,23 @@ const EditorEffectSchema = S.declare<EditorEffect>(isEditorEffect).pipe(
 export class SlashItem extends S.Class<SlashItem>($I`SlashItem`)(
   {
     /** Stable identity used as the menu option key. */
-    key: S.String,
+    key: S.NonEmptyString.annotateKey({ description: "Stable identity used as the menu option key." }),
     /** Display label. */
-    label: S.String,
+    label: S.NonEmptyString.annotateKey({ description: "Display label." }),
     /** Optional right-aligned hint / shortcut keyword shown in the menu. */
-    hint: S.optionalKey(S.String),
+    hint: S.optionalKey(S.String).annotateKey({
+      description: "Optional right-aligned hint or shortcut keyword shown in the menu.",
+    }),
     /** Extra search terms used for fuzzy filtering beyond the label. */
-    keywords: S.Array(S.String).pipe(S.optionalKey),
+    keywords: S.Array(S.NonEmptyString).pipe(S.optionalKey).annotateKey({
+      description: "Extra non-empty search terms used for fuzzy filtering beyond the label.",
+    }),
     /** Optional leading icon. */
-    icon: S.optionalKey(DOMReactNode),
+    icon: S.optionalKey(DOMReactNode).annotateKey({ description: "Optional leading icon." }),
     /** Apply the command to the editor (runs inside the menu selection flow). */
-    onSelect: EditorEffectSchema,
+    onSelect: EditorEffectSchema.annotateKey({
+      description: "Apply the command to the editor inside the menu selection flow.",
+    }),
   },
   $I.annote("SlashItem", {
     description: "A single `/` command: identity, label, optional hint/keywords/icon, and an editor side effect.",
@@ -184,13 +202,13 @@ export class SlashItem extends S.Class<SlashItem>($I`SlashItem`)(
 export class MentionOption extends S.Class<MentionOption>($I`MentionOption`)(
   {
     /** Stable identity used as the menu option key. */
-    id: S.String,
+    id: S.NonEmptyString.annotateKey({ description: "Stable identity used as the menu option key." }),
     /** Display label, also the inserted text (`@label`). */
-    label: S.String,
+    label: S.NonEmptyString.annotateKey({ description: "Display label, also the inserted mention text." }),
     /** Optional secondary line (e.g. a role or handle). */
-    hint: S.optionalKey(S.String),
+    hint: S.optionalKey(S.String).annotateKey({ description: "Optional secondary line, such as a role or handle." }),
     /** Optional leading icon/avatar. */
-    icon: S.optionalKey(DOMReactNode),
+    icon: S.optionalKey(DOMReactNode).annotateKey({ description: "Optional leading icon or avatar." }),
   },
   $I.annote("MentionOption", {
     description: "A single `@` mention candidate: identity, label, and optional hint/icon.",

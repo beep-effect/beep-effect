@@ -7,7 +7,7 @@
     "SFV4-getsomes-struct"
   ],
   "families": {
-    "foundation": { "blocking": false },
+    "foundation": { "blocking": true },
     "drivers": { "blocking": false },
     "tooling": { "blocking": false },
     "apps-slices": { "blocking": false }

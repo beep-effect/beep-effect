@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
-    "line": 813,
-    "symbol": "PrefixMap",
-    "smell": "PrefixMap validates keys with PrefixMapSchema = S.Record(S.String, IRI).check(PrefixMapKeyChecks) and then uses a repo-banned double cast to recover S.Codec<Readonly<Record<PrefixLabel, IRI>>, ...>. The schema key proof is outside the Record key schema, so TypeScript cannot carry the branded PrefixLabel key type without `as unknown as`.",
-    "proposedTarget": "Use the branded key schema directly: S.Record(PrefixLabel, IRI), then annotate it as PrefixMap. Effect v4 Record accepts a key schema (verified at .repos/effect-v4/packages/effect/src/Schema.ts:3780-3793), and its decoded Record.Type indexes by Key[\"Type\"] (verified at .repos/effect-v4/packages/effect/src/Schema.ts:3643-3648), so PrefixLabel checks move into the key codec and the cast plus PrefixMapKeyChecks/isPrefixLabel helper can disappear.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 3.4
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/foundation/modeling/rdf/src/Prov.ts",
     "line": 922,
     "symbol": "ProvRecord",
@@ -19,18 +8,11 @@
     "proposedTarget": "Add provType: S.tag(\"Usage\" | \"Generation\" | ... | \"End\") to the relation classes, then pipe ProvRecord through S.toTaggedUnion(\"provType\"). In-repo exemplars: Rdf.ts:536-537 derives Term with S.toTaggedUnion(\"termType\"), Evidence.ts:194-195 derives EvidenceSelector with S.toTaggedUnion(\"kind\"), and WebAnnotation.ts:161-166 derives WebAnnotationSelector with S.toTaggedUnion(\"type\"). This is a public wire-form change and needs the SPEC §5.4 consumer sweep plus encoded snapshot proof.",
     "confidence": 0.58,
     "mechanization": "judgment",
-    "roiRank": 1.74
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/modeling/rdf/src/Adapters/WebAnnotation.ts",
-    "line": 324,
-    "symbol": "webAnnotationSelectorToEvidenceSelector",
-    "smell": "webAnnotationSelectorToEvidenceSelector manually dispatches a schema-tagged WebAnnotationSelector with Match.value(selector), two Match.when({ type: ... }) arms, and a Match.orElse fallback that silently treats every future selector type as FragmentSelector. WebAnnotationSelector already derives .match from S.toTaggedUnion(\"type\") at lines 161-166.",
-    "proposedTarget": "Replace the Match.value pipeline with WebAnnotationSelector.match(selector, { TextQuoteSelector: ..., TextPositionSelector: ..., FragmentSelector: ... }). Same-file exemplar: evidenceSelectorToWebAnnotationSelector already uses EvidenceSelector.match at lines 275-296; another package-local exemplar is Term.match in Rdf.ts:1106-1115.",
-    "confidence": 0.95,
-    "mechanization": "codemod",
-    "roiRank": 3.8
+    "roiRank": 1.74,
+    "exception": {
+      "reason": "Adding provType tags to relation records would change the public PROV encoded wire shape and requires a consumer sweep across semantic-web/provenance call sites. Keep the finding recorded for the family-close public-form pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

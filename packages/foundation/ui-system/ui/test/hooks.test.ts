@@ -7,13 +7,13 @@ import { describe, expect, it } from "vitest";
 describe("@beep/ui hooks/useNumberInput", () => {
   describe("toNumber", () => {
     it("parses editable numeric text", () => {
-      expect(toNumber("12.5")).toBe(12.5);
+      expect(O.getOrUndefined(toNumber("12.5"))).toBe(12.5);
     });
 
     it("returns undefined for empty and invalid values", () => {
-      expect(toNumber("")).toBeUndefined();
-      expect(toNumber("nope")).toBeUndefined();
-      expect(toNumber(undefined)).toBeUndefined();
+      expect(O.getOrUndefined(toNumber(""))).toBeUndefined();
+      expect(O.getOrUndefined(toNumber("nope"))).toBeUndefined();
+      expect(O.getOrUndefined(toNumber(undefined))).toBeUndefined();
     });
   });
 

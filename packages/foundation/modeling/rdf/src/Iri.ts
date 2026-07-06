@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $RdfId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { pipe } from "effect";
 import * as O from "effect/Option";
@@ -892,7 +893,8 @@ export const IRIReference = S.String.check(iriReferenceChecks)
     S.brand("IRIReference"),
     $I.annoteSchema("IRIReference", {
       description: "RFC 3987 IRI reference syntax, including both absolute and relative forms.",
-    })
+    }),
+    SchemaUtils.withCodecStatics
   );
 
 /**
@@ -934,7 +936,8 @@ export const RelativeIRIReference = S.String.check(relativeIriReferenceChecks)
     S.brand("RelativeIRIReference"),
     $I.annoteSchema("RelativeIRIReference", {
       description: "RFC 3987 relative IRI reference syntax (`irelative-ref`).",
-    })
+    }),
+    SchemaUtils.withCodecStatics
   );
 
 /**
@@ -976,7 +979,8 @@ export const AbsoluteIRI = S.String.check(absoluteIriChecks)
     S.brand("AbsoluteIRI"),
     $I.annoteSchema("AbsoluteIRI", {
       description: "RFC 3987 absolute IRI syntax without a fragment component.",
-    })
+    }),
+    SchemaUtils.withCodecStatics
   );
 
 /**
@@ -1018,7 +1022,8 @@ export const IRI = S.String.check(iriChecks)
     S.brand("IRI"),
     $I.annoteSchema("IRI", {
       description: "RFC 3987 IRI syntax.",
-    })
+    }),
+    SchemaUtils.withCodecStatics
   );
 
 /**

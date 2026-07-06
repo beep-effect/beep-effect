@@ -1,27 +1,5 @@
 [
   {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/foundation/ui-system/editor/src/artifact-ref-node.tsx",
-    "line": 134,
-    "symbol": "$createArtifactRefNode",
-    "smell": "Lexical node factory takes an inline `{ artifactId: string; label?: string }` object even though the same file already pins the serialized wire shape to `ArtifactRefNodeSchema.Encoded` at line 38.",
-    "proposedTarget": "Define a schema-derived input alias, for example `type ArtifactRefNodeCreateInput = Pick<SerializedArtifactRefNode, \"artifactId\" | \"label\">`, and type `$createArtifactRefNode(props: ArtifactRefNodeCreateInput)`. If callers should use decoded optional semantics instead, derive the alias from `ArtifactRefNodeSchema.Type`. In-repo exemplars: `SerializedArtifactRefNode = ArtifactRefNodeSchema.Encoded` in this file at line 38 and `SerializedYouTubeNode = YouTubeNodeSchema.Encoded` in youtube-node.tsx:47.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 0.35
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/foundation/ui-system/editor/src/youtube-node.tsx",
-    "line": 161,
-    "symbol": "$createYouTubeNode",
-    "smell": "Lexical node factory accepts a bare `videoID: string` and DOM import passes the raw `data-lexical-youtube` attribute into it, despite the serialized node contract being pinned to `YouTubeNodeSchema.Encoded` at line 47.",
-    "proposedTarget": "At minimum type the factory parameter as `SerializedYouTubeNode[\"videoID\"]`; if the lexical schema carries a tighter decoded video id later, decode the DOM attribute through that schema before construction. In-repo exemplar: `importJSON` in the same file receives `SerializedYouTubeNode & Record<string, unknown>` at line 95 and uses the schema-pinned `videoID` field.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 0.25
-  },
-  {
     "ruleId": "schema-first-inventory",
     "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
     "line": 108,

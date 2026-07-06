@@ -124,6 +124,9 @@
       "path": "packages/drivers/openai-compat"
     },
     {
+      "path": "packages/drivers/pacer"
+    },
+    {
       "path": "packages/drivers/pglite"
     },
     {

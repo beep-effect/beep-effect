@@ -6,7 +6,7 @@
  */
 
 import { $PandocAstId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { pipe } from "effect";
 import * as S from "effect/Schema";
@@ -107,7 +107,7 @@ export type PandocMappingProfile = typeof PandocMappingProfile.Type;
  * @category models
  * @since 0.0.0
  */
-export const JsonPathSegment = S.Union([S.String, S.Finite]).pipe(
+export const JsonPathSegment = S.Union([S.String, S.Int.check(S.isGreaterThanOrEqualTo(0))]).pipe(
   $I.annoteSchema("JsonPathSegment", {
     description: "A single segment in a Pandoc JSON path.",
   })
@@ -121,6 +121,12 @@ export const JsonPathSegment = S.Union([S.String, S.Finite]).pipe(
  */
 export type JsonPathSegment = typeof JsonPathSegment.Type;
 
+const escapePointerSegment = (segment: JsonPathSegment): string =>
+  pipe(`${segment}`, Str.replace(/~/g, "~0"), Str.replace(/\//g, "~1"));
+
+const jsonPathToPointer = (path: ReadonlyArray<JsonPathSegment>): string =>
+  path.length === 0 ? "" : `/${pipe(path, A.map(escapePointerSegment), A.join("/"))}`;
+
 /**
  * Ordered path to a construct inside Pandoc JSON.
  *
@@ -130,7 +136,10 @@ export type JsonPathSegment = typeof JsonPathSegment.Type;
 export const JsonPath = S.Array(JsonPathSegment).pipe(
   $I.annoteSchema("JsonPath", {
     description: "Ordered path to a construct inside Pandoc JSON.",
-  })
+  }),
+  SchemaUtils.withStatics(() => ({
+    toPointer: jsonPathToPointer,
+  }))
 );
 
 /**
@@ -140,9 +149,6 @@ export const JsonPath = S.Array(JsonPathSegment).pipe(
  * @since 0.0.0
  */
 export type JsonPath = typeof JsonPath.Type;
-
-const escapePointerSegment = (segment: JsonPathSegment): string =>
-  pipe(`${segment}`, Str.replace(/~/g, "~0"), Str.replace(/\//g, "~1"));
 
 /**
  * Converts a JSON path into a stable JSON Pointer string.
@@ -157,8 +163,7 @@ const escapePointerSegment = (segment: JsonPathSegment): string =>
  * @category utilities
  * @since 0.0.0
  */
-export const jsonPointerFromPath = (path: JsonPath): string =>
-  path.length === 0 ? "" : `/${pipe(path, A.map(escapePointerSegment), A.join("/"))}`;
+export const jsonPointerFromPath = (path: JsonPath): string => JsonPath.toPointer(path);
 
 /**
  * A single compatibility issue found while mapping between Pandoc and Md.
@@ -199,14 +204,17 @@ export class PandocMappingIssue extends S.Class<PandocMappingIssue>($I`PandocMap
     }),
     severity: PandocMappingSeverity.annotateKey({
       description: "Issue severity.",
-    }),
+    }).pipe(SchemaUtils.withConstantDefault<PandocMappingSeverity>("unsupported")),
   },
   $I.annote("PandocMappingIssue", {
     description: "A single compatibility issue found while mapping between Pandoc and Md.",
   })
 ) {
-  static readonly fromPath = (input: Omit<PandocMappingIssue.Type, "pointer">): PandocMappingIssue =>
-    PandocMappingIssue.make({ ...input, pointer: jsonPointerFromPath(input.path) });
+  static readonly fromPath = (
+    input: Omit<PandocMappingIssue.Type, "pointer" | "severity"> & {
+      readonly severity?: PandocMappingSeverity;
+    }
+  ): PandocMappingIssue => PandocMappingIssue.make({ ...input, pointer: JsonPath.toPointer(input.path) });
 }
 
 /**
@@ -235,22 +243,6 @@ export declare namespace PandocMappingIssue {
 }
 
 /**
- * Computes the summary profile from a list of mapping issues.
- *
- * @example
- * ```ts
- * import { profileFromIssues } from "@beep/pandoc-ast/Pandoc.report"
- *
- * console.log(profileFromIssues([])) // "supported"
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export const profileFromIssues = (issues: ReadonlyArray<PandocMappingIssue.Type>): PandocMappingProfile =>
-  issues.length === 0 ? "supported" : "gap";
-
-/**
  * Compatibility report shared by both mapping directions.
  *
  * @example
@@ -277,9 +269,26 @@ export class PandocCompatibilityReport extends S.Class<PandocCompatibilityReport
     description: "Compatibility report shared by both mapping directions.",
   })
 ) {
+  static readonly profileFromIssues = (issues: ReadonlyArray<PandocMappingIssue.Type>): PandocMappingProfile =>
+    issues.length === 0 ? "supported" : "gap";
   static readonly fromIssues = (issues: ReadonlyArray<PandocMappingIssue.Type>): PandocCompatibilityReport =>
-    PandocCompatibilityReport.make({ issues, profile: profileFromIssues(issues) });
+    PandocCompatibilityReport.make({ issues, profile: PandocCompatibilityReport.profileFromIssues(issues) });
 }
+
+/**
+ * Computes the summary profile from a list of mapping issues.
+ *
+ * @example
+ * ```ts
+ * import { profileFromIssues } from "@beep/pandoc-ast/Pandoc.report"
+ *
+ * console.log(profileFromIssues([])) // "supported"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const profileFromIssues = PandocCompatibilityReport.profileFromIssues;
 
 /**
  * Companion namespace for {@link PandocCompatibilityReport}.

@@ -1,12 +1,17 @@
 import {
+  ApplicationNumber,
   Claim,
   Distinction,
+  KindCode,
   LegalClientStatus,
   LegalContactRole,
   Matter,
   MatterType,
   OfficeAction,
+  OfficeCode,
   PatentAssetStatus,
+  PatentDocumentTriplet,
+  PatentNumber,
   PriorArtReference,
   Rejection,
 } from "@beep/law-practice-domain";
@@ -14,6 +19,7 @@ import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { baseEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 describe("@beep/law-practice-domain", () => {
   it("exports value schemas from the package identity", () => {
@@ -21,6 +27,44 @@ describe("@beep/law-practice-domain", () => {
     expect(LegalContactRole.is.founder("founder")).toBe(true);
     expect(MatterType.is.patent_application("patent_application")).toBe(true);
     expect(PatentAssetStatus.is.pre_filing("pre_filing")).toBe(true);
+  });
+
+  it("validates WIPO patent application and publication identifiers", () => {
+    expect(S.is(ApplicationNumber)("102014000345678")).toBe(true);
+    expect(S.is(ApplicationNumber)("112015012345679")).toBe(true);
+    expect(S.is(ApplicationNumber)("912014000345678")).toBe(true);
+    expect(S.is(ApplicationNumber)("102014AB0345678")).toBe(true);
+    expect(S.is(ApplicationNumber)("202016000004321")).toBe(false);
+    expect(S.is(ApplicationNumber)("XX 10 2014 345678")).toBe(false);
+
+    expect(S.is(PatentNumber)("1234567890123")).toBe(true);
+    expect(S.is(PatentNumber)("12345678901234")).toBe(false);
+    expect(S.is(PatentNumber)("US1234567B2")).toBe(false);
+
+    expect(S.is(PatentDocumentTriplet)("US 7,654,321 B2")).toBe(true);
+    expect(S.is(PatentDocumentTriplet)("EP 4,181,262 A1")).toBe(true);
+    expect(S.is(PatentDocumentTriplet)("US 7654321 B2")).toBe(false);
+    expect(S.is(PatentDocumentTriplet)("AA 7,654,321 B2")).toBe(false);
+    expect(S.is(PatentDocumentTriplet)("US 7,654,321 A0")).toBe(false);
+
+    expect(OfficeCode.is.US("US")).toBe(true);
+    expect(OfficeCode.is.EP("EP")).toBe(true);
+    expect(OfficeCode.is.XX("XX")).toBe(true);
+    expect(S.is(OfficeCode)("AA")).toBe(false);
+
+    expect(KindCode.is.A("A")).toBe(true);
+    expect(KindCode.is.A1("A1")).toBe(true);
+    expect(KindCode.is.B9("B9")).toBe(true);
+    expect(S.is(KindCode)("A0")).toBe(false);
+  });
+
+  it("covers patent identifiers with schema-derived arbitraries", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(PatentNumber), (patentNumber) => {
+        expect(S.is(PatentNumber)(patentNumber)).toBe(true);
+      }),
+      { numRuns: 25 }
+    );
   });
 
   it("wires Matter to the law-practice BaseEntity identity", () => {

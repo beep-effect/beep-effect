@@ -13,6 +13,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LiteralKit, LiteralKitKeyCollisionError, matchLiteral } from "../LiteralKit/index.ts";
+import { isNonNegative } from "../Number.ts";
 import type { TaggedErrorClassFromFields } from "@beep/schema/TaggedErrorClass";
 import type { SchemaAST } from "effect";
 import type { LiteralKit as LiteralKitSchema, LiteralToKey } from "../LiteralKit/index.ts";
@@ -21,8 +22,8 @@ const $I = $SchemaId.create("MappedLiteralKit");
 const MappedLiteralDuplicateErrorFields = {
   side: S.Literals(["from", "to"]),
   literal: S.Union([S.String, S.BigInt, S.Boolean, S.Finite]),
-  firstIndex: S.Finite,
-  secondIndex: S.Finite,
+  firstIndex: S.Int.check(isNonNegative),
+  secondIndex: S.Int.check(isNonNegative),
 } satisfies S.Struct.Fields;
 const MappedLiteralDuplicateErrorBase: TaggedErrorClassFromFields<
   MappedLiteralDuplicateError,

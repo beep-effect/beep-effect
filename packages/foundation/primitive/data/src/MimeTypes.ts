@@ -85,6 +85,11 @@ export type OfficialMimeTypeData = (typeof official.OfficialMimeTypeDataValues)[
  */
 export type FileExtension = internal.FileExtension;
 
+type MimeTypeDefinition = {
+  source: string;
+  extensions: FileExtension[];
+};
+
 // -------------------------------------------------------------------------------------
 // data
 // -------------------------------------------------------------------------------------
@@ -223,7 +228,7 @@ export const mimes: typeof internal.mimes = internal.mimes;
  * @category constants
  * @since 0.0.0
  */
-export const mimeTypes: typeof internal.mimeTypes = internal.mimeTypes;
+export const mimeTypes: Record<MimeType, MimeTypeDefinition> = internal.mimeTypes;
 
 /**
  * Stable source metadata for the generated official IANA media type registry.

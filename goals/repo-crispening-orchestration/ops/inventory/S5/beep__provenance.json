@@ -8,28 +8,10 @@
     "proposedTarget": "Absorb as a cross-field struct check: S.check on the class/struct with S.makeFilter((a) => a.startChar <= a.endChar, { identifier: $I`TextAnchorWellOrderedCheck`, ... }) — S.check verified .repos/effect-v4/packages/effect/src/Schema.ts:4964, S.makeFilter (object-level filter, cross-field capable per its own doc examples) at 6355-6397; in-repo filter idiom exemplars at packages/foundation/modeling/schema/src/URL.ts:23 and UnitInterval.ts. CAUTION: TextAnchorFields (line 37) is exported for spreading into richer consumer structs, and a check attached to the TextAnchor class does not travel with the spread — either export a checked TextAnchorStruct alongside the raw fields or document that spread consumers must re-apply the check (§5.4 consumer sweep: rg shows the epistemic EvidenceSpan-style consumers). Keep isWellOrdered exported for the plain-object call sites or re-derive it from the schema.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/foundation/modeling/provenance/src/TextAnchor.ts",
-    "line": 62,
-    "symbol": "TextAnchor",
-    "smell": "The package's two invariants (well-orderedness and NonNegativeInt offsets) are covered by exactly two hand fixtures (test/TextAnchor.test.ts:8/15-16); no S.toArbitrary law exists, and §5.3 requires one round-trip law per absorbed invariant once the well-ordered check lands in the schema.",
-    "proposedTarget": "Additive property test: fc.assert over S.toArbitrary(TextAnchor) (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) asserting decode∘encode identity under S.toEquivalence(TextAnchor) (verified 13201) and isWellOrdered(anchor) for every generated anchor. If generation via the fc filter on the new cross-field check discards too much, add a toArbitrary annotation generating (start, len) pairs and mapping to (start, start+len) — same annotation pattern as packages/foundation/modeling/lexical/src/Lexical.model.ts:629. The re-slice law (source.slice(start,end) === quote) needs a paired source-text generator and stays a hand-rolled fc property, not schema-derived. Existing fixtures stay (static-fixture carve-out).",
-    "confidence": 0.6,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/foundation/modeling/provenance/src/TextAnchor.ts",
-    "line": 37,
-    "symbol": "TextAnchorFields",
-    "smell": "None of the three fields (startChar, endChar, quote) carries a per-key annotation — no .annotateKey descriptions — even though the fields object is exported precisely so other packages can reuse it, making the missing runtime-retrievable field docs a cross-package gap; only the whole-class $I.annote exists (line 64).",
-    "proposedTarget": "Annotate each field: startChar: NonNegativeInt.annotateKey({ description: \"Inclusive start character offset into the source text.\" }), endChar: NonNegativeInt.annotateKey({ description: \"Exclusive end character offset into the source text.\" }), quote: S.String.annotateKey({ description: \"Exact quoted substring; source.slice(startChar, endChar) must reproduce it.\" }) — S.annotateKey verified .repos/effect-v4/packages/effect/src/Schema.ts:605; per-key pattern exemplar in sibling modeling package packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts:77-85. Purely additive.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 3,
+    "exception": {
+      "reason": "Remediation audit (P2 @beep/provenance): declined schema-level TextAnchor well-orderedness absorption in this package wave. A class/struct check would change the public validation boundary and would not propagate to the exported TextAnchorFields spread consumer in packages/epistemic/domain/src/values/EvidenceSpan/EvidenceSpan.model.ts without an out-of-package edit. Local remediation added S.toArbitrary parity coverage, key annotations, and class-side predicate colocation; the cross-field schema check is intentionally deferred.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   }
 ]

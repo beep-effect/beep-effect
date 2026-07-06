@@ -22,6 +22,22 @@ import { SourceAuthRegistration } from "./SourceAuth.ts";
 
 const $I = $McpKitId.create("ApiKeyRequired");
 
+class ApiKeyRequiredFailureParams extends S.Class<ApiKeyRequiredFailureParams>($I`ApiKeyRequiredFailureParams`)(
+  {
+    tool: S.String.annotateKey({
+      description: "Name of the tool that could not resolve its credential.",
+    }),
+    registration: SourceAuthRegistration.annotateKey({
+      description: "Source registration whose credential is required by the tool.",
+    }),
+  },
+  $I.annote("ApiKeyRequiredFailureParams", {
+    description: "Input payload for building an api_key_required tool failure.",
+  })
+) {}
+
+type ApiKeyRequiredFailureParamsInput = Exclude<(typeof ApiKeyRequiredFailureParams)["~type.make.in"], void>;
+
 /**
  * Typed tool failure returned when a `soft`-gated (or key-optional) source's
  * credential is absent at call time. Intended for use as a `Tool.make`
@@ -65,10 +81,7 @@ export class ApiKeyRequiredFailure extends S.Class<ApiKeyRequiredFailure>($I`Api
     description: "Typed api_key_required tool failure for a source whose credential is absent at call time.",
   })
 ) {
-  static readonly forTool = (params: {
-    readonly tool: string;
-    readonly registration: SourceAuthRegistration;
-  }): ApiKeyRequiredFailure =>
+  static readonly forTool = (params: ApiKeyRequiredFailureParamsInput): ApiKeyRequiredFailure =>
     ApiKeyRequiredFailure.make({
       tool: params.tool,
       envVar: params.registration.envVar,
@@ -106,7 +119,5 @@ export class ApiKeyRequiredFailure extends S.Class<ApiKeyRequiredFailure>($I`Api
  * @category constructors
  * @since 0.0.0
  */
-export const apiKeyRequiredFailure = (params: {
-  readonly tool: string;
-  readonly registration: SourceAuthRegistration;
-}): ApiKeyRequiredFailure => ApiKeyRequiredFailure.forTool(params);
+export const apiKeyRequiredFailure = (params: ApiKeyRequiredFailureParamsInput): ApiKeyRequiredFailure =>
+  ApiKeyRequiredFailure.forTool(params);

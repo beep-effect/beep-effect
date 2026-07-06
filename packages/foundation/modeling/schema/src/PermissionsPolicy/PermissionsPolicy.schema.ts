@@ -345,7 +345,7 @@ export class PermissionsPolicyResponseHeader extends S.Class<PermissionsPolicyRe
 )(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String),
+    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("PermissionsPolicyResponseHeader", {
     description: "The `Permissions-Policy` response header.",

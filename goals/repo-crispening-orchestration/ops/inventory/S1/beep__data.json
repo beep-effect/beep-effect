@@ -8,7 +8,11 @@
     "proposedTarget": "Keep `@beep/data` as the raw data source, but add a downstream `@beep/schema` wrapper if this public API is retained: derive `BlockchainNetworkName` with `LiteralKit(Struct.keysNonEmpty(BlockchainData.Networks))` and derive a reversible name-to-ticker codec with `MappedLiteralKit(...)` over entries projected from `Networks`. In-repo exemplars: `CurrencyCode` derives `LiteralKit(Struct.keysNonEmpty(...))` at packages/foundation/modeling/schema/src/CurrencyCode.ts:43, and `TerritoryNameFromCode` derives a reversible `MappedLiteralKit` at packages/foundation/modeling/schema/src/TerritoryCode.ts:114. Verified local factories: `LiteralKit` at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:743 and `MappedLiteralKit` at packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts:348.",
     "confidence": 0.58,
     "mechanization": "judgment",
-    "roiRank": 0.35
+    "roiRank": 0.35,
+    "exception": {
+      "reason": "Remediation audit: `@beep/data` is the primitive raw-data source and already has the correct public constant surface for blockchain ticker metadata. The proposed executable `LiteralKit`/`MappedLiteralKit` wrapper belongs downstream in `@beep/schema`; adding it here would invert the established dependency direction, while editing `@beep/schema` is outside this single-package writer scope.",
+      "boundary": "cross-package schema-wrapper ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "schema-first-inventory",

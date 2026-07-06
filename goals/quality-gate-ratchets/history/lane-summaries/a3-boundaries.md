@@ -270,4 +270,3 @@ fallow-quality-enforcement packet failed:
 ```
 
 The boundary provenance portions of the packet validator were reconciled; the remaining full-packet failures are pre-existing audit CI-mode assertions outside this A3 boundary lane.
-

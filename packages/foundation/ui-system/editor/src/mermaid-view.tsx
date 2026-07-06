@@ -7,6 +7,7 @@
  */
 "use client";
 
+import { Match } from "effect";
 import { useEffect, useId, useMemo, useState } from "react";
 import type { JSX } from "react";
 
@@ -43,6 +44,33 @@ const sanitizeIdPart = (value: string): string => {
 };
 
 const errorMessage = (error: unknown): string => (error instanceof Error ? error.message : fallbackErrorMessage);
+
+const renderMermaidState = (source: string) =>
+  Match.type<MermaidRenderState>().pipe(
+    Match.tagsExhaustive({
+      failed: (state) => (
+        <div className="my-3 rounded border border-destructive/40 bg-muted p-3" data-testid="mermaid-diagram">
+          <div className="mb-2 text-xs text-muted-foreground">{state.message}</div>
+          <pre className="overflow-x-auto rounded bg-background p-3 text-sm">
+            <code>{source}</code>
+          </pre>
+        </div>
+      ),
+      ok: (state) => (
+        <div
+          className="my-3 overflow-x-auto rounded border bg-background p-3"
+          data-testid="mermaid-diagram"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: Mermaid 11.15.0 renders sanitized SVG with securityLevel strict; sandboxed iframe rendering is the separate "sandbox" level.
+          dangerouslySetInnerHTML={{ __html: state.svg }}
+        />
+      ),
+      pending: () => (
+        <div className="my-3 rounded border bg-muted p-3 text-sm text-muted-foreground" data-testid="mermaid-diagram">
+          Rendering diagram...
+        </div>
+      ),
+    })
+  );
 
 /**
  * Renders Mermaid source to SVG and falls back to source text on render
@@ -100,31 +128,5 @@ export function MermaidView({
     };
   }, [renderId, source]);
 
-  if (state._tag === "ok") {
-    return (
-      <div
-        className="my-3 overflow-x-auto rounded border bg-background p-3"
-        data-testid="mermaid-diagram"
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: Mermaid 11.15.0 renders sanitized SVG with securityLevel strict; sandboxed iframe rendering is the separate "sandbox" level.
-        dangerouslySetInnerHTML={{ __html: state.svg }}
-      />
-    );
-  }
-
-  if (state._tag === "failed") {
-    return (
-      <div className="my-3 rounded border border-destructive/40 bg-muted p-3" data-testid="mermaid-diagram">
-        <div className="mb-2 text-xs text-muted-foreground">{state.message}</div>
-        <pre className="overflow-x-auto rounded bg-background p-3 text-sm">
-          <code>{source}</code>
-        </pre>
-      </div>
-    );
-  }
-
-  return (
-    <div className="my-3 rounded border bg-muted p-3 text-sm text-muted-foreground" data-testid="mermaid-diagram">
-      Rendering diagram...
-    </div>
-  );
+  return renderMermaidState(source)(state);
 }

@@ -1,16 +1,5 @@
 [
   {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/modeling/utils/src/internal/StructPath.ts",
-    "line": 171,
-    "symbol": "unsafeDotGet",
-    "smell": "PathLookupSchema is a local S.TaggedUnion at line 49, but unsafeDotGet manually branches with Match.value(lookup).when({ found: true }) instead of using the schema-derived match. Struct.dotGetOption repeats the same lookup-shape branch from another file after importing only the PathLookup type.",
-    "proposedTarget": "Use PathLookupSchema.match in internal/StructPath.ts and expose a tiny fold/helper for Struct.dotGetOption to share, so found/notFound dispatch is derived from the S.TaggedUnion. S.TaggedUnion match is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:6163-6167.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 1.8
-  },
-  {
     "ruleId": "SFV4-getsomes-struct",
     "file": "packages/foundation/modeling/utils/src/Option.ts",
     "line": 102,

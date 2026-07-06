@@ -9,8 +9,7 @@ import { CurrencyCodes as CurrencyCodesData } from "@beep/data";
 import { $SchemaId } from "@beep/identity";
 import { A, Struct } from "@beep/utils";
 import { cast } from "@beep/utils/Function";
-import { pipe } from "effect";
-import * as S from "effect/Schema";
+import { HashSet, pipe } from "effect";
 import { LiteralKit } from "./LiteralKit/index.ts";
 
 const $I = $SchemaId.create("CurrencyCode");
@@ -45,6 +44,8 @@ export const CurrencyCode = LiteralKit(Struct.keysNonEmpty(CurrencyCodesData.Cur
     description: "An active ISO 4217 currency code.",
   })
 );
+
+const currencyCodeSet = HashSet.fromIterable(CurrencyCode.Options);
 
 /**
  * {@inheritDoc CurrencyCode}
@@ -115,7 +116,7 @@ export type CurrencyName = typeof CurrencyName.Type;
  * @category validation
  * @since 0.0.0
  */
-export const isCurrencyCode = S.is(CurrencyCode);
+export const isCurrencyCode = (value: string): value is CurrencyCode => HashSet.has(currencyCodeSet, value);
 
 /**
  * ISO 4217 constant for United States Dollar.

@@ -61,6 +61,7 @@
     "packages/drivers/dol/dtslint/**/*.tst.*",
     "packages/drivers/courtlistener/dtslint/**/*.tst.*",
     "packages/drivers/uspto-mcp/dtslint/**/*.tst.*",
+    "packages/drivers/pacer/dtslint/**/*.tst.*",
     "packages/foundation/modeling/html/dtslint/**/*.tst.*",
     "packages/foundation/modeling/identity/dtslint/**/*.tst.*",
     "packages/foundation/modeling/lexical/dtslint/**/*.tst.*",

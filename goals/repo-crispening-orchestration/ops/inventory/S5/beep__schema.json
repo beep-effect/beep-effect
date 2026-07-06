@@ -1,61 +1,6 @@
 [
   {
     "ruleId": "SFV4-numeric-domain",
-    "file": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
-    "line": 24,
-    "symbol": "MappedLiteralDuplicateErrorFields.firstIndex/secondIndex",
-    "smell": "Duplicate-literal indices are modeled as broad S.Finite even though validateMappings supplies zero-based array positions; fractional or negative indices are impossible in the source domain.",
-    "proposedTarget": "Tighten both fields to S.Int.check(S.isGreaterThanOrEqualTo(0)) or a local NonNegativeIndex schema. In-repo exemplar: Graph.NodeIndex uses S.Int.check(isNonNegative) with $I.annoteSchema at packages/foundation/modeling/schema/src/Graph/Graph.primitives.ts:30. Effect v4 APIs verified: S.Int at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and S.isGreaterThanOrEqualTo at .repos/effect-v4/packages/effect/src/Schema.ts:7314.",
-    "confidence": 0.88,
-    "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-numeric-domain",
-    "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
-    "line": 327,
-    "symbol": "LiteralKitEnumMappingDuplicateLiteralErrorFields.firstIndex/secondIndex",
-    "smell": "Enum-mapping duplicate indices are modeled as broad S.Finite even though the thrown values are zero-based array positions from LiteralKit mapping validation.",
-    "proposedTarget": "Use the same non-negative integer schema proposed for MappedLiteralKit duplicate indices: S.Int.check(S.isGreaterThanOrEqualTo(0)) or a shared local NonNegativeIndex. In-repo exemplar: packages/foundation/modeling/schema/src/Graph/Graph.primitives.ts:30. Effect v4 APIs verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7314.",
-    "confidence": 0.88,
-    "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-numeric-domain",
-    "file": "packages/foundation/modeling/schema/src/Jsonc.ts",
-    "line": 34,
-    "symbol": "JsoncParseDiagnostic.code/offset/length",
-    "smell": "JSONC parse diagnostics use S.Finite for parser code, offset, and length; jsonc-parser emits integer diagnostic codes and non-negative character spans, so the schema admits impossible fractional and negative values.",
-    "proposedTarget": "Model code/offset/length as non-negative integers via S.Int.check(S.isGreaterThanOrEqualTo(0)); keep the existing $I.annote(\"JsoncParseDiagnostic\", ...) class annotation. In-repo exemplar: packages/foundation/modeling/schema/src/Graph/Graph.primitives.ts:30. Effect v4 APIs verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7314.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-numeric-domain",
-    "file": "packages/foundation/modeling/schema/src/Jsonl.ts",
-    "line": 24,
-    "symbol": "JsonlChunkParseResult.read",
-    "smell": "Bun JSONL parse result `read` is decoded as S.Finite even though it is a consumed character count used by Str.substring(chunk.read), so fractional and negative values are outside the real parser response domain.",
-    "proposedTarget": "Replace `read: S.Finite` with a non-negative integer schema (S.Int.check(S.isGreaterThanOrEqualTo(0))) and add a tiny parser-response decode regression. In-repo exemplar: Graph.NodeIndex at packages/foundation/modeling/schema/src/Graph/Graph.primitives.ts:30. Effect v4 APIs verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7314.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-numeric-domain",
-    "file": "packages/foundation/modeling/schema/src/CsvParser/CsvParser.parser.ts",
-    "line": 112,
-    "symbol": "ParsedField.cursor / ParsedRow.cursor",
-    "smell": "CSV parser cursor fields are modeled as S.Finite, but all producers increment zero-based string offsets; fractional and negative cursor positions cannot occur and would be invalid parser state.",
-    "proposedTarget": "Introduce a local CursorIndex = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe($I.annoteSchema(...)) and use it for ParsedField.cursor and ParsedRow.cursor. In-repo exemplar: packages/foundation/modeling/schema/src/Graph/Graph.primitives.ts:30. Effect v4 APIs verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7314.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-numeric-domain",
     "file": "packages/foundation/modeling/schema/src/StatusCauseError.ts",
     "line": 41,
     "symbol": "StatusCauseFields.status / StatusCauseInputOptions.status / StatusCauseInput.status",
@@ -63,84 +8,11 @@
     "proposedTarget": "Reuse the existing HttpStatus schema (`Schema` alias at packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.schema.ts:83) for the three status fields, or use S.Int with explicit 100-599 bounds if unofficial status coverage is intentionally wider. Because this narrows public input, apply the §5.4 consumer sweep and add an S.toArbitrary round-trip law like packages/foundation/modeling/schema/test/HttpStatus.test.ts:12. Effect v4 S.toArbitrary verified at .repos/effect-v4/packages/effect/src/Schema.ts:12970.",
     "confidence": 0.66,
     "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-numeric-domain",
-    "file": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
-    "line": 40,
-    "symbol": "ForceHttpsRedirectConfig.maxAge",
-    "smell": "Strict-Transport-Security `maxAge` is modeled as optional S.Finite, but max-age is rendered as seconds in a response header and should be a non-negative integer.",
-    "proposedTarget": "Use S.optionalKey(S.Int.check(S.isGreaterThanOrEqualTo(0))) or a shared HeaderMaxAgeSeconds schema reused by ExpectCTConfig. In-repo exemplar for optional non-negative integer units: packages/foundation/modeling/schema/src/Duration/Duration.input.ts:135. Effect v4 APIs verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7314.",
-    "confidence": 0.74,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-numeric-domain",
-    "file": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
-    "line": 40,
-    "symbol": "ExpectCTConfig.maxAge",
-    "smell": "Expect-CT `maxAge` is modeled as optional S.Finite, but max-age is rendered as seconds in a response header and should be a non-negative integer.",
-    "proposedTarget": "Use S.optionalKey(S.Int.check(S.isGreaterThanOrEqualTo(0))) or a shared HeaderMaxAgeSeconds schema with ForceHttpsRedirectConfig. In-repo exemplar for optional non-negative integer units: packages/foundation/modeling/schema/src/Duration/Duration.input.ts:135. Effect v4 APIs verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7314.",
-    "confidence": 0.74,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-numeric-domain",
-    "file": "packages/foundation/modeling/schema/src/Color/Color.adjust.ts",
-    "line": 120,
-    "symbol": "ColorAmount",
-    "smell": "ColorAmount is only S.Finite even though every use is an interpolation/lightness/alpha amount and the existing package already has UnitInterval for 0 through 1 finite percentages.",
-    "proposedTarget": "Base ColorAmount on UnitInterval (packages/foundation/modeling/schema/src/UnitInterval.ts:32) or add S.isBetween({ minimum: 0, maximum: 1 }) before the ColorAmount brand. This keeps the color adjustment examples and WithAlpha CSS alpha domain aligned. Effect v4 S.isBetween verified at .repos/effect-v4/packages/effect/src/Schema.ts:7401.",
-    "confidence": 0.62,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/foundation/modeling/schema/src/Cuid.ts",
-    "line": 59,
-    "symbol": "Cuid",
-    "smell": "Exported branded reusable schema `Cuid` has no package-local $SchemaId composer and no $I.annoteSchema metadata; unlike neighboring value schemas, it also has no schema-level toArbitrary annotation to support generated CUID samples.",
-    "proposedTarget": "Add `import { $SchemaId } from \"@beep/identity\"`, create `$I = $SchemaId.create(\"Cuid\")`, and pipe Cuid through `$I.annoteSchema(\"Cuid\", { description, toArbitrary: () => (fc) => fc.stringMatching(/^[a-z][0-9a-z]+$/) })`; then add a small S.toArbitrary(Cuid) round-trip law in Cuid.test.ts. $I.annoteSchema preserves schema statics at packages/foundation/modeling/identity/src/Id.ts:1380, and Effect v4 S.toArbitrary is verified at .repos/effect-v4/packages/effect/src/Schema.ts:12970.",
-    "confidence": 0.76,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts",
-    "line": 28,
-    "symbol": "HttpMethod_ / Literal",
-    "smell": "The public raw LiteralKit export `HttpMethod_` (re-exported as `Literal`) is a reusable schema but has no $I.annoteSchema annotation; only the richer `HttpMethod` wrapper is annotated.",
-    "proposedTarget": "Annotate the raw literal kit before exporting it, preserving helper statics with the local pattern already used in this file: `const HttpMethodBase = LiteralKit(...); export const HttpMethod_ = HttpMethodBase.pipe($I.annoteSchema(\"HttpMethodLiteral\", ...), SchemaUtils.withLiteralKitStatics(HttpMethodBase));` See NoBody at packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts:32 and withLiteralKitStatics at packages/foundation/modeling/schema/src/SchemaUtils/withLiteralKitStatics.ts:37.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/foundation/modeling/schema/test/LiteralKit.test.ts",
-    "line": 17,
-    "symbol": "LiteralKit",
-    "smell": "LiteralKit's central test suite covers options, enum helpers, matching, tagged unions, and runtime errors, but it never derives samples with S.toArbitrary from a production LiteralKit schema.",
-    "proposedTarget": "Add an additive property test using S.toArbitrary(Status) in the existing `describe(\"LiteralKit\")` block, asserting generated samples are members of Status.Options and round-trip through S.decodeUnknownSync/S.encodeUnknownSync where applicable. Existing in-repo pattern: packages/foundation/modeling/schema/test/HttpStatus.test.ts:12 and packages/foundation/modeling/schema/test/SchemaUtils.test.ts:176. Effect v4 S.toArbitrary/decodeUnknownSync/encodeUnknownSync verified at .repos/effect-v4/packages/effect/src/Schema.ts:12970, :1718, and :2123.",
-    "confidence": 0.68,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/foundation/modeling/schema/test/MappedLiteralKit.test.ts",
-    "line": 6,
-    "symbol": "MappedLiteralKit",
-    "smell": "MappedLiteralKit tests verify hand-written decode/encode examples and helper statics, but there is no S.toArbitrary-derived round-trip law for the reversible mapped-literal schema it produces.",
-    "proposedTarget": "Add `const arbitrary = S.toArbitrary(SqlState)` and assert for generated encoded-domain samples that `S.decodeSync(SqlState)(S.encodeSync(SqlState)(value)) === value`; also cover SqlState.To if reverse arbitrary generation is supported. In-repo exemplar: packages/foundation/modeling/schema/test/HttpStatus.test.ts:12. Effect v4 S.toArbitrary verified at .repos/effect-v4/packages/effect/src/Schema.ts:12970.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Narrowing status from S.Finite to HttpStatus/non-negative integer range changes exported StatusCauseFields and StatusCauseInput public form with out-of-package consumers; the §5.4 ripple is outside this package writer lane.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",

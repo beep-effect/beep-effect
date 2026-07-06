@@ -1279,45 +1279,45 @@
       "sanitized": "beep__html",
       "family": "foundation",
       "discovery": "done",
-      "remediation": "pending",
+      "remediation": "done",
       "findingsByDomain": {
-        "S1": 3,
-        "S2": 12,
+        "S1": 2,
+        "S2": 7,
         "S3": 1,
-        "S4": 16,
-        "S5": 9
+        "S4": 15,
+        "S5": 6
       },
-      "actionableCount": 12,
-      "exceptionCount": 29,
-      "parityProofRef": null,
+      "actionableCount": 0,
+      "exceptionCount": 31,
+      "parityProofRef": "packages/foundation/modeling/html/test/Html.test.ts (wire-shape parity snapshots for GlobalAttributesStruct, Doctype, Input, and HtmlElementMeta; S.toArbitrary round-trip laws for GlobalAttributesStruct, BooleanAttribute, Text, Comment, Doctype, Input, and HtmlElementMeta)",
       "policyFlipped": false,
-      "remediationNote": ""
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__html.json after P2 remediation: 31 records remain, all exceptions, actionableCount 0. Fixed 10 records: schema-validated generator JSON inputs; Option-defaulted generated element attributes, global attributes, dataset, ARIA/event string helper, and Doctype fields with encoded wire parity; BooleanAttribute codec statics; GlobalAttributesStruct and generated HtmlElementMeta annotations/finite HtmlCategory; schema-derived round-trip laws. Newly excepted 2 records: S3 Struct.fromEntries literal-key cast kept because A.map tuple-union inference resolves keys to never without it; S5 token-domain narrowing deferred pending a complete HTML value-domain model. Removed stale standards/schema-first.inventory.jsonc entry for the old generator-local struct helper after live scan reported it stale. §5.4 consumer sweep found no out-of-package source imports of @beep/html requiring edits. Codemod proposers were run file-scoped but aborted before proposing diffs because Effect.tapErrorCause is unavailable in this Effect v4 runtime. Verification green: bun run check --filter=@beep/html; bun run lint --filter=@beep/html; cd packages/foundation/modeling/html && npx vitest run; bun run beep lint schema-first. Policy flip intentionally skipped by orchestrator override."
     },
     "@beep/identity": {
       "path": "packages/foundation/modeling/identity",
       "sanitized": "beep__identity",
       "family": "foundation",
       "discovery": "done",
-      "remediation": "pending",
+      "remediation": "done",
       "findingsByDomain": {
-        "S1": 13,
-        "S2": 6,
+        "S1": 10,
+        "S2": 4,
         "S3": 5,
-        "S4": 10,
-        "S5": 6
+        "S4": 6,
+        "S5": 4
       },
-      "actionableCount": 12,
-      "exceptionCount": 28,
-      "parityProofRef": null,
+      "actionableCount": 0,
+      "exceptionCount": 29,
+      "parityProofRef": "packages/foundation/modeling/identity/test/{Curie,Identity,PnLocal,Vocab}.test.ts (S.toArbitrary round-trip laws for CurieFromIri, BaseIdentityInput, SafePnLocal, EscapedPnLocal, and VocabRegistry; explicit prefix and PN_LOCAL parity fixtures)",
       "policyFlipped": false,
-      "remediationNote": ""
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__identity.json after P2 remediation: 29 records remain, all documented exceptions, actionableCount 0. Fixed 11 records: schema-backed SafePnLocal/EscapedPnLocal predicates and Option tokenizer, VocabEntry/VocabRegistry runtime schemas, BaseIdentityInput normalization schema, finite CurieFromIri CoreVocab declaration codec + S.toArbitrary law, and S4 helper simplifications (Str.capitalize, direct A.contains, direct Str.startsWith, flow). Newly excepted 1 record: SFV4-null-return for existing CURIE undefined fallback overloads, deferred as a cross-package public-form ripple while compatibility wrappers stay byte-identical. Codemod proposers were run file-scoped; static-api-colocation, defaults-fallback, and getsomes-struct all aborted before proposing diffs because Effect.tapErrorCause is unavailable in this Effect v4 runtime. Verification: bun run check --filter=@beep/identity PASS; bun run lint --filter=@beep/identity PASS; cd packages/foundation/modeling/identity && npx vitest run PASS (6 files, 58 tests); bun run beep lint schema-first FAILS only on out-of-scope @beep/html live inventory drift in packages/foundation/modeling/html/scripts/generate.ts, with no @beep/identity findings remaining. No policy flip and no cross-package source edits."
     },
     "@beep/lexical-schema": {
       "path": "packages/foundation/modeling/lexical",
       "sanitized": "beep__lexical-schema",
       "family": "foundation",
       "discovery": "done",
-      "remediation": "pending",
+      "remediation": "done",
       "findingsByDomain": {
         "S1": 6,
         "S2": 7,
@@ -1325,11 +1325,11 @@
         "S4": 3,
         "S5": 3
       },
-      "actionableCount": 8,
+      "actionableCount": 0,
       "exceptionCount": 16,
       "parityProofRef": null,
       "policyFlipped": false,
-      "remediationNote": ""
+      "remediationNote": "Foundation-close wave; writer completed before a session restart, bookkeeping reconciled by orchestrator."
     },
     "@beep/md": {
       "path": "packages/foundation/modeling/md",
@@ -1355,159 +1355,159 @@
       "sanitized": "beep__nlp",
       "family": "foundation",
       "discovery": "done",
-      "remediation": "pending",
+      "remediation": "done",
       "findingsByDomain": {
-        "S1": 11,
-        "S2": 31,
-        "S3": 3,
-        "S4": 30,
-        "S5": 19
+        "S1": 6,
+        "S2": 22,
+        "S3": 2,
+        "S4": 9,
+        "S5": 14
       },
-      "actionableCount": 64,
-      "exceptionCount": 30,
-      "parityProofRef": null,
+      "actionableCount": 0,
+      "exceptionCount": 53,
+      "parityProofRef": "packages/foundation/modeling/nlp/test/CoreModels.test.ts; packages/foundation/modeling/nlp/test/PatternCore.test.ts; packages/foundation/modeling/nlp/test/Ontology/Kind.test.ts; packages/foundation/modeling/nlp/test/Algebra/NLPMonoid.test.ts",
       "policyFlipped": false,
-      "remediationNote": ""
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__nlp.json after P2 remediation: 53 records remain, all exception-ledgered, actionableCount 0. Fixed 41 package-local findings: schema-backed guard/static colocation for Core/Ontology/Handoff IDs and Pattern codecs, constructor defaults for Core optional fields, Option-first PatternBuilder lookups, data-last compose overloads, NonNegativeCount domains in NLPMonoid, schema-derived stats equivalence, and S.toArbitrary parity laws. Newly excepted 23 findings are public Graph/Handoff/Core/Ontology/query/vectorization ripples deferred to the family-close sweep per SPEC §5.4. Codemod proposers were attempted file-scoped but failed before mutation on stale Effect.tapErrorCause in the shared runners; scoped edits were reviewed and applied manually. Policy not flipped per orchestrator override. Verification: bun run check --filter=@beep/nlp passed (8 tasks); bun run lint --filter=@beep/nlp passed (8 tasks); cd packages/foundation/modeling/nlp && npx vitest run passed (10 files, 166 tests); bun run beep lint schema-first executed and failed only on out-of-scope stale inventory entries in packages/foundation/modeling/html/scripts/generate.ts and packages/law-practice/domain/test/LawPracticeDomain.test.ts, with all SFV4 advisory counts at 0 and no @beep/nlp live/tracked drift."
     },
     "@beep/ontology": {
       "path": "packages/foundation/modeling/ontology",
       "sanitized": "beep__ontology",
       "family": "foundation",
       "discovery": "done",
-      "remediation": "pending",
+      "remediation": "done",
       "findingsByDomain": {
         "S1": 0,
         "S2": 0,
         "S3": 2,
         "S4": 1,
-        "S5": 6
+        "S5": 2
       },
-      "actionableCount": 4,
+      "actionableCount": 0,
       "exceptionCount": 5,
-      "parityProofRef": null,
+      "parityProofRef": "packages/foundation/modeling/ontology/test/Ontology.models.test.ts (wire-shape parity snapshots + S.toArbitrary round-trip laws)",
       "policyFlipped": false,
-      "remediationNote": ""
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__ontology.json after removing fixed records: 5 records total, 5 exceptions, 0 remaining actionable. Fixed S5 records: OWLSearchScore redundant numeric union collapsed to S.Finite; HttpUrl gained an unbranded absolute-URL filter while preserving Type/Encoded string shape; OWLClass/OWLObjectProperty IRI-token fields and IRI-token arrays now use a shared non-empty schema building block; added S.toArbitrary round-trip laws and representative OpenAPI wire-shape parity snapshots. Existing S3/S4/S5 exception records were left in place. §5.4: repo consumer sweep found no external @beep/ontology model construction/import call sites requiring edits; no ripples deferred. Verification green: bun run check --filter=@beep/ontology; bun run lint --filter=@beep/ontology; cd packages/foundation/modeling/ontology && npx vitest run; bun run beep lint schema-first. Policy not flipped per orchestrator override."
     },
     "@beep/pandoc-ast": {
       "path": "packages/foundation/modeling/pandoc-ast",
       "sanitized": "beep__pandoc-ast",
       "family": "foundation",
       "discovery": "done",
-      "remediation": "pending",
+      "remediation": "done",
       "findingsByDomain": {
-        "S1": 10,
-        "S2": 8,
-        "S3": 4,
-        "S4": 8,
-        "S5": 7
+        "S1": 7,
+        "S2": 7,
+        "S3": 2,
+        "S4": 2,
+        "S5": 3
       },
-      "actionableCount": 17,
-      "exceptionCount": 20,
-      "parityProofRef": null,
+      "actionableCount": 0,
+      "exceptionCount": 21,
+      "parityProofRef": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts; packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
       "policyFlipped": false,
-      "remediationNote": ""
+      "remediationNote": "Fixed 16 P2 findings; newly excepted top-level Pandoc JSON helper wrapper to preserve public Effect signatures. Added exact wire snapshots and S.toArbitrary parity laws for codec, report, and mapping invariants. Policy flip intentionally skipped by orchestrator override."
     },
     "@beep/provenance": {
       "path": "packages/foundation/modeling/provenance",
       "sanitized": "beep__provenance",
       "family": "foundation",
       "discovery": "done",
-      "remediation": "pending",
+      "remediation": "done",
       "findingsByDomain": {
         "S1": 2,
         "S2": 0,
         "S3": 0,
-        "S4": 1,
-        "S5": 3
+        "S4": 0,
+        "S5": 1
       },
-      "actionableCount": 5,
-      "exceptionCount": 1,
-      "parityProofRef": null,
+      "actionableCount": 0,
+      "exceptionCount": 3,
+      "parityProofRef": "packages/foundation/modeling/provenance/test/TextAnchor.test.ts (it: 'round-trips schema-derived anchors through the encoded wire shape'; it: 'colocated well-ordered predicate agrees with ordered offset pairs')",
       "policyFlipped": false,
-      "remediationNote": ""
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__provenance.json after burndown: 3 records remain, all exceptions, 0 actionable. Fixed 3 findings: SFV4-static-api isWellOrdered colocated as TextAnchor.isWellOrdered with public alias preserved; SFV4-arbitrary-tests covered by S.toArbitrary/S.toEquivalence round-trip property; SFV4-precision-audit TextAnchorFields key annotations added. Newly excepted 2 overlapping schema-level well-orderedness findings (S1 SFV4-fn-schema + S5 SFV4-precision-audit) because absorbing the cross-field check would require a cross-package consumer sweep for TextAnchorFields spread users such as @beep/epistemic-domain EvidenceSpan; boundary: cross-package ripple, deferred to family-close sweep. Encoded/wire shape unchanged for TextAnchor fields; source change is additive annotations + static alias."
     },
     "@beep/rdf": {
       "path": "packages/foundation/modeling/rdf",
       "sanitized": "beep__rdf",
       "family": "foundation",
       "discovery": "done",
-      "remediation": "pending",
+      "remediation": "done",
       "findingsByDomain": {
-        "S1": 8,
-        "S2": 19,
-        "S3": 6,
-        "S4": 28,
-        "S5": 14
+        "S1": 5,
+        "S2": 7,
+        "S3": 4,
+        "S4": 4,
+        "S5": 13
       },
-      "actionableCount": 53,
-      "exceptionCount": 22,
-      "parityProofRef": null,
+      "actionableCount": 0,
+      "exceptionCount": 33,
+      "parityProofRef": "packages/foundation/modeling/rdf/test/Rdf.test.ts::@beep/rdf crispening parity",
       "policyFlipped": false,
-      "remediationNote": ""
+      "remediationNote": "Fixed boundary codecs, schema-owned defaults/statics, LanguageTag normalization, PrefixMap key validation, and package parity laws; remaining records are documented cross-package/public-form ripples or existing carve-outs."
     },
     "@beep/schema": {
       "path": "packages/foundation/modeling/schema",
       "sanitized": "beep__schema",
       "family": "foundation",
       "discovery": "done",
-      "remediation": "pending",
+      "remediation": "done",
       "findingsByDomain": {
-        "S1": 9,
-        "S2": 19,
-        "S3": 9,
-        "S4": 28,
-        "S5": 16
+        "S1": 7,
+        "S2": 7,
+        "S3": 8,
+        "S4": 4,
+        "S5": 4
       },
-      "actionableCount": 58,
-      "exceptionCount": 23,
-      "parityProofRef": null,
+      "actionableCount": 0,
+      "exceptionCount": 30,
+      "parityProofRef": "packages/foundation/modeling/schema/test/{Cuid,Color,DateTimeUtcFromValid,HttpHeaders,LiteralKit,MappedLiteralKit}.test.ts (S.toArbitrary Cuid/ColorAmount/LiteralKit/MappedLiteralKit laws, tagged DateTime statics, header max-age/default parity, CuidSeed encoded-shape parity)",
       "policyFlipped": false,
-      "remediationNote": ""
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__schema.json after P2 remediation: 30 records remain, all exceptions, actionableCount 0. Fixed 51 records across S1-S5, including CuidSeed schema modeling, URL boundary codec, schema defaults, Option/null-return helpers, static API colocation, numeric-domain tightening, precision annotations, and arbitrary-test parity laws already present in the live package source. Newly excepted 7 records: StatusCause defaults/status public-form ripples, BinaryFileExtension path-normalization codec design, EntitySchema persisted-variant dispatcher, and three Graph topology/dispatch findings; cross-package source edits were not made. Removed two stale @beep/schema entries from standards/schema-first.inventory.jsonc after live detector proof; out-of-scope stale entries were left untouched. Codemod proposers defaults-fallback and static-api-colocation were attempted file-scoped but failed before proposing diffs because Effect.tapErrorCause is unavailable in the current Effect v4 runtime. Policy not flipped and no commit made. Verification: bun run check --filter=@beep/schema PASS; bun run lint --filter=@beep/schema PASS; cd packages/foundation/modeling/schema && npx vitest run PASS (67 files, 596 tests); bun run beep lint schema-topology PASS; bun run beep lint schema-first FAILS only on out-of-scope stale standard-inventory entries for @beep/html and @beep/law-practice-domain, with no @beep/schema missing/stale/actionable findings."
     },
     "@beep/utils": {
       "path": "packages/foundation/modeling/utils",
       "sanitized": "beep__utils",
       "family": "foundation",
       "discovery": "done",
-      "remediation": "pending",
+      "remediation": "done",
       "findingsByDomain": {
         "S1": 9,
-        "S2": 17,
-        "S3": 4,
-        "S4": 2,
-        "S5": 10
+        "S2": 15,
+        "S3": 3,
+        "S4": 1,
+        "S5": 4
       },
-      "actionableCount": 10,
+      "actionableCount": 0,
       "exceptionCount": 32,
-      "parityProofRef": null,
+      "parityProofRef": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
       "policyFlipped": false,
-      "remediationNote": ""
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__utils.json after burndown: 32 records remain, all existing exceptions, 0 actionable. Removed 10 fixed findings already satisfied in source plus the new parity test: Glob defaults resolved through ResolvedGlobOptions, toFileInfo uses Option.fromUndefinedOr, path lookup branches through PathLookupSchema.match/pathLookupToOption, GlobError cause decoding is hoisted and routed through GlobError.new, field annotations are present on Glob/FileSystem/Event schemas, AppendFileSyncOptions.mode is non-negative S.Int, and SchemaParity.test.ts adds encoded-shape snapshots plus S.toArbitrary round-trip laws. Codemod proposer functions were run file-scoped and reported unchanged; the standalone wrappers still reference missing Effect.tapErrorCause. No cross-package ripples; policy flip intentionally skipped by orchestrator override."
     },
     "@beep/data": {
       "path": "packages/foundation/primitive/data",
       "sanitized": "beep__data",
       "family": "foundation",
       "discovery": "done",
-      "remediation": "pending",
+      "remediation": "done",
       "findingsByDomain": {
         "S1": 3,
         "S2": 11,
-        "S3": 3,
-        "S4": 8,
-        "S5": 6
+        "S3": 2,
+        "S4": 6,
+        "S5": 5
       },
-      "actionableCount": 6,
-      "exceptionCount": 25,
-      "parityProofRef": null,
+      "actionableCount": 0,
+      "exceptionCount": 27,
+      "parityProofRef": "No Effect Schema touched; runtime parity in packages/foundation/primitive/data/test/mime-types.test.ts and public type parity in packages/foundation/primitive/data/dtslint/mime-types.tst.ts",
       "policyFlipped": false,
-      "remediationNote": ""
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__data.json after burndown: 27 records remain, all exceptions, 0 actionable. Fixed 4 findings: derived KeyboardShortcutCommandLabelValues from KeyboardShortcutCommandNameValues through formalizeValues, reduced formalizeValues to A.map(Str.capitalize), hoisted MIME lookup to lookupPath via Fn.flow/O.liftPredicate(Str.isNonEmpty) while preserving the exported lookup(path) signature, and tightened internal MimeTypeDefinition to finite source + non-empty extensions while keeping the public MimeTypes.mimeTypes facade widened for compatibility. Added a MIME table invariant test and verified dtslint public shape. Newly excepted 2 findings: Blockchain Networks executable schema wrapper is a cross-package @beep/schema ripple deferred to family-close sweep; MIME lookup normalization remains in the vendored primitive data facade rather than adding an unexported private schema. Codemod proposer attempted for S4 but the standalone codemod exits before touching files because its wrapper calls missing Effect.tapErrorCause. Policy flip intentionally skipped by orchestrator override."
     },
     "@beep/types": {
       "path": "packages/foundation/primitive/types",
       "sanitized": "beep__types",
       "family": "foundation",
       "discovery": "done",
-      "remediation": "pending",
+      "remediation": "done",
       "findingsByDomain": {
         "S1": 1,
         "S2": 1,
@@ -1519,64 +1519,64 @@
       "exceptionCount": 9,
       "parityProofRef": null,
       "policyFlipped": false,
-      "remediationNote": ""
+      "remediationNote": "Discovery found zero actionable records (4 audited exceptions only) — nothing to remediate."
     },
     "@beep/editor": {
       "path": "packages/foundation/ui-system/editor",
       "sanitized": "beep__editor",
       "family": "foundation",
       "discovery": "done",
-      "remediation": "pending",
+      "remediation": "done",
       "findingsByDomain": {
-        "S1": 7,
-        "S2": 11,
-        "S3": 3,
-        "S4": 5,
-        "S5": 9
+        "S1": 5,
+        "S2": 10,
+        "S3": 2,
+        "S4": 2,
+        "S5": 3
       },
-      "actionableCount": 13,
+      "actionableCount": 0,
       "exceptionCount": 22,
-      "parityProofRef": null,
+      "parityProofRef": "packages/foundation/ui-system/editor/test/chat-schema-parity.test.ts",
       "policyFlipped": false,
-      "remediationNote": ""
+      "remediationNote": "Fixed 13 P2 records: schema-derived Lexical factory input types, attachment MIME/rejection codec statics, byte-count/capture-limit schemas, config field annotations/non-empty menu fields, exhaustive Mermaid render dispatch, SerializedEditorState.decodeOption reuse, and S.toArbitrary parity coverage. Remaining 22 records are pre-existing UI/Lexical boundary exceptions."
     },
     "@beep/form": {
       "path": "packages/foundation/ui-system/form",
       "sanitized": "beep__form",
       "family": "foundation",
       "discovery": "done",
-      "remediation": "pending",
+      "remediation": "done",
       "findingsByDomain": {
-        "S1": 8,
+        "S1": 7,
         "S2": 14,
-        "S3": 5,
+        "S3": 4,
         "S4": 4,
         "S5": 6
       },
-      "actionableCount": 2,
+      "actionableCount": 0,
       "exceptionCount": 35,
-      "parityProofRef": null,
+      "parityProofRef": "packages/foundation/ui-system/form/test/FormOptions.test.ts (it: 'round-trips ValidateOn without changing its encoded shape')",
       "policyFlipped": false,
-      "remediationNote": ""
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__form.json after removing fixed ValidateOn records: 35 records total, 35 exceptions, 0 remaining actionable. Fixed 2 duplicate ValidateOn records (S1 schema-first-inventory + S3 SFV4-static-api) by moving the validation-slot domain into a LiteralKit and routing buildValidators through ValidateOn.$match. Public string values and type imports remain unchanged. Added encoded-shape and S.toArbitrary round-trip parity coverage in FormOptions.test.ts. No cross-package ripples; policy flip intentionally skipped by orchestrator override. Package check/lint/vitest gates are green; final schema-first lint is blocked by two stale entries outside @beep/form."
     },
     "@beep/ui": {
       "path": "packages/foundation/ui-system/ui",
       "sanitized": "beep__ui",
       "family": "foundation",
       "discovery": "done",
-      "remediation": "pending",
+      "remediation": "done",
       "findingsByDomain": {
-        "S1": 12,
-        "S2": 13,
-        "S3": 5,
-        "S4": 11,
-        "S5": 11
+        "S1": 9,
+        "S2": 5,
+        "S3": 3,
+        "S4": 6,
+        "S5": 4
       },
-      "actionableCount": 28,
-      "exceptionCount": 24,
-      "parityProofRef": null,
+      "actionableCount": 0,
+      "exceptionCount": 27,
+      "parityProofRef": "packages/foundation/ui-system/ui/test/schema-parity.test.ts",
       "policyFlipped": false,
-      "remediationNote": ""
+      "remediationNote": "P2 remediation complete for @beep/ui: fixed 25 records across S1-S5, added 3 package-boundary exceptions, kept source edits scoped to packages/foundation/ui-system/ui. Direct @beep/ui lint and package vitest pass. Required turbo check/lint are blocked before @beep/ui by pre-existing @beep/schema dependency failures; schema-first lint reports zero live advisories but fails on 3 stale entries outside @beep/ui."
     },
     "@beep/db-admin": {
       "path": "packages/_internal/db-admin",

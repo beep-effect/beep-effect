@@ -1,4 +1,4 @@
-import { make } from "@beep/identity";
+import { BaseIdentityInput, make } from "@beep/identity";
 import {
   $AgentsDomainId,
   $AgentsUseCasesId,
@@ -9,7 +9,10 @@ import {
   $SchemaId,
   $WorkspaceDomainId,
 } from "@beep/identity/packages";
+import * as Equal from "effect/Equal";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
 declare module "effect/Schema" {
@@ -35,6 +38,24 @@ describe("@beep/identity", () => {
 
     expect($BeepId.string()).toBe("@beep");
     expect($BeepId.symbol()).toBe(Symbol.for("@beep"));
+  });
+
+  it("normalizes package constructor bases through the schema codec", () => {
+    expect(S.decodeUnknownOption(BaseIdentityInput)("@beep/my-pkg")).toEqual(O.some("my-pkg"));
+    expect(S.decodeUnknownOption(BaseIdentityInput)("@my-pkg")).toEqual(O.some("my-pkg"));
+    expect(make("my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");
+    expect(make("@my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");
+    expect(make("@beep/my-pkg").$MyPkgId.string()).toBe("@beep/my-pkg");
+  });
+
+  it("round-trips generated base constructor input values", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(BaseIdentityInput), (base) => {
+        const decoded = O.flatMap(S.encodeOption(BaseIdentityInput)(base), S.decodeUnknownOption(BaseIdentityInput));
+
+        expect(O.exists(decoded, (value) => Equal.equals(value, base))).toBe(true);
+      })
+    );
   });
 
   it("chains create for single-segment composition", () => {

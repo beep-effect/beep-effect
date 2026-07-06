@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/ui-system/form/src/core/FormOptions.ts",
-    "line": 44,
-    "symbol": "ValidateOn",
-    "smell": "Exported runtime configuration domain is a type-only literal union (`\"change\" | \"blur\" | \"submit\"`) instead of a schema-owned literal kit.",
-    "proposedTarget": "Replace the type-only union with `export const ValidateOn = LiteralKit([\"change\", \"blur\", \"submit\"])` and `export type ValidateOn = typeof ValidateOn.Type`; `buildValidators` can keep matching on the same string values. In-repo exemplars: `SendOn` in packages/foundation/ui-system/editor/src/chat/config.ts:43 and `ThemeMode` in packages/foundation/ui-system/ui/src/themes/theme-provider.tsx:69.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 0.45
-  },
-  {
-    "ruleId": "schema-first-inventory",
     "file": "packages/foundation/ui-system/form/src/core/FormSchema.ts",
     "line": 35,
     "symbol": "ToFormSchemaOptions (+ FormSchema)",

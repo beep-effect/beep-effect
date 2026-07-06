@@ -1,38 +1,5 @@
 [
   {
-    "ruleId": "SFV4-boundary-codec",
-    "file": "packages/foundation/modeling/rdf/src/Adapters/WebAnnotation.ts",
-    "line": 275,
-    "symbol": "evidenceSelectorToWebAnnotationSelector / webAnnotationSelectorToEvidenceSelector",
-    "smell": "`EvidenceSelector` and `WebAnnotationSelector` are both schema-owned tagged unions, but the adapter seam is encoded as two exported hand-mapping functions. The bidirectional boundary contract lives in function bodies instead of a named schema transformation, so consumers cannot decode/encode the seam through a schema value.",
-    "proposedTarget": "Introduce a named codec such as `WebAnnotationSelectorFromEvidenceSelector = EvidenceSelector.pipe(S.decodeTo(WebAnnotationSelector, { decode: SchemaGetter.transform(...), encode: SchemaGetter.transform(...) }))`, then preserve the two exported functions as compatibility wrappers over the codec if the API surface must remain. The source schemas are `EvidenceSelector` at `packages/foundation/modeling/rdf/src/Evidence.ts:194` and `WebAnnotationSelector` at `packages/foundation/modeling/rdf/src/Adapters/WebAnnotation.ts:161`. In-repo transform-codec precedent: `packages/foundation/modeling/md/src/Md.model.ts:1297-1300`; richer wire-codec precedent: `packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts:152-180`. Effect v4 APIs verified at `.repos/effect-v4/packages/effect/src/Schema.ts:5408` (`S.decodeTo`) and `.repos/effect-v4/packages/effect/src/SchemaGetter.ts:499` (`SchemaGetter.transform`).",
-    "confidence": 0.76,
-    "mechanization": "assisted",
-    "roiRank": 0.58
-  },
-  {
-    "ruleId": "SFV4-boundary-codec",
-    "file": "packages/foundation/modeling/rdf/src/Adapters/WebAnnotation.ts",
-    "line": 371,
-    "symbol": "evidenceTargetToWebAnnotationTarget / webAnnotationTargetToEvidenceTarget",
-    "smell": "`EvidenceTarget` and `WebAnnotationTarget` are both `S.Class` DTOs, but their adapter conversion is split into exported hand-mapping functions that recursively call the selector mapping functions. The target-level boundary is schema-shaped and reversible, yet it is not available as a schema codec.",
-    "proposedTarget": "Add a target-level codec, e.g. `WebAnnotationTargetFromEvidenceTarget = EvidenceTarget.pipe(S.decodeTo(WebAnnotationTarget, { decode: SchemaGetter.transform(...), encode: SchemaGetter.transform(...) }))`, composed with the selector codec from the previous finding. Source schemas: `EvidenceTarget` at `packages/foundation/modeling/rdf/src/Evidence.ts:235` and `WebAnnotationTarget` at `packages/foundation/modeling/rdf/src/Adapters/WebAnnotation.ts:206`. Effect v4 `S.decodeTo` and `SchemaGetter.transform` were verified at `.repos/effect-v4/packages/effect/src/Schema.ts:5408` and `.repos/effect-v4/packages/effect/src/SchemaGetter.ts:499`.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 0.5
-  },
-  {
-    "ruleId": "SFV4-boundary-codec",
-    "file": "packages/foundation/modeling/rdf/src/Adapters/WebAnnotation.ts",
-    "line": 431,
-    "symbol": "evidenceAnchorToWebAnnotation / webAnnotationToEvidenceAnchor",
-    "smell": "`EvidenceAnchor` and `WebAnnotation` are schema-owned adapter DTOs, but the package exposes the root adapter transformation only as two manual exported functions. This leaves the full Web Annotation boundary outside the schema graph even though nested selectors and targets are schema-modeled.",
-    "proposedTarget": "Add a root codec such as `WebAnnotationFromEvidenceAnchor = EvidenceAnchor.pipe(S.decodeTo(WebAnnotation, { decode: SchemaGetter.transform(...), encode: SchemaGetter.transform(...) }))`, composed from the target codec, and optionally keep the current functions as wrappers. Source schemas: `EvidenceAnchor` at `packages/foundation/modeling/rdf/src/Evidence.ts:276` and `WebAnnotation` at `packages/foundation/modeling/rdf/src/Adapters/WebAnnotation.ts:240`. In-repo precedent for schema-owned boundary transformations is `packages/foundation/modeling/md/src/Md.model.ts:1297-1300`; v4 APIs verified at `.repos/effect-v4/packages/effect/src/Schema.ts:5408` and `.repos/effect-v4/packages/effect/src/SchemaGetter.ts:499`.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 0.48
-  },
-  {
     "ruleId": "schema-first-inventory",
     "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
     "line": 21,

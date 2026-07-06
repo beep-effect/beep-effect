@@ -27,6 +27,9 @@ const targetFlag = Flag.string("target").pipe(
 );
 
 const allFlag = Flag.boolean("all").pipe(Flag.withDescription("Sync every checked-in target"));
+const includeAuthenticatedFlag = Flag.boolean("include-authenticated").pipe(
+  Flag.withDescription("Include sync targets that require configured authenticated source access when --all is used")
+);
 const checkFlag = Flag.boolean("check").pipe(
   Flag.withDescription("Report drift without writing files and exit non-zero when changes are needed")
 );
@@ -49,6 +52,7 @@ type SyncDataRunModeFlags = typeof SyncDataRunModeFlags.Type;
 class SyncDataTargetSelection extends S.Class<SyncDataTargetSelection>("SyncDataTargetSelection")({
   targetId: S.Option(S.String),
   all: S.Boolean,
+  includeAuthenticated: S.Boolean,
 }) {}
 
 const makeRunModeFlags = (check: boolean, dryRun: boolean): SyncDataRunModeFlags => [check, dryRun];
@@ -112,6 +116,11 @@ const resolveSelectedTarget = flow(
   O.getOrElse(() => Effect.fail(targetSelectionRequiredError()))
 );
 
+const targetIsEnabledForAll =
+  (includeAuthenticated: boolean) =>
+  (target: SyncDataTarget): boolean =>
+    target.access === "public" || includeAuthenticated;
+
 const resolveTargetSelection: (
   selection: SyncDataTargetSelection
 ) => Effect.Effect<ReadonlyArray<SyncDataTarget>, SyncDataToTsError> = Match.type<SyncDataTargetSelection>().pipe(
@@ -121,16 +130,18 @@ const resolveTargetSelection: (
   ),
   Match.when(
     ({ all }) => all,
-    () => Effect.succeed(syncDataTargets)
+    ({ includeAuthenticated }) =>
+      Effect.succeed(pipe(syncDataTargets, A.filter(targetIsEnabledForAll(includeAuthenticated))))
   ),
   Match.orElse(({ targetId }) => resolveSelectedTarget(targetId))
 );
 
 const resolveTargets = Effect.fnUntraced(function* (
   targetId: O.Option<string>,
-  all: boolean
+  all: boolean,
+  includeAuthenticated: boolean
 ): Effect.fn.Return<ReadonlyArray<SyncDataTarget>, SyncDataToTsError> {
-  return yield* resolveTargetSelection(SyncDataTargetSelection.make({ targetId, all }));
+  return yield* resolveTargetSelection(SyncDataTargetSelection.make({ targetId, all, includeAuthenticated }));
 });
 
 const readExistingFile = Effect.fn(function* (
@@ -512,16 +523,17 @@ export const syncDataToTsCommand = Command.make(
   {
     target: targetFlag,
     all: allFlag,
+    includeAuthenticated: includeAuthenticatedFlag,
     check: checkFlag,
     dryRun: dryRunFlag,
     verbose: verboseFlag,
     reportDir: reportDirFlag,
   },
   Effect.fn(
-    function* ({ target, all, check, dryRun, verbose, reportDir }) {
+    function* ({ target, all, includeAuthenticated, check, dryRun, verbose, reportDir }) {
       const repoRoot = yield* findRepoRoot();
       const mode = yield* resolveRunMode(check, dryRun);
-      const targets = yield* resolveTargets(target, all);
+      const targets = yield* resolveTargets(target, all, includeAuthenticated);
       const results = yield* Effect.forEach(targets, (currentTarget) => syncTarget(repoRoot, mode, currentTarget), {
         concurrency: 1,
       });

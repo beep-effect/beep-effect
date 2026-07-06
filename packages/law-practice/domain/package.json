@@ -39,6 +39,12 @@
     "./entities/PatentAsset": "./src/entities/PatentAsset/index.ts",
     "./entities/PriorArtReference": "./src/entities/PriorArtReference/index.ts",
     "./entities/Rejection": "./src/entities/Rejection/index.ts",
+    "./values": "./src/values/index.ts",
+    "./values/ApplicationNumber": "./src/values/ApplicationNumber/index.ts",
+    "./values/KindCode": "./src/values/KindCode/index.ts",
+    "./values/OfficeCode": "./src/values/OfficeCode/index.ts",
+    "./values/PatentDocumentTriplet": "./src/values/PatentDocumentTriplet/index.ts",
+    "./values/PatentNumber": "./src/values/PatentNumber/index.ts",
     "./package.json": "./package.json"
   },
   "files": [

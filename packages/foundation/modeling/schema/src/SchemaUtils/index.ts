@@ -14,6 +14,11 @@ export * from "./isCodecDataFirst.ts";
  * @since 0.0.0
  * @category utilities
  */
+export * from "./optional.ts";
+/**
+ * @since 0.0.0
+ * @category utilities
+ */
 export * from "./optionalKeyWithDefaults.ts";
 /**
  * @since 0.0.0

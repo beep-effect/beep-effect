@@ -1,10 +1,19 @@
 import { Document, DocumentId } from "@beep/nlp/Core/Document";
 import { Sentence, SentenceIndex } from "@beep/nlp/Core/Sentence";
+import { SimilarityScore } from "@beep/nlp/Core/Similarity";
 import { CharPosition, Token, TokenIndex } from "@beep/nlp/Core/Token";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A } from "@beep/utils";
-import { Chunk, pipe } from "effect";
+import { Chunk, Effect, pipe } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
+
+const TokenArbitrary = S.toArbitrary(Token);
+const SentenceArbitrary = S.toArbitrary(Sentence);
+const DocumentArbitrary = S.toArbitrary(Document);
+const SimilarityScoreArbitrary = S.toArbitrary(SimilarityScore);
 
 const makeToken = (index: number, text: string, start: number, end: number): Token =>
   Token.make({
@@ -61,6 +70,107 @@ const makeDocument = (text: string, tokens: ReadonlyArray<Token>, sentences: Rea
   });
 
 describe("Core models", () => {
+  it("keeps constructor-defaulted optional fields absent in encoded core wire shapes", () => {
+    const token = Token.make({
+      end: CharPosition.make(6),
+      index: TokenIndex.make(0),
+      start: CharPosition.make(0),
+      tags: [],
+      text: "Effect",
+    });
+    const sentence = Sentence.make({
+      end: TokenIndex.make(0),
+      index: SentenceIndex.make(0),
+      start: TokenIndex.make(0),
+      text: "Effect",
+      tokens: Chunk.of(token),
+    });
+    const document = Document.make({
+      id: DocumentId.make("core-models"),
+      sentences: Chunk.of(sentence),
+      text: "Effect",
+      tokens: Chunk.of(token),
+    });
+    const similarity = SimilarityScore.make({
+      document1Id: DocumentId.make("doc-a"),
+      document2Id: DocumentId.make("doc-b"),
+      method: "set.tversky",
+      score: UnitInterval.make(0.8),
+    });
+
+    expect(Effect.runSync(S.encodeUnknownEffect(Token)(token))).toEqual({
+      end: 6,
+      index: 0,
+      start: 0,
+      tags: [],
+      text: "Effect",
+    });
+    const encodedSentence = Effect.runSync(S.encodeUnknownEffect(Sentence)(sentence));
+    expect(encodedSentence).toEqual({
+      end: 0,
+      index: 0,
+      start: 0,
+      text: "Effect",
+      tokens: encodedSentence.tokens,
+    });
+    expect(Chunk.toReadonlyArray(encodedSentence.tokens)).toEqual([
+      {
+        end: 6,
+        index: 0,
+        start: 0,
+        tags: [],
+        text: "Effect",
+      },
+    ]);
+
+    const encodedDocument = Effect.runSync(S.encodeUnknownEffect(Document)(document));
+    expect(encodedDocument).toEqual({
+      id: "core-models",
+      sentences: encodedDocument.sentences,
+      text: "Effect",
+      tokens: encodedDocument.tokens,
+    });
+    expect(Chunk.toReadonlyArray(encodedDocument.sentences)).toEqual([encodedSentence]);
+    expect(Chunk.toReadonlyArray(encodedDocument.tokens)).toEqual([
+      {
+        end: 6,
+        index: 0,
+        start: 0,
+        tags: [],
+        text: "Effect",
+      },
+    ]);
+    expect(Effect.runSync(S.encodeUnknownEffect(SimilarityScore)(similarity))).toEqual({
+      document1Id: "doc-a",
+      document2Id: "doc-b",
+      method: "set.tversky",
+      score: 0.8,
+    });
+  });
+
+  it("round-trips schema-derived core model values", () => {
+    fc.assert(
+      fc.property(
+        TokenArbitrary,
+        SentenceArbitrary,
+        DocumentArbitrary,
+        SimilarityScoreArbitrary,
+        (token, sentence, document, similarity) => {
+          const encodedToken = Effect.runSync(S.encodeEffect(Token)(token));
+          const encodedSentence = Effect.runSync(S.encodeEffect(Sentence)(sentence));
+          const encodedDocument = Effect.runSync(S.encodeEffect(Document)(document));
+          const encodedSimilarity = Effect.runSync(S.encodeEffect(SimilarityScore)(similarity));
+
+          expect(Effect.runSync(S.decodeUnknownEffect(Token)(encodedToken))).toEqual(token);
+          expect(Effect.runSync(S.decodeUnknownEffect(Sentence)(encodedSentence))).toEqual(sentence);
+          expect(Effect.runSync(S.decodeUnknownEffect(Document)(encodedDocument))).toEqual(document);
+          expect(Effect.runSync(S.decodeUnknownEffect(SimilarityScore)(encodedSimilarity))).toEqual(similarity);
+        }
+      ),
+      { numRuns: 50 }
+    );
+  });
+
   it("returns tokens whose character spans overlap the requested range", () => {
     const tokens = [makeToken(0, "Ada", 0, 3), makeToken(1, "Loves", 3, 8), makeToken(2, "Code", 8, 12)];
     const sentence = makeSentence(0, "AdaLovesCode", tokens);

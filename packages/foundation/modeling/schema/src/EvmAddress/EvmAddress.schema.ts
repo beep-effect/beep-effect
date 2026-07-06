@@ -8,50 +8,12 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { Str } from "@beep/utils";
-import { keccak_256 } from "@noble/hashes/sha3.js";
-import { Encoding, flow, Redacted } from "effect";
-import * as Eq from "effect/Equal";
+import { flow, Redacted } from "effect";
 import * as S from "effect/Schema";
+import { isCanonicalEvmAddress } from "../internal/crypto.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("EvmAddress");
-
-const evmAddressPattern = /^0x[0-9a-fA-F]{40}$/;
-
-const isCanonicalEvmAddress = (input: string): boolean => {
-  if (!evmAddressPattern.test(input)) {
-    return false;
-  }
-
-  const addressBody = Str.slice(2)(input);
-  const lowercaseAddressBody = Str.toLowerCase(addressBody);
-
-  if (addressBody === lowercaseAddressBody) {
-    return true;
-  }
-
-  const checksum = Encoding.encodeHex(keccak_256(new TextEncoder().encode(lowercaseAddressBody)));
-
-  for (let index = 0; index < addressBody.length; index += 1) {
-    const character = addressBody[index]!;
-    const lowercaseCharacter = Str.toLowerCase(character);
-    const uppercaseCharacter = Str.toUpperCase(character);
-
-    if (Eq.equals(lowercaseCharacter, uppercaseCharacter)) {
-      continue;
-    }
-
-    const checksumNibble = Number.parseInt(checksum[index]!, 16);
-    const shouldBeUppercase = checksumNibble >= 8;
-
-    if (shouldBeUppercase ? character !== uppercaseCharacter : character !== lowercaseCharacter) {
-      return false;
-    }
-  }
-
-  return true;
-};
 
 const EvmAddressChecks = S.makeFilterGroup(
   [

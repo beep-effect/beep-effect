@@ -8,6 +8,8 @@
 
 import * as Kind from "@beep/nlp/Ontology/Kind";
 import { describe, expect, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const allKinds: ReadonlyArray<Kind.TextKind> = [
@@ -26,6 +28,7 @@ const allKinds: ReadonlyArray<Kind.TextKind> = [
 ];
 
 const kindArbitrary = fc.constantFrom(...allKinds);
+const KindContainmentArbitrary = S.toArbitrary(Kind.KindContainment);
 
 describe("TextKind schema", () => {
   it("accepts every declared kind", () => {
@@ -59,6 +62,21 @@ describe("Containment poset", () => {
     expect(Kind.canContain("Document", "Sentence")).toBe(true);
     expect(Kind.canContain("Token", "Character")).toBe(true);
     expect(Kind.canContain("Token", "Document")).toBe(false);
+  });
+
+  it("derives the runtime containment record from schema defaults", () => {
+    expect(Kind.KindContainment.containment).toEqual(Kind.KindContainment.make({}));
+  });
+
+  it("round-trips schema-derived containment records", () => {
+    fc.assert(
+      fc.property(KindContainmentArbitrary, (containment) => {
+        const encoded = Effect.runSync(S.encodeEffect(Kind.KindContainment)(containment));
+        const decoded = Effect.runSync(S.decodeUnknownEffect(Kind.KindContainment)(encoded));
+
+        expect(decoded).toEqual(containment);
+      })
+    );
   });
 });
 

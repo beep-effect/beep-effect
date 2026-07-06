@@ -94,6 +94,9 @@ describe("DateTimeInput primitive schemas", () => {
     expect(S.decodeUnknownSync(DateTimeInputString.Tagged)(stringInput)).toEqual(stringInput);
     expect(S.decodeUnknownSync(DateTimeInputNumber.Tagged)(numberInput)).toEqual(numberInput);
     expect(S.decodeUnknownSync(DateTimeInputDate.Tagged)(dateInput)).toEqual(dateInput);
+    expect(DateTimeInputString.Tagged.is(stringInput)).toBe(true);
+    expect(DateTimeInputNumber.Tagged.is(numberInput)).toBe(true);
+    expect(DateTimeInputDate.Tagged.is(dateInput)).toBe(true);
   });
 
   it("rejects invalid primitive inputs", () => {
