@@ -76,16 +76,6 @@ const documentToRecord = (document: UsptoDocumentReference): Record<string, unkn
 
 const TIER_ORDER: ReadonlyArray<FieldTierName> = ["complete", "balanced", "minimal"];
 
-/**
- * Tagged outcome of {@link projectDocumentsWithinBudget}: `Inline` names the
- * field tier that fit within budget, carrying the tier-projected columnar
- * envelope directly; `Fetchable` carries a {@link FetchableHandle} minted by
- * the caller when even the `minimal` tier's columnar envelope exceeds
- * budget.
- *
- * @category schemas
- * @since 0.0.0
- */
 const DocumentsProjectionOutputBase = LiteralKit(["Inline", "Fetchable"]).toTaggedUnion("_tag")({
   Inline: { tier: FieldTierName, envelope: ColumnarEnvelope },
   Fetchable: { handle: FetchableHandle },
@@ -108,6 +98,16 @@ const DocumentsProjectionOutputArbitraryValues = [
   }),
 ] as const;
 
+/**
+ * Tagged outcome of {@link projectDocumentsWithinBudget}: `Inline` names the
+ * field tier that fit within budget, carrying the tier-projected columnar
+ * envelope directly; `Fetchable` carries a {@link FetchableHandle} minted by
+ * the caller when even the `minimal` tier's columnar envelope exceeds
+ * budget.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const DocumentsProjectionOutput = DocumentsProjectionOutputBase.annotate({
   toArbitrary: () => (fc) => fc.constantFrom(...DocumentsProjectionOutputArbitraryValues),
 }).pipe(
