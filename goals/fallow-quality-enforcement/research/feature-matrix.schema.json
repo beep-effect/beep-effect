@@ -136,6 +136,7 @@
           "ruleSourceClass": {
             "enum": [
               "manifest-derived",
+              "doctrine-pinned",
               "architecture-derived-hard-check",
               "review-gate-only",
               "tool-native",
@@ -163,6 +164,7 @@
                 "sourceClass": {
                   "enum": [
                     "manifest-derived",
+                    "doctrine-pinned",
                     "architecture-derived-hard-check",
                     "review-gate-only",
                     "tool-native",
@@ -172,6 +174,7 @@
                 "enforcementScope": {
                   "enum": [
                     "declared-dependency-consistency",
+                    "layer-legality",
                     "architecture-legal-edge",
                     "review-only"
                   ]
@@ -519,6 +522,7 @@
     ],
     "ruleSourceClass": [
       "manifest-derived",
+      "doctrine-pinned",
       "architecture-derived-hard-check",
       "review-gate-only",
       "tool-native",
@@ -526,6 +530,7 @@
     ],
     "boundaryEnforcementScope": [
       "declared-dependency-consistency",
+      "layer-legality",
       "architecture-legal-edge",
       "review-only"
     ],

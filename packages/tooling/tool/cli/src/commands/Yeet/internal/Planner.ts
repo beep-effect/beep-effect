@@ -232,8 +232,8 @@ export const emptyTurboPlanSnapshot = (warnings: ReadonlyArray<string>): TurboPl
 
 // Deterministic auto-fixers run sequentially (runPhase concurrency:1) so parallel
 // inventory writes cannot corrupt each other. Code rewriters (effect-imports) run
-// first, then artifact generators (dual-arity inventory, fallow boundaries,
-// tsconfig), then biome formats everything, then docgen regenerates docs last.
+// first, then artifact generators (dual-arity inventory, tsconfig), then biome
+// formats everything, then docgen regenerates docs last.
 // terse-effect/schema-first are intentionally excluded: they can leave manual
 // candidates and are enforced advisory in verify, not auto-fixed here.
 const repairSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> => [
@@ -257,19 +257,9 @@ const repairSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> => [
     "write",
     "repo"
   ),
-  bunRunStep(
-    context,
-    "prepare:03-boundaries",
-    "prepare:fallow:boundaries",
-    "prepare",
-    "fallow:boundaries:write",
-    [],
-    "write",
-    "repo"
-  ),
-  bunRunStep(context, "prepare:04-config-sync", "prepare:config-sync", "prepare", "config-sync", [], "write", "repo"),
-  bunRunStep(context, "prepare:05-lint-fix", "prepare:lint:fix", "prepare", "lint:fix", [], "write", "repo"),
-  bunRunStep(context, "prepare:06-docgen", "prepare:docgen", "prepare", "docgen", [], "write", "repo"),
+  bunRunStep(context, "prepare:03-config-sync", "prepare:config-sync", "prepare", "config-sync", [], "write", "repo"),
+  bunRunStep(context, "prepare:04-lint-fix", "prepare:lint:fix", "prepare", "lint:fix", [], "write", "repo"),
+  bunRunStep(context, "prepare:05-docgen", "prepare:docgen", "prepare", "docgen", [], "write", "repo"),
 ];
 
 const packageNameForFeedbackTask =
