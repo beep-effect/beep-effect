@@ -238,7 +238,7 @@ const findingOrder = Order.combine(
   )
 );
 
-const emptyRawFindings = (): ReadonlyArray<KnipRawFindingItem> => A.empty<KnipRawFindingItem>();
+const emptyRawFindings = A.empty<KnipRawFindingItem>;
 
 const rawItemsForKind = (issue: KnipRawIssue, kind: KnipFindingKind): ReadonlyArray<KnipRawFindingItem> =>
   KnipFindingKind.$match(kind, {
@@ -467,7 +467,7 @@ const renderFindingLines = (findings: ReadonlyArray<KnipFinding>, limit: number)
       omittedCount,
       O.liftPredicate((count) => count > 0),
       O.map((count) => A.of(`  - ... ${count} more`)),
-      O.getOrElse(() => A.empty<string>())
+      O.getOrElse(A.empty<string>)
     ),
   ];
 };

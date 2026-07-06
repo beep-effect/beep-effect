@@ -327,7 +327,7 @@ const renderDeltaLines = (
       omittedCount,
       O.liftPredicate((count) => count > 0),
       O.map((count) => A.of(`  - ... ${count} more`)),
-      O.getOrElse(() => A.empty<string>())
+      O.getOrElse(A.empty<string>)
     ),
   ];
 };

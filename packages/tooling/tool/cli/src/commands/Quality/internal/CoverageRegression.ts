@@ -455,7 +455,7 @@ const compareCoverage = (
         actualsByName,
         R.get(packageName),
         O.map((actual) => droppedMetrics(packageName, packageBaseline, actual.baseline, baseline.epsilon)),
-        O.getOrElse(() => A.empty<CoverageComparisonFailure>())
+        O.getOrElse(A.empty<CoverageComparisonFailure>)
       )
     )
   );
@@ -507,14 +507,14 @@ const failComparison = Effect.fn("CoverageRegression.failComparison")(function* 
 ): Effect.fn.Return<void, QualityTaskFailed> {
   const sections = [
     ...A.match(result.failures, {
-      onEmpty: () => A.empty<string>(),
+      onEmpty: A.empty<string>,
       onNonEmpty: (failures) => [
         "[coverage-ratchet] coverage dropped below baseline:",
         ...renderCoverageFailures(failures),
       ],
     }),
     ...A.match(result.missingActuals, {
-      onEmpty: () => A.empty<string>(),
+      onEmpty: A.empty<string>,
       onNonEmpty: (missing) => [
         "[coverage-ratchet] missing coverage summaries for baseline package(s):",
         ...A.map(missing, (packageName) => `  - ${packageName}`),
