@@ -626,7 +626,8 @@ const resolveSchemaCrispeningPolicyBlocking = (
  * import { isSchemaCrispeningPolicyExempt } from "@beep/repo-cli/commands/Lint"
  * import * as O from "effect/Option"
  *
- * console.log(isSchemaCrispeningPolicyExempt(O.none())(entry))
+ * const exemptWithoutPolicy = isSchemaCrispeningPolicyExempt(O.none())
+ * console.log(exemptWithoutPolicy)
  * ```
  * @category utilities
  * @since 0.0.0
@@ -634,18 +635,17 @@ const resolveSchemaCrispeningPolicyBlocking = (
 export const isSchemaCrispeningPolicyExempt =
   (policyDocument: O.Option<SchemaCrispeningPolicyDocument>) =>
   (entry: SchemaFirstInventoryEntry): boolean =>
-    O.match(policyDocument, {
-      onNone: () => false,
-      onSome: (policy) =>
+    pipe(
+      policyDocument,
+      O.flatMap((policy) =>
         pipe(
           O.fromNullishOr(entry.ruleId),
           O.filter((ruleId) => A.contains(policy.cards, ruleId)),
-          O.match({
-            onNone: () => false,
-            onSome: () => !resolveSchemaCrispeningPolicyBlocking(policy, entry),
-          })
-        ),
-    });
+          O.map(() => !resolveSchemaCrispeningPolicyBlocking(policy, entry))
+        )
+      ),
+      O.getOrElse(() => false)
+    );
 
 const isFunctionLikeMember = (member: Node): boolean => {
   if (
