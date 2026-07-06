@@ -29,3 +29,19 @@ commit documents the coverage-lane runtime design in `vitest.setup.ts`
 (istanbul under `--bun` measures 0% — verified 0/555 on modeling/utils —
 so `coverage` scripts run node vitest/v8 behind a guarded Bun-API shim while
 `test` scripts stay bun-native).
+
+## rqt-015 candidate: local pre-push composite races itself (2026-07-06)
+
+Three consecutive local verify failures were intra-composite concurrency
+artifacts, not code defects (every gate passes standalone on the same tree):
+(a) repo-cli's yeet tests perform real `git stash` ops while
+`lint:schema-first` scans the same tree → inventory mismatch, exit 1;
+(b) docgen extracts @example blocks to temporary files while the
+`lint:deprecated-apis` eslint glob collects them → ENOENT crash (exit 2)
+when docgen deletes them mid-scan; (c) full docgen segfaults (exit 139)
+under multi-session memory pressure. The verdict layer misattributed all
+three to dual-arity. Hosted CI is immune (isolated checkouts per lane).
+Follow-up: isolate mutating steps (tests, docgen) from tree-scanning steps
+(schema-first, deprecated-apis) in the grouped-concurrency plan — the
+greptile P2 on Tasks.ts concurrency called this. Shipping via the
+documented fast-plus-monitor path with hosted checks as proof.
