@@ -677,6 +677,79 @@ const groupDigits = (number: string): string =>
     O.getOrElse(() => number)
   );
 
+const metadataField = <A>(
+  metadata: PatentDisplayMetadata.Encoded | null | undefined,
+  field: (metadata: PatentDisplayMetadata.Encoded) => A | null | undefined
+): O.Option<A> =>
+  pipe(
+    O.fromNullishOr(metadata),
+    O.flatMap((value) => O.fromNullishOr(field(value)))
+  );
+
+const makePatentDisplayInput = (metadata: PatentDisplayMetadata.Encoded | null | undefined): PatentDisplayMetadata =>
+  PatentDisplayMetadata.make({
+    patent_number: metadataField(metadata, ({ patent_number }) => patent_number),
+    patentNumber: metadataField(metadata, ({ patentNumber }) => patentNumber),
+    country: metadataField(metadata, ({ country }) => country),
+    kind_code: metadataField(metadata, ({ kind_code }) => kind_code),
+    kindCode: metadataField(metadata, ({ kindCode }) => kindCode),
+  });
+
+const patentDisplayRawNumber = (input: PatentDisplayMetadata): string =>
+  pipe(
+    firstSome([input.patentNumber, input.patent_number]),
+    O.getOrElse(() => "")
+  );
+
+const patentDisplayContentReference = (content: string | undefined): PatentReference =>
+  pipe(O.fromNullishOr(content), O.map(parsePatentReference), O.getOrElse(PatentReference.empty));
+
+const patentDisplayCountry = (
+  input: PatentDisplayMetadata,
+  fromNumber: PatentReference,
+  fromContent: PatentReference
+): OfficeCode =>
+  pipe(
+    firstSome([pipe(input.country, O.flatMap(toOfficeCodeOption)), fromNumber.country, fromContent.country]),
+    O.getOrElse(() => DEFAULT_OFFICE_CODE)
+  );
+
+const patentDisplayKindCode = (
+  input: PatentDisplayMetadata,
+  fromNumber: PatentReference,
+  fromContent: PatentReference
+): O.Option<KindCode> =>
+  firstSome([
+    pipe(input.kind_code, O.flatMap(toKindCodeOption)),
+    pipe(input.kindCode, O.flatMap(toKindCodeOption)),
+    fromNumber.kindCode,
+    fromContent.kindCode,
+  ]);
+
+const patentDisplayNumber = (
+  rawNumber: string,
+  fromNumber: PatentReference,
+  fromContent: PatentReference
+): O.Option<PatentNumber> => firstSome([fromNumber.number, toPatentNumberOption(rawNumber), fromContent.number]);
+
+const patentDisplayFormatted = (
+  country: OfficeCode,
+  number: O.Option<PatentNumber>,
+  kindCode: O.Option<KindCode>
+): string => {
+  const display = pipe(
+    number,
+    O.map((value) => `${country} ${groupDigits(value)}`),
+    O.getOrElse(() => country)
+  );
+
+  return pipe(
+    kindCode,
+    O.map((value) => `${display} ${value}`),
+    O.getOrElse(() => display)
+  );
+};
+
 /**
  * Build a jurisdiction-aware display identity from API metadata and content.
  *
@@ -684,44 +757,15 @@ const groupDigits = (number: string): string =>
  * @since 0.0.0
  */
 export const getPatentDisplay = (metadata?: PatentDisplayMetadata.Encoded | null, content?: string): PatentDisplay => {
-  const input = PatentDisplayMetadata.make({
-    patent_number: O.fromNullishOr(metadata?.patent_number),
-    patentNumber: O.fromNullishOr(metadata?.patentNumber),
-    country: O.fromNullishOr(metadata?.country),
-    kind_code: O.fromNullishOr(metadata?.kind_code),
-    kindCode: O.fromNullishOr(metadata?.kindCode),
-  });
-  const rawNumber = pipe(
-    firstSome([input.patentNumber, input.patent_number]),
-    O.getOrElse(() => "")
-  );
+  const input = makePatentDisplayInput(metadata);
+  const rawNumber = patentDisplayRawNumber(input);
   const fromNumber = parsePatentReference(rawNumber);
-  const fromContent = pipe(O.fromNullishOr(content), O.map(parsePatentReference), O.getOrElse(PatentReference.empty));
-  const country = pipe(
-    firstSome([pipe(input.country, O.flatMap(toOfficeCodeOption)), fromNumber.country, fromContent.country]),
-    O.getOrElse(() => DEFAULT_OFFICE_CODE)
-  );
-  const kindCode = firstSome([
-    pipe(input.kind_code, O.flatMap(toKindCodeOption)),
-    pipe(input.kindCode, O.flatMap(toKindCodeOption)),
-    fromNumber.kindCode,
-    fromContent.kindCode,
-  ]);
-  const number = firstSome([fromNumber.number, toPatentNumberOption(rawNumber), fromContent.number]);
-  const display = pipe(
-    number,
-    O.map((value) => `${country} ${groupDigits(value)}`),
-    O.getOrElse(() => country)
-  );
-  const formatted = pipe(
-    kindCode,
-    O.map((value) => `${display} ${value}`),
-    O.getOrElse(() => display)
-  );
-  const status = getStatusFromKindCode(
-    country,
-    O.map(kindCode, (value) => value)
-  );
+  const fromContent = patentDisplayContentReference(content);
+  const country = patentDisplayCountry(input, fromNumber, fromContent);
+  const kindCode = patentDisplayKindCode(input, fromNumber, fromContent);
+  const number = patentDisplayNumber(rawNumber, fromNumber, fromContent);
+  const formatted = patentDisplayFormatted(country, number, kindCode);
+  const status = getStatusFromKindCode(country, kindCode);
 
   return PatentDisplay.make({
     country,

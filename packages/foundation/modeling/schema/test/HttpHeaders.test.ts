@@ -17,7 +17,7 @@ import {
   NavigationDirective,
   ReportingDirective,
 } from "@beep/schema/Csp";
-import { ExpectCTHeader } from "@beep/schema/ExpectCt";
+import { ExpectCTConfig, ExpectCTHeader } from "@beep/schema/ExpectCt";
 import { ForceHttpsRedirectHeader } from "@beep/schema/ForceHttpsRedirect";
 import { FrameGuardHeader } from "@beep/schema/FrameGuard";
 import { NoOpenHeader } from "@beep/schema/NoOpen";
@@ -168,11 +168,11 @@ describe("Secure header schemas", () => {
     Effect.gen(function* () {
       const option = [
         true,
-        {
+        ExpectCTConfig.make({
           maxAge: 123,
           enforce: true,
-          reportURI: new URL("https://example.com/report"),
-        },
+          reportURI: O.some(new URL("https://example.com/report")),
+        }),
       ] as const;
 
       expectHeader(
@@ -211,9 +211,18 @@ describe("Secure header schemas", () => {
         Promise.resolve(expect(run(ExpectCTHeader.createValue(true))).resolves.toEqual(O.some("max-age=86400")))
       );
       expect(O.isNone(yield* Effect.promise(() => Promise.resolve(run(ExpectCTHeader.create(false)))))).toBe(true);
-      expect(Exit.isFailure(runExit(ExpectCTHeader.createValue([true, { reportURI: "not-a-url" }] as const)))).toBe(
-        true
-      );
+      expect(
+        Exit.isFailure(
+          runExit(
+            ExpectCTHeader.createValue([
+              true,
+              ExpectCTConfig.make({
+                reportURI: O.some("not-a-url"),
+              }),
+            ] as const)
+          )
+        )
+      ).toBe(true);
       expect(Exit.isFailure(runExit(ExpectCTHeader.createValue([true, { maxAge: -1 }] as never)))).toBe(true);
     }));
 
@@ -647,7 +656,7 @@ describe("Secure header aggregates", () => {
                   scriptSrc: "'self'",
                 },
               },
-              expectCT: [true, { maxAge: 123, enforce: true }],
+              expectCT: [true, ExpectCTConfig.make({ maxAge: 123, enforce: true, reportURI: O.none() })],
             })
           )
         )

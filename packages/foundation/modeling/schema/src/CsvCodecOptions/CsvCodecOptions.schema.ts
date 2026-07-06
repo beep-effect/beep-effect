@@ -7,10 +7,12 @@
 
 import { $SchemaId } from "@beep/identity";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { NonNegativeInt } from "../Int.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $SchemaId.create("CsvCodecOptions");
 
@@ -74,7 +76,10 @@ export class CsvCodecOptions extends S.Class<CsvCodecOptions>($I`CsvCodecOptions
     parseOptions: csvCodecOptionsParseOptions,
   })
 ) {
-  static readonly decodeEffect = S.decodeUnknownEffect(CsvCodecOptions);
+  static readonly decodeEffect: {
+    (input: unknown, options?: AST.ParseOptions): Effect.Effect<CsvCodecOptions, S.SchemaError>;
+    (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<CsvCodecOptions, S.SchemaError>;
+  } = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(CsvCodecOptions));
 
   get escapeChar(): O.Option<string> {
     return O.orElse(() => this.quote)(this.escape);

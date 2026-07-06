@@ -18,6 +18,22 @@ import { lookupAtPath, pathLookupToOption, unsafeDotGet } from "./internal/Struc
 import type { Get, Paths, Simplify } from "type-fest";
 import type { PathLookup as InternalPathLookup, PathInput } from "./internal/StructPath.ts";
 
+/**
+ * Schema for dot-delimited paths or path segment arrays accepted by struct lookup helpers.
+ *
+ * @example
+ * ```ts
+ * import { PathInput } from "@beep/utils/Struct"
+ *
+ * const path = PathInput.make(["profile", "name"])
+ * console.log(path)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export { PathInput } from "./internal/StructPath.ts";
+
 const $I = $UtilsId.create("Struct");
 
 type NonEmptyStringKeyStruct<R extends object> = [keyof R & string] extends [never] ? never : R;

@@ -1,105 +1,6 @@
 [
   {
     "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts",
-    "line": 16,
-    "symbol": "commonFields",
-    "smell": "`cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))` is an Option field on the shared TaggedErrorClass field set, but it lacks `SchemaUtils.withNoneDefault`; secure-header call sites therefore repeat `cause: O.none()` across the package.",
-    "proposedTarget": "Apply the package's own constructor-default helper: `cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault)`, using `SchemaUtils.withNoneDefault` as defined in `SchemaUtils/withConstructorDefaults.ts:46-51`; then omit `cause` at no-underlying-cause `*.make({ message })` sites while preserving `O.some(cause)` where present.",
-    "confidence": 0.92,
-    "mechanization": "codemod",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.schema.ts",
-    "line": 140,
-    "symbol": "ParserOptions",
-    "smell": "The `ParserOptions` S.Class hand-wires constructor and missing-key defaults with repeated `S.withConstructorDefault(Effect.succeed(...))` + `S.withDecodingDefaultKey(Effect.succeed(...))` for objectMode, delimiter, booleans, carriageReturn, encoding, and row limits instead of using this package's default helpers.",
-    "proposedTarget": "Replace same-value defaults with `SchemaUtils.withKeyDefaults(...)` and boolean defaults with `SchemaUtils.BoolKeyDefaultFalse` / `BoolKeyDefaultTrue` (`SchemaUtils/withKeyDefaults.ts:50-68`, `:207-246`). For `escape`, `comment`, and `headers`, use `SchemaUtils.withNoneDefault` for the constructor side and keep the explicit decode default to `null` unless a dedicated Option key-default helper is added; leave the `quote` `O.some('\"')` default as assisted/manual because Type and Encoded defaults differ.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/schema/src/CsvCodecOptions/CsvCodecOptions.schema.ts",
-    "line": 49,
-    "symbol": "CsvCodecOptions",
-    "smell": "CSV codec option fields repeat the same raw default wiring as `ParserOptions`: `delimiter`, trim flags, strictColumnHandling, and row/line limits all manually compose Effect/Schema defaults while `SchemaUtils.withKeyDefaults`, `BoolKeyDefaultFalse`, and `withNoneDefault` already exist in-package.",
-    "proposedTarget": "Mechanically rewrite same-value fields to the local helpers (`delimiter: SingleCharacterText.pipe(SchemaUtils.withKeyDefaults(','))`, booleans to `SchemaUtils.BoolKeyDefaultFalse`, numeric limits to `NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(0))`). For `escape` and `comment`, use `S.OptionFromNullOr(...).pipe(SchemaUtils.withNoneDefault, S.withDecodingDefaultKey(Effect.succeed(null)))`; handle `quote` manually or after adding an explicit Option-some key default helper.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/schema/src/ForceHttpsRedirect/ForceHttpsRedirect.schema.ts",
-    "line": 40,
-    "symbol": "ForceHttpsRedirectConfig",
-    "smell": "`ForceHttpsRedirectConfig` models `maxAge`, `includeSubDomains`, and `preload` as plain `S.optionalKey(...)`, then `formatForceHttpsRedirectValue` supplies `config.maxAge ?? defaultMaxAge` and checks booleans with `=== true`.",
-    "proposedTarget": "Move defaults onto the config schema: `maxAge: S.Finite.pipe(SchemaUtils.withKeyDefaults(defaultMaxAge))`, `includeSubDomains: SchemaUtils.BoolKeyDefaultFalse`, and `preload: SchemaUtils.BoolKeyDefaultFalse` (helpers verified in `SchemaUtils/withKeyDefaults.ts:50-68` and `:207-246`). The header transform can then render decoded fields without `??` while the option/wire input still accepts missing keys.",
-    "confidence": 0.86,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/schema/src/ExpectCt/ExpectCt.schema.ts",
-    "line": 40,
-    "symbol": "ExpectCTConfig",
-    "smell": "`ExpectCTConfig` leaves `maxAge`, `enforce`, and `reportURI` as optional raw fields; `formatExpectCTValue` later performs `config.maxAge ?? defaultMaxAge`, `config.enforce === true`, and `P.isUndefined(reportUriValue) ? O.none() : O.some(...)`.",
-    "proposedTarget": "Schema-normalize the config: `maxAge: S.Finite.pipe(SchemaUtils.withKeyDefaults(defaultMaxAge))`, `enforce: SchemaUtils.BoolKeyDefaultFalse`, and `reportURI: S.OptionFromOptionalKey(internal.StringOrUrl).pipe(SchemaUtils.withNoneDefault)`. This mirrors the existing `ResponseHeader.value` Option modeling and removes the body-level undefined-to-Option conversion.",
-    "confidence": 0.84,
-    "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/schema/src/Http/Http.headers.shared.ts",
-    "line": 171,
-    "symbol": "ResponseHeader",
-    "smell": "`value: S.OptionFromOptionalKey(S.String)` is a decoded-domain Option field on an S.Class without `SchemaUtils.withNoneDefault`; constructor callers must still pass an explicit `Option` even though omitted/absent values already decode to None.",
-    "proposedTarget": "Use `value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` and import the existing helper from `../SchemaUtils/index.ts`. This keeps the encoded key optional and makes `ResponseHeader.make({ name })` represent no value without explicit `Option.none()`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 6
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/schema/src/CrossOriginEmbedderPolicy/CrossOriginEmbedderPolicy.schema.ts",
-    "line": 104,
-    "symbol": "COEPResponseHeader",
-    "smell": "`value: S.OptionFromUndefinedOr(S.String)` and the sibling secure-header response classes repeat Option-valued header fields without `withNoneDefault`, even though the encoded side legitimately uses `undefined` for header omission.",
-    "proposedTarget": "Introduce or reuse a shared secure-header value schema such as `S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault)` and apply it to the response header classes in `CrossOriginEmbedderPolicy`, `CrossOriginOpenerPolicy`, `CrossOriginResourcePolicy`, `Csp`, `ExpectCt`, `ForceHttpsRedirect`, `FrameGuard`, `NoOpen`, `NoSniff`, `PermissionsPolicy`, `PermittedCrossDomainPolicies`, `ReferrerPolicy`, and `XssProtection`. This is not a layout restructure; it is the existing S2 helper applied consistently.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 7
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/schema/src/SafeRemoteHost.ts",
-    "line": 91,
-    "symbol": "BlockedHostError",
-    "smell": "`url` and `cause` are `S.OptionFromOptionalKey(...)` fields on a tagged error, but all no-url/no-cause paths still have to pass `O.none()` manually (`SafeRemoteHost.ts:236`, `:326`, `:328`, `:412`).",
-    "proposedTarget": "Apply `SchemaUtils.withNoneDefault` to both `url` and `cause` fields while keeping the explicit `O.some(url)` / `O.some(cause)` cases. This does not weaken the SSRF guard; it only moves constructor absence defaults into the tagged error schema.",
-    "confidence": 0.84,
-    "mechanization": "assisted",
-    "roiRank": 8
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.schema.ts",
-    "line": 40,
-    "symbol": "ParserOptionsErrorFields",
-    "smell": "`ParserOptionsErrorFields.cause` is `S.OptionFromOptionalKey(S.Defect({ includeStack: true }))` without `withNoneDefault`; `toParserOptionsError` therefore materializes `O.none()` for missing causes at line 103.",
-    "proposedTarget": "Pipe the cause field through `SchemaUtils.withNoneDefault` and let `toParserOptionsError` omit `cause` when `P.isError(cause)` is false, preserving the `O.some(cause)` path for real errors.",
-    "confidence": 0.88,
-    "mechanization": "assisted",
-    "roiRank": 9
-  },
-  {
-    "ruleId": "SFV4-defaults",
     "file": "packages/foundation/modeling/schema/src/StatusCauseError.ts",
     "line": 120,
     "symbol": "statusCauseInput",
@@ -107,40 +8,11 @@
     "proposedTarget": "Split raw encoded input from normalized data or move the optional-cause invariant onto `StatusCauseInputOptions`: `cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault)`. Then `statusCauseInput` can pass the decoded Option through directly; update `buildStatusCauseError` call sites in the same file as part of the same public-form sweep.",
     "confidence": 0.68,
     "mechanization": "assisted",
-    "roiRank": 10
-  },
-  {
-    "ruleId": "SFV4-null-return",
-    "file": "packages/foundation/modeling/schema/src/CryptoTxnHash/CryptoTxnHash.schema.ts",
-    "line": 22,
-    "symbol": "decodeCanonicalBase58",
-    "smell": "Private soft-decoder returns `Uint8Array | null` and uses `Result.getOrNull`; `isCanonicalSolanaSignature` then checks `P.isNotNull(decoded)` before reading length.",
-    "proposedTarget": "Return `O.Option<Uint8Array>` instead: `Result.match(Result.try(...), { onFailure: O.none, onSuccess: (decoded) => base58.encode(decoded) === input ? O.some(decoded) : O.none() })`, then use verified Effect v4 `O.exists` (`.repos/effect-v4/packages/effect/src/Option.ts:2312`) for the length predicate. Effect v4 `Result.match` is verified at `.repos/effect-v4/packages/effect/src/Result.ts:905`.",
-    "confidence": 0.93,
-    "mechanization": "codemod",
-    "roiRank": 11
-  },
-  {
-    "ruleId": "SFV4-null-return",
-    "file": "packages/foundation/modeling/schema/src/CryptoWalletAddress/CryptoWalletAddress.schema.ts",
-    "line": 41,
-    "symbol": "decodeCanonicalBase58",
-    "smell": "Private base58 helper returns `Uint8Array | null`, and Bitcoin wallet validation branches on `P.isNull(decoded)` before using decoded bytes.",
-    "proposedTarget": "Mirror the `CryptoTxnHash` target: return `O.Option<Uint8Array>` from the soft decode with `Result.match` + `O.some`/`O.none`, then replace `P.isNull(decoded) || decoded.length !== 25` with `!O.exists(decoded, (bytes) => bytes.length === 25)` or an `O.match` block. This keeps invalid-base58 as soft absence without exposing `null` in domain helpers.",
-    "confidence": 0.93,
-    "mechanization": "codemod",
-    "roiRank": 12
-  },
-  {
-    "ruleId": "SFV4-null-return",
-    "file": "packages/foundation/modeling/schema/src/Csp/Csp.schema.ts",
-    "line": 824,
-    "symbol": "createContentSecurityPolicyOptionHeaderValue",
-    "smell": "Exported domain helper returns `string | undefined` and uses bare `return;` for disabled CSP options, even though `ContentSecurityPolicyHeader.createValue` already exposes the schema-native `Effect<Option<string>, SecureHeaderError>` surface at lines 885-904.",
-    "proposedTarget": "Either make `createContentSecurityPolicyOptionHeaderValue` private/raw and expose only `ContentSecurityPolicyHeader.createValue`, or change it to return `O.Option<string>` (`O.none()` for `undefined`/`false`/empty output, `O.some(value)` otherwise) with the required same-PR consumer/test sweep (`HttpHeaders.test.ts:573-575` currently asserts `undefined`).",
-    "confidence": 0.66,
-    "mechanization": "assisted",
-    "roiRank": 13
+    "roiRank": 10,
+    "exception": {
+      "reason": "Changing statusCauseInput and StatusCauseFields to schema-defaulted Option form would change exported public form with consumers outside @beep/schema; the required §5.4 consumer sweep is outside this package writer lane.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -151,7 +23,11 @@
     "proposedTarget": "Add a schema codec such as `BinaryFileExtensionFromPath = S.String.pipe(S.decodeTo(BinaryFileExtension, SchemaGetter.transformOrFail(...)))` that extracts, lowercases, and validates the dotted extension, then implement `hasBinaryExtension` through `S.decodeUnknownOption(BinaryFileExtensionFromPath)`/`O.isSome`. In-package exemplars for string normalization codecs: `CommonTextSchemas.ts:36-43` and `:81-88`.",
     "confidence": 0.56,
     "mechanization": "judgment",
-    "roiRank": 14
+    "roiRank": 14,
+    "exception": {
+      "reason": "extractNormalizedExtension is the exported path utility behavior for arbitrary file/name strings. Promoting it to a new path-to-extension codec would add public schema surface and needs a dedicated BinaryFileExtension codec design/proof.",
+      "boundary": "exported path normalization utility, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",

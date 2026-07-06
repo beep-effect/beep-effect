@@ -15,7 +15,7 @@ import {
 } from "@beep/repo-cli/test/SyncDataToTs";
 import { A, O } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { Cause, Effect, Exit, FileSystem, Layer, Path, Runtime } from "effect";
+import { Cause, ConfigProvider, Effect, Exit, FileSystem, Layer, Path, Runtime } from "effect";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/unstable/http";
@@ -193,28 +193,14 @@ const withEnv = <A, E, R>(
   entries: Readonly<Record<string, string>>,
   use: Effect.Effect<A, E, R>
 ): Effect.Effect<A, E, R> =>
-  Effect.acquireUseRelease(
-    Effect.sync(() => {
-      const previous = Object.fromEntries(Object.keys(entries).map((key) => [key, process.env[key]] as const));
+  Effect.gen(function* () {
+    const current = yield* ConfigProvider.ConfigProvider;
+    const testEnv = ConfigProvider.fromEnv({ env: entries });
 
-      for (const [key, value] of Object.entries(entries)) {
-        process.env[key] = value;
-      }
-
-      return previous;
-    }),
-    () => use,
-    (previous) =>
-      Effect.sync(() => {
-        for (const [key, value] of Object.entries(previous)) {
-          if (value === undefined) {
-            delete process.env[key];
-          } else {
-            process.env[key] = value;
-          }
-        }
-      })
-  );
+    return yield* use.pipe(
+      Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.orElse(testEnv, current))
+    );
+  });
 
 const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(

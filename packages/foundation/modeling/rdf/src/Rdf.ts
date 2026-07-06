@@ -9,7 +9,7 @@ import { $RdfId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { A, R, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Match, Order, pipe, Result, SchemaTransformation } from "effect";
+import { Match, Order, pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -330,9 +330,7 @@ export type Curie = typeof Curie.Type;
  * @since 0.0.0
  * @category models
  */
-export const LanguageTag = S.String.pipe(
-  S.decode(SchemaTransformation.toLowerCase()),
-  S.check(LanguageTagChecks),
+export const LanguageTag = S.String.check(LanguageTagChecks).pipe(
   S.brand("LanguageTag"),
   $I.annoteSchema("LanguageTag", {
     description: "RDF literal language tag.",
@@ -1120,7 +1118,7 @@ export const serializeTerm = (term: Term): string =>
     BlankNode: (value) => `_:${encodeBlankNodeLabel(value.value)}`,
     Literal: (value) =>
       O.isSome(value.language)
-        ? `"${escapeLiteralLexical(value.value)}"@${value.language.value}`
+        ? `"${escapeLiteralLexical(value.value)}"@${Str.toLowerCase(value.language.value)}`
         : `"${escapeLiteralLexical(value.value)}"^^<${value.datatype.value}>`,
     DefaultGraph: () => "default",
   });

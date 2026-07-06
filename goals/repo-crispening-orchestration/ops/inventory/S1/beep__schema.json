@@ -1,28 +1,6 @@
 [
   {
     "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/modeling/schema/src/Cuid.ts",
-    "line": 109,
-    "symbol": "CuidSeed",
-    "smell": "Exported pure data payload is modeled as a structural type alias (`{ timestamp, counter, random, fingerprint }`) in a schema-modeled file instead of as executable schema evidence.",
-    "proposedTarget": "Promote to a named schema-backed model, e.g. `export class CuidSeed extends S.Class<CuidSeed>($I`CuidSeed`)({ timestamp: S.Finite, counter: NonNegativeInt, random: S.Uint8Array, fingerprint: S.String }, $I.annote(\"CuidSeed\", ...)) {}` and keep `type CuidSeed = typeof CuidSeed.Type` semantics through the class. In-repo exemplars: `CsvCodecOptions` uses `S.Class` for option payloads at `packages/foundation/modeling/schema/src/CsvCodecOptions/CsvCodecOptions.schema.ts:47`; `S.Uint8Array` is already used as the byte boundary in `packages/foundation/modeling/schema/src/Sha256.ts:112`; `NonNegativeInt` is the local non-negative integer schema in `packages/foundation/modeling/schema/src/Int.ts:182`.",
-    "confidence": 0.84,
-    "mechanization": "assisted",
-    "roiRank": 0.58
-  },
-  {
-    "ruleId": "SFV4-boundary-codec",
-    "file": "packages/foundation/modeling/schema/src/URL.ts",
-    "line": 16,
-    "symbol": "isURLStr",
-    "smell": "URL validation hand-rolls `Result.try(() => new URL(u))` inside a schema predicate even though Effect v4 exposes the URL string boundary codec and this same file already uses it.",
-    "proposedTarget": "Replace the `new URL` probe with the verified v4 schema codec: after the `NonEmptyTrimmedStr` check, use `S.decodeUnknownOption(S.URLFromString)(u)` / `O.isSome` (or a local decode-option alias if reused). In-repo exemplar: `filterHttpsUrl` already decodes through `S.URLFromString` at `packages/foundation/modeling/schema/src/URL.ts:73-82`. Effect v4 verification: `.repos/effect-v4/packages/effect/src/Schema.ts:10320` and `:10338` define `URLFromString`; `S.decodeUnknownOption` is defined at `.repos/effect-v4/packages/effect/src/Schema.ts:1500`.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 0.48
-  },
-  {
-    "ruleId": "schema-first-inventory",
     "file": "packages/foundation/modeling/schema/src/Semver.ts",
     "line": 107,
     "symbol": "isSemverNumberSegmentString",

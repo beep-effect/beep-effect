@@ -725,9 +725,6 @@
     "packages/drivers/pacer": {
       "name": "@beep/pacer",
       "version": "0.0.0",
-      "dependencies": {
-        "effect": "catalog:",
-      },
       "devDependencies": {
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1375,6 +1372,7 @@
       "name": "@beep/form",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/ui": "workspace:^",
         "@tanstack/react-form": "catalog:",

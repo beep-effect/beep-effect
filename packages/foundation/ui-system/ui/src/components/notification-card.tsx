@@ -4,9 +4,10 @@ import { $UiId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { ArrowRightIcon, CheckIcon, ClockIcon, SpinnerGapIcon, WarningCircleIcon } from "@phosphor-icons/react";
-import { DateTime, flow, pipe } from "effect";
+import { DateTime, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { formatShortDate, toUtcDateTime } from "../lib/date-time.ts";
 import { cn } from "../lib/index.ts";
 
 const $I = $UiId.create("components/notification-card");
@@ -197,13 +198,6 @@ interface NotificationCardProps {
   readonly title: string;
 }
 
-const shortDateFormatter = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-});
-
-const toUtcDateTime: (value: Date | string) => DateTime.Utc = flow(DateTime.makeUnsafe, DateTime.toUtc);
-
 const formatDate = (date: Date | string): string => {
   const parsed = toUtcDateTime(date);
   const now = DateTime.nowUnsafe();
@@ -217,7 +211,7 @@ const formatDate = (date: Date | string): string => {
   if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays < 7) return `${diffDays}d ago`;
 
-  return shortDateFormatter.format(DateTime.toEpochMillis(parsed));
+  return formatShortDate(parsed);
 };
 
 /**

@@ -1,4 +1,3 @@
-import { VERSION } from "@beep/provenance";
 import { isWellOrdered, TextAnchor } from "@beep/provenance/TextAnchor";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
@@ -8,8 +7,8 @@ const TextAnchorArbitrary = S.toArbitrary(TextAnchor);
 const TextAnchorEquivalence = S.toEquivalence(TextAnchor);
 
 describe("@beep/provenance TextAnchor", () => {
-  it("exposes the package VERSION constant from the barrel", () => {
-    expect(VERSION).toBe("0.0.0");
+  it("exposes TextAnchor from the public subpath", () => {
+    expect(TextAnchor.isWellOrdered({ startChar: 0, endChar: 0 })).toBe(true);
   });
 
   it("decodes a well-formed anchor and re-slices the source text to the quote", () => {

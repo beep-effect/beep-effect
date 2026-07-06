@@ -30,6 +30,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 import type * as Ordering from "effect/Ordering";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $SchemaId.create("Semver");
 
@@ -382,7 +383,10 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
     description: "Structured semantic version with core, prerelease, and build metadata segments.",
   })
 ) {
-  static readonly decodeOption = S.decodeUnknownOption(Semver);
+  static readonly decodeOption: {
+    (input: unknown, options?: AST.ParseOptions): O.Option<Semver>;
+    (options?: AST.ParseOptions): (input: unknown) => O.Option<Semver>;
+  } = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownOption(Semver));
 
   /**
    * Normalizes supported loose boundary strings before strict SemVer parsing.

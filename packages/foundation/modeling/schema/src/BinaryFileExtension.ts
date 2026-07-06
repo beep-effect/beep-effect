@@ -213,7 +213,8 @@ export type BinaryFileExtension = typeof BinaryFileExtension.Type;
  * @since 0.0.0
  * @category validation
  */
-export const isBinaryFileExtension = BinaryFileExtension.is;
+export const isBinaryFileExtension = (value: string): value is BinaryFileExtension =>
+  HashSet.has(binaryFileExtensionSet, value);
 
 /**
  * Detects whether a file path ends in a known binary file extension.

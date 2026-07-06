@@ -441,7 +441,7 @@ describe("@beep/rdf RDF term and dataset models", () => {
   it("decodes scalar RDF helpers and rejects malformed labels", () => {
     expect(PrefixLabel.fromUnknown("schema")).toBe("schema");
     expect(Curie.fromUnknown("schema:Thing")).toBe("schema:Thing");
-    expect(LanguageTag.fromUnknown("en-US")).toBe("en-us");
+    expect(LanguageTag.fromUnknown("en-US")).toBe("en-US");
     expect(() => PrefixLabel.fromUnknown("bad prefix")).toThrow("Prefix labels must begin with an ASCII letter");
     expect(() => S.decodeUnknownSync(Curie)("missing-colon")).toThrow("CURIE values must be of the form");
     expect(() => LanguageTag.fromUnknown("en_US")).toThrow("Language tags must use alphanumeric subtags");
@@ -474,7 +474,7 @@ describe("@beep/rdf RDF term and dataset models", () => {
     expect(decodedNamedNode).toEqual(alice);
     expect(decodedLiteral).toEqual(typed);
     expect(blank).toEqual(BlankNode.make({ termType: "BlankNode", value: "b0" }));
-    expect(label.language).toEqual(O.some("en"));
+    expect(label.language).toEqual(O.some("EN"));
     expect(typed.language).toEqual(O.none());
     expect(quad.graph).toEqual(graph);
     expect(Term.is(alice)).toBe(true);
@@ -501,8 +501,8 @@ describe("@beep/rdf RDF term and dataset models", () => {
     const directDataset = makeDataset([curriedQuad, defaultGraphQuad]);
     const reorderedDataset = makeDataset([defaultGraphQuad, curriedQuad]);
 
-    expect(languageLiteral.language).toEqual(O.some("en"));
-    expect(directLanguageLiteral.language).toEqual(O.some("en"));
+    expect(languageLiteral.language).toEqual(O.some("EN"));
+    expect(directLanguageLiteral.language).toEqual(O.some("EN"));
     expect(serializeTerm(alice)).toBe("<https://example.com/people/alice>");
     expect(serializeTerm(blank)).toBe("_:b0");
     expect(serializeTerm(languageLiteral)).toBe('"Alice"@en');
@@ -633,10 +633,10 @@ describe("@beep/rdf semantic metadata", () => {
     })(S.Finite);
     const wrapped = S.Array(curried);
 
-    expect(getSemanticSchemaMetadata(direct)?.canonicalName).toBe("ExampleIdentifier");
-    expect(getSemanticSchemaMetadata(wrapped)?.canonicalName).toBe("NestedIdentifier");
-    expect(getSemanticSchemaMetadata(S.Array(S.String))).toBeUndefined();
-    expect(getSemanticSchemaMetadata(S.Boolean)).toBeUndefined();
+    expect(O.map(getSemanticSchemaMetadata(direct), (m) => m.canonicalName)).toEqual(O.some("ExampleIdentifier"));
+    expect(O.map(getSemanticSchemaMetadata(wrapped), (m) => m.canonicalName)).toEqual(O.some("NestedIdentifier"));
+    expect(O.isNone(getSemanticSchemaMetadata(S.Array(S.String)))).toBe(true);
+    expect(O.isNone(getSemanticSchemaMetadata(S.Boolean))).toBe(true);
   });
 
   it("round-trips decode/encode for metadata derived from the source schema", () => {

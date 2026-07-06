@@ -58,9 +58,6 @@
       "./package.json": "./package.json"
     }
   },
-  "dependencies": {
-    "effect": "catalog:"
-  },
   "devDependencies": {
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:"

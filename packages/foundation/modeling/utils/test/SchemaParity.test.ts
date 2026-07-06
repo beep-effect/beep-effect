@@ -1,6 +1,6 @@
 import { AppendFileSyncOptions, ReaddirSyncOptions, RmSyncOptions } from "@beep/utils/FileSystem";
 import { GlobOptions, Pattern } from "@beep/utils/Glob";
-import { PathInput } from "@beep/utils/internal/StructPath";
+import { PathInput } from "@beep/utils/Struct";
 import { Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";

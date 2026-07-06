@@ -1450,19 +1450,19 @@
       "sanitized": "beep__schema",
       "family": "foundation",
       "discovery": "done",
-      "remediation": "pending",
+      "remediation": "done",
       "findingsByDomain": {
-        "S1": 9,
-        "S2": 19,
-        "S3": 9,
-        "S4": 28,
-        "S5": 16
+        "S1": 7,
+        "S2": 7,
+        "S3": 8,
+        "S4": 4,
+        "S5": 4
       },
-      "actionableCount": 58,
-      "exceptionCount": 23,
-      "parityProofRef": null,
+      "actionableCount": 0,
+      "exceptionCount": 30,
+      "parityProofRef": "packages/foundation/modeling/schema/test/{Cuid,Color,DateTimeUtcFromValid,HttpHeaders,LiteralKit,MappedLiteralKit}.test.ts (S.toArbitrary Cuid/ColorAmount/LiteralKit/MappedLiteralKit laws, tagged DateTime statics, header max-age/default parity, CuidSeed encoded-shape parity)",
       "policyFlipped": false,
-      "remediationNote": ""
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__schema.json after P2 remediation: 30 records remain, all exceptions, actionableCount 0. Fixed 51 records across S1-S5, including CuidSeed schema modeling, URL boundary codec, schema defaults, Option/null-return helpers, static API colocation, numeric-domain tightening, precision annotations, and arbitrary-test parity laws already present in the live package source. Newly excepted 7 records: StatusCause defaults/status public-form ripples, BinaryFileExtension path-normalization codec design, EntitySchema persisted-variant dispatcher, and three Graph topology/dispatch findings; cross-package source edits were not made. Removed two stale @beep/schema entries from standards/schema-first.inventory.jsonc after live detector proof; out-of-scope stale entries were left untouched. Codemod proposers defaults-fallback and static-api-colocation were attempted file-scoped but failed before proposing diffs because Effect.tapErrorCause is unavailable in the current Effect v4 runtime. Policy not flipped and no commit made. Verification: bun run check --filter=@beep/schema PASS; bun run lint --filter=@beep/schema PASS; cd packages/foundation/modeling/schema && npx vitest run PASS (67 files, 596 tests); bun run beep lint schema-topology PASS; bun run beep lint schema-first FAILS only on out-of-scope stale standard-inventory entries for @beep/html and @beep/law-practice-domain, with no @beep/schema missing/stale/actionable findings."
     },
     "@beep/utils": {
       "path": "packages/foundation/modeling/utils",

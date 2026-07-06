@@ -559,7 +559,7 @@ const getError = (value: number | undefined, min: number, max: number): O.Option
         (current) => current > max,
         () => O.some(NumberInputError.Enum["exceed-max"])
       ),
-      Match.orElse(() => O.none())
+      Match.orElse(O.none<NumberInputError>)
     )
   );
 };
@@ -609,6 +609,24 @@ export type UseNumberInputOptions = BoundaryParamsInput &
     readonly onChange?: ((value: number | undefined, metadata: NumberInputChangeMetadata) => void) | undefined;
   };
 
+const makeBoundaryParams = (options: BoundaryParamsInput): BoundaryParams =>
+  BoundaryParams.make(
+    O.getSomesStruct({
+      defaultValue: O.fromUndefinedOr(options.defaultValue),
+      value: O.fromUndefinedOr(options.value),
+      min: O.fromUndefinedOr(options.min),
+      max: O.fromUndefinedOr(options.max),
+    })
+  );
+
+const makeSpinParams = (options: SpinParamsInput): SpinParams =>
+  SpinParams.make(
+    O.getSomesStruct({
+      precision: O.fromUndefinedOr(options.precision),
+      step: O.fromUndefinedOr(options.step),
+    })
+  );
+
 /**
  * Low-level hook that manages string and numeric boundary state for a number input.
  *
@@ -637,20 +655,8 @@ export type UseNumberInputOptions = BoundaryParamsInput &
 export const useNumberBoundary = (options: UseNumberInputOptions = {}, scope?: string | undefined) => {
   const generatedScope = useId();
   const boundaryScope = scope ?? generatedScope;
-  const boundaryParams = BoundaryParams.make(
-    O.getSomesStruct({
-      defaultValue: O.fromUndefinedOr(options.defaultValue),
-      value: O.fromUndefinedOr(options.value),
-      min: O.fromUndefinedOr(options.min),
-      max: O.fromUndefinedOr(options.max),
-    })
-  );
-  const spinParams = SpinParams.make(
-    O.getSomesStruct({
-      precision: O.fromUndefinedOr(options.precision),
-      step: O.fromUndefinedOr(options.step),
-    })
-  );
+  const boundaryParams = makeBoundaryParams(options);
+  const spinParams = makeSpinParams(options);
   const { defaultValue, value, keepWithinRange = true, formatter = identity, parser = identity } = options;
   const { min, max } = boundaryParams;
   const { precision, step } = spinParams;
@@ -669,12 +675,10 @@ export const useNumberBoundary = (options: UseNumberInputOptions = {}, scope?: s
 
   const change = (multiplier = 1, params: SpinParamsInput = {}) =>
     setInterfaceValueState((current) => {
-      const currentSpinParams = SpinParams.make(
-        O.getSomesStruct({
-          precision: O.fromUndefinedOr(params.precision ?? precision),
-          step: O.fromUndefinedOr(params.step ?? step),
-        })
-      );
+      const currentSpinParams = makeSpinParams({
+        precision: params.precision ?? precision,
+        step: params.step ?? step,
+      });
       const result =
         pipe(
           current,
@@ -733,18 +737,8 @@ export const useNumberBoundary = (options: UseNumberInputOptions = {}, scope?: s
 export const useNumberInput = (options: UseNumberInputOptions = {}) => {
   const scope = useId();
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const boundaryParams = BoundaryParams.make(
-    O.getSomesStruct({
-      min: O.fromUndefinedOr(options.min),
-      max: O.fromUndefinedOr(options.max),
-    })
-  );
-  const spinParams = SpinParams.make(
-    O.getSomesStruct({
-      precision: O.fromUndefinedOr(options.precision),
-      step: O.fromUndefinedOr(options.step),
-    })
-  );
+  const boundaryParams = makeBoundaryParams(options);
+  const spinParams = makeSpinParams(options);
   const {
     focusInputOnChange = true,
     keepWithinRange = true,

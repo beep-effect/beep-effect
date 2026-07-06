@@ -1323,31 +1323,21 @@
       "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
       "symbol": "stripJsonFence.trim",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-normalization",
       "line": 421,
       "owner": "@beep/langextract",
-      "reason": "Normalization call \".trim()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
+      "reason": "LLM output fence stripping is trust-boundary text cleanup before schema JSON decoding; the schema owns the decoded payload shape, while this helper only removes Markdown wrapper noise from model text."
     },
     {
       "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
       "symbol": "stripJsonFence.trim",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-normalization",
       "line": 423,
       "owner": "@beep/langextract",
-      "reason": "Normalization call \".trim()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
-    },
-    {
-      "file": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
-      "symbol": "apiKeyRequiredFailure",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-fn-schema",
-      "line": 109,
-      "owner": "@beep/mcp-kit",
-      "reason": "Exported function \"apiKeyRequiredFailure\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+      "reason": "LLM output fence stripping is trust-boundary text cleanup before schema JSON decoding; the schema owns the decoded payload shape, while this helper only removes Markdown wrapper noise from model text."
     },
     {
       "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
@@ -1577,29 +1567,11 @@
       "file": "packages/foundation/modeling/html/scripts/generate.ts",
       "symbol": "className.toUpperCase",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-normalization",
-      "line": 102,
-      "owner": "@beep/html",
-      "reason": "Normalization call \".toUpperCase()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
-    },
-    {
-      "file": "packages/foundation/modeling/html/scripts/generate.ts",
-      "symbol": "inner.trim",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-normalization",
-      "line": 174,
-      "owner": "@beep/html",
-      "reason": "Normalization call \".trim()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
-    },
-    {
-      "file": "packages/foundation/modeling/html/scripts/generate.ts",
-      "symbol": "struct",
-      "kind": "object-struct-schema",
       "status": "exception",
+      "ruleId": "SFV4-normalization",
+      "line": 103,
       "owner": "@beep/html",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
+      "reason": "Codegen script derives TypeScript class identifiers from HTML tag names; this casing is generator naming, not schema-bearing domain normalization."
     },
     {
       "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
@@ -1621,21 +1593,21 @@
       "file": "packages/foundation/modeling/identity/src/Curie.ts",
       "symbol": "contract",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-null-return",
-      "line": 118,
+      "line": 194,
       "owner": "@beep/identity",
-      "reason": "Exported helper \"contract\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
+      "reason": "Internal lookup helpers and schema codecs already use Option and SchemaTransformation; this exported wrapper preserves the existing literal-preserving string-or-undefined compatibility API for unknown user-supplied IRIs."
     },
     {
       "file": "packages/foundation/modeling/identity/src/Curie.ts",
       "symbol": "expand",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-null-return",
-      "line": 91,
+      "line": 167,
       "owner": "@beep/identity",
-      "reason": "Exported helper \"expand\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
+      "reason": "Internal lookup helpers and schema codecs already use Option and SchemaTransformation; this exported wrapper preserves the existing literal-preserving string-or-undefined compatibility API for unknown user-supplied CURIEs."
     },
     {
       "file": "packages/foundation/modeling/identity/src/Id.ts",
@@ -1700,26 +1672,6 @@
       "status": "exception",
       "owner": "@beep/nlp",
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/nlp/src/Core/PatternBuilders.ts",
-      "symbol": "getMark",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-null-return",
-      "line": 404,
-      "owner": "@beep/nlp",
-      "reason": "Exported helper \"getMark\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
-    },
-    {
-      "file": "packages/foundation/modeling/nlp/src/Core/PatternBuilders.ts",
-      "symbol": "last",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-null-return",
-      "line": 510,
-      "owner": "@beep/nlp",
-      "reason": "Exported helper \"last\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
     },
     {
       "file": "packages/foundation/modeling/nlp/src/Graph/GraphOps.ts",
@@ -1810,26 +1762,6 @@
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
     },
     {
-      "file": "packages/foundation/modeling/provenance/src/TextAnchor.ts",
-      "symbol": "isWellOrdered",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-fn-schema",
-      "line": 90,
-      "owner": "@beep/provenance",
-      "reason": "Exported function \"isWellOrdered\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
-    },
-    {
-      "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-      "symbol": "getSemanticSchemaMetadata",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-null-return",
-      "line": 460,
-      "owner": "@beep/rdf",
-      "reason": "Exported helper \"getSemanticSchemaMetadata\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/CauseTaggedError/CauseTaggedError.errors.ts",
       "symbol": "CauseTaggedErrorFactory",
       "kind": "exported-interface",
@@ -1852,34 +1784,6 @@
       "status": "exception",
       "owner": "@beep/schema",
       "reason": "S.Struct with non-identifier or spread keys stays tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Csp/Csp.schema.ts",
-      "symbol": "createContentSecurityPolicyOptionHeaderValue",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-null-return",
-      "line": 824,
-      "owner": "@beep/schema",
-      "reason": "Exported helper \"createContentSecurityPolicyOptionHeaderValue\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Cuid.ts",
-      "symbol": "CuidSeed",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.adapter.ts",
-      "symbol": "createDateTimeWithTimezone",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-null-return",
-      "line": 114,
-      "owner": "@beep/schema",
-      "reason": "Exported helper \"createDateTimeWithTimezone\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
     },
     {
       "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.definition.ts",
@@ -2342,16 +2246,6 @@
       "reason": "Exception: meta-test of the Fn/ThunkOf/AnyFn schema combinator over function values (declareConstructor with self-identity equivalence); no structural data for S.toArbitrary to generate or round-trip."
     },
     {
-      "file": "packages/foundation/modeling/schema/test/MappedLiteralKit.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 13,
-      "owner": "@beep/schema",
-      "reason": "Exception: meta-test of the MappedLiteralKit combinator using test-local literal pairs; exercises combinator mechanics, not a domain schema law."
-    },
-    {
       "file": "packages/foundation/modeling/schema/test/PromiseSchema.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -2707,31 +2601,31 @@
       "file": "packages/foundation/ui-system/form/stories/fields/storyHelpers.tsx",
       "symbol": "CountryFieldDemo",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-fn-schema",
       "line": 28,
       "owner": "@beep/form",
-      "reason": "Exported function \"CountryFieldDemo\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+      "reason": "Storybook demo helper sits at the React render boundary; its props select the rendered field variant for a UI story, not a reusable domain/function contract."
     },
     {
       "file": "packages/foundation/ui-system/form/stories/fields/storyHelpers.tsx",
       "symbol": "UploadFieldDemo",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-fn-schema",
       "line": 49,
       "owner": "@beep/form",
-      "reason": "Exported function \"UploadFieldDemo\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+      "reason": "Storybook demo helper sits at the React render boundary; its props select the rendered upload field variant for a UI story, not a reusable domain/function contract."
     },
     {
       "file": "packages/foundation/ui-system/form/stories/fields/storyHelpers.tsx",
       "symbol": "assertUploadedPreview",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-fn-schema",
       "line": 75,
       "owner": "@beep/form",
-      "reason": "Exported function \"assertUploadedPreview\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+      "reason": "Storybook play-test helper receives DOM and file-fixture inputs at the React test boundary, so the inline object is an interaction fixture rather than schema-bearing domain data."
     },
     {
       "file": "packages/foundation/ui-system/ui/src/components/color-picker.tsx",
@@ -2862,24 +2756,14 @@
       "reason": "Derived interface with extends clauses is tracked as an exception."
     },
     {
-      "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
-      "symbol": "toNumber",
+      "file": "packages/law-practice/domain/src/values/PatentMetadata/PatentMetadata.model.ts",
+      "symbol": "getKindCodeExplanation",
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-null-return",
-      "line": 287,
-      "owner": "@beep/ui",
-      "reason": "Exported helper \"toNumber\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
-    },
-    {
-      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 35,
+      "line": 629,
       "owner": "@beep/law-practice-domain",
-      "reason": "Schema-heavy test file has 6 Schema codec assertions but no schema-derived property coverage."
+      "reason": "Exported helper \"getKindCodeExplanation\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
     },
     {
       "file": "packages/law-practice/server/test/fixture.ts",
@@ -3856,6 +3740,16 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/Iso3166.ts",
+      "symbol": "normalizeSubdivisionRow.R.getSomes",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-getsomes-struct",
+      "line": 265,
+      "owner": "@beep/repo-cli",
+      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",

@@ -11,6 +11,7 @@ import { DateTimes } from "@beep/utils/DateTime";
 import { Context, Crypto, Effect, Layer } from "effect";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
+import type { Brand } from "effect";
 import type * as PlatformError from "effect/PlatformError";
 
 const $I = $SchemaId.create("Cuid");
@@ -65,7 +66,8 @@ export const Cuid = S.String.pipe(
   S.brand("@typed/id/CUID"),
   $I.annoteSchema("Cuid", {
     description: "Canonical CUID string beginning with a lowercase letter followed by lowercase base36 text.",
-    toArbitrary: () => (fc) => fc.stringMatching(/^[a-z][0-9a-z]+$/).map((value) => value as Cuid),
+    toArbitrary: () => (fc) =>
+      fc.stringMatching(/^[a-z][0-9a-z]+$/).map((value) => value as Brand.Branded<string, "@typed/id/CUID">),
   }),
   SchemaUtils.withCodecStatics
 );

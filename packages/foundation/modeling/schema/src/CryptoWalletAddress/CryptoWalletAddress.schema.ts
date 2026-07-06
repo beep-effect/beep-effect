@@ -10,77 +10,17 @@
 import { $SchemaId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
-import { keccak_256 } from "@noble/hashes/sha3.js";
-import { base58, bech32, bech32m } from "@scure/base";
-import { Encoding, flow, Redacted, Result } from "effect";
-import * as Eq from "effect/Equal";
+import { bech32, bech32m } from "@scure/base";
+import { flow, Redacted } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { bytesEqual, decodeCanonicalBase58, isCanonicalEvmAddress } from "../internal/crypto.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("CryptoWalletAddress");
 
-const evmCryptoWalletAddressPattern = /^0x[0-9a-fA-F]{40}$/;
-
 const isBech32Like = (input: string): input is `${string}1${string}` => Str.includes("1")(input);
-
-const equalBytes = (left: Uint8Array, right: Uint8Array): boolean => {
-  if (left.length !== right.length) {
-    return false;
-  }
-
-  for (let index = 0; index < left.length; index += 1) {
-    if (left[index] !== right[index]) {
-      return false;
-    }
-  }
-
-  return true;
-};
-
-const decodeCanonicalBase58 = (input: string): O.Option<Uint8Array> =>
-  Result.match(
-    Result.try(() => base58.decode(input)),
-    {
-      onFailure: () => O.none(),
-      onSuccess: (decoded) => (base58.encode(decoded) === input ? O.some(decoded) : O.none()),
-    }
-  );
-
-const isCanonicalEvmCryptoWalletAddress = (input: string): boolean => {
-  if (!evmCryptoWalletAddressPattern.test(input)) {
-    return false;
-  }
-
-  const address = Str.slice(2)(input);
-  const lowercaseCryptoWalletAddress = Str.toLowerCase(address);
-
-  if (address === lowercaseCryptoWalletAddress) {
-    return true;
-  }
-
-  const checksum = Encoding.encodeHex(keccak_256(new TextEncoder().encode(lowercaseCryptoWalletAddress)));
-
-  for (let index = 0; index < address.length; index += 1) {
-    const character = address[index]!;
-    const lowercaseCharacter = Str.toLowerCase(character);
-    const uppercaseCharacter = Str.toUpperCase(character);
-
-    if (Eq.equals(lowercaseCharacter, uppercaseCharacter)) {
-      continue;
-    }
-
-    const checksumNibble = Number.parseInt(checksum[index]!, 16);
-    const shouldBeUppercase = checksumNibble >= 8;
-
-    if (shouldBeUppercase ? character !== uppercaseCharacter : character !== lowercaseCharacter) {
-      return false;
-    }
-  }
-
-  return true;
-};
 
 const isCanonicalBitcoinBase58CryptoWalletAddress = (input: string): boolean => {
   const decoded = decodeCanonicalBase58(input);
@@ -100,7 +40,7 @@ const isCanonicalBitcoinBase58CryptoWalletAddress = (input: string): boolean => 
   const checksum = bytes.subarray(21);
   const expectedChecksum = sha256(sha256(payload)).subarray(0, 4);
 
-  return equalBytes(checksum, expectedChecksum);
+  return bytesEqual(checksum, expectedChecksum);
 };
 
 const isCanonicalBitcoinWitnessCryptoWalletAddress = (input: string): boolean => {
@@ -157,7 +97,7 @@ const isCanonicalSolanaCryptoWalletAddress = (input: string): boolean => {
 };
 
 const isCanonicalCryptoWalletAddress = P.some([
-  isCanonicalEvmCryptoWalletAddress,
+  isCanonicalEvmAddress,
   isCanonicalBitcoinCryptoWalletAddress,
   isCanonicalSolanaCryptoWalletAddress,
 ]);

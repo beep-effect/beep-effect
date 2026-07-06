@@ -7,6 +7,7 @@
 
 import { $SchemaId } from "@beep/identity";
 import { Effect, Match, Number as Num, pipe, RegExp as Regex, Result } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -16,6 +17,7 @@ import { RegExpFromStr } from "../RegExp.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { TaggedErrorClass } from "../TaggedErrorClass/index.ts";
 import { HeaderArray, HeaderTransformFunction } from "./ParserOptions.types.ts";
+import type * as AST from "effect/SchemaAST";
 import type { TaggedErrorClassFromFields } from "../TaggedErrorClass/index.ts";
 
 const $I = $SchemaId.create("ParserOptions");
@@ -184,7 +186,10 @@ export class ParserOptions extends S.Class<ParserOptions>($I`ParserOptions`)(
       Result.getOrThrowWith((cause) => toParserOptionsError("Failed to decode parser options.", cause))
     );
 
-  static readonly decodeUnknownResult = S.decodeUnknownResult(ParserOptions);
+  static readonly decodeUnknownResult: {
+    (input: unknown, options?: AST.ParseOptions): Result.Result<ParserOptions, S.SchemaError>;
+    (options?: AST.ParseOptions): (input: unknown) => Result.Result<ParserOptions, S.SchemaError>;
+  } = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownResult(ParserOptions));
 
   get escapedDelimiter(): string {
     return Regex.escape(this.delimiter);

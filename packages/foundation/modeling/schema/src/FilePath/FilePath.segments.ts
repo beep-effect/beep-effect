@@ -4,6 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { HashSet } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LiteralKit } from "../LiteralKit/index.ts";
@@ -106,7 +107,8 @@ export const ValidWindowsPlainPathSegment = S.NonEmptyString.check(
  */
 export type ValidWindowsPlainPathSegment = typeof ValidWindowsPlainPathSegment.Type;
 
-const isWindowsDotSegment = S.is(WindowsDotSegment);
+const windowsDotSegmentSet = HashSet.fromIterable(WindowsDotSegment.Options);
+const isWindowsDotSegment = (value: string): value is WindowsDotSegment => HashSet.has(windowsDotSegmentSet, value);
 
 /**
  * Branded schema for Windows root segments such as UNC server and share names.

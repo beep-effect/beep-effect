@@ -21,8 +21,7 @@
 import { $EditorId } from "@beep/identity";
 import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { ImageMimeType, MimeType } from "@beep/schema/MimeType";
-import { flow, identity, Result, SchemaTransformation } from "effect";
-import * as N from "effect/Number";
+import { flow, identity, Number as N, Result, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $EditorId.create("chat/attachment-model");

@@ -9,7 +9,7 @@
 import { $RdfId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { A } from "@beep/utils";
+import { A, O } from "@beep/utils";
 import { pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -448,15 +448,19 @@ const findSemanticSchemaMetadata = (
  * ```ts
  * import * as S from "effect/Schema"
  * import { getSemanticSchemaMetadata } from "@beep/rdf/SemanticSchemaMetadata"
+ * import * as O from "effect/Option"
  *
  * const metadata = getSemanticSchemaMetadata(S.String)
- * console.log(metadata) // undefined (no metadata attached)
+ * console.log(O.isNone(metadata)) // true (no metadata attached)
  * ```
  *
  * @param schema - Target schema.
- * @returns Metadata payload or `undefined`.
+ * @returns Metadata payload as an Option.
  * @since 0.0.0
  * @category utilities
  */
-export const getSemanticSchemaMetadata = (schema: S.Top): SemanticSchemaMetadataAnnotationPayload | undefined =>
-  findSemanticSchemaMetadata(schema.ast, new WeakSet());
+export const getSemanticSchemaMetadata = (schema: S.Top): O.Option<SemanticSchemaMetadataAnnotationPayload> =>
+  pipe(
+    O.fromNullishOr(S.resolveAnnotations(schema)?.semanticSchemaMetadata),
+    O.orElse(() => O.fromNullishOr(findSemanticSchemaMetadata(schema.ast, new WeakSet())))
+  );

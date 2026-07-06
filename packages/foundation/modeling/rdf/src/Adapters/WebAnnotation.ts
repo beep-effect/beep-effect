@@ -344,6 +344,10 @@ export const WebAnnotationSelectorFromEvidenceSelector = S.toEncoded(EvidenceSel
   }),
   $I.annoteSchema("WebAnnotationSelectorFromEvidenceSelector", {
     description: "Codec between package-owned evidence selectors and Web Annotation selector DTOs.",
+    semanticSchemaMetadata: adapterMetadata(
+      "WebAnnotationSelectorFromEvidenceSelector",
+      "Codec between package-owned evidence selectors and Web Annotation selector DTOs."
+    ),
   }),
   SchemaUtils.withCodecStatics
 );
@@ -471,6 +475,10 @@ export const WebAnnotationTargetFromEvidenceTarget = S.toEncoded(EvidenceTarget)
   }),
   $I.annoteSchema("WebAnnotationTargetFromEvidenceTarget", {
     description: "Codec between evidence targets and Web Annotation target DTOs.",
+    semanticSchemaMetadata: adapterMetadata(
+      "WebAnnotationTargetFromEvidenceTarget",
+      "Codec between evidence targets and Web Annotation target DTOs."
+    ),
   }),
   SchemaUtils.withCodecStatics
 );
@@ -551,6 +559,10 @@ export const WebAnnotationFromEvidenceAnchor = S.toEncoded(EvidenceAnchor).pipe(
   }),
   $I.annoteSchema("WebAnnotationFromEvidenceAnchor", {
     description: "Codec between evidence anchors and Web Annotation DTOs.",
+    semanticSchemaMetadata: adapterMetadata(
+      "WebAnnotationFromEvidenceAnchor",
+      "Codec between evidence anchors and Web Annotation DTOs."
+    ),
   }),
   SchemaUtils.withCodecStatics
 );

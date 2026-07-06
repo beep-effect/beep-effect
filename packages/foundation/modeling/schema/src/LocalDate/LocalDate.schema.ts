@@ -26,6 +26,7 @@ import {
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaUtils from "../SchemaUtils/index.ts";
 import type * as AST from "effect/SchemaAST";
 
 const $I = $SchemaId.create("LocalDate");
@@ -61,7 +62,10 @@ export class LocalDate extends S.Class<LocalDate>($I`LocalDate`)(
   })
 ) {
   static readonly is = S.is(LocalDate);
-  static readonly decodeEffect = S.decodeUnknownEffect(LocalDate);
+  static readonly decodeEffect: {
+    (input: unknown, options?: AST.ParseOptions): Effect.Effect<LocalDate, S.SchemaError>;
+    (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<LocalDate, S.SchemaError>;
+  } = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(LocalDate));
 
   /**
    * Format as ISO 8601 date string (YYYY-MM-DD)
@@ -87,14 +91,14 @@ export class LocalDate extends S.Class<LocalDate>($I`LocalDate`)(
    * Value equality for LocalDate instances.
    */
   [Equal.symbol](that: Equal.Equal): boolean {
-    return LocalDate.is(that) && this.year === that.year && this.month === that.month && this.day === that.day;
+    return localDateEquals(this, that);
   }
 
   /**
    * Stable hash based on the ISO date representation.
    */
   [Hash.symbol](): number {
-    return Hash.string(this.toISOString());
+    return localDateHash(this);
   }
 
   /**
@@ -103,11 +107,7 @@ export class LocalDate extends S.Class<LocalDate>($I`LocalDate`)(
    * @category utilities
    */
   toDateTime(): DateTime.Utc {
-    return DateTime.makeUnsafe({
-      year: this.year,
-      month: this.month,
-      day: this.day,
-    });
+    return localDateToDateTime(this);
   }
 
   /**
@@ -115,7 +115,7 @@ export class LocalDate extends S.Class<LocalDate>($I`LocalDate`)(
    * @returns * @since 0.0.0
    * @category utilities
    */
-  readonly toDate = (): Date => DateTime.toDateUtc(this.toDateTime());
+  readonly toDate = (): Date => localDateToDate(this);
 }
 
 /**
@@ -133,6 +133,20 @@ export class LocalDate extends S.Class<LocalDate>($I`LocalDate`)(
  * @category guards
  */
 export const isLocalDate = LocalDate.is;
+
+const localDateEquals = (self: LocalDate, that: Equal.Equal): boolean =>
+  LocalDate.is(that) && self.year === that.year && self.month === that.month && self.day === that.day;
+
+const localDateHash = (self: LocalDate): number => Hash.string(self.toISOString());
+
+const localDateToDateTime = (self: LocalDate): DateTime.Utc =>
+  DateTime.makeUnsafe({
+    year: self.year,
+    month: self.month,
+    day: self.day,
+  });
+
+const localDateToDate = (self: LocalDate): Date => DateTime.toDateUtc(localDateToDateTime(self));
 
 const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 

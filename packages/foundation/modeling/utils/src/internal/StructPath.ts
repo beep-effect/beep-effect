@@ -22,7 +22,7 @@ const $I = $UtilsId.create("StructPath");
  *
  * @example
  * ```ts
- * import { PathInput } from "@beep/utils/internal/StructPath"
+ * import { PathInput } from "@beep/utils/Struct"
  *
  * const schema = PathInput
  * console.log(schema)
@@ -42,7 +42,7 @@ export const PathInput = S.Union([S.String, S.Array(S.String)]).pipe(
  *
  * @example
  * ```ts
- * import type { PathInput } from "@beep/utils/internal/StructPath"
+ * import type { PathInput } from "@beep/utils/Struct"
  *
  * const path: PathInput = ["profile", "name"]
  * console.log(path)

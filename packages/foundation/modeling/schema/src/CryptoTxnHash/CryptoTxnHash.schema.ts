@@ -8,25 +8,16 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { base58 } from "@scure/base";
-import { flow, Redacted, Result } from "effect";
+import { flow, Redacted } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { decodeCanonicalBase58 } from "../internal/crypto.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("CryptoTxnHash");
 
 const evmCryptoTxnHashPattern = /^0x[0-9a-f]{64}$/;
 const bitcoinCryptoTxnHashPattern = /^[0-9a-f]{64}$/;
-
-const decodeCanonicalBase58 = (input: string): O.Option<Uint8Array> =>
-  Result.match(
-    Result.try(() => base58.decode(input)),
-    {
-      onFailure: () => O.none(),
-      onSuccess: (decoded) => (base58.encode(decoded) === input ? O.some(decoded) : O.none()),
-    }
-  );
 
 const isCanonicalSolanaSignature = (input: string): boolean =>
   O.exists(decodeCanonicalBase58(input), (decoded) => decoded.length === 64);
