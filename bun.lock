@@ -1668,6 +1668,7 @@
         "@beep/face-detection": "workspace:^",
         "@beep/ffmpeg": "workspace:^",
         "@beep/file-processing": "workspace:^",
+        "@beep/firecrawl": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/libpff": "workspace:^",
         "@beep/md": "workspace:^",

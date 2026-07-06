@@ -18,6 +18,9 @@
       "path": "../../../drivers/ffmpeg/tsconfig.json"
     },
     {
+      "path": "../../../drivers/firecrawl/tsconfig.json"
+    },
+    {
       "path": "../../../drivers/libpff/tsconfig.json"
     },
     {
