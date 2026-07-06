@@ -1,6 +1,7 @@
 import { fallowCiUploadDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command";
 import {
   collectEffectTsgoDiagnosticLines,
+  compareKnipFindingsForTesting,
   detectQualityProfileForTesting,
   devQualityStepsForTesting,
   FallowReportFinding,
@@ -11,7 +12,9 @@ import {
   githubCheckPromotedFallowLaneDiagnosticsForTesting,
   githubCheckQualityLanesForTesting,
   githubCheckRepoSanityLanesForTesting,
+  KnipFinding,
   lintFixChangedStepForTesting,
+  normalizeKnipReportForTesting,
   parseQualityTaskInvocation,
   promotedFallowGithubCheckLaneIdsForTesting,
   QualityTaskFailed,
@@ -369,6 +372,7 @@ describe("quality task adapter", () => {
     expect(A.map(lanes, (lane) => lane.id)).toEqual([
       "quality:build",
       "quality:check",
+      "quality:knip",
       "quality:lint",
       "quality:docgen",
       "quality:test",
@@ -376,8 +380,9 @@ describe("quality task adapter", () => {
     expect(A.every(lanes, (lane) => lane.stage === "repo-quality")).toBe(true);
     expect(A.every(lanes, (lane) => lane.blockedBy.length === 0)).toBe(true);
     expect(lanes[1]?.step.args).toEqual(["run", "check"]);
-    expect(lanes[2]?.step.args).toEqual(["run", "lint"]);
-    expect(lanes[4]?.step.args).toEqual(["run", "test"]);
+    expect(lanes[2]?.step.args).toEqual(["run", "beep", "quality", "knip"]);
+    expect(lanes[3]?.step.args).toEqual(["run", "lint"]);
+    expect(lanes[5]?.step.args).toEqual(["run", "test"]);
   });
 
   it("maps repo-sanity github checks as collector lanes", () => {
@@ -639,6 +644,52 @@ describe("quality task adapter", () => {
     ]);
 
     expect(diagnostics).toEqual(["src/example.test.ts:1:1 - warning TS90001: unsafe effect(service) usage"]);
+  });
+
+  it("normalizes Knip findings with stable ordering and without position fields", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const findings = yield* normalizeKnipReportForTesting(
+          encodeJson({
+            issues: [
+              {
+                file: "b.ts",
+                exports: [{ name: "Beta", line: 5, col: 14, pos: 100 }],
+              },
+              {
+                file: "a.ts",
+                dependencies: [{ name: "left-pad", line: 10, col: 6, pos: 220 }],
+                files: [{ name: "a.ts" }],
+              },
+            ],
+          })
+        );
+
+        expect(findings).toEqual([
+          KnipFinding.make({ kind: "dependencies", file: "a.ts", name: "left-pad" }),
+          KnipFinding.make({ kind: "exports", file: "b.ts", name: "Beta" }),
+          KnipFinding.make({ kind: "files", file: "a.ts", name: "a.ts" }),
+        ]);
+      })
+    ));
+
+  it("compares Knip findings as fail-on-growth and advisory shrinkage", () => {
+    const inherited = KnipFinding.make({ kind: "exports", file: "src/a.ts", name: "legacy" });
+    const removed = KnipFinding.make({ kind: "dependencies", file: "package.json", name: "unused-lib" });
+    const introduced = KnipFinding.make({ kind: "types", file: "src/b.ts", name: "NewType" });
+
+    expect(compareKnipFindingsForTesting([inherited], [removed, inherited])).toMatchObject({
+      current_count: 1,
+      baseline_count: 2,
+      introduced: [],
+      resolved: [removed],
+    });
+    expect(compareKnipFindingsForTesting([inherited, introduced], [inherited])).toMatchObject({
+      current_count: 2,
+      baseline_count: 1,
+      introduced: [introduced],
+      resolved: [],
+    });
   });
 
   it("skips repo-level tsgo diagnostics only for explicit package filters", () => {

@@ -508,6 +508,28 @@ jobs:
           path: .beep/fallow/**
           if-no-files-found: error
 
+  knip:
+    name: Knip
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+          use-node: "false"
+
+      - name: Run Knip regression gate
+        run: bun run beep quality knip
+
   build:
     name: Build
     if: github.event_name == 'push'
