@@ -88,12 +88,12 @@
     {
       "id": "P1",
       "name": "Vertical slice (n=1)",
-      "status": "in_progress"
+      "status": "completed"
     },
     {
       "id": "P2",
       "name": "Corpus",
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "P3",

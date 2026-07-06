@@ -40,12 +40,14 @@ before generalizing anything.
 
 ## Latest Evidence
 
-2026-07-06: **P0 complete, P1 loop-proof achieved** — SkillOpt trained
-end-to-end against this repo (exit 0, 27s, 1 step): codex_exec target
-rollouts + claude_chat sonnet optimizer, all plan-covered. Four integration
-findings + smoke artifacts in
-[`history/p1-spike/`](./history/p1-spike/FINDINGS.md). Remaining P1: a
-baseline-failing task to exercise the edit+gate path.
+2026-07-06: **P1 complete — both gate branches proven.** Accept run: the
+optimizer learned a generalizable rule from a train failure and the gate
+recorded `accept_new_best` (val 0.6667 → 1.0000). Reject run: a
+non-improving candidate edit was refused on the strict-improvement rule and
+the skill reverted. Design + logs + artifacts in
+[`history/p1-gate/`](./history/p1-gate/FINDINGS.md); loop-proof smoke and
+integration findings in [`history/p1-spike/`](./history/p1-spike/FINDINGS.md).
+Custom-env seam for P3 confirmed (`_ENV_REGISTRY` injection, no fork).
 
 ## Notes
 
