@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "initiative-manifest/v1",
+  "initiative": {
+    "id": "skillopt-training-pilot",
+    "title": "SkillOpt Training Pilot",
+    "status": "active",
+    "created": "2026-07-06",
+    "updated": "2026-07-06",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/skillopt-training-pilot",
+  "lifecycle": "active",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "mission": "Compose existing eval bricks (QualityWorkerEval runner pattern, ai-metrics BenchmarkCase storage, schema-first/tsgo law-scorers, beep worktree) into a SkillOpt training loop and run it end-to-end on schema-first-development; loop-runs = success, lift = evidence, park-with-findings = legitimate verdict.",
+  "provenance": {
+    "exploration": "explorations/skillopt-training-pilot",
+    "graduated": "2026-07-06",
+    "note": "BRIEF signed off 2026-07-06; 7 locked decisions in exploration DECISIONS.md (pilot skill, loop-runs bar, flake+uv provisioning, codex execution, no-adoption boundary, BRIEF sign-off, agent-effectiveness code home)."
+  },
+  "relatedPackets": [
+    {
+      "id": "agent-pipeline-velocity",
+      "relation": "successor",
+      "notes": "Uses the SkillOpt-compatible skill shape, worktree tooling, and SkillOpt provenance it established (PR #295)."
+    },
+    {
+      "id": "quality-gate-ratchets",
+      "relation": "successor",
+      "notes": "Harness PR ships through the 17-check ruleset it activated; codex worktree-lane conventions inherited verbatim (PR #305/#306)."
+    },
+    {
+      "id": "agent-effectiveness-loop",
+      "relation": "successor",
+      "notes": "Extends the Phase-1 agent-effectiveness command family and Phoenix substrate."
+    },
+    {
+      "id": "agent-effectiveness-phoenix-enrichment",
+      "relation": "revives",
+      "notes": "B5 stretch revives the superseded phoenix-experiments/phoenix-evals slices under this packet's provenance."
+    }
+  ],
+  "executionMandate": {
+    "implementation": "codex-subagents",
+    "orchestration": "claude",
+    "conventions": [
+      "codex cwd = worktree (preflight test -w .); codex cannot commit in worktrees or call GitHub APIs",
+      "deliverable-on-disk + .lane-summary.md; orchestrator commits/pushes",
+      "training runs never inside codex sandboxes; local with full-log capture (no tail pipes on verdict-bearing commands)",
+      "P1 vertical slice (n=1) before any generalization"
+    ]
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Harness/corpus/provisioning changes ship as one PR driven to mergeable via /yeet through the active main ruleset; the goal itself completes on a recorded park-or-proceed verdict with training artifacts in history/.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/skillopt-training-pilot/README.md",
+    "goals/skillopt-training-pilot/SPEC.md",
+    "goals/skillopt-training-pilot/PLAN.md",
+    "goals/skillopt-training-pilot/GOAL.md",
+    "goals/skillopt-training-pilot/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "explorations/skillopt-training-pilot/RESEARCH.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/skillopt-training-pilot/GOAL.md"
+    }
+  ],
+  "phases": [
+    { "id": "P0", "name": "Provisioning + skeleton", "status": "pending" },
+    { "id": "P1", "name": "Vertical slice (n=1)", "status": "pending" },
+    { "id": "P2", "name": "Corpus", "status": "pending" },
+    { "id": "P3", "name": "Scorer + runner hardening", "status": "pending" },
+    { "id": "P4", "name": "Ship harness", "status": "pending" },
+    { "id": "P5", "name": "Training run", "status": "pending" },
+    { "id": "P6", "name": "Stretch + close", "status": "pending" }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/skillopt-training-pilot/GOAL.md)\" -le 4000",
+    "jq . goals/skillopt-training-pilot/ops/manifest.json",
+    "git diff --check -- goals/skillopt-training-pilot",
+    "uv run --project tools/skillopt skillopt --help",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Harness integration infeasible within appetite — PARK with findings (legitimate outcome).",
+    "A change would weaken any gate, unseal raw transcripts, or grow always-loaded context.",
+    "BenchmarkCase extension would fork rather than extend ai-metrics schemas.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
