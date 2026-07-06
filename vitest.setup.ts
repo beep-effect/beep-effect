@@ -384,7 +384,9 @@ class GlobShim {
         const absolutePath = join(absoluteDirectory, dirent.name);
 
         if (dirent.isSymbolicLink()) {
-          if (!recursivePattern && this.match(relativePath)) {
+          // Bun.Glob lists matching symlinked entries in recursive scans too;
+          // it just does not traverse into symlinked directories.
+          if (this.match(relativePath)) {
             entries.push(outputPath(relativePath, absolutePath));
           }
         } else if (dirent.isDirectory()) {

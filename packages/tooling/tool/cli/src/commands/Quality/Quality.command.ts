@@ -2621,10 +2621,6 @@ const devQualityCommand = Command.make(
     surface: Flag.boolean("surface").pipe(
       Flag.withDescription("Also run affected docgen and repo-export checks for public surface edits")
     ),
-    mode: Argument.choice("mode", ["green"]).pipe(
-      Argument.optional,
-      Argument.withDescription("Optional alias for the green local development quality lane")
-    ),
   },
   ({ base, head, surface }) =>
     runQualityProgram(

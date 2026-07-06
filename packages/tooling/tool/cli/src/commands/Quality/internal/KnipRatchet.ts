@@ -8,7 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { Console, Effect, FileSystem, Order, Path, pipe, Stream } from "effect";
+import { Console, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -16,6 +16,7 @@ import * as Str from "effect/String";
 import { ChildProcess } from "effect/unstable/process";
 import { parse } from "jsonc-parser";
 import { QualityScriptCommandError } from "../Quality.errors.js";
+import { collectText } from "./QualityArtifactSupport.js";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ParseError } from "jsonc-parser";
 
@@ -378,16 +379,6 @@ const writeBaseline = Effect.fn("KnipRatchet.writeBaseline")(function* (
     .writeFileString(absolutePath, `${baselineHeader}${json}\n`)
     .pipe(QualityScriptCommandError.mapError(`Failed to write ${baselinePath}.`));
 });
-
-// fallow-ignore-next-line code-duplication
-const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
-  stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(
-      () => "",
-      (acc, chunk) => `${acc}${chunk}`
-    )
-  );
 
 type KnipProcessResult = {
   readonly stdout: string;

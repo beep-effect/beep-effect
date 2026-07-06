@@ -737,3 +737,15 @@ export const declarationKind = (node: Node): string => {
   }
   return node.getKindName();
 };
+
+/**
+ * Fold a byte stream into its decoded text.
+ *
+ * @category streams
+ * @since 0.0.0
+ */
+export const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
+  stream.pipe(
+    Stream.decodeText(),
+    Stream.runFold(thunkEmptyStr, (acc, chunk) => `${acc}${chunk}`)
+  );

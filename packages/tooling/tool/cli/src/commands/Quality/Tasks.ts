@@ -8,7 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { A, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
+import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Console, Duration, Effect, FileSystem, flow, Inspectable, Match, Order, Path, pipe, Stream } from "effect";
 import { dual } from "effect/Function";
@@ -22,6 +22,7 @@ import {
   compareCoverageRegressionBaseline,
   writeCoverageRegressionBaseline,
 } from "./internal/CoverageRegression.js";
+import { collectText } from "./internal/QualityArtifactSupport.js";
 import { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Quality.errors.js";
 import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
@@ -640,12 +641,6 @@ const turboCoverageEnv = (
 ): Record<string, string> | undefined =>
   // fallow-ignore-next-line code-duplication
   includesTurboCoverageTask(tasks, args) ? { VITEST_COVERAGE_RATCHET: "1" } : undefined;
-
-const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
-  stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(thunkEmptyStr, (acc, chunk) => `${acc}${chunk}`)
-  );
 
 const linesFromText = (text: string): ReadonlyArray<string> =>
   pipe(Str.split(/\r?\n/)(text), A.map(Str.trim), A.filter(Str.isNonEmpty));
