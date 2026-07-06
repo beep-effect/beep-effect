@@ -583,7 +583,9 @@ const stripCoverageControlArgs: (args: ReadonlyArray<string>) => ReadonlyArray<s
 
 const coverageTurboArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> => {
   const stripped = stripCoverageControlArgs(stripPassthroughDelimiter(args));
-  return A.some(stripped, isTurboConcurrencyArg) ? stripped : [ROOT_COVERAGE_TURBO_CONCURRENCY_ARG, ...stripped];
+  return isCi() || A.some(stripped, isTurboConcurrencyArg)
+    ? stripped
+    : [ROOT_COVERAGE_TURBO_CONCURRENCY_ARG, ...stripped];
 };
 
 const parseCoverageTaskOptions = (args: ReadonlyArray<string>): CoverageTaskOptions => {
