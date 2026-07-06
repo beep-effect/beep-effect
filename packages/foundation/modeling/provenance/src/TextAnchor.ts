@@ -35,9 +35,15 @@ const $I = $ProvenanceId.create("TextAnchor");
  * @since 0.0.0
  */
 export const TextAnchorFields = {
-  startChar: NonNegativeInt,
-  endChar: NonNegativeInt,
-  quote: S.String,
+  startChar: NonNegativeInt.annotateKey({
+    description: "Inclusive start character offset into the source text.",
+  }),
+  endChar: NonNegativeInt.annotateKey({
+    description: "Exclusive end character offset into the source text.",
+  }),
+  quote: S.String.annotateKey({
+    description: "Exact quoted substring; source.slice(startChar, endChar) should reproduce it.",
+  }),
 };
 
 /**
@@ -65,16 +71,32 @@ export class TextAnchor extends S.Class<TextAnchor>($I`TextAnchor`)(
     description:
       "A half-open character range [startChar, endChar) into a source document, with the exact quoted substring.",
   })
-) {}
+) {
+  /**
+   * Whether an anchor is well-ordered: `startChar <= endChar`.
+   *
+   * @example
+   * ```ts
+   * import { TextAnchor } from "@beep/provenance/TextAnchor"
+   *
+   * console.log(TextAnchor.isWellOrdered({ startChar: 0, endChar: 14 })) // true
+   * ```
+   *
+   * @category validation
+   * @since 0.0.0
+   */
+  static readonly isWellOrdered = (anchor: Pick<typeof TextAnchor.Encoded, "startChar" | "endChar">): boolean =>
+    anchor.startChar <= anchor.endChar;
+}
 
 /**
  * Whether an anchor is well-ordered: `startChar <= endChar`. A malformed anchor
  * (start after end) is a defect at the producing boundary.
  *
- * Encoded as a predicate rather than a baked schema filter because the modeling
- * packages do not yet share a cross-field refinement idiom; producers should
- * assert this when constructing anchors. (Schema-level enforcement is a tracked
- * follow-up.)
+ * Encoded as a predicate rather than a baked schema filter because
+ * `TextAnchorFields` is a public spread surface; schema-level enforcement needs
+ * a same-sweep update for spread consumers. Producers should assert this when
+ * constructing anchors.
  *
  * @example
  * ```ts
@@ -87,5 +109,4 @@ export class TextAnchor extends S.Class<TextAnchor>($I`TextAnchor`)(
  * @category validation
  * @since 0.0.0
  */
-export const isWellOrdered = (anchor: { readonly startChar: number; readonly endChar: number }): boolean =>
-  anchor.startChar <= anchor.endChar;
+export const isWellOrdered = TextAnchor.isWellOrdered;

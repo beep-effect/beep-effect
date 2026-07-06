@@ -30,7 +30,11 @@ jobs:
           cache-write: "true"
 
       - name: Sync official datasets
-        run: bun run beep sync-data-to-ts --all --report-dir "$RUNNER_TEMP/data-sync-report"
+        env:
+          BEEP_ISO3166_PART1_CSV_URL: ${{ secrets.BEEP_ISO3166_PART1_CSV_URL }}
+          BEEP_ISO3166_PART2_CSV_URL: ${{ secrets.BEEP_ISO3166_PART2_CSV_URL }}
+          BEEP_ISO3166_AUTH_HEADER: ${{ secrets.BEEP_ISO3166_AUTH_HEADER }}
+        run: bun run beep sync-data-to-ts --all --include-authenticated --report-dir "$RUNNER_TEMP/data-sync-report"
 
       - name: Upload data sync report
         uses: actions/upload-artifact@v4

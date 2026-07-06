@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/ui-system/form/src/core/FormOptions.ts",
-    "line": 44,
-    "symbol": "ValidateOn",
-    "smell": "ValidateOn is a hand-written \"change\" | \"blur\" | \"submit\" type alias and buildValidators repeats the same literals in Match.when handlers, so the validation-slot domain is split between a type alias and ad-hoc match cases.",
-    "proposedTarget": "Introduce a ValidateOn LiteralKit([\"change\", \"blur\", \"submit\"]) in FormOptions.ts, derive export type ValidateOn from the kit, and dispatch buildValidators via ValidateOn.$match. LiteralKit const type params/$match are verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:665/710.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 3.6
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/foundation/ui-system/form/src/internal/FieldShell.tsx",
     "line": 38,
     "symbol": "FieldShellProps",

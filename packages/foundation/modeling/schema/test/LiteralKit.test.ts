@@ -8,6 +8,7 @@ import {
 } from "@beep/schema/LiteralKit";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 const createRuntimeLiteralKit = (
   literals: ReadonlyArray<unknown>,
@@ -19,6 +20,20 @@ describe("LiteralKit", () => {
 
   it("exposes Options with the original literal tuple", () => {
     expect(Status.Options).toEqual([1, 20n, true, false, "hello"]);
+  });
+
+  it("round-trips schema-derived literal samples", () => {
+    const arbitrary = S.toArbitrary(Status);
+    const decode = S.decodeUnknownSync(Status);
+    const encode = S.encodeSync(Status);
+
+    fc.assert(
+      fc.property(arbitrary, (literal) => {
+        expect(Status.Options).toContain(literal);
+        expect(decode(encode(literal))).toBe(literal);
+      }),
+      { numRuns: 25 }
+    );
   });
 
   it("creates an Enum map with LiteralToKey keys", () => {

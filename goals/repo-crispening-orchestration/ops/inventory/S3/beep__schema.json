@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/modeling/schema/src/Semver.ts",
-    "line": 291,
-    "symbol": "satisfiesComparator",
-    "smell": "RangeComparatorOperator is a finite schema literal domain at line 94, but satisfiesComparator dispatches it through Match.type with all current operator literals followed by Match.orElse(() => false). Adding a new accepted operator to the schema would decode successfully and then silently fail the range check instead of forcing an exhaustive handler update.",
-    "proposedTarget": "Make RangeComparatorOperator a LiteralKit([\"^\", \">=\", \">\", \"<=\", \"<\", \"=\"]) and dispatch with RangeComparatorOperator.$match(comparator.operator, { ... }), or keep the schema and replace the fallback with Match.exhaustive. Verified exemplars: LiteralKit.$match is implemented at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:606-619; this package already uses Match.exhaustive for PersistStrategy at packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.factory.ts:181-201; Effect v4 Match.exhaustive is verified at .repos/effect-v4/packages/effect/src/Match.ts:2003.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 3.3
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.factory.ts",
     "line": 333,
     "symbol": "matchVariantFieldDescriptor",
@@ -19,7 +8,11 @@
     "proposedTarget": "Refactor the dispatcher around the existing finite domains: either mirror explicitVariantCompatibilityFor's Match.type<PersistStrategy>().pipe(..., Match.exhaustive) shape from lines 181-201, or use ValueStrategy.$match(descriptor.valueStrategy, { ... }) with an inner StorageKind/descriptor match for the timestampDate/timestampMillis special cases. Keep the change in EntitySchema.factory.ts/EntitySchema.persist.ts; do not restructure the @beep/schema topology.",
     "confidence": 0.78,
     "mechanization": "assisted",
-    "roiRank": 3.1
+    "roiRank": 3.1,
+    "exception": {
+      "reason": "The dispatcher spans PersistDescriptor storageKind/valueStrategy and intentionally falls back to the provided field for passthrough variants. Making it exhaustive needs a dedicated EntitySchema persisted-variant proof to preserve wire shape.",
+      "boundary": "EntitySchema persisted-variant dispatcher, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -30,7 +23,11 @@
     "proposedTarget": "Make GraphKind derive from the existing GraphKindValue kit (or make GraphKind the single exported kit while preserving current public exports), then use that same source for GraphEncoded's type field and graph kind dispatch. The in-repo source of truth candidate is packages/foundation/modeling/schema/src/Graph/Graph.shared.ts:31; LiteralKit helper attachment is verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:754-805.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 2.4
+    "roiRank": 2.4,
+    "exception": {
+      "reason": "Consolidating GraphKind with GraphKindValue changes the graph schema source of truth and public graph type surface; this belongs in the graph family-close sweep under the topology fence.",
+      "boundary": "Graph schema topology fence, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -41,7 +38,11 @@
     "proposedTarget": "Dispatch encoded.type through GraphKindValue.$match(encoded.type, { directed: ..., undirected: ... }) after importing the runtime kit, or through Match.type<GraphKindValue>().pipe(Match.when(\"directed\", ...), Match.when(\"undirected\", ...), Match.exhaustive). LiteralKit.$match is verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:606-619 and Effect v4 Match.exhaustive at .repos/effect-v4/packages/effect/src/Match.ts:2003.",
     "confidence": 0.78,
     "mechanization": "assisted",
-    "roiRank": 2.8
+    "roiRank": 2.8,
+    "exception": {
+      "reason": "Graph rebuild dispatch is tied to the same graph kind source-of-truth split. Updating it safely requires the coordinated GraphKind/GraphKindValue family sweep and parity proof.",
+      "boundary": "Graph schema topology fence, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -52,7 +53,11 @@
     "proposedTarget": "Select the target schemas with GraphKindValue.$match(expectedType, { directed: ..., undirected: ... }) and share that selection between mutable and immutable branches, or use an exhaustive Match.type<GraphKindValue>() helper. Keep the current Graph role files; this is an in-place dispatch cleanup, not a schema-topology restructure.",
     "confidence": 0.74,
     "mechanization": "assisted",
-    "roiRank": 2.5
+    "roiRank": 2.5,
+    "exception": {
+      "reason": "Graph transform dispatch is tied to the graph kind source-of-truth split. Updating it safely requires the coordinated GraphKind/GraphKindValue family sweep and parity proof.",
+      "boundary": "Graph schema topology fence, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

@@ -489,6 +489,7 @@ const acquireCldrTerritoriesProjection = Effect.fn("SyncDataToTs.CldrTerritories
  */
 export const cldrTerritoriesTarget: SyncDataTarget = {
   id: targetId,
+  access: "public",
   description: "Sync CLDR territory and top-level containment data from the latest CLDR JSON release.",
   sourceUrls: [
     CLDR_JSON_LATEST_RELEASE_URL,

@@ -1,38 +1,5 @@
 [
   {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
-    "line": 46,
-    "symbol": "MdHeadingLevel",
-    "smell": "Local `type MdHeadingLevel = 1 | 2 | 3 | 4 | 5 | 6` literal-union alias duplicates the existing `Md.HeadingLevel` LiteralKit schema type (packages/foundation/modeling/md/src/Md.model.ts:830-842), which is already reachable via the file's `import * as Md from \"@beep/md/Md.model\"`.",
-    "proposedTarget": "Delete the alias and use `Md.HeadingLevel` (the `typeof Md.HeadingLevel.Type` export at Md.model.ts:842) in `mdHeadingLevelFromPandoc` (line 308), `pandocHeadingLevelProjection` (line 327), and `headingToMd` (line 343). Pure type-level substitution; no runtime change.",
-    "confidence": 0.92,
-    "mechanization": "codemod",
-    "roiRank": 0.55
-  },
-  {
-    "ruleId": "SFV4-boundary-codec",
-    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
-    "line": 213,
-    "symbol": "attrFromWire",
-    "smell": "Hand-rolled bidirectional tuple↔class mapping: `attrFromWire` (decode, line 213) and `encodeAttr` (encode, line 454) pair-wise implement the AttrWire `[id, classes, keyValues]` ⇄ `PandocAttr` transformation outside any schema, though both endpoint schemas (`AttrWire` line 166, `PandocAttr` in Pandoc.model.ts) exist.",
-    "proposedTarget": "A `PandocAttrFromWire = AttrWire.pipe(S.decodeTo(PandocAttr, { decode: SchemaGetter.transform(([id, classes, keyValues]) => ({ classes, id, keyValues })), encode: SchemaGetter.transform((attr) => [attr.id, attr.classes, attr.keyValues]) }))` codec carries both directions in one schema; in-repo exemplar of the `S.decodeTo` + `SchemaGetter.transform` pattern: packages/foundation/modeling/md/src/Md.model.ts:1297. Verified against .repos/effect-v4/packages/effect/src/Schema.ts:5408 (`decodeTo`) and .repos/effect-v4/packages/effect/src/SchemaGetter.ts:499 (`SchemaGetter.transform`).",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 0.5
-  },
-  {
-    "ruleId": "SFV4-boundary-codec",
-    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
-    "line": 216,
-    "symbol": "targetFromWire",
-    "smell": "Same shape as attrFromWire: `targetFromWire` (decode, line 216) and `encodeTarget` (encode, line 458) hand-roll the TargetWire `[url, title]` ⇄ `PandocTarget` transformation as a split function pair, with both endpoint schemas already defined (`TargetWire` line 167, `PandocTarget` in Pandoc.model.ts).",
-    "proposedTarget": "A `PandocTargetFromWire = TargetWire.pipe(S.decodeTo(PandocTarget, { decode: SchemaGetter.transform(([url, title]) => ({ title, url })), encode: SchemaGetter.transform((t) => [t.url, t.title]) }))` codec; exemplar packages/foundation/modeling/md/src/Md.model.ts:1297. Two-field non-recursive mapping — the most direct schema-codec fit in the file.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 0.5
-  },
-  {
     "ruleId": "SFV4-fn-schema",
     "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
     "line": 528,
@@ -41,7 +8,11 @@
     "proposedTarget": "A top-level `PandocDocumentFromWire = PandocJsonWire.pipe(S.decodeTo(PandocDocument, ...))` transformation schema (v4 `S.decodeTo`, .repos/effect-v4/packages/effect/src/Schema.ts:5408) so `S.decodeUnknownEffect(PandocDocumentFromWire)` / `S.encodeEffect(PandocDocumentFromWire)` become the API, and the string variant derives by composing with the existing `PandocJsonFromString` (line 152). The existing effectful decoders can seat inside the transformation, preserving the UnknownBlock/UnknownInline best-effort fallback semantics.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 0.35
+    "roiRank": 0.35,
+    "exception": {
+      "reason": "The exported decode/encode helpers are the package boundary API and must keep their exact Effect<..., SchemaError>/Effect<..., never> signatures; wrapping the recursive best-effort Pandoc constructor dispatch in S.decodeTo would either duplicate the same machinery or alter the encoder error channel. Local tuple transformations and property laws now cover the schema-fit absorptions without changing this public boundary.",
+      "boundary": "Pandoc JSON wire boundary public helpers; revisit only with a dedicated public codec export and full same-PR consumer sweep"
+    }
   },
   {
     "ruleId": "schema-first-inventory",

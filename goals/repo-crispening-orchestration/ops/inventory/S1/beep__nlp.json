@@ -1,61 +1,6 @@
 [
   {
     "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/modeling/nlp/src/Ontology/Kind.ts",
-    "line": 380,
-    "symbol": "KindContainment.containment",
-    "smell": "`KindContainment` is an `S.Class` for the containment poset, but runtime behavior ignores that schema and reads a separate static `containment` record. The two sources disagree: the schema defaults put `Document` at `[\"Character\", \"POS\", \"Lemma\"]` (lines 393-397), while the runtime record puts `Document` at `[\"Paragraph\", \"Sentence\"]` (line 412); the schema gives `Character` children (lines 382-386), while the runtime record makes `Character` a leaf (line 416).",
-    "proposedTarget": "Make the poset a single schema-owned data value. Correct `KindContainment` defaults to the behavior proven by `test/Ontology/Kind.test.ts:52-62`, then derive `KindContainment.containment` from `KindContainment.make({})`, or remove the static record and have `canContain` / `getValidChildren` read the schema-built instance. Keep `SchemaUtils.withKeyDefaults(...)` as the default carrier; this turns the existing schema from decorative metadata into the runtime source of truth.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 0.72
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/foundation/modeling/nlp/src/Ontology/Kind.ts",
-    "line": 166,
-    "symbol": "makeTyped / Document / Paragraph / Sentence / Token / Character / Entity / Relation / Embedding / Dependency / Chunk / POS / Lemma",
-    "smell": "`TypedTextSchema` exists (line 151), but the shared constructor returns plain object literals and the exported kind constructors expose inline function contracts rather than schema-owned construction.",
-    "proposedTarget": "Introduce per-kind schemas such as `DocumentText = TypedTextSchema(S.Literal(\"Document\"))` (or cache them behind a schema-backed `makeTyped`) and implement the exported constructors with the relevant schema `.make({ content, metadata })`, preserving the public constructor names. `Fn` is not required unless decode-on-call semantics are wanted; the main target is that `TypedText` values are constructed through the available schema.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 0.5
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/modeling/nlp/src/Core/PatternOperations.ts",
-    "line": 27,
-    "symbol": "isPOSElement / isEntityElement / isLiteralElement",
-    "smell": "Exported guard helpers hand-roll discriminator checks with `P.isTagged(...)` even though the corresponding element schemas already expose colocated schema-derived statics on `Pattern.POS`, `Pattern.Entity`, and `Pattern.Literal`.",
-    "proposedTarget": "Replace the three helper bodies with compatibility aliases to the schema statics (`Pattern.POS.is`, `Pattern.Entity.is`, `Pattern.Literal.is`) from `packages/foundation/modeling/nlp/src/Core/Pattern.ts:526-563`. The statics are built with `SchemaUtils.withStatics`; canonical codec-statics helper precedent is `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`, and v4 `S.is` is verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1256`.",
-    "confidence": 0.93,
-    "mechanization": "codemod",
-    "roiRank": 0.6
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/modeling/nlp/src/Core/Token.ts",
-    "line": 52,
-    "symbol": "isTokenIndex / isCharPosition",
-    "smell": "Exported guards validate against `NonNegativeInt` directly while the branded schemas `TokenIndex` and `CharPosition` are declared later in the same file. The guard behavior is detached from the branded schemas that should carry the public contract.",
-    "proposedTarget": "Pipe `TokenIndex` and `CharPosition` through `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)`, then keep `isTokenIndex` / `isCharPosition` as compatibility aliases to `TokenIndex.is` / `CharPosition.is`. Verified support: `S.fromBrand` at `.repos/effect-v4/packages/effect/src/Schema.ts:5083` and `SchemaUtils.withCodecStatics` at `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`; in-repo branded schema statics precedent: `packages/foundation/modeling/md/src/Md.model.ts:36`.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 0.46
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/foundation/modeling/nlp/src/Core/PatternParsers.ts",
-    "line": 242,
-    "symbol": "PatternFromString",
-    "smell": "Exported decode function takes `unknown` and returns `S.NonEmptyArray(BracketStringToPatternElement)` by calling an inline schema expression, but the function contract itself is not named as a schema.",
-    "proposedTarget": "Name the contract as a schema, e.g. `PatternElementsFromString = S.NonEmptyArray(BracketStringToPatternElement).pipe($I.annoteSchema(...), SchemaUtils.withCodecStatics)`, then preserve `PatternFromString` as a compatibility alias to the schema-derived decoder. If keeping Result-style behavior, v4 `S.decodeUnknownResult` is verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1564`; codec statics helper is `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`.",
-    "confidence": 0.84,
-    "mechanization": "assisted",
-    "roiRank": 0.48
-  },
-  {
-    "ruleId": "schema-first-inventory",
     "file": "packages/foundation/modeling/nlp/src/Operations/Definition.ts",
     "line": 48,
     "symbol": "OperationDefinition",

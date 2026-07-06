@@ -7,9 +7,12 @@
 
 import { $SchemaId } from "@beep/identity";
 import { Effect } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { NonNegativeInt } from "../Int.ts";
+import * as SchemaUtils from "../SchemaUtils/index.ts";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $SchemaId.create("CsvCodecOptions");
 
@@ -46,60 +49,38 @@ const SingleCharacterText = S.String.check(
  */
 export class CsvCodecOptions extends S.Class<CsvCodecOptions>($I`CsvCodecOptions`)(
   {
-    delimiter: SingleCharacterText.pipe(
-      S.withConstructorDefault(Effect.succeed(",")),
-      S.withDecodingDefaultKey(Effect.succeed(","))
-    ),
-    ignoreEmpty: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false))
-    ),
+    delimiter: SingleCharacterText.pipe(SchemaUtils.withKeyDefaults(",")),
+    ignoreEmpty: SchemaUtils.BoolKeyDefaultFalse,
     quote: S.OptionFromNullOr(SingleCharacterText).pipe(
       S.withConstructorDefault(Effect.succeed(O.some('"'))),
       S.withDecodingDefaultKey(Effect.succeed('"'))
     ),
     escape: S.OptionFromNullOr(SingleCharacterText).pipe(
-      S.withConstructorDefault(Effect.succeed(O.none<string>())),
+      SchemaUtils.withNoneDefault,
       S.withDecodingDefaultKey(Effect.succeed(null))
     ),
     comment: S.OptionFromNullOr(SingleCharacterText).pipe(
-      S.withConstructorDefault(Effect.succeed(O.none<string>())),
+      SchemaUtils.withNoneDefault,
       S.withDecodingDefaultKey(Effect.succeed(null))
     ),
-    ltrim: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false))
-    ),
-    rtrim: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false))
-    ),
-    trim: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false))
-    ),
-    strictColumnHandling: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false))
-    ),
-    maxRows: NonNegativeInt.pipe(
-      S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultKey(Effect.succeed(0))
-    ),
-    skipLines: NonNegativeInt.pipe(
-      S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultKey(Effect.succeed(0))
-    ),
-    skipRows: NonNegativeInt.pipe(
-      S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultKey(Effect.succeed(0))
-    ),
+    ltrim: SchemaUtils.BoolKeyDefaultFalse,
+    rtrim: SchemaUtils.BoolKeyDefaultFalse,
+    trim: SchemaUtils.BoolKeyDefaultFalse,
+    strictColumnHandling: SchemaUtils.BoolKeyDefaultFalse,
+    maxRows: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+    skipLines: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+    skipRows: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
   },
   $I.annote("CsvCodecOptions", {
     description: "Schema-backed CSV text codec options.",
     parseOptions: csvCodecOptionsParseOptions,
   })
 ) {
+  static readonly decodeEffect: {
+    (input: unknown, options?: AST.ParseOptions): Effect.Effect<CsvCodecOptions, S.SchemaError>;
+    (options?: AST.ParseOptions): (input: unknown) => Effect.Effect<CsvCodecOptions, S.SchemaError>;
+  } = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownEffect(CsvCodecOptions));
+
   get escapeChar(): O.Option<string> {
     return O.orElse(() => this.quote)(this.escape);
   }

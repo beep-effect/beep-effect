@@ -7,7 +7,7 @@
 "use client";
 
 import { $FormId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import {
   Combobox,
   ComboboxContent,
@@ -44,7 +44,7 @@ const $I = $FormId.create("components/country-select");
  * @category models
  * @since 0.0.0
  */
-export const CountryCode = LiteralKit([
+const CountryCodeBase = LiteralKit([
   "AC",
   "AD",
   "AE",
@@ -298,6 +298,12 @@ export const CountryCode = LiteralKit([
   "ZM",
   "ZW",
 ]);
+export const CountryCode = CountryCodeBase.pipe(
+  $I.annoteSchema("CountryCode", {
+    description: "ISO 3166-1 alpha-2 country code accepted by country UI primitives.",
+  }),
+  SchemaUtils.withLiteralKitStatics(CountryCodeBase)
+);
 /**
  * ISO 3166-1 alpha-2 country code used by the country primitives.
  *
@@ -398,8 +404,7 @@ export const countryCodes: ReadonlyArray<CountryCode> = A.map(countryOptions, (o
  * @category utilities
  * @since 0.0.0
  */
-export const isCountryCode = (value: string): value is CountryCode =>
-  A.some(countryOptions, (option) => option.code === value);
+export const isCountryCode: (value: string) => value is CountryCode = S.is(CountryCode);
 
 /**
  * Finds the display option for a country code.
@@ -408,23 +413,30 @@ export const isCountryCode = (value: string): value is CountryCode =>
  * ```tsx
  * import { findCountryOption } from "@beep/ui/components/country-select"
  *
- * console.log(findCountryOption("US")?.label)
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.getOrUndefined(findCountryOption("US"))?.label)
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const findCountryOption = (value: string | undefined): CountryOption | undefined =>
+export const findCountryOption = (value: string | undefined): O.Option<CountryOption> =>
   P.isString(value)
     ? pipe(
         countryOptions,
-        A.findFirst((option) => option.code === value),
-        O.getOrUndefined
+        A.findFirst((option) => option.code === value)
       )
-    : undefined;
+    : O.none();
 
 const countryCodeLabel = (value: unknown): string =>
-  P.isString(value) && isCountryCode(value) ? (findCountryOption(value)?.label ?? value) : "";
+  P.isString(value) && isCountryCode(value)
+    ? pipe(
+        findCountryOption(value),
+        O.map((option) => option.label),
+        O.getOrElse(() => value)
+      )
+    : "";
 
 const countryCodeValue = (value: unknown): string => (P.isString(value) && isCountryCode(value) ? value : "");
 

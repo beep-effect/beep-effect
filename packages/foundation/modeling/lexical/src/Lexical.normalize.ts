@@ -11,6 +11,7 @@
  * @since 0.0.0
  */
 
+import { sanitizeUrlDestination } from "@beep/md/Md.escape";
 // cspell:word youtu
 import * as Md from "@beep/md/Md.model";
 import { A, O, Str, thunkEmptyStr } from "@beep/utils";
@@ -19,6 +20,8 @@ import { pipe } from "effect/Function";
 
 const wwwPrefix = /^www\./u;
 const embedOrShortsPrefix = /^\/(?:embed|shorts)\//u;
+const urlSchemePrefix = /^[A-Za-z][A-Za-z0-9+.-]*:/u;
+const safeLinkProtocols: ReadonlyArray<string> = ["http:", "https:", "mailto:", "artifact:"];
 
 const firstPathSegment = (pathname: string): string =>
   pipe(Str.split(pathname, "/"), A.findFirst(Str.isNonEmpty), O.getOrElse(thunkEmptyStr));
@@ -28,6 +31,17 @@ const firstPathSegment = (pathname: string): string =>
  * `None`. Uses the total `URL.parse` constructor (no `try`/`catch`).
  */
 const safeUrl = (value: string): O.Option<URL> => O.fromNullishOr(URL.parse(value));
+
+const hasUrlScheme = (value: string): boolean => O.isSome(Str.match(urlSchemePrefix)(value));
+
+const isAllowedAbsoluteUrl = (value: string): boolean =>
+  pipe(
+    safeUrl(value),
+    O.exists((url) => A.contains(safeLinkProtocols, url.protocol))
+  );
+
+const isSafeRelativeUrl = (value: string): boolean =>
+  !hasUrlScheme(value) && !Str.startsWith("//")(value) && !Str.includes("\\")(value);
 
 const youtubeVideoIdFromUrl = (url: URL): O.Option<string> =>
   Match.value(Str.replace(wwwPrefix, "")(url.hostname)).pipe(
@@ -74,6 +88,32 @@ export const legacyYouTubeVideoId = (value: string): string => {
         O.flatMap(youtubeVideoIdFromUrl),
         O.getOrElse(() => trimmed)
       );
+};
+
+/**
+ * Sanitizes a serialized Lexical link URL before it reaches an anchor `href`.
+ *
+ * Active script/data protocols are first neutralized with the canonical
+ * `@beep/md` URL destination sanitizer, then the Lexical anchor sink keeps only
+ * http, https, mailto, package-owned artifact URLs, and relative URLs.
+ *
+ * @example
+ * ```ts
+ * import { sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize"
+ *
+ * console.log(sanitizeUrl("javascript:alert(1)")) // "#"
+ * ```
+ *
+ * @param value - Raw serialized Lexical link URL.
+ * @returns The safe URL destination, or `#` when the input is unsafe for an anchor href.
+ * @category normalization
+ * @since 0.0.0
+ */
+export const sanitizeUrl = (value: string): string => {
+  const sanitized = Str.trim(sanitizeUrlDestination(value));
+  return sanitized === "#" || Str.isEmpty(sanitized) || isAllowedAbsoluteUrl(sanitized) || isSafeRelativeUrl(sanitized)
+    ? sanitized
+    : "#";
 };
 
 /**

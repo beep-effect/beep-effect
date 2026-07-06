@@ -9,6 +9,7 @@ import { A, thunk0, thunk1 } from "@beep/utils";
 import { Number as Num, Result, SchemaGetter } from "effect";
 import * as Bool from "effect/Boolean";
 import * as S from "effect/Schema";
+import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { HexColor, hexToRgbValue, NormalizeHexColor, rgbToHexValue } from "./Color.hex.ts";
 import { $I, schemaIssueToError } from "./Color.shared.ts";
 import { hexToOklchValue, oklchToHexValue } from "./Color.transforms.ts";
@@ -54,7 +55,7 @@ const generateScaleValues = ({ seed, isDark }: GenerateScaleInput): HexColorScal
   });
 
   return Result.getOrThrowWith(
-    S.decodeUnknownResult(HexColorScale12)(
+    HexColorScale12.decodeResult(
       A.zipWith(lightSteps, chromaMultipliers, (lightness, multiplier) =>
         oklchToHexValue({
           l: lightness,
@@ -76,7 +77,7 @@ const generateNeutralScaleValues = ({ seed, isDark }: GenerateNeutralScaleInput)
   });
 
   return Result.getOrThrowWith(
-    S.decodeUnknownResult(HexColorScale12)(
+    HexColorScale12.decodeResult(
       A.map(lightSteps, (lightness) =>
         oklchToHexValue({
           l: lightness,
@@ -100,7 +101,7 @@ const generateAlphaScaleValues = ({ scale, isDark }: GenerateAlphaScaleInput): H
   });
 
   return Result.getOrThrowWith(
-    S.decodeUnknownResult(HexColorScale12)(
+    HexColorScale12.decodeResult(
       A.zipWith(scale, alphas, (hex, alpha) => {
         const { r, g, b } = hexToRgbValue(hex);
 
@@ -141,7 +142,10 @@ export const HexColorScale12 = S.Array(HexColor)
     S.brand("HexColorScale12"),
     $I.annoteSchema("HexColorScale12", {
       description: "A fixed-size 12-step scale of canonical hex colors.",
-    })
+    }),
+    SchemaUtils.withStatics((self) => ({
+      decodeResult: S.decodeUnknownResult(self),
+    }))
   );
 
 /**

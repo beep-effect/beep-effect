@@ -149,18 +149,22 @@ export type FileExtension = (typeof mimes)[MimeType]["extensions"][number];
  * ```
  */
 type MimeTypeDefinition = {
-  source: string;
-  extensions: FileExtension[];
+  source: MimeTypeSource;
+  extensions: A.NonEmptyArray<FileExtension>;
 };
+
+type MimeTypeSource = (typeof mimes)[MimeType]["source"];
 
 const mimeTypeDefinitions = R.empty<MimeType, MimeTypeDefinition>();
 
 for (const type of Struct.keys(mimes)) {
   const mime = mimes[type];
+  const extensions = A.fromIterable(mime.extensions);
+  A.assertNonEmptyArray(extensions);
 
   mimeTypeDefinitions[type] = {
     source: mime.source,
-    extensions: A.fromIterable(mime.extensions),
+    extensions,
   };
 }
 
@@ -178,6 +182,12 @@ const types = R.empty<FileExtension, MimeType>();
 
 const normalizeLookupExtension = Fn.flow((input: string) => extname(`x.${input}`), Str.toLowerCase, Str.substring(1));
 const returnFalse = (): false => false;
+const lookupPath: (path: string) => false | MimeType = Fn.flow(
+  O.liftPredicate(Str.isNonEmpty),
+  O.map(normalizeLookupExtension),
+  O.map(lookupNormalizedExtension),
+  O.getOrElse(returnFalse)
+);
 
 function hasTypeForExtension(extension: string, types: Record<FileExtension, MimeType>): extension is FileExtension {
   return extension in types;
@@ -263,13 +273,7 @@ export function getExtensions(): Record<MimeType, FileExtension[]> {
  * ```
  */
 export function lookup(path: string): false | MimeType {
-  return pipe(
-    path,
-    O.liftPredicate((value) => !Str.isEmpty(value)),
-    O.map(normalizeLookupExtension),
-    O.map(lookupNormalizedExtension),
-    O.getOrElse(returnFalse)
-  );
+  return lookupPath(path);
 }
 
 let inittedMaps = false;

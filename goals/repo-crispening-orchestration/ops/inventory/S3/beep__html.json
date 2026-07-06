@@ -8,6 +8,10 @@
     "proposedTarget": "Return readonly literal entries from the A.map callbacks (for example (n) => [n, Str] as const) so @beep/utils Struct.fromEntries carries the key union directly. Verified in-repo helper: packages/foundation/modeling/utils/src/Struct.ts:579-604 documents and types Struct.fromEntries as preserving per-key value types; keeping the named tuples preserves the current public key sets without touching generated Html.model.ts.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 2.25
+    "roiRank": 2.25,
+    "exception": {
+      "reason": "Reviewed assisted target was not type-correct here: `A.map` over the const name tuples still produces a tuple keyed by the full key union, so `Struct.fromEntries` resolves individual extracted keys to `never`. The explicit mapped-type cast is the boundary that preserves the public exhaustive ARIA/event schema field map.",
+      "boundary": "TypeScript tuple-union inference for generated literal-key field maps"
+    }
   }
 ]

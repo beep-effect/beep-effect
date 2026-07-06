@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "SFV4-precision-audit",
-    "file": "packages/foundation/primitive/data/src/internal/data/mime-types/index.ts",
-    "line": 151,
-    "symbol": "MimeTypeDefinition",
-    "smell": "The derived MIME metadata widens a finite registry-source domain to `source: string` and its extension list to mutable/unbounded `FileExtension[]`. The actual non-generated MIME tables only use `\"iana\"`, `\"apache\"`, and `\"nginx\"` sources, and every concrete entry has a non-empty extension array; the dtslint fixture currently pins the widened public shape at dtslint/mime-types.tst.ts:35-43.",
-    "proposedTarget": "Introduce a local precise data type, e.g. `type MimeTypeSource = (typeof mimes)[MimeType][\"source\"]` and `type MimeTypeDefinition = { readonly source: MimeTypeSource; readonly extensions: A.NonEmptyReadonlyArray<FileExtension> }`, then decide whether `getExtensions` keeps a widened `FileExtension[]` compatibility return. In-repo exemplars: `packages/foundation/modeling/schema/src/FileExtension.ts:30-34` already models MIME dictionaries with non-empty extension arrays, `packages/foundation/modeling/schema/src/MimeType.ts:99-113` builds downstream LiteralKit schemas over @beep/data MIME constants, and `packages/foundation/modeling/utils/src/Array.ts:580` exposes `A.fromIterableNonEmpty` when a runtime iterable must be asserted non-empty.",
-    "confidence": 0.68,
-    "mechanization": "assisted",
-    "roiRank": 2.5
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
     "file": "packages/foundation/primitive/data/src/internal/data/keyboard-shortcuts.ts",
     "line": 1,
     "symbol": "KeyboardShortcutPlatformValues",

@@ -137,7 +137,7 @@ export class ReferrerPolicyResponseHeader extends S.Class<ReferrerPolicyResponse
 )(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String),
+    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ReferrerPolicyResponseHeader", {
     description: "The `Referrer-Policy` response header.",

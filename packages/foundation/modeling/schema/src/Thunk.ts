@@ -104,7 +104,8 @@ export const ThunkUnknown = S.declare<() => unknown>(isThunkUnknownValue).pipe(
   }),
   SchemaUtils.withStatics(() => ({
     generic: <A = never>(guard: (u: unknown) => u is () => A) => S.declare<() => A>(guard),
-  }))
+  })),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -122,7 +123,7 @@ export const ThunkUnknown = S.declare<() => unknown>(isThunkUnknownValue).pipe(
  * @since 0.0.0
  * @category guards
  */
-export const isThunkUnknown = S.is(ThunkUnknown);
+export const isThunkUnknown = ThunkUnknown.is;
 
 /**
  * Builds a typed thunk schema from a type guard and a return-type schema

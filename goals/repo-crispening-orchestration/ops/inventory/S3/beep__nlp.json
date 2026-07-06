@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/modeling/nlp/src/Core/Pattern.ts",
-    "line": 376,
-    "symbol": "PatternElement",
-    "smell": "PatternElement is a finite family of S.TaggedClass members but stops at S.Union([POSPatternElement, EntityPatternElement, LiteralPatternElement]) without S.toTaggedUnion(\"_tag\"), so the schema does not derive .match/.guards/.isAnyOf. PatternParsers.ts:67 then hand-builds encodePatternElement with Match.tagsExhaustive instead of using schema-derived dispatch.",
-    "proposedTarget": "Pipe PatternElement through S.toTaggedUnion(\"_tag\") before annotation, then replace encodePatternElement with PatternElement.match. In-package exemplar: Graph/Schema.ts:109-149 derives TextNode from a LiteralKit member family and finishes with S.toTaggedUnion(\"type\"); Effect v4 S.toTaggedUnion was verified at .repos/effect-v4/packages/effect/src/Schema.ts:6094-6098 and exposes match/guards in the tagged-union utility surface.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 3.2
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
     "line": 147,
     "symbol": "ChunkKind",
@@ -19,7 +8,11 @@
     "proposedTarget": "Introduce one shared structural-granularity kit (for example StructuralTextKind) and keep ChunkKind/TextNodeType as annotated aliases over that source so public names survive while the literal tuple and derived helpers have one owner. Graph/Schema.ts:109-149 remains the local exemplar for deriving a tagged union from that kit via mapMembers(...).pipe(S.toTaggedUnion(\"type\")); LiteralKit API split and .Options/.Enum/.is/.$match/.toTaggedUnion were verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:647-668 and :744-801.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 1.95
+    "roiRank": 1.95,
+    "exception": {
+      "reason": "Unifying ChunkKind/TextNodeType literal kits crosses Handoff and Graph public surfaces with external consumers.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

@@ -464,10 +464,21 @@ export const zipWith: {
  * @since 0.0.0
  * @category combinators
  */
-export const compose = <A, B, C, R1, E1, R2, E2>(
-  first: OperationBuilder<A, B, R1, E1>,
-  second: OperationBuilder<B, C, R2, E2>
-): OperationBuilder<A, C, R1 | R2, E1 | E2> => first.flatMap(second);
+export const compose: {
+  <B, C, R2, E2>(
+    second: OperationBuilder<B, C, R2, E2>
+  ): <A, R1, E1>(first: OperationBuilder<A, B, R1, E1>) => OperationBuilder<A, C, R1 | R2, E1 | E2>;
+  <A, B, C, R1, E1, R2, E2>(
+    first: OperationBuilder<A, B, R1, E1>,
+    second: OperationBuilder<B, C, R2, E2>
+  ): OperationBuilder<A, C, R1 | R2, E1 | E2>;
+} = dual(
+  2,
+  <A, B, C, R1, E1, R2, E2>(
+    first: OperationBuilder<A, B, R1, E1>,
+    second: OperationBuilder<B, C, R2, E2>
+  ): OperationBuilder<A, C, R1 | R2, E1 | E2> => first.flatMap(second)
+);
 
 /**
  * The identity operation: returns its input unchanged.

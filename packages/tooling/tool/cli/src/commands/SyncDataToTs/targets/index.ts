@@ -8,6 +8,7 @@
 import { cldrTerritoriesTarget } from "./CldrTerritories.js";
 import { ianaMediaTypesTarget } from "./IanaMediaTypes.js";
 import { ianaTimezonesTarget } from "./IanaTimezones.js";
+import { iso3166Target } from "./Iso3166.js";
 import { iso4217Target } from "./Iso4217.js";
 
 /**
@@ -23,6 +24,7 @@ import { iso4217Target } from "./Iso4217.js";
  */
 export const syncDataTargets = [
   iso4217Target,
+  iso3166Target,
   ianaMediaTypesTarget,
   ianaTimezonesTarget,
   cldrTerritoriesTarget,

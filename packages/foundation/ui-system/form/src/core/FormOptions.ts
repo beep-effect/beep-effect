@@ -20,12 +20,34 @@
  * @since 0.0.0
  */
 
+import { $FormId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import { formOptions } from "@tanstack/react-form";
-import { Match } from "effect";
 import * as S from "effect/Schema";
 import { getEncodedDefaultFormValues } from "./Defaults.ts";
 import { toFormSchema } from "./FormSchema.ts";
 import type { ToFormSchemaOptions } from "./FormSchema.ts";
+
+const $I = $FormId.create("core/FormOptions");
+
+/**
+ * Validation events supported by TanStack validator routing.
+ *
+ * @example
+ * ```ts
+ * import { ValidateOn } from "@beep/form/core/FormOptions"
+ *
+ * console.log(ValidateOn.is.blur("blur")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ValidateOn = LiteralKit(["change", "blur", "submit"]).pipe(
+  $I.annoteSchema("ValidateOn", {
+    description: "Validation events supported by TanStack form validator routing.",
+  })
+);
 
 /**
  * Which validation event the schema runs on.
@@ -34,14 +56,14 @@ import type { ToFormSchemaOptions } from "./FormSchema.ts";
  * ```ts
  * import type { ValidateOn } from "@beep/form/core/FormOptions"
  *
- * const validateOn = "blur" satisfies ValidateOn
+ * const validateOn: ValidateOn = "blur"
  * console.log(validateOn) // "blur"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type ValidateOn = "change" | "blur" | "submit";
+export type ValidateOn = typeof ValidateOn.Type;
 
 interface BaseParams<A, I> {
   /** Route to the async validator slot for async-capable schemas; defaults to `false`. */
@@ -59,12 +81,11 @@ const buildValidators = <A, I>(
   validateOn: ValidateOn,
   async: boolean
 ) =>
-  Match.value(validateOn).pipe(
-    Match.when("change", () => (async ? { onChangeAsync: standard } : { onChange: standard })),
-    Match.when("blur", () => (async ? { onBlurAsync: standard } : { onBlur: standard })),
-    Match.when("submit", () => (async ? { onSubmitAsync: standard } : { onSubmit: standard })),
-    Match.exhaustive
-  );
+  ValidateOn.$match(validateOn, {
+    change: () => (async ? { onChangeAsync: standard } : { onChange: standard }),
+    blur: () => (async ? { onBlurAsync: standard } : { onBlur: standard }),
+    submit: () => (async ? { onSubmitAsync: standard } : { onSubmit: standard }),
+  });
 
 /**
  * Base builder: wires a schema's Standard Schema into TanStack `validators` on

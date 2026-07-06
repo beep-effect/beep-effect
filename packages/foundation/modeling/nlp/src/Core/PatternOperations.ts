@@ -7,7 +7,7 @@
 
 import { A, Str } from "@beep/utils";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
+import { Pattern } from "./Pattern.ts";
 import type { EntityPatternElement, LiteralPatternElement, PatternElement, POSPatternElement } from "./Pattern.ts";
 
 /**
@@ -24,8 +24,7 @@ import type { EntityPatternElement, LiteralPatternElement, PatternElement, POSPa
  * @since 0.0.0
  * @category predicates
  */
-export const isPOSElement = (element: PatternElement): element is POSPatternElement =>
-  P.isTagged(element, "POSPatternElement");
+export const isPOSElement: (element: PatternElement) => element is POSPatternElement = Pattern.POS.is;
 
 /**
  * Check whether an element is an entity element.
@@ -41,8 +40,7 @@ export const isPOSElement = (element: PatternElement): element is POSPatternElem
  * @since 0.0.0
  * @category predicates
  */
-export const isEntityElement = (element: PatternElement): element is EntityPatternElement =>
-  P.isTagged(element, "EntityPatternElement");
+export const isEntityElement: (element: PatternElement) => element is EntityPatternElement = Pattern.Entity.is;
 
 /**
  * Check whether an element is a literal element.
@@ -58,8 +56,7 @@ export const isEntityElement = (element: PatternElement): element is EntityPatte
  * @since 0.0.0
  * @category predicates
  */
-export const isLiteralElement = (element: PatternElement): element is LiteralPatternElement =>
-  P.isTagged(element, "LiteralPatternElement");
+export const isLiteralElement: (element: PatternElement) => element is LiteralPatternElement = Pattern.Literal.is;
 
 /**
  * Extract element values as a readonly array.

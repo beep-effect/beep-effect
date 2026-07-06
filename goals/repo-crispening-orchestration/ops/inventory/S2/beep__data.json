@@ -8,7 +8,11 @@
     "proposedTarget": "Introduce a small lookup-input transformation schema near the MIME lookup utilities, e.g. `MimeLookupExtensionInput = S.String.pipe(S.decodeTo(S.String, SchemaTransformation.transform({ decode: normalize extension + lowercase, encode: identity })))`, then have `lookup` decode once before `lookupNormalizedExtension`. Verified v4 surface: `S.decodeTo` and `SchemaTransformation.transform`; in-repo exemplars: `packages/foundation/modeling/schema/src/CommonTextSchemas.ts:36-43` and `:81-88` for text normalization, and `packages/foundation/modeling/schema/src/internal/email.ts:36-39` for trim/lowercase in-schema.",
     "confidence": 0.68,
     "mechanization": "assisted",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "Remediation audit: declined adding a private Effect Schema to the vendored MIME data package. `@beep/data` owns raw compatibility data and the public `mime-types.lookup`-style facade; executable MIME/FileExtension schemas already live downstream in `@beep/schema`. The package-local remediation kept the lookup shell byte-compatible and removed the trivial passthrough/empty-string helper smell without introducing an unexported schema that cannot carry a package-local S.toArbitrary parity surface.",
+      "boundary": "primitive data-source package; MIME lookup compatibility normalization remains a vendored facade"
+    }
   },
   {
     "ruleId": "SFV4-defaults",

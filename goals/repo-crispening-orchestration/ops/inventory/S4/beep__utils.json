@@ -2,17 +2,6 @@
   {
     "ruleId": "SFV4-static-api",
     "file": "packages/foundation/modeling/utils/src/Glob.ts",
-    "line": 233,
-    "symbol": "toGlobError",
-    "smell": "Module-private constructor helper duplicating the already-colocated schema-derived static: its Match.orElse branch hand-builds `GlobError.make({ pattern, cause: S.decodeUnknownOption(S.Defect({ includeStack: true }))(error) })` (line 238-241), which re-implements `normalizeGlobErrorCause` (line 164-165) and therefore the colocated dual static `GlobError.new(pattern, cause)` (line 151-155) — a duplicate constructor helper where a schema-derived static exists, plus the `S.Defect({ includeStack: true })` schema and its decoder are rebuilt on every invocation of the returned closure.",
-    "proposedTarget": "Collapse the orElse branch to `Match.orElse((error) => GlobError.new(pattern, error))` — `GlobError.new` already routes through `normalizeGlobErrorCause`, which performs the identical `S.decodeUnknownOption(S.Defect({ includeStack: true }))` on non-Option input. Type note: `GlobErrorCauseInput` is `GlobError[\"cause\"] | GlobError.Encoded[\"cause\"]`, so the `unknown` from Match.orElse needs either a widening of GlobErrorCauseInput to accept unknown (normalizeGlobErrorCause already handles arbitrary input at runtime) or a decode-first step — verify at the call site. Also hoist the repeated `S.decodeUnknownOption(S.Defect({ includeStack: true }))` (lines 165 and 240) to a single module const so the schema is built once. Module-private, zero public-form change.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 1.3
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/modeling/utils/src/Glob.ts",
     "line": 37,
     "symbol": "Pattern / PathInput",
     "smell": "Two union consts without `SchemaUtils.withCodecStatics`: `Pattern = S.Union([S.String, S.Array(S.String)])` (Glob.ts:37) and the internal `PathInput = S.Union([S.String, S.Array(S.String)])` (src/internal/StructPath.ts:31) — literal match for the 'union consts missing withCodecStatics' smell.",

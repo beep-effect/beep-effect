@@ -2,39 +2,6 @@
   {
     "ruleId": "SFV4-static-api",
     "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
-    "line": 58,
-    "symbol": "ImageAttachmentMimeType / isImageMimeType",
-    "smell": "Package-owned schema const `ImageAttachmentMimeType = S.Literals(IMAGE_MIME_TYPES).pipe($I.annoteSchema(...))` immediately grows a free-floating guard `const isImageMimeType = S.is(ImageAttachmentMimeType)` at line 64, used only by `isImageAttachment` at line 370. This is the direct duplicate-guard helper shape SFV4-static-api targets.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to `ImageAttachmentMimeType` and replace `isImageMimeType(attachment.mimeType)` with `ImageAttachmentMimeType.is(attachment.mimeType)`, then delete the helper. In-repo exemplar: `ArtifactRefId` attaches `SchemaUtils.withCodecStatics` after annotation in packages/foundation/modeling/lexical/src/Lexical.model.ts:366-379; helper contract verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90-97.",
-    "confidence": 0.92,
-    "mechanization": "codemod",
-    "roiRank": 2.2
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
-    "line": 191,
-    "symbol": "AttachmentRejection",
-    "smell": "Exported tagged-union const `S.Union([AttachmentTooLarge, AttachmentInvalidMimeType]).pipe(S.toTaggedUnion(\"_tag\"), $I.annoteSchema(...))` has no colocated `is`/`fromUnknown`/`decodeOption` statics, unlike the repo's tagged-union exemplars.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` as the final pipe step, matching packages/foundation/modeling/md/src/Md.model.ts:608-614 and packages/foundation/modeling/md/src/Md.model.ts:1612-1618. Additive only: no encoded-form change and no React public prop change.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 1.8
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
-    "line": 78,
-    "symbol": "decodeSerializedState",
-    "smell": "Duplicate decode wall for `SerializedEditorState`: `const decodeSerializedState = S.decodeUnknownOption(SerializedEditorState)` appears here and again in chat/atoms.ts:37. The upstream schema class has no colocated decodeOption static today, so two editor modules rebuild the same decoder.",
-    "proposedTarget": "After @beep/lexical-schema adds an in-body `SerializedEditorState.decodeOption = S.decodeUnknownOption(SerializedEditorState)` static (tracked by the lexical S4 inventory), replace both editor-local helpers with `SerializedEditorState.decodeOption`. If the upstream wave also adds `decodeEffect`, composer.tsx:121 can collapse its inline `S.decodeUnknownEffect(SerializedEditorState)` call too.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 2.4
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
     "line": 32,
     "symbol": "decodeMimeType",
     "smell": "Detector hit: top-of-file `const decodeMimeType = S.decodeUnknownResult(MimeType)` looks like a decode-wall entry.",

@@ -36,13 +36,14 @@
 
 import { $SchemaId } from "@beep/identity";
 import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
-import { Effect, pipe, Result } from "effect";
+import { Effect, Number as N, pipe, Result } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("SafeRemoteHost");
 
@@ -88,15 +89,21 @@ export class BlockedHostError extends TaggedErrorClass<BlockedHostError>($I`Bloc
     host: S.String.annotateKey({
       description: "Normalized hostname that was rejected (lowercased, brackets stripped).",
     }),
-    url: S.OptionFromOptionalKey(S.String).annotateKey({
-      description: "Originating URL when the guard was invoked on a full URL.",
-    }),
+    url: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Originating URL when the guard was invoked on a full URL.",
+      })
+    ),
     message: S.String.annotateKey({
       description: "Safe diagnostic message explaining why the host was blocked.",
     }),
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).annotateKey({
-      description: "Underlying parse failure when the URL could not be decoded.",
-    }),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Underlying parse failure when the URL could not be decoded.",
+      })
+    ),
   },
   $I.annote("BlockedHostError", {
     description: "Raised when an outbound request targets internal network space or an unparseable URL.",
@@ -187,14 +194,16 @@ const isInternalHost = (host: string): boolean =>
  * octet explicitly rather than with a broad `172.` prefix that would also block
  * public `172.x` addresses.
  */
-const isPrivate172 = (host: string): boolean =>
+const parsePrivate172SecondOctet = (host: string): O.Option<number> =>
   pipe(
     Str.match(/^172\.(\d{1,3})\./)(host),
     O.flatMap(A.get(1)),
     O.map((octet) => Number.parseInt(octet, 10)),
-    O.filter((n) => !Number.isNaN(n)),
-    O.exists((n) => n >= 16 && n <= 31)
+    O.filter((octet) => !Number.isNaN(octet)),
+    O.filter(N.between({ minimum: 16, maximum: 31 }))
   );
+
+const isPrivate172 = (host: string): boolean => O.isSome(parsePrivate172SecondOctet(host));
 
 /**
  * Resolve a hostname through the injected resolver and reject if ANY resolved
@@ -233,7 +242,6 @@ const assertResolvedAddressesAllowed: (
       host: internal.value,
       url,
       message: `Refusing to reach ${host}: it resolves to a loopback, link-local, private, or metadata address: ${internal.value}`,
-      cause: O.none(),
     });
   }
 });
@@ -323,9 +331,7 @@ export const assertAllowedRemoteHost: {
     if (isBlockedRemoteHost(hostname, options)) {
       return yield* BlockedHostError.make({
         host,
-        url: O.none(),
         message: `Refusing to reach a loopback, link-local, private, or metadata host: ${host}`,
-        cause: O.none(),
       });
     }
     yield* assertResolvedAddressesAllowed(hostname, O.none(), options);
@@ -409,7 +415,6 @@ export const assertAllowedRemoteUrl: {
         host,
         url: O.some(url),
         message: `Refusing to load from a loopback, link-local, private, or metadata host: ${host}`,
-        cause: O.none(),
       });
     }
     yield* assertResolvedAddressesAllowed(hostname, O.some(url), options);

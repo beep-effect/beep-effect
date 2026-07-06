@@ -62,4 +62,19 @@ describe("Color", () => {
       { numRuns: 50 }
     );
   });
+
+  it("derives only bounded color amounts from the source schema", () => {
+    const amountArbitrary = S.toArbitrary(Color.ColorAmount);
+    const encode = S.encodeSync(Color.ColorAmount);
+    const decode = S.decodeUnknownSync(Color.ColorAmount);
+
+    fc.assert(
+      fc.property(amountArbitrary, (amount) => {
+        expect(amount).toBeGreaterThanOrEqual(0);
+        expect(amount).toBeLessThanOrEqual(1);
+        expect(decode(encode(amount))).toBe(amount);
+      }),
+      { numRuns: 25 }
+    );
+  });
 });

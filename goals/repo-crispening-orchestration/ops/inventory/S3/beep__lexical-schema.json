@@ -1,38 +1,5 @@
 [
   {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
-    "line": 102,
-    "symbol": "TextFormatBits",
-    "smell": "TextFormatBits is a named bit-object while TextFormatBit re-lists those values in a LiteralKit at line 122; TextDetailBits/TextDetailBit repeat the same object-plus-kit pattern at lines 214/225. The semantic names and numeric literal domain are two parallel sources.",
-    "proposedTarget": "Model each injective name->bit table with MappedLiteralKit and derive the public named constants from the kit instead of maintaining a separate object and numeric LiteralKit. In-repo exemplar: HeadingLevelTag at Lexical.codec.ts:74 uses MappedLiteralKit with From.Enum/To.Enum; API verified at packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts:275-276/317.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 2.52
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/modeling/lexical/src/Lexical.codec.ts",
-    "line": 207,
-    "symbol": "quoteChildToInlines/isArtifactLink",
-    "smell": "quoteChildToInlines uses block._tag === \"p\" and isArtifactLink uses child._tag === \"a\" over @beep/md tagged unions, bypassing the existing narrowing primitives for those tags.",
-    "proposedTarget": "Replace the manual _tag predicates with P.isTagged(\"p\") / P.isTagged(\"a\") or the schema-derived Md.Block/Md.Inline guards. P.isTagged is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Predicate.ts:1166, and S.toTaggedUnion-derived guards are verified at .repos/effect-v4/packages/effect/src/Schema.ts:6040-6042.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 3.6
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/modeling/lexical/src/Lexical.codec.ts",
-    "line": 443,
-    "symbol": "listToBlock",
-    "smell": "listToBlock branches over ListType with if (node.listType === \"check\") and a second \"number\" ternary even though ListType is a LiteralKit at Lexical.model.ts:543.",
-    "proposedTarget": "Dispatch through ListType.$match(node.listType, { check, number, bullet }) so the Md block construction is keyed by the kit-owned literal family. LiteralKit $match is verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:665/710.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 2.55
-  },
-  {
     "ruleId": "literal-kit-const-assertion",
     "file": "packages/foundation/modeling/lexical/src/Lexical.codec.ts",
     "line": 74,

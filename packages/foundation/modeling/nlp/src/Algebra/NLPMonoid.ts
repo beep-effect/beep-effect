@@ -31,6 +31,12 @@ import * as Monoid from "./Monoid.ts";
 
 const $I = $NlpId.create("Algebra/NLPMonoid");
 
+const NonNegativeCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+  $I.annoteSchema("NonNegativeCount", {
+    description: "Non-negative integer count used by NLP aggregation carriers.",
+  })
+);
+
 const TermNumberMap = MutableHashMapFromSelf({
   key: S.String,
   value: S.Finite,
@@ -271,9 +277,9 @@ export const DocumentText: Monoid.Monoid<string> = Monoid.StringJoin("\n\n");
  */
 export class DocumentStatistics extends S.Class<DocumentStatistics>($I`DocumentStatistics`)(
   {
-    charCount: S.Finite,
-    sentenceCount: S.Finite,
-    wordCount: S.Finite,
+    charCount: NonNegativeCount,
+    sentenceCount: NonNegativeCount,
+    wordCount: NonNegativeCount,
   },
   $I.annote("DocumentStatistics", {
     description: "Document statistics carrier.",
@@ -422,8 +428,8 @@ export const NamedEntityList: Monoid.Monoid<ReadonlyArray<NamedEntity>> = Monoid
  */
 export class DependencyEdge extends S.Class<DependencyEdge>($I`DependencyEdge`)(
   {
-    dependent: S.Finite,
-    head: S.Finite,
+    dependent: NonNegativeCount,
+    head: NonNegativeCount,
     relation: S.String,
   },
   $I.annote("DependencyEdge", {
@@ -610,7 +616,7 @@ export class TextAnalysis extends S.Class<TextAnalysis>($I`TextAnalysis`)(
   {
     bow: BagOfWords,
     entities: S.Array(NamedEntity),
-    sentenceCount: S.Finite,
+    sentenceCount: NonNegativeCount,
     vocabulary: S.HashSet(S.String),
   },
   $I.annote("TextAnalysis", {

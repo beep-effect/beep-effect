@@ -2,6 +2,10 @@ import { syncDataToTsCommand } from "@beep/repo-cli/commands/SyncDataToTs";
 import {
   fetchSource,
   formatJson,
+  ISO3166_AUTH_HEADER_ENV,
+  ISO3166_PART1_CSV_URL_ENV,
+  ISO3166_PART2_CSV_URL_ENV,
+  ISO3166_SOURCE_URL,
   ISO4217_SOURCE_URL,
   outputFile,
   parseCsvSource,
@@ -11,7 +15,7 @@ import {
 } from "@beep/repo-cli/test/SyncDataToTs";
 import { A, O } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
-import { Cause, Effect, Exit, FileSystem, Layer, Path, Runtime } from "effect";
+import { Cause, ConfigProvider, Effect, Exit, FileSystem, Layer, Path, Runtime } from "effect";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import { HttpClient, HttpClientError, HttpClientResponse } from "effect/unstable/http";
@@ -26,9 +30,13 @@ const provideScopedLayer =
 const runSyncDataToTsCommand = Command.runWith(syncDataToTsCommand, { version: "0.0.0" });
 const CommandTestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer, NodeCrypto.layer);
 const generatedOutputPath = "packages/foundation/primitive/data/src/generated/iso4217.ts" as const;
+const iso3166GeneratedOutputPath = "packages/foundation/primitive/data/src/generated/iso3166.ts" as const;
+const iso3166CanonicalOutputPath = "packages/foundation/primitive/data/src/generated/iso3166.data.json" as const;
 const csvGeneratedOutputPath = "packages/foundation/primitive/data/src/generated/test-csv.ts" as const;
 const csvCanonicalOutputPath = "packages/foundation/primitive/data/src/generated/test-csv.data.json" as const;
 const csvFixtureSourceUrl = "https://example.com/test.csv" as const;
+const iso3166Part1FixtureSourceUrl = "https://private.example.test/iso3166-1.csv" as const;
+const iso3166Part2FixtureSourceUrl = "https://private.example.test/iso3166-2.csv" as const;
 
 const expectReportedExit = (exit: Exit.Exit<unknown, unknown>, exitCode = 1) => {
   expect(Exit.isFailure(exit)).toBe(true);
@@ -84,6 +92,19 @@ EUR,Euro,"Line 1
 Line 2"
 `;
 
+const iso3166Part1CsvFixture = `"Alpha-2 code","Alpha-3 code","Numeric code","English short name"
+US,USA,840,United States
+GB,GBR,826,United Kingdom
+CA,CAN,124,Canada
+`;
+
+const iso3166Part2CsvFixture = `"Code","Name","Type","Parent subdivision"
+US-CA,California,State,
+US-NY,New York,State,
+GB-ENG,England,Country,
+CA-BC,British Columbia,Province,
+`;
+
 const makeWebHandlerClient = (handler: (request: Request) => Promise<Response>) =>
   HttpClient.make((request, url) =>
     Effect.tryPromise({
@@ -130,11 +151,56 @@ const makeIso4217Client = () => makeTextFixtureClient(ISO4217_SOURCE_URL, iso421
 
 const makeCsvFixtureClient = () => makeTextFixtureClient(csvFixtureSourceUrl, csvFixture, "text/csv");
 
+const makeIso3166Client = () =>
+  makeWebHandlerClient((request) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const authorized = request.headers.get("authorization") === "Bearer test-token";
+
+        if (!authorized) {
+          return new Response("unauthorized", { status: 401 });
+        }
+
+        if (request.url === iso3166Part1FixtureSourceUrl) {
+          return new Response(iso3166Part1CsvFixture, {
+            status: 200,
+            headers: { "content-type": "text/csv" },
+          });
+        }
+
+        if (request.url === iso3166Part2FixtureSourceUrl) {
+          return new Response(iso3166Part2CsvFixture, {
+            status: 200,
+            headers: { "content-type": "text/csv" },
+          });
+        }
+
+        return new Response("missing", { status: 404 });
+      })
+    )
+  );
+
 const provideIso4217Client = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   effect.pipe(Effect.provideService(HttpClient.HttpClient, makeIso4217Client()));
 
 const provideCsvFixtureClient = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   effect.pipe(Effect.provideService(HttpClient.HttpClient, makeCsvFixtureClient()));
+
+const provideIso3166Client = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+  effect.pipe(Effect.provideService(HttpClient.HttpClient, makeIso3166Client()));
+
+const withEnv = <A, E, R>(
+  entries: Readonly<Record<string, string>>,
+  use: Effect.Effect<A, E, R>
+): Effect.Effect<A, E, R> =>
+  Effect.gen(function* () {
+    const current = yield* ConfigProvider.ConfigProvider;
+    const testEnv = ConfigProvider.fromEnv({ env: entries });
+
+    return yield* use.pipe(
+      Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.orElse(testEnv, current))
+    );
+  });
 
 const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(
@@ -202,6 +268,7 @@ const writeGeneratedFile = (content: string) => writeOutputFile(generatedOutputP
 
 const csvTarget: SyncDataTarget = {
   id: "test-csv",
+  access: "public",
   description: "Fixture CSV target used to verify sync-data-to-ts CSV parsing.",
   sourceUrls: [csvFixtureSourceUrl],
   acquire: Effect.gen(function* () {
@@ -226,7 +293,7 @@ const csvTarget: SyncDataTarget = {
   }).pipe(Effect.withSpan("SyncDataToTsTest.acquireCsv")),
 };
 
-describe("sync-data-to-ts", () => {
+describe("sync-data-to-ts", { concurrent: false }, () => {
   it("writes the generated ISO 4217 module in write mode", () =>
     Effect.runPromise(
       Effect.gen(function* () {
@@ -311,5 +378,40 @@ describe("sync-data-to-ts", () => {
         expect(sidecar).toBe(content);
         expect(process.exitCode ?? 0).toBe(0);
       }).pipe(provideCsvFixtureClient, withTempRepoCommand, (effect) => withRegisteredTarget(csvTarget, effect))
+    ));
+
+  it("writes the authenticated ISO 3166 module without leaking private source URLs", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        yield* runSyncDataToTsCommand(["--target", "iso3166"]);
+
+        const content = yield* readOutputFile(iso3166GeneratedOutputPath);
+        const sidecar = yield* readOutputFile(iso3166CanonicalOutputPath);
+        const logs = yield* TestConsole.logLines;
+
+        expect(content).toContain(`alpha2: "US"`);
+        expect(content).toContain(`alpha3: "USA"`);
+        expect(content).toContain(`flagEmoji: "🇺🇸"`);
+        expect(content).toContain(`code: "US-CA"`);
+        expect(content).toContain(`type: "State"`);
+        expect(content).toContain(ISO3166_SOURCE_URL);
+        expect(content).not.toContain(iso3166Part1FixtureSourceUrl);
+        expect(content).not.toContain(iso3166Part2FixtureSourceUrl);
+        expect(sidecar).not.toContain(iso3166Part1FixtureSourceUrl);
+        expect(sidecar).not.toContain(iso3166Part2FixtureSourceUrl);
+        expect(logs).toContain(
+          "sync-data-to-ts: updated iso3166 -> packages/foundation/primitive/data/src/generated/iso3166.ts (3 country entries and 4 subdivision entries)"
+        );
+        expect(process.exitCode ?? 0).toBe(0);
+      }).pipe(provideIso3166Client, withTempRepoCommand, (effect) =>
+        withEnv(
+          {
+            [ISO3166_PART1_CSV_URL_ENV]: iso3166Part1FixtureSourceUrl,
+            [ISO3166_PART2_CSV_URL_ENV]: iso3166Part2FixtureSourceUrl,
+            [ISO3166_AUTH_HEADER_ENV]: "Authorization: Bearer test-token",
+          },
+          effect
+        )
+      )
     ));
 });

@@ -104,7 +104,7 @@ export class CrossOriginResourcePolicyResponseHeader extends S.Class<CrossOrigin
 )(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String),
+    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("CrossOriginResourcePolicyResponseHeader", {
     description: "The `Cross-Origin-Resource-Policy` response header.",

@@ -8,7 +8,11 @@
     "proposedTarget": "Absorb the invariant as a cross-field filter on the class: `TextAnchor extends S.Class(...)(TextAnchorFields, ...)` gains `.check(S.makeFilter((a) => a.startChar <= a.endChar ? undefined : { path: [\"endChar\"], issue: \"endChar must be >= startChar\" }, { identifier: $I`TextAnchorWellOrderedCheck`, ... }))`. Verified v4 API: `S.makeFilter` .repos/effect-v4/packages/effect/src/Schema.ts:6393 (struct-level `.check` exemplified in its docs); in-repo cross-field exemplar: packages/shared/domain/src/values/LocalDate/LocalDate.model.ts:40-46 (`S.makeFilter(isValidCalendarDate, ...)` on the LocalDate fields struct). §5.4 ripple: also export the filter (e.g. `wellOrderedFilter`) so the `...TextAnchorFields` spread consumer packages/epistemic/domain/src/values/EvidenceSpan/EvidenceSpan.model.ts can apply the same check — a bare fields spread does not inherit struct-level filters. §5.3: decode now rejects malformed anchors (previously accepted), so the wave needs the parity proof plus a S.toArbitrary round-trip law with an ordered-pair generator.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 0.6
+    "roiRank": 0.6,
+    "exception": {
+      "reason": "Remediation audit (P2 @beep/provenance): declined schema-level TextAnchor well-orderedness absorption in this package wave. Adding a class filter would tighten public TextAnchor decode/construct behavior and must also be carried to public TextAnchorFields spread consumers such as packages/epistemic/domain/src/values/EvidenceSpan/EvidenceSpan.model.ts; fence 8 forbids that cross-package source edit here. Local-only remediation colocated the predicate on TextAnchor and kept the public isWellOrdered alias byte-identical.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "schema-first-inventory",

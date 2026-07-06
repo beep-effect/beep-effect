@@ -11,6 +11,8 @@
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $HtmlId.create("Html.nodes");
@@ -96,13 +98,19 @@ export declare namespace Comment {
 export class Doctype extends S.TaggedClass<Doctype>($I`Doctype`)(
   "#doctype",
   {
-    name: S.optionalKey(S.String).annotateKey({ description: 'Document type name (e.g. "html").' }),
-    publicId: S.optionalKey(S.String).annotateKey({ description: "Legacy public identifier." }),
-    systemId: S.optionalKey(S.String).annotateKey({ description: "Legacy system identifier." }),
+    name: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: 'Document type name (e.g. "html").' }),
+    publicId: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Legacy public identifier." }),
+    systemId: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Legacy system identifier." }),
   },
   $I.annote("Doctype", { description: "A document type declaration." })
 ) {
-  static readonly html = (): Doctype => Doctype.make({ name: "html" });
+  static readonly html = (): Doctype => Doctype.make({ name: O.some("html") });
 }
 
 /**
@@ -115,10 +123,15 @@ export declare namespace Doctype {
   /** @since 0.0.0 */
   export interface Type {
     readonly _tag: "#doctype";
+    readonly name: O.Option<string>;
+    readonly publicId: O.Option<string>;
+    readonly systemId: O.Option<string>;
+  }
+  /** @since 0.0.0 */
+  export interface Encoded {
+    readonly _tag: "#doctype";
     readonly name?: string;
     readonly publicId?: string;
     readonly systemId?: string;
   }
-  /** @since 0.0.0 */
-  export interface Encoded extends Type {}
 }

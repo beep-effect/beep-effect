@@ -37,9 +37,9 @@ const defaultMaxAge = 60 * 60 * 24;
  */
 export class ExpectCTConfig extends S.Class<ExpectCTConfig>($I`ExpectCTConfig`)(
   {
-    maxAge: S.optionalKey(S.Finite),
-    enforce: S.optionalKey(S.Boolean),
-    reportURI: S.optionalKey(internal.StringOrUrl),
+    maxAge: S.optionalKey(internal.HeaderMaxAgeSeconds).pipe(SchemaUtils.withKeyDefaults(defaultMaxAge)),
+    enforce: SchemaUtils.BoolKeyDefaultFalse,
+    reportURI: S.OptionFromOptionalKey(internal.StringOrUrl).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ExpectCTConfig", {
     description: "Optional configuration values for the `Expect-CT` header.",
@@ -121,7 +121,7 @@ export type ExpectCTOption = typeof ExpectCTOption.Type;
 export class ExpectCTResponseHeader extends S.Class<ExpectCTResponseHeader>($I`ExpectCTResponseHeader`)(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String),
+    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ExpectCTResponseHeader", {
     description: "The `Expect-CT` response header.",
@@ -133,25 +133,26 @@ type ExpectCTResponseHeaderEncoded = typeof ExpectCTResponseHeader.Encoded;
 const formatExpectCTValue = Effect.fn("ExpectCT.formatExpectCTValue")(function* (
   config: ExpectCTConfig
 ): Effect.fn.Return<string, SecureHeaderError> {
-  const reportUriValue = config.reportURI;
-
-  const reportURI: O.Option<string> = P.isUndefined(reportUriValue)
-    ? O.none<string>()
-    : O.some(
-        yield* Effect.try({
+  const reportURI: O.Option<string> = yield* O.match(config.reportURI, {
+    onNone: () => Effect.succeed(O.none<string>()),
+    onSome: (reportUriValue) =>
+      Effect.map(
+        Effect.try({
           try: () => String(internal.encodeStrictURI(reportUriValue)),
           catch: () =>
             ExpectCtError.make({
               message: `Invalid value for "reportURI" option in ${headerName}: ${String(reportUriValue)}`,
               cause: O.none(),
             }),
-        })
-      );
+        }),
+        O.some
+      ),
+  });
 
   return pipe(
     A.make(
-      `max-age=${config.maxAge ?? defaultMaxAge}`,
-      config.enforce === true ? "enforce" : undefined,
+      `max-age=${config.maxAge}`,
+      config.enforce ? "enforce" : undefined,
       pipe(
         reportURI,
         O.map((value) => `report-uri=${value}`),

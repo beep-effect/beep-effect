@@ -38,6 +38,7 @@ import {
 import { NonNegativeInt } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Chunk, Effect, Schema } from "effect";
+import * as O from "effect/Option";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 import type { PatternElement } from "@beep/nlp/Core/index";
@@ -70,10 +71,27 @@ describe("Core Pattern", () => {
     expect(length(pattern)).toBe(3);
     expect(isEmpty(pattern)).toBe(false);
     expect(hasMark(pattern)).toBe(true);
-    expect(getMark(pattern)).toEqual([0, 1]);
-    expect(head(pattern)?._tag).toBe("POSPatternElement");
-    expect(last(pattern)?._tag).toBe("LiteralPatternElement");
-    expect(elementAt(pattern, 1)?._tag).toBe("POSPatternElement");
+    expect(O.getOrThrow(getMark(pattern))).toEqual([0, 1]);
+    expect(O.getOrThrow(head(pattern))._tag).toBe("POSPatternElement");
+    expect(O.getOrThrow(last(pattern))._tag).toBe("LiteralPatternElement");
+    expect(O.getOrThrow(elementAt(pattern, 1))._tag).toBe("POSPatternElement");
+  });
+
+  it("keeps absent pattern marks absent in the encoded wire shape", () => {
+    const pattern = Pattern.make({
+      _tag: "Pattern",
+      elements: Chunk.of(literal("Effect")),
+      id: Pattern.Id("effect-token"),
+    });
+
+    const encoded = Pattern.encode(pattern);
+
+    expect(encoded).toEqual({
+      _tag: "Pattern",
+      elements: encoded.elements,
+      id: "effect-token",
+    });
+    expect(Chunk.toReadonlyArray(encoded.elements)).toEqual([{ _tag: "LiteralPatternElement", value: ["Effect"] }]);
   });
 
   it("supports structural transforms", () => {
@@ -106,10 +124,10 @@ describe("Core Pattern", () => {
     );
     const combined = combine(pattern, make("other", [pos("VERB")]), { id: "combined" });
 
-    expect(elementAt(patched, 0)?._tag).toBe("EntityPatternElement");
-    expect(elementAt(patched, 1)?._tag).toBe("POSPatternElement");
-    expect(elementAt(generalized, 0)?._tag).toBe("POSPatternElement");
-    expect(elementAt(generalized, 1)?._tag).toBe("EntityPatternElement");
+    expect(O.getOrThrow(elementAt(patched, 0))._tag).toBe("EntityPatternElement");
+    expect(O.getOrThrow(elementAt(patched, 1))._tag).toBe("POSPatternElement");
+    expect(O.getOrThrow(elementAt(generalized, 0))._tag).toBe("POSPatternElement");
+    expect(O.getOrThrow(elementAt(generalized, 1))._tag).toBe("EntityPatternElement");
     expect(combined.id).toBe("combined");
     expect(length(combined)).toBe(4);
   });

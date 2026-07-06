@@ -1,16 +1,5 @@
 [
   {
-    "ruleId": "SFV4-boundary-codec",
-    "file": "packages/foundation/modeling/html/scripts/generate.ts",
-    "line": 536,
-    "symbol": "readJson",
-    "smell": "Generator reads schema-shaped vendored JSON through `S.decodeUnknownSync(S.UnknownFromJsonString)` and then generic `as T`; the local payload interfaces (`Dfn`, `WebrefElement`, `ContentModelEntry`, `Classification`, wrapper objects) are not schemas, so the boundary validates JSON syntax but not the data contracts the generator relies on.",
-    "proposedTarget": "Replace generic `readJson<T>` with a schema-parameterized decoder, e.g. `readJson(schema, rel)` using `S.decodeUnknownEffect(S.fromJsonString(schema))`; model the source documents with `S.Class`/`S.Struct` schemas for `Dfn`, `WebrefElement`, `ContentModelEntry`, `Classification`, and document wrappers. In-repo generator exemplar: `packages/drivers/acp/scripts/generate.ts:94-117` (`MetaJson`/`UpstreamJsonSchema` plus `S.decodeEffect(S.fromJsonString(...))`). Effect v4 APIs verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325` (`decodeUnknownEffect`) and `.repos/effect-v4/packages/effect/src/Schema.ts:10983` (`fromJsonString`).",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 0.56
-  },
-  {
     "ruleId": "schema-first-inventory",
     "file": "packages/foundation/modeling/html/src/Html.nodes.ts",
     "line": 48,

@@ -16,7 +16,6 @@
 import { SerializedEditorState } from "@beep/lexical-schema";
 import { A, O } from "@beep/utils";
 import { Effect, Layer, Result } from "effect";
-import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
 import {
   $createParagraphNode,
@@ -30,11 +29,6 @@ import { SEND_MESSAGE_COMMAND } from "./commands.ts";
 import { ComposerFeatures } from "./config.ts";
 import type { LexicalEditor } from "lexical";
 import type { ComposerAttachment } from "./attachment-model.ts";
-
-// Sync non-throwing decode of the editor's serialized state at send time;
-// out-of-schema states yield O.none() and the send is skipped (the same degrade
-// the OnChangePlugin mirror applies).
-const decodeSerializedState = S.decodeUnknownOption(SerializedEditorState);
 
 /**
  * Per-editor resolved {@link ComposerFeatures}. The composer writes the
@@ -519,7 +513,7 @@ export const sendCommandBindingAtom = Atom.family((editor: LexicalEditor) =>
           const hasContent = editorState.read(() => $getRoot().getTextContent().trim().length > 0);
           const dispatched =
             hasContent &&
-            O.match(decodeSerializedState(editorState.toJSON()), {
+            O.match(SerializedEditorState.decodeOption(editorState.toJSON()), {
               onNone: () => false,
               onSome: (state) => get.once(onSendAtom(editor)).run(state) === true,
             });

@@ -1,61 +1,6 @@
 [
   {
     "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
-    "line": 559,
-    "symbol": "useNumberBoundary",
-    "smell": "The schema-modeled number-input parameter records leave numeric defaults optional (`BoundaryParams.min/max`, `SpinParams.precision/step`) and then reapply domain defaults in the hook body (`minSafeInteger`, `maxSafeInteger`, `0`, `1`). This makes the decoded data less canonical than the runtime data the hook actually uses.",
-    "proposedTarget": "Move the numeric defaults onto the schemas: `min: S.Finite.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(minSafeInteger))`, `max: ...maxSafeInteger`, `precision: NonNegativePrecision.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(0))`, and `step: S.Finite.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(1))`. In-repo exemplars: `packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts:274` uses `SchemaUtils.withKeyDefaults`, and `packages/foundation/modeling/lexical/src/Lexical.model.ts:681` uses `SchemaUtils.withConstantDefault(1)`. Keep `parser`, `formatter`, and event callbacks at the React hook boundary.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-normalization",
-    "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
-    "line": 287,
-    "symbol": "toNumber",
-    "smell": "The exported helper hand-normalizes user text with `Str.trim`, rejects empty strings, converts through `Number`, then collapses invalid/empty values with `O.getOrUndefined`. This is a schema-worthy text-to-finite-number boundary whose absence semantics are currently encoded as `undefined`.",
-    "proposedTarget": "Introduce a named schema transformation such as `NumberInputNumberFromText` or `NumberInputFiniteFromText` using Effect v4 `S.decodeTo` / `SchemaTransformation.transformOrFail` and `S.Finite` (or repo-available finite string parsing if chosen), then expose an Option-returning parser through `S.decodeUnknownOption(...)` or an `O.Option<number>` helper. If JSX props still require `undefined`, keep that conversion as a thin compatibility wrapper at the component boundary. Verified APIs: `.repos/effect-v4/packages/effect/src/Schema.ts:5408` for `S.decodeTo` and `.repos/effect-v4/packages/effect/src/Schema.ts:1500` for `S.decodeUnknownOption`. In-repo normalization exemplar: `packages/foundation/modeling/schema/src/Color/Color.hex.ts:173` defines `NormalizeHexColor` as a schema transform.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
-    "line": 455,
-    "symbol": "NumberInputChangeMetadata",
-    "smell": "`NumberInputChangeMetadata.error` is modeled as `S.NullOr(NumberInputError)` while `getError` returns `NumberInputError | null` and callers write `error: null` for the no-error case. The absence default is a schema-level invariant, but it is currently spread across return types and call sites.",
-    "proposedTarget": "Model the field as Option at the schema boundary, for example `error: S.OptionFromNullOr(NumberInputError).pipe(SchemaUtils.withNoneDefault)` if null must be accepted from inputs, or `S.OptionFromOptionalKey(NumberInputError).pipe(SchemaUtils.withNoneDefault)` for decoded objects. Then have `getError` return `O.Option<NumberInputError>` and let JSX/event compatibility wrappers convert only where a consumer contract requires null. Verified APIs: `.repos/effect-v4/packages/effect/src/Schema.ts:8576` for `S.OptionFromNullOr`, `.repos/effect-v4/packages/effect/src/Schema.ts:8668` for `S.OptionFromOptionalKey`, and `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46` for `SchemaUtils.withNoneDefault`. In-repo Option/default exemplar: `packages/foundation/modeling/lexical/src/Lexical.model.ts:688`.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/ui-system/ui/src/components/notification-card.tsx",
-    "line": 121,
-    "symbol": "NotificationActionFields",
-    "smell": "`executed` and `style` are decoded as `Option` fields, but the renderer immediately supplies semantic defaults (`false` for `executed`, default action style for `style`). The defaulted action state is domain data, not only JSX presentation.",
-    "proposedTarget": "Push the defaults into `NotificationActionFields`: `executed: S.Boolean.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(false))` and `style: ActionStyle.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(ActionStyle.Enum.default))`. If a three-state action is intentionally needed, keep Option but add `SchemaUtils.withNoneDefault` and document that the renderer is the projection boundary. In-repo exemplars: `packages/foundation/modeling/md/src/Md.model.ts:1101` for boolean default helpers and `packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts:274` for `SchemaUtils.withKeyDefaults`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/ui-system/ui/src/components/toast.tsx",
-    "line": 137,
-    "symbol": "ToastData",
-    "smell": "`ToastData.variant` is an optional schema key, then rendering resolves `variant ?? toast.data?.variant ?? \"default\"`. The literal default belongs with the schema-modeled toast data; keeping it only in the renderer means other decoders can observe an under-normalized toast.",
-    "proposedTarget": "Change `variant` to `ToastVariant.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(ToastVariant.Enum.default))` for schema-created data, then leave only the component prop override branch in the renderer. Verified Effect v4 default API: `.repos/effect-v4/packages/effect/src/Schema.ts:5661` for `S.withDecodingDefaultKey`; repo wrapper exemplar: `packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts:274`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-defaults",
     "file": "packages/foundation/ui-system/ui/src/components/country-select.tsx",
     "line": 326,
     "symbol": "CountryOption",
@@ -63,40 +8,11 @@
     "proposedTarget": "Represent missing phone prefix data as Option, for example `callingCode: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)`, or introduce a named `CountryOptionFromCountriesList` transform that maps an absent/empty phone array to `O.none()` before constructing `CountryOption`. Renderers can then project `O.none` to an empty label only at the combobox display boundary. Verified APIs: `.repos/effect-v4/packages/effect/src/Schema.ts:8668` for `S.OptionFromOptionalKey` and `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46` for `SchemaUtils.withNoneDefault`.",
     "confidence": 0.72,
     "mechanization": "assisted",
-    "roiRank": 6
-  },
-  {
-    "ruleId": "SFV4-null-return",
-    "file": "packages/foundation/ui-system/ui/src/components/country-select.tsx",
-    "line": 417,
-    "symbol": "findCountryOption",
-    "smell": "The exported lookup helper returns `CountryOption | undefined` and ends by converting an Option pipeline with `O.getOrUndefined`. Consumers then use optional chaining or empty-string fallbacks, so absence is repeatedly represented outside the Option type.",
-    "proposedTarget": "Return `O.Option<CountryOption>` from `findCountryOption` (or add `findCountryOptionOption` and keep the existing name as a compatibility wrapper). Callers such as `countryCodeLabel` and phone-input country selection can then explicitly project with `O.match` at JSX boundaries. In-repo style exemplar: `packages/foundation/modeling/lexical/src/Lexical.model.ts:765` uses Option fields as the canonical absence representation.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 7
-  },
-  {
-    "ruleId": "SFV4-null-return",
-    "file": "packages/foundation/ui-system/ui/src/components/color-picker.tsx",
-    "line": 37,
-    "symbol": "normalizeHexColorInput",
-    "smell": "`normalizeHexColorInput` already delegates to the schema-backed `Color.NormalizeHexColor`, but then converts parse failure to `undefined` through `Result.match`. The schema boundary is present; only the absence surface is leaking out as `undefined`.",
-    "proposedTarget": "Expose an Option-returning helper backed directly by `S.decodeUnknownOption(Color.NormalizeHexColor)`, and reserve `O.getOrUndefined` for React controlled-input interop if a prop contract requires it. Verified Effect v4 API: `.repos/effect-v4/packages/effect/src/Schema.ts:1500` for `S.decodeUnknownOption`. Existing in-repo target schema: `packages/foundation/modeling/schema/src/Color/Color.hex.ts:173`.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 8
-  },
-  {
-    "ruleId": "SFV4-normalization",
-    "file": "packages/foundation/ui-system/ui/src/components/phone-input.tsx",
-    "line": 119,
-    "symbol": "parsePhoneDraft",
-    "smell": "`parsePhoneDraft` normalizes user-entered phone text through third-party formatters, but represents invalid/empty output as the empty-string sentinel with `?? \"\"`. The exported `PhoneNumberE164` alias is schema-relevant data, while the sentinel is a form-control convenience.",
-    "proposedTarget": "Introduce a schema-backed E.164 value and draft decoder, for example `PhoneNumberE164` plus `PhoneNumberE164FromDraft` using `S.decodeTo` / `SchemaTransformation.transformOrFail`, returning `O.Option<PhoneNumberE164>` for empty or invalid input. Keep `\"\"` projection only at the controlled input boundary. Verified transform APIs: `.repos/effect-v4/packages/effect/src/Schema.ts:5408` for `S.decodeTo` and `.repos/effect-v4/packages/effect/src/SchemaTransformation.ts` for `transformOrFail`.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 9
+    "roiRank": 6,
+    "exception": {
+      "reason": "CountryOption is exported display/search data derived from the third-party countries-list dataset; S5 already settled this as a permissive UI boundary. Changing callingCode to Option would alter the public countryOptions/CountryOptionContent shape and ripple through JSX display consumers outside the intended schema-default absorption.",
+      "boundary": "third-party countries-list display/search data; public UI option shape"
+    }
   },
   {
     "ruleId": "SFV4-normalization",

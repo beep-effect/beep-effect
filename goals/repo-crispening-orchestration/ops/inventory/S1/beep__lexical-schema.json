@@ -1,16 +1,5 @@
 [
   {
-    "ruleId": "SFV4-boundary-codec",
-    "file": "packages/foundation/modeling/lexical/src/Lexical.codec.ts",
-    "line": 217,
-    "symbol": "artifactRefFromLink",
-    "smell": "The `artifact://` URI shape is carried by string manipulation instead of a schema: `isArtifactLink` guards with `Str.startsWith(href, ARTIFACT_URI_PREFIX)` (line 232), `artifactRefFromLink` strips the prefix with `Str.slice(ARTIFACT_URI_PREFIX.length)` before decoding `ArtifactRefId` (line 219), and the encode side rebuilds the URI by interpolation `` `${ARTIFACT_URI_PREFIX}${node.artifactId}` `` (line 375). The URI grammar exists only implicitly across three call sites.",
-    "proposedTarget": "An `ArtifactUri = S.TemplateLiteral([\"artifact://\", ArtifactRefId])` schema (or `S.TemplateLiteralParser` for the string→id direction) making the URI grammar the single source of truth; guard becomes `S.is(ArtifactUri)`, parse becomes its decode, and line 375's interpolation becomes its encode. Verified v4 API: `TemplateLiteral` .repos/effect-v4/packages/effect/src/Schema.ts:2737, `TemplateLiteralParser` :2816. In-repo exemplar of prefixed-id template literal schemas: packages/foundation/capability/file-processing/src/Artifact/index.ts (`ArtifactId`, `OperationId`, `ContentDigest`).",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 0.4
-  },
-  {
     "ruleId": "schema-first-inventory",
     "file": "packages/foundation/modeling/lexical/src/Lexical.codec.ts",
     "line": 212,

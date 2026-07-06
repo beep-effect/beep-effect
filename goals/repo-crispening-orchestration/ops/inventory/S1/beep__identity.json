@@ -1,27 +1,5 @@
 [
   {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/modeling/identity/src/PnLocal.ts",
-    "line": 80,
-    "symbol": "isSafeLocal",
-    "smell": "Public PN_LOCAL predicate hand-validates RDF local-name syntax instead of deriving the guard from an Effect Schema.",
-    "proposedTarget": "Introduce a `SafePnLocal` schema in this package, e.g. `S.String.check(S.makeFilter(isSafeLocalInternal, ...))`, export its type, and keep `isSafeLocal` as `S.is(SafePnLocal)` for compatibility. Verified Effect v4 APIs: `.repos/effect-v4/packages/effect/src/Schema.ts:6393` (`S.makeFilter`), `.repos/effect-v4/packages/effect/src/Schema.ts:6458` (`S.makeFilterGroup`), and `.repos/effect-v4/packages/effect/src/Schema.ts:1256` (`S.is`). In-repo shape exemplar: `packages/foundation/modeling/rdf/src/Rdf.ts:130` prefix checks and `Rdf.ts:257` record schema with checked keys.",
-    "confidence": 0.84,
-    "mechanization": "assisted",
-    "roiRank": 0.68
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/modeling/identity/src/PnLocal.ts",
-    "line": 165,
-    "symbol": "acceptsEscapedLocal",
-    "smell": "Public escaped-PN_LOCAL predicate owns parser-side validation as a boolean helper rather than a schema guard.",
-    "proposedTarget": "Introduce an `EscapedPnLocal` schema that reuses the existing tokenizer through an `S.makeFilter` / `S.makeFilterGroup` check, export its type, and keep `acceptsEscapedLocal` as `S.is(EscapedPnLocal)`. This keeps the parser boundary schema-owned while preserving the public predicate API.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 0.62
-  },
-  {
     "ruleId": "SFV4-boundary-codec",
     "file": "packages/foundation/modeling/identity/src/PnLocal.ts",
     "line": 198,
@@ -35,17 +13,6 @@
       "reason": "These functions are low-level character transforms used for codec parity and do not currently reject malformed inputs. Schema-ifying them directly could change tolerant behavior; the safer S1 move is first to add explicit safe/escaped PN_LOCAL schemas.",
       "boundary": "low-level PN_LOCAL character codec utility"
     }
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/modeling/identity/src/Vocab.ts",
-    "line": 28,
-    "symbol": "VocabShape",
-    "smell": "Exported vocabulary registry data model is a TypeScript-only record shape consumed by runtime CURIE codecs.",
-    "proposedTarget": "Add runtime schemas such as `VocabEntry = S.Struct({ iri: S.String, terms: S.Array(S.String) })` and `VocabRegistry = S.Record(S.String, VocabEntry)`, while preserving the existing literal-preserving `VocabShape` constraint for `as const` registries. Verified in-repo `S.Record(S.String, ...)` exemplars: `packages/foundation/modeling/rdf/src/Rdf.ts:257`, `packages/foundation/modeling/rdf/src/JsonLd.ts:147`, and `packages/foundation/capability/observability/src/web/Config.ts:40`.",
-    "confidence": 0.66,
-    "mechanization": "assisted",
-    "roiRank": 0.42
   },
   {
     "ruleId": "schema-first-inventory",

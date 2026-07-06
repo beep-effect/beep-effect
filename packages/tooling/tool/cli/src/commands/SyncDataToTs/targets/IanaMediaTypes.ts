@@ -282,6 +282,7 @@ const acquireIanaMediaTypesProjection = Effect.fn("SyncDataToTs.IanaMediaTypes.a
  */
 export const ianaMediaTypesTarget: SyncDataTarget = {
   id: targetId,
+  access: "public",
   description: "Sync official MIME/media type literals from the IANA registry XML.",
   sourceUrls: [IANA_MEDIA_TYPES_SOURCE_URL],
   acquire: acquireIanaMediaTypesProjection(),

@@ -273,6 +273,7 @@ const acquireIanaTimezonesProjection = Effect.fn("SyncDataToTs.IanaTimezones.acq
  */
 export const ianaTimezonesTarget: SyncDataTarget = {
   id: targetId,
+  access: "public",
   description: "Sync IANA timezone identifiers from the latest tzdb data release.",
   sourceUrls: [IANA_TZDATA_SOURCE_URL],
   acquire: acquireIanaTimezonesProjection(),

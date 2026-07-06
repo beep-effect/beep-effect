@@ -8,6 +8,7 @@
 import { A, Str } from "@beep/utils";
 import { flow, identity, Number as Num, pipe, Result, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
+import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { $I, schemaIssueToError } from "./Color.shared.ts";
 import type { RgbEncoded } from "./Color.shared.ts";
 
@@ -92,7 +93,7 @@ const toHexChannel = (value: number): string =>
  */
 export const rgbToHexValue = ({ r, g, b }: RgbEncoded): HexColor =>
   Result.getOrThrowWith(
-    S.decodeUnknownResult(HexColor)(`#${toHexChannel(r)}${toHexChannel(g)}${toHexChannel(b)}`),
+    HexColor.decodeResult(`#${toHexChannel(r)}${toHexChannel(g)}${toHexChannel(b)}`),
     schemaIssueToError
   );
 
@@ -144,7 +145,10 @@ export const HexColor = S.String.check(HexColorChecks).pipe(
   S.brand("HexColor"),
   $I.annoteSchema("HexColor", {
     description: "A canonical lowercase six-digit hex color string.",
-  })
+  }),
+  SchemaUtils.withStatics((self) => ({
+    decodeResult: S.decodeUnknownResult(self),
+  }))
 );
 
 /**
