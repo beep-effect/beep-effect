@@ -40,7 +40,7 @@
     "smell": "makeRequest spreads one fixed object literal through R.getSomes at lines 599-611, mixing optional numbers, booleans, response_format objects, stream flags, tool_choice, tools arrays, and nullable temperature/top_p values. This is the heterogeneous Option-struct shape where Record.getSomes loses per-key precision.",
     "proposedTarget": "Replace the spread with `...O.getSomesStruct({ max_completion_tokens: ..., max_tokens: ..., parallel_tool_calls: ..., response_format: ..., seed: ..., stream: ..., stream_options: ..., temperature: ..., tool_choice: ..., tools: ..., top_p: ..., user: ... })`. The repo helper is verified at packages/foundation/modeling/utils/src/Option.ts:102; Effect v4 R.getSomes is the homogeneous record helper at .repos/effect-v4/packages/effect/src/Record.ts:824. Held at judgment per D5 until the Law 20/47 amendment sweep is cleared.",
     "confidence": 0.8,
-    "mechanization": "judgment",
+    "mechanization": "assisted",
     "roiRank": 1.6
   },
   {

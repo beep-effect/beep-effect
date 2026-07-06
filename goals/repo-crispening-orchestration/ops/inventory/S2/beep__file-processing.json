@@ -128,7 +128,7 @@
     "smell": "`...R.getSomes({ maxMaterializedBytes: O.fromUndefinedOr(operation.maxMaterializedBytes) })` spread on a fixed single-key struct (here and the twin at lines 331-333): `R.getSomes` (effect-v4 Record.ts:824) is the homogeneous-dictionary form; the repo struct form is `O.getSomesStruct` (@beep/utils, packages/foundation/modeling/utils/src/Option.ts:102). The whole dance is a symptom of `maxMaterializedBytes: S.optionalKey` on the operation classes.",
     "proposedTarget": "Root fix is the Operation/index.ts maxMaterializedBytes findings (lines 219/264/310) — after Option-ification both spread sites delete entirely and `operation.maxMaterializedBytes` flows through as Option. If the schema change is deferred, the interim swap is `...O.getSomesStruct({ maxMaterializedBytes: O.fromUndefinedOr(...) })`. Mechanization pinned to judgment per D5 for all SFV4-getsomes-struct findings.",
     "confidence": 0.7,
-    "mechanization": "judgment",
+    "mechanization": "assisted",
     "roiRank": 0.7
   },
   {
