@@ -14,6 +14,7 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";
 import { Console, Effect, FileSystem, Path } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
@@ -74,13 +75,13 @@ export const defaultWorktreeBranch = (name: string): string => `feat/${name}`;
  * @category utilities
  * @since 0.0.0
  */
-export const worktreeAddArgs = (targetPath: string, branch: string): ReadonlyArray<string> => [
-  "worktree",
-  "add",
-  targetPath,
-  "-b",
-  branch,
-];
+export const worktreeAddArgs: {
+  (branch: string): (targetPath: string) => ReadonlyArray<string>;
+  (targetPath: string, branch: string): ReadonlyArray<string>;
+} = dual(
+  2,
+  (targetPath: string, branch: string): ReadonlyArray<string> => ["worktree", "add", targetPath, "-b", branch]
+);
 
 /**
  * Build the `git worktree remove` argument vector, optionally forced.
@@ -97,8 +98,14 @@ export const worktreeAddArgs = (targetPath: string, branch: string): ReadonlyArr
  * @category utilities
  * @since 0.0.0
  */
-export const worktreeRemoveArgs = (targetPath: string, force: boolean): ReadonlyArray<string> =>
-  force ? ["worktree", "remove", "--force", targetPath] : ["worktree", "remove", targetPath];
+export const worktreeRemoveArgs: {
+  (force: boolean): (targetPath: string) => ReadonlyArray<string>;
+  (targetPath: string, force: boolean): ReadonlyArray<string>;
+} = dual(
+  2,
+  (targetPath: string, force: boolean): ReadonlyArray<string> =>
+    force ? ["worktree", "remove", "--force", targetPath] : ["worktree", "remove", targetPath]
+);
 
 /**
  * Suggested command an operator can run to delete a retired branch.
