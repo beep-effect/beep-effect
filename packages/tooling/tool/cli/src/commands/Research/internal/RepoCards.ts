@@ -20,7 +20,12 @@ import { ChildProcess } from "effect/unstable/process";
 import { ResearchCommandError } from "../Research.errors.js";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
-/** Facts gathered about one cloned repository. @internal */
+/**
+ * Facts gathered about one cloned repository.
+ *
+ * @internal
+ * @category models
+ */
 export interface ClonedRepoInfo {
   readonly hasLicense: boolean;
   readonly lastCommitIso: O.Option<string>;
@@ -31,7 +36,12 @@ export interface ClonedRepoInfo {
   readonly slugRepo: string;
 }
 
-/** One starred repository from the GitHub API. @internal */
+/**
+ * One starred repository from the GitHub API.
+ *
+ * @internal
+ * @category models
+ */
 export class StarredRepo extends S.Class<StarredRepo>("StarredRepo")({
   description: S.String.pipe(S.NullOr, S.optionalKey),
   full_name: S.String,
@@ -75,6 +85,7 @@ const CLONE_SEARCH_DEPTH = 3;
  * the first `.git` so vendored repos inside clones are not double-counted.
  *
  * @internal
+ * @category utilities
  */
 export const discoverClones = Effect.fn("RepoCards.discoverClones")(function* (
   researchRoot: string
@@ -139,7 +150,14 @@ const readmeExcerptOf = Effect.fn("RepoCards.readmeExcerptOf")(function* (
   return O.none();
 });
 
-/** Normalize a git remote to a browsable https URL. @internal */
+/**
+ * Normalize a git remote to a browsable https URL.
+ *
+ * @internal
+ * @param remote - Git remote URL in SSH or HTTPS form.
+ * @returns Browsable HTTPS URL, with a trailing `.git` suffix removed.
+ * @category utilities
+ */
 export const remoteToHttpsUrl = (remote: string): string => {
   const sshMatch = remote.match(/^git@([^:]+):(.+?)(\.git)?$/);
   if (!P.isNull(sshMatch)) {
@@ -148,7 +166,15 @@ export const remoteToHttpsUrl = (remote: string): string => {
   return remote.replace(/\.git$/, "");
 };
 
-/** Derive owner/repo slug parts from a remote URL or local dirname. @internal */
+/**
+ * Derive owner/repo slug parts from a remote URL or local dirname.
+ *
+ * @internal
+ * @param remoteUrl - Optional git remote URL to parse first.
+ * @param localDirname - Local directory name used as the fallback repo slug.
+ * @returns Owner and repository slug parts.
+ * @category utilities
+ */
 export const slugPartsOf = (remoteUrl: O.Option<string>, localDirname: string): readonly [string, string] =>
   remoteUrl.pipe(
     O.flatMap((url) => {
@@ -162,6 +188,7 @@ export const slugPartsOf = (remoteUrl: O.Option<string>, localDirname: string): 
  * Gather remote, README, license, and last-commit facts for one clone.
  *
  * @internal
+ * @category utilities
  */
 export const inspectClone = Effect.fn("RepoCards.inspectClone")(function* (
   repoDir: string
@@ -192,6 +219,7 @@ export const inspectClone = Effect.fn("RepoCards.inspectClone")(function* (
  * List the authenticated user's starred repositories via the `gh` CLI.
  *
  * @internal
+ * @category utilities
  */
 export const listStarredRepos = Effect.fn("RepoCards.listStarredRepos")(function* (
   cwd: string

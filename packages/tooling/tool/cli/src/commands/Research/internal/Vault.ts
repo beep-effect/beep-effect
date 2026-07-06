@@ -20,12 +20,22 @@ import * as Yaml from "yaml";
 import { ResearchCommandError } from "../Research.errors.js";
 import { KnowledgeCardFrontmatter } from "../Research.schemas.js";
 
-/** Environment variable naming the default vault root. @internal */
+/**
+ * Environment variable naming the default vault root.
+ *
+ * @internal
+ * @category utilities
+ */
 export const VAULT_ENV_VAR = "BEEP_KNOWLEDGE_VAULT";
 
 const DEFAULT_VAULT_RELATIVE = "YeeBois/knowledge";
 
-/** Vault subdirectories that ingesters write into. @internal */
+/**
+ * Vault subdirectories that ingesters write into.
+ *
+ * @internal
+ * @category utilities
+ */
 export const VAULT_DIRS = {
   articles: "sources/articles",
   digest: "digest",
@@ -56,6 +66,7 @@ const FRONTMATTER_KEYS = [
  * Resolve the vault root from a flag, the environment, or the default path.
  *
  * @internal
+ * @category utilities
  */
 export const resolveVaultRoot = Effect.fn("ResearchVault.resolveVaultRoot")(function* (
   vaultFlag: O.Option<string>
@@ -91,6 +102,9 @@ export const resolveVaultRoot = Effect.fn("ResearchVault.resolveVaultRoot")(func
  * params, sort the remaining query, and trim trailing slashes.
  *
  * @internal
+ * @param rawUrl - URL string to normalize.
+ * @returns Normalized URL string.
+ * @category utilities
  */
 export const normalizeUrl = (rawUrl: string): Effect.Effect<string, ResearchCommandError> =>
   Effect.try({
@@ -111,7 +125,14 @@ export const normalizeUrl = (rawUrl: string): Effect.Effect<string, ResearchComm
     },
   });
 
-/** Hex-encoded SHA-256 of a UTF-8 string. @internal */
+/**
+ * Hex-encoded SHA-256 of a UTF-8 string.
+ *
+ * @internal
+ * @param content - UTF-8 content to hash.
+ * @returns Hex-encoded SHA-256 digest.
+ * @category utilities
+ */
 export const sha256HexOf = (content: string): string => createHash("sha256").update(content, "utf8").digest("hex");
 
 /**
@@ -120,6 +141,10 @@ export const sha256HexOf = (content: string): string => createHash("sha256").upd
  * uniqueness.
  *
  * @internal
+ * @param title - Card title used for the slug prefix.
+ * @param urlNorm - Normalized URL used for the uniqueness suffix.
+ * @returns Filesystem-safe card slug.
+ * @category utilities
  */
 export const slugFor = (title: string, urlNorm: string): string => {
   const base = title
@@ -136,6 +161,10 @@ export const slugFor = (title: string, urlNorm: string): string => {
  * Render a knowledge card as YAML frontmatter followed by a markdown body.
  *
  * @internal
+ * @param frontmatter - Structured frontmatter to render.
+ * @param body - Markdown body content.
+ * @returns Complete markdown card content.
+ * @category utilities
  */
 export const renderCard = (frontmatter: KnowledgeCardFrontmatter, body: string): string => {
   const yamlSource: Array<readonly [string, unknown]> = FRONTMATTER_KEYS.flatMap(([prop, key]) => {
@@ -151,6 +180,7 @@ export const renderCard = (frontmatter: KnowledgeCardFrontmatter, body: string):
  * unknown keys, but fail on a missing or malformed frontmatter fence.
  *
  * @internal
+ * @category utilities
  */
 export const parseCard = Effect.fn("ResearchVault.parseCard")(function* (
   cardPath: string,
@@ -182,6 +212,7 @@ export const parseCard = Effect.fn("ResearchVault.parseCard")(function* (
  * Write a knowledge card beneath the vault root, creating parent directories.
  *
  * @internal
+ * @category utilities
  */
 export const writeCard = Effect.fn("ResearchVault.writeCard")(function* (
   vaultRoot: string,

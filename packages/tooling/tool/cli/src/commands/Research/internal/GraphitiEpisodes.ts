@@ -29,6 +29,7 @@ const jsonRpc = (method: string, params: Record<string, unknown>, id: number): R
  * Post one research pipeline event as a Graphiti episode; never fails.
  *
  * @internal
+ * @category utilities
  */
 export const postResearchEpisode = Effect.fn("GraphitiEpisodes.postResearchEpisode")(function* (
   name: string,

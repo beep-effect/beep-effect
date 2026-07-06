@@ -16,7 +16,12 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ResearchCommandError } from "../Research.errors.js";
 
-/** Catalog database file name beneath `<vault>/.beep/`. @internal */
+/**
+ * Catalog database file name beneath `<vault>/.beep/`.
+ *
+ * @internal
+ * @category utilities
+ */
 export const CATALOG_DB_NAME = "research.duckdb";
 
 const CREATE_TABLES: ReadonlyArray<string> = [
@@ -49,6 +54,11 @@ const CREATE_TABLES: ReadonlyArray<string> = [
  * first use.
  *
  * @internal
+ * @param databasePath - DuckDB database file path.
+ * @param message - Error context used when catalog work fails.
+ * @param work - Effect to run after catalog tables are initialized.
+ * @returns The result of the supplied catalog effect.
+ * @category utilities
  */
 export const runWithResearchDb = <A, E>(
   databasePath: string,
@@ -70,7 +80,12 @@ export const runWithResearchDb = <A, E>(
 const CountRow = S.Struct({ total: S.Finite });
 const decodeCountRows = S.decodeUnknownEffect(S.Array(CountRow));
 
-/** Decode a single-count query result. @internal */
+/**
+ * Decode a single-count query result.
+ *
+ * @internal
+ * @category utilities
+ */
 export const singleCount = Effect.fn("ResearchCatalog.singleCount")(function* (
   rows: unknown,
   label: string
@@ -84,14 +99,29 @@ export const singleCount = Effect.fn("ResearchCatalog.singleCount")(function* (
   );
 });
 
-/** Statement recording a first-seen URL, ignoring duplicates. @internal */
+/**
+ * Statement recording a first-seen URL, ignoring duplicates.
+ *
+ * @internal
+ * @category utilities
+ */
 export const INSERT_SEEN_URL = `INSERT INTO research_seen_urls (url_norm, first_seen, via)
   VALUES (?, ?, ?) ON CONFLICT (url_norm) DO NOTHING`;
 
-/** Statement checking whether a normalized URL is already known. @internal */
+/**
+ * Statement checking whether a normalized URL is already known.
+ *
+ * @internal
+ * @category utilities
+ */
 export const SELECT_SEEN_URL = "SELECT COUNT(*)::DOUBLE AS total FROM research_seen_urls WHERE url_norm = ?";
 
-/** Statement upserting one card row by stable card id. @internal */
+/**
+ * Statement upserting one card row by stable card id.
+ *
+ * @internal
+ * @category utilities
+ */
 export const UPSERT_CARD = `INSERT INTO research_cards (id, path, url, source_type, status, content_hash, captured_at, cognified_at, title)
   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   ON CONFLICT (id) DO UPDATE SET
@@ -104,6 +134,11 @@ export const UPSERT_CARD = `INSERT INTO research_cards (id, path, url, source_ty
     cognified_at = excluded.cognified_at,
     title = excluded.title`;
 
-/** Statement appending one capture-log row. @internal */
+/**
+ * Statement appending one capture-log row.
+ *
+ * @internal
+ * @category utilities
+ */
 export const INSERT_CAPTURE_LOG =
   "INSERT INTO research_capture_log (ts, subcommand, subject, outcome) VALUES (?, ?, ?, ?)";

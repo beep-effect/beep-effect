@@ -20,7 +20,12 @@ import { ChildProcess } from "effect/unstable/process";
 import { ResearchCommandError } from "../Research.errors.js";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
-/** Unit base names installed by research install-timers. @internal */
+/**
+ * Unit base names installed by research install-timers.
+ *
+ * @internal
+ * @category utilities
+ */
 export const RESEARCH_UNITS = ["beep-research-daily", "beep-research-repo-card"] as const;
 
 const ENV_FILE_RELATIVE = ".config/beep-research/env";
@@ -88,6 +93,7 @@ const runSystemctl = Effect.fn("ResearchTimers.runSystemctl")(function* (
  * Install (or uninstall) the research systemd user timers.
  *
  * @internal
+ * @category utilities
  */
 export const installResearchTimers = Effect.fn("ResearchTimers.installResearchTimers")(function* (
   repoRoot: string,

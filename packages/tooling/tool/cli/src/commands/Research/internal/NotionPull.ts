@@ -24,7 +24,12 @@ import { sha256HexOf } from "./Vault.js";
 const NOTION_API_URL = "https://api.notion.com";
 const NOTION_VERSION = "2022-06-28";
 
-/** One saved link extracted from a Notion database page. @internal */
+/**
+ * One saved link extracted from a Notion database page.
+ *
+ * @internal
+ * @category models
+ */
 export interface NotionSavedLink {
   readonly createdIso: string;
   readonly pageId: string;
@@ -86,6 +91,7 @@ const notionRequest = Effect.fn("NotionPull.notionRequest")(function* (
  * Find the database id for a saved-links database by title.
  *
  * @internal
+ * @category utilities
  */
 export const findDatabaseId = Effect.fn("NotionPull.findDatabaseId")(function* (
   databaseTitle: string
@@ -234,6 +240,7 @@ const extractBlockLink = (block: unknown): O.Option<NotionSavedLink> =>
  * bulleted list item per link).
  *
  * @internal
+ * @category utilities
  */
 export const queryPageLinks = Effect.fn("NotionPull.queryPageLinks")(function* (
   pageId: string
@@ -276,6 +283,7 @@ const decodeSavedLinkInputsJson = S.decodeEffect(S.fromJsonString(S.Array(SavedL
  * The file holds an array of `{ title, url, tags?, createdIso? }` objects.
  *
  * @internal
+ * @category utilities
  */
 export const readLinksFile = Effect.fn("NotionPull.readLinksFile")(function* (
   filePath: string
@@ -300,6 +308,7 @@ export const readLinksFile = Effect.fn("NotionPull.readLinksFile")(function* (
  * Page through every row of the saved-links database.
  *
  * @internal
+ * @category utilities
  */
 export const querySavedLinks = Effect.fn("NotionPull.querySavedLinks")(function* (
   databaseId: string

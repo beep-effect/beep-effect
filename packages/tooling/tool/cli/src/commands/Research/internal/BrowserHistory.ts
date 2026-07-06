@@ -20,17 +20,32 @@ import * as Str from "effect/String";
 import { ResearchCommandError } from "../Research.errors.js";
 import type { BrowserKind } from "../Research.schemas.js";
 
-/** Seconds between the Chrome epoch (1601-01-01) and the Unix epoch. @internal */
+/**
+ * Seconds between the Chrome epoch (1601-01-01) and the Unix epoch.
+ *
+ * @internal
+ * @category utilities
+ */
 export const CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600;
 
-/** One discovered browser profile history database. @internal */
+/**
+ * One discovered browser profile history database.
+ *
+ * @internal
+ * @category models
+ */
 export interface BrowserProfile {
   readonly browser: Exclude<BrowserKind, "all">;
   readonly historyPath: string;
   readonly profile: string;
 }
 
-/** One history row surviving the time cutoff. @internal */
+/**
+ * One history row surviving the time cutoff.
+ *
+ * @internal
+ * @category models
+ */
 export class HistoryUrlRow extends S.Class<HistoryUrlRow>("HistoryUrlRow")({
   lastVisitChrome: S.Finite,
   title: S.String,
@@ -49,6 +64,7 @@ const BROWSER_CONFIG_DIRS: ReadonlyArray<readonly [Exclude<BrowserKind, "all">, 
  * Discover profile `History` databases for the requested browser family.
  *
  * @internal
+ * @category utilities
  */
 export const discoverProfiles = Effect.fn("BrowserHistory.discoverProfiles")(function* (
   browser: BrowserKind
@@ -89,6 +105,7 @@ export const discoverProfiles = Effect.fn("BrowserHistory.discoverProfiles")(fun
  * DuckDB's sqlite scanner.
  *
  * @internal
+ * @category utilities
  */
 export const readProfileHistory = Effect.fn("BrowserHistory.readProfileHistory")(function* (
   profile: BrowserProfile,
@@ -133,11 +150,25 @@ export const readProfileHistory = Effect.fn("BrowserHistory.readProfileHistory")
   );
 });
 
-/** Convert a Unix-seconds timestamp to Chrome epoch microseconds. @internal */
+/**
+ * Convert a Unix-seconds timestamp to Chrome epoch microseconds.
+ *
+ * @internal
+ * @param unixSeconds - Unix timestamp in seconds.
+ * @returns Chrome epoch timestamp in microseconds.
+ * @category utilities
+ */
 export const unixSecondsToChromeMicros = (unixSeconds: number): number =>
   (unixSeconds + CHROME_EPOCH_OFFSET_SECONDS) * 1_000_000;
 
-/** Convert Chrome epoch microseconds to an ISO timestamp. @internal */
+/**
+ * Convert Chrome epoch microseconds to an ISO timestamp.
+ *
+ * @internal
+ * @param chromeMicros - Chrome epoch timestamp in microseconds.
+ * @returns ISO timestamp for the same instant.
+ * @category utilities
+ */
 export const chromeMicrosToIso = (chromeMicros: number): string =>
   DateTime.formatIso(DateTime.makeUnsafe(Math.floor((chromeMicros / 1_000_000 - CHROME_EPOCH_OFFSET_SECONDS) * 1000)));
 
@@ -188,6 +219,9 @@ const ALLOW_PATTERNS: ReadonlyArray<RegExp> = [
  * law sources) to keep the inbox high-signal.
  *
  * @internal
+ * @param url - Visited URL to evaluate.
+ * @returns Whether the URL should create a knowledge-inbox stub.
+ * @category utilities
  */
 export const isInterestingUrl = (url: string): boolean =>
   !A.some(DENY_PATTERNS, (pattern) => pattern.test(url)) && A.some(ALLOW_PATTERNS, (pattern) => pattern.test(url));
@@ -197,6 +231,9 @@ export const isInterestingUrl = (url: string): boolean =>
  * session over a repo yields one stub instead of ten.
  *
  * @internal
+ * @param url - URL to canonicalize for sift deduplication.
+ * @returns Repository root URL for supported git hosts, otherwise the original URL.
+ * @category utilities
  */
 export const canonicalizeForSift = (url: string): string => {
   const repoMatch = url.match(/^https?:\/\/(github|gitlab)\.com\/([^/?#]+)\/([^/?#]+)/i);

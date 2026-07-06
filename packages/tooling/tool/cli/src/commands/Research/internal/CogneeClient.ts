@@ -18,13 +18,23 @@ import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import { ResearchCommandError } from "../Research.errors.js";
 
-/** One markdown card queued for a Cognee dataset. @internal */
+/**
+ * One markdown card queued for a Cognee dataset.
+ *
+ * @internal
+ * @category models
+ */
 export interface CogneeCardUpload {
   readonly content: string;
   readonly fileName: string;
 }
 
-/** Resolved Cognee connection settings. @internal */
+/**
+ * Resolved Cognee connection settings.
+ *
+ * @internal
+ * @category models
+ */
 export interface CogneeConnection {
   readonly apiUrl: string;
   readonly token: string;
@@ -50,6 +60,7 @@ const failStatus = Effect.fn("CogneeClient.failStatus")(function* (
  * `COGNEE_API_PASSWORD` (defaulting to the Cognee default user).
  *
  * @internal
+ * @category utilities
  */
 export const cogneeLogin = Effect.fn("CogneeClient.cogneeLogin")(function* (): Effect.fn.Return<
   CogneeConnection,
@@ -90,6 +101,7 @@ export const cogneeLogin = Effect.fn("CogneeClient.cogneeLogin")(function* (): E
  * Add markdown cards to a Cognee dataset via multipart upload.
  *
  * @internal
+ * @category utilities
  */
 export const cogneeAdd = Effect.fn("CogneeClient.cogneeAdd")(function* (
   connection: CogneeConnection,
@@ -119,6 +131,7 @@ export const cogneeAdd = Effect.fn("CogneeClient.cogneeAdd")(function* (
  * Run cognify over the named datasets.
  *
  * @internal
+ * @category utilities
  */
 export const cogneeCognify = Effect.fn("CogneeClient.cogneeCognify")(function* (
   connection: CogneeConnection,
@@ -137,6 +150,13 @@ export const cogneeCognify = Effect.fn("CogneeClient.cogneeCognify")(function* (
   }
 });
 
-/** Map a card source type onto its Cognee dataset name. @internal */
+/**
+ * Map a card source type onto its Cognee dataset name.
+ *
+ * @internal
+ * @param sourceType - Knowledge-card source type.
+ * @returns Cognee dataset name for that source type.
+ * @category utilities
+ */
 export const datasetForSourceType = (sourceType: string): string =>
   sourceType === "link" ? "kb_inbox" : `kb_${sourceType.replaceAll("-", "_")}s`;
