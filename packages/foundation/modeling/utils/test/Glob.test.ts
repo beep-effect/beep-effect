@@ -1,9 +1,9 @@
+import { spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import { writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { TaggedErrorClass } from "@beep/schema/TaggedErrorClass";
 import { GlobError, layer as GlobLayer, Glob as GlobService } from "@beep/utils/Glob";
-import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
-import * as BunPath from "@effect/platform-bun/BunPath";
 import { Effect, Layer, Match } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -25,17 +25,17 @@ type Fixture = {
   readonly cleanup: TestEffect<void>;
 };
 
-const platformLayer = GlobLayer.pipe(Layer.provide(Layer.mergeAll(BunFileSystem.layer, BunPath.layer)));
+const platformLayer = GlobLayer;
 const joinPath = (base: string, ...segments: ReadonlyArray<string>): string =>
   [Str.replace(/\/+$/u, "")(base), ...segments.map((segment) => Str.replace(/^\/+|\/+$/gu, "")(segment))]
     .filter((segment) => segment.length > 0)
     .join("/");
 const runFileCommand = (command: string, args: ReadonlyArray<string>): TestEffect<void> =>
-  Effect.sync(() => Bun.spawnSync([command, ...args], { stderr: "ignore", stdout: "ignore" })).pipe(
+  Effect.sync(() => spawnSync(command, [...args], { stderr: "ignore", stdout: "ignore" })).pipe(
     Effect.flatMap((result) =>
-      result.exitCode === 0
+      result.status === 0
         ? Effect.void
-        : Effect.die(new Error(`${command} ${args.join(" ")} failed with exit code ${result.exitCode}`))
+        : Effect.die(new Error(`${command} ${args.join(" ")} failed with exit code ${result.status ?? "unknown"}`))
     )
   );
 const makeDirectory = (path: string) => runFileCommand("mkdir", ["-p", path]);
@@ -48,7 +48,7 @@ const makeTempDirectory: (prefix: string) => TestEffect<string> = Effect.fn("Glo
   return dir;
 });
 const writeText = (path: string, content: string): TestEffect<void> =>
-  Effect.promise(() => Bun.write(path, content)).pipe(Effect.asVoid);
+  Effect.promise(() => writeFile(path, content)).pipe(Effect.asVoid);
 const removePath = (path: string) => runFileCommand("rm", ["-rf", path]);
 const makeSymlink = (target: string, path: string) => runFileCommand("ln", ["-s", target, path]);
 

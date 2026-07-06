@@ -1,7 +1,10 @@
 import { fallowCiUploadDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command";
 import {
+  CoveragePackageBaseline,
+  CoverageRegressionBaseline,
   collectEffectTsgoDiagnosticLines,
   compareKnipFindingsForTesting,
+  compareCoverageRegressionSnapshotsForTesting,
   detectQualityProfileForTesting,
   devQualityStepsForTesting,
   FallowReportFinding,
@@ -57,6 +60,24 @@ const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = decodeJsoncTextAs(G
 const isQualityTaskFailed = S.is(QualityTaskFailed);
 const isQualityTaskGroupFailed = S.is(QualityTaskGroupFailed);
 const isString = (value: unknown): value is string => typeof value === "string";
+const coveragePackageBaseline = (path: string, metric = 50): CoveragePackageBaseline =>
+  CoveragePackageBaseline.make({
+    path,
+    lines: metric,
+    statements: metric,
+    branches: metric,
+    functions: metric,
+  });
+const coverageRegressionBaseline = CoverageRegressionBaseline.make({
+  schema_version: 1,
+  generated_at: "2026-07-06T00:00:00.000Z",
+  git_sha: "test-sha",
+  command: "bun run coverage:baseline:write",
+  epsilon: 0.001,
+  packages: {
+    "@beep/existing": coveragePackageBaseline("packages/existing"),
+  },
+});
 
 const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>
   Effect.scoped(
@@ -223,6 +244,11 @@ describe("quality task adapter", () => {
       task: "audit",
       fix: false,
       args: ["packages", "--filter=@beep/schema"],
+    });
+    expect(getInvocation(["coverage", "--affected"])).toMatchObject({
+      task: "coverage",
+      fix: false,
+      args: ["--affected"],
     });
   });
 
@@ -822,7 +848,7 @@ describe("quality task adapter", () => {
     ]);
   });
 
-  it("runs combined root coverage tasks in report-only mode", () => {
+  it("runs combined root coverage tasks in ratchet mode", () => {
     const passthroughTasks = ["build", "check", "test", "coverage", "audit", "lint", "docgen"] as const;
     const steps = rootQualityStepsForTesting("/repo", getInvocation(["lint", "--fix", ...passthroughTasks]));
 
@@ -831,9 +857,92 @@ describe("quality task adapter", () => {
       command: "bunx",
       args: expectedRootTurboArgs("lint:fix", passthroughTasks),
       env: {
+        VITEST_COVERAGE_RATCHET: "1",
+      },
+    });
+    expect(steps[0]?.env).not.toHaveProperty("VITEST_COVERAGE_REPORT_ONLY");
+  });
+
+  it("runs root coverage as the ratchet gate by default", () => {
+    const steps = rootQualityStepsForTesting("/repo", getInvocation(["coverage"]));
+
+    expect(steps).toHaveLength(1);
+    expect(steps[0]).toMatchObject({
+      label: "coverage:ratchet",
+      command: "bunx",
+      args: expectedRootTurboArgs("coverage", []),
+      env: {
+        VITEST_COVERAGE_RATCHET: "1",
+      },
+    });
+    expect(steps[0]?.env).not.toHaveProperty("VITEST_COVERAGE_REPORT_ONLY");
+  });
+
+  it("keeps report-only coverage reserved for baseline regeneration", () => {
+    const steps = rootQualityStepsForTesting(
+      "/repo",
+      getInvocation(["coverage", "--write-baseline", "--concurrency=1"])
+    );
+
+    expect(steps).toHaveLength(1);
+    expect(steps[0]).toMatchObject({
+      label: "coverage:baseline",
+      command: "bunx",
+      args: expectedTurboArgs("coverage", ["--concurrency=1"]),
+      env: {
+        VITEST_COVERAGE_RATCHET: "1",
         VITEST_COVERAGE_REPORT_ONLY: "1",
       },
     });
+  });
+
+  it("compares coverage snapshots with fail-on-drop and warning-only new package semantics", () => {
+    const result = compareCoverageRegressionSnapshotsForTesting(
+      coverageRegressionBaseline,
+      [
+        {
+          packageName: "@beep/existing",
+          baseline: CoveragePackageBaseline.make({
+            path: "packages/existing",
+            lines: 49.998,
+            statements: 50,
+            branches: 50,
+            functions: 50,
+          }),
+        },
+        {
+          packageName: "@beep/new",
+          baseline: coveragePackageBaseline("packages/new"),
+        },
+      ],
+      false
+    );
+
+    expect(result.comparedCount).toBe(1);
+    expect(result.missingActuals).toEqual([]);
+    expect(result.newPackages).toEqual([
+      expect.objectContaining({
+        packageName: "@beep/new",
+        baseline: expect.objectContaining({ path: "packages/new" }),
+      }),
+    ]);
+    expect(result.failures).toEqual([
+      expect.objectContaining({
+        packageName: "@beep/existing",
+        metric: "lines",
+        actual: 49.998,
+        baseline: 50,
+      }),
+    ]);
+  });
+
+  it("only fails missing baseline-package summaries for unscoped coverage runs", () => {
+    expect(compareCoverageRegressionSnapshotsForTesting(coverageRegressionBaseline, [], false).missingActuals).toEqual([
+      "@beep/existing",
+    ]);
+    expect(compareCoverageRegressionSnapshotsForTesting(coverageRegressionBaseline, [], true).missingActuals).toEqual(
+      []
+    );
   });
 
   it("runs unit and types as separate turbo invocations", () => {

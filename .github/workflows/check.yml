@@ -81,6 +81,11 @@ jobs:
             timeout_minutes: 20
             uses_turbo: "true"
             install_typos: "false"
+          - id: coverage
+            name: Coverage Regression
+            timeout_minutes: 40
+            uses_turbo: "true"
+            install_typos: "false"
           - id: docgen
             name: Docgen
             timeout_minutes: 20
@@ -218,6 +223,9 @@ jobs:
               ;;
             test-integration)
               bun run test -- --integration "${turbo_args[@]}"
+              ;;
+            coverage)
+              bun run coverage -- "${turbo_args[@]}"
               ;;
             docgen)
               if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then

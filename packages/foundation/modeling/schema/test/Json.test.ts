@@ -28,7 +28,7 @@ describe("Json", () => {
 
       expect(Exit.isFailure(result)).toBe(true);
       if (Exit.isFailure(result)) {
-        expect(Cause.pretty(result.cause)).toContain("JSON Parse error");
+        expect(Cause.pretty(result.cause)).toMatch(/JSON Parse error|SyntaxError/u);
       }
     })
   );

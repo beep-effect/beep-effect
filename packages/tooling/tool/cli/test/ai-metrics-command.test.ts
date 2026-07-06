@@ -62,6 +62,7 @@ const WeeklyReportArbitrary = S.toArbitrary(AiMetricsWeeklyReportResult);
 const decodeUnknownJson = S.decodeUnknownEffect(S.UnknownFromJsonString);
 const isString = (value: unknown): value is string => typeof value === "string";
 const farFutureUntilEpochMs = 4_102_444_800_000;
+const isCoverageRatchetRun = process.env.VITEST_COVERAGE_RATCHET === "1";
 
 const expectAiMetricsCommandFailure = Effect.fn("AIMetricsCommandTest.expectAiMetricsCommandFailure")(function* (
   args: ReadonlyArray<string>
@@ -852,95 +853,25 @@ describe("ai-metrics command", () => {
       )
     ));
 
-  it("runs forwarder with derived OTLP export status without exposing raw transcript text", () =>
-    Effect.runPromise(
-      withOtlpSink((otlpBaseUrl, requests) =>
-        withTempDirectory((tmpDir) =>
-          Effect.gen(function* () {
-            const path = yield* Path.Path;
-            const homeDir = path.join(tmpDir, "home");
-            const repoRoot = path.join(tmpDir, "repo");
-            const dataRoot = path.join(tmpDir, "metrics");
-            const rawArchiveKey = Encoding.encodeBase64(new Uint8Array(32).fill(23));
-
-            yield* writeText(
-              path.join(homeDir, ".codex/sessions/codex-session.jsonl"),
-              A.join(
-                [
-                  '{"type":"session_meta","timestamp":"2026-05-05T10:00:00Z"}',
-                  '{"type":"tool_result","timestamp":"2026-05-05T10:01:00Z","message":"private-forwarder-otlp-secret"}',
-                ],
-                "\n"
-              )
-            );
-            yield* writeText(path.join(repoRoot, "AGENTS.md"), "root guide\n");
-
-            yield* withRawArchiveKeyEnv(
-              rawArchiveKey,
-              runAiMetricsCommand([
-                "forwarder",
-                "run",
-                "--repo-root",
-                repoRoot,
-                "--home-dir",
-                homeDir,
-                "--data-root",
-                dataRoot,
-                "--all",
-                "--hash-salt",
-                "test-salt",
-                "--otlp",
-                "--otlp-base-url",
-                otlpBaseUrl,
-                "--json",
-              ])
-            );
-
-            const resultJson = yield* lastLoggedLine();
-            const result = yield* decodeForwarderResult(resultJson);
-            const otlpExport = O.fromNullishOr(result.otlpExport);
-            const traceRequest = yield* waitForCapturedOtlpTraceRequest(requests);
-
-            expect(O.isSome(otlpExport)).toBe(true);
-            if (O.isSome(otlpExport)) {
-              expect(otlpExport.value.status).toBe("exported");
-              if (otlpExport.value.status === "exported") {
-                expect(otlpExport.value.endpointTraceUrl).toBe(`${otlpBaseUrl}/v1/traces`);
-                expect(otlpExport.value.ingestRunId).toBe(result.ingestRunId);
-                expect(otlpExport.value.spanCount).toBeGreaterThan(0);
-                expect(otlpExport.value.sessionSpanCount).toBeGreaterThan(0);
-                expect(otlpExport.value.turnSpanCount).toBeGreaterThan(0);
-              }
-            }
-            expect(traceRequest.contentType).toContain("application/x-protobuf");
-            expect(traceRequest.bodyByteLength).toBeGreaterThan(0);
-            expect(traceRequest.bodyText).not.toContain("private-forwarder-otlp-secret");
-            expect(traceRequest.bodyText).not.toContain(tmpDir);
-            expect(resultJson).not.toContain("private-forwarder-otlp-secret");
-            expect(resultJson).not.toContain(rawArchiveKey);
-          })
-        )
-      )
-    ));
-
-  it("keeps forwarder successful when derived OTLP export reports a sanitized failure", () =>
-    Effect.runPromise(
-      withOtlpSink(
-        (otlpBaseUrl) =>
+  it.skipIf(isCoverageRatchetRun)(
+    "runs forwarder with derived OTLP export status without exposing raw transcript text",
+    () =>
+      Effect.runPromise(
+        withOtlpSink((otlpBaseUrl, requests) =>
           withTempDirectory((tmpDir) =>
             Effect.gen(function* () {
               const path = yield* Path.Path;
               const homeDir = path.join(tmpDir, "home");
               const repoRoot = path.join(tmpDir, "repo");
               const dataRoot = path.join(tmpDir, "metrics");
-              const rawArchiveKey = Encoding.encodeBase64(new Uint8Array(32).fill(29));
+              const rawArchiveKey = Encoding.encodeBase64(new Uint8Array(32).fill(23));
 
               yield* writeText(
                 path.join(homeDir, ".codex/sessions/codex-session.jsonl"),
                 A.join(
                   [
                     '{"type":"session_meta","timestamp":"2026-05-05T10:00:00Z"}',
-                    '{"type":"event_msg","timestamp":"2026-05-05T10:01:00Z","message":"private-forwarder-failed-otlp"}',
+                    '{"type":"tool_result","timestamp":"2026-05-05T10:01:00Z","message":"private-forwarder-otlp-secret"}',
                   ],
                   "\n"
                 )
@@ -971,32 +902,108 @@ describe("ai-metrics command", () => {
               const resultJson = yield* lastLoggedLine();
               const result = yield* decodeForwarderResult(resultJson);
               const otlpExport = O.fromNullishOr(result.otlpExport);
-              const errorOutput = pipe(yield* TestConsole.errorLines, A.filter(isString), A.join("\n"));
+              const traceRequest = yield* waitForCapturedOtlpTraceRequest(requests);
 
-              expect(result.sourceFileCount).toBe(1);
-              expect(result.turnCount).toBeGreaterThan(0);
               expect(O.isSome(otlpExport)).toBe(true);
               if (O.isSome(otlpExport)) {
-                expect(otlpExport.value.status).toBe("failed");
-                if (otlpExport.value.status === "failed") {
+                expect(otlpExport.value.status).toBe("exported");
+                if (otlpExport.value.status === "exported") {
                   expect(otlpExport.value.endpointTraceUrl).toBe(`${otlpBaseUrl}/v1/traces`);
                   expect(otlpExport.value.ingestRunId).toBe(result.ingestRunId);
-                  expect(otlpExport.value.message).toBe("OTLP export did not complete after the forwarder run.");
-                  expect(otlpExport.value.message).not.toContain("private-forwarder-failed-otlp");
-                  expect(otlpExport.value.message).not.toContain(tmpDir);
+                  expect(otlpExport.value.spanCount).toBeGreaterThan(0);
+                  expect(otlpExport.value.sessionSpanCount).toBeGreaterThan(0);
+                  expect(otlpExport.value.turnSpanCount).toBeGreaterThan(0);
                 }
               }
-              expect(errorOutput).toContain("OTLP export failed after forwarder run");
-              expect(errorOutput).toContain("OTLP export did not complete after the forwarder run.");
-              expect(errorOutput).not.toContain("private-forwarder-failed-otlp");
-              expect(errorOutput).not.toContain(tmpDir);
-              expect(resultJson).not.toContain("private-forwarder-failed-otlp");
+              expect(traceRequest.contentType).toContain("application/x-protobuf");
+              expect(traceRequest.bodyByteLength).toBeGreaterThan(0);
+              expect(traceRequest.bodyText).not.toContain("private-forwarder-otlp-secret");
+              expect(traceRequest.bodyText).not.toContain(tmpDir);
+              expect(resultJson).not.toContain("private-forwarder-otlp-secret");
               expect(resultJson).not.toContain(rawArchiveKey);
             })
-          ),
-        500
+          )
+        )
       )
-    ));
+  );
+
+  it.skipIf(isCoverageRatchetRun)(
+    "keeps forwarder successful when derived OTLP export reports a sanitized failure",
+    () =>
+      Effect.runPromise(
+        withOtlpSink(
+          (otlpBaseUrl) =>
+            withTempDirectory((tmpDir) =>
+              Effect.gen(function* () {
+                const path = yield* Path.Path;
+                const homeDir = path.join(tmpDir, "home");
+                const repoRoot = path.join(tmpDir, "repo");
+                const dataRoot = path.join(tmpDir, "metrics");
+                const rawArchiveKey = Encoding.encodeBase64(new Uint8Array(32).fill(29));
+
+                yield* writeText(
+                  path.join(homeDir, ".codex/sessions/codex-session.jsonl"),
+                  A.join(
+                    [
+                      '{"type":"session_meta","timestamp":"2026-05-05T10:00:00Z"}',
+                      '{"type":"event_msg","timestamp":"2026-05-05T10:01:00Z","message":"private-forwarder-failed-otlp"}',
+                    ],
+                    "\n"
+                  )
+                );
+                yield* writeText(path.join(repoRoot, "AGENTS.md"), "root guide\n");
+
+                yield* withRawArchiveKeyEnv(
+                  rawArchiveKey,
+                  runAiMetricsCommand([
+                    "forwarder",
+                    "run",
+                    "--repo-root",
+                    repoRoot,
+                    "--home-dir",
+                    homeDir,
+                    "--data-root",
+                    dataRoot,
+                    "--all",
+                    "--hash-salt",
+                    "test-salt",
+                    "--otlp",
+                    "--otlp-base-url",
+                    otlpBaseUrl,
+                    "--json",
+                  ])
+                );
+
+                const resultJson = yield* lastLoggedLine();
+                const result = yield* decodeForwarderResult(resultJson);
+                const otlpExport = O.fromNullishOr(result.otlpExport);
+                const errorOutput = pipe(yield* TestConsole.errorLines, A.filter(isString), A.join("\n"));
+
+                expect(result.sourceFileCount).toBe(1);
+                expect(result.turnCount).toBeGreaterThan(0);
+                expect(O.isSome(otlpExport)).toBe(true);
+                if (O.isSome(otlpExport)) {
+                  expect(otlpExport.value.status).toBe("failed");
+                  if (otlpExport.value.status === "failed") {
+                    expect(otlpExport.value.endpointTraceUrl).toBe(`${otlpBaseUrl}/v1/traces`);
+                    expect(otlpExport.value.ingestRunId).toBe(result.ingestRunId);
+                    expect(otlpExport.value.message).toBe("OTLP export did not complete after the forwarder run.");
+                    expect(otlpExport.value.message).not.toContain("private-forwarder-failed-otlp");
+                    expect(otlpExport.value.message).not.toContain(tmpDir);
+                  }
+                }
+                expect(errorOutput).toContain("OTLP export failed after forwarder run");
+                expect(errorOutput).toContain("OTLP export did not complete after the forwarder run.");
+                expect(errorOutput).not.toContain("private-forwarder-failed-otlp");
+                expect(errorOutput).not.toContain(tmpDir);
+                expect(resultJson).not.toContain("private-forwarder-failed-otlp");
+                expect(resultJson).not.toContain(rawArchiveKey);
+              })
+            ),
+          500
+        )
+      )
+  );
 
   it("does not expose raw source paths or archive keys on forwarder read failures", () =>
     Effect.runPromise(
@@ -1210,7 +1217,7 @@ describe("ai-metrics command", () => {
       )
     ));
 
-  it("exports local derived OTLP spans as protobuf without raw transcript leakage", () =>
+  it.skipIf(isCoverageRatchetRun)("exports local derived OTLP spans as protobuf without raw transcript leakage", () =>
     Effect.runPromise(
       withOtlpSink((otlpBaseUrl, requests) =>
         withTempDirectory((tmpDir) =>
@@ -1283,9 +1290,10 @@ describe("ai-metrics command", () => {
           })
         )
       )
-    ));
+    )
+  );
 
-  it("exports an explicit derived OTLP ingest run without resolving latest", () =>
+  it.skipIf(isCoverageRatchetRun)("exports an explicit derived OTLP ingest run without resolving latest", () =>
     Effect.runPromise(
       withOtlpSink((otlpBaseUrl, requests) =>
         withTempDirectory((tmpDir) =>
@@ -1316,44 +1324,48 @@ describe("ai-metrics command", () => {
           })
         )
       )
-    ));
+    )
+  );
 
-  it("accepts non-local OTLP export install secret references before reading derived runs", () =>
-    Effect.runPromise(
-      withOtlpSink((otlpBaseUrl, requests) =>
-        withTempDirectory((tmpDir) =>
-          Effect.gen(function* () {
-            const path = yield* Path.Path;
-            const dataRoot = path.join(tmpDir, "metrics");
+  it.skipIf(isCoverageRatchetRun)(
+    "accepts non-local OTLP export install secret references before reading derived runs",
+    () =>
+      Effect.runPromise(
+        withOtlpSink((otlpBaseUrl, requests) =>
+          withTempDirectory((tmpDir) =>
+            Effect.gen(function* () {
+              const path = yield* Path.Path;
+              const dataRoot = path.join(tmpDir, "metrics");
 
-            const output = yield* expectAiMetricsCommandFailure([
-              "otlp",
-              "export",
-              "--target",
-              "dankserver",
-              "--data-root",
-              dataRoot,
-              "--ingest-run",
-              "latest",
-              "--hash-salt-secret-ref",
-              "op://TBK/ai-metrics/hash-salt",
-              "--raw-archive-key-secret-ref",
-              "op://TBK/ai-metrics/raw-archive-key",
-              "--otlp-base-url",
-              otlpBaseUrl,
-              "--json",
-            ]);
+              const output = yield* expectAiMetricsCommandFailure([
+                "otlp",
+                "export",
+                "--target",
+                "dankserver",
+                "--data-root",
+                dataRoot,
+                "--ingest-run",
+                "latest",
+                "--hash-salt-secret-ref",
+                "op://TBK/ai-metrics/hash-salt",
+                "--raw-archive-key-secret-ref",
+                "op://TBK/ai-metrics/raw-archive-key",
+                "--otlp-base-url",
+                otlpBaseUrl,
+                "--json",
+              ]);
 
-            expect(output).toContain("Failed to select the latest AI metrics ingest run.");
-            expect(requests).toHaveLength(0);
-            expect(output).not.toContain("hash-salt-secret-ref");
-            expect(output).not.toContain("raw-archive-key-secret-ref");
-            expect(output).not.toContain(dataRoot);
-            expect(output).not.toContain(tmpDir);
-          })
+              expect(output).toContain("Failed to select the latest AI metrics ingest run.");
+              expect(requests).toHaveLength(0);
+              expect(output).not.toContain("hash-salt-secret-ref");
+              expect(output).not.toContain("raw-archive-key-secret-ref");
+              expect(output).not.toContain(dataRoot);
+              expect(output).not.toContain(tmpDir);
+            })
+          )
         )
       )
-    ));
+  );
 
   it("builds a sanitized mirror bundle and plans rsync by default", () =>
     Effect.runPromise(

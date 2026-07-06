@@ -120,7 +120,7 @@
     "test": "bun run beep:test",
     "type-test": "cd ../../../.. && bunx tstyche",
     "test:watch": "vitest",
-    "coverage": "bunx --bun vitest run --coverage",
+    "coverage": "bunx vitest run --coverage",
     "docgen": "bun run ../../../../packages/tooling/tool/docgen/src/bin.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",

@@ -9,6 +9,7 @@ export * from "@beep/repo-cli/commands/Quality/ChangesetGraph";
 export * from "@beep/repo-cli/commands/Quality/index";
 export * from "@beep/repo-cli/commands/Quality/Quality.command";
 export * from "@beep/repo-cli/commands/Quality/Tasks";
+export * from "../commands/Quality/internal/CoverageRegression.js";
 export * from "../commands/Quality/internal/FallowEnvelope.schema.js";
 export * from "../commands/Quality/internal/JSDocDocumentationInventory.js";
 export * from "../commands/Quality/internal/KnipRatchet.js";

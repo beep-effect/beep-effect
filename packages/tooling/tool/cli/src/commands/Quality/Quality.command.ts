@@ -2615,6 +2615,10 @@ const devQualityCommand = Command.make(
     surface: Flag.boolean("surface").pipe(
       Flag.withDescription("Also run affected docgen and repo-export checks for public surface edits")
     ),
+    mode: Argument.choice("mode", ["green"]).pipe(
+      Argument.optional,
+      Argument.withDescription("Optional alias for the green local development quality lane")
+    ),
   },
   ({ base, head, surface }) =>
     runQualityProgram(
@@ -2826,6 +2830,8 @@ export const qualityCommand = Command.make("quality", {}, () =>
     "- bun run beep quality github-checks quality",
     "- bun run beep quality github-checks repo-sanity",
     "- bun run beep quality github-checks plan-contract-check --mode pre-push --expect-promoted-fallow-lanes",
+    "- bun run coverage",
+    "- bun run coverage:baseline:write",
     "- bun run beep quality bun-audit",
     "- bun run beep quality dtslint-tsgo",
     "- bun run beep quality test-tsgo",

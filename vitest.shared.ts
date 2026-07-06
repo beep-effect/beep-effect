@@ -12,7 +12,7 @@ type AliasEntry = {
 
 const projectRootDirectory = new URL("./", import.meta.url);
 const rootTsconfigPath = new URL("./tsconfig.json", import.meta.url).pathname;
-const coverageProvider = process.versions.bun !== undefined ? "istanbul" : "v8";
+const coverageProvider = "v8";
 const configStringOptionSync = (name: string): O.Option<string> => Effect.runSync(Config.option(Config.string(name)));
 const configStringEqualsSync = (name: string, expected: string): boolean =>
   pipe(
@@ -20,13 +20,10 @@ const configStringEqualsSync = (name: string, expected: string): boolean =>
     O.exists((value) => value === expected)
   );
 export const vitestCoverageReportOnly = configStringEqualsSync("VITEST_COVERAGE_REPORT_ONLY", "1");
-const coverageThresholds = vitestCoverageReportOnly
-  ? {
-      branches: 0,
-      functions: 0,
-      lines: 0,
-      statements: 0,
-    }
+export const vitestCoverageRatchet = configStringEqualsSync("VITEST_COVERAGE_RATCHET", "1");
+const shouldUseCoverageRatchetMode = vitestCoverageReportOnly || vitestCoverageRatchet;
+const coverageThresholds = shouldUseCoverageRatchetMode
+  ? undefined
   : {
       branches: 80,
       functions: 60,
@@ -109,6 +106,7 @@ const config: ViteUserConfig = {
     // generous global cap; a genuine hang still fails well within each lane's
     // job timeout, and packages may still override per-test where needed.
     testTimeout: 30_000,
+    passWithNoTests: shouldUseCoverageRatchetMode,
     exclude: ["**/.context/**", "**/node_modules/**"],
     setupFiles: [new URL("./vitest.setup.ts", import.meta.url).pathname],
     fakeTimers: {
@@ -120,6 +118,7 @@ const config: ViteUserConfig = {
     include: ["test/**/*.test.{ts,tsx}"],
     coverage: {
       provider: coverageProvider,
+      include: ["src/**/*.{ts,tsx}"],
       reporter: ["text", "html", "lcov", "json-summary"],
       reportsDirectory: "coverage",
       exclude: [
@@ -137,7 +136,7 @@ const config: ViteUserConfig = {
         "**/vitest.setup.*",
         "**/vitest.shared.*",
       ],
-      thresholds: coverageThresholds,
+      ...(P.isUndefined(coverageThresholds) ? {} : { thresholds: coverageThresholds }),
     },
   },
 };

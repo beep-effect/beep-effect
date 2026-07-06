@@ -17,6 +17,11 @@ import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
 import { GithubCheckMode } from "../../internal/repo-run/index.js";
 import { configStringEqualsSync, configStringOption } from "./internal/Config.js";
+import {
+  cleanCoverageRegressionOutputs,
+  compareCoverageRegressionBaseline,
+  writeCoverageRegressionBaseline,
+} from "./internal/CoverageRegression.js";
 import { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Quality.errors.js";
 import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
@@ -45,6 +50,8 @@ const LOCAL_BIOME_BIN = "./node_modules/.bin/biome";
 const BIOME_FIX_CHANGED_ARGS = ["check", "--write", "--files-ignore-unknown=true", "--no-errors-on-unmatched"] as const;
 const LINT_FIX_AGGREGATE_ARGS = ["--full", "--repo"] as const;
 const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
+const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
+const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 // Lint-policy steps are independent read-only tools (cspell, markdownlint,
 // oxlint, eslint-jsdoc, law checks, madge...). Running them grouped-concurrent
 // converts the lane from sum-of-steps to max-of-steps; 6 balances the
@@ -64,7 +71,7 @@ const groupedStepOutputTruncatedNotice = `\n[beep-cli] output truncated after ${
  * @category models
  * @since 0.0.0
  */
-export const QualityTaskName = LiteralKit(["build", "check", "test", "lint", "audit"]).pipe(
+export const QualityTaskName = LiteralKit(["build", "check", "test", "lint", "audit", "coverage"]).pipe(
   $I.annoteSchema("QualityTaskName", {
     description: "Canonical quality task name handled by beep-cli.",
   })
@@ -261,6 +268,12 @@ type RootAuditSelectionState = {
   readonly args: ReadonlyArray<string>;
 };
 
+type CoverageTaskOptions = {
+  readonly args: ReadonlyArray<string>;
+  readonly scoped: boolean;
+  readonly writeBaseline: boolean;
+};
+
 const emptyParsedFixArgs: ParsedFixArgsState = {
   fix: false,
   args: A.empty<string>(),
@@ -279,6 +292,7 @@ const profileByTask: Readonly<Record<QualityTaskName, PackageTaskProfile>> = {
   test: PackageTaskProfile.make({ task: QualityTaskName.Enum.test, script: "beep:test" }),
   lint: PackageTaskProfile.make({ task: QualityTaskName.Enum.lint, script: "beep:lint", fixScript: "beep:lint:fix" }),
   audit: PackageTaskProfile.make({ task: QualityTaskName.Enum.audit, script: "beep:audit" }),
+  coverage: PackageTaskProfile.make({ task: QualityTaskName.Enum.coverage, script: "coverage" }),
 };
 
 const isQualityTaskName = S.is(QualityTaskName);
@@ -559,6 +573,28 @@ const isExplicitTurboScopeArg = (arg: string): boolean =>
 const isExplicitTurboAffectedOrScopeArg = (arg: string): boolean =>
   arg === "--affected" || isExplicitTurboScopeArg(arg);
 
+const isCoverageWriteBaselineArg = (arg: string): boolean => arg === COVERAGE_WRITE_BASELINE_ARG;
+
+const isCoveragePassthroughDelimiter = (arg: string): boolean => arg === "--";
+
+const stripCoverageControlArgs: (args: ReadonlyArray<string>) => ReadonlyArray<string> = A.filter(
+  (arg) => !isCoverageWriteBaselineArg(arg) && !isCoveragePassthroughDelimiter(arg)
+);
+
+const coverageTurboArgs = (args: ReadonlyArray<string>): ReadonlyArray<string> => {
+  const stripped = stripCoverageControlArgs(stripPassthroughDelimiter(args));
+  return A.some(stripped, isTurboConcurrencyArg) ? stripped : [ROOT_COVERAGE_TURBO_CONCURRENCY_ARG, ...stripped];
+};
+
+const parseCoverageTaskOptions = (args: ReadonlyArray<string>): CoverageTaskOptions => {
+  const stripped = stripPassthroughDelimiter(args);
+  return {
+    args: coverageTurboArgs(stripped),
+    scoped: A.some(stripped, isExplicitTurboAffectedOrScopeArg),
+    writeBaseline: A.some(stripped, isCoverageWriteBaselineArg),
+  };
+};
+
 const isLintFixAggregateArg = (arg: string): boolean => A.some(LINT_FIX_AGGREGATE_ARGS, (name) => name === arg);
 
 const stripLintFixAggregateArgs: (args: ReadonlyArray<string>) => ReadonlyArray<string> = A.filter(
@@ -599,7 +635,7 @@ const turboCoverageEnv = (
   tasks: ReadonlyArray<string>,
   args: ReadonlyArray<string>
 ): Record<string, string> | undefined =>
-  includesTurboCoverageTask(tasks, args) ? { VITEST_COVERAGE_REPORT_ONLY: "1" } : undefined;
+  includesTurboCoverageTask(tasks, args) ? { VITEST_COVERAGE_RATCHET: "1" } : undefined;
 
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
   stream.pipe(
@@ -995,6 +1031,18 @@ const turboStep = (cwd: string, label: string, tasks: ReadonlyArray<string>, arg
   });
 };
 
+const coverageStep = (cwd: string, options: CoverageTaskOptions) =>
+  QualityTaskStep.make({
+    label: options.writeBaseline ? "coverage:baseline" : "coverage:ratchet",
+    command: "bunx",
+    args: turboRunArgs(["coverage"], options.args),
+    cwd,
+    env: {
+      VITEST_COVERAGE_RATCHET: "1",
+      ...(options.writeBaseline ? { VITEST_COVERAGE_REPORT_ONLY: "1" } : {}),
+    },
+  });
+
 const bunRunStep = (cwd: string, label: string, args: ReadonlyArray<string>) =>
   QualityTaskStep.make({
     label,
@@ -1365,6 +1413,10 @@ const rootAuditSteps = (repoRoot: string, args: ReadonlyArray<string>) => {
   return [repoCliStep(repoRoot, `audit:${scriptMode}`, ["quality", "github-checks", ...scriptArgs])];
 };
 
+const rootCoverageSteps = (repoRoot: string, args: ReadonlyArray<string>) => [
+  coverageStep(repoRoot, parseCoverageTaskOptions(args)),
+];
+
 const invocationArgs = (invocation: QualityTaskInvocation): ReadonlyArray<string> =>
   invocation.args ?? A.empty<string>();
 const invocationFix = (invocation: QualityTaskInvocation): boolean => invocation.fix ?? false;
@@ -1377,6 +1429,7 @@ const rootStepsFor = (repoRoot: string, invocation: QualityTaskInvocation): Read
       Match.when("test", () => rootTestSteps(repoRoot, invocationArgs(current))),
       Match.when("lint", () => rootLintSteps(repoRoot, invocationArgs(current), invocationFix(current))),
       Match.when("audit", () => rootAuditSteps(repoRoot, invocationArgs(current))),
+      Match.when("coverage", () => rootCoverageSteps(repoRoot, invocationArgs(current))),
       Match.exhaustive
     )(current.task)
   );
@@ -1403,6 +1456,28 @@ export const rootQualityStepsForTesting: {
   (repoRoot: string, invocation: QualityTaskInvocation): ReadonlyArray<QualityTaskStep> =>
     rootStepsFor(repoRoot, invocation)
 );
+
+const runRootCoverageTask = Effect.fn("QualityTasks.runRootCoverageTask")(function* (
+  repoRoot: string,
+  args: ReadonlyArray<string>
+) {
+  const options = parseCoverageTaskOptions(args);
+  if (!options.writeBaseline && configStringEqualsSync("VITEST_COVERAGE_REPORT_ONLY", "1")) {
+    return yield* QualityTaskConfigurationError.new(
+      "VITEST_COVERAGE_REPORT_ONLY is only supported for coverage baseline regeneration. Run `bun run coverage:baseline:write` to regenerate the baseline, or unset it for the coverage gate."
+    );
+  }
+
+  yield* cleanCoverageRegressionOutputs(repoRoot);
+  yield* runStep(coverageStep(repoRoot, options));
+
+  if (options.writeBaseline) {
+    yield* writeCoverageRegressionBaseline(repoRoot);
+    return;
+  }
+
+  yield* compareCoverageRegressionBaseline(repoRoot, options.scoped);
+});
 
 const readPackageJson = Effect.fn("QualityTasks.readPackageJson")(function* (packageDir: string) {
   const path = yield* Path.Path;
@@ -1483,6 +1558,11 @@ const runRootTask = Effect.fn("QualityTasks.runRootTask")(function* (
 
   if (invocation.task === "lint") {
     yield* runRootLintTask(repoRoot, invocationArgs(invocation), invocationFix(invocation));
+    return;
+  }
+
+  if (invocation.task === "coverage") {
+    yield* runRootCoverageTask(repoRoot, invocationArgs(invocation));
     return;
   }
 

@@ -100,6 +100,7 @@ export type JsonRecord = typeof JsonRecord.Type;
 export class PackageJson extends S.Class<PackageJson>($I`PackageJson`)(
   {
     name: S.String,
+    scripts: S.optionalKey(S.Record(S.String, S.String)),
     workspaces: S.optionalKey(S.Unknown),
     exports: S.optionalKey(S.Unknown),
   },
