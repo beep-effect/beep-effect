@@ -10,11 +10,14 @@
  */
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
+import { $RepoCliId } from "@beep/identity/packages";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ResearchCommandError } from "../Research.errors.js";
+
+const $I = $RepoCliId.create("commands/Research/internal/Catalog");
 
 /**
  * Catalog database file name beneath `<vault>/.beep/`.
@@ -77,7 +80,13 @@ export const runWithResearchDb = <A, E>(
     )
   ).pipe(ResearchCommandError.mapError(message));
 
-const CountRow = S.Struct({ total: S.Finite });
+class CountRow extends S.Class<CountRow>($I`CountRow`)(
+  { total: S.Finite },
+  $I.annote("CountRow", {
+    title: "Count Row",
+    description: "Single numeric count row returned by research catalog aggregate queries.",
+  })
+) {}
 const decodeCountRows = S.decodeUnknownEffect(S.Array(CountRow));
 
 /**

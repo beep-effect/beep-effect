@@ -14,6 +14,7 @@ import { createHash } from "node:crypto";
 import { Config, Effect, FileSystem, Path } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Yaml from "yaml";
@@ -171,7 +172,7 @@ export const renderCard = (frontmatter: KnowledgeCardFrontmatter, body: string):
     const value = frontmatter[prop];
     return P.isUndefined(value) ? [] : [[key, value] as const];
   });
-  const rendered = Yaml.stringify(Object.fromEntries(yamlSource), { lineWidth: 0 });
+  const rendered = Yaml.stringify(R.fromEntries(yamlSource), { lineWidth: 0 });
   return `---\n${rendered}---\n\n${body.trimEnd()}\n`;
 };
 
@@ -200,7 +201,7 @@ export const parseCard = Effect.fn("ResearchVault.parseCard")(function* (
   const withDefaults = {
     related: [],
     tags: [],
-    ...Object.fromEntries(presentEntries),
+    ...R.fromEntries(presentEntries),
   };
   const frontmatter = yield* decodeFrontmatter(withDefaults).pipe(
     ResearchCommandError.mapError(`Card "${cardPath}" frontmatter failed schema validation.`)

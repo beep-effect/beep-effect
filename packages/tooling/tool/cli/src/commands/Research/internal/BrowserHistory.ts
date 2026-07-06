@@ -12,6 +12,7 @@
  */
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
+import { $RepoCliId } from "@beep/identity/packages";
 import { Config, DateTime, Effect, FileSystem, Layer, Path } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -19,6 +20,9 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ResearchCommandError } from "../Research.errors.js";
 import type { BrowserKind } from "../Research.schemas.js";
+
+const $I = $RepoCliId.create("commands/Research/internal/BrowserHistory");
+type BrowserProfileKind = Exclude<BrowserKind, "all">;
 
 /**
  * Seconds between the Chrome epoch (1601-01-01) and the Unix epoch.
@@ -34,11 +38,17 @@ export const CHROME_EPOCH_OFFSET_SECONDS = 11_644_473_600;
  * @internal
  * @category models
  */
-export interface BrowserProfile {
-  readonly browser: Exclude<BrowserKind, "all">;
-  readonly historyPath: string;
-  readonly profile: string;
-}
+export class BrowserProfile extends S.Class<BrowserProfile>($I`BrowserProfile`)(
+  {
+    browser: S.Union([S.Literal("brave"), S.Literal("chrome")]),
+    historyPath: S.String,
+    profile: S.String,
+  },
+  $I.annote("BrowserProfile", {
+    title: "Browser Profile",
+    description: "One discovered Chromium-family browser profile history database.",
+  })
+) {}
 
 /**
  * One history row surviving the time cutoff.
@@ -46,16 +56,22 @@ export interface BrowserProfile {
  * @internal
  * @category models
  */
-export class HistoryUrlRow extends S.Class<HistoryUrlRow>("HistoryUrlRow")({
-  lastVisitChrome: S.Finite,
-  title: S.String,
-  url: S.String,
-  visitCount: S.Finite,
-}) {}
+export class HistoryUrlRow extends S.Class<HistoryUrlRow>($I`HistoryUrlRow`)(
+  {
+    lastVisitChrome: S.Finite,
+    title: S.String,
+    url: S.String,
+    visitCount: S.Finite,
+  },
+  $I.annote("HistoryUrlRow", {
+    title: "History URL Row",
+    description: "One browser history URL row surviving the configured time cutoff.",
+  })
+) {}
 
 const decodeHistoryUrlRows = S.decodeUnknownEffect(S.Array(HistoryUrlRow));
 
-const BROWSER_CONFIG_DIRS: ReadonlyArray<readonly [Exclude<BrowserKind, "all">, string]> = [
+const BROWSER_CONFIG_DIRS: ReadonlyArray<readonly [BrowserProfileKind, string]> = [
   ["brave", ".config/BraveSoftware/Brave-Browser"],
   ["chrome", ".config/google-chrome"],
 ];
@@ -93,7 +109,7 @@ export const discoverProfiles = Effect.fn("BrowserHistory.discoverProfiles")(fun
       const historyPath = path.join(browserRoot, entry, "History");
       const hasHistory = yield* fs.exists(historyPath).pipe(Effect.orElseSucceed(() => false));
       if (hasHistory) {
-        profiles.push({ browser: kind, historyPath, profile: entry });
+        profiles.push(BrowserProfile.make({ browser: kind, historyPath, profile: entry }));
       }
     }
   }

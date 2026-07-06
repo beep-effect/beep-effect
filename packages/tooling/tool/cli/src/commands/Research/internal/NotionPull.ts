@@ -10,16 +10,21 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
+import { O as OptionUtils } from "@beep/utils";
 import { Config, Effect, FileSystem, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import { ResearchCommandError } from "../Research.errors.js";
 import { sha256HexOf } from "./Vault.js";
+
+const $I = $RepoCliId.create("commands/Research/internal/NotionPull");
 
 const NOTION_API_URL = "https://api.notion.com";
 const NOTION_VERSION = "2022-06-28";
@@ -30,28 +35,52 @@ const NOTION_VERSION = "2022-06-28";
  * @internal
  * @category models
  */
-export interface NotionSavedLink {
-  readonly createdIso: string;
-  readonly pageId: string;
-  readonly tags: ReadonlyArray<string>;
-  readonly title: string;
-  readonly url: O.Option<string>;
-}
+export class NotionSavedLink extends S.Class<NotionSavedLink>($I`NotionSavedLink`)(
+  {
+    createdIso: S.String,
+    pageId: S.String,
+    tags: S.Array(S.String),
+    title: S.String,
+    url: S.OptionFromOptionalKey(S.String),
+  },
+  $I.annote("NotionSavedLink", {
+    title: "Notion Saved Link",
+    description: "One saved link extracted from a Notion database page or page block.",
+  })
+) {}
 
-const SearchResult = S.Struct({
-  id: S.String,
-  object: S.String,
-});
+class SearchResult extends S.Class<SearchResult>($I`SearchResult`)(
+  {
+    id: S.String,
+    object: S.String,
+  },
+  $I.annote("SearchResult", {
+    title: "Search Result",
+    description: "Minimal Notion search result used to locate the saved-links database.",
+  })
+) {}
 
-const SearchResponse = S.Struct({
-  results: S.Array(S.Unknown),
-});
+class SearchResponse extends S.Class<SearchResponse>($I`SearchResponse`)(
+  {
+    results: S.Array(S.Unknown),
+  },
+  $I.annote("SearchResponse", {
+    title: "Search Response",
+    description: "Minimal Notion search response containing raw result payloads.",
+  })
+) {}
 
-const QueryResponse = S.Struct({
-  has_more: S.Boolean,
-  next_cursor: S.NullOr(S.String),
-  results: S.Array(S.Unknown),
-});
+class QueryResponse extends S.Class<QueryResponse>($I`QueryResponse`)(
+  {
+    has_more: S.Boolean,
+    next_cursor: S.NullOr(S.String),
+    results: S.Array(S.Unknown),
+  },
+  $I.annote("QueryResponse", {
+    title: "Query Response",
+    description: "Minimal Notion paginated query response used by research notion-pull.",
+  })
+) {}
 
 const decodeQueryResponse = S.decodeUnknownEffect(QueryResponse);
 const decodeSearchResponse = S.decodeUnknownEffect(SearchResponse);
@@ -119,19 +148,20 @@ export const findDatabaseId = Effect.fn("NotionPull.findDatabaseId")(function* (
 });
 
 const asRecord = (value: unknown): O.Option<Record<string, unknown>> =>
-  P.isObject(value) && !Array.isArray(value) ? O.some(value as Record<string, unknown>) : O.none();
+  P.isObject(value) && !A.isArray(value) ? O.some(value as Record<string, unknown>) : O.none();
 
 const plainTextOf = (richText: unknown): string =>
-  Array.isArray(richText)
-    ? richText
-        .map((item) =>
+  A.isArray(richText)
+    ? A.join(
+        A.map(richText, (item) =>
           asRecord(item).pipe(
             O.flatMap((record) => O.fromNullishOr(record.plain_text)),
             O.filter(P.isString),
             O.getOrElse(() => "")
           )
-        )
-        .join("")
+        ),
+        ""
+      )
     : "";
 
 const extractSavedLink = (page: unknown): O.Option<NotionSavedLink> =>
@@ -145,11 +175,12 @@ const extractSavedLink = (page: unknown): O.Option<NotionSavedLink> =>
       let title = "";
       let url = O.none<string>();
       const tags: Array<string> = [];
-      for (const property of Object.values(properties.value)) {
+      for (const property of R.values(properties.value)) {
         const record = asRecord(property);
         if (O.isNone(record)) {
           continue;
         }
+        const multiSelect = record.value.multi_select;
         const kind = O.fromNullishOr(record.value.type).pipe(
           O.filter(P.isString),
           O.getOrElse(() => "")
@@ -158,8 +189,8 @@ const extractSavedLink = (page: unknown): O.Option<NotionSavedLink> =>
           title = plainTextOf(record.value.title);
         } else if (kind === "url" && O.isNone(url)) {
           url = O.fromNullishOr(record.value.url).pipe(O.filter(P.isString), O.filter(Str.isNonEmpty));
-        } else if (kind === "multi_select" && Array.isArray(record.value.multi_select)) {
-          for (const option of record.value.multi_select) {
+        } else if (kind === "multi_select" && A.isArray(multiSelect)) {
+          for (const option of multiSelect) {
             const name = asRecord(option).pipe(
               O.flatMap((optionRecord) => O.fromNullishOr(optionRecord.name)),
               O.filter(P.isString)
@@ -174,20 +205,22 @@ const extractSavedLink = (page: unknown): O.Option<NotionSavedLink> =>
         O.filter(P.isString),
         O.getOrElse(() => "")
       );
-      return O.some({
-        createdIso,
-        pageId: pageId.value,
-        tags,
-        title: Str.isEmpty(Str.trim(title)) ? pageId.value : Str.trim(title),
-        url,
-      });
+      return O.some(
+        NotionSavedLink.make({
+          createdIso,
+          pageId: pageId.value,
+          tags,
+          title: Str.isEmpty(Str.trim(title)) ? pageId.value : Str.trim(title),
+          url,
+        })
+      );
     })
   );
 
 const richTextTitle = (richText: unknown): string => plainTextOf(richText);
 
 const richTextFirstHref = (richText: unknown): O.Option<string> => {
-  if (!Array.isArray(richText)) {
+  if (!A.isArray(richText)) {
     return O.none();
   }
   for (const item of richText) {
@@ -225,13 +258,15 @@ const extractBlockLink = (block: unknown): O.Option<NotionSavedLink> =>
         O.filter(P.isString),
         O.getOrElse(() => "")
       );
-      return O.some({
-        createdIso,
-        pageId: blockId.value,
-        tags: [],
-        title: Str.isEmpty(title) ? url.value : title,
-        url,
-      });
+      return O.some(
+        NotionSavedLink.make({
+          createdIso,
+          pageId: blockId.value,
+          tags: [],
+          title: Str.isEmpty(title) ? url.value : title,
+          url,
+        })
+      );
     })
   );
 
@@ -269,12 +304,18 @@ export const queryPageLinks = Effect.fn("NotionPull.queryPageLinks")(function* (
   return links;
 });
 
-const SavedLinkInput = S.Struct({
-  createdIso: S.String.pipe(S.optionalKey),
-  tags: S.Array(S.String).pipe(S.optionalKey),
-  title: S.String,
-  url: S.String,
-});
+class SavedLinkInput extends S.Class<SavedLinkInput>($I`SavedLinkInput`)(
+  {
+    createdIso: S.String.pipe(S.optionalKey),
+    tags: S.Array(S.String).pipe(S.optionalKey),
+    title: S.String,
+    url: S.String,
+  },
+  $I.annote("SavedLinkInput", {
+    title: "Saved Link Input",
+    description: "Local JSON backfill input row for research notion-pull.",
+  })
+) {}
 const decodeSavedLinkInputsJson = S.decodeEffect(S.fromJsonString(S.Array(SavedLinkInput)));
 
 /**
@@ -295,13 +336,15 @@ export const readLinksFile = Effect.fn("NotionPull.readLinksFile")(function* (
   const inputs = yield* decodeSavedLinkInputsJson(content).pipe(
     ResearchCommandError.mapError(`Links file "${filePath}" failed schema validation.`)
   );
-  return A.map(inputs, (input) => ({
-    createdIso: input.createdIso ?? "",
-    pageId: sha256HexOf(input.url),
-    tags: input.tags ?? [],
-    title: Str.isEmpty(Str.trim(input.title)) ? input.url : Str.trim(input.title),
-    url: O.some(input.url),
-  }));
+  return A.map(inputs, (input) =>
+    NotionSavedLink.make({
+      createdIso: input.createdIso ?? "",
+      pageId: sha256HexOf(input.url),
+      tags: input.tags ?? [],
+      title: Str.isEmpty(Str.trim(input.title)) ? input.url : Str.trim(input.title),
+      url: O.some(input.url),
+    })
+  );
 });
 
 /**
@@ -322,10 +365,7 @@ export const querySavedLinks = Effect.fn("NotionPull.querySavedLinks")(function*
       `/v1/databases/${databaseId}/query`,
       O.some({
         page_size: 100,
-        ...O.match(cursor, {
-          onNone: () => ({}),
-          onSome: (value) => ({ start_cursor: value }),
-        }),
+        ...OptionUtils.getSomesStruct({ start_cursor: cursor }),
       })
     );
     const response = yield* decodeQueryResponse(raw).pipe(

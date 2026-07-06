@@ -10,6 +10,7 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import { Effect, FileSystem, Path, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -20,21 +21,29 @@ import { ChildProcess } from "effect/unstable/process";
 import { ResearchCommandError } from "../Research.errors.js";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
+const $I = $RepoCliId.create("commands/Research/internal/RepoCards");
+
 /**
  * Facts gathered about one cloned repository.
  *
  * @internal
  * @category models
  */
-export interface ClonedRepoInfo {
-  readonly hasLicense: boolean;
-  readonly lastCommitIso: O.Option<string>;
-  readonly localPath: string;
-  readonly readmeExcerpt: O.Option<string>;
-  readonly remoteUrl: O.Option<string>;
-  readonly slugOwner: string;
-  readonly slugRepo: string;
-}
+export class ClonedRepoInfo extends S.Class<ClonedRepoInfo>($I`ClonedRepoInfo`)(
+  {
+    hasLicense: S.Boolean,
+    lastCommitIso: S.OptionFromOptionalKey(S.String),
+    localPath: S.String,
+    readmeExcerpt: S.OptionFromOptionalKey(S.String),
+    remoteUrl: S.OptionFromOptionalKey(S.String),
+    slugOwner: S.String,
+    slugRepo: S.String,
+  },
+  $I.annote("ClonedRepoInfo", {
+    title: "Cloned Repo Info",
+    description: "Facts gathered about one cloned repository before rendering a research repo card.",
+  })
+) {}
 
 /**
  * One starred repository from the GitHub API.
@@ -42,15 +51,21 @@ export interface ClonedRepoInfo {
  * @internal
  * @category models
  */
-export class StarredRepo extends S.Class<StarredRepo>("StarredRepo")({
-  description: S.String.pipe(S.NullOr, S.optionalKey),
-  full_name: S.String,
-  html_url: S.String,
-  language: S.String.pipe(S.NullOr, S.optionalKey),
-  topics: S.Array(S.String).pipe(S.optionalKey),
-}) {}
+export class StarredRepo extends S.Class<StarredRepo>($I`StarredRepo`)(
+  {
+    description: S.String.pipe(S.NullOr, S.optionalKey),
+    full_name: S.String,
+    html_url: S.String,
+    language: S.String.pipe(S.NullOr, S.optionalKey),
+    topics: S.Array(S.String).pipe(S.optionalKey),
+  },
+  $I.annote("StarredRepo", {
+    title: "Starred Repo",
+    description: "One starred repository row returned by the GitHub API.",
+  })
+) {}
 
-const decodeStarredRepos = S.decodeUnknownEffect(S.Array(StarredRepo));
+const decodeStarredRepoJsonLine = S.decodeEffect(S.fromJsonString(StarredRepo));
 
 const runForOutput = Effect.fn("RepoCards.runForOutput")(function* (
   command: string,
@@ -212,7 +227,15 @@ export const inspectClone = Effect.fn("RepoCards.inspectClone")(function* (
     }
   }
   const [slugOwner, slugRepo] = slugPartsOf(remoteUrl, path.basename(repoDir));
-  return { hasLicense, lastCommitIso, localPath: repoDir, readmeExcerpt, remoteUrl, slugOwner, slugRepo };
+  return ClonedRepoInfo.make({
+    hasLicense,
+    lastCommitIso,
+    localPath: repoDir,
+    readmeExcerpt,
+    remoteUrl,
+    slugOwner,
+    slugRepo,
+  });
 });
 
 /**
@@ -234,14 +257,7 @@ export const listStarredRepos = Effect.fn("RepoCards.listStarredRepos")(function
       message: "Failed listing GitHub stars via `gh api user/starred`; is gh installed and authenticated?",
     });
   }
-  const parsed = yield* Effect.try({
-    catch: (cause) => ResearchCommandError.new(cause, "GitHub stars output was not valid JSON lines."),
-    try: () =>
-      Str.split(output.value, "\n")
-        .filter(Str.isNonEmpty)
-        .map((line) => JSON.parse(line) as unknown),
-  });
-  return yield* decodeStarredRepos(parsed).pipe(
-    ResearchCommandError.mapError("GitHub stars failed schema validation.")
-  );
+  return yield* Effect.forEach(A.filter(Str.split(output.value, "\n"), Str.isNonEmpty), (line) =>
+    decodeStarredRepoJsonLine(line)
+  ).pipe(ResearchCommandError.mapError("GitHub stars failed schema validation."));
 });

@@ -205,10 +205,11 @@ export type BrowserKind = typeof BrowserKind.Type;
  * @example
  * ```ts
  * import { ResearchHistorySiftOptions } from "@beep/repo-cli/commands/Research"
+ * import { NonNegativeInt } from "@beep/schema"
  *
  * const options = ResearchHistorySiftOptions.make({
  *   browser: "all",
- *   sinceDays: 7,
+ *   sinceDays: NonNegativeInt.make(7),
  *   vaultRoot: "/home/user/knowledge"
  * })
  * console.log(options.sinceDays)
@@ -233,13 +234,14 @@ export class ResearchHistorySiftOptions extends S.Class<ResearchHistorySiftOptio
  * @example
  * ```ts
  * import { ResearchHistorySiftSummary } from "@beep/repo-cli/commands/Research"
+ * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = ResearchHistorySiftSummary.make({
- *   profilesScanned: 2,
- *   skippedFiltered: 40,
- *   skippedSeen: 3,
- *   stubsWritten: 5,
- *   urlsScanned: 48
+ *   profilesScanned: NonNegativeInt.make(2),
+ *   skippedFiltered: NonNegativeInt.make(40),
+ *   skippedSeen: NonNegativeInt.make(3),
+ *   stubsWritten: NonNegativeInt.make(5),
+ *   urlsScanned: NonNegativeInt.make(48)
  * })
  * console.log(summary.stubsWritten)
  * ```
@@ -296,12 +298,13 @@ export class ResearchRepoCardOptions extends S.Class<ResearchRepoCardOptions>($I
  * @example
  * ```ts
  * import { ResearchRepoCardSummary } from "@beep/repo-cli/commands/Research"
+ * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = ResearchRepoCardSummary.make({
- *   cardsSkipped: 1,
- *   cardsWritten: 3,
- *   reposScanned: 4,
- *   starsScanned: 0
+ *   cardsSkipped: NonNegativeInt.make(1),
+ *   cardsWritten: NonNegativeInt.make(3),
+ *   reposScanned: NonNegativeInt.make(4),
+ *   starsScanned: NonNegativeInt.make(0)
  * })
  * console.log(summary.cardsWritten)
  * ```
@@ -355,11 +358,12 @@ export class ResearchNotionPullOptions extends S.Class<ResearchNotionPullOptions
  * @example
  * ```ts
  * import { ResearchNotionPullSummary } from "@beep/repo-cli/commands/Research"
+ * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = ResearchNotionPullSummary.make({
- *   cardsWritten: 4,
- *   pagesSeen: 6,
- *   skippedSeen: 2
+ *   cardsWritten: NonNegativeInt.make(4),
+ *   pagesSeen: NonNegativeInt.make(6),
+ *   skippedSeen: NonNegativeInt.make(2)
  * })
  * console.log(summary.cardsWritten)
  * ```
@@ -383,11 +387,12 @@ export class ResearchNotionPullSummary extends S.Class<ResearchNotionPullSummary
  * @example
  * ```ts
  * import { ResearchDailyOptions } from "@beep/repo-cli/commands/Research"
+ * import { NonNegativeInt } from "@beep/schema"
  *
  * const options = ResearchDailyOptions.make({
  *   browser: "all",
  *   commit: true,
- *   sinceDays: 2,
+ *   sinceDays: NonNegativeInt.make(2),
  *   vaultRoot: "/home/user/knowledge"
  * })
  * console.log(options.commit)
@@ -461,8 +466,13 @@ export class ResearchCognifyOptions extends S.Class<ResearchCognifyOptions>($I`R
  * @example
  * ```ts
  * import { ResearchCognifySummary } from "@beep/repo-cli/commands/Research"
+ * import { NonNegativeInt } from "@beep/schema"
  *
- * const summary = ResearchCognifySummary.make({ cardsPushed: 5, datasets: ["kb_repos"], dryRun: false })
+ * const summary = ResearchCognifySummary.make({
+ *   cardsPushed: NonNegativeInt.make(5),
+ *   datasets: ["kb_repos"],
+ *   dryRun: false
+ * })
  * console.log(summary.cardsPushed)
  * ```
  * @category models
@@ -508,8 +518,13 @@ export class ResearchDigestOptions extends S.Class<ResearchDigestOptions>($I`Res
  * @example
  * ```ts
  * import { ResearchDigestSummary } from "@beep/repo-cli/commands/Research"
+ * import { NonNegativeInt } from "@beep/schema"
  *
- * const summary = ResearchDigestSummary.make({ digestPath: "digest/2026-07-05.md", inboxBacklog: 3, newCards: 7 })
+ * const summary = ResearchDigestSummary.make({
+ *   digestPath: "digest/2026-07-05.md",
+ *   inboxBacklog: NonNegativeInt.make(3),
+ *   newCards: NonNegativeInt.make(7)
+ * })
  * console.log(summary.digestPath)
  * ```
  * @category models
@@ -612,8 +627,9 @@ export class ResearchStatusOptions extends S.Class<ResearchStatusOptions>($I`Res
  * @example
  * ```ts
  * import { ResearchSourceTypeCount } from "@beep/repo-cli/commands/Research"
+ * import { NonNegativeInt } from "@beep/schema"
  *
- * const row = ResearchSourceTypeCount.make({ cards: 3, sourceType: "article" })
+ * const row = ResearchSourceTypeCount.make({ cards: NonNegativeInt.make(3), sourceType: "article" })
  * console.log(row.cards)
  * ```
  * @category models
@@ -635,13 +651,14 @@ export class ResearchSourceTypeCount extends S.Class<ResearchSourceTypeCount>($I
  * @example
  * ```ts
  * import { ResearchStatusSummary } from "@beep/repo-cli/commands/Research"
+ * import { NonNegativeInt } from "@beep/schema"
  *
  * const summary = ResearchStatusSummary.make({
  *   bySourceType: [],
- *   inboxCards: 0,
- *   pendingCognify: 0,
- *   seenUrls: 0,
- *   totalCards: 0
+ *   inboxCards: NonNegativeInt.make(0),
+ *   pendingCognify: NonNegativeInt.make(0),
+ *   seenUrls: NonNegativeInt.make(0),
+ *   totalCards: NonNegativeInt.make(0)
  * })
  * console.log(summary.totalCards)
  * ```

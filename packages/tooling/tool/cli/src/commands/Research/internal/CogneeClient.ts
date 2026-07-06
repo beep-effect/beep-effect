@@ -11,6 +11,7 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import { Config, Effect, Redacted } from "effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -18,16 +19,24 @@ import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import { ResearchCommandError } from "../Research.errors.js";
 
+const $I = $RepoCliId.create("commands/Research/internal/CogneeClient");
+
 /**
  * One markdown card queued for a Cognee dataset.
  *
  * @internal
  * @category models
  */
-export interface CogneeCardUpload {
-  readonly content: string;
-  readonly fileName: string;
-}
+export class CogneeCardUpload extends S.Class<CogneeCardUpload>($I`CogneeCardUpload`)(
+  {
+    content: S.String,
+    fileName: S.String,
+  },
+  $I.annote("CogneeCardUpload", {
+    title: "Cognee Card Upload",
+    description: "One markdown card queued for upload to a Cognee dataset.",
+  })
+) {}
 
 /**
  * Resolved Cognee connection settings.
@@ -35,12 +44,24 @@ export interface CogneeCardUpload {
  * @internal
  * @category models
  */
-export interface CogneeConnection {
-  readonly apiUrl: string;
-  readonly token: string;
-}
+export class CogneeConnection extends S.Class<CogneeConnection>($I`CogneeConnection`)(
+  {
+    apiUrl: S.String,
+    token: S.String,
+  },
+  $I.annote("CogneeConnection", {
+    title: "Cognee Connection",
+    description: "Resolved Cognee API URL and bearer token used by research cognify.",
+  })
+) {}
 
-const LoginResponse = S.Struct({ access_token: S.String });
+class LoginResponse extends S.Class<LoginResponse>($I`LoginResponse`)(
+  { access_token: S.String },
+  $I.annote("LoginResponse", {
+    title: "Login Response",
+    description: "Cognee login response containing the bearer access token.",
+  })
+) {}
 const decodeLoginResponse = S.decodeUnknownEffect(LoginResponse);
 
 const failStatus = Effect.fn("CogneeClient.failStatus")(function* (
@@ -94,7 +115,7 @@ export const cogneeLogin = Effect.fn("CogneeClient.cogneeLogin")(function* (): E
   const decoded = yield* decodeLoginResponse(raw).pipe(
     ResearchCommandError.mapError("Cognee login response failed schema validation.")
   );
-  return { apiUrl, token: decoded.access_token };
+  return CogneeConnection.make({ apiUrl, token: decoded.access_token });
 });
 
 /**

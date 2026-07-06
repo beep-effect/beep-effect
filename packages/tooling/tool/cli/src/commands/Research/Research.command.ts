@@ -55,7 +55,7 @@ const captureUrlArgument = Argument.string("url").pipe(
 const splitTags = (tags: O.Option<string>): ReadonlyArray<string> =>
   tags.pipe(
     O.map((value) => A.filter(A.map(Str.split(value, ","), Str.trim), Str.isNonEmpty)),
-    O.getOrElse(() => A.empty<string>())
+    O.getOrElse(A.empty<string>)
   );
 
 const researchCaptureCommand = Command.make(

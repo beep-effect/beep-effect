@@ -8,7 +8,20 @@
 import { DuckDb } from "@beep/duckdb";
 import { Firecrawl, FirecrawlScrapePayload } from "@beep/firecrawl";
 import { $RepoCliId } from "@beep/identity/packages";
-import { Config, Console, Context, DateTime, Effect, FileSystem, Layer, Path, Result } from "effect";
+import {
+  Config,
+  Console,
+  Context,
+  DateTime,
+  Effect,
+  FileSystem,
+  Layer,
+  MutableHashMap,
+  MutableHashSet,
+  Order,
+  Path,
+  Result,
+} from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -187,7 +200,7 @@ const scrapeMarkdown = Effect.fn("Research.scrapeMarkdown")(function* (
 });
 
 const asRecord = (value: unknown): O.Option<Record<string, unknown>> =>
-  P.isObject(value) && !Array.isArray(value) ? O.some(value as Record<string, unknown>) : O.none();
+  P.isObject(value) && !A.isArray(value) ? O.some(value as Record<string, unknown>) : O.none();
 
 const documentMarkdown = (success: FirecrawlScrapeSuccess): O.Option<string> =>
   asRecord(success.data).pipe(
@@ -337,12 +350,18 @@ const persistCards = Effect.fn("Research.persistCards")(function* (
   );
 });
 
-const SeenUrlRow = S.Struct({ urlNorm: S.String });
+class SeenUrlRow extends S.Class<SeenUrlRow>($I`SeenUrlRow`)(
+  { urlNorm: S.String },
+  $I.annote("SeenUrlRow", {
+    title: "Seen URL Row",
+    description: "Research catalog row carrying one normalized seen URL.",
+  })
+) {}
 const decodeSeenUrlRows = S.decodeUnknownEffect(S.Array(SeenUrlRow));
 
 const loadSeenUrls = Effect.fn("Research.loadSeenUrls")(function* (
   databasePath: string
-): Effect.fn.Return<Set<string>, ResearchCommandError> {
+): Effect.fn.Return<MutableHashSet.MutableHashSet<string>, ResearchCommandError> {
   const rows = yield* runWithResearchDb(
     databasePath,
     `Failed loading seen URLs from "${databasePath}".`,
@@ -354,7 +373,11 @@ const loadSeenUrls = Effect.fn("Research.loadSeenUrls")(function* (
   const decoded = yield* decodeSeenUrlRows(rows).pipe(
     ResearchCommandError.mapError("Seen-URL rows failed schema validation.")
   );
-  return new Set(A.map(decoded, (row) => row.urlNorm));
+  const seen = MutableHashSet.empty<string>();
+  A.forEach(decoded, (row) => {
+    MutableHashSet.add(seen, row.urlNorm);
+  });
+  return seen;
 });
 
 const decodeHistorySiftSummary = S.decodeUnknownEffect(ResearchHistorySiftSummary);
@@ -376,7 +399,7 @@ const historySiftImpl = Effect.fn("Research.historySiftImpl")(function* (
     readonly url: string;
     readonly visitCount: number;
   }
-  const byUrlNorm = new Map<string, Candidate>();
+  const byUrlNorm = MutableHashMap.empty<string, Candidate>();
   let urlsScanned = 0;
   let skippedFiltered = 0;
   let skippedSeen = 0;
@@ -394,13 +417,13 @@ const historySiftImpl = Effect.fn("Research.historySiftImpl")(function* (
         skippedFiltered += 1;
         continue;
       }
-      if (seen.has(urlNorm.value)) {
+      if (MutableHashSet.has(seen, urlNorm.value)) {
         skippedSeen += 1;
         continue;
       }
-      const existing = byUrlNorm.get(urlNorm.value);
-      if (existing === undefined || row.lastVisitChrome > existing.lastVisitChrome) {
-        byUrlNorm.set(urlNorm.value, {
+      const existing = MutableHashMap.get(byUrlNorm, urlNorm.value);
+      if (O.isNone(existing) || row.lastVisitChrome > existing.value.lastVisitChrome) {
+        MutableHashMap.set(byUrlNorm, urlNorm.value, {
           lastVisitChrome: row.lastVisitChrome,
           title: Str.isEmpty(Str.trim(row.title)) ? urlNorm.value : Str.trim(row.title),
           url: urlNorm.value,
@@ -411,7 +434,7 @@ const historySiftImpl = Effect.fn("Research.historySiftImpl")(function* (
   }
 
   const capturedAt = DateTime.formatIso(yield* DateTime.now);
-  const cards: Array<CardPersistRow> = [...byUrlNorm.values()].map((candidate) => {
+  const cards: Array<CardPersistRow> = A.map(A.fromIterable(MutableHashMap.values(byUrlNorm)), (candidate) => {
     const frontmatter = KnowledgeCardFrontmatter.make({
       capturedAt,
       id: `kb-link-${sha256HexOf(candidate.url).slice(0, 16)}`,
@@ -582,11 +605,11 @@ const notionPullImpl = Effect.fn("Research.notionPullImpl")(function* (
       onNone: () => Effect.succeedNone,
       onSome: (url) => normalizeUrl(url).pipe(Effect.option),
     });
-    if (O.isNone(urlNorm) || seen.has(urlNorm.value)) {
+    if (O.isNone(urlNorm) || MutableHashSet.has(seen, urlNorm.value)) {
       skippedSeen += 1;
       continue;
     }
-    seen.add(urlNorm.value);
+    MutableHashSet.add(seen, urlNorm.value);
     const frontmatter = KnowledgeCardFrontmatter.make({
       capturedAt,
       id: `kb-xpost-${link.pageId.replaceAll("-", "").slice(0, 16)}`,
@@ -624,15 +647,27 @@ const notionPullImpl = Effect.fn("Research.notionPullImpl")(function* (
   return summary;
 });
 
-const PendingCardRow = S.Struct({
-  id: S.String,
-  path: S.String,
-  sourceType: S.String,
-});
+class PendingCardRow extends S.Class<PendingCardRow>($I`PendingCardRow`)(
+  {
+    id: S.String,
+    path: S.String,
+    sourceType: S.String,
+  },
+  $I.annote("PendingCardRow", {
+    title: "Pending Card Row",
+    description: "Research catalog row for a card pending Cognee upload.",
+  })
+) {}
 const decodePendingCardRows = S.decodeUnknownEffect(S.Array(PendingCardRow));
 const decodeCognifySummary = S.decodeUnknownEffect(ResearchCognifySummary);
 
 const COGNEE_ADD_BATCH_SIZE = 50;
+
+interface CognifyUpload {
+  readonly content: string;
+  readonly fileName: string;
+  readonly id: string;
+}
 
 const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
   options: ResearchCognifyOptions
@@ -656,10 +691,7 @@ const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
     ResearchCommandError.mapError("Pending-card rows failed schema validation.")
   );
 
-  const byDataset = new Map<
-    string,
-    Array<{ readonly content: string; readonly fileName: string; readonly id: string }>
-  >();
+  const byDataset = MutableHashMap.empty<string, Array<CognifyUpload>>();
   for (const row of pending) {
     const absolutePath = path.join(options.vaultRoot, row.path);
     const content = yield* fs.readFileString(absolutePath).pipe(Effect.option);
@@ -668,17 +700,21 @@ const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
       continue;
     }
     const dataset = datasetForSourceType(row.sourceType);
-    const uploads = byDataset.get(dataset) ?? [];
+    const uploads = MutableHashMap.get(byDataset, dataset).pipe(O.getOrElse((): Array<CognifyUpload> => []));
     uploads.push({ content: content.value, fileName: `${row.id}.md`, id: row.id });
-    byDataset.set(dataset, uploads);
+    MutableHashMap.set(byDataset, dataset, uploads);
   }
 
-  const datasets = [...byDataset.keys()].sort();
-  const cardsPushed = [...byDataset.values()].reduce((total, uploads) => total + uploads.length, 0);
+  const datasets = A.sort(A.fromIterable(MutableHashMap.keys(byDataset)), Order.String);
+  const cardsPushed = A.reduce(MutableHashMap.values(byDataset), 0, (total, uploads) => total + A.length(uploads));
 
   if (options.dryRun || cardsPushed === 0) {
     for (const dataset of datasets) {
-      yield* Console.log(`research cognify (dry-run): ${byDataset.get(dataset)?.length ?? 0} cards -> ${dataset}`);
+      const uploadCount = MutableHashMap.get(byDataset, dataset).pipe(
+        O.map(A.length),
+        O.getOrElse(() => 0)
+      );
+      yield* Console.log(`research cognify (dry-run): ${uploadCount} cards -> ${dataset}`);
     }
     if (cardsPushed === 0) {
       yield* Console.log("research cognify: nothing pending.");
@@ -690,11 +726,11 @@ const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
 
   const connection = yield* cogneeLogin();
   for (const dataset of datasets) {
-    const uploads = byDataset.get(dataset) ?? [];
-    for (let index = 0; index < uploads.length; index += COGNEE_ADD_BATCH_SIZE) {
+    const uploads = MutableHashMap.get(byDataset, dataset).pipe(O.getOrElse((): Array<CognifyUpload> => []));
+    for (let index = 0; index < A.length(uploads); index += COGNEE_ADD_BATCH_SIZE) {
       yield* cogneeAdd(connection, dataset, uploads.slice(index, index + COGNEE_ADD_BATCH_SIZE));
     }
-    yield* Console.log(`research cognify: added ${uploads.length} cards to ${dataset}.`);
+    yield* Console.log(`research cognify: added ${A.length(uploads)} cards to ${dataset}.`);
   }
   yield* cogneeCognify(connection, datasets, true);
 
@@ -704,7 +740,7 @@ const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
     `Failed stamping cognified cards in "${databasePath}".`,
     Effect.gen(function* () {
       const db = yield* DuckDb;
-      for (const uploads of byDataset.values()) {
+      for (const uploads of MutableHashMap.values(byDataset)) {
         for (const upload of uploads) {
           yield* db.run("UPDATE research_cards SET cognified_at = ? WHERE id = ?", [now, upload.id]);
         }
@@ -730,12 +766,18 @@ const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
   );
 });
 
-const DigestCardRow = S.Struct({
-  capturedAt: S.String,
-  path: S.String,
-  sourceType: S.String,
-  title: S.NullOr(S.String),
-});
+class DigestCardRow extends S.Class<DigestCardRow>($I`DigestCardRow`)(
+  {
+    capturedAt: S.String,
+    path: S.String,
+    sourceType: S.String,
+    title: S.NullOr(S.String),
+  },
+  $I.annote("DigestCardRow", {
+    title: "Digest Card Row",
+    description: "Research catalog card row used to render the daily digest.",
+  })
+) {}
 const decodeDigestCardRows = S.decodeUnknownEffect(S.Array(DigestCardRow));
 const decodeDigestSummary = S.decodeUnknownEffect(ResearchDigestSummary);
 
@@ -1140,12 +1182,13 @@ export const cognifyResearchCards = Effect.fn("Research.cognifyResearchCards")(f
  * @example
  * ```ts
  * import { runResearchDaily, ResearchDailyOptions } from "@beep/repo-cli/commands/Research"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
  * const options = ResearchDailyOptions.make({
  *   browser: "all",
  *   commit: false,
- *   sinceDays: 2,
+ *   sinceDays: NonNegativeInt.make(2),
  *   vaultRoot: "/home/user/knowledge"
  * })
  * const ran = runResearchDaily(options).pipe(Effect.map((summary) => summary.ran))
@@ -1195,9 +1238,14 @@ export const writeResearchDigest = Effect.fn("Research.writeResearchDigest")(fun
  * @example
  * ```ts
  * import { siftResearchHistory, ResearchHistorySiftOptions } from "@beep/repo-cli/commands/Research"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { Effect } from "effect"
  *
- * const options = ResearchHistorySiftOptions.make({ browser: "all", sinceDays: 7, vaultRoot: "/home/user/knowledge" })
+ * const options = ResearchHistorySiftOptions.make({
+ *   browser: "all",
+ *   sinceDays: NonNegativeInt.make(7),
+ *   vaultRoot: "/home/user/knowledge"
+ * })
  * const stubs = siftResearchHistory(options).pipe(Effect.map((summary) => summary.stubsWritten))
  * console.log(stubs.pipe !== undefined) // true
  * ```
