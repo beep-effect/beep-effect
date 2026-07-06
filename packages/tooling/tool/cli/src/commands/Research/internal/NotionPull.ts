@@ -12,7 +12,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { O as OptionUtils } from "@beep/utils";
-import { Config, Effect, FileSystem, Redacted } from "effect";
+import { Config, Effect, FileSystem, Redacted, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -22,6 +22,7 @@ import * as Str from "effect/String";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import { ResearchCommandError } from "../Research.errors.js";
+import { asRecord } from "./UnknownRecord.js";
 import { sha256HexOf } from "./Vault.js";
 
 const $I = $RepoCliId.create("commands/Research/internal/NotionPull");
@@ -147,9 +148,6 @@ export const findDatabaseId = Effect.fn("NotionPull.findDatabaseId")(function* (
   return result.id;
 });
 
-const asRecord = (value: unknown): O.Option<Record<string, unknown>> =>
-  P.isObject(value) && !A.isArray(value) ? O.some(value as Record<string, unknown>) : O.none();
-
 const plainTextOf = (richText: unknown): string =>
   A.isArray(richText)
     ? A.join(
@@ -164,6 +162,41 @@ const plainTextOf = (richText: unknown): string =>
       )
     : "";
 
+interface SavedLinkParts {
+  readonly tags: Array<string>;
+  title: string;
+  url: O.Option<string>;
+}
+
+const multiSelectNames = (multiSelect: unknown): ReadonlyArray<string> =>
+  A.isArray(multiSelect)
+    ? A.filterMap(multiSelect, (option) =>
+        asRecord(option).pipe(
+          O.flatMap((optionRecord) => O.fromNullishOr(optionRecord.name)),
+          O.filter(P.isString),
+          O.match({ onNone: () => Result.failVoid, onSome: Result.succeed })
+        )
+      )
+    : [];
+
+const applySavedLinkProperty = (parts: SavedLinkParts, property: unknown): void => {
+  const record = asRecord(property);
+  if (O.isNone(record)) {
+    return;
+  }
+  const kind = O.fromNullishOr(record.value.type).pipe(
+    O.filter(P.isString),
+    O.getOrElse(() => "")
+  );
+  if (kind === "title") {
+    parts.title = plainTextOf(record.value.title);
+  } else if (kind === "url" && O.isNone(parts.url)) {
+    parts.url = O.fromNullishOr(record.value.url).pipe(O.filter(P.isString), O.filter(Str.isNonEmpty));
+  } else if (kind === "multi_select") {
+    parts.tags.push(...multiSelectNames(record.value.multi_select));
+  }
+};
+
 const extractSavedLink = (page: unknown): O.Option<NotionSavedLink> =>
   asRecord(page).pipe(
     O.flatMap((record) => {
@@ -172,34 +205,9 @@ const extractSavedLink = (page: unknown): O.Option<NotionSavedLink> =>
       if (O.isNone(pageId) || O.isNone(properties)) {
         return O.none();
       }
-      let title = "";
-      let url = O.none<string>();
-      const tags: Array<string> = [];
+      const parts: SavedLinkParts = { tags: [], title: "", url: O.none<string>() };
       for (const property of R.values(properties.value)) {
-        const record = asRecord(property);
-        if (O.isNone(record)) {
-          continue;
-        }
-        const multiSelect = record.value.multi_select;
-        const kind = O.fromNullishOr(record.value.type).pipe(
-          O.filter(P.isString),
-          O.getOrElse(() => "")
-        );
-        if (kind === "title") {
-          title = plainTextOf(record.value.title);
-        } else if (kind === "url" && O.isNone(url)) {
-          url = O.fromNullishOr(record.value.url).pipe(O.filter(P.isString), O.filter(Str.isNonEmpty));
-        } else if (kind === "multi_select" && A.isArray(multiSelect)) {
-          for (const option of multiSelect) {
-            const name = asRecord(option).pipe(
-              O.flatMap((optionRecord) => O.fromNullishOr(optionRecord.name)),
-              O.filter(P.isString)
-            );
-            if (O.isSome(name)) {
-              tags.push(name.value);
-            }
-          }
-        }
+        applySavedLinkProperty(parts, property);
       }
       const createdIso = O.fromNullishOr(record.created_time).pipe(
         O.filter(P.isString),
@@ -209,9 +217,9 @@ const extractSavedLink = (page: unknown): O.Option<NotionSavedLink> =>
         NotionSavedLink.make({
           createdIso,
           pageId: pageId.value,
-          tags,
-          title: Str.isEmpty(Str.trim(title)) ? pageId.value : Str.trim(title),
-          url,
+          tags: parts.tags,
+          title: Str.isEmpty(Str.trim(parts.title)) ? pageId.value : Str.trim(parts.title),
+          url: parts.url,
         })
       );
     })
@@ -270,6 +278,29 @@ const extractBlockLink = (block: unknown): O.Option<NotionSavedLink> =>
     })
   );
 
+const collectPaginatedLinks = Effect.fnUntraced(function* (
+  requestFor: (cursor: O.Option<string>) => Effect.Effect<unknown, ResearchCommandError, HttpClient.HttpClient>,
+  extract: (item: unknown) => O.Option<NotionSavedLink>
+) {
+  const links: Array<NotionSavedLink> = [];
+  let cursor: O.Option<string> = O.none();
+  let firstPage = true;
+  while (firstPage || O.isSome(cursor)) {
+    firstPage = false;
+    const raw: unknown = yield* requestFor(cursor);
+    const response = yield* decodeQueryResponse(raw).pipe(
+      ResearchCommandError.mapError("Notion paginated response failed schema validation.")
+    );
+    links.push(
+      ...A.filterMap(response.results, (item) =>
+        extract(item).pipe(O.match({ onNone: () => Result.failVoid, onSome: Result.succeed }))
+      )
+    );
+    cursor = response.has_more ? O.fromNullishOr(response.next_cursor) : O.none();
+  }
+  return links as ReadonlyArray<NotionSavedLink>;
+});
+
 /**
  * Extract saved links from the block children of a plain Notion page (one
  * bulleted list item per link).
@@ -280,28 +311,17 @@ const extractBlockLink = (block: unknown): O.Option<NotionSavedLink> =>
 export const queryPageLinks = Effect.fn("NotionPull.queryPageLinks")(function* (
   pageId: string
 ): Effect.fn.Return<ReadonlyArray<NotionSavedLink>, ResearchCommandError, HttpClient.HttpClient> {
-  const links: Array<NotionSavedLink> = [];
-  let cursor: O.Option<string> = O.none();
-  let firstPage = true;
-  while (firstPage || O.isSome(cursor)) {
-    firstPage = false;
-    const query = O.match(cursor, {
-      onNone: () => "?page_size=100",
-      onSome: (value) => `?page_size=100&start_cursor=${encodeURIComponent(value)}`,
-    });
-    const raw: unknown = yield* notionRequest(`/v1/blocks/${pageId}/children${query}`, O.none());
-    const response = yield* decodeQueryResponse(raw).pipe(
-      ResearchCommandError.mapError("Notion block-children response failed schema validation.")
-    );
-    for (const block of response.results) {
-      const link = extractBlockLink(block);
-      if (O.isSome(link)) {
-        links.push(link.value);
-      }
-    }
-    cursor = response.has_more ? O.fromNullishOr(response.next_cursor) : O.none();
-  }
-  return links;
+  return yield* collectPaginatedLinks(
+    (cursor) =>
+      notionRequest(
+        `/v1/blocks/${pageId}/children${O.match(cursor, {
+          onNone: () => "?page_size=100",
+          onSome: (value) => `?page_size=100&start_cursor=${encodeURIComponent(value)}`,
+        })}`,
+        O.none()
+      ),
+    extractBlockLink
+  );
 });
 
 class SavedLinkInput extends S.Class<SavedLinkInput>($I`SavedLinkInput`)(
@@ -356,28 +376,15 @@ export const readLinksFile = Effect.fn("NotionPull.readLinksFile")(function* (
 export const querySavedLinks = Effect.fn("NotionPull.querySavedLinks")(function* (
   databaseId: string
 ): Effect.fn.Return<ReadonlyArray<NotionSavedLink>, ResearchCommandError, HttpClient.HttpClient> {
-  const links: Array<NotionSavedLink> = [];
-  let cursor: O.Option<string> = O.none();
-  let firstPage = true;
-  while (firstPage || O.isSome(cursor)) {
-    firstPage = false;
-    const raw: unknown = yield* notionRequest(
-      `/v1/databases/${databaseId}/query`,
-      O.some({
-        page_size: 100,
-        ...OptionUtils.getSomesStruct({ start_cursor: cursor }),
-      })
-    );
-    const response = yield* decodeQueryResponse(raw).pipe(
-      ResearchCommandError.mapError("Notion query response failed schema validation.")
-    );
-    for (const page of response.results) {
-      const link = extractSavedLink(page);
-      if (O.isSome(link)) {
-        links.push(link.value);
-      }
-    }
-    cursor = response.has_more ? O.fromNullishOr(response.next_cursor) : O.none();
-  }
-  return links;
+  return yield* collectPaginatedLinks(
+    (cursor) =>
+      notionRequest(
+        `/v1/databases/${databaseId}/query`,
+        O.some({
+          page_size: 100,
+          ...OptionUtils.getSomesStruct({ start_cursor: cursor }),
+        })
+      ),
+    extractSavedLink
+  );
 });

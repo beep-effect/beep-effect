@@ -50,6 +50,7 @@ import { cogneeAdd, cogneeCognify, cogneeLogin, datasetForSourceType } from "./i
 import { postResearchEpisode } from "./internal/GraphitiEpisodes.js";
 import { findDatabaseId, queryPageLinks, querySavedLinks, readLinksFile } from "./internal/NotionPull.js";
 import { discoverClones, inspectClone, listStarredRepos, slugPartsOf } from "./internal/RepoCards.js";
+import { asRecord } from "./internal/UnknownRecord.js";
 import {
   normalizeUrl,
   renderCard,
@@ -198,9 +199,6 @@ const scrapeMarkdown = Effect.fn("Research.scrapeMarkdown")(function* (
     onSome: (firecrawl) => firecrawl.scrape(payload),
   }).pipe(ResearchCommandError.mapError(`Firecrawl scrape failed for "${url}".`));
 });
-
-const asRecord = (value: unknown): O.Option<Record<string, unknown>> =>
-  P.isObject(value) && !A.isArray(value) ? O.some(value as Record<string, unknown>) : O.none();
 
 const documentMarkdown = (success: FirecrawlScrapeSuccess): O.Option<string> =>
   asRecord(success.data).pipe(
@@ -382,6 +380,74 @@ const loadSeenUrls = Effect.fn("Research.loadSeenUrls")(function* (
 
 const decodeHistorySiftSummary = S.decodeUnknownEffect(ResearchHistorySiftSummary);
 
+interface SiftCandidate {
+  readonly lastVisitChrome: number;
+  readonly title: string;
+  readonly url: string;
+  readonly visitCount: number;
+}
+
+interface SiftCollection {
+  readonly byUrlNorm: MutableHashMap.MutableHashMap<string, SiftCandidate>;
+  skippedFiltered: number;
+  skippedSeen: number;
+  urlsScanned: number;
+}
+
+const collectSiftRow = Effect.fnUntraced(function* (
+  collection: SiftCollection,
+  seen: MutableHashSet.MutableHashSet<string>,
+  row: { readonly lastVisitChrome: number; readonly title: string; readonly url: string; readonly visitCount: number }
+) {
+  collection.urlsScanned += 1;
+  if (!isInterestingUrl(row.url)) {
+    collection.skippedFiltered += 1;
+    return;
+  }
+  const urlNorm = yield* normalizeUrl(canonicalizeForSift(row.url)).pipe(Effect.option);
+  if (O.isNone(urlNorm)) {
+    collection.skippedFiltered += 1;
+    return;
+  }
+  if (MutableHashSet.has(seen, urlNorm.value)) {
+    collection.skippedSeen += 1;
+    return;
+  }
+  const existing = MutableHashMap.get(collection.byUrlNorm, urlNorm.value);
+  if (O.isNone(existing) || row.lastVisitChrome > existing.value.lastVisitChrome) {
+    MutableHashMap.set(collection.byUrlNorm, urlNorm.value, {
+      lastVisitChrome: row.lastVisitChrome,
+      title: Str.isEmpty(Str.trim(row.title)) ? urlNorm.value : Str.trim(row.title),
+      url: urlNorm.value,
+      visitCount: row.visitCount,
+    });
+  }
+});
+
+const historyStubCard = (candidate: SiftCandidate, capturedAt: string, relativePath: string): CardPersistRow => {
+  const frontmatter = KnowledgeCardFrontmatter.make({
+    capturedAt,
+    id: `kb-link-${sha256HexOf(candidate.url).slice(0, 16)}`,
+    related: [],
+    sourceType: "link",
+    status: "inbox",
+    tags: [],
+    title: candidate.title,
+    url: candidate.url,
+    via: "history-sift",
+  });
+  const body = [
+    `# ${candidate.title}`,
+    "",
+    `> Sifted from browser history: ${candidate.visitCount} visits, last on ${chromeMicrosToIso(candidate.lastVisitChrome)}.`,
+    "",
+    `Open: <${candidate.url}>`,
+    "",
+    "Triage: keep (capture it), file it under a topic, or delete this stub.",
+  ].join("\n");
+  return { body, frontmatter, relativePath };
+};
+
 const historySiftImpl = Effect.fn("Research.historySiftImpl")(function* (
   options: ResearchHistorySiftOptions
 ): Effect.fn.Return<ResearchHistorySiftSummary, ResearchCommandError, ResearchCommandServiceRequirements> {
@@ -393,82 +459,29 @@ const historySiftImpl = Effect.fn("Research.historySiftImpl")(function* (
   const cutoff = unixSecondsToChromeMicros(nowMillis / 1000 - options.sinceDays * 86_400);
   const scratchDir = path.join(options.vaultRoot, VAULT_DIRS.state, "tmp");
 
-  interface Candidate {
-    readonly lastVisitChrome: number;
-    readonly title: string;
-    readonly url: string;
-    readonly visitCount: number;
-  }
-  const byUrlNorm = MutableHashMap.empty<string, Candidate>();
-  let urlsScanned = 0;
-  let skippedFiltered = 0;
-  let skippedSeen = 0;
-
+  const collection: SiftCollection = {
+    byUrlNorm: MutableHashMap.empty<string, SiftCandidate>(),
+    skippedFiltered: 0,
+    skippedSeen: 0,
+    urlsScanned: 0,
+  };
   for (const profile of profiles) {
     const rows = yield* readProfileHistory(profile, scratchDir, cutoff);
-    for (const row of rows) {
-      urlsScanned += 1;
-      if (!isInterestingUrl(row.url)) {
-        skippedFiltered += 1;
-        continue;
-      }
-      const urlNorm = yield* normalizeUrl(canonicalizeForSift(row.url)).pipe(Effect.option);
-      if (O.isNone(urlNorm)) {
-        skippedFiltered += 1;
-        continue;
-      }
-      if (MutableHashSet.has(seen, urlNorm.value)) {
-        skippedSeen += 1;
-        continue;
-      }
-      const existing = MutableHashMap.get(byUrlNorm, urlNorm.value);
-      if (O.isNone(existing) || row.lastVisitChrome > existing.value.lastVisitChrome) {
-        MutableHashMap.set(byUrlNorm, urlNorm.value, {
-          lastVisitChrome: row.lastVisitChrome,
-          title: Str.isEmpty(Str.trim(row.title)) ? urlNorm.value : Str.trim(row.title),
-          url: urlNorm.value,
-          visitCount: row.visitCount,
-        });
-      }
-    }
+    yield* Effect.forEach(rows, (row) => collectSiftRow(collection, seen, row), { discard: true });
   }
 
   const capturedAt = DateTime.formatIso(yield* DateTime.now);
-  const cards: Array<CardPersistRow> = A.map(A.fromIterable(MutableHashMap.values(byUrlNorm)), (candidate) => {
-    const frontmatter = KnowledgeCardFrontmatter.make({
-      capturedAt,
-      id: `kb-link-${sha256HexOf(candidate.url).slice(0, 16)}`,
-      related: [],
-      sourceType: "link",
-      status: "inbox",
-      tags: [],
-      title: candidate.title,
-      url: candidate.url,
-      via: "history-sift",
-    });
-    const body = [
-      `# ${candidate.title}`,
-      "",
-      `> Sifted from browser history: ${candidate.visitCount} visits, last on ${chromeMicrosToIso(candidate.lastVisitChrome)}.`,
-      "",
-      `Open: <${candidate.url}>`,
-      "",
-      "Triage: keep (capture it), file it under a topic, or delete this stub.",
-    ].join("\n");
-    return {
-      body,
-      frontmatter,
-      relativePath: path.join(VAULT_DIRS.inbox, `${slugFor(candidate.title, candidate.url)}.md`),
-    };
-  });
+  const cards: Array<CardPersistRow> = A.map(A.fromIterable(MutableHashMap.values(collection.byUrlNorm)), (candidate) =>
+    historyStubCard(candidate, capturedAt, path.join(VAULT_DIRS.inbox, `${slugFor(candidate.title, candidate.url)}.md`))
+  );
 
   yield* persistCards(options.vaultRoot, databasePath, "history-sift", cards);
   const summary = yield* decodeHistorySiftSummary({
     profilesScanned: A.length(profiles),
-    skippedFiltered,
-    skippedSeen,
+    skippedFiltered: collection.skippedFiltered,
+    skippedSeen: collection.skippedSeen,
     stubsWritten: A.length(cards),
-    urlsScanned,
+    urlsScanned: collection.urlsScanned,
   }).pipe(ResearchCommandError.mapError("History-sift summary failed schema validation."));
   yield* Console.log(
     `research history-sift: profiles=${summary.profilesScanned} scanned=${summary.urlsScanned} stubs=${summary.stubsWritten} seen=${summary.skippedSeen} filtered=${summary.skippedFiltered}`
@@ -478,21 +491,20 @@ const historySiftImpl = Effect.fn("Research.historySiftImpl")(function* (
 
 const decodeRepoCardSummary = S.decodeUnknownEffect(ResearchRepoCardSummary);
 
-const repoCardImpl = Effect.fn("Research.repoCardImpl")(function* (
-  options: ResearchRepoCardOptions
-): Effect.fn.Return<ResearchRepoCardSummary, ResearchCommandError, ResearchCommandServiceRequirements> {
-  const fs = yield* FileSystem.FileSystem;
+interface RepoCardCollection {
+  readonly cards: Array<CardPersistRow>;
+  cardsSkipped: number;
+  reposScanned: number;
+  starsScanned: number;
+}
+
+const collectCloneCards = Effect.fnUntraced(function* (
+  options: ResearchRepoCardOptions,
+  capturedAt: string,
+  collection: RepoCardCollection,
+  cardExists: (relativePath: string) => Effect.Effect<boolean>
+) {
   const path = yield* Path.Path;
-  const databasePath = yield* catalogDbPath(options.vaultRoot);
-  const capturedAt = DateTime.formatIso(yield* DateTime.now);
-  const cards: Array<CardPersistRow> = [];
-  let reposScanned = 0;
-  let cardsSkipped = 0;
-  let starsScanned = 0;
-
-  const cardExists = (relativePath: string) =>
-    fs.exists(path.join(options.vaultRoot, relativePath)).pipe(Effect.orElseSucceed(() => false));
-
   const clones = yield* discoverClones(options.researchRoot);
   const selected =
     options.only === undefined
@@ -500,11 +512,11 @@ const repoCardImpl = Effect.fn("Research.repoCardImpl")(function* (
       : A.filter(clones, (dir) => Str.includes(options.only ?? "")(path.basename(dir).toLowerCase()));
 
   for (const repoDir of selected) {
-    reposScanned += 1;
+    collection.reposScanned += 1;
     const info = yield* inspectClone(repoDir);
     const relativePath = path.join(VAULT_DIRS.repos, `${info.slugOwner}--${info.slugRepo}.md`);
     if (!options.force && (yield* cardExists(relativePath))) {
-      cardsSkipped += 1;
+      collection.cardsSkipped += 1;
       continue;
     }
     const title = `${info.slugOwner}/${info.slugRepo}`;
@@ -531,50 +543,74 @@ const repoCardImpl = Effect.fn("Research.repoCardImpl")(function* (
       "",
       O.getOrElse(info.readmeExcerpt, () => "_No README found._"),
     ].join("\n");
-    cards.push({ body, frontmatter, relativePath });
+    collection.cards.push({ body, frontmatter, relativePath });
   }
+});
 
-  if (options.includeStars) {
-    const stars = yield* listStarredRepos(options.vaultRoot);
-    for (const star of stars) {
-      starsScanned += 1;
-      const [owner, repo] = slugPartsOf(O.some(star.html_url), star.full_name.replaceAll("/", "--"));
-      const relativePath = path.join(VAULT_DIRS.repos, `${owner}--${repo}.md`);
-      if (!options.force && (yield* cardExists(relativePath))) {
-        cardsSkipped += 1;
-        continue;
-      }
-      const topics = star.topics ?? [];
-      const frontmatter = KnowledgeCardFrontmatter.make({
-        capturedAt,
-        id: `kb-repo-${owner}--${repo}`,
-        related: [],
-        sourceType: "repo",
-        status: "inbox",
-        tags: ["starred"],
-        title: star.full_name,
-        url: star.html_url,
-        via: "repo-card",
-      });
-      const body = [
-        `# ${star.full_name}`,
-        "",
-        `- Remote: ${star.html_url}`,
-        `- Language: ${star.language ?? "(unknown)"}`,
-        A.length(topics) > 0 ? `- Topics: ${A.join(topics, ", ")}` : "- Topics: (none)",
-        "",
-        star.description ?? "_No description._",
-      ].join("\n");
-      cards.push({ body, frontmatter, relativePath });
+const collectStarCards = Effect.fnUntraced(function* (
+  options: ResearchRepoCardOptions,
+  capturedAt: string,
+  collection: RepoCardCollection,
+  cardExists: (relativePath: string) => Effect.Effect<boolean>
+) {
+  const path = yield* Path.Path;
+  const stars = yield* listStarredRepos(options.vaultRoot);
+  for (const star of stars) {
+    collection.starsScanned += 1;
+    const [owner, repo] = slugPartsOf(O.some(star.html_url), star.full_name.replaceAll("/", "--"));
+    const relativePath = path.join(VAULT_DIRS.repos, `${owner}--${repo}.md`);
+    if (!options.force && (yield* cardExists(relativePath))) {
+      collection.cardsSkipped += 1;
+      continue;
     }
+    const topics = star.topics ?? [];
+    const frontmatter = KnowledgeCardFrontmatter.make({
+      capturedAt,
+      id: `kb-repo-${owner}--${repo}`,
+      related: [],
+      sourceType: "repo",
+      status: "inbox",
+      tags: ["starred"],
+      title: star.full_name,
+      url: star.html_url,
+      via: "repo-card",
+    });
+    const body = [
+      `# ${star.full_name}`,
+      "",
+      `- Remote: ${star.html_url}`,
+      `- Language: ${star.language ?? "(unknown)"}`,
+      A.length(topics) > 0 ? `- Topics: ${A.join(topics, ", ")}` : "- Topics: (none)",
+      "",
+      star.description ?? "_No description._",
+    ].join("\n");
+    collection.cards.push({ body, frontmatter, relativePath });
+  }
+});
+
+const repoCardImpl = Effect.fn("Research.repoCardImpl")(function* (
+  options: ResearchRepoCardOptions
+): Effect.fn.Return<ResearchRepoCardSummary, ResearchCommandError, ResearchCommandServiceRequirements> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const databasePath = yield* catalogDbPath(options.vaultRoot);
+  const capturedAt = DateTime.formatIso(yield* DateTime.now);
+  const collection: RepoCardCollection = { cards: [], cardsSkipped: 0, reposScanned: 0, starsScanned: 0 };
+
+  const cardExists = (relativePath: string) =>
+    fs.exists(path.join(options.vaultRoot, relativePath)).pipe(Effect.orElseSucceed(() => false));
+
+  yield* collectCloneCards(options, capturedAt, collection, cardExists);
+  if (options.includeStars) {
+    yield* collectStarCards(options, capturedAt, collection, cardExists);
   }
 
-  yield* persistCards(options.vaultRoot, databasePath, "repo-card", cards);
+  yield* persistCards(options.vaultRoot, databasePath, "repo-card", collection.cards);
   const summary = yield* decodeRepoCardSummary({
-    cardsSkipped,
-    cardsWritten: A.length(cards),
-    reposScanned,
-    starsScanned,
+    cardsSkipped: collection.cardsSkipped,
+    cardsWritten: A.length(collection.cards),
+    reposScanned: collection.reposScanned,
+    starsScanned: collection.starsScanned,
   }).pipe(ResearchCommandError.mapError("Repo-card summary failed schema validation."));
   yield* Console.log(
     `research repo-card: repos=${summary.reposScanned} stars=${summary.starsScanned} written=${summary.cardsWritten} skipped=${summary.cardsSkipped}`
