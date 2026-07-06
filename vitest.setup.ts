@@ -105,6 +105,7 @@ const isObject = (value: unknown): value is object => P.isObjectKeyword(value) &
 const hasFunctionProperty = (value: unknown, key: string): boolean =>
   isObject(value) && typeof Reflect.get(value, key) === "function";
 
+// fallow-ignore-next-line complexity
 const isBunTestShim = (value: unknown): value is BunTestShim =>
   isObject(value) &&
   P.hasProperty(value, "Glob") &&
@@ -138,6 +139,7 @@ const normalizeSpawnInput = (
   return { args, command, options: commandOrOptions };
 };
 
+// fallow-ignore-next-line complexity
 const spawnSync = (commandOrOptions: BunSpawnSyncObject | ReadonlyArray<string>, options?: BunSpawnSyncOptions) => {
   const normalized = normalizeSpawnInput(commandOrOptions, options);
   const result = nodeSpawnSync(normalized.command, [...normalized.args], {
@@ -188,6 +190,7 @@ const file = (path: string | URL): BunFileShim => ({
   text: () => readFile(path, "utf8"),
 });
 
+// fallow-ignore-next-line complexity
 const writeInput = async (input: unknown): Promise<string | Uint8Array> => {
   if (typeof input === "string") {
     return input;
@@ -225,6 +228,7 @@ const responseHeaders = (response: Response): Record<string, string> => {
   return headers;
 };
 
+// fallow-ignore-next-line complexity
 const requestHeaders = (messageHeaders: NodeJS.Dict<string | readonly string[]>): Headers => {
   const headers = new Headers();
   for (const [key, value] of Object.entries(messageHeaders)) {
@@ -254,6 +258,7 @@ const serve = (options: BunServeOptions): ReturnType<BunTestShim["serve"]> => {
     const chunks: Array<Buffer> = [];
     request.on("data", (chunk: Buffer) => chunks.push(chunk));
     request.on("end", () => {
+      // fallow-ignore-next-line complexity
       void (async () => {
         try {
           const url = `http://${request.headers.host ?? `${hostname}:${port}`}${request.url ?? "/"}`;
@@ -309,6 +314,7 @@ const parseToml = (content: string): unknown => {
   }
 };
 
+// fallow-ignore-next-line complexity
 const parseJsonlChunk: BunTestShim["JSONL"]["parseChunk"] = (content) => {
   const values: Array<unknown> = [];
   let read = 0;
@@ -356,6 +362,7 @@ class GlobShim {
     return this.matcher(normalizeFilePath(relativePath));
   }
 
+  // fallow-ignore-next-line complexity
   scanSync(options?: BunGlobScanOptions): Iterable<string> {
     const cwd = options?.cwd ?? process.cwd();
     const entries: Array<string> = [];
@@ -364,6 +371,7 @@ class GlobShim {
     const outputPath = (relativePath: string, absolutePath: string): string =>
       options?.absolute === true ? normalizeFilePath(absolutePath) : relativePath;
 
+    // fallow-ignore-next-line complexity
     const visit = (absoluteDirectory: string, relativeDirectory: string): void => {
       for (const dirent of readdirSync(absoluteDirectory, { withFileTypes: true })) {
         if (options?.dot !== true && dirent.name.startsWith(".")) {

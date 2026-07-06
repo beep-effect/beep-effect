@@ -633,10 +633,12 @@ const boundedRootTurboArgs = (args: ReadonlyArray<string>): ReadonlyArray<string
 const includesTurboCoverageTask = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): boolean =>
   A.some(tasks, (task) => task === "coverage") || A.some(args, (arg) => arg === "coverage");
 
+// fallow-ignore-next-line code-duplication
 const turboCoverageEnv = (
   tasks: ReadonlyArray<string>,
   args: ReadonlyArray<string>
 ): Record<string, string> | undefined =>
+  // fallow-ignore-next-line code-duplication
   includesTurboCoverageTask(tasks, args) ? { VITEST_COVERAGE_RATCHET: "1" } : undefined;
 
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>

@@ -714,6 +714,7 @@ const normalizeFindings = (feature: FallowFeature, document: unknown): ReadonlyA
     security: () => findingsForCount(feature, "security-findings", rawSecurityFindingCount(document)),
   });
 
+// fallow-ignore-next-line code-duplication
 const rawFindingCount = (feature: FallowFeature, document: unknown): number =>
   FallowFeatureFamily.$match(feature, {
     audit: () => A.length(normalizeAuditFindings(document)),

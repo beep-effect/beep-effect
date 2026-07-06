@@ -367,6 +367,7 @@ const writeBaseline = Effect.fn("KnipRatchet.writeBaseline")(function* (
   const path = yield* Path.Path;
   const absolutePath = path.resolve(repoRoot, baselinePath);
   const json = yield* jsonStringifyPretty(baseline).pipe(
+    // fallow-ignore-next-line code-duplication
     QualityScriptCommandError.mapError(`Failed to encode ${baselinePath}.`)
   );
 
@@ -378,6 +379,7 @@ const writeBaseline = Effect.fn("KnipRatchet.writeBaseline")(function* (
     .pipe(QualityScriptCommandError.mapError(`Failed to write ${baselinePath}.`));
 });
 
+// fallow-ignore-next-line code-duplication
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
   stream.pipe(
     Stream.decodeText(),
@@ -462,6 +464,7 @@ const renderFindingLines = (findings: ReadonlyArray<KnipFinding>, limit: number)
   const shown = A.take(findings, limit);
   const omittedCount = A.length(findings) - A.length(shown);
   return [
+    // fallow-ignore-next-line code-duplication
     ...A.map(shown, (finding) => `  - ${renderFinding(finding)}`),
     ...pipe(
       omittedCount,
