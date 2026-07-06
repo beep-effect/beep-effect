@@ -461,7 +461,8 @@ export const getSupportedCapabilities = (backend: NLPBackendShape): ReadonlyArra
  * @category constructors
  * @since 0.0.0
  */
-export const notSupported = BackendNotSupported.forOperation;
+export const notSupported = (backend: string, operation: string, message?: string): BackendNotSupported =>
+  BackendNotSupported.forOperation(backend, operation, message === undefined ? undefined : { message });
 
 /**
  * Construct a {@link BackendInitError} from an unknown initialization cause.
@@ -486,11 +487,12 @@ export const initError: typeof BackendInitError.fromCause = BackendInitError.fro
  * ```ts
  * import { operationError } from "@beep/nlp-processing/Backend/NLPBackend"
  *
- * const error = operationError("wink-nlp", "tokenize", { cause: new Error("bad input") })
+ * const error = operationError("wink-nlp", "tokenize", new Error("bad input"))
  * console.log(error.operation) // "tokenize"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const operationError: typeof BackendOperationError.fromCause = BackendOperationError.fromCause;
+export const operationError = (backend: string, operation: string, cause: unknown): BackendOperationError =>
+  BackendOperationError.fromCause(backend, operation, { cause });

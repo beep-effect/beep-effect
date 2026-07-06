@@ -87,7 +87,7 @@ describe("Failure constructors", () => {
   });
 
   it("notSupported honors an explicit message", () => {
-    const err = Backend.notSupported("wink", "extractRelations", { message: "lite model has no RE" });
+    const err = Backend.notSupported("wink", "extractRelations", "lite model has no RE");
     expect(err.message).toBe("lite model has no RE");
   });
 
@@ -102,7 +102,7 @@ describe("Failure constructors", () => {
 
   it("operationError records the operation and retains the cause", () => {
     const cause = new Error("nope");
-    const err = Backend.operationError("corenlp", "posTag", { cause });
+    const err = Backend.operationError("corenlp", "posTag", cause);
     expect(err._tag).toBe("BackendOperationError");
     expect(err.operation).toBe("posTag");
     expect(err.message).toContain("posTag");
@@ -118,9 +118,7 @@ describe("Tagged errors are schema-decodable", () => {
   it("recognizes constructed backend errors through the union statics", () => {
     expect(Backend.NLPBackendError.is(Backend.notSupported("wink", "posTag"))).toBe(true);
     expect(Backend.NLPBackendError.is(Backend.initError("wink", new Error("boom")))).toBe(true);
-    expect(Backend.NLPBackendError.is(Backend.operationError("wink", "posTag", { cause: new Error("boom") }))).toBe(
-      true
-    );
+    expect(Backend.NLPBackendError.is(Backend.operationError("wink", "posTag", new Error("boom")))).toBe(true);
   });
 
   it.effect(

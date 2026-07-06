@@ -1,5 +1,3 @@
-import { spawn } from "node:child_process";
-import { readFile } from "node:fs/promises";
 import { Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -18,19 +16,15 @@ const PackageJson = S.Struct({
   exports: S.Record(S.String, S.NullOr(S.String)),
 });
 const decodePackageJson = S.decodeUnknownEffect(S.fromJsonString(PackageJson));
-const readText = (relativePath: string) => Effect.promise(() => readFile(joinPath(packageRoot, relativePath), "utf8"));
+const readText = (relativePath: string) => Effect.promise(() => Bun.file(joinPath(packageRoot, relativePath)).text());
 const runTypecheck = (tscPath: string, tsconfigPath: string) =>
   Effect.promise(
     () =>
-      new Promise<number>((resolve, reject) => {
-        const child = spawn(tscPath, ["--pretty", "false", "--noEmit", "-p", tsconfigPath], {
-          cwd: repoRoot,
-          stdio: "ignore",
-        });
-
-        child.once("error", reject);
-        child.once("close", (exitCode) => resolve(exitCode ?? 1));
-      })
+      Bun.spawn([tscPath, "--pretty", "false", "--noEmit", "-p", tsconfigPath], {
+        cwd: repoRoot,
+        stderr: "ignore",
+        stdout: "ignore",
+      }).exited
   ).pipe(
     Effect.flatMap((exitCode) =>
       exitCode === 0 ? Effect.void : Effect.die(new Error(`tsc failed for ${tsconfigPath} with exit code ${exitCode}`))
