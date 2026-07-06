@@ -1,0 +1,83 @@
+[
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.service.test.ts",
+    "line": 16,
+    "symbol": "AiProviderCli schema family",
+    "smell": "The package exports schema-backed provider/status literals, process results, auth probes, and errors, but tests only exercise an injected runner fixture; no S.toArbitrary-derived law covers the production schemas.",
+    "proposedTarget": "Add additive laws for AiProviderCliProvider, AiProviderCliAuthStatus, AiProviderCliProcessResult, AiProviderCliAuthProbe, and AiProviderCliError using S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970), following packages/shared/domain/test/Organization.test.ts:13 and :79 or assertSchemaArbitraryDecodesToSelf at packages/tooling/test-kit/test-utils/src/Schema.ts:30-43.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
+    "line": 125,
+    "symbol": "AiProviderCliProcessResult/AiProviderCliAuthProbe fields",
+    "smell": "The exported process-result and auth-probe schemas have whole-schema $I.annote metadata but no annotateKey descriptions for exitCode, stderr, stdout, command, provider, or status.",
+    "proposedTarget": "Add field-level annotateKey metadata, following packages/drivers/govinfo/src/domain/values/SearchBody/SearchBody.model.ts:42-65; keep stdout/stderr broad strings because empty output is valid CLI behavior.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
+    "line": 127,
+    "symbol": "AiProviderCliProcessResult.exitCode",
+    "smell": "Process exit code is modeled as S.Finite, allowing negative and fractional values even though process status codes are integers and the service branches on zero vs non-zero.",
+    "proposedTarget": "Use S.Int.check(S.isBetween({ minimum: 0, maximum: 255 })) if POSIX-style exit codes are the intended domain, or at least NonNegativeInt. S.Int is verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and S.isBetween at :7401; NonNegativeInt exists at packages/foundation/modeling/schema/src/Number.ts:182-197.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
+    "line": 161,
+    "symbol": "AiProviderCliAuthProbe.command",
+    "smell": "Auth probe command is broad S.String even though it is always the executable name/path used for a provider CLI probe and should not be empty.",
+    "proposedTarget": "Use S.NonEmptyString.annotateKey for command; S.NonEmptyString is verified at .repos/effect-v4/packages/effect/src/Schema.ts:8420.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.errors.ts",
+    "line": 41,
+    "symbol": "AiProviderCliError fields",
+    "smell": "The exported TaggedErrorClass schema has whole-schema $I.annote metadata but no annotateKey descriptions; message/operation/provider are broad S.String, provider duplicates AiProviderCliProvider, and exitCode is broad S.Finite.",
+    "proposedTarget": "Add annotateKey metadata; model provider as AiProviderCliProvider, message/operation/command as S.NonEmptyString where present, and exitCode with the same integer/range schema as AiProviderCliProcessResult. S.NonEmptyString is verified at .repos/effect-v4/packages/effect/src/Schema.ts:8420.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.service.ts",
+    "line": 77,
+    "symbol": "AiProviderCliPaths",
+    "smell": "Provider CLI executable paths are private schema fields with whole-schema $I.annote metadata but no annotateKey descriptions, and both paths are optional broad S.String values that permit empty command paths.",
+    "proposedTarget": "Use S.optionalKey(S.NonEmptyString).annotateKey for claudePath and codexPath; S.NonEmptyString is verified at .repos/effect-v4/packages/effect/src/Schema.ts:8420. Keep them private if this remains only layer configuration.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/ai-provider-cli/test/AiProviderCli.service.test.ts",
+    "line": 7,
+    "symbol": "injected runner fixture",
+    "smell": "Detector candidate: auth mapping coverage uses a hand-written runner fixture instead of generated process results.",
+    "proposedTarget": "None — keep as is (schema-derived laws above are additive coverage).",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The fixture proves the service's provider-specific command mapping and zero/non-zero auth interpretation without spawning real CLIs; it is behavior coverage, not a replacement for schema-domain laws.",
+      "boundary": "Claude/Codex CLI auth status runner fixture"
+    }
+  }
+]

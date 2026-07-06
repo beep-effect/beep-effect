@@ -1,0 +1,520 @@
+[
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+    "line": 2692,
+    "symbol": "makeArchitecturePackageOperationPlan",
+    "smell": "Exported plan-builder in a schema-modeled file accepts an anonymous inline input object `{ boundedContext: string; role: ArchitecturePackageRole }`. The role is already a LiteralKit schema and the function returns the schema-modeled `CanonicalSliceOperationPlan`, but the input contract itself is not schema-carried.",
+    "proposedTarget": "Introduce `ArchitecturePackageOperationPlanInput` as an `S.Class` beside `ArchitecturePlanTarget` (same-file exemplar: `ArchitecturePlanTarget` at line 457 and `WritePackageJsonOperation` at line 532), with `boundedContext: S.String` and `role: ArchitecturePackageRole`. Then type the exported builder from that schema, optionally via `Fn({ input: ArchitecturePackageOperationPlanInput, output: CanonicalSliceOperationPlan }).implementEffect(...)` (Fn and `.implementEffect` verified at packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:637 and :224).",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 5.1
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+    "line": 2148,
+    "symbol": "extractCorpusDocket",
+    "smell": "Exported parser returns `O.Option<{ readonly docket: string; readonly family: string }>` from a schema-modeled Corpus module. The anonymous docket/family payload is then projected into `CorpusOrganizeRecord.docket` and `docketFamily`, so the normalized parser result can drift from the manifest schema fields.",
+    "proposedTarget": "Add a small `CorpusDocketMatch` `S.Class` in `Corpus.schemas.ts` near `CorpusOrganizeRecord` (line 981; its `docket` and `docketFamily` fields show the downstream payload shape). Return `O.Option<CorpusDocketMatch>` and construct with `CorpusDocketMatch.make`; if the function is wrapped, use `Fn({ input: S.String, output: S.Option(CorpusDocketMatch) }).implementSync(...)` (`S.Option` verified at .repos/effect-v4/packages/effect/src/Schema.ts:8492; Fn `.implementSync` verified at packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:225).",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 4.4
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.recyclebin.ts",
+    "line": 153,
+    "symbol": "classifyRecycleBinName",
+    "smell": "Exported parser returns `O.Option<{ readonly kind: RecycleBinEntryKind; readonly pairKey: string }>` even though the pair-key classification is a stable domain payload and feeds the schema-modeled recycle-bin scan/pairing flow.",
+    "proposedTarget": "Add `RecycleBinNameClassification` as an `S.Class` near `RecycleBinEntryKind` and `RecycleBinScanEntry` (Corpus.schemas.ts:616 and :647) with `kind: RecycleBinEntryKind` and `pairKey: S.NonEmptyString`. Return `O.Option<RecycleBinNameClassification>` from `classifyRecycleBinName` using `S.Option(RecycleBinNameClassification)` as the Fn output if wrapped (`S.Option` verified at .repos/effect-v4/packages/effect/src/Schema.ts:8492).",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 4.6
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts",
+    "line": 97,
+    "symbol": "DocgenLocalOptions / buildDocgenLocalPlan / runDocgenLocal",
+    "smell": "Two exported workflow functions in a schema-modeled file (`buildDocgenLocalPlan` at line 884 and `runDocgenLocal` at line 918) expose the same non-schema type-literal options contract. The module already models the dry-run document, selected packages, full reasons, and local plan as `S.Class` values, but the command input stays a plain structural type.",
+    "proposedTarget": "Promote `DocgenLocalOptions` to an `S.Class` near the existing local docgen schemas, e.g. `base/head: S.String`, `full/json/plan: S.Boolean`, `packageSelector: S.Option(S.String)`, and `parallel: S.Finite`; keep `type DocgenLocalOptions = typeof DocgenLocalOptions.Type`. Same-file schema exemplars: `DocgenLocalSelectedPackage` at line 186 and `DocgenLocalPlan` at line 246; `S.Option` verified at .repos/effect-v4/packages/effect/src/Schema.ts:8492.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 5.8
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
+    "line": 432,
+    "symbol": "RunDocgenForPackageOptions / runDocgenForPackage",
+    "smell": "Exported dual helper `runDocgenForPackage` uses a non-schema type literal `{ include?: ReadonlyArray<string> }` for its options, in the same file that schema-models `DocgenWorkspacePackage` and `DocgenGenerationResult`.",
+    "proposedTarget": "Replace the type literal with `RunDocgenForPackageOptions extends S.Class` using `include: S.optionalKey(S.Array(S.String))`, colocated near `DocgenGenerationResult` at line 418. Keep the existing dual overload shape but make the options type schema-derived. The local file already has an options S.Class pattern at `ResolveDocgenWorkspacePackageOptions` line 62.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3.1
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
+    "line": 1731,
+    "symbol": "aggregateGeneratedDocs",
+    "smell": "Exported workflow function accepts an anonymous optional object `{ clean?: boolean; package?: string }`. This is a stable command/workflow input contract in a file that already uses S.Class for docgen documents, workspace packages, analyses, and aggregate results.",
+    "proposedTarget": "Introduce `AggregateGeneratedDocsOptions extends S.Class` near `DocgenAggregateResult` (line 458) with optional `clean` and package selector fields, then type `aggregateGeneratedDocs` with that schema-derived options type. This gives the `--package` and `--clean` input shape the same executable contract as the result model.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 3.3
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Quality.ts",
+    "line": 599,
+    "symbol": "resolveDocgenQualityTargets",
+    "smell": "Exported workflow function destructures an anonymous `{ all; changedFiles; packageSelector }` object. The field values are the durable selector contract for docgen quality scope, but they bypass the nearby schema-modeled quality domains.",
+    "proposedTarget": "Add `DocgenQualityTargetSelection extends S.Class` near `DocgenQualityScopeMode` (line 104) with `all: S.Boolean`, `changedFiles: S.Boolean`, and `packageSelector: S.Option(S.String)`. Then accept that schema-derived type in `resolveDocgenQualityTargets`; `S.Option` verified at .repos/effect-v4/packages/effect/src/Schema.ts:8492.",
+    "confidence": 0.76,
+    "mechanization": "assisted",
+    "roiRank": 4.2
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Quality.ts",
+    "line": 2021,
+    "symbol": "analyzeDocgenQuality",
+    "smell": "Exported workflow function takes an anonymous object for the consolidated quality report run (`scope`, `scoreMode`, `targets`, `packetLimit`, `packageTimeout`). The module already schema-models the report, scope, score mode, subjects, and package reports, but the top-level workflow input is structural only.",
+    "proposedTarget": "Split the schema-carrying part into an `AnalyzeDocgenQualityOptions` S.Class near `DocgenQualityReport` (line 402): `scope: DocgenQualityScopeMode`, `scoreMode: DocgenQualityScoreMode`, `targets: S.Array(DocgenWorkspacePackage)`, `packetLimit: S.optionalKey(S.Finite)`. Keep `packageTimeout: Duration.Duration` as a runtime-only override or model it separately if a Duration schema is chosen by the writer.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerRunpodEval.ts",
+    "line": 443,
+    "symbol": "makeQualityWorkerRunpodEvalPodCreateInput",
+    "smell": "Exported constructor takes an anonymous Runpod pod recipe object while the same file already schema-models the full Runpod worker-eval options and report. The fields overlap the existing `RunDocgenQualityWorkerRunpodEvalOptions` schema but are re-declared structurally.",
+    "proposedTarget": "Introduce `DocgenQualityWorkerRunpodPodCreateOptions extends S.Class` beside `RunDocgenQualityWorkerRunpodEvalOptions` (line 269), or derive this helper from that existing options schema's relevant subset. The function can continue returning `PodCreateInput.make(...)`; the first-party pod recipe contract should be schema-derived.",
+    "confidence": 0.64,
+    "mechanization": "assisted",
+    "roiRank": 2.6
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/TemplateService.ts",
+    "line": 97,
+    "symbol": "TemplateServiceShape",
+    "smell": "Exported type literal with an Effect-returning function member (candidate hit for the exported type-alias inventory detector).",
+    "proposedTarget": "None - keep as a service contract. `TemplateService` is a `Context.Service<TemplateService, TemplateServiceShape>()` at line 114, and the data payload `TemplateRenderRequest` is already an S.Class at line 71.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Context.Service shape with an Effect-returning method; fence 1 says service contracts stay interfaces/type shapes.",
+      "boundary": "service-contract/Context.Service-shape carve-out"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts",
+    "line": 295,
+    "symbol": "FileGenerationPlanServiceShape",
+    "smell": "Exported type literal with function members used by the exported `FileGenerationPlanService` Context.Service (candidate hit for the exported type-alias inventory detector).",
+    "proposedTarget": "None - keep as a service contract. The pure data inputs/results are already schemas (`FileGenerationPlanInput` at line 129, `FileGenerationPlan` at line 247, `FileGenerationExecutionResult` at line 268).",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Context.Service shape for deterministic plan orchestration; its members are function/service operations, not payload DTOs.",
+      "boundary": "service-contract/Context.Service-shape carve-out"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/TsMorphIntegrationService.ts",
+    "line": 231,
+    "symbol": "TsMorphMutationAdapter",
+    "smell": "Exported type literal with an Effect-returning function member (candidate hit for schema-first inventory).",
+    "proposedTarget": "None - keep as an adapter boundary. The mutation and outcome payloads are already schema-modeled (`TsMorphMutation` at line 124 and `TsMorphIntegrationResult` at line 207); this alias is the live ts-morph execution port.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Runtime adapter/port interface for concrete ts-morph implementations; function member cannot be usefully schema-ified.",
+      "boundary": "port-interface carve-out"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/TsMorphIntegrationService.ts",
+    "line": 247,
+    "symbol": "TsMorphIntegrationServiceShape",
+    "smell": "Exported type literal with function members consumed by `TsMorphIntegrationService` Context.Service (candidate hit for schema-first inventory).",
+    "proposedTarget": "None - keep as a service contract. The request/response data uses schema-derived `TsMorphMutation` and `TsMorphIntegrationResult`.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Context.Service shape; the data carried through the service is already schema-modeled.",
+      "boundary": "service-contract/Context.Service-shape carve-out"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+    "line": 154,
+    "symbol": "CorpusCommandServiceShape",
+    "smell": "Exported interface with Effect-returning service methods over schema-modeled Corpus options/results (candidate hit for the exported interface detector).",
+    "proposedTarget": "None - keep as a service contract. Each method's durable input/output payload is already carried by Corpus S.Class models such as `CorpusArchiveMoveOptions`, `CorpusCatalogOptions`, and result summaries.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Service interface for the Corpus command Context.Service; fence 1 explicitly keeps service contracts as interfaces.",
+      "boundary": "service-contract/Context.Service-shape carve-out"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
+    "line": 345,
+    "symbol": "FilesCommandServiceShape",
+    "smell": "Exported interface with Effect-returning service methods over schema-modeled Files options/results (candidate hit for the exported interface detector).",
+    "proposedTarget": "None - keep as a service contract. The command options, plans, manifests, and summaries are already S.Class/LiteralKit schemas in `Files.schemas.ts`.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Service interface for the Files command Context.Service; schema-as-truth applies to its payloads, not the service shape.",
+      "boundary": "service-contract/Context.Service-shape carve-out"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts",
+    "line": 485,
+    "symbol": "DocgenQualityWorkerEvalRunner",
+    "smell": "Exported function type alias in a schema-modeled file superficially looks like a function contract that should be modeled with `Fn`.",
+    "proposedTarget": "None - keep as a runner port. Its input and output are already schema classes (`DocgenQualityWorkerEvalRunnerInput` at line 446 and `DocgenQualityWorkerEvalRunnerResult` at line 422), while the alias represents an injectable effectful runner implementation.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Effectful runtime runner port for Codex/Ollama/LM Studio adapters; wrapping the port alias in Fn would not add schema truth because both payloads are already S.Class models.",
+      "boundary": "runtime runner port / service-contract carve-out"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
+    "line": 124,
+    "symbol": "isPackageType / decodeAppKindEffect / decodePackageFamilyEffect / decodeFoundationKindEffect / decodeToolingKindEffect",
+    "smell": "Cluster of local `S.is(...)` and `S.decodeUnknownEffect(...)` aliases around LiteralKit-backed CLI flag domains can look like a decode/guard helper wall.",
+    "proposedTarget": "None - audited as non-actionable for S1. The schemas are the source of truth (`PackageType`, `AppKind`, `PackageFamily`, `FoundationKind`, `ToolingKind`), and the decode helpers only attach command-specific DomainError messages at the CLI boundary. A later S4 pass could decide whether these LiteralKit domains should expose additional statics.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Boundary validation aliases over existing schemas with custom CLI error messages; not hand-rolled validation and not a schema bypass.",
+      "boundary": "CLI flag decode boundary"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.command.ts",
+    "line": 64,
+    "symbol": "decodeStage / decodeDomainKind / decodeRole / decodePackageRole",
+    "smell": "Cluster of local decode helpers over LiteralKit-backed Architecture domains can look like a top-of-file decode wall.",
+    "proposedTarget": "None - audited as non-actionable for S1. Each helper delegates directly to `S.decodeUnknownEffect(...)` over an existing schema (`ArchitecturePlanStage`, `ArchitectureDomainKind`, `ArchitectureSliceRole`, `ArchitecturePackageRole`) and adds CLI-specific `DomainError` text.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Schema-backed CLI argument boundary; helpers do not duplicate or replace schema validation.",
+      "boundary": "CLI flag decode boundary"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.media.ts",
+    "line": 282,
+    "symbol": "isImageFileExtension / isVideoFileExtension / isSupportedMetadataImageExtension",
+    "smell": "Exported `S.is(...)` guard aliases in a schema-modeled helper file can look like guard-wall noise.",
+    "proposedTarget": "None - audited as non-actionable for S1. The aliases are direct schema guards over imported public file-extension schemas and are used as lightweight classifier predicates; they do not hand-roll validation.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Direct schema-derived guard aliases; potential static-colocation polish is S4 territory, not an S1 schema-as-truth action.",
+      "boundary": "schema-derived classifier guards"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Source.ts",
+    "line": 45,
+    "symbol": "ParsedCsvRecords",
+    "smell": "Exported exotic type alias `Array<ParsedCsvRecord> & { readonly columns: ReadonlyArray<string> }` carries a parsed CSV payload plus header metadata outside an executable schema. The implementation attaches `columns` with `Reflect.defineProperty` and returns through `cast(...)`, so the invariant is runtime convention rather than schema truth.",
+    "proposedTarget": "Replace the augmented-array alias with a small schema model, e.g. `ParsedCsvRecords extends S.Class` beside `ParsedCsvRecord` with `rows: S.Array(ParsedCsvRecord)` and `columns: S.Array(S.String)`, then update `parseCsvSource` to return `.make({ rows, columns })` and consumers to read `.rows`. In-repo exemplars: `ParsedCsvRecord` at line 32 and `SyncDataOutputFile` at packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts:94. Effect v4 APIs verified: `S.Class` at .repos/effect-v4/packages/effect/src/Schema.ts:12696 and `S.Array` export at .repos/effect-v4/packages/effect/src/Schema.ts:4462-4483.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 4.1
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Source.ts",
+    "line": 55,
+    "symbol": "SyncDataFetchedSource",
+    "smell": "Exported interface models the fetched-source payload (`bytes`, `id`, `sha256`, `text`, `url`) consumed by `fetchSource`, `sourceMetadata`, and all parse helpers. The existing durable inventory treats it as a runtime-handle exception, but `Uint8Array` is schema-supported in Effect v4, so this is a re-audit candidate rather than a hard carve-out.",
+    "proposedTarget": "Promote `SyncDataFetchedSource` to an `S.Class` in this module or in `internal/Models.ts` with `bytes: S.Uint8Array`, `id/url/text/sha256: S.String`, and return `SyncDataFetchedSource.make(...)` from `fetchSource`. In-repo exemplars: `SyncDataSourceMetadata` at packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts:75 and binary schema usage at packages/drivers/xai/src/XAi.models.ts:180. Effect v4 API verified: `S.Uint8Array` at .repos/effect-v4/packages/effect/src/Schema.ts:11781.",
+    "confidence": 0.66,
+    "mechanization": "assisted",
+    "roiRank": 3.8
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Source.ts",
+    "line": 125,
+    "symbol": "sourceMetadata",
+    "smell": "Exported constructor helper in a schema-modeled file accepts an inline `{ readonly version?: string; readonly published?: string }` options object even though it returns the schema-modeled `SyncDataSourceMetadata` and is reused by every checked-in sync target.",
+    "proposedTarget": "Introduce `SyncDataSourceMetadataExtras` as an `S.Class` or boundary `S.Struct` near `SyncDataSourceMetadata` with `version` and `published` optional keys, then type `sourceMetadata` from that schema-derived type. Same-package exemplar: `SyncDataSourceMetadata` at packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts:75. Effect v4 API verified: `S.optionalKey` at .repos/effect-v4/packages/effect/src/Schema.ts:2270.",
+    "confidence": 0.69,
+    "mechanization": "assisted",
+    "roiRank": 3.1
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+    "line": 266,
+    "symbol": "buildYeetVerdict",
+    "smell": "Exported production constructor in a schema-modeled file accepts a large anonymous input object for run identity, planned steps, executed steps, optional freshness/stash state, and outcome. The return is `YeetVerdict.make(...)`, but the input contract is not schema-carried.",
+    "proposedTarget": "Add `YeetVerdictBuildInput extends S.Class` beside `YeetVerdict` with the current fields (`executed: S.Array(YeetExecutedStep)`, `planned: S.Array(RepoPlanStep)`, optional `baseFreshness/indexPath/stash`, and an outcome literal schema), then type `buildYeetVerdict` from `typeof YeetVerdictBuildInput.Type` or wrap it with `Fn({ input: YeetVerdictBuildInput, output: YeetVerdict }).implementSync(...)`. Same-file exemplars: `YeetVerdict` at line 165 and `YeetExecutedStep` at line 201. Fn `.implementSync` verified at packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:225.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/internal/cli/OptionRecord.ts",
+    "line": 16,
+    "symbol": "optionalProp",
+    "smell": "Exported overload object with inline mapped return types can look like an exported function contract that should be modeled.",
+    "proposedTarget": "None - audited and rejected as an S1 action.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 0.02,
+    "exception": {
+      "reason": "Generic type-level utility for constructing optional object spreads from `O.Option`; the mapped return type depends on the generic key literal and is not a data payload or schema-modeled domain contract.",
+      "boundary": "type-level utility carve-out"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/Image/Image.service.ts",
+    "line": 55,
+    "symbol": "ImageCommandServiceShape",
+    "smell": "Exported interface with Effect-returning service methods over schema-modeled image options/results is a schema-first inventory candidate.",
+    "proposedTarget": "None - keep as a service contract. The payloads are already schema-modeled (`ExtractFramesOptions`, `ExtractFramesDirOptions`, `ExtractFramesDirResult`) in Image.schemas.ts.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Paired with `Context.Service<ImageCommandService, ImageCommandServiceShape>()`; fence 1 keeps service contracts and port interfaces as TypeScript shapes.",
+      "boundary": "service-contract/Context.Service-shape carve-out"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+    "line": 138,
+    "symbol": "SyncDataTarget",
+    "smell": "Exported interface in a schema-modeled model file can look like a data payload candidate.",
+    "proposedTarget": "None - keep as a target port. Its `acquire` member is an Effect workflow requiring `HttpClient` and `Crypto`, while the acquired projection payload is already `SyncDataTargetProjection`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Checked-in target definition/port interface with an Effect member and runtime service requirements; schema-as-truth applies to the acquired data payload, not the target implementation contract.",
+      "boundary": "port-interface carve-out"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+    "line": 167,
+    "symbol": "SyncDataTargetResult",
+    "smell": "Exported result interface is a structural aggregate in a file that otherwise models sync-data payloads with schemas.",
+    "proposedTarget": "Potential future target: `SyncDataTargetResult extends S.Class` after introducing a repo-local schema for `JsonPatch.JsonPatch`; audited as a non-actionable exception for this S1 batch.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 0.2,
+    "exception": {
+      "reason": "`canonicalPatch` is Effect's type-only `JsonPatch.JsonPatch` value produced by `S.toDifferJsonPatch(S.Json)` and consumed immediately for command reporting. Without a first-party JsonPatch operation schema, converting the outer aggregate alone would leave the core field unmodeled and create churn.",
+      "boundary": "external Effect JsonPatch reporting aggregate"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+    "line": 208,
+    "symbol": "FallowAuditRawReport / FallowDeadCodeRawReport / FallowHealthRawReport / FallowFlagsRawReport",
+    "smell": "Cluster of annotated `S.Struct` tool-output boundary schemas can look like object-struct-schema candidates for promotion to `S.Class`.",
+    "proposedTarget": "None for this pass - keep as boundary structs until a dedicated Fallow raw-report extraction pass can preserve all external JSON keys and snapshots.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.08,
+    "exception": {
+      "reason": "These are lenient raw decoder shapes for external Fallow JSON output, with snake_case external fields and nested raw summaries. The file already wraps durable report envelopes in S.Class models; these boundary decoders are intentionally schema-owned but not rich domain classes.",
+      "boundary": "external tool-output boundary schema"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+    "line": 540,
+    "symbol": "AuditDuplicationCloneGroups",
+    "smell": "Internal `S.Struct` decoder for one Fallow audit JSON fragment can look like an object-struct-schema candidate.",
+    "proposedTarget": "None for this pass - keep as a tiny boundary decoder for the clone-group fragment.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "The decoder exists only to classify Fallow duplication clone groups and fail closed when the external report shape cannot be parsed; promoting it to a class would not add domain truth.",
+      "boundary": "external tool-output fragment decoder"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/CldrTerritories.ts",
+    "line": 131,
+    "symbol": "anonymous@131",
+    "smell": "Nested `S.Struct({ en: CldrLocaleDisplayNames })` inside a CLDR document class matches the object-struct-schema detector.",
+    "proposedTarget": "None for this pass - keep as a nested external JSON boundary shape inside `CldrTerritoryNamesDocument`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The anonymous struct mirrors the upstream CLDR JSON envelope under `main.en`; extracting a named class would add ceremony without moving an invariant.",
+      "boundary": "external CLDR JSON envelope"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyOps.ts",
+    "line": 387,
+    "symbol": "shouldInstallProxyServiceForTesting",
+    "smell": "Exported function in a schema-modeled file accepts an inline object contract.",
+    "proposedTarget": "None - audited and rejected as an actionable Fn-schema target.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Explicit `@category testing` helper exported for focused tests of systemd unit drift logic; the inline shape is a local test fixture contract, not a domain payload or public command API.",
+      "boundary": "test-only helper escape hatch"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyOps.ts",
+    "line": 1293,
+    "symbol": "shouldRecoverGraphitiStackForTesting",
+    "smell": "Exported function in a schema-modeled file accepts an inline object contract.",
+    "proposedTarget": "None - audited and rejected as an actionable Fn-schema target.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Explicit `@category testing` helper for recovery-decision unit tests; the object is a compact fixture input for booleans and health strings, not a reusable data model.",
+      "boundary": "test-only helper escape hatch"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
+    "line": 884,
+    "symbol": "closeoutGateStatesForTesting",
+    "smell": "Exported function in a schema-modeled file accepts an inline test input object.",
+    "proposedTarget": "None - audited and rejected as an actionable Fn-schema target.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Explicit test helper over already schema-modeled payloads (`PrCloseoutOptions`, `GreptileSummary`, `PrCloseoutGateState`); wrapping the fixture bundle would not improve production schema truth.",
+      "boundary": "test-only helper escape hatch"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+    "line": 2825,
+    "symbol": "buildYeetRunPlanForTesting",
+    "smell": "Exported function in a schema-modeled file accepts a large inline test options object.",
+    "proposedTarget": "None - audited and rejected as an actionable Fn-schema target.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Explicit `ForTesting` helper used by `test/yeet.test.ts` to avoid repository-state reads; the production plan input is already modeled through `YeetRunPlanModeOptions` and `RepoRunContext`.",
+      "boundary": "test-only helper escape hatch"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/CategorySelectionService.ts",
+    "line": 22,
+    "symbol": "CategorySelectionServiceShape",
+    "smell": "Exported type literal with function members over schema-modeled VersionSync options/categories.",
+    "proposedTarget": "None - keep as a service contract.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Paired with `Context.Service<CategorySelectionService, CategorySelectionServiceShape>()`; function members describe a service port while the data arguments are already schema-modeled.",
+      "boundary": "service-contract/Context.Service-shape carve-out"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/ReportRendererService.ts",
+    "line": 28,
+    "symbol": "ReportRendererServiceShape",
+    "smell": "Exported type literal with Effect-returning rendering service members.",
+    "proposedTarget": "None - keep as a service contract.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Context.Service shape for console/report rendering; payloads (`VersionSyncReport`, `VersionCategoryReport`, modes/statuses) are already schema-derived.",
+      "boundary": "service-contract/Context.Service-shape carve-out"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/ResolverService.ts",
+    "line": 39,
+    "symbol": "ResolverServiceShape",
+    "smell": "Exported type literal with an Effect-returning resolver method.",
+    "proposedTarget": "None - keep as a service contract.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Context.Service shape for resolver orchestration with filesystem/path/http/category services; its input and output payloads are schema-modeled `VersionSyncOptions` and `VersionSyncResolution`.",
+      "boundary": "service-contract/Context.Service-shape carve-out"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/UpdateApplierService.ts",
+    "line": 46,
+    "symbol": "UpdateApplierServiceShape",
+    "smell": "Exported type literal with an Effect-returning update service method.",
+    "proposedTarget": "None - keep as a service contract.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Context.Service shape for write-mode update application; the durable resolution/report payloads are schema-modeled and the service method carries runtime filesystem/path requirements.",
+      "boundary": "service-contract/Context.Service-shape carve-out"
+    }
+  }
+]

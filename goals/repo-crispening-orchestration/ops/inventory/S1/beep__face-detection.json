@@ -1,0 +1,77 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
+    "line": 116,
+    "symbol": "LoadedFaceDetector",
+    "smell": "Exported interface with an Effect-returning function member matches the schema-first-inventory detector surface.",
+    "proposedTarget": "None -- fence 1 port-interface carve-out. The `detect` payloads are already `FaceDetectionImageRequest` and `FaceDetectionResult` schemas; keep the loaded detector as the runtime ONNX session port.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "A loaded detector closes over a live ONNX Runtime session. Schema-as-truth applies to the request/result payloads, not to the runtime session-bound port interface.",
+      "boundary": "ONNX Runtime loaded-detector port"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
+    "line": 163,
+    "symbol": "FaceDetectionServiceShape",
+    "smell": "Exported interface with a higher-order Effect service method matches the schema-first-inventory detector surface.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. Keep `FaceDetectionModelConfig` as the schema for the config payload and `LoadedFaceDetector` as the callback port; Effect v4 class-style `Context.Service<Self, Shape>()(\"Key\")` verified at `.repos/effect-v4/packages/effect/src/Context.ts:162-163`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "The shape is the public service contract for acquiring and releasing a native model session around a callback. It is a Context.Service boundary, not a decoded data model.",
+      "boundary": "Context.Service shape for the face-detection driver"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
+    "line": 721,
+    "symbol": "makeFaceDetectionService",
+    "smell": "Exported service factory in a schema-modeled service file can look like an SFV4-fn-schema hit.",
+    "proposedTarget": "Hypothetical no-arg `Fn({ output: FaceDetectionServiceShape })` wrapper -- audited and rejected.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "The function constructs a runtime service implementation around ONNX loading/acquire-release behavior. Its return is the service shape carve-out, not a first-party payload whose contract should move into Schema.",
+      "boundary": "service implementation factory"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
+    "line": 794,
+    "symbol": "withDetector",
+    "smell": "Exported higher-order function in a schema-modeled service file accepts a callback contract (`use: (detector) => Effect...`) that a naive SFV4-fn-schema detector may flag.",
+    "proposedTarget": "Hypothetical `Fn` wrapper for the callback pair -- audited and rejected. `Fn(...).implementEffect`/`implementSync` helpers are verified at `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:369-410`.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "`withDetector` is a resource-scoped service helper: `config` is already the `FaceDetectionModelConfig` schema, while `use` is a generic callback over the live detector port. Fn schemas cannot preserve the generic A/E/R callback relationship without changing the service API.",
+      "boundary": "higher-order service callback over a native detector port"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/face-detection/src/FaceDetection.models.ts",
+    "line": 443,
+    "symbol": "decodeFaceDetectionModelConfig / decodeFaceDetectionImageRequest",
+    "smell": "Exported schema-derived decoders can look like a public decode-helper wall (`S.decodeUnknownEffect(...)`).",
+    "proposedTarget": "None for S1. Keep these as package boundary codecs over the public request models; Effect v4 `S.decodeUnknownEffect` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The helpers are direct schema-derived model codecs. They do not implement a parallel validator; the request/config classes remain the source of truth.",
+      "boundary": "public face-detection model codec API"
+    }
+  }
+]

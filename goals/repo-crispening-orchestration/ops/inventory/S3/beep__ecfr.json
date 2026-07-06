@@ -1,0 +1,13 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ecfr/scripts/generate.ts",
+    "line": 50,
+    "symbol": "schemaExpr",
+    "smell": "schemaExpr uses a native switch over the finite JsonSchema.type family for integer, number, boolean, array, and a default string fallback. This hand-authored generator can use Effect Match to make schema-type coverage explicit without generated-output churn.",
+    "proposedTarget": "Replace the switch with Match.value(schema.type).pipe(Match.when(\"integer\", ...), Match.when(\"number\", ...), Match.when(\"boolean\", ...), Match.when(\"array\", ...), Match.orElse(...)) or a typed Match.type<JsonSchema[\"type\"]>() matcher. Effect v4 Match APIs were verified in .repos/effect-v4/packages/effect/src/Match.ts.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 2.7
+  }
+]

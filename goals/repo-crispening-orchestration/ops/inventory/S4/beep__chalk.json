@@ -1,0 +1,297 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkSchema.ts",
+    "line": 157,
+    "symbol": "ColorSupportLevel",
+    "smell": "LiteralKit statics (Options/is/Enum/$match/toTaggedUnion) silently dropped by `.pipe($I.annoteSchema(...))` — annotation rebuilds the schema (confirmed by withLiteralKitStatics docs). Downstream compensates with a free-floating decode helper (ChalkRuntime.ts:124) and tests use `S.is(ColorSupportLevel)` (test/index.test.ts:152).",
+    "proposedTarget": "Capture the kit in a base const, then `base.pipe($I.annoteSchema(\"ColorSupportLevel\", {...}), SchemaUtils.withLiteralKitStatics(base), SchemaUtils.withCodecStatics)` so `.is`/`.fromUnknown`/`.decodeOption` and kit helpers survive annotation (helpers verified at packages/foundation/modeling/schema/src/SchemaUtils/withLiteralKitStatics.ts:37 and withCodecStatics.ts:90).",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkSchema.ts",
+    "line": 281,
+    "symbol": "ModifierName",
+    "smell": "LiteralKit statics lost via `.pipe($I.annoteSchema(...))` rebuild; AnsiStyles.ts:239 rebuilds the guard as free-floating `const isModifierStyleName = S.is(ModifierName)` — the exact duplicate-guard wall SFV4-static-api targets.",
+    "proposedTarget": "Same base-const + `withLiteralKitStatics(base)` + `withCodecStatics` pattern so consumers call `ModifierName.is(...)` directly.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkSchema.ts",
+    "line": 318,
+    "symbol": "ForegroundColorName",
+    "smell": "LiteralKit statics lost via `.pipe($I.annoteSchema(...))` rebuild; AnsiStyles.ts:241 rebuilds the guard as free-floating `const isForegroundStyleName = S.is(ForegroundColorName)`.",
+    "proposedTarget": "Same base-const + `withLiteralKitStatics(base)` + `withCodecStatics` pattern so consumers call `ForegroundColorName.is(...)` directly.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/PublicSurface.ts",
+    "line": 53,
+    "symbol": "ColorSupportLevelInput",
+    "smell": "Branded/refined const (`S.Int.check(...).pipe($I.annoteSchema(...))`) missing withCodecStatics; ChalkRuntime.ts:125 builds free-floating `decodeColorSupportLevelInput = S.decodeUnknownResult(ColorSupportLevelInput)` and immediately `Result.getOrThrowWith`s it (ChalkRuntime.ts:142), which is `fromUnknown` semantics.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the pipe; replace the runtime's Result-then-throw dance with `ColorSupportLevelInput.fromUnknown(level)`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkSchema.ts",
+    "line": 355,
+    "symbol": "BackgroundColorName",
+    "smell": "LiteralKit statics lost via `.pipe($I.annoteSchema(...))` rebuild; AnsiStyles.ts:261 reaches the background branch only via Match.orElse because no `.is` guard survives on the schema.",
+    "proposedTarget": "Same base-const + `withLiteralKitStatics(base)` + `withCodecStatics` pattern.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkSchema.ts",
+    "line": 392,
+    "symbol": "ColorName",
+    "smell": "LiteralKit statics lost via `.pipe($I.annoteSchema(...))` rebuild; the public surface (Chalk.ts:577) re-exports the raw values tuple `colorNameValues` separately because kit `.Options` did not survive.",
+    "proposedTarget": "Same base-const + `withLiteralKitStatics(base)` + `withCodecStatics` pattern; public `colorNames` can then alias `ColorName.Options`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
+    "line": 186,
+    "symbol": "modifierStyles",
+    "smell": "Triplicated verbose pipeline `pipe(codes, R.toEntries, A.map(([k, pair]) => [k, toStyleEntry(pair)] as const), R.fromEntries)` (lines 186, 193, 200) is a wrapper-lambda detour for value-mapping a record.",
+    "proposedTarget": "Direct helper ref: `R.map(modifierCodes, toStyleEntry)` (dual value-map preserving keys, verified at .repos/effect-v4/packages/effect/src/Record.ts:619); same for foregroundStyles and backgroundStyles.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkRuntime.ts",
+    "line": 192,
+    "symbol": "capitalizeModelName",
+    "smell": "Hand-rolled `${Str.toUpperCase(Str.slice(0, 1)(modelName))}${Str.slice(1)(modelName)}` reimplements an existing dedicated helper; inputs are only \"rgb\"|\"hex\"|\"ansi256\" so behavior is identical.",
+    "proposedTarget": "Direct helper ref: `Str.capitalize` (verified at .repos/effect-v4/packages/effect/src/String.ts:211; re-exported by @beep/utils Str via packages/foundation/modeling/utils/src/Str.ts:734).",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
+    "line": 239,
+    "symbol": "isModifierStyleName",
+    "smell": "Free-floating guard `const isModifierStyleName = S.is(ModifierName)` — duplicate of the kit-derived `.is` static that LiteralKit provides but the annotation pipe dropped (see ChalkSchema.ts:281 finding).",
+    "proposedTarget": "Delete; use `ModifierName.is` inside `getStyleEntry` once statics are reattached upstream.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 9
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
+    "line": 241,
+    "symbol": "isForegroundStyleName",
+    "smell": "Free-floating guard `const isForegroundStyleName = S.is(ForegroundColorName)` — duplicate of the kit-derived `.is` static dropped by the annotation pipe (see ChalkSchema.ts:318 finding).",
+    "proposedTarget": "Delete; use `ForegroundColorName.is` inside `getStyleEntry` once statics are reattached upstream.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 10
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkRuntime.ts",
+    "line": 124,
+    "symbol": "decodeColorSupportLevel",
+    "smell": "Top-of-file decode-wall entry `const decodeColorSupportLevel = S.decodeUnknownResult(ColorSupportLevel)`; sole consumer normalizeColorSupportLevel (line 141) immediately throws via `Result.getOrThrowWith`, i.e. `fromUnknown` semantics that belong on the schema.",
+    "proposedTarget": "Replace with `ColorSupportLevel.fromUnknown` after withCodecStatics lands on ChalkSchema.ts:157; delete the wall const and the schemaIssueToError adapter if unused.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 11
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkRuntime.ts",
+    "line": 125,
+    "symbol": "decodeColorSupportLevelInput",
+    "smell": "Top-of-file decode-wall entry `const decodeColorSupportLevelInput = S.decodeUnknownResult(ColorSupportLevelInput)`; consumed only by normalizeColorSupportLevel's throw-on-failure path.",
+    "proposedTarget": "Replace with `ColorSupportLevelInput.fromUnknown` after withCodecStatics lands on PublicSurface.ts:53.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 12
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+    "line": 138,
+    "symbol": "normalizeStreamLike",
+    "smell": "Passthrough pipe lambda: `(stream) => pipe(decodeStreamLike(stream), O.getOrElse(() => StreamLikeModel.make({})))` is an exact `flow` candidate.",
+    "proposedTarget": "`const normalizeStreamLike = flow(decodeStreamLike, O.getOrElse(() => StreamLikeModel.make({})))`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 13
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+    "line": 144,
+    "symbol": "normalizeSupportsColorOptions",
+    "smell": "Passthrough pipe lambda: `(options) => pipe(decodeSupportsColorOptions(options), O.getOrElse(...))` is an exact `flow` candidate.",
+    "proposedTarget": "`const normalizeSupportsColorOptions = flow(decodeSupportsColorOptions, O.getOrElse(() => SupportsColorOptionsModel.make({})))`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 14
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+    "line": 150,
+    "symbol": "normalizeRuntimeProcessLike",
+    "smell": "Passthrough pipe lambda: `(runtimeProcessLike) => pipe(decodeRuntimeProcessLike(runtimeProcessLike), O.getOrElse(...))` is an exact `flow` candidate.",
+    "proposedTarget": "`const normalizeRuntimeProcessLike = flow(decodeRuntimeProcessLike, O.getOrElse(() => RuntimeProcessLikeModel.make({})))`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 15
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkSchema.ts",
+    "line": 221,
+    "symbol": "ColorInfo",
+    "smell": "Union const `S.Union([ColorSupport, S.Literal(false)]).pipe($I.annoteSchema(...))` missing withCodecStatics; consumers scatter `info === false` checks (Chalk.ts:653, SupportsColor.ts translateLevel) with no colocated guard/decoder.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the pipe so `ColorInfo.is` / `ColorInfo.decodeOption` live on the schema.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 16
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.browser.ts",
+    "line": 86,
+    "symbol": "browserColorSupport",
+    "smell": "Passthrough thunk pipeline: `() => pipe(getBrowserNavigator(), O.map(browserColorSupportFromNavigator), O.getOrElse(() => disabledBrowserSupport))` is a nullary `flow` candidate (flow's first fn may be 0-ary, Function.ts:1162).",
+    "proposedTarget": "`const browserColorSupport: () => ColorInfo = flow(getBrowserNavigator, O.map(browserColorSupportFromNavigator), O.getOrElse(() => disabledBrowserSupport))`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 17
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkRuntime.ts",
+    "line": 185,
+    "symbol": "stringIndexOfOrNotFound",
+    "smell": "Behavior separated from its helper module: byte-for-byte duplicate of the private `indexOfOrNotFound` in Utilities.ts:17 — the shared helper exists but is not exported, so the runtime re-implements it.",
+    "proposedTarget": "Export `indexOfOrNotFound` from internal/Utilities.ts and reuse it in ChalkRuntime.ts; delete the duplicate.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 18
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.browser.ts",
+    "line": 39,
+    "symbol": "getBrowserNavigator",
+    "smell": "Trivial single-step pipe wrapper: `() => pipe(globalThis.navigator, O.fromNullishOr)` — `pipe(x, f)` is just `f(x)`.",
+    "proposedTarget": "`const getBrowserNavigator = (): O.Option<Navigator> => O.fromNullishOr(globalThis.navigator)` (thunk kept for lazy navigator access).",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 19
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+    "line": 132,
+    "symbol": "decodeStreamLike",
+    "smell": "Top-of-file decode wall (lines 132-136: decodeStreamLike / decodeSupportsColorOptions / decodeRuntimeProcessLike) plus normalize* companions — codec behavior separated from the S.Class models it serves.",
+    "proposedTarget": "Colocate as in-body statics on StreamLikeModel / SupportsColorOptionsModel / RuntimeProcessLikeModel (e.g. `static readonly decodeOption = S.decodeUnknownOption(Self)` and a `static normalize`); withCodecStatics does not apply to S.Class (constructor identity lost when piped), so in-body statics are the sanctioned form.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 20
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+    "line": 523,
+    "symbol": "createSupportsColor",
+    "smell": "Detector hit: exported 3-arg helper that is not `dual`.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 21,
+    "exception": {
+      "reason": "All three parameters are optional with defaults (stream = {}, options = {}, runtimeProcessLike = current process); dual dispatches on argument count, which is incompatible with optional-trailing-argument boundary APIs — callers legitimately invoke it with 0, 1, 2, or 3 args.",
+      "boundary": "Chalk-compat detection entry point mirroring upstream supports-color's signature; changing arity semantics would break API compatibility."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
+    "line": 496,
+    "symbol": "getModelAnsi",
+    "smell": "Detector hit: exported 3-fixed-arg helper (plus variadic tail) that is not `dual`.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 22,
+    "exception": {
+      "reason": "Variadic `...arguments_` tail makes total arity unbounded; dual requires a fixed arity or predicate and would misdispatch when color-channel arguments are spread (e.g. getModelAnsi(\"rgb\", level, type, r, g, b)).",
+      "boundary": "Internal ANSI renderer consumed only by ChalkRuntime's model builders; not a public pipeable surface."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkRuntime.ts",
+    "line": 91,
+    "symbol": "Styler",
+    "smell": "Detector hit: `declare namespace Styler` type block sits apart from the Styler class — superficially 'behavior separated from its data'.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 23,
+    "exception": {
+      "reason": "Fence 5: the namespace supplies the Styler.Codec type required by `S.suspend((): S.Codec<Styler.Codec> => Styler)` self-recursion (line 84); restructuring load-bearing recursion namespaces is explicitly out of scope.",
+      "boundary": "SPEC fence 5 — no `declare namespace` recursion blocks."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/PublicSurface.ts",
+    "line": 82,
+    "symbol": "ChalkInstanceSurface",
+    "smell": "Detector hit: large `declare abstract class` contract detached from any schema — superficially a colocation candidate.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 24,
+    "exception": {
+      "reason": "Fence 1: this is a type-only public surface contract (the chainable builder interface with `this`-typed getters); it has no runtime value to attach statics to, and service-shape/port contracts stay interfaces.",
+      "boundary": "SPEC fence 1 — service-contract carve-out."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkRuntime.ts",
+    "line": 115,
+    "symbol": "builderMetaMap",
+    "smell": "Detector hit: builder metadata held in a native `WeakMap` beside the schemas rather than on the data.",
+    "proposedTarget": "None — leave as-is in this packet.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 25,
+    "exception": {
+      "reason": "Fences 6/7: native-collection choices belong to the effect-native-migration domain, not this packet; the WeakMap is additionally load-bearing for GC of ephemeral builder functions (no MutableHash* equivalent offers weak keys).",
+      "boundary": "SPEC fences 6/7 — no native-collection migration in S4."
+    }
+  }
+]

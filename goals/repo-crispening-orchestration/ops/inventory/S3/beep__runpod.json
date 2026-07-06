@@ -1,0 +1,95 @@
+[
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 580,
+    "symbol": "diagnosticsFor.optionalFields",
+    "smell": "diagnosticsFor assembles a heterogeneous optional diagnostics struct through two adjacent single-key R.getSomes spreads for cause and status (lines 580-585). The combined object has fixed known keys with different value types, not a homogeneous dynamic-key dictionary.",
+    "proposedTarget": "Replace the two spreads with one ...O.getSomesStruct({ cause: O.fromUndefinedOr(error.cause), status: O.fromUndefinedOr(error.status) }) call. O.getSomesStruct is verified at packages/foundation/modeling/utils/src/Option.ts:102; sibling driver exemplars are RunpodError.fromDescriptor in packages/drivers/runpod/src/Runpod.errors.ts:151 and Firecrawl diagnostics in packages/drivers/firecrawl/src/Firecrawl.service.ts:297. Held at judgment per D5 until the Law 20/47 sweep is allowed.",
+    "confidence": 0.82,
+    "mechanization": "judgment",
+    "roiRank": 1.7
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/scripts/generate.ts",
+    "line": 27,
+    "symbol": "HttpMethod",
+    "smell": "The generator keeps a parallel HTTP method family as an uppercase inline union type (line 27), a lowercase HTTP_METHODS tuple (line 175), and a narrowing cast Str.toUpperCase(openApiMethod) as HttpMethod (line 218). The lower-to-upper relation is a reversible code map but is encoded as duplicated literals plus an assertion.",
+    "proposedTarget": "Model the mapping once with MappedLiteralKit([['get', 'GET'], ['post', 'POST'], ['patch', 'PATCH'], ['put', 'PUT'], ['delete', 'DELETE']]), iterate its From.Options for OpenAPI path keys, and decode/lookup uppercase method values from the kit instead of casting. MappedLiteralKit's reversible From/To API is verified at packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts:264-372; in-repo mapped-kit exemplars include TerritoryNameFromCode at packages/foundation/modeling/schema/src/TerritoryCode.ts:114 and HttpStatus at packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.schema.ts:34.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 2.2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/scripts/generate.ts",
+    "line": 151,
+    "symbol": "Operation.responseBody",
+    "smell": "Request/response body kind literals are repeated as inline unions and render-template literals: Operation.responseBody uses \"json\" | \"none\" | \"text\" at line 151, chooseResponse returns those literals at lines 365/374/384/393, ResponseChoice.body repeats the union at line 336, and the generated schema templates hard-code LiteralKit([\"json\", \"none\"]) / LiteralKit([\"json\", \"none\", \"text\"]) at lines 701 and 731.",
+    "proposedTarget": "Introduce generator-local LiteralKit constants for request and response body kinds, derive Operation/ResponseChoice types from their Type values, render generated LiteralKit calls from their Options, and use kit Enum values in renderOperationDescriptor. This follows the in-repo LiteralKit source-of-truth pattern in packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts:28-30 and the generated output already expects the resulting RunpodRequestBodyKind/RunpodResponseBodyKind kits.",
+    "confidence": 0.64,
+    "mechanization": "assisted",
+    "roiRank": 1.6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 40,
+    "symbol": "RunpodQueryScalar",
+    "smell": "A broad undiscriminated-union detector sees RunpodQueryScalar = S.Union([S.Boolean, S.Finite, S.String]), RunpodQueryValue = S.Union([RunpodQueryScalar, RunpodQueryScalarArray]) at line 78, and RunpodUrlParamValue = S.Union([S.String, S.Array(S.String)]) at line 191.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These are primitive/query-codec boundary unions for raw URL query values, not variant records with case-specific payloads. The only branch site, queryScalarToString at lines 231-235, already uses Effect Match over primitive predicates and has no _tag-like discriminator or schema-derived tagged-union helpers to apply.",
+      "boundary": "Runpod raw-request query/value codec boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/scripts/generate.ts",
+    "line": 34,
+    "symbol": "JsonSchema.OpenApiWireUnions",
+    "smell": "A broad literal/undiscriminated-union detector sees the generator's OpenAPI wire-shape schemas: JsonSchema.type accepts string | readonly string[] (line 34), additionalProperties accepts JsonSchema | boolean (line 41), and OpenApiParameter.in uses S.Literals([\"path\", \"query\", \"header\", \"cookie\"]) at line 51 with simple path/query filters later.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These schemas intentionally mirror the OpenAPI/JSON Schema document shape consumed by the generator. Tagging or re-shaping them would change the accepted wire form; the line 51 parameter-location literals are a closed protocol field but do not have repeated helper/enum/matcher surfaces beyond simple path/query filtering.",
+      "boundary": "Runpod OpenAPI generator input document codec"
+    }
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/drivers/runpod/src/RunpodDocs.service.ts",
+    "line": 147,
+    "symbol": "parseEntry.descriptionOptionalSpread",
+    "smell": "A loose R.getSomes detector sees ...R.getSomes({ description }) while constructing a RunpodDocsIndexEntry.",
+    "proposedTarget": "None -- keep as-is for this S3 pass.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The SFV4-getsomes-struct card is only actionable for heterogeneous Option structs where O.getSomesStruct preserves per-key value types. This site has one optional description key, so changing it would be consistency cleanup rather than an S3 discrimination/exhaustiveness finding.",
+      "boundary": "single-key optional docs-index description payload; D5-gated heterogeneous-struct sweep"
+    }
+  },
+  {
+    "ruleId": "literal-kit-const-assertion",
+    "file": "packages/drivers/runpod/src/index.ts",
+    "line": 57,
+    "symbol": "Runpod ordinary as const candidates",
+    "smell": "A broad no-as / literal-kit-const-assertion detector sees ordinary as const expressions: VERSION = \"0.0.0\" as const at index.ts:57, tuple-return assertions at Runpod.service.ts:283/324/603, and named generator tuples at scripts/generate.ts:175/184.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "`as const` is explicitly allowed except when applied to an inline array passed directly to LiteralKit(...). None of these candidates are LiteralKit inline array arguments; the HTTP_METHODS tuple participates in a separate duplicate-literal-family finding, but not because the as-const assertion itself violates this card.",
+      "boundary": "literal-kit-const-assertion detector boundary: only LiteralKit([... ] as const) inline arguments"
+    }
+  }
+]

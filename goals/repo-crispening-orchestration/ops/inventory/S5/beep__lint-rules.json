@@ -1,0 +1,114 @@
+[
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/policy-pack/lint-rules/test/harness.ts",
+    "line": 52,
+    "symbol": "BiomeReport.location.start.line/column",
+    "smell": "Biome report coordinates are decoded as arbitrary S.Finite values, so fractions and negative numbers pass the test-harness boundary even though diagnostics use integer source locations.",
+    "proposedTarget": "Introduce local coordinate schemas, e.g. const ReportLine = S.Int.check(S.isGreaterThanOrEqualTo(1)) and const ReportColumn = S.Int.check(S.isGreaterThanOrEqualTo(0)), then use them for location.start.line/column. S.Int and S.isGreaterThanOrEqualTo were verified in .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7314; the in-repo non-negative integer pattern already appears in packages/foundation/modeling/schema/src/Duration/Duration.input.ts:135-142.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-harness.ts",
+    "line": 81,
+    "symbol": "OxlintReport.diagnostics.labels.span.line",
+    "smell": "Oxlint report span line is decoded as arbitrary S.Finite; a diagnostic source coordinate should be an integer line number, not any finite number.",
+    "proposedTarget": "Share the same local ReportLine schema as the Biome harness: S.Int.check(S.isGreaterThanOrEqualTo(1)) for span.line, keeping the field optional. S.Int and S.isGreaterThanOrEqualTo were verified in .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7314; packages/foundation/modeling/schema/src/Duration/Duration.input.ts:135-142 is the local non-negative integer exemplar.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/policy-pack/lint-rules/test/harness.ts",
+    "line": 44,
+    "symbol": "BiomeReport",
+    "smell": "Detector candidate: the Biome JSON report schema intentionally keeps category/message/severity broad and diagnostics optional.",
+    "proposedTarget": "None - keep the broad CLI report shape, with only the coordinate numeric tightening recorded separately.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is a lenient third-party CLI JSON boundary in a test harness; parseReport explicitly tolerates non-JSON or unexpected output by falling back to emptyReport, so narrowing category/message/severity to repo-local literals would make the harness less robust.",
+      "boundary": "Biome CLI JSON reporter boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-harness.ts",
+    "line": 75,
+    "symbol": "OxlintReport",
+    "smell": "Detector candidate: the oxlint JSON report schema keeps diagnostic codes and label arrays broad and optional.",
+    "proposedTarget": "None - keep the broad CLI report shape, with only the coordinate numeric tightening recorded separately.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This schema decodes a third-party CLI report format and intentionally accepts only the subset the harness reads; narrowing code/labels to repo-local rule shapes would couple the helper to oxlint output details beyond the test's contract.",
+      "boundary": "oxlint CLI JSON reporter boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-equivalence",
+    "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
+    "line": 156,
+    "symbol": "AST helper discriminant checks",
+    "smell": "Detector candidate: the parser helpers and rules use hand-written equality against ESTree discriminants and property names rather than schema-derived equivalence.",
+    "proposedTarget": "None - keep the direct AST discriminant checks; S.toEquivalence (verified .repos/effect-v4/packages/effect/src/Schema.ts:13201) does not apply because these helpers operate on @oxlint/plugins ESTree nodes, not a repo-owned schema model.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The equality is parser-control-flow over externally typed ESTree nodes and string discriminants, not value equality for a schema-modeled domain object.",
+      "boundary": "@oxlint/plugins ESTree visitor boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/tooling/policy-pack/lint-rules/test/sources.ts",
+    "line": 18,
+    "symbol": "SOURCES",
+    "smell": "Detector candidate: Biome GritQL rule tests use static inline valid/invalid fixture sources rather than S.toArbitrary-generated programs.",
+    "proposedTarget": "None - keep these hand-written fixtures; S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) is additive for schema laws, not a replacement for deliberate lint-rule regression programs.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These are intentional positive/negative lint fixtures whose exact syntax triggers or avoids a specific rule; generated arbitrary programs would not replace the regression contract.",
+      "boundary": "Biome GritQL lint-rule fixture boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-sources.ts",
+    "line": 32,
+    "symbol": "OXLINT_SOURCES",
+    "smell": "Detector candidate: oxlint plugin tests use static inline valid/invalid fixture sources rather than S.toArbitrary-generated programs.",
+    "proposedTarget": "None - keep these hand-written fixtures; S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) is additive for schema laws, not a replacement for exact lint-rule regression programs.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The sources encode path-sensitive and import-binding-sensitive rule cases, including false-positive fixtures; static fixtures are the correct regression artifact.",
+      "boundary": "oxlint plugin lint-rule fixture boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-equivalence",
+    "file": "packages/tooling/policy-pack/lint-rules/src/index.ts",
+    "line": 34,
+    "symbol": "RULE_NAMES documentation example",
+    "smell": "Detector candidate: JSDoc examples use deepStrictEqual for literal registry examples.",
+    "proposedTarget": "None - keep documentation examples simple; this is not runtime equality over a schema-modeled domain.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The deepStrictEqual usage occurs only inside examples documenting exported constants and types; there is no package runtime equality helper for S.toEquivalence to replace.",
+      "boundary": "JSDoc example boundary"
+    }
+  }
+]

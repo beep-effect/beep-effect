@@ -1,0 +1,28 @@
+[
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/modeling/provenance/src/TextAnchor.ts",
+    "line": 90,
+    "symbol": "isWellOrdered",
+    "smell": "Exported imperative validation predicate `isWellOrdered` carries the `startChar <= endChar` invariant OUTSIDE the `TextAnchor` schema; its parameter contract is a structural duplicate of the schema's own fields, and the docstring itself concedes 'Schema-level enforcement is a tracked follow-up'. Producers are asked to remember to assert it — the exact free-floating-guard failure mode S1 exists to remove.",
+    "proposedTarget": "Absorb the invariant as a cross-field filter on the class: `TextAnchor extends S.Class(...)(TextAnchorFields, ...)` gains `.check(S.makeFilter((a) => a.startChar <= a.endChar ? undefined : { path: [\"endChar\"], issue: \"endChar must be >= startChar\" }, { identifier: $I`TextAnchorWellOrderedCheck`, ... }))`. Verified v4 API: `S.makeFilter` .repos/effect-v4/packages/effect/src/Schema.ts:6393 (struct-level `.check` exemplified in its docs); in-repo cross-field exemplar: packages/shared/domain/src/values/LocalDate/LocalDate.model.ts:40-46 (`S.makeFilter(isValidCalendarDate, ...)` on the LocalDate fields struct). §5.4 ripple: also export the filter (e.g. `wellOrderedFilter`) so the `...TextAnchorFields` spread consumer packages/epistemic/domain/src/values/EvidenceSpan/EvidenceSpan.model.ts can apply the same check — a bare fields spread does not inherit struct-level filters. §5.3: decode now rejects malformed anchors (previously accepted), so the wave needs the parity proof plus a S.toArbitrary round-trip law with an ordered-pair generator.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 0.6
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/provenance/src/TextAnchor.ts",
+    "line": 37,
+    "symbol": "TextAnchorFields",
+    "smell": "Exported bare fields object (plain record of schemas, not itself a schema) — audited and rejected as independently actionable.",
+    "proposedTarget": "None standalone — established shared-fields pattern; but see the isWellOrdered finding: once the cross-field check lands, this spread surface is exactly where the check can silently NOT propagate, so the exported filter must ride alongside it.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.06,
+    "exception": {
+      "reason": "Deliberate shared-fields composition surface (same pattern as ColorsFields in @beep/colors): consumers like EvidenceSpan spread the offset fields into a richer value object without re-declaring the shape. Each field is itself a schema (NonNegativeInt, S.String), so the truth stays in schemas; converting the record into a schema would break the documented spread use.",
+      "boundary": "shared schema-fields composition surface"
+    }
+  }
+]

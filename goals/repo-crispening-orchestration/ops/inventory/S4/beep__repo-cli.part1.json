@@ -1,0 +1,727 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docs/Docs.command.ts",
+    "line": 20,
+    "symbol": "DocsSectionName",
+    "smell": "Detector hit for a `LiteralKit(...).pipe($I.annoteSchema(...))` value, but the kit is local builder glue used immediately to derive `DocsSection`; there is no downstream guard/decode wall or public helper to remove.",
+    "proposedTarget": "Leave as-is unless `DocsSectionName` becomes exported or grows consumers; if that happens, use the base-kit reattachment pattern from `packages/foundation/modeling/nlp/src/Core/Similarity.ts:35` with `SchemaUtils.withLiteralKitStatics` verified at `packages/foundation/modeling/schema/src/SchemaUtils/withLiteralKitStatics.ts:37`.",
+    "confidence": 0.4,
+    "mechanization": "judgment",
+    "roiRank": 45,
+    "exception": {
+      "reason": "Local one-shot kit used only to construct the adjacent tagged union; no separated behavior is currently present.",
+      "boundary": "false-positive literal-kit audit"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docs/Docs.command.ts",
+    "line": 78,
+    "symbol": "DocsSection",
+    "smell": "Exported tagged-union schema is built by piping through `S.toTaggedUnion` and annotation but never reattaches codec statics, so any consumer must rebuild `S.is(DocsSection)` / decode helpers by hand.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after annotation, following the union exemplar `packages/foundation/modeling/md/src/Md.model.ts:1612` and `withCodecStatics` API verified at `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 34
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+    "line": 34,
+    "symbol": "ArchitectureDomainKind",
+    "smell": "Exported `LiteralKit` loses kit statics through `$I.annoteSchema`; `Architecture.command.ts:69` keeps a separate decoder helper for CLI input instead of schema-owned decode behavior.",
+    "proposedTarget": "Capture `ArchitectureDomainKindKit`, then pipe annotation, `SchemaUtils.withLiteralKitStatics(ArchitectureDomainKindKit)`, and `SchemaUtils.withCodecStatics`; use the same pattern as `packages/foundation/modeling/nlp/src/Core/Similarity.ts:35` and `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+    "line": 61,
+    "symbol": "ArchitecturePlanStage",
+    "smell": "Exported `LiteralKit` statics are dropped by annotation; `Architecture.command.ts:64` rebuilds stage decoding as a free helper.",
+    "proposedTarget": "Use a base kit plus `SchemaUtils.withLiteralKitStatics(base)` and `SchemaUtils.withCodecStatics`, then colocate the command-facing decode wrapper via `SchemaUtils.withStatics` if the custom `DomainError` text must remain.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+    "line": 88,
+    "symbol": "ArchitectureSliceRole",
+    "smell": "Exported role literal domain loses `Options`/`Enum`/guards after annotation; `Architecture.command.ts:74` rebuilds decode behavior outside the schema.",
+    "proposedTarget": "Reattach literal-kit and codec statics with the base-kit pattern used by `SimilarityMethod` (`packages/foundation/modeling/nlp/src/Core/Similarity.ts:35`) and move custom decode text into a colocated static if still needed.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+    "line": 125,
+    "symbol": "ArchitecturePackageRole",
+    "smell": "Exported package-role literal domain drops kit statics after annotation; downstream code uses `$match` at `OperationPlan.ts:1769`, which only works if statics survive on this schema.",
+    "proposedTarget": "Capture a base kit and reattach with `SchemaUtils.withLiteralKitStatics(base)`; keep `$match` colocated on `ArchitecturePackageRole` and add `SchemaUtils.withCodecStatics` for guard/decode callers.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+    "line": 167,
+    "symbol": "ArchitectureOperationKind",
+    "smell": "Exported operation-kind literal domain is annotation-piped without reattaching kit or codec statics; operation helpers later switch on bare strings and consumers must rebuild guards.",
+    "proposedTarget": "Use `const ArchitectureOperationKindKit = LiteralKit([...])` followed by annotation, `SchemaUtils.withLiteralKitStatics(ArchitectureOperationKindKit)`, and `SchemaUtils.withCodecStatics`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 11
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+    "line": 206,
+    "symbol": "ArchitectureWriterKind",
+    "smell": "Exported writer literal domain loses kit statics through annotation even though the values drive generated operation-plan behavior.",
+    "proposedTarget": "Reattach `withLiteralKitStatics` from a base kit and add `withCodecStatics`; `withLiteralKitStatics` is verified at `packages/foundation/modeling/schema/src/SchemaUtils/withLiteralKitStatics.ts:37`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 15
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+    "line": 639,
+    "symbol": "ArchitectureOperation",
+    "smell": "Public union const lacks `withCodecStatics`; encode/decode JSON helpers are kept separately at `OperationPlan.ts:2533` and re-exported at `OperationPlan.ts:2733` / `OperationPlan.ts:2758`.",
+    "proposedTarget": "Pipe the union through annotation plus `SchemaUtils.withCodecStatics` as in `packages/foundation/modeling/md/src/Md.model.ts:1612`; if JSON helpers remain public, add a colocated `SchemaUtils.withStatics` block like `FileGenerationPlanService.ts:218` for `encodeJson` / `decodeJson`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 16
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
+    "line": 118,
+    "symbol": "PackageType",
+    "smell": "Top-of-file schema helper wall: `PackageType` drops literal-kit statics and is followed by separate `isPackageType` and `packageTypeEquivalence` helpers at lines 124-125.",
+    "proposedTarget": "Capture `PackageTypeKit`, reattach kit and codec statics, and colocate equivalence with `SchemaUtils.withStatics`; consumers can call `PackageType.is` / `PackageType.equivalence` instead of the free helpers.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
+    "line": 127,
+    "symbol": "AppKind",
+    "smell": "Literal domain drops statics and immediately grows `isAppKind`, `decodeAppKindEffect`, and `appKindEquivalence` helpers at lines 133-140.",
+    "proposedTarget": "Use base-kit reattachment plus `SchemaUtils.withStatics` for `decodeEffect` with the current `DomainError` message; keep call sites pipeable by reading from `AppKind` statics.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
+    "line": 142,
+    "symbol": "PackageFamily",
+    "smell": "Literal domain drops statics and is followed by free `isPackageFamily`, `decodePackageFamilyEffect`, and `packageFamilyEquivalence` helpers at lines 148-155.",
+    "proposedTarget": "Reattach literal-kit and codec statics, then colocate the custom CLI decode wrapper and equivalence via `SchemaUtils.withStatics` as demonstrated in `FileGenerationPlanService.ts:218`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
+    "line": 157,
+    "symbol": "FoundationKind",
+    "smell": "Literal domain drops statics and is followed by free guard/decode helpers (`isFoundationKind`, `decodeFoundationKindEffect`) at lines 164-165.",
+    "proposedTarget": "Move the guard/decode behavior onto `FoundationKind` with `withLiteralKitStatics`, `withCodecStatics`, and a small `withStatics` decode wrapper for the existing error message.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
+    "line": 174,
+    "symbol": "ToolingKind",
+    "smell": "Literal domain drops statics and is followed by free guard/decode helpers (`isToolingKind`, `decodeToolingKindEffect`) at lines 180-181.",
+    "proposedTarget": "Move the guard/decode behavior onto `ToolingKind` with `withLiteralKitStatics`, `withCodecStatics`, and `withStatics` for the command-specific decode error.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 9
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
+    "line": 201,
+    "symbol": "ParentDir",
+    "smell": "Branded/refined const schema lacks `withCodecStatics`; `isParentDir` is rebuilt as a free guard at line 207.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after annotation, matching the branded schema pattern in `packages/foundation/modeling/md/src/Md.model.ts:32`; replace `isParentDir` with `ParentDir.is`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 12
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
+    "line": 209,
+    "symbol": "PackageName",
+    "smell": "Branded/refined const schema lacks `withCodecStatics`; `isPackageName` is rebuilt as a free guard at line 215.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after annotation and replace `isPackageName` call sites with `PackageName.is`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 13
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/ConfigUpdater.ts",
+    "line": 140,
+    "symbol": "PackagePath",
+    "smell": "Branded path schema lacks `withCodecStatics`; `isPackagePath` is rebuilt as a free guard at line 174 and guards config matching at line 230.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to `PackagePath` and replace the free guard with `PackagePath.is`; keep the `PackagePathToTstychePattern` transform separate.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 14
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts",
+    "line": 152,
+    "symbol": "GenerationActionKind",
+    "smell": "Exported action-kind literal domain is annotation-piped without reattached literal-kit statics; adjacent `GenerationAction` already uses `SchemaUtils.withStatics`, so the kind domain is the outlier.",
+    "proposedTarget": "Capture a `GenerationActionKindKit` base const and reattach `SchemaUtils.withLiteralKitStatics(GenerationActionKindKit)` plus `withCodecStatics`, matching the colocated `GenerationAction.toStr` pattern at `FileGenerationPlanService.ts:218`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 30
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/TsMorphIntegrationService.ts",
+    "line": 28,
+    "symbol": "TsMorphMutationKind",
+    "smell": "Exported mutation-kind literal domain loses kit statics through annotation, while the nearby mutation union keeps constructor statics manually (`thunkThis`) for behavior colocation.",
+    "proposedTarget": "Use the base-kit plus `withLiteralKitStatics` pattern, and add `withCodecStatics` if callers need schema-owned guards.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 31
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+    "line": 28,
+    "symbol": "CorpusCopyMode",
+    "smell": "Exported corpus literal domain loses kit statics after annotation; examples and consumers must use `S.is(CorpusCopyMode)` style guards instead of colocated schema statics.",
+    "proposedTarget": "Use a base kit and pipe annotation, `SchemaUtils.withLiteralKitStatics(base)`, and `SchemaUtils.withCodecStatics`, as in `packages/foundation/modeling/nlp/src/Core/Similarity.ts:35`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 17
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+    "line": 92,
+    "symbol": "CorpusDuplicateScope",
+    "smell": "Exported duplicate-scope literal domain loses `Options`/`Enum`/guard statics through annotation.",
+    "proposedTarget": "Reattach kit statics from a base `CorpusDuplicateScopeKit` and add `withCodecStatics` for guard/decode use.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 18
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+    "line": 313,
+    "symbol": "RecycleBinFormatVersion",
+    "smell": "Exported recycle-bin format literal domain drops kit statics; `Corpus.recyclebin.ts:123` decodes `RecycleBinOriginal` instead of having colocated format helpers available.",
+    "proposedTarget": "Reattach literal-kit statics and codec statics with the verified `SchemaUtils` helpers.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 29
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+    "line": 616,
+    "symbol": "RecycleBinEntryKind",
+    "smell": "Exported entry-kind literal domain loses kit statics; `Corpus.recyclebin.ts:153` hand-constructs literal return values rather than using colocated enum/options helpers.",
+    "proposedTarget": "Capture `RecycleBinEntryKindKit` and reattach `withLiteralKitStatics` plus `withCodecStatics`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 32
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+    "line": 935,
+    "symbol": "CorpusOrganizeCategory",
+    "smell": "Exported organize category literal domain drops kit statics while `Corpus.service.ts:2552` maintains a separate exhaustive counts record keyed by the same literal family.",
+    "proposedTarget": "Reattach literal-kit statics so category options/enums stay on `CorpusOrganizeCategory`; add `withCodecStatics` for guards/decoders.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 19
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+    "line": 183,
+    "symbol": "decodeCorpusProvenanceRecordJson",
+    "smell": "Public JSONL codec helper is free-floating next to `CorpusProvenanceRecord`; the schema owns the wire shape but not its decode/encode behavior (`encodeCorpusProvenanceRecordJson` follows at line 212).",
+    "proposedTarget": "Attach `decodeJson` / `encodeJson` through in-body statics on `CorpusProvenanceRecord` or a `SchemaUtils.withStatics` companion; keep exported aliases only as compatibility shims if public form must stay stable.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 37
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+    "line": 359,
+    "symbol": "decodeSourceTotalsRows",
+    "smell": "Local query-row decode wall (`decodeSourceTotalsRows`, `decodeDuplicateTotalsRows`, `decodeDuplicateSetRecords`, `decodeCatalogDigestRows`) sits apart from the row schemas it serves.",
+    "proposedTarget": "Attach decode-array statics to the local row classes or colocate the row decoder block beside the schemas with `SchemaUtils.withStatics`; keep custom `CorpusCommandError.mapError` at call boundaries.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 40
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+    "line": 145,
+    "symbol": "MediaKind",
+    "smell": "Exported media-kind literal domain loses kit statics after annotation; `Files.media.ts:370` returns raw literal strings instead of schema-owned enum/options.",
+    "proposedTarget": "Use a base `MediaKindKit` with `SchemaUtils.withLiteralKitStatics(MediaKindKit)` and `SchemaUtils.withCodecStatics`; then `mediaKindFromExtension` can return `MediaKind.Enum.image` / `MediaKind.Enum.video` if desired.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 20
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+    "line": 170,
+    "symbol": "SupportedMetadataImageExtension",
+    "smell": "Exported extension literal domain drops kit statics; `Files.media.ts:308` rebuilds `isSupportedMetadataImageExtension = S.is(SupportedMetadataImageExtension)`.",
+    "proposedTarget": "Reattach literal-kit and codec statics, then replace the free guard with `SupportedMetadataImageExtension.is` after colocation.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 10
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+    "line": 195,
+    "symbol": "NormalizeImageFormatInput",
+    "smell": "Exported normalize input literal domain loses kit statics through annotation; format normalization code must work with raw strings.",
+    "proposedTarget": "Reattach `withLiteralKitStatics` from a base kit and add `withCodecStatics` for schema-owned guard/decode behavior.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 33
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+    "line": 220,
+    "symbol": "NormalizeImageFormat",
+    "smell": "Exported canonical output-format literal domain drops kit statics; render helpers such as `Files.media.ts:686` accept bare literals without colocated enum/options helpers.",
+    "proposedTarget": "Use base-kit reattachment plus `withCodecStatics`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 35
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+    "line": 245,
+    "symbol": "NormalizeSkippedReason",
+    "smell": "Exported skipped-reason literal domain loses kit statics; downstream summary/render code handles bare strings instead of schema-owned options.",
+    "proposedTarget": "Reattach literal-kit statics and codec statics from a base `NormalizeSkippedReasonKit`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 36
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+    "line": 312,
+    "symbol": "BorderSide",
+    "smell": "Exported border-side literal domain drops kit statics; `Files.media.ts:134` keeps a separate `borderSides` array duplicating the same literal family.",
+    "proposedTarget": "Reattach literal-kit statics and replace the separate `borderSides` tuple with `BorderSide.Options` after colocation.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 21
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+    "line": 337,
+    "symbol": "BorderDetectionKind",
+    "smell": "Exported border-classification literal domain loses kit statics while classification logic in `Files.media.ts:893` returns raw literal strings.",
+    "proposedTarget": "Reattach literal-kit statics and codec statics so classification values can be named through `BorderDetectionKind.Enum`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 38
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+    "line": 429,
+    "symbol": "DetectFacesFlag",
+    "smell": "Exported face-detection flag literal domain loses kit statics; `Files.service.ts:2137` builds arrays of raw flag strings.",
+    "proposedTarget": "Reattach `DetectFacesFlag` kit and codec statics; consider replacing raw string construction with `DetectFacesFlag.Enum` members.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 39
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+    "line": 485,
+    "symbol": "CandidateAssessmentDecision",
+    "smell": "Exported candidate decision literal domain loses kit statics; `Files.media.ts:123` and archive rendering use raw decision literals.",
+    "proposedTarget": "Reattach literal-kit statics and codec statics from a base kit.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 41
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+    "line": 510,
+    "symbol": "CandidateAssessmentReason",
+    "smell": "Exported candidate-reason literal domain loses kit statics while `Files.media.ts:800` accumulates raw reason strings.",
+    "proposedTarget": "Reattach literal-kit statics and codec statics; use `CandidateAssessmentReason.Enum` for new reason construction.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 42
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+    "line": 2244,
+    "symbol": "ProcessFilesFailurePolicy",
+    "smell": "Exported process failure-policy literal domain loses kit statics; CLI/service code handles raw `continue` / `fail-on-error` literals without colocated enum/options.",
+    "proposedTarget": "Reattach `withLiteralKitStatics` from a base kit and add `withCodecStatics`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 43
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+    "line": 2319,
+    "symbol": "decodeImageSizeMetadata",
+    "smell": "Public decode/encode helper wall from lines 2319-2486 keeps schema-derived decode/encode functions separate from the model classes (`ImageSizeMetadata`, `FfprobeOutput`, option schemas, manifests, reports).",
+    "proposedTarget": "Move high-traffic codecs onto the owning classes/consts with in-body statics or `SchemaUtils.withStatics`; keep exported names as compatibility aliases during the same consumer sweep.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 22
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.media.ts",
+    "line": 282,
+    "symbol": "isImageFileExtension",
+    "smell": "Free-floating exported guard `S.is(ImageFileExtension)` duplicates behavior that belongs on the imported schema; upstream `ImageFileExtension` is an annotation-piped LiteralKit at `packages/foundation/modeling/schema/src/FileExtension.ts:218`.",
+    "proposedTarget": "After upstream `ImageFileExtension` gets `withLiteralKitStatics`/`withCodecStatics`, replace this export and internal calls with `ImageFileExtension.is` or keep only a compatibility alias.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 23
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.media.ts",
+    "line": 295,
+    "symbol": "isVideoFileExtension",
+    "smell": "Free-floating exported guard `S.is(VideoFileExtension)` duplicates behavior that belongs on the imported schema; upstream `VideoFileExtension` is an annotation-piped LiteralKit at `packages/foundation/modeling/schema/src/FileExtension.ts:136`.",
+    "proposedTarget": "After upstream `VideoFileExtension` gets `withLiteralKitStatics`/`withCodecStatics`, replace this export and internal calls with `VideoFileExtension.is` or keep only a compatibility alias.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 24
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.media.ts",
+    "line": 308,
+    "symbol": "isSupportedMetadataImageExtension",
+    "smell": "Free-floating exported guard `S.is(SupportedMetadataImageExtension)` duplicates the statics that should live on `SupportedMetadataImageExtension` (see `Files.schemas.ts:170`).",
+    "proposedTarget": "Replace with `SupportedMetadataImageExtension.is` once that schema reattaches `withLiteralKitStatics` and `withCodecStatics`; compatibility alias can remain if public API requires it.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 25
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
+    "line": 106,
+    "symbol": "DocgenPackageStatus",
+    "smell": "Exported docgen status literal domain loses kit statics through annotation; docs examples expect `.is` style helpers but annotation drops the original kit object.",
+    "proposedTarget": "Capture a base kit and reattach with `SchemaUtils.withLiteralKitStatics(base)` plus `withCodecStatics`; use the same pattern as `packages/foundation/modeling/nlp/src/Core/Similarity.ts:35`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 26
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
+    "line": 221,
+    "symbol": "DocgenIssuePriority",
+    "smell": "Exported priority literal domain loses kit statics; `byIssueAscending` at lines 85-92 branches over the same values manually.",
+    "proposedTarget": "Reattach literal-kit statics and consider colocating the priority-rank behavior with `SchemaUtils.withStatics` on `DocgenIssuePriority`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 44
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
+    "line": 251,
+    "symbol": "DocgenExportKind",
+    "smell": "Exported export-kind literal domain loses kit statics after annotation; analysis logic later compares raw declaration-kind strings.",
+    "proposedTarget": "Reattach literal-kit statics and codec statics from a base `DocgenExportKindKit`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 46
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts",
+    "line": 148,
+    "symbol": "DocgenLocalMode",
+    "smell": "Exported local-mode literal domain loses kit statics after annotation, so mode values are handled as raw strings in planner/reporting code.",
+    "proposedTarget": "Use a base `DocgenLocalModeKit` and reattach `SchemaUtils.withLiteralKitStatics` plus `withCodecStatics`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 47
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Quality.ts",
+    "line": 104,
+    "symbol": "DocgenQualityScopeMode",
+    "smell": "Exported quality scope literal domain loses kit statics through annotation.",
+    "proposedTarget": "Reattach from a base kit with `SchemaUtils.withLiteralKitStatics` and add `withCodecStatics`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 48
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Quality.ts",
+    "line": 137,
+    "symbol": "DocgenQualityScoreMode",
+    "smell": "Exported quality scoring literal domain loses kit statics through annotation.",
+    "proposedTarget": "Reattach literal-kit and codec statics from a base `DocgenQualityScoreModeKit`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 49
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Quality.ts",
+    "line": 170,
+    "symbol": "DocgenQualityTier",
+    "smell": "Exported quality-tier literal domain loses kit statics through annotation; report rendering later treats tiers as raw strings.",
+    "proposedTarget": "Reattach literal-kit and codec statics; consider colocating display/rank behavior if it remains repeated.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 50
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Quality.ts",
+    "line": 211,
+    "symbol": "DocgenQualityFindingCode",
+    "smell": "Large exported finding-code literal family loses kit statics through annotation; examples expect `.is[...]` helpers but the annotation pipe drops the original kit.",
+    "proposedTarget": "Capture `DocgenQualityFindingCodeKit`, reattach `SchemaUtils.withLiteralKitStatics`, and add `withCodecStatics`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 27
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts",
+    "line": 89,
+    "symbol": "DocgenQualityWorkerEvalProvider",
+    "smell": "Exported worker-provider literal domain loses kit statics after annotation; command handling later branches over provider values.",
+    "proposedTarget": "Reattach literal-kit statics and codec statics from a base kit.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 28
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts",
+    "line": 122,
+    "symbol": "DocgenQualityWorkerEvalReasoningEffort",
+    "smell": "Exported reasoning-effort literal domain loses kit statics through annotation; CLI fallback code handles raw effort strings.",
+    "proposedTarget": "Reattach from a base kit with `withLiteralKitStatics` and `withCodecStatics`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 51
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts",
+    "line": 155,
+    "symbol": "DocgenQualityWorkerEvalScope",
+    "smell": "Exported worker-eval scope literal domain loses kit statics through annotation.",
+    "proposedTarget": "Reattach literal-kit and codec statics from a base kit.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 52
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts",
+    "line": 188,
+    "symbol": "DocgenQualityWorkerEvalPacketStatus",
+    "smell": "Exported packet-status literal domain loses kit statics; summary code at lines 1068-1072 filters raw status/disposition strings.",
+    "proposedTarget": "Reattach literal-kit and codec statics; use enum/statics in summary code where practical.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 53
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts",
+    "line": 221,
+    "symbol": "DocgenQualityWorkerEvalReviewDisposition",
+    "smell": "Exported review-disposition literal domain loses kit statics; summary code at lines 1070-1072 compares raw strings.",
+    "proposedTarget": "Reattach literal-kit and codec statics; use enum/statics in summary code where practical.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 54
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts",
+    "line": 254,
+    "symbol": "DocgenQualityWorkerEvalPolicyViolationCode",
+    "smell": "Large exported policy-code literal family loses kit statics through annotation; `summarizePolicyViolations` handles the family as raw strings.",
+    "proposedTarget": "Capture a base kit, reattach `withLiteralKitStatics`, and add `withCodecStatics`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 55
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts",
+    "line": 315,
+    "symbol": "decodeWorkerOutputJson",
+    "smell": "Free-floating decode helper for `DocgenQualityWorkerEvalWorkerOutput` JSON keeps the schema's wire behavior separate from the class.",
+    "proposedTarget": "Attach a `static readonly decodeJson = S.decodeUnknownEffect(S.fromJsonString(Self))` style member in-body, or use `SchemaUtils.withStatics` on a companion if constructor identity must remain untouched.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 56
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerRunpodEval.ts",
+    "line": 97,
+    "symbol": "DocgenQualityWorkerRunpodEvalTemplateStrategy",
+    "smell": "Local LiteralKit status family drops kit statics through annotation and then feeds structured report classes.",
+    "proposedTarget": "If the strategy family remains local, reattach `withLiteralKitStatics` only if consumers need enum/options; otherwise ledger as local-only. If exported later, add `withCodecStatics` too.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 59,
+    "exception": {
+      "reason": "Local-only report literal family with no detected guard/decode duplication in the assigned scope.",
+      "boundary": "false-positive literal-kit audit"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+    "line": 154,
+    "symbol": "CorpusCommandServiceShape",
+    "smell": "Service-shape interface has many function properties and could look like behavior separated from data, but S4 fence 1 explicitly excludes service contracts from schema/static colocation.",
+    "proposedTarget": "No S4 remediation. Keep this as an interface-backed `Context.Service` contract.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 60,
+    "exception": {
+      "reason": "Service-contract/interface carve-out.",
+      "boundary": "fence 1"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
+    "line": 345,
+    "symbol": "FilesCommandServiceShape",
+    "smell": "Service-shape interface exposes multi-argument service operations (`sortAndRenameFiles`, `stripMetadataFiles`) but service contracts are not S4 dual/static targets.",
+    "proposedTarget": "No S4 remediation. Keep public service operation shape unchanged.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 61,
+    "exception": {
+      "reason": "Service-contract/interface carve-out.",
+      "boundary": "fence 1"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/TemplateService.ts",
+    "line": 97,
+    "symbol": "TemplateServiceShape",
+    "smell": "Template rendering service shape is a port contract, not a schema-modeled value object; attaching statics would cross the service-contract fence.",
+    "proposedTarget": "No S4 remediation. Keep the service contract as a type/Context.Service boundary.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 62,
+    "exception": {
+      "reason": "Service-contract/interface carve-out.",
+      "boundary": "fence 1"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/TsMorphIntegrationService.ts",
+    "line": 265,
+    "symbol": "TsMorphIntegrationService",
+    "smell": "`Context.Service` class could look like a class missing schema statics, but it is a service tag over a port interface, not an `S.Class` domain model.",
+    "proposedTarget": "No S4 remediation. Keep `Context.Service` service tag unchanged.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 63,
+    "exception": {
+      "reason": "Service-contract/interface carve-out.",
+      "boundary": "fence 1"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+    "line": 520,
+    "symbol": "seenDigests",
+    "smell": "`MutableHashSet` usage was detector-adjacent during false-positive audit, but S4 explicitly does not own Graph/MutableHash/native-collection migration.",
+    "proposedTarget": "No S4 remediation. Leave MutableHashSet/MutableHashMap questions to `effect-native-migration`.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 64,
+    "exception": {
+      "reason": "MutableHash collection site is outside S4 colocation/pipeability scope.",
+      "boundary": "fences 6 and 7"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
+    "line": 563,
+    "symbol": "canonicalWorkspaceDirs",
+    "smell": "`MutableHashSet` usage was detector-adjacent during false-positive audit, but S4 does not migrate native/effect mutable collections.",
+    "proposedTarget": "No S4 remediation. Leave collection migration to the `effect-native-migration` packet.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 65,
+    "exception": {
+      "reason": "MutableHash collection site is outside S4 colocation/pipeability scope.",
+      "boundary": "fences 6 and 7"
+    }
+  }
+]

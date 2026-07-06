@@ -1,0 +1,142 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/NextConfig.model.ts",
+    "line": 394,
+    "symbol": "NextConfig decode helpers",
+    "smell": "Class schema behavior is split into module-level helpers: `decodeNextConfigResult`, `encodeNextConfigResult`, exported `decodeNextConfig`, and `defineNextConfig` all serve the `NextConfig` class instead of living on the data. Tests call the free helper repeatedly (`test/NextConfig.model.test.ts:34,46,70,87`).",
+    "proposedTarget": "Add in-body statics on `NextConfig` such as `decodeEffect`, `decodeResult`, and `encodeResult`, then keep `decodeNextConfig` / `defineNextConfig` as compatibility aliases unless the remediation PR performs the public consumer sweep. Use in-body statics, not `SchemaUtils.withCodecStatics`, because class schemas lose constructor identity when piped (verified at `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:10`; exemplar `packages/foundation/modeling/md/src/Md.model.ts:873`).",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
+    "line": 316,
+    "symbol": "BeepNextConfigEnv decode helpers",
+    "smell": "Top-of-file decode wall for shared Next config classes: `decodeBeepNextConfigEnvResult` and `decodeBeepNextConfigOptionsResult` back exported `decodeBeepNextConfigEnv`, `defineBeepNextConfigEnv`, `makeBeepNextBaseConfig`, and `defineBeepNextConfig` instead of statics on `BeepNextConfigEnv` / `BeepNextConfigOptions`.",
+    "proposedTarget": "Attach in-body class statics such as `BeepNextConfigEnv.decodeEffect`, `BeepNextConfigEnv.decodeResult`, and `BeepNextConfigOptions.decodeResult`; rewrite the exported functions as thin aliases. This follows the S.Class static pattern documented in `SchemaUtils/withCodecStatics.ts:10-12` and avoids piping the classes.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/RuleAstSchemas.ts",
+    "line": 67,
+    "symbol": "RuleAstSchemas decode helpers",
+    "smell": "ESLint AST node classes have a free-floating decode wall (`decodeImportDeclarationNode`, `decodeImportNamespaceSpecifierNode`, `decodeImportSpecifierNode`, `decodeNamedDeclarationNode`, `decodeVariableDeclarationNode`, `decodeBlockCommentNode`). Consumers in `RequireCategoryTagRule.ts:59,63,96` import the helpers instead of calling behavior colocated on the node classes.",
+    "proposedTarget": "Move each soft decoder into the relevant class as `static readonly decodeOption = S.decodeUnknownOption(Self)` and keep the exported helper names as compatibility aliases. `S.decodeUnknownOption` is verified in v4 at `.repos/effect-v4/packages/effect/src/Schema.ts:1500`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSchemas.ts",
+    "line": 103,
+    "symbol": "EffectLawsAllowlist decode/encode helpers",
+    "smell": "Allowlist schema behavior is spread across exported helpers (`decodeAllowlistDocumentFromJsoncText`, `decodeAllowlistCheckInput`, `decodeAllowlistSnapshot`, `encodeAllowlistSnapshot`, `areLookupKeysEquivalent`) instead of the schema values and classes they serve. `EffectLawsAllowlist.ts:27,108,119` and codegen call those free helpers directly.",
+    "proposedTarget": "Colocate the class helpers as statics: `EffectLawsAllowlistCheckInput.decodeOption`, `EffectLawsAllowlistSnapshot.fromUnknown` / `encodeUnknownResult`, and `EffectLawsAllowlistLookupKey.equivalence`. Keep the JSONC text transform decoder on `AllowlistJsoncTextToUnknown` (or a named composed schema) via `SchemaUtils.withStatics` so the public helper can alias the schema-owned behavior.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/models/AllowedDevOrigin.schema.ts",
+    "line": 29,
+    "symbol": "AllowedDevOrigin",
+    "smell": "Exported branded/refined boundary schema has no colocated codec statics; callers and tests must rebuild decoders with `S.decodeUnknownEffect(AllowedDevOrigin)` (`test/NextConfig.schemas.test.ts:6`) instead of using the schema's own API.",
+    "proposedTarget": "Import `SchemaUtils` from `@beep/schema` and append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)`, giving `AllowedDevOrigin.is`, `.fromUnknown`, and `.decodeOption`. Helper contract verified at `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/models/Shared.schema.ts",
+    "line": 32,
+    "symbol": "FileSizeSuffix / SizeLimit",
+    "smell": "Public template-literal and union schemas lack codec statics; the package test builds a mini decode wall (`decodeFileSizeSuffix`, `decodeSizeLimit`) at `test/NextModels.schema.test.ts:17-18` for behavior that belongs on `FileSizeSuffix` and `SizeLimit`.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to both schema pipes so tests and consumers can call `FileSizeSuffix.fromUnknown` / `SizeLimit.fromUnknown` or `.decodeOption` instead of rebuilding `S.decodeUnknownEffect` / sync decoders at call sites.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/models/Routes.schema.ts",
+    "line": 65,
+    "symbol": "RouteHas",
+    "smell": "Public tagged-union schema derived from `RouteHasType.toTaggedUnion(\"type\")` is exported without codec statics; tests rebuild both effect and sync decoders at `test/NextModels.schema.test.ts:19,114`.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after the `RouteHas` annotation so `RouteHas.is`, `RouteHas.fromUnknown`, and `RouteHas.decodeOption` live on the union. Leave `RouteHasType`'s LiteralKit statics alone because `$I.annoteSchema` preserves them.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/models/Routes.schema.ts",
+    "line": 288,
+    "symbol": "Redirect",
+    "smell": "Public union const `Redirect` has no colocated codec statics; the test suite rebuilds `decodeRedirect = S.decodeUnknownEffect(Redirect)` (`test/NextModels.schema.test.ts:22`) for the union boundary.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(\"Redirect\", ...)` so route consumers can use `Redirect.fromUnknown` / `.decodeOption`; class aliases such as `Rewrite` and `Header` should use in-body statics only if their decode helpers become public behavior.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/policy-pack/repo-configs/src/eslint/RequireCategoryTagRule.ts",
+    "line": 25,
+    "symbol": "hasCategoryTag",
+    "smell": "Free-floating guard `const hasCategoryTag = S.is(CategoryTaggedComment)` duplicates schema-derived behavior for the refined `CategoryTaggedComment` const.",
+    "proposedTarget": "Pipe `CategoryTaggedComment` through `SchemaUtils.withCodecStatics` and replace the helper with `CategoryTaggedComment.is` at line 135. This is the direct static-api codemod shape verified by `withCodecStatics.ts:90`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 9
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
+    "line": 327,
+    "symbol": "mergeUniqueStrings",
+    "smell": "Passthrough pipe lambda inside `A.flatMap`: `(group) => pipe(O.fromNullishOr(group), O.getOrElse(A.empty))` is an exact `flow` candidate.",
+    "proposedTarget": "Replace the callback with `flow(O.fromNullishOr, O.getOrElse(A.empty))`; v4 `flow` is verified at `.repos/effect-v4/packages/effect/src/Function.ts:1162`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 10
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/security/index.ts",
+    "line": 221,
+    "symbol": "withSecureHeaders",
+    "smell": "Detector hit: exported two-argument helper is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 91,
+    "exception": {
+      "reason": "The second argument is optional and `withSecureHeaders(config)` is a meaningful default-header call. A normal `dual(2, ...)` rewrite would reinterpret one-argument calls as data-last partial application, changing public semantics.",
+      "boundary": "false-positive audit: optional-arity public config helper"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/models/ImageConfig.schema.ts",
+    "line": 29,
+    "symbol": "LoaderValue",
+    "smell": "Detector hit: `LiteralKit(...).pipe($I.annoteSchema(...))` superficially looks like the archived lost-LiteralKit-static pattern.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 92,
+    "exception": {
+      "reason": "`$I.annoteSchema` preserves own schema statics in current repo code via `preserveSchemaStatics(self, self.annotate(annotation))` (`packages/foundation/modeling/identity/src/Id.ts:70,1386`), and LiteralKit attaches `Options` / `Enum` / `is` / `$match` at `LiteralKit.schema.ts:793-801`.",
+      "boundary": "false-positive audit: LiteralKit annotation preservation"
+    }
+  }
+]

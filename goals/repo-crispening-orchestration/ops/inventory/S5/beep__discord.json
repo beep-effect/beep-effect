@@ -1,0 +1,87 @@
+[
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/discord/test/Discord.service.test.ts",
+    "line": 103,
+    "symbol": "Discord schema family",
+    "smell": "The package exports schema-backed config, request, proof, and error models, but tests are HTTP fixture based and contain no S.toArbitrary-derived law for the production schemas.",
+    "proposedTarget": "Add additive schema laws for DiscordConfigInput, DiscordChannelRequest, DiscordCreateMessageRequest, DiscordChannelProof, DiscordMessageProof, DiscordErrorReason, and DiscordError using S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970), following packages/shared/domain/test/Organization.test.ts:13 and :79 or assertSchemaArbitraryDecodesToSelf at packages/tooling/test-kit/test-utils/src/Schema.ts:30-43.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/discord/src/Discord.models.ts",
+    "line": 54,
+    "symbol": "DiscordConfigInput.baseUrl",
+    "smell": "Discord REST baseUrl is modeled as broad S.String with a default even though the service normalizes it and treats it as an absolute API base URL.",
+    "proposedTarget": "Tighten the resolved URL path to URLStr from packages/foundation/modeling/schema/src/URL.ts:44-53, following the resolved-config pattern in packages/drivers/govinfo/src/Govinfo.service.ts:62-75. If public input must stay string-shaped for tests/adapters, decode to URLStr before request construction.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/discord/src/Discord.models.ts",
+    "line": 80,
+    "symbol": "DiscordChannelRequest/DiscordCreateMessageRequest/DiscordChannelProof/DiscordMessageProof fields",
+    "smell": "The exported request/proof classes have whole-schema $I.annote metadata but most fields lack annotateKey descriptions, and Discord snowflake identifiers are modeled only as S.NonEmptyString/S.String rather than a decimal snowflake pattern.",
+    "proposedTarget": "Add annotateKey metadata to every field and introduce a named DiscordSnowflake schema such as S.String.check(S.isPattern(/^\\d{17,20}$/)) for channelId/messageId/guildId. S.isPattern is verified at .repos/effect-v4/packages/effect/src/Schema.ts:6521; field annotation style is shown in packages/drivers/govinfo/src/domain/values/SearchBody/SearchBody.model.ts:42-65.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/drivers/discord/src/Discord.models.ts",
+    "line": 151,
+    "symbol": "DiscordChannelProof.status/DiscordMessageProof.status",
+    "smell": "HTTP proof status fields are bare S.Finite, allowing fractional or negative status values.",
+    "proposedTarget": "Use the existing HTTP status schema from @beep/schema/HttpStatus (packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.schema.ts:34-43), or a 2XX subset if proof models should only encode success. S.Finite is verified at .repos/effect-v4/packages/effect/src/Schema.ts:11380.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/discord/src/Discord.errors.ts",
+    "line": 76,
+    "symbol": "DiscordError fields",
+    "smell": "The exported TaggedErrorClass schema has whole-schema $I.annote metadata but no annotateKey descriptions; method/path/cause are broad strings and status is bare S.Finite.",
+    "proposedTarget": "Add annotateKey metadata to cause/method/path/reason/status; model method as S.Literal(\"GET\", \"POST\") or a shared HTTP method domain if available, path as S.NonEmptyString, and status with @beep/schema/HttpStatus (packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.schema.ts:34-43). S.NonEmptyString is verified at .repos/effect-v4/packages/effect/src/Schema.ts:8420.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/discord/src/Discord.service.ts",
+    "line": 34,
+    "symbol": "DiscordRawChannel/DiscordRawMessage",
+    "smell": "Detector candidate: private Discord response DTOs use broad string fields for ids, names, and timestamps.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These private schemas decode a minimal subset of the third-party Discord REST response before projection into sanitized proof models; hardening the exported proof models is the right target, while the raw wire DTOs should remain tolerant of Discord payload shape drift.",
+      "boundary": "Discord REST wire-response boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/discord/test/Discord.service.test.ts",
+    "line": 13,
+    "symbol": "CapturedDiscordRequest/CapturedDiscordMessageBody",
+    "smell": "Detector candidate: test-local capture schemas and fixed HTTP response fixtures are hand-written rather than S.toArbitrary-derived.",
+    "proposedTarget": "None — keep as is (production schema laws above are additive coverage).",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The capture schemas and fixed responses assert request construction, authorization header shape, and allowed_mentions suppression; they are protocol fixtures, not production domain laws.",
+      "boundary": "Discord REST request/response fixture"
+    }
+  }
+]

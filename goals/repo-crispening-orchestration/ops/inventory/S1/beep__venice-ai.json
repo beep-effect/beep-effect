@@ -1,0 +1,125 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 521,
+    "symbol": "isVeniceAIOperationDescriptor",
+    "smell": "Top-level `const isVeniceAIOperationDescriptor = S.is(VeniceAIOperationDescriptor)` textually matches the guard-helper-wall smell.",
+    "proposedTarget": "Inline `S.is(VeniceAIOperationDescriptor)` in the `dual` discriminator at `packages/drivers/venice-ai/src/VeniceAI.service.ts:583` -- audited and rejected. Effect v4 `S.is` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1256`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Schema-derived guard alias used only to name the overloaded `VeniceAIError.fromDescriptor` discriminator. It does not replace schema validation; `VeniceAIOperationDescriptor` remains the source of truth.",
+      "boundary": "dual overload discriminator for operation-scoped error construction"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 576,
+    "symbol": "VeniceAIError.fromDescriptor",
+    "smell": "Exported static constructor overload in a schema-modeled file accepts `VeniceAIErrorOptions`, a plain object type literal that duplicates nearby `VeniceAIError` option fields.",
+    "proposedTarget": "Promote `VeniceAIErrorOptions` at `packages/drivers/venice-ai/src/VeniceAI.service.ts:658` to an annotated input schema, preserving `cause: S.optionalKey(S.Unknown)` for normalization and `status: S.optionalKey(S.Finite)`, then use it before `VeniceAIError.make`. In-repo exemplar: `packages/drivers/govinfo/src/Govinfo.errors.ts:70` models `GovinfoErrorOptions` as an `S.Class`; same driver-family target appears for Box at `goals/repo-crispening-orchestration/ops/inventory/S1/beep__box.json`.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 0.58
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 727,
+    "symbol": "decodeChatCompletionTextResponse",
+    "smell": "Local `const decodeChatCompletionTextResponse = S.decodeUnknownEffect(ChatCompletionTextResponse)` textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Inline `S.decodeUnknownEffect(ChatCompletionTextResponse)(response.body)` in `extractChatText` at `packages/drivers/venice-ai/src/VeniceAI.service.ts:1731` -- audited and rejected. Effect v4 `S.decodeUnknownEffect` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Single schema-derived decoder at the compatibility chat response boundary. The local minimal response schema remains the truth source and the alias only names that decode.",
+      "boundary": "Venice compatibility chat JSON response boundary"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 1257,
+    "symbol": "VeniceAIMethod / VeniceAIStreamMethod / VeniceAIShape",
+    "smell": "Exported function type aliases and a mapped service shape in a schema-modeled file match the S1 type/function-contract smell.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. Keep request/response payload truth in `VeniceAIRequestOptions` (`packages/drivers/venice-ai/src/VeniceAI.service.ts:284`), `VeniceAIResponse` (`:468`), and `VeniceAIServerSentEvent` (`:510`); keep these aliases as service-method port types consumed by `VeniceAI extends Context.Service` at line 1833.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "These aliases describe the live Context.Service operation port. The method payloads are schema-modeled separately, and the shape includes function members by design.",
+      "boundary": "VeniceAI Context.Service operation surface"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 1300,
+    "symbol": "ResolvedVeniceAIConfig",
+    "smell": "Local resolved-config type literal models a pure runtime data payload (`apiKey`, normalized `baseUrl`, `headers`) beside schema-backed `VeniceAIConfigInput`.",
+    "proposedTarget": "Promote this to an annotated `ResolvedVeniceAIConfig extends S.Class` with `apiKey: S.Option(S.String.pipe(S.RedactedFromValue))` or the existing Redacted representation, `baseUrl` using the same URL target identified by S5, and `headers: S.Record(S.String, S.String)`. In-repo exemplars: `packages/drivers/m365/src/M365.config.ts:231` defines `ResolvedM365Config` as an `S.Class`, and `packages/drivers/govinfo/src/Govinfo.service.ts:62` defines a local `ResolvedConfig` class.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 0.55
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 1306,
+    "symbol": "VeniceAIEncodedQuery / normalizeQuery",
+    "smell": "Local record type alias plus manual per-entry validation loops over query values even though `VeniceAIQueryValue` already carries the scalar/array query schema.",
+    "proposedTarget": "Introduce `const VeniceAIEncodedQuery = S.Record(S.String, VeniceAIQueryValue).pipe($I.annoteSchema(\"VeniceAIEncodedQuery\", ...))` and derive `type VeniceAIEncodedQuery = typeof VeniceAIEncodedQuery.Type`; then replace `isEncodedQueryValue` plus the `R.toEntries` loop with `S.decodeUnknownEffect(VeniceAIEncodedQuery)(query)` mapped to `request encoding`. Effect v4 `S.decodeUnknownEffect` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`; `VeniceAIQueryValue` is the local schema at `packages/drivers/venice-ai/src/VeniceAI.service.ts:236`.",
+    "confidence": 0.76,
+    "mechanization": "assisted",
+    "roiRank": 0.62
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 1611,
+    "symbol": "SseDataEvent / SseDecodeState",
+    "smell": "Internal SSE parser type literals can look like pure data models during schema-first-inventory scanning.",
+    "proposedTarget": "None for `SseDecodeState` while excepted because it carries a live `TextDecoder` handle. If the parser state is later split, only the pure emitted event shape (`SseDataEvent`) should be considered for an internal schema; the public stream event is already `VeniceAIServerSentEvent` at `packages/drivers/venice-ai/src/VeniceAI.service.ts:510`.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "`SseDecodeState` is runtime parser state with a mutable decoder handle, not decoded domain data. The externally visible SSE payload is already schema-modeled.",
+      "boundary": "internal SSE decoder state over TextDecoder"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts",
+    "line": 170,
+    "symbol": "make / layer / model",
+    "smell": "Exported language-model factory functions in a schema-modeled file can be swept up by a broad SFV4-fn-schema audit.",
+    "proposedTarget": "None while excepted. `make` and `layer` take `VeniceAiLanguageModelOptions`, an `S.Class` at `packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts:48`; `model` is an Effect AI model factory. Fn wrappers would validate no additional first-party payload contract.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Layer/model constructors are service wiring surfaces. Their package-owned options are schema-backed and the provider handle is `VeniceAI` from Context.",
+      "boundary": "Effect AI Venice language-model factory surface"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 1902,
+    "symbol": "VeniceAiChat service shape",
+    "smell": "Inline `Context.Service` shape contains a function member and can look like a schema-worthy object contract.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. The compatibility chat input/output is the method boundary; the underlying request/response schemas remain `VeniceAIRequestOptions` and `VeniceAIResponse`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Inline Context.Service shape with a live method. S1 explicitly leaves service contracts and port interfaces as interfaces/object shapes.",
+      "boundary": "compatibility chat Context.Service shape"
+    }
+  }
+]

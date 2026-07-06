@@ -1,0 +1,253 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/acp/src/AcpAgent.service.ts",
+    "line": 46,
+    "symbol": "AcpAgentOptions",
+    "smell": "Exported interface in a driver package; surface-level schema-first-inventory hit. It extends the schema-backed `AcpProtocolLoggingOptions` but adds a live logger callback.",
+    "proposedTarget": "None while excepted. Keep the pure logging flags on `AcpProtocolLoggingOptions` (`packages/drivers/acp/src/AcpProtocol.service.ts:169`) and keep the logger callback in the service-construction options surface.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:103-108`: derived interface with extends clauses. The added member is an Effect-returning logger callback, which is a service hook rather than decoded domain data.",
+      "boundary": "ACP agent service-construction options over protocol logging plus live logger callback."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/acp/src/AcpAgent.service.ts",
+    "line": 64,
+    "symbol": "AcpAgentShape",
+    "smell": "Exported interface with many function members and Effect-returning service methods; surface-level schema-first-inventory hit.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. The Context.Service tag at `packages/drivers/acp/src/AcpAgent.service.ts:238` is the in-repo boundary exemplar for this shape.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:111-116`: interface contains non-schema signals such as function members or runtime handles. Its request/response payloads already point at ACP schemas from `AcpSchema`.",
+      "boundary": "Context.Service shape for the ACP agent driver."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/acp/src/AcpAgent.service.ts",
+    "line": 273,
+    "symbol": "decodeCancelNotification",
+    "smell": "Module-level `const decodeCancelNotification = S.decodeUnknownEffect(AcpSchema.CancelNotification)` textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Inline `S.decodeUnknownEffect(AcpSchema.CancelNotification)(value.params)` at the single use site (`packages/drivers/acp/src/AcpAgent.service.ts:347`) -- audited and rejected. Effect v4 `S.decodeUnknownEffect` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Single schema-derived decoder at the ACP wire boundary; the schema already carries the truth and the alias only names the boundary decode used in the cancel-notification router.",
+      "boundary": "ACP JSON-RPC inbound notification boundary (`session/cancel` params -> `AcpSchema.CancelNotification`)."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/acp/src/AcpClient.service.ts",
+    "line": 50,
+    "symbol": "AcpClientOptions",
+    "smell": "Exported interface in a driver package; surface-level schema-first-inventory hit. It extends the schema-backed `AcpProtocolLoggingOptions` but adds a live logger callback.",
+    "proposedTarget": "None while excepted. Keep the pure logging flags on `AcpProtocolLoggingOptions` (`packages/drivers/acp/src/AcpProtocol.service.ts:169`) and keep the logger callback in the service-construction options surface.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:119-124`: derived interface with extends clauses. The added member is an Effect-returning logger callback, which is a service hook rather than decoded domain data.",
+      "boundary": "ACP client service-construction options over protocol logging plus live logger callback."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/acp/src/AcpClient.service.ts",
+    "line": 74,
+    "symbol": "AcpClientShape",
+    "smell": "Exported interface with many function members and Effect-returning service methods; surface-level schema-first-inventory hit.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. The Context.Service tag at `packages/drivers/acp/src/AcpClient.service.ts:307` is the in-repo boundary exemplar for this shape.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:127-132`: interface contains non-schema signals such as function members or runtime handles. Its request/response payloads already point at ACP schemas from `AcpSchema`.",
+      "boundary": "Context.Service shape for the ACP client driver."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 28,
+    "symbol": "isAcpError",
+    "smell": "Top-level `const isAcpError = S.is(AcpError.AcpError)` textually matches the guard-helper-wall smell.",
+    "proposedTarget": "Inline `S.is(AcpError.AcpError)(error)` at `packages/drivers/acp/src/AcpProtocol.service.ts:648` -- audited and rejected. Effect v4 `S.is` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1256`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Schema-derived guard alias, not hand-rolled validation. The alias names a transport error-classification boundary and preserves the schema as the source of truth.",
+      "boundary": "ACP transport termination classification (`unknown` failure -> `AcpError.AcpError` guard)."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 29,
+    "symbol": "isAcpRequestError",
+    "smell": "Top-level `const isAcpRequestError = S.is(AcpError.AcpRequestError)` textually matches the guard-helper-wall smell.",
+    "proposedTarget": "Inline `S.is(AcpError.AcpRequestError)(error)` at `packages/drivers/acp/src/AcpProtocol.service.ts:770` -- audited and rejected. Effect v4 `S.is` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1256`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Schema-derived guard alias, not hand-rolled validation. It keeps request-error normalization readable while still delegating the predicate to the `AcpRequestError` schema.",
+      "boundary": "ACP request-error normalization (`AcpError.AcpError` -> `AcpRequestError`)."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 250,
+    "symbol": "AcpPatchedProtocolOptions",
+    "smell": "Exported interface in a schema-modeled protocol file; surface-level schema-first-inventory hit.",
+    "proposedTarget": "None while excepted. Keep the pure logging flags on `AcpProtocolLoggingOptions` (`packages/drivers/acp/src/AcpProtocol.service.ts:169`); the remaining fields are live callbacks, `HashSet`, `Stdio`, and an Effect-valued termination hook.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:143-148`: derived interface with extends clauses. The non-inherited members are transport/runtime handles and callbacks, not a decoded data payload.",
+      "boundary": "Patched ACP protocol construction options over Effect Stdio, method registry, callbacks, and termination effect."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 274,
+    "symbol": "AcpPatchedProtocol",
+    "smell": "Exported interface in a schema-modeled protocol file; contains runtime protocol handles plus overload surfaces for request/notify.",
+    "proposedTarget": "None -- fence 1 service-contract/port-interface carve-out and overload-surface carve-out. The returned object is built at `packages/drivers/acp/src/AcpProtocol.service.ts:752` and explicitly satisfies this runtime handle interface.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:135-140`: interface contains non-schema signals such as function members or runtime handles. `RpcClient.Protocol[\"Service\"]`, `RpcServer.Protocol[\"Service\"]`, `Stream`, and curried overloads are port handles.",
+      "boundary": "Runtime ACP JSON-RPC transport handle returned by `makeAcpPatchedProtocol`."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 288,
+    "symbol": "decodeSessionUpdate",
+    "smell": "Module-level `const decodeSessionUpdate = S.decodeUnknownEffect(AcpSchema.SessionNotification)` textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Inline `S.decodeUnknownEffect(AcpSchema.SessionNotification)(message.payload)` at the single use site (`packages/drivers/acp/src/AcpProtocol.service.ts:492`) -- audited and rejected. Effect v4 `S.decodeUnknownEffect` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Single schema-derived decoder at the ACP wire boundary; the schema already carries the truth and the alias only names the session-update decode used in the router.",
+      "boundary": "ACP JSON-RPC inbound notification boundary (`session/update` payload -> `AcpSchema.SessionNotification`)."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 289,
+    "symbol": "decodeElicitationComplete",
+    "smell": "Module-level `const decodeElicitationComplete = S.decodeUnknownEffect(AcpSchema.ElicitationCompleteNotification)` textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Inline `S.decodeUnknownEffect(AcpSchema.ElicitationCompleteNotification)(message.payload)` at the single use site (`packages/drivers/acp/src/AcpProtocol.service.ts:511`) -- audited and rejected. Effect v4 `S.decodeUnknownEffect` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Single schema-derived decoder at the ACP wire boundary; the schema already carries the truth and the alias only names the elicitation-complete decode used in the router.",
+      "boundary": "ACP JSON-RPC inbound notification boundary (`session/elicitation/complete` payload -> `AcpSchema.ElicitationCompleteNotification`)."
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 319,
+    "symbol": "makeAcpPatchedProtocol",
+    "smell": "Exported Effect.fn constructor in a schema-modeled file whose parameter/return contracts are named interfaces. A broad SFV4-fn-schema audit can surface it even though the landed detector only flags inline object type literals.",
+    "proposedTarget": "None -- legitimate escape hatch. A hypothetical Fn contract over `AcpPatchedProtocolOptions -> AcpPatchedProtocol` would try to schema-model `Stdio`, `HashSet`, `Stream`, RPC protocol services, callbacks, overloads, and `Scope` requirements. The schema-owned data crossing this constructor is already modeled by `AcpIncomingNotification` (`packages/drivers/acp/src/AcpProtocol.service.ts:198`) and the generated ACP schemas consumed by `AcpRpc.models.ts`.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Service/protocol constructor over runtime handles and callbacks, not a pure function contract. Schema-as-truth applies to the ACP messages and log events, not to the live transport handle object.",
+      "boundary": "Effect Stdio + unstable RPC client/server protocol construction boundary."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 763,
+    "symbol": "isProtocolError",
+    "smell": "Hand-rolled validation checks `P.isObject(value)`, `P.isNumber(value.code)`, and `P.isString(value.message)` for an ACP protocol error shape even though the package already has an `AcpSchema.Error` schema and schema-derived guard usage.",
+    "proposedTarget": "Replace the manual guard with a schema-derived guard such as `const isAcpProtocolError = S.is(AcpSchema.Error)` and use it at `packages/drivers/acp/src/AcpProtocol.service.ts:556` before `AcpError.AcpRequestError.fromProtocolError(...)`; then delete `isProtocolError`. In-repo exemplar: `packages/drivers/acp/src/internal/shared.ts:7` defines `S.is(AcpSchema.Error)` and `packages/drivers/acp/src/internal/shared.ts:23` uses it at the RPC boundary. Effect v4 `S.is` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1256`.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 1.7
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/acp/src/AcpTerminal.models.ts",
+    "line": 26,
+    "symbol": "AcpTerminal",
+    "smell": "Exported interface in a models file with Effect-typed fields; surface-level schema-first-inventory hit.",
+    "proposedTarget": "None -- fence 1 port-interface carve-out. The object is assembled as a live terminal handle in `packages/drivers/acp/src/AcpTerminal.models.ts:84` and from RPC calls in `packages/drivers/acp/src/AcpAgent.service.ts:548`.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:151-156`: interface contains non-schema signals such as function members or runtime handles. The `Effect` fields are terminal operations, not persisted or decoded data.",
+      "boundary": "Live ACP terminal resource handle."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/acp/src/AcpTerminal.models.ts",
+    "line": 61,
+    "symbol": "MakeTerminalOptions",
+    "smell": "Exported interface for constructing a terminal handle; surface-level schema-first-inventory hit.",
+    "proposedTarget": "None -- constructor options for a port/resource handle. The helper copies these live operation effects into the handle at `packages/drivers/acp/src/AcpTerminal.models.ts:84-92`.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:159-164`: interface contains non-schema signals such as function members or runtime handles. The string IDs are paired with already-constructed terminal operation effects.",
+      "boundary": "Internal construction options for a live ACP terminal resource handle."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/acp/src/internal/shared.ts",
+    "line": 7,
+    "symbol": "isAcpProtocolError",
+    "smell": "Top-level `const isAcpProtocolError = S.is(AcpSchema.Error)` textually matches the guard-helper-wall smell.",
+    "proposedTarget": "Keep the schema-derived guard alias; it is the positive exemplar for replacing `isProtocolError` in `packages/drivers/acp/src/AcpProtocol.service.ts:763`. Effect v4 `S.is` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1256`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Schema-derived guard alias used at a real RPC error boundary (`packages/drivers/acp/src/internal/shared.ts:23`). This is schema-as-truth evidence, not hand-rolled validation.",
+      "boundary": "RPC client error normalization (`AcpSchema.Error` -> `AcpRequestError`)."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/acp/src/internal/shared.ts",
+    "line": 8,
+    "symbol": "isAcpRequestError",
+    "smell": "Top-level `const isAcpRequestError = S.is(AcpError.AcpRequestError)` textually matches the guard-helper-wall smell.",
+    "proposedTarget": "Keep the schema-derived guard alias; it is used in the shared handler boundary at `packages/drivers/acp/src/internal/shared.ts:50`. Effect v4 `S.is` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1256`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Schema-derived guard alias used to preserve typed request errors and convert all other handler failures to protocol errors. The schema remains the source of truth.",
+      "boundary": "Handler error normalization (`AcpError.AcpError` -> protocol error payload)."
+    }
+  }
+]

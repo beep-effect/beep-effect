@@ -1,0 +1,267 @@
+[
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
+    "line": 33,
+    "symbol": "CliReportedExit.exitCode and subprocess exitCode fields",
+    "smell": "Process exit status payloads use unconstrained S.Finite even when the runtime boundary and command errors expect integer process statuses. The same pattern appears in RepoStepRunResult.exitCode, PackageVerifyStepResult.exitCode, QualityTaskFailed.exitCode, GraphitiProxyOpsError.exitCode, YeetCommandError.exitCode, YeetVerdictLane.exitCode, and QualityIssue.exitCode.",
+    "proposedTarget": "Introduce or reuse a shared exit-status schema: failure-only paths can use the existing PositiveExitStatus exemplar at packages/tooling/tool/cli/src/commands/Quality/internal/FallowEnvelope.schema.ts:109, while status fields that can be zero should use S.Int.check(S.isBetween({ minimum: 0, maximum: 255 })) or an equivalent branded ExitStatus. Effect v4 S.Int and S.isBetween were verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7401.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
+    "line": 63,
+    "symbol": "Laws summaries and diagnostic source coordinates",
+    "smell": "Laws command summaries and diagnostics encode non-negative counters, source lines, source columns, and parameter counts as S.Finite across TerseEffect, NoNativeRuntime, EffectImports, EffectFn, and DualArity.",
+    "proposedTarget": "Use NonNegativeInt for count fields and parameterCount, and PosInt for source line/column fields where the producer emits 1-based positions. Existing repo targets are NonNegativeInt at packages/foundation/modeling/schema/src/Number.ts:182 and PosInt at packages/foundation/modeling/schema/src/Int.ts:77; Laws already uses LiteralKit annotations in DualArity.ts:53-82 as the local precision style.",
+    "confidence": 0.84,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts",
+    "line": 115,
+    "symbol": "NoNativeRuntimeSeverity and EffectFnRecommendation",
+    "smell": "Reusable LiteralKit domains are used by exported diagnostic schemas but are not piped through $I.annoteSchema. DualArity literal kits in the same Laws package are annotated, so these two stand out as catalog gaps.",
+    "proposedTarget": "Pipe NoNativeRuntimeSeverity and EffectFnRecommendation through $I.annoteSchema, mirroring DualArityEntryKind and DualArityDiagnosticKind at packages/tooling/tool/cli/src/commands/Laws/DualArity.ts:53 and :70.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
+    "line": 363,
+    "symbol": "SchemaCrispeningPolicyDocument.cards/families",
+    "smell": "The schema-crispening policy document accepts cards as S.Array(S.String) and families as S.Record(S.String, SchemaCrispeningFamilyPolicy) even though this file defines SchemaFirstPolicyRuleId and SchemaCrispeningFamily literal domains for these exact fields.",
+    "proposedTarget": "Use cards: S.Array(SchemaFirstPolicyRuleId) and families: S.Record(SchemaCrispeningFamily, SchemaCrispeningFamilyPolicy), preserving ownerOverrides as S.Record(S.String, ...) because owner names are open. Effect v4 S.Record key schemas were verified at .repos/effect-v4/packages/effect/src/Schema.ts:3780.",
+    "confidence": 0.92,
+    "mechanization": "codemod",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
+    "line": 203,
+    "symbol": "Lint source coordinates, literal argument indexes, and SchemaFirstLintSummary counts",
+    "smell": "Lint records encode source line, literal argument index, and advisory/count summaries as S.Finite in SchemaFirstInventoryEntry, SchemaFirstPolicyFinding, LiteralKitConstAssertionViolation, SchemaFirstLintSummary, LintViolation, ModuleSpecifierUse, and PackageTestImportViolation.",
+    "proposedTarget": "Use PosInt for 1-based source line fields, NonNegativeInt for zero-based argument indexes and counts, and keep existing schema-first literal rule ids. Existing helpers are NonNegativeInt at packages/foundation/modeling/schema/src/Number.ts:182 and PosInt at packages/foundation/modeling/schema/src/Int.ts:77.",
+    "confidence": 0.83,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+    "line": 131,
+    "symbol": "QualityProfileConfig and QualityProfileDetection numeric knobs",
+    "smell": "Quality scheduling slots, concurrency, CPU count, and memoryGiB are domain numeric values but are modeled as bare S.Finite. Concurrency/slots/CPU are positive integer domains, while memoryGiB should at least be positive finite.",
+    "proposedTarget": "Use PosInt for turboConcurrency, docgenParallel, fullProofSlots, reviewFixSlots, and cpuCount. Use S.Finite.check(S.isGreaterThan(0)) or a branded positive finite schema for memoryGiB. PosInt exists at packages/foundation/modeling/schema/src/Int.ts:77 and Effect v4 S.isGreaterThan was verified at .repos/effect-v4/packages/effect/src/Schema.ts:7286.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts",
+    "line": 124,
+    "symbol": "Quality, Purge, PackageVerify, and TurboConfigProof summary numerics",
+    "smell": "Normalized summary counts and durations remain S.Finite in ChangesetGraphSummary, PurgeSummary, PackageVerifyStepResult.durationMillis, and TurboConfigProofCountSummary total/byTask/byReason/byStatus maps.",
+    "proposedTarget": "Use NonNegativeInt for counts and millisecond durations. For record values such as byTask/byReason/byStatus, use S.Record(S.String, NonNegativeInt). In-package exemplar: FallowEnvelope.schema.ts already uses NonNegativeInt for attribution counts and findingCount at packages/tooling/tool/cli/src/commands/Quality/internal/FallowEnvelope.schema.ts:156 and :198.",
+    "confidence": 0.84,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+    "line": 91,
+    "symbol": "Fallow raw report numeric fields",
+    "smell": "Detector candidate: raw Fallow JSON schemas accept S.Finite for counts, timings, complexity metrics, and source positions before normalizing into Fallow envelopes.",
+    "proposedTarget": "None - keep this as a loose adapter boundary. The normalized envelope already converts selected counts to NonNegativeInt and uses PositiveExitStatus/exitStatus schemas in FallowEnvelope.schema.ts.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The file is a third-party Fallow JSON adapter; raw report precision is intentionally loose and bounded by maxFindingsPerCount before materializing findings.",
+      "boundary": "Fallow CLI JSON report compatibility boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyConfig.ts",
+    "line": 34,
+    "symbol": "makeDefaultedPositiveIntField and Graphiti restore timing config",
+    "smell": "The Graphiti env decoder enforces positive integers at runtime, but decodes to S.Finite, widening listenPort, concurrency, maxQueue, byte/time limits, timeoutSeconds, and waitSeconds back to number.",
+    "proposedTarget": "Decode to PosInt or to S.Int.check(S.isGreaterThan(0)) after the string transform, and reuse that positive-int schema for GraphitiRestoreConfig waitSeconds and GraphitiProxyOpsConfig timeoutSeconds/waitSeconds. PosInt exists at packages/foundation/modeling/schema/src/Int.ts:77; S.Int and S.isGreaterThan were verified in .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7286.",
+    "confidence": 0.83,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyServices.ts",
+    "line": 168,
+    "symbol": "ProxyQueueStats and ProxyHealthPayload counters",
+    "smell": "Graphiti proxy health and queue stats expose active, queued, peakQueueDepth, processed, failed, rejected, concurrency, and maxQueue as S.Finite even though these are non-negative counters or positive config-derived limits.",
+    "proposedTarget": "Use NonNegativeInt for active/queued/peakQueueDepth/processed/failed/rejected and PosInt for concurrency/maxQueue. These helpers are already exported through @beep/schema from packages/foundation/modeling/schema/src/Number.ts:182 and packages/foundation/modeling/schema/src/Int.ts:77.",
+    "confidence": 0.84,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Image/Image.schemas.ts",
+    "line": 239,
+    "symbol": "ExtractFramesDirResult count fields",
+    "smell": "Frame extraction directory result counts are normalized result counters but completedCount, failedCount, and totalCount are modeled as S.Finite.",
+    "proposedTarget": "Use NonNegativeInt for completedCount, failedCount, and totalCount, matching the repo-wide count schema at packages/foundation/modeling/schema/src/Number.ts:182 and the CLI count exemplars in Corpus/Files schemas.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/BunResolver.ts",
+    "line": 91,
+    "symbol": "BunSemverIdentifier and BunSemver.core",
+    "smell": "Parsed Bun semantic-version components use S.Finite for core tuple values and numeric prerelease identifiers, while parseBunVersionPart already enforces integer >= 0.",
+    "proposedTarget": "Use NonNegativeInt for the three core tuple components and the numeric branch of BunSemverIdentifier. The parser at BunResolver.ts:111-113 already matches NonNegativeInt semantics; the schema helper exists at packages/foundation/modeling/schema/src/Number.ts:182.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/Models.ts",
+    "line": 369,
+    "symbol": "VersionSyncUpdateLocation.yamlPath, resolver yamlPath fields, and drift counts",
+    "smell": "YAML path segments use S.Finite for array indexes, VersionDriftItem.line uses S.Option(S.Finite), and VersionSyncDriftError.driftCount uses S.Finite.",
+    "proposedTarget": "Use S.Array(S.Union([S.String, NonNegativeInt])) for YAML path segments, PosInt for 1-based drift lines, and NonNegativeInt for driftCount. NodeResolver already imports NonNegativeInt at packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/NodeResolver.ts:12 for stepIndex, making this a local reuse target.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+    "line": 115,
+    "symbol": "SyncDataTargetProjection.recordCount and SyncDataToTsDriftError.driftCount",
+    "smell": "SyncDataToTs normalized projection counts and drift-count errors are non-negative counters but are encoded as S.Finite.",
+    "proposedTarget": "Use NonNegativeInt for recordCount and driftCount. This matches the repo count schema at packages/foundation/modeling/schema/src/Number.ts:182 and existing CLI generated-data count usage in Corpus/Files schemas.",
+    "confidence": 0.87,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/Iso4217.ts",
+    "line": 109,
+    "symbol": "Iso4217CurrencyEntry.digits",
+    "smell": "ISO 4217 minor-unit digits are normalized from XML into a numeric domain but remain bare S.Finite. The parser maps N.A. to 0 and parseInt values to number without schema-level non-negative integer precision.",
+    "proposedTarget": "Use NonNegativeInt for digits, or a narrower bounded integer if ISO minor-unit maximums are locked later. The immediate safe target is NonNegativeInt from packages/foundation/modeling/schema/src/Number.ts:182.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/IanaMediaTypes.ts",
+    "line": 47,
+    "symbol": "IanaMediaTypeName",
+    "smell": "Reusable union schema IanaMediaTypeName is used by IanaMediaTypeRecord but lacks $I.annoteSchema, while the sibling Iso4217CurrencyName union has a description annotation.",
+    "proposedTarget": "Pipe IanaMediaTypeName through $I.annoteSchema(\"IanaMediaTypeName\", { description: \"Media type name node emitted by the IANA registry parser.\" }) mirroring Iso4217CurrencyName at packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/Iso4217.ts:58.",
+    "confidence": 0.94,
+    "mechanization": "codemod",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
+    "line": 106,
+    "symbol": "SkillLockEntry.computedHash",
+    "smell": "Skill lock entries store a computed SHA-256 digest as S.String even though the command computes lowercase hex with Encoding.encodeHex and the repo already has a Sha256Hex schema.",
+    "proposedTarget": "Use Sha256Hex for computedHash and decode/construct the value at sha256Hex or makeLockEntry boundaries. Sha256Hex is exported from @beep/schema via packages/foundation/modeling/schema/src/Sha256.ts:62 and includes a toArbitrary annotation at :64.",
+    "confidence": 0.87,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
+    "line": 145,
+    "symbol": "GitHubTreeEntry.size and SkillsDriftError.driftCount",
+    "smell": "Skills command byte-size and drift-count fields use S.Finite. GitHub tree entry size is an optional non-negative byte count, and driftCount is a non-negative error count.",
+    "proposedTarget": "Use S.optionalKey(NonNegativeInt) for GitHubTreeEntry.size and NonNegativeInt for SkillsDriftError.driftCount. Existing helper: packages/foundation/modeling/schema/src/Number.ts:182.",
+    "confidence": 0.71,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
+    "line": 446,
+    "symbol": "Yeet closeout/status/quality issue counts, PR numbers, and source coordinates",
+    "smell": "Yeet durable reports encode review thread counts, issue counts, PR numbers, status worktree/check counts, quality issue source coordinates, and several required Greptile thresholds as S.Finite.",
+    "proposedTarget": "Use NonNegativeInt for counts and thresholds, PosInt for PR numbers and 1-based source positions, and the shared exit-status schema proposed for exitCode fields. This affects PrCloseoutReport, PrCloseoutOptions, GreptileSummary, PrCloseoutGateState, QualityIssue/PackageQualityReport, YeetStatusWorktree/Remote/Artifact, YeetBaseFreshness, and YeetVerdictLane.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
+    "line": 521,
+    "symbol": "TsconfigSync result changedFiles and drift fileCount",
+    "smell": "TsconfigSync result payloads and drift errors model file-count fields as S.Finite even though changedFiles/fileCount are non-negative integer counts.",
+    "proposedTarget": "Use NonNegativeInt for TsconfigSyncResultSync.changedFiles, TsconfigSyncResultCheck.changedFiles, TsconfigSyncResultDryRun.changedFiles, and TsconfigSyncDriftError.fileCount. Existing helper: packages/foundation/modeling/schema/src/Number.ts:182.",
+    "confidence": 0.88,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
+    "line": 621,
+    "symbol": "JsonObject, TsconfigReferenceEntry.path, and TsconfigCompilerOptionsPaths.paths",
+    "smell": "Detector candidate: tsconfig/docgen JSON adapter schemas keep generic S.Record(S.String, S.Unknown) and S.optionalKey(S.Unknown) shapes.",
+    "proposedTarget": "None - keep these adapter schemas broad. The command preserves user-authored tsconfig/docgen JSON while reading and rewriting selected paths, and it already uses schema-derived equivalence for StringArray at TsconfigSync.command.ts:130.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The broad shapes are intentional passthrough for user-authored tsconfig/docgen JSON documents, not package-owned normalized domain fields.",
+      "boundary": "tsconfig and docgen config JSON compatibility boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
+    "line": 94,
+    "symbol": "SummaryCandidate.mtimeMillis and LongestTask.durationMs",
+    "smell": "Derived CI summary fields use S.Finite for file mtimes and rendered task durations. These are non-negative millisecond values after local filesystem/Turbo summary processing.",
+    "proposedTarget": "Use NonNegativeInt for mtimeMillis and durationMs, keeping the raw Turbo summary adapter separate. Existing helper: packages/foundation/modeling/schema/src/Number.ts:182.",
+    "confidence": 0.76,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
+    "line": 25,
+    "symbol": "TurboSummaryExecution and TurboSummaryTaskExecution raw numeric fields",
+    "smell": "Detector candidate: raw Turbo run summary fields accept attempted, success, startTime, and endTime as S.Finite, and task summaries accept raw timing fields before rendering.",
+    "proposedTarget": "None - keep raw Turbo JSON parsing permissive at the adapter boundary. Tighten only derived local projections such as SummaryCandidate and LongestTask.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Turbo summary JSON is third-party tool output; this schema is a compatibility adapter before local rendering and projection.",
+      "boundary": "Turbo run summary JSON boundary"
+    }
+  }
+]

@@ -1,0 +1,80 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts",
+    "line": 33,
+    "symbol": "decodeCandidateClaim / decodeEvidence",
+    "smell": "Top-of-file domain decode helper wall constructs epistemic entities from spike-shaped objects.",
+    "proposedTarget": "Fold the spike construction boundary into a named schema-backed helper/model instead of free decoders, or attach schema-owned codec statics where the owning schemas allow it. Local target examples: `EntityInput` is already an `S.Class` in `packages/law-practice/use-cases/src/internal/spikeEntity.ts:88`, and `SchemaUtils.withCodecStatics` exposes codec statics at `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`.",
+    "confidence": 0.63,
+    "mechanization": "assisted",
+    "roiRank": 0.42
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.service.ts",
+    "line": 35,
+    "symbol": "decodeOfficeAction / decodeClaim / decodePriorArtReference / decodeRejection / decodeDistinction",
+    "smell": "Module-scope wall of five schema decoders constructs law-practice entities from spike-shaped objects.",
+    "proposedTarget": "Replace the free decoder wall with a schema-backed spike construction boundary that names the decoded payload once, then builds `LawEntities`. In-package exemplar: `LawEntities` is already an `S.Class` at `packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts:51`, and the `IrToLawShape.toLaw` method is already modeled with `Fn({ input: S.Array(GroundedExtraction), output: EffectSchema<...>() })` at `packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts:94`-`97`.",
+    "confidence": 0.64,
+    "mechanization": "assisted",
+    "roiRank": 0.5
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.service.ts",
+    "line": 90,
+    "symbol": "anchorOf",
+    "smell": "Internal Effect.fn return annotation is an inline object type `{ endChar, quote, startChar }` duplicating the existing `TextAnchor` schema used by `Distinction.anchor`.",
+    "proposedTarget": "Import `TextAnchor` from `@beep/provenance` and return `Effect.fn.Return<TextAnchor, IrToLawExtractionError>`, constructing with `TextAnchor.make({ endChar: span.end, quote, startChar: span.start })` or an Effect schema decode if encoded input must be checked. Existing schema: `TextAnchor` at `packages/foundation/modeling/provenance/src/TextAnchor.ts:62`; consuming field: `Distinction.anchor: TextAnchor` at `packages/law-practice/domain/src/entities/Distinction/Distinction.model.ts:63`.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 0.58
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts",
+    "line": 149,
+    "symbol": "OfficeActionReviewDeps",
+    "smell": "Exported interface contains injected service/runtime handles and a nested Effect-returning callback.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. Keep the dependency-injection port as an interface; schema-as-truth applies to the stable inputs/results/errors flowing through the services.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This is an injected dependency port over file-processing, LangExtract, IR-to-law, and epistemic services. It is not a wire, persisted, config, or pure domain payload.",
+      "boundary": "OfficeActionReview dependency port"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.ports.ts",
+    "line": 168,
+    "symbol": "OfficeActionReviewShape",
+    "smell": "Exported interface with an Effect-returning service method matches the schema-first-inventory detector surface.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. The method input (`OfficeActionReviewInput`) and error union (`OfficeActionReviewError`) are already schema-modeled.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This is the `Context.Service` shape for the office-action review use-case port, not a data payload to schema-ify.",
+      "boundary": "OfficeActionReview service port"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/law-practice/use-cases/src/internal/spikeEntity.ts",
+    "line": 54,
+    "symbol": "spikeEntityInput",
+    "smell": "Exported overloaded `dual` helper has a function-signature type literal in a schema-modeled internal fixture module.",
+    "proposedTarget": "None -- audited as an overload/dual surface returning the schema-backed `EntityInput` class. Keep as a typed ergonomic helper unless a future detector specifically models dual overloads.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "The overload surface is intentional (`dual`) and the return value is already an `EntityInput` S.Class. Fn-wrapping would remove the data-first/data-last API rather than add schema truth.",
+      "boundary": "internal spike fixture overload helper"
+    }
+  }
+]

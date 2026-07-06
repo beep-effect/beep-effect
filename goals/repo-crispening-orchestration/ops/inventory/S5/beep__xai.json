@@ -1,0 +1,109 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/xai/src/XAi.config.ts",
+    "line": 85,
+    "symbol": "XAiConfigInput.apiUrl / managementApiUrl / websocketUrl",
+    "smell": "The driver base URLs have absolute HTTP(S)/WS(S) defaults and are fed directly into request/WebSocket construction, but the schema accepts arbitrary strings.",
+    "proposedTarget": "Use `HttpsUrl` or `URLStr` from `packages/foundation/modeling/schema/src/URL.ts:44` and `:103` for HTTP base URLs, and introduce an annotated `WebSocketUrl = S.String.check(S.isPattern(/^wss?:\\/\\//))` plus `new URL` protocol validation for the WebSocket base. Effect v4 exposes `S.isPattern` at `.repos/effect-v4/packages/effect/src/Schema.ts:6521`.",
+    "confidence": 0.76,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/drivers/xai/src/XAi.models.ts",
+    "line": 119,
+    "symbol": "XAiJsonResponse.status / XAiTextResponse.status / XAiBinaryResponse.status / XAiNoBodyResponse.status",
+    "smell": "HTTP response status is modeled as `S.Finite`, allowing negative and fractional values in the decoded response union.",
+    "proposedTarget": "Replace response status fields with the repo `HttpStatus` schema from `@beep/schema/HttpStatus` (`packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.schema.ts:34`), matching the existing Box response exemplar in `packages/drivers/box/src/experimental/Box.schemas.ts:249`.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/drivers/xai/src/XAi.errors.ts",
+    "line": 92,
+    "symbol": "XAiError.status / XAiErrorOptions.status",
+    "smell": "Typed driver errors preserve HTTP status as `S.Finite`; the transport code only ever supplies status-like numbers, so the schema over-accepts fractional and negative values.",
+    "proposedTarget": "Use the same `HttpStatus` target as the response schemas, or an annotated local `XAiStatusCode` integer if xAI can surface non-standard proxy status values.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/drivers/xai/src/XAi.models.ts",
+    "line": 286,
+    "symbol": "XAiServerSentEvent.index",
+    "smell": "SSE event index is generated from a zero-based counter in `XAi.service.ts` but is decoded as any finite number.",
+    "proposedTarget": "Use `NonNegativeInt` from `@beep/schema/Number` (`packages/foundation/modeling/schema/src/Number.ts:182`) for the event index. The service initializes the counter at `0` and increments by one per parsed block.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/drivers/xai/src/XAi.models.ts",
+    "line": 360,
+    "symbol": "XAiWebSocketEvent.code",
+    "smell": "WebSocket close codes decode as `S.Finite`, so fractional and negative codes are accepted even though close codes are integers.",
+    "proposedTarget": "Narrow to an annotated `S.Int.check(S.isBetween(1000, 4999))` if only protocol/application close codes are expected, or at minimum `NonNegativeInt`. Effect v4 exposes `S.Int` and `S.isBetween` at `.repos/effect-v4/packages/effect/src/Schema.ts:11398` and `:7401`.",
+    "confidence": 0.62,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/xai/src/XAiLanguageModel.service.ts",
+    "line": 54,
+    "symbol": "XAiLanguageModelOptions.model",
+    "smell": "Language-model construction accepts an empty model id because `model` is a plain `S.String`, even though the adapter forwards it to xAI request bodies as a provider model identifier.",
+    "proposedTarget": "Introduce an annotated `XAiModelName = S.NonEmptyString` or a local model-id schema if the supported model set becomes finite. Effect v4 exposes `S.NonEmptyString` at `.repos/effect-v4/packages/effect/src/Schema.ts:8420`.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/xai/test/XAi.service.test.ts",
+    "line": 225,
+    "symbol": "xAI config, endpoint, response, error, SSE, and WebSocket schemas",
+    "smell": "The test suite exercises endpoint manifest alignment and transport behavior, but there are no schema-derived arbitrary/equivalence laws for the handwritten schemas.",
+    "proposedTarget": "Add focused `S.toArbitrary` / `S.toEquivalence` tests for `XAiConfigInput`, `XAiError`, `XAiEndpoint`, `XAiResponse`, `XAiServerSentEvent`, and `XAiWebSocketEvent`; keep raw `body`, `bytes`, and `FormData` escape hatches out of arbitrary generation or give them custom arbitraries.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/xai/src/XAi.models.ts",
+    "line": 78,
+    "symbol": "XAiRequestOptions / XAiQueryValue",
+    "smell": "Detector candidate: raw request options use broad `S.Unknown`, `S.Record(S.String, S.String)`, and finite/string/boolean query values.",
+    "proposedTarget": "No S5 rewrite for this pass. Endpoint-specific body schemas would be a separate driver modeling effort; this type is the generic endpoint escape hatch.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The service intentionally exposes a generic request boundary for all xAI endpoints, including JSON, multipart, binary, query, and path substitutions.",
+      "boundary": "xAI raw endpoint request boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/xai/test/XAi.service.test.ts",
+    "line": 225,
+    "symbol": "xAI endpoint and transport compatibility fixtures",
+    "smell": "Detector candidate: the suite uses table-like endpoint fixtures and fake transport captures instead of schema arbitraries.",
+    "proposedTarget": "Keep these fixtures. Add additive schema-law coverage separately; do not replace manifest/transport assertions that verify endpoint wiring and redaction behavior.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The tests pin endpoint manifest alignment, request construction, failure mapping, SSE parsing, WebSocket error mapping, and secret redaction.",
+      "boundary": "xAI endpoint compatibility and transport fixture tests"
+    }
+  }
+]

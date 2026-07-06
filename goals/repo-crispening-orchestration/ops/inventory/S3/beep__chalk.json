@@ -1,0 +1,128 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
+    "line": 186,
+    "symbol": "modifierStyles",
+    "smell": "modifierStyles, foregroundStyles, and backgroundStyles (lines 186, 193, 200) rebuild kit-derived literal-keyed records via R.toEntries -> A.map -> R.fromEntries, widening Record<ModifierStyleName|ForegroundStyleName|BackgroundStyleName, StylerEntry> to Record<string, StylerEntry> and discarding the LiteralKit-derived key exhaustiveness proof that getStyleEntry (line 257) indexes against.",
+    "proposedTarget": "Replace each pipeline with R.map(codes, toStyleEntry) (verified: effect v4 Record.map at .repos/effect-v4/packages/effect/src/Record.ts:619 preserves the literal key type K), restoring statically exhaustive Record<StyleName-subset, StylerEntry> tables behind getStyleEntry's S.is-guarded Match dispatch.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3.4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
+    "line": 451,
+    "symbol": "renderRgbModel",
+    "smell": "Escape-model literal family \"ansi\" | \"ansi256\" | \"ansi16m\" is hand-repeated as inline union types at AnsiStyles.ts:451, 457, 467, 498 and duplicated as values inside levelMapping at ChalkRuntime.ts:117 -- a parallel literal family with no single schema source and ad-hoc Match.type dispatch instead of a kit-derived matcher.",
+    "proposedTarget": "Collapse into one LiteralKit([\"ansi\", \"ansi256\", \"ansi16m\"]) in ChalkSchema.ts (LiteralKit const type params verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:743), derive the type from kit.Type, dispatch renderRgbModel via kit.$match, and type levelMapping as a ColorSupportLevel-indexed tuple of kit.Type. Note: MappedLiteralKit is NOT the fit for levelMapping -- the level->model map is non-injective (0->ansi and 1->ansi) and MappedLiteralKit is a reversible code map.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 2.8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
+    "line": 497,
+    "symbol": "getModelAnsi",
+    "smell": "Color-model literal family \"rgb\" | \"hex\" | \"ansi256\" is hand-repeated as inline union types at AnsiStyles.ts:497 and 502 and duplicated as an inline as-const array at ChalkRuntime.ts:286 (createPrototype's for-of over [\"rgb\", \"hex\", \"ansi256\"]) -- a parallel literal family (array + union type + Match.type dispatch) with no kit source.",
+    "proposedTarget": "Collapse into one LiteralKit([\"rgb\", \"hex\", \"ansi256\"]) in ChalkSchema.ts; iterate kit.Options in createPrototype, derive the parameter type from kit.Type, and dispatch getModelAnsi via kit.$match so adding a model is one kit entry plus handlers.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 2.8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkRuntime.ts",
+    "line": 148,
+    "symbol": "setChalkStateLevel",
+    "smell": "(state as MutableChalkState).level = normalizeColorSupportLevel(level) uses a repo-banned as cast (only as const is allowed) to strip readonly from the S.toTaggedUnion-derived ChalkState and mutate the discriminator in place, bypassing the schema-owned variant model.",
+    "proposedTarget": "Model the shared-mutable builder level explicitly instead of casting: hold state in a mutable box ({ state: ChalkState } whose property is reassigned to a freshly-made variant) or give BuilderMeta an intentionally mutable level field, keeping normalizeColorSupportLevel's Result-based decode at the boundary. Requires care: derived builders share the state object by reference, so the box must remain the shared identity.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2.6
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+    "line": 464,
+    "symbol": "makeSupportsColorDecisionInput",
+    "smell": "Heterogeneous optional-key struct assembly via four chained conditional spreads ...(P.isNotUndefined(x) ? { x } : {}) for isTTY, osRelease, platform, sniffFlags (lines 464-467) -- the sibling pattern of the R.getSomes struct-spread smell, where O.getSomesStruct is the fit. No R.getSomes call exists in this package; this is the manual-spread variant of the same shape.",
+    "proposedTarget": "({ argv, env, ...O.getSomesStruct({ isTTY: O.fromUndefinedOr(isTTY), osRelease: O.fromUndefinedOr(osRelease), platform: O.fromUndefinedOr(platform), sniffFlags: O.fromUndefinedOr(sniffFlags) }) }) using O.getSomesStruct (verified at packages/foundation/modeling/utils/src/Option.ts:102) and O.fromUndefinedOr (verified at .repos/effect-v4/packages/effect/src/Option.ts:860). Held at judgment per D5 until the Law 20/47 amendment sweep is cleared.",
+    "confidence": 0.7,
+    "mechanization": "judgment",
+    "roiRank": 1.4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
+    "line": 452,
+    "symbol": "renderRgbModel",
+    "smell": "Two-member literal family \"color\" | \"bgColor\" repeated inline at AnsiStyles.ts:452, 468, 476, 499 selecting between the ansiStyles.color and ansiStyles.bgColor tables; no shared alias or kit source.",
+    "proposedTarget": "At minimum a single exported type alias (or small LiteralKit if the foreground/background axis grows guards); a full kit may be overkill for a two-value selector used only as typed table keys -- judgment call on whether the collapse pays for itself.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 0.5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkSchema.ts",
+    "line": 221,
+    "symbol": "ColorInfo",
+    "smell": "ColorInfo = S.Union([ColorSupport, S.Literal(false)]) is an undiscriminated union (struct | false) that a naive undiscriminated-union detector would flag as a tagged-union candidate.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Upstream chalk API compatibility: supportsColor must be `false | ColorSupport` so the ecosystem idiom `supportsColor === false` keeps working (package docs and public aliases explicitly preserve chalk API compatibility). The union is trivially discriminable by the false literal; tagging it would break the drop-in surface.",
+      "boundary": "public chalk-compatible API surface (@beep/chalk supportsColor / supportsColorStderr / ColorInfo)"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/PublicSurface.ts",
+    "line": 235,
+    "symbol": "makeChalkConstructor",
+    "smell": "new Proxy(ConstructorBase, { construct... }) as unknown as ChalkConstructorFor<Base> -- a repo-banned double cast retyping a Proxy whose construct trap changes the constructor signature.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "TypeScript types new Proxy(target, handler) as typeof target; no Effect narrowing primitive (P.*, S.is, Match) can express a construct-trap signature change, and a class-extends restructuring fails because create() returns object, which is not assignable to InstanceType<Base>. The cast is the minimal honest boundary for the chalk callable-constructor architecture mirrored from upstream.",
+      "boundary": "type-system limit at the Proxy construct trap in PublicSurface.makeChalkConstructor"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkRuntime.ts",
+    "line": 215,
+    "symbol": "applyStyle",
+    "smell": "if (state.level <= 0 || text.length === 0) branches on the ChalkState discriminator field where the S.toTaggedUnion-derived ChalkState.match/.guards exist -- an if-over-discriminator detector would flag it.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The check is a numeric threshold/ordering comparison (<= 0) combined with an unrelated emptiness test, not variant dispatch; a derived 4-case match adds noise without an exhaustiveness benefit on this hot string-render path. ChalkState's derived match remains the right tool where cases actually diverge.",
+      "boundary": "internal hot render path (ChalkRuntime.applyStyle); no public contract"
+    }
+  },
+  {
+    "ruleId": "literal-kit-const-assertion",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkSchema.ts",
+    "line": 44,
+    "symbol": "modifierNameValues",
+    "smell": "Named as-const literal arrays feeding LiteralKit by identifier (modifierNameValues:44, colorSupportLevelValues:28, foregroundColorNameValues:70, backgroundColorNameValues:105, colorNameValues:140) -- a loose literal-kit-const-assertion heuristic keyed on 'LiteralKit(x) where x's declaration has as const' would flag them.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The card only covers inline LiteralKit array arguments (detector at packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts:476-486: 'Inline LiteralKit array arguments do not need as const'). These arrays are separate named bindings where as const is required for tuple inference, they are the single source the kits derive from (no parallel duplicate family), and they double as documented public API exports (modifierNames, colorNames, etc. in Chalk.ts).",
+      "boundary": "named public-API literal tuples consumed by LiteralKit by identifier, outside the inline-argument scope of the card"
+    }
+  }
+]

@@ -1,0 +1,247 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/Domain.ts",
+    "line": 22,
+    "symbol": "DocNewOptions",
+    "smell": "Private type-literal option bag is used as the public `Doc.new` static-constructor contract beside the `Doc` S.Class.",
+    "proposedTarget": "Replace the object alias with an annotated private `DocNewOptions` schema (`S.Struct` or `S.Class`) and derive `type DocNewOptions = typeof DocNewOptions.Type`; follow schema input exemplars such as packages/tooling/tool/docgen/src/Configuration.ts:65 and packages/tooling/library/ai-metrics/src/source-discovery.ts:83.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 0.67
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/Domain.ts",
+    "line": 32,
+    "symbol": "SignaturePositionOptions",
+    "smell": "Shared type-literal option bag feeds public static constructors for `DocEntry`, `Interface`, `Function`, `TypeAlias`, and `Constant` instead of a schema-derived contract.",
+    "proposedTarget": "Introduce an annotated `SignaturePositionOptions` schema over `signature: S.String` and `position: Position`, then derive the type from the schema. This mirrors the local `Position` S.Class at packages/tooling/tool/docgen/src/Domain.ts:78 and input-schema style at packages/tooling/library/ai-metrics/src/source-discovery.ts:83.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 0.78
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/Domain.ts",
+    "line": 37,
+    "symbol": "ClassNewOptions",
+    "smell": "Type-literal constructor option bag extends another alias and carries arrays of schema-modeled `DocEntry` values for the exported `Class.new` API.",
+    "proposedTarget": "Model `ClassNewOptions` as an annotated schema that reuses the `SignaturePositionOptions` fields and `S.Array(DocEntry)` fields, then derive the type. Use existing `S.Class` field schemas in this file and the input-class exemplar at packages/tooling/library/ai-metrics/src/source-discovery.ts:83.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.58
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/Domain.ts",
+    "line": 43,
+    "symbol": "ExportNewOptions",
+    "smell": "Type-literal constructor option bag carries the exported `Export.new` contract instead of a schema-derived input shape.",
+    "proposedTarget": "Model `ExportNewOptions` with an annotated schema over `signature`, `position`, and `isNamespaceExport`, reusing the `SignaturePositionOptions` schema; derive the type from that schema.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.55
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/Domain.ts",
+    "line": 47,
+    "symbol": "NamespaceNewOptions",
+    "smell": "Type-literal constructor option bag carries nested namespace/member arrays for the exported `Namespace.new` API.",
+    "proposedTarget": "Model `NamespaceNewOptions` as an annotated schema with `position: Position`, `interfaces: S.Array(Interface)`, `typeAliases: S.Array(TypeAlias)`, and the existing recursive namespace carve-out preserved; compare the load-bearing namespace recursion handling in this file around `declare readonly namespaces`.",
+    "confidence": 0.67,
+    "mechanization": "assisted",
+    "roiRank": 0.42
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/Domain.ts",
+    "line": 54,
+    "symbol": "ModuleNewOptions",
+    "smell": "Large type-literal constructor option bag duplicates most of the `Module` S.Class fields for the exported `Module.new` API.",
+    "proposedTarget": "Introduce an annotated `ModuleNewOptions` schema that reuses `Doc`, `S.Array(Class)`, `S.Array(Interface)`, `S.Array(Function)`, `S.Array(TypeAlias)`, `S.Array(Constant)`, `S.Array(Export)`, and `S.Array(Namespace)`, while leaving `source: Parser.SourceShape` outside the schema per service/runtime-handle carve-out.",
+    "confidence": 0.64,
+    "mechanization": "assisted",
+    "roiRank": 0.44
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/Domain.ts",
+    "line": 706,
+    "symbol": "FileNewOptions",
+    "smell": "Type-literal constructor option bag carries the optional `isOverwritable` default for the exported `File.new` API instead of a schema default.",
+    "proposedTarget": "Use a schema-derived options contract with `isOverwritable` defaulted in the schema, matching the default-in-schema pattern in packages/tooling/library/ai-metrics/src/scorecard.ts:337 and the `S.withConstructorDefault` API verified in .repos/effect-v4/packages/effect/src/Schema.ts:5646.",
+    "confidence": 0.76,
+    "mechanization": "assisted",
+    "roiRank": 0.5
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/Domain.ts",
+    "line": 861,
+    "symbol": "ProcessShape",
+    "smell": "Type-literal shape is paired with `Context.Service<Process, ProcessShape>()`.",
+    "proposedTarget": "Audited and rejected: service shapes are an S1 fence-1 carve-out and should remain interfaces/type aliases.",
+    "confidence": 0.14,
+    "mechanization": "judgment",
+    "roiRank": 0.02,
+    "exception": {
+      "reason": "Context.Service shape containing Effect-valued runtime handles (`argv`, `cwd`, `platform`), explicitly covered by the service-contract carve-out.",
+      "boundary": "Context.Service shape"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/tool/docgen/src/Parser.ts",
+    "line": 105,
+    "symbol": "Comment",
+    "smell": "Exported `parseComment(text): Comment` returns a plain object type alias for parsed JSDoc data rather than a schema-modeled value.",
+    "proposedTarget": "Either make `parseComment` private and keep `parseDoc` returning the existing `Domain.Doc` S.Class, or introduce a `ParsedComment` S.Class/S.Struct and derive the return type. `Domain.Doc` at packages/tooling/tool/docgen/src/Domain.ts:122 is the in-package schema target.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 0.43
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/Core.ts",
+    "line": 28,
+    "symbol": "FencedCodeBlock",
+    "smell": "Plain object type alias describes extracted fenced-code payloads returned by exported `extractFencedCodeBlocks`.",
+    "proposedTarget": "Model the block as a small annotated schema (`code: S.String`, `extension: LiteralKit([\".ts\", \".tsx\"])` or `S.Literal`) and derive the type, following literal-domain exemplars such as packages/tooling/tool/docgen/src/ProofManifest.ts:35 and input schemas at packages/tooling/library/ai-metrics/src/source-discovery.ts:83.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 0.46
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/Printer.ts",
+    "line": 224,
+    "symbol": "PrintModelOptions",
+    "smell": "Private type-literal helper options in a schema-modeled printer file.",
+    "proposedTarget": "Hypothetical private print-options schema, audited and rejected for this S1 pass.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "Private formatting helper options with no exported contract, decode boundary, persistence boundary, or reusable domain invariant. Schema conversion would not move truth across a boundary.",
+      "boundary": "private formatting helper options"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/Printer.ts",
+    "line": 245,
+    "symbol": "PrintEntryOptions",
+    "smell": "Private type-literal helper options in a schema-modeled printer file.",
+    "proposedTarget": "Hypothetical private print-entry-options schema, audited and rejected for this S1 pass.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "Private formatting helper options passed between local printer helpers only; no schema-modeled public contract is bypassed.",
+      "boundary": "private formatting helper options"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/Configuration.ts",
+    "line": 233,
+    "symbol": "CompilerOptionsInput",
+    "smell": "Exported type alias manually duplicates the already-existing `CompilerOptionsSchema` union (`string | S.Schema.Type<typeof CompilerOptionsShape>`).",
+    "proposedTarget": "Export/annotate the existing `CompilerOptionsSchema` (line 40) as the source of truth and derive `export type CompilerOptionsInput = typeof CompilerOptionsSchema.Type`, matching `ConfigurationDocument = ConfigurationSchema` at packages/tooling/tool/docgen/src/Configuration.ts:101 and LiteralKit-derived types at packages/tooling/tool/docgen/src/ProofManifest.ts:47.",
+    "confidence": 0.84,
+    "mechanization": "assisted",
+    "roiRank": 0.64
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/Configuration.ts",
+    "line": 238,
+    "symbol": "LoadArgs",
+    "smell": "Private type-literal input to exported `load(args)` in a schema-modeled configuration file.",
+    "proposedTarget": "Hypothetical `LoadArgs` schema using `S.OptionFromOptionalKey` fields, audited and rejected for this pass.",
+    "confidence": 0.28,
+    "mechanization": "judgment",
+    "roiRank": 0.06,
+    "exception": {
+      "reason": "`LoadArgs` is an adapter shape produced by Effect CLI flags and already contains `O.Option` values; the durable domain contract is `ConfigurationShape` / `ConfigurationSchema`, not the raw CLI adapter record.",
+      "boundary": "Effect CLI adapter input"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/Parser.ts",
+    "line": 44,
+    "symbol": "SourceShape",
+    "smell": "Exported shape class is used as the `Context.Service` payload for parser source state.",
+    "proposedTarget": "Audited and rejected: this shape contains a `ts-morph` `SourceFile` runtime handle and backs `Context.Service<Source, SourceShape>()` at line 81.",
+    "confidence": 0.12,
+    "mechanization": "judgment",
+    "roiRank": 0.02,
+    "exception": {
+      "reason": "Runtime adapter/service shape over a third-party AST handle, explicitly outside schema-ification. Schema should not model `ts-morph` object identity.",
+      "boundary": "Context.Service shape / third-party AST handle"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/markdown-toc.d.ts",
+    "line": 2,
+    "symbol": "MarkdownTocOptions",
+    "smell": "Ambient exported interface in a source file.",
+    "proposedTarget": "Audited and rejected: keep the ambient declaration matching the third-party `@effect/markdown-toc` module.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 0.01,
+    "exception": {
+      "reason": "Third-party module declaration/adapter surface, not first-party domain data. Replacing it with a schema would not affect runtime validation and could break type augmentation.",
+      "boundary": "third-party ambient module declaration"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/markdown-toc.d.ts",
+    "line": 6,
+    "symbol": "MarkdownTocResult",
+    "smell": "Ambient exported interface in a source file.",
+    "proposedTarget": "Audited and rejected: keep the ambient declaration matching the third-party `@effect/markdown-toc` module.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 0.01,
+    "exception": {
+      "reason": "Third-party module declaration/adapter surface, not first-party domain data. Replacing it with a schema would not affect runtime validation and could break type augmentation.",
+      "boundary": "third-party ambient module declaration"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/ProofManifest.ts",
+    "line": 262,
+    "symbol": "decodeDocgenProofManifest",
+    "smell": "Single module-local schema codec helper near proof-manifest boundary.",
+    "proposedTarget": "Hypothetical class static or exported codec next to `DocgenProofManifest`, audited and rejected as a low-value single-use boundary helper.",
+    "confidence": 0.24,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Single schema-backed JSON decoder for a proof-manifest read boundary; it already uses `S.decodeUnknownEffect(S.fromJsonString(DocgenProofManifest))` and is not a helper wall.",
+      "boundary": "proof-manifest JSON boundary"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/tool/docgen/src/CLI.ts",
+    "line": 21,
+    "symbol": "decodeCompilerOptions",
+    "smell": "Single module-local schema codec helper for CLI compiler-options JSON text.",
+    "proposedTarget": "Hypothetical exported compiler-options JSON codec, audited and rejected for this pass.",
+    "confidence": 0.22,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Single CLI adapter decoder that already uses the schema codec (`S.decodeUnknownEffect(S.fromJsonString(S.toEncoded(TSConfigCompilerOptions)))`); no direct `JSON.parse` or duplicate object contract remains here.",
+      "boundary": "CLI flag JSON boundary"
+    }
+  }
+]

@@ -1,0 +1,69 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
+    "line": 62,
+    "symbol": "resolveConfig",
+    "smell": "`EcfrConfigInput.apiUrl` is `S.optionalKey(S.String)` and `resolveConfig` defaults it with `input.apiUrl ?? ECFR_API_URL`.",
+    "proposedTarget": "Move the default onto the config schema: `apiUrl: S.String.pipe(SchemaUtils.withKeyDefaults(ECFR_API_URL))`, matching `packages/drivers/uspto/src/Uspto.config.ts:47` and `packages/drivers/discord/src/Discord.models.ts:54`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/ecfr/src/Ecfr.errors.ts",
+    "line": 64,
+    "symbol": "EcfrErrorOptions",
+    "smell": "`EcfrErrorOptions` and `EcfrError` carry optional `cause`/`status` fields as `S.optionalKey(...)`, then constructors rebuild absent values with `O.fromUndefinedOr` + `O.getSomesStruct`.",
+    "proposedTarget": "Use `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` for optional error context on both classes; local exemplar: `packages/drivers/pglite/src/Pglite.errors.ts:43`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
+    "line": 108,
+    "symbol": "makeFromEnvironment",
+    "smell": "`Config.string(\"ECFR_API_URL\").pipe(Config.withDefault(ECFR_API_URL))` is a defaulting detector hit.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Ambient environment acquisition happens before an `EcfrConfigInput` value exists; the explicit config path should own schema defaults, while the live layer can keep Effect Config's environment fallback.",
+      "boundary": "Effect Config environment boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/ecfr/scripts/generate.ts",
+    "line": 58,
+    "symbol": "schemaExpr",
+    "smell": "Generator source contains fallback/default logic such as `schema.items ?? { type: \"string\" }`, `schema.required ?? []`, and `schema.properties ?? {}`.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "This is a bespoke renderer for an external Swagger document, not package runtime domain logic. The generated output is excluded, and the generator must tolerate missing Swagger members while rendering deterministic source.",
+      "boundary": "code generator input-shape fallback"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
+    "line": 48,
+    "symbol": "EcfrTestHttp.handle",
+    "smell": "Test capture uses `O.getOrElse(() => request.url)` and an assertion fallback `captures[0]?.url ?? \"\"`.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "Test harness fallback for request capture and assertion ergonomics, not first-party runtime behavior.",
+      "boundary": "test fixture"
+    }
+  }
+]

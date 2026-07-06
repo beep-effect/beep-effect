@@ -1,0 +1,65 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
+    "line": 102,
+    "symbol": "TextFormatBits",
+    "smell": "TextFormatBits is a named bit-object while TextFormatBit re-lists those values in a LiteralKit at line 122; TextDetailBits/TextDetailBit repeat the same object-plus-kit pattern at lines 214/225. The semantic names and numeric literal domain are two parallel sources.",
+    "proposedTarget": "Model each injective name->bit table with MappedLiteralKit and derive the public named constants from the kit instead of maintaining a separate object and numeric LiteralKit. In-repo exemplar: HeadingLevelTag at Lexical.codec.ts:74 uses MappedLiteralKit with From.Enum/To.Enum; API verified at packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts:275-276/317.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 2.52
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.codec.ts",
+    "line": 207,
+    "symbol": "quoteChildToInlines/isArtifactLink",
+    "smell": "quoteChildToInlines uses block._tag === \"p\" and isArtifactLink uses child._tag === \"a\" over @beep/md tagged unions, bypassing the existing narrowing primitives for those tags.",
+    "proposedTarget": "Replace the manual _tag predicates with P.isTagged(\"p\") / P.isTagged(\"a\") or the schema-derived Md.Block/Md.Inline guards. P.isTagged is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Predicate.ts:1166, and S.toTaggedUnion-derived guards are verified at .repos/effect-v4/packages/effect/src/Schema.ts:6040-6042.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3.6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.codec.ts",
+    "line": 443,
+    "symbol": "listToBlock",
+    "smell": "listToBlock branches over ListType with if (node.listType === \"check\") and a second \"number\" ternary even though ListType is a LiteralKit at Lexical.model.ts:543.",
+    "proposedTarget": "Dispatch through ListType.$match(node.listType, { check, number, bullet }) so the Md block construction is keyed by the kit-owned literal family. LiteralKit $match is verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:665/710.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 2.55
+  },
+  {
+    "ruleId": "literal-kit-const-assertion",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.codec.ts",
+    "line": 74,
+    "symbol": "HeadingLevelTag",
+    "smell": "HeadingLevelTag passes an inline as-const pair array to MappedLiteralKit, which an over-broad literal-kit-const-assertion detector could confuse with redundant inline LiteralKit([... ] as const).",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The reused card only covers inline array literals passed directly to LiteralKit; this call uses MappedLiteralKit's pair-map API, and current in-repo MappedLiteralKit examples preserve pair tuples with as const.",
+      "boundary": "MappedLiteralKit reversible pair map, outside literal-kit-const-assertion scope"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.codec.ts",
+    "line": 421,
+    "symbol": "collectListItems",
+    "smell": "collectListItems checks child.type === \"listitem\" and then ListNode.is(child), which a discriminator-branch detector can flag as manual type dispatch.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is structural list-flattening over a recursive Lexical tree with a non-list fallback, not exhaustive rendering for every LexicalNode variant; the function already uses the available ListNode.is schema guard for the recursive list case.",
+      "boundary": "internal lossy Lexical list-flattening algorithm"
+    }
+  }
+]

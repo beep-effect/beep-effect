@@ -1,0 +1,102 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/observability/src/CoreConfig.ts",
+    "line": 14,
+    "symbol": "ObservabilityCoreConfigFields",
+    "smell": "serviceName, serviceVersion, and environment are broad S.String in the shared config field block that feeds ObservabilityCoreConfig, and the same three fields are mirrored in ServerObservabilityConfig (server/Config.ts:40-42) and WebObservabilityConfig (web/Config.ts:36-38). Empty service identity values silently produce unhelpful telemetry resources because toOtlpResource/toWebResource copy them directly.",
+    "proposedTarget": "Use S.NonEmptyString for serviceName/serviceVersion/environment (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420) and add per-field annotateKey descriptions. Sweep CoreConfig.ts, server/Config.ts, and web/Config.ts together so the config shapes stay compatible. Include prometheusPrefix (server/Config.ts:49) in the same NonEmptyString pass.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/observability/src/server/Config.ts",
+    "line": 44,
+    "symbol": "ServerObservabilityConfig.otlpBaseUrl/devtoolsUrl",
+    "smell": "otlpBaseUrl and devtoolsUrl are broad S.String even though both are URL-shaped operator config fields. Malformed values pass decode and fail later in OTLP or DevTools client wiring.",
+    "proposedTarget": "Use URLStr from @beep/schema for both fields (verified packages/foundation/modeling/schema/src/URL.ts:44; it validates NonEmptyTrimmedStr through new URL()). URLStr is already the repo's URL-shaped config schema, e.g. drivers/govinfo/src/Govinfo.service.ts:17/65 and drivers/ecfr/src/Ecfr.service.ts:17/55.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
+    "line": 66,
+    "symbol": "HttpApiTelemetryDescriptor",
+    "smell": "method is S.String for a field whose domain is the repo's HTTP method literal family, and apiName/groupName/endpointName/route are broad strings copied into span annotations and metric attributes. successStatus is NonNegativeInt, which still admits values outside the HTTP status-code range.",
+    "proposedTarget": "Use HttpMethod from @beep/schema/HttpMethod for method (verified packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts:67). Use S.NonEmptyString for apiName/groupName/endpointName/route (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420). Consider successStatus: S.Int.check(S.isBetween({ minimum: 100, maximum: 599 })) or a shared HttpStatus schema if available; S.isBetween object syntax is verified at Schema.ts:7401 and examples at Schema.ts:1089.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/observability/src/PhaseProfiler.ts",
+    "line": 116,
+    "symbol": "PhaseProfile.phase",
+    "smell": "phase is S.String for a phase name that is always a non-empty caller-chosen label and is interpolated into span annotations, logs, and metric attributes. An empty phase produces anonymous, hard-to-group telemetry.",
+    "proposedTarget": "Use S.NonEmptyString (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420). Leave attributes as S.Record(S.String, S.String); those are producer-controlled metric attributes, not a decoded external payload.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
+    "line": 276,
+    "symbol": "RedactCauseOptions/redactCauseSummary",
+    "smell": "The redaction pipeline absorbs real invariants: RedactCauseOptions carries constructor defaults for channel and length limits, while redactCauseSummary must keep message/detail within those dynamic limits, drop detail on the client channel, and set truncated consistently. test/CauseRedaction.test.ts has only point fixtures; sibling Observed.test.ts:52-68 already demonstrates the package's S.toArbitrary + FastCheck pattern.",
+    "proposedTarget": "Add an additive property test over S.toArbitrary(RedactCauseOptions) (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) paired with arbitrary raw strings/Causes, asserting that message/detail lengths respect the generated limits, client channel detail is O.none, and truncated matches whether message or detail exceeded its bound. Keep the existing secret/path sanitization fixtures under fence 4; the property law is additive.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
+    "line": 247,
+    "symbol": "RedactedCause.message/detail",
+    "smell": "Detector candidate: RedactedCause.message and detail are broad S.String / OptionFromOptionalKey(S.String) even though their annotateKey descriptions promise bounded, sanitized content.",
+    "proposedTarget": "None - keep the schema broad and prove the dynamic law at the producer.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The bound is parameterized by the RedactCauseOptions instance used for the call, so a static S.isMaxLength check would either over-constrain callers with higher limits or under-constrain the default. Fence 4 also applies: sanitization/truncation guards stay explicit and property-tested.",
+      "boundary": "redactCauseSummary producer path with options-parameterized truncation"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/observability/src/web/Config.ts",
+    "line": 40,
+    "symbol": "resourceAttributes/otlpResourceAttributes",
+    "smell": "Detector candidate: WebObservabilityConfig.resourceAttributes and ServerObservabilityConfig.otlpResourceAttributes are unbounded S.Record(S.String, S.String) fields on exported config schemas.",
+    "proposedTarget": "None - keep the open-ended OTLP resource metadata shape. If this ever becomes untrusted input, S.Record(...).check(S.isMaxProperties(n)) is available (S.isMaxProperties verified .repos/effect-v4/packages/effect/src/Schema.ts:8250).",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These values are operator-supplied deployment metadata constructed in first-party app wiring. OTLP resource attributes are intentionally open-ended key/value metadata, and bounding them would not validate attacker-controlled data in the current package.",
+      "boundary": "in-process observability deployment config"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/observability/src/experimental/server/OtlpPacketLab.ts",
+    "line": 124,
+    "symbol": "OtlpPacket.contentType/preview",
+    "smell": "Detector candidate: OtlpPacket.contentType and preview are broad S.String fields on an exported experimental schema.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.8,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The fields are producer snapshots of captured OTLP HttpBody metadata. preview is dynamically truncated by previewFromBody (lines 171-183), and contentType mirrors the upstream payload content type or a fixed fallback. A static schema would not express the producer-specific truncation rule without over-constraining diagnostic payloads.",
+      "boundary": "experimental in-process OTLP packet capture diagnostics"
+    }
+  }
+]

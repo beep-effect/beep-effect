@@ -1,0 +1,43 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "infra/src/OipWeb.ts",
+    "line": 485,
+    "symbol": "loadOipWebStackArgs",
+    "smell": "Pulumi config string is cast to the `VercelAuthenticationDeploymentType` LiteralKit type instead of being decoded through the schema.",
+    "proposedTarget": "Mirror the local schema-first Pulumi boundary patterns: add `const decodeVercelAuthenticationDeploymentType = S.decodeUnknownResult(VercelAuthenticationDeploymentType)` and a `vercelAuthenticationDeploymentTypeFromPulumiConfig` helper like `infra/src/Storybook.ts:93-104`, or the `targetFromPulumiConfig` / `toolFromPulumiConfig` pattern in `infra/src/AIMetrics.ts:39-50`; then pass the decoded value into `makeOipWebStackArgsFromConfigValues`.",
+    "confidence": 0.94,
+    "mechanization": "codemod",
+    "roiRank": 0.82
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "infra/src/OipWeb.ts",
+    "line": 304,
+    "symbol": "OipWebRuntimeSecrets",
+    "smell": "Exported object type alias for OIP runtime secrets looks like a schema-first payload candidate.",
+    "proposedTarget": "Hypothetical target: `S.Class` over the secret object; audited and rejected because fields are Pulumi secret inputs rather than plain data.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The fields are `pulumi.Input<string>` values returned by `config.getSecret(...)`; they may be encrypted Pulumi Outputs/runtime handles. Schema decoding would either reveal nothing useful or risk weakening the secret boundary.",
+      "boundary": "Pulumi secret input boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-boundary-codec",
+    "file": "infra/src/OipWeb.ts",
+    "line": 520,
+    "symbol": "secureBucketPolicy",
+    "smell": "Direct `JSON.stringify` appeared in the boundary-codec grep pass.",
+    "proposedTarget": "Hypothetical target: schema JSON encoding via verified Effect v4 `S.fromJsonString` / `S.UnknownFromJsonString` (`.repos/effect-v4/packages/effect/src/Schema.ts:10983`, `:10905`) — audited and rejected for this Pulumi/AWS policy renderer.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "AWS S3 bucket policy resources require a JSON string, and the input is a closed in-module policy literal inside `bucket.arn.apply(...)`, not unknown data being parsed. There is no schema-fit decode boundary here.",
+      "boundary": "AWS IAM policy string renderer"
+    }
+  }
+]

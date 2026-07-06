@@ -1,0 +1,162 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/html/scripts/generate.ts",
+    "line": 222,
+    "symbol": "valueSchema",
+    "smell": "`valueSchema` emits `S.optionalKey(...)` for generated element-specific attributes (boolean, enum, numeric, and string attributes), so the generated decoded HTML AST represents absence as `undefined` instead of `Option`.",
+    "proposedTarget": "Change the generator to emit `S.OptionFromOptionalKey(<attr schema>).pipe(SchemaUtils.withNoneDefault)` for decoded attribute absence while keeping the encoded key optional; add the generated `SchemaUtils` import. In-repo target shape is verified by `packages/foundation/modeling/schema/test/SchemaUtils.test.ts:123` and `packages/foundation/modeling/lexical/src/Lexical.model.ts:687-688`. This is a public-form change, so it needs the same-PR generated-output and consumer sweep required by SPEC §5.4.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
+    "line": 173,
+    "symbol": "StandardGlobalAttributes",
+    "smell": "Hand-authored WHATWG global attributes use `S.optionalKey(...)` for every optional decoded attribute (`accesskey`, `autocapitalize`, `autofocus`, etc.), mirroring encoded absence as TypeScript `undefined` in the domain type.",
+    "proposedTarget": "Introduce local Optional* helpers that use `S.OptionFromOptionalKey(schema).pipe(SchemaUtils.withNoneDefault)` and apply them to the hand-authored global attribute bundle. Use the same target shape as `SchemaUtils.test.ts:123` and the Lexical `$` field at `Lexical.model.ts:687-688`; keep the encoded form optional, and handle the public `GlobalAttributesType` ripple in the same PR.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
+    "line": 219,
+    "symbol": "DatasetAttribute",
+    "smell": "`dataset: S.optionalKey(S.Record(S.String, S.String))` models absence of the `data-*` record bag as `undefined` in the decoded global-attribute type.",
+    "proposedTarget": "`dataset: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(SchemaUtils.withNoneDefault)` if absence should remain distinct from an intentionally empty dataset; otherwise make the intended empty-record default explicit with `SchemaUtils.withKeyDefaults`. Existing default helpers are verified in `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46` and `packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:50`.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
+    "line": 164,
+    "symbol": "Str",
+    "smell": "`const Str = S.optionalKey(S.String)` is reused for every generated ARIA and event-handler global attribute, so those decoded fields carry `undefined` instead of `Option`.",
+    "proposedTarget": "Replace the helper with an Option-defaulted optional-key schema, e.g. `const OptionalString = S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)`, and update the exported mapped types accordingly. This mirrors the verified local exemplar at `packages/foundation/modeling/schema/test/SchemaUtils.test.ts:123`.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/html/src/Html.nodes.ts",
+    "line": 99,
+    "symbol": "Doctype",
+    "smell": "`Doctype` uses `S.optionalKey(S.String)` for `name`, `publicId`, and `systemId`, so the non-element AST node carries nullish absence in its decoded domain type.",
+    "proposedTarget": "Move each field to `S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` and update `Doctype.html` / companion namespace types so omitted IDs construct as `O.none()`. Same Option default shape is verified in `packages/foundation/modeling/schema/test/SchemaUtils.test.ts:123-140`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/modeling/html/scripts/generate.ts",
+    "line": 102,
+    "symbol": "className",
+    "smell": "`tag.charAt(0).toUpperCase() + tag.slice(1)` is case normalization in a function body.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "Identifier casing for generated TypeScript class names, not normalization of a domain field that flows through a schema codec.",
+      "boundary": "code-generation naming boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/modeling/html/scripts/generate.ts",
+    "line": 174,
+    "symbol": "inner",
+    "smell": "`s.slice(open + 1, close).trim()` normalizes SchemaRepresentation output in the generator body.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "The trim is parser cleanup for Effect `SchemaRepresentation.toCodeDocument` source text before emitting generated code; it is not a runtime schema-field invariant.",
+      "boundary": "code-generation parser boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/modeling/html/scripts/generate.ts",
+    "line": 183,
+    "symbol": "isObsolete",
+    "smell": "`(d: Dfn | undefined)` accepts a nullish union and checks `d !== undefined` in generator logic.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "Local predicate over optional results from webref dataset lookup; no exported domain helper returns null or undefined.",
+      "boundary": "external webref dataset lookup inside generator"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/html/scripts/generate.ts",
+    "line": 192,
+    "symbol": "buildModel",
+    "smell": "`for (const f of ea.for ?? [])` defaults an optional webref `for` array to empty during generation.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "External webref input normalization for a code generator; the empty array means 'no scoped element targets' while assembling generated metadata, not a schema construction default.",
+      "boundary": "external webref dataset adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/html/scripts/generate.ts",
+    "line": 200,
+    "symbol": "buildModel",
+    "smell": "`for (const f of av.for ?? [])` defaults another optional webref `for` array to empty during generation.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "Same webref adapter boundary as line 192; generator iteration fallback, not a domain schema default.",
+      "boundary": "external webref dataset adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/html/scripts/generate.ts",
+    "line": 252,
+    "symbol": "interfaceOf",
+    "smell": "`interfaceByName.get(name) ?? obsoleteInterfaces[name] ?? (obsolete ? \"HTMLUnknownElement\" : \"HTMLElement\")` chooses a fallback DOM interface in generator logic.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 11,
+    "exception": {
+      "reason": "Fallback is generated metadata policy derived from WHATWG/obsolete interface coverage; it cannot live on a runtime package schema field.",
+      "boundary": "code-generation metadata policy"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/html/scripts/generate.ts",
+    "line": 265,
+    "symbol": "buildModel",
+    "smell": "`categories: contentModel[tag]?.categories ?? []` defaults missing advisory content categories to an empty generated metadata array.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 12,
+    "exception": {
+      "reason": "Advisory metadata fallback while generating `ELEMENT_META`; missing categories in the external content-model dataset are intentionally emitted as an empty metadata list.",
+      "boundary": "external webref content-model metadata adapter"
+    }
+  }
+]

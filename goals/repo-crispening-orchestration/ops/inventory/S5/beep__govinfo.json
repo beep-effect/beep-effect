@@ -1,0 +1,109 @@
+[
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/drivers/govinfo/src/domain/values/SearchBody/SearchBody.model.ts",
+    "line": 50,
+    "symbol": "SearchBody.pageSize",
+    "smell": "Search request pageSize is S.Finite.check(S.isInt32()), so zero/negative values and fractional finite numbers can pass the first schema layer despite the field representing a positive result count.",
+    "proposedTarget": "Use PosInt from @beep/schema/Int (packages/foundation/modeling/schema/src/Int.ts:77), or add S.Int plus S.isGreaterThanOrEqualTo(1) (Effect v4 range filter verified .repos/effect-v4/packages/effect/src/Schema.ts:7314).",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/drivers/govinfo/src/domain/values/GranuleContainer/GranuleContainer.model.ts",
+    "line": 53,
+    "symbol": "GranuleContainer.count / SummaryItem.granuleCount / SummaryItem.packageCount",
+    "smell": "GovInfo count fields use signed Int64, so negative bigint counts decode for values that represent reported collection/package/granule totals.",
+    "proposedTarget": "Introduce or reuse a non-negative Int64 refinement: Int64.pipe(S.check(S.isGreaterThanOrEqualToBigInt(BigInt(0)))) using Effect v4's bigint filter (.repos/effect-v4/packages/effect/src/Schema.ts:7756), then apply it to count fields. Int64 itself is signed in packages/foundation/modeling/schema/src/Int.ts:204.",
+    "confidence": 0.76,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/drivers/govinfo/src/domain/values/GranuleContainer/GranuleContainer.model.ts",
+    "line": 78,
+    "symbol": "GranuleContainer.offset / GranuleContainer.pageSize",
+    "smell": "offset and pageSize are only int32-checked, so negative offsets/page sizes are accepted for pagination fields.",
+    "proposedTarget": "Use NonNegativeInt for offset and PosInt for pageSize from @beep/schema/Int / @beep/schema/Number, matching the already constrained SearchResponse.count pattern at packages/drivers/govinfo/src/domain/values/SearchResponse/SearchResponse.model.ts:48.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/govinfo/src/domain/values/GranuleMetadata/GranuleMetadata.model.ts",
+    "line": 56,
+    "symbol": "GranuleMetadata.md5",
+    "smell": "The MD5 checksum field is documented as an MD5 hash but accepts any string.",
+    "proposedTarget": "Use an annotated digest schema, e.g. S.String.check(S.isPattern(/^[0-9a-f]{32}$/i)) with S.isPattern verified at .repos/effect-v4/packages/effect/src/Schema.ts:6521, or promote a reusable Md5Hex concept modeled after packages/foundation/modeling/schema/src/Sha256.ts:62.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/govinfo/src/Govinfo.config.ts",
+    "line": 119,
+    "symbol": "GovinfoConfigInput",
+    "smell": "The config class has no field-level annotations, and apiUrl/apiKey accept broad strings even though apiUrl is later normalized to URLStr in the service layer.",
+    "proposedTarget": "Annotate apiKey and apiUrl with .annotateKey and move apiUrl to URLStr from packages/foundation/modeling/schema/src/URL.ts:44 at the config boundary if callers should fail fast; keep RedactedFromValue for apiKey and use S.NonEmptyString if blank keys are invalid.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/drivers/govinfo/src/Govinfo.errors.ts",
+    "line": 73,
+    "symbol": "GovinfoErrorOptions.status / GovinfoError.status",
+    "smell": "Driver error status fields use S.Finite, allowing negative and fractional statuses even though the service only populates HTTP response status values.",
+    "proposedTarget": "Use HttpStatus from @beep/schema/HttpStatus (packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.schema.ts:34), matching the typed contract status usage in packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts:9.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
+    "line": 91,
+    "symbol": "Govinfo config, error, SearchBody/SearchResponse, and value DTO schemas",
+    "smell": "The package has service and transport fixtures, but no S.toArbitrary-derived schema law for the hand-authored GovInfo DTOs and contracts.",
+    "proposedTarget": "Add additive encode/decode laws for GovinfoConfigInput, GovinfoError, SearchBody/Payload, SearchResponse/Success, SummaryItem, GranuleContainer, PackageInfo, GranuleMetadata, and SearchResult using S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970), with custom date/digest values if needed.",
+    "confidence": 0.66,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/govinfo/src/domain/values/SearchResult/SearchResult.model.ts",
+    "line": 62,
+    "symbol": "GovInfo provider DTO strings, URLs, download maps, and pagination links",
+    "smell": "Detector candidate: provider payloads contain broad strings, dynamic download record keys, cursor strings, and URL-like links.",
+    "proposedTarget": "Do not close the provider DTO boundary in S5; refine only checksum and numeric/count fields with clear invariants.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "GovInfo controls these API payload shapes and may add link keys, cursor formats, identifiers, and text fields; date fields already use DateTimeUtcFromString where the model asserts a date-time contract.",
+      "boundary": "GovInfo REST provider response DTO boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/govinfo/test/Govinfo.service.test.ts",
+    "line": 101,
+    "symbol": "GovInfo service transport fixtures",
+    "smell": "Detector candidate: the suite uses static response and transport fixtures instead of schema-generated values.",
+    "proposedTarget": "Keep these fixtures; add schema laws separately.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The tests pin api_key handling, keyless operation, cache call-count behavior, and rate-limit header parsing; generated DTO values would not replace those service-level behaviors.",
+      "boundary": "GovInfo transport and rate-limit behavior tests"
+    }
+  }
+]

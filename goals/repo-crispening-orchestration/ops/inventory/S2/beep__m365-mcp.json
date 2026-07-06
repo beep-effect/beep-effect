@@ -1,0 +1,13 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/m365-mcp/src/M365Tools.ts",
+    "line": 65,
+    "symbol": "M365ToolError",
+    "smell": "`reason` is `S.optionalKey(S.String)` on a returned tool failure model, so decoded failures expose absence as `undefined` even though handlers pass a stable reason when they have one.",
+    "proposedTarget": "Either make `reason` required if every `M365ToolError` must carry a reason, or model intentional absence as `S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)`. Local driver exemplar for Option-shaped error context: `packages/drivers/pglite/src/Pglite.errors.ts:43`; sibling M365 driver already uses `S.OptionFromOptionalKey` at `packages/drivers/m365/src/M365.errors.ts:99`.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 1
+  }
+]

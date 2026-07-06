@@ -1,0 +1,368 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Core/PatternOperations.ts",
+    "line": 27,
+    "symbol": "isPOSElement",
+    "smell": "Free-floating guard `P.isTagged(element, \"POSPatternElement\")` duplicates the colocated `Pattern.POS.is` static already attached in Pattern.ts:526.",
+    "proposedTarget": "Import the `Pattern` value and define `export const isPOSElement = Pattern.POS.is`; Pattern.POS.is is built with `SchemaUtils.withStatics` at packages/foundation/modeling/nlp/src/Core/Pattern.ts:526 and `S.is` is verified at .repos/effect-v4/packages/effect/src/Schema.ts:1256.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Core/PatternOperations.ts",
+    "line": 44,
+    "symbol": "isEntityElement",
+    "smell": "Free-floating guard `P.isTagged(element, \"EntityPatternElement\")` duplicates the colocated `Pattern.Entity.is` static already attached in Pattern.ts:540.",
+    "proposedTarget": "Import the `Pattern` value and define `export const isEntityElement = Pattern.Entity.is`; Pattern.Entity.is is built with `SchemaUtils.withStatics` at packages/foundation/modeling/nlp/src/Core/Pattern.ts:540.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Core/PatternOperations.ts",
+    "line": 61,
+    "symbol": "isLiteralElement",
+    "smell": "Free-floating guard `P.isTagged(element, \"LiteralPatternElement\")` duplicates the colocated `Pattern.Literal.is` static already attached in Pattern.ts:554.",
+    "proposedTarget": "Import the `Pattern` value and define `export const isLiteralElement = Pattern.Literal.is`; Pattern.Literal.is is built with `SchemaUtils.withStatics` at packages/foundation/modeling/nlp/src/Core/Pattern.ts:554.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Core/PatternBuilders.ts",
+    "line": 73,
+    "symbol": "isLiteralElement",
+    "smell": "Private duplicate guard `P.isTagged(element, \"LiteralPatternElement\")` lives beside an imported `Pattern` value that already exposes `Pattern.Literal.is`.",
+    "proposedTarget": "Delete the private guard and use `Pattern.Literal.is` in `patchReplaceLiteralAt` and `patchReplaceAllLiterals`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Operations/Composable.ts",
+    "line": 467,
+    "symbol": "compose",
+    "smell": "Public binary combinator over `OperationBuilder` is not `dual`, so it cannot be used data-last in `pipe(first, compose(second))` like the neighboring `map`, `product`, and `zipWith` combinators.",
+    "proposedTarget": "Give `compose` overloads and implement `dual(2, (first, second) => first.flatMap(second))`; `dual` is verified at .repos/effect-v4/packages/effect/src/Function.ts:102 and the local neighboring pattern is packages/foundation/modeling/nlp/src/Operations/Composable.ts:342.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Core/Pattern.ts",
+    "line": 188,
+    "symbol": "POSPatternOption",
+    "smell": "Refined option schema has no colocated codec statics; PatternParsers.ts:50 rebuilds its guard as `S.is(POSPatternOption)` inside the parser helper.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after the `POSPatternOption` annotation and replace the parser guard with `POSPatternOption.is`; withCodecStatics is verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Core/Pattern.ts",
+    "line": 225,
+    "symbol": "EntityPatternOption",
+    "smell": "Refined option schema has no colocated codec statics; PatternParsers.ts:55 rebuilds its guard as `S.is(EntityPatternOption)` inside the parser helper.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after the `EntityPatternOption` annotation and replace the parser guard with `EntityPatternOption.is`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Core/Pattern.ts",
+    "line": 266,
+    "symbol": "LiteralPatternOption",
+    "smell": "Refined option schema has no colocated codec statics; PatternParsers.ts:60 rebuilds its guard as `S.is(LiteralPatternOption)` inside the parser helper.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after the `LiteralPatternOption` annotation and replace the parser guard with `LiteralPatternOption.is`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Core/Token.ts",
+    "line": 84,
+    "symbol": "TokenIndex",
+    "smell": "Branded schema lacks codec statics while the module exports nearby free-floating validation helpers (`isTokenIndex` at line 52 and `tokenIndex` at line 68) for the same domain.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to `TokenIndex`; replace `isTokenIndex` with `TokenIndex.is` and prefer `TokenIndex.make`/`TokenIndex.fromUnknown` over the exported constructor helper where public compatibility allows.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 9
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Core/Token.ts",
+    "line": 158,
+    "symbol": "CharPosition",
+    "smell": "Branded schema lacks codec statics while the module exports nearby free-floating validation helpers (`isCharPosition` at line 124 and `charPosition` at line 140) for the same domain.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to `CharPosition`; replace `isCharPosition` with `CharPosition.is` and prefer `CharPosition.make`/`CharPosition.fromUnknown` over the exported constructor helper where public compatibility allows.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 10
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Core/Document.ts",
+    "line": 116,
+    "symbol": "DocumentIndex",
+    "smell": "Branded index schema lacks codec statics while the module exports the separate `documentIndex` constructor helper at line 97; constructor behavior is separated from the schema value.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to `DocumentIndex`; keep `documentIndex` only as a compatibility alias for `DocumentIndex.make` if needed.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 11
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Core/Sentence.ts",
+    "line": 71,
+    "symbol": "SentenceIndex",
+    "smell": "Branded index schema lacks codec statics while the module exports the separate `sentenceIndex` constructor helper at line 52; constructor behavior is separated from the schema value.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to `SentenceIndex`; keep `sentenceIndex` only as a compatibility alias for `SentenceIndex.make` if needed.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 12
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
+    "line": 43,
+    "symbol": "ChunkId",
+    "smell": "Branded public identifier schema is exported without colocated codec statics, so any guard or trusted-boundary decode would need a free-floating `S.is`/`S.decodeUnknownSync` helper.",
+    "proposedTarget": "Import `SchemaUtils` from `@beep/schema` and append `SchemaUtils.withCodecStatics` after the `ChunkId` annotation.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 13
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
+    "line": 69,
+    "symbol": "MentionId",
+    "smell": "Branded public identifier schema is exported without colocated codec statics, so any guard or trusted-boundary decode would need a free-floating `S.is`/`S.decodeUnknownSync` helper.",
+    "proposedTarget": "Import `SchemaUtils` from `@beep/schema` and append `SchemaUtils.withCodecStatics` after the `MentionId` annotation.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 14
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
+    "line": 95,
+    "symbol": "EntityId",
+    "smell": "Branded public identifier schema is exported without colocated codec statics, so any guard or trusted-boundary decode would need a free-floating `S.is`/`S.decodeUnknownSync` helper.",
+    "proposedTarget": "Import `SchemaUtils` from `@beep/schema` and append `SchemaUtils.withCodecStatics` after the `EntityId` annotation.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 15
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
+    "line": 121,
+    "symbol": "RelationId",
+    "smell": "Branded public identifier schema is exported without colocated codec statics, so any guard or trusted-boundary decode would need a free-floating `S.is`/`S.decodeUnknownSync` helper.",
+    "proposedTarget": "Import `SchemaUtils` from `@beep/schema` and append `SchemaUtils.withCodecStatics` after the `RelationId` annotation.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 16
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
+    "line": 175,
+    "symbol": "Span",
+    "smell": "Refined public schema (`SpanFields.check(...).annotate(...).pipe($I.annoteSchema(...))`) has no colocated codec statics; tests and consumers must decode it via free `S.decodeUnknown*` calls.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after the `Span` annotation so `Span.is`, `Span.fromUnknown`, and `Span.decodeOption` live on the refined schema.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 17
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Core/Document.ts",
+    "line": 44,
+    "symbol": "DocumentId",
+    "smell": "Branded public identifier schema is exported without colocated codec statics; guard/decode behavior would have to be recreated away from the schema.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after the `DocumentId` annotation.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 18
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Core/Pattern.ts",
+    "line": 411,
+    "symbol": "PatternId",
+    "smell": "Branded public identifier schema is exported without colocated codec statics; `Pattern.Id` wraps only construction, not guard or soft-decode behavior.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after the `PatternId` annotation; `Pattern.Id` can remain a pipeable constructor alias.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 19
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/internal/numbers.ts",
+    "line": 30,
+    "symbol": "PositiveNumber",
+    "smell": "Refined schema const `S.Finite.check(...).pipe($I.annoteSchema(...))` is exported without colocated codec statics; any guard or boundary decode would need a detached Schema helper.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after the `PositiveNumber` annotation, matching withCodecStatics' documented branded/refined/union target.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 20
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Core/PatternParsers.ts",
+    "line": 242,
+    "symbol": "PatternFromString",
+    "smell": "Exported decode helper inlines `S.decodeUnknownResult(S.NonEmptyArray(BracketStringToPatternElement))`; the array boundary schema is unnamed and its decoder lives as a free function.",
+    "proposedTarget": "Introduce a named `PatternElementsFromStrings` schema near the other parser schemas, annotate it, attach `SchemaUtils.withCodecStatics`, and implement `PatternFromString` via `PatternElementsFromStrings.fromUnknown`.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 21
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
+    "line": 147,
+    "symbol": "ChunkKind",
+    "smell": "Detector hit: annotated `LiteralKit` schema looked like a possible lost-statics site.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 22,
+    "exception": {
+      "reason": "LiteralKit preserves helper descriptors through `.annotate` (packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:625), so `ChunkKind.is.sentence` survives as shown by the local example.",
+      "boundary": "False-positive audit: annotated LiteralKit statics already survive."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Ontology/Kind.ts",
+    "line": 50,
+    "symbol": "TextKind",
+    "smell": "Detector hit: annotated `LiteralKit` schema looked like a possible lost-statics site.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 23,
+    "exception": {
+      "reason": "LiteralKit preserves helper descriptors through `.annotate`; the schema is already used with `TextKind.pickOptions(...)` in KindContainment fields, proving the helper surface remains present.",
+      "boundary": "False-positive audit: annotated LiteralKit statics already survive."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+    "line": 41,
+    "symbol": "TextNodeType",
+    "smell": "Detector hit: annotated `LiteralKit` schema looked like a possible lost-statics site.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 24,
+    "exception": {
+      "reason": "LiteralKit preserves helper descriptors through `.annotate`; `TextNodeType.mapMembers(...)` at line 109 uses the preserved kit API.",
+      "boundary": "False-positive audit: annotated LiteralKit statics already survive."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+    "line": 60,
+    "symbol": "TextEdgeRelation",
+    "smell": "Detector hit: annotated `LiteralKit` schema looked like a possible lost-statics site.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 25,
+    "exception": {
+      "reason": "LiteralKit preserves helper descriptors through `.annotate`; `TextEdgeRelation.mapMembers(...)` at line 193 uses the preserved kit API.",
+      "boundary": "False-positive audit: annotated LiteralKit statics already survive."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Graph/GraphOps.ts",
+    "line": 123,
+    "symbol": "TraversalOrder",
+    "smell": "Detector hit: annotated `LiteralKit` schema looked like a possible lost-statics site.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 26,
+    "exception": {
+      "reason": "LiteralKit preserves helper descriptors through `.annotate`; no duplicate guard or decoder wall exists for TraversalOrder.",
+      "boundary": "False-positive audit: annotated LiteralKit statics already survive."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Algebra/NLPMonoid.ts",
+    "line": 729,
+    "symbol": "computeTFIDF",
+    "smell": "Detector hit: exported 3-arg helper is not `dual`.",
+    "proposedTarget": "None - leave as-is in S4.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 27,
+    "exception": {
+      "reason": "The helper's data arguments are `MutableHashMap`-based term maps; SPEC fences 6/7 reserve Graph/MutableHash* and native-collection migration or dual/flow refactors for effect-native-migration, not S4.",
+      "boundary": "SPEC fences 6/7 - no Graph/MutableHash* or native-collection migration in S4."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Algebra/Monoid.ts",
+    "line": 75,
+    "symbol": "make",
+    "smell": "Detector hit: exported 2-arg helper is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 28,
+    "exception": {
+      "reason": "This is a constructor for a `Monoid` record from two independent fields (`empty`, `combine`), not a data-first/data-last transformation over a self value.",
+      "boundary": "Factory constructor, not a pipeable self-helper."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Algebra/Monoid.ts",
+    "line": 201,
+    "symbol": "StringDelimited",
+    "smell": "Detector hit: exported 3-arg helper is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 29,
+    "exception": {
+      "reason": "All three arguments are static configuration for a returned `Monoid<string>`; there is no self/data argument to pipe over.",
+      "boundary": "Factory constructor, not a pipeable self-helper."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/nlp/src/Ontology/Kind.ts",
+    "line": 184,
+    "symbol": "Document/Paragraph/Sentence typed constructors",
+    "smell": "Detector hit: exported 2-arg constructor family `(content, metadata?)` is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 30,
+    "exception": {
+      "reason": "These are smart constructors produced by `makeTyped(kind)`; the optional metadata argument is construction data, not a pipeable transformation target.",
+      "boundary": "Smart-constructor family, not public data-last helper surface."
+    }
+  }
+]

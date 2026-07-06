@@ -1,0 +1,95 @@
+[
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/shared/domain/src/values/LocalDate/LocalDate.behavior.ts",
+    "line": 216,
+    "symbol": "fromString",
+    "smell": "`fromString` repeats ISO-date regex matching, numeric part parsing, and calendar validation in the helper body even though the module already exposes `LocalDateFromString` as a string-to-LocalDate transformation schema at lines 703-707.",
+    "proposedTarget": "Make `fromString` a thin schema decode: `S.decodeUnknownEffect(LocalDateFromString)(dateString)`. Keep `decodeLocalDateFromString`/`toCalendarParts` as schema-internal implementation details. Verified v4 API: `.repos/effect-v4/packages/effect/src/Schema.ts:1325-1330` (`S.decodeUnknownEffect`) and `.repos/effect-v4/packages/effect/src/Schema.ts:5408-5416` (`S.decodeTo`); local exemplar in the same file: `LocalDateFromString` uses `SchemaGetter.transformOrFail` at `LocalDate.behavior.ts:703-706`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/shared/domain/src/entity/Principal.ts",
+    "line": 101,
+    "symbol": "Principal on-behalf-of Option fields",
+    "smell": "`onBehalfOfUserId` / `onBehalfOfTeamId` fields use `S.OptionFromOptionalKey(...)` at lines 101, 135, and 166 without `SchemaUtils.withNoneDefault`, so constructor-side absence is not carried by the schema.",
+    "proposedTarget": "Pipe each `OptionFromOptionalKey` field through `SchemaUtils.withNoneDefault`. Verified v4 API: `.repos/effect-v4/packages/effect/src/Schema.ts:8668-8672`; verified helper: `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46-51`; in-repo exemplar: `packages/foundation/modeling/lexical/src/Lexical.model.ts:686-688`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/shared/domain/src/entity/EntityId.ts",
+    "line": 105,
+    "symbol": "Options",
+    "smell": "`Options` models override absence as five `S.optionalKey(S.String)` fields, then `buildDefinition` reads them with nullish fallbacks at lines 439, 440, 444, 448, and 450.",
+    "proposedTarget": "Model each override as `S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` so absence is explicit in the decoded `Options` value while `OptionsInput = typeof Options.Encoded` remains an optional-key public input. `buildDefinition` can then use Option folds for the sibling/parameter-derived defaults. Verified v4 API: `.repos/effect-v4/packages/effect/src/Schema.ts:8668-8672`; helper already imported in this file at line 9.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/shared/domain/src/entity/EntityId.ts",
+    "line": 434,
+    "symbol": "buildDefinition",
+    "smell": "`const overrides = Options.make(input ?? {});` and the following `??` fallbacks derive entity-id metadata defaults from `slice`, `name`, and `entityType`.",
+    "proposedTarget": "None as a standalone default move; this is handled only if the `Options` schema finding at line 105 is remediated together with a same-PR consumer/type sweep.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "The defaults are sibling/parameter-derived (`slice`, `name`, and derived `entityType`), so field-level schema defaults cannot represent them directly. The actionable part is the `Options` absence modeling at line 105, not these derived fallback expressions in isolation.",
+      "boundary": "parameter-derived identity metadata factory"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/shared/domain/test/Organization.test.ts",
+    "line": 34,
+    "symbol": "Organization decode fixture",
+    "smell": "`parentOrgId: null` appears in the organization decode fixture.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "Fixture proves the persisted/wire nullable organization parent id decodes through `M.FieldOption` to domain Option.",
+      "boundary": "SQL/wire decode fixture"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/shared/domain/test/EntityKernel.test.ts",
+    "line": 72,
+    "symbol": "Document optionalNote fixture",
+    "smell": "`optionalNote: null` appears in the BaseEntity kernel test fixture.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "Fixture exercises a nullable persisted field (`S.OptionFromNullOr`) and verifies it decodes to the domain Option shape.",
+      "boundary": "SQL/wire decode fixture"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/shared/domain/src/values/LocalDate/LocalDate.behavior.ts",
+    "line": 141,
+    "symbol": "toCalendarParts",
+    "smell": "`globalThis.Number.parseInt(...)` appears in the ISO date parser used by `LocalDateFromString`.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "The parsing is already inside the implementation of a schema transformation: `LocalDateFromString` wires `decodeLocalDateFromString` through `SchemaGetter.transformOrFail` at lines 703-706. The actionable duplication is the public `fromString` helper at line 216.",
+      "boundary": "schema transformation implementation"
+    }
+  }
+]

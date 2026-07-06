@@ -1,0 +1,242 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.errors.ts",
+    "line": 41,
+    "symbol": "GraphitiProxyConfigLoadError / GraphitiProxyOpsError",
+    "smell": "Graphiti command errors carry absence as optional keys (`cause: S.optionalKey(S.Defect(...))` at line 41; `command`, `exitCode`, and `cause` at lines 82-84), then re-default `exitCode` in the class body with `this.exitCode ?? 1` at line 91 and sparse-spread constructor options at lines 107-110.",
+    "proposedTarget": "Model absence on the error payloads with `S.OptionFromOptionalKey(...)` for cause/context fields and default `exitCode` on the schema (`S.Finite.pipe(SchemaUtils.withKeyDefaults(1))`) so `Runtime.errorExitCode` reads the decoded field directly. In-repo exemplars: `packages/foundation/modeling/schema/src/StatusCauseError.ts:42`, `packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts:16`, and `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:34` for `withNoneDefault`.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
+    "line": 47,
+    "symbol": "ChangesetGraphError / QualityScriptCommandError",
+    "smell": "`ChangesetGraphError` and `QualityScriptCommandError` use optional-key context/cause fields (`file`, `command`, `exitCode`, `cause`) and `QualityScriptCommandError` repeats the command-error `this.exitCode ?? 1` fallback at line 103.",
+    "proposedTarget": "Use Option-shaped context fields (`S.OptionFromOptionalKey(S.String)` / `S.OptionFromOptionalKey(S.Defect({ includeStack: true }))`) and a schema-level exit-code default for `QualityScriptCommandError`. Keep the encoded sparse object form with `OptionFromOptionalKey`; constructor helpers can accept raw option bags and normalize once at the boundary.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts",
+    "line": 44,
+    "symbol": "YeetCommandError",
+    "smell": "`YeetCommandError` models `command`, `exitCode`, `file`, and `cause` as optional keys, then defaults `Runtime.errorExitCode` with `this.exitCode ?? 1` at line 54 and sparsely spreads raw undefined constructor options at lines 70-74.",
+    "proposedTarget": "`exitCode: S.Finite.pipe(SchemaUtils.withKeyDefaults(1))`; `command`, `file`, and `cause` as `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` if constructor omission should remain ergonomic. This mirrors the repo error-cause Option shape verified in `StatusCauseFields` and `SecureHeaderError`.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.errors.ts",
+    "line": 44,
+    "symbol": "SyncDataToTsError",
+    "smell": "`targetId`, `file`, and `cause` are `S.optionalKey(...)` fields on a domain error; `new` can pass literal undefined-shaped fields into `make` at lines 63-69, while `mapError` has to rebuild sparse context with `O.fromUndefinedOr` at lines 77-80.",
+    "proposedTarget": "Move absence to the schema with `S.OptionFromOptionalKey(S.String)` for `targetId`/`file` and `S.OptionFromOptionalKey(S.Defect({ includeStack: true }))` for `cause`; use `SchemaUtils.withNoneDefault` if call sites should omit absent Options. Keep rendering responsible for converting Options into CLI text.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/tool/cli/src/commands/Skills/Skills.errors.ts",
+    "line": 29,
+    "symbol": "makeSkillsCommandError",
+    "smell": "`makeSkillsCommandError` hand-builds an object with `file?: string` / `skill?: string` and `if (x !== undefined)` branches (lines 29-45), matching `SkillsCommandError` optional-key fields at lines 63-65.",
+    "proposedTarget": "Make `file`, `skill`, and `cause` Option-valued encoded-optional fields on `SkillsCommandError`, then replace the branchy builder with a single schema-normalized constructor (`file: O.fromUndefinedOr(file)`, `skill: O.fromUndefinedOr(skill)`, `cause: O.some(cause)`). In-repo helper: `optionalProp` is fine for final encoded sparse records, but the error payload itself should be Option-shaped.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/tool/cli/src/commands/Image/Image.errors.ts",
+    "line": 32,
+    "symbol": "ImageCommandError",
+    "smell": "`cause: S.optionalKey(S.Defect({ includeStack: true }))` keeps the typed error's underlying cause as undefined-shaped data even though constructors always receive a cause.",
+    "proposedTarget": "`cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))` (plus `SchemaUtils.withNoneDefault` only if a no-cause constructor is introduced). This matches the repo's Option-first error-cause exemplars in `StatusCauseError` / `SecureHeaderError` and avoids another optional-key error variant.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/tool/cli/src/commands/Ci/Ci.errors.ts",
+    "line": 32,
+    "symbol": "CiCommandError",
+    "smell": "`CiCommandError` repeats the optional-key `cause` pattern for a first-party tagged error.",
+    "proposedTarget": "Use `S.OptionFromOptionalKey(S.Defect({ includeStack: true }))` for `cause`; constructors pass `O.some(cause)` and any future no-cause path can omit via `SchemaUtils.withNoneDefault` rather than `undefined`.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.errors.ts",
+    "line": 45,
+    "symbol": "VersionSyncError",
+    "smell": "`VersionSyncError` has a required `file` but optional-key `cause`, so the error's absence modeling differs from repo Option-first error exemplars.",
+    "proposedTarget": "`cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))`; update `new` / `mapError` to pass `O.some(cause)`. This is the same edit shape as the other command-suite tagged errors.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+    "line": 144,
+    "symbol": "JSDocDocumentationInventoryOptions",
+    "smell": "`rootDir`, `outputJsonPath`, `outputMarkdownPath`, and `generatedAt` are optional schema fields, then `resolveJSDocInventoryOptions` applies `??` defaults and sibling-derived output paths in the body at lines 177-183.",
+    "proposedTarget": "Decode a raw input schema into a resolved options schema: simple defaults (`rootDir`) can use `SchemaUtils.withKeyDefaults(defaultRepoRoot)`, dynamic `generatedAt` can use `S.withConstructorDefault(Effect.map(DateTime.now, DateTime.formatIso))`, and output paths should be derived in a whole-record `S.decodeTo(..., SchemaTransformation.transform/transformOrFail(...))` because they depend on `repoRoot`. Verified local exemplar: `Graphiti/internal/ProxyConfig.ts:19-70` carries env defaults/normalization in schema getters.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 9
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
+    "line": 236,
+    "symbol": "SharedOptions",
+    "smell": "`SharedOptions` models most shared command flags as optional keys, then `runYeetMode` applies a wall of `??` defaults (`false`, empty strings, `-1`, `\"full\"`, bot list) at lines 274-296 before constructing `YeetRunOptions`.",
+    "proposedTarget": "Move defaults into the option schema or a `SharedOptions -> YeetRunOptions` transformation: bools use `SchemaUtils.BoolKeyDefaultFalse`, strings/numbers/literals use `SchemaUtils.withKeyDefaults(...)`, and `message` should be included in the same normalized input shape instead of defaulted separately. Keep `Flag.withDefault(...)` at the CLI parser boundary; this finding is about the second default wall after parsing.",
+    "confidence": 0.84,
+    "mechanization": "assisted",
+    "roiRank": 10
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/QualityIssueIndex.ts",
+    "line": 224,
+    "symbol": "QualityIssue",
+    "smell": "`QualityIssue` is the normalized Yeet issue model but carries a large set of `S.optionalKey(...)` fields (lines 224-254); downstream helpers immediately re-default or convert them (`issue.packageName ?? '@beep/root'`, `O.fromUndefinedOr(issue.packagePath)`, `issue.packagePath ?? ''` at lines 335-337).",
+    "proposedTarget": "Keep the encoded sparse JSON form with `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` for optional issue metadata, then helpers consume Options directly and only rendering/grouping code chooses display defaults like `@beep/root`. Public JSON compatibility needs a before/after snapshot because this is a packet/index wire surface.",
+    "confidence": 0.63,
+    "mechanization": "assisted",
+    "roiRank": 11
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/tooling/tool/cli/src/commands/Image/Image.service.ts",
+    "line": 90,
+    "symbol": "normalizeBareExtension",
+    "smell": "`normalizeBareExtension` strips a leading dot and lowercases a path extension before checking `VideoFileExtension` at lines 90-97, so the accepted extension boundary is split between a helper and the literal schema.",
+    "proposedTarget": "Promote a reusable `BareVideoFileExtension`/`BareFileExtension` transformation schema near `VideoFileExtension` (`packages/foundation/modeling/schema/src/FileExtension.ts:136`) that decodes `.MP4`-style input to the bare lowercase literal before the guard. This mirrors the part1 `Files.media.ts:355` candidate and keeps path-safety checks separate from extension normalization.",
+    "confidence": 0.64,
+    "mechanization": "assisted",
+    "roiRank": 12
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/Iso4217.ts",
+    "line": 121,
+    "symbol": "normalizeIso4217Document",
+    "smell": "ISO 4217 country/minor-unit normalization lives in free helpers (`normalizeWhitespace`, `normalizeCountryName`, `parseMinorUnits` at lines 121-145) and is applied while constructing `Iso4217CurrencyEntry` at lines 272-285.",
+    "proposedTarget": "Represent the upstream XML row -> normalized entry parts as schema transformations: e.g. `NormalizedIsoCountryName = S.String.pipe(S.decodeTo(S.String, SchemaTransformation.transform(...)))` and an `Iso4217MinorUnits` transform that maps `\"N.A.\"` to `0` or fails with `SyncDataToTsError`. Then `normalizeIso4217Document` groups already-normalized values instead of carrying trim/titlecase/parse rules in the loop.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 13
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/IanaMediaTypes.ts",
+    "line": 231,
+    "symbol": "normalizeIanaMediaTypes",
+    "smell": "Top-level and subtype names are lowercased in the normalizer body (`Str.toLowerCase(registry.title)` and `Str.toLowerCase(registryName)` at lines 231 and 236) before constructing `IanaMediaTypeEntry`; optional `date` is then sparsely spread at line 242.",
+    "proposedTarget": "Add schema-level transforms for normalized media type tokens and the rendered entry input: decode `registry.title` and `record.name` through a lowercasing token schema, and model `date` as `S.OptionFromOptionalKey(S.String)` if it remains absent on some upstream records. `IanaMediaTypeEntry.make` should receive already-normalized values.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 14
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyOps.ts",
+    "line": 87,
+    "symbol": "ProxyEnsureConfig / GraphitiRestoreConfig",
+    "smell": "Resolved Graphiti ops config classes require concrete fields, but the factories derive them with body-level env/default helpers (`envValue`, `intEnvValue`, `booleanEnvValue`, `proxyPortFromUrl`) at lines 190-249 and 310-330.",
+    "proposedTarget": "Follow the local `GraphitiProxyConfig` pattern: define raw env/input schemas for proxy ensure/restore/service config and decode them to resolved config via `S.decodeTo` + `SchemaGetter`/`SchemaTransformation`, with `S.withConstructorDefault` / `S.withDecodingDefault` on defaulted fields. This keeps env parsing at the config boundary and removes the duplicated default helpers from operational bodies.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 15
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyServices.ts",
+    "line": 267,
+    "symbol": "normalizeEndpointPath",
+    "smell": "`normalizeEndpointPath`, `parseContainerHealth`, and `parseContentLength` are detector hits for trim/lowercase/number coercion in a body.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 16,
+    "exception": {
+      "reason": "These helpers sit on HTTP/proxy trust boundaries: endpoint path canonicalization enforces the upstream path allowlist, content-length parsing validates request headers, and container health text comes from docker inspect. Fence 4 says URL/request guards stay explicit and property-testable.",
+      "boundary": "HTTP proxy and docker-inspect boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+    "line": 219,
+    "symbol": "FallowAuditRawReport",
+    "smell": "`max_cyclomatic: S.NullOr(S.Finite)` and nearby trim/default logic for Fallow CLI output are raw detector hits.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 17,
+    "exception": {
+      "reason": "This schema mirrors an external Fallow JSON report where `null` is part of the producer's raw contract; normalization happens when repo-cli emits its own Fallow envelope, not in the raw input schema.",
+      "boundary": "third-party CLI report input"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
+    "line": 311,
+    "symbol": "normalizeSlashes",
+    "smell": "`normalizeSlashes` rewrites backslashes before hashing and lockfile entry construction (`path: normalizeSlashes(...)` at line 455).",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 18,
+    "exception": {
+      "reason": "This is deterministic path canonicalization for cross-platform skill-directory hashing and lockfile stability, not semantic field normalization that belongs in a schema transform.",
+      "boundary": "filesystem path canonicalization for reproducible hashes"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/tool/cli/src/commands/Ci/Ci.command.ts",
+    "line": 24,
+    "symbol": "TurboSummaryExecution",
+    "smell": "Turbo summary decode fields are optional and the renderer uses `??` fallbacks (`optionNumber`, cache status, tasks map, command/attempted/successful defaults at lines 114-125 and 221-223).",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 19,
+    "exception": {
+      "reason": "The schemas mirror Turbo's external summary JSON and the defaults are presentation-only values for a GitHub step summary. They are not persisted domain defaults.",
+      "boundary": "third-party Turbo summary input plus display rendering"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+    "line": 2844,
+    "symbol": "buildYeetRunPlanForTesting",
+    "smell": "`buildYeetRunPlanForTesting` accepts a partial testing option bag and applies `??` defaults at lines 2844-2854.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 20,
+    "exception": {
+      "reason": "This helper is explicitly `@category testing`; the defaults are fixture ergonomics for focused plan tests, while the production `Yeet.command.ts` default wall is recorded separately as actionable.",
+      "boundary": "test fixture helper"
+    }
+  }
+]

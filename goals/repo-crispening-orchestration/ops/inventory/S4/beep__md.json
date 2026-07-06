@@ -1,0 +1,124 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/md/src/Md.escape.ts",
+    "line": 43,
+    "symbol": "UnsafeUrlProtocolDestination",
+    "smell": "Refined schema const is immediately followed by a free-floating guard (`isUnsafeUrlProtocolDestination` at line 55) and consumed only through that detached guard in the URL sanitizer (line 250). The schema already has the behavior; the guard wall is the separation.",
+    "proposedTarget": "Import `SchemaUtils` from `@beep/schema`, append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)`, and call `UnsafeUrlProtocolDestination.is` from `sanitizeUrlDestination`. The helper is verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90 and Md.model.ts already uses the same pattern for `CodeFenceLanguage`.",
+    "confidence": 0.88,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/md/src/Md.escape.ts",
+    "line": 55,
+    "symbol": "isUnsafeUrlProtocolDestination",
+    "smell": "Free-floating guard `S.is(UnsafeUrlProtocolDestination)` duplicates the schema-derived `.is` static that `SchemaUtils.withCodecStatics` provides.",
+    "proposedTarget": "Delete the detached guard and use `UnsafeUrlProtocolDestination.is` after statics are attached on the schema const.",
+    "confidence": 0.88,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/md/src/Md.escape.ts",
+    "line": 38,
+    "symbol": "StringArray",
+    "smell": "Private schema const backs an exported guard (`isStringArray` at line 390) but does not carry codec statics, so the public API exposes a detached `S.is(...)` wrapper instead of colocated schema behavior.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` and have the exported guard alias/call `StringArray.is`. Same in-repo pattern as `CodeFenceLanguage` in Md.model.ts:25-36.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/md/src/Md.escape.ts",
+    "line": 390,
+    "symbol": "isStringArray",
+    "smell": "Exported free-floating guard `S.is(StringArray)` repeats behavior that should live on the schema static once `StringArray` has codec statics.",
+    "proposedTarget": "Replace with `export const isStringArray = StringArray.is` after adding `SchemaUtils.withCodecStatics` to `StringArray`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/md/src/Md.ts",
+    "line": 843,
+    "symbol": "taskItem",
+    "smell": "Public two-argument self/options constructor (`children`, `options`) is not pipeable. Existing call sites use both one-arg and two-arg data-first forms, so a plain `dual(2, ...)` would not preserve the one-arg constructor behavior.",
+    "proposedTarget": "Add explicit overloads and predicate-form `dual` (verified at .repos/effect-v4/packages/effect/src/Function.ts:96) so existing `taskItem(children[, options])` calls keep working and `pipe(children, taskItem({ checked: true }))` is available. The body remains the current `TaskItem.make` implementation.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/md/src/Md.ts",
+    "line": 896,
+    "symbol": "pre",
+    "smell": "Public value/options constructor (`value`, `options`) is not pipeable, despite the first argument being the natural self value and the second argument being configuration.",
+    "proposedTarget": "Add overloads and predicate-form `dual` preserving `pre(value)` / `pre(value, options)` while enabling `pipe(value, pre({ language: \"ts\" }))`. `Function.dual` predicate overload was verified in .repos/effect-v4/packages/effect/src/Function.ts:96-116.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/md/src/Md.ts",
+    "line": 946,
+    "symbol": "table",
+    "smell": "Public children/options constructor (`children`, `options`) is not pipeable. It mirrors the self/options shape that S4 expects to dualize.",
+    "proposedTarget": "Add overloads and predicate-form `dual` preserving `table(children)` / `table(children, options)` while enabling `pipe(rows, table({ headerRow: true }))`; keep the current `Table.make` body.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/md/src/Md.ts",
+    "line": 635,
+    "symbol": "a",
+    "smell": "Detector candidate: public two-argument constructor is not `dual`.",
+    "proposedTarget": "No change for S4 inventory; a pipeable form would need a bespoke curried constructor (`a(href)(children)`) because the current public order is semantic (`href`, `children`) rather than self-first.",
+    "confidence": 0.45,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "Constructor DSL argument order is link target first, content second; Effect `dual` would make the self argument first and would not preserve the existing public order mechanically.",
+      "boundary": "public Markdown DSL constructor"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/md/src/Md.ts",
+    "line": 652,
+    "symbol": "img",
+    "smell": "Detector candidate: public two-argument constructor with a defaulted second argument is not `dual`.",
+    "proposedTarget": "No S4 action. `src` and `alt` are two semantic fields, not self/options, and the one-argument `img(src)` constructor is already meaningful because `alt` defaults to the empty string.",
+    "confidence": 0.45,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "Dualizing would collide with the existing one-argument image constructor and there is no natural self/options split.",
+      "boundary": "public Markdown DSL constructor"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/md/src/Md.ts",
+    "line": 984,
+    "symbol": "youtube",
+    "smell": "Detector candidate: constructor uses `S.decodeUnknownResult(YouTube)` and `youtubeEffect` uses `S.decodeUnknownEffect(YouTube)`.",
+    "proposedTarget": "No direct `fromUnknown`/`decodeOption` swap. These public constructors intentionally expose Result/Effect validation boundaries for an encoded payload assembled by `youtubeInput`.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "The helpers are boundary constructors preserving Result/Effect error channels, not throw-on-failure duplicate decode walls.",
+      "boundary": "public validated Markdown constructor"
+    }
+  }
+]

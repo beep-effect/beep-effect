@@ -1,0 +1,136 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
+    "line": 46,
+    "symbol": "MdHeadingLevel",
+    "smell": "Local `type MdHeadingLevel = 1 | 2 | 3 | 4 | 5 | 6` literal-union alias duplicates the existing `Md.HeadingLevel` LiteralKit schema type (packages/foundation/modeling/md/src/Md.model.ts:830-842), which is already reachable via the file's `import * as Md from \"@beep/md/Md.model\"`.",
+    "proposedTarget": "Delete the alias and use `Md.HeadingLevel` (the `typeof Md.HeadingLevel.Type` export at Md.model.ts:842) in `mdHeadingLevelFromPandoc` (line 308), `pandocHeadingLevelProjection` (line 327), and `headingToMd` (line 343). Pure type-level substitution; no runtime change.",
+    "confidence": 0.92,
+    "mechanization": "codemod",
+    "roiRank": 0.55
+  },
+  {
+    "ruleId": "SFV4-boundary-codec",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
+    "line": 213,
+    "symbol": "attrFromWire",
+    "smell": "Hand-rolled bidirectional tuple↔class mapping: `attrFromWire` (decode, line 213) and `encodeAttr` (encode, line 454) pair-wise implement the AttrWire `[id, classes, keyValues]` ⇄ `PandocAttr` transformation outside any schema, though both endpoint schemas (`AttrWire` line 166, `PandocAttr` in Pandoc.model.ts) exist.",
+    "proposedTarget": "A `PandocAttrFromWire = AttrWire.pipe(S.decodeTo(PandocAttr, { decode: SchemaGetter.transform(([id, classes, keyValues]) => ({ classes, id, keyValues })), encode: SchemaGetter.transform((attr) => [attr.id, attr.classes, attr.keyValues]) }))` codec carries both directions in one schema; in-repo exemplar of the `S.decodeTo` + `SchemaGetter.transform` pattern: packages/foundation/modeling/md/src/Md.model.ts:1297. Verified against .repos/effect-v4/packages/effect/src/Schema.ts:5408 (`decodeTo`) and .repos/effect-v4/packages/effect/src/SchemaGetter.ts:499 (`SchemaGetter.transform`).",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 0.5
+  },
+  {
+    "ruleId": "SFV4-boundary-codec",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
+    "line": 216,
+    "symbol": "targetFromWire",
+    "smell": "Same shape as attrFromWire: `targetFromWire` (decode, line 216) and `encodeTarget` (encode, line 458) hand-roll the TargetWire `[url, title]` ⇄ `PandocTarget` transformation as a split function pair, with both endpoint schemas already defined (`TargetWire` line 167, `PandocTarget` in Pandoc.model.ts).",
+    "proposedTarget": "A `PandocTargetFromWire = TargetWire.pipe(S.decodeTo(PandocTarget, { decode: SchemaGetter.transform(([url, title]) => ({ title, url })), encode: SchemaGetter.transform((t) => [t.url, t.title]) }))` codec; exemplar packages/foundation/modeling/md/src/Md.model.ts:1297. Two-field non-recursive mapping — the most direct schema-codec fit in the file.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 0.5
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
+    "line": 528,
+    "symbol": "decodePandocJson",
+    "smell": "Exported decode/encode function pair (`decodePandocJson` line 528, `encodePandocJson` line 569, plus string variants at 550/594) whose joint contract is exactly a codec between `PandocJsonWire` and `PandocDocument`, implemented as ~340 lines of hand-dispatched Match decoding (`decodeInline` line 359, `decodeBlock` line 425) and Match encoding (`encodeInline` line 469, `encodeBlock` line 494) that never lands in a transformation schema.",
+    "proposedTarget": "A top-level `PandocDocumentFromWire = PandocJsonWire.pipe(S.decodeTo(PandocDocument, ...))` transformation schema (v4 `S.decodeTo`, .repos/effect-v4/packages/effect/src/Schema.ts:5408) so `S.decodeUnknownEffect(PandocDocumentFromWire)` / `S.encodeEffect(PandocDocumentFromWire)` become the API, and the string variant derives by composing with the existing `PandocJsonFromString` (line 152). The existing effectful decoders can seat inside the transformation, preserving the UnknownBlock/UnknownInline best-effort fallback semantics.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 0.35
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
+    "line": 187,
+    "symbol": "decodeConstructor (memoized decoder block, lines 187-205)",
+    "smell": "Nineteen consecutive module-level `const decodeX = S.decodeUnknownEffect(...)` bindings textually match the decode-helper-wall smell — audited and rejected as not actionable.",
+    "proposedTarget": "None — audited; the wall is the internal machinery of a single recursive wire codec, not exported API surface.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "All nineteen decoders are non-exported, memoized once at module scope (avoiding per-call parser construction in a hot recursive codec), and consumed only by the wire-decode pipeline directly below. The schemas they wrap ARE the truth for each wire payload shape; this is the correct boundary-codec pattern per the beep__colors precedent. If the SFV4-fn-schema finding at line 528 (fold the pipeline into a transformation schema) is taken, this wall shrinks as a side effect — it is not independently actionable.",
+      "boundary": "runtime-boundary codec internals (Pandoc JSON wire → model)"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
+    "line": 98,
+    "symbol": "isMdInline",
+    "smell": "Top-of-file `const isMdInline = S.is(Md.Inline)` textually matches the guard-wall smell — audited and rejected as not actionable.",
+    "proposedTarget": "None — audited; single memoized schema-derived guard.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "One non-exported guard, derived directly from the schema (`S.is` — schema-as-truth, not hand-rolled validation), used twice (lines 405, 444) to discriminate mixed Md child arrays. A single derived guard is not a wall; inlining `S.is(Md.Inline)` at both call sites would rebuild the parser per call for zero truth gain.",
+      "boundary": "schema-derived guard (S.is over an existing schema)"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
+    "line": 41,
+    "symbol": "Projection",
+    "smell": "Internal `type Projection<Value> = { issues; value }` struct alias for a data payload — audited and rejected as not actionable.",
+    "proposedTarget": "Hypothetical generic schema factory `Projection = <V>(value: S.Schema<V>) => S.Struct({ issues: S.Array(PandocMappingIssue), value })` — audited and rejected.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0.06,
+    "exception": {
+      "reason": "Non-exported, generic-parameterized intermediate carried only through Effect return types inside the mapping fold; never decoded, encoded, persisted, or exposed. Generic type-level utilities are an explicit S1 carve-out; the schema-typed halves (PandocMappingIssue) are already schemas, and the aggregate result IS schema-modeled (PandocToDocumentResult / DocumentToPandocResult S.Class at lines ~884/~928).",
+      "boundary": "type-level utility (generic internal accumulator)"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.report.ts",
+    "line": 160,
+    "symbol": "jsonPointerFromPath",
+    "smell": "Exported function in a schema-modeled file (naive SFV4-fn-schema detector hit: file exports LiteralKits + S.Class schemas) — audited and rejected.",
+    "proposedTarget": "Hypothetical `Fn({ input: JsonPath, output: S.String })` — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Parameter contract is already carried by the `JsonPath` schema type (line 130); return is a primitive string. Consumed by the colocated `PandocMappingIssue.fromPath` static (line 208) — behavior already lives on the data. Fn-wrapping adds decode-throwing invocation semantics with no truth gain (per the beep__colors supportsColor precedent).",
+      "boundary": "schema-typed function contract (parameter is a schema type)"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.report.ts",
+    "line": 250,
+    "symbol": "profileFromIssues",
+    "smell": "Exported function in a schema-modeled file (naive SFV4-fn-schema detector hit) — audited and rejected.",
+    "proposedTarget": "Hypothetical `Fn({ input: S.Array(PandocMappingIssue), output: PandocMappingProfile })` — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Both parameter (`ReadonlyArray<PandocMappingIssue.Type>`) and return (`PandocMappingProfile` LiteralKit type) contracts are carried by existing schemas; the function is the derivation behind the colocated `PandocCompatibilityReport.fromIssues` static (line 280). Whether it should be file-private rather than exported is an S4 colocation nit, not an S1 schema-bypass.",
+      "boundary": "schema-typed function contract (schema-typed parameter and return)"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
+    "line": 982,
+    "symbol": "pandocToDocument",
+    "smell": "Exported mapping functions in a schema-modeled file (`pandocToDocument` line 982, `documentToPandoc` line 1009; naive SFV4-fn-schema detector hits) — audited and rejected.",
+    "proposedTarget": "Hypothetical `Fn({ input: PandocDocument, output: PandocToDocumentResult })` / a `S.decodeTo` codec between the two ASTs — audited and rejected.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.06,
+    "exception": {
+      "reason": "Parameters and returns are all schema-class types (`PandocDocument.Type` → `PandocToDocumentResult` built via `.make`; `Md.Document.Type` → `DocumentToPandocResult` via `.make`) — the contracts are carried by schemas end to end. The mapping is deliberately NOT a codec: it is lossy-by-design and emits a structured `PandocCompatibilityReport` alongside the value, so an encode direction cannot round-trip and a transformation schema would misrepresent the semantics.",
+      "boundary": "schema-typed function contract (lossy projection with compatibility report, not a codec)"
+    }
+  }
+]

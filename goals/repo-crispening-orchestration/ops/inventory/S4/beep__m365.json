@@ -1,0 +1,95 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/m365/src/M365.service.ts",
+    "line": 697,
+    "symbol": "M365DriveItemDownload",
+    "smell": "Public tagged-union const is built with `S.Union(...).pipe(S.toTaggedUnion(\"_tag\"), $I.annoteSchema(...))` but lacks colocated codec statics for guard/soft decode use.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` so consumers can call `M365DriveItemDownload.is`, `.fromUnknown`, and `.decodeOption`. Union exemplar: `Block` at packages/foundation/modeling/md/src/Md.model.ts:1617; helper verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/m365/src/M365.errors.ts",
+    "line": 195,
+    "symbol": "safeBoolean",
+    "smell": "Passthrough pipe lambda `evaluate => pipe(Result.try(evaluate), Result.getOrElse(() => false))` should be `flow(...)`.",
+    "proposedTarget": "`const safeBoolean: (evaluate: () => boolean) => boolean = flow(Result.try, Result.getOrElse(() => false));` (`flow` already imported; v4 `flow` verified at .repos/effect-v4/packages/effect/src/Function.ts:1162).",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/m365/src/M365.errors.ts",
+    "line": 201,
+    "symbol": "httpClientCauseLabel",
+    "smell": "Passthrough `cause => pipe(O.fromNullishOr(cause), ...)` wrapper can be expressed point-free.",
+    "proposedTarget": "Rewrite as `const httpClientCauseLabel: (cause: unknown) => O.Option<string> = flow(O.fromNullishOr, O.filter((value) => safeBoolean(() => HttpClientError.isHttpClientError(value))), O.flatMap((value) => readProperty(value, \"reason\")), O.flatMap(readString(\"_tag\")), O.map((tag) => `HttpClientError:${tag}`));`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/m365/src/M365.service.ts",
+    "line": 755,
+    "symbol": "decodeRequest",
+    "smell": "Detector hit: generic boundary decoder calls `S.decodeUnknownEffect(schema)` instead of schema-local statics.",
+    "proposedTarget": "None - leave as-is in S4.",
+    "confidence": 0.4,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "This helper maps request decode failures into resource-specific `M365Error.fromReason(\"request encoding\", ...)`; `withCodecStatics` would not preserve that typed error channel or resource context.",
+      "boundary": "SPEC Non-Goal 4: no trust-boundary weakening; request-boundary error mapping stays explicit."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/m365/src/M365.service.ts",
+    "line": 877,
+    "symbol": "executeJson",
+    "smell": "Detector hit: generic response decoder calls `S.decodeUnknownEffect(schema)` instead of schema-local statics.",
+    "proposedTarget": "None - leave as-is in S4.",
+    "confidence": 0.4,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "This is the HTTP response trust boundary and maps schema failures into `M365Error.fromReason(\"response decoding\", ...)` with status, URL, and resource context. Replacing it with schema statics would erase driver-specific diagnostics.",
+      "boundary": "SPEC Non-Goal 4: no trust-boundary weakening; response-boundary error mapping stays explicit."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/m365/src/M365.auth.ts",
+    "line": 332,
+    "symbol": "M365Auth.makeLayer",
+    "smell": "Detector hit: public 2-arg static helper is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "`makeLayer(config, options = {})` intentionally supports the one-argument layer constructor used by callers. `dual(2, ...)` would reinterpret that existing call as data-last.",
+      "boundary": "Optional-trailing-argument layer constructor; preserving public call semantics outranks pipeability."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/m365/src/M365.service.ts",
+    "line": 1156,
+    "symbol": "M365.makeLiveLayer",
+    "smell": "Detector hit: public 2-arg static helper is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "`makeLiveLayer(config, options = {})` intentionally supports the one-argument live-layer constructor. `dual(2, ...)` would break that public form.",
+      "boundary": "Optional-trailing-argument layer constructor; no public-form change without same-PR consumer sweep."
+    }
+  }
+]

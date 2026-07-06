@@ -1,0 +1,110 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompatClient.service.ts",
+    "line": 55,
+    "symbol": "OpenAiCompatClientOptions",
+    "smell": "`apiKey`, `apiUrl`, and `headers` are `S.optionalKey(...)`, then `makeHttpClient` applies `options.apiUrl ?? \"https://api.openai.com/v1\"` and `=== undefined` branches for auth/header setup at lines 173-175.",
+    "proposedTarget": "Move the fixed URL default and absence modeling onto the schema: `apiUrl: S.String.pipe(SchemaUtils.withKeyDefaults(\"https://api.openai.com/v1\"))`, `apiKey: S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(SchemaUtils.withNoneDefault)`, and either `headers: S.Record(...).pipe(SchemaUtils.withKeyDefaults(R.empty()))` or an Option field if setting empty headers is not identical. Existing driver exemplars: `packages/drivers/m365/src/M365.config.ts:182-200` and `packages/drivers/venice-ai/src/VeniceAI.service.ts:320-321`.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+    "line": 69,
+    "symbol": "OpenAiCompatLanguageModelConfig",
+    "smell": "Request-time config knobs are `S.optionalKey(...)` / `S.NullOr(...).pipe(S.optionalKey)`, then `makeRequest` rebuilds sparse request fields with `O.fromUndefinedOr(...)` at lines 599-611 and `strictJsonSchema` defaults to true in bodies at lines 503-504 and 577.",
+    "proposedTarget": "Use Option/default fields in the config schema: numeric/string/bool knobs as `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)`, nullable provider knobs (`temperature`, `topP`) via the repo helper `OptionFromOptionalNullishKey(...)`, and `strictJsonSchema` as `SchemaUtils.BoolKeyDefaultTrue` if true is the intended constructor/decode default. In-package exemplars: `OpenAiCompat.models.ts:16-24` defines optional-nullish and optional-number helpers; `packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:246-250` defines `BoolKeyDefaultTrue`.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+    "line": 156,
+    "symbol": "OpenAiCompatLanguageModelClientOptions.config",
+    "smell": "`config: S.optionalKey(OpenAiCompatLanguageModelConfig)` is defaulted in `makeFromProvider` via destructuring (`config = OpenAiCompatLanguageModelConfig.make({})` at line 903) and mirrored by the public `model(..., config?: ... | undefined)` helper at line 1022.",
+    "proposedTarget": "Model adapter config absence as `S.OptionFromOptionalKey(OpenAiCompatLanguageModelConfig).pipe(SchemaUtils.withNoneDefault)`, then have `makeFromProvider` explicitly choose `OpenAiCompatLanguageModelConfig.make({})` via `O.getOrElse`. This matches the S2 pattern used for optional object config in other driver inventories and keeps the public-form sweep visible.",
+    "confidence": 0.62,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+    "line": 213,
+    "symbol": "jsonObjectOrEmpty",
+    "smell": "`decodeUnknownRecordOption(value)` falls back to `R.empty<string, unknown>` when a converted tool/response schema is not a JSON object.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "This is adapter hardening around Effect AI/OpenAI structured-output schema conversion; the empty object is an OpenAI JSON Schema payload fallback, not a package domain default.",
+      "boundary": "effect/unstable/ai Tool JSON schema adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompatClient.service.ts",
+    "line": 215,
+    "symbol": "contentMediaType",
+    "smell": "`contentMediaType` splits an HTTP Content-Type header, defaults a missing first segment to `\"\"`, then trims/lowercases it.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "This is HTTP response-header classification for the SSE transport, not a schema-modeled data field.",
+      "boundary": "HTTP response Content-Type parser"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+    "line": 254,
+    "symbol": "usageFromCompat",
+    "smell": "`cacheRead`, `cacheWrite`, `reasoning`, and `response` are assigned literal `undefined` when adapting OpenAI-compatible usage/finish data to Effect AI response parts.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "These keys belong to Effect AI's response/usage metadata contract; the OpenAI-compatible provider has no corresponding values, so the adapter must leave them absent.",
+      "boundary": "effect/unstable/ai Response adapter contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompat.models.ts",
+    "line": 250,
+    "symbol": "OpenAiCompatFunctionToolDefinition.description",
+    "smell": "`description: S.String.pipe(S.NullOr, S.optionalKey)` preserves nullish wire shape for OpenAI-compatible tool definitions.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "This is an OpenAI-compatible wire payload model; `description` may be omitted or null on the encoded provider contract, and service code intentionally emits `O.getOrNull` at line 497 for that boundary.",
+      "boundary": "third-party OpenAI-compatible JSON wire contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+    "line": 643,
+    "symbol": "streamToolCallId",
+    "smell": "Streaming tool-call assembly falls back across `activeToolCall?.id`, `toolCall.id`, generated chunk ids, unknown tool names, and empty argument deltas at lines 643-667.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "OpenAI-compatible streaming chunks are partial deltas; the adapter must synthesize stable ids/names/argument buffers while reconstructing a complete Effect AI tool-call stream.",
+      "boundary": "OpenAI-compatible streaming delta protocol adapter"
+    }
+  }
+]

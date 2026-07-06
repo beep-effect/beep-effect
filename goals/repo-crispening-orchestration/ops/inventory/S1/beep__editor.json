@@ -1,0 +1,99 @@
+[
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/ui-system/editor/src/artifact-ref-node.tsx",
+    "line": 134,
+    "symbol": "$createArtifactRefNode",
+    "smell": "Lexical node factory takes an inline `{ artifactId: string; label?: string }` object even though the same file already pins the serialized wire shape to `ArtifactRefNodeSchema.Encoded` at line 38.",
+    "proposedTarget": "Define a schema-derived input alias, for example `type ArtifactRefNodeCreateInput = Pick<SerializedArtifactRefNode, \"artifactId\" | \"label\">`, and type `$createArtifactRefNode(props: ArtifactRefNodeCreateInput)`. If callers should use decoded optional semantics instead, derive the alias from `ArtifactRefNodeSchema.Type`. In-repo exemplars: `SerializedArtifactRefNode = ArtifactRefNodeSchema.Encoded` in this file at line 38 and `SerializedYouTubeNode = YouTubeNodeSchema.Encoded` in youtube-node.tsx:47.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 0.35
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/ui-system/editor/src/youtube-node.tsx",
+    "line": 161,
+    "symbol": "$createYouTubeNode",
+    "smell": "Lexical node factory accepts a bare `videoID: string` and DOM import passes the raw `data-lexical-youtube` attribute into it, despite the serialized node contract being pinned to `YouTubeNodeSchema.Encoded` at line 47.",
+    "proposedTarget": "At minimum type the factory parameter as `SerializedYouTubeNode[\"videoID\"]`; if the lexical schema carries a tighter decoded video id later, decode the DOM attribute through that schema before construction. In-repo exemplar: `importJSON` in the same file receives `SerializedYouTubeNode & Record<string, unknown>` at line 95 and uses the schema-pinned `videoID` field.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 0.25
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+    "line": 108,
+    "symbol": "ChatComposerProps",
+    "smell": "Exported React prop interface plus neighboring component prop surfaces (`EditorComposerProps`, slash/mention plugin props, toolbar/attachment props) match the interface-data detector.",
+    "proposedTarget": "None - audited; React component prop boundary.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 0.02,
+    "exception": {
+      "reason": "The user explicitly carved out React UI component props for @beep/editor. These props carry `ReactNode`, callbacks, `LexicalEditor`, and mount-time UI configuration; durable editor state is carried by `@beep/lexical-schema` and schema-backed chat config classes (`ComposerFeatures`, `SlashItem`, `MentionOption`).",
+      "boundary": "React component props / Lexical UI boundary"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/ui-system/editor/src/chat/config.ts",
+    "line": 122,
+    "symbol": "EditorEffect (+ MentionSource)",
+    "smell": "Function type aliases in a schema-modeled config file look like SFV4 function-contract candidates.",
+    "proposedTarget": "None - audited; these callbacks are already represented by schema declarations where useful.",
+    "confidence": 0.12,
+    "mechanization": "judgment",
+    "roiRank": 0.02,
+    "exception": {
+      "reason": "`EditorEffect` is backed by `EditorEffectSchema = S.declare<EditorEffect>(...)` at line 126 and `MentionSource` is exported as an `S.declare` schema at line 239. The callback payloads include a live `LexicalEditor` side-effect port and async mention source behavior; an `Fn` schema would not add useful validation beyond the existing function schema declarations.",
+      "boundary": "UI callback schema via S.declare"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
+    "line": 32,
+    "symbol": "decodeMimeType (+ isImageMimeType, isImageAttachment, fileToAttachment)",
+    "smell": "Local decode and guard helpers in a schema-modeled attachment module look like a guard/decode wall.",
+    "proposedTarget": "None - audited; single capture boundary with schema-derived helpers.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "The helpers are non-throwing schema-derived adapters over DOM `File` capture: `decodeMimeType` uses `S.decodeUnknownResult(MimeType)`, `isImageMimeType` is `S.is(ImageAttachmentMimeType)`, and successful data is constructed through the `ComposerAttachment` S.Class at line 251. The object URL and raw `File` are in-memory UI resources, not persisted payloads.",
+      "boundary": "DOM File capture / in-memory attachment boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/ui-system/editor/src/chat/atoms.ts",
+    "line": 247,
+    "symbol": "captureAttachmentsFn (+ removeAttachmentFn, SendHandlerBox)",
+    "smell": "Atom runtime functions and boxed callback interfaces use inline input objects containing `LexicalEditor`, `File`, ids, and send callbacks.",
+    "proposedTarget": "None - audited; atom runtime mutation contracts and UI callback ports.",
+    "confidence": 0.12,
+    "mechanization": "judgment",
+    "roiRank": 0.02,
+    "exception": {
+      "reason": "These inputs are mutation commands for `Atom.runtime` scoped by a live `LexicalEditor` and DOM `File` handles. The data that survives capture is schema-modeled (`ComposerAttachment`), and send payloads are `SerializedEditorState.Type`; schema-ifying the runtime command envelopes would validate framework handles rather than domain data.",
+      "boundary": "Effect Atom runtime command / UI callback port"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/ui-system/editor/src/mermaid-view.tsx",
+    "line": 64,
+    "symbol": "MermaidView (+ YouTubeEmbed)",
+    "smell": "Exported React functions use inline prop objects (`{ source; renderKey }` and `{ videoID }`) instead of named schemas.",
+    "proposedTarget": "None - audited; render-only React component props.",
+    "confidence": 0.12,
+    "mechanization": "judgment",
+    "roiRank": 0.02,
+    "exception": {
+      "reason": "These are component rendering props in the @beep/editor UI boundary. Durable editor node shapes live in `@beep/lexical-schema`; `MermaidView` and `YouTubeEmbed` only render already-selected source/id values and handle client-side rendering concerns.",
+      "boundary": "React component props / rendering surface"
+    }
+  }
+]

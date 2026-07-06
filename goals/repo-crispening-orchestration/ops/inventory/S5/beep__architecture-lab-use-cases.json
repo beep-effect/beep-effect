@@ -1,0 +1,61 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.commands.ts",
+    "line": 41,
+    "symbol": "WorkItem and Worker command/query fields",
+    "smell": "Exported command/query S.Class schemas have whole-schema $I.annote metadata, but their public fields (id, title, assignee, priority, status, organizationId, displayName) have no annotateKey descriptions, so the annotation catalog cannot recover command payload semantics.",
+    "proposedTarget": "Add .annotateKey({ description }) to command/query fields in WorkItem.commands.ts and Worker.commands.ts while preserving the imported domain schemas; follow packages/agents/server/src/AssistantTurn/BlockRepair.ts:62-64 and packages/drivers/uspto-mcp/src/UsptoTools.ts:73-79. Effect v4 annotateKey is verified at .repos/effect-v4/packages/effect/src/Schema.ts:185 and :605.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.errors.ts",
+    "line": 90,
+    "symbol": "WorkItem/Worker action and repository reason fields",
+    "smell": "Public and repository error schemas use broad S.String for reason fields and also omit annotateKey metadata; these reasons are human-readable diagnostics or redacted public messages where empty strings are not meaningful.",
+    "proposedTarget": "Introduce named NonEmptyString reason schemas, or at least replace reason: S.String with S.NonEmptyString.annotateKey({ description: ... }) in WorkItem.errors.ts, WorkItem.repository.ts, Worker.errors.ts, and Worker.repository.ts. S.NonEmptyString is verified at .repos/effect-v4/packages/effect/src/Schema.ts:8420; the annotated error-field style is shown at packages/drivers/uspto-mcp/src/UsptoTools.ts:73-79.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.errors.ts",
+    "line": 195,
+    "symbol": "WorkItemActionError / WorkerActionError",
+    "smell": "The exported action error union schemas are bare S.Union values with JSDoc only; the member TaggedErrorClass schemas are annotated, but the reusable union surfaces lack $I.annoteSchema metadata.",
+    "proposedTarget": "Pipe WorkItemActionError and WorkerActionError through $I.annoteSchema(\"...\", { title, description }) after S.Union([...]); the in-repo union annotation pattern appears at packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.contracts.ts:80.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/architecture-lab/use-cases/test/WorkItem.test.ts",
+    "line": 43,
+    "symbol": "architecture-lab use-case schema laws",
+    "smell": "The package tests exercise command handling with fixed in-memory repositories, but no S.toArbitrary-derived law covers the exported command/query and action-error schemas.",
+    "proposedTarget": "Add additive schema-law tests using assertSchemaArbitraryDecodesToSelf from @beep/test-utils (packages/tooling/test-kit/test-utils/src/Schema.ts:30-43) for Create/Assign/Complete/Reopen/Archive/Get/List WorkItem payloads, Create/Get/List Worker payloads, and WorkItemActionError/WorkerActionError. S.toArbitrary is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:12970.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/architecture-lab/use-cases/test/WorkItem.test.ts",
+    "line": 43,
+    "symbol": "use-case repository behavior fixtures",
+    "smell": "Detector candidate: the use-case tests use fixed repository stubs, fixed ids, and specific public error assertions.",
+    "proposedTarget": "None — keep these static fixtures; schema-derived arbitrary laws are complementary and recorded separately.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These fixtures prove repository error translation, redaction behavior, and command orchestration through service ports; generated payload laws cannot replace the behavior contract.",
+      "boundary": "architecture-lab use-case behavior and repository-port fixtures"
+    }
+  }
+]

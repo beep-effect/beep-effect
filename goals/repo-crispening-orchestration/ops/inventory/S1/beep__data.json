@@ -1,0 +1,43 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/primitive/data/src/Blockchain.ts",
+    "line": 25,
+    "symbol": "Networks",
+    "smell": "Public hand-authored blockchain network/ticker metadata is an exported finite domain model (`network name -> { ticker }`) represented only as an `as const` object. Unlike the generated registry facades in this package, no downstream `@beep/schema` wrapper was found for blockchain network names or tickers.",
+    "proposedTarget": "Keep `@beep/data` as the raw data source, but add a downstream `@beep/schema` wrapper if this public API is retained: derive `BlockchainNetworkName` with `LiteralKit(Struct.keysNonEmpty(BlockchainData.Networks))` and derive a reversible name-to-ticker codec with `MappedLiteralKit(...)` over entries projected from `Networks`. In-repo exemplars: `CurrencyCode` derives `LiteralKit(Struct.keysNonEmpty(...))` at packages/foundation/modeling/schema/src/CurrencyCode.ts:43, and `TerritoryNameFromCode` derives a reversible `MappedLiteralKit` at packages/foundation/modeling/schema/src/TerritoryCode.ts:114. Verified local factories: `LiteralKit` at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:743 and `MappedLiteralKit` at packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts:348.",
+    "confidence": 0.58,
+    "mechanization": "judgment",
+    "roiRank": 0.35
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/primitive/data/src/CurrencyCodes.ts",
+    "line": 34,
+    "symbol": "Generated registry projection aliases",
+    "smell": "Grep-first S1 alias sweep found many public type aliases that look like data-payload aliases (`CurrencyCodeData`, `TimezoneData`, `TerritoryData`, `OfficialMimeTypeData`, keyboard shortcut row aliases, calendar literal aliases), but they are non-literal projections from generated or internal const data, not exported type-literal DTOs.",
+    "proposedTarget": "None - keep these `@beep/data` projection aliases as raw data-source facades. Downstream executable schemas already wrap the generated registries where runtime validation is needed: `CurrencyCode` at packages/foundation/modeling/schema/src/CurrencyCode.ts:43, `Timezone` at packages/foundation/modeling/schema/src/Timezone.ts:29, `TerritoryNameFromCode` at packages/foundation/modeling/schema/src/TerritoryCode.ts:114, and `MimeType` at packages/foundation/modeling/schema/src/MimeType.ts:99.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "The schema-first inventory detector only owns exported interfaces and exported type-literal aliases; these are `typeof ...Values[number]`/indexed-access projections over raw registry data. Importing `@beep/schema` into `@beep/data` would invert the established dependency direction, and generated files themselves are excluded from S1 scanning.",
+      "boundary": "primitive data-source package facade; executable schemas live downstream in @beep/schema"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/primitive/data/src/MimeTypes.ts",
+    "line": 380,
+    "symbol": "getTypes (+ getExtensions, lookup)",
+    "smell": "Public MIME utility exports expose explicit function contracts (`Record<FileExtension, MimeType>`, `Record<MimeType, FileExtension[]>`, `false | MimeType`) and can look like function contracts bypassing `Fn` or schema-owned input/output validation.",
+    "proposedTarget": "None - audited and rejected as an S1 action. Do not wrap these facade exports in `Fn`; downstream schema wrappers for MIME values already exist (`MimeType` at packages/foundation/modeling/schema/src/MimeType.ts:99 and file-extension LiteralKit wrappers at packages/foundation/modeling/schema/src/FileExtension.ts:95), while S2/S4/S5 own the separate normalization, sentinel, precision, and helper-shape findings around the internal lookup implementation.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "`@beep/data` has no schema-modeled source files in this path (`S.Class`/`S.Struct`/`Fn` signals are absent), and these exported functions do not use inline object parameter or return contracts. They mirror the vendored `mime-types` compatibility surface, including the public miss sentinel `false`.",
+      "boundary": "vendored MIME lookup compatibility facade in a primitive data package"
+    }
+  }
+]

@@ -1,0 +1,249 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/utils/src/Glob.ts",
+    "line": 475,
+    "symbol": "makeGlob",
+    "smell": "GlobOptions is already an S.Class of bare `S.optionalKey` fields (Glob.ts:73-80), but every default leaks into bodies: `options?.cwd ?? \".\"` (475), `dot: options?.dot ?? false` (486), `onlyFiles: options?.nodir ?? false` (487), `options?.absolute === true` (469), and `ignore === undefined ? [] : ...` (265).",
+    "proposedTarget": "Move the defaults onto the schema: `dot: S.Boolean.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(false))`, same for `nodir`/`absolute`, `cwd: S.String.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(\".\"))`, and either `ignore: Pattern.pipe(S.optionalKey, SchemaUtils.withKeyDefaults([]))` or a named `IgnorePatterns` schema if Pattern's string-or-array surface needs preserving. Bodies then consume a decoded-total `GlobOptions.make(options ?? {})` once at the entry point and the scattered `??` / `=== undefined` branches disappear. Review point: defaulting `cwd` to `\".\"` changes the Bun scan call from omitting `cwd` to passing `\".\"`; behavior should be equivalent but needs the wave parity check.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/utils/src/FileSystem.ts",
+    "line": 203,
+    "symbol": "toFileInfo",
+    "smell": "`blksize: stats.blksize !== undefined ? Option.some(FileSystem.Size(stats.blksize)) : Option.none()` - hand-rolled undefined-check ternary building an Option, in a struct where every sibling optional field already uses `Option.fromNullishOr` (lines 192-204).",
+    "proposedTarget": "`blksize: pipe(Option.fromUndefinedOr(stats.blksize), Option.map(FileSystem.Size))` - `Option.fromUndefinedOr` verified in Effect v4 at .repos/effect-v4/packages/effect/src/Option.ts:860. Purely mechanical, single site.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/modeling/utils/src/Str.ts",
+    "line": 848,
+    "symbol": "orEmpty",
+    "smell": "`export const orEmpty = (str: string | null | undefined): string => str ?? \"\"` - nullish param + `??` default in an exported helper (defaults + nullish-union detector hit).",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "`@beep/utils` is the low-level primitive layer: `Str.orEmpty` is the shared one-line adapter other packages reach for exactly at 3rd-party nullable-string boundaries, so the nullish union is its whole contract. Removing it would just re-inline `?? \"\"` at every consumer.",
+      "boundary": "shared nullish-boundary primitive (utils package charter)"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/modeling/utils/src/internal/StructPath.ts",
+    "line": 173,
+    "symbol": "unsafeDotGet",
+    "smell": "`Match.orElse(() => undefined)` - undefined-returning path getter (null-return detector hit); surfaces publicly through `Struct.dotGet`.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "Deliberate paired-API design: `unsafeDotGet` is the internal undefined-returning primitive documented as unsafe, and the safe Option form `Struct.dotGetOption` is built from it. The Option-returning variant already exists; the undefined form is the low-level building block.",
+      "boundary": "internal low-level primitive with an existing Option-returning public counterpart"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/utils/src/GlobalValue.ts",
+    "line": 61,
+    "symbol": "globalValue",
+    "smell": "`const store = globalScope[globalStoreId] ?? HashMap.empty<...>()` - `??` initialization fallback (detector hit).",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "Port of Effect's own GlobalValue idiom: lazily initializing a registry slot on `globalThis`, which is inherently an untyped nullable platform surface. The `??` is the canonical create-on-first-use step of the pattern, not a schema default.",
+      "boundary": "globalThis platform registry (cross-module singleton idiom)"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/utils/src/FileSystem.ts",
+    "line": 153,
+    "symbol": "toPlatformError",
+    "smell": "`(err?.code !== undefined ? errnoToTag[err.code] : undefined) ?? \"Unknown\"` - undefined-check ternary plus `??` lookup-miss default over the errno table.",
+    "proposedTarget": "None - keep as-is (at most `pipe(O.fromUndefinedOr(err?.code), O.flatMap((code) => R.get(errnoToTag, code)), O.getOrElse(() => \"Unknown\"))`, a style swap).",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "3rd-party boundary translation mirroring Effect's own errno handling: `NodeJS.ErrnoException.code` is optional by Node's contract and the errno table is inherently sparse; `\"Unknown\"` is part of Effect's `PlatformError.SystemErrorTag` contract, not a leaked schema default.",
+      "boundary": "NodeJS.ErrnoException to Effect PlatformError adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/utils/src/FileSystem.ts",
+    "line": 182,
+    "symbol": "toFileType",
+    "smell": "`Option.getOrElse((): FileSystem.File.Type => \"Unknown\")` terminating the Stats predicate table - getOrElse-as-default detector hit.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "Port of @effect/platform-node-shared's file-type resolution: `\"Unknown\"` is a first-class member of Effect's `File.Type` union reserved for exactly this no-predicate-matched case at the node:fs boundary. Already Option-first.",
+      "boundary": "node:fs Stats to Effect FileSystem.File.Type adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/modeling/utils/src/Struct.ts",
+    "line": 57,
+    "symbol": "assertStructHasStringKeys",
+    "smell": "`Match.when(true, () => undefined)` (also line 72 in `assertStructHasStringEntries`) - literal `undefined`-returning arm, a naive null-return detector hit.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "TypeScript `asserts input is ...` assertion functions must return void; the `undefined` arm is the void success path of the assert, not a value-channel nullish return. Useful detector escape hatch: ignore functions whose return type is an `asserts` predicate.",
+      "boundary": "TypeScript assertion-function void contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/utils/src/Predicate.ts",
+    "line": 159,
+    "symbol": "hasInspectableObjectShape",
+    "smell": "`Result.getOrElse(Result.try(() => { ...Reflect probing... }), () => false)` - getOrElse-as-default detector hit.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 11,
+    "exception": {
+      "reason": "Defensive guard against proxy-hostile objects: a throwing `Reflect.ownKeys`/`getOwnPropertyDescriptor` is the `not inspectable` answer, so the `false` terminal is the semantic result of the probe, not a defaulted absence. Already Result-first.",
+      "boundary": "Reflect/Proxy platform probing guard"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/utils/src/thunk.ts",
+    "line": 142,
+    "symbol": "thunkEmptyStr",
+    "smell": "`const thunkEmptyStr = thunk(\"\")` and the wider `thunkEmpty*` / `thunkSomeEmpty*` family (lines 197, 216, 330, 370, 442, 460) - `*Empty` naming-detector hits.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 12,
+    "exception": {
+      "reason": "These are the repo's sanctioned shared thunk vocabulary - the canonical single definition that everything else reuses so empty-value defaults are not re-invented inline. Flagging the vocabulary itself would invert the rule's intent; detector should allowlist @beep/utils/thunk exports.",
+      "boundary": "shared thunk-helper vocabulary (utils package charter)"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/utils/src/Glob.ts",
+    "line": 306,
+    "symbol": "compileIncludedPatterns",
+    "smell": "`const rootDirectory = ... ? ... : undefined` - undefined-sentinel local with a `!== undefined` re-check in the returned matcher (line 309).",
+    "proposedTarget": "None this wave - an `O.Option<string>` local would be equivalent, but this is private hot-path matcher state rather than a public contract or schema field.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 13,
+    "exception": {
+      "reason": "Closure-local sentinel in the pattern-matcher hot path of a low-level utils primitive; it never escapes the closure and the utils package is the sanctioned home for such primitives. Cosmetic Option-ification only - no invariant leaks.",
+      "boundary": "private closure-local in low-level glob matcher"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/modeling/utils/src/Str.ts",
+    "line": 753,
+    "symbol": "trimThunk",
+    "smell": "`trimThunk`, `toSlug`, and `truncate` contain `Str.trim` / `Str.toLowerCase` / regex normalization in exported helpers (lines 753, 788-793, 827).",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 14,
+    "exception": {
+      "reason": "`@beep/utils/Str` is the primitive string-helper layer; these exports are the normalization combinators other packages should reuse or schema-wrap. They are not business logic normalizing a modeled field.",
+      "boundary": "shared primitive string helper vocabulary (utils package charter)"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/modeling/utils/src/Text.ts",
+    "line": 33,
+    "symbol": "splitCommaSeparatedTrimmed",
+    "smell": "`flow(Str.split(\",\"), A.map(Str.trim), A.filter(Str.isNonEmpty))` - trim + empty filtering in an exported helper.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 15,
+    "exception": {
+      "reason": "This is the named reusable primitive for comma-separated text normalization. A package-specific field can wrap it in a schema transform, but the utility itself is intentionally generic.",
+      "boundary": "shared text parsing helper vocabulary (utils package charter)"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/modeling/utils/src/Function.ts",
+    "line": 193,
+    "symbol": "lazy",
+    "smell": "`let cache: { readonly value: A } | undefined` and `if (cache === undefined)` - undefined sentinel in an exported memoizing helper.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 16,
+    "exception": {
+      "reason": "Private closure-local sentinel for a low-level lazy helper. It never crosses the API boundary and replacing it with Option would allocate on every hot-path read without improving domain modeling.",
+      "boundary": "private closure-local cache sentinel in primitive helper"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/utils/src/Struct.ts",
+    "line": 416,
+    "symbol": "pathsOf",
+    "smell": "`Str.isEmpty(prefix) ? key : `${prefix}.${key}`` expressed via Match - empty-string branch while formatting nested object paths.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 17,
+    "exception": {
+      "reason": "Path formatting algorithm: the root path has no prefix, so the first segment is rendered without a dot. This is formatter control flow, not a schema default.",
+      "boundary": "path-formatting primitive"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/modeling/utils/src/Utils.ts",
+    "line": 29,
+    "symbol": "structuralRegionState",
+    "smell": "`tester: ((a, b) => boolean) | undefined` initialized as `tester: undefined` - nullish state field detector hit.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 18,
+    "exception": {
+      "reason": "Global mutable runtime hook state mirrors Effect's structural-region mechanism; the optional tester slot is a platform/runtime hook, not first-party domain data that should be schema-modeled.",
+      "boundary": "runtime structural-comparison hook state"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/utils/src/Glob.ts",
+    "line": 341,
+    "symbol": "patternScanRoot",
+    "smell": "`if (staticSegments.length === 0) return \"\"` plus related empty-path checks in glob path formatting (for example `parent.length === 0` at 351 and `relativeDirectoryPath.length === 0` at 385).",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 19,
+    "exception": {
+      "reason": "Empty string is the root-directory sentinel in the glob path algorithm. This is path math inside a low-level filesystem helper, not an absent modeled field.",
+      "boundary": "filesystem path algorithm sentinel"
+    }
+  }
+]

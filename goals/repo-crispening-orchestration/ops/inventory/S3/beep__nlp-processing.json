@@ -1,0 +1,50 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
+    "line": 425,
+    "symbol": "OperationCost.scale",
+    "smell": "OperationCost is derived from Complexity via S.toTaggedUnion(\"complexity\") at line 419, but scale computes timeMultiplier with a nested cost.complexity === ... chain (lines 425-432). The fallback arm silently means O(n^2), so adding a Complexity literal would not force a handler update.",
+    "proposedTarget": "Replace the nested discriminator chain with Complexity.$match(cost.complexity, { \"O(1)\": () => 1, \"O(n)\": () => nodeCount, \"O(n log n)\": () => nodeCount * Math.log2(nodeCount), \"O(n^2)\": () => nodeCount * nodeCount }). LiteralKit.$match is available on this kit (packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:657-665), and Complexity is the package-local LiteralKit source (Types.ts:208).",
+    "confidence": 0.92,
+    "mechanization": "codemod",
+    "roiRank": 3.68
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/nlp-processing/src/Tools/PhoneticMatch.ts",
+    "line": 15,
+    "symbol": "PhoneticMatchAlgorithmKit",
+    "smell": "PhoneticMatchAlgorithmKit duplicates the exact [\"soundex\", \"phonetize\"] LiteralKit already defined as AiPhoneticAlgorithmKit in Tools/_schemas.ts:34, so the parameter schema and result schema can drift independently for the same phonetic algorithm domain.",
+    "proposedTarget": "Promote one shared phonetic algorithm schema/kit (for example export the existing AiPhoneticAlgorithm/AiPhoneticAlgorithmKit from Tools/_schemas.ts or move it to a small shared Tools schema module) and have PhoneticMatchParameters.algorithm use that source. LiteralKit const type parameters preserve the tuple (packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:743-748), so no as const wrapper is needed.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 3.44
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/nlp-processing/src/Tools/TextSimilarity.ts",
+    "line": 34,
+    "symbol": "SimilarityMethod literals",
+    "smell": "Similarity method values are repeated as S.Literal(\"vector.cosine\") in TextSimilaritySuccess and QueryCorpusSuccess, S.Literal(\"bow.cosine\") in BowCosineSimilaritySuccess, and S.Literal(\"set.tversky\") in TverskySimilaritySuccess even though @beep/nlp already owns SimilarityMethod = LiteralKit([\"vector.cosine\", \"set.tversky\", \"bow.cosine\"]) at packages/foundation/modeling/nlp/src/Core/Similarity.ts:16.",
+    "proposedTarget": "Import SimilarityMethod from @beep/nlp/Core/Similarity and derive the singleton method fields from that kit, e.g. S.Literal(SimilarityMethod.Enum[\"vector.cosine\"]) / S.Literal(SimilarityMethod.Enum[\"bow.cosine\"]) / S.Literal(SimilarityMethod.Enum[\"set.tversky\"]) or narrow with SimilarityMethod.pickOptions([...]) plus S.Literals. Effect v4 S.Literal and S.Literals are verified at .repos/effect-v4/packages/effect/src/Schema.ts:2607 and :4801.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 3.12
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/nlp-processing/src/Tools/ToolExport.ts",
+    "line": 228,
+    "symbol": "handleTool",
+    "smell": "toolkit.handle(tool.name as never, params as never) as Effect.Effect<...> is a no-as detector candidate at the dynamic positional-export boundary.",
+    "proposedTarget": "None -- keep as-is unless effect/unstable/ai adds a correlation-preserving dynamic handle helper.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The adapter decodes params with the selected tool.parametersSchema immediately before the call, but TypeScript cannot preserve the correlation between the iterated NlpTool union member, its literal name, and Tool.Parameters<typeof member> through Toolkit.WithHandler.handle<Name extends keyof Tools>. Effect v4's Toolkit.handle signature is the generic name/parameter pair at .repos/effect-v4/packages/effect/src/unstable/ai/Toolkit.ts:194-203, and upstream dynamic callers use the same cast boundary pattern.",
+      "boundary": "dynamic adapter from positional tool descriptors to effect/unstable/ai Toolkit.WithHandler"
+    }
+  }
+]

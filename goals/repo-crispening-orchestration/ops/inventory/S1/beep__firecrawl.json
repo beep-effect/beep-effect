@@ -1,0 +1,118 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.service.ts",
+    "line": 48,
+    "symbol": "FirecrawlSdkWatcher",
+    "smell": "Exported type literal with function members matches the schema-first-inventory detector surface.",
+    "proposedTarget": "Hypothetical watcher S.Class/Fn surface for `close`/`on`/`off`/`start` — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "This is a minimal SDK adapter port consumed by `Firecrawl.makeLayerFromClient`, and the members are runtime callbacks/Promise handles rather than pure data. It falls under the service-contract/port carve-out.",
+      "boundary": "third-party SDK watcher adapter port"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.service.ts",
+    "line": 71,
+    "symbol": "FirecrawlSdkClient",
+    "smell": "Exported type literal with many Promise-returning function members matches the schema-first-inventory detector surface.",
+    "proposedTarget": "Hypothetical SDK-client schema/Fn map — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "This is the explicit third-party SDK client port injected into the driver layer; request/response data is decoded separately by `runSdkCall`. Service and port interfaces stay as interfaces/type literals under S1 fence 1.",
+      "boundary": "third-party SDK client adapter port"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.service.ts",
+    "line": 156,
+    "symbol": "FirecrawlShape",
+    "smell": "Exported type literal with Effect-returning service methods matches the schema-first-inventory detector surface.",
+    "proposedTarget": "Hypothetical schema/Fn model for each service method — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "`FirecrawlShape` is the public `Context.Service` shape used by `export class Firecrawl extends Context.Service<Firecrawl, FirecrawlShape>()`; Effect v4 source verifies the class-style `Context.Service<Self, Shape>()(\"Id\")` form. Service shapes are an explicit S1 carve-out.",
+      "boundary": "Context.Service contract"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.models.ts",
+    "line": 84,
+    "symbol": "FirecrawlSdkAgentRequest",
+    "smell": "Local pure-object type literal backs an exported request schema via `typedUnknown<FirecrawlSdkAgentRequest>`.",
+    "proposedTarget": "Hypothetical annotated `S.Class`/`S.Struct` request model for the known fields (`prompt`, `model`, `urls`, `webhook`, etc.) — audited and rejected for this pass.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 0.12,
+    "exception": {
+      "reason": "The exported schema is intentionally an opaque third-party SDK boundary adapter (`FirecrawlAgentRequest = typedUnknown<FirecrawlSdkAgentRequest>`). Replacing it with a first-party structural schema would assert Firecrawl SDK protocol ownership the driver does not currently take on; this is a rule-card escape hatch for 3rd-party boundary adapters.",
+      "boundary": "third-party SDK opaque request boundary"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.models.ts",
+    "line": 96,
+    "symbol": "FirecrawlSdkAgentWaitRequest",
+    "smell": "Local intersection type extends the opaque SDK request with polling fields and backs an exported request schema via `typedUnknown<FirecrawlSdkAgentWaitRequest>`.",
+    "proposedTarget": "Hypothetical annotated schema extending a `FirecrawlSdkAgentRequest` schema with `pollInterval` and `timeout` — audited and rejected for this pass.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 0.12,
+    "exception": {
+      "reason": "This is the wait-mode companion for the same opaque third-party SDK request boundary. It is not a first-party domain payload today; making it structural would change the driver's validation contract.",
+      "boundary": "third-party SDK opaque request boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.errors.ts",
+    "line": 269,
+    "symbol": "FirecrawlError.fromReason",
+    "smell": "Exported static constructor in a schema-modeled file accepts `FirecrawlErrorOptionsInput`, a plain object type literal that duplicates the nearby `FirecrawlErrorOptions`/`FirecrawlError` schema fields.",
+    "proposedTarget": "Promote `FirecrawlErrorOptionsInput` to an annotated input schema (for example an `S.Class` like `FirecrawlConfigInput` at `packages/drivers/firecrawl/src/Firecrawl.config.ts:47`), then have `fromReason` construct/decode that schema before `FirecrawlError.make`. If the constructor is split into a standalone function later, use `Fn({ input, output })` as in `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66` and `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 0.5
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.service.ts",
+    "line": 276,
+    "symbol": "decodeWith",
+    "smell": "Local decode helper matches the decode-helper-wall smell textually (`S.decodeUnknownEffect(schema)(value)`).",
+    "proposedTarget": "Inline each `S.decodeUnknownEffect(schema)(value)` call — audited and rejected.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.06,
+    "exception": {
+      "reason": "`decodeWith` is the single request/response boundary codec for SDK calls and maps Effect v4 `S.decodeUnknownEffect` failures into the driver error type. The schema remains the source of truth; the helper centralizes error labeling and span context rather than bypassing validation.",
+      "boundary": "SDK request/response boundary codec"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.service.ts",
+    "line": 350,
+    "symbol": "emitWatcherEvent",
+    "smell": "Local decode helper matches the decode-helper-wall smell textually (`S.decodeUnknownResult(schema)(value)`).",
+    "proposedTarget": "Inline each watcher-event `S.decodeUnknownResult(schema)(value)` call — audited and rejected.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.06,
+    "exception": {
+      "reason": "`emitWatcherEvent` is the queue bridge for unknown Firecrawl watcher payloads and uses the supplied event schema before offering to the stream. The helper is a trust-boundary adapter, not an alternative validation layer.",
+      "boundary": "SDK watcher event boundary codec"
+    }
+  }
+]

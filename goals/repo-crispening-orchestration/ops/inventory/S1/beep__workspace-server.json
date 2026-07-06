@@ -1,0 +1,47 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts",
+    "line": 36,
+    "symbol": "encodeWorkspaceId / encodeThreadId / encodeTurnId / encodeMessageId / encodeDocument",
+    "smell": "Module-scope schema codec helpers match the encode/decode helper-wall smell.",
+    "proposedTarget": "None -- audited as direct schema-derived encoders at the repository persistence boundary. `WorkspaceId`, `ThreadId`, `TurnId`, `MessageId`, and `Document` remain the executable contracts; Effect v4 `S.encodeSync` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:2154`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The helpers do not hand-roll validation or bypass schemas. They name the repeated conversion from schema-backed ids/documents into numeric/json persistence adapter values.",
+      "boundary": "schema-backed domain values -> repository persistence adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts",
+    "line": 211,
+    "symbol": "makeInMemoryThreadStore",
+    "smell": "Exported Effect service constructor in a schema-modeled repository file.",
+    "proposedTarget": "Hypothetical `Fn`/`EffectSchema` wrapper is rejected. Keep this as an `Effect.fn` constructor for the `ThreadStore` service; the service shape is the fence-1 `ThreadStoreShape` at `packages/workspace/use-cases/src/aggregates/Thread/ThreadStore.ts:183` and `ThreadStore extends Context.Service` at line 229. Effect v4 `Context.Service<Self, Shape>()(\"Key\")` verified at `.repos/effect-v4/packages/effect/src/Context.ts:163`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This constructs a runtime service implementation. Method inputs and outputs are already schema-modeled in the use-case contract; crispening does not schema-ify service constructors or `Context.Service` shapes.",
+      "boundary": "ThreadStore service implementation constructor"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts",
+    "line": 346,
+    "symbol": "makeDrizzleThreadStore",
+    "smell": "Exported Effect service constructor in a schema-modeled repository file.",
+    "proposedTarget": "Hypothetical `Fn`/`EffectSchema` wrapper is rejected. Keep this as an `Effect.fn` constructor for the Drizzle-backed `ThreadStore` service; row conversions route through schema-backed table converters (`fromThreadRow`, `toThreadInsert`, `fromTurnRow`, `toTurnInsert`, `fromMessageRow`, `toMessageInsert`).",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This constructs a runtime service implementation requiring `PostgresDrizzle`. The data crossing its methods is already carried by schema classes and Drizzle boundary converters; an `Fn` schema would not absorb an inline object contract.",
+      "boundary": "Drizzle-backed ThreadStore service implementation constructor"
+    }
+  }
+]

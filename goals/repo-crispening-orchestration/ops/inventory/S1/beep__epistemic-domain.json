@@ -1,0 +1,17 @@
+[
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/epistemic/domain/src/entities/UsageRecord/UsageRecord.model.ts",
+    "line": 213,
+    "symbol": "appendTurnFinalizationUsageRecord",
+    "smell": "Exported function in a schema-modeled entity file (naive SFV4-fn-schema surface).",
+    "proposedTarget": "Hypothetical `Fn({ input: TurnFinalizationUsageAppend, output: UsageRecord }).implementSync((input) => UsageRecord.make(input))` wrapper, matching the `Fn` shape at `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66` and service-function schema shape at `packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts:95` -- audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Both sides of the contract are already schema classes: the input is `TurnFinalizationUsageAppend` and the return is a `UsageRecord.make(input)` instance. Fn-wrapping would add decode-on-call behavior without moving a missing invariant into a schema.",
+      "boundary": "schema-typed entity constructor helper"
+    }
+  }
+]

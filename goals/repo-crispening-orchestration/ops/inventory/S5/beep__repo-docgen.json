@@ -1,0 +1,150 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/docgen/src/Domain.ts",
+    "line": 78,
+    "symbol": "Domain exported schema classes",
+    "smell": "The exported docgen domain model schemas (Position, Doc, DocEntry, Class, Interface, Function, TypeAlias, Constant, Export, Namespace, Module, File, DocgenError) rely on JSDoc but carry no schema-level $I.annote metadata and almost no field-level annotateKey descriptions. Sibling docgen schemas already do this in ProofManifest.ts and Checker.ts.",
+    "proposedTarget": "Add class-level $I.annote metadata and targeted field annotateKey descriptions to the Domain S.Class/S.TaggedClass definitions, following packages/tooling/tool/docgen/src/ProofManifest.ts:119-128 for S.Class, packages/foundation/modeling/md/src/Md.model.ts:116-125 for S.TaggedClass + annotateKey, and packages/tooling/tool/docgen/src/Checker.ts:33-41 for a small local S.Class annotation.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/docgen/src/Domain.ts",
+    "line": 79,
+    "symbol": "Position.column/line",
+    "smell": "Position.column and Position.line are modeled as bare S.Finite even though the docs and parser call sites describe one-based source coordinates. The schema currently accepts fractional, zero, and negative values.",
+    "proposedTarget": "Replace both fields with a positive-integer schema such as PosInt from @beep/schema (packages/foundation/modeling/schema/src/Int.ts:77-88; exported from packages/foundation/modeling/schema/src/index.ts:193). Effect v4 S.Int is available at .repos/effect-v4/packages/effect/src/Schema.ts:11398, and positive checks are already wrapped in the shared PosInt helper.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/docgen/src/Domain.ts",
+    "line": 201,
+    "symbol": "DocEntry/Class/Interface/Function/TypeAlias/Constant/Export/Namespace/Module textual fields",
+    "smell": "Parsed declaration names, printable signatures, and source path segments are broad S.String/S.Array(S.String) even though parser construction always supplies named declarations, signatures, and path segments. Empty strings can enter the reusable model schemas even when they are not meaningful docgen domain values.",
+    "proposedTarget": "Introduce named local schema building blocks such as DocgenSymbolName = S.NonEmptyString, DocgenSignatureText = S.NonEmptyString, and DocgenPathSegments = S.Array(S.NonEmptyString) or the shared ArrayOfNonEmptyStrings (packages/foundation/modeling/schema/src/ArrayOf.ts:86-90). Effect v4 S.NonEmptyString is verified at .repos/effect-v4/packages/effect/src/Schema.ts:8420; use annotateKey as in packages/foundation/modeling/md/src/Md.model.ts:119-121 where field intent matters.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/docgen/src/Domain.ts",
+    "line": 594,
+    "symbol": "Namespace.namespaces",
+    "smell": "The recursive Namespace child list is encoded as S.Array(S.Any), so nested namespace payloads are not validated by the Namespace schema even though the class declares readonly namespaces: ReadonlyArray<Namespace> immediately below.",
+    "proposedTarget": "Replace S.Array(S.Any) with a named recursive child schema using S.suspend, e.g. DocgenNamespaceChildren = S.Array(S.suspend((): S.Codec<Namespace.Type, Namespace.Encoded> => Namespace)).pipe($I.annoteSchema(...)). This mirrors packages/foundation/modeling/md/src/Md.model.ts:78-82 and packages/foundation/modeling/lexical/src/Lexical.model.ts:736-740; Effect v4 S.suspend is verified at .repos/effect-v4/packages/effect/src/Schema.ts:4943.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/docgen/src/ProofManifest.ts",
+    "line": 121,
+    "symbol": "DocgenProofManifestFile/DocgenProofManifestFingerprint digest and count fields",
+    "smell": "Proof manifest digests are broad S.String (sha256/inputSha256/outputSha256) and byte/count fields are bare S.Finite, even though the values are generated from createHash(\"sha256\"), file byte lengths, and array lengths.",
+    "proposedTarget": "Use Sha256Hex for sha256/inputSha256/outputSha256 and NonNegativeInt for bytes/inputFileCount/outputFileCount, imported from @beep/schema. The shared schemas are exported through packages/foundation/modeling/schema/src/index.ts:9 and :323, with concrete definitions at packages/foundation/modeling/schema/src/Sha256.ts:62-70 and packages/foundation/modeling/schema/src/Number.ts:182-199. Effect v4 S.Int/S.Finite support is verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :11380.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/docgen/src/Configuration.ts",
+    "line": 65,
+    "symbol": "ConfigurationSchema",
+    "smell": "The exported docgen.json input schema has no $I.annote class metadata and no field-level annotateKey descriptions, so generated schema/docs cannot explain user-facing configuration keys from the schema itself.",
+    "proposedTarget": "Add a second S.Class options argument with $I.annote(\"ConfigurationSchema\", { description: ... }) and annotateKey descriptions for public config fields. Use packages/tooling/tool/docgen/src/ProofManifest.ts:119-128 for the local S.Class annotation shape and packages/foundation/modeling/schema/src/Color/Color.rgb.ts:102-106 or packages/foundation/modeling/md/src/Md.model.ts:119-125 for field annotateKey + class annotation.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/docgen/src/Configuration.ts",
+    "line": 138,
+    "symbol": "ConfigurationShape",
+    "smell": "The resolved runtime configuration schema is exported and reused by services/tests, but it also lacks $I.annote metadata and field-level annotateKey descriptions for the resolved configuration surface.",
+    "proposedTarget": "Add $I.annote(\"ConfigurationShape\", { description: ... }) to the S.Class and annotateKey the resolved fields whose defaults are documented in Configuration.load. Local exemplars: packages/tooling/tool/docgen/src/ProofManifest.ts:151-165 for an annotated S.Class and packages/foundation/modeling/schema/src/Color/Color.rgb.ts:128-132 for annotated fields in a model consumed by tooling.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/tooling/tool/docgen/test/Configuration.test.ts",
+    "line": 70,
+    "symbol": "repo-docgen schema families",
+    "smell": "The package has parser/checker/configuration fixture tests but no S.toArbitrary-derived round-trip/property law for exported schema families in Domain.ts, Configuration.ts, ProofManifest.ts, or Printer.Printable.",
+    "proposedTarget": "Add an additive schema-law test file that imports production schemas through @beep/repo-docgen/* package aliases and uses assertSchemaArbitraryDecodesToSelf from packages/tooling/test-kit/test-utils/src/Schema.ts:30-44, or direct S.toArbitrary usage like packages/foundation/modeling/md/test/Md.test.ts:45-47. Effect v4 S.toArbitrary is verified at .repos/effect-v4/packages/effect/src/Schema.ts:12970.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/docgen/src/Domain.ts",
+    "line": 130,
+    "symbol": "Doc.tags",
+    "smell": "Detector candidate: Doc.tags is a broad S.Record(S.String, S.UndefinedOr(S.Array(S.String))) rather than a closed tagged-union or named schema for known JSDoc tags.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The parser intentionally preserves arbitrary doctrine/JSDoc tag names and raw grouped tag text for downstream checks and printing. Closing the tag map to known tags would reject extension tags and lose unknown-tag fidelity; targeted named fields like since/examples/category already exist on Doc.",
+      "boundary": "JSDoc/doctrine parser extension boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/docgen/src/Domain.ts",
+    "line": 662,
+    "symbol": "Module.source",
+    "smell": "Detector candidate: Module.source is S.Any even though the class declares readonly source: Parser.SourceShape below the schema.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Parser.SourceShape contains a ts-morph SourceFile runtime object, not a JSON/domain payload; validating that handle structurally would cross the third-party AST object boundary. The typed declaration retains the TypeScript contract while the schema avoids pretending the AST handle is serializable.",
+      "boundary": "ts-morph SourceFile runtime object boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/docgen/src/Configuration.ts",
+    "line": 65,
+    "symbol": "ConfigurationSchema string/path/glob fields",
+    "smell": "Detector candidate: docgen.json accepts broad optional S.String and S.Array(S.String) fields for paths, globs, theme, tscExecutable, and source links.",
+    "proposedTarget": "None - keep as is for the value domain; add metadata as recorded separately.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This schema is the external package-local docgen.json boundary. It must accept ordinary CLI/config strings and glob patterns before Configuration.load resolves defaults, filesystem paths, compiler options, and package metadata; tighter path/URL/glob brands here would risk rejecting valid existing config without improving downstream normalized behavior.",
+      "boundary": "package-local docgen.json and CLI configuration boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/tooling/tool/docgen/test/Parser.test.ts",
+    "line": 103,
+    "symbol": "Parser/Printer/Checker golden fixtures",
+    "smell": "Detector candidate: the test suite relies heavily on hand-written parser inputs and exact markdown/error string fixtures instead of generated data.",
+    "proposedTarget": "None - keep as is (schema-derived round-trip laws are additive coverage recorded separately, not a replacement).",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These tests assert formatting, source-link, parser, and code-frame regressions where exact static fixtures are the behavior under test. S.toArbitrary laws can cover schema decode/encode separately, but they cannot replace golden markdown and diagnostic output checks.",
+      "boundary": "docgen parser/printer/checker golden behavior fixtures"
+    }
+  }
+]

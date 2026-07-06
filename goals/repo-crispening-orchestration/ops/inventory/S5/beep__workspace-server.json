@@ -1,0 +1,65 @@
+[
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts",
+    "line": 66,
+    "symbol": "ThreadEntityInput/TurnEntityInput/MessageEntityInput/InMemoryState ids",
+    "smell": "Local construction/state schemas model generated ids, foreign ids, message ids, and `turnIndex` as bare S.Finite. The true domains are integer ids (positive once persisted/generated) and a non-negative integer turn index.",
+    "proposedTarget": "Replace bare S.Finite helper fields with named integer schemas: PosInt for generated/foreign ids (packages/foundation/modeling/schema/src/Int.ts:77) or S.Int.check(S.isGreaterThan(0)), and NonNegativeInt for `turnIndex` (packages/foundation/modeling/schema/src/Number.ts:182). Effect v4 S.Int and numeric checks are verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398, :7286, and :7314.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts",
+    "line": 67,
+    "symbol": "ThreadEntityInput.title",
+    "smell": "`ThreadEntityInput.title` is a broad S.String even though it is immediately decoded into the domain Thread schema, where `title` is S.NonEmptyString, and server tests exercise only non-empty titles.",
+    "proposedTarget": "Align the local construction schema with the domain boundary by using S.NonEmptyString (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420) or TrimmedNonEmptyText (packages/foundation/modeling/schema/src/CommonTextSchemas.ts:36) for `title`; the sibling set-title use-case already uses S.NonEmptyString for both title fields at packages/workspace/use-cases/src/aggregates/Thread/ThreadStore.ts:154-156.",
+    "confidence": 0.66,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts",
+    "line": 66,
+    "symbol": "ThreadStore repo local schema fields",
+    "smell": "ThreadEntityInput, TurnEntityInput, MessageEntityInput, and InMemoryState have whole-schema `$I.annote` metadata, but their public construction/state fields lack `annotateKey` descriptions.",
+    "proposedTarget": "Add behavior-neutral `.annotateKey({ description })` metadata to the local S.Class fields while preserving shapes; follow packages/agents/server/src/AssistantTurn/BlockRepair.ts:62-64. Effect v4 `annotateKey` is verified at .repos/effect-v4/packages/effect/src/Schema.ts:185 and :605.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/workspace/server/test/ThreadStore.test.ts",
+    "line": 17,
+    "symbol": "in-memory ThreadStore behavior fixtures",
+    "smell": "Detector candidate: in-memory repository tests use fixed thread ids, titles, roles, message documents, parent-turn branches, timeline expectations, and exact missing-thread errors.",
+    "proposedTarget": "None - keep these behavior fixtures; they complement the existing SetThreadTitleIfEmptyInput S.toArbitrary property at lines 101-107.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These fixtures prove repository sequencing, branch linkage, timeline projection, and typed error routing; generated schema samples would not replace those behavioral contracts.",
+      "boundary": "workspace in-memory ThreadStore behavior fixture"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/workspace/server/test/integration/ThreadStoreDrizzleRepository.pglite.test.ts",
+    "line": 37,
+    "symbol": "Drizzle ThreadStore PgLite integration fixture",
+    "smell": "Detector candidate: PgLite integration test uses fixed migration path, titles, roles, message documents, parent-turn branches, and exact timeline assertions.",
+    "proposedTarget": "None - keep this static integration fixture.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The fixture proves migration wiring, Drizzle persistence, SQL row projection, transaction behavior, and timeline reconstruction under the real adapter; schema-derived laws are additive and cannot replace this live persistence contract.",
+      "boundary": "workspace Drizzle/PgLite repository integration fixture"
+    }
+  }
+]

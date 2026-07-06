@@ -1,0 +1,128 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.repository.ts",
+    "line": 126,
+    "symbol": "WorkerRepositoryError",
+    "smell": "Exported repository error union is a type-only contract over three `TaggedErrorClass` schemas, but there is no companion `S.Union` value for the repository error channel.",
+    "proposedTarget": "Add `export const WorkerRepositoryError = S.Union([WorkerRepositoryNotFound, WorkerRepositoryConflict, WorkerRepositoryUnavailable]).pipe(S.toTaggedUnion(\"_tag\"))` and derive `export type WorkerRepositoryError = typeof WorkerRepositoryError.Type`, matching `ThreadStoreError` at `packages/workspace/use-cases/src/aggregates/Thread/Thread.errors.ts:128`/`:155`. Effect v4 `S.toTaggedUnion(\"_tag\")` match/guards utilities verified at `.repos/effect-v4/packages/effect/src/Schema.ts:6036`-`:6094`.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 0.74
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.errors.ts",
+    "line": 142,
+    "symbol": "WorkerActionError",
+    "smell": "Hand-written exported union type duplicates the same-name `S.Union` schema declared at line 163.",
+    "proposedTarget": "Derive `export type WorkerActionError = typeof WorkerActionError.Type` from the existing `WorkerActionError` schema, following `ThreadStoreError` at `packages/workspace/use-cases/src/aggregates/Thread/Thread.errors.ts:128`/`:155` and `TSMorphServiceError` at `packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts:301`/`:321`.",
+    "confidence": 0.95,
+    "mechanization": "codemod",
+    "roiRank": 0.81
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.repository.ts",
+    "line": 130,
+    "symbol": "WorkItemRepositoryError",
+    "smell": "Exported repository error union is a type-only contract over three `TaggedErrorClass` schemas, but there is no companion `S.Union` value for the repository error channel.",
+    "proposedTarget": "Add `export const WorkItemRepositoryError = S.Union([WorkItemRepositoryNotFound, WorkItemRepositoryConflict, WorkItemRepositoryUnavailable]).pipe(S.toTaggedUnion(\"_tag\"))` and derive `export type WorkItemRepositoryError = typeof WorkItemRepositoryError.Type`, matching `ThreadStoreError` at `packages/workspace/use-cases/src/aggregates/Thread/Thread.errors.ts:128`/`:155`. Effect v4 `S.toTaggedUnion(\"_tag\")` match/guards utilities verified at `.repos/effect-v4/packages/effect/src/Schema.ts:6036`-`:6094`.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 0.74
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.errors.ts",
+    "line": 174,
+    "symbol": "WorkItemActionError",
+    "smell": "Hand-written exported union type duplicates the same-name `S.Union` schema declared at line 195.",
+    "proposedTarget": "Derive `export type WorkItemActionError = typeof WorkItemActionError.Type` from the existing `WorkItemActionError` schema, following `ThreadStoreError` at `packages/workspace/use-cases/src/aggregates/Thread/Thread.errors.ts:128`/`:155` and `TSMorphServiceError` at `packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts:301`/`:321`.",
+    "confidence": 0.95,
+    "mechanization": "codemod",
+    "roiRank": 0.82
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.service.ts",
+    "line": 30,
+    "symbol": "isRepositoryNotFound / isRepositoryConflict / isRepositoryUnavailable",
+    "smell": "Top-of-file guard aliases `S.is(...)` for repository errors form a small guard wall before `toWorkerActionError`.",
+    "proposedTarget": "After adding a tagged-union `WorkerRepositoryError` schema, replace the guard aliases and if-chain with `WorkerRepositoryError.match(error, { WorkerRepositoryNotFound: ..., WorkerRepositoryConflict: ..., WorkerRepositoryUnavailable: ... })`. In-repo exemplar: `ThreadStoreError` pipes `S.Union` through `S.toTaggedUnion(\"_tag\")` at `packages/workspace/use-cases/src/aggregates/Thread/Thread.errors.ts:128`-`:130`; Effect v4 match utility verified at `.repos/effect-v4/packages/effect/src/Schema.ts:6042`-`:6055`.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 0.56
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.service.ts",
+    "line": 39,
+    "symbol": "isRepositoryNotFound / isRepositoryConflict / isRepositoryUnavailable",
+    "smell": "Top-of-file guard aliases `S.is(...)` for repository errors form a small guard wall before `toWorkItemActionError`.",
+    "proposedTarget": "After adding a tagged-union `WorkItemRepositoryError` schema, route repository errors through `WorkItemRepositoryError.match(...)` or its schema-owned `guards` and leave domain `WorkItemDomainError` as the explicit fall-through. In-repo exemplar: `ThreadStoreError` pipes `S.Union` through `S.toTaggedUnion(\"_tag\")` at `packages/workspace/use-cases/src/aggregates/Thread/Thread.errors.ts:128`-`:130`; Effect v4 match/guards utilities verified at `.repos/effect-v4/packages/effect/src/Schema.ts:6036`-`:6055`.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 0.55
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.use-cases.ts",
+    "line": 43,
+    "symbol": "WorkerUseCasesShape",
+    "smell": "Exported interface with Effect-returning methods matches the schema-first-inventory detector surface.",
+    "proposedTarget": "None - fence 1 service-contract carve-out. The command inputs (`CreateWorkerCommand`, `GetWorkerQuery`, `ListWorkersQuery`) and public error channel (`WorkerActionError`) are schema-modeled separately.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This is a `Context.Service` shape for a use-case port, not a wire or domain payload. S1 explicitly preserves service contracts and port interfaces.",
+      "boundary": "Worker use-case service port"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.repository.ts",
+    "line": 167,
+    "symbol": "WorkerRepositoryShape",
+    "smell": "Exported interface with Effect-returning persistence methods matches the schema-first-inventory detector surface.",
+    "proposedTarget": "None - fence 1 repository port carve-out. Keep repository behavior as an injected port; model only its stable request/result/error payloads as schemas.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The interface is the server-side repository adapter contract. Schema-ifying it would wrap behavior and runtime effects rather than a data payload.",
+      "boundary": "Worker repository port"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.use-cases.ts",
+    "line": 55,
+    "symbol": "WorkItemUseCasesShape",
+    "smell": "Exported interface with Effect-returning methods matches the schema-first-inventory detector surface.",
+    "proposedTarget": "None - fence 1 service-contract carve-out. The command/query inputs and public error channel are schema-modeled separately.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This is a `Context.Service` shape for a use-case port, not a wire or domain payload. S1 explicitly preserves service contracts and port interfaces.",
+      "boundary": "WorkItem use-case service port"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.repository.ts",
+    "line": 178,
+    "symbol": "WorkItemRepositoryShape",
+    "smell": "Exported interface with Effect-returning persistence methods matches the schema-first-inventory detector surface.",
+    "proposedTarget": "None - fence 1 repository port carve-out. Keep repository behavior as an injected port; model only its stable request/result/error payloads as schemas.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The interface is the server-side repository adapter contract. Schema-ifying it would wrap behavior and runtime effects rather than a data payload.",
+      "boundary": "WorkItem repository port"
+    }
+  }
+]

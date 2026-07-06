@@ -1,0 +1,261 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
+    "line": 46,
+    "symbol": "decodeNonNegativeInt",
+    "smell": "Top-of-file `const decodeNonNegativeInt = ... S.decodeUnknownResult(NonNegativeInt) ...` helper repeats the same branded-number decode instead of colocating the codec on the schema.",
+    "proposedTarget": "Attach `SchemaUtils.withCodecStatics` to `NonNegativeInt` in `packages/foundation/modeling/schema/src/Number.ts` so this call site can use `NonNegativeInt.fromUnknown(DEFAULT_MESSAGE_LIMIT)` / `NonNegativeInt.fromUnknown(DEFAULT_DETAIL_LIMIT)`. Verified exemplars: `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`, `packages/foundation/modeling/md/src/Md.model.ts:36`, and `packages/foundation/modeling/md/src/Md.model.ts:873` for colocated class statics.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.62
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/observability/src/PhaseProfiler.ts",
+    "line": 38,
+    "symbol": "ProfilePhaseOptions",
+    "smell": "Private interface is the public `profilePhase` options contract in a schema-modeled file.",
+    "proposedTarget": "Hypothetical `ProfilePhaseOptions` S.Class for `phase` and `attributes` plus typed runtime metric fields was audited and rejected for S1.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "The shape is an overload/observability-port surface carrying `Metric.Counter` and `Metric.Metric` runtime handles. Those are not schema payloads; schema-ifying this interface would either weaken the runtime handle types or split an ergonomic public options surface.",
+      "boundary": "runtime metric-handle options for an overloaded Effect helper"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/observability/src/PhaseProfiler.ts",
+    "line": 35,
+    "symbol": "decodeNonNegativeInt",
+    "smell": "Top-of-file branded-number decode helper is used to construct `PhaseProfile.durationMs` instead of using a schema-owned codec static.",
+    "proposedTarget": "After `NonNegativeInt` owns codec statics via `SchemaUtils.withCodecStatics`, replace `decodeNonNegativeInt(durationMs)` with `NonNegativeInt.fromUnknown(durationMs)`. Verified local target field: `PhaseProfile.durationMs` at line 118; verified statics exemplar: `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.6
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/observability/src/Metric.ts",
+    "line": 28,
+    "symbol": "TrackDurationOptions",
+    "smell": "The public `trackDuration` options contract is a private TypeScript interface even though it is a plain data payload (`attributes?: Record<string, string>`).",
+    "proposedTarget": "Model the options as an annotated schema, e.g. `class TrackDurationOptions extends S.Class<TrackDurationOptions>($I`TrackDurationOptions`)({ attributes: S.OptionFromOptionalKey(S.Record(S.String, S.String)) }, ...) {}` or an equivalent package-local options schema, then derive `type TrackDurationOptions = typeof TrackDurationOptions.Type`. In-repo options-schema exemplars: `RedactCauseOptions` at `CauseRedaction.ts:276` and `NodeSdkServerOptions` at `server/NodeSdk.ts:91`.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 0.64
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/observability/src/Metric.ts",
+    "line": 32,
+    "symbol": "ObserveWorkflowOptions",
+    "smell": "Private interface is the public `observeWorkflow` options contract.",
+    "proposedTarget": "Hypothetical options S.Class was audited and rejected for S1 because most fields are Effect Metric handles rather than serializable/domain data.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "The contract carries `Metric.Counter` and `Metric.Metric` runtime handles plus optional attributes. This is an observability port/options surface, not a pure payload schema candidate.",
+      "boundary": "runtime metric-handle options for an overloaded Effect helper"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/observability/src/Metric.ts",
+    "line": 42,
+    "symbol": "ObserveHttpRequestOptions",
+    "smell": "Private interface is the public `observeHttpRequest` options contract.",
+    "proposedTarget": "Hypothetical options S.Class was audited and rejected for S1 because the shape is primarily a pair of Effect Metric handles plus request labels.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "The schema-worthy labels are coupled to `Metric.Counter` / `Metric.Metric` handles required to update metrics. This is a runtime instrumentation port surface; S1 should not schema-ify Effect metric handles.",
+      "boundary": "runtime metric-handle options for an overloaded Effect helper"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/observability/src/Logging.ts",
+    "line": 296,
+    "symbol": "renderLogBanner",
+    "smell": "Exported function in a schema-modeled file carries inline object option contracts for `kind` and `pretty` instead of a named executable schema.",
+    "proposedTarget": "Introduce an annotated `RenderLogBannerOptions` S.Class with `kind: S.OptionFromOptionalKey(S.Literal(\"phase\", \"startup\"))` and `pretty: S.OptionFromOptionalKey(PrettyLoggerConfig)`, then use `type RenderLogBannerOptions = typeof RenderLogBannerOptions.Type` in the overloads. In-package exemplar: `PrettyLoggerConfig` at line 162; Fn/schema contract exemplar: `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 0.69
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/observability/src/CauseDiagnostics.ts",
+    "line": 35,
+    "symbol": "decodeNonNegativeInt",
+    "smell": "Top-of-file branded-number decode helper is used six times to populate schema-modeled count fields.",
+    "proposedTarget": "After `NonNegativeInt` owns codec statics via `SchemaUtils.withCodecStatics`, replace each `decodeNonNegativeInt(...)` with `NonNegativeInt.fromUnknown(...)`. Verified count fields use `NonNegativeInt` at lines 158-161 and 218; verified statics exemplar: `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.67
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/observability/src/server/NodeSdk.ts",
+    "line": 108,
+    "symbol": "isServerObservabilityConfig",
+    "smell": "Top-level `const isServerObservabilityConfig = S.is(ServerObservabilityConfig)` guard is a free-floating schema guard used to drive dual overload detection.",
+    "proposedTarget": "Move the guard onto `ServerObservabilityConfig` as `static readonly is = S.is(ServerObservabilityConfig)` and call `ServerObservabilityConfig.is(args[0])`. Verified in-body class guard exemplars: `packages/foundation/modeling/md/src/Md.model.ts:873` and `packages/foundation/modeling/nlp/src/Core/Pattern.ts:596`.",
+    "confidence": 0.84,
+    "mechanization": "assisted",
+    "roiRank": 0.58
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
+    "line": 24,
+    "symbol": "decodeNonNegativeInt",
+    "smell": "Top-of-file branded-number decode helper validates HTTP API status metadata in several exported helpers instead of using a schema-owned codec static.",
+    "proposedTarget": "After `NonNegativeInt` owns codec statics via `SchemaUtils.withCodecStatics`, replace `decodeNonNegativeInt(resolveHttpApiStatus(...))` and `decodeNonNegativeInt(options.descriptor.successStatus)` with `NonNegativeInt.fromUnknown(...)`. Verified field target: `HttpApiTelemetryDescriptor.successStatus` at line 68; verified statics exemplar: `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.7
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
+    "line": 35,
+    "symbol": "decodeStatusField",
+    "smell": "Top-level `const decodeStatusField = S.decodeUnknownOption(HttpApiStatusField)` is a free-floating decoder for the immediately preceding S.Class.",
+    "proposedTarget": "Move the soft decoder onto `HttpApiStatusField`, e.g. `static readonly decodeOption = S.decodeUnknownOption(HttpApiStatusField)`, then call `HttpApiStatusField.decodeOption(error)` at line 320. Verified class-static decode exemplar: `packages/foundation/modeling/rdf/src/Rdf.ts:394`; verified v4 API: `.repos/effect-v4/packages/effect/src/Schema.ts:1500` exports `decodeUnknownOption`.",
+    "confidence": 0.88,
+    "mechanization": "assisted",
+    "roiRank": 0.63
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
+    "line": 81,
+    "symbol": "HttpApiMetricSet",
+    "smell": "Private interface describes a reusable metric bundle consumed by exported telemetry helpers.",
+    "proposedTarget": "Hypothetical metric-set S.Class was audited and rejected for S1.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The two fields are Effect `Metric` runtime handles. They are service/port wiring values, not domain or wire payloads; S1 must not schema-ify runtime handles.",
+      "boundary": "runtime metric-handle bundle"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
+    "line": 92,
+    "symbol": "HttpApiTelemetryMiddlewareOptions",
+    "smell": "Private interface is the public middleware layer options contract.",
+    "proposedTarget": "Hypothetical middleware options S.Class was audited and rejected for S1.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The schema-worthy `apiName` is coupled to the `HttpApiMetricSet` runtime-handle bundle; modeling the whole shape as data would incorrectly treat Effect Metric handles as payloads.",
+      "boundary": "HttpApi middleware runtime wiring options"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/observability/src/server/DevTools.ts",
+    "line": 28,
+    "symbol": "DevToolsSpanFilter",
+    "smell": "Exported function type alias `(name: string) => boolean` bypasses an executable function schema.",
+    "proposedTarget": "Replace the function type alias with an annotated `Fn({ input: S.String, output: S.Boolean })` schema and derive `type DevToolsSpanFilter = typeof DevToolsSpanFilter.Type`. Verified Fn API/exemplars: `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:403`, `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`, and `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66`.",
+    "confidence": 0.79,
+    "mechanization": "assisted",
+    "roiRank": 0.5
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/observability/src/server/DevTools.ts",
+    "line": 90,
+    "symbol": "layerFilteredDevTools",
+    "smell": "Exported layer builder carries an inline object parameter with `url` and `shouldPublish` function contract instead of a named schema.",
+    "proposedTarget": "Introduce `LayerFilteredDevToolsOptions` as an annotated S.Class with `url: S.String` and `shouldPublish: DevToolsSpanFilter` after `DevToolsSpanFilter` becomes an Fn schema. This mirrors package-local config classes such as `ServerObservabilityConfig` at `server/Config.ts:38` and Fn exemplars at `ParserOptions.types.ts:61`.",
+    "confidence": 0.76,
+    "mechanization": "assisted",
+    "roiRank": 0.49
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/observability/src/server/ErrorReporting.ts",
+    "line": 30,
+    "symbol": "makeConsoleErrorReporter",
+    "smell": "Exported constructor carries an inline object options parameter (`includeCause?: boolean`) instead of a schema-owned options contract.",
+    "proposedTarget": "Introduce `ConsoleErrorReporterOptions` as an annotated S.Class with `includeCause: S.OptionFromOptionalKey(S.Boolean)` and derive the public type from it. In-package options-schema exemplars: `RedactCauseOptions` at `CauseRedaction.ts:276`, `ServerObservabilityConfig` at `server/Config.ts:38`.",
+    "confidence": 0.83,
+    "mechanization": "assisted",
+    "roiRank": 0.52
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/observability/src/server/ErrorReporting.ts",
+    "line": 73,
+    "symbol": "layerErrorReporter",
+    "smell": "Exported layer builder carries an inline object options parameter (`includeCause`, `mergeWithExisting`) instead of a schema-owned options contract.",
+    "proposedTarget": "Introduce `ErrorReporterLayerOptions` as an annotated S.Class with optional boolean fields, or reuse/extend `ConsoleErrorReporterOptions` for the shared `includeCause` field. In-package options-schema exemplars: `LoggingConfig` at `Logging.ts:190`, `NodeSdkServerOptions` at `server/NodeSdk.ts:91`.",
+    "confidence": 0.83,
+    "mechanization": "assisted",
+    "roiRank": 0.53
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/observability/src/experimental/server/OtlpPacketLab.ts",
+    "line": 152,
+    "symbol": "OtlpPacketLab.Service",
+    "smell": "Context.Service shape contains function and Effect members that look like function-contract schema candidates in a schema-modeled file.",
+    "proposedTarget": "Hypothetical Fn/EffectSchema fields were audited and rejected for S1.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "This is a `Context.Service` contract. SPEC fence 1 explicitly preserves service shapes and port interfaces; the service methods intentionally remain typed Effect functions.",
+      "boundary": "Context.Service service contract"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/observability/src/experimental/server/OtlpPacketLab.ts",
+    "line": 19,
+    "symbol": "decodeNonNegativeInt",
+    "smell": "Top-of-file branded-number decode helper constructs `OtlpPacket` numeric fields from clock/body runtime values instead of using a schema-owned codec static.",
+    "proposedTarget": "After `NonNegativeInt` owns codec statics via `SchemaUtils.withCodecStatics`, replace `decodeNonNegativeInt(clock.currentTimeMillisUnsafe())` and `decodeNonNegativeInt(sizeFromBody(body))` with `NonNegativeInt.fromUnknown(...)`. Verified target fields: `OtlpPacket.capturedAtMs` and `OtlpPacket.size` at lines 123 and 125.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.59
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/observability/src/experimental/server/DevToolsRelay.ts",
+    "line": 77,
+    "symbol": "DevToolsRelayService.Service",
+    "smell": "Context.Service shape contains function and Effect members that look like function/effect schema candidates in a schema-modeled file.",
+    "proposedTarget": "Hypothetical Fn/EffectSchema fields were audited and rejected for S1.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "This is a `Context.Service` contract. SPEC fence 1 explicitly preserves service shapes and port interfaces; schema-ifying the service methods would blur service boundaries.",
+      "boundary": "Context.Service service contract"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/observability/src/experimental/server/DevToolsRelay.ts",
+    "line": 20,
+    "symbol": "decodeNonNegativeInt",
+    "smell": "Top-of-file branded-number decode helper constructs `DevToolsSnapshot` numeric fields from relay runtime state instead of using a schema-owned codec static.",
+    "proposedTarget": "After `NonNegativeInt` owns codec statics via `SchemaUtils.withCodecStatics`, replace the four `decodeNonNegativeInt(...)` calls at lines 174-177 with `NonNegativeInt.fromUnknown(...)`. Verified target fields: `DevToolsSnapshot` numeric fields at lines 48-51.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.61
+  }
+]

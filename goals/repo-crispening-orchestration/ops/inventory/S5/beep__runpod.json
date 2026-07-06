@@ -1,0 +1,124 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/runpod/src/Runpod.config.ts",
+    "line": 65,
+    "symbol": "RunpodConfigInput.apiUrl/RunpodDocsConfigInput.indexUrl",
+    "smell": "Runpod API and docs endpoint configuration fields are broad S.String even though both defaults and call sites treat them as absolute HTTPS URLs.",
+    "proposedTarget": "Use URLStr or HttpsUrl from @beep/schema/URL (URLStr verified packages/foundation/modeling/schema/src/URL.ts:44-53; HttpsUrl :103-108), following packages/drivers/govinfo/src/Govinfo.service.ts:62-75. If public input must remain unbranded string, use S.String.check(URLStr.filter) before SchemaUtils.withKeyDefaults so invalid base/index URLs fail at construction.",
+    "confidence": 0.76,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/drivers/runpod/src/Runpod.errors.ts",
+    "line": 127,
+    "symbol": "RunpodError.status/RunpodDocsError.status/Runpod*ErrorOptions.status",
+    "smell": "Runpod error status fields are S.Finite, allowing negative and fractional statuses even though the values come from HTTP responses.",
+    "proposedTarget": "Use HttpStatus from @beep/schema/HttpStatus when standard/unofficial HTTP status literals are acceptable (packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.schema.ts:34-45), or NonNegativeInt for a looser transport-boundary status. Driver exemplars use NonNegativeInt for status-like error fields in packages/drivers/tika/src/Tika.errors.ts:72-78 and packages/drivers/uspto/src/Uspto.errors.ts:72-78.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 153,
+    "symbol": "RunpodRawResponse.status",
+    "smell": "Raw HTTP response status is modeled as S.Finite, so the response schema accepts values that cannot be HTTP status codes.",
+    "proposedTarget": "Tighten status to HttpStatus (packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.schema.ts:34-45) or NonNegativeInt if the raw escape hatch must admit provider-specific nonstandard numeric statuses. S.Int and non-negative checks were verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7314.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/runpod/src/RunpodDocs.service.ts",
+    "line": 43,
+    "symbol": "RunpodDocsIndexEntry/RunpodDocsIndex",
+    "smell": "Parsed docs index schemas accept empty section/title/url strings and RunpodDocsIndex.entries accepts an empty array, while parseRunpodDocsIndex rejects empty parsed results and produces Markdown links with non-empty titles and URLs.",
+    "proposedTarget": "Use S.NonEmptyString for description/section/title where blank values are invalid, URLStr or HttpsUrl for url, and S.NonEmptyArray(RunpodDocsIndexEntry) for entries. S.NonEmptyString and S.NonEmptyArray were verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:8420 and :4533; URLStr/HttpsUrl are in packages/foundation/modeling/schema/src/URL.ts:44-53 and :103-108.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/drivers/runpod/scripts/generate.ts",
+    "line": 918,
+    "symbol": "schemaExpression integer/number mapping",
+    "smell": "The OpenAPI generator renders both JSON Schema integer and number as S.Finite, losing integer precision for every generated integer field before it reaches the checked-in generated model surface.",
+    "proposedTarget": "Split the Match.whenOr branch: render type \"integer\" as S.Int (or an imported in-repo integer domain when constraints are added) and type \"number\" as S.Finite. S.Int is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:11398; existing positive/non-negative integer domains are in packages/foundation/modeling/schema/src/Int.ts:77-88 and packages/foundation/modeling/schema/src/Number.ts:182-200.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/runpod/scripts/generate.ts",
+    "line": 671,
+    "symbol": "generated LiteralKit operation metadata schemas",
+    "smell": "The generator template emits exported LiteralKit schemas for RunpodOperationId, RunpodRequestBodyKind, and RunpodResponseBodyKind without $I.annoteSchema annotations, unlike most hand-written schemas in this package and the generated schema aliases emitted by renderSchemaAlias.",
+    "proposedTarget": "Pipe each generated LiteralKit through $I.annoteSchema before export, mirroring renderSchemaAlias at packages/drivers/runpod/scripts/generate.ts:504-515 and in-repo annotated LiteralKit patterns such as packages/drivers/firecrawl/src/Firecrawl.errors.ts:33-43. This is a generator-source change; do not hand-edit src/_generated output.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/runpod/test/Runpod.service.test.ts",
+    "line": 186,
+    "symbol": "Runpod config/error/raw/docs schemas",
+    "smell": "Runpod has fixture-based service tests and dtslint surface checks, but no S.toArbitrary-derived round-trip/property law for the handwritten config, error, raw request/response, docs index, or generator-emitted schema families.",
+    "proposedTarget": "Add additive property tests using S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) for RunpodConfigInput, RunpodDocsConfigInput, RunpodRawRequest/RunpodRawResponse, RunpodErrorOptions/RunpodDocsErrorOptions, and RunpodDocsIndex/RunpodDocsIndexEntry. Follow packages/foundation/modeling/schema/test/Options.test.ts:58-67 or packages/drivers/wink/test/ToolValidation.test.ts:81-91 for decode(encode(value)) structure.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/runpod/scripts/generate.ts",
+    "line": 31,
+    "symbol": "JsonSchema/OpenApi* generator input models",
+    "smell": "Detector candidate: OpenAPI/JSON Schema mirror classes contain broad string, record, array, and unknown fields.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These classes intentionally mirror the upstream OpenAPI JSON document shape consumed by the generator. Tightening them to domain-level Runpod models would make the generator reject valid provider spec documents before schemaExpression can map the provider contract.",
+      "boundary": "Runpod OpenAPI document ingestion boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 117,
+    "symbol": "RunpodRawRequest",
+    "smell": "Detector candidate: raw request body is S.Unknown, query/header records are stringly, and path is broad S.String.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "RunpodRawRequest is the documented escape hatch for endpoints ahead of the checked-in OpenAPI document. It normalizes paths at execution and keeps body/query/header shapes loose by design so callers can reach not-yet-generated provider endpoints.",
+      "boundary": "Runpod raw HTTP escape hatch"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/runpod/test/Runpod.service.test.ts",
+    "line": 62,
+    "symbol": "Runpod fake HTTP responses and request captures",
+    "smell": "Detector candidate: service tests use static fake HTTP responses and captured-request assertions instead of generated arbitrary data.",
+    "proposedTarget": "None - keep as is (schema law tests should be additive and separate).",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The fixtures pin generated operation routing, auth/header/query/body encoding, raw endpoint behavior, and docs parsing against deterministic HTTP captures. Those are integration regression checks, not substitutes for schema-derived law coverage.",
+      "boundary": "Runpod HTTP client compatibility fixtures"
+    }
+  }
+]

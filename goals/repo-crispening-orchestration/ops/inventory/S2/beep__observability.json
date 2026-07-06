@@ -1,0 +1,161 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/observability/src/server/NodeSdk.ts",
+    "line": 93,
+    "symbol": "NodeSdkServerOptions.loggerExportInterval",
+    "smell": "`loggerExportInterval: S.optionalKey(DurationInput)` leaves the constructor/decode default in `makeNodeSdkServerConfig`: `options?.loggerExportInterval ?? Duration.seconds(1)` at NodeSdk.ts:172.",
+    "proposedTarget": "Move the default onto the schema: `loggerExportInterval: DurationInput.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(Duration.seconds(1)))`, then consume a decoded `NodeSdkServerOptions.make(options ?? {})` in the builder. Verified APIs: `SchemaUtils.withKeyDefaults` at packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:50; `S.withDecodingDefaultKey` / `S.withConstructorDefault` at .repos/effect-v4/packages/effect/src/Schema.ts:5717/5646. In-repo exemplar: packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts:274.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/observability/src/server/NodeSdk.ts",
+    "line": 97,
+    "symbol": "NodeSdkServerOptions.metricsExportInterval",
+    "smell": "`metricsExportInterval: S.optionalKey(DurationInput)` defaults in the body via `options?.metricsExportInterval ?? Duration.seconds(10)` at NodeSdk.ts:175.",
+    "proposedTarget": "`metricsExportInterval: DurationInput.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(Duration.seconds(10)))`; same edit unit as loggerExportInterval so both duration defaults disappear from the builder body.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/observability/src/server/NodeSdk.ts",
+    "line": 94,
+    "symbol": "NodeSdkServerOptions.loggerMergeWithExisting",
+    "smell": "`loggerMergeWithExisting: S.optionalKey(S.Boolean)` defaults in the body via `options?.loggerMergeWithExisting ?? true` at NodeSdk.ts:217.",
+    "proposedTarget": "Use the schema default form (`S.Boolean.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(true))`, or the repo helper if `BoolKeyDefaultTrue` is preferred; `BoolKeyDefaultFalse`/bool helper family verified at packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:188-207).",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/observability/src/server/NodeSdk.ts",
+    "line": 98,
+    "symbol": "NodeSdkServerOptions.metricTemporality",
+    "smell": "`metricTemporality: S.optionalKey(NodeSdkMetricTemporality)` defaults in the body via `options?.metricTemporality ?? \"cumulative\"` at NodeSdk.ts:218.",
+    "proposedTarget": "`metricTemporality: NodeSdkMetricTemporality.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(NodeSdkMetricTemporality.Enum.cumulative))`; LiteralKit `.Enum` usage is already present in-package on `RedactionChannel.Enum.diagnostic` at CauseRedaction.ts:279.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/observability/src/server/NodeSdk.ts",
+    "line": 99,
+    "symbol": "NodeSdkServerOptions.shutdownTimeout",
+    "smell": "`shutdownTimeout: S.optionalKey(DurationInput)` defaults in the body via `options?.shutdownTimeout ?? Duration.seconds(3)` at NodeSdk.ts:219.",
+    "proposedTarget": "`shutdownTimeout: DurationInput.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(Duration.seconds(3)))`; the Effect v4 upstream `NodeSdk.Configuration.shutdownTimeout` remains optional at .repos/effect-v4/packages/opentelemetry/src/NodeSdk.ts:48, but this package's wrapper schema can carry its local default.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/observability/src/Logging.ts",
+    "line": 207,
+    "symbol": "defaultPrettyLoggerConfig",
+    "smell": "`const defaultPrettyLoggerConfig = PrettyLoggerConfig.make({ theme: \"ocean\", bannerMode: \"off\" })` plus `pretty = defaultPrettyLoggerConfig` at Logging.ts:406 keeps `PrettyLoggerConfig` defaults outside the schema class.",
+    "proposedTarget": "Move field defaults into `PrettyLoggerConfig`: `theme: PrettyLogTheme.pipe(SchemaUtils.withKeyDefaults(PrettyLogTheme.Enum.ocean))`, `bannerMode: BannerMode.pipe(SchemaUtils.withKeyDefaults(BannerMode.Enum.off))`; then use `PrettyLoggerConfig.make({})` at the two optional pretty boundaries. Same schema-default helper as the NodeSdk findings.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/observability/src/server/ErrorReporting.ts",
+    "line": 30,
+    "symbol": "makeConsoleErrorReporter",
+    "smell": "The console reporter option bag is unmodeled and defaults booleans in bodies: `options?.includeCause ?? true` at ErrorReporting.ts:53 and `options?.mergeWithExisting ?? true` at ErrorReporting.ts:78.",
+    "proposedTarget": "Introduce a small `ConsoleErrorReporterOptions` S.Class with `includeCause` / `mergeWithExisting` schema defaults (`SchemaUtils.withKeyDefaults(true)`), then decode once at the reporter/layer boundary. This mirrors the existing `NodeSdkServerOptions` wrapper pattern in the same package.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
+    "line": 315,
+    "symbol": "httpApiFailureStatus",
+    "smell": "Exported domain helper overloads return `number | undefined` and implement by `O.getOrUndefined(...)` at HttpApiTelemetry.ts:319 even though the computation is already Option-first internally.",
+    "proposedTarget": "Expose an Option-returning helper (`httpApiFailureStatusOption`) or change the untyped overloads to return `O.Option<NonNegativeInt>`; keep any legacy `number | undefined` wrapper only as a compatibility adapter. Verified `S.OptionFromOptionalKey` and Option codec APIs in .repos/effect-v4/packages/effect/src/Schema.ts:8653-8668. Public-form change requires the §5.4 consumer sweep.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/capability/observability/src/CauseDiagnostics.ts",
+    "line": 340,
+    "symbol": "fingerprintChunk",
+    "smell": "`flow(Str.trim, Str.replaceAll(/\\s+/g, \" \"), Str.slice(0, 80), Str.toLowerCase)` normalizes the chunk that flows into `CauseFingerprint.value`, while `CauseFingerprint.value` is modeled as bare `S.String` at CauseDiagnostics.ts:129-132.",
+    "proposedTarget": "Introduce a `CauseFingerprintChunk` or `CauseFingerprintValue` transformation schema carrying the trim/collapse/truncate/lowercase invariant, then build `CauseFingerprint.make` from decoded normalized chunks. In-repo normalization-transform exemplar: `Pre.language` uses `S.decodeTo(..., SchemaGetter.transform(...))` at packages/foundation/modeling/md/src/Md.model.ts:1295-1300.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 9
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/observability/src/server/NodeSdk.ts",
+    "line": 180,
+    "symbol": "makeNodeSdkServerConfig processor fallbacks",
+    "smell": "`options?.spanProcessor ?? ...`, `options?.metricReader ?? ...`, and `options?.logRecordProcessor ?? ...` choose processors from `config.otlpEnabled`; the default depends on sibling server config and third-party OpenTelemetry constructors.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "These are config-dependent adapter constructions for Effect/OpenTelemetry's optional `NodeSdk.Configuration` processors (verified optional upstream at .repos/effect-v4/packages/opentelemetry/src/NodeSdk.ts:35-48), not pure field defaults that a schema can own.",
+      "boundary": "third-party OpenTelemetry NodeSdk adapter; sibling-derived runtime default"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/observability/src/server/Prometheus.ts",
+    "line": 52,
+    "symbol": "layerPrometheusMetricsHttp",
+    "smell": "`const { path: routePath, ...formatOptions } = options ?? {}` and `routePath ?? \"/metrics\"` mirror a nullable third-party options bag.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 11,
+    "exception": {
+      "reason": "This is a thin sanitized wrapper over Effect's own `PrometheusMetrics.layerHttp` contract, whose `HttpOptions.path` and whole options argument are optional and default `/metrics` upstream (verified .repos/effect-v4/packages/effect/src/unstable/observability/PrometheusMetrics.ts:59-64 and :175-190).",
+      "boundary": "third-party Effect PrometheusMetrics.HttpOptions adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
+    "line": 190,
+    "symbol": "sanitizeSensitiveText",
+    "smell": "`sanitizeSensitiveText` normalizes whitespace and trims via `Str.replaceAll(/[ \\t]+/g, \" \")` and `Str.trim`; detector hit for normalization outside codecs.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 12,
+    "exception": {
+      "reason": "This is the package's redaction/sanitization trust boundary for secrets, tokens, and home paths; fence 4 says escaping/sanitization guards stay explicit and property-tested.",
+      "boundary": "trust-boundary guard (redaction/sanitization)"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/capability/observability/src/experimental/server/OtlpPacketLab.ts",
+    "line": 161,
+    "symbol": "contentTypeFromBody",
+    "smell": "`contentTypeFromBody` returns `string | undefined`, and packet preview/metadata use `?? \"application/octet-stream\"` fallbacks at OtlpPacketLab.ts:174 and :206.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 13,
+    "exception": {
+      "reason": "Adapter over Effect HTTP body variants where missing content type is a transport fact; the fallback is packet-lab presentation metadata, not a domain field invariant. `OtlpPacket.contentType` itself stays total.",
+      "boundary": "experimental HTTP body adapter / packet-lab diagnostics"
+    }
+  }
+]

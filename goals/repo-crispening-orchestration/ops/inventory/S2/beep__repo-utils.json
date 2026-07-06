@@ -1,0 +1,165 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
+    "line": 90,
+    "symbol": "DocgenAliasSource.subpathAliasTargets",
+    "smell": "`subpathAliasTargets` is modeled as an optional/undefined record (`S.Record(...).pipe(S.UndefinedOr, S.optionalKey)`) and the consumer immediately defaults it with `aliasSource.subpathAliasTargets ?? EMPTY_STRING_RECORD` at DocgenConfig.ts:565.",
+    "proposedTarget": "Make the field total through the schema: `subpathAliasTargets: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(EMPTY_STRING_RECORD))`, then remove the `?? EMPTY_STRING_RECORD` at line 565. Verified `SchemaUtils.withKeyDefaults` in packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:50-68; in-repo exemplar: packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts:134.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts",
+    "line": 295,
+    "symbol": "normalizeJSDocCategoryKey",
+    "smell": "Exported category normalization manually trims, walks characters, lowercases ASCII, collapses separators, and feeds the result into `normalizeJSDocCategory`/`JSDocCategoryNormalization` instead of carrying the free-form string -> normalized category invariant as a schema transformation.",
+    "proposedTarget": "Introduce a schema transformation for the boundary, e.g. `S.String.pipe(S.decodeTo(JSDocCategoryNormalization, { decode: SchemaGetter.transformOrFail(...), encode: SchemaGetter.forbidden(...) }))`, and make the exported helper a thin decode wrapper or compatibility adapter. In-package exemplar: TSConfig.ts:290-318 uses `S.String.pipe(S.decodeTo(..., { decode: SchemaGetter.transformOrFail(...) }))` for case-insensitive literal normalization. Verified v4 APIs: `.repos/effect-v4/packages/effect/src/Schema.ts` has `decodeTo`, and `.repos/effect-v4/packages/effect/src/SchemaGetter.ts:538` has `transformOrFail`.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts",
+    "line": 176,
+    "symbol": "JSDocCategoryNormalization",
+    "smell": "First-party normalization result fields `canonical` and `message` are modeled as raw optional keys (`S.optionalKey(S.String)`), so absence is exposed as `undefined` rather than `Option` on the decoded/domain side.",
+    "proposedTarget": "Use Option fields with constructor defaults: `canonical: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` and the same for `message`. In-package adjacent exemplar: JSDocTagDefinition.model.ts:115 already uses `S.OptionFromOptionalKey` for optional metadata; cross-repo constructor-default exemplar: packages/foundation/modeling/lexical/src/Lexical.model.ts:686-688. Public form changes require the same-PR consumer/test sweep.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/_fields.ts",
+    "line": 35,
+    "symbol": "optionalType",
+    "smell": "Shared JSDoc tag-value fragments (`optionalType`, `optionalName`, `optionalDesc`) use `S.optionalKey(S.String)`, and those fragments are spread through many first-party `S.TaggedClass` tag-value models, propagating `undefined` as the decoded absence representation.",
+    "proposedTarget": "Convert the shared fragments to Option fields, for example `{ type: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault) }`, and apply the same pattern to `optionalName` and `optionalDesc`. This is one shared edit plus a public-form consumer/test sweep. Verified `S.OptionFromOptionalKey` in `.repos/effect-v4/packages/effect/src/Schema.ts:8653-8668`; in-repo `withNoneDefault` exemplar: packages/foundation/modeling/lexical/src/Lexical.model.ts:686-688.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/library/repo-utils/src/errors/DomainError.ts",
+    "line": 36,
+    "symbol": "DomainError",
+    "smell": "`cause: S.optionalKey(S.Defect({ includeStack: true }))` exposes optional error cause as `undefined`; tests assert that shape at test/errors/errors.test.ts:36/49, so absence is a public decoded form rather than an Option.",
+    "proposedTarget": "Use `cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))` (optionally with `SchemaUtils.withNoneDefault` if constructor omission should stay ergonomic), then update `newCause`/`newCauseMessage` and call sites to pass `O.some(cause)` or `O.none()`. In-repo exemplars: packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Errors.ts:199-203 and packages/foundation/modeling/utils/src/Glob.ts:138-142.",
+    "confidence": 0.79,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/tooling/library/repo-utils/src/JSDoc/models/JSDocTagAnnotation.model.ts",
+    "line": 69,
+    "symbol": "getJSDocTagMetadata",
+    "smell": "Exported first-party metadata helper returns `JSDocTagAnnotationPayload | undefined` directly from optional schema annotations; absence leaves the helper as a nullish-returning API instead of an Option-returning one.",
+    "proposedTarget": "Return `O.Option<JSDocTagAnnotationPayload>` with `O.fromUndefinedOr(SchemaAST.resolve(schema.ast)?.jsDocTagMetadata)` and update examples/consumers to match. In-package Option-return exemplar: packages/tooling/library/repo-utils/src/TSMorph/TSMorph.shared.ts:201 returns `O.Option<string>` for optional metadata-like extraction. Verified v4 annotation optionality in `.repos/effect-v4/packages/effect/src/SchemaRepresentation.ts:54`.",
+    "confidence": 0.84,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TSCategory.model.ts",
+    "line": 261,
+    "symbol": "getTSCategoryMetadata",
+    "smell": "Exported schema-metadata helper returns `TSCategoryAnnotationPayload | undefined`; the sole in-module caller at TSCategory.model.ts:1053 immediately branches on `metadata === undefined`.",
+    "proposedTarget": "Return `O.Option<TSCategoryAnnotationPayload>` and have the taxonomy builder use `O.match`/`O.filterMap` rather than an undefined branch. This mirrors the `getJSDocTagMetadata` target and keeps annotation optionality at the Effect Schema boundary only.",
+    "confidence": 0.84,
+    "mechanization": "assisted",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TSCategory.model.ts",
+    "line": 1252,
+    "symbol": "getCategory",
+    "smell": "Exported category lookup returns `TSCategory | undefined`; internal callers at TSCategory.model.ts:1346 and :1420 branch on `category === undefined` before appending/filtering.",
+    "proposedTarget": "Return `O.Option<TSCategory>` from `getCategory` and rewrite the callers with Option-aware collection folds (`O.match`, `A.filterMap`, or equivalent). In-package Option lookup exemplar: packages/tooling/library/repo-utils/src/schemas/TsconfigAliasTargets.ts:105 returns `O.Option<string>` for package export lookups. Public form change requires the §5.4 consumer sweep.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
+    "line": 706,
+    "symbol": "PackageExportsEntry",
+    "smell": "`type PackageExportsEntry = string | null | ...` and `PackageExportsEntryPath = S.Union([RelativeDotPath, S.Null])` preserve `null` in the package export/import schema.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "Node/npm package.json uses `null` as an explicit export/import target blocker; this is an external wire-format value, not domain absence to Option-ify.",
+      "boundary": "package.json wire codec"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
+    "line": 524,
+    "symbol": "TSConfigPathTargets",
+    "smell": "`TSConfigPathTargets = S.NullOr(TSConfigUniqueStringArray)` keeps `null` as an accepted encoded value for `compilerOptions.paths` entries.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "The schema models tsconfig-compatible JSON where `null` is an external encoded sentinel; nearby `nullableOptionalField` already converts nullable optional fields to `Option` on the decoded side.",
+      "boundary": "tsconfig wire codec"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
+    "line": 126,
+    "symbol": "makeStrictStringKeyRecord",
+    "smell": "`onNone: () => undefined` appears inside an `S.makeFilter` callback.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 11,
+    "exception": {
+      "reason": "`undefined` is the Effect Schema filter callback sentinel for no issue; this is not an exported helper or domain return type.",
+      "boundary": "Effect Schema filter callback contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
+    "line": 1163,
+    "symbol": "getDiagnostics",
+    "smell": "`diagnostic.getStart() ?? 0`, `diagnostic.getLength() ?? 0`, and `source: source ?? null` normalize ts-morph diagnostic absence in adapter code.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 12,
+    "exception": {
+      "reason": "ts-morph diagnostics expose optional start/length/source values; this adapter immediately maps them into the package's normalized diagnostic schema (`source: S.OptionFromNullOr(...)` at TSMorph.model.ts:1861).",
+      "boundary": "third-party ts-morph diagnostic adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.shared.ts",
+    "line": 201,
+    "symbol": "readDocstring",
+    "smell": "`readDocstring` trims ts-morph JSDoc descriptions before returning `O.Option<string>`.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 13,
+    "exception": {
+      "reason": "This is AST adapter extraction from third-party ts-morph nodes, not a reusable schema field invariant; the helper already returns `Option` and the normalization belongs to the source-text extraction step.",
+      "boundary": "third-party ts-morph AST adapter"
+    }
+  }
+]

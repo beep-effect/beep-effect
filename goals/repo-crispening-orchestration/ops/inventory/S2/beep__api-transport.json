@@ -1,0 +1,61 @@
+[
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/capability/api-transport/src/Transport.ts",
+    "line": 116,
+    "symbol": "parseNumberHeader",
+    "smell": "Module-private domain helper typed `(headers, ...keys) => number | undefined` with a bare `return undefined` (line 125); the sole caller immediately re-wraps each result via `O.fromUndefinedOr` (lines 136-138), the wrap-at-call-site tell that the helper should return Option in the first place.",
+    "proposedTarget": "Return `O.Option<number>` directly: iterate keys with `A.findFirst`/`O.flatMap`, use `Str.match` (effect-v4 String.ts:706, returns Option<RegExpMatchArray>) for the numeric extraction, and `O.filter(Number.isFinite)`; the `O.fromUndefinedOr` shims in parseSnapshot then delete. Alternatively absorbed wholesale by the SFV4-normalization companion finding (line 128).",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 1.5
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/api-transport/src/Transport.ts",
+    "line": 244,
+    "symbol": "makeApiTransport",
+    "smell": "`options.retryBaseDelay ?? \"200 millis\"` constructor-default fallback in the body, paired with the `retryBaseDelay?: Duration.Input | undefined` nullish-union field on ApiTransportOptions (line 172) — the default lives in business logic instead of the options model.",
+    "proposedTarget": "Schema-model the options bag as an `S.Class` (via $ApiTransportId composer) and carry the default with `SchemaUtils.withConstantDefault` (SchemaUtils/withConstructorDefaults.ts:80) or decode-side `SchemaUtils.withKeyDefaults` (SchemaUtils/withKeyDefaults.ts:50); body then reads `options.retryBaseDelay` with no `??`. The `Duration.Input` field needs an `S.Duration`-based codec (effect-v4 Schema.ts:10529) and the `ApiAuth` Data.TaggedEnum + Redacted fields need modeling decisions, so assisted rather than codemod. Note: only the options data bag is in scope — the returned `ApiTransport` port interface stays an interface per fence 1.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 1.3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/api-transport/src/Transport.ts",
+    "line": 266,
+    "symbol": "makeApiTransport",
+    "smell": "`times: options.retryTimes ?? 3` constructor-default fallback in the body, paired with the `retryTimes?: number | undefined` nullish-union field on ApiTransportOptions (line 173).",
+    "proposedTarget": "Same options-schema refactor as the line-244 finding: `retryTimes: S.Finite.pipe(SchemaUtils.withConstantDefault(3))` (or `SchemaUtils.withKeyDefaults(3)` if missing-key-on-decode should also default), collapsing both `??` sites in one change.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 1.3
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/capability/api-transport/src/Transport.ts",
+    "line": 128,
+    "symbol": "parseSnapshot",
+    "smell": "String->parts normalization pipeline living in function bodies instead of a transformation schema: regex numeric extraction + `Number(...)` coercion + `Number.isFinite` refinement (parseNumberHeader lines 120-123) plus the all-undefined emptiness check (`if (limit === undefined && remaining === undefined && reset === undefined)` line 132) hand-roll a Headers -> RateLimitSnapshot decode that RateLimitSnapshot's codec could carry.",
+    "proposedTarget": "A `RateLimitSnapshot.fromHeaders` transformation codec: source schema over the header record piped through `S.decodeTo(RateLimitSnapshot, SchemaTransformation.transformOrFail(...))` (effect-v4 Schema.ts:5408, SchemaTransformation.ts:286), with the multi-alias header keys (`x-ratelimit-*` vs `ratelimit-*`) and none-vs-empty handling expressed in the transformation; `parseSnapshot`/`parseNumberHeader` then delete. Judgment: the multi-alias fallback chains and the Option-of-class result may leave the codec no simpler than the current 26 lines — worth a design pass, not a mechanical rewrite.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 1.0
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/capability/api-transport/src/Transport.ts",
+    "line": 119,
+    "symbol": "parseNumberHeader",
+    "smell": "Nullish checks in a body — `if (raw === undefined) continue` (line 119) and `if (match === null) continue` (line 121) — audited as normalization/under-modeling candidates.",
+    "proposedTarget": "None standalone: these exact checks are forced by 3rd-party contracts and disappear only if the enclosing pipeline is absorbed per the line-128 and line-116 findings; do not flag them independently.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Indexing the Headers record yields `string | undefined` and native `RegExp.exec` returns `RegExpMatchArray | null`; the checks are the narrowest possible handling of those foreign contracts, not leaked schema invariants.",
+      "boundary": "3rd-party: effect/unstable/http Headers record index access + native RegExp.exec API"
+    }
+  }
+]

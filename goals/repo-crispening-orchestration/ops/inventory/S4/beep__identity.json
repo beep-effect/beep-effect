@@ -1,0 +1,136 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/identity/src/Id.ts",
+    "line": 1172,
+    "symbol": "toTitle",
+    "smell": "Inline capitalization lambda rebuilds an existing Effect String helper: `${Str.toUpperCase(Str.slice(0, 1)(segment))}${Str.slice(1)(segment)}` is byte-for-byte `Str.capitalize` behavior for the current segment string.",
+    "proposedTarget": "Replace the `A.map(...)` lambda with `A.map(Str.capitalize)`. Effect v4 `Str.capitalize` is verified at .repos/effect-v4/packages/effect/src/String.ts:211 and uses the same first-character uppercase plus tail logic.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/identity/src/Curie.ts",
+    "line": 35,
+    "symbol": "hasTerm",
+    "smell": "One-use helper `hasTerm = (terms, term) => A.contains(terms, term)` wraps a dual Effect Array helper without adding behavior.",
+    "proposedTarget": "Delete `hasTerm` and inline `A.contains(entry.terms, term)` at line 43, or use the data-last form `A.contains(term)(entry.terms)`. `A.contains` dual forms are verified at .repos/effect-v4/packages/effect/src/Array.ts:2573.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/identity/src/Curie.ts",
+    "line": 149,
+    "symbol": "expandPredicate",
+    "smell": "Single-step pipe `pipe(predicate, Str.startsWith(\"^\"))` adds a wrapper with no composition benefit.",
+    "proposedTarget": "Use the helper directly: `const inverse = Str.startsWith(\"^\")(predicate)`. Effect v4 `Str.startsWith` is verified at .repos/effect-v4/packages/effect/src/String.ts:500.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/identity/src/Id.ts",
+    "line": 1207,
+    "symbol": "toPascalIdentifier",
+    "smell": "Passthrough pipe lambda `segment => pipe(segment, toTitle, Str.replace(...))` is a `flow(...)` candidate.",
+    "proposedTarget": "Use `flow(toTitle, Str.replace(/\\s+/g, \"\"))` with the existing generic return type/cast preserved on the exported const type. Effect v4 `flow` is verified at .repos/effect-v4/packages/effect/src/Function.ts:1162.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/identity/src/Id.ts",
+    "line": 39,
+    "symbol": "BeepNamespace",
+    "smell": "Detector candidate: bootstrap literals have detached guards/decoders (`isBeepNamespace`, `isBeepBase`, `beepNamespace`, `beepBase` at lines 49-53) instead of schema codec statics.",
+    "proposedTarget": "No source change in this package. `@beep/identity` depends only on `effect` (package.json:26-27), while `@beep/schema` depends on `@beep/identity` (schema package.json:26-28), so importing `SchemaUtils.withCodecStatics` here would invert the package foundation. Keep these private bootstrap literals local unless a lower-level identity-local statics helper is introduced by a separate architecture decision.",
+    "confidence": 0.45,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "Bootstrap schema literals live below the shared schema utility package and are private to identity normalization.",
+      "boundary": "package dependency foundation"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/identity/src/Id.ts",
+    "line": 1213,
+    "symbol": "validateSegment",
+    "smell": "Detector candidate: validation helpers call `S.decodeUnknownSync(SegmentSchema)` / `S.decodeUnknownSync(ModuleSegmentSchema)` and then return the original typed segment.",
+    "proposedTarget": "No direct `fromUnknown` target in this package. The schemas are private identity-constructor validators and cannot use `SchemaUtils.withCodecStatics` without adding an `@beep/schema` dependency cycle; Effect v4 `S.decodeUnknownSync` is verified at .repos/effect-v4/packages/effect/src/Schema.ts:1718.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "Throwing validation is intentional at identity composer construction boundaries, and shared codec statics are not available below @beep/schema.",
+      "boundary": "identity constructor validation"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/identity/src/Curie.ts",
+    "line": 209,
+    "symbol": "makeCurieFromIri",
+    "smell": "Detector candidate: public schema factory returns a codec schema annotated with `$I.annoteSchema(...)` but without `withCodecStatics`; downstream tests build `S.decodeUnknownEffect(CurieFromIri)` and `S.encodeUnknownEffect(CurieFromIri)` externally.",
+    "proposedTarget": "No `SchemaUtils.withCodecStatics` change inside `@beep/identity` because that helper lives in `@beep/schema`, which depends on identity. If this needs statics later, move a minimal statics helper below identity first; do not import `@beep/schema` from identity.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "Codec statics helper is above identity in the package graph, and the current public boundary intentionally exposes the raw Effect Schema codec.",
+      "boundary": "package dependency foundation"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/identity/src/Curie.ts",
+    "line": 91,
+    "symbol": "expand",
+    "smell": "Detector candidate: public CURIE helpers (`expand`, `contract`, `expandPredicate`) have two-argument overloads and are not `dual`.",
+    "proposedTarget": "Do not mechanically dualize these overloads. The one-argument form already means \"use CoreVocab\", so a data-last one-argument form would collide with established default-vocabulary semantics. Registry-specific pipeable usage already exists through `makeCurieCodec(vocab)` (line 174).",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "One-argument overloads are semantically occupied by CoreVocab defaults, so standard `dual(2, ...)` would change the API meaning.",
+      "boundary": "public CURIE overload API"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/identity/src/PnLocal.ts",
+    "line": 234,
+    "symbol": "prefixedNameOrIri",
+    "smell": "Detector candidate: public three-argument helper is not `dual`.",
+    "proposedTarget": "No S4 action. The three parameters are coordinated output fields (`prefix`, `local`, `fullIri`) and not a self/options shape; the full IRI is the fallback rendering boundary when `local` is unsafe.",
+    "confidence": 0.45,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "No natural single self argument exists; dualizing would obscure the safe-local fallback decision.",
+      "boundary": "Turtle PN_LOCAL rendering boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/identity/src/Id.ts",
+    "line": 1583,
+    "symbol": "make",
+    "smell": "Detector candidate: public package-composer constructor has a two-argument overload (`base`, `options`) and is not `dual`.",
+    "proposedTarget": "No S4 action. `make(base)` is the primary constructor form and `options` configures rebasing; adding a data-last overload would need predicate dispatch and would not materially improve the identity composer API.",
+    "confidence": 0.45,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "Constructor factory with meaningful one-argument default behavior; not a reusable self/options transformation helper.",
+      "boundary": "public identity composer factory"
+    }
+  }
+]

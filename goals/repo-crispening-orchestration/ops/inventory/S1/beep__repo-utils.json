@@ -1,0 +1,139 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/library/repo-utils/src/FsUtils.ts",
+    "line": 20,
+    "symbol": "decodeJsonString",
+    "smell": "Top-of-file `const decodeJsonString = S.decodeUnknownOption(S.fromJsonString(S.Json))` textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Inline `S.decodeUnknownOption(S.fromJsonString(S.Json))(content)` at the single JSON file boundary use site in `readJson` (line 213) - audited and rejected as not actionable.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Single private decoder used at one filesystem JSON boundary. It already uses the schema codec `S.fromJsonString(S.Json)` instead of direct `JSON.parse`, so schema is the boundary truth; inlining would be a terseness-only cleanup.",
+      "boundary": "runtime-boundary codec (file text -> S.Json)"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/library/repo-utils/src/FsUtils.ts",
+    "line": 61,
+    "symbol": "FsUtilsShape",
+    "smell": "Exported interface in a schema-modeled file (`GlobOptions` S.Class is in the same module).",
+    "proposedTarget": "Hypothetical schema or Fn-backed record for each service method - audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "`FsUtilsShape` is the explicit `Context.Service<FsUtils, FsUtilsShape>()` service contract at line 161. Service shapes and port interfaces are SPEC fence-1 carve-outs and should remain interfaces/type literals.",
+      "boundary": "Context.Service service contract"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/library/repo-utils/src/schemas/JSDocCategories.ts",
+    "line": 126,
+    "symbol": "JSDocCategory",
+    "smell": "Closed canonical category domain is represented as `CANONICAL_JSDOC_CATEGORIES as const` plus `export type JSDocCategory = (typeof CANONICAL_JSDOC_CATEGORIES)[number]` instead of a schema-backed literal domain.",
+    "proposedTarget": "Promote the domain to `export const JSDocCategory = LiteralKit(CANONICAL_JSDOC_CATEGORIES).pipe($I.annoteSchema(\"JSDocCategory\", ...))` and derive `export type JSDocCategory = typeof JSDocCategory.Type`; then reuse `JSDocCategory.Options`/`JSDocCategory.is` in `canonicalCategoryOption` and `isCanonicalJSDocCategory`. In-repo exemplars: same file `JSDocCategoryNormalizationStatus` at line 140, `TSCategoryTagBase` in `JSDoc/models/TSCategory.model.ts:42`, and `TSSyntaxKind` statics in `TypeScript/models/TSSyntaxKind.model.ts:462`.",
+    "confidence": 0.95,
+    "mechanization": "codemod",
+    "roiRank": 0.86
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/library/repo-utils/src/schemas/PackageJsonTools.ts",
+    "line": 44,
+    "symbol": "decodeBrowserResult",
+    "smell": "Top-of-file package-json decode helper wall: six private `decode*Result = S.decodeUnknownResult(...)` constants at lines 44-51 feed one-off canonicalization branches.",
+    "proposedTarget": "Collapse the wall by moving decode statics onto the target schemas with `SchemaUtils.withStatics` or by inlining `S.decodeUnknownResult(Browser)` / `S.decodeUnknownResult(PackageExports)` / siblings at their single use sites (lines 131, 162, 167, 174, 205, 239). In-repo exemplars: `Category` attaches `decodeUnknown` with `SchemaUtils.withStatics` in `JSDoc/models/TSCategory.model.ts:1523`, and `SchemaUtils.withCodecStatics` defines schema-carried codec statics in `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 0.45
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
+    "line": 1267,
+    "symbol": "SymbolInit",
+    "smell": "Exported object type alias `Omit<Symbol.Type, \"id\" | \"category\"> & { id?: ...; category?: ... }` describes the public constructor input payload for a schema-modeled `Symbol` but is not itself a schema.",
+    "proposedTarget": "Introduce a schema-backed constructor input, e.g. `export class SymbolInit extends S.Class<SymbolInit>($I`SymbolInit`)({ ...Symbol fields except derived id/category, id: S.optionalKey(SymbolId), category: S.optionalKey(SymbolCategory) }, ...) {}` or an equivalent annotated `S.Struct`, then derive `export type SymbolInit = typeof SymbolInit.Type`. In-repo exemplar for named input payloads: `CanonicalDocgenConfigInput` in `schemas/DocgenConfig.ts:116`; required v4 API `S.optionalKey` is verified in `.repos/effect-v4/packages/effect/src/Schema.ts:2270`.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 0.72
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
+    "line": 1405,
+    "symbol": "makeSymbol",
+    "smell": "Exported constructor-style function in a schema-modeled file accepts the non-schema `SymbolInit` object alias and returns a `Symbol` S.Class instance.",
+    "proposedTarget": "After `SymbolInit` becomes a schema, define a function contract such as `const MakeSymbol = Fn({ input: SymbolInit, output: Symbol }).pipe($I.annoteSchema(\"MakeSymbol\", ...))` and implement with `MakeSymbol.implementSync((input) => Symbol.make({ ... }))`, or at minimum make the parameter type schema-derived from `SymbolInit`. Verified repo-local Fn split: `implementSync` is the sync wrapper in `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:403`.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 0.45
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
+    "line": 87,
+    "symbol": "decodeByteLength",
+    "smell": "Dense top-of-file decode/guard wall: 20 local `decode* = S.decodeUnknownEffect(...)` / `S.decodeOption(...)` / `S.is(...)` helpers at lines 87-110 wrap TSMorph schemas before service logic starts.",
+    "proposedTarget": "Keep the local `decodeOrFail` domain-error mapper, but move reusable decode/guard capability onto the source schemas in `TSMorph.model.ts` with `SchemaUtils.withStatics` (for effect decoders) or `SchemaUtils.withCodecStatics` where sync/option statics are enough. Then service call sites can read `SourceText.decodeUnknown(...)`, `TypeScriptFilePath.decodeOption(...)`, or similar instead of a private helper wall. In-repo exemplars: `Category` uses `SchemaUtils.withStatics` for `decodeUnknown` at `JSDoc/models/TSCategory.model.ts:1523`, `TSSyntaxKind` uses `SchemaUtils.withStatics` at `TypeScript/models/TSSyntaxKind.model.ts:462`, and `withCodecStatics` is defined at `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.62
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
+    "line": 334,
+    "symbol": "TSMorphServiceShape",
+    "smell": "Exported object type literal with function members in a schema-modeled service module.",
+    "proposedTarget": "Hypothetical `Fn` schemas for each service method - audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "`TSMorphServiceShape` is the explicit `Context.Service<TSMorphService, TSMorphServiceShape>()` contract at line 387, including higher-order `inspectProject` and `updateSourceFile` methods over third-party `Project`/`SourceFile` objects. Service contracts and port interfaces are SPEC fence-1 carve-outs.",
+      "boundary": "Context.Service service contract / third-party ts-morph port"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.shared.ts",
+    "line": 44,
+    "symbol": "OutlineDeclaration",
+    "smell": "Exported type alias union of third-party `ts-morph` declaration node classes.",
+    "proposedTarget": "Hypothetical schema union over `ts-morph` node classes - audited and rejected.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "`OutlineDeclaration` is a type-level adapter over external `ts-morph` AST node classes, consumed by AST reader helpers such as `readDocstring`, `readDecorators`, `readSignature`, and `getDeclarationName`. It is not a wire/persisted/domain payload and would not gain runtime truth from a repo schema.",
+      "boundary": "third-party AST adapter/type-level utility"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TSCategory.model.ts",
+    "line": 1366,
+    "symbol": "ScoredCategoryCandidate",
+    "smell": "Exported result payload is a hand-written `Readonly<{ category: TSCategory; combinedConfidence: number }>` object type in a schema-modeled taxonomy module.",
+    "proposedTarget": "Replace with `export class ScoredCategoryCandidate extends S.Class<ScoredCategoryCandidate>($I`ScoredCategoryCandidate`)({ category: TSCategoryDefinition, combinedConfidence: S.Finite.check(S.makeFilterGroup([S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(1)])) }, ...) {}` or an equivalent encoded-category schema if callers must keep the encoded `TSCategory` shape. In-repo exemplar for the confidence invariant: `ASTSignal.confidence` in `JSDoc/models/ASTSignal.model.ts:42`; v4 filter APIs are verified in `.repos/effect-v4/packages/effect/src/Schema.ts:6458`, `:7314`, and `:7370`.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 0.69
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TSCategory.model.ts",
+    "line": 1409,
+    "symbol": "getCandidateCategories",
+    "smell": "Exported function in a schema-modeled file accepts an inline object-array contract `ReadonlyArray<{ category: TSCategoryTag; confidence: number }>` and returns the non-schema `ScoredCategoryCandidate` payload.",
+    "proposedTarget": "Introduce schema-backed `CategorySignal` and `ScoredCategoryCandidate` payloads, then express the function contract with `Fn({ input: S.Array(CategorySignal), output: S.Array(ScoredCategoryCandidate) }).implementSync(...)`. Use `ASTSignal.confidence` at `JSDoc/models/ASTSignal.model.ts:42` for the 0..1 confidence schema and `TSCategoryTag` at `JSDoc/models/TSCategory.model.ts:988` for the category domain. Verified repo-local Fn split: `implementSync` for synchronous handlers at `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:403`.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.55
+  }
+]

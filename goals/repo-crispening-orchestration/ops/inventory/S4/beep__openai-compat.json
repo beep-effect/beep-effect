@@ -1,0 +1,83 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompat.models.ts",
+    "line": 435,
+    "symbol": "OpenAiCompatChatMessage",
+    "smell": "Public role-discriminated union is built with `S.toTaggedUnion(\"role\")` but lacks colocated codec statics for guard/soft decode use.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `S.toTaggedUnion(\"role\")` (and import `SchemaUtils`) so consumers can call `OpenAiCompatChatMessage.is`, `.fromUnknown`, and `.decodeOption`. Union exemplar: `Block` at packages/foundation/modeling/md/src/Md.model.ts:1617; helper verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompat.models.ts",
+    "line": 637,
+    "symbol": "OpenAiCompatResponseFormat",
+    "smell": "Public type-discriminated union is built with `S.toTaggedUnion(\"type\")` but lacks colocated codec statics.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `S.toTaggedUnion(\"type\")`, matching the `Block` union pattern in packages/foundation/modeling/md/src/Md.model.ts:1617.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompat.models.ts",
+    "line": 985,
+    "symbol": "decodeChatCompletionResponse",
+    "smell": "Exported decode helper is a free-floating `S.decodeUnknownEffect(OpenAiCompatChatCompletionResponse)` beside the class it serves.",
+    "proposedTarget": "Move the decoder onto `OpenAiCompatChatCompletionResponse` as an in-body static, e.g. `static readonly decodeUnknownEffect = S.decodeUnknownEffect(OpenAiCompatChatCompletionResponse)`, then keep this export as a compatibility alias. Class-static exemplar: `Heading.is` at packages/foundation/modeling/md/src/Md.model.ts:873; v4 `S.decodeUnknownEffect` verified at .repos/effect-v4/packages/effect/src/Schema.ts:1325.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompat.models.ts",
+    "line": 1003,
+    "symbol": "decodeChatCompletionChunk",
+    "smell": "Exported decode helper is a free-floating `S.decodeUnknownEffect(OpenAiCompatChatCompletionChunk)` beside the class it serves.",
+    "proposedTarget": "Move the decoder onto `OpenAiCompatChatCompletionChunk` as `static readonly decodeUnknownEffect = S.decodeUnknownEffect(OpenAiCompatChatCompletionChunk)` and keep the export as a compatibility alias.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+    "line": 45,
+    "symbol": "decodeUnknownRecordOption",
+    "smell": "Top-of-file decode-wall helper builds `S.decodeUnknownOption(S.Record(S.String, S.Unknown))`; its only use immediately falls back to `R.empty` in `jsonObjectOrEmpty`.",
+    "proposedTarget": "Name the schema, e.g. `const UnknownRecord = S.Record(S.String, S.Unknown).pipe(SchemaUtils.withCodecStatics)`, then `const jsonObjectOrEmpty = flow(UnknownRecord.decodeOption, O.getOrElse(R.empty<string, unknown>));`. `S.decodeUnknownOption` verified at .repos/effect-v4/packages/effect/src/Schema.ts:1500.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompatClient.service.ts",
+    "line": 255,
+    "symbol": "parseSseData",
+    "smell": "Passthrough pipe lambda `data => pipe(decodeJsonString(data), Effect.flatMap(...), Effect.mapError(...))` is an exact `flow(...)` candidate.",
+    "proposedTarget": "`const parseSseData: (data: string) => Effect.Effect<OpenAiCompatChatCompletionChunk, AiError.AiError> = flow(decodeJsonString, Effect.flatMap(decodeChatCompletionChunk), Effect.mapError(mapSchemaError(\"streamChatCompletion\")));`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+    "line": 1020,
+    "symbol": "model",
+    "smell": "Detector hit: exported 2-arg helper is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "`model(modelName, config?)` intentionally supports a one-argument constructor returning an `AiModel.Model`; `dual(2, ...)` would reinterpret that existing call as data-last.",
+      "boundary": "Optional-trailing-argument public constructor; no public-form change without same-PR consumer sweep."
+    }
+  }
+]

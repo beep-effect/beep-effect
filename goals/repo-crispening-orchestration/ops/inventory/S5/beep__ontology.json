@@ -1,0 +1,76 @@
+[
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/modeling/ontology/src/Ontology.models.ts",
+    "line": 653,
+    "symbol": "OWLSearchScore",
+    "smell": "OWLSearchScore is S.Union([S.Int, S.Finite]) — the S.Int arm is a strict subset of S.Finite (S.Int = Number.check(isInt()) at .repos/effect-v4/packages/effect/src/Schema.ts:11398, S.Finite = Number.check(isFinite()) at 11380), so the union accepts exactly what S.Finite alone accepts; the two arms are a literal transcription of the OpenAPI anyOf [integer, number] rather than a domain statement.",
+    "proposedTarget": "Collapse to S.Finite with the existing $I.annoteSchema kept: export const OWLSearchScore = S.Finite.pipe($I.annoteSchema(\"OWLSearchScore\", {...})). Accepted value set is unchanged (Finite ⊇ Int), so no behavior change and no consumer-visible narrowing; optionally add S.isGreaterThanOrEqualTo(0) (verified Schema.ts:7314) only if the FOLIO API contractually guarantees non-negative relevance scores — that guarantee is unverified, so the base fix is the union collapse.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/ontology/src/Ontology.models.ts",
+    "line": 64,
+    "symbol": "HttpUrl",
+    "smell": "HttpUrl carries only min/max length checks (1..2083) plus an advisory format: \"uri\" annotation — \"not a url at all but 2083 chars of anything\" decodes fine, despite the repo already owning a URL-validity brand.",
+    "proposedTarget": "Reuse the in-repo exemplar: URLStr at packages/foundation/modeling/schema/src/URL.ts:44 (NonEmptyTrimmedStr branded via a new URL() validity filter, exported from @beep/schema). Either replace HttpUrl's base with URLStr.check(S.isMaxLength(2083, ...)) or add the same makeFilter-based validity check locally, keeping the $I.annoteSchema identity. Narrowing at a third-party HTTP response boundary is fail-closed in the right direction: a non-URL in the http_url field is a malformed FOLIO response, and the field is already Option-wrapped (GraphInfo.http_url, line 150) so absence stays representable.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/ontology/src/Ontology.models.ts",
+    "line": 272,
+    "symbol": "OWLClass.iri",
+    "smell": "iri — the primary identifier of every OWL class — is broad S.String (empty string decodes fine), as is OWLObjectProperty.iri (line 473) and every IRI-valued array field (sub_class_of:284, parent_class_of:293, see_also:310, sub_property_of:485, domain:494, range:503). FOLIO IRIs are short non-empty identifier tokens (e.g. \"R8pNPutX0TN6DlEqkyZuxSw\" per the schema's own examples).",
+    "proposedTarget": "Minimum: S.NonEmptyString (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420) on both iri fields and the IRI-array element schemas — an empty identifier is a malformed FOLIO response and failing the decode is correct at this HTTP boundary. A FOLIO-IRI pattern brand is possible but the exact grammar is not documented in-repo, so pattern tightening is writer judgment; NonEmptyString is the safe mechanical floor.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/modeling/ontology/src/Ontology.models.ts",
+    "line": 111,
+    "symbol": "GraphInfo",
+    "smell": "The package has no test/ directory at all, yet its schemas absorb real invariants: positive/non-negative count checks (GraphInfo.num_classes:113 / num_properties:124), HttpUrl length checks (64-75), withNoneDefault Option normalization on ~30 optional-nullable fields, and withKeyDefaults(false) on OWLClass.deprecated (327-334). None of these has an S.toArbitrary round-trip law; sibling modeling packages set the pattern (packages/foundation/modeling/lexical/test/Lexical.model.test.ts:16-17 derives arbitraries from production schemas and asserts decode∘encode identity).",
+    "proposedTarget": "Add test/Ontology.models.test.ts with fc.assert over S.toArbitrary(X) for X in {GraphInfo, HealthResponse, OWLClass, OWLClassList, OWLSearchResults, HTTPValidationError} (S.toArbitrary verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) asserting S.decodeUnknownSync(X)(S.encodeSync(X)(value)) equals value under S.toEquivalence(X) (verified Schema.ts:13201) — one law per class exercises every absorbed default/check. Purely additive; no fixtures exist to displace.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/ontology/src/Ontology.models.ts",
+    "line": 813,
+    "symbol": "ValidationError.input/ctx",
+    "smell": "input is optional S.Unknown and ctx is an optional broad S.Record(S.String, S.Unknown) on the exported ValidationError class.",
+    "proposedTarget": "Keep as-is. These transcribe FastAPI/Pydantic's HTTPValidationError detail shape, where input echoes the arbitrary offending payload and ctx is an open error-context bag — both are producer-defined open types on a third-party API response; typing them would reject valid error responses.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Faithful mirror of the FOLIO (FastAPI) validation-error wire contract, whose input/ctx members are open by upstream definition; the fields are already Option-wrapped with None defaults and never introspected in-repo.",
+      "boundary": "FOLIO OpenAPI HTTPValidationError response (https://folio.openlegalstandard.org/openapi.json)"
+    }
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/modeling/ontology/src/Ontology.models.ts",
+    "line": 767,
+    "symbol": "ValidationErrorLocationSegment",
+    "smell": "Detector candidate: the location segment numeric arm is bare S.Int with no non-negative index check.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The schema intentionally mirrors FastAPI/Pydantic's OpenAPI anyOf string/integer validation-error `loc` segment shape. Narrowing integer segments would reject upstream error payloads based on a local assumption about list-index sign, and the package only transports the diagnostic path.",
+      "boundary": "FOLIO OpenAPI HTTPValidationError response `detail[].loc` path"
+    }
+  }
+]

@@ -1,0 +1,65 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/wink/src/WinkVectorizer.service.ts",
+    "line": 46,
+    "symbol": "BM25VectorizerFactory.norm",
+    "smell": "BM25 normalization literals \"none\" | \"l1\" | \"l2\" are repeated in three local structural types: WinkVectorizer.service.ts:46, WinkCorpus.service.ts:45, and WinkTools.service.ts:86, even though @beep/nlp/Core/Vectorization already exports BM25Norm from a LiteralKit at packages/foundation/modeling/nlp/src/Core/Vectorization.ts:31-56.",
+    "proposedTarget": "Use the existing schema-owned BM25Norm type in each local config surface (readonly norm?: BM25Norm) while keeping the current BM25Norm schema for decoded request models. This mirrors the package's own TransformOperation source-of-truth pattern, where LiteralKit owns the type and applyTransformOperation dispatches with TransformOperation.$match at packages/drivers/wink/src/WinkTools.service.ts:269-300.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 2.6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/wink/src/WinkTools.service.ts",
+    "line": 193,
+    "symbol": "decodeEntityOutputDetails",
+    "smell": "decodeEntityOutputDetails and decodeEntityOutputSpans narrow wink output with value as ReadonlyArray<unknown> after only checking P.isUndefined(value) (lines 193 and 202). The casts bypass available array predicates and leave non-array non-undefined output outside the type proof.",
+    "proposedTarget": "Replace the boolean Match + cast with an A.isArray/O.liftPredicate guard before A.map, returning the existing empty-array fallback when the wink field is absent or not an array. The file already uses A.isArray for span elements at line 203, so the local no-as narrowing primitive is in scope; this keeps the third-party wink output boundary explicit.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 2.2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/wink/src/WinkTools.service.ts",
+    "line": 713,
+    "symbol": "WinkNlpToolkit mode matchers",
+    "smell": "Tool parameter/output literal domains are re-spelled in handler-local Match.type calls and function parameters: source \"builtin\" | \"custom\" at line 254, LearnCustomEntities mode \"append\" | \"replace\" at line 713, NGrams mode \"bag\" | \"edge\" | \"set\" at line 752, and PhoneticMatch algorithm \"soundex\" | \"phonetize\" at line 807. The owning @beep/nlp-processing tool schemas already model these as LiteralKit-backed domains (LearnCustomEntitiesModeKit, NGramModeKit, PhoneticMatchAlgorithmKit, AiEntitySourceKit/AiPhoneticAlgorithmKit).",
+    "proposedTarget": "Expose the relevant mode/source kits or same-name type aliases from @beep/nlp-processing, then import them here and dispatch with kit.$match / kit Enum values the way this file already does for TransformOperation.$match at line 300. This is judgment-level because the schema owners are in a foundation package; avoid local duplicate kits in @beep/wink.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 1.1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/wink/src/Wink.errors.ts",
+    "line": 193,
+    "symbol": "WinkError",
+    "smell": "A broad undiscriminated-union detector sees WinkError = S.Union([...]) at Wink.errors.ts:193 and WinkNlpToolkitLiveError = S.Union([...]) at WinkTools.service.ts:312.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Both unions are immediately finalized with S.toTaggedUnion(\"_tag\"), so they already expose schema-derived tagged-union helpers and satisfy the S3 discrimination target. The member classes are distinct tagged error types and must not be merged under SPEC fence 3.",
+      "boundary": "typed wink error unions; no error-tag merging"
+    }
+  },
+  {
+    "ruleId": "literal-kit-const-assertion",
+    "file": "packages/drivers/wink/src/index.ts",
+    "line": 24,
+    "symbol": "Wink ordinary as const candidates",
+    "smell": "A broad no-as / literal-kit-const-assertion detector sees ordinary as const expressions such as VERSION at index.ts:24, packageAttributes at WinkObservability.ts:30, tuple returns in WinkTokenization.service.ts:101/175, and method literal result fields in WinkTools.service.ts:422/1002/1075 and WinkCorpus.service.ts:722/795.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "`as const` is explicitly allowed except when applied to an inline array passed directly to LiteralKit(...). These sites are scalar literals, tuple return preservation, or exact method literal result fields; no LiteralKit inline array argument is involved.",
+      "boundary": "literal-kit-const-assertion detector boundary: only LiteralKit([... ] as const) inline arguments"
+    }
+  }
+]

@@ -1,0 +1,238 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/TemplateService.ts",
+    "line": 32,
+    "symbol": "TemplateSpec.outputPath / RenderedTemplate.outputPath",
+    "smell": "Template output paths are modeled as broad S.String even though they are immediately passed into PlannedFile.relativePath, whose schema uses the stricter RelativePlanPath checks for non-empty, non-absolute, traversal-safe output-relative paths.",
+    "proposedTarget": "Reuse the existing RelativePlanPath schema from packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts:34-65 for TemplateSpec.outputPath and RenderedTemplate.outputPath, or promote that schema to a shared CreatePackage path block. This keeps template rendering from producing paths that FileGenerationPlanInput later rejects. S.String.check and S.isPattern/check filters are verified v4 APIs at .repos/effect-v4/packages/effect/src/Schema.ts:6521.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts",
+    "line": 272,
+    "symbol": "FileGenerationExecutionResult count fields",
+    "smell": "createdDirectories, writtenFiles, skippedFileWrites, createdSymlinks, and skippedSymlinks are execution counters but are modeled as bare S.Finite, so negative and fractional values satisfy the schema.",
+    "proposedTarget": "Use the repo's NonNegativeInt schema for all five counters (packages/foundation/modeling/schema/src/Number.ts:182-199, already imported elsewhere from @beep/schema in this package family). S.Int is verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and S.isGreaterThanOrEqualTo at :7314.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+    "line": 818,
+    "symbol": "CorpusExtractOptions/CorpusEnrichOptions/CorpusSalvageOptions numeric knobs",
+    "smell": "concurrency, maxFiles, lookupDelayMillis, maxLookups, and sampleStride are CLI integer knobs but are modeled as optional S.Finite; service code later repairs them with Math.floor plus Math.max at Corpus.service.ts:1055, 1092, 1734, 2747, and 2784-2787.",
+    "proposedTarget": "Move the integer/range domain into schemas: PosInt (packages/foundation/modeling/schema/src/Int.ts:77) or S.Int.check(S.isGreaterThan(0)) for concurrency/sampleStride, and NonNegativeInt for maxFiles/maxLookups/lookupDelayMillis. S.isGreaterThan is verified at .repos/effect-v4/packages/effect/src/Schema.ts:7286.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+    "line": 639,
+    "symbol": "ArchitectureOperation",
+    "smell": "Exported reusable union schema ArchitectureOperation is the only public operation-plan schema in the local cluster without a $I.annoteSchema annotation; the operation classes and literal kits around it are annotated.",
+    "proposedTarget": "Pipe the S.Union through $I.annoteSchema(\"ArchitectureOperation\", { description: ... }) before exporting the type, matching GenerationAction in CreatePackage/FileGenerationPlanService.ts:209-216 and other annotated union/literal domains in this package.",
+    "confidence": 0.95,
+    "mechanization": "codemod",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+    "line": 495,
+    "symbol": "Architecture operation path fields",
+    "smell": "WriteFileOperation.path, WritePackageJsonOperation.path, EnsureFileOperation.path, EnsureAbsentPathOperation.path, ArchitectureOperationCheck.path, AcceptedProofFile.path, and result path arrays are broad S.String/S.Array(S.String), while OperationPlanExecution.resolveOperationPath has to reject absolute paths and traversal at runtime.",
+    "proposedTarget": "Define an ArchitectureOperationPath schema that carries the same repo-relative/non-traversal invariant currently enforced at OperationPlanExecution.ts:35-42, then use it for operation path fields and S.Array(ArchitectureOperationPath) result arrays. The CreatePackage RelativePlanPath filter group at FileGenerationPlanService.ts:34-65 is the closest in-repo exemplar.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Codex/Codex.errors.ts",
+    "line": 39,
+    "symbol": "CodexCommandError.exitCode",
+    "smell": "Process exitCode is modeled as S.Finite, allowing negative and fractional process statuses even though Runtime.errorExitCode consumes it as a process exit status.",
+    "proposedTarget": "Use NonNegativeInt for the error exitCode, or a stricter local S.Int.check(S.isBetween({ minimum: 0, maximum: 255 })) if the CLI wants POSIX-style byte exit statuses. S.isBetween is verified at .repos/effect-v4/packages/effect/src/Schema.ts:7401.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.media.ts",
+    "line": 59,
+    "symbol": "TargetNameForEntryOptions.index/width and RenamePlanEntry.index",
+    "smell": "Generated rename indices and zero-pad width are modeled as S.Finite, but makeRenamePlan derives width from collection length and increments index from 0; negative/fractional values would produce nonsensical filenames.",
+    "proposedTarget": "Use NonNegativeInt for index and PosInt or S.Int.check(S.isGreaterThan(0)) for width; RenamePlanEntry.index at Files.schemas.ts:976 should use the same index schema. The value flow is visible at Files.service.ts:3240-3255.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.media.ts",
+    "line": 79,
+    "symbol": "RawImagePixelData",
+    "smell": "Raw image channels, height, and width are broad S.Finite even though pixel loops require positive integer dimensions and a small positive integer channel count.",
+    "proposedTarget": "Use PositiveMediaDimension from Files.schemas.ts:31 for height/width and define a local RawImageChannelCount as S.Int.check(S.isBetween({ minimum: 1, maximum: 4 })) or the actual sharp channel range. This mirrors existing RgbChannel bounds at Files.schemas.ts:745-771.",
+    "confidence": 0.76,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+    "line": 1003,
+    "symbol": "Files command summary and plan count fields",
+    "smell": "Many report/plan counters are modeled as S.Finite (for example SortAndRenameSummary, CreateCaptionFilesSummary, NormalizeSummary/ManifestSummary, ArchivePoorCandidatesSummary/ManifestSummary, DetectBordersSummary, DetectFacesSummary, CropBordersPlan/Summary, SortableFileCollection, RenamePlan, and StripMetadataPlan), but service constructors fill them from A.length, accumulated counts, or zero literals.",
+    "proposedTarget": "Replace these count fields with the already-imported NonNegativeInt, matching ProcessFilesSummary at Files.schemas.ts:2295-2301. Representative producers are Files.service.ts:2818-2827 and :2860-2865.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+    "line": 1522,
+    "symbol": "Files image metric fields",
+    "smell": "Several image metric fields are broad S.Int/S.Finite despite tighter domains: CandidateAssessmentMetrics.pixelArea is non-negative, DetectBorderSideMeasurement.score is a 0-1 ratio, widthPct/primaryFaceAreaPct are percentages, widthPx/borderCount/faceCount are non-negative integers.",
+    "proposedTarget": "Use NonNegativeInt for pixelArea, widthPx, borderCount, and faceCount; use FaceDetectionPercentage for primaryFaceAreaPct; use BorderDetectionPercentage or a local zero-inclusive percentage for widthPct; and use S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })) for score. Existing percentage schemas are Files.schemas.ts:604 and @beep/face-detection FaceDetectionPercentage.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-equivalence",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.media.ts",
+    "line": 757,
+    "symbol": "mediaDimensionsChanged",
+    "smell": "Hand-written equality compares MediaDimensions.width/height with !== even though MediaDimensions is a schema class and v4 can derive the equivalence from the schema.",
+    "proposedTarget": "Add const mediaDimensionsEquivalence = S.toEquivalence(MediaDimensions) and implement mediaDimensionsChanged as !mediaDimensionsEquivalence(left, right). S.toEquivalence is verified at .repos/effect-v4/packages/effect/src/Schema.ts:13201, and CreatePackage/ConfigUpdater.ts:175 already uses schema-derived equivalence for arrays.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Quality.ts",
+    "line": 316,
+    "symbol": "DocgenQualitySubject.contentHash",
+    "smell": "contentHash is modeled as broad S.String even though finalizeSubject computes it through decodeContentHashFromSourceText and the repo-utils model already exposes a branded ContentHash schema.",
+    "proposedTarget": "Use ContentHash from @beep/repo-utils for DocgenQualitySubject.contentHash, matching the value produced at Quality.ts:1302 and the in-repo branded schema at packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts:686-689.",
+    "confidence": 0.88,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Quality.ts",
+    "line": 252,
+    "symbol": "DocgenQualityFinding.scoreImpact / DocgenQualityReview.score",
+    "smell": "JSDoc quality scores are modeled as S.Finite even though scoreImpact is an integer rubric weight and score is clamped to the 1-10 integer range at Quality.ts:1722.",
+    "proposedTarget": "Introduce annotated DocgenQualityScoreImpact and DocgenQualityScore schemas using S.Int.check with S.isBetween bounds, mirroring the already precise DocgenQualityWorkerEvalLocalScore at QualityWorkerEval.ts:38-64.",
+    "confidence": 0.84,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Quality.ts",
+    "line": 343,
+    "symbol": "DocgenQualitySummary / DocgenQualityPackageReport numeric fields",
+    "smell": "DocgenQualitySummary counts plus DocgenQualityPackageReport.durationMs and omittedPacketCount are broad S.Finite, but they are produced from array lengths, elapsed milliseconds, or zero/default counts.",
+    "proposedTarget": "Use NonNegativeInt for summary counts, omittedPacketCount, and durationMs (including PackageReportOptions.durationMs at line 1893). This matches the repo's count modeling in packages/foundation/modeling/schema/src/Number.ts:182-199.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
+    "line": 309,
+    "symbol": "DocgenExportAnalysis and docgen operation summary counts",
+    "smell": "DocgenExportAnalysis.line, DocgenAnalysisSummary counts, DocgenGenerationResult.moduleCount, and DocgenAggregateResult.fileCount are S.Finite despite being positive source line numbers or non-negative counts derived from export/module/file totals.",
+    "proposedTarget": "Use PosInt or S.Int.check(S.isGreaterThan(0)) for source line numbers and NonNegativeInt for all count fields. The same file already groups docgen report schemas, so the shared numeric aliases can live near the model block.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts",
+    "line": 254,
+    "symbol": "DocgenLocalPlan.parallel and worker-eval runtime/count numeric fields",
+    "smell": "Docgen local and worker-eval runtime fields use broad S.Finite for positive parallelism, packet limits, timeout/duration milliseconds, package/packet/status counts, exportedSpans, and minRamPerGpuGb.",
+    "proposedTarget": "Use PosInt for parallel/packet limits and positive resource knobs, and NonNegativeInt for durations, timeouts, exportedSpans, and summary counts across Local.ts:254, QualityWorkerEval.ts:321-366, and QualityWorkerRunpodEval.ts:144, 173, 189, 203-206, 281, 283.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/TemplateService.ts",
+    "line": 75,
+    "symbol": "TemplateRenderRequest.context",
+    "smell": "Detector candidate: template rendering context is S.Record(S.String, S.Unknown), a broad object accepted by Handlebars.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is an adapter boundary to the Handlebars renderer; the schema intentionally accepts arbitrary template variables while TemplateContext remains the typed producer for the normal create-package path.",
+      "boundary": "Handlebars template rendering adapter input"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+    "line": 816,
+    "symbol": "FfprobeSideData.rotation / FfprobeStream.tags",
+    "smell": "Detector candidate: ffprobe rotation accepts finite numbers or numeric strings and tags is S.Record(S.String, S.Unknown).",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These schemas mirror external ffprobe JSON, where rotation may arrive from side_data_list or arbitrary stringly tags; rotationFromStream immediately decodes only the supported rotation value and ignores unrelated tag payload.",
+      "boundary": "ffprobe JSON process boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
+    "line": 151,
+    "symbol": "DocgenConfigDocument",
+    "smell": "Detector candidate: docgen.json fields are broad optional strings, include/exclude string arrays, and compiler options accept either strings or generic JSON objects.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This model is a third-party/user-authored docgen.json boundary. It preserves the config file's permissive shape so the command suite can inspect and pass through supported upstream options without pretending to own every nested compiler-option schema.",
+      "boundary": "docgen.json configuration boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts",
+    "line": 155,
+    "symbol": "AiMetricsArchiveDrillRow.plaintextContentHash",
+    "smell": "Detector candidate: plaintextContentHash is a broad S.String even though the name suggests a hash-like domain.",
+    "proposedTarget": "None in this CLI command part.",
+    "confidence": 0.86,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The row mirrors a derived AI-metrics DuckDB query for a non-printing decrypt drill; the hash domain is owned upstream by @beep/ai-metrics retention/archive storage, where both current private identifiers and legacy public hashes are compared. Tightening only the CLI projection would create a partial, potentially incompatible boundary.",
+      "boundary": "AI metrics derived-storage verification row"
+    }
+  }
+]

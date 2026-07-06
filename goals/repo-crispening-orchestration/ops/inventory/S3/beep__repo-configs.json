@@ -1,0 +1,84 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/RuleAstSchemas.ts",
+    "line": 6,
+    "symbol": "ImportKindSchema",
+    "smell": "Import kind is modeled three times: S.Literals([\"type\", \"value\"]) at line 6, a parallel type alias at line 8, and a hand-written equality guard in resolveImportSpecifierImportKind at line 89. This duplicates a finite literal family instead of deriving the type and guard surface from one kit/schema.",
+    "proposedTarget": "Replace ImportKindSchema with a single LiteralKit([\"type\", \"value\"]) source, derive type ImportKind from typeof ImportKind.Type, and replace the line 89 equality chain with S.is(ImportKind)(importKind) or the kit-derived literal guards. Verified in-repo: LiteralKit exposes Options/Enum/is/$match/toTaggedUnion at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:645 and const type parameters at line 743; Effect v4 S.is is .repos/effect-v4/packages/effect/src/Schema.ts:1256.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 2.6
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
+    "line": 377,
+    "symbol": "makeBundleAnalyzerPlugin",
+    "smell": "Known-key optional object assembly is hand-rolled with conditional spreads for analyzerMode/logLevel/openAnalyzer at lines 377-379 and register/cacheOnNavigation/reloadOnOnline at lines 403-405. This is the heterogeneous Option-struct spread shape that should use the repo O.getSomesStruct helper rather than per-key object literals.",
+    "proposedTarget": "Use the repo-local O alias and spread O.getSomesStruct({ analyzerMode: O.fromUndefinedOr(config.analyzerMode), logLevel: O.fromUndefinedOr(config.logLevel), openAnalyzer: O.fromUndefinedOr(config.openAnalyzer) }) and the equivalent Serwist option struct. Verified O.getSomesStruct at packages/foundation/modeling/utils/src/Option.ts:102 and Effect v4 O.fromUndefinedOr at .repos/effect-v4/packages/effect/src/Option.ts:860. Keep this judgment-tier until the S3/D5 sweep is allowed.",
+    "confidence": 0.72,
+    "mechanization": "judgment",
+    "roiRank": 1.4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
+    "line": 121,
+    "symbol": "BeepNextBundleAnalyzerConfig",
+    "smell": "Several schemas use S.Union([S.Literal(false), ObjectConfig]) forms that a naive undiscriminated-union detector would flag as taggable variants: BeepNextBundleAnalyzerConfig at line 121, BeepNextMdxConfig at line 164, BeepNextPwaConfig at line 216, SecureHeadersConfig at security/index.ts:93, DevIndicatorsConfig at NextConfig.model.ts:81, LoggingConfig | false at NextConfig.model.ts:361, and PrefetchInliningConfig at PrefetchInliningConfig.schema.ts:37.",
+    "proposedTarget": "None -- keep the false-or-object unions as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These model public Next.js and plugin configuration contracts where false is the documented disable sentinel. Replacing the false literal with a tagged object would change the encoded/user-authored config surface and violate the no public-form change fence without a same-PR consumer and third-party compatibility story.",
+      "boundary": "public Next.js-compatible config surface in @beep/repo-configs/next"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
+    "line": 369,
+    "symbol": "adaptSerwistNextConfigPlugin",
+    "smell": "plugin as unknown as NextConfigPlugin is a double cast that a no-as detector would flag.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The adjacent comment records the boundary: Serwist can resolve its own Next canary, so its plugin type points at a different NextConfig identity even though the runtime config contract matches. No schema or Predicate narrowing primitive can prove type identity across those package instances.",
+      "boundary": "third-party Serwist/NextConfig package-identity mismatch"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/policy-pack/repo-configs/src/eslint/DeprecatedApisESLintConfig.ts",
+    "line": 16,
+    "symbol": "tseslintPlugin",
+    "smell": "tseslint as unknown as FlatConfigPlugins[string] is a double cast that a no-as detector would flag.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This adapts the @typescript-eslint plugin module value into ESLint flat-config's plugin map slot. The cast is a third-party type-shape adapter, not discriminator narrowing that Effect Predicate, Match, or Schema can prove.",
+      "boundary": "ESLint flat-config plugin interop boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/NextConfig.model.ts",
+    "line": 34,
+    "symbol": "withKeyDocumentation",
+    "smell": "schema.annotateKey(...) as Schema is a generic schema-preservation cast that a no-as detector would flag.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "annotateKey returns a schema value whose runtime contract is the same as the input schema, but the generic helper intentionally preserves the exact Schema type parameter for callers. This is a type-level helper boundary rather than a missing runtime discrimination or exhaustiveness proof.",
+      "boundary": "generic effect/Schema annotation helper preserving caller schema type"
+    }
+  }
+]

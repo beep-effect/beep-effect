@@ -1,0 +1,47 @@
+[
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/_internal/db-admin/src/migrate.ts",
+    "line": 85,
+    "symbol": "migrateOnBoot",
+    "smell": "`return undefined;` appears at the end of the exported migration workflow.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "`migrateOnBoot` returns an `Effect` workflow whose success channel is intentionally unit-like after side effects; this is not a domain helper returning nullish data in place of Option/Result.",
+      "boundary": "side-effecting Effect workflow success value"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/_internal/db-admin/test/integration/ArchitectureLabMigration.pglite.test.ts",
+    "line": 25,
+    "symbol": "ArchitectureLabMigration PgLite fixture",
+    "smell": "`O.getOrElse(() => \"drizzle\")` supplies the migration schema when the test database info has none.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 2,
+    "exception": {
+      "reason": "Integration-test harness default for the PgLite migration journal schema, not a domain schema-field default.",
+      "boundary": "test harness / migration setup"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/_internal/db-admin/test/integration/ArchitectureLabMigration.pglite.test.ts",
+    "line": 222,
+    "symbol": "WorkspaceThread migration fixture",
+    "smell": "`{ id: 11, parent_turn_id: null }` asserts the nullable SQL parent-turn column after migration.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Fence 2: SQL absence must encode as `null`; this integration test verifies the migration's persisted row shape.",
+      "boundary": "SQL migration integration fixture"
+    }
+  }
+]

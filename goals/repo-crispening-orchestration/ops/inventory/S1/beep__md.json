@@ -1,0 +1,170 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/md/src/Md.ts",
+    "line": 75,
+    "symbol": "InlineInput / BlockInput / ListItemInput / TableCellInput",
+    "smell": "Public builder DSL input aliases are exported as TypeScript unions beside a schema-owned AST.",
+    "proposedTarget": "Hypothetical input-union schemas were audited and rejected for S1. The durable Markdown data model already lives in `packages/foundation/modeling/md/src/Md.model.ts` as S.TaggedClass nodes and `Inline` / `Block` unions with `SchemaUtils.withCodecStatics` at lines 613 and 1617.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "These aliases are ergonomic constructor inputs for a public Markdown builder DSL. They accept strings, template pieces, and already-built schema nodes before normalizing to schema classes; they are not persisted or wire payloads.",
+      "boundary": "public builder DSL shorthand surface"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/md/src/Md.ts",
+    "line": 109,
+    "symbol": "InlineContentBuilder / BlockContentBuilder / ListItemContentBuilder",
+    "smell": "Exported type aliases encode overloaded builder call signatures in a schema-modeled package.",
+    "proposedTarget": "Hypothetical `Fn({ input, output })` schemas were audited and rejected. Verified Fn exists for concrete unary contracts (`packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:403` `implementSync`), but these are TypeScript overload surfaces for tagged-template and call-form ergonomics.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The overloads describe compile-time call forms and TemplateStringsArray handling. Schema-ifying them would not move an invariant into the Markdown AST; the resulting nodes are already constructed through S.TaggedClass models.",
+      "boundary": "builder overload/type-level utility surface"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/md/src/Md.ts",
+    "line": 272,
+    "symbol": "TaskListItemInput",
+    "smell": "Public type alias includes inline object union branches (`{ text, checked? }` and `{ children, checked? }`) near the schema-owned TaskItem model.",
+    "proposedTarget": "Hypothetical `TaskListItemInput` schema was audited and rejected for S1; the normalized output is the `TaskItem` S.TaggedClass and class-local guard (`packages/foundation/modeling/md/src/Md.model.ts:1112`).",
+    "confidence": 0.26,
+    "mechanization": "judgment",
+    "roiRank": 0.08,
+    "exception": {
+      "reason": "The inline object shapes are builder conveniences accepted before `asTaskItem` normalizes to `TaskItem.make`. They are not a standalone domain model or external boundary contract.",
+      "boundary": "public builder DSL shorthand surface normalized into schema classes"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/md/src/Md.ts",
+    "line": 318,
+    "symbol": "isTemplateStringsArray / isInlineInputArray / isBlockInputArray",
+    "smell": "Local `is*` helper cluster discriminates Markdown builder input shapes instead of using schema guards.",
+    "proposedTarget": "Hypothetical schema guards were audited and rejected. Existing schema guards are already used when discriminating modeled nodes (`BlockSchema.is` at line 329, `Li.is` at line 488, `TableCell.is` at line 502, `TableRow.is` at line 505).",
+    "confidence": 0.22,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "These helpers distinguish TemplateStringsArray, array shorthands, and formatting chunks for overload implementation. They are parser/normalizer mechanics around the DSL, not duplicated domain validation.",
+      "boundary": "builder overload runtime discriminator"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/modeling/md/src/Md.ts",
+    "line": 843,
+    "symbol": "taskItem / pre / table options",
+    "smell": "Exported constructor functions accept inline option object types (`checked`, `language`, `headerRow`) even though each field maps directly to schema-modeled AST properties.",
+    "proposedTarget": "Introduce named option schemas such as `TaskItemOptions`, `PreOptions`, and `TableOptions`, or wrap the constructors in Fn schemas when behavior is intentionally decode-on-call. Use `CodeFenceLanguage` codec statics for `pre` as already done at `Md.model.ts:25-37`; verified Fn schema exemplars include `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61` and `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66`.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 0.46
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/md/src/Md.ts",
+    "line": 984,
+    "symbol": "youtube / youtubeEffect",
+    "smell": "Public constructors perform explicit `S.decodeUnknownResult(YouTube)` / `S.decodeUnknownEffect(YouTube)` calls.",
+    "proposedTarget": "Keep the boundary decode. Effect v4 APIs are verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1564` (`decodeUnknownResult`) and `.repos/effect-v4/packages/effect/src/Schema.ts:1325` (`decodeUnknownEffect`).",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The constructors build an encoded YouTube payload and immediately decode through the `YouTube` S.TaggedClass, preserving schema validation and surfaced schema errors. This is a positive schema boundary, not a decode helper wall.",
+      "boundary": "public runtime boundary codec (string video id -> YouTube schema node)"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/md/src/Md.render.ts",
+    "line": 81,
+    "symbol": "PureRenderAdapter",
+    "smell": "Public interface carries a render callback in a schema-modeled package.",
+    "proposedTarget": "Hypothetical adapter schema was audited and rejected for S1.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "This is a port/adapter contract over a callback and generic output, not a serializable Markdown domain payload. The `document` argument is already the schema-owned `Document` type.",
+      "boundary": "render adapter port interface"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/md/src/Md.render.ts",
+    "line": 107,
+    "symbol": "EffectRenderAdapter",
+    "smell": "Public interface carries an Effect-returning render callback and generic environment/error parameters.",
+    "proposedTarget": "Hypothetical adapter schema was audited and rejected for S1.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "The shape is an Effect adapter port with callback behavior plus Error/Requirements type parameters. Schema-ifying it would erase the service/runtime contract rather than improve schema truth.",
+      "boundary": "Effect render adapter port interface"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/md/src/Md.behavior.ts",
+    "line": 31,
+    "symbol": "SegmentStrategy",
+    "smell": "Public interface carries guard/render callbacks for segmentation behavior.",
+    "proposedTarget": "Hypothetical strategy schema was audited and rejected for S1.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This is a generic behavior strategy consumed by `segmentInlineRuns`, including a type guard callback. It is not a data boundary; the concrete inline/block nodes are already schema modeled.",
+      "boundary": "generic behavior strategy interface"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/md/src/Md.model.ts",
+    "line": 90,
+    "symbol": "Type / Encoded companion namespaces",
+    "smell": "Large schema model file contains many exported namespace `Type` / `Encoded` interfaces that mirror S.TaggedClass fields.",
+    "proposedTarget": "Do not replace these with separate schemas. The normative S1 carve-out preserves recursion scaffolding around `S.suspend`, visible at `InlineChildren` line 78 and `InlineChildren.Type` / `Encoded` line 90.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The namespaces provide explicit recursive Type/Encoded names for mutually recursive Markdown AST schemas. They are load-bearing type projections around the schema graph, not free-floating alternative models.",
+      "boundary": "S.suspend recursive schema companion namespace"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/md/src/Md.escape.ts",
+    "line": 55,
+    "symbol": "isUnsafeUrlProtocolDestination",
+    "smell": "Private top-level guard helper wraps `S.is(UnsafeUrlProtocolDestination)` instead of attaching guard behavior to the schema.",
+    "proposedTarget": "Pipe `UnsafeUrlProtocolDestination` through `SchemaUtils.withCodecStatics` and use `UnsafeUrlProtocolDestination.is` at the call site. Verified in-repo targets: `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`, `packages/foundation/modeling/md/src/Md.model.ts:36`, and class-local static guards at `packages/foundation/modeling/md/src/Md.model.ts:873`.",
+    "confidence": 0.84,
+    "mechanization": "assisted",
+    "roiRank": 0.58
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/md/src/Md.escape.ts",
+    "line": 390,
+    "symbol": "isStringArray",
+    "smell": "Exported guard helper is detached from the `StringArray` schema.",
+    "proposedTarget": "Attach `SchemaUtils.withCodecStatics` to `StringArray`, export the schema if needed for public API clarity, and preserve `isStringArray` as a compatibility alias to `StringArray.is`. Verified in-repo statics helper: `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.5
+  }
+]

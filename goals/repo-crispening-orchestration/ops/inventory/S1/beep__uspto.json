@@ -1,0 +1,65 @@
+[
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/uspto/src/Uspto.models.ts",
+    "line": 109,
+    "symbol": "normalizeUsptoApplicationNumber",
+    "smell": "Exported parser helper in a schema-modeled file strips separators and then re-tests `applicationNumberPattern`, duplicating the invariant already carried by the `UsptoApplicationNumber` schema at line 32.",
+    "proposedTarget": "Introduce an annotated `UsptoApplicationNumberFromText` boundary codec over `S.String` that strips separators and decodes to `UsptoApplicationNumber`, then expose this helper as a thin `S.decodeUnknownOption(UsptoApplicationNumberFromText)` wrapper or `Fn({ input: S.String, output: S.Option(UsptoApplicationNumber) }).implementSync(...)`. In-repo exemplars: `SemverFromString` at `packages/foundation/modeling/schema/src/Semver.ts:626`, `Formatter` at `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66`, and `HeaderTransformFunction` at `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`. Verified Effect v4 APIs: `S.decodeUnknownOption` (`.repos/effect-v4/packages/effect/src/Schema.ts:1500`), `S.decodeTo` (`:5408`), and `S.Option` (`:8459`).",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 0.58
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/uspto/src/Uspto.models.ts",
+    "line": 133,
+    "symbol": "normalizeUsptoPatentNumber",
+    "smell": "Exported parser helper in a schema-modeled file uppercases, strips USPTO decorations, and then re-tests `patentNumberPattern`, duplicating the invariant already carried by the `UsptoPatentNumber` schema at line 67.",
+    "proposedTarget": "Introduce an annotated `UsptoPatentNumberFromText` boundary codec over `S.String` that performs the current text normalization and decodes to `UsptoPatentNumber`, then expose this helper through `S.decodeUnknownOption(UsptoPatentNumberFromText)` or `Fn({ input: S.String, output: S.Option(UsptoPatentNumber) }).implementSync(...)`. In-repo exemplars: `SemverFromString` at `packages/foundation/modeling/schema/src/Semver.ts:626`, `Formatter` at `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66`, and `HeaderTransformFunction` at `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`. Verified Effect v4 APIs: `S.decodeUnknownOption` (`.repos/effect-v4/packages/effect/src/Schema.ts:1500`), `S.decodeTo` (`:5408`), and `S.Option` (`:8459`).",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 0.56
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/uspto/src/Uspto.errors.ts",
+    "line": 89,
+    "symbol": "UsptoError.fromReason / makeUsptoError",
+    "smell": "Exported/static error constructors accept an inline options object (`{ cause?: string; status?: NonNegativeInt }`) that duplicates optional fields on the `UsptoError` tagged schema.",
+    "proposedTarget": "Promote the options bag to `UsptoErrorOptions extends S.Class` beside `UsptoError`, mirroring `GovinfoErrorOptions` at `packages/drivers/govinfo/src/Govinfo.errors.ts:70`; change `fromReason` and `makeUsptoError` to accept `UsptoErrorOptions = UsptoErrorOptions.make({})` while preserving the public fields.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.62
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/uspto/src/Uspto.service.ts",
+    "line": 41,
+    "symbol": "UsptoShape",
+    "smell": "Exported interface with Effect-returning service methods over schema-modeled USPTO request/result payloads matches the schema-first-inventory surface.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. Keep `UsptoShape` as the `Context.Service` shape used by `Uspto extends Context.Service<Uspto, UsptoShape>()` at line 357; the payloads are schema-modeled in `Uspto.models.ts`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Service shapes and Context.Service contracts are explicitly carved out by SPEC Non-Goals fence 1; schema-as-truth applies to the payloads, not the service interface.",
+      "boundary": "Context.Service shape for the USPTO driver"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/uspto/src/Uspto.service.ts",
+    "line": 123,
+    "symbol": "decodeMetadataEnvelopeJson / decodeContinuityEnvelopeJson / decodeDocumentsEnvelopeJson / decodeApplicationMetadata / decodeDocumentReference",
+    "smell": "Cluster of module-level schema-derived decoders can look like a decode-helper wall.",
+    "proposedTarget": "None -- keep these boundary codecs centralized at the USPTO HTTP response boundary. Effect v4 `S.decodeUnknownEffect` and `S.fromJsonString` were verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325` and `:10983`.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.06,
+    "exception": {
+      "reason": "The helpers are direct schema decoders for unknown USPTO response JSON/entity records, not alternate validation logic; the schemas remain the source of truth and the decode names make the response boundary auditable.",
+      "boundary": "USPTO response JSON/entity decode boundary"
+    }
+  }
+]

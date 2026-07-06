@@ -1,0 +1,65 @@
+[
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/semantic-web/src/services/canonicalization.ts",
+    "line": 109,
+    "symbol": "CanonicalizeDatasetRequest.workLimit/FingerprintDatasetRequest.workLimit",
+    "smell": "Both canonicalization request schemas model workLimit as S.OptionFromOptionalKey(S.Finite), which admits negative and fractional work limits even though the field represents a bounded operation count. The package already derives CanonicalizeDatasetRequest arbitrary coverage at test/ServicesAndSurface.test.ts:45, so the broad schema also generates out-of-domain work-limit values.",
+    "proposedTarget": "Tighten both workLimit fields to S.OptionFromOptionalKey(NonNegativeInt) using the in-repo non-negative integer schema (packages/foundation/modeling/schema/src/Number.ts:182) and the existing semantic-web timeout pattern at packages/foundation/capability/semantic-web/src/services/sparql-query.ts:75; S.OptionFromOptionalKey is verified in .repos/effect-v4/packages/effect/src/Schema.ts:8668.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/semantic-web/src/services/jsonld-stream-serialize.ts",
+    "line": 62,
+    "symbol": "JsonLdStreamSerializeRequest.maxChunkCharacters",
+    "smell": "maxChunkCharacters is modeled as S.OptionFromOptionalKey(NonNegativeInt), but the live adapter rejects 0 before serializing (adapters/jsonld-stream-serialize.ts:96-99) and chunkText treats <= 0 as an invalid no-chunks condition (adapters/jsonld-stream-serialize.ts:40-42). The true accepted domain is a positive integer.",
+    "proposedTarget": "Change the field to S.OptionFromOptionalKey(PosInt), importing the existing positive-integer schema from @beep/schema (packages/foundation/modeling/schema/src/Int.ts:77); keep or adjust the live guard deliberately because moving this to the decoder changes whether 0 is rejected at construction time or as JsonLdStreamSerializeError.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/semantic-web/src/services/sparql-query.ts",
+    "line": 225,
+    "symbol": "service error reason LiteralKits",
+    "smell": "Several exported TaggedErrorClass reason fields embed anonymous LiteralKit([...]) schemas directly, so the reusable reason domains are not named, exported, or $I.annoteSchema-annotated: CanonicalizationError.reason (canonicalization.ts:77), SparqlQueryError.reason (sparql-query.ts:225), ShaclValidationError.reason (shacl-validation.ts:250), and ProvenanceServiceError.reason (provenance.ts:260). Sibling service files already extract annotated reason kits.",
+    "proposedTarget": "Extract named exported reason schemas such as SparqlQueryErrorReason, CanonicalizationErrorReason, ShaclValidationErrorReason, and ProvenanceServiceErrorReason, each LiteralKit([...]).pipe($I.annoteSchema(...)), then use those constants in the error fields. Use the existing in-package exemplars JsonLdDocumentErrorReason at services/jsonld-document.ts:48-59 and JsonLdStreamSerializeErrorReason at services/jsonld-stream-serialize.ts:124-128.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/semantic-web/src/services/sparql-query.ts",
+    "line": 101,
+    "symbol": "SparqlSelectResult.rows",
+    "smell": "Detector candidate: SELECT rows are S.Array(S.Record(S.String, Term)), an open string-keyed record.",
+    "proposedTarget": "None - keep the open record.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "SPARQL SELECT bindings are keyed by query variable names chosen by the caller; tightening the record keys would either reject valid query results or require a schema family parameterized by the query text.",
+      "boundary": "external SPARQL result binding map"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
+    "line": 152,
+    "symbol": "ShaclValidationViolation.focusNode",
+    "smell": "Detector candidate: focusNode is broad S.String even though violations are produced from RDF dataset subjects.",
+    "proposedTarget": "None - keep the serialized report string unless a shared SerializedTerm schema is introduced.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The bounded SHACL adapter stores focus nodes as serializeTerm(quad.subject) output (adapters/shacl-engine.ts:73 and :82), which can include serialized named-node and blank-node report forms rather than raw JSON-LD identifiers. Narrowing to IRIReference or JsonLdNodeIdentifier would change report output compatibility.",
+      "boundary": "SHACL validation report diagnostic field"
+    }
+  }
+]

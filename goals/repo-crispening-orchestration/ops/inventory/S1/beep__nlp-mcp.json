@@ -1,0 +1,320 @@
+[
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+    "line": 393,
+    "symbol": "loadText / loadLines / loadJsonl / loadJson",
+    "smell": "Exported loader helpers in a schema-modeled file accept inline option object contracts (`encoding`, `skipEmpty`, `trim`, `skipInvalid`, `timeout`) while their returned data and provenance already live in `DatasetResult`/`DatasetMeta` schemas.",
+    "proposedTarget": "Promote the loader option contracts to named schemas in `DatasetLoader.ts` (for example `DatasetLoadTextOptions`, `DatasetLoadLinesOptions`, `DatasetLoadJsonlOptions`, and `DatasetLoadJsonOptions`, sharing a timeout building block if useful), derive the exported option types from those schemas, and reuse the same schemas in the matching `StreamingTools.ts` parameter option fields. In-repo exemplar: `TextReadOptions` and `TextStreamOptions` already carry analogous helper option contracts at `packages/drivers/nlp-mcp/src/Streaming/TextStream.ts:195` and `packages/drivers/nlp-mcp/src/Streaming/TextStream.ts:226`.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 1.05
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/nlp-mcp/src/Streaming/Jsonl.ts",
+    "line": 133,
+    "symbol": "streamJsonl / readJsonl / validateJsonl / sampleJsonl",
+    "smell": "Public JSONL helpers keep the `skipInvalid` option and the `validateJsonl` `{ errors, records }` result as inline object contracts even though adjacent JSONL errors and stats are schema-owned.",
+    "proposedTarget": "Add named JSONL option/result schemas next to `JsonlLineError` and `JsonlStats`, such as `JsonlReadOptions` for `skipInvalid` and `JsonlValidationResult` for `{ errors: S.Array(JsonlLineError), records: S.Array(S.Unknown) }`; derive helper types from those schemas and reuse them in `StreamingTools.ts` (`ReadJsonlParameters`, `SampleJsonlParameters`, and `ValidateJsonlParameters`). In-repo exemplar: `JsonlLineError` and `JsonlStats` are already `S.Class` models at `packages/drivers/nlp-mcp/src/Streaming/Jsonl.ts:40` and `packages/drivers/nlp-mcp/src/Streaming/Jsonl.ts:69`.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 0.82
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/nlp-mcp/src/Streaming/Pipeline.ts",
+    "line": 179,
+    "symbol": "processFile",
+    "smell": "Exported pipeline helper accepts an inline options object (`maxLines`, `skipEmpty`, `stopOnError`) while pipeline stages, errors, and results are already schema-owned.",
+    "proposedTarget": "Add a named `PipelineProcessOptions` schema beside `PipelineStage`, `PipelineError`, and `PipelineResult`, derive the helper option type from it, and reuse the schema for `ProcessFileParameters.options` in `packages/drivers/nlp-mcp/src/StreamingTools.ts:610`. In-repo exemplar: `PipelineResult` is already the schema truth for the process output at `packages/drivers/nlp-mcp/src/Streaming/Pipeline.ts:118`.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 0.78
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+    "line": 424,
+    "symbol": "ReadLinesParameters",
+    "smell": "Nested `S.Struct` under `options` matches the object-struct schema-first-inventory surface.",
+    "proposedTarget": "None while excepted. Keep the tool boundary schema in place until the dedicated option-class extraction pass can replace the nested struct with a named schema such as `TextStreamOptions`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:401-406`: inline nested `S.Struct` boundary shapes stay tracked until a dedicated class extraction pass.",
+      "boundary": "MCP tool parameter option envelope"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+    "line": 452,
+    "symbol": "TextStatsParameters",
+    "smell": "Nested `S.Struct` under `options` matches the object-struct schema-first-inventory surface.",
+    "proposedTarget": "None while excepted. Keep the tool boundary schema in place until the dedicated option-class extraction pass can replace the nested struct with a named schema such as `TextReadOptions`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:425-430`: inline nested `S.Struct` boundary shapes stay tracked until a dedicated class extraction pass.",
+      "boundary": "MCP tool parameter option envelope"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+    "line": 467,
+    "symbol": "SampleLinesParameters",
+    "smell": "Nested `S.Struct` under `options` matches the object-struct schema-first-inventory surface.",
+    "proposedTarget": "None while excepted. Keep the tool boundary schema in place until the dedicated option-class extraction pass can replace the nested struct with a named schema such as `TextReadOptions`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:417-422`: inline nested `S.Struct` boundary shapes stay tracked until a dedicated class extraction pass.",
+      "boundary": "MCP tool parameter option envelope"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+    "line": 487,
+    "symbol": "ReadJsonlParameters",
+    "smell": "Nested `S.Struct` under `options` matches the object-struct schema-first-inventory surface.",
+    "proposedTarget": "None while excepted. Keep the tool boundary schema in place until the dedicated option-class extraction pass can replace the nested struct with a named JSONL read-options schema.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:393-398`: inline nested `S.Struct` boundary shapes stay tracked until a dedicated class extraction pass.",
+      "boundary": "MCP tool parameter option envelope"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+    "line": 512,
+    "symbol": "ValidateJsonlParameters",
+    "smell": "Nested `S.Struct` under `options` matches the object-struct schema-first-inventory surface.",
+    "proposedTarget": "None while excepted. Keep the tool boundary schema in place until the dedicated option-class extraction pass can replace the nested struct with a named JSONL validation-options schema.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:433-438`: inline nested `S.Struct` boundary shapes stay tracked until a dedicated class extraction pass.",
+      "boundary": "MCP tool parameter option envelope"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+    "line": 529,
+    "symbol": "SampleJsonlParameters",
+    "smell": "Nested `S.Struct` under `options` matches the object-struct schema-first-inventory surface.",
+    "proposedTarget": "None while excepted. Keep the tool boundary schema in place until the dedicated option-class extraction pass can replace the nested struct with a named JSONL read-options schema.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:409-414`: inline nested `S.Struct` boundary shapes stay tracked until a dedicated class extraction pass.",
+      "boundary": "MCP tool parameter option envelope"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+    "line": 548,
+    "symbol": "LoadTextParameters",
+    "smell": "Nested `S.Struct` under `options` matches the object-struct schema-first-inventory surface.",
+    "proposedTarget": "None while excepted. Keep the tool boundary schema in place until the dedicated option-class extraction pass can replace the nested struct with a named dataset load-options schema.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:377-382`: inline nested `S.Struct` boundary shapes stay tracked until a dedicated class extraction pass.",
+      "boundary": "MCP tool parameter option envelope"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+    "line": 563,
+    "symbol": "LoadLinesParameters",
+    "smell": "Nested `S.Struct` under `options` matches the object-struct schema-first-inventory surface.",
+    "proposedTarget": "None while excepted. Keep the tool boundary schema in place until the dedicated option-class extraction pass can replace the nested struct with a named dataset load-options schema.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:369-374`: inline nested `S.Struct` boundary shapes stay tracked until a dedicated class extraction pass.",
+      "boundary": "MCP tool parameter option envelope"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+    "line": 580,
+    "symbol": "LoadJsonlParameters",
+    "smell": "Nested `S.Struct` under `options` matches the object-struct schema-first-inventory surface.",
+    "proposedTarget": "None while excepted. Keep the tool boundary schema in place until the dedicated option-class extraction pass can replace the nested struct with a named dataset load-options schema.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:361-366`: inline nested `S.Struct` boundary shapes stay tracked until a dedicated class extraction pass.",
+      "boundary": "MCP tool parameter option envelope"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+    "line": 596,
+    "symbol": "LoadJsonParameters",
+    "smell": "Nested `S.Struct` under `options` matches the object-struct schema-first-inventory surface.",
+    "proposedTarget": "None while excepted. Keep the tool boundary schema in place until the dedicated option-class extraction pass can replace the nested struct with a named dataset load-options schema.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:353-358`: inline nested `S.Struct` boundary shapes stay tracked until a dedicated class extraction pass.",
+      "boundary": "MCP tool parameter option envelope"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+    "line": 610,
+    "symbol": "ProcessFileParameters",
+    "smell": "Nested `S.Struct` under `options` matches the object-struct schema-first-inventory surface.",
+    "proposedTarget": "None while excepted. Keep the tool boundary schema in place until the dedicated option-class extraction pass can replace the nested struct with a named pipeline process-options schema.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:385-390`: inline nested `S.Struct` boundary shapes stay tracked until a dedicated class extraction pass.",
+      "boundary": "MCP tool parameter option envelope"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+    "line": 632,
+    "symbol": "FilterLinesParameters",
+    "smell": "Nested `S.Struct` under `options` matches the object-struct schema-first-inventory surface.",
+    "proposedTarget": "None while excepted. Keep the tool boundary schema in place until the dedicated option-class extraction pass can replace the nested struct with a named regex filter-options schema.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:345-350`: inline nested `S.Struct` boundary shapes stay tracked until a dedicated class extraction pass.",
+      "boundary": "MCP tool parameter option envelope"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+    "line": 651,
+    "symbol": "ExtractMatchesParameters",
+    "smell": "Nested `S.Struct` under `options` matches the object-struct schema-first-inventory surface.",
+    "proposedTarget": "None while excepted. Keep the tool boundary schema in place until the dedicated option-class extraction pass can replace the nested struct with a named regex extraction-options schema.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:337-342`: inline nested `S.Struct` boundary shapes stay tracked until a dedicated class extraction pass.",
+      "boundary": "MCP tool parameter option envelope"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+    "line": 674,
+    "symbol": "CountLinesParameters",
+    "smell": "Nested `S.Struct` under `options` matches the object-struct schema-first-inventory surface.",
+    "proposedTarget": "None while excepted. Keep the tool boundary schema in place until the dedicated option-class extraction pass can replace the nested struct with a named count-options schema.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:329-334`: inline nested `S.Struct` boundary shapes stay tracked until a dedicated class extraction pass.",
+      "boundary": "MCP tool parameter option envelope"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+    "line": 688,
+    "symbol": "CountJsonlParameters",
+    "smell": "Nested `S.Struct` under `options` matches the object-struct schema-first-inventory surface.",
+    "proposedTarget": "None while excepted. Keep the tool boundary schema in place until the dedicated option-class extraction pass can replace the nested struct with a named count-options schema.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:321-326`: inline nested `S.Struct` boundary shapes stay tracked until a dedicated class extraction pass.",
+      "boundary": "MCP tool parameter option envelope"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+    "line": 245,
+    "symbol": "decodeJson",
+    "smell": "Top-level `const decodeJson = S.decodeEffect(S.UnknownFromJsonString)` textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Inline `S.decodeEffect(S.UnknownFromJsonString)(value)` in `parseJson` -- audited and rejected. Effect v4 `S.decodeEffect` and `S.UnknownFromJsonString` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1356` and `.repos/effect-v4/packages/effect/src/Schema.ts:10905`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Single schema-derived JSON codec used by dataset loaders to map parse/schema failures into `DatasetLoadError`. The schema remains the source of truth and no raw `JSON.parse` bypass exists.",
+      "boundary": "dataset JSON document boundary codec"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/nlp-mcp/src/Streaming/Jsonl.ts",
+    "line": 87,
+    "symbol": "decodeJsonLine",
+    "smell": "Top-level `const decodeJsonLine = S.decodeResult(S.UnknownFromJsonString)` textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Inline `S.decodeResult(S.UnknownFromJsonString)(line)` in `parseLine` -- audited and rejected. Effect v4 `S.UnknownFromJsonString` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:10905`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Single schema-derived JSONL line codec used to normalize schema parse failures into `JsonlLineError`; this is the boundary codec, not a hand-rolled parser.",
+      "boundary": "JSONL line boundary codec"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+    "line": 169,
+    "symbol": "DatasetResult",
+    "smell": "Exported generic factory function in a schema-modeled file can look like an exported function contract bypass.",
+    "proposedTarget": "None -- keep the generic schema factory. It returns an `S.Class` whose `data` field is parameterized by the supplied schema and whose `meta` field is the `DatasetMeta` schema.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "This function creates schema truth; it does not bypass it. The paired type alias at line 204 is a type projection from the generated schema factory.",
+      "boundary": "generic schema factory"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/nlp-mcp/src/Server.ts",
+    "line": 102,
+    "symbol": "makeServerLayer",
+    "smell": "Exported constructor-style function in a schema-modeled file returns a live `Layer` and can be caught by broad exported-function detectors.",
+    "proposedTarget": "None -- keep `makeServerLayer` as the runtime layer constructor over a schema-typed `NlpMcpServerConfig` parameter. The config contract is already carried by the `NlpMcpServerConfig` `S.Class` at `packages/drivers/nlp-mcp/src/Server.ts:51`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Runtime service/layer construction is a fence-1 service boundary. Wrapping the function in `Fn` would validate no additional durable data model and would change invocation semantics.",
+      "boundary": "MCP stdio server layer constructor"
+    }
+  }
+]

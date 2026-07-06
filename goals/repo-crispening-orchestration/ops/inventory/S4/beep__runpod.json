@@ -1,0 +1,239 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/scripts/generate.ts",
+    "line": 504,
+    "symbol": "renderSchemaAlias",
+    "smell": "Generated schema aliases are rendered as `${expression}.pipe($I.annoteSchema(...))` with no codec statics; when `schemaExpression(...)` returns a `LiteralKit(...)` enum (line 905), annotation also drops kit helpers unless the generator emits a base const and reattaches them.",
+    "proposedTarget": "Extend the generated prelude to import `SchemaUtils` from `@beep/schema`; render generated aliases with `SchemaUtils.withCodecStatics`, and for LiteralKit expressions render a base const plus `SchemaUtils.withLiteralKitStatics(base)` before `withCodecStatics`. This matches `withLiteralKitStatics` at packages/foundation/modeling/schema/src/SchemaUtils/withLiteralKitStatics.ts:37 and union codec statics at packages/foundation/modeling/md/src/Md.model.ts:1612.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/scripts/generate.ts",
+    "line": 641,
+    "symbol": "RunpodHttpMethod/RunpodOperationId/RunpodRequestBodyKind/RunpodResponseBodyKind",
+    "smell": "Generator emits four public LiteralKit schemas as raw `LiteralKit(...)` consts. Kit statics survive because there is no annotation, but the schemas still lack the standard `fromUnknown`/`decodeOption` codec statics used by S4 for branded/union consts.",
+    "proposedTarget": "Render each generated LiteralKit as `LiteralKit(...).pipe(SchemaUtils.withCodecStatics)` after adding `SchemaUtils` to the generated header import at line 451. `withCodecStatics` is verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/scripts/generate.ts",
+    "line": 761,
+    "symbol": "RunpodOperationDescriptor",
+    "smell": "Generated S.Class lacks an in-body `static readonly is`; hand-written code compensates with `const isRunpodOperationDescriptor = S.is(RunpodOperationDescriptor)` in Runpod.errors.ts:102.",
+    "proposedTarget": "Have the generator render `) { static readonly is = S.is(RunpodOperationDescriptor); }` for `RunpodOperationDescriptor` (and optionally for generated classes generally). Class-static exemplar: `Heading.is` at packages/foundation/modeling/md/src/Md.model.ts:873; `withCodecStatics.ts:10-12` documents class statics as the sanctioned form.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/src/Runpod.errors.ts",
+    "line": 33,
+    "symbol": "RunpodErrorReason",
+    "smell": "Annotated LiteralKit loses kit statics through `$I.annoteSchema(...)`; the public error-reason domain also lacks `fromUnknown`/`decodeOption` codec statics for consumers that need reason decoding.",
+    "proposedTarget": "Introduce `RunpodErrorReasonBase`, then export `RunpodErrorReason = RunpodErrorReasonBase.pipe($I.annoteSchema(...), SchemaUtils.withLiteralKitStatics(RunpodErrorReasonBase), SchemaUtils.withCodecStatics)`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/src/Runpod.errors.ts",
+    "line": 74,
+    "symbol": "RunpodDocsErrorReason",
+    "smell": "Annotated LiteralKit loses kit statics through `$I.annoteSchema(...)` and lacks the standard codec statics.",
+    "proposedTarget": "Introduce `RunpodDocsErrorReasonBase`, then pipe through `SchemaUtils.withLiteralKitStatics(RunpodDocsErrorReasonBase)` and `SchemaUtils.withCodecStatics` after annotation.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 78,
+    "symbol": "RunpodQueryValue",
+    "smell": "Union const `S.Union([RunpodQueryScalar, RunpodQueryScalarArray]).pipe($I.annoteSchema(...))` lacks `withCodecStatics`; line 227 rebuilds its soft decoder as `decodeQueryValueOption = S.decodeUnknownOption(RunpodQueryValue)`.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` so query parsing can call `RunpodQueryValue.decodeOption`. Union exemplar: `Block` in packages/foundation/modeling/md/src/Md.model.ts:1612; helper contract verified at SchemaUtils/withCodecStatics.ts:90.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 227,
+    "symbol": "decodeQueryValueOption",
+    "smell": "Free-floating soft decoder `S.decodeUnknownOption(RunpodQueryValue)` duplicates the schema-derived `decodeOption` static that should live on `RunpodQueryValue`.",
+    "proposedTarget": "Delete this wall const and use `RunpodQueryValue.decodeOption` after `SchemaUtils.withCodecStatics` lands on Runpod.service.ts:78.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 62,
+    "symbol": "RunpodQueryScalarArray",
+    "smell": "Private schema const is immediately followed by `const isRunpodQueryScalarArray = S.is(RunpodQueryScalarArray)`, a guard-wall pattern for behavior separated from the schema.",
+    "proposedTarget": "Define `RunpodQueryScalarArray = S.Array(RunpodQueryScalar).pipe(SchemaUtils.withCodecStatics)` and replace `isRunpodQueryScalarArray(value)` with `RunpodQueryScalarArray.is(value)`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/src/Runpod.errors.ts",
+    "line": 118,
+    "symbol": "RunpodError",
+    "smell": "Tagged error class is guarded externally by `const isRunpodError = S.is(RunpodError)` in Runpod.service.ts:228 instead of colocating the class guard on the error data.",
+    "proposedTarget": "Add in-body `static readonly is = S.is(RunpodError);` to the class and replace the service guard with `RunpodError.is`. Class-static exemplar: packages/foundation/modeling/md/src/Md.model.ts:873.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 9
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 228,
+    "symbol": "isRunpodError",
+    "smell": "Free-floating guard `const isRunpodError = S.is(RunpodError)` duplicates a guard that belongs on the exported tagged error class.",
+    "proposedTarget": "Delete the wall const and use `RunpodError.is` after adding the in-body class static at Runpod.errors.ts:118.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 10
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/src/Runpod.errors.ts",
+    "line": 102,
+    "symbol": "isRunpodOperationDescriptor",
+    "smell": "Free-floating guard `S.is(RunpodOperationDescriptor)` compensates for the generated descriptor class lacking an in-body `is` static.",
+    "proposedTarget": "Delete this guard and use `RunpodOperationDescriptor.is` after the generator emits the static at scripts/generate.ts:761.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 11
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/scripts/generate.ts",
+    "line": 139,
+    "symbol": "decodeOpenApiDocument",
+    "smell": "Generator-local `OpenApiDocument` S.Class is followed by a top-level decode helper `S.decodeEffect(S.fromJsonString(OpenApiDocument))`; JSON boundary behavior is tied to the document schema but lives outside it.",
+    "proposedTarget": "Colocate as an in-body class static on `OpenApiDocument`, e.g. `static readonly decodeJsonEffect = S.decodeEffect(S.fromJsonString(OpenApiDocument));`, then call `OpenApiDocument.decodeJsonEffect(raw)`. Class statics are the S4 mechanism for S.Class; see Md.model.ts:873 and withCodecStatics.ts:10-12.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 12
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 302,
+    "symbol": "decodeRequest",
+    "smell": "Detector hit: generic top-level `S.decodeUnknownEffect(requestSchema)` helper for generated operation request schemas.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 13,
+    "exception": {
+      "reason": "This is an HTTP trust-boundary decoder that maps schema issues into operation-specific `RunpodError.fromDescriptor(...)` with method/path/operation context. The standard codec statics do not provide that Effect error-channel mapping.",
+      "boundary": "SPEC fence 4 — no trust-boundary weakening."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 455,
+    "symbol": "decodeJsonResponse",
+    "smell": "Detector hit: generic top-level `S.decodeUnknownEffect(responseSchema)` helper for generated operation response schemas.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 14,
+    "exception": {
+      "reason": "This decoder preserves response-body parse failures as operation-specific `RunpodError` values after HTTP status handling. Replacing it with `fromUnknown` would throw and `decodeOption` would lose the schema issue.",
+      "boundary": "SPEC fence 4 — no trust-boundary weakening."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 703,
+    "symbol": "executeRawRequest",
+    "smell": "Detector hit: explicit `S.decodeUnknownEffect(RunpodRawRequest)(rawRequest)` in the raw request escape hatch.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 15,
+    "exception": {
+      "reason": "The raw escape hatch still validates the request at the HTTP boundary and maps failures into `RunpodError.raw(...)` with method/path context. Codec statics would not preserve that error shape.",
+      "boundary": "SPEC fence 4 — no trust-boundary weakening; raw HTTP boundary."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 176,
+    "symbol": "RunpodShape",
+    "smell": "Detector hit: exported service-shape interface exposes generated behavior away from schema-modeled data.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 16,
+    "exception": {
+      "reason": "This is the Context.Service shape for the Runpod driver and extends a generated operation port. It is a service contract over Effectful methods, not schema-modeled data.",
+      "boundary": "SPEC fence 1 — service-contract/interface carve-out."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/scripts/generate.ts",
+    "line": 885,
+    "symbol": "RunpodOperationsShape",
+    "smell": "Detector hit: generator emits a public interface full of operation methods that are not `dual`.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 17,
+    "exception": {
+      "reason": "This is the generated service/port contract consumed by `RunpodShape`. Dualizing the interface signatures would change the driver service surface rather than colocating schema behavior.",
+      "boundary": "SPEC fence 1 — service-contract/interface carve-out."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/src/RunpodDocs.service.ts",
+    "line": 86,
+    "symbol": "RunpodDocsShape",
+    "smell": "Detector hit: service-shape interface exposes behavior away from schema-modeled data.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 18,
+    "exception": {
+      "reason": "This is the Context.Service shape for the documentation-index driver. It has no runtime schema value to receive statics and should remain a service contract.",
+      "boundary": "SPEC fence 1 — service-contract/interface carve-out."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/runpod/src/Runpod.errors.ts",
+    "line": 222,
+    "symbol": "RunpodDocsError.fromReason",
+    "smell": "Detector hit: public two-argument static constructor is not `dual`.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 19,
+    "exception": {
+      "reason": "The second argument is optional with a default (`options = {}`). Arity-based `dual(2, ...)` would turn the valid `fromReason(reason)` call into data-last partial application instead of constructing an error.",
+      "boundary": "Public error-constructor API with optional trailing args; dual dispatch is incompatible."
+    }
+  }
+]

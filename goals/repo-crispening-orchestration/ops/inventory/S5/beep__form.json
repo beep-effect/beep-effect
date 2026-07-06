@@ -1,0 +1,92 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/ui-system/form/src/core/Options.ts",
+    "line": 29,
+    "symbol": "FieldOption",
+    "smell": "Detector candidate: FieldOption defaults its value type to broad string and uses React.ReactNode for labels.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "FieldOption is a public UI option interface shared by select/radio/toggle components. The concrete form schema owns the selected value domain; this interface only carries renderable labels and caller-provided option values.",
+      "boundary": "React field option props API"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/ui-system/form/src/internal/FieldShell.tsx",
+    "line": 38,
+    "symbol": "Form/field React props interfaces",
+    "smell": "Detector candidate: exported field/component props interfaces expose broad ReactNode/string/number/callback props across the package.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These are React-facing props for field components and are explicitly carved out by the package instructions. Field value precision is supplied by the caller's effect schema passed into TanStack form options.",
+      "boundary": "public React component props API"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/ui-system/form/src/core/FormSchema.ts",
+    "line": 80,
+    "symbol": "toFormSchema",
+    "smell": "Detector candidate: the package does not define S.toArbitrary laws around the schemas it receives.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "toFormSchema is a generic adapter from caller-owned effect schemas to TanStack's Standard Schema contract. The caller schema owns precision and round-trip laws; @beep/form's own tests correctly exercise adapter behavior with small representative schemas.",
+      "boundary": "generic Schema-to-TanStack adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-equivalence",
+    "file": "packages/foundation/ui-system/form/src/core/Path.ts",
+    "line": 205,
+    "symbol": "isPathUnderRoot/schemaPathToFieldPath",
+    "smell": "Detector candidate: path helpers use hand-written string equality and formatting instead of S.toEquivalence.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These helpers operate on TanStack/schema issue path strings and prototype-safe dynamic path formatting, not on a named domain schema with structural equality semantics. S.toEquivalence does not apply.",
+      "boundary": "form field path formatting and dirty-path predicate helpers"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/ui-system/form/src/core/Errors.ts",
+    "line": 31,
+    "symbol": "FieldErrorEntry.message",
+    "smell": "Detector candidate: renderable field-error messages are modeled as optional broad strings.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The helper normalizes TanStack/Standard Schema error payloads into the minimal @beep/ui FieldError rendering shape. Message text is user-facing copy from validators, not a domain identifier that should be branded.",
+      "boundary": "TanStack form validation error rendering boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/ui-system/form/stories/fields/Autocomplete.stories.tsx",
+    "line": 6,
+    "symbol": "Storybook demo schemas",
+    "smell": "Detector candidate: story files define many small S.Struct examples with broad S.String/S.Finite/S.Array(S.String) fields.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These are Storybook/demo fixtures for exercising field controls with simple values, not reusable package-owned domain schemas. Static fixtures and demos are an S5 carve-out; precision belongs in the consuming app's submitted schema.",
+      "boundary": "Storybook field demo fixtures"
+    }
+  }
+]

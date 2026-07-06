@@ -1,0 +1,13 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/provenance/src/TextAnchor.ts",
+    "line": 90,
+    "symbol": "isWellOrdered",
+    "smell": "Pure well-orderedness predicate over TextAnchor's own fields (`anchor.startChar <= anchor.endChar`) lives as a free exported function directly below the TextAnchor S.Class — behavior separated from its data in the schema's own file.",
+    "proposedTarget": "Colocate as an in-body static on the class: `static readonly isWellOrdered = (anchor: { readonly startChar: number; readonly endChar: number }): boolean => anchor.startChar <= anchor.endChar` (in-body statics are the class-side pattern — piping S.Class loses constructor identity, packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:10-12; the structural parameter type keeps pre-construction inputs checkable). Consumers are in-package only (test/TextAnchor.test.ts:1,15,16 and README.md:15), so dropping the free export is an in-package §5.4 sweep; or keep it as a one-line alias. Note the file's own JSDoc marks schema-level cross-field enforcement as a tracked follow-up — absorbing the predicate into an S.check refinement is S1 territory; this finding covers only the colocation.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 1.4
+  }
+]

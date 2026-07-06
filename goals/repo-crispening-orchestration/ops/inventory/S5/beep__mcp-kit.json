@@ -1,0 +1,175 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 390,
+    "symbol": "FetchableHandle.handleId",
+    "smell": "Field documented as \"UUID identifying the out-of-band payload\" is typed as broad S.NonEmptyString; any non-empty string passes, so a non-UUID handle id decodes silently.",
+    "proposedTarget": "Use the branded UUID schema from @beep/schema (packages/foundation/modeling/schema/src/String.ts:101, NonEmptyTrimmedStr.check(S.isUUID()) — S.isUUID verified at .repos/effect-v4/packages/effect/src/Schema.ts:6592). Consumer-owned minting call sites then construct via UUID.make.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+    "line": 103,
+    "symbol": "TierGateAuditRecord.occurredAt",
+    "smell": "Field documented as \"ISO-8601 timestamp at which the outcome was decided\" is typed as broad S.NonEmptyString; any non-empty string (e.g. \"not-a-date\") is a valid audit timestamp, and this record is destined for the UsageRecord.metadata jsonb sink.",
+    "proposedTarget": "S.DateTimeUtcFromString (verified .repos/effect-v4/packages/effect/src/Schema.ts:12024; decodeTo<DateTimeUtc, String> so the encoded form remains a plain string and the jsonb-serializable rationale still holds). fromApprovedToolsPolicy (TierGate.ts:353) then passes DateTime.now output directly instead of DateTime.formatIso.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+    "line": 86,
+    "symbol": "TierGateAuditRecord",
+    "smell": "Persist-boundary codec (jsonb sink) with an OptionFromNullOr(S.String) absorption (toolCallId) has no S.toArbitrary round-trip law; test/TierGate.test.ts exercises dispatch behavior with hand fixtures only.",
+    "proposedTarget": "Additive property test: S.toArbitrary(TierGateAuditRecord) (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) + FastCheck via @effect/vitest asserting decode(encode(x)) round-trips under S.toEquivalence (Schema.ts:13201). Existing behavior tests stay.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 393,
+    "symbol": "FetchableHandle.expiresAt",
+    "smell": "Field documented as \"ISO-8601 timestamp after which the handle is no longer fetchable\" is typed as broad S.NonEmptyString; an unparseable expiry decodes silently, defeating TTL enforcement downstream.",
+    "proposedTarget": "S.DateTimeUtcFromString (verified .repos/effect-v4/packages/effect/src/Schema.ts:12024; encoded form remains string, wire-safe).",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/mcp-kit/src/SourceAuth.ts",
+    "line": 105,
+    "symbol": "SourceAuthRegistration.signupUrl",
+    "smell": "Field documented as \"Optional signup URL surfaced when the credential is missing\" is S.OptionFromNullOr(S.String); any string — including non-URLs — is accepted and surfaced to callers/models.",
+    "proposedTarget": "S.OptionFromNullOr(URLStr) with the branded URLStr from @beep/schema (packages/foundation/modeling/schema/src/URL.ts:44, validated against new URL()).",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+    "line": 286,
+    "symbol": "TierGatePolicy.approvedTools",
+    "smell": "Security-policy allowlist typed as unbounded S.Array(S.String); empty-string tool names are meaningless yet accepted into the approved-tools policy consulted by the fail-closed gate.",
+    "proposedTarget": "S.Array(S.NonEmptyString) at minimum (MCP tool names are non-empty); consider a uniqueness check so duplicate policy entries are rejected at decode time.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
+    "line": 53,
+    "symbol": "ApiKeyRequiredFailure",
+    "smell": "Wire-boundary codec (encoded failure JSON is mirrored into CallToolResult content[].text per McpServer.ts:717-734) nesting SourceAuthRegistration with an OptionFromNullOr absorption has no S.toArbitrary round-trip law; test/ApiKeyRequired.test.ts uses hand fixtures only.",
+    "proposedTarget": "Additive property test: S.toArbitrary(ApiKeyRequiredFailure) + FastCheck round-trip law decode(encode(x)) == x under S.toEquivalence; existing wire-behavior fixtures stay.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/capability/mcp-kit/src/SourceAuth.ts",
+    "line": 94,
+    "symbol": "SourceAuthRegistration",
+    "smell": "Reusable registration codec with an OptionFromNullOr(S.String) absorption (signupUrl) is nested by ApiKeyRequiredFailure and consumed by ToolkitComposition, but has no S.toArbitrary round-trip law anywhere in the package tests.",
+    "proposedTarget": "Additive property test: S.toArbitrary(SourceAuthRegistration) + FastCheck round-trip law under S.toEquivalence.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+    "line": 142,
+    "symbol": "TierGateVerdict",
+    "smell": "Tagged union derived via LiteralKit(...).toTaggedUnion(\"verdict\") embedding TierGateAuditRecord has no S.toArbitrary round-trip law; only hand-built verdicts are exercised in tests.",
+    "proposedTarget": "Additive property test: S.toArbitrary(TierGateVerdict) + FastCheck round-trip law under S.toEquivalence (verify arbitrary derivation through the kit-derived union at implementation time).",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+    "line": 100,
+    "symbol": "TierGateAuditRecord.toolCallId",
+    "smell": "Caller-supplied tool call identifier typed as S.OptionFromNullOr(S.String); an empty-string id decodes to Some(\"\") when absence should be None, polluting the sanitized audit record.",
+    "proposedTarget": "S.OptionFromNullOr(S.NonEmptyString) so present-but-empty identifiers are rejected at the schema boundary.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 233,
+    "symbol": "ProjectWithinBudgetOptions.budgetBytes",
+    "smell": "Broad `number` for a byte budget with no S.Int/S.Finite/non-negativity constraint; NaN or negative budgets make every `<=` comparison in projectWithinBudget false, silently forcing all payloads down the Fetchable path.",
+    "proposedTarget": "NonNegativeInt brand from @beep/schema (packages/foundation/modeling/schema/src/Number.ts:182 — finite, integer, non-negative checked; already imported by this module for sizeBytes).",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 388,
+    "symbol": "FetchableHandle",
+    "smell": "Reusable wire schema returned in tool results has no S.toArbitrary round-trip law; value rises once the handleId/expiresAt precision upgrades (UUID brand, DateTimeUtcFromString) turn it into a genuine transformation codec.",
+    "proposedTarget": "Additive property test: S.toArbitrary(FetchableHandle) + FastCheck round-trip law under S.toEquivalence, landed together with the FieldTier.ts:390/:393 precision findings.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/mcp-kit/src/SourceAuth.ts",
+    "line": 99,
+    "symbol": "SourceAuthRegistration.envVar",
+    "smell": "Environment-variable name typed as S.NonEmptyString; names with spaces or '=' would produce a registration that can never resolve via Config.redacted.",
+    "proposedTarget": "Pattern-checked string (e.g. S.NonEmptyString.check over /^[A-Za-z_][A-Za-z0-9_]*$/) — judgment call: POSIX allows broader names and all in-repo drivers use conventional uppercase, so the added precision may not pay for the brand ceremony.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 323,
+    "symbol": "ColumnarEnvelope.columns",
+    "smell": "S.Array(S.String) columns and S.Array(S.Array(S.Unknown)) rows are broad, but they reshape arbitrary consumer payload records where empty-string keys and unknown values are legal JSON; tightening would make toColumnarEnvelope reject valid 3rd-party payloads.",
+    "proposedTarget": "Keep as-is; precision is intentionally loose at this payload-reshaping boundary.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Columns are R.keys of arbitrary consumer records and rows carry arbitrary JSON cell values (nulls are filled deliberately for sparse rows); empty-string keys are legal JSON keys and must round-trip, so NonEmptyString elements or bounded arrays would reject valid payloads.",
+      "boundary": "3rd-party/consumer payload reshaping boundary (row-oriented MCP tool results of any shape)"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 214,
+    "symbol": "OversizedFieldProjection.value",
+    "smell": "UnknownRecord field is maximally broad, but it deliberately carries the oversized minimal-tier projection of an arbitrary consumer payload handed to the consumer-owned mintFetchableHandle.",
+    "proposedTarget": "Keep as-is; UnknownRecord from @beep/schema is the repo's canonical schema for exactly this unknown-payload boundary.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "The projected payload's shape is defined by consumer-supplied field tiers over 3rd-party data; the kit cannot know it more precisely, and UnknownRecord is already the repo-sanctioned schema for unknown record payloads.",
+      "boundary": "3rd-party/consumer payload boundary (oversized projection handed to consumer-owned handle minting)"
+    }
+  }
+]
