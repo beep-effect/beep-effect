@@ -11,6 +11,21 @@ import * as Backend from "@beep/nlp-processing/Backend/NLPBackend";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
+
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
+  const arbitrary = S.toArbitrary(schema);
+  const decode = S.decodeUnknownSync(schema);
+  const encode = S.encodeSync(schema);
+  const equals = S.toEquivalence(schema);
+
+  fc.assert(
+    fc.property(arbitrary, (value) => {
+      expect(equals(decode(encode(value)), value)).toBe(true);
+    }),
+    { numRuns: 50 }
+  );
+};
 
 const capabilities: Backend.BackendCapabilities = {
   tokenization: true,
@@ -38,6 +53,7 @@ describe("BackendCapabilities", () => {
       extractRelations: () => Effect.succeed([]),
     };
     expect(Backend.supportsCapability(stub, "tokenization")).toBe(true);
+    expect(Backend.supportsCapability("tokenization")(stub)).toBe(true);
     expect(Backend.supportsCapability(stub, "lemmatization")).toBe(false);
   });
 
@@ -71,7 +87,7 @@ describe("Failure constructors", () => {
   });
 
   it("notSupported honors an explicit message", () => {
-    const err = Backend.notSupported("wink", "extractRelations", "lite model has no RE");
+    const err = Backend.notSupported("wink", "extractRelations", { message: "lite model has no RE" });
     expect(err.message).toBe("lite model has no RE");
   });
 
@@ -86,7 +102,7 @@ describe("Failure constructors", () => {
 
   it("operationError records the operation and retains the cause", () => {
     const cause = new Error("nope");
-    const err = Backend.operationError("corenlp", "posTag", cause);
+    const err = Backend.operationError("corenlp", "posTag", { cause });
     expect(err._tag).toBe("BackendOperationError");
     expect(err.operation).toBe("posTag");
     expect(err.message).toContain("posTag");
@@ -95,6 +111,18 @@ describe("Failure constructors", () => {
 });
 
 describe("Tagged errors are schema-decodable", () => {
+  it("round-trips schema-derived backend not-supported errors", () => {
+    assertSchemaRoundTrip(Backend.BackendNotSupported);
+  });
+
+  it("recognizes constructed backend errors through the union statics", () => {
+    expect(Backend.NLPBackendError.is(Backend.notSupported("wink", "posTag"))).toBe(true);
+    expect(Backend.NLPBackendError.is(Backend.initError("wink", new Error("boom")))).toBe(true);
+    expect(Backend.NLPBackendError.is(Backend.operationError("wink", "posTag", { cause: new Error("boom") }))).toBe(
+      true
+    );
+  });
+
   it.effect(
     "BackendNotSupported round-trips through encode/decode",
     Effect.fnUntraced(function* () {

@@ -294,9 +294,12 @@ export class RedactCauseOptions extends S.Class<RedactCauseOptions>($I`RedactCau
   $I.annote("RedactCauseOptions", {
     description: "Options controlling channel and length bounds when redacting a cause.",
   })
-) {}
+) {
+  static readonly is = S.is(RedactCauseOptions);
+}
 
 const defaultOptions = RedactCauseOptions.make({});
+const isRedactionDataFirst = (args: IArguments): boolean => args.length >= 2 || !RedactCauseOptions.is(args[0]);
 
 const wasTruncated = (input: string, maxLength: number): boolean =>
   Str.length(sanitizeSensitiveText(input)) > maxLength;
@@ -324,10 +327,7 @@ const detailForChannel = (summary: CauseSummary, options: RedactCauseOptions): O
  * @since 0.0.0
  * @category utilities
  */
-export const redactCauseSummary = (
-  summary: CauseSummary,
-  options: RedactCauseOptions = defaultOptions
-): RedactedCause => {
+const redactCauseSummaryImpl = (summary: CauseSummary, options: RedactCauseOptions = defaultOptions): RedactedCause => {
   const messageTruncated = wasTruncated(summary.primaryMessage, options.messageLimit);
   const detail = detailForChannel(summary, options);
   const detailTruncated = O.match(detail, {
@@ -348,6 +348,11 @@ export const redactCauseSummary = (
     truncated: messageTruncated || detailTruncated,
   });
 };
+
+export const redactCauseSummary: {
+  (summary: CauseSummary, options?: RedactCauseOptions): RedactedCause;
+  (options: RedactCauseOptions): (summary: CauseSummary) => RedactedCause;
+} = dual(isRedactionDataFirst, redactCauseSummaryImpl);
 
 const toCause = (input: unknown): Cause.Cause<unknown> => (Cause.isCause(input) ? input : Cause.fail(input));
 
@@ -377,8 +382,14 @@ const toCause = (input: unknown): Cause.Cause<unknown> => (Cause.isCause(input) 
  * @since 0.0.0
  * @category utilities
  */
-export const redactCause = (input: unknown, options: RedactCauseOptions = defaultOptions): RedactedCause =>
-  redactCauseSummary(summarizeCause(toCause(input)), options);
+export const redactCause: {
+  (input: unknown, options?: RedactCauseOptions): RedactedCause;
+  (options: RedactCauseOptions): (input: unknown) => RedactedCause;
+} = dual(
+  isRedactionDataFirst,
+  (input: unknown, options: RedactCauseOptions = defaultOptions): RedactedCause =>
+    redactCauseSummary(summarizeCause(toCause(input)), options)
+);
 
 /**
  * Redact an unknown error or {@link Cause} for a client-facing channel,
@@ -452,14 +463,17 @@ export class RedactedCauseError extends TaggedErrorClass<RedactedCauseError>($I`
  * @since 0.0.0
  * @category utilities
  */
-export const redactCauseEffect = Effect.fn("observability.redact_cause")(function* (
-  input: unknown,
-  options: RedactCauseOptions = defaultOptions
-) {
-  const redacted = redactCause(input, options);
-  yield* Effect.annotateCurrentSpan({
-    cause_tag: redacted.tag,
-    cause_fingerprint: redacted.fingerprint,
-  });
-  return redacted;
-});
+export const redactCauseEffect: {
+  (input: unknown, options?: RedactCauseOptions): Effect.Effect<RedactedCause>;
+  (options: RedactCauseOptions): (input: unknown) => Effect.Effect<RedactedCause>;
+} = dual(
+  isRedactionDataFirst,
+  Effect.fn("observability.redact_cause")(function* (input: unknown, options: RedactCauseOptions = defaultOptions) {
+    const redacted = redactCause(input, options);
+    yield* Effect.annotateCurrentSpan({
+      cause_tag: redacted.tag,
+      cause_fingerprint: redacted.fingerprint,
+    });
+    return redacted;
+  })
+);

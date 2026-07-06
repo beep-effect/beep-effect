@@ -20,9 +20,9 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, NonNegNum, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Brand, Clock, Duration, Effect, Random, Tuple } from "effect";
+import { Clock, Duration, Effect, Random, Tuple } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -152,24 +152,24 @@ export type ExecutionStrategy = typeof ExecutionStrategy.Type;
  * @category models
  */
 export class ExecutionMetrics extends S.Class<ExecutionMetrics>($I`ExecutionMetrics`)({
-  cacheHits: S.Finite,
-  cacheMisses: S.Finite,
+  cacheHits: NonNegativeInt,
+  cacheMisses: NonNegativeInt,
   duration: S.Duration,
-  nodesCreated: S.Finite,
-  nodesProcessed: S.Finite,
+  nodesCreated: NonNegativeInt,
+  nodesProcessed: NonNegativeInt,
   /** Tokens consumed by LLM-backed operations. */
-  tokensConsumed: S.Finite.annotateKey({
+  tokensConsumed: NonNegativeInt.annotateKey({
     description: "Tokens consumed by LLM-backed operations.",
   }),
 }) {
   static readonly empty = () =>
     ExecutionMetrics.make({
-      cacheHits: 0,
-      cacheMisses: 0,
+      cacheHits: NonNegativeInt.make(0),
+      cacheMisses: NonNegativeInt.make(0),
       duration: Duration.zero,
-      nodesCreated: 0,
-      nodesProcessed: 0,
-      tokensConsumed: 0,
+      nodesCreated: NonNegativeInt.make(0),
+      nodesProcessed: NonNegativeInt.make(0),
+      tokensConsumed: NonNegativeInt.make(0),
     });
 
   static readonly combine: {
@@ -177,14 +177,15 @@ export class ExecutionMetrics extends S.Class<ExecutionMetrics>($I`ExecutionMetr
     (m2: ExecutionMetrics): (m1: ExecutionMetrics) => ExecutionMetrics;
   } = dual(
     2,
-    (m1: ExecutionMetrics, m2: ExecutionMetrics): ExecutionMetrics => ({
-      cacheHits: m1.cacheHits + m2.cacheHits,
-      cacheMisses: m1.cacheMisses + m2.cacheMisses,
-      duration: Duration.sum(m1.duration, m2.duration),
-      nodesCreated: m1.nodesCreated + m2.nodesCreated,
-      nodesProcessed: m1.nodesProcessed + m2.nodesProcessed,
-      tokensConsumed: m1.tokensConsumed + m2.tokensConsumed,
-    })
+    (m1: ExecutionMetrics, m2: ExecutionMetrics): ExecutionMetrics =>
+      ExecutionMetrics.make({
+        cacheHits: NonNegativeInt.make(m1.cacheHits + m2.cacheHits),
+        cacheMisses: NonNegativeInt.make(m1.cacheMisses + m2.cacheMisses),
+        duration: Duration.sum(m1.duration, m2.duration),
+        nodesCreated: NonNegativeInt.make(m1.nodesCreated + m2.nodesCreated),
+        nodesProcessed: NonNegativeInt.make(m1.nodesProcessed + m2.nodesProcessed),
+        tokensConsumed: NonNegativeInt.make(m1.tokensConsumed + m2.tokensConsumed),
+      })
   );
 }
 
@@ -253,11 +254,11 @@ export class ConstantOperationCost extends S.Class<ConstantOperationCost>($I`Con
     complexity: S.tag("O(1)"),
     estimatedTime: S.Duration,
     /** Memory cost in bytes. */
-    memoryCost: S.Finite.annotateKey({
+    memoryCost: NonNegNum.annotateKey({
       description: "Memory cost in bytes.",
     }),
     /** LLM token cost. */
-    tokenCost: S.Finite.annotateKey({
+    tokenCost: NonNegNum.annotateKey({
       description: "LLM token cost in tokens.",
     }),
   },
@@ -292,11 +293,11 @@ export class LinearOperationCost extends S.Class<LinearOperationCost>($I`LinearO
     complexity: S.tag("O(n)"),
     estimatedTime: S.Duration,
     /** Memory cost in bytes. */
-    memoryCost: S.Finite.annotateKey({
+    memoryCost: NonNegNum.annotateKey({
       description: "Memory cost in bytes.",
     }),
     /** LLM token cost. */
-    tokenCost: S.Finite.annotateKey({
+    tokenCost: NonNegNum.annotateKey({
       description: "LLM token cost in tokens.",
     }),
   },
@@ -331,11 +332,11 @@ export class LinearithmicOperationCost extends S.Class<LinearithmicOperationCost
     complexity: S.tag("O(n log n)"),
     estimatedTime: S.Duration,
     /** Memory cost in bytes. */
-    memoryCost: S.Finite.annotateKey({
+    memoryCost: NonNegNum.annotateKey({
       description: "Memory cost in bytes.",
     }),
     /** LLM token cost. */
-    tokenCost: S.Finite.annotateKey({
+    tokenCost: NonNegNum.annotateKey({
       description: "LLM token cost in tokens.",
     }),
   },
@@ -370,11 +371,11 @@ export class QuadraticOperationCost extends S.Class<QuadraticOperationCost>($I`Q
     complexity: S.tag("O(n^2)"),
     estimatedTime: S.Duration,
     /** Memory cost in bytes. */
-    memoryCost: S.Finite.annotateKey({
+    memoryCost: NonNegNum.annotateKey({
       description: "Memory cost in bytes.",
     }),
     /** LLM token cost. */
-    tokenCost: S.Finite.annotateKey({
+    tokenCost: NonNegNum.annotateKey({
       description: "LLM token cost in tokens.",
     }),
   },
@@ -422,19 +423,17 @@ export const OperationCost = Complexity.mapMembers(
       (cost: OperationCost, nodeCount: number): OperationCost;
       (nodeCount: number): (cost: OperationCost) => OperationCost;
     } = dual(2, (cost: OperationCost, nodeCount: number): OperationCost => {
-      const timeMultiplier =
-        cost.complexity === "O(1)"
-          ? 1
-          : cost.complexity === "O(n)"
-            ? nodeCount
-            : cost.complexity === "O(n log n)"
-              ? nodeCount * Math.log2(nodeCount)
-              : nodeCount * nodeCount;
+      const timeMultiplier = Complexity.$match(cost.complexity, {
+        "O(1)": () => 1,
+        "O(n)": () => nodeCount,
+        "O(n log n)": () => nodeCount * Math.log2(nodeCount),
+        "O(n^2)": () => nodeCount * nodeCount,
+      });
       return {
         complexity: cost.complexity,
         estimatedTime: Duration.times(cost.estimatedTime, timeMultiplier),
-        memoryCost: cost.memoryCost * nodeCount,
-        tokenCost: cost.tokenCost * nodeCount,
+        memoryCost: NonNegNum.make(cost.memoryCost * nodeCount),
+        tokenCost: NonNegNum.make(cost.tokenCost * nodeCount),
       };
     });
 
@@ -557,7 +556,11 @@ export const OperationCategory = LiteralKit([
   "filtering",
   "composition",
   "llm",
-]);
+]).pipe(
+  $I.annoteSchema("OperationCategory", {
+    description: "Graph operation category vocabulary.",
+  })
+);
 
 /**
  * Runtime type represented by {@link OperationCategory}.
@@ -603,31 +606,24 @@ export type OperationCategory = typeof OperationCategory.Type;
  */
 export class ExecutionOptions extends S.Class<ExecutionOptions>($I`ExecutionOptions`)(
   {
-    cache: S.Boolean,
-    strategy: ExecutionStrategy,
-    timeout: S.Option(S.Duration),
-    trace: S.Boolean,
+    cache: SchemaUtils.withKeyDefaults(S.Boolean, true),
+    strategy: SchemaUtils.withKeyDefaults(ExecutionStrategy, ExecutionStrategy.Sequential),
+    timeout: SchemaUtils.withKeyDefaults(S.Option(S.Duration), O.none()),
+    trace: SchemaUtils.withKeyDefaults(S.Boolean, false),
   },
   $I.annote("ExecutionOptions", {
     description: "Options controlling a single execution.",
   })
 ) {
-  static readonly default = () =>
-    ExecutionOptions.make({
-      cache: true,
-      strategy: ExecutionStrategy.Sequential,
-      timeout: O.none(),
-      trace: false,
-    });
+  static readonly default = () => ExecutionOptions.make({});
   static readonly sequential = () =>
     ExecutionOptions.make({
-      ...ExecutionOptions.default(),
       strategy: ExecutionStrategy.cases.Sequential.make({}),
     });
-  static readonly parallel = (concurrency = 4) => ({
-    ...ExecutionOptions.default(),
-    strategy: ExecutionStrategy.Parallel(concurrency),
-  });
+  static readonly parallel = (concurrency = 4) =>
+    ExecutionOptions.make({
+      strategy: ExecutionStrategy.Parallel(concurrency),
+    });
 }
 
 // =============================================================================
@@ -651,7 +647,8 @@ export const ExecutionId = S.String.pipe(
   S.brand("ExecutionId"),
   $I.annoteSchema("ExecutionId", {
     description: "Unique identifier for one execution.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -668,21 +665,6 @@ export const ExecutionId = S.String.pipe(
  * @category models
  */
 export type ExecutionId = typeof ExecutionId.Type;
-
-/**
- * Constructor for {@link ExecutionId}.
- *
- * @example
- * ```ts
- * import { makeExecutionId } from "@beep/nlp-processing/Graph/GraphOperations/Types"
- *
- * console.log(makeExecutionId("exec-1"))
- * ```
- *
- * @since 0.0.0
- * @category constructors
- */
-export const makeExecutionId: Brand.Constructor<ExecutionId> = Brand.nominal<ExecutionId>();
 
 /**
  * Generate a fresh execution id from the Effect clock and random service.
@@ -703,7 +685,7 @@ export const makeExecutionId: Brand.Constructor<ExecutionId> = Brand.nominal<Exe
 export const generateExecutionId: Effect.Effect<ExecutionId> = Effect.gen(function* () {
   const ms = yield* Clock.currentTimeMillis;
   const rand = yield* Random.nextInt;
-  return makeExecutionId(`exec-${ms}-${rand}`);
+  return ExecutionId.make(`exec-${ms}-${rand}`);
 });
 
 // =============================================================================
@@ -746,10 +728,10 @@ export interface OperationResult<B, E> {
  * @example
  * ```ts
  * import { Effect } from "effect"
- * import { ExecutionMetrics, makeOperationResult, makeExecutionId } from "@beep/nlp-processing/Graph/GraphOperations/Types"
+ * import { ExecutionId, ExecutionMetrics, makeOperationResult } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const program = makeOperationResult(
- *   makeExecutionId("exec-example"),
+ *   ExecutionId.make("exec-example"),
  *   "source graph",
  *   [],
  *   [],

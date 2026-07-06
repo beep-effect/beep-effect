@@ -8,18 +8,11 @@
     "proposedTarget": "`S.OptionFromOptionalKey(...)` (effect-v4 Schema.ts:8668; encoded side stays optionalKey per the interface at Schema.ts:8653, so the wire contract is unchanged) piped through `SchemaUtils.withNoneDefault` (SchemaUtils/withConstructorDefaults.ts:46) to erase `O.none()` at each make. makeGrounded then collapses to a single `GroundedExtraction.make({...})` passing Options through; definedExtractions becomes an `A.filterMap` (effect-v4 Array.ts:3710) pairing each extraction with its span; the law-practice `O.fromUndefinedOr` shims delete. Judgment: public-form change embedded in an out-of-family port schema (`S.Array(GroundedExtraction)` at law-practice IrToLaw.ports.ts:96) — the §5.4 same-PR consumer sweep crosses the foundation-family fence-8 boundary, and the span type-predicate rework is a design change, so this needs a coordination decision, not a mechanical rewrite.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 1.4
-  },
-  {
-    "ruleId": "SFV4-null-return",
-    "file": "packages/foundation/capability/langextract/src/Alignment/index.ts",
-    "line": 78,
-    "symbol": "findExact",
-    "smell": "Module-private domain helper typed `(sourceText, query) => undefined | readonly [number, string]` returning `undefined` on miss; the sole caller alignCandidateImpl runs an `if (exact !== undefined)` / `if (lesser !== undefined)` / `if (fuzzy !== undefined)` ladder (lines 232-247) over three such helpers — exactly the dispatch an Option chain collapses.",
-    "proposedTarget": "Return `O.Option<readonly [number, string]>` (`start >= 0 ? O.some([start, query]) : O.none()`); alignCandidateImpl becomes an `O.orElse` chain (effect-v4 Option.ts:657) or `O.firstSomeOf` over lazy candidates (Option.ts:774), each arm tagged with its AlignmentStatus via `O.map`, finished by `O.match` (Option.ts:423) into makeGrounded. All three find* helpers are module-private, so the exported dual `alignCandidate`/`alignCandidates` signatures are untouched — in-package sweep only.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 1.3
+    "roiRank": 1.4,
+    "exception": {
+      "reason": "Option-ifying GroundedExtraction optional keys changes the exported Type used by @beep/law-practice IrToLaw ports and services; it must ship with that consumer sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -30,7 +23,11 @@
     "proposedTarget": "Absorb into a transformation codec composed in front of `S.UnknownFromJsonString`: `S.String.pipe(S.decodeTo(S.String, SchemaTransformation.transform({...fence-strip + trim...})))` (S.decodeTo at effect-v4 Schema.ts:5408; SchemaTransformation.transform at SchemaTransformation.ts:334; built-in trim() transformation at SchemaTransformation.ts:428), then the existing ModelOutput decode. Assisted, not codemod: parseModelOutput maps the two decode stages to distinct error reasons (`model-output-parse-failed` line 425 vs `model-output-schema-invalid` line 434), so either keep two-stage decoding or discriminate the composed codec's issue — a small design choice.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 1.2
+    "roiRank": 1.2,
+    "exception": {
+      "reason": "Formatting normalization remains a pre-parse step to preserve separate parse-failed and schema-invalid errors; moving it into one codec is deferred to a parser redesign with equivalent error taxonomy.",
+      "boundary": "manual-audit parser boundary, deferred codec redesign"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -41,7 +38,11 @@
     "proposedTarget": "Carry the default on the schema field: `fuzzyThreshold: UnitInterval.pipe(SchemaUtils.withKeyDefaults(0.82))` (SchemaUtils/withKeyDefaults.ts:50, make + missing-key decode) so a constructed/decoded LangExtractOptions always has a threshold; UnitInterval is a constrained schema (packages/foundation/modeling/schema/src/UnitInterval.ts:32) so the withConstantDefault explicit-type-arg gotcha may apply. The residual `options?.` optional-parameter case collapses with the companion LangExtractRequest.options finding (Extraction/index.ts:270) by defaulting the options field itself; both `??` sites in this file go in one options-schema change.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 1.2
+    "roiRank": 1.2,
+    "exception": {
+      "reason": "Moving the fuzzy threshold default into LangExtractOptions changes public defaulting and encoded snapshot behavior; defer to a coordinated options-default sweep with parity fixtures.",
+      "boundary": "public-form defaulting, deferred schema-default sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -52,29 +53,11 @@
     "proposedTarget": "Same options-schema refactor as the line-242 finding: `maxExtractions: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(256))` (SchemaUtils/withKeyDefaults.ts:50; NonNegativeInt is branded, so `withConstantDefault` would need the explicit type argument if chosen instead), then `A.take(candidates, options.maxExtractions)` with no `??` and no Math.min. Behavior-parity note for §5.3: verify take-clamping equivalence in the wave PR.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 1.2
-  },
-  {
-    "ruleId": "SFV4-null-return",
-    "file": "packages/foundation/capability/langextract/src/Alignment/index.ts",
-    "line": 109,
-    "symbol": "findLesser",
-    "smell": "Module-private domain helper returning `undefined` on three paths (lines 112, 118, 125) instead of Option, plus internal `start === undefined || end === undefined` checks (line 124) from raw index access into the offset arrays.",
-    "proposedTarget": "Return `O.Option<readonly [number, string]>`; the offset lookups become `A.get` (effect-v4 Array.ts:951, returns Option) combined with `O.flatMap`/`O.map` into the span tuple, deleting both the undefined-returns and the interior undefined-checks. Consumed by the same alignCandidateImpl Option chain as the findExact finding.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 1.2
-  },
-  {
-    "ruleId": "SFV4-null-return",
-    "file": "packages/foundation/capability/langextract/src/Alignment/index.ts",
-    "line": 173,
-    "symbol": "findFuzzy",
-    "smell": "Module-private domain helper returning `undefined` on four paths (lines 175, 180, 185, 203) plus a `best === undefined` accumulator comparison (line 198) — undefined-as-absence throughout instead of Option.",
-    "proposedTarget": "Return `O.Option<readonly [number, string]>`: the fail-closed CPU-budget guards (line 174) and the too-few-words guards become `O.none()` early returns (semantics unchanged — candidate still falls through to `unaligned`), and the final `best === undefined ? undefined : [best[0], best[1]]` becomes `O.map(best, ...)` over an Option-typed accumulator. Joins the alignCandidateImpl `O.orElse`/`O.firstSomeOf` chain from the findExact finding.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 1.2
+    "roiRank": 1.2,
+    "exception": {
+      "reason": "Moving the extraction cap default into LangExtractOptions changes public defaulting and encoded snapshot behavior; defer with the companion fuzzyThreshold default sweep.",
+      "boundary": "public-form defaulting, deferred schema-default sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -85,7 +68,11 @@
     "proposedTarget": "`S.OptionFromOptionalKey(...)` (effect-v4 Schema.ts:8668) + `SchemaUtils.withNoneDefault` (SchemaUtils/withConstructorDefaults.ts:46). Wire contract unchanged: the decode boundary is model-emitted JSON where the keys stay optional, and existing make call sites omit both fields (in-package tests; law-practice OfficeActionReview.candidates.ts:29-32 `ExtractionCandidate.make({ label, text })`) so withNoneDefault keeps every constructor call byte-identical. makeGrounded then passes `candidate.attributes` / `candidate.confidence` straight through as Options. Couple with the GroundedExtraction finding so the two classes' field forms move together.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 1.1
+    "roiRank": 1.1,
+    "exception": {
+      "reason": "ExtractionCandidate optional-key Optionification needs to stay coupled to GroundedExtraction optional-form changes; the complete sweep crosses into @beep/law-practice consumers.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -96,7 +83,11 @@
     "proposedTarget": "`examples: S.Array(ExtractionExample).pipe(...max-length check..., SchemaUtils.withEmptyArrayDefaults<ExtractionExample>())` (SchemaUtils/withKeyDefaults.ts:114, make + decode default `[]`) so the guard collapses to a single emptiness check; `options: LangExtractOptions.pipe(SchemaUtils.withKeyDefaults(LangExtractOptions.make({})))`-style defaulting so `request.options` is always present and the Alignment `??` sites die with the companion findings. §5.3 wire note: with a required Type side, encode emits `examples: []` where the key was previously omitted — LangExtractRequest is an in-process service input (no persisted encoded form found), but the wave PR must include the encoded-snapshot parity check.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 1.1
+    "roiRank": 1.1,
+    "exception": {
+      "reason": "Defaulting examples/options changes the exported request Type and encoded shape used by law-practice request constructors and server tests; defer to the consumer sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -107,18 +98,11 @@
     "proposedTarget": "`S.OptionFromOptionalKey` (effect-v4 Schema.ts:8668) + `SchemaUtils.withNoneDefault` (withConstructorDefaults.ts:46); renderTarget becomes two `O.match` arms. Since absent and empty attributes render identically, consider `S.NonEmptyArray(S.NonEmptyString).pipe(S.OptionFromOptionalKey)` to make the empty-array state unrepresentable (decode-tightening — needs a §5.3 decision). Ripple: four cross-family `ExtractionTarget.make({ description: \"...\" })` sites pass raw strings (law-practice OfficeActionReview.service.ts:51-70) and would need `O.some(...)` wraps in the same PR per §5.4; ExtractionExampleItem instances also flow through raw `JSON.stringify` at Service/index.ts:112, which must switch to `S.encodeSync(ExtractionExample)` (effect-v4 Schema.ts:2154) in the same change or the few-shot prompt JSON would serialize Option internals.",
     "confidence": 0.6,
     "mechanization": "assisted",
-    "roiRank": 1.1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/capability/langextract/src/Handoff/index.ts",
-    "line": 144,
-    "symbol": "toAnnotatedDocument",
-    "smell": "`mentions[index]?.id ?? Contract.MentionId.make(...)` — a defensive `??` fallback that re-mints the mention id a second time. `mentions` and the entities loop both map over the same `aligned` array, so the index is always in range and the fallback is unreachable duplicate logic masking the parallel-array coupling.",
-    "proposedTarget": "Restructure to a single `A.map` pass over `aligned` producing the mention/entity pair together (or `A.zip` the two arrays), so each MentionId is minted exactly once and the `??` deletes. Judgment: pure restructuring with no schema target; low blast radius; verify diagnostics counts stay identical.",
-    "confidence": 0.5,
-    "mechanization": "judgment",
-    "roiRank": 0.6
+    "roiRank": 1.1,
+    "exception": {
+      "reason": "Option-ifying target description/attributes changes the exported target Type constructed in @beep/law-practice with raw strings; it must ship with that sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",

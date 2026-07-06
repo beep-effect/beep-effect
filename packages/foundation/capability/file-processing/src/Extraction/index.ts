@@ -9,11 +9,30 @@ import { ArtifactId, ArtifactReference, ContentDigest, OperationId } from "@beep
 import { FileProcessingOperationErrorReason } from "@beep/file-processing/Operation";
 import { FileFormatFamily, FileProcessingSkipReason, SelectedStrategy } from "@beep/file-processing/Strategy";
 import { $FileProcessingId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import type * as Effect from "effect/Effect";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $FileProcessingId.create("Extraction");
+
+type JsonEncodeEffect<Input> = {
+  (options: AST.ParseOptions): (input: Input) => Effect.Effect<string, S.SchemaError>;
+  (input: Input, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
+};
+
+const isParseOptions = (input: unknown): input is AST.ParseOptions =>
+  P.hasProperty(input, "errors") ||
+  P.hasProperty(input, "onExcessProperty") ||
+  P.hasProperty(input, "propertyOrder") ||
+  P.hasProperty(input, "disableChecks") ||
+  P.hasProperty(input, "concurrency");
+
+const isSchemaCodecDataFirst = (args: IArguments): boolean =>
+  args.length >= 2 || (args.length === 1 && !isParseOptions(args[0]));
 
 /**
  * Processing status emitted for each source row.
@@ -91,11 +110,18 @@ export class TextArtifactReference extends S.Class<TextArtifactReference>($I`Tex
  * @since 0.0.0
  */
 export class TextSpan extends S.Class<TextSpan>($I`TextSpan`)(
-  {
-    endOffset: S.Finite,
-    startOffset: S.Finite,
+  S.Struct({
+    endOffset: NonNegativeInt,
+    startOffset: NonNegativeInt,
     text: S.String,
-  },
+  }).check(
+    S.makeFilter(({ endOffset, startOffset }) => endOffset >= startOffset, {
+      identifier: $I`TextSpanOffsetOrderCheck`,
+      title: "Text Span Offset Order",
+      description: "Checks that a text span's end offset is greater than or equal to its start offset.",
+      message: "Expected endOffset to be greater than or equal to startOffset.",
+    })
+  ),
   $I.annote("TextSpan", {
     description: "Extracted text span with byte or character offsets supplied by the engine.",
   })
@@ -374,7 +400,8 @@ export const ProcessFileResult = S.Union([
   S.toTaggedUnion("resultKind"),
   $I.annoteSchema("ProcessFileResult", {
     description: "Runtime-neutral result for a full source processing operation.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -591,7 +618,11 @@ export const SourceProcessingRecord = S.Union([
   S.toTaggedUnion("status"),
   $I.annoteSchema("SourceProcessingRecord", {
     description: "JSONL-safe source processing record emitted by the CLI proof.",
-  })
+  }),
+  SchemaUtils.withCodecStatics,
+  SchemaUtils.withStatics((schema) => ({
+    encodeJson: S.encodeUnknownEffect(S.fromJsonString(schema)),
+  }))
 );
 
 /**
@@ -622,7 +653,8 @@ export type SourceProcessingRecord = typeof SourceProcessingRecord.Type;
 export const FileProcessingFailureReason = S.Union([FileProcessingOperationErrorReason, FileProcessingSkipReason]).pipe(
   $I.annoteSchema("FileProcessingFailureReason", {
     description: "Machine-readable skipped or failed source reason emitted in failures.jsonl.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -759,7 +791,11 @@ export const FileProcessingFailureRecord = S.Union([
   S.toTaggedUnion("status"),
   $I.annoteSchema("FileProcessingFailureRecord", {
     description: "JSONL-safe sanitized skipped or failed source record.",
-  })
+  }),
+  SchemaUtils.withCodecStatics,
+  SchemaUtils.withStatics((schema) => ({
+    encodeJson: S.encodeUnknownEffect(S.fromJsonString(schema)),
+  }))
 );
 
 /**
@@ -802,7 +838,12 @@ export class ChildArtifactRecord extends S.Class<ChildArtifactRecord>($I`ChildAr
   $I.annote("ChildArtifactRecord", {
     description: "JSONL-safe child artifact record emitted for archive exports.",
   })
-) {}
+) {
+  static readonly encodeJson: JsonEncodeEffect<ChildArtifactRecord> = dual(
+    isSchemaCodecDataFirst,
+    S.encodeUnknownEffect(S.fromJsonString(ChildArtifactRecord))
+  );
+}
 
 /**
  * Coverage summary written to coverage.json.
@@ -842,7 +883,12 @@ export class FileProcessingCoverageSummary extends S.Class<FileProcessingCoverag
   $I.annote("FileProcessingCoverageSummary", {
     description: "Aggregate processing coverage counts for the proof manifest.",
   })
-) {}
+) {
+  static readonly encodeJson: JsonEncodeEffect<FileProcessingCoverageSummary> = dual(
+    isSchemaCodecDataFirst,
+    S.encodeUnknownEffect(S.fromJsonString(FileProcessingCoverageSummary))
+  );
+}
 
 /**
  * Top-level run manifest written to run.json.
@@ -889,7 +935,12 @@ export class ProcessRunManifest extends S.Class<ProcessRunManifest>($I`ProcessRu
   $I.annote("ProcessRunManifest", {
     description: "JSON-safe root manifest for a file-processing proof run.",
   })
-) {}
+) {
+  static readonly encodeJson: JsonEncodeEffect<ProcessRunManifest> = dual(
+    isSchemaCodecDataFirst,
+    S.encodeUnknownEffect(S.fromJsonString(ProcessRunManifest))
+  );
+}
 
 /**
  * JSON encoder for {@link ProcessRunManifest}.
@@ -935,7 +986,7 @@ export class ProcessRunManifest extends S.Class<ProcessRunManifest>($I`ProcessRu
  * @category codecs
  * @since 0.0.0
  */
-export const encodeProcessRunManifestJson = S.encodeUnknownEffect(S.fromJsonString(ProcessRunManifest));
+export const encodeProcessRunManifestJson = ProcessRunManifest.encodeJson;
 
 /**
  * JSON encoder for {@link FileProcessingCoverageSummary}.
@@ -971,9 +1022,7 @@ export const encodeProcessRunManifestJson = S.encodeUnknownEffect(S.fromJsonStri
  * @category codecs
  * @since 0.0.0
  */
-export const encodeFileProcessingCoverageSummaryJson = S.encodeUnknownEffect(
-  S.fromJsonString(FileProcessingCoverageSummary)
-);
+export const encodeFileProcessingCoverageSummaryJson = FileProcessingCoverageSummary.encodeJson;
 
 /**
  * JSONL encoder for {@link SourceProcessingRecord}.
@@ -1010,7 +1059,7 @@ export const encodeFileProcessingCoverageSummaryJson = S.encodeUnknownEffect(
  * @category codecs
  * @since 0.0.0
  */
-export const encodeSourceProcessingRecordJson = S.encodeUnknownEffect(S.fromJsonString(SourceProcessingRecord));
+export const encodeSourceProcessingRecordJson = SourceProcessingRecord.encodeJson;
 
 /**
  * JSONL encoder for {@link FileProcessingFailureRecord}.
@@ -1045,9 +1094,7 @@ export const encodeSourceProcessingRecordJson = S.encodeUnknownEffect(S.fromJson
  * @category codecs
  * @since 0.0.0
  */
-export const encodeFileProcessingFailureRecordJson = S.encodeUnknownEffect(
-  S.fromJsonString(FileProcessingFailureRecord)
-);
+export const encodeFileProcessingFailureRecordJson = FileProcessingFailureRecord.encodeJson;
 
 /**
  * JSONL encoder for {@link ChildArtifactRecord}.
@@ -1080,4 +1127,4 @@ export const encodeFileProcessingFailureRecordJson = S.encodeUnknownEffect(
  * @category codecs
  * @since 0.0.0
  */
-export const encodeChildArtifactRecordJson = S.encodeUnknownEffect(S.fromJsonString(ChildArtifactRecord));
+export const encodeChildArtifactRecordJson = ChildArtifactRecord.encodeJson;

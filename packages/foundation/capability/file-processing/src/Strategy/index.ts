@@ -6,7 +6,8 @@
  */
 
 import { $FileProcessingId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { A } from "@beep/utils";
 import { Match } from "effect";
 import * as S from "effect/Schema";
 
@@ -97,7 +98,27 @@ export const FileFormatFamily = LiteralKit([
 ]).pipe(
   $I.annoteSchema("FileFormatFamily", {
     description: "Deterministic file format families recognized by V1 file processing.",
-  })
+  }),
+  SchemaUtils.withStatics(() => ({
+    fromExtension: Match.type<string | undefined>().pipe(
+      Match.when("doc", () => "doc" as const),
+      Match.when("docx", () => "docx" as const),
+      Match.when("docm", () => "docm" as const),
+      Match.when("rtf", () => "rtf" as const),
+      Match.whenOr("htm", "html", () => "html" as const),
+      Match.when("xhtml", () => "xhtml" as const),
+      Match.when("pdf", () => "pdf-text-layer" as const),
+      Match.when("pst", () => "pst" as const),
+      Match.whenOr("txt", "text", () => "plain-text" as const),
+      Match.whenOr("md", "markdown", () => "markdown" as const),
+      Match.whenOr("bmp", "gif", "jpeg", "jpg", "png", "tif", "tiff", "webp", () => "image-metadata" as const),
+      Match.when("xls", () => "xls" as const),
+      Match.when("xlsx", () => "xlsx" as const),
+      Match.orElse(() => "unknown" as const)
+    ),
+    processCapability: (format: FileFormatFamily): FileProcessingCapability =>
+      format === "image-metadata" ? "extract-metadata" : "extract-text",
+  }))
 );
 
 /**
@@ -357,7 +378,8 @@ export const SelectedStrategy = S.Union([
   S.toTaggedUnion("disposition"),
   $I.annoteSchema("SelectedStrategy", {
     description: "Resolved engine and support strategy for a source artifact operation.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -402,7 +424,19 @@ export class FileProcessingEngineDescriptor extends S.Class<FileProcessingEngine
   $I.annote("FileProcessingEngineDescriptor", {
     description: "Runtime-neutral descriptor for a file-processing engine implementation.",
   })
-) {}
+) {
+  matchesPreference(preferredEngine: FileProcessingEngineDescriptor["engine"]): boolean {
+    return preferredEngine === "auto" || this.engine === preferredEngine;
+  }
+
+  supportsCapability(capability: FileProcessingCapability): boolean {
+    return A.contains(this.capabilities, capability);
+  }
+
+  supportsFormat(format: FileFormatFamily): boolean {
+    return A.contains(this.supportedFormats, format);
+  }
+}
 
 /**
  * Classify a bare file extension into its deterministic format family.
@@ -422,21 +456,5 @@ export class FileProcessingEngineDescriptor extends S.Class<FileProcessingEngine
  * @category utilities
  * @since 0.0.0
  */
-export const classifyFormatFromExtension: (extension: string | undefined) => FileFormatFamily = Match.type<
-  string | undefined
->().pipe(
-  Match.when("doc", () => "doc" as const),
-  Match.when("docx", () => "docx" as const),
-  Match.when("docm", () => "docm" as const),
-  Match.when("rtf", () => "rtf" as const),
-  Match.whenOr("htm", "html", () => "html" as const),
-  Match.when("xhtml", () => "xhtml" as const),
-  Match.when("pdf", () => "pdf-text-layer" as const),
-  Match.when("pst", () => "pst" as const),
-  Match.whenOr("txt", "text", () => "plain-text" as const),
-  Match.whenOr("md", "markdown", () => "markdown" as const),
-  Match.whenOr("bmp", "gif", "jpeg", "jpg", "png", "tif", "tiff", "webp", () => "image-metadata" as const),
-  Match.when("xls", () => "xls" as const),
-  Match.when("xlsx", () => "xlsx" as const),
-  Match.orElse(() => "unknown" as const)
-);
+export const classifyFormatFromExtension: (extension: string | undefined) => FileFormatFamily =
+  FileFormatFamily.fromExtension;

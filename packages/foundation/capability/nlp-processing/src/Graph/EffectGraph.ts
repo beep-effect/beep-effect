@@ -25,7 +25,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { A, thunk0 } from "@beep/utils";
 import { Clock, Effect, Graph, HashMap, MutableHashMap, MutableHashSet, Random } from "effect";
 import { dual } from "effect/Function";
@@ -57,7 +57,8 @@ export const NodeId = S.String.pipe(
   S.brand("NodeId"),
   $I.annoteSchema("NodeId", {
     description: "Unique identifier for graph nodes.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -103,9 +104,9 @@ export const generateNodeId: Effect.Effect<NodeId> = Effect.gen(function* () {
  *
  * @example
  * ```ts
- * import { NodeNotFoundError } from "@beep/nlp-processing/Graph/EffectGraph"
+ * import { NodeId, NodeNotFoundError } from "@beep/nlp-processing/Graph/EffectGraph"
  *
- * const error = NodeNotFoundError.make({ nodeId: "node-missing" })
+ * const error = NodeNotFoundError.make({ nodeId: NodeId.make("node-missing") })
  * console.log(error._tag) // "NodeNotFoundError"
  * ```
  *
@@ -115,7 +116,7 @@ export const generateNodeId: Effect.Effect<NodeId> = Effect.gen(function* () {
 export class NodeNotFoundError extends TaggedErrorClass<NodeNotFoundError>($I`NodeNotFoundError`)(
   "NodeNotFoundError",
   {
-    nodeId: S.String,
+    nodeId: NodeId,
   },
   $I.annote("NodeNotFoundError", {
     description: "Raised when a graph node id cannot be resolved during traversal.",
@@ -144,7 +145,7 @@ export class NodeNotFoundError extends TaggedErrorClass<NodeNotFoundError>($I`No
  */
 export class NodeMetadata extends S.Class<NodeMetadata>($I`NodeMetadata`)(
   {
-    depth: S.Finite,
+    depth: NonNegativeInt,
     operation: S.Option(S.String),
     timestamp: S.Finite,
   },
@@ -267,7 +268,7 @@ export const makeNode: {
         operation,
         timestamp,
         // recalculated when added to a graph under a parent
-        depth: O.match(parentId, { onNone: thunk0, onSome: () => 1 }),
+        depth: NonNegativeInt.make(O.match(parentId, { onNone: thunk0, onSome: () => 1 })),
       },
     };
   })
@@ -367,7 +368,7 @@ export const addNode: {
         O.map(parentNode, (p) => p.metadata.depth),
         thunk0
       );
-      return { ...node, metadata: { ...node.metadata, depth: parentDepth + 1 } };
+      return { ...node, metadata: { ...node.metadata, depth: NonNegativeInt.make(parentDepth + 1) } };
     },
   });
 

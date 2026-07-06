@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { SimilarityMethod } from "@beep/nlp/Core/Similarity";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
@@ -31,7 +32,7 @@ class TextSimilarityParameters extends S.Class<TextSimilarityParameters>($I`Text
 
 class TextSimilaritySuccess extends S.Class<TextSimilaritySuccess>($I`TextSimilaritySuccess`)(
   {
-    method: S.Literal("vector.cosine").annotateKey({
+    method: S.Literal(SimilarityMethod.Enum["vector.cosine"]).annotateKey({
       description: "The similarity method used",
     }),
     score: UnitInterval.annotateKey({

@@ -16,35 +16,41 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
-const arbMetrics: fc.Arbitrary<Types.ExecutionMetrics> = fc
-  .record({
-    cacheHits: fc.nat(),
-    cacheMisses: fc.nat(),
-    durationMs: fc.nat(),
-    nodesCreated: fc.nat(),
-    nodesProcessed: fc.nat(),
-    tokensConsumed: fc.nat(),
-  })
-  .map((r) => ({
-    cacheHits: r.cacheHits,
-    cacheMisses: r.cacheMisses,
-    duration: Duration.millis(r.durationMs),
-    nodesCreated: r.nodesCreated,
-    nodesProcessed: r.nodesProcessed,
-    tokensConsumed: r.tokensConsumed,
-  }));
+const finiteNonNegativeMillis = (duration: Duration.Duration): Duration.Duration => {
+  const millis = Duration.toMillis(duration);
+  return Number.isFinite(millis) ? Duration.millis(Math.min(Math.abs(Math.trunc(millis)), 86_400_000)) : Duration.zero;
+};
 
-const metricsEqual = (a: Types.ExecutionMetrics, b: Types.ExecutionMetrics): boolean =>
-  a.cacheHits === b.cacheHits &&
-  a.cacheMisses === b.cacheMisses &&
-  Duration.equals(a.duration, b.duration) &&
-  a.nodesCreated === b.nodesCreated &&
-  a.nodesProcessed === b.nodesProcessed &&
-  a.tokensConsumed === b.tokensConsumed;
+const arbMetrics: fc.Arbitrary<Types.ExecutionMetrics> = S.toArbitrary(Types.ExecutionMetrics).map((metrics) =>
+  Types.ExecutionMetrics.make({
+    ...metrics,
+    duration: finiteNonNegativeMillis(metrics.duration),
+  })
+);
+const metricsEqual = S.toEquivalence(Types.ExecutionMetrics);
+
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
+  const arbitrary = S.toArbitrary(schema);
+  const decode = S.decodeUnknownSync(schema);
+  const encode = S.encodeSync(schema);
+  const equals = S.toEquivalence(schema);
+
+  fc.assert(
+    fc.property(arbitrary, (value) => {
+      expect(equals(decode(encode(value)), value)).toBe(true);
+    }),
+    { numRuns: 50 }
+  );
+};
 
 describe("ExecutionMetrics monoid laws", () => {
+  it("round-trips schema-derived metrics through encode/decode", () => {
+    assertSchemaRoundTrip(Types.ExecutionMetrics);
+  });
+
   it("satisfies left identity: empty ⊕ x = x", () => {
     fc.assert(
       fc.property(arbMetrics, (x) => metricsEqual(Types.ExecutionMetrics.combine(Types.ExecutionMetrics.empty(), x), x))
@@ -70,6 +76,10 @@ describe("ExecutionMetrics monoid laws", () => {
 });
 
 describe("OperationCost", () => {
+  it("round-trips schema-derived operation costs through encode/decode", () => {
+    assertSchemaRoundTrip(Types.OperationCost);
+  });
+
   it("scales O(1) cost by a constant factor of 1", () => {
     const scaled = Types.OperationCost.scale(
       { ...Types.OperationCost.zero(), tokenCost: 5, estimatedTime: Duration.millis(10) },
@@ -89,6 +99,10 @@ describe("OperationCost", () => {
 });
 
 describe("ExecutionId", () => {
+  it("round-trips schema-derived ids through encode/decode", () => {
+    assertSchemaRoundTrip(Types.ExecutionId);
+  });
+
   it.effect(
     "generates distinct ids",
     Effect.fnUntraced(function* () {

@@ -68,7 +68,14 @@ const $I = $NlpProcessingId.create("Graph/AnnotatedTextGraph");
  * @since 0.0.0
  * @category models
  */
-export type AnnotatedNode = TextNode | POSNode | EntityNode | LemmaNode | DependencyNode | RelationNode;
+export const AnnotatedNode = S.Union([TextNode, POSNode, EntityNode, LemmaNode, DependencyNode, RelationNode]).pipe(
+  $I.annoteSchema("AnnotatedNode", {
+    description: "Union of structural text nodes and linguistic annotation nodes.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+export type AnnotatedNode = typeof AnnotatedNode.Type;
 
 /**
  * Refine a heterogeneous annotated node to a structural text node.
@@ -339,10 +346,10 @@ class AnnotationOptions extends S.Class<AnnotationOptions>($I`AnnotationOptions`
  */
 export const fromDocumentAnnotated = Effect.fn("fromDocumentAnnotated")(function* (
   text: string,
-  options: AnnotationOptions = AnnotationOptions.make()
+  options: (typeof AnnotationOptions)["~type.make.in"] = {}
 ): Effect.fn.Return<AnnotatedTextGraph, Backend.NLPBackendError, Backend.NLPBackend> {
   const backend = yield* Backend.NLPBackend;
-  const resolved = { ...AnnotationOptions.make(), ...options };
+  const resolved = AnnotationOptions.make(options);
   const attributes = {
     backend: backend.name,
     document_length: `${text.length}`,

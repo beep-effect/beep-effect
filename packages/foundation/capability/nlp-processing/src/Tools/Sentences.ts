@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import { AiSentence, AiToolError } from "./_schemas.ts";
@@ -26,7 +27,7 @@ class SentencesParameters extends S.Class<SentencesParameters>($I`SentencesParam
 
 class SentencesSuccess extends S.Class<SentencesSuccess>($I`SentencesSuccess`)(
   {
-    sentenceCount: S.Finite,
+    sentenceCount: NonNegativeInt,
     sentences: S.Array(AiSentence),
   },
   $I.annote("SentencesSuccess", {

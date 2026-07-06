@@ -51,7 +51,9 @@ export class ServerObservabilityConfig extends S.Class<ServerObservabilityConfig
   $I.annote("ServerObservabilityConfig", {
     description: "Server-only observability configuration.",
   })
-) {}
+) {
+  static readonly is = S.is(ServerObservabilityConfig);
+}
 
 /**
  * Convert server config into OTLP resource attributes.

@@ -1,27 +1,5 @@
 [
   {
-    "ruleId": "SFV4-getsomes-struct",
-    "file": "packages/foundation/capability/file-processing/src/Service/index.ts",
-    "line": 302,
-    "symbol": "makeFileProcessingServiceLayer.process (exportArchive payload)",
-    "smell": "Fixed-key Option-struct spread `...R.getSomes({ maxMaterializedBytes: O.fromUndefinedOr(operation.maxMaterializedBytes) })` (R from effect/Record) inside the archiveEngine.exportArchive call payload; struct-literal spread form, not a homogeneous dynamic-key dictionary.",
-    "proposedTarget": "Replace with `...O.getSomesStruct({ maxMaterializedBytes: O.fromUndefinedOr(operation.maxMaterializedBytes) })` from @beep/utils (packages/foundation/modeling/utils/src/Option.ts:102), matching the existing drivers/firecrawl usage; drop the effect/Record import if it becomes unused.",
-    "confidence": 0.88,
-    "mechanization": "assisted",
-    "roiRank": 1.8
-  },
-  {
-    "ruleId": "SFV4-getsomes-struct",
-    "file": "packages/foundation/capability/file-processing/src/Service/index.ts",
-    "line": 331,
-    "symbol": "makeFileProcessingServiceLayer.process (extract payload)",
-    "smell": "Fixed-key Option-struct spread `...R.getSomes({ maxMaterializedBytes: O.fromUndefinedOr(operation.maxMaterializedBytes) })` (R from effect/Record) inside the extractionEngine.extract call payload; struct-literal spread form, not a homogeneous dynamic-key dictionary.",
-    "proposedTarget": "Replace with `...O.getSomesStruct({ maxMaterializedBytes: O.fromUndefinedOr(operation.maxMaterializedBytes) })` from @beep/utils (packages/foundation/modeling/utils/src/Option.ts:102); mechanically identical transform to the line 302 site, held at judgment pending the Law 20/47 amendment (D5).",
-    "confidence": 0.88,
-    "mechanization": "assisted",
-    "roiRank": 1.8
-  },
-  {
     "ruleId": "SFV4-static-api",
     "file": "packages/foundation/capability/file-processing/src/Artifact/index.ts",
     "line": 254,
@@ -30,7 +8,11 @@
     "proposedTarget": "If locator variants ever diverge in payload, rebuild as LiteralKit -> member S.Classes -> S.Union([...]).pipe(S.toTaggedUnion(\"kind\")) so drivers branch via derived .guards/.isAnyOf. Today all variants carry the identical `value: PosixPath` payload, so the win is derived guards only; this is a public-form change requiring the same-PR consumer sweep across drivers (SPEC 5.4).",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 1.5
+    "roiRank": 1.5,
+    "exception": {
+      "reason": "All locator variants currently share the same payload, so a tagged-union rebuild would only add guards while changing the public class form and requiring driver branch sweeps.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "literal-kit-const-assertion",

@@ -19,6 +19,7 @@
  * @since 0.0.0
  */
 import { $ObservabilityId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $ObservabilityId.create("Observed");
@@ -234,7 +235,8 @@ export type ObservedCauseReason = typeof ObservedCauseReason.Type;
 export const ObservedCause = S.Cause(ObservedErrorWithStack, ObservedDefectWithStack).pipe(
   $I.annoteSchema("ObservedCause", {
     description: "A transport-safe schema for full Effect causes.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -272,7 +274,8 @@ export type ObservedCause = typeof ObservedCause.Type;
 export const ObservedExit = S.Exit(S.Unknown, ObservedErrorWithStack, ObservedDefectWithStack).pipe(
   $I.annoteSchema("ObservedExit", {
     description: "A transport-safe schema for exits carrying unknown success values.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

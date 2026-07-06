@@ -15,6 +15,22 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
+
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
+  const arbitrary = S.toArbitrary(schema);
+  const decode = S.decodeUnknownSync(schema);
+  const encode = S.encodeSync(schema);
+  const equals = S.toEquivalence(schema);
+
+  fc.assert(
+    fc.property(arbitrary, (value) => {
+      expect(equals(decode(encode(value)), value)).toBe(true);
+    }),
+    { numRuns: 50 }
+  );
+};
 
 const words = (text: string): ReadonlyArray<string> => text.split(/\s+/).filter((w) => w.length > 0);
 
@@ -63,6 +79,10 @@ const StubBackend = Layer.succeed(
 );
 
 describe("AnnotatedTextGraph construction", () => {
+  it("round-trips schema-derived annotated nodes", () => {
+    assertSchemaRoundTrip(ATG.AnnotatedNode);
+  });
+
   it.effect(
     "empty has no nodes",
     Effect.fnUntraced(function* () {

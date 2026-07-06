@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/langextract/src/Alignment/index.ts",
-    "line": 36,
-    "symbol": "makeGrounded",
-    "smell": "Constructor behavior separated from its data: the candidate-to-grounded adapter (ExtractionCandidate + AlignmentStatus + optional span/matchedText -> GroundedExtraction.make input, stripping undefined optionalKey fields) lives as a private helper in the Alignment behavior module instead of colocated on the GroundedExtraction class it constructs (S4 'behavior separated from its data'; SFV4-static-api 'constructor helpers where schema-derived statics exist').",
-    "proposedTarget": "In-body static on GroundedExtraction (packages/foundation/capability/langextract/src/Extraction/index.ts:236), e.g. `static readonly fromCandidate = (candidate: ExtractionCandidate, status: AlignmentStatus, span?: Contract.Span, matchedText?: string): GroundedExtraction => ...` mirroring the LangExtractError.fromReason in-body static pattern already used at Extraction/index.ts:104. No import cycle: Extraction already imports Contract from @beep/nlp/Handoff and does not import Alignment. Note the undefined-conditional input building also overlaps S2 (optionalKey handling).",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/foundation/capability/langextract/src/Service/index.ts",
     "line": 137,
     "symbol": "buildPrompt (with private renderTarget:97, renderExamples:106)",
@@ -19,7 +8,11 @@
     "proposedTarget": "Colocate as a static on LangExtractRequest (e.g. `static readonly toPrompt = (request: LangExtractRequest): string => ...`) or a dedicated behavior module, leaving Service as wiring only. Counter-argument (why judgment, not assisted): prompt format is arguably a provider-presentation concern deliberately kept next to the LanguageModel call, and moving it changes the public @beep/langextract/Service API surface (ripple: docgen examples + any external callers). Unrelated same-line cleanups (raw JSON.stringify at Service/index.ts:112, native .map/.join) belong to S1/native-migration, not S4.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "buildPrompt remains a public Service formatter and provider-presentation concern; moving it onto LangExtractRequest changes the public import/call surface for naming-only gain.",
+      "boundary": "public API ripple, deferred formatter colocation"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -30,18 +23,11 @@
     "proposedTarget": "In-body static on AnnotatedDocumentInput, e.g. `static readonly toAnnotatedDocument = (input: AnnotatedDocumentInput): Contract.AnnotatedDocument => ...` (callers like Service/index.ts:190 keep passing structural object literals, so no call-shape change beyond the qualifier). Low confidence because same-module adjacency already substantially satisfies colocation and the gain is naming/discoverability only.",
     "confidence": 0.45,
     "mechanization": "judgment",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/capability/langextract/src/Service/index.ts",
-    "line": 197,
-    "symbol": "make.extract (alignedCount computation)",
-    "smell": "Manual literal comparison `extraction.alignmentStatus !== \"unaligned\"` where the schema-derived kit guard already exists: AlignmentStatus is a LiteralKit (Extraction/index.ts:126) exposing per-literal guards (`AlignmentStatus.is.unaligned`, guard shape verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:707-708). Hand-rolled discrimination where a derived static exists (SFV4-static-api reuse). Overlaps S3's discriminator-branching card; filed here too so it is not lost.",
-    "proposedTarget": "Use the derived guard: count via `AlignmentStatus.is.unaligned(extraction.alignmentStatus)` (negated) rather than a raw string literal, e.g. with A.partition/A.filter from effect/Array (the native `.filter`/`.length` usage on the same line is a separate native-migration concern, out of S4 scope per fence 7).",
-    "confidence": 0.5,
-    "mechanization": "judgment",
-    "roiRank": 1
+    "roiRank": 2,
+    "exception": {
+      "reason": "toAnnotatedDocument is already adjacent to AnnotatedDocumentInput and is the public Handoff API; moving it to a static is naming-only and would require call-site/docgen sweep.",
+      "boundary": "public API ripple, deferred colocation"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

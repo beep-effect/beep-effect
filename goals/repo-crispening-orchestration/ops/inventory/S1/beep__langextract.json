@@ -8,7 +8,11 @@
     "proposedTarget": "Absorb the branch normalization into the union codec so decode yields ReadonlyArray<ExtractionCandidate> directly: pipe the union through `S.decodeTo` (verified .repos/effect-v4/packages/effect/src/Schema.ts:5408) with `SchemaGetter.transform` (root `SchemaGetter` export; repo exemplar packages/shared/domain/src/values/LocalDate/LocalDate.behavior.ts:704-706), mapping the ModelOutputObject branch to its `.extractions` and the array branch to itself on decode, re-wrapping to the canonical `{ extractions }` object on encode. Then `ParsedModelOutput`, `isCandidateArray`, and `outputToCandidates` delete and `parseModelOutput` decodes straight to candidates. All symbols non-exported — no §5.4 ripple; parity fixture: both accepted payload shapes decode to identical candidate arrays before/after.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 1.7
+    "roiRank": 1.7,
+    "exception": {
+      "reason": "Private LLM boundary accepts object and array wire forms; keeping the explicit two-stage decode preserves parse-vs-schema LangExtractErrorReason taxonomy while schema-derived parser round-trip coverage now guards parity.",
+      "boundary": "manual-audit private boundary codec, no public-form change"
+    }
   },
   {
     "ruleId": "SFV4-boundary-codec",
@@ -19,29 +23,11 @@
     "proposedTarget": "Encode through the schema: `S.encodeSync(S.fromJsonString(S.Struct({ extractions: S.Array(ExtractionExampleItem) })))` (verified: fromJsonString .repos/effect-v4/packages/effect/src/Schema.ts:10983 emits compact JSON matching JSON.stringify; encodeSync Schema.ts:2154). The prompt is the deterministic model-facing surface and promptChars diagnostics derive from it: prove byte-parity with fixtures covering attributes-present and attributes-absent example items (key order must match today's reflection output).",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 1.3
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/capability/langextract/src/Alignment/index.ts",
-    "line": 36,
-    "symbol": "makeGrounded",
-    "smell": "Hand-written shadow of GroundedExtraction's constructor input: local `input` is annotated with a 7-field inline struct type (lines 42-50) re-declaring the schema's fields (`alignmentStatus`, `attributes`, `confidence: UnitInterval`, `span: Contract.Span`, `matchedText`, `label`, `text`) so optional keys can be imperatively attached via four `!== undefined` guards before `GroundedExtraction.make` — the schema's shape is duplicated by hand instead of derived from the schema.",
-    "proposedTarget": "Delete the shadow type: build the make input with conditional spreads (`...(candidate.attributes !== undefined ? { attributes: candidate.attributes } : {})`) so inference carries the schema contract, or annotate with the schema-derived `Parameters<typeof GroundedExtraction.make>[0]`. If S2's wave Option-ifies these optionals, `O.getSomesStruct` (packages/foundation/modeling/utils/src/Option.ts:102) becomes the assembly fit — coordinate with S2, don't duplicate. Non-exported helper — no §5.4 ripple.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 0.9
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/capability/langextract/src/Handoff/index.ts",
-    "line": 59,
-    "symbol": "makeEntity",
-    "smell": "Same shadow-constructor-input pattern as Alignment's makeGrounded: local `input` annotated with a 6-field inline struct type (lines 66-73) hand-duplicating Contract.Entity's constructor input (`canonicalName`, `confidence?: UnitInterval`, `id: Contract.EntityId`, `mentions`, `provenance`, `type`) purely to conditionally attach `confidence` before `Contract.Entity.make` — a second copy of a schema shape maintained by hand.",
-    "proposedTarget": "Same fix family as makeGrounded: conditional spread (`...(extraction.confidence !== undefined ? { confidence: extraction.confidence } : {})`) or the schema-derived `Parameters<typeof Contract.Entity.make>[0]` annotation; `O.getSomesStruct` (packages/foundation/modeling/utils/src/Option.ts:102) only if S2 Option-ifies the field. Non-exported helper — no §5.4 ripple. Note Contract.Entity is owned by @beep/nlp — the fix reads its make type, it does not touch the schema (fence 8 safe).",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 0.85
+    "roiRank": 1.3,
+    "exception": {
+      "reason": "Prompt rendering is a synchronous public string builder; replacing JSON.stringify with Effect schema encoding would either change the API to Effect or introduce a sync throwing codec. Defer to a dedicated prompt-format codec redesign.",
+      "boundary": "manual-audit encode-direction boundary, deferred formatter redesign"
+    }
   },
   {
     "ruleId": "schema-first-inventory",
@@ -52,7 +38,11 @@
     "proposedTarget": "Push the coupling into the schema: either a cross-field filter via `S.makeFilter` on the class (verified .repos/effect-v4/packages/effect/src/Schema.ts:6393 — the doc example is exactly a cross-field struct check: enforce status !== 'unaligned' ⟺ span/matchedText present), or redesign as a discriminated pair (aligned-with-span | unaligned) so Handoff's guard becomes schema-derived narrowing. Judgment-tier: the filter alone enforces at decode/make time but does not give TS the `& { span }` narrowing that definedExtractions needs, while the union redesign changes a public class form (§5.4 consumer sweep: Alignment, Handoff, Service, and tests).",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 0.75
+    "roiRank": 0.75,
+    "exception": {
+      "reason": "Encoding the alignmentStatus/span coupling as a discriminated public form requires sweeping @beep/law-practice consumers of GroundedExtraction and its embedded port schema.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-boundary-codec",
@@ -63,7 +53,11 @@
     "proposedTarget": "Fold fence-stripping into the first decode stage as a named schema, e.g. `S.String.pipe(S.decodeTo(S.UnknownFromJsonString, { decode: SchemaGetter.transform(stripJsonFence), encode: SchemaGetter.transform(identity) }))` (decodeTo verified .repos/effect-v4/packages/effect/src/Schema.ts:5408; UnknownFromJsonString Schema.ts:10905), so the boundary contract is one codec. Judgment-tier: parseModelOutput deliberately splits json-parse vs schema-decode failures into distinct LangExtractErrorReason values ('model-output-parse-failed' line 425 vs 'model-output-schema-invalid' line 434) — the composition must preserve that error taxonomy (fence 3 adjacent), and the encode side must pick a canonical unfenced form.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 0.5
+    "roiRank": 0.5,
+    "exception": {
+      "reason": "Fence stripping stays split ahead of JSON decode so malformed JSON and schema-invalid JSON keep distinct LangExtractErrorReason values; fold only in a parser codec redesign that preserves the taxonomy.",
+      "boundary": "manual-audit parser boundary, deferred codec redesign"
+    }
   },
   {
     "ruleId": "SFV4-fn-schema",

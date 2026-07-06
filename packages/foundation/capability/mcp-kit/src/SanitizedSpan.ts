@@ -21,6 +21,8 @@
  */
 
 import { Cause, Context, Effect, Layer, Sink, Stream } from "effect";
+import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -70,65 +72,68 @@ export const defaultSanitizedSpanKeys: ReadonlyArray<string> = ["parameters"];
  * @category combinators
  * @since 0.0.0
  */
-export const sanitizeTracerAttributes = (
-  tracer: Tracer.Tracer,
-  sanitizedKeys: ReadonlyArray<string> = defaultSanitizedSpanKeys
-): Tracer.Tracer => ({
-  ...tracer,
-  span(options) {
-    const span = tracer.span(options);
-    // Span implementations (e.g. `NativeSpan`) define their methods on the
-    // class prototype, so a shallow `{ ...span }` spread would silently drop
-    // `end`/`event`/`addLinks` (only own instance fields survive a spread).
-    // Every member below is an explicit delegate so the wrapper stays a
-    // fully conformant `Span`, with `attribute` the only overridden method.
-    return {
-      get _tag() {
-        return span._tag;
-      },
-      get name() {
-        return span.name;
-      },
-      get spanId() {
-        return span.spanId;
-      },
-      get traceId() {
-        return span.traceId;
-      },
-      get parent() {
-        return span.parent;
-      },
-      get annotations() {
-        return span.annotations;
-      },
-      get status() {
-        return span.status;
-      },
-      get attributes() {
-        return span.attributes;
-      },
-      get links() {
-        return span.links;
-      },
-      get sampled() {
-        return span.sampled;
-      },
-      get kind() {
-        return span.kind;
-      },
-      end: (endTime: bigint, exit) => span.end(endTime, exit),
-      attribute: (key: string, value: unknown) => {
-        if (sanitizedKeys.includes(key)) {
-          return;
-        }
-        span.attribute(key, value);
-      },
-      event: (name: string, startTime: bigint, attributes?: Record<string, unknown>) =>
-        span.event(name, startTime, attributes),
-      addLinks: (links) => span.addLinks(links),
-    };
-  },
-});
+export const sanitizeTracerAttributes: {
+  (sanitizedKeys?: ReadonlyArray<string>): (tracer: Tracer.Tracer) => Tracer.Tracer;
+  (tracer: Tracer.Tracer, sanitizedKeys?: ReadonlyArray<string>): Tracer.Tracer;
+} = dual(
+  (args) => args.length >= 1 && (args.length >= 2 || !A.isArray(args[0])),
+  (tracer: Tracer.Tracer, sanitizedKeys: ReadonlyArray<string> = defaultSanitizedSpanKeys): Tracer.Tracer => ({
+    ...tracer,
+    span(options) {
+      const span = tracer.span(options);
+      // Span implementations (e.g. `NativeSpan`) define their methods on the
+      // class prototype, so a shallow `{ ...span }` spread would silently drop
+      // `end`/`event`/`addLinks` (only own instance fields survive a spread).
+      // Every member below is an explicit delegate so the wrapper stays a
+      // fully conformant `Span`, with `attribute` the only overridden method.
+      return {
+        get _tag() {
+          return span._tag;
+        },
+        get name() {
+          return span.name;
+        },
+        get spanId() {
+          return span.spanId;
+        },
+        get traceId() {
+          return span.traceId;
+        },
+        get parent() {
+          return span.parent;
+        },
+        get annotations() {
+          return span.annotations;
+        },
+        get status() {
+          return span.status;
+        },
+        get attributes() {
+          return span.attributes;
+        },
+        get links() {
+          return span.links;
+        },
+        get sampled() {
+          return span.sampled;
+        },
+        get kind() {
+          return span.kind;
+        },
+        end: (endTime: bigint, exit) => span.end(endTime, exit),
+        attribute: (key: string, value: unknown) => {
+          if (A.contains(sanitizedKeys, key)) {
+            return;
+          }
+          span.attribute(key, value);
+        },
+        event: (name: string, startTime: bigint, attributes?: Record<string, unknown>) =>
+          span.event(name, startTime, attributes),
+        addLinks: (links) => span.addLinks(links),
+      };
+    },
+  })
+);
 
 /**
  * Runs `effect` inside a freshly opened span named `spanName`, created
@@ -148,24 +153,37 @@ export const sanitizeTracerAttributes = (
  * import { Effect } from "effect"
  * import { withSanitizedToolSpan } from "@beep/mcp-kit"
  *
- * const program = withSanitizedToolSpan("mcp.tool.call", Effect.annotateCurrentSpan({ parameters: { secret: "x" } }))
+ * const program = withSanitizedToolSpan(Effect.annotateCurrentSpan({ parameters: { secret: "x" } }), "mcp.tool.call")
  * Effect.runSync(program)
  * ```
  *
  * @category combinators
  * @since 0.0.0
  */
-export const withSanitizedToolSpan = <A, E, R>(
-  spanName: string,
-  effect: Effect.Effect<A, E, R>,
-  options?: { readonly sanitizedKeys?: ReadonlyArray<string> }
-): Effect.Effect<A, E, R> =>
-  Effect.flatMap(Effect.tracer, (tracer) =>
-    Effect.withTracer(
-      Effect.withSpan(effect, spanName),
-      sanitizeTracerAttributes(tracer, options?.sanitizedKeys ?? defaultSanitizedSpanKeys)
+export const withSanitizedToolSpan: {
+  <A, E, R>(
+    spanName: string,
+    options?: { readonly sanitizedKeys?: ReadonlyArray<string> }
+  ): (effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
+  <A, E, R>(
+    effect: Effect.Effect<A, E, R>,
+    spanName: string,
+    options?: { readonly sanitizedKeys?: ReadonlyArray<string> }
+  ): Effect.Effect<A, E, R>;
+} = dual(
+  (args) => Effect.isEffect(args[0]),
+  <A, E, R>(
+    effect: Effect.Effect<A, E, R>,
+    spanName: string,
+    options?: { readonly sanitizedKeys?: ReadonlyArray<string> }
+  ): Effect.Effect<A, E, R> =>
+    Effect.flatMap(Effect.tracer, (tracer) =>
+      Effect.withTracer(
+        Effect.withSpan(effect, spanName),
+        sanitizeTracerAttributes(tracer, options?.sanitizedKeys ?? defaultSanitizedSpanKeys)
+      )
     )
-  );
+);
 
 const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Record<string, AiTool.Any>>(
   toolkit: Toolkit.Toolkit<Tools>
@@ -177,7 +195,7 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
     Exclude<AiTool.HandlersFor<Tools>, McpServerClient>
   >;
   const services = yield* Effect.context<never>();
-  for (const tool of R.values(built.tools) as ReadonlyArray<AiTool.Any>) {
+  for (const tool of R.values<string, AiTool.Any>(built.tools)) {
     const annotations = tool.annotations;
     const toolMeta = Context.getOrUndefined(annotations, AiTool.Meta);
     const wireTool = WireTool.make({
@@ -204,7 +222,7 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
       // effect/unstable/ai/McpServer.ts:711); dispatch is looked up by tool
       // name at runtime, so no narrower parameter type is available here.
       handle: (payload) =>
-        withSanitizedToolSpan(`mcp.tool.call.${tool.name}`, built.handle(tool.name, payload)).pipe(
+        withSanitizedToolSpan(built.handle(tool.name, payload), `mcp.tool.call.${tool.name}`).pipe(
           Stream.unwrap,
           Stream.run(Sink.last()),
           Effect.flatMap(Effect.fromOption),

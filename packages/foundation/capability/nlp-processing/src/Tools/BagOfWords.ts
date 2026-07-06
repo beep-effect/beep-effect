@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import { AiNGram, AiToolError } from "./_schemas.ts";
@@ -27,8 +28,8 @@ class BagOfWordsParameters extends S.Class<BagOfWordsParameters>($I`BagOfWordsPa
 class BagOfWordsSuccess extends S.Class<BagOfWordsSuccess>($I`BagOfWordsSuccess`)(
   {
     terms: S.Array(AiNGram),
-    totalTerms: S.Finite,
-    uniqueTerms: S.Finite,
+    totalTerms: NonNegativeInt,
+    uniqueTerms: NonNegativeInt,
   },
   $I.annote("BagOfWordsSuccess", {
     description: "Bag-of-words term-frequency table with total and unique term counts.",

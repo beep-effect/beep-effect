@@ -113,7 +113,7 @@ export type PhaseOutcome = typeof PhaseOutcome.Type;
  */
 export class PhaseProfile extends S.Class<PhaseProfile>($I`PhaseProfile`)(
   {
-    phase: S.String,
+    phase: S.NonEmptyString,
     outcome: PhaseOutcome,
     durationMs: NonNegativeInt,
     attributes: S.Record(S.String, S.String),

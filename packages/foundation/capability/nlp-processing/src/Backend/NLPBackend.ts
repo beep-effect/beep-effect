@@ -17,9 +17,11 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Context, Inspectable, pipe, Struct } from "effect";
+import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type * as GraphSchema from "@beep/nlp/Graph/Schema";
 import type * as Effect from "effect/Effect";
@@ -27,6 +29,18 @@ import type * as Effect from "effect/Effect";
 const $I = $NlpProcessingId.create("Backend/NLPBackend");
 
 const renderCause = (cause: unknown): string => Inspectable.toStringUnknown(cause);
+
+type BackendNotSupportedOptions = {
+  readonly message?: string | undefined;
+};
+
+type BackendOperationErrorOptions = {
+  readonly cause: unknown;
+};
+
+const isBackendNotSupportedDataFirst = (args: IArguments): boolean => args.length >= 3 || P.isString(args[1]);
+
+const isBackendOperationErrorDataFirst = (args: IArguments): boolean => args.length >= 3;
 
 /**
  * Failure raised when a backend does not support a requested operation.
@@ -56,7 +70,20 @@ export class BackendNotSupported extends TaggedErrorClass<BackendNotSupported>($
   $I.annote("BackendNotSupported", {
     description: "Failure raised when an NLP backend does not support a requested operation.",
   })
-) {}
+) {
+  static readonly forOperation: {
+    (backend: string, operation: string, options?: BackendNotSupportedOptions): BackendNotSupported;
+    (operation: string, options?: BackendNotSupportedOptions): (backend: string) => BackendNotSupported;
+  } = dual(
+    isBackendNotSupportedDataFirst,
+    (backend: string, operation: string, options?: BackendNotSupportedOptions): BackendNotSupported =>
+      BackendNotSupported.make({
+        backend,
+        operation,
+        message: options?.message ?? `Backend ${backend} does not support ${operation}`,
+      })
+  );
+}
 
 /**
  * Failure raised when a backend fails to initialize.
@@ -86,7 +113,20 @@ export class BackendInitError extends TaggedErrorClass<BackendInitError>($I`Back
   $I.annote("BackendInitError", {
     description: "Failure raised when an NLP backend fails to initialize.",
   })
-) {}
+) {
+  static readonly fromCause: {
+    (backend: string, cause: unknown): BackendInitError;
+    (cause: unknown): (backend: string) => BackendInitError;
+  } = dual(
+    2,
+    (backend: string, cause: unknown): BackendInitError =>
+      BackendInitError.make({
+        backend,
+        cause,
+        message: `Backend ${backend} failed to initialize: ${renderCause(cause)}`,
+      })
+  );
+}
 
 /**
  * Failure raised when a backend operation fails at runtime.
@@ -118,18 +158,34 @@ export class BackendOperationError extends TaggedErrorClass<BackendOperationErro
   $I.annote("BackendOperationError", {
     description: "Failure raised when an NLP backend operation fails at runtime.",
   })
-) {}
+) {
+  static readonly fromCause: {
+    (backend: string, operation: string, options: BackendOperationErrorOptions): BackendOperationError;
+    (operation: string, options: BackendOperationErrorOptions): (backend: string) => BackendOperationError;
+  } = dual(
+    isBackendOperationErrorDataFirst,
+    (backend: string, operation: string, options: BackendOperationErrorOptions): BackendOperationError => {
+      const cause = options.cause;
+
+      return BackendOperationError.make({
+        backend,
+        cause,
+        message: `Backend ${backend} operation ${operation} failed: ${renderCause(cause)}`,
+        operation,
+      });
+    }
+  );
+}
 
 /**
  * Tagged schema union for every recoverable backend failure.
  *
  * @example
  * ```ts
- * import * as S from "effect/Schema"
  * import { notSupported, NLPBackendError } from "@beep/nlp-processing/Backend/NLPBackend"
  *
  * const error = notSupported("minimal", "ner")
- * console.log(S.is(NLPBackendError)(error)) // true
+ * console.log(NLPBackendError.is(error)) // true
  * ```
  *
  * @category errors
@@ -139,7 +195,8 @@ export const NLPBackendError = S.Union([BackendNotSupported, BackendInitError, B
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("NLPBackendError", {
     description: "A backend failure.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -340,8 +397,13 @@ export class NLPBackend extends Context.Service<NLPBackend, NLPBackendShape>()($
  * @category utilities
  * @since 0.0.0
  */
-export const supportsCapability = (backend: NLPBackendShape, capability: keyof BackendCapabilities): boolean =>
-  backend.capabilities[capability];
+export const supportsCapability: {
+  (backend: NLPBackendShape, capability: keyof BackendCapabilities): boolean;
+  (capability: keyof BackendCapabilities): (backend: NLPBackendShape) => boolean;
+} = dual(
+  2,
+  (backend: NLPBackendShape, capability: keyof BackendCapabilities): boolean => backend.capabilities[capability]
+);
 
 /**
  * List supported capability keys in schema order.
@@ -399,12 +461,7 @@ export const getSupportedCapabilities = (backend: NLPBackendShape): ReadonlyArra
  * @category constructors
  * @since 0.0.0
  */
-export const notSupported = (backend: string, operation: string, message?: string): BackendNotSupported =>
-  BackendNotSupported.make({
-    backend,
-    operation,
-    message: message ?? `Backend ${backend} does not support ${operation}`,
-  });
+export const notSupported = BackendNotSupported.forOperation;
 
 /**
  * Construct a {@link BackendInitError} from an unknown initialization cause.
@@ -420,12 +477,7 @@ export const notSupported = (backend: string, operation: string, message?: strin
  * @category constructors
  * @since 0.0.0
  */
-export const initError = (backend: string, cause: unknown): BackendInitError =>
-  BackendInitError.make({
-    backend,
-    cause,
-    message: `Backend ${backend} failed to initialize: ${renderCause(cause)}`,
-  });
+export const initError: typeof BackendInitError.fromCause = BackendInitError.fromCause;
 
 /**
  * Construct a {@link BackendOperationError} for a failed backend operation.
@@ -434,17 +486,11 @@ export const initError = (backend: string, cause: unknown): BackendInitError =>
  * ```ts
  * import { operationError } from "@beep/nlp-processing/Backend/NLPBackend"
  *
- * const error = operationError("wink-nlp", "tokenize", new Error("bad input"))
+ * const error = operationError("wink-nlp", "tokenize", { cause: new Error("bad input") })
  * console.log(error.operation) // "tokenize"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const operationError = (backend: string, operation: string, cause: unknown): BackendOperationError =>
-  BackendOperationError.make({
-    backend,
-    cause,
-    message: `Backend ${backend} operation ${operation} failed: ${renderCause(cause)}`,
-    operation,
-  });
+export const operationError: typeof BackendOperationError.fromCause = BackendOperationError.fromCause;

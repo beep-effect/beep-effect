@@ -19,7 +19,7 @@
  */
 
 import { $McpKitId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, UnknownRecord } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, UnknownRecord } from "@beep/schema";
 import { HashSet } from "effect";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
@@ -185,7 +185,7 @@ export const projectFieldTier = (
  */
 export const estimateJsonSize = (value: unknown): number => JSON.stringify(value).length;
 
-const TIER_ORDER: ReadonlyArray<FieldTierName> = ["complete", "balanced", "minimal"];
+const TIER_ORDER: ReadonlyArray<FieldTierName> = A.reverse(FieldTierName.Options);
 
 /**
  * A payload too large for even the `minimal` tier, handed to the caller's
@@ -224,13 +224,58 @@ export class OversizedFieldProjection extends S.Class<OversizedFieldProjection>(
 ) {}
 
 /**
+ * A fetchable handle for a payload too large to return inline: a UUID
+ * identifier plus a TTL expiry the caller can use to fetch the full payload
+ * out-of-band, instead of receiving it embedded in a tool result.
+ *
+ * @example
+ * ```ts
+ * import { FetchableHandle } from "@beep/mcp-kit"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const handle = FetchableHandle.make({
+ *   handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
+ *   expiresAt: "2026-07-01T01:00:00.000Z",
+ *   sizeBytes: NonNegativeInt.make(2_000_000),
+ *   tier: "complete"
+ * })
+ * console.log(handle.tier)
+ * // "complete"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FetchableHandle extends S.Class<FetchableHandle>($I`FetchableHandle`)(
+  {
+    handleId: S.NonEmptyString.annotateKey({
+      description: "UUID identifying the out-of-band payload.",
+    }),
+    expiresAt: S.NonEmptyString.annotateKey({
+      description: "ISO-8601 timestamp after which the handle is no longer fetchable.",
+    }),
+    sizeBytes: NonNegativeInt.annotateKey({
+      description: "Approximate serialized size of the full payload, in bytes.",
+    }),
+    tier: FieldTierName.annotateKey({
+      description: "Field tier the full payload was projected at before storage.",
+    }),
+  },
+  $I.annote("FetchableHandle", {
+    description: "UUID+TTL fetchable handle standing in for a payload too large to return inline.",
+  })
+) {
+  static readonly is = S.is(FetchableHandle);
+}
+
+/**
  * Options for {@link projectWithinBudget}.
  *
  * @category models
  * @since 0.0.0
  */
 export interface ProjectWithinBudgetOptions {
-  readonly budgetBytes: number;
+  readonly budgetBytes: NonNegativeInt;
   readonly mintFetchableHandle: (oversized: OversizedFieldProjection) => FetchableHandle;
 }
 
@@ -243,9 +288,24 @@ export interface ProjectWithinBudgetOptions {
  * @category models
  * @since 0.0.0
  */
-export type FieldProjectionOutcome =
-  | { readonly _tag: "Inline"; readonly tier: FieldTierName; readonly value: Record<string, unknown> }
-  | { readonly _tag: "Fetchable"; readonly handle: FetchableHandle };
+export const FieldProjectionOutcome = LiteralKit(["Inline", "Fetchable"])
+  .toTaggedUnion("_tag")({
+    Inline: {
+      tier: FieldTierName,
+      value: UnknownRecord,
+    },
+    Fetchable: {
+      handle: FetchableHandle,
+    },
+  })
+  .pipe(
+    $I.annoteSchema("FieldProjectionOutcome", {
+      description: "Inline or fetchable outcome of projecting a payload within a caller's size budget.",
+    }),
+    SchemaUtils.withCodecStatics
+  );
+
+export type FieldProjectionOutcome = typeof FieldProjectionOutcome.Type;
 
 /**
  * Projects a payload to the most complete field tier that fits within
@@ -290,7 +350,7 @@ export const projectWithinBudget = (
   for (const tier of TIER_ORDER) {
     const projected = projectFieldTier(tiers, tier, value);
     if (estimateJsonSize(projected) <= options.budgetBytes) {
-      return { _tag: "Inline", tier, value: projected };
+      return FieldProjectionOutcome.make({ _tag: "Inline", tier, value: projected });
     }
   }
   const minimalProjected = projectFieldTier(tiers, "minimal", value);
@@ -298,7 +358,7 @@ export const projectWithinBudget = (
     value: minimalProjected,
     sizeBytes: NonNegativeInt.make(estimateJsonSize(minimalProjected)),
   });
-  return { _tag: "Fetchable", handle: options.mintFetchableHandle(oversized) };
+  return FieldProjectionOutcome.make({ _tag: "Fetchable", handle: options.mintFetchableHandle(oversized) });
 };
 
 /**
@@ -330,7 +390,17 @@ export class ColumnarEnvelope extends S.Class<ColumnarEnvelope>($I`ColumnarEnvel
   $I.annote("ColumnarEnvelope", {
     description: "Columnar reshaping of row-oriented records: one column-name list plus value-only rows.",
   })
-) {}
+) {
+  static readonly fromRows = (rows: ReadonlyArray<Record<string, unknown>>): ColumnarEnvelope => {
+    const columns = A.dedupe(A.flatMap(rows, R.keys));
+    return ColumnarEnvelope.make({
+      columns,
+      rows: A.map(rows, (row) => A.map(columns, (column) => (R.has(row, column) ? row[column] : null))),
+    });
+  };
+
+  static readonly is = S.is(ColumnarEnvelope);
+}
 
 /**
  * Reshapes an array of row-oriented records into a {@link ColumnarEnvelope}.
@@ -354,53 +424,4 @@ export class ColumnarEnvelope extends S.Class<ColumnarEnvelope>($I`ColumnarEnvel
  * @category constructors
  * @since 0.0.0
  */
-export const toColumnarEnvelope = (rows: ReadonlyArray<Record<string, unknown>>): ColumnarEnvelope => {
-  const columns = A.dedupe(A.flatMap(rows, R.keys));
-  return ColumnarEnvelope.make({
-    columns,
-    rows: rows.map((row) => columns.map((column) => (R.has(row, column) ? row[column] : null))),
-  });
-};
-
-/**
- * A fetchable handle for a payload too large to return inline: a UUID
- * identifier plus a TTL expiry the caller can use to fetch the full payload
- * out-of-band, instead of receiving it embedded in a tool result.
- *
- * @example
- * ```ts
- * import { FetchableHandle } from "@beep/mcp-kit"
- * import { NonNegativeInt } from "@beep/schema"
- *
- * const handle = FetchableHandle.make({
- *   handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
- *   expiresAt: "2026-07-01T01:00:00.000Z",
- *   sizeBytes: NonNegativeInt.make(2_000_000),
- *   tier: "complete"
- * })
- * console.log(handle.tier)
- * // "complete"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class FetchableHandle extends S.Class<FetchableHandle>($I`FetchableHandle`)(
-  {
-    handleId: S.NonEmptyString.annotateKey({
-      description: "UUID identifying the out-of-band payload.",
-    }),
-    expiresAt: S.NonEmptyString.annotateKey({
-      description: "ISO-8601 timestamp after which the handle is no longer fetchable.",
-    }),
-    sizeBytes: NonNegativeInt.annotateKey({
-      description: "Approximate serialized size of the full payload, in bytes.",
-    }),
-    tier: FieldTierName.annotateKey({
-      description: "Field tier the full payload was projected at before storage.",
-    }),
-  },
-  $I.annote("FetchableHandle", {
-    description: "UUID+TTL fetchable handle standing in for a payload too large to return inline.",
-  })
-) {}
+export const toColumnarEnvelope = ColumnarEnvelope.fromRows;

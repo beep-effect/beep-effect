@@ -1,12 +1,25 @@
-import chalk, { Chalk, ChalkConstructorOptions, ChalkOptions, ColorSupportLevel, chalkStderr } from "@beep/chalk";
+import chalk, {
+  Chalk,
+  ChalkConstructorOptions,
+  ChalkOptions,
+  ColorInfo,
+  ColorName,
+  ColorSupport,
+  ColorSupportLevel,
+  chalkStderr,
+  ModifierName,
+} from "@beep/chalk";
 import browserChalk, {
   chalkStderr as browserChalkStderr,
   supportsColor as browserSupportsColor,
   supportsColorStderr as browserSupportsColorStderr,
 } from "@beep/chalk/Chalk.browser";
+import { AnsiRenderLevel, ColorModelName, StyleChannel, StyleName } from "@beep/chalk/internal/ChalkSchema";
 import { createSupportsColor } from "@beep/chalk/internal/SupportsColor";
 import { describe, expect, it } from "@effect/vitest";
+import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import type { ChalkInstance, ColorSupportLevel as ColorSupportLevelType } from "@beep/chalk";
 
 const withLevel = (instance: ChalkInstance, level: ColorSupportLevelType, run: () => void): void => {
@@ -152,6 +165,35 @@ describe("@beep/chalk", () => {
     expect(S.is(ColorSupportLevel)(2)).toBe(true);
     expect(S.is(ColorSupportLevel)(4)).toBe(false);
     expect(() => decodeConstructorOptions({ level: 4 })).toThrow(/integer from 0 to 3/);
+  });
+
+  it("round-trips schema-derived values through their encoded shapes", () => {
+    const schemas = [
+      AnsiRenderLevel,
+      ChalkConstructorOptions,
+      ChalkOptions,
+      ColorInfo,
+      ColorModelName,
+      ColorName,
+      ColorSupport,
+      ColorSupportLevel,
+      ModifierName,
+      StyleChannel,
+      StyleName,
+    ] as const;
+
+    for (const schema of schemas) {
+      const arbitrary = S.toArbitrary(schema);
+      const decode = S.decodeSync(schema);
+      const encode = S.encodeSync(schema);
+
+      fc.assert(
+        fc.property(arbitrary, (value) => {
+          expect(Equal.equals(decode(encode(value)), value)).toBe(true);
+        }),
+        { numRuns: 50 }
+      );
+    }
   });
 });
 

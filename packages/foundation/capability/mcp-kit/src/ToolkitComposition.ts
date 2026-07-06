@@ -20,7 +20,7 @@
 
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
-import { decideSourceAuthMount } from "./SourceAuth.ts";
+import { decideSourceAuthMount, SourceAuthDecision } from "./SourceAuth.ts";
 import type { Config } from "effect";
 import type { SourceAuthRegistration } from "./SourceAuth.ts";
 
@@ -55,8 +55,7 @@ export interface GatedLayer<ROut, E, RIn> {
  * const registration = SourceAuthRegistration.make({
  *   name: "Example",
  *   envVar: "MCP_KIT_EXAMPLE_DOES_NOT_EXIST",
- *   gate: "none",
- *   signupUrl: O.none()
+ *   gate: "none"
  * })
  *
  * const entry = gatedLayer(registration, Layer.empty)
@@ -93,8 +92,7 @@ export const gatedLayer = <ROut, E, RIn>(
  * const hardGated = SourceAuthRegistration.make({
  *   name: "Example",
  *   envVar: "MCP_KIT_EXAMPLE_DOES_NOT_EXIST",
- *   gate: "hard",
- *   signupUrl: O.none()
+ *   gate: "hard"
  * })
  *
  * const composed = composeGatedLayers(gatedLayer(hardGated, Layer.empty))
@@ -115,7 +113,7 @@ export const composeGatedLayers = <E = never, RIn = never>(
 
       for (const entry of entries) {
         const decision = yield* decideSourceAuthMount(entry.registration);
-        if (decision._tag === "Mount") {
+        if (SourceAuthDecision.$is("Mount")(decision)) {
           mounted.push(entry.layer);
         }
       }

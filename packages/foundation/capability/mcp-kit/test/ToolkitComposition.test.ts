@@ -7,7 +7,6 @@
 import { composeGatedLayers, gatedLayer, SourceAuthRegistration } from "@beep/mcp-kit";
 import { assert, describe, layer } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer } from "effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Tool, Toolkit } from "effect/unstable/ai";
 import * as McpServer from "effect/unstable/ai/McpServer";
@@ -29,7 +28,6 @@ const hardRegistration = SourceAuthRegistration.make({
   name: "Hard Fixture Source",
   envVar: "MCP_KIT_TEST_HARD_KEY",
   gate: "hard",
-  signupUrl: O.none(),
 });
 
 // `composeGatedLayers` decides mount-vs-vanish while its layer builds, so the

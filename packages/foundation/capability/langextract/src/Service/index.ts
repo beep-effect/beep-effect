@@ -8,6 +8,7 @@
 import { $LangExtractId } from "@beep/identity";
 import { alignCandidates } from "@beep/langextract/Alignment";
 import {
+  AlignmentStatus,
   LangExtractDiagnostics,
   LangExtractError,
   LangExtractResult,
@@ -194,7 +195,9 @@ export const make = Effect.fn("LangExtractService.make")(function* () {
         text: request.text,
         timestamp,
       });
-      const alignedCount = extractions.filter((extraction) => extraction.alignmentStatus !== "unaligned").length;
+      const alignedCount = extractions.filter(
+        (extraction) => !AlignmentStatus.is.unaligned(extraction.alignmentStatus)
+      ).length;
       const unalignedCount = extractions.length - alignedCount;
 
       return LangExtractResult.make({

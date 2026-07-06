@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import { AiToolError } from "./_schemas.ts";
@@ -26,8 +27,8 @@ class RemoveStopWordsParameters extends S.Class<RemoveStopWordsParameters>($I`Re
 
 class RemoveStopWordsSuccess extends S.Class<RemoveStopWordsSuccess>($I`RemoveStopWordsSuccess`)(
   {
-    count: S.Finite,
-    removedCount: S.Finite,
+    count: NonNegativeInt,
+    removedCount: NonNegativeInt,
     tokens: S.Array(S.String),
   },
   $I.annote("RemoveStopWordsSuccess", {

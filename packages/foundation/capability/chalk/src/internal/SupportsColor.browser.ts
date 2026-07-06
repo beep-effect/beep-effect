@@ -83,12 +83,11 @@ const browserColorSupportFromNavigator = (browserNavigator: Navigator): ColorInf
     O.getOrElse(() => disabledBrowserSupport)
   );
 
-const browserColorSupport = (): ColorInfo =>
-  pipe(
-    getBrowserNavigator(),
-    O.map(browserColorSupportFromNavigator),
-    O.getOrElse(() => disabledBrowserSupport)
-  );
+const browserColorSupport: () => ColorInfo = flow(
+  getBrowserNavigator,
+  O.map(browserColorSupportFromNavigator),
+  O.getOrElse(() => disabledBrowserSupport)
+);
 
 /**
  * Color support detected for browser stdout and stderr compatibility channels.

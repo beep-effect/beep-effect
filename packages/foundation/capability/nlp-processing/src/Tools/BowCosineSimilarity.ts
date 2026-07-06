@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { SimilarityMethod } from "@beep/nlp/Core/Similarity";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
@@ -31,7 +32,7 @@ class BowCosineSimilarityParameters extends S.Class<BowCosineSimilarityParameter
 
 class BowCosineSimilaritySuccess extends S.Class<BowCosineSimilaritySuccess>($I`BowCosineSimilaritySuccess`)(
   {
-    method: S.Literal("bow.cosine").annotateKey({
+    method: S.Literal(SimilarityMethod.Enum["bow.cosine"]).annotateKey({
       description: "The similarity method used",
     }),
     score: UnitInterval.annotateKey({
