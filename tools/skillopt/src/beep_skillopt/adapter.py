@@ -685,7 +685,7 @@ def _run_batch(
             skip_exec=skip_exec,
         )
 
-    with results_path.open("a", encoding="utf-8") as outf:
+    with results_path.open("a", encoding="utf-8") as out_file:
         executor = ThreadPoolExecutor(max_workers=max(1, int(workers)))
         try:
             futures = {executor.submit(run_item, item): item for item in pending}
@@ -717,8 +717,8 @@ def _run_batch(
                         f"hard={result.get('hard', '?')}",
                         flush=True,
                     )
-                    outf.write(json.dumps(result, ensure_ascii=False) + "\n")
-                    outf.flush()
+                    out_file.write(json.dumps(result, ensure_ascii=False) + "\n")
+                    out_file.flush()
                 for future in timed_out:
                     pending_futures.remove(future)
                     future.cancel()
@@ -731,8 +731,8 @@ def _run_batch(
                         f"(acc={acc:.3f}) id={result['id']} TIMEOUT",
                         flush=True,
                     )
-                    outf.write(json.dumps(result, ensure_ascii=False) + "\n")
-                    outf.flush()
+                    out_file.write(json.dumps(result, ensure_ascii=False) + "\n")
+                    out_file.flush()
         finally:
             executor.shutdown(wait=False, cancel_futures=True)
 

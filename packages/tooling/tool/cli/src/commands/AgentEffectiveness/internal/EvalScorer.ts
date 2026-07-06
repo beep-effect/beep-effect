@@ -18,7 +18,7 @@ import {
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import { A } from "@beep/utils";
-import { Clock, Console, Effect, FileSystem, Layer, Order, Path, pipe, Stream } from "effect";
+import { Clock, Console, Effect, FileSystem, flow, Layer, Order, Path, pipe, Stream } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -81,7 +81,8 @@ export const AgentEffectivenessEvalViolationSource = LiteralKit(["schema-first",
 export type AgentEffectivenessEvalViolationSource = typeof AgentEffectivenessEvalViolationSource.Type;
 
 /**
- * SkillOpt task completion criteria.
+ * Declarative checks a rollout must satisfy: required exported symbol names
+ * plus required/forbidden source regexes from the task manifest.
  *
  * @category models
  * @since 0.0.0
@@ -358,7 +359,7 @@ const formatCommand = (command: string, args: ReadonlyArray<string>): string => 
 
 const normalizePathSeparators = Str.replaceAll("\\", "/");
 
-const normalizeRelativePath = (value: string): string => pipe(value, normalizePathSeparators, Str.replace(/^\.\//, ""));
+const normalizeRelativePath: (value: string) => string = flow(normalizePathSeparators, Str.replace(/^\.\//, ""));
 
 const firstRuleId = (task: SkillOptTaskManifest): string =>
   pipe(
@@ -386,12 +387,12 @@ const scoreOrder = Order.combine(
 const violationKey = (violation: AgentEffectivenessEvalViolation): string =>
   `${violation.source}\u0000${violation.ruleId}\u0000${violation.file}\u0000${violation.line}\u0000${violation.message}`;
 
-const sortViolations = (violations: ReadonlyArray<AgentEffectivenessEvalViolation>) =>
-  pipe(
-    violations,
-    A.dedupeWith((left, right) => violationKey(left) === violationKey(right)),
-    A.sort(scoreOrder)
-  );
+const sortViolations: (
+  violations: ReadonlyArray<AgentEffectivenessEvalViolation>
+) => ReadonlyArray<AgentEffectivenessEvalViolation> = flow(
+  A.dedupeWith((left, right) => violationKey(left) === violationKey(right)),
+  A.sort(scoreOrder)
+);
 
 const lineForOffset = (content: string, offset: number): number =>
   pipe(content, Str.slice(0, offset), Str.split("\n"), A.length);
@@ -608,6 +609,8 @@ export const evaluateSkillOptCompletion = Effect.fn("AgentEffectivenessEvalScore
  * `1`. The mapping is deterministic, bounded, and gives every additional
  * violation diminishing but nonzero penalty.
  *
+ * @param violationCount - Number of violations the component reported.
+ * @returns Component score in `[0, 1]`.
  * @category scoring
  * @since 0.0.0
  */
@@ -620,6 +623,10 @@ export const lawComponentScore = (violationCount: number): number => roundScore(
  * {@link lawComponentScore}; `law_frac` is the deterministic arithmetic mean
  * of those three component scores.
  *
+ * @param schemaFirst - Schema-first lint component score.
+ * @param tsgo - tsgo diagnostics component score.
+ * @param biome - Biome diagnostics component score.
+ * @returns Mean law fraction in `[0, 1]`.
  * @category scoring
  * @since 0.0.0
  */
@@ -751,16 +758,14 @@ const schemaFirstIssueFromLine = (line: string): O.Option<SchemaFirstPolicyIssue
     O.flatMap(decodeSchemaFirstIssueJson)
   );
 
-const parseSchemaFirstViolations = (output: string): ReadonlyArray<AgentEffectivenessEvalViolation> =>
-  pipe(
-    output,
-    Str.split("\n"),
-    A.filter(Str.isNonEmpty),
-    A.map(schemaFirstIssueFromLine),
-    A.getSomes,
-    A.map(schemaFirstIssueToViolation),
-    sortViolations
-  );
+const parseSchemaFirstViolations: (output: string) => ReadonlyArray<AgentEffectivenessEvalViolation> = flow(
+  Str.split("\n"),
+  A.filter(Str.isNonEmpty),
+  A.map(schemaFirstIssueFromLine),
+  A.getSomes,
+  A.map(schemaFirstIssueToViolation),
+  sortViolations
+);
 
 const evaluateSchemaFirst = Effect.fn("AgentEffectivenessEvalScorer.evaluateSchemaFirst")(function* (
   fixtureDir: string,
@@ -919,27 +924,25 @@ const biomeDiagnosticFile = (diagnostic: unknown): string =>
     O.getOrElse(() => ".")
   );
 
-const parseBiomeJsonViolations = (output: string): O.Option<ReadonlyArray<AgentEffectivenessEvalViolation>> =>
-  pipe(
-    decodeUnknownJsonOption(output),
-    O.flatMap((document) => unknownProperty(document, "diagnostics")),
-    O.flatMap(decodeUnknownArrayOption),
-    O.map((diagnostics) =>
-      pipe(
-        diagnostics,
-        A.map((diagnostic) =>
-          AgentEffectivenessEvalViolation.make({
-            source: "biome",
-            ruleId: biomeDiagnosticCategory(diagnostic),
-            file: biomeDiagnosticFile(diagnostic),
-            line: 1,
-            message: biomeDiagnosticMessage(diagnostic),
-          })
-        ),
-        sortViolations
-      )
+const parseBiomeJsonViolations: (output: string) => O.Option<ReadonlyArray<AgentEffectivenessEvalViolation>> = flow(
+  decodeUnknownJsonOption,
+  O.flatMap((document) => unknownProperty(document, "diagnostics")),
+  O.flatMap(decodeUnknownArrayOption),
+  O.map(
+    flow(
+      A.map((diagnostic: unknown) =>
+        AgentEffectivenessEvalViolation.make({
+          source: "biome",
+          ruleId: biomeDiagnosticCategory(diagnostic),
+          file: biomeDiagnosticFile(diagnostic),
+          line: 1,
+          message: biomeDiagnosticMessage(diagnostic),
+        })
+      ),
+      sortViolations
     )
-  );
+  )
+);
 
 const parseBiomeViolations = (result: SubprocessResult): ReadonlyArray<AgentEffectivenessEvalViolation> =>
   pipe(
@@ -1004,6 +1007,10 @@ const evaluateLaw = Effect.fn("AgentEffectivenessEvalScorer.evaluateLaw")(functi
  * `law_frac` is the arithmetic mean of schema-first, tsgo, and biome
  * component scores, where each component is `1 / (1 + violations)`.
  *
+ * @param task - Task manifest the fixture was scored against.
+ * @param completion - Completion-check outcome for the fixture.
+ * @param law - Law-component violation sets for the fixture.
+ * @returns Deterministic score report with breakdown and sorted violations.
  * @category scoring
  * @since 0.0.0
  */
