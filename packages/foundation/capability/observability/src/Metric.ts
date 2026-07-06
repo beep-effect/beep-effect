@@ -30,6 +30,12 @@ import { PhaseOutcome } from "./PhaseProfiler.ts";
 
 const $I = $ObservabilityId.create("Metric");
 
+/**
+ * Options for the trackDuration metric helper.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class TrackDurationOptions extends S.Class<TrackDurationOptions>($I`TrackDurationOptions`)(
   {
     attributes: S.Record(S.String, S.String).pipe(S.optionalKey).annotateKey({

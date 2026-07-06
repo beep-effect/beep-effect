@@ -22,6 +22,12 @@ import type { HttpApiEndpoint, HttpApiGroup } from "effect/unstable/httpapi";
 const $I = $ObservabilityId.create("server/HttpApiTelemetry");
 const resolveHttpApiStatus = SchemaAST.resolveAt<number>("httpApiStatus");
 
+/**
+ * HTTP status code in the standard 100-599 range.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const HttpStatusCode = NonNegativeInt.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
   $I.annoteSchema("HttpStatusCode", {
     description: "HTTP status code in the standard 100-599 range.",
@@ -29,6 +35,12 @@ export const HttpStatusCode = NonNegativeInt.check(S.isBetween({ minimum: 100, m
   SchemaUtils.withCodecStatics
 );
 
+/**
+ * HTTP status code in the standard 100-599 range.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export type HttpStatusCode = typeof HttpStatusCode.Type;
 
 class HttpApiStatusField extends S.Class<HttpApiStatusField>($I`HttpApiStatusField`)(
@@ -138,6 +150,8 @@ const isHttpApiHandlerEffect = <
   value: unknown
 ): value is Effect.Effect<A, E, R> => Effect.isEffect(value);
 
+const isHttpApiSuccessStatusDataFirst = (args: IArguments): boolean => args.length >= 2 || S.isSchema(args[0]);
+
 /**
  * Resolve the declared success status from an HttpApiSchema value.
  *
@@ -153,8 +167,6 @@ const isHttpApiHandlerEffect = <
  * @since 0.0.0
  * @category observability
  */
-const isHttpApiSuccessStatusDataFirst = (args: IArguments): boolean => args.length >= 2 || S.isSchema(args[0]);
-
 export const httpApiSuccessStatus: {
   (schema: S.Top, fallback?: number): NonNegativeInt;
   (fallback: number): (schema: S.Top) => NonNegativeInt;

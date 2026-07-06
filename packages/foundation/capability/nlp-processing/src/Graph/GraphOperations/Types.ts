@@ -138,11 +138,12 @@ export type ExecutionStrategy = typeof ExecutionStrategy.Type;
  *
  * @example
  * ```ts
+ * import { NonNegativeInt } from "@beep/schema"
  * import { ExecutionMetrics } from "@beep/nlp-processing/Graph/GraphOperations/Types"
  *
  * const combined = ExecutionMetrics.combine(
  *   ExecutionMetrics.empty(),
- *   ExecutionMetrics.make({ ...ExecutionMetrics.empty(), nodesProcessed: 2 })
+ *   ExecutionMetrics.make({ ...ExecutionMetrics.empty(), nodesProcessed: NonNegativeInt.make(2) })
  * )
  *
  * console.log(combined.nodesProcessed) // 2

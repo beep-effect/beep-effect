@@ -75,6 +75,12 @@ export const AnnotatedNode = S.Union([TextNode, POSNode, EntityNode, LemmaNode, 
   SchemaUtils.withCodecStatics
 );
 
+/**
+ * Static TypeScript type for structural and linguistic annotation nodes.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type AnnotatedNode = typeof AnnotatedNode.Type;
 
 /**

@@ -201,9 +201,10 @@ export const withFallback: {
  * @example
  * ```ts
  * import { Duration } from "effect"
+ * import { PosInt } from "@beep/schema"
  * import type { CachingOptions } from "@beep/nlp-processing/Backend/Composition"
  *
- * const options: CachingOptions = { capacity: 64, timeToLive: Duration.minutes(5) }
+ * const options: CachingOptions = { capacity: PosInt.make(64), timeToLive: Duration.minutes(5) }
  * console.log(options.capacity) // 64
  * ```
  *
@@ -231,6 +232,7 @@ export class CachingOptions extends S.Class<CachingOptions>($I`CachingOptions`)(
  * @example
  * ```ts
  * import { Effect } from "effect"
+ * import { PosInt } from "@beep/schema"
  * import { withCaching } from "@beep/nlp-processing/Backend/Composition"
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"
  *
@@ -255,7 +257,9 @@ export class CachingOptions extends S.Class<CachingOptions>($I`CachingOptions`)(
  *   parseDependencies: () => Effect.succeed([]),
  *   extractRelations: () => Effect.succeed([])
  * }
- * const program = Effect.flatMap(withCaching(backend, { capacity: 16 }), (cached) => cached.tokenize("typed effects"))
+ * const program = Effect.flatMap(withCaching(backend, { capacity: PosInt.make(16) }), (cached) =>
+ *   cached.tokenize("typed effects")
+ * )
  * Effect.runPromise(program).then(console.log) // ["typed", "effects"]
  * ```
  *

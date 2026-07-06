@@ -104,9 +104,9 @@ export const makeConsoleErrorReporter = (options?: ConsoleErrorReporterOptions):
  * @example
  * ```typescript
  * import { Layer } from "effect"
- * import { layerErrorReporter } from "@beep/observability/server"
+ * import { ErrorReporterLayerOptions, layerErrorReporter } from "@beep/observability/server"
  *
- * const ErrorReporterLive = layerErrorReporter({ includeCause: true })
+ * const ErrorReporterLive = layerErrorReporter(ErrorReporterLayerOptions.make({ includeCause: true }))
  * console.log(ErrorReporterLive)
  * ```
  *

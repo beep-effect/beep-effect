@@ -384,6 +384,12 @@ interface TierGateDispatchResultDefinition extends Data.TaggedEnum.WithGenerics<
   readonly taggedEnum: TierGateDispatchResult<this["A"]>;
 }
 
+/**
+ * Tagged-enum constructors and matchers for {@link TierGateDispatchResult}.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const TierGateDispatchResult = Data.taggedEnum<TierGateDispatchResultDefinition>();
 
 /**

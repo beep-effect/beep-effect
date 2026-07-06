@@ -197,6 +197,12 @@ export class LoggingConfig extends S.Class<LoggingConfig>($I`LoggingConfig`)(
   })
 ) {}
 
+/**
+ * Options controlling startup/phase log banner rendering.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class RenderLogBannerOptions extends S.Class<RenderLogBannerOptions>($I`RenderLogBannerOptions`)(
   {
     kind: S.Literals(["phase", "startup"]).pipe(S.optionalKey).annotateKey({

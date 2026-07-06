@@ -305,6 +305,12 @@ export const FieldProjectionOutcome = LiteralKit(["Inline", "Fetchable"])
     SchemaUtils.withCodecStatics
   );
 
+/**
+ * Inline or fetchable outcome of projecting a payload within a caller's size budget.
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export type FieldProjectionOutcome = typeof FieldProjectionOutcome.Type;
 
 /**
@@ -317,6 +323,7 @@ export type FieldProjectionOutcome = typeof FieldProjectionOutcome.Type;
  * @example
  * ```ts
  * import * as S from "effect/Schema"
+ * import { NonNegativeInt } from "@beep/schema"
  * import { defineFieldTiers, FetchableHandle, projectWithinBudget } from "@beep/mcp-kit"
  *
  * const tiers = defineFieldTiers({
@@ -326,7 +333,7 @@ export type FieldProjectionOutcome = typeof FieldProjectionOutcome.Type;
  * })
  *
  * const projected = projectWithinBudget(tiers, { id: "doc-1", summary: "s", body: "b".repeat(100) }, {
- *   budgetBytes: 40,
+ *   budgetBytes: NonNegativeInt.make(40),
  *   mintFetchableHandle: (oversized) =>
  *     FetchableHandle.make({
  *       handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",

@@ -101,8 +101,9 @@ export class TextArtifactReference extends S.Class<TextArtifactReference>($I`Tex
  * @example
  * ```ts
  * import { TextSpan } from "@beep/file-processing/Extraction"
+ * import { NonNegativeInt } from "@beep/schema"
  *
- * const span = TextSpan.make({ endOffset: 5, startOffset: 0, text: "hello" })
+ * const span = TextSpan.make({ endOffset: NonNegativeInt.make(5), startOffset: NonNegativeInt.make(0), text: "hello" })
  * console.log(span.text) // "hello"
  * ```
  *

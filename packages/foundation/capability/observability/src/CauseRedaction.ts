@@ -349,6 +349,12 @@ const redactCauseSummaryImpl = (summary: CauseSummary, options: RedactCauseOptio
   });
 };
 
+/**
+ * Redact a cause summary's message, detail, and fingerprint for safe logging.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const redactCauseSummary: {
   (summary: CauseSummary, options?: RedactCauseOptions): RedactedCause;
   (options: RedactCauseOptions): (summary: CauseSummary) => RedactedCause;

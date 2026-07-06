@@ -24,6 +24,12 @@ const AiEntitySourceKit = LiteralKit(["builtin", "custom"]).annotate(
     description: "LiteralKit backing schema for AI entity source values.",
   })
 );
+/**
+ * LiteralKit backing schema for AI phonetic algorithm values.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const AiPhoneticAlgorithmKit = LiteralKit(["soundex", "phonetize"]).annotate(
   $I.annote("AiPhoneticAlgorithmKit", {
     description: "LiteralKit backing schema for AI phonetic algorithm values.",
@@ -37,6 +43,12 @@ const AiEntitySource = AiEntitySourceKit.pipe(
   SchemaUtils.withLiteralKitStatics(AiEntitySourceKit)
 );
 
+/**
+ * Phonetic encoding algorithm used to compare text.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export const AiPhoneticAlgorithm = AiPhoneticAlgorithmKit.pipe(
   $I.annoteSchema("AiPhoneticAlgorithm", {
     description: "Phonetic encoding algorithm used to compare text.",

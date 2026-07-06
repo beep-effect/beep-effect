@@ -158,6 +158,12 @@ export type SourceAuthDecision = Data.TaggedEnum<{
   readonly Vanish: {};
 }>;
 
+/**
+ * Tagged-enum constructors and matchers for {@link SourceAuthDecision}.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
 export const SourceAuthDecision = Data.taggedEnum<SourceAuthDecision>();
 
 /**

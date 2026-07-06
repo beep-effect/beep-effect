@@ -128,11 +128,12 @@ export class NodeNotFoundError extends TaggedErrorClass<NodeNotFoundError>($I`No
  *
  * @example
  * ```ts
+ * import { NonNegativeInt } from "@beep/schema"
  * import { NodeMetadata } from "@beep/nlp-processing/Graph/EffectGraph"
  * import * as O from "effect/Option"
  *
  * const metadata = NodeMetadata.make({
- *   depth: 0,
+ *   depth: NonNegativeInt.make(0),
  *   operation: O.none(),
  *   timestamp: 0
  * })

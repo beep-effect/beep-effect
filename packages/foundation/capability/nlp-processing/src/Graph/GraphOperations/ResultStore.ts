@@ -123,12 +123,13 @@ export interface StoredResult {
  *
  * @example
  * ```ts
+ * import { NonNegativeInt } from "@beep/schema"
  * import { CacheStats } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
  * import * as O from "effect/Option"
  *
  * const emptyStats = CacheStats.make({
- *   size: 0,
- *   totalHits: 0,
+ *   size: NonNegativeInt.make(0),
+ *   totalHits: NonNegativeInt.make(0),
  *   oldestEntry: O.none(),
  *   newestEntry: O.none()
  * })
