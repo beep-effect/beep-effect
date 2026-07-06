@@ -25,7 +25,11 @@ export * from "./Lint.errors.js";
  * @since 0.0.0
  */
 export {
+  fnSchemaEntryFromFunctionLike,
+  getsomesStructEntryFromCallExpression,
   isSchemaCrispeningPolicyExempt,
+  normalizationEntryFromCallExpression,
+  nullReturnEntryFromFunctionLike,
   SchemaCrispeningFamilyPolicy,
   SchemaCrispeningPolicyDocument,
   SchemaFirstInventoryEntry,

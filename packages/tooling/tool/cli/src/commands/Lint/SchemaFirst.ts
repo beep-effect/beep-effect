@@ -38,6 +38,12 @@ const DEFAULTS_SCHEMA_SIGNAL_PATTERN =
   /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|ErrorClass|TaggedErrorClass)|withConstructorDefault|withDecodingDefault|SchemaUtils\.withKeyDefaults)\b/;
 const EQUIVALENCE_SCHEMA_SIGNAL_PATTERN =
   /\b(?:S\.(?:Class|Struct|TaggedClass|TaggedStruct|ErrorClass|TaggedErrorClass|toEquivalence|overrideToEquivalence)|SchemaUtils\.toEquivalence)\b/;
+const FN_CALL_SIGNAL_PATTERN = /\bFn\s*\(/;
+const NORMALIZATION_METHOD_NAMES = ["trim", "toUpperCase", "toLowerCase"] as const;
+const NORMALIZATION_CALL_SIGNAL_PATTERN = /\.(?:trim|toUpperCase|toLowerCase)\(/;
+const NULL_UNDEFINED_RETURN_PATTERN = /\bnull\b|\bundefined\b/;
+const GETSOMES_CALL_SIGNAL_PATTERN = /\bgetSomes\s*\(/;
+const GETSOMES_OBJECT_NAMES = ["R", "Record"] as const;
 const SCHEMA_DERIVED_EQUIVALENCE_PATTERN =
   /\b(?:S|Schema)\.(?:toEquivalence|overrideToEquivalence)\b|SchemaUtils\.toEquivalence\b/;
 const MANUAL_EQUALITY_COMPARISON_PATTERN = /===|!==/;
@@ -129,6 +135,10 @@ export const SchemaFirstPolicyRuleId = LiteralKit([
   "SFV4-equivalence",
   "SFV4-numeric-domain",
   "SFV4-boundary-codec",
+  "SFV4-fn-schema",
+  "SFV4-normalization",
+  "SFV4-null-return",
+  "SFV4-getsomes-struct",
 ]).pipe(
   $I.annoteSchema("SchemaFirstPolicyRuleId", {
     description: "Stable schema-first policy rule identifiers emitted for lint and Yeet issue routing.",
@@ -284,6 +294,10 @@ class SchemaFirstLintSummary extends S.Class<SchemaFirstLintSummary>($I`SchemaFi
     precisionAuditAdvisories: S.Finite,
     arbitraryTestsAdvisories: S.Finite,
     numericDomainAdvisories: S.Finite,
+    fnSchemaAdvisories: S.Finite,
+    normalizationAdvisories: S.Finite,
+    nullReturnAdvisories: S.Finite,
+    getsomesStructAdvisories: S.Finite,
     crispeningPolicyExempt: S.Finite,
     wroteInventory: S.Boolean,
   },
@@ -445,6 +459,18 @@ const missingEntryRemediation = (entry: SchemaFirstInventoryEntry): string => {
   }
   if (entry.ruleId === "SFV4-arbitrary-tests") {
     return "Add a focused property test using S.toArbitrary(sourceSchema) and fast-check, or keep the inventory entry when the file is intentionally golden/snapshot/regression-only coverage.";
+  }
+  if (entry.ruleId === "SFV4-fn-schema") {
+    return "Model inline object parameter/return contracts with Fn({ input, output }) from @beep/schema or an S.Class, or run bun run beep lint schema-first --write with a justification when the shape intentionally stays inline.";
+  }
+  if (entry.ruleId === "SFV4-normalization") {
+    return "Move the trim/case normalization into a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data; inventory the exception only when the call is intentionally imperative.";
+  }
+  if (entry.ruleId === "SFV4-null-return") {
+    return "Return O.Option, Result, Effect, or Exit instead of a null/undefined-typed return; run bun run beep lint schema-first --write when the boundary (3rd-party/react) intentionally returns null/undefined.";
+  }
+  if (entry.ruleId === "SFV4-getsomes-struct") {
+    return "Replace R.getSomes over an inline Option-struct literal with O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; inventory the exception only for intentionally homogeneous dynamic-key dictionaries.";
   }
   return "Run bun run beep lint schema-first --write after reviewing the finding, or migrate the symbol to an annotated schema.";
 };
@@ -972,6 +998,249 @@ const boundaryCodecEntryFromJsonParse = (
       "Direct JSON.parse boundary should use S.UnknownFromJsonString or S.fromJsonString(schema) so parsing and validation stay schema-owned.",
   });
 
+type FunctionLikeDeclarationNode = import("ts-morph").FunctionDeclaration | import("ts-morph").ArrowFunction;
+
+const sourceExportedArrowFunctions = (
+  sourceFile: import("ts-morph").SourceFile
+): ReadonlyArray<import("ts-morph").ArrowFunction> =>
+  pipe(
+    sourceFile.getVariableStatements(),
+    A.filter((statement) => statement.isExported()),
+    A.flatMap((statement) => statement.getDeclarations()),
+    A.map((declaration) => O.fromNullishOr(declaration.getInitializer())),
+    A.map(O.filter(Node.isArrowFunction)),
+    A.getSomes
+  );
+
+const functionLikeSymbolName = (node: FunctionLikeDeclarationNode): string => {
+  if (Node.isFunctionDeclaration(node)) {
+    return node.getName() ?? "anonymous-function";
+  }
+  const variableDeclaration = node.getFirstAncestorByKind(SyntaxKind.VariableDeclaration);
+  return variableDeclaration?.getName() ?? "anonymous-arrow";
+};
+
+const isInlineTypeLiteralNode = (typeNode: Node | undefined): boolean =>
+  typeNode !== undefined && Node.isTypeLiteral(typeNode);
+
+const sourceHasFnSchemaSignal = (sourceFile: import("ts-morph").SourceFile): boolean => {
+  const text = sourceFile.getFullText();
+  return SCHEMA_FIELDS_CALL_PATTERN.test(text) || FN_CALL_SIGNAL_PATTERN.test(text);
+};
+
+/**
+ * Detect an exported function or arrow function whose parameter or return
+ * contract is an inline object type literal rather than a schema, within a
+ * schema-modeled file. Generic declarations are conservatively skipped.
+ *
+ * @param node - Exported `FunctionDeclaration` or `ArrowFunction` candidate.
+ * @param file - Repo-relative posix path of the source file.
+ * @param owner - Resolved owning package for the finding.
+ * @returns `O.some` with the advisory entry when an inline object contract is found, `O.none` otherwise.
+ * @example
+ * ```ts
+ * import { fnSchemaEntryFromFunctionLike } from "@beep/repo-cli/commands/Lint"
+ * console.log(fnSchemaEntryFromFunctionLike)
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+export const fnSchemaEntryFromFunctionLike = (
+  node: FunctionLikeDeclarationNode,
+  file: string,
+  owner: string
+): O.Option<SchemaFirstInventoryEntry> => {
+  if (node.getTypeParameters().length > 0) {
+    return O.none();
+  }
+
+  const hasInlineParameterTypeLiteral = A.some(node.getParameters(), (parameter) =>
+    isInlineTypeLiteralNode(parameter.getTypeNode())
+  );
+  const hasInlineReturnTypeLiteral = isInlineTypeLiteralNode(node.getReturnTypeNode());
+  if (!hasInlineParameterTypeLiteral && !hasInlineReturnTypeLiteral) {
+    return O.none();
+  }
+
+  const name = functionLikeSymbolName(node);
+  return O.some(
+    SchemaFirstInventoryEntry.make({
+      file,
+      symbol: name,
+      kind: "schema-policy-advisory",
+      status: "advisory",
+      ruleId: "SFV4-fn-schema",
+      line: node.getSourceFile().getLineAndColumnAtPos(node.getStart()).line,
+      owner,
+      reason: `Exported function "${name}" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable.`,
+    })
+  );
+};
+
+/**
+ * Detect an exported function or arrow function whose explicit return type
+ * annotation includes `null` or `undefined` rather than an `O.Option`,
+ * `Result`, `Effect`, or `Exit` return. Only explicit annotations are
+ * inspected; inferred returns are out of scope. Generic declarations and
+ * `.tsx` react boundary files are conservatively skipped by callers.
+ *
+ * @param node - Exported `FunctionDeclaration` or `ArrowFunction` candidate.
+ * @param file - Repo-relative posix path of the source file.
+ * @param owner - Resolved owning package for the finding.
+ * @returns `O.some` with the advisory entry when a null/undefined return annotation is found, `O.none` otherwise.
+ * @example
+ * ```ts
+ * import { nullReturnEntryFromFunctionLike } from "@beep/repo-cli/commands/Lint"
+ * console.log(nullReturnEntryFromFunctionLike)
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+export const nullReturnEntryFromFunctionLike = (
+  node: FunctionLikeDeclarationNode,
+  file: string,
+  owner: string
+): O.Option<SchemaFirstInventoryEntry> => {
+  if (node.getTypeParameters().length > 0) {
+    return O.none();
+  }
+
+  const returnTypeNode = node.getReturnTypeNode();
+  if (returnTypeNode === undefined || !NULL_UNDEFINED_RETURN_PATTERN.test(returnTypeNode.getText())) {
+    return O.none();
+  }
+
+  const name = functionLikeSymbolName(node);
+  return O.some(
+    SchemaFirstInventoryEntry.make({
+      file,
+      symbol: name,
+      kind: "schema-policy-advisory",
+      status: "advisory",
+      ruleId: "SFV4-null-return",
+      line: node.getSourceFile().getLineAndColumnAtPos(node.getStart()).line,
+      owner,
+      reason: `Exported helper "${name}" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions).`,
+    })
+  );
+};
+
+const isNullReturnEligibleFilePath = (filePath: string): boolean => !Str.endsWith(".tsx")(filePath);
+
+const isNormalizationMethodName = (name: string): boolean =>
+  A.some(NORMALIZATION_METHOD_NAMES, (methodName) => Str.Equivalence(methodName, name));
+
+const sourceHasNormalizationSignal = (sourceFile: import("ts-morph").SourceFile): boolean => {
+  const text = sourceFile.getFullText();
+  return SCHEMA_FIELDS_CALL_PATTERN.test(text) && NORMALIZATION_CALL_SIGNAL_PATTERN.test(text);
+};
+
+/**
+ * Detect a zero-argument `.trim()`/`.toUpperCase()`/`.toLowerCase()` call made
+ * inside a function body of a schema-modeled file. Such normalization belongs
+ * in a schema transformation so the invariant travels with the data instead of
+ * living in ad hoc imperative code.
+ *
+ * @param callExpression - Candidate call expression to inspect.
+ * @param file - Repo-relative posix path of the source file.
+ * @param owner - Resolved owning package for the finding.
+ * @returns `O.some` with the advisory entry when a function-local normalization call is found, `O.none` otherwise.
+ * @example
+ * ```ts
+ * import { normalizationEntryFromCallExpression } from "@beep/repo-cli/commands/Lint"
+ * console.log(normalizationEntryFromCallExpression)
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+export const normalizationEntryFromCallExpression = (
+  callExpression: import("ts-morph").CallExpression,
+  file: string,
+  owner: string
+): O.Option<SchemaFirstInventoryEntry> => {
+  const expression = callExpression.getExpression();
+  if (
+    !Node.isPropertyAccessExpression(expression) ||
+    !isNormalizationMethodName(expression.getName()) ||
+    callExpression.getArguments().length > 0 ||
+    !isFunctionLocalNode(callExpression)
+  ) {
+    return O.none();
+  }
+
+  const methodName = expression.getName();
+  const container = inferExecutableContainerSymbol(callExpression);
+  return O.some(
+    SchemaFirstInventoryEntry.make({
+      file,
+      symbol: `${container}.${methodName}`,
+      kind: "schema-policy-advisory",
+      status: "advisory",
+      ruleId: "SFV4-normalization",
+      line: callExpression.getSourceFile().getLineAndColumnAtPos(callExpression.getStart()).line,
+      owner,
+      reason: `Normalization call ".${methodName}()" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data.`,
+    })
+  );
+};
+
+const sourceHasGetSomesSignal = (sourceFile: import("ts-morph").SourceFile): boolean =>
+  GETSOMES_CALL_SIGNAL_PATTERN.test(sourceFile.getFullText());
+
+const isGetSomesObjectName = (name: string): boolean =>
+  A.some(GETSOMES_OBJECT_NAMES, (objectName) => Str.Equivalence(objectName, name));
+
+/**
+ * Detect an `R.getSomes(...)`/`Record.getSomes(...)` call whose first argument
+ * is an inline object literal, i.e. a heterogeneous Option-struct spread that
+ * should preserve literal keys and per-key value types through
+ * `O.getSomesStruct` instead. Calls over an identifier/variable argument (the
+ * homogeneous dynamic-key dictionary case) are left alone.
+ *
+ * @param callExpression - Candidate call expression to inspect.
+ * @param file - Repo-relative posix path of the source file.
+ * @param owner - Resolved owning package for the finding.
+ * @returns `O.some` with the advisory entry when an inline Option-struct literal is spread through `getSomes`, `O.none` otherwise.
+ * @example
+ * ```ts
+ * import { getsomesStructEntryFromCallExpression } from "@beep/repo-cli/commands/Lint"
+ * console.log(getsomesStructEntryFromCallExpression)
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+export const getsomesStructEntryFromCallExpression = (
+  callExpression: import("ts-morph").CallExpression,
+  file: string,
+  owner: string
+): O.Option<SchemaFirstInventoryEntry> => {
+  const expression = callExpression.getExpression();
+  if (!Node.isPropertyAccessExpression(expression) || expression.getName() !== "getSomes") {
+    return O.none();
+  }
+  if (!isGetSomesObjectName(expression.getExpression().getText())) {
+    return O.none();
+  }
+  const firstArgument = callExpression.getArguments()[0];
+  if (firstArgument === undefined || !Node.isObjectLiteralExpression(firstArgument)) {
+    return O.none();
+  }
+
+  return O.some(
+    SchemaFirstInventoryEntry.make({
+      file,
+      symbol: `${inferExecutableContainerSymbol(callExpression)}.R.getSomes`,
+      kind: "schema-policy-advisory",
+      status: "advisory",
+      ruleId: "SFV4-getsomes-struct",
+      line: callExpression.getSourceFile().getLineAndColumnAtPos(callExpression.getStart()).line,
+      owner,
+      reason:
+        "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05).",
+    })
+  );
+};
+
 const sourceHasDefaultsSchemaSignal = (sourceFile: import("ts-morph").SourceFile): boolean =>
   DEFAULTS_SCHEMA_SIGNAL_PATTERN.test(sourceFile.getFullText());
 
@@ -1369,7 +1638,23 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
       );
     }
 
+    const hasNormalizationSignal = sourceHasNormalizationSignal(sourceFile);
+    const hasGetSomesSignal = sourceHasGetSomesSignal(sourceFile);
+
     for (const callExpression of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
+      if (hasNormalizationSignal) {
+        const normalizationEntry = normalizationEntryFromCallExpression(callExpression, filePath, owner);
+        if (O.isSome(normalizationEntry)) {
+          A.appendInPlace(entries, normalizationEntry.value);
+        }
+      }
+      if (hasGetSomesSignal) {
+        const getsomesEntry = getsomesStructEntryFromCallExpression(callExpression, filePath, owner);
+        if (O.isSome(getsomesEntry)) {
+          A.appendInPlace(entries, getsomesEntry.value);
+        }
+      }
+
       if (callExpression.getExpression().getText() !== "S.Struct") {
         if (isJsonParseCallExpression(callExpression)) {
           A.appendInPlace(entries, boundaryCodecEntryFromJsonParse(callExpression, filePath, owner));
@@ -1388,6 +1673,28 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
         O.getOrElse(reasonOption, () => "Object schema should prefer an annotated S.Class over S.Struct."),
         owner
       );
+    }
+
+    const functionLikeCandidates: ReadonlyArray<FunctionLikeDeclarationNode> = [
+      ...A.filter(sourceFile.getFunctions(), (declaration) => declaration.isExported()),
+      ...sourceExportedArrowFunctions(sourceFile),
+    ];
+    const hasFnSchemaSignal = sourceHasFnSchemaSignal(sourceFile);
+    const isNullReturnEligible = isNullReturnEligibleFilePath(filePath);
+
+    for (const functionLike of functionLikeCandidates) {
+      if (hasFnSchemaSignal) {
+        const fnSchemaEntry = fnSchemaEntryFromFunctionLike(functionLike, filePath, owner);
+        if (O.isSome(fnSchemaEntry)) {
+          A.appendInPlace(entries, fnSchemaEntry.value);
+        }
+      }
+      if (isNullReturnEligible) {
+        const nullReturnEntry = nullReturnEntryFromFunctionLike(functionLike, filePath, owner);
+        if (O.isSome(nullReturnEntry)) {
+          A.appendInPlace(entries, nullReturnEntry.value);
+        }
+      }
     }
 
     for (const property of sourceFile.getDescendantsOfKind(SyntaxKind.PropertyAssignment)) {
@@ -1475,6 +1782,10 @@ type SchemaFirstLintFindings = {
   readonly precisionAuditAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly arbitraryTestsAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly numericDomainAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
+  readonly fnSchemaAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
+  readonly normalizationAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
+  readonly nullReturnAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
+  readonly getsomesStructAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly activeAdvisories: ReadonlyArray<SchemaFirstInventoryEntry>;
   readonly policyExemptCount: number;
 };
@@ -1533,6 +1844,10 @@ const collectSchemaFirstLintFindings = (
   const precisionAuditAdvisories = A.filter(policyFilteredEntries, isActiveRuleAdvisory("SFV4-precision-audit"));
   const arbitraryTestsAdvisories = A.filter(policyFilteredEntries, isActiveRuleAdvisory("SFV4-arbitrary-tests"));
   const numericDomainAdvisories = A.filter(policyFilteredEntries, isActiveRuleAdvisory("SFV4-numeric-domain"));
+  const fnSchemaAdvisories = A.filter(policyFilteredEntries, isActiveRuleAdvisory("SFV4-fn-schema"));
+  const normalizationAdvisories = A.filter(policyFilteredEntries, isActiveRuleAdvisory("SFV4-normalization"));
+  const nullReturnAdvisories = A.filter(policyFilteredEntries, isActiveRuleAdvisory("SFV4-null-return"));
+  const getsomesStructAdvisories = A.filter(policyFilteredEntries, isActiveRuleAdvisory("SFV4-getsomes-struct"));
 
   return {
     missingEntries,
@@ -1545,6 +1860,10 @@ const collectSchemaFirstLintFindings = (
     precisionAuditAdvisories,
     arbitraryTestsAdvisories,
     numericDomainAdvisories,
+    fnSchemaAdvisories,
+    normalizationAdvisories,
+    nullReturnAdvisories,
+    getsomesStructAdvisories,
     activeAdvisories: [
       ...boundaryCodecAdvisories,
       ...defaultsAdvisories,
@@ -1553,6 +1872,10 @@ const collectSchemaFirstLintFindings = (
       ...precisionAuditAdvisories,
       ...arbitraryTestsAdvisories,
       ...numericDomainAdvisories,
+      ...fnSchemaAdvisories,
+      ...normalizationAdvisories,
+      ...nullReturnAdvisories,
+      ...getsomesStructAdvisories,
     ],
     policyExemptCount,
   };
@@ -1579,6 +1902,10 @@ const makeSchemaFirstLintSummary = (
     precisionAuditAdvisories: findings.precisionAuditAdvisories.length,
     arbitraryTestsAdvisories: findings.arbitraryTestsAdvisories.length,
     numericDomainAdvisories: findings.numericDomainAdvisories.length,
+    fnSchemaAdvisories: findings.fnSchemaAdvisories.length,
+    normalizationAdvisories: findings.normalizationAdvisories.length,
+    nullReturnAdvisories: findings.nullReturnAdvisories.length,
+    getsomesStructAdvisories: findings.getsomesStructAdvisories.length,
     crispeningPolicyExempt: findings.policyExemptCount,
     wroteInventory: options.write,
   });
@@ -1597,6 +1924,10 @@ const logSchemaFirstSummary = Effect.fn("logSchemaFirstSummary")(function* (summ
   yield* Console.log(`[schema-first] sfv4_precision_audit_advisories=${summary.precisionAuditAdvisories}`);
   yield* Console.log(`[schema-first] sfv4_arbitrary_tests_advisories=${summary.arbitraryTestsAdvisories}`);
   yield* Console.log(`[schema-first] sfv4_numeric_domain_advisories=${summary.numericDomainAdvisories}`);
+  yield* Console.log(`[schema-first] sfv4_fn_schema_advisories=${summary.fnSchemaAdvisories}`);
+  yield* Console.log(`[schema-first] sfv4_normalization_advisories=${summary.normalizationAdvisories}`);
+  yield* Console.log(`[schema-first] sfv4_null_return_advisories=${summary.nullReturnAdvisories}`);
+  yield* Console.log(`[schema-first] sfv4_getsomes_struct_advisories=${summary.getsomesStructAdvisories}`);
   yield* Console.log(`[schema-first] crispening_policy_exempt=${summary.crispeningPolicyExempt}`);
   if (summary.wroteInventory) {
     yield* Console.log(`[schema-first] wrote ${INVENTORY_PATH}`);
