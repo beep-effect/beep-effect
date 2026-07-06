@@ -3,6 +3,15 @@
 **Rated by:** Claude Fable 5 · **Date:** 2026-07-05 · **HEAD:** `2c2727f830` (main)
 **Method:** 11-dimension weighted rubric. Nine parallel evidence-gathering assessors (one per dimension, read-only, ~444k tokens) plus inline git-history analysis. Every score is anchored: **2** = active hazard, **5** = median professional repo, **7** = disciplined, **9** = exemplary. Every claim below cites a file or a command run against this tree on the rating date.
 
+> **Delta note (2026-07-05, same day, post-assessment):** the
+> `agent-pipeline-velocity` initiative (PR #295) landed against this report's
+> top findings: main's last red check fixed (CI/CD), review lineup cut to one
+> bot, PRs read the turbo cache, instruction files single-sourced with a
+> drift gate (~150KB agent-context reduction), lint-policy lane 4.4× faster
+> with per-step timing, `beep worktree` shipped. Scores stand until the next
+> ritual re-rate; expected movement: CI/CD 3.5→~7, agent-friendliness 8.0→~9,
+> git hygiene rising with the worktree/publish discipline now tooled.
+
 **Prior rating (ritual):** 7.2/10 on 2026-06-11 by the same model, on a different (self-chosen) rubric. The headline number barely moved, but the composition changed: the June rating docked *testing* (5) and *product completeness* (4); this one docks *process* — the in-tree engineering has kept improving while the trunk workflow has decayed.
 
 ## Scorecard
