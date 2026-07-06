@@ -1,0 +1,5 @@
+## Context
+Validation copy of the one-item smoke task. SkillOpt requires a validation split for gate comparison, but this P1 lane is discovery plus static config only.
+
+## Question
+In the prepared scratch file /home/elpresidank/YeeBois/projects/beep-effect-worktrees/skillopt-p1-spike/goals/skillopt-training-pilot/history/p1-spike/fixture/Status.ts, model a 4-member status literal domain as a LiteralKit schema with $I annotations per repo law. When finished, answer <answer>schema-first-literalkit-status-complete</answer>.
