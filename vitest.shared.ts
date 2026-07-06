@@ -20,7 +20,12 @@ const configStringEqualsSync = (name: string, expected: string): boolean =>
     O.exists((value) => value === expected)
   );
 export const vitestCoverageReportOnly = configStringEqualsSync("VITEST_COVERAGE_REPORT_ONLY", "1");
-const vitestCoverageRunActive = vitestCoverageReportOnly || configStringEqualsSync("VITEST_COVERAGE_RATCHET", "1");
+// Env flags do not survive every spawn chain (root script -> turbo ->
+// package script -> vitest); the vitest process's own argv is authoritative.
+const vitestCoverageRunActive =
+  vitestCoverageReportOnly ||
+  configStringEqualsSync("VITEST_COVERAGE_RATCHET", "1") ||
+  process.argv.includes("--coverage");
 // Fixed global coverage floors are retired (quality-gate-ratchets, 2026-07-06):
 // the committed per-package baseline compare (standards/coverage.regression-baseline.jsonc,
 // fail-on-drop) is the sole coverage judge. Package-local floors (e.g.
