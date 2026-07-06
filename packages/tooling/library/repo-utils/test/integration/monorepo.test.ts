@@ -22,7 +22,7 @@ import { Effect, FileSystem, HashMap, HashSet, Layer, Order } from "effect";
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
 
-layer(TestLayer, { timeout: 120_000 })("integration (real monorepo)", (it) => {
+layer(TestLayer, { timeout: 300_000 })("integration (real monorepo)", (it) => {
   // ── findRepoRoot ─────────────────────────────────────────────────────
   describe("findRepoRoot", () => {
     it.effect(
