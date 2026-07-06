@@ -57,6 +57,11 @@ jobs:
         id: release-diff
         if: steps.pending-changesets.outputs.has_changesets == 'true'
         shell: bash
+        env:
+          # @changesets/changelog-github resolves PR/author links via the
+          # GitHub API and hard-fails without a token (main-red cause,
+          # fixed 2026-07-05, goals/agent-pipeline-velocity B3).
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           bun run changeset:version
           if [[ -n "$(git status --porcelain)" ]]; then

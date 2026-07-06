@@ -3,9 +3,9 @@
   "initiative": {
     "id": "yeet-pr-closeout-loop",
     "title": "Yeet PR Closeout Loop",
-    "status": "active",
+    "status": "superseded",
     "created": "2026-06-08",
-    "updated": "2026-06-08",
+    "updated": "2026-07-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/yeet-pr-closeout-loop",
@@ -19,6 +19,8 @@
     "grandfathered": false
   },
   "mission": "Implement Yeet retry, targeted review-fix proof, affected repo-export checks, and PR closeout gates.",
+  "supersededBy": "goals/agent-pipeline-velocity",
+  "supersededNote": "2026-07-05: absorbed into agent-pipeline-velocity (ledger-surgery decision, explorations/agent-pipeline-velocity/DECISIONS.md) — closeout-gate lineup changes (greptile-only default) land there as Phase B1; stale repo-exports-catalog verificationCommands retire with it.",
   "ownership": {
     "family": "tooling",
     "primaryPackages": [

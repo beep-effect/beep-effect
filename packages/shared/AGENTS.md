@@ -55,6 +55,18 @@ cross-slice contract has met the promotion bar.
   schema-first when Effect Schema can represent them.
 - Add tests and JSDoc/docgen metadata when new exported behavior appears.
 
+## Tables role contract
+
+Applies to every `*-tables` package (`@beep/shared-tables`,
+`@beep/epistemic-tables`, `@beep/workspace-tables`, …):
+
+- Keep table meaning tied to the owning domain's product language.
+- Generic projection belongs in `@beep/drizzle`; a tables package only
+  publishes concrete tables for its domain.
+- The only Drizzle allowance is metadata-only `pgTable` definition and index
+  construction from domain descriptors — no connections, query execution,
+  repositories, migrations, seeders, or live DB access.
+
 ## Verification
 
 Use package-local checks for the leaf package you touched:

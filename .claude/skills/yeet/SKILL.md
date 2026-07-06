@@ -222,8 +222,13 @@ from a real security failure) before shipping such a fix.
 `yeet closeout` is read-first. It classifies review threads and bot findings and
 writes Yeet artifacts locally. It posts a Greptile rerun comment only when
 `--retrigger-greptile` is explicit, and it does not auto-resolve or auto-reply to
-review threads. The closeout artifact includes durable states for review
-threads, Greptile, CodeRabbit, ChatGPT, and hosted-check handoff.
+review threads. The default bot lineup is **greptile-only** (2026-07-05,
+agent-pipeline-velocity): the closeout artifact includes durable states for
+review threads, Greptile, and hosted-check handoff. CodeRabbit/ChatGPT gates
+appear only with explicit opt-in via `--bots greptile,coderabbit,chatgpt`
+(their parsers are retained; the org apps are uninstalled/auto-review-off, so
+expect "unknown" unless comments exist). Deep review is on-demand:
+`/code-review ultra` or an explicit `@codex review` mention.
 
 ## Fast Plus Monitor
 

@@ -10,7 +10,7 @@ import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Console, Effect, FileSystem, flow, Inspectable, Match, Order, Path, pipe, Stream } from "effect";
+import { Console, Duration, Effect, FileSystem, flow, Inspectable, Match, Order, Path, pipe, Stream } from "effect";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -45,6 +45,12 @@ const LOCAL_BIOME_BIN = "./node_modules/.bin/biome";
 const BIOME_FIX_CHANGED_ARGS = ["check", "--write", "--files-ignore-unknown=true", "--no-errors-on-unmatched"] as const;
 const LINT_FIX_AGGREGATE_ARGS = ["--full", "--repo"] as const;
 const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
+// Lint-policy steps are independent read-only tools (cspell, markdownlint,
+// oxlint, eslint-jsdoc, law checks, madge...). Running them grouped-concurrent
+// converts the lane from sum-of-steps to max-of-steps; 6 balances the
+// CPU-heavy members (turbo-lint, tsgo-rules, eslint) against memory
+// (rqt-012, goals/agent-pipeline-velocity D4).
+const LINT_POLICY_STEP_CONCURRENCY = 6;
 const groupedStepOutputTruncatedNotice = `\n[beep-cli] output truncated after ${GROUPED_STEP_OUTPUT_MAX_CHARS} characters`;
 
 /**
@@ -838,7 +844,14 @@ const collectStreamingStepFailures = Effect.fn("QualityTasks.collectStreamingSte
     (step) =>
       runStep(step).pipe(
         Effect.as(O.none<QualityTaskFailed>()),
-        Effect.catchTag("QualityTaskFailed", (failure) => Effect.succeed(O.some(failure)))
+        Effect.catchTag("QualityTaskFailed", (failure) => Effect.succeed(O.some(failure))),
+        Effect.timed,
+        Effect.tap(([elapsed, outcome]) =>
+          Console.log(
+            `[beep-cli] ${step.label}: ${O.isNone(outcome) ? "ok" : "failed"} in ${Duration.toMillis(elapsed)}ms`
+          )
+        ),
+        Effect.map(([, outcome]) => outcome)
       ),
     { concurrency: 1 }
   );
@@ -954,7 +967,16 @@ const runStepGroup = Effect.fn("QualityTasks.runStepGroup")(function* (
   yield* Effect.forEach(resolvedSteps, (step) =>
     Console.log(`[beep-cli] ${step.label}: ${commandText(step.command, step.args)}`)
   );
-  const results = yield* Effect.forEach(resolvedSteps, collectResolvedStepOutput, { concurrency });
+  const results = yield* Effect.forEach(
+    resolvedSteps,
+    (step) =>
+      collectResolvedStepOutput(step).pipe(
+        Effect.timed,
+        Effect.tap(([elapsed]) => Console.log(`[beep-cli] ${step.label}: done in ${Duration.toMillis(elapsed)}ms`)),
+        Effect.map(([, result]) => result)
+      ),
+    { concurrency }
+  );
 
   yield* Effect.forEach(results, renderStepOutput, { discard: true });
 
@@ -1270,7 +1292,7 @@ export const runRootLintPolicyTask: Effect.Effect<void, QualityTaskError, Qualit
     const cwd = path.resolve(process.cwd());
     const repoRoot = yield* findRepoRoot(cwd);
 
-    yield* runStreamingStepGroup("lint:policy", rootRepoLintPolicySteps(repoRoot));
+    yield* runStepGroup("lint:policy", rootRepoLintPolicySteps(repoRoot), LINT_POLICY_STEP_CONCURRENCY);
   }
 );
 
@@ -1320,7 +1342,7 @@ const runRootLintTask = Effect.fn("QualityTasks.runRootLintTask")(function* (
     return;
   }
 
-  yield* runStreamingStepGroup("lint", [lintStep, ...rootRepoLintPolicySteps(repoRoot)]);
+  yield* runStepGroup("lint", [lintStep, ...rootRepoLintPolicySteps(repoRoot)], LINT_POLICY_STEP_CONCURRENCY);
 });
 
 const rootAuditSteps = (repoRoot: string, args: ReadonlyArray<string>) => {

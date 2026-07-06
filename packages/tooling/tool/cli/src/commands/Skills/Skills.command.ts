@@ -274,12 +274,6 @@ export const remoteSkillSources: ReadonlyArray<RemoteSkillSource> = [
     ref: "main",
     skillPath: "skills/shadcn/SKILL.md",
   }),
-  skillSource({
-    name: "turborepo",
-    source: "vercel/turborepo",
-    ref: "main",
-    skillPath: "skills/turborepo/SKILL.md",
-  }),
 ];
 
 const remoteSkillSourcesByName: Readonly<Record<string, RemoteSkillSource>> = pipe(

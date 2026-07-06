@@ -1,0 +1,116 @@
+{
+  "schemaVersion": "initiative-manifest/v1",
+  "initiative": {
+    "id": "agent-pipeline-velocity",
+    "title": "Agent Pipeline Velocity",
+    "status": "active",
+    "created": "2026-07-05",
+    "updated": "2026-07-05",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/agent-pipeline-velocity",
+  "lifecycle": "active",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "mission": "Cut agent context friction (Claude + Codex) and time-to-mergeable-PR in one pass: greptile-only reviews, read-only PR turbo cache, green main, single-sourced instruction files, progressive-disclosure skills, permission allowlist, instrumented + rebenchmarked yeet, local/hosted parity, and a beep worktree helper \u2014 one goal, one PR.",
+  "provenance": {
+    "exploration": "explorations/agent-pipeline-velocity",
+    "graduated": "2026-07-05",
+    "note": "Graduated after deep-research reconciliation: zero contradictions, 5 refinements (see exploration DECISIONS.md final entry): laws-only instruction files; Anthropic skill budget rules layered on SkillOpt band; C4 hooks elevated; optional typescript-lsp trial; CSF-001 amendment cites turbo #1188/#6624."
+  },
+  "sequencingGate": "PR #291 (codex/yeet-verify-repair) must merge before code-touching phases.",
+  "supersedes": [
+    "goals/agent-effectiveness-phoenix-enrichment",
+    "goals/agent-effectiveness-workflow-integration",
+    "goals/yeet-operator-clarity",
+    "goals/yeet-pr-closeout-loop"
+  ],
+  "relatedPackets": [
+    {
+      "id": "repo-quality-throughput",
+      "relation": "successor",
+      "notes": "Continues rqt-NNN numbering at rqt-011; inherits proof-parity-map.md and measured-delta conventions."
+    }
+  ],
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/agent-pipeline-velocity/README.md",
+    "goals/agent-pipeline-velocity/SPEC.md",
+    "goals/agent-pipeline-velocity/PLAN.md",
+    "goals/agent-pipeline-velocity/GOAL.md",
+    "goals/agent-pipeline-velocity/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "explorations/agent-pipeline-velocity/research/baseline-agent-config.md",
+    "explorations/agent-pipeline-velocity/research/baseline-pipeline.md",
+    "explorations/agent-pipeline-velocity/research/baseline-review-merge.md",
+    "explorations/agent-pipeline-velocity/research/audit-nested-instructions.md",
+    "explorations/agent-pipeline-velocity/research/audit-skills-economy.md",
+    "explorations/agent-pipeline-velocity/research/deep-research-report.json"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/agent-pipeline-velocity/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Gate & Quick Strikes",
+      "status": "completed"
+    },
+    {
+      "id": "P1",
+      "name": "Agent Effectiveness",
+      "status": "completed"
+    },
+    {
+      "id": "P2",
+      "name": "Pipeline rqt-011+ (Fable-direct)",
+      "status": "completed"
+    },
+    {
+      "id": "P3",
+      "name": "Worktrees",
+      "status": "completed"
+    },
+    {
+      "id": "P4",
+      "name": "Yeet: PR to mergeable",
+      "status": "in_progress"
+    },
+    {
+      "id": "P5",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/agent-pipeline-velocity/GOAL.md)\" -le 4000",
+    "jq . goals/agent-pipeline-velocity/ops/manifest.json",
+    "rg -n \"agent-pipeline-velocity|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/agent-pipeline-velocity",
+    "git diff --check -- goals/agent-pipeline-velocity",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope (esp. crispen creep beyond optimization-unblocking refactors).",
+    "A change would weaken full proof, hosted checks, or closeout gates.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "Concurrency increase causes memory thrash \u2014 record the measured ceiling instead of forcing a target.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

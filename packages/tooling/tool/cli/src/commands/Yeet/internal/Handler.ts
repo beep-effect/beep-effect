@@ -2868,7 +2868,7 @@ export const defaultYeetRunOptions = (overrides: Partial<YeetRunOptions> = {}): 
     allowStaleBase: false,
     amend: false,
     base: "origin/main",
-    bots: "greptile,coderabbit,chatgpt",
+    bots: "greptile",
     fast: false,
     head: "HEAD",
     json: false,

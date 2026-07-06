@@ -122,6 +122,9 @@
       "@beep/repo-cli/commands/VersionSync": [
         "../../../../packages/tooling/tool/cli/src/commands/VersionSync/index.ts"
       ],
+      "@beep/repo-cli/commands/Worktree": [
+        "../../../../packages/tooling/tool/cli/src/commands/Worktree/index.ts"
+      ],
       "@beep/repo-cli/commands/Yeet": [
         "../../../../packages/tooling/tool/cli/src/commands/Yeet/index.ts"
       ],

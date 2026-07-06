@@ -102,8 +102,10 @@ const pushOnlyFlag = Flag.boolean("push-only").pipe(
 );
 
 const botsFlag = Flag.string("bots").pipe(
-  Flag.withDescription("Comma-separated PR review bots to classify during closeout"),
-  Flag.withDefault("greptile,coderabbit,chatgpt")
+  Flag.withDescription(
+    "Comma-separated PR review bots to classify and gate during closeout (default greptile; pass greptile,coderabbit,chatgpt to restore the legacy lineup)"
+  ),
+  Flag.withDefault("greptile")
 );
 
 const requireGreptileScoreFlag = Flag.string("require-greptile-score").pipe(
@@ -273,7 +275,7 @@ const runYeetMode = (mode: YeetRunMode, options: SharedOptions & { readonly mess
       ...sharedOptions,
       allowStaleBase: sharedOptions.allowStaleBase ?? false,
       amend: sharedOptions.amend ?? false,
-      bots: sharedOptions.bots ?? "greptile,coderabbit,chatgpt",
+      bots: sharedOptions.bots ?? "greptile",
       fast: sharedOptions.fast ?? false,
       message: options.message ?? "",
       mode,

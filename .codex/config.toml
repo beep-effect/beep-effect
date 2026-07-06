@@ -18,6 +18,9 @@
     name = "claude-frontend-lane"
     enabled = true
   [[skills.config]]
+    name = "crispen"
+    enabled = true
+  [[skills.config]]
     name = "effect-first-development"
     enabled = true
   [[skills.config]]

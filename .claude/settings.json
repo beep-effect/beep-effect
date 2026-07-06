@@ -3,5 +3,44 @@
   "enabledPlugins": {
     "claude-md-management@claude-plugins-official": false,
     "serena@claude-plugins-official": false
+  },
+  "permissions": {
+    "allow": [
+      "Bash(rg:*)",
+      "Bash(fd:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)",
+      "Bash(jq:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git worktree list:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(bun run beep yeet status:*)",
+      "Bash(bun run beep yeet verify:*)",
+      "Bash(bun run beep quality dev:*)",
+      "Bash(bun run docgen:local:*)",
+      "Bash(bunx turbo ls:*)",
+      "Bash(bunx --bun vitest run:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/law-pulse.sh"
+          }
+        ]
+      }
+    ]
   }
 }

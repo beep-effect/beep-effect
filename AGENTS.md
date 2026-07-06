@@ -1,62 +1,103 @@
 # Agent Guide
 
+Canonical rules for all coding agents. Claude Code loads this via the
+`CLAUDE.md` symlink; Codex reads it directly. Laws only — architecture lives
+in `standards/ARCHITECTURE.md`, workflows in skills.
+
 ## Mission
 
-Build and maintain features with effect first development.
+Ship reliable code with effect-first and schema-first patterns.
 
-## Rules
+## Code Laws
 
-- Use schema first domain models.
-- Prefer typed errors and tagged unions.
-- Prefer effect modules over native helpers.
-- Prefer tersest equivalent helper forms when behavior is unchanged: direct helper refs over trivial lambdas, `flow(...)` for passthrough `pipe(...)` callbacks, and shared thunk helpers when already in scope.
-- Prefer named schema building blocks, derived `S.is(...)` guards, and `LiteralKit` internal domains over ad-hoc predicate helpers.
-- Do not add `as const` to inline array literals passed directly to `LiteralKit(...)`; `LiteralKit` uses const type parameters already.
-- In `packages/**/{test,dtslint}/**/*.{ts,tsx}`, import package source through `@beep/*` package aliases instead of relative paths into any workspace `src/`; keep relatives only for local helpers, fixtures, snapshots, and other non-`src` test files.
-- Keep service boundaries explicit.
-- Keep repo quality commands green.
-- For local docgen edit loops, prefer `bun run docgen:local`. It plans from
-  `origin/main...HEAD` plus dirty/untracked files, runs bounded package-scoped
-  docgen through Turbo, and aggregates only selected packages. Use
-  `bun run docgen` when the full repo docgen proof is required.
+- Use schema-first domain models; prefer typed errors and tagged unions.
+- Prefer effect helper modules (`String`, `Equal`, ...) over native helpers;
+  keep root `effect` imports for core combinators.
+- Prefer match helpers over conditional chains; prefer service composition
+  over global state; keep service boundaries explicit.
+- Prefer tersest equivalent helper forms when behavior is unchanged: direct
+  helper refs over trivial lambdas, `flow(...)` for passthrough `pipe(...)`
+  callbacks, shared thunk helpers when already in scope.
+- Prefer named schema building blocks, derived `S.is(...)` guards, and
+  `LiteralKit` internal domains over ad-hoc predicate helpers. Do not add
+  `as const` to inline arrays passed to `LiteralKit(...)` — it uses const
+  type parameters already.
+- Apply schema defaults when safe. Keep changes focused and testable.
+- In `packages/**/{test,dtslint}/**/*.{ts,tsx}`, import package source through
+  `@beep/*` aliases instead of relative paths into any workspace `src/`;
+  relatives only for local helpers, fixtures, snapshots, and other
+  non-`src` test files.
+
+## Discovery & Reuse
+
 - Before recreating a shared helper, schema, utility, model, or known symbol,
-  search live package source and public barrels first. Prefer targeted source
-  searches such as:
-  `rg -n "export (const|function|class|type|interface) .*<symbol-or-intent>" packages --glob '**/src/**/*.{ts,tsx}' --glob '!**/*.test.ts' --glob '!**/*.test.tsx'`
-  and barrel searches such as:
-  `rg -n "<symbol-or-intent>" packages --glob '**/src/index.ts'`.
-  Use the `repo-symbol-discovery` skill when a broader symbol lookup is useful.
-- The old generated repo export catalog at `standards/repo-exports.catalog.*` is
-  retired; do not look for it, refresh it, or use repo-export catalog commands as
-  a default discovery or proof step.
-- Yeet is the canonical repo-quality operator path. Use the `yeet` skill and
-  `bun run beep yeet repair`, `bun run beep yeet verify`,
-  `bun run beep yeet publish --message "..."`, and
-  `bun run beep yeet monitor` for End-to-End Green: repair, proof, commit,
-  push, PR checks, review closeout, and merge readiness.
-- Yeet fast-plus-monitor is opt-in only: `bun run beep yeet publish --fast
-  --monitor --message "..."` is PR-branch guarded. Use the normal
-  `publish --message` path by default, and keep `bun run audit:github pre-push`
-  as the explicit full local fallback for secrets, security, SAST, Nix, or any
-  lane that needs manual proof outside Yeet.
+  search live source and barrels first:
+  `rg -n "export (const|function|class|type|interface) .*<intent>" packages --glob '**/src/**/*.{ts,tsx}' --glob '!**/*.test.*'`
+  and `rg -n "<intent>" packages --glob '**/src/index.ts'`. Use the
+  `repo-symbol-discovery` skill for broader lookups.
+- The old `standards/repo-exports.catalog.*` is retired; never look for it or
+  run repo-export catalog commands as a discovery or proof step.
+
+## Quality Operator
+
+- Yeet is the canonical repo-quality path: `bun run beep yeet repair`,
+  `... verify`, `... publish --message "..."`, `... monitor` for End-to-End
+  Green (repair, proof, commit, push, PR checks, closeout, merge readiness).
+  Keep repo quality commands green.
+- Fast-plus-monitor is opt-in only (`publish --fast --monitor`, PR-branch
+  guarded). Default to plain `publish --message`. Keep
+  `bun run audit:github pre-push` as the explicit full local fallback for
+  secrets, security, SAST, or Nix lanes.
+- Docgen: prefer `bun run docgen:local` for edit loops (bounded,
+  `origin/main...HEAD` + dirty files); `bun run docgen` only for the full
+  repo proof.
+
+## Codegen
+
 - Use `bun run beep architecture` for canonical slice, concept, role, and
   architecture proof generation instead of hand-authoring boilerplate.
-- For architecture concepts, use the canonical `--domain-kind` archetypes:
-  `aggregates` for full slice concepts, `entities` for persisted domain
-  entities, and `values` for domain-only value objects.
-- `graphiti-memory` is the primary durable repository knowledge base for this repo.
-- Agent MCP clients should use the repo-owned queue proxy endpoint
-  `http://localhost:8123/mcp`; `http://localhost:8000/mcp` is the backing
-  Graphiti service upstream.
-- Prefer the repo-local helpers when useful:
-  - `bun run graphiti:proxy`
-  - `bun run graphiti:proxy:ensure`
-- If `graphiti-memory` is unavailable in-session, fall back to repo-local docs,
-  code search, and the checked-in `AGENTS.md` / `CLAUDE.md` guidance.
+- Architecture concepts use canonical `--domain-kind` archetypes:
+  `aggregates` (full slice concepts), `entities` (persisted domain entities),
+  `values` (domain-only value objects).
+
+## Docs & Knowledge
+
+- `docs/` is tracked authored documentation (see `docs/README.md`); docgen
+  aggregate lands in gitignored `docs/generated/`; `docs/_internal/` is
+  private and must never be committed (public repo).
+- `explorations/` is the fuzzy front end (capture → graduate), driven by the
+  `/explore` skill; crystallized work graduates into `goals/` packets and
+  `docs/product/` prose.
+
+## Graphiti Memory
+
+- `graphiti-memory` is the primary durable repo knowledge base. MCP clients
+  use the queue proxy `http://localhost:8123/mcp` (`:8000` is the backing
+  upstream). Helpers: `bun run graphiti:proxy`, `bun run graphiti:proxy:ensure`.
+- If unavailable in-session, fall back to repo-local docs, code search, and
+  this file.
 - Prefer `get_status`, narrow `get_episodes`, and scoped
-  `search_memory_facts` calls with small result limits over broad startup
-  searches.
-- Graphiti memory MCP startup gotcha: the server expects `group_ids` as a list. If the tool wrapper exposes `group_ids` as `string`, pass a JSON array literal string containing `beep_dev` instead of the plain string `beep_dev`.
-- When the user asks questions on differences between effect v3 and effect v4, prefer the `effect-v4` skill and only reach for `graphiti-memory` when the legacy graph adds useful historical context.
-- When working with shadcn in this monorepo, treat the editor app as the app workspace and the shared UI package as the shared base package. Prefer the shadcn skill and the shadcn MCP server for registry discovery and installs.
-- When answering MUI questions, prefer the `mui-mcp` server: call `useMuiDocs` first, then call `fetchDocs` only with URLs returned from the MUI docs responses until you have the needed context.
+  `search_memory_facts` with small limits over broad startup searches.
+- Startup gotcha: the server expects `group_ids` as a list — if the wrapper
+  types it `string`, pass a JSON array literal containing `beep_dev`.
+
+## Tool Routing
+
+- effect v3↔v4 differences: prefer the `effect-v4-imports` skill; reach for
+  `graphiti-memory` only for historical context.
+- shadcn: editor app = app workspace, shared UI package = shared base; prefer
+  the shadcn skill + shadcn MCP for registry discovery and installs.
+- MUI: prefer `mui-mcp` — `useMuiDocs` first, then `fetchDocs` only with URLs
+  it returned.
+
+## Context Economy
+
+- Keep the MCP/tool surface stable within a session; settle `.mcp.json` and
+  enabled tools before working, not mid-task.
+- Always-loaded files (this file, skill frontmatter, settings) are the prompt
+  cache prefix: batch edits to them, keep them lean; durable cross-session
+  knowledge belongs in file-memory or Graphiti, not here.
+- Front-load stable context; let volatile per-task detail arrive later in the
+  conversation.
+- Continue related follow-ups on an existing subagent (SendMessage) instead
+  of spawning fresh ones; avoid idle gaps over ~5 minutes (cache TTL).

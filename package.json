@@ -360,6 +360,7 @@
     "storybook:start": "bunx turbo run storybook:start --filter=@beep/storybook",
     "skills:update": "bun run beep skills update",
     "skills:update:check": "bun run beep skills update --check",
+    "instructions:drift": "test -L CLAUDE.md && test \"$(readlink CLAUDE.md)\" = AGENTS.md || { echo 'drift: root CLAUDE.md must be a symlink to AGENTS.md (single-source law, agent-pipeline-velocity C1)'; exit 1; }",
     "test": "beep-cli test",
     "test:storybook": "bunx turbo run test:storybook --filter=@beep/storybook",
     "topo-sort": "bun run beep topo-sort",

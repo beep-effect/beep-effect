@@ -3,12 +3,14 @@
   "initiative": {
     "id": "agent-effectiveness-workflow-integration",
     "title": "Agent Effectiveness Workflow Integration",
-    "status": "pending-planning",
+    "status": "superseded",
     "created": "2026-05-20",
-    "updated": "2026-05-20",
+    "updated": "2026-07-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "mission": "Integrate proven agent-effectiveness evidence loops into normal repo workflows.",
+  "supersededBy": "goals/agent-pipeline-velocity",
+  "supersededNote": "2026-07-05: absorbed into agent-pipeline-velocity (ledger-surgery decision, explorations/agent-pipeline-velocity/DECISIONS.md) — its workflow/CI-integration scope lands there as Phases C-D.",
   "parentGoal": "goals/agent-effectiveness-loop",
   "inputPackets": [
     "goals/agent-effectiveness-loop",

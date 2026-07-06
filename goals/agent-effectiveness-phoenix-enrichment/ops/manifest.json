@@ -3,12 +3,14 @@
   "initiative": {
     "id": "agent-effectiveness-phoenix-enrichment",
     "title": "Agent Effectiveness Phoenix Enrichment",
-    "status": "pending-planning",
+    "status": "superseded",
     "created": "2026-05-20",
-    "updated": "2026-05-20",
+    "updated": "2026-07-05",
     "packetAnchorDocument": "SPEC.md"
   },
   "mission": "Plan and implement Phoenix-native enrichment for repo-owned agent-effectiveness evidence.",
+  "supersededBy": "goals/agent-pipeline-velocity",
+  "supersededNote": "2026-07-05: absorbed into agent-pipeline-velocity (ledger-surgery decision, explorations/agent-pipeline-velocity/DECISIONS.md). Its eval/dataset direction survives as the named SkillOpt-pilot successor recorded there.",
   "parentGoal": "goals/agent-effectiveness-loop",
   "inputPackets": [
     "goals/agent-effectiveness-loop",

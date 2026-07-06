@@ -1327,7 +1327,10 @@
       ],
       "@beep/mcp-kit/*": ["./packages/foundation/capability/mcp-kit/src/*"],
       "@beep/uspto-mcp": ["./packages/drivers/uspto-mcp/src/index.ts"],
-      "@beep/uspto-mcp/*": ["./packages/drivers/uspto-mcp/src/*"]
+      "@beep/uspto-mcp/*": ["./packages/drivers/uspto-mcp/src/*"],
+      "@beep/repo-cli/commands/Worktree": [
+        "./packages/tooling/tool/cli/src/commands/Worktree/index.ts"
+      ]
     }
   }
 }
