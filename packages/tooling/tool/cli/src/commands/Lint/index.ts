@@ -24,7 +24,18 @@ export * from "./Lint.errors.js";
  * @category cli-commands
  * @since 0.0.0
  */
-export { sourceTextHasSchemaArbitraryPropertyCoverage } from "./SchemaFirst.ts";
+export {
+  fnSchemaEntryFromFunctionLike,
+  getsomesStructEntryFromCallExpression,
+  isSchemaCrispeningPolicyExempt,
+  normalizationEntryFromCallExpression,
+  nullReturnEntryFromFunctionLike,
+  SchemaCrispeningFamilyPolicy,
+  SchemaCrispeningPolicyDocument,
+  SchemaFirstInventoryEntry,
+  schemaCrispeningFamilyForFile,
+  sourceTextHasSchemaArbitraryPropertyCoverage,
+} from "./SchemaFirst.ts";
 /**
  * Schema topology lint utilities.
  *

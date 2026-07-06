@@ -72,7 +72,7 @@ const requireEnv = (key: string) =>
 - Inside domain code, avoid `| null` and `| undefined`.
 - Convert nullable values at boundaries via `O.fromNullishOr`.
 - Consume via `O.map`, `O.flatMap`, `O.match`, `O.getOrElse`.
-- For `Option`-valued object fields, use `R.getSomes({...})` when `None` should omit keys, `O.all({...})` when the whole object is all-or-nothing, and `S.OptionFrom*` when optionality/nullability belongs at the schema boundary.
+- For `Option`-valued object fields, prefer `O.getSomesStruct({...})` (`@beep/utils`) for heterogeneous struct spreads with known keys — runtime-identical to `R.getSomes` but preserves per-key literal types; reserve `R.getSomes({...})` for homogeneous dynamic-key dictionaries. Use `O.all({...})` when the whole object is all-or-nothing, and `S.OptionFrom*` when optionality/nullability belongs at the schema boundary. (Amended 2026-07-05 — see `standards/architecture/DECISIONS.md`.)
 - Avoid `O.match(...)` with `onNone: () => ({})`; for a single `Option` becoming an object, prefer `O.map(...)` plus `O.getOrElse(() => ({}))`.
 
 Example:

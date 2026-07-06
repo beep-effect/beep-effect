@@ -1,4 +1,14 @@
-import { sourceTextHasSchemaArbitraryPropertyCoverage } from "@beep/repo-cli/commands/Lint";
+import {
+  fnSchemaEntryFromFunctionLike,
+  getsomesStructEntryFromCallExpression,
+  isSchemaCrispeningPolicyExempt,
+  normalizationEntryFromCallExpression,
+  nullReturnEntryFromFunctionLike,
+  SchemaCrispeningPolicyDocument,
+  SchemaFirstInventoryEntry,
+  schemaCrispeningFamilyForFile,
+  sourceTextHasSchemaArbitraryPropertyCoverage,
+} from "@beep/repo-cli/commands/Lint";
 import {
   createFileGenerationPlanService,
   FileGenerationPlanInput,
@@ -8,7 +18,9 @@ import {
 } from "@beep/repo-cli/test/CreatePackage";
 import { VersionSyncOptions } from "@beep/repo-cli/test/VersionSync";
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { Project, SyntaxKind } from "ts-morph";
 import { describe, expect, it } from "vitest";
 
 describe("packages/tooling/tool/cli schema-first models", () => {
@@ -128,5 +140,212 @@ describe("packages/tooling/tool/cli schema-first models", () => {
         'import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";'
       )
     ).toBe(false);
+  });
+
+  it("resolves schema-crispening wave families by path prefix", () => {
+    expect(schemaCrispeningFamilyForFile("packages/foundation/modeling/schema/src/Foo.ts")).toEqual(
+      O.some("foundation")
+    );
+    expect(schemaCrispeningFamilyForFile("packages/drivers/postgres/src/Foo.ts")).toEqual(O.some("drivers"));
+    expect(schemaCrispeningFamilyForFile("packages/tooling/tool/cli/src/Foo.ts")).toEqual(O.some("tooling"));
+    expect(schemaCrispeningFamilyForFile("apps/web/src/Foo.tsx")).toEqual(O.some("apps-slices"));
+    expect(schemaCrispeningFamilyForFile("packages/agents/src/Foo.ts")).toEqual(O.some("apps-slices"));
+    expect(schemaCrispeningFamilyForFile("packages/architecture-lab/src/Foo.ts")).toEqual(O.some("apps-slices"));
+    expect(schemaCrispeningFamilyForFile("packages/epistemic/src/Foo.ts")).toEqual(O.some("apps-slices"));
+    expect(schemaCrispeningFamilyForFile("packages/law-practice/src/Foo.ts")).toEqual(O.some("apps-slices"));
+    expect(schemaCrispeningFamilyForFile("packages/workspace/src/Foo.ts")).toEqual(O.some("apps-slices"));
+    expect(O.isNone(schemaCrispeningFamilyForFile("packages/shared/kernel/src/Foo.ts"))).toBe(true);
+    expect(O.isNone(schemaCrispeningFamilyForFile("infra/pulumi/src/Foo.ts"))).toBe(true);
+    expect(O.isNone(schemaCrispeningFamilyForFile("README.md"))).toBe(true);
+  });
+
+  describe("isSchemaCrispeningPolicyExempt", () => {
+    const trackedEntry = SchemaFirstInventoryEntry.make({
+      file: "packages/foundation/modeling/schema/src/Foo.ts",
+      symbol: "Foo",
+      kind: "object-struct-schema",
+      status: "advisory",
+      ruleId: "SFV4-defaults",
+      owner: "@beep/schema",
+      reason: "test finding",
+    });
+
+    it("exempts nothing when the policy document is absent (fail-safe)", () => {
+      expect(isSchemaCrispeningPolicyExempt(O.none())(trackedEntry)).toBe(false);
+    });
+
+    it("does not exempt an entry whose ruleId is not a policy-tracked card", () => {
+      const policy = O.some(
+        SchemaCrispeningPolicyDocument.make({
+          schemaVersion: "schema-crispening-policy/v1",
+          cards: ["SFV4-normalization"],
+          families: { foundation: { blocking: false } },
+          ownerOverrides: {},
+        })
+      );
+      expect(isSchemaCrispeningPolicyExempt(policy)(trackedEntry)).toBe(false);
+    });
+
+    it("exempts a tracked card whose resolved family is non-blocking", () => {
+      const policy = O.some(
+        SchemaCrispeningPolicyDocument.make({
+          schemaVersion: "schema-crispening-policy/v1",
+          cards: ["SFV4-defaults"],
+          families: { foundation: { blocking: false } },
+          ownerOverrides: {},
+        })
+      );
+      expect(isSchemaCrispeningPolicyExempt(policy)(trackedEntry)).toBe(true);
+    });
+
+    it("does not exempt a tracked card whose resolved family is blocking", () => {
+      const policy = O.some(
+        SchemaCrispeningPolicyDocument.make({
+          schemaVersion: "schema-crispening-policy/v1",
+          cards: ["SFV4-defaults"],
+          families: { foundation: { blocking: true } },
+          ownerOverrides: {},
+        })
+      );
+      expect(isSchemaCrispeningPolicyExempt(policy)(trackedEntry)).toBe(false);
+    });
+
+    it("lets a blocking owner override win over a non-blocking family", () => {
+      const policy = O.some(
+        SchemaCrispeningPolicyDocument.make({
+          schemaVersion: "schema-crispening-policy/v1",
+          cards: ["SFV4-defaults"],
+          families: { foundation: { blocking: false } },
+          ownerOverrides: { "@beep/schema": { blocking: true } },
+        })
+      );
+      expect(isSchemaCrispeningPolicyExempt(policy)(trackedEntry)).toBe(false);
+    });
+
+    it("treats an unassigned family (e.g. packages/shared) as non-blocking, hence exempt", () => {
+      const sharedEntry = SchemaFirstInventoryEntry.make({
+        ...trackedEntry,
+        file: "packages/shared/kernel/src/Foo.ts",
+      });
+      const policy = O.some(
+        SchemaCrispeningPolicyDocument.make({
+          schemaVersion: "schema-crispening-policy/v1",
+          cards: ["SFV4-defaults"],
+          families: {},
+          ownerOverrides: {},
+        })
+      );
+      expect(isSchemaCrispeningPolicyExempt(policy)(sharedEntry)).toBe(true);
+    });
+  });
+});
+
+describe("fnSchemaEntryFromFunctionLike", () => {
+  it("fires for an exported function with an inline object parameter contract", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      "export function updateWidget(input: { id: string; name: string }): void {}"
+    );
+    const [functionDeclaration] = sourceFile.getFunctions();
+    const entry = fnSchemaEntryFromFunctionLike(functionDeclaration, "fixture.ts", "@beep/test");
+
+    expect(O.isSome(entry)).toBe(true);
+    expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-fn-schema"));
+    expect(O.map(entry, (found) => found.symbol)).toEqual(O.some("updateWidget"));
+    expect(O.map(entry, (found) => found.status)).toEqual(O.some("advisory"));
+  });
+
+  it("does not fire for a generic exported function", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export function identity<T>(input: { value: T }): T {", "  return input.value;", "}"].join("\n")
+    );
+    const [functionDeclaration] = sourceFile.getFunctions();
+    const entry = fnSchemaEntryFromFunctionLike(functionDeclaration, "fixture.ts", "@beep/test");
+
+    expect(O.isNone(entry)).toBe(true);
+  });
+});
+
+describe("normalizationEntryFromCallExpression", () => {
+  it("fires for a trim() call inside a function body", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export function normalizeName(name: string): string {", "  return name.trim();", "}"].join("\n")
+    );
+    const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
+    const entry = normalizationEntryFromCallExpression(callExpression, "fixture.ts", "@beep/test");
+
+    expect(O.isSome(entry)).toBe(true);
+    expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-normalization"));
+    expect(O.map(entry, (found) => found.symbol)).toEqual(O.some("normalizeName.trim"));
+  });
+
+  it("does not fire for a module-top-level trim() call", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile("fixture.ts", 'const trimmed = "  hi  ".trim();');
+    const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
+    const entry = normalizationEntryFromCallExpression(callExpression, "fixture.ts", "@beep/test");
+
+    expect(O.isNone(entry)).toBe(true);
+  });
+});
+
+describe("nullReturnEntryFromFunctionLike", () => {
+  it("fires for an exported function with an explicit null return annotation", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export function findUser(id: string): string | null {", "  return null;", "}"].join("\n")
+    );
+    const [functionDeclaration] = sourceFile.getFunctions();
+    const entry = nullReturnEntryFromFunctionLike(functionDeclaration, "fixture.ts", "@beep/test");
+
+    expect(O.isSome(entry)).toBe(true);
+    expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-null-return"));
+    expect(O.map(entry, (found) => found.symbol)).toEqual(O.some("findUser"));
+  });
+
+  it("does not fire for a function without an explicit return annotation", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export function findUser(id: string) {", "  return null;", "}"].join("\n")
+    );
+    const [functionDeclaration] = sourceFile.getFunctions();
+    const entry = nullReturnEntryFromFunctionLike(functionDeclaration, "fixture.ts", "@beep/test");
+
+    expect(O.isNone(entry)).toBe(true);
+  });
+});
+
+describe("getsomesStructEntryFromCallExpression", () => {
+  it("fires for R.getSomes over an inline Option-struct literal", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export function pickSomes() {", "  return R.getSomes({ a: 1, b: 2 });", "}"].join("\n")
+    );
+    const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
+    const entry = getsomesStructEntryFromCallExpression(callExpression, "fixture.ts", "@beep/test");
+
+    expect(O.isSome(entry)).toBe(true);
+    expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-getsomes-struct"));
+    expect(O.map(entry, (found) => found.symbol)).toEqual(O.some("pickSomes.R.getSomes"));
+  });
+
+  it("does not fire for R.getSomes over an identifier dictionary argument", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export function pickSomes(dict: Record<string, number>) {", "  return R.getSomes(dict);", "}"].join("\n")
+    );
+    const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
+    const entry = getsomesStructEntryFromCallExpression(callExpression, "fixture.ts", "@beep/test");
+
+    expect(O.isNone(entry)).toBe(true);
   });
 });

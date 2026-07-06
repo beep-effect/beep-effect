@@ -93,8 +93,11 @@ Keep `Schema` as the source of truth for pure data models.
   boundary.
 - Use `S.OptionFrom*` when the wire/schema field is optional or nullish. If
   runtime `Option` values are already being shaped into an object, prefer
-  `R.getSomes({...})` for omission-style objects or `O.all({...})` for
-  all-or-nothing fixed-shape composition.
+  `O.getSomesStruct({...})` (`@beep/utils`) for heterogeneous struct spreads
+  with known keys — runtime-identical to `R.getSomes` but type-preserving per
+  key; reserve `R.getSomes({...})` for homogeneous dynamic-key dictionaries.
+  Use `O.all({...})` for all-or-nothing fixed-shape composition. (Amended
+  2026-07-05 — see `standards/architecture/DECISIONS.md`.)
 - Use `S.withConstructorDefault(...)`, `S.withDecodingDefault(...)`, and
   `S.decodeTo(...)` with `SchemaTransformation` for normalization and fallback
   behavior.
