@@ -69,6 +69,20 @@ export type FieldTierName = typeof FieldTierName.Type;
  * conceptual payload: `minimal` (smallest), `balanced`, and `complete`
  * (largest).
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import type { FieldTierSet } from "@beep/mcp-kit"
+ *
+ * const tiers = {
+ *   minimal: S.Struct({ id: S.String }),
+ *   balanced: S.Struct({ id: S.String, title: S.String }),
+ *   complete: S.Struct({ id: S.String, title: S.String, body: S.String })
+ * } satisfies FieldTierSet<S.Struct.Fields, S.Struct.Fields, S.Struct.Fields>
+ * console.log(Object.keys(tiers.complete.fields))
+ * // ["id", "title", "body"]
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -271,6 +285,25 @@ export class FetchableHandle extends S.Class<FetchableHandle>($I`FetchableHandle
 /**
  * Options for {@link projectWithinBudget}.
  *
+ * @example
+ * ```ts
+ * import { FetchableHandle, type ProjectWithinBudgetOptions } from "@beep/mcp-kit"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const options: ProjectWithinBudgetOptions = {
+ *   budgetBytes: NonNegativeInt.make(64),
+ *   mintFetchableHandle: (oversized) =>
+ *     FetchableHandle.make({
+ *       handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
+ *       expiresAt: "2026-07-01T01:00:00.000Z",
+ *       sizeBytes: oversized.sizeBytes,
+ *       tier: "minimal"
+ *     })
+ * }
+ * console.log(options.budgetBytes)
+ * // 64
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -284,6 +317,19 @@ export interface ProjectWithinBudgetOptions {
  * budget and its projected value is returned directly; `Fetchable` when even
  * `minimal` did not fit, carrying a {@link FetchableHandle} minted by the
  * caller instead of an oversized inline payload.
+ *
+ * @example
+ * ```ts
+ * import { FieldProjectionOutcome } from "@beep/mcp-kit"
+ *
+ * const outcome = FieldProjectionOutcome.make({
+ *   _tag: "Inline",
+ *   tier: "minimal",
+ *   value: { id: "doc-1" }
+ * })
+ * console.log(outcome._tag)
+ * // "Inline"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -307,6 +353,20 @@ export const FieldProjectionOutcome = LiteralKit(["Inline", "Fetchable"])
 
 /**
  * Inline or fetchable outcome of projecting a payload within a caller's size budget.
+ *
+ * @example
+ * ```ts
+ * import { FieldProjectionOutcome as FieldProjectionOutcomeValue } from "@beep/mcp-kit"
+ * import type { FieldProjectionOutcome } from "@beep/mcp-kit"
+ *
+ * const outcome: FieldProjectionOutcome = FieldProjectionOutcomeValue.make({
+ *   _tag: "Inline",
+ *   tier: "balanced",
+ *   value: { id: "doc-1", title: "Patent packet" }
+ * })
+ * console.log(outcome._tag)
+ * // "Inline"
+ * ```
  *
  * @category models
  * @since 0.0.0

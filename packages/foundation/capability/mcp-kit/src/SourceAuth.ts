@@ -150,6 +150,19 @@ export const resolveSourceCredential = (
  * source's credential is absent and the source must not be registered at
  * all.
  *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { SourceAuthDecision as SourceAuthDecisionValue } from "@beep/mcp-kit"
+ * import type { SourceAuthDecision } from "@beep/mcp-kit"
+ *
+ * const decision: SourceAuthDecision = SourceAuthDecisionValue.Mount({
+ *   credential: O.none()
+ * })
+ * console.log(decision._tag)
+ * // "Mount"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -160,6 +173,15 @@ export type SourceAuthDecision = Data.TaggedEnum<{
 
 /**
  * Tagged-enum constructors and matchers for {@link SourceAuthDecision}.
+ *
+ * @example
+ * ```ts
+ * import { SourceAuthDecision } from "@beep/mcp-kit"
+ *
+ * const decision = SourceAuthDecision.Vanish()
+ * console.log(decision._tag)
+ * // "Vanish"
+ * ```
  *
  * @category constructors
  * @since 0.0.0
