@@ -8,6 +8,7 @@
 
 import * as Composition from "@beep/nlp-processing/Backend/Composition";
 import * as Backend from "@beep/nlp-processing/Backend/NLPBackend";
+import { PosInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -103,7 +104,7 @@ describe("withCaching", () => {
           return [text];
         })
       );
-      const cached = yield* Composition.withCaching(backend, { capacity: 8 });
+      const cached = yield* Composition.withCaching(backend, { capacity: PosInt.make(8) });
       const first = yield* cached.tokenize("hello");
       const second = yield* cached.tokenize("hello");
       expect(first).toEqual(["hello"]);

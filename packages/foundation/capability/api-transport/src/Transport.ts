@@ -19,9 +19,8 @@
 
 import { $ApiTransportId } from "@beep/identity";
 import { O } from "@beep/utils";
-import { Data, Effect, Redacted, Ref, Schedule } from "effect";
+import { Data, Effect, Number as N, Redacted, Ref, Schedule } from "effect";
 import * as A from "effect/Array";
-import * as N from "effect/Number";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as HttpClient from "effect/unstable/http/HttpClient";

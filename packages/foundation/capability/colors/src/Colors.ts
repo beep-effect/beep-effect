@@ -29,27 +29,17 @@
  */
 
 import { $ColorsId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { A, Str, thunk } from "@beep/utils";
 import { pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ColorsFields, Formatter as FormatterDefinition } from "./internal/ColorsSchema.ts";
 import type * as AST from "effect/SchemaAST";
 import type { Formatter as FormatterType } from "./internal/ColorsSchema.ts";
 
 const $I = $ColorsId.create("Domain");
-
-const isParseOptions = (input: unknown): input is AST.ParseOptions =>
-  P.hasProperty(input, "errors") ||
-  P.hasProperty(input, "onExcessProperty") ||
-  P.hasProperty(input, "propertyOrder") ||
-  P.hasProperty(input, "disableChecks") ||
-  P.hasProperty(input, "concurrency");
-
-const isSchemaCodecDataFirst = (args: IArguments): boolean =>
-  args.length >= 2 || (args.length === 1 && !isParseOptions(args[0]));
 
 /**
  * Minimal stdout metadata used by ANSI color support detection.
@@ -125,7 +115,7 @@ export class ProcessLike extends S.Class<ProcessLike>($I`ProcessLike`)(
   static readonly decodeOption: {
     (input: unknown, options?: AST.ParseOptions): O.Option<ProcessLike>;
     (options?: AST.ParseOptions): (input: unknown) => O.Option<ProcessLike>;
-  } = dual(isSchemaCodecDataFirst, S.decodeUnknownOption(ProcessLike));
+  } = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownOption(ProcessLike));
 
   static readonly supportsColor = (processLike: ProcessLike = runtimeProcessLike): boolean => {
     const argv = processLike.argv ?? A.empty();

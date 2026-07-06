@@ -12,7 +12,6 @@ import { $FileProcessingId } from "@beep/identity";
 import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { dual } from "effect/Function";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type * as Effect from "effect/Effect";
 import type * as AST from "effect/SchemaAST";
@@ -23,16 +22,6 @@ type JsonEncodeEffect<Input> = {
   (options: AST.ParseOptions): (input: Input) => Effect.Effect<string, S.SchemaError>;
   (input: Input, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
 };
-
-const isParseOptions = (input: unknown): input is AST.ParseOptions =>
-  P.hasProperty(input, "errors") ||
-  P.hasProperty(input, "onExcessProperty") ||
-  P.hasProperty(input, "propertyOrder") ||
-  P.hasProperty(input, "disableChecks") ||
-  P.hasProperty(input, "concurrency");
-
-const isSchemaCodecDataFirst = (args: IArguments): boolean =>
-  args.length >= 2 || (args.length === 1 && !isParseOptions(args[0]));
 
 /**
  * Processing status emitted for each source row.
@@ -841,7 +830,7 @@ export class ChildArtifactRecord extends S.Class<ChildArtifactRecord>($I`ChildAr
   })
 ) {
   static readonly encodeJson: JsonEncodeEffect<ChildArtifactRecord> = dual(
-    isSchemaCodecDataFirst,
+    SchemaUtils.isCodecDataFirst,
     S.encodeUnknownEffect(S.fromJsonString(ChildArtifactRecord))
   );
 }
@@ -886,7 +875,7 @@ export class FileProcessingCoverageSummary extends S.Class<FileProcessingCoverag
   })
 ) {
   static readonly encodeJson: JsonEncodeEffect<FileProcessingCoverageSummary> = dual(
-    isSchemaCodecDataFirst,
+    SchemaUtils.isCodecDataFirst,
     S.encodeUnknownEffect(S.fromJsonString(FileProcessingCoverageSummary))
   );
 }
@@ -938,7 +927,7 @@ export class ProcessRunManifest extends S.Class<ProcessRunManifest>($I`ProcessRu
   })
 ) {
   static readonly encodeJson: JsonEncodeEffect<ProcessRunManifest> = dual(
-    isSchemaCodecDataFirst,
+    SchemaUtils.isCodecDataFirst,
     S.encodeUnknownEffect(S.fromJsonString(ProcessRunManifest))
   );
 }

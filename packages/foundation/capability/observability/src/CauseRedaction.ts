@@ -389,8 +389,10 @@ const toCause = (input: unknown): Cause.Cause<unknown> => (Cause.isCause(input) 
  * @category utilities
  */
 export const redactCause: {
-  (input: unknown, options?: RedactCauseOptions): RedactedCause;
+  // Data-last first: the catch-all `(input: unknown, ...)` overload would
+  // otherwise absorb a lone options argument and hide the curried form.
   (options: RedactCauseOptions): (input: unknown) => RedactedCause;
+  (input: unknown, options?: RedactCauseOptions): RedactedCause;
 } = dual(
   isRedactionDataFirst,
   (input: unknown, options: RedactCauseOptions = defaultOptions): RedactedCause =>
