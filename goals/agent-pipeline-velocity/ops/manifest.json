@@ -3,16 +3,17 @@
   "initiative": {
     "id": "agent-pipeline-velocity",
     "title": "Agent Pipeline Velocity",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-05",
-    "updated": "2026-07-05",
+    "updated": "2026-07-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-pipeline-velocity",
-  "lifecycle": "active",
-  "executionCapable": true,
+  "lifecycle": "completed-retained",
+  "executionCapable": false,
+  "mergedPullRequest": 295,
   "reflectionRequired": true,
-  "mission": "Cut agent context friction (Claude + Codex) and time-to-mergeable-PR in one pass: greptile-only reviews, read-only PR turbo cache, green main, single-sourced instruction files, progressive-disclosure skills, permission allowlist, instrumented + rebenchmarked yeet, local/hosted parity, and a beep worktree helper \u2014 one goal, one PR.",
+  "mission": "Cut agent context friction (Claude + Codex) and time-to-mergeable-PR in one pass: greptile-only reviews, read-only PR turbo cache, green main, single-sourced instruction files, progressive-disclosure skills, permission allowlist, instrumented + rebenchmarked yeet, local/hosted parity, and a beep worktree helper — one goal, one PR.",
   "provenance": {
     "exploration": "explorations/agent-pipeline-velocity",
     "graduated": "2026-07-05",
@@ -90,12 +91,12 @@
     {
       "id": "P4",
       "name": "Yeet: PR to mergeable",
-      "status": "in_progress"
+      "status": "completed"
     },
     {
       "id": "P5",
       "name": "Close",
-      "status": "pending"
+      "status": "completed"
     }
   ],
   "verificationCommands": [
@@ -110,7 +111,7 @@
     "The implementation would exceed named scope (esp. crispen creep beyond optimization-unblocking refactors).",
     "A change would weaken full proof, hosted checks, or closeout gates.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
-    "Concurrency increase causes memory thrash \u2014 record the measured ceiling instead of forcing a target.",
+    "Concurrency increase causes memory thrash — record the measured ceiling instead of forcing a target.",
     "The same blocker repeats after reasonable investigation."
   ]
 }

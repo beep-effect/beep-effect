@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active` — graduated 2026-07-05 from
+Lifecycle: `completed-retained` — **merged as [PR #295](https://github.com/beep-effect/beep-effect/pull/295)** (`2a0fca454c`, 2026-07-06). Graduated 2026-07-05 from
 [`explorations/agent-pipeline-velocity`](../../explorations/agent-pipeline-velocity/README.md)
 after deep-research reconciliation (zero contradictions, 5 refinements).
 
@@ -46,12 +46,16 @@ optional typescript-lsp trial, CSF-001 amendment citations.
 
 ## Latest Evidence
 
-2026-07-05: all build phases complete on `feat/agent-pipeline-velocity`
-(11 commits, rebased on main @ #293). Measured: lint-policy lane 142.4s→32.3s
-(rqt-014); baselines + negative results in
+2026-07-06: **PR #295 CLEAN/MERGEABLE — all hosted checks green** on
+`950b48f456` (12 commits). Both greptile P2 threads resolved (law-pulse
+counter scoped per worktree in `950b48f456`; Tasks.ts concurrency concern
+answered by rqt-014 measurement, 142.4s→32.3s). Sole prior red was a one-off
+PgLite hook-timeout flake (passes locally in 2.7s, green on re-run).
+Baselines + negative results in
 [`history/rqt-ledger.md`](./history/rqt-ledger.md). Closeout reflection:
 [`history/reflections/2026-07-05-claude.md`](./history/reflections/2026-07-05-claude.md).
-P4 (yeet publish → mergeable PR) in progress.
+Merged 2026-07-06 as PR #295 (`2a0fca454c`); all phases completed;
+completion gate satisfied.
 
 ## Notes
 
