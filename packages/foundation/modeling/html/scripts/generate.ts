@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { $HtmlId } from "@beep/identity";
 /**
  * Code generator for the exhaustive HTML AST.
  *
@@ -10,20 +11,20 @@
  *   - `src/Html.meta.ts`  — the `ELEMENT_META` table (interface, conformance,
  *     content categories, void/raw-text flags).
  *
- * Per-element attribute field bodies and their TypeScript types are produced by
- * effect's own `SchemaRepresentation.toCodeDocument` (we do not hand-roll a
- * schema→source emitter); the `@beep/md`-style `S.TaggedClass` wrapper, shared
- * `...GlobalAttributes` spread, recursive children, and the discriminated-union
- * assembly are added around it. Run with `bun run generate` (which then formats
- * the output with biome). Output is deterministic.
+ * Per-element attribute field bodies and decoded/encoded TypeScript types are
+ * emitted from one attribute spec so decoded absence can be `Option` while the
+ * encoded wire key remains optional. Run with `bun run generate` (which then
+ * formats the output with biome). Output is deterministic.
  *
  * @since 0.0.0
  */
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
-import { Effect, FileSystem, Layer, Logger, Path, SchemaRepresentation as SR } from "effect";
+import { Effect, FileSystem, Layer, Logger, Path } from "effect";
 import * as S from "effect/Schema";
 import { GlobalAttributes } from "../src/Html.attributes.ts";
+
+const $I = $HtmlId.create("scripts/generate");
 
 // ---------------------------------------------------------------------------
 // reserved identifiers / naming
@@ -117,9 +118,16 @@ const CATEGORIES: ReadonlyArray<readonly [string, string]> = [
 
 type Kind = "void" | "rawText" | "normal";
 
+interface AttributeSpec {
+  readonly encoded: string;
+  readonly runtime: string;
+  readonly type: string;
+}
+
 interface El {
   readonly categories: ReadonlyArray<string>;
   readonly cls: string;
+  readonly encoded: string;
   readonly iface: string;
   readonly kind: Kind;
   readonly obsolete: boolean;
@@ -129,28 +137,60 @@ interface El {
 }
 
 /** A single webref definition entry from `ed/dfns/html.json`. */
-interface Dfn {
-  readonly for?: ReadonlyArray<string>;
-  readonly href: string;
-  readonly linkingText: ReadonlyArray<string>;
-  readonly type: string;
-}
+class Dfn extends S.Class<Dfn>($I`Dfn`)(
+  {
+    for: S.Array(S.String).pipe(S.optionalKey),
+    href: S.String,
+    linkingText: S.Array(S.String),
+    type: S.String,
+  },
+  $I.annote("Dfn", { description: "A single webref definition entry from ed/dfns/html.json." })
+) {}
 
-interface WebrefElement {
-  readonly interface: string;
-  readonly name: string;
-}
+class WebrefElement extends S.Class<WebrefElement>($I`WebrefElement`)(
+  {
+    interface: S.String,
+    name: S.String,
+  },
+  $I.annote("WebrefElement", { description: "A single webref element-index entry." })
+) {}
 
-interface ContentModelEntry {
-  readonly categories?: ReadonlyArray<string>;
-}
+class ContentModelEntry extends S.Class<ContentModelEntry>($I`ContentModelEntry`)(
+  {
+    categories: S.Array(S.String).pipe(S.optionalKey),
+  },
+  $I.annote("ContentModelEntry", { description: "WHATWG content-model metadata for one element." })
+) {}
 
-interface Classification {
-  readonly booleanAttributes: ReadonlyArray<string>;
-  readonly numericAttributes: ReadonlyArray<string>;
-  readonly rawText: ReadonlyArray<string>;
-  readonly void: ReadonlyArray<string>;
-}
+class Classification extends S.Class<Classification>($I`Classification`)(
+  {
+    booleanAttributes: S.Array(S.String),
+    numericAttributes: S.Array(S.String),
+    rawText: S.Array(S.String),
+    void: S.Array(S.String),
+  },
+  $I.annote("Classification", { description: "Pinned HTML attribute and element classifications." })
+) {}
+
+class DfnsDoc extends S.Class<DfnsDoc>($I`DfnsDoc`)(
+  { dfns: S.Array(Dfn) },
+  $I.annote("DfnsDoc", { description: "webref dfns-html.json document." })
+) {}
+
+class ElementsDoc extends S.Class<ElementsDoc>($I`ElementsDoc`)(
+  { elements: S.Array(WebrefElement) },
+  $I.annote("ElementsDoc", { description: "webref elements-html.json document." })
+) {}
+
+class ContentModelDoc extends S.Class<ContentModelDoc>($I`ContentModelDoc`)(
+  { elements: S.Record(S.String, ContentModelEntry) },
+  $I.annote("ContentModelDoc", { description: "WHATWG content-model.json document." })
+) {}
+
+class ObsoleteInterfacesDoc extends S.Class<ObsoleteInterfacesDoc>($I`ObsoleteInterfacesDoc`)(
+  { interfaces: S.Record(S.String, S.String) },
+  $I.annote("ObsoleteInterfacesDoc", { description: "Local obsolete interface override document." })
+) {}
 
 interface RawData {
   readonly classification: Classification;
@@ -164,15 +204,11 @@ interface RawData {
 // pure build
 // ---------------------------------------------------------------------------
 
-/** Inner `{ ... }` body of a single `Schema.X({ ... })` / `{ ... }` expression. */
-const inner = (s: string): string => {
-  const open = s.indexOf("{");
-  const close = s.lastIndexOf("}");
-  if (open === -1 || close <= open) {
-    throw new Error(`Unexpected SchemaRepresentation output (no balanced braces): ${s.slice(0, 120)}`);
-  }
-  return s.slice(open + 1, close).trim();
-};
+const optionalRuntime = (schema: string): string =>
+  `S.OptionFromOptionalKey(${schema}).pipe(SchemaUtils.withNoneDefault)`;
+
+const literalUnion = (values: ReadonlyArray<string>): string =>
+  values.map((value) => JSON.stringify(value)).join(" | ");
 
 const buildModel = (data: RawData): { model: string; meta: string; conforming: number; total: number } => {
   const { classification, contentModel, dfns, elements: elementsData, obsoleteInterfaces } = data;
@@ -216,35 +252,52 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
   const voidEls = new Set<string>(classification.void);
   const rawTextEls = new Set<string>(classification.rawText);
 
-  const valueSchema = (el: string, attr: string): S.Top => {
+  const valueSchema = (el: string, attr: string): AttributeSpec => {
     // HTML boolean attributes accept true/false and the empty-string presence
     // form (`disabled=""`); mirror the hand-authored `BooleanAttribute` overlay.
-    if (booleanAttrs.has(attr)) return S.optionalKey(S.Union([S.Boolean, S.Literal("")]));
+    if (booleanAttrs.has(attr)) {
+      return {
+        runtime: optionalRuntime('S.Union([S.Boolean, S.Literal("")])'),
+        type: 'O.Option<boolean | "">',
+        encoded: 'boolean | ""',
+      };
+    }
     const vals = enumValues.get(`${el}/${attr}`);
     if (vals !== undefined && vals.length > 0) {
       const uniq = [...new Set(vals)];
-      return S.optionalKey(uniq.length === 1 ? S.Literal(uniq[0]) : S.Literals(uniq));
+      const schema =
+        uniq.length === 1 ? `S.Literal(${JSON.stringify(uniq[0])})` : `S.Literals(${JSON.stringify(uniq)})`;
+      const union = literalUnion(uniq);
+      return {
+        runtime: optionalRuntime(schema),
+        type: `O.Option<${union}>`,
+        encoded: union,
+      };
     }
-    if (numericAttrs.has(attr)) return S.optionalKey(S.Int);
-    return S.optionalKey(S.String);
+    if (numericAttrs.has(attr)) {
+      return {
+        runtime: optionalRuntime("S.Int"),
+        type: "O.Option<number>",
+        encoded: "number",
+      };
+    }
+    return {
+      runtime: optionalRuntime("S.String"),
+      type: "O.Option<string>",
+      encoded: "string",
+    };
   };
 
-  // SR-generated runtime field body + TS type body for an element's specific
+  // Generated runtime field body + TS type bodies for an element's specific
   // attributes (globals/`_tag`/children excluded).
-  const specificBodies = (el: string): { runtime: string; type: string } => {
+  const specificBodies = (el: string): { encoded: string; runtime: string; type: string } => {
     const attrs = [...elemAttrs.get(el)!].filter((a) => !globalKeys.has(a)).sort();
-    if (attrs.length === 0) return { runtime: "", type: "" };
-    const fields: Record<string, S.Top> = {};
-    for (const a of attrs) fields[a] = valueSchema(el, a);
-    const struct = S.Struct(fields);
-    const code = SR.toCodeDocument(SR.fromASTs([struct.ast])).codes[0];
+    if (attrs.length === 0) return { encoded: "", runtime: "", type: "" };
+    const fields = attrs.map((attr) => [attr, valueSchema(el, attr)] as const);
     return {
-      // SR lowers `S.Int` to `Schema.Number.check(Schema.isInt())`, which trips
-      // effect's finite-number diagnostic; restore the lint-clean `S.Int`.
-      runtime: inner(code.runtime)
-        .replace(/Schema\./g, "S.")
-        .replace(/S\.Number\.check\(S\.isInt\(\)\)/g, "S.Int"),
-      type: inner(code.Type),
+      runtime: fields.map(([attr, spec]) => `${JSON.stringify(attr)}: ${spec.runtime}`).join(", "),
+      type: fields.map(([attr, spec]) => `readonly ${JSON.stringify(attr)}: ${spec.type}`).join("; "),
+      encoded: fields.map(([attr, spec]) => `readonly ${JSON.stringify(attr)}?: ${spec.encoded}`).join("; "),
     };
   };
 
@@ -255,10 +308,11 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
     const d = elementDfns.find((x) => x.linkingText[0] === tag);
     const obsolete = isObsolete(d);
     const kind: Kind = voidEls.has(tag) ? "void" : rawTextEls.has(tag) ? "rawText" : "normal";
-    const { runtime, type } = specificBodies(tag);
+    const { encoded, runtime, type } = specificBodies(tag);
     return {
       tag,
       cls: className(tag),
+      encoded,
       obsolete,
       kind,
       iface: interfaceOf(tag, obsolete),
@@ -284,7 +338,11 @@ const buildModel = (data: RawData): { model: string; meta: string; conforming: n
       .filter((l) => l !== "")
       .join("\n");
     const typeFields = (encoded: boolean): string =>
-      [`    readonly _tag: "${e.tag}";`, e.type !== "" ? `    ${e.type};` : "", childTypeField(e.kind, encoded)]
+      [
+        `    readonly _tag: "${e.tag}";`,
+        encoded ? (e.encoded !== "" ? `    ${e.encoded};` : "") : e.type !== "" ? `    ${e.type};` : "",
+        childTypeField(e.kind, encoded),
+      ]
         .filter((l) => l !== "")
         .join("\n");
     return `/**
@@ -371,17 +429,19 @@ export const ${name} = taggedUnion<${types}, ${encodeds}>(
  * obsolete elements). Each element is an \`S.TaggedClass\` whose \`_tag\` is its tag
  * name; all are combined into the {@link HtmlNode} discriminated union via
  * \`S.toTaggedUnion("_tag")\`. Generated from the vendored datasets in \`data/\`
- * (see \`data/SOURCES.md\`); attribute field bodies/types are emitted by effect's
- * \`SchemaRepresentation.toCodeDocument\`.
+ * (see \`data/SOURCES.md\`); attribute field bodies/types are emitted from the
+ * generator's schema-first attribute specs.
  *
  * @packageDocumentation \\@beep/html/Html.model
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { GlobalAttributes } from "./Html.attributes.ts";
 import { Comment, Doctype, Text } from "./Html.nodes.ts";
 import type { GlobalAttributesEncoded, GlobalAttributesType } from "./Html.attributes.ts";
+import type * as O from "effect/Option";
 
 const $I = $HtmlId.create("Html.model");
 
@@ -469,6 +529,8 @@ ${unionMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
     })
     .join("\n");
 
+  const categoryValues = JSON.stringify([...new Set(els.flatMap((element) => element.categories))].sort());
+
   const meta = `/**
  * GENERATED FILE — do not edit by hand. Run \`bun run generate\`.
  *
@@ -478,7 +540,44 @@ ${unionMembers.map((m) => `    | ${m}.Encoded`).join("\n")};
  * @packageDocumentation \\@beep/html/Html.meta
  * @since 0.0.0
  */
+import { $HtmlId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
+
+const $I = $HtmlId.create("Html.meta");
+
+/**
+ * Advisory content-category values emitted by the WHATWG element index.
+ *
+ * @example
+ * \`\`\`ts
+ * import { HtmlCategory } from "@beep/html/Html.meta"
+ *
+ * console.log(HtmlCategory.is("flow")) // true
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlCategory = LiteralKit(${categoryValues}).pipe(
+  $I.annoteSchema("HtmlCategory", { description: "Advisory WHATWG content-category value." })
+);
+
+/**
+ * Decoded advisory content category.
+ *
+ * @example
+ * \`\`\`ts
+ * import type { HtmlCategory } from "@beep/html/Html.meta"
+ *
+ * const category: HtmlCategory = "flow"
+ * console.log(category)
+ * \`\`\`
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlCategory = typeof HtmlCategory.Type;
 
 /**
  * Schema describing one HTML element kind's metadata.
@@ -492,8 +591,8 @@ export const HtmlElementMeta = S.Struct({
   conformance: S.Literals(["conforming", "non-conforming"]),
   void: S.Boolean,
   rawText: S.Boolean,
-  categories: S.Array(S.String),
-}).annotate({ identifier: "HtmlElementMeta", description: "Metadata describing one HTML element kind." });
+  categories: S.Array(HtmlCategory),
+}).pipe($I.annoteSchema("HtmlElementMeta", { description: "Metadata describing one HTML element kind." }));
 
 /**
  * Decoded type of {@link HtmlElementMeta}.
@@ -522,10 +621,6 @@ ${metaEntries}
 // IO program
 // ---------------------------------------------------------------------------
 
-// Schema-owned JSON parsing (schema-first boundary policy) over trusted vendored
-// data; constructed at module scope so the sync decode is not inside an Effect.
-const parseJson = S.decodeUnknownSync(S.UnknownFromJsonString);
-
 const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -533,14 +628,14 @@ const program = Effect.gen(function* () {
   const dataDir = path.join(pkgRoot, "data");
   const srcDir = path.join(pkgRoot, "src");
 
-  const readJson = <T>(rel: string) =>
-    fs.readFileString(path.join(dataDir, rel)).pipe(Effect.map((s): T => parseJson(s) as T));
+  const readJson = <Schema extends S.Top>(schema: Schema, rel: string) =>
+    fs.readFileString(path.join(dataDir, rel)).pipe(Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(schema))));
 
-  const dfnsDoc = yield* readJson<{ dfns: ReadonlyArray<Dfn> }>("webref/dfns-html.json");
-  const elementsDoc = yield* readJson<{ elements: ReadonlyArray<WebrefElement> }>("webref/elements-html.json");
-  const cmDoc = yield* readJson<{ elements: Record<string, ContentModelEntry> }>("whatwg/content-model.json");
-  const classification = yield* readJson<Classification>("overrides/classification.json");
-  const obsDoc = yield* readJson<{ interfaces: Record<string, string> }>("overrides/obsolete-interfaces.json");
+  const dfnsDoc = yield* readJson(DfnsDoc, "webref/dfns-html.json");
+  const elementsDoc = yield* readJson(ElementsDoc, "webref/elements-html.json");
+  const cmDoc = yield* readJson(ContentModelDoc, "whatwg/content-model.json");
+  const classification = yield* readJson(Classification, "overrides/classification.json");
+  const obsDoc = yield* readJson(ObsoleteInterfacesDoc, "overrides/obsolete-interfaces.json");
 
   const { conforming, meta, model, total } = buildModel({
     dfns: dfnsDoc.dfns,

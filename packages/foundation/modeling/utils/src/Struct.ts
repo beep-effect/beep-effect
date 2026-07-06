@@ -14,7 +14,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as A from "./Array.ts";
-import { lookupAtPath, unsafeDotGet } from "./internal/StructPath.ts";
+import { lookupAtPath, pathLookupToOption, unsafeDotGet } from "./internal/StructPath.ts";
 import type { Get, Paths, Simplify } from "type-fest";
 import type { PathLookup as InternalPathLookup, PathInput } from "./internal/StructPath.ts";
 
@@ -178,10 +178,7 @@ export const dotGetOption: {
   <S extends object, const P extends ReadonlyArray<string>>(self: S, path: P): O.Option<Get<S, P>>;
 } = dual(2, <S extends object>(self: S, path: PathInput): O.Option<unknown> => {
   const lookup = lookupAtPath(self, path);
-  return Match.value(lookup).pipe(
-    Match.when({ found: true }, ({ value }) => O.some(value)),
-    Match.orElse(O.none)
-  );
+  return pathLookupToOption(lookup);
 }) as {
   <const P extends string>(path: P): <S extends object>(self: P extends Paths<S> ? S : never) => O.Option<Get<S, P>>;
   <const P extends ReadonlyArray<string>>(path: P): <S extends object>(self: S) => O.Option<Get<S, P>>;

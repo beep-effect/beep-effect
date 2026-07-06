@@ -75,6 +75,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@effect/platform-bun": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:"
   }

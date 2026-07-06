@@ -2,17 +2,6 @@
   {
     "ruleId": "SFV4-precision-audit",
     "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
-    "line": 1395,
-    "symbol": "LinkNode.url",
-    "smell": "LinkNode.url is broad S.String on a persisted untrusted schema whose value the editor renders into an anchor href, while the very same node hierarchy sanitizes its CSS sinks at the schema boundary (SafeInlineStyle:617, SafeStyleValue:650, both with decode+encode sanitizers and fixed-point toArbitrary annotations). A javascript:/data: URL in persisted or synced editor state flows through undecoded — the URL sink is the one presentation-state boundary in this package without a schema guard (rg finds no href/url sanitizer in @beep/lexical-schema or @beep/editor).",
-    "proposedTarget": "A SafeUrl transform mirroring the in-file SafeInlineStyle pattern (Lexical.model.ts:617-631): S.String.pipe(S.decode({ decode/encode: SchemaGetter.transform(sanitizeUrl) })) with a scheme allowlist (http/https/mailto/relative + the package's own artifact:// prefix, ARTIFACT_URI_PREFIX at Lexical.codec.ts:63), sanitizer living in Lexical.normalize.ts beside sanitizeInlineStyle, plus a fixed-point toArbitrary annotation and an additive property law like the existing ones in test/Lexical.model.test.ts:235. Sanitize-on-decode keeps decoding total over existing persisted states (no rejection). NOTE cross-package ripple: the Md projection target Md.A.href is equally broad (packages/foundation/modeling/md/src/Md.model.ts:463); aligning both belongs to the same foundation wave but @beep/md edits are that package's own finding set.",
-    "confidence": 0.55,
-    "mechanization": "judgment",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
     "line": 1396,
     "symbol": "LinkNode.rel/target/title",
     "smell": "rel, target, and title are broad optional strings (S.OptionFromOptionalNullOr(S.String)); target in particular has a conventional closed-ish domain (_blank/_self/_parent/_top).",

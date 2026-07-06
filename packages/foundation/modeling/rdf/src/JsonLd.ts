@@ -22,7 +22,7 @@ const JsonLdScalar = S.Union([S.String, S.Finite, S.Boolean]).pipe(
 
 const jsonLdBlankNodeIdentifierChecks = S.makeFilterGroup(
   [
-    S.isPattern(/^_:[^\s]+$/, {
+    S.isPattern(/^_:\S+$/, {
       identifier: $I`JsonLdBlankNodeIdentifierPatternCheck`,
       title: "JSON-LD Blank Node Identifier Pattern",
       description: "A JSON-LD blank-node identifier beginning with `_:` and containing no whitespace.",

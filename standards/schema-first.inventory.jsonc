@@ -824,14 +824,6 @@
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
-      "file": "packages/foundation/modeling/html/scripts/generate.ts",
-      "symbol": "struct",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/html",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
-    },
-    {
       "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
       "symbol": "GlobalAttributesStruct",
       "kind": "object-struct-schema",
@@ -1980,16 +1972,6 @@
       "status": "exception",
       "owner": "@beep/ui",
       "reason": "Derived interface with extends clauses is tracked as an exception."
-    },
-    {
-      "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 35,
-      "owner": "@beep/law-practice-domain",
-      "reason": "Schema-heavy test file has 6 Schema codec assertions but no schema-derived property coverage."
     },
     {
       "file": "packages/law-practice/server/test/fixture.ts",

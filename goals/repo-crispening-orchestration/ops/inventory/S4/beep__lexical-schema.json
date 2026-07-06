@@ -2,28 +2,6 @@
   {
     "ruleId": "SFV4-static-api",
     "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
-    "line": 1897,
-    "symbol": "LexicalNode",
-    "smell": "Exported tagged-union const (`S.Union([TextNode, ...TableCellNode]).pipe(S.toTaggedUnion(\"type\"))`) missing `SchemaUtils.withCodecStatics` — no colocated is/fromUnknown/decodeOption while the package's own tests re-spell `S.decodeUnknownSync(LexicalNode)(...)` inline ~10 times (test/Lexical.model.test.ts:237,249,250,252,262,272,298,324) and the JSDoc examples do the same (Lexical.behavior.ts:29, index.ts:32,62).",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the existing `.pipe(S.toTaggedUnion(\"type\"))` chain — the in-file exemplar is ArtifactRefId (Lexical.model.ts:366-380, same package) and the cross-package exemplar is Md.Inline/Md.Block (packages/foundation/modeling/md/src/Md.model.ts:608-614,1612-1618: toTaggedUnion then withCodecStatics). Purely additive; SchemaUtils is already imported in the file (used at line 379).",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 2.5
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
-    "line": 2009,
-    "symbol": "SerializedEditorState",
-    "smell": "The persistence-boundary envelope S.Class has no colocated codec statics, so consumers rebuild the same free decode helper independently: `const decodeSerializedState = S.decodeUnknownOption(SerializedEditorState)` is duplicated verbatim in @beep/editor at packages/foundation/ui-system/editor/src/chat/atoms.ts:37 and packages/foundation/ui-system/editor/src/chat/chat-composer.tsx:78 — the exact duplicate-decode wall SFV4-static-api targets.",
-    "proposedTarget": "Attach in-body statics on the class (S.Class loses constructor identity when piped through withStatics — in-body is the documented class-side pattern, packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:10-12): `static readonly decodeOption = S.decodeUnknownOption(SerializedEditorState)` (self-reference in a static initializer is legal; exemplars Lexical.model.ts:1282 `static readonly is = S.is(ListNode)` and Md.model.ts:873). Attachment is additive (no encoded-form change, no §5.4 sweep); the two @beep/editor walls collapse to `SerializedEditorState.decodeOption` — same foundation family, so the sweep can land in the same wave or in @beep/editor's own remediation.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 2.4
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
     "line": 34,
     "symbol": "decodeYouTubeVideoId",
     "smell": "Module-private hoisted decoder `const decodeYouTubeVideoId = S.decodeUnknownEffect(Md.YouTubeVideoId)` at file top resembles a decode-wall entry.",

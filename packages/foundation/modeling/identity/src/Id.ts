@@ -25,7 +25,7 @@
  * @since 0.0.0
  */
 
-import { Function as Fn, flow, pipe } from "effect";
+import { Function as Fn, flow, pipe, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -1152,6 +1152,73 @@ const BaseSegmentSchema = S.String.check(
   })
 );
 
+const stripPrefix = (prefix: string) =>
+  flow(O.liftPredicate(Str.startsWith(prefix)), O.map(Str.slice(Str.length(prefix))));
+
+const normalizeBaseValue = (value: string): string => {
+  const namespaceBaseOption = O.as(O.liftPredicate(isBeepNamespace)(value), beepBase);
+  const scopedNamespaceOption = stripPrefix(`${beepNamespace}/`)(value);
+  const atPrefixNamespaceOption = stripPrefix(beepNamespace)(value);
+  const withoutNamespace = pipe(
+    [namespaceBaseOption, scopedNamespaceOption, atPrefixNamespaceOption],
+    O.firstSomeOf,
+    O.getOrElse(() => value)
+  );
+
+  return pipe(
+    stripPrefix("@")(withoutNamespace),
+    O.getOrElse(() => withoutNamespace)
+  );
+};
+
+/**
+ * Schema for package identity constructor input after `@beep` prefix normalization.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { BaseIdentityInput } from "@beep/identity"
+ *
+ * const normalized = S.decodeUnknownOption(BaseIdentityInput)("@beep/my-pkg")
+ * console.log(O.getOrElse(normalized, () => "invalid")) // "my-pkg"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const BaseIdentityInput = S.String.pipe(
+  S.decodeTo(
+    BaseSegmentSchema,
+    SchemaTransformation.transform({
+      decode: normalizeBaseValue,
+      encode: Fn.identity,
+    })
+  )
+).annotate({
+  identifier: "@beep/identity/Id/BaseIdentityInput",
+  title: "Base Identity Input",
+  description: "Package identity constructor input normalized by stripping accepted @beep prefixes.",
+});
+
+/**
+ * Runtime type for {@link BaseIdentityInput}.
+ *
+ * @example
+ * ```ts
+ * import type { BaseIdentityInput } from "@beep/identity"
+ *
+ * const base: BaseIdentityInput = "my-pkg"
+ * console.log(base)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type BaseIdentityInput = typeof BaseIdentityInput.Type;
+
+const decodeBaseIdentityInput = S.decodeUnknownSync(BaseIdentityInput);
+
 const toIdentityString = <Value extends string>(value: Value): IdentityString<Value> => value as IdentityString<Value>;
 
 const toIdentitySymbol = <Value extends string>(value: Value): IdentitySymbol<Value> =>
@@ -1169,7 +1236,7 @@ const toTitle = <const Identifier extends TString.NonEmpty>(identifier: Identifi
     Str.trim,
     Str.split(" "),
     A.filter(Str.isNonEmpty),
-    A.map((segment) => `${Str.toUpperCase(Str.slice(0, 1)(segment))}${Str.slice(1)(segment)}`),
+    A.map(Str.capitalize),
     A.join(" ")
   ) as TitleFromIdentifier<Identifier>;
 
@@ -1204,8 +1271,10 @@ const toSlug = <const Identifier extends string>(identifier: Identifier): SlugFr
 type ModulePascal<Segment extends TString.NonEmpty> =
   ModuleAccessor<Segment> extends `${infer Pascal}Id` ? Pascal : never;
 
+const toPascalTitle = flow(toTitle, Str.replace(/\s+/g, ""));
+
 const toPascalIdentifier = <const Segment extends TString.NonEmpty>(segment: Segment): ModulePascal<Segment> =>
-  pipe(segment, toTitle, Str.replace(/\s+/g, "")) as ModulePascal<Segment>;
+  toPascalTitle(segment) as ModulePascal<Segment>;
 
 const toTaggedKey = <const Segment extends TString.NonEmpty>(segment: Segment): TaggedAccessor<Segment> =>
   `$${toPascalIdentifier(segment)}Id` as TaggedAccessor<Segment>;
@@ -1242,26 +1311,8 @@ const validateTemplateSegmentCount = (strings: TemplateStringsArray): void =>
       }),
   });
 
-const stripPrefix = (prefix: string) =>
-  flow(O.liftPredicate(Str.startsWith(prefix)), O.map(Str.slice(Str.length(prefix))));
-
-const normalizeBase = <const Base extends TString.NonEmpty>(base: Base): NormalizedBase<Base> => {
-  const value = S.decodeUnknownSync(S.String)(base);
-  const namespaceBaseOption = O.as(O.liftPredicate(isBeepNamespace)(value), beepBase);
-  const scopedNamespaceOption = stripPrefix(`${beepNamespace}/`)(value);
-  const atPrefixNamespaceOption = stripPrefix(beepNamespace)(value);
-  const withoutNamespace = pipe(
-    [namespaceBaseOption, scopedNamespaceOption, atPrefixNamespaceOption],
-    O.firstSomeOf,
-    O.getOrElse(() => value)
-  );
-  const withoutAtPrefix = pipe(
-    stripPrefix("@")(withoutNamespace),
-    O.getOrElse(() => withoutNamespace)
-  );
-
-  return S.decodeUnknownSync(BaseSegmentSchema)(withoutAtPrefix) as NormalizedBase<Base>;
-};
+const normalizeBase = <const Base extends TString.NonEmpty>(base: Base): NormalizedBase<Base> =>
+  decodeBaseIdentityInput(base) as NormalizedBase<Base>;
 
 const createBaseIdentity = <const Base extends TString.NonEmpty>(base: NormalizedBase<Base>): BaseIdentity<Base> =>
   O.match(O.liftPredicate(isBeepBase)(base), {

@@ -2,28 +2,6 @@
   {
     "ruleId": "SFV4-static-api",
     "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
-    "line": 346,
-    "symbol": "decodeMathInline",
-    "smell": "PandocMathType is already a LiteralKit at Pandoc.model.ts:178, but decodeMathInline repeats the \"DisplayMath\" | \"InlineMath\" family in a Match.value(mathTypeWire.t) branch with an orElse fallback, splitting the accepted math-mode domain between the kit and ad-hoc string cases.",
-    "proposedTarget": "Decode mathTypeWire.t with S.decodeUnknownOption(PandocMathType) (verified Effect v4 API at .repos/effect-v4/packages/effect/src/Schema.ts:1500) and dispatch the Some value through PandocMathType.$match (verified LiteralKit $match at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:665/710), preserving the current unknownInline fallback for O.none.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 2.34
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
-    "line": 46,
-    "symbol": "MdHeadingLevel",
-    "smell": "Local MdHeadingLevel = 1 | 2 | 3 | 4 | 5 | 6 plus mdHeadingLevelFromPandoc's 1..6 if-chain duplicates the canonical @beep/md HeadingLevel LiteralKit at packages/foundation/modeling/md/src/Md.model.ts:830 before calling Md.Heading.make.",
-    "proposedTarget": "Drop the local literal union and derive the type from Md.HeadingLevel; keep the clamp semantics in one small conversion that returns the @beep/md kit domain. In-repo exemplar: lexical's HeadingLevelTag MappedLiteralKit bridge at packages/foundation/modeling/lexical/src/Lexical.codec.ts:74/262 keeps the h1..h6 <-> 1..6 mapping in one literal source.",
-    "confidence": 0.62,
-    "mechanization": "assisted",
-    "roiRank": 1.55
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
     "line": 359,
     "symbol": "decodeInline/decodeBlock",
     "smell": "decodeInline and decodeBlock branch on external Pandoc constructor strings via Match.value(wire.t), which a detector can mistake for manual discriminator dispatch over a closed schema union.",

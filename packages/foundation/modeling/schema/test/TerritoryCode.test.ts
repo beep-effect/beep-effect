@@ -28,6 +28,13 @@ describe("CountryCode", () => {
     expect(S.decodeSync(CountryNameFromCode)("GB")).toBe("United Kingdom");
     expect(S.decodeSync(CountryCodeFromName)("United Kingdom")).toBe("GB");
   });
+
+  it("renders flags only for alpha-2 country codes", () => {
+    expect(CountryCode.getFlag("US")).toBe("🇺🇸");
+    expect(CountryCode.getFlag("GB")).toBe("🇬🇧");
+    expect(CountryCode.getFlag("001")).toBe("");
+    expect(CountryCode.getFlag("us")).toBe("");
+  });
 });
 
 describe("ContinentCode", () => {

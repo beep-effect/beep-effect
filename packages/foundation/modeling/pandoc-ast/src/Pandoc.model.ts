@@ -6,10 +6,21 @@
  */
 
 import { $PandocAstId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $PandocAstId.create("Pandoc.model");
+
+const withPandocCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unknown, unknown>>(self: Sch) =>
+  SchemaUtils.withStatics((schema: Sch) => {
+    const decoder = schema as Sch & S.ConstraintDecoder<unknown>;
+
+    return {
+      decodeOption: S.decodeUnknownOption(decoder),
+      fromUnknown: S.decodeUnknownSync(decoder),
+      is: S.is(schema),
+    };
+  })(self);
 
 /**
  * Pandoc API version tuple carried by Pandoc JSON.
@@ -24,7 +35,7 @@ const $I = $PandocAstId.create("Pandoc.model");
  * @category models
  * @since 0.0.0
  */
-export const PandocApiVersion = S.Array(S.Int).pipe(
+export const PandocApiVersion = S.NonEmptyArray(S.Int.check(S.isGreaterThanOrEqualTo(0))).pipe(
   $I.annoteSchema("PandocApiVersion", {
     description: "Pandoc API version tuple carried by Pandoc JSON.",
   })
@@ -89,6 +100,8 @@ export class PandocAttr extends S.Class<PandocAttr>($I`PandocAttr`)(
   })
 ) {
   static readonly empty: PandocAttr = PandocAttr.make({ classes: [], id: "", keyValues: [] });
+  static readonly isNonEmpty = (self: PandocAttr.Type): boolean =>
+    self.id.length > 0 || self.classes.length > 0 || self.keyValues.length > 0;
 }
 
 /**
@@ -975,7 +988,8 @@ export const PandocInline = S.Union([
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("PandocInline", {
     description: "Pandoc inline union for the v1 compatibility slice.",
-  })
+  }),
+  withPandocCodecStatics
 );
 
 /**
@@ -1545,7 +1559,8 @@ export const PandocBlock = S.Union([
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("PandocBlock", {
     description: "Pandoc block union for the v1 compatibility slice.",
-  })
+  }),
+  withPandocCodecStatics
 );
 
 /**

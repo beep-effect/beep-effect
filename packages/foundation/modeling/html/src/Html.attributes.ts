@@ -18,7 +18,7 @@
  * @since 0.0.0
  */
 import { $HtmlId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Struct } from "@beep/utils";
 import * as S from "effect/Schema";
 
@@ -154,14 +154,15 @@ export const PopoverTargetAction = LiteralKit(["toggle", "show", "hide"]).pipe(
  * @since 0.0.0
  */
 export const BooleanAttribute = S.Union([S.Boolean, S.Literal("")]).pipe(
-  $I.annoteSchema("BooleanAttribute", { description: "HTML boolean attribute (true/false or empty-string presence)." })
+  $I.annoteSchema("BooleanAttribute", { description: "HTML boolean attribute (true/false or empty-string presence)." }),
+  SchemaUtils.withCodecStatics
 );
 
 // -----------------------------------------------------------------------------
 // field bundles
 // -----------------------------------------------------------------------------
 
-const Str = S.optionalKey(S.String);
+const Str = S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault);
 type Str = typeof Str;
 
 /**
@@ -171,41 +172,41 @@ type Str = typeof Str;
  * @since 0.0.0
  */
 export const StandardGlobalAttributes = {
-  accesskey: S.optionalKey(S.String),
-  autocapitalize: S.optionalKey(AutoCapitalize),
-  autocorrect: S.optionalKey(AutoCorrect),
-  autofocus: S.optionalKey(BooleanAttribute),
-  class: S.optionalKey(S.String),
-  contenteditable: S.optionalKey(ContentEditable),
-  dir: S.optionalKey(Dir),
-  draggable: S.optionalKey(Draggable),
-  enterkeyhint: S.optionalKey(EnterKeyHint),
-  exportparts: S.optionalKey(S.String),
-  headingoffset: S.optionalKey(S.Int),
-  headingreset: S.optionalKey(S.String),
-  hidden: S.optionalKey(Hidden),
-  id: S.optionalKey(S.String),
-  inert: S.optionalKey(BooleanAttribute),
-  inputmode: S.optionalKey(InputMode),
-  is: S.optionalKey(S.String),
-  itemid: S.optionalKey(S.String),
-  itemprop: S.optionalKey(S.String),
-  itemref: S.optionalKey(S.String),
-  itemscope: S.optionalKey(BooleanAttribute),
-  itemtype: S.optionalKey(S.String),
-  lang: S.optionalKey(S.String),
-  nonce: S.optionalKey(S.String),
-  part: S.optionalKey(S.String),
-  popover: S.optionalKey(Popover),
-  popovertarget: S.optionalKey(S.String),
-  popovertargetaction: S.optionalKey(PopoverTargetAction),
-  slot: S.optionalKey(S.String),
-  spellcheck: S.optionalKey(SpellCheck),
-  style: S.optionalKey(S.String),
-  tabindex: S.optionalKey(S.Int),
-  title: S.optionalKey(S.String),
-  translate: S.optionalKey(Translate),
-  writingsuggestions: S.optionalKey(WritingSuggestions),
+  accesskey: Str,
+  autocapitalize: S.OptionFromOptionalKey(AutoCapitalize).pipe(SchemaUtils.withNoneDefault),
+  autocorrect: S.OptionFromOptionalKey(AutoCorrect).pipe(SchemaUtils.withNoneDefault),
+  autofocus: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+  class: Str,
+  contenteditable: S.OptionFromOptionalKey(ContentEditable).pipe(SchemaUtils.withNoneDefault),
+  dir: S.OptionFromOptionalKey(Dir).pipe(SchemaUtils.withNoneDefault),
+  draggable: S.OptionFromOptionalKey(Draggable).pipe(SchemaUtils.withNoneDefault),
+  enterkeyhint: S.OptionFromOptionalKey(EnterKeyHint).pipe(SchemaUtils.withNoneDefault),
+  exportparts: Str,
+  headingoffset: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+  headingreset: Str,
+  hidden: S.OptionFromOptionalKey(Hidden).pipe(SchemaUtils.withNoneDefault),
+  id: Str,
+  inert: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+  inputmode: S.OptionFromOptionalKey(InputMode).pipe(SchemaUtils.withNoneDefault),
+  is: Str,
+  itemid: Str,
+  itemprop: Str,
+  itemref: Str,
+  itemscope: S.OptionFromOptionalKey(BooleanAttribute).pipe(SchemaUtils.withNoneDefault),
+  itemtype: Str,
+  lang: Str,
+  nonce: Str,
+  part: Str,
+  popover: S.OptionFromOptionalKey(Popover).pipe(SchemaUtils.withNoneDefault),
+  popovertarget: Str,
+  popovertargetaction: S.OptionFromOptionalKey(PopoverTargetAction).pipe(SchemaUtils.withNoneDefault),
+  slot: Str,
+  spellcheck: S.OptionFromOptionalKey(SpellCheck).pipe(SchemaUtils.withNoneDefault),
+  style: Str,
+  tabindex: S.OptionFromOptionalKey(S.Int).pipe(SchemaUtils.withNoneDefault),
+  title: Str,
+  translate: S.OptionFromOptionalKey(Translate).pipe(SchemaUtils.withNoneDefault),
+  writingsuggestions: S.OptionFromOptionalKey(WritingSuggestions).pipe(SchemaUtils.withNoneDefault),
 } as const;
 
 /**
@@ -216,7 +217,7 @@ export const StandardGlobalAttributes = {
  * @since 0.0.0
  */
 export const DatasetAttribute = {
-  dataset: S.optionalKey(S.Record(S.String, S.String)),
+  dataset: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(SchemaUtils.withNoneDefault),
 } as const;
 
 const ariaAttributeNames = [
@@ -283,8 +284,8 @@ const ariaAttributeNames = [
  * @since 0.0.0
  */
 export const AriaAttributes = {
-  role: S.optionalKey(S.String),
-  ...(Struct.fromEntries(A.map(ariaAttributeNames, (n) => [n, Str])) as {
+  role: Str,
+  ...(Struct.fromEntries(A.map(ariaAttributeNames, (n) => [n, Str] as const)) as {
     readonly [K in (typeof ariaAttributeNames)[number]]: Str;
   }),
 } as const;
@@ -371,7 +372,7 @@ const eventHandlerNames = [
  * @category schemas
  * @since 0.0.0
  */
-export const EventHandlerAttributes = Struct.fromEntries(A.map(eventHandlerNames, (n) => [n, Str])) as {
+export const EventHandlerAttributes = Struct.fromEntries(A.map(eventHandlerNames, (n) => [n, Str] as const)) as {
   readonly [K in (typeof eventHandlerNames)[number]]: Str;
 };
 
@@ -397,7 +398,9 @@ export const GlobalAttributes = {
  * @category schemas
  * @since 0.0.0
  */
-export const GlobalAttributesStruct = S.Struct(GlobalAttributes);
+export const GlobalAttributesStruct = S.Struct(GlobalAttributes).pipe(
+  $I.annoteSchema("GlobalAttributesStruct", { description: "Struct schema over the shared HTML global attributes." })
+);
 
 /**
  * Decoded type of the shared global attributes.

@@ -72,16 +72,42 @@ export type Pattern = typeof Pattern.Type;
  */
 export class GlobOptions extends S.Class<GlobOptions>($I`GlobOptions`)(
   {
-    absolute: S.optionalKey(S.Boolean),
-    cwd: S.optionalKey(S.String),
-    dot: S.optionalKey(S.Boolean),
-    ignore: S.optionalKey(Pattern),
-    nodir: S.optionalKey(S.Boolean),
+    absolute: S.optionalKey(S.Boolean).annotateKey({
+      description: "Whether matched paths should be returned as absolute paths.",
+    }),
+    cwd: S.optionalKey(S.String).annotateKey({
+      description: "Directory used as the root for glob scanning.",
+    }),
+    dot: S.optionalKey(S.Boolean).annotateKey({
+      description: "Whether dot-prefixed path segments should be matched.",
+    }),
+    ignore: S.optionalKey(Pattern).annotateKey({
+      description: "Glob pattern or patterns excluded from scan results.",
+    }),
+    nodir: S.optionalKey(S.Boolean).annotateKey({
+      description: "Whether directory matches should be omitted from results.",
+    }),
   },
   $I.annote("GlobOptions", {
     description: "Optional runtime flags for glob scans.",
   })
 ) {}
+
+class ResolvedGlobOptions extends S.Class<ResolvedGlobOptions>($I`ResolvedGlobOptions`)(
+  {
+    absolute: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    cwd: S.String.pipe(S.withConstructorDefault(Effect.succeed("."))),
+    dot: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    ignore: Pattern.pipe(S.withConstructorDefault(Effect.sync((): ReadonlyArray<string> => []))),
+    nodir: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+  },
+  $I.annote("ResolvedGlobOptions", {
+    description: "Resolved runtime flags for glob scans.",
+  })
+) {}
+
+const resolveGlobOptions = (options?: undefined | GlobOptions): ResolvedGlobOptions =>
+  ResolvedGlobOptions.make(options ?? {});
 
 /**
  * Namespace for the encoded form of {@link GlobError}.
@@ -138,8 +164,12 @@ export declare namespace GlobError {
 export class GlobError extends S.TaggedErrorClass<GlobError>($I`GlobError`)(
   "GlobError",
   {
-    pattern: Pattern,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+    pattern: Pattern.annotateKey({
+      description: "Glob pattern being evaluated when matching failed.",
+    }),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).annotateKey({
+      description: "Optional decoded defect captured from the underlying glob implementation.",
+    }),
   },
   $I.annote("GlobError", {
     description: "An error that occurs during glob pattern matching",
@@ -161,8 +191,10 @@ export class GlobError extends S.TaggedErrorClass<GlobError>($I`GlobError`)(
 
 type GlobErrorCauseInput = GlobError["cause"] | GlobError.Encoded["cause"];
 
+const decodeGlobErrorCause = S.decodeUnknownOption(S.Defect({ includeStack: true }));
+
 const normalizeGlobErrorCause = (cause: GlobErrorCauseInput): GlobError["cause"] =>
-  O.isOption(cause) ? cause : S.decodeUnknownOption(S.Defect({ includeStack: true }))(cause);
+  O.isOption(cause) ? cause : decodeGlobErrorCause(cause);
 
 /**
  * Service interface for performing glob-based file matching.
@@ -234,12 +266,7 @@ function toGlobError(pattern: Pattern): (cause: unknown) => GlobError {
   return (cause: unknown): GlobError =>
     Match.value(cause).pipe(
       Match.when(S.is(GlobError), (error) => error),
-      Match.orElse((error) =>
-        GlobError.make({
-          pattern,
-          cause: S.decodeUnknownOption(S.Defect({ includeStack: true }))(error),
-        })
-      )
+      Match.orElse((error) => GlobError.new(pattern, decodeGlobErrorCause(error)))
     );
 }
 
@@ -260,9 +287,6 @@ function toPatterns(pattern: Pattern): ReadonlyArray<string> {
     Match.orElse((patterns) => patterns)
   );
 }
-
-const toIgnorePatterns = (ignore: undefined | Pattern): ReadonlyArray<string> =>
-  ignore === undefined ? [] : toPatterns(ignore);
 
 const toDirectoryUrl = (cwd: string): URL => {
   const normalizedCwd = ensureTrailingSeparator(cwd);
@@ -374,7 +398,7 @@ const scanDirectory = (
   relativeDirectoryPath: string,
   includeMatchers: ReadonlyArray<PatternMatcher>,
   ignoreMatchers: ReadonlyArray<PatternMatcher>,
-  options: undefined | GlobOptions
+  options: ResolvedGlobOptions
 ): Effect.Effect<ReadonlyArray<NodeGlobEntry>, PlatformError.PlatformError> =>
   readdirSync(absoluteDirectoryPath, { withFileTypes: true }).pipe(
     Effect.flatMap((entries) =>
@@ -387,7 +411,7 @@ const scanDirectory = (
           const absolutePath = absolutePathPattern.test(normalizedRelativePath)
             ? normalizedRelativePath
             : fileURLToPath(new URL(normalizedRelativePath, cwdUrl));
-          const isHiddenPath = options?.dot !== true && hasDotSegment(normalizedRelativePath);
+          const isHiddenPath = !options.dot && hasDotSegment(normalizedRelativePath);
 
           if (isHiddenPath) {
             return [];
@@ -405,7 +429,7 @@ const scanDirectory = (
 
           const currentEntry: ReadonlyArray<NodeGlobEntry> =
             matchesCompiledPatterns(includeMatchers, normalizedRelativePath, isDirectory) &&
-            (isDirectory ? options?.nodir !== true : true)
+            (isDirectory ? !options.nodir : true)
               ? [{ isDirectory, relativePath: normalizedRelativePath }]
               : [];
 
@@ -430,13 +454,13 @@ const scanDirectory = (
 
 const scanWithNodeFs = Effect.fn("scanWithNodeFs")(function* (
   pattern: Pattern,
-  options: undefined | GlobOptions,
+  options: ResolvedGlobOptions,
   cwdUrl: URL,
   toAbsolute: (relativePath: string) => string
 ): Effect.fn.Return<Array<string>, PlatformError.PlatformError> {
   const patterns = toPatterns(pattern);
   const includeMatchers = compileIncludedPatterns(patterns);
-  const ignoreMatchers = compileIgnoredPatterns(toIgnorePatterns(options?.ignore));
+  const ignoreMatchers = compileIgnoredPatterns(toPatterns(options.ignore));
 
   const entriesPerRoot = yield* Effect.forEach(
     scanRootsForPatterns(patterns),
@@ -466,32 +490,31 @@ const scanWithNodeFs = Effect.fn("scanWithNodeFs")(function* (
     A.sort(Order.String)
   );
 
-  return options?.absolute === true
-    ? pipe(relativePaths, A.map(toAbsolute), (paths) => [...paths])
-    : [...relativePaths];
+  return options.absolute ? pipe(relativePaths, A.map(toAbsolute), (paths) => [...paths]) : [...relativePaths];
 });
 
-const makeGlob = (pattern: Pattern, options?: undefined | GlobOptions) => {
-  const cwdUrl = toDirectoryUrl(options?.cwd ?? ".");
+const makeGlob = Effect.fn("makeGlob")((pattern: Pattern, options?: undefined | GlobOptions) => {
+  const resolvedOptions = resolveGlobOptions(options);
+  const cwdUrl = toDirectoryUrl(resolvedOptions.cwd);
   const toAbsolute = toAbsolutePath(cwdUrl);
   const BunGlob = getBunGlobConstructor();
 
   if (BunGlob === undefined) {
-    return Effect.mapError(scanWithNodeFs(pattern, options, cwdUrl, toAbsolute), toGlobError(pattern));
+    return Effect.mapError(scanWithNodeFs(pattern, resolvedOptions, cwdUrl, toAbsolute), toGlobError(pattern));
   }
 
   return Effect.try({
     try: (): Array<string> => {
       const scanOptions: BunGlobScanRoot = {
-        dot: options?.dot ?? false,
-        onlyFiles: options?.nodir ?? false,
+        dot: resolvedOptions.dot,
+        onlyFiles: resolvedOptions.nodir,
       };
 
       if (options?.cwd !== undefined) {
-        scanOptions.cwd = options.cwd;
+        scanOptions.cwd = resolvedOptions.cwd;
       }
 
-      const ignoreGlobs = compileGlobs(BunGlob, toIgnorePatterns(options?.ignore));
+      const ignoreGlobs = compileGlobs(BunGlob, toPatterns(resolvedOptions.ignore));
       const relativePaths = pipe(
         toPatterns(pattern),
         (patterns) => compileGlobs(BunGlob, patterns),
@@ -502,13 +525,13 @@ const makeGlob = (pattern: Pattern, options?: undefined | GlobOptions) => {
         A.sort(Order.String)
       );
 
-      return options?.absolute === true
+      return resolvedOptions.absolute
         ? pipe(relativePaths, A.map(toAbsolute), (paths) => [...paths])
         : [...relativePaths];
     },
     catch: toGlobError(pattern),
   });
-};
+});
 
 /**
  * Live `Layer` providing the {@link Glob} service backed by `Bun.Glob` when

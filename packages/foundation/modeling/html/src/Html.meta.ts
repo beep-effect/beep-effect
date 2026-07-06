@@ -7,7 +7,57 @@
  * @packageDocumentation \@beep/html/Html.meta
  * @since 0.0.0
  */
+import { $HtmlId } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
+
+const $I = $HtmlId.create("Html.meta");
+
+/**
+ * Advisory content-category values emitted by the WHATWG element index.
+ *
+ * @example
+ * ```ts
+ * import { HtmlCategory } from "@beep/html/Html.meta"
+ *
+ * console.log(HtmlCategory.is("flow")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HtmlCategory = LiteralKit([
+  "embedded",
+  "flow",
+  "form-associated",
+  "heading",
+  "interactive",
+  "labelable",
+  "listed",
+  "metadata",
+  "palpable",
+  "phrasing",
+  "resettable",
+  "script-supporting",
+  "sectioning",
+  "submittable",
+]).pipe($I.annoteSchema("HtmlCategory", { description: "Advisory WHATWG content-category value." }));
+
+/**
+ * Decoded advisory content category.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlCategory } from "@beep/html/Html.meta"
+ *
+ * const category: HtmlCategory = "flow"
+ * console.log(category)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlCategory = typeof HtmlCategory.Type;
 
 /**
  * Schema describing one HTML element kind's metadata.
@@ -21,8 +71,8 @@ export const HtmlElementMeta = S.Struct({
   conformance: S.Literals(["conforming", "non-conforming"]),
   void: S.Boolean,
   rawText: S.Boolean,
-  categories: S.Array(S.String),
-}).annotate({ identifier: "HtmlElementMeta", description: "Metadata describing one HTML element kind." });
+  categories: S.Array(HtmlCategory),
+}).pipe($I.annoteSchema("HtmlElementMeta", { description: "Metadata describing one HTML element kind." }));
 
 /**
  * Decoded type of {@link HtmlElementMeta}.

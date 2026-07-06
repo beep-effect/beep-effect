@@ -2,17 +2,6 @@
   {
     "ruleId": "SFV4-static-api",
     "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
-    "line": 156,
-    "symbol": "BooleanAttribute",
-    "smell": "Union const `S.Union([S.Boolean, S.Literal(\"\")]).pipe($I.annoteSchema(...))` is reused across global attribute fields but has no colocated codec statics; any guard or soft decode would have to be rebuilt as a free-floating `S.is`/`S.decodeUnknownOption` helper.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after annotation so `BooleanAttribute.is`, `BooleanAttribute.fromUnknown`, and `BooleanAttribute.decodeOption` live on the union schema; helper verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90 and Effect APIs at .repos/effect-v4/packages/effect/src/Schema.ts:1256/1500/1718.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
     "line": 37,
     "symbol": "Dir",
     "smell": "Detector hit: annotated `LiteralKit` schema looked like a possible lost-statics site.",

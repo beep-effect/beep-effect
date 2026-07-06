@@ -5,6 +5,8 @@
  * @since 0.0.0
  */
 
+import * as S from "effect/Schema";
+
 /**
  * Registry shape consumed by identity CURIE type helpers and codecs.
  *
@@ -34,6 +36,69 @@ export type VocabShape = Readonly<
     }
   >
 >;
+
+/**
+ * Runtime schema for one vocabulary registry entry.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { VocabEntry } from "@beep/identity"
+ *
+ * const entry = VocabEntry.make({ iri: "https://example.test/ns#", terms: ["Thing"] })
+ * console.log(S.is(VocabEntry)(entry)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class VocabEntry extends S.Class<VocabEntry>("@beep/identity/Vocab/VocabEntry")(
+  {
+    iri: S.String,
+    terms: S.Array(S.String),
+  },
+  {
+    title: "Vocabulary Entry",
+    description: "One namespace IRI and term list inside an identity vocabulary registry.",
+  }
+) {}
+
+/**
+ * Runtime schema for vocabulary registries consumed by CURIE codecs.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { VocabRegistry } from "@beep/identity"
+ *
+ * const isRegistry = S.is(VocabRegistry)
+ * console.log(isRegistry({ ex: { iri: "https://example.test/ns#", terms: ["Thing"] } }))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const VocabRegistry = S.Record(S.String, VocabEntry).annotate({
+  identifier: "@beep/identity/Vocab/VocabRegistry",
+  title: "Vocabulary Registry",
+  description: "Record of namespace prefixes to identity vocabulary entries.",
+});
+
+/**
+ * Runtime type for {@link VocabRegistry}.
+ *
+ * @example
+ * ```ts
+ * import { VocabEntry, type VocabRegistry } from "@beep/identity"
+ *
+ * const registry: VocabRegistry = { ex: VocabEntry.make({ iri: "https://example.test/ns#", terms: ["Thing"] }) }
+ * console.log(registry.ex?.terms[0])
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type VocabRegistry = typeof VocabRegistry.Type;
 
 type TermOf<V extends VocabShape, Prefix extends keyof V & string> = V[Prefix]["terms"][number] & string;
 
