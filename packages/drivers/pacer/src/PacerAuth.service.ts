@@ -6,33 +6,29 @@
  * `loginResult` code, so this path does NOT use `httpapi` (whose error model is
  * status-driven). {@link PacerAuth} exposes raw `login`/`logout`; {@link
  * PacerSession} is a scoped layer that logs in on acquire, holds the token in a
- * {@link effect/Ref} (so the PCL client can read + refresh it), and logs out on
+ * {@link Ref} (so the PCL client can read + refresh it), and logs out on
  * release.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
-import { $ScratchpadId } from "@beep/identity";
-import { Context, Effect, Layer, pipe, Redacted, Ref } from "effect";
+import { $PacerId } from "@beep/identity";
+import { Context, Duration, Effect, Layer, pipe, Redacted, Ref } from "effect";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
-import { PacerAuthError } from "../Pacer.errors.ts";
-import { NextGenCsoToken } from "../Pacer.tokens.ts";
 import { CsoAuthRequest, CsoAuthResponse, CsoLogoutRequest, CsoLogoutResponse } from "./CsoAuth.models.ts";
-import type { PacerConfig } from "../Pacer.config.ts";
+import { PacerAuthError } from "./Pacer.errors.ts";
+import { pacerCauseMessage } from "./Pacer.http.ts";
+import { NextGenCsoToken } from "./Pacer.tokens.ts";
+import type { PacerConfig } from "./Pacer.config.ts";
 
-const $I = $ScratchpadId.create("pacer/auth/PacerAuth.service");
+const $I = $PacerId.create("pacer/auth/PacerAuth.service");
 
-/**
- * Runtime shape exposed by {@link PacerAuth}.
- *
- * @category services
- * @since 0.0.0
- */
-export interface PacerAuthShape {
+interface PacerAuthShape {
   /** Authenticate with the configured credentials, returning a fresh token. */
   readonly login: Effect.Effect<NextGenCsoToken, PacerAuthError>;
   /** Invalidate a token via cso-logout. */
@@ -40,63 +36,87 @@ export interface PacerAuthShape {
 }
 
 const transport = (cause: unknown): PacerAuthError =>
-  PacerAuthError.fromReason("transport", { cause: String(cause) });
+  PacerAuthError.fromReason("transport", { cause: pacerCauseMessage(cause) });
 const decoding = (cause: unknown): PacerAuthError =>
-  PacerAuthError.fromReason("response-decoding", { cause: String(cause) });
+  PacerAuthError.fromReason("response-decoding", { cause: pacerCauseMessage(cause) });
 
 /** Per-request timeout so a hung PACER auth endpoint can never block forever. */
-const REQUEST_TIMEOUT = "30 seconds";
+const REQUEST_TIMEOUT = Duration.seconds(30);
+
+const executeAuthRequest = <A, E>(
+  client: HttpClient.HttpClient,
+  request: HttpClientRequest.HttpClientRequest,
+  decode: (response: HttpClientResponse.HttpClientResponse) => Effect.Effect<A, E>
+): Effect.Effect<A, PacerAuthError> =>
+  client.execute(request).pipe(
+    Effect.timeout(REQUEST_TIMEOUT),
+    Effect.mapError(transport),
+    Effect.flatMap((response) => decode(response).pipe(Effect.mapError(decoding)))
+  );
+
+const logAuthWarning = (operation: "login" | "logout", description: O.Option<string>): Effect.Effect<void> =>
+  pipe(
+    description,
+    O.filter(Str.isNonEmpty),
+    O.match({
+      onNone: () => Effect.void,
+      onSome: (message) => Effect.logWarning(`PACER ${operation} succeeded with a warning: ${message}`),
+    })
+  );
 
 const makeService = (client: HttpClient.HttpClient, cfg: PacerConfig): PacerAuthShape => {
   const login: Effect.Effect<NextGenCsoToken, PacerAuthError> = Effect.gen(function* () {
     const requestBody = CsoAuthRequest.make({
       loginId: Redacted.value(cfg.loginId),
       password: Redacted.value(cfg.password),
-	    clientCode: cfg.clientCode,
-	    otpCode: O.map(cfg.otpCode, Redacted.value),
-	    // Filers (e-filing accounts) must attest redaction compliance; PACER returns
-	    // loginResult "1" if a filer omits it. Search-only accounts leave it off.
-	    redactFlag: O.flatMap(cfg.isFiler, (isFiler) => isFiler ? O.some("1") : O.none<string>()),
+      clientCode: cfg.clientCode,
+      otpCode: O.map(cfg.otpCode, Redacted.value),
+      // Filers (e-filing accounts) must attest redaction compliance; PACER returns
+      // loginResult "1" if a filer omits it. Search-only accounts leave it off.
+      redactFlag: O.flatMap(cfg.isFiler, (isFiler) => (isFiler ? O.some("1") : O.none<string>())),
     });
     const baseRequest = HttpClientRequest.post(`${cfg.authBaseUrl}/services/cso-auth`).pipe(
       HttpClientRequest.accept("application/json")
     );
     const request = yield* HttpClientRequest.bodyJson(baseRequest, requestBody).pipe(Effect.mapError(transport));
-    const response = yield* client.execute(request).pipe(Effect.timeout(REQUEST_TIMEOUT), Effect.mapError(transport));
-    const body = yield* HttpClientResponse.schemaBodyJson(CsoAuthResponse)(response).pipe(Effect.mapError(decoding));
+    const body = yield* executeAuthRequest(client, request, HttpClientResponse.schemaBodyJson(CsoAuthResponse));
 
     if (body.loginResult !== "0" || body.nextGenCSO === "") {
       return yield* PacerAuthError.fromLoginResult(body.loginResult, body.errorDescription.pipe(O.getOrUndefined));
     }
     // loginResult "0" can still carry a non-fatal search-privilege warning.
-    yield* pipe(
-      body.errorDescription,
-      O.filter((description) => description.length > 0),
-      O.match({
-        onNone: () => Effect.void,
-        onSome: (description) => Effect.logWarning(`PACER login succeeded with a warning: ${description}`),
-      })
-    );
+    yield* logAuthWarning("login", body.errorDescription);
     return NextGenCsoToken.make(body.nextGenCSO);
   });
 
-  const logout = (token: NextGenCsoToken): Effect.Effect<void, PacerAuthError> =>
-    Effect.gen(function* () {
-      const baseRequest = HttpClientRequest.post(`${cfg.authBaseUrl}/services/cso-logout`).pipe(
-        HttpClientRequest.accept("application/json")
-      );
-      const request = yield* HttpClientRequest.bodyJson(baseRequest, CsoLogoutRequest.make({ nextGenCSO: token })).pipe(
-        Effect.mapError(transport)
-      );
-      const response = yield* client.execute(request).pipe(Effect.timeout(REQUEST_TIMEOUT), Effect.mapError(transport));
-      yield* HttpClientResponse.schemaBodyJson(CsoLogoutResponse)(response).pipe(Effect.mapError(decoding));
-    });
+  const logout: PacerAuthShape["logout"] = Effect.fnUntraced(function* (token: NextGenCsoToken) {
+    const baseRequest = HttpClientRequest.post(`${cfg.authBaseUrl}/services/cso-logout`).pipe(
+      HttpClientRequest.accept("application/json")
+    );
+    const request = yield* HttpClientRequest.bodyJson(baseRequest, CsoLogoutRequest.make({ nextGenCSO: token })).pipe(
+      Effect.mapError(transport)
+    );
+    const body = yield* executeAuthRequest(client, request, HttpClientResponse.schemaBodyJson(CsoLogoutResponse));
+    const loginResult = O.getOrElse(body.loginResult, () => "0");
+    if (loginResult !== "0") {
+      return yield* PacerAuthError.fromLoginResult(loginResult, body.errorDescription.pipe(O.getOrUndefined));
+    }
+    yield* logAuthWarning("logout", body.errorDescription);
+  });
 
   return { login, logout };
 };
 
 /**
  * PACER Authentication service: raw `login` / `logout` over an HTTP client.
+ *
+ * @example
+ * ```ts
+ * import { makePacerLayer, makePacerMockHttpClient, mockPacerConfig } from "@beep/pacer"
+ *
+ * const layers = makePacerLayer(mockPacerConfig(), makePacerMockHttpClient())
+ * console.log(Boolean(layers.auth))
+ * ```
  *
  * @category services
  * @since 0.0.0
@@ -118,20 +138,22 @@ export class PacerAuth extends Context.Service<PacerAuth, PacerAuthShape>()($I`P
     );
 }
 
-/**
- * Runtime shape exposed by {@link PacerSession}.
- *
- * @category services
- * @since 0.0.0
- */
-export interface PacerSessionShape {
+interface PacerSessionShape {
   /** The current auth token, refreshable by the PCL client on token rotation. */
   readonly tokenRef: Ref.Ref<Redacted.Redacted<NextGenCsoToken>>;
 }
 
 /**
  * A scoped authenticated session: logs in on layer acquire, exposes the token
- * via a {@link effect/Ref}, and logs out on layer release.
+ * via a {@link Ref}, and logs out on layer release.
+ *
+ * @example
+ * ```ts
+ * import { makePacerLayer, makePacerMockHttpClient, mockPacerConfig } from "@beep/pacer"
+ *
+ * const layers = makePacerLayer(mockPacerConfig(), makePacerMockHttpClient())
+ * console.log(Boolean(layers.session))
+ * ```
  *
  * @category services
  * @since 0.0.0
@@ -151,8 +173,11 @@ export class PacerSession extends Context.Service<PacerSession, PacerSessionShap
       yield* Effect.logInfo("PacerSession: authenticated (nextGenCSO acquired)");
       const tokenRef = yield* Ref.make(Redacted.make(token));
       yield* Effect.addFinalizer(() =>
-        auth.logout(token).pipe(
+        Ref.get(tokenRef).pipe(
+          Effect.map(Redacted.value),
+          Effect.flatMap(auth.logout),
           Effect.tap(() => Effect.logInfo("PacerSession: logged out (cso-logout)")),
+          Effect.tapError((error) => Effect.logWarning(`PacerSession: cso-logout failed: ${error.reason}`)),
           Effect.ignore
         )
       );

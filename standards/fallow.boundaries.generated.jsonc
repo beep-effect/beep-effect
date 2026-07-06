@@ -1633,10 +1633,16 @@
       {
         "from": "@beep/pacer",
         "allow": [
-          "@beep/pacer"
+          "@beep/identity",
+          "@beep/pacer",
+          "@beep/schema",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
-          "@beep/pacer"
+          "@beep/identity",
+          "@beep/pacer",
+          "@beep/schema",
+          "@beep/utils"
         ]
       },
       {
