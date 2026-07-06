@@ -974,6 +974,46 @@ it needs, with a package README promotion record, generated identity composer,
 workspace registration, tsconfig reference, and boundary provenance in the same
 change.
 
+## 2026-07-05: Repo Crispening — Family-Scoped Waves, Per-Owner Lint Ratchet, And The `getSomesStruct` Amendment
+
+- **Status:** Accepted
+
+Decision:
+
+1. Family-scoped remediation waves (foundation → drivers → tooling →
+   apps/slices) run under `goals/repo-crispening-orchestration` are sanctioned
+   as a bounded exception to the cleanup-on-touch migration-bucket rule
+   (`standards/architecture/README.md:48-52`): each wave is touch-scoped to one
+   family, gated by `bun run beep yeet verify`, and ships as small per-package
+   PRs. This is not a general license for family-wide sweeps outside that
+   packet.
+2. A per-owner blocking policy at `standards/schema-crispening.policy.jsonc`
+   governs the four novel schema-first lint cards (`SFV4-fn-schema`,
+   `SFV4-normalization`, `SFV4-null-return`, `SFV4-getsomes-struct`). Findings
+   for those cards in families/owners marked non-blocking are exempt from
+   `schemaFirstLintHasFailures`; a family flips to blocking only after its
+   remediation wave is yeet-verify-green. This is the durable anti-regression
+   ratchet.
+3. Effect-first Laws 20 and 47 (and their mirrors in
+   `standards/effect-first-development.md` and the schema-first skill) are
+   amended: prefer `O.getSomesStruct` (`@beep/utils`) for heterogeneous
+   Option-struct spreads; `R.getSomes` stays for homogeneous dynamic-key
+   dictionaries. The repo-wide `R.getSomes` → `O.getSomesStruct` sweep may only
+   run after this entry and the law amendment are merged to `main`.
+
+Rationale:
+
+These decisions were locked in
+`goals/repo-crispening-orchestration/research/decisions-locked.md` (D1–D5,
+G1–G7) after a grounded grill and are not to be reopened during packet
+execution. `O.getSomesStruct` is literally `cast(R.getSomes(self))`
+(`packages/foundation/modeling/utils/src/Option.ts:102`) — runtime behavior is
+unchanged and the change is purely type-level, so amending the doctrine ahead
+of any mechanical sweep costs nothing and prevents a repo-wide codemod from
+running against stale guidance. The per-owner ratchet converts a one-time
+cleanup into a permanent property: once a family is green, new PRs in that
+family cannot reintroduce the smells the wave just removed.
+
 ## Known Unknowns
 
 Areas the doctrine does not yet cover and which the authors expect to revise as the architecture is load-tested:

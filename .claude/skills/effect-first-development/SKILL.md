@@ -31,7 +31,7 @@ Before writing code, run this checklist:
 12. Is this a zero-arg effect value rather than a reusable function? Prefer `Effect.gen(...).pipe(Effect.withSpan("Name"))` over immediate `Effect.fn` IIFEs.
 13. Is this effect observable? Add spans and structured logs from the start; add metrics where the path is materially important.
 14. Am I expressing durations/time windows? Use `effect/Duration`.
-15. Am I mapping nullable/nullish schema values to `Option` or building objects from `Option` fields? Use `S.OptionFrom*` at schema boundaries, `R.getSomes({...})` when `None` should omit keys, and `O.all({...})` when the whole object is all-or-nothing.
+15. Am I mapping nullable/nullish schema values to `Option` or building objects from `Option` fields? Use `S.OptionFrom*` at schema boundaries, `O.getSomesStruct({...})` (`@beep/utils`) for heterogeneous Option-struct spreads with known keys, `R.getSomes({...})` only for homogeneous dynamic-key dictionaries, and `O.all({...})` when the whole object is all-or-nothing. (Amended 2026-07-05 — see `standards/architecture/DECISIONS.md`.)
 16. Am I creating an exported helper API? Prefer dual data-first/data-last with `dual`.
 17. Am I parsing/stringifying JSON? Use schema JSON codecs with Effect variants by default, never `JSON.parse` / `JSON.stringify`; this applies to tests and fixtures too.
 18. Am I decoding or encoding with Schema? Prefer `S.decodeUnknownEffect` / `S.decodeEffect` and `S.encodeUnknownEffect` / `S.encodeEffect`; map schema errors with `Effect.mapError(...)` when they cross a local boundary. Use Result/Option codecs only for intentional non-throwing sync helpers; if a legacy sync wrapper must throw, map the Result failure with `Result.getOrThrowWith(...)` instead of throwing the raw schema issue.
@@ -96,7 +96,7 @@ Before writing code, run this checklist:
 17. Reusable functions returning `Effect` should use named `Effect.fn("Namespace.name")` (or `Effect.fnUntraced` for hot/internal paths). Zero-arg effect values may stay `Effect.gen(...).pipe(Effect.withSpan("Name"))` when there is no exported/reused function to expose.
 18. Effect workflows should be observable with spans and structured logs from the start; add metrics (`effect/Metric` + `Effect.track*`) where the path is important enough to measure.
 19. Durations and time windows should use `effect/Duration`, not ad-hoc number literals.
-20. For nullable/nullish/optional schema-to-`Option` conversions, use `S.OptionFromNullOr`, `S.OptionFromNullishOr`, `S.OptionFromOptionalKey`, or `S.OptionFromOptional`. For runtime `Option` object fields, use `R.getSomes({...})` when `None` should omit keys and `O.all({...})` when the whole object is all-or-nothing.
+20. For nullable/nullish/optional schema-to-`Option` conversions, use `S.OptionFromNullOr`, `S.OptionFromNullishOr`, `S.OptionFromOptionalKey`, or `S.OptionFromOptional`. For runtime `Option` object fields, prefer `O.getSomesStruct({...})` (`@beep/utils`) for heterogeneous struct spreads with known keys — it is runtime-identical to `R.getSomes` but preserves literal keys and per-key value types; reserve `R.getSomes({...})` for homogeneous dynamic-key dictionaries. Use `O.all({...})` when the whole object is all-or-nothing. (Amended 2026-07-05 — see `standards/architecture/DECISIONS.md`.)
 21. Exported helper utilities should expose dual data-first/data-last forms via `dual` from `effect/Function`.
 22. Never use `JSON.parse` / `JSON.stringify` in Effect-first code, tests, or fixtures; use `S.UnknownFromJsonString` / `S.fromJsonString` + `S.decodeUnknownEffect` / `S.encodeUnknownEffect` or explicit Result/Option codecs for non-throwing sync helpers.
 23. Do not use `S.decodeSync`, `S.decodeUnknownSync`, `S.encodeSync`, or `S.encodeUnknownSync` by default. Prefer Effect codecs, and map schema errors with `Effect.mapError(...)` before returning them across module, service, CLI, HTTP, or test-helper boundaries. If a legacy sync API must remain throwing, use Result codecs plus `Result.getOrThrowWith(...)` to preserve an `Error` or typed boundary error.
@@ -123,7 +123,7 @@ Before writing code, run this checklist:
 44. Never use native `Array.prototype.sort`; use `A.sort(values, order)` with explicit `Order` instances.
 45. Avoid ad-hoc `String(...)` coercion in domain logic; model unknown-to-string normalization with schema transformations and compare via schema equivalence.
 46. When branching on boolean values, prefer the flattest equivalent form first; use `Bool.match` when both branches do real work or when it is materially clearer than direct boolean selection.
-47. Before keeping `O.match(...)`, check whether `O.map(...)`, `O.flatMap(...)`, `O.liftPredicate(...)`, and `O.getOrElse(...)` express the same control flow more flatly. Avoid `onNone: () => ({})` object compaction; use `O.map(...)` plus `O.getOrElse(() => ({}))`, `R.getSomes({...})`, or `S.OptionFrom*` according to boundary semantics.
+47. Before keeping `O.match(...)`, check whether `O.map(...)`, `O.flatMap(...)`, `O.liftPredicate(...)`, and `O.getOrElse(...)` express the same control flow more flatly. Avoid `onNone: () => ({})` object compaction; use `O.map(...)` plus `O.getOrElse(() => ({}))`, `O.getSomesStruct({...})` for heterogeneous struct spreads (`R.getSomes({...})` only for homogeneous dynamic-key dictionaries), or `S.OptionFrom*` according to boundary semantics. (Amended 2026-07-05 — see `standards/architecture/DECISIONS.md`.)
 48. In callback-only contexts where `yield*` is unavailable (for example `SchemaTransformation.transform*`), consume services with `Context.Service.use(...)`.
 49. Do not import `node:path` in production/tooling source. Use `Path.Path` service (`yield* Path.Path`) for `join`, `resolve`, `relative`, `basename`, etc.
 50. Do not use native `fetch` in production/tooling source. Use `HttpClient` from `effect/unstable/http` and provide platform client layers (Bun: `BunHttpClient.layer`).
@@ -568,7 +568,7 @@ export class ProfileInput extends S.Class<ProfileInput>($I`ProfileInput`)({
 }) {}
 ```
 
-For runtime `Option` object fields, use `R.getSomes({...})` when `None` should omit keys and `O.all({...})` when the whole object should exist only if every field is `Some`. When a single `Option` becomes an object, prefer `O.map(...)` plus `O.getOrElse(() => ({}))` over `O.match(...)` with `onNone: () => ({})`.
+For runtime `Option` object fields, prefer `O.getSomesStruct({...})` (`@beep/utils`) for heterogeneous struct spreads with known keys — runtime-identical to `R.getSomes` but type-preserving per key — and reserve `R.getSomes({...})` for homogeneous dynamic-key dictionaries; use `O.all({...})` when the whole object should exist only if every field is `Some`. When a single `Option` becomes an object, prefer `O.map(...)` plus `O.getOrElse(() => ({}))` over `O.match(...)` with `onNone: () => ({})`. (Amended 2026-07-05 — see `standards/architecture/DECISIONS.md`.)
 
 ### 13) Dual helper APIs
 
