@@ -20,7 +20,7 @@ The fast triage questions:
 
 1. Can it fail? Typed tagged error in `Effect`. Can it be missing? `Option`.
 2. Is input external? Decode with `Schema` at the boundary; schema is the source of truth for data shapes.
-3. Touching arrays/objects/strings/booleans or branching on shape? Effect modules (`A`/`R`/`Str`/`Bool`), `Predicate`, `Match`, `A.match` — never native helpers or `switch`.
+3. Touching arrays/objects/strings/booleans or branching on shape? Effect modules (`A`/`R`/`Str`/`Bool`), `Predicate`, `Match`, `A.match` — never native helpers or `switch`. Prefer the flattest equivalent form first. Before I keep an `O.match(...)`, can `O.map`/`O.flatMap`/`O.liftPredicate`/`O.getOrElse` express it more flatly?
 4. Defining services, schemas, unions, or Effect-returning functions? Identity composer + `Context.Service`/`Layer`, `S.Class`, `LiteralKit`/`S.toTaggedUnion`, named `Effect.fn`.
 5. At a runtime boundary? `Effect.run*` only at entrypoints/tests, `runMain` owns process exit, `Effect.tryPromise` for promises, `Effect.scoped`/`acquireUseRelease` for resources.
 6. Resilience/observability? `Effect.retry` + `Schedule`, `timeoutOption`/`timeoutOrElse`, explicit concurrency, spans + structured logs from the start, `Config`/`Redacted` for env + secrets.
