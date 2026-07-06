@@ -910,7 +910,14 @@ const commitVault = Effect.fn("Research.commitVault")(function* (
         const handle = yield* ChildProcess.make("git", [...args], { cwd: vaultRoot, stderr: "pipe", stdout: "pipe" });
         return yield* handle.exitCode;
       })
-    ).pipe(ResearchCommandError.mapError(`Failed running git ${A.join(args, " ")} in the vault.`));
+    ).pipe(
+      ResearchCommandError.mapError(`Failed running git ${A.join(args, " ")} in the vault.`),
+      Effect.filterOrFail(
+        (exitCode) => exitCode === 0,
+        (exitCode) =>
+          ResearchCommandError.make({ message: `git ${A.join(args, " ")} exited with ${exitCode} in the vault.` })
+      )
+    );
   yield* run(["add", "-A"]);
   const status = yield* Effect.scoped(
     Effect.gen(function* () {

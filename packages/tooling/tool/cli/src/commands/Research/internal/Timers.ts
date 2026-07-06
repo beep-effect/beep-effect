@@ -123,6 +123,13 @@ export const installResearchTimers = Effect.fn("ResearchTimers.installResearchTi
     return;
   }
 
+  // Systemd splits ExecStart on whitespace with no shell quoting, so the page
+  // id must be a single safe token before it is rendered into the unit.
+  if (O.isSome(notionPage) && !/^[A-Za-z0-9-]+$/.test(notionPage.value)) {
+    return yield* ResearchCommandError.make({
+      message: `--page must be a bare Notion page id ([A-Za-z0-9-]); received "${notionPage.value}".`,
+    });
+  }
   const dailyArgs = O.match(notionPage, {
     onNone: () => "research daily --commit",
     onSome: (page) => `research daily --commit --page ${page}`,

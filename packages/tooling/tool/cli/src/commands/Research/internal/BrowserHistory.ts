@@ -138,6 +138,8 @@ export const readProfileHistory = Effect.fn("BrowserHistory.readProfileHistory")
     .copyFile(profile.historyPath, copyPath)
     .pipe(ResearchCommandError.mapError(`Failed copying locked history database "${profile.historyPath}".`));
 
+  // sqlite_scan requires a literal string argument, so the path cannot be a
+  // bound parameter; it is a locally-derived temp path with quotes escaped.
   const escapedPath = copyPath.replaceAll("'", "''");
   const statement = `SELECT
       url AS "url",

@@ -146,6 +146,7 @@ export const cogneeAdd = Effect.fn("CogneeClient.cogneeAdd")(function* (
     const text = yield* response.text.pipe(Effect.orElseSucceed(() => ""));
     return yield* failStatus(`add (dataset "${datasetName}")`, response.status, text);
   }
+  yield* response.text.pipe(Effect.ignore);
 });
 
 /**
@@ -169,6 +170,7 @@ export const cogneeCognify = Effect.fn("CogneeClient.cogneeCognify")(function* (
     const text = yield* response.text.pipe(Effect.orElseSucceed(() => ""));
     return yield* failStatus("cognify", response.status, text);
   }
+  yield* response.text.pipe(Effect.ignore);
 });
 
 /**
