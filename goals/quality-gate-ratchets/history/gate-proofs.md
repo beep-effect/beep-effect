@@ -45,3 +45,16 @@ Follow-up: isolate mutating steps (tests, docgen) from tree-scanning steps
 (schema-first, deprecated-apis) in the grouped-concurrency plan — the
 greptile P2 on Tasks.ts concurrency called this. Shipping via the
 documented fast-plus-monitor path with hosted checks as proof.
+
+## A5 ruleset — live, refusal proven (2026-07-06)
+
+Ruleset 10240248 activated post-merge: `~DEFAULT_BRANCH`, pull_request rule,
+17 required status checks (verify matrix + all four new gates + security
+lanes), deletion/non-FF kept, `bypass_actors: []`
+(`current_user_can_bypass: "never"`; emergency hatch = disable the ruleset
+via `gh api`, auditable). Direct-push probe:
+
+```text
+! [remote rejected] main -> main (push declined due to repository rule violations)
+remote: - 17 of 17 required status checks are expected.
+```
