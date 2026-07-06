@@ -620,13 +620,21 @@ const makeBoundaryParams = (options: BoundaryParamsInput): BoundaryParams =>
     })
   );
 
+const isPositiveFiniteStep = S.is(PositiveFiniteStep);
+
 const makeSpinParams = (options: SpinParamsInput): SpinParams =>
   SpinParams.make(
     O.getSomesStruct({
       precision: O.fromUndefinedOr(options.precision),
-      step: O.fromUndefinedOr(options.step),
+      step: pipe(O.fromUndefinedOr(options.step), O.filter(isPositiveFiniteStep)),
     })
   );
+
+// `step: 0` (or any non-positive/non-finite step) historically meant "spinning
+// is a no-op". The branded SpinParams cannot carry that state, so the hooks
+// collapse the effective step to 0 whenever the caller provided such a step.
+const effectiveStep = (provided: number | undefined, params: SpinParams): number =>
+  provided !== undefined && !isPositiveFiniteStep(provided) ? 0 : params.step;
 
 /**
  * Low-level hook that manages string and numeric boundary state for a number input.
@@ -660,7 +668,8 @@ export const useNumberBoundary = (options: UseNumberInputOptions = {}, scope?: s
   const spinParams = makeSpinParams(options);
   const { defaultValue, value, keepWithinRange = true, formatter = identity, parser = identity } = options;
   const { min, max } = boundaryParams;
-  const { precision, step } = spinParams;
+  const { precision } = spinParams;
+  const step = effectiveStep(options.step, spinParams);
 
   const interfaceValueAtom = numberBoundaryInterfaceValueAtom(boundaryScope);
   const [storedInterfaceValue, setInterfaceValueState] = useAtom(interfaceValueAtom);
@@ -676,9 +685,10 @@ export const useNumberBoundary = (options: UseNumberInputOptions = {}, scope?: s
 
   const change = (multiplier = 1, params: SpinParamsInput = {}) =>
     setInterfaceValueState((current) => {
+      const requestedStep = params.step ?? step;
       const currentSpinParams = makeSpinParams({
         precision: params.precision ?? precision,
-        step: params.step ?? step,
+        step: requestedStep,
       });
       const result =
         pipe(
@@ -687,7 +697,7 @@ export const useNumberBoundary = (options: UseNumberInputOptions = {}, scope?: s
           toNumber,
           O.getOrElse(() => 0)
         ) +
-        multiplier * currentSpinParams.step;
+        multiplier * effectiveStep(requestedStep, currentSpinParams);
       const digits = currentSpinParams.precision;
 
       if (keepWithinRange) {
@@ -750,7 +760,8 @@ export const useNumberInput = (options: UseNumberInputOptions = {}) => {
     onChange,
   } = options;
   const { min, max } = boundaryParams;
-  const { step, precision } = spinParams;
+  const { precision } = spinParams;
+  const step = effectiveStep(options.step, spinParams);
 
   const { interfaceValueAtom, interfaceValue, setInterfaceValue, numberValue, increment, decrement } =
     useNumberBoundary(options, scope);
