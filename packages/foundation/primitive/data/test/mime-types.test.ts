@@ -27,6 +27,12 @@ describe("mimeTypes", () => {
     const json = mimeTypes["application/json"];
     expect(json.source).toBe("iana");
     expect(json.extensions).toContain("json");
+
+    for (const type of Struct.keys(mimeTypes)) {
+      const mime = mimeTypes[type];
+      expect(["iana", "apache", "nginx"]).toContain(mime.source);
+      expect(A.length(mime.extensions)).toBeGreaterThan(0);
+    }
   });
 });
 

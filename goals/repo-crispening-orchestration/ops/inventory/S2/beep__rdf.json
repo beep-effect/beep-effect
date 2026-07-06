@@ -1,27 +1,5 @@
 [
   {
-    "ruleId": "SFV4-normalization",
-    "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
-    "line": 329,
-    "symbol": "LanguageTag",
-    "smell": "`LanguageTag` only validates the BCP-47-ish pattern, while `serializeTerm` lowercases `value.language.value` at line 1112; language-tag canonicalization lives in serialization instead of the schema.",
-    "proposedTarget": "Move lowercase canonicalization into `LanguageTag`, e.g. via `S.decode(SchemaTransformation.toLowerCase())` before the brand/check, so `serializeTerm` can emit the already-normalized value. The v4 transformation API is verified in `.repos/effect-v4/packages/effect/src/SchemaTransformation.ts` and the local exemplar is `packages/foundation/modeling/schema/src/internal/email.ts:36-38`.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
-    "line": 465,
-    "symbol": "Literal",
-    "smell": "`language: S.OptionFromOptionalKey(LanguageTag)` models absence as Option but lacks `SchemaUtils.withNoneDefault`; `makeLiteralInternal` then has to build an object spread with `O.fromUndefinedOr(language)` at line 931.",
-    "proposedTarget": "`language: S.OptionFromOptionalKey(LanguageTag).pipe(SchemaUtils.withNoneDefault)` and simplify `makeLiteralInternal` to omit the language key when absent. Verified target shape: `packages/foundation/modeling/schema/test/SchemaUtils.test.ts:123` and `packages/foundation/modeling/lexical/src/Lexical.model.ts:687-688`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 2
-  },
-  {
     "ruleId": "SFV4-defaults",
     "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
     "line": 915,
@@ -30,7 +8,11 @@
     "proposedTarget": "Use `language: S.OptionFromOptional(S.String).pipe(SchemaUtils.withNoneDefault)` (or accept `LanguageTag` directly if the options class should validate the tag), then let the literal schema own absence. `S.OptionFromOptional` is verified in `.repos/effect-v4/packages/effect/src/Schema.ts:8698`.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Changing the helper options field from optional string to Option/LanguageTag would alter the exported makeLiteral overload/options surface used outside @beep/rdf. Literal.language now owns decoding, normalization, and constructor absence; the public options ripple is deferred to the family-close sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -41,40 +23,11 @@
     "proposedTarget": "`graph: GraphTerm.pipe(SchemaUtils.withKeyDefaults(makeDefaultGraph()))` on `MakeQuadOptions`, then `makeQuad` consumes `options.graph` directly. `SchemaUtils.withKeyDefaults` is verified at `packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:50-66`.",
     "confidence": 0.82,
     "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-    "line": 210,
-    "symbol": "SemanticSchemaSpecification",
-    "smell": "`version`, `section`, `url`, and `localRef` are `S.OptionFromOptionalKey(...)` fields without `SchemaUtils.withNoneDefault`.",
-    "proposedTarget": "Pipe each Option field through `SchemaUtils.withNoneDefault` and import `SchemaUtils` from `@beep/schema`; same constructor-default pattern as `SchemaUtils.test.ts:123`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-    "line": 242,
-    "symbol": "SemanticRepresentation",
-    "smell": "`note: S.OptionFromOptionalKey(S.NonEmptyString)` lacks a constructor `None` default.",
-    "proposedTarget": "`note: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault)`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 6
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
-    "line": 279,
-    "symbol": "SemanticSchemaMetadata",
-    "smell": "The metadata payload has ten `S.OptionFromOptionalKey(...)` fields (`canonicalIri`, `preferredPrefix`, `aliases`, `representations`, `implementationNotes`, `nonGoals`, etc.) without `SchemaUtils.withNoneDefault`.",
-    "proposedTarget": "Apply `SchemaUtils.withNoneDefault` to each Option field. This preserves the decoded Option type while making `makeSemanticSchemaMetadata` construction omit absent annotation metadata cleanly.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 7
+    "roiRank": 4,
+    "exception": {
+      "reason": "Moving the default graph into the exported options schema changes the public makeQuad options/overload surface used outside @beep/rdf. The current helper preserves existing call shapes; the public-form cleanup needs the family-close consumer sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-null-return",
@@ -85,84 +38,11 @@
     "proposedTarget": "Return `O.Option<SemanticSchemaMetadataAnnotationPayload>` from the exported helper and have the recursive walker compose Options; unwrap only at external callers that truly need `undefined`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 8
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/rdf/src/Evidence.ts",
-    "line": 78,
-    "symbol": "TextQuoteSelector",
-    "smell": "`TextQuoteSelector.prefix/suffix`, `FragmentSelector.conformsTo`, and `EvidenceAnchor.note` are OptionFromOptionalKey fields without constructor `None` defaults.",
-    "proposedTarget": "Add `SchemaUtils.withNoneDefault` to those Option fields. The target shape is verified by `SchemaUtils.test.ts:123-140`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 9
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/rdf/src/Adapters/WebAnnotation.ts",
-    "line": 62,
-    "symbol": "WebAnnotationTextQuoteSelector",
-    "smell": "Web Annotation DTO fields `prefix`, `suffix`, `conformsTo`, and `bodyValue` are `S.OptionFromOptionalKey(...)` but lack `SchemaUtils.withNoneDefault`.",
-    "proposedTarget": "Pipe each DTO Option field through `SchemaUtils.withNoneDefault`; encoded optional keys stay unchanged while constructors can omit absent DTO fields.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 10
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/rdf/src/JsonLd.ts",
-    "line": 106,
-    "symbol": "JsonLdTermDefinition",
-    "smell": "`JsonLdTermDefinition.@type`, `JsonLdContext.@base`, and `JsonLdContext.@vocab` are OptionFromOptionalKey fields without `withNoneDefault`.",
-    "proposedTarget": "Add `SchemaUtils.withNoneDefault` to the JSON-LD context-level Option fields. This follows the existing local Option schema pattern and only supplies constructor defaults.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 11
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/rdf/src/JsonLd.ts",
-    "line": 397,
-    "symbol": "JsonLdNodeObject",
-    "smell": "`JsonLdNodeObject.@id/@type`, `JsonLdDocument.@context`, and `JsonLdFrame.@type/includeProperties` are OptionFromOptionalKey fields without constructor defaults.",
-    "proposedTarget": "Apply `SchemaUtils.withNoneDefault` to each Option field; for optional arrays like `@type` and `includeProperties`, keep Option if unknown-vs-empty matters, or deliberately switch to `SchemaUtils.withEmptyArrayDefaults` if missing means empty.",
-    "confidence": 0.88,
-    "mechanization": "assisted",
-    "roiRank": 12
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/rdf/src/Prov.ts",
-    "line": 220,
-    "symbol": "LifecycleTimes",
-    "smell": "All seven lifecycle timestamp fields are `S.OptionFromOptionalKey(ProvDateTime)` without `SchemaUtils.withNoneDefault`.",
-    "proposedTarget": "Pipe each lifecycle timestamp field through `SchemaUtils.withNoneDefault` and import `SchemaUtils` from `@beep/schema`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 13
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/rdf/src/Prov.ts",
-    "line": 265,
-    "symbol": "Entity",
-    "smell": "PROV entity/activity/agent/association/etc. records use many `S.OptionFromOptionalKey(...)` fields and optional arrays without constructor `None` defaults.",
-    "proposedTarget": "Codemod all `S.OptionFromOptionalKey(...)` fields in `Prov.ts` to pipe through `SchemaUtils.withNoneDefault`. Optional arrays should remain Option arrays unless the PROV model decides missing means empty, in which case use `SchemaUtils.withEmptyArrayDefaults` explicitly.",
-    "confidence": 0.88,
-    "mechanization": "assisted",
-    "roiRank": 14
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/rdf/src/Prov.ts",
-    "line": 991,
-    "symbol": "ProvBundle",
-    "smell": "`lifecycle: S.OptionFromOptionalKey(LifecycleTimes)` lacks `SchemaUtils.withNoneDefault`.",
-    "proposedTarget": "`lifecycle: S.OptionFromOptionalKey(LifecycleTimes).pipe(SchemaUtils.withNoneDefault)`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 15
+    "roiRank": 8,
+    "exception": {
+      "reason": "The exported AST-introspection helper has outside consumers that expect undefined for absent annotations. Returning Option would require coordinated cross-package call-site updates, so this is deferred to the family-close sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",

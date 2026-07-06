@@ -38,6 +38,24 @@ import type { JSX } from "react";
 export type SerializedArtifactRefNode = ArtifactRefNodeSchema.Encoded;
 
 /**
+ * Schema-derived creation input for {@link $createArtifactRefNode}. It is the
+ * construction subset of the serialized artifact-ref wire shape used by runtime
+ * Lexical node construction.
+ *
+ * @example
+ * ```ts
+ * import type { ArtifactRefNodeCreateInput } from "@beep/editor/artifact-ref-node"
+ *
+ * const input: ArtifactRefNodeCreateInput = { artifactId: "artifact-123", label: "Quarterly report" }
+ * console.log(input.artifactId) // "artifact-123"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ArtifactRefNodeCreateInput = Pick<SerializedArtifactRefNode, "artifactId" | "label">;
+
+/**
  * Block-level decorator node referencing a runtime artifact.
  *
  * @example
@@ -131,7 +149,7 @@ export class ArtifactRefNode extends DecoratorNode<JSX.Element> {
  * @category constructors
  * @since 0.0.0
  */
-export const $createArtifactRefNode = (props: { readonly artifactId: string; readonly label?: string }) =>
+export const $createArtifactRefNode = (props: ArtifactRefNodeCreateInput) =>
   new ArtifactRefNode(props.artifactId, props.label);
 
 /**

@@ -12,8 +12,9 @@ import { A, Str } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { keccak_256 } from "@noble/hashes/sha3.js";
 import { base58, bech32, bech32m } from "@scure/base";
-import { Encoding, flow, pipe, Redacted, Result } from "effect";
+import { Encoding, flow, Redacted, Result } from "effect";
 import * as Eq from "effect/Equal";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
@@ -38,10 +39,13 @@ const equalBytes = (left: Uint8Array, right: Uint8Array): boolean => {
   return true;
 };
 
-const decodeCanonicalBase58 = (input: string): Uint8Array | null =>
-  pipe(
+const decodeCanonicalBase58 = (input: string): O.Option<Uint8Array> =>
+  Result.match(
     Result.try(() => base58.decode(input)),
-    Result.getOrNull
+    {
+      onFailure: () => O.none(),
+      onSuccess: (decoded) => (base58.encode(decoded) === input ? O.some(decoded) : O.none()),
+    }
   );
 
 const isCanonicalEvmCryptoWalletAddress = (input: string): boolean => {
@@ -81,18 +85,19 @@ const isCanonicalEvmCryptoWalletAddress = (input: string): boolean => {
 const isCanonicalBitcoinBase58CryptoWalletAddress = (input: string): boolean => {
   const decoded = decodeCanonicalBase58(input);
 
-  if (P.isNull(decoded) || decoded.length !== 25) {
+  if (O.isNone(decoded) || decoded.value.length !== 25) {
     return false;
   }
 
-  const version = decoded[0];
+  const bytes = decoded.value;
+  const version = bytes[0];
 
   if (version !== 0x00 && version !== 0x05) {
     return false;
   }
 
-  const payload = decoded.subarray(0, 21);
-  const checksum = decoded.subarray(21);
+  const payload = bytes.subarray(0, 21);
+  const checksum = bytes.subarray(21);
   const expectedChecksum = sha256(sha256(payload)).subarray(0, 4);
 
   return equalBytes(checksum, expectedChecksum);
@@ -148,7 +153,7 @@ const isCanonicalBitcoinCryptoWalletAddress = (input: string): boolean =>
 const isCanonicalSolanaCryptoWalletAddress = (input: string): boolean => {
   const decoded = decodeCanonicalBase58(input);
 
-  return P.isNotNull(decoded) && decoded.length === 32;
+  return O.exists(decoded, (bytes) => bytes.length === 32);
 };
 
 const isCanonicalCryptoWalletAddress = P.some([

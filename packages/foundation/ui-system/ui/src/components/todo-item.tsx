@@ -2,7 +2,7 @@
 
 import { A, Str } from "@beep/utils";
 import { ArrowRightIcon, CalendarIcon, CheckIcon, InfoIcon, WarningCircleIcon } from "@phosphor-icons/react";
-import { DateTime, pipe } from "effect";
+import { DateTime, flow } from "effect";
 import { cn } from "../lib/index.ts";
 
 type TodoPriority = "high" | "medium" | "low" | "none";
@@ -81,7 +81,7 @@ const shortDateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
 });
 
-const toUtcDateTime = (value: Date | string): DateTime.Utc => pipe(DateTime.makeUnsafe(value), DateTime.toUtc);
+const toUtcDateTime: (value: Date | string) => DateTime.Utc = flow(DateTime.makeUnsafe, DateTime.toUtc);
 
 const formatDate = (date: Date | string): string => {
   const parsed = toUtcDateTime(date);

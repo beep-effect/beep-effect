@@ -214,6 +214,7 @@ describe("Secure header schemas", () => {
       expect(Exit.isFailure(runExit(ExpectCTHeader.createValue([true, { reportURI: "not-a-url" }] as const)))).toBe(
         true
       );
+      expect(Exit.isFailure(runExit(ExpectCTHeader.createValue([true, { maxAge: -1 }] as never)))).toBe(true);
     }));
 
   it("formats HSTS defaults and tuple options", () =>
@@ -233,6 +234,7 @@ describe("Secure header schemas", () => {
       yield* Effect.promise(() =>
         Promise.resolve(expect(run(ForceHttpsRedirectHeader.createValue(false))).resolves.toEqual(O.none()))
       );
+      expect(Exit.isFailure(runExit(ForceHttpsRedirectHeader.createValue([true, { maxAge: -1 }] as never)))).toBe(true);
     }));
 
   it("handles HSTS direct, disabled, and sparse tuple forms", () =>
@@ -570,9 +572,11 @@ describe("Secure header schemas", () => {
 
   it("handles disabled and empty CSP options", () =>
     Effect.gen(function* () {
-      expect(createContentSecurityPolicyOptionHeaderValue()).toBeUndefined();
-      expect(createContentSecurityPolicyOptionHeaderValue(false)).toBeUndefined();
-      expect(createContentSecurityPolicyOptionHeaderValue({ directives: { sandbox: true } })).toBe("sandbox");
+      expect(createContentSecurityPolicyOptionHeaderValue()).toEqual(O.none());
+      expect(createContentSecurityPolicyOptionHeaderValue(false)).toEqual(O.none());
+      expect(createContentSecurityPolicyOptionHeaderValue({ directives: { sandbox: true } })).toEqual(
+        O.some("sandbox")
+      );
       expectHeader(
         yield* S.decodeUnknownEffect(ContentSecurityPolicyHeader)(undefined),
         "Content-Security-Policy",

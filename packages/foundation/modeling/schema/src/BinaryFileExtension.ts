@@ -26,7 +26,6 @@ import { A, Str, thunkEmptyStr, thunkFalse, thunkTrue } from "@beep/utils";
 import { HashSet, pipe } from "effect";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import { LiteralKit } from "./LiteralKit/index.ts";
 
 const $I = $SchemaId.create("BinaryFileExtension");
@@ -180,7 +179,6 @@ export const BinaryFileExtension = LiteralKit(binaryFileExtensionOptions).pipe(
 );
 
 const binaryFileExtensionSet = HashSet.fromIterable(BinaryFileExtension.Options);
-const isBinaryFileExtensionSchema = S.is(BinaryFileExtension);
 
 /**
  * Union of literals accepted by {@link BinaryFileExtension}.
@@ -215,8 +213,7 @@ export type BinaryFileExtension = typeof BinaryFileExtension.Type;
  * @since 0.0.0
  * @category validation
  */
-export const isBinaryFileExtension = (value: unknown): value is BinaryFileExtension =>
-  isBinaryFileExtensionSchema(value);
+export const isBinaryFileExtension = BinaryFileExtension.is;
 
 /**
  * Detects whether a file path ends in a known binary file extension.

@@ -6,6 +6,8 @@
  */
 "use client";
 
+import { $UiId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import {
   Combobox,
   ComboboxContent,
@@ -22,9 +24,12 @@ import {
 } from "@beep/ui/components/country-select";
 import { InputGroup, InputGroupInput } from "@beep/ui/components/input-group";
 import { make as makeScopedAtom, useAtom } from "@effect/atom-react";
+import { pipe } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
 import {
   AsYouType,
@@ -37,6 +42,9 @@ import type { CountryCode as PhoneCountryCode } from "libphonenumber-js/min";
 import type React from "react";
 
 const defaultPhoneCountry = "US" satisfies PhoneCountryCode;
+const $I = $UiId.create("components/phone-input");
+
+const phoneNumberE164Pattern = /^\+[1-9]\d{1,14}$/u;
 
 /**
  * Supported phone country codes from the pinned phone metadata.
@@ -69,7 +77,51 @@ export const phoneCountryCodes: ReadonlyArray<PhoneCountryCode> = getCountries()
 export const phoneCountryOptions = A.filter(countryOptions, (option) => isSupportedCountry(option.code));
 
 /**
- * E.164 phone number value used by {@link PhoneInput}.
+ * E.164 phone number value schema used by {@link PhoneInput}.
+ *
+ * @example
+ * ```ts
+ * import { PhoneNumberE164 } from "@beep/ui/components/phone-input"
+ *
+ * const supportLine = PhoneNumberE164.fromUnknown("+14155552671")
+ *
+ * console.log(supportLine.startsWith("+"))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const PhoneNumberE164 = S.String.check(
+  S.makeFilterGroup(
+    [
+      S.isPattern(phoneNumberE164Pattern, {
+        identifier: $I`PhoneNumberE164Pattern`,
+        title: "E.164 Phone Number Pattern",
+        description: "Phone numbers must use E.164 plus-prefixed international format.",
+        message: "Phone number must use E.164 format.",
+      }),
+      S.makeFilter((value: string) => isValidPhoneNumber(value), {
+        identifier: $I`PhoneNumberE164MetadataCheck`,
+        title: "Valid E.164 Phone Number",
+        description: "Phone number must be valid according to the pinned libphonenumber metadata.",
+        message: "Phone number must be valid according to libphonenumber metadata.",
+      }),
+    ],
+    {
+      identifier: $I`PhoneNumberE164Checks`,
+      title: "E.164 Phone Number",
+      description: "Checks for valid E.164 phone numbers accepted by the phone input.",
+    }
+  )
+).pipe(
+  $I.annoteSchema("PhoneNumberE164", {
+    description: "Valid E.164 phone number accepted by PhoneInput.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime type for {@link PhoneNumberE164}.
  *
  * @example
  * ```ts
@@ -83,7 +135,7 @@ export const phoneCountryOptions = A.filter(countryOptions, (option) => isSuppor
  * @category models
  * @since 0.0.0
  */
-export type PhoneNumberE164 = string;
+export type PhoneNumberE164 = typeof PhoneNumberE164.Type;
 
 /**
  * Formats draft phone input for a selected country.
@@ -108,25 +160,30 @@ export const formatPhoneDraft: {
  *
  * @example
  * ```tsx
+ * import * as O from "effect/Option"
  * import { parsePhoneDraft } from "@beep/ui/components/phone-input"
  *
- * console.log(parsePhoneDraft("4155552671", "US"))
+ * console.log(O.getOrUndefined(parsePhoneDraft("4155552671", "US")))
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
 export const parsePhoneDraft: {
-  (country: PhoneCountryCode): (value: string) => PhoneNumberE164;
-  (value: string, country: PhoneCountryCode): PhoneNumberE164;
-} = dual(2, (value: string, country: PhoneCountryCode): PhoneNumberE164 => {
+  (country: PhoneCountryCode): (value: string) => O.Option<PhoneNumberE164>;
+  (value: string, country: PhoneCountryCode): O.Option<PhoneNumberE164>;
+} = dual(2, (value: string, country: PhoneCountryCode): O.Option<PhoneNumberE164> => {
   if (value.length === 0) {
-    return "";
+    return O.none();
   }
 
   const formatter = new AsYouType(country);
   formatter.input(value);
-  return formatter.getNumberValue() ?? parsePhoneNumberFromString(value, country)?.number ?? "";
+  return pipe(
+    formatter.getNumberValue() ?? parsePhoneNumberFromString(value, country)?.number,
+    O.fromNullishOr,
+    O.filter(PhoneNumberE164.is)
+  );
 });
 
 /**
@@ -143,7 +200,7 @@ export const parsePhoneDraft: {
  * @category utilities
  * @since 0.0.0
  */
-export const isValidPhoneNumberE164 = (value: string): boolean => value.length > 0 && isValidPhoneNumber(value);
+export const isValidPhoneNumberE164 = (value: string): boolean => PhoneNumberE164.is(value);
 
 /**
  * Props for a country-aware phone input that emits E.164 values.
@@ -250,6 +307,11 @@ const PhoneInputInner: React.FC<PhoneInputProps> = ({
   const [state, setState] = useAtom(PhoneInputScope.use());
   const selectedCountry = state.country;
   const selectedOption = findCountryOption(selectedCountry);
+  const selectedCountryPlaceholder = pipe(
+    selectedOption,
+    O.map((option) => option.code),
+    O.getOrElse(() => defaultCountry)
+  );
   const displayedValue =
     P.isString(value) && value.length > 0 ? formatInitialPhoneValue(value, selectedCountry) : state.displayValue;
 
@@ -271,7 +333,7 @@ const PhoneInputInner: React.FC<PhoneInputProps> = ({
             aria-label="Phone country"
             className="w-36 rounded-r-none border-0 border-r bg-transparent focus-visible:ring-0"
             disabled={disabled}
-            placeholder={selectedOption?.code ?? defaultCountry}
+            placeholder={selectedCountryPlaceholder}
             showClear={false}
           />
           <ComboboxContent>
@@ -297,7 +359,10 @@ const PhoneInputInner: React.FC<PhoneInputProps> = ({
           onChange={(event) => {
             const draft = event.target.value;
             const formatted = formatPhoneDraft(draft, selectedCountry);
-            const e164 = parsePhoneDraft(draft, selectedCountry);
+            const e164 = pipe(
+              parsePhoneDraft(draft, selectedCountry),
+              O.getOrElse(() => "")
+            );
             setState((current) => ({ ...current, displayValue: formatted }));
             onValueChange?.(e164);
           }}

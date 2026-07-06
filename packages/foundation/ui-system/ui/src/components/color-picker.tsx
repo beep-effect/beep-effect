@@ -11,7 +11,8 @@ import { Button } from "@beep/ui/components/button";
 import { Input } from "@beep/ui/components/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@beep/ui/components/popover";
 import { make as makeScopedAtom, useAtom } from "@effect/atom-react";
-import { pipe, Result } from "effect";
+import { flow } from "effect";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
@@ -26,22 +27,18 @@ const defaultColorValue = "#000000";
  *
  * @example
  * ```tsx
+ * import * as O from "effect/Option"
  * import { normalizeHexColorInput } from "@beep/ui/components/color-picker"
  *
- * console.log(normalizeHexColorInput("#3bf"))
+ * console.log(O.getOrUndefined(normalizeHexColorInput("#3bf")))
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const normalizeHexColorInput = (value: string): string | undefined =>
-  pipe(
-    S.decodeUnknownResult(Color.NormalizeHexColor)(value),
-    Result.match({
-      onFailure: () => undefined,
-      onSuccess: (color) => color,
-    })
-  );
+export const normalizeHexColorInput = S.decodeUnknownOption(Color.NormalizeHexColor);
+
+const normalizeHexColorInputOrUndefined = flow(normalizeHexColorInput, O.getOrUndefined);
 
 /**
  * Props for a hex color input that can run controlled or uncontrolled.
@@ -80,7 +77,7 @@ interface ColorPickerState {
 
 const ColorPickerScope = makeScopedAtom((defaultValue: string) =>
   Atom.make<ColorPickerState>({
-    draftValue: normalizeHexColorInput(defaultValue) ?? defaultColorValue,
+    draftValue: normalizeHexColorInputOrUndefined(defaultValue) ?? defaultColorValue,
     open: false,
   })
 );
@@ -124,11 +121,11 @@ const ColorPickerInner: React.FC<ColorPickerProps> = ({
 }) => {
   const [state, setState] = useAtom(ColorPickerScope.use());
   const controlled = P.isString(value);
-  const normalizedValue = controlled ? normalizeHexColorInput(value) : undefined;
+  const normalizedValue = controlled ? normalizeHexColorInputOrUndefined(value) : undefined;
   const color = normalizedValue ?? state.draftValue;
 
   const commitColor = (nextValue: string) => {
-    const normalized = normalizeHexColorInput(nextValue);
+    const normalized = normalizeHexColorInputOrUndefined(nextValue);
     setState((current) => ({ ...current, draftValue: normalized ?? nextValue }));
     if (normalized !== undefined) {
       onValueChange?.(normalized);

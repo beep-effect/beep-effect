@@ -1,39 +1,6 @@
 [
   {
     "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/ui-system/ui/src/components/phone-input.tsx",
-    "line": 86,
-    "symbol": "PhoneNumberE164",
-    "smell": "Exported E.164 phone-number value is modeled as a bare `string` alias, with the runtime invariant split into the separate `isValidPhoneNumberE164` guard at line 146.",
-    "proposedTarget": "Promote the value to an annotated schema, e.g. `export const PhoneNumberE164 = S.String.check(S.makeFilterGroup([S.isPattern(/^\\+[1-9]\\d{1,14}$/, ...), S.makeFilter(isValidPhoneNumber, ...)])).pipe($I.annoteSchema(\"PhoneNumberE164\", ...))` and `export type PhoneNumberE164 = typeof PhoneNumberE164.Type`; split any UI-empty sentinel into a separate input/draft boundary if the public component must continue emitting `\"\"`. In-repo exemplars: the Storybook phone field already defines an E.164 `S.String.check(S.isPattern(...))` schema at `packages/foundation/ui-system/form/stories/fields/Phone.stories.tsx:6`; `HexColorInput` / `HexColor` show branded string-schema value exports with runtime aliases at `packages/foundation/modeling/schema/src/Color/Color.hex.ts:114` and `:143`.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 0.62
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/ui-system/ui/src/components/country-select.tsx",
-    "line": 401,
-    "symbol": "isCountryCode",
-    "smell": "Exported country-code guard re-derives membership by scanning `countryOptions` even though `CountryCode` is already the schema-owned `LiteralKit` source of truth.",
-    "proposedTarget": "Replace the helper with a schema-derived guard, e.g. `export const isCountryCode: (value: string) => value is CountryCode = S.is(CountryCode)`, or document an exception if the intended domain is the `countryOptions` subset rather than the `CountryCode` schema. In-repo exemplar: `CurrencyCode` is a `LiteralKit(...)` schema at `packages/foundation/modeling/schema/src/CurrencyCode.ts:43` and exports `isCurrencyCode = S.is(CurrencyCode)` at `packages/foundation/modeling/schema/src/CurrencyCode.ts:118`; `LiteralKit` helper statics are defined at `packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:657`.",
-    "confidence": 0.88,
-    "mechanization": "assisted",
-    "roiRank": 0.41
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/foundation/ui-system/ui/src/components/link-preview.tsx",
-    "line": 15,
-    "symbol": "UrlMetadata",
-    "smell": "Fetched/merged link-preview metadata is a structural interface with nullable fields instead of schema-owned boundary data; the metadata crosses a network-derived HTML boundary before being cached and merged into component state.",
-    "proposedTarget": "Model `UrlMetadata` as an annotated `S.Class`/`S.Struct` with `S.NullOr(S.String)` fields and a deliberately chosen `url` field (`S.String` to preserve current fallback behavior, or `URLStr` if the same PR tightens invalid-url handling). Then derive `type UrlMetadata = typeof UrlMetadata.Type` and use the schema at the fetch/fallback merge boundary. In-repo exemplars: `ToastData` uses `S.Class` for UI-carried data at `packages/foundation/ui-system/ui/src/components/toast.tsx:135`; `CountryOption` uses `S.Class` for rendered option data at `packages/foundation/ui-system/ui/src/components/country-select.tsx:324`; `URLStr` is the shared URL string schema at `packages/foundation/modeling/schema/src/URL.ts:44`.",
-    "confidence": 0.67,
-    "mechanization": "assisted",
-    "roiRank": 0.33
-  },
-  {
-    "ruleId": "schema-first-inventory",
     "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
     "line": 499,
     "symbol": "UseNumberInputOptions",

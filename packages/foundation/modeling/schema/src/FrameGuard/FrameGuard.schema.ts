@@ -154,7 +154,7 @@ export type FrameGuardOption = typeof FrameGuardOption.Type;
 export class FrameGuardResponseHeader extends S.Class<FrameGuardResponseHeader>($I`FrameGuardResponseHeader`)(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String),
+    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("FrameGuardResponseHeader", {
     description: "The `X-Frame-Options` response header.",

@@ -6,7 +6,7 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Brand, Chunk, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -45,7 +45,8 @@ export const DocumentId = S.NonEmptyString.pipe(
   S.brand("DocumentId"),
   $I.annoteSchema("DocumentId", {
     description: "Stable identifier for an NLP document.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -116,7 +117,8 @@ export const DocumentIndex = NonNegativeInt.pipe(
   S.fromBrand("DocumentIndex", documentIndex),
   $I.annoteSchema("DocumentIndex", {
     description: "Non-negative ordered index for an NLP document.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 const rebuildSentence: {
@@ -196,7 +198,7 @@ export class Document extends S.Class<Document>($I`Document`)(
     text: S.String,
     tokens: S.Chunk(Token),
     sentences: S.Chunk(Sentence),
-    sentiment: S.OptionFromOptionalKey(S.Finite),
+    sentiment: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Document", {
     description: "Immutable NLP document with token and sentence structure.",

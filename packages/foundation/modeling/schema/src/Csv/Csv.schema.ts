@@ -72,8 +72,6 @@ export type CsvDocument<RowSchema extends RowSchemaWithFields> = S.decodeTo<
   typeof CsvText
 >;
 
-const decodeCsvCodecOptions = S.decodeUnknownEffect(CsvCodecOptions);
-
 const isRowSchemaWithFields = (value: unknown): value is RowSchemaWithFields =>
   P.isObjectKeyword(value) && P.hasProperty(value, "fields");
 
@@ -191,7 +189,7 @@ const mapRowToHeaderRecord = (
 };
 
 const normalizeParserOptions = Effect.fn("Csv.normalizeParserOptions")(function* (options?: CsvCodecOptionsArgs) {
-  const decoded = yield* decodeCsvCodecOptions(options ?? {}, CsvCodecOptionsParseOptions);
+  const decoded = yield* CsvCodecOptions.decodeEffect(options ?? {}, CsvCodecOptionsParseOptions);
 
   return {
     codec: decoded,

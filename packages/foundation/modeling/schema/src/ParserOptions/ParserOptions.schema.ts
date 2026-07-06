@@ -13,6 +13,7 @@ import * as S from "effect/Schema";
 import { BuffEncoding } from "../BufferEncoding.ts";
 import { NonNegativeInt } from "../Int.ts";
 import { RegExpFromStr } from "../RegExp.ts";
+import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { TaggedErrorClass } from "../TaggedErrorClass/index.ts";
 import { HeaderArray, HeaderTransformFunction } from "./ParserOptions.types.ts";
 import type { TaggedErrorClassFromFields } from "../TaggedErrorClass/index.ts";
@@ -37,7 +38,7 @@ const SingleCharacterText = S.String.check(
 
 const decodeRegExpResult = S.decodeResult(RegExpFromStr);
 const ParserOptionsErrorFields = {
-  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
+  cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
   message: S.String,
 } satisfies S.Struct.Fields;
 const ParserOptionsErrorBase: TaggedErrorClassFromFields<
@@ -137,78 +138,36 @@ const buildNextTokenRegExp = (escapedDelimiter: string): globalThis.RegExp =>
  */
 export class ParserOptions extends S.Class<ParserOptions>($I`ParserOptions`)(
   {
-    objectMode: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(true)),
-      S.withDecodingDefaultKey(Effect.succeed(true))
-    ),
-    delimiter: SingleCharacterText.pipe(
-      S.withConstructorDefault(Effect.succeed(",")),
-      S.withDecodingDefaultKey(Effect.succeed(","))
-    ),
-    ignoreEmpty: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false))
-    ),
+    objectMode: SchemaUtils.BoolKeyDefaultTrue,
+    delimiter: SingleCharacterText.pipe(SchemaUtils.withKeyDefaults(",")),
+    ignoreEmpty: SchemaUtils.BoolKeyDefaultFalse,
     quote: S.OptionFromNullOr(S.String).pipe(
       S.withConstructorDefault(Effect.succeed(O.some('"'))),
       S.withDecodingDefaultKey(Effect.succeed('"'))
     ),
     escape: S.OptionFromNullOr(S.String).pipe(
-      S.withConstructorDefault(Effect.succeed(O.none<string>())),
+      SchemaUtils.withNoneDefault,
       S.withDecodingDefaultKey(Effect.succeed(null))
     ),
     comment: S.OptionFromNullOr(S.String).pipe(
-      S.withConstructorDefault(Effect.succeed(O.none<string>())),
+      SchemaUtils.withNoneDefault,
       S.withDecodingDefaultKey(Effect.succeed(null))
     ),
-    ltrim: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false))
-    ),
-    rtrim: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false))
-    ),
-    trim: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false))
-    ),
+    ltrim: SchemaUtils.BoolKeyDefaultFalse,
+    rtrim: SchemaUtils.BoolKeyDefaultFalse,
+    trim: SchemaUtils.BoolKeyDefaultFalse,
     headers: S.OptionFromNullOr(HeaderValueInput).pipe(
-      S.withConstructorDefault(Effect.succeed(O.none<HeaderValueInput>())),
+      SchemaUtils.withNoneDefault,
       S.withDecodingDefaultKey(Effect.succeed(null))
     ),
-    renameHeaders: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false))
-    ),
-    strictColumnHandling: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false))
-    ),
-    discardUnmappedColumns: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefaultKey(Effect.succeed(false))
-    ),
-    carriageReturn: S.String.pipe(
-      S.withConstructorDefault(Effect.succeed("\r")),
-      S.withDecodingDefaultKey(Effect.succeed("\r"))
-    ),
-    encoding: BuffEncoding.pipe(
-      S.withConstructorDefault(Effect.succeed(BuffEncoding.Enum.utf8)),
-      S.withDecodingDefaultKey(Effect.succeed(BuffEncoding.Enum.utf8))
-    ),
-    maxRows: NonNegativeInt.pipe(
-      S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultKey(Effect.succeed(0))
-    ),
-    skipLines: NonNegativeInt.pipe(
-      S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultKey(Effect.succeed(0))
-    ),
-    skipRows: NonNegativeInt.pipe(
-      S.withConstructorDefault(Effect.succeed(0)),
-      S.withDecodingDefaultKey(Effect.succeed(0))
-    ),
+    renameHeaders: SchemaUtils.BoolKeyDefaultFalse,
+    strictColumnHandling: SchemaUtils.BoolKeyDefaultFalse,
+    discardUnmappedColumns: SchemaUtils.BoolKeyDefaultFalse,
+    carriageReturn: S.String.pipe(SchemaUtils.withKeyDefaults("\r")),
+    encoding: BuffEncoding.pipe(SchemaUtils.withKeyDefaults(BuffEncoding.Enum.utf8)),
+    maxRows: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+    skipLines: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
+    skipRows: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(0))),
   },
   $I.annote("ParserOptions", {
     description: "Schema-backed CSV parser options.",
@@ -221,9 +180,11 @@ export class ParserOptions extends S.Class<ParserOptions>($I`ParserOptions`)(
    */
   static readonly new = (input?: ParserOptionsArgs): ParserOptions =>
     pipe(
-      decodeParserOptionsUnknownResult(input ?? {}, parserOptionsParseOptions),
+      ParserOptions.decodeUnknownResult(input ?? {}, parserOptionsParseOptions),
       Result.getOrThrowWith((cause) => toParserOptionsError("Failed to decode parser options.", cause))
     );
+
+  static readonly decodeUnknownResult = S.decodeUnknownResult(ParserOptions);
 
   get escapedDelimiter(): string {
     return Regex.escape(this.delimiter);
@@ -245,8 +206,6 @@ export class ParserOptions extends S.Class<ParserOptions>($I`ParserOptions`)(
     return buildNextTokenRegExp(this.escapedDelimiter);
   }
 }
-
-const decodeParserOptionsUnknownResult = S.decodeUnknownResult(ParserOptions);
 
 /**
  * Encoded/raw constructor input for {@link ParserOptions}.

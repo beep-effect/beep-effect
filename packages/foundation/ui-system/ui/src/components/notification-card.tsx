@@ -1,10 +1,10 @@
 "use client";
 
 import { $UiId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { ArrowRightIcon, CheckIcon, ClockIcon, SpinnerGapIcon, WarningCircleIcon } from "@phosphor-icons/react";
-import { DateTime, Match, pipe } from "effect";
+import { DateTime, flow, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { cn } from "../lib/index.ts";
@@ -105,23 +105,35 @@ export type ActionStyle = typeof ActionStyle.Type;
 const defaultActionStyleClassName =
   "bg-zinc-200/50 text-zinc-600 hover:bg-zinc-200 hover:text-zinc-700 dark:bg-zinc-800/50 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-300";
 
-const actionStyleClassName = Match.type<ActionStyle>().pipe(
-  Match.when(
-    "primary",
-    () => "bg-sky-500/10 text-blue-600 hover:bg-sky-500/20 dark:text-blue-400 dark:hover:bg-sky-500/20"
-  ),
-  Match.when(
-    "danger",
-    () => "bg-red-500/10 text-red-600 hover:bg-red-500/20 dark:text-red-400 dark:hover:bg-red-500/20"
-  ),
-  Match.orElse(() => defaultActionStyleClassName)
-);
+const actionStyleClassName = ActionStyle.$match({
+  primary: () => "bg-sky-500/10 text-blue-600 hover:bg-sky-500/20 dark:text-blue-400 dark:hover:bg-sky-500/20",
+  danger: () => "bg-red-500/10 text-red-600 hover:bg-red-500/20 dark:text-red-400 dark:hover:bg-red-500/20",
+  default: () => defaultActionStyleClassName,
+});
 
 const NotificationActionFields = {
-  executed: S.OptionFromOptionalKey(S.Boolean),
-  id: S.String,
-  label: S.String,
-  style: S.OptionFromOptionalKey(ActionStyle),
+  executed: S.OptionFromOptionalKey(S.Boolean).pipe(
+    SchemaUtils.withNoneDefault,
+    $I.annoteKey("NotificationAction.executed", {
+      description: "Optional completion state projected to false by the notification renderer.",
+    })
+  ),
+  id: S.NonEmptyString.pipe(
+    $I.annoteKey("NotificationAction.id", {
+      description: "Stable non-empty action identifier used for callbacks and loading state.",
+    })
+  ),
+  label: S.NonEmptyString.pipe(
+    $I.annoteKey("NotificationAction.label", {
+      description: "Human-readable non-empty action button label.",
+    })
+  ),
+  style: S.OptionFromOptionalKey(ActionStyle).pipe(
+    SchemaUtils.withNoneDefault,
+    $I.annoteKey("NotificationAction.style", {
+      description: "Optional visual button style projected to default by the notification renderer.",
+    })
+  ),
 };
 
 /**
@@ -190,7 +202,7 @@ const shortDateFormatter = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
 });
 
-const toUtcDateTime = (value: Date | string): DateTime.Utc => pipe(DateTime.makeUnsafe(value), DateTime.toUtc);
+const toUtcDateTime: (value: Date | string) => DateTime.Utc = flow(DateTime.makeUnsafe, DateTime.toUtc);
 
 const formatDate = (date: Date | string): string => {
   const parsed = toUtcDateTime(date);
@@ -303,10 +315,11 @@ export function NotificationCard({
                     onClick={() => onAction?.(id, action.id, action.type)}
                     className={cn(
                       "flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-normal transition",
-                      O.match(action.style, {
-                        onNone: () => defaultActionStyleClassName,
-                        onSome: actionStyleClassName,
-                      }),
+                      pipe(
+                        action.style,
+                        O.map(actionStyleClassName),
+                        O.getOrElse(() => defaultActionStyleClassName)
+                      ),
                       showLoading && "opacity-50",
                       isExecuted && "cursor-not-allowed opacity-60"
                     )}

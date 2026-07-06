@@ -11,6 +11,7 @@
  */
 import { $SchemaId } from "@beep/identity";
 import * as S from "effect/Schema";
+import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("UnitInterval");
 
@@ -36,7 +37,8 @@ export const UnitInterval = S.Finite.check(
   $I.annoteSchema("UnitInterval", {
     description:
       "Schema for a real number in the closed unit interval [0, 1] (inclusive).\nThe canonical shape for probabilities, confidences, ratios, and normalized scores.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -70,7 +72,7 @@ export type UnitInterval = typeof UnitInterval.Type;
  * @since 0.0.0
  * @category validation
  */
-export const isUnitInterval = S.is(UnitInterval);
+export const isUnitInterval = UnitInterval.is;
 
 /**
  * UnitInterval constant for `0` (the empty/none bound).

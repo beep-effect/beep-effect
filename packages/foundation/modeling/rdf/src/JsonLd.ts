@@ -7,6 +7,7 @@
  */
 
 import { $RdfId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 import { AbsoluteIRI, IRI, IRIReference } from "./Iri.ts";
@@ -103,7 +104,7 @@ export type JsonLdKeyword = typeof JsonLdKeyword.Type;
 export class JsonLdTermDefinition extends S.Class<JsonLdTermDefinition>($I`JsonLdTermDefinition`)(
   {
     "@id": S.String,
-    "@type": S.OptionFromOptionalKey(S.String),
+    "@type": S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("JsonLdTermDefinition", {
     description: "Normalized JSON-LD term definition used by the bounded context model.",
@@ -142,8 +143,8 @@ export class JsonLdTermDefinition extends S.Class<JsonLdTermDefinition>($I`JsonL
  */
 export class JsonLdContext extends S.Class<JsonLdContext>($I`JsonLdContext`)(
   {
-    "@base": S.OptionFromOptionalKey(AbsoluteIRI),
-    "@vocab": S.OptionFromOptionalKey(IRI),
+    "@base": S.OptionFromOptionalKey(AbsoluteIRI).pipe(SchemaUtils.withNoneDefault),
+    "@vocab": S.OptionFromOptionalKey(IRI).pipe(SchemaUtils.withNoneDefault),
     terms: S.Record(S.String, S.Union([S.String, JsonLdTermDefinition])),
   },
   $I.annote("JsonLdContext", {
@@ -190,7 +191,8 @@ export const JsonLdBlankNodeIdentifier = S.String.check(jsonLdBlankNodeIdentifie
       canonicalizationRequired: true,
       representations: [{ kind: "JSON-LD" }, { kind: "RDF/JS", note: "Bridges to RDF blank-node labels." }],
     }),
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -237,7 +239,8 @@ export const JsonLdNodeIdentifier = S.Union([IRIReference, JsonLdBlankNodeIdenti
       canonicalizationRequired: true,
       representations: [{ kind: "JSON-LD" }, { kind: "RDF/JS", note: "Bridges to named nodes or blank nodes." }],
     }),
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -313,8 +316,8 @@ export class JsonLdReferenceValue extends S.Class<JsonLdReferenceValue>($I`JsonL
 export class JsonLdLiteralValue extends S.Class<JsonLdLiteralValue>($I`JsonLdLiteralValue`)(
   {
     "@value": JsonLdScalar,
-    "@type": S.OptionFromOptionalKey(IRIReference),
-    "@language": S.OptionFromOptionalKey(S.String),
+    "@type": S.OptionFromOptionalKey(IRIReference).pipe(SchemaUtils.withNoneDefault),
+    "@language": S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("JsonLdLiteralValue", {
     description: "JSON-LD literal value object.",
@@ -352,7 +355,8 @@ export class JsonLdLiteralValue extends S.Class<JsonLdLiteralValue>($I`JsonLdLit
 export const JsonLdPropertyValue = S.Union([JsonLdReferenceValue, JsonLdLiteralValue]).pipe(
   $I.annoteSchema("JsonLdPropertyValue", {
     description: "JSON-LD property value union used by bounded node objects.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -394,8 +398,8 @@ export type JsonLdPropertyValue = typeof JsonLdPropertyValue.Type;
  */
 export class JsonLdNodeObject extends S.Class<JsonLdNodeObject>($I`JsonLdNodeObject`)(
   {
-    "@id": S.OptionFromOptionalKey(JsonLdNodeIdentifier),
-    "@type": IRIReference.pipe(S.Array, S.OptionFromOptionalKey),
+    "@id": S.OptionFromOptionalKey(JsonLdNodeIdentifier).pipe(SchemaUtils.withNoneDefault),
+    "@type": IRIReference.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     properties: S.Record(S.String, S.Array(JsonLdPropertyValue)),
   },
   $I.annote("JsonLdNodeObject", {
@@ -430,7 +434,7 @@ export class JsonLdNodeObject extends S.Class<JsonLdNodeObject>($I`JsonLdNodeObj
  */
 export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
   {
-    "@context": S.OptionFromOptionalKey(JsonLdContext),
+    "@context": S.OptionFromOptionalKey(JsonLdContext).pipe(SchemaUtils.withNoneDefault),
     "@graph": S.Array(JsonLdNodeObject),
   },
   $I.annote("JsonLdDocument", {
@@ -469,8 +473,8 @@ export class JsonLdDocument extends S.Class<JsonLdDocument>($I`JsonLdDocument`)(
  */
 export class JsonLdFrame extends S.Class<JsonLdFrame>($I`JsonLdFrame`)(
   {
-    "@type": S.OptionFromOptionalKey(IRIReference),
-    includeProperties: S.String.pipe(S.Array, S.OptionFromOptionalKey),
+    "@type": S.OptionFromOptionalKey(IRIReference).pipe(SchemaUtils.withNoneDefault),
+    includeProperties: S.String.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("JsonLdFrame", {
     description: "Bounded JSON-LD frame model.",

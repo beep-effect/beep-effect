@@ -2,28 +2,6 @@
   {
     "ruleId": "SFV4-static-api",
     "file": "packages/foundation/primitive/data/src/internal/data/mime-types/index.ts",
-    "line": 265,
-    "symbol": "lookup",
-    "smell": "Exported one-arg MIME lookup helper is a passthrough `return pipe(path, O.liftPredicate(...), O.map(...), O.map(...), O.getOrElse(...))` pipeline. It also wraps `!Str.isEmpty(value)` instead of using the verified direct predicate `Str.isNonEmpty`.",
-    "proposedTarget": "Hoist the pipeline to `Fn.flow(O.liftPredicate(Str.isNonEmpty), O.map(normalizeLookupExtension), O.map(lookupNormalizedExtension), O.getOrElse(returnFalse))`, then either export that const directly or keep the existing function shell as `return lookupPath(path)` if the internal public form must stay a function. In-repo exemplar: the same module already uses `Fn.flow` for `normalizeLookupExtension` at line 179. Effect v4 APIs verified at `.repos/effect-v4/packages/effect/src/Function.ts:1162`, `.repos/effect-v4/packages/effect/src/Option.ts:617`, `.repos/effect-v4/packages/effect/src/Option.ts:1159`, `.repos/effect-v4/packages/effect/src/Option.ts:2178`, and `.repos/effect-v4/packages/effect/src/String.ts:420`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/primitive/data/src/internal/data/utils.ts",
-    "line": 4,
-    "symbol": "formalizeValues",
-    "smell": "Internal exported helper is a trivial data-first wrapper around dual `A.map`: `<T>(values: T) => A.map(values, Str.capitalize)`. The only consumers are the month and weekday value derivations, so the helper can keep its semantic name while delegating through the data-last helper form.",
-    "proposedTarget": "Prefer the direct helper ref `export const formalizeValues = A.map(Str.capitalize)` if the inferred tuple/non-empty return type remains acceptable for `calendar/month.ts:18` and `calendar/weekday.ts:5`; otherwise keep the current signature and treat it as an explicit type-preservation exception. Effect v4 `Array.map` dual form verified at `.repos/effect-v4/packages/effect/src/Array.ts:3493`; `Str.capitalize` verified at `.repos/effect-v4/packages/effect/src/String.ts:211`.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/primitive/data/src/internal/data/mime-types/index.ts",
     "line": 182,
     "symbol": "hasTypeForExtension",
     "smell": "False-positive audit for non-dual-helper detector: private 2-arg type predicate `hasTypeForExtension(extension, types)` is not `dual`.",

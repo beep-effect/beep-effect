@@ -7,6 +7,7 @@
  */
 
 import { $RdfId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A } from "@beep/utils";
 import { pipe, Result } from "effect";
@@ -207,10 +208,10 @@ export type SemanticRepresentationKind = typeof SemanticRepresentationKind.Type;
 export class SemanticSchemaSpecification extends S.Class<SemanticSchemaSpecification>($I`SemanticSchemaSpecification`)(
   {
     name: S.NonEmptyString,
-    version: S.OptionFromOptionalKey(S.NonEmptyString),
-    section: S.OptionFromOptionalKey(S.NonEmptyString),
-    url: S.OptionFromOptionalKey(S.NonEmptyString),
-    localRef: S.OptionFromOptionalKey(S.NonEmptyString),
+    version: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    section: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    url: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    localRef: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
     disposition: SemanticSchemaSpecificationDisposition,
   },
   $I.annote("SemanticSchemaSpecification", {
@@ -239,7 +240,7 @@ export class SemanticSchemaSpecification extends S.Class<SemanticSchemaSpecifica
 export class SemanticRepresentation extends S.Class<SemanticRepresentation>($I`SemanticRepresentation`)(
   {
     kind: SemanticRepresentationKind,
-    note: S.OptionFromOptionalKey(S.NonEmptyString),
+    note: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("SemanticRepresentation", {
     description: "Single representation note attached to semantic-web schemas.",
@@ -276,16 +277,16 @@ export class SemanticSchemaMetadata extends S.Class<SemanticSchemaMetadata>($I`S
     status: SemanticSchemaStatus,
     specifications: S.NonEmptyArray(SemanticSchemaSpecification),
     equivalenceBasis: S.NonEmptyString,
-    canonicalIri: S.OptionFromOptionalKey(S.NonEmptyString),
-    preferredPrefix: S.OptionFromOptionalKey(S.NonEmptyString),
-    aliases: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey),
-    canonicalizationRequired: S.OptionFromOptionalKey(S.Boolean),
-    representations: SemanticRepresentation.pipe(S.Array, S.OptionFromOptionalKey),
-    provenanceProfile: S.OptionFromOptionalKey(S.NonEmptyString),
-    evidenceAnchoring: S.OptionFromOptionalKey(S.NonEmptyString),
-    timeSemantics: S.OptionFromOptionalKey(S.NonEmptyString),
-    implementationNotes: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey),
-    nonGoals: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey),
+    canonicalIri: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    preferredPrefix: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    aliases: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    canonicalizationRequired: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    representations: SemanticRepresentation.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    provenanceProfile: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    evidenceAnchoring: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    timeSemantics: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    implementationNotes: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    nonGoals: S.NonEmptyString.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("SemanticSchemaMetadata", {
     description: "Typed metadata payload stored in the semanticSchemaMetadata annotation key.",

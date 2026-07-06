@@ -1,61 +1,6 @@
 [
   {
     "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/nlp/src/Core/Token.ts",
-    "line": 211,
-    "symbol": "Token",
-    "smell": "`Token` has fourteen `S.OptionFromOptionalKey(...)` fields (`pos`, `lemma`, `stem`, `normal`, `shape`, flags, etc.) but none are piped through `SchemaUtils.withNoneDefault`, so constructor sites must still supply or reason about explicit `Option` values.",
-    "proposedTarget": "Pipe each `S.OptionFromOptionalKey(...)` field through `SchemaUtils.withNoneDefault` and import `SchemaUtils` from `@beep/schema`; this is the same constructor-default target shape verified at `packages/foundation/modeling/schema/test/SchemaUtils.test.ts:123` and `packages/foundation/modeling/lexical/src/Lexical.model.ts:687-688`.",
-    "confidence": 0.92,
-    "mechanization": "codemod",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/nlp/src/Core/Sentence.ts",
-    "line": 116,
-    "symbol": "Sentence",
-    "smell": "`sentiment`, `importance`, `negationFlag`, and `markedUpText` are already `S.OptionFromOptionalKey(...)` fields but lack `SchemaUtils.withNoneDefault`.",
-    "proposedTarget": "Add `SchemaUtils.withNoneDefault` to each Option field so `Sentence.make(...)` can omit absent scoring metadata. Verified exemplar: `packages/foundation/modeling/schema/test/SchemaUtils.test.ts:123-140`.",
-    "confidence": 0.92,
-    "mechanization": "codemod",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/nlp/src/Core/Pattern.ts",
-    "line": 504,
-    "symbol": "Pattern",
-    "smell": "`mark: S.OptionFromOptionalKey(MarkRange)` models absence as Option but does not default construction to `O.none()`, forcing helper-level defaults in `PatternBuilders.makePattern`.",
-    "proposedTarget": "`mark: S.OptionFromOptionalKey(MarkRange).pipe(SchemaUtils.withNoneDefault)`; `Pattern.ts` already imports `SchemaUtils`, and the target shape matches `SchemaUtils.test.ts:123`.",
-    "confidence": 0.92,
-    "mechanization": "codemod",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/nlp/src/Core/Document.ts",
-    "line": 199,
-    "symbol": "Document",
-    "smell": "`sentiment: S.OptionFromOptionalKey(S.Finite)` has the Option boundary but not the constructor default.",
-    "proposedTarget": "Pipe through `SchemaUtils.withNoneDefault` and import `SchemaUtils` from `@beep/schema`; same verified pattern as `SchemaUtils.test.ts:123`.",
-    "confidence": 0.92,
-    "mechanization": "codemod",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/nlp/src/Core/Similarity.ts",
-    "line": 136,
-    "symbol": "SimilarityScore",
-    "smell": "`parameters: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown))` lacks `SchemaUtils.withNoneDefault`, even though the module already imports `SchemaUtils`.",
-    "proposedTarget": "`parameters: S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(SchemaUtils.withNoneDefault)`; verified target shape at `SchemaUtils.test.ts:123`.",
-    "confidence": 0.92,
-    "mechanization": "codemod",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-defaults",
     "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
     "line": 85,
     "symbol": "textNodeFields",
@@ -63,7 +8,11 @@
     "proposedTarget": "Use `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` for both fields, importing `SchemaUtils`. Encoded keys stay optional, while decoded graph nodes become Option-first. Existing target examples: `SchemaUtils.test.ts:123` and `Lexical.model.ts:687-688`.",
     "confidence": 0.82,
     "mechanization": "assisted",
-    "roiRank": 6
+    "roiRank": 6,
+    "exception": {
+      "reason": "Graph node decoded-shape change has live @beep/nlp/Graph consumers outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -74,7 +23,11 @@
     "proposedTarget": "Change both edge fields to `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)`, preserving optional encoded keys and updating `TextEdge` consumers in the same public-form sweep.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 7
+    "roiRank": 7,
+    "exception": {
+      "reason": "Graph edge decoded-shape change has live @beep/nlp/Graph consumers outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -85,7 +38,11 @@
     "proposedTarget": "Use `S.OptionFromOptionalKey(S.Record(S.String, S.Finite)).pipe(SchemaUtils.withNoneDefault)` unless missing stats should decode to an empty record, in which case use `SchemaUtils.withKeyDefaults` deliberately. Option/default exemplars are verified at `SchemaUtils.test.ts:123` and `SchemaUtils/withKeyDefaults.ts:50`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 8
+    "roiRank": 8,
+    "exception": {
+      "reason": "NLPAnalysis stats absence semantics are consumed through the public Graph schema surface outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -96,7 +53,11 @@
     "proposedTarget": "Introduce shared optional field helpers in `Graph/Schema.ts` and move the scalar fields to `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)`; use `SchemaUtils.withEmptyArrayDefaults` only where the model means an empty collection, not unknown absence.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 9
+    "roiRank": 9,
+    "exception": {
+      "reason": "Annotation node optional fields share the public Graph model surface with external graph consumers.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -107,7 +68,11 @@
     "proposedTarget": "`confidence: S.OptionFromOptionalKey(UnitInterval).pipe(SchemaUtils.withNoneDefault)` after importing `SchemaUtils`; update `makeProvenance` to pass `O.some(UnitInterval.make(confidence))` or omit the field against the constructor default.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 10
+    "roiRank": 10,
+    "exception": {
+      "reason": "Handoff confidence decoded-shape change has live @beep/nlp/Handoff consumers outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -118,7 +83,11 @@
     "proposedTarget": "Use `S.OptionFromOptionalKey(UnitInterval).pipe(SchemaUtils.withNoneDefault)` so decoded handoff entities do not expose `undefined` confidence.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 11
+    "roiRank": 11,
+    "exception": {
+      "reason": "Entity confidence decoded-shape change has live handoff consumers outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -129,7 +98,11 @@
     "proposedTarget": "Move confidence to `S.OptionFromOptionalKey(UnitInterval).pipe(SchemaUtils.withNoneDefault)`. For `evidence`, choose and encode the invariant explicitly: `S.Array(Span).pipe(SchemaUtils.withEmptyArrayDefaults<Span>())` if missing means no evidence, or `S.OptionFromOptionalKey(S.Array(Span)).pipe(SchemaUtils.withNoneDefault)` if unknown evidence is distinct. `withEmptyArrayDefaults` is verified at `SchemaUtils/withKeyDefaults.ts:114-164`.",
     "confidence": 0.72,
     "mechanization": "assisted",
-    "roiRank": 12
+    "roiRank": 12,
+    "exception": {
+      "reason": "Relation confidence/evidence absence semantics are part of the exported handoff contract consumed outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -140,7 +113,11 @@
     "proposedTarget": "Use `S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(SchemaUtils.withNoneDefault)` in `TypedTextSchema` and update `TypedText` / `makeTyped` to expose `O.Option` on the decoded side. `Ontology/Kind.ts` already imports `SchemaUtils`.",
     "confidence": 0.72,
     "mechanization": "assisted",
-    "roiRank": 13
+    "roiRank": 13,
+    "exception": {
+      "reason": "TypedText metadata is a published interface/helper surface; switching to Option requires a coordinated typed-text public-form sweep.",
+      "boundary": "public typed-text ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -151,7 +128,11 @@
     "proposedTarget": "Promote the invariant to a `NormalizedQuestion` schema using `S.decodeTo(..., { decode: SchemaGetter.transform(...), encode: SchemaGetter.transform(...) })`, and keep `normalizeQuestion` as a thin decode wrapper if the function API must remain. Same-package schema transform exemplar: `Core/PatternParsers.ts:107-115`; trim/lowercase transformation exemplar: `packages/foundation/modeling/schema/src/internal/email.ts:36-38`.",
     "confidence": 0.62,
     "mechanization": "assisted",
-    "roiRank": 14
+    "roiRank": 14,
+    "exception": {
+      "reason": "This exported helper is the current normalization API; promoting a NormalizedQuestion codec would create a new public model boundary.",
+      "boundary": "normalized query model boundary, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -162,7 +143,11 @@
     "proposedTarget": "Model the phrase normalization as a `NormalizedPhrase` transformation schema layered over `NormalizedQuestion`, then let extraction helpers decode into that schema. Use `SchemaGetter.transform` / `S.decodeTo` as in `Core/PatternParsers.ts:204-206`.",
     "confidence": 0.6,
     "mechanization": "assisted",
-    "roiRank": 15
+    "roiRank": 15,
+    "exception": {
+      "reason": "Phrase normalization composes the same public query-text helper API; schema promotion should land with a dedicated NormalizedPhrase model.",
+      "boundary": "normalized query model boundary, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -173,51 +158,11 @@
     "proposedTarget": "Fold the trim/split into a reusable bracket-values schema (or route this helper through the existing `BracketStringTo*` codecs) so parsing callers do not own normalization. Verified local transform surface: `Core/PatternParsers.ts:107-115`.",
     "confidence": 0.6,
     "mechanization": "assisted",
-    "roiRank": 16
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/nlp/src/Core/PatternBuilders.ts",
-    "line": 56,
-    "symbol": "makePattern",
-    "smell": "`mark: O.Option<MarkRange> = O.none()` is a helper-level constructor default for the `Pattern.mark` schema field.",
-    "proposedTarget": "After `Pattern.mark` gains `SchemaUtils.withNoneDefault`, remove the default parameter and omit `mark` when absent: `Pattern.make({ elements, id: Pattern.Id(id) })`.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 17
-  },
-  {
-    "ruleId": "SFV4-null-return",
-    "file": "packages/foundation/modeling/nlp/src/Core/PatternBuilders.ts",
-    "line": 404,
-    "symbol": "getMark",
-    "smell": "`getMark` returns `MarkRange | undefined` by unwrapping the already Option-modeled `pattern.mark` field.",
-    "proposedTarget": "Return `O.Option<MarkRange>` directly (`pattern.mark`) or rename the old helper as a boundary adapter; consumers that need nullable JS can unwrap at the boundary.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 18
-  },
-  {
-    "ruleId": "SFV4-null-return",
-    "file": "packages/foundation/modeling/nlp/src/Core/PatternBuilders.ts",
-    "line": 453,
-    "symbol": "elementAt",
-    "smell": "`elementAt` overloads return `PatternElement | undefined` even though `Chunk.get` already returns `Option`.",
-    "proposedTarget": "Change both overloads to return `O.Option<PatternElement>` and return `Chunk.get(pattern.elements, index)` directly. This is a public-form change and needs the same-PR consumer sweep.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 19
-  },
-  {
-    "ruleId": "SFV4-null-return",
-    "file": "packages/foundation/modeling/nlp/src/Core/PatternBuilders.ts",
-    "line": 510,
-    "symbol": "last",
-    "smell": "`last` exposes `PatternElement | undefined` because it delegates to `elementAt`'s undefined-returning API.",
-    "proposedTarget": "Return `O.Option<PatternElement>` after `elementAt` is Option-first; this is the same public helper sweep as line 453.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 20
+    "roiRank": 16,
+    "exception": {
+      "reason": "Bracket-value parsing is already schema-owned at PatternParsers decode boundaries; extracting a separate values codec is a public parser utility sweep.",
+      "boundary": "bracket-values model boundary, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",

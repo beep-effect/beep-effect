@@ -106,7 +106,7 @@ export class CrossOriginOpenerPolicyResponseHeader extends S.Class<CrossOriginOp
 )(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String),
+    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("CrossOriginOpenerPolicyResponseHeader", {
     description: "The `Cross-Origin-Opener-Policy` response header.",

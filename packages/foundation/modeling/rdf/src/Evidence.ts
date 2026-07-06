@@ -7,7 +7,7 @@
  */
 
 import { $RdfId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { IRIReference } from "./Iri.ts";
 import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata.ts";
@@ -75,8 +75,8 @@ export class TextQuoteSelector extends S.Class<TextQuoteSelector>($I`TextQuoteSe
   {
     kind: S.tag("text-quote"),
     exact: S.NonEmptyString,
-    prefix: S.OptionFromOptionalKey(S.String),
-    suffix: S.OptionFromOptionalKey(S.String),
+    prefix: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    suffix: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("TextQuoteSelector", {
     description: "Text-quote selector for evidence anchors.",
@@ -157,7 +157,7 @@ export class FragmentSelector extends S.Class<FragmentSelector>($I`FragmentSelec
   {
     kind: S.tag("fragment"),
     value: S.NonEmptyString,
-    conformsTo: S.OptionFromOptionalKey(IRIReference),
+    conformsTo: S.OptionFromOptionalKey(IRIReference).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("FragmentSelector", {
     description: "Fragment selector for evidence anchors.",
@@ -277,7 +277,7 @@ export class EvidenceAnchor extends S.Class<EvidenceAnchor>($I`EvidenceAnchor`)(
   {
     id: IRIReference,
     target: EvidenceTarget,
-    note: S.OptionFromOptionalKey(S.String),
+    note: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("EvidenceAnchor", {
     description: "Evidence anchor value referenced from provenance and verification services.",

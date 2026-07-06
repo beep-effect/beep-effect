@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/foundation/ui-system/editor/src/mermaid-view.tsx",
-    "line": 13,
-    "symbol": "MermaidRenderState",
-    "smell": "MermaidRenderState is a local _tag union, but render dispatch is a pair of if (state._tag === ...) branches at lines 103 and 114 with the pending case left as the implicit fallthrough.",
-    "proposedTarget": "Render through Match.type<MermaidRenderState>().pipe(Match.tagsExhaustive({ pending, ok, failed })) or an equivalent local exhaustive matcher so the JSX cases stay tied to the union. Match.tagsExhaustive is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Match.ts:1095.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 2.55
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/foundation/ui-system/editor/src/artifact-ref-node.tsx",
     "line": 78,
     "symbol": "ArtifactRefNode.importJSON/YouTubeNode.importJSON",

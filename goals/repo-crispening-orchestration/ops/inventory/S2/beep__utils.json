@@ -1,27 +1,5 @@
 [
   {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/utils/src/Glob.ts",
-    "line": 475,
-    "symbol": "makeGlob",
-    "smell": "GlobOptions is already an S.Class of bare `S.optionalKey` fields (Glob.ts:73-80), but every default leaks into bodies: `options?.cwd ?? \".\"` (475), `dot: options?.dot ?? false` (486), `onlyFiles: options?.nodir ?? false` (487), `options?.absolute === true` (469), and `ignore === undefined ? [] : ...` (265).",
-    "proposedTarget": "Move the defaults onto the schema: `dot: S.Boolean.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(false))`, same for `nodir`/`absolute`, `cwd: S.String.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(\".\"))`, and either `ignore: Pattern.pipe(S.optionalKey, SchemaUtils.withKeyDefaults([]))` or a named `IgnorePatterns` schema if Pattern's string-or-array surface needs preserving. Bodies then consume a decoded-total `GlobOptions.make(options ?? {})` once at the entry point and the scattered `??` / `=== undefined` branches disappear. Review point: defaulting `cwd` to `\".\"` changes the Bun scan call from omitting `cwd` to passing `\".\"`; behavior should be equivalent but needs the wave parity check.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/foundation/modeling/utils/src/FileSystem.ts",
-    "line": 203,
-    "symbol": "toFileInfo",
-    "smell": "`blksize: stats.blksize !== undefined ? Option.some(FileSystem.Size(stats.blksize)) : Option.none()` - hand-rolled undefined-check ternary building an Option, in a struct where every sibling optional field already uses `Option.fromNullishOr` (lines 192-204).",
-    "proposedTarget": "`blksize: pipe(Option.fromUndefinedOr(stats.blksize), Option.map(FileSystem.Size))` - `Option.fromUndefinedOr` verified in Effect v4 at .repos/effect-v4/packages/effect/src/Option.ts:860. Purely mechanical, single site.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 2
-  },
-  {
     "ruleId": "SFV4-null-return",
     "file": "packages/foundation/modeling/utils/src/Str.ts",
     "line": 848,

@@ -13,6 +13,7 @@ import { HashMap, HashSet, Match, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { isNonNegative } from "../Number.ts";
 import type { TaggedErrorClassFromFields } from "@beep/schema/TaggedErrorClass";
 import type { SchemaAST, Struct, Unify } from "effect";
 
@@ -324,8 +325,8 @@ const LiteralKitKeyCollisionErrorBase: TaggedErrorClassFromFields<
 );
 const LiteralKitEnumMappingDuplicateLiteralErrorFields = {
   literal: LiteralValueSchema,
-  firstIndex: S.Finite,
-  secondIndex: S.Finite,
+  firstIndex: S.Int.check(isNonNegative),
+  secondIndex: S.Int.check(isNonNegative),
 } satisfies S.Struct.Fields;
 const LiteralKitEnumMappingDuplicateLiteralErrorBase: TaggedErrorClassFromFields<
   LiteralKitEnumMappingDuplicateLiteralError,

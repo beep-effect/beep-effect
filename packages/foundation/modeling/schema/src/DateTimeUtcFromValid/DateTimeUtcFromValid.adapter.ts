@@ -7,7 +7,7 @@
 
 import { $SchemaId } from "@beep/identity/packages";
 import { DateTime } from "effect";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -81,7 +81,10 @@ export type DateTimeAdapterTimezone = string;
  * @category constructors
  * @since 0.0.0
  */
-export const applyTimezone = (value: DateTime.DateTime, timezone: DateTimeAdapterTimezone): DateTime.DateTime => {
+export const applyTimezone: {
+  (timezone: DateTimeAdapterTimezone): (value: DateTime.DateTime) => DateTime.DateTime;
+  (value: DateTime.DateTime, timezone: DateTimeAdapterTimezone): DateTime.DateTime;
+} = dual(2, (value: DateTime.DateTime, timezone: DateTimeAdapterTimezone): DateTime.DateTime => {
   if (timezone === "UTC") {
     return DateTime.toUtc(value);
   }
@@ -95,7 +98,7 @@ export const applyTimezone = (value: DateTime.DateTime, timezone: DateTimeAdapte
     O.map((zone) => DateTime.setZone(value, zone)),
     O.getOrElse(() => value)
   );
-};
+});
 
 /**
  * Creates an Effect DateTime for a nullable adapter value and timezone.
@@ -111,10 +114,10 @@ export const applyTimezone = (value: DateTime.DateTime, timezone: DateTimeAdapte
  * @category constructors
  * @since 0.0.0
  */
-export const createDateTimeWithTimezone = (
-  value: DateInputToDateTime,
-  timezone: DateTimeAdapterTimezone
-): DateTime.DateTime | null => {
+export const createDateTimeWithTimezone: {
+  (timezone: DateTimeAdapterTimezone): (value: DateInputToDateTime) => DateTime.DateTime | null;
+  (value: DateInputToDateTime, timezone: DateTimeAdapterTimezone): DateTime.DateTime | null;
+} = dual(2, (value: DateInputToDateTime, timezone: DateTimeAdapterTimezone): DateTime.DateTime | null => {
   if (value === null || value === undefined) {
     return null;
   }
@@ -124,7 +127,7 @@ export const createDateTimeWithTimezone = (
     O.map((dateTime) => applyTimezone(dateTime, timezone)),
     O.getOrElse(createInvalidDateTime)
   );
-};
+});
 
 /**
  * Creates an invalid DateTime-shaped value for picker validation paths.

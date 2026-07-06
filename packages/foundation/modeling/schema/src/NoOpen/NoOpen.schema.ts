@@ -100,7 +100,7 @@ export type NoOpenOption = typeof NoOpenOption.Type;
 export class NoOpenResponseHeader extends S.Class<NoOpenResponseHeader>($I`NoOpenResponseHeader`)(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String),
+    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("NoOpenResponseHeader", {
     description: "The `X-Download-Options` response header.",

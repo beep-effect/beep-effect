@@ -6,8 +6,9 @@
  */
 
 import { $NlpId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Effect, flow, Match, pipe, Result, SchemaGetter, SchemaIssue } from "effect";
+import { Effect, flow, pipe, SchemaGetter, SchemaIssue } from "effect";
 import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -24,9 +25,6 @@ import {
 import type { PatternElement as PatternElementType } from "./Pattern.ts";
 
 const $I = $NlpId.create("Core/PatternParsers");
-const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
-  cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
-
 type NonEmptyChoices<A> = readonly [A, ...A[]];
 
 const invalidBracketString = (input: string, message: string): SchemaIssue.InvalidValue =>
@@ -64,13 +62,11 @@ const decodeLiteralPatternElement = (input: string): O.Option<LiteralPatternElem
 
 const succeedPatternElement = (element: PatternElementType) => Effect.succeed(element);
 
-const encodePatternElement = Match.type<PatternElementType>().pipe(
-  Match.tagsExhaustive({
-    EntityPatternElement: (element) => Pattern.Entity.toBracketString(element.value),
-    LiteralPatternElement: (element) => Pattern.Literal.toBracketString(element.value),
-    POSPatternElement: (element) => Pattern.POS.toBracketString(element.value),
-  })
-);
+const encodePatternElement = PatternElement.match({
+  EntityPatternElement: (element) => Pattern.Entity.toBracketString(element.value),
+  LiteralPatternElement: (element) => Pattern.Literal.toBracketString(element.value),
+  POSPatternElement: (element) => Pattern.POS.toBracketString(element.value),
+});
 
 const decodePatternElement = (input: string) =>
   pipe(
@@ -226,6 +222,42 @@ export const BracketStringToPatternElement = S.String.pipe(
 export type BracketStringToPatternElement = typeof BracketStringToPatternElement.Type;
 
 /**
+ * Decode a non-empty string array into ordered pattern elements.
+ *
+ * @example
+ * ```ts
+ * import { PatternElementsFromString } from "@beep/nlp/Core/PatternParsers"
+ *
+ * const elements = PatternElementsFromString.fromUnknown(["[NOUN]"])
+ * console.log(elements[0]?._tag) // "POSPatternElement"
+ * ```
+ *
+ * @since 0.0.0
+ * @category validation
+ */
+export const PatternElementsFromString = S.NonEmptyArray(BracketStringToPatternElement).pipe(
+  $I.annoteSchema("PatternElementsFromString", {
+    description: "Decoder for non-empty arrays of supported bracket-string pattern elements.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime type for {@link PatternElementsFromString}.
+ *
+ * @example
+ * ```ts
+ * import type { PatternElementsFromString } from "@beep/nlp/Core/PatternParsers"
+ *
+ * type Example = PatternElementsFromString
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type PatternElementsFromString = typeof PatternElementsFromString.Type;
+
+/**
  * Decode a string array into ordered pattern elements.
  *
  * @example
@@ -239,8 +271,4 @@ export type BracketStringToPatternElement = typeof BracketStringToPatternElement
  * @since 0.0.0
  * @category validation
  */
-export const PatternFromString = (input: unknown) =>
-  Result.getOrThrowWith(
-    S.decodeUnknownResult(S.NonEmptyArray(BracketStringToPatternElement))(input),
-    schemaIssueToError
-  );
+export const PatternFromString = (input: unknown) => PatternElementsFromString.fromUnknown(input);

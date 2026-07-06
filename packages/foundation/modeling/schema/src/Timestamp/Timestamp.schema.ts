@@ -8,7 +8,7 @@
 import { $SchemaId } from "@beep/identity";
 import { LocalDate } from "@beep/schema/LocalDate";
 import { Str } from "@beep/utils";
-import { DateTime, Effect, flow, Order as Order_, pipe, Schema, SchemaIssue, SchemaTransformation } from "effect";
+import { DateTime, Effect, flow, Order as Order_, pipe, SchemaIssue, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -220,6 +220,8 @@ export class Timestamp extends S.Class<Timestamp>("Timestamp")(
     documentation: "Stores the epoch milliseconds internally.\nEncoded as ISO 8601 datetime string.",
   })
 ) {
+  static readonly is = S.is(Timestamp);
+
   /**
    * Get the underlying DateTime.Utc instance
    *
@@ -286,7 +288,7 @@ export class Timestamp extends S.Class<Timestamp>("Timestamp")(
  * @since 0.0.0
  * @category guards
  */
-export const isTimestamp = Schema.is(Timestamp);
+export const isTimestamp = Timestamp.is;
 
 /**
  * Create a `Timestamp` from a `DateTime.Utc`.

@@ -1,16 +1,5 @@
 [
   {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
-    "line": 425,
-    "symbol": "RDF/JSON-LD/PROV schema tests",
-    "smell": "The package has extensive fixture coverage for RDF terms, JSON-LD, vocabulary constants, and semantic metadata, but only SemanticSchemaMetadata has an S.toArbitrary-derived round-trip proof. Core RDF terms, datasets, JSON-LD models, evidence models, and PROV models are not property-tested from their production schemas.",
-    "proposedTarget": "Add additive property tests using S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) for NamedNode, BlankNode, Literal, Quad, Dataset, JsonLdDocument, JsonLdFrame, EvidenceSelector/EvidenceAnchor, and ProvO where generated values are stable. IRI schemas already define custom toArbitrary annotations at packages/foundation/modeling/rdf/src/Iri.ts:887. Mirror packages/foundation/modeling/md/test/Md.test.ts:45 and :150 or packages/tooling/test-kit/test-utils/src/Schema.ts:36.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
     "ruleId": "SFV4-precision-audit",
     "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
     "line": 913,
@@ -19,7 +8,11 @@
     "proposedTarget": "Use LanguageTag in MakeLiteralOptions, or decode the overload's string language into LanguageTag before constructing Literal. The existing LanguageTag schema is packages/foundation/modeling/rdf/src/Rdf.ts:329 and Literal.language already uses it at :465.",
     "confidence": 0.82,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening the exported makeLiteral options language field to LanguageTag changes the helper options surface used by external package tests and adapters. Literal.language now validates and normalizes the constructed value; the options signature ripple is deferred.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -30,7 +23,11 @@
     "proposedTarget": "Use IRIReference or JsonLdNodeIdentifier for @id, depending on whether blank node identifiers and relative references should be accepted, and use S.OptionFromOptionalKey(IRIReference) for @type. IRIReference is verified locally at packages/foundation/modeling/rdf/src/Iri.ts:887 and includes a toArbitrary annotation.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening this JSON-LD field changes accepted external JSON-LD wire forms and affects semantic-web consumers. The package needs a coordinated JSON-LD term/IRI precision sweep rather than a single-package public-form change.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -41,7 +38,11 @@
     "proposedTarget": "Introduce a JsonLdTermName schema, at minimum S.NonEmptyString with keyword exclusions if needed, and use S.Record(JsonLdTermName, S.Union([IRIReference, JsonLdTermDefinition])). S.NonEmptyString is verified at .repos/effect-v4/packages/effect/src/Schema.ts:8420.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Tightening this JSON-LD field changes accepted external JSON-LD wire forms and affects semantic-web consumers. The package needs a coordinated JSON-LD term/IRI precision sweep rather than a single-package public-form change.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -52,7 +53,11 @@
     "proposedTarget": "Use LanguageTag for @language. If importing LanguageTag from Rdf.ts would introduce a cycle, move the language-tag schema to a small shared module and re-export it from Rdf.ts. The target schema is packages/foundation/modeling/rdf/src/Rdf.ts:329.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening this JSON-LD field changes accepted external JSON-LD wire forms and affects semantic-web consumers. The package needs a coordinated JSON-LD term/IRI precision sweep rather than a single-package public-form change.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -63,7 +68,11 @@
     "proposedTarget": "Use JsonLdTermName or IRIReference for property keys, and consider S.NonEmptyArray(JsonLdPropertyValue) for property values if empty property arrays are not meaningful. S.NonEmptyArray is verified at .repos/effect-v4/packages/effect/src/Schema.ts:4533.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Tightening this JSON-LD field changes accepted external JSON-LD wire forms and affects semantic-web consumers. The package needs a coordinated JSON-LD term/IRI precision sweep rather than a single-package public-form change.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -74,7 +83,11 @@
     "proposedTarget": "Use IRIReference or JsonLdTermName for includeProperties elements, and use S.NonEmptyArray when present. The fixture at packages/foundation/modeling/rdf/test/Rdf.test.ts:535 uses https://schema.org/name.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Tightening this JSON-LD field changes accepted external JSON-LD wire forms and affects semantic-web consumers. The package needs a coordinated JSON-LD term/IRI precision sweep rather than a single-package public-form change.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -85,7 +98,11 @@
     "proposedTarget": "Add a start <= end check to TextPositionSelector and WebAnnotationTextPositionSelector, and add a custom toArbitrary annotation if schema-derived arbitrary tests are added. The NLP handoff Span model is the local exemplar for this exact invariant at packages/foundation/modeling/nlp/src/Handoff/Contract.ts:151 through :198.",
     "confidence": 0.82,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Adding start <= end changes the public decode/constructor behavior for Evidence and WebAnnotation selector DTOs and has external consumers. The invariant needs a coordinated family-close sweep with encoded snapshot updates.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-equivalence",

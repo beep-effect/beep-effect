@@ -111,7 +111,7 @@ export class PermittedCrossDomainPoliciesResponseHeader extends S.Class<Permitte
 )(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String),
+    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("PermittedCrossDomainPoliciesResponseHeader", {
     description: "The `X-Permitted-Cross-Domain-Policies` response header.",

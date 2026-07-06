@@ -60,6 +60,9 @@ export class LocalDate extends S.Class<LocalDate>($I`LocalDate`)(
       "Stores year, month (1-12), and day (1-31) as numbers.\nEncoded as ISO 8601 date string (YYYY-MM-DD).",
   })
 ) {
+  static readonly is = S.is(LocalDate);
+  static readonly decodeEffect = S.decodeUnknownEffect(LocalDate);
+
   /**
    * Format as ISO 8601 date string (YYYY-MM-DD)
    *
@@ -84,7 +87,7 @@ export class LocalDate extends S.Class<LocalDate>($I`LocalDate`)(
    * Value equality for LocalDate instances.
    */
   [Equal.symbol](that: Equal.Equal): boolean {
-    return S.is(LocalDate)(that) && this.year === that.year && this.month === that.month && this.day === that.day;
+    return LocalDate.is(that) && this.year === that.year && this.month === that.month && this.day === that.day;
   }
 
   /**
@@ -129,11 +132,9 @@ export class LocalDate extends S.Class<LocalDate>($I`LocalDate`)(
  * @since 0.0.0
  * @category guards
  */
-export const isLocalDate = S.is(LocalDate);
+export const isLocalDate = LocalDate.is;
 
 const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
-
-const decodeLocalDate = S.decodeUnknownEffect(LocalDate);
 
 const isLeapYearInternal = (year: number): boolean => (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
 
@@ -237,7 +238,7 @@ export const fromString = (dateString: string): Effect.Effect<LocalDate, S.Schem
       };
 
       return isValidCalendarDate(parts)
-        ? decodeLocalDate(parts)
+        ? LocalDate.decodeEffect(parts)
         : Effect.fail(makeInvalidLocalDateError(dateString, "Invalid calendar date"));
     },
   });

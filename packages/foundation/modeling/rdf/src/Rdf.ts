@@ -6,19 +6,17 @@
  */
 
 import { $RdfId } from "@beep/identity/packages";
-import { A, Str } from "@beep/utils";
+import { SchemaUtils } from "@beep/schema";
+import { A, R, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Match, Order, pipe, Result } from "effect";
+import { Match, Order, pipe, Result, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { IRI } from "./Iri.ts";
 import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata.ts";
 
 const $I = $RdfId.create("rdf");
-
-const decodeBlankNodeResult = S.decodeUnknownResult(S.NonEmptyString);
 
 const curieMetadata = makeSemanticSchemaMetadata({
   kind: "identifier",
@@ -197,6 +195,13 @@ const BlankNodeLabelChecks = S.makeFilterGroup(
   }
 );
 
+const BlankNodeLabel = S.String.check(BlankNodeLabelChecks).pipe(
+  $I.annoteSchema("BlankNodeLabel", {
+    description: "Blank node label accepted by RDF/JS blank nodes.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
 /**
  * Prefix label used by RDF namespace bindings.
  *
@@ -229,32 +234,9 @@ export const PrefixLabel = S.String.check(PrefixLabelChecks).pipe(
       ],
       equivalenceBasis: "Exact string equality.",
     }),
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
-
-const isPrefixLabel = S.is(PrefixLabel);
-
-const PrefixMapKeyChecks = S.makeFilter<Readonly<Record<string, unknown>>>(
-  (value) =>
-    pipe(
-      A.findFirst(R.keys(value), (key) => !isPrefixLabel(key)),
-      O.match({
-        onNone: () => undefined,
-        onSome: (invalidKey) => ({
-          path: [invalidKey],
-          issue:
-            "Prefix labels must begin with an ASCII letter and then use letters, digits, dot, underscore, or hyphen",
-        }),
-      })
-    ),
-  {
-    identifier: $I`PrefixMapKeyChecks`,
-    title: "Prefix Map Keys",
-    description: "Checks that every prefix map key is an RDF prefix label.",
-  }
-);
-
-const PrefixMapSchema = S.Record(S.String, IRI).check(PrefixMapKeyChecks);
 
 /**
  * Type for {@link PrefixLabel}.
@@ -271,6 +253,27 @@ const PrefixMapSchema = S.Record(S.String, IRI).check(PrefixMapKeyChecks);
  * @category models
  */
 export type PrefixLabel = typeof PrefixLabel.Type;
+
+const PrefixMapKeyChecks = S.makeFilterGroup(
+  [
+    S.makeFilter(
+      (prefixes: Readonly<Record<string, unknown>>) =>
+        R.every(prefixes, (_namespace, prefix) => PrefixLabel.is(prefix)),
+      {
+        identifier: $I`PrefixMapKeyCheck`,
+        title: "Prefix Map Keys",
+        description: "Prefix maps must use RDF prefix labels for every key.",
+        message:
+          "Prefix labels must begin with an ASCII letter and then use letters, digits, dot, underscore, or hyphen",
+      }
+    ),
+  ],
+  {
+    identifier: $I`PrefixMapKeyChecks`,
+    title: "Prefix Map Keys",
+    description: "Checks for RDF prefix map keys.",
+  }
+);
 
 /**
  * CURIE-style compact IRI expression.
@@ -292,7 +295,8 @@ export const Curie = S.String.check(CurieChecks).pipe(
   $I.annoteSchema("Curie", {
     description: "CURIE-style compact IRI expression.",
     semanticSchemaMetadata: curieMetadata,
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -326,7 +330,9 @@ export type Curie = typeof Curie.Type;
  * @since 0.0.0
  * @category models
  */
-export const LanguageTag = S.String.check(LanguageTagChecks).pipe(
+export const LanguageTag = S.String.pipe(
+  S.decode(SchemaTransformation.toLowerCase()),
+  S.check(LanguageTagChecks),
   S.brand("LanguageTag"),
   $I.annoteSchema("LanguageTag", {
     description: "RDF literal language tag.",
@@ -344,7 +350,8 @@ export const LanguageTag = S.String.check(LanguageTagChecks).pipe(
       ],
       equivalenceBasis: "Lower-cased language-tag equality.",
     }),
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -415,7 +422,7 @@ export class NamedNode extends S.Class<NamedNode>($I`NamedNode`)(
 export class BlankNode extends S.Class<BlankNode>($I`BlankNode`)(
   {
     termType: S.tag("BlankNode"),
-    value: S.String.check(BlankNodeLabelChecks),
+    value: BlankNodeLabel,
   },
   $I.annote("BlankNode", {
     description: "RDF blank node value aligned with RDF/JS.",
@@ -462,7 +469,7 @@ export class Literal extends S.Class<Literal>($I`Literal`)(
   {
     termType: S.tag("Literal"),
     value: S.String,
-    language: S.OptionFromOptionalKey(LanguageTag),
+    language: S.OptionFromOptionalKey(LanguageTag).pipe(SchemaUtils.withNoneDefault),
     datatype: NamedNode,
   },
   $I.annote("Literal", {
@@ -553,7 +560,8 @@ export const Term = S.Union([NamedNode, BlankNode, Literal, DefaultGraph]).pipe(
       canonicalizationRequired: true,
       representations: [{ kind: "RDF/JS" }, { kind: "JSON-LD" }],
     }),
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -594,7 +602,8 @@ export const Subject = S.Union([NamedNode, BlankNode]).pipe(
   S.toTaggedUnion("termType"),
   $I.annoteSchema("Subject", {
     description: "RDF subject term union.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -636,7 +645,8 @@ export const ObjectTerm = S.Union([NamedNode, BlankNode, Literal]).pipe(
   S.toTaggedUnion("termType"),
   $I.annoteSchema("ObjectTerm", {
     description: "RDF object term union.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -677,7 +687,8 @@ export const GraphTerm = S.Union([NamedNode, BlankNode, DefaultGraph]).pipe(
   S.toTaggedUnion("termType"),
   $I.annoteSchema("GraphTerm", {
     description: "RDF graph term union.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -808,10 +819,9 @@ export class NamespaceBinding extends S.Class<NamespaceBinding>($I`NamespaceBind
  * @since 0.0.0
  * @category models
  */
-// Runtime key validation in PrefixMapSchema proves every erased S.Record key is a PrefixLabel.
-export const PrefixMap = (
-  PrefixMapSchema as unknown as S.Codec<Readonly<Record<PrefixLabel, IRI>>, Readonly<Record<PrefixLabel, IRI>>>
-).pipe(
+export const PrefixMap = S.Record(S.String, IRI).pipe(
+  S.check(PrefixMapKeyChecks),
+  S.decodeTo(S.Record(PrefixLabel, IRI)),
   $I.annoteSchema("PrefixMap", {
     description: "Prefix map keyed by RDF prefix labels.",
     semanticSchemaMetadata: makeSemanticSchemaMetadata({
@@ -828,7 +838,8 @@ export const PrefixMap = (
       ],
       equivalenceBasis: "Prefix and namespace string equality.",
     }),
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -893,7 +904,7 @@ export const makeNamedNode = (value: string): NamedNode =>
 export const makeBlankNode = (value: string): BlankNode =>
   BlankNode.make({
     termType: "BlankNode",
-    value: pipe(decodeBlankNodeResult(value), Result.getOrThrow),
+    value: BlankNodeLabel.fromUnknown(value),
   });
 
 /**
@@ -1109,7 +1120,7 @@ export const serializeTerm = (term: Term): string =>
     BlankNode: (value) => `_:${encodeBlankNodeLabel(value.value)}`,
     Literal: (value) =>
       O.isSome(value.language)
-        ? `"${escapeLiteralLexical(value.value)}"@${Str.toLowerCase(value.language.value)}`
+        ? `"${escapeLiteralLexical(value.value)}"@${value.language.value}`
         : `"${escapeLiteralLexical(value.value)}"^^<${value.datatype.value}>`,
     DefaultGraph: () => "default",
   });
