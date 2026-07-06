@@ -60,7 +60,7 @@ wheels = [
 [[package]]
 name = "beep-skillopt-runner"
 version = "0.0.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "skillopt" },
 ]
