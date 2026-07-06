@@ -14,8 +14,9 @@
 #
 # Retired dependency-refresh ignores are intentionally absent when the lockfile
 # resolves fixed versions. The current lock resolves esbuild 0.25.12, form-data
-# 4.0.6, and protobufjs 7.6.4; form-data and protobufjs are also pinned in root
-# overrides.
+# 4.0.6, protobufjs 8.6.5, and nested protobufjs 7.6.4 naturally from dependency
+# ranges. Root package.json has no active overrides object; `resolutions#` is a
+# comment-only note key.
 
 [[IgnoredVulns]]
 id = "GHSA-h67p-54hq-rp68"
