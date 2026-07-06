@@ -38,6 +38,7 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { Cause, Duration, Effect, Exit, FileSystem, Layer, Path, pipe, Ref, Runtime } from "effect";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
 import * as HttpClient from "effect/unstable/http/HttpClient";
@@ -4198,4 +4199,17 @@ export const ValidExport = packageDocAnchor;
       )
     )
   );
+});
+
+describe("DocgenQualityWorkerEvalReport schema", () => {
+  it("every schema-derived report round-trips through its JSON codec", () => {
+    const arbitrary = S.toArbitrary(DocgenQualityWorkerEvalReport);
+    const encodeReportJson = S.encodeSync(S.fromJsonString(DocgenQualityWorkerEvalReport));
+    const sameReport = S.toEquivalence(DocgenQualityWorkerEvalReport);
+
+    fc.assert(
+      fc.property(arbitrary, (report) => sameReport(report, decodeWorkerEvalReportJson(encodeReportJson(report)))),
+      { numRuns: 16 }
+    );
+  });
 });

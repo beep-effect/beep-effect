@@ -524,10 +524,15 @@ const enforceComparison = Effect.fn("KnipRatchet.enforceComparison")(function* (
  * @category models
  * @since 0.0.0
  */
-export type RunKnipRatchetOptions = {
-  readonly baselinePath: string;
-  readonly writeBaseline: boolean;
-};
+export class RunKnipRatchetOptions extends S.Class<RunKnipRatchetOptions>($I`RunKnipRatchetOptions`)(
+  {
+    baselinePath: S.String,
+    writeBaseline: S.Boolean,
+  },
+  $I.annote("RunKnipRatchetOptions", {
+    description: "Options accepted by runKnipRatchet: baseline location and write mode.",
+  })
+) {}
 
 /**
  * Run Knip and enforce or refresh the committed regression baseline.

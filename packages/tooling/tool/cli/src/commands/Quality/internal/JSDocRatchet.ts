@@ -458,11 +458,16 @@ const writeBaseline = Effect.fn("JSDocRatchet.writeBaseline")(function* (
  * @category models
  * @since 0.0.0
  */
-export type RunJSDocRatchetOptions = {
-  readonly baselinePath: string;
-  readonly inventoryPath: string;
-  readonly writeBaseline: boolean;
-};
+export class RunJSDocRatchetOptions extends S.Class<RunJSDocRatchetOptions>($I`RunJSDocRatchetOptions`)(
+  {
+    baselinePath: S.String,
+    inventoryPath: S.String,
+    writeBaseline: S.Boolean,
+  },
+  $I.annote("RunJSDocRatchetOptions", {
+    description: "Options accepted by runJSDocRatchet: inventory source, baseline location, and write mode.",
+  })
+) {}
 
 /**
  * Compare generated JSDoc inventory totals against the committed totals baseline.

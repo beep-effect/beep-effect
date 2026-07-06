@@ -146,10 +146,15 @@ class VitestCoverageSummary extends S.Class<VitestCoverageSummary>($I`VitestCove
  * @category models
  * @since 0.0.0
  */
-export type CoverageSnapshotEntry = {
-  readonly baseline: CoveragePackageBaseline;
-  readonly packageName: string;
-};
+export class CoverageSnapshotEntry extends S.Class<CoverageSnapshotEntry>($I`CoverageSnapshotEntry`)(
+  {
+    baseline: CoveragePackageBaseline,
+    packageName: S.String,
+  },
+  $I.annote("CoverageSnapshotEntry", {
+    description: "Baseline entry paired with the package it covers.",
+  })
+) {}
 
 /**
  * One metric that dropped below its committed baseline for one package.
@@ -163,13 +168,18 @@ export type CoverageSnapshotEntry = {
  * @category models
  * @since 0.0.0
  */
-export type CoverageComparisonFailure = {
-  readonly actual: number;
-  readonly baseline: number;
-  readonly metric: CoverageMetricName;
-  readonly packageName: string;
-  readonly packagePath: string;
-};
+export class CoverageComparisonFailure extends S.Class<CoverageComparisonFailure>($I`CoverageComparisonFailure`)(
+  {
+    actual: S.Finite,
+    baseline: S.Finite,
+    metric: CoverageMetricName,
+    packageName: S.String,
+    packagePath: S.String,
+  },
+  $I.annote("CoverageComparisonFailure", {
+    description: "One metric that dropped below its committed baseline for one package.",
+  })
+) {}
 
 /**
  * Outcome of comparing current coverage against the committed baseline:
@@ -185,12 +195,17 @@ export type CoverageComparisonFailure = {
  * @category models
  * @since 0.0.0
  */
-export type CoverageComparisonResult = {
-  readonly comparedCount: number;
-  readonly failures: ReadonlyArray<CoverageComparisonFailure>;
-  readonly missingActuals: ReadonlyArray<string>;
-  readonly newPackages: ReadonlyArray<CoverageSnapshotEntry>;
-};
+export class CoverageComparisonResult extends S.Class<CoverageComparisonResult>($I`CoverageComparisonResult`)(
+  {
+    comparedCount: S.Int,
+    failures: S.Array(CoverageComparisonFailure),
+    missingActuals: S.Array(S.String),
+    newPackages: S.Array(CoverageSnapshotEntry),
+  },
+  $I.annote("CoverageComparisonResult", {
+    description: "Outcome of comparing current coverage against the committed baseline.",
+  })
+) {}
 
 const decodeCoverageRegressionBaseline = decodeJsoncTextAs(CoverageRegressionBaseline);
 const decodeVitestCoverageSummary = S.decodeUnknownEffect(S.fromJsonString(VitestCoverageSummary));
