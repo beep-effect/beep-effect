@@ -746,6 +746,7 @@ export const declarationKind = (node: Node): string => {
  * @category streams
  * @since 0.0.0
  */
+// fallow-ignore-next-line code-duplication
 export const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
   stream.pipe(
     Stream.decodeText(),
