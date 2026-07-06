@@ -52,7 +52,11 @@
     "proposedTarget": "Add explicit overloads and predicate-form `dual` (verified at .repos/effect-v4/packages/effect/src/Function.ts:96) so existing `taskItem(children[, options])` calls keep working and `pipe(children, taskItem({ checked: true }))` is available. The body remains the current `TaskItem.make` implementation.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Remediation audit (P2 pilot @beep/md): declined dualization. taskItem is a builder-DSL constructor (children first, options second) with no pipe-position consumer anywhere in the repo. Dualizing would require runtime first-argument disambiguation between ListItemContent and an options object, adding speculative surface with no demonstrated data-last call site — contrary to crispen deletion-first doctrine. Not tracked in standards/dual-arity.inventory.jsonc and `laws dual-arity --check` reports 0 enforced candidates, so leaving it byte-identical to main introduces no law/lint finding.",
+      "boundary": "public Markdown builder DSL constructor"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -63,7 +67,11 @@
     "proposedTarget": "Add overloads and predicate-form `dual` preserving `pre(value)` / `pre(value, options)` while enabling `pipe(value, pre({ language: \"ts\" }))`. `Function.dual` predicate overload was verified in .repos/effect-v4/packages/effect/src/Function.ts:96-116.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 6
+    "roiRank": 6,
+    "exception": {
+      "reason": "Remediation audit (P2 pilot @beep/md): declined dualization. pre(value, options) is a builder-DSL constructor with no pipe-position consumer in the repo; the value invariant (safe code-fence language) is already absorbed by CodeFenceLanguage in the Pre model. Adding overloads + predicate-form dual is speculative surface, not noise removal — contrary to crispen deletion-first doctrine. Not tracked in standards/dual-arity.inventory.jsonc; `laws dual-arity --check` reports 0 enforced candidates. Left byte-identical to main; no new law/lint finding.",
+      "boundary": "public Markdown builder DSL constructor"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -74,7 +82,11 @@
     "proposedTarget": "Add overloads and predicate-form `dual` preserving `table(children)` / `table(children, options)` while enabling `pipe(rows, table({ headerRow: true }))`; keep the current `Table.make` body.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 7
+    "roiRank": 7,
+    "exception": {
+      "reason": "Remediation audit (P2 pilot @beep/md): declined dualization. table(children, options) is a builder-DSL constructor with no pipe-position consumer in the repo and no un-absorbed invariant in its options bag ({ headerRow? }). Adding overloads + predicate-form dual is speculative surface, not noise removal — contrary to crispen deletion-first doctrine. Not tracked in standards/dual-arity.inventory.jsonc; `laws dual-arity --check` reports 0 enforced candidates. Left byte-identical to main; no new law/lint finding.",
+      "boundary": "public Markdown builder DSL constructor"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

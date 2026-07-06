@@ -204,12 +204,12 @@ export const makeNodeSdkServerConfig: {
         options?.logRecordProcessor ??
         (config.otlpEnabled
           ? [
-              new BatchLogRecordProcessor(
-                new OTLPLogExporter({
+              new BatchLogRecordProcessor({
+                exporter: new OTLPLogExporter({
                   url: endpointUrl(config.otlpBaseUrl, "/v1/logs"),
                 }),
-                { scheduledDelayMillis: loggerExportInterval }
-              ),
+                scheduledDelayMillis: loggerExportInterval,
+              }),
             ]
           : undefined),
       loggerMergeWithExisting: options?.loggerMergeWithExisting ?? true,

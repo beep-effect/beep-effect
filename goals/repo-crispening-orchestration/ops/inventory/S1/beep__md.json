@@ -68,7 +68,11 @@
     "proposedTarget": "Introduce named option schemas such as `TaskItemOptions`, `PreOptions`, and `TableOptions`, or wrap the constructors in Fn schemas when behavior is intentionally decode-on-call. Use `CodeFenceLanguage` codec statics for `pre` as already done at `Md.model.ts:25-37`; verified Fn schema exemplars include `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61` and `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66`.",
     "confidence": 0.72,
     "mechanization": "assisted",
-    "roiRank": 0.46
+    "roiRank": 0.46,
+    "exception": {
+      "reason": "Remediation audit (P2 pilot @beep/md): declined. These constructor option bags ({ checked? }, { language? }, { headerRow? }) are transient builder-DSL inputs normalized immediately into the S.TaggedClass AST nodes (TaskItem/Pre/Table). The only real invariant — a safe code-fence language — is already absorbed by CodeFenceLanguage in the Pre model (Md.model.ts:25-37), which pre() decodes on construction. Introducing named option schemas or Fn wrappers would author new schemas (schema-first-development's lane), not absorb an existing invariant, and would add a decode step for one-field objects fed straight to X.make. Left byte-identical to main; no new lint/law findings.",
+      "boundary": "public builder DSL constructor option-bag surface"
+    }
   },
   {
     "ruleId": "schema-first-inventory",

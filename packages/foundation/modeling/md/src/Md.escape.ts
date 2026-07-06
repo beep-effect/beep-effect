@@ -10,7 +10,7 @@
  */
 
 import { $MdId } from "@beep/identity";
-import { Markdown } from "@beep/schema";
+import { Markdown, SchemaUtils } from "@beep/schema";
 import { A, Html, Str, thunkEmptyStr } from "@beep/utils";
 import { Match, Number as N } from "effect";
 import { dual, flow, pipe } from "effect/Function";
@@ -38,7 +38,8 @@ const maxUrlDecodePasses = 4;
 const StringArray = S.Array(S.String).pipe(
   $I.annoteSchema("StringArray", {
     description: "Rendered string array accepted by Markdown utility helpers.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 const UnsafeUrlProtocolDestination = S.String.check(
   S.isPattern(unsafeUrlProtocolPattern, {
@@ -50,9 +51,9 @@ const UnsafeUrlProtocolDestination = S.String.check(
 ).pipe(
   $I.annoteSchema("UnsafeUrlProtocolDestination", {
     description: "Normalized URL destination that starts with an active unsafe protocol.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
-const isUnsafeUrlProtocolDestination = S.is(UnsafeUrlProtocolDestination);
 
 const isValidCodePoint = (codePoint: number): boolean => codePoint >= 0 && codePoint <= maxUnicodeCodePoint;
 const parseCodePoint: {
@@ -247,7 +248,7 @@ export const sanitizeUrlDestination = (destination: string): string => {
   ];
 
   // Evaluate normalized/decoded candidates, but preserve the original destination when safe.
-  return pipe(candidates, A.map(normalizeUrlProtocolCandidate), A.some(isUnsafeUrlProtocolDestination))
+  return pipe(candidates, A.map(normalizeUrlProtocolCandidate), A.some(UnsafeUrlProtocolDestination.is))
     ? "#"
     : destination;
 };
@@ -387,4 +388,4 @@ export const renderFencedCode: {
  * @category guards
  * @since 0.0.0
  */
-export const isStringArray = S.is(StringArray);
+export const isStringArray = StringArray.is;
