@@ -1,0 +1,9 @@
+[
+  {
+    "op": "insert_after",
+    "target": "## Fast Rules",
+    "content_preview": "- When a task or question asks for output \"formatted per the beep spike response convention\" (or similarly references a \"beep\" response/answer convention), prefix the literal value with `beep: ` (e.g.",
+    "status": "applied_insert_after",
+    "index": 1
+  }
+]

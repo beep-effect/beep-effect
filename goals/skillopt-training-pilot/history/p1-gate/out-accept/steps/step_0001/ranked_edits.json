@@ -1,0 +1,11 @@
+{
+  "reasoning": "The question explicitly asked for the answer 'formatted per the beep spike response convention', signaling that the final answer must be wrapped/prefixed according to a named convention rather than returned as the bare extracted fact. The agent extracted the correct value ('spike-echo-alpha') but ignored the formatting instruction, costing exact match. The skill has no guidance on honoring in-question formatting/naming conventions for the final answer. Adding a general rule (not hardcoding the specific token or prefix value) closes this gap: when a question names a response/output convention, apply that convention's prefix or wrapper to the final answer before emitting it.",
+  "edits": [
+    {
+      "op": "append",
+      "content": "## Answer Formatting Conventions\n\n- If the question explicitly names a response/output convention (e.g. \"formatted per the beep spike response convention\", \"in <X> format\", \"per the <name> convention\"), the final answer must be wrapped or prefixed according to that named convention — do not return the bare extracted value alone.\n- Look in the provided context for how that convention is defined (a prefix like `beep: `, a label, a required delimiter, etc.) and apply it exactly to the extracted value before placing it inside `<answer>...</answer>`.\n- When no convention is named in the question, return the plain extracted value as-is.",
+      "source_type": "failure",
+      "support_count": 1
+    }
+  ]
+}
