@@ -538,6 +538,43 @@ jobs:
       - name: Run Knip regression gate
         run: bun run beep quality knip
 
+  jsdoc-ratchet:
+    name: JSDoc Ratchet
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+          use-node: "false"
+
+      - name: Run JSDoc inventory ratchet
+        shell: bash
+        run: |
+          set -euo pipefail
+          SECONDS=0
+          bun run beep quality jsdoc-inventory
+          inventory_seconds="$SECONDS"
+          bun run beep quality jsdoc-ratchet
+          total_seconds="$SECONDS"
+          {
+            echo "### JSDoc Ratchet"
+            echo
+            echo "- inventory command: \`bun run beep quality jsdoc-inventory\`"
+            echo "- inventory wall time: \`${inventory_seconds}s\`"
+            echo "- command: \`bun run beep quality jsdoc-ratchet\`"
+            echo "- total wall time: \`${total_seconds}s\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   build:
     name: Build
     if: github.event_name == 'push'

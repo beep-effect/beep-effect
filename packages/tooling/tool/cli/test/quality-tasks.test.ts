@@ -3,6 +3,8 @@ import {
   CoveragePackageBaseline,
   CoverageRegressionBaseline,
   collectEffectTsgoDiagnosticLines,
+  compareCoverageRegressionSnapshotsForTesting,
+  compareJSDocTotalsForTesting,
   compareKnipFindingsForTesting,
   compareCoverageRegressionSnapshotsForTesting,
   detectQualityProfileForTesting,
@@ -399,6 +401,7 @@ describe("quality task adapter", () => {
       "quality:build",
       "quality:check",
       "quality:knip",
+      "quality:jsdoc-ratchet",
       "quality:lint",
       "quality:docgen",
       "quality:test",
@@ -407,8 +410,9 @@ describe("quality task adapter", () => {
     expect(A.every(lanes, (lane) => lane.blockedBy.length === 0)).toBe(true);
     expect(lanes[1]?.step.args).toEqual(["run", "check"]);
     expect(lanes[2]?.step.args).toEqual(["run", "beep", "quality", "knip"]);
-    expect(lanes[3]?.step.args).toEqual(["run", "lint"]);
-    expect(lanes[5]?.step.args).toEqual(["run", "test"]);
+    expect(lanes[3]?.step.args).toEqual(["run", "beep", "quality", "jsdoc-ratchet"]);
+    expect(lanes[4]?.step.args).toEqual(["run", "lint"]);
+    expect(lanes[6]?.step.args).toEqual(["run", "test"]);
   });
 
   it("maps repo-sanity github checks as collector lanes", () => {
@@ -715,6 +719,55 @@ describe("quality task adapter", () => {
       baseline_count: 1,
       introduced: [introduced],
       resolved: [],
+    });
+  });
+
+  it("compares JSDoc totals as fail-on-growth and advisory shrinkage", () => {
+    expect(
+      compareJSDocTotalsForTesting(
+        {
+          missingExportExamples: 10,
+          unsafeExampleFindings: 2,
+        },
+        {
+          missingExportExamples: 12,
+          unsafeExampleFindings: 2,
+        }
+      )
+    ).toMatchObject({
+      increased: [],
+      decreased: [
+        {
+          metric: "missingExportExamples",
+          baseline: 12,
+          current: 10,
+          delta: -2,
+        },
+      ],
+      missing_current_metrics: [],
+    });
+
+    expect(
+      compareJSDocTotalsForTesting(
+        {
+          missingExportExamples: 13,
+        },
+        {
+          missingExportExamples: 12,
+          unsafeExampleFindings: 2,
+        }
+      )
+    ).toMatchObject({
+      increased: [
+        {
+          metric: "missingExportExamples",
+          baseline: 12,
+          current: 13,
+          delta: 1,
+        },
+      ],
+      decreased: [],
+      missing_current_metrics: ["unsafeExampleFindings"],
     });
   });
 

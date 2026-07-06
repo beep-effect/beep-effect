@@ -26,6 +26,7 @@ import { runChangesetGraphCheck } from "./ChangesetGraph.js";
 import { qualityFallowCommand } from "./FallowQuality.command.js";
 import { configStringEqualsSync } from "./internal/Config.js";
 import { writeJSDocDocumentationInventory } from "./internal/JSDocDocumentationInventory.js";
+import { defaultJSDocInventoryPath, defaultJSDocTotalsBaselinePath, runJSDocRatchet } from "./internal/JSDocRatchet.js";
 import { defaultKnipBaselinePath, runKnipRatchet } from "./internal/KnipRatchet.js";
 import { runPackageVerifyCli } from "./internal/PackageVerify.js";
 import { repoRelative } from "./internal/QualityArtifactSupport.js";
@@ -914,6 +915,11 @@ const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubCheckLan
   githubCheckLane("quality:build", "repo-quality", bunRunLane(repoRoot, "quality:build", ["build"])),
   githubCheckLane("quality:check", "repo-quality", bunRunLane(repoRoot, "quality:check", ["check"])),
   githubCheckLane("quality:knip", "repo-quality", repoCliLane(repoRoot, "quality:knip", ["knip"])),
+  githubCheckLane(
+    "quality:jsdoc-ratchet",
+    "repo-quality",
+    repoCliLane(repoRoot, "quality:jsdoc-ratchet", ["jsdoc-ratchet"])
+  ),
   githubCheckLane("quality:lint", "repo-quality", bunRunLane(repoRoot, "quality:lint", ["lint"])),
   githubCheckLane("quality:docgen", "repo-quality", bunRunLane(repoRoot, "quality:docgen", ["docgen"])),
   githubCheckLane("quality:test", "repo-quality", bunRunLane(repoRoot, "quality:test", ["test"])),
@@ -2674,6 +2680,31 @@ const jsdocQualityCommand = Command.make("jsdoc-quality", {}, () => runQualityPr
   Command.withDescription("Fail when repo-wide JSDoc quality reports warnings or failures")
 );
 
+const jsdocRatchetCommand = Command.make(
+  "jsdoc-ratchet",
+  {
+    baseline: Flag.string("baseline").pipe(
+      Flag.withDefault(defaultJSDocTotalsBaselinePath),
+      Flag.withDescription("Committed JSDoc totals regression baseline JSONC path")
+    ),
+    inventory: Flag.string("inventory").pipe(
+      Flag.withDefault(defaultJSDocInventoryPath),
+      Flag.withDescription("Generated JSDoc documentation inventory JSONC path")
+    ),
+    writeBaseline: Flag.boolean("write-baseline").pipe(
+      Flag.withDescription("Rewrite the JSDoc totals regression baseline from the generated inventory")
+    ),
+  },
+  ({ baseline, inventory, writeBaseline }) =>
+    runQualityProgram(
+      runJSDocRatchet({
+        baselinePath: baseline,
+        inventoryPath: inventory,
+        writeBaseline,
+      })
+    )
+).pipe(Command.withDescription("Run JSDoc inventory totals as a fail-on-growth regression-baseline gate"));
+
 const knipCommand = Command.make(
   "knip",
   {
@@ -2840,6 +2871,8 @@ export const qualityCommand = Command.make("quality", {}, () =>
     "- bun run beep quality jsdoc-module-tags",
     "- bun run beep quality jsdoc-inventory",
     "- bun run beep quality jsdoc-quality",
+    "- bun run beep quality jsdoc-ratchet",
+    "- bun run beep quality jsdoc-ratchet --write-baseline",
     "- bun run beep quality knip",
     "- bun run beep quality knip --write-baseline",
     "- bun run beep quality turbo-config-proof --base origin/main --head HEAD",
@@ -2861,6 +2894,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     jsdocModuleTagsCommand,
     jsdocInventoryCommand,
     jsdocQualityCommand,
+    jsdocRatchetCommand,
     knipCommand,
     turboConfigProofCommand,
     qualityProfileCommand,
