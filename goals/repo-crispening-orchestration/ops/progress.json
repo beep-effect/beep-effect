@@ -14,8 +14,8 @@
   },
   "phases": {
     "P0_enforce": "done",
-    "P1_baseline": "in_progress",
-    "P1_5_mechanize": "pending",
+    "P1_baseline": "done",
+    "P1_5_mechanize": "in_progress",
     "P2_waves": "pending",
     "P3_catalog": "pending",
     "P4_close": "pending"
@@ -72,8 +72,9 @@
   },
   "pilot": {
     "family": "foundation",
-    "package": "TBD (foundation/modeling exemplar, e.g. @beep/md or @beep/lexical)",
-    "status": "pending"
+    "package": "@beep/md",
+    "status": "pending",
+    "rationale": "GOAL-suggested foundation/modeling exemplar; 10 actionable findings spread across S1/S2/S4/S5 (S3 clean) — meaty enough to exercise the parity-proof + round-trip-law machinery, small enough to converge fast."
   },
   "packages": {
     "@beep/architecture-lab-proof": {
@@ -251,13 +252,13 @@
       "path": "packages/architecture-lab/client",
       "sanitized": "beep__architecture-lab-client",
       "family": "apps-slices",
-      "discovery": "in_progress",
+      "discovery": "done",
       "remediation": "pending",
       "findingsByDomain": {
         "S1": 2,
         "S2": 0,
         "S3": 0,
-        "S4": null,
+        "S4": 0,
         "S5": 0
       },
       "actionableCount": 0,
@@ -270,13 +271,13 @@
       "path": "packages/architecture-lab/config",
       "sanitized": "beep__architecture-lab-config",
       "family": "apps-slices",
-      "discovery": "in_progress",
+      "discovery": "done",
       "remediation": "pending",
       "findingsByDomain": {
         "S1": 1,
         "S2": 3,
         "S3": 0,
-        "S4": null,
+        "S4": 0,
         "S5": 5
       },
       "actionableCount": 7,
@@ -308,17 +309,17 @@
       "path": "packages/architecture-lab/server",
       "sanitized": "beep__architecture-lab-server",
       "family": "apps-slices",
-      "discovery": "in_progress",
+      "discovery": "done",
       "remediation": "pending",
       "findingsByDomain": {
         "S1": 1,
         "S2": 4,
         "S3": 2,
-        "S4": null,
+        "S4": 4,
         "S5": 4
       },
-      "actionableCount": 5,
-      "exceptionCount": 6,
+      "actionableCount": 7,
+      "exceptionCount": 8,
       "parityProofRef": null,
       "policyFlipped": false,
       "remediationNote": ""
@@ -327,13 +328,13 @@
       "path": "packages/architecture-lab/tables",
       "sanitized": "beep__architecture-lab-tables",
       "family": "apps-slices",
-      "discovery": "in_progress",
+      "discovery": "done",
       "remediation": "pending",
       "findingsByDomain": {
         "S1": 3,
         "S2": 4,
         "S3": 0,
-        "S4": null,
+        "S4": 0,
         "S5": 2
       },
       "actionableCount": 2,
@@ -346,17 +347,17 @@
       "path": "packages/architecture-lab/ui",
       "sanitized": "beep__architecture-lab-ui",
       "family": "apps-slices",
-      "discovery": "in_progress",
+      "discovery": "done",
       "remediation": "pending",
       "findingsByDomain": {
         "S1": 1,
         "S2": 2,
         "S3": 1,
-        "S4": null,
+        "S4": 2,
         "S5": 6
       },
-      "actionableCount": 7,
-      "exceptionCount": 3,
+      "actionableCount": 8,
+      "exceptionCount": 4,
       "parityProofRef": null,
       "policyFlipped": false,
       "remediationNote": ""
@@ -1581,13 +1582,13 @@
       "path": "packages/_internal/db-admin",
       "sanitized": "beep__db-admin",
       "family": "apps-slices",
-      "discovery": "in_progress",
+      "discovery": "done",
       "remediation": "pending",
       "findingsByDomain": {
         "S1": 2,
         "S2": 3,
         "S3": 0,
-        "S4": null,
+        "S4": 0,
         "S5": 4
       },
       "actionableCount": 2,
@@ -1657,16 +1658,16 @@
       "path": "packages/shared/domain",
       "sanitized": "beep__shared-domain",
       "family": "apps-slices",
-      "discovery": "in_progress",
+      "discovery": "done",
       "remediation": "pending",
       "findingsByDomain": {
         "S1": 9,
         "S2": 7,
         "S3": 3,
-        "S4": null,
+        "S4": 17,
         "S5": 8
       },
-      "actionableCount": 11,
+      "actionableCount": 28,
       "exceptionCount": 16,
       "parityProofRef": null,
       "policyFlipped": false,
@@ -1676,13 +1677,13 @@
       "path": "packages/shared/tables",
       "sanitized": "beep__shared-tables",
       "family": "apps-slices",
-      "discovery": "in_progress",
+      "discovery": "done",
       "remediation": "pending",
       "findingsByDomain": {
         "S1": 1,
         "S2": 0,
         "S3": 0,
-        "S4": null,
+        "S4": 0,
         "S5": 1
       },
       "actionableCount": 0,
@@ -1866,13 +1867,13 @@
       "path": "packages/workspace/server",
       "sanitized": "beep__workspace-server",
       "family": "apps-slices",
-      "discovery": "in_progress",
+      "discovery": "done",
       "remediation": "pending",
       "findingsByDomain": {
         "S1": 3,
         "S2": 7,
         "S3": 4,
-        "S4": null,
+        "S4": 0,
         "S5": 5
       },
       "actionableCount": 8,
@@ -1904,16 +1905,16 @@
       "path": "packages/workspace/use-cases",
       "sanitized": "beep__workspace-use-cases",
       "family": "apps-slices",
-      "discovery": "in_progress",
+      "discovery": "done",
       "remediation": "pending",
       "findingsByDomain": {
         "S1": 1,
         "S2": 3,
         "S3": 0,
-        "S4": null,
+        "S4": 2,
         "S5": 7
       },
-      "actionableCount": 7,
+      "actionableCount": 9,
       "exceptionCount": 4,
       "parityProofRef": null,
       "policyFlipped": false,

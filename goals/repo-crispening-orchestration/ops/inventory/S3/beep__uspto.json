@@ -7,7 +7,7 @@
     "smell": "Heterogeneous optional error fields are assembled through adjacent single-key R.getSomes spreads for cause and status. R.getSomes is Effect Record's homogeneous dictionary helper (verified at .repos/effect-v4/packages/effect/src/Record.ts:824); here the fixed struct fields have different domains and are part of one options object.",
     "proposedTarget": "Replace the two spreads with one ...O.getSomesStruct({ cause: O.fromUndefinedOr(options.cause), status: O.fromUndefinedOr(options.status) }). O.getSomesStruct is the repo heterogeneous Option-struct helper verified at packages/foundation/modeling/utils/src/Option.ts:102; keep the finding judgment-held until D5.",
     "confidence": 0.85,
-    "mechanization": "judgment",
+    "mechanization": "assisted",
     "roiRank": 1.8
   },
   {

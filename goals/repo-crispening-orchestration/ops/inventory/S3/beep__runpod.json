@@ -7,7 +7,7 @@
     "smell": "diagnosticsFor assembles a heterogeneous optional diagnostics struct through two adjacent single-key R.getSomes spreads for cause and status (lines 580-585). The combined object has fixed known keys with different value types, not a homogeneous dynamic-key dictionary.",
     "proposedTarget": "Replace the two spreads with one ...O.getSomesStruct({ cause: O.fromUndefinedOr(error.cause), status: O.fromUndefinedOr(error.status) }) call. O.getSomesStruct is verified at packages/foundation/modeling/utils/src/Option.ts:102; sibling driver exemplars are RunpodError.fromDescriptor in packages/drivers/runpod/src/Runpod.errors.ts:151 and Firecrawl diagnostics in packages/drivers/firecrawl/src/Firecrawl.service.ts:297. Held at judgment per D5 until the Law 20/47 sweep is allowed.",
     "confidence": 0.82,
-    "mechanization": "judgment",
+    "mechanization": "assisted",
     "roiRank": 1.7
   },
   {

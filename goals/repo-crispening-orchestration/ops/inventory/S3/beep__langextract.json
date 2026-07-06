@@ -18,7 +18,7 @@
     "smell": "Heterogeneous optional-key struct assembly via a locally mutated `input` record with four conditional undefined-guarded assignments (`if (candidate.attributes !== undefined) input.attributes = ...` for attributes/confidence/matchedText/span, lines 56-67) plus a hand-written 7-field type annotation, feeding GroundedExtraction.make — the imperative sibling of the R.getSomes struct-spread smell where O.getSomesStruct is the fit. No R.getSomes call exists in this package.",
     "proposedTarget": "GroundedExtraction.make({ alignmentStatus: status, label: candidate.label, text: candidate.text, ...O.getSomesStruct({ attributes: O.fromUndefinedOr(candidate.attributes), confidence: O.fromUndefinedOr(candidate.confidence), matchedText: O.fromUndefinedOr(matchedText), span: O.fromUndefinedOr(span) }) }) using O.getSomesStruct (verified at packages/foundation/modeling/utils/src/Option.ts:102) and O.fromUndefinedOr (verified at .repos/effect-v4/packages/effect/src/Option.ts:860); deletes the mutable record and its hand-written input type. Behavior-identical for S.optionalKey fields (None keys are omitted entirely, matching exact-optional semantics). Held at judgment per D5 until the Law 20/47 amendment merges.",
     "confidence": 0.75,
-    "mechanization": "judgment",
+    "mechanization": "assisted",
     "roiRank": 1.5
   },
   {
@@ -29,7 +29,7 @@
     "smell": "Same imperative optional-key assembly pattern as Alignment makeGrounded: locally mutated `input` record with hand-written 6-field type annotation and a conditional `if (extraction.confidence !== undefined) input.confidence = extraction.confidence` (lines 66-84) feeding Contract.Entity.make — the manual variant of the R.getSomes struct-spread smell where O.getSomesStruct is the fit.",
     "proposedTarget": "Contract.Entity.make({ canonicalName: extraction.text, id: Contract.EntityId.make(`${documentId}:entity:${index}`), mentions: [mentionId], provenance, type: extraction.label, ...O.getSomesStruct({ confidence: O.fromUndefinedOr(extraction.confidence) }) }) using O.getSomesStruct (packages/foundation/modeling/utils/src/Option.ts:102) and O.fromUndefinedOr (.repos/effect-v4/packages/effect/src/Option.ts:860); mechanically simpler single-key transform than the makeGrounded site, held at judgment per D5 until the Law 20/47 amendment merges.",
     "confidence": 0.8,
-    "mechanization": "judgment",
+    "mechanization": "assisted",
     "roiRank": 1.4
   },
   {

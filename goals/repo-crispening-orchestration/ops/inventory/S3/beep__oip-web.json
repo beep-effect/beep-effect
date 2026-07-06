@@ -18,7 +18,7 @@
     "smell": "Two adjacent R.getSomes spreads assemble one fixed optional error-options struct: provider/providerReason are optional strings at lines 57-60 and status is an optional number at lines 61-63. R.getSomes is the homogeneous record helper, so this split loses the single heterogeneous struct shape that the OipContentLoadError constructor consumes.",
     "proposedTarget": "Coalesce the optional fields into one O.getSomesStruct({ provider: O.fromUndefinedOr(options.provider), providerReason: O.fromUndefinedOr(options.providerReason), status: O.fromUndefinedOr(options.status) }) spread. In-package exemplar: ContactSubmissionError.fromReason already uses O.getSomesStruct for the same provider/providerReason/status shape at apps/oip-web/src/contact/ContactSubmission.service.ts:60-64. Verified target helper: packages/foundation/modeling/utils/src/Option.ts:102; verified Record.getSomes homogeneous signature: .repos/effect-v4/packages/effect/src/Record.ts:824-826. Held at judgment pending D5.",
     "confidence": 0.8,
-    "mechanization": "judgment",
+    "mechanization": "assisted",
     "roiRank": 1.6
   },
   {
@@ -29,7 +29,7 @@
     "smell": "SanityConfigInput.make is populated through four R.getSomes spreads over fixed config fields at lines 98-101. The fields are a heterogeneous constructor payload: projectId/dataset/apiHost/apiVersion are strings while apiToken decodes through S.RedactedFromValue in SanityConfigInput at packages/drivers/sanity/src/Sanity.config.ts:68-73.",
     "proposedTarget": "Build the optional config payload with one O.getSomesStruct call from @beep/utils, e.g. { ...O.getSomesStruct({ projectId, dataset, apiHost: yield* readTextConfigOption(\"SANITY_API_HOST\"), apiVersion: yield* readTextConfigOption(\"SANITY_API_VERSION\"), apiToken: yield* readRedactedConfigOption(\"SANITY_API_TOKEN\") }) }, preserving per-key value types for SanityConfigInput.make. Verified target helper: packages/foundation/modeling/utils/src/Option.ts:102; verified Option.fromUndefinedOr/source Option APIs in Effect v4 at .repos/effect-v4/packages/effect/src/Option.ts:860. Held at judgment pending D5.",
     "confidence": 0.78,
-    "mechanization": "judgment",
+    "mechanization": "assisted",
     "roiRank": 1.6
   },
   {
@@ -40,7 +40,7 @@
     "smell": "Structured log annotations assemble a fixed heterogeneous optional payload through adjacent R.getSomes spreads: provider/providerReason strings at lines 137-140 and status number at lines 141-143. This mirrors the error-options shape above and should preserve named optional fields as one struct.",
     "proposedTarget": "Use one O.getSomesStruct({ provider: O.fromUndefinedOr(error.provider), providerReason: O.fromUndefinedOr(error.providerReason), status: O.fromUndefinedOr(error.status) }) inside Effect.annotateLogs. In-package exemplar: submitContact already annotates provider/providerReason/status with O.getSomesStruct at apps/oip-web/src/contact/ContactSubmission.service.ts:298-302. Verified target helper: packages/foundation/modeling/utils/src/Option.ts:102; R.getSomes homogeneous signature: .repos/effect-v4/packages/effect/src/Record.ts:824-826. Held at judgment pending D5.",
     "confidence": 0.76,
-    "mechanization": "judgment",
+    "mechanization": "assisted",
     "roiRank": 1.5
   },
   {

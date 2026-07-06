@@ -7,7 +7,7 @@
     "smell": "Fixed-key Option-struct spread `...R.getSomes({ maxMaterializedBytes: O.fromUndefinedOr(operation.maxMaterializedBytes) })` (R from effect/Record) inside the archiveEngine.exportArchive call payload; struct-literal spread form, not a homogeneous dynamic-key dictionary.",
     "proposedTarget": "Replace with `...O.getSomesStruct({ maxMaterializedBytes: O.fromUndefinedOr(operation.maxMaterializedBytes) })` from @beep/utils (packages/foundation/modeling/utils/src/Option.ts:102), matching the existing drivers/firecrawl usage; drop the effect/Record import if it becomes unused.",
     "confidence": 0.88,
-    "mechanization": "judgment",
+    "mechanization": "assisted",
     "roiRank": 1.8
   },
   {
@@ -18,7 +18,7 @@
     "smell": "Fixed-key Option-struct spread `...R.getSomes({ maxMaterializedBytes: O.fromUndefinedOr(operation.maxMaterializedBytes) })` (R from effect/Record) inside the extractionEngine.extract call payload; struct-literal spread form, not a homogeneous dynamic-key dictionary.",
     "proposedTarget": "Replace with `...O.getSomesStruct({ maxMaterializedBytes: O.fromUndefinedOr(operation.maxMaterializedBytes) })` from @beep/utils (packages/foundation/modeling/utils/src/Option.ts:102); mechanically identical transform to the line 302 site, held at judgment pending the Law 20/47 amendment (D5).",
     "confidence": 0.88,
-    "mechanization": "judgment",
+    "mechanization": "assisted",
     "roiRank": 1.8
   },
   {

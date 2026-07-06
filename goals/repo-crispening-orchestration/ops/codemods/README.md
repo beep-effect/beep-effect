@@ -61,25 +61,36 @@ produced by the S1–S5 discovery specialists (`ruleId`, `file`, `line`,
 `exception?`); this table assigns each smell family's *default* tier, which
 discovery may override per-site.
 
-## Triage table (candidate transforms — counts are estimates pending P1)
+## Triage table (measured P1 baseline, 2026-07-06)
 
-| Smell | Target | Tier | Est. sites | Golden-diff status |
+Counts are **actionable** findings (exception-ledgered records excluded) from
+the §5.5 inventories at `ops/inventory/S1..S5`, split by the G5 confidence
+tiers as `pure-codemod / assisted / judgment`. Aggregate across all
+specialists: 1,761 actionable (175 / 1,475 / 111) plus 1,491 audited
+exceptions out of 3,252 records.
+
+| Smell | Target | Measured tier split (≥0.9 / 0.6–0.9 / <0.6) | Sites | Golden-diff status |
 | --- | --- | --- | --- | --- |
-| `R.getSomes({...})` on heterogeneous Option-structs | `O.getSomesStruct({...})` (`packages/foundation/modeling/utils/src/Option.ts:102`) | ≥ 0.9 (pure codemod) — **blocked until the Law 20/47 amendment merges (D5)** | ~113 per SPEC/prompt estimate; a directional `rg -c "R\.getSomes\(" packages apps` on 2026-07-05 sums to 124 occurrences repo-wide — P1 discovery is the authoritative count, this is only a sanity check | not started |
-| `?? d` fallback where a schema constructor default belongs | `SchemaUtils.withConstantDefault` / `SchemaUtils.withKeyDefaults` (`packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts`, `withKeyDefaults.ts`) | 0.6 – 0.9 (codemod proposes + review) | TBD — P1 | not started |
-| Top-of-file `const isX = S.is(X)` / `const decodeX = ...` guard/decode wall | `SchemaUtils.withCodecStatics` (`packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts`) or in-body `static readonly is = S.is(Self)` | 0.6 – 0.9 (codemod proposes + review) | TBD — P1 | not started |
-| `switch` / if-chain over a `_tag`-like discriminator | Derived `match` / `Match.tagsExhaustive` / `Match.discriminatorsExhaustive` (`effect/Match`) | 0.6 – 0.9 (codemod proposes + review) | TBD — P1 | not started |
-| `...somethingDefaults` spread | Schema-level defaults (`SchemaUtils.withConstantDefault` / `withKeyDefaults` / `withEncodeDefault`) | 0.6 – 0.9 (codemod proposes + review) | TBD — P1 | not started |
-| `.trim()` / `.toUpperCase()` / `.toLowerCase()` / clamp/coerce normalization in a function body | Transformation schema (`S.decodeTo` + `SchemaTransformation.transform`/`transformOrFail`, or `SchemaGetter`) | Judgment (< 0.6) | TBD — P1 | not applicable (judgment-only) |
-| Function returning `null` / `undefined` in domain code | `effect/Option` (`O.some`/`O.none`/`O.fromNullishOr`) | Judgment (< 0.6) | TBD — P1 | not applicable (judgment-only) |
+| `R.getSomes({...})` on heterogeneous Option-structs (`SFV4-getsomes-struct`, S3+S2) | `O.getSomesStruct({...})` (`packages/foundation/modeling/utils/src/Option.ts:102`) | 0 / 22 / 0 — discovery measured **assisted**, not the ≥0.9 the P0 estimate assumed; call-site heterogeneity needs per-diff review | 22 | not started |
+| Schema-default absorption: `?? d` fallbacks and `...somethingDefaults` spreads (`SFV4-defaults`, S2) | `SchemaUtils.withConstantDefault` / `withKeyDefaults` / `withEncodeDefault` (`packages/foundation/modeling/schema/src/SchemaUtils/`) | 36 / 246 / 27 | 309 | not started |
+| Statics colocation: guard/decode walls, statics detached from schemas, non-dual helpers (`SFV4-static-api`, S4) | `SchemaUtils.withCodecStatics` or in-body `static readonly is = S.is(Self)`; `dual`; `flow(...)` | 85 / 392 / 38 | 515 | not started |
+| Manual discriminator branching: `switch`/if-chains over `_tag`-like discriminators (`SFV4-static-api`, S3) | Derived `match` / `Match.tagsExhaustive` / `Match.discriminatorsExhaustive` (`effect/Match`) | 17 / 115 / 9 | 141 | not started |
+| Body-level normalization: trim/case/clamp/coerce (`SFV4-normalization`, S2) | Transformation schema (`S.decodeTo` + `SchemaTransformation.transform`/`transformOrFail`, or `SchemaGetter`) | 2 / 51 / 9 — measured mostly **assisted**, not judgment-only as estimated | 62 | not started |
+| `null`/`undefined`-returning domain helpers (`SFV4-null-return`, S2) | `effect/Option` (`O.some`/`O.none`/`O.fromNullishOr`) | 4 / 29 / 1 — measured mostly **assisted**, not judgment-only as estimated | 34 | not started |
+| Exported fn contracts bypassing schemas (`SFV4-fn-schema`, S1) | `Fn` / `EffectSchema()` / `PromiseSchema` (`@beep/schema`) | 0 / 54 / 8 | 62 | not started |
+| Exported interface/type-alias/struct data models (`schema-first-inventory`, S1) | `S.Class` (default) / `S.Struct` + `typeof X.Type` | 9 / 72 / 9 | 90 | not started |
+| Ad-hoc `JSON.parse` near schema-fit boundaries (`SFV4-boundary-codec`, S1) | Schema codec (`S.fromJsonString` / boundary decode) | 0 / 11 / 4 | 15 | not started |
+| Unbranded/broad primitives on domain fields (`SFV4-precision-audit`, S5) | Brands, named checks (`S.isPattern`), range checks | 15 / 235 / 5 | 255 | not started |
+| Broad numeric fields (`SFV4-numeric-domain`, S5) | `S.Int` / `S.Finite` / range refinements | 5 / 148 / 0 | 153 | not started |
+| Absorptions without round-trip laws (`SFV4-arbitrary-tests`, S5) | `S.toArbitrary` round-trip property tests (`@effect/vitest`) | 0 / 93 / 1 | 94 | not started |
+| Hand-written equality where derivation applies (`SFV4-equivalence`, S5) | `S.toEquivalence` | 2 / 7 / 0 | 9 | not started |
 
-The `R.getSomes` → `O.getSomesStruct` row is the only ≥ 0.9 candidate today
-and is explicitly sequenced behind the doctrine amendment (D5, SPEC.md Stop
-Conditions): do not draft that codemod, and do not run it against any wave,
-until `.claude/skills/effect-first-development/SKILL.md` Law 20 (line 99) and
-Law 47 (line 126) — plus the mirror at
-`.claude/skills/schema-first-development/SKILL.md:96` — are amended and the
-consolidated `standards/architecture/DECISIONS.md` entry (G6) is merged.
+The `R.getSomes` → `O.getSomesStruct` sweep was sequenced behind the Law
+20/47 doctrine amendment (D5, SPEC.md Stop Conditions). **That gate is
+satisfied:** the amendment and the consolidated
+`standards/architecture/DECISIONS.md` entry merged to main in the P0 PR
+(#294, commit 5fd9f35220). The sweep may proceed in P2 — at the measured
+**assisted** tier (agent reviews each diff), not unattended.
 
 ## What P1.5 must add here
 

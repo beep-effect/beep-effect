@@ -51,7 +51,7 @@
     "smell": "Heterogeneous optional-key struct assembly via four chained conditional spreads ...(P.isNotUndefined(x) ? { x } : {}) for isTTY, osRelease, platform, sniffFlags (lines 464-467) -- the sibling pattern of the R.getSomes struct-spread smell, where O.getSomesStruct is the fit. No R.getSomes call exists in this package; this is the manual-spread variant of the same shape.",
     "proposedTarget": "({ argv, env, ...O.getSomesStruct({ isTTY: O.fromUndefinedOr(isTTY), osRelease: O.fromUndefinedOr(osRelease), platform: O.fromUndefinedOr(platform), sniffFlags: O.fromUndefinedOr(sniffFlags) }) }) using O.getSomesStruct (verified at packages/foundation/modeling/utils/src/Option.ts:102) and O.fromUndefinedOr (verified at .repos/effect-v4/packages/effect/src/Option.ts:860). Held at judgment per D5 until the Law 20/47 amendment sweep is cleared.",
     "confidence": 0.7,
-    "mechanization": "judgment",
+    "mechanization": "assisted",
     "roiRank": 1.4
   },
   {
