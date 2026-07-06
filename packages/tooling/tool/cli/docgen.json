@@ -101,6 +101,9 @@
       "@beep/repo-cli/commands/Quality": [
         "../../../../packages/tooling/tool/cli/src/commands/Quality/index.ts"
       ],
+      "@beep/repo-cli/commands/Research": [
+        "../../../../packages/tooling/tool/cli/src/commands/Research/index.ts"
+      ],
       "@beep/repo-cli/commands/Reuse": [
         "../../../../packages/tooling/tool/cli/src/commands/Reuse/index.ts"
       ],
@@ -176,6 +179,10 @@
       "@beep/file-processing/test": [
         "../../../../packages/foundation/capability/file-processing/src/test.ts"
       ],
+      "@beep/firecrawl": [
+        "../../../../packages/drivers/firecrawl/src/index.ts"
+      ],
+      "@beep/firecrawl/*": ["../../../../packages/drivers/firecrawl/src/*.ts"],
       "@beep/identity": [
         "../../../../packages/foundation/modeling/identity/src/index.ts"
       ],

@@ -1,4 +1,5 @@
 achievability
+achievability
 affordances
 AGENTSDK
 aiassistant
@@ -28,6 +29,7 @@ CAGR
 Cassano
 Catalunya
 CDTF
+CDTF
 CEUR
 ceur
 chainer
@@ -44,6 +46,7 @@ Clusterer
 CNBC
 cnbc
 codegraph
+cognified
 Cognify
 commoditized
 commoditizes
@@ -53,9 +56,13 @@ conclusory
 contoso
 Danswer
 DCMI
+DCMI
 Dcterms
 dcterms
 DCTERMS
+dcterms
+DCTERMS
+Dcterms
 dedup
 deff
 Definely
@@ -75,10 +82,12 @@ Emph
 emph
 empt
 Eqky
+Eqky
 ERES
 erythropoietin
 ESTRELLA
 estrellaproject
+exfiltration
 fcap
 financials
 fmod
@@ -95,6 +104,7 @@ generalise
 Gramm
 gramm
 graphiti
+greppable
 Heppner
 hierarchized
 HMAC
@@ -120,6 +130,7 @@ ipronto
 ipsissimis
 ipwatchdog
 Irreflexive
+Irreflexive
 isanyof
 ISWC
 JELS
@@ -137,6 +148,7 @@ lawp
 LAWSRV
 lawyered
 LCBR
+LCSH
 LCSH
 LEDES
 libyal
@@ -158,6 +170,7 @@ Msty
 mtimes
 muda
 myapp
+myapp
 nana
 NCOR
 negotiables
@@ -168,6 +181,7 @@ OAPI
 ODRL
 oip
 okrs
+okrs
 Openllet
 openllet
 opip
@@ -177,6 +191,7 @@ Orthogonalization
 osdk
 oxigraph
 Oxigraph
+parameterizes
 parameterizes
 partes
 perkinscoie
@@ -195,7 +210,9 @@ ptmnfee
 ptoffact
 PTOL
 Qbhqb
+Qbhqb
 QEMB
+qohv
 qohv
 Quartik
 QWEN
@@ -219,6 +236,7 @@ Reor
 reor
 reorproject
 repros
+reqs
 reqs
 Revaia
 rightaichoice
@@ -276,6 +294,7 @@ TSDR
 TTAB
 ttool
 tulpn
+tulpn
 ulimits
 unasserted
 unbilled
@@ -292,6 +311,7 @@ Unifi
 unindexed
 uninspectable
 unioned
+unioned
 Universitat
 unlogged
 unmodeled
@@ -299,6 +319,7 @@ Unradio
 unre
 unrefereed
 UNREFEREED
+unreviewable
 unreviewed
 Unsandboxed
 unstarted
@@ -315,26 +336,6 @@ VLAIR
 vsearch
 WEMI
 wkcbdgqqo
-achievability
-CDTF
-DCMI
-dcterms
-DCTERMS
-Dcterms
-Eqky
-exfiltration
-greppable
-Irreflexive
-LCSH
-myapp
-okrs
-parameterizes
-Qbhqb
-qohv
-reqs
-tulpn
-unioned
-unreviewable
 Wyner
 yeet
 zazuko

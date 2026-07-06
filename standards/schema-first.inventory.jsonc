@@ -2282,6 +2282,14 @@
       "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Research/Research.service.ts",
+      "symbol": "ResearchCommandServiceShape",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
       "symbol": "SyncDataTarget",
       "kind": "exported-interface",
