@@ -634,7 +634,7 @@ ${Md.h3("Inside")}
   // These S.toArbitrary laws pin that the colocated `.is` static agrees with
   // the schema it derives from, so the absorption cannot silently drift.
   it("colocated escape-schema guards agree with their schemas", () => {
-    const stringArrayArbitrary = S.toArbitrary(S.Array(S.String));
+    const stringArrayArbitrary = S.String.pipe(S.Array, S.toArbitrary);
     fc.assert(
       fc.property(stringArrayArbitrary, (values) => {
         expect(isStringArray(values)).toBe(true);
