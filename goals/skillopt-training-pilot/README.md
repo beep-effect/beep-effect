@@ -40,7 +40,12 @@ before generalizing anything.
 
 ## Latest Evidence
 
-Not started — graduated 2026-07-06.
+2026-07-06: **P0 complete, P1 loop-proof achieved** — SkillOpt trained
+end-to-end against this repo (exit 0, 27s, 1 step): codex_exec target
+rollouts + claude_chat sonnet optimizer, all plan-covered. Four integration
+findings + smoke artifacts in
+[`history/p1-spike/`](./history/p1-spike/FINDINGS.md). Remaining P1: a
+baseline-failing task to exercise the edit+gate path.
 
 ## Notes
 
