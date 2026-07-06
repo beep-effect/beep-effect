@@ -325,7 +325,7 @@ export class NormalizeJsonLdDocumentRequest extends S.Class<NormalizeJsonLdDocum
     document: JsonLdDocument,
     profile: JsonLdDocumentNormalizationProfile,
     loaderPolicy: S.OptionFromOptionalKey(JsonLdDocumentLoaderPolicy).pipe(SchemaUtils.withNoneDefault),
-    safeMode: S.OptionFromOptionalKey(S.Boolean),
+    safeMode: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("NormalizeJsonLdDocumentRequest", {
     description: "Normalize JSON-LD document request.",
