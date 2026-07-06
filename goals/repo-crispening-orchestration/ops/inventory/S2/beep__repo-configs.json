@@ -1,0 +1,169 @@
+[
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSchemas.ts",
+    "line": 117,
+    "symbol": "normalizeAllowlistEntries",
+    "smell": "`EffectLawsAllowlistEntry.file` is modeled as plain `NonEmptyString` at line 17, then every entry is rebuilt through `normalizePath(entry.file)` at lines 117-125. The path normalization invariant lives in post-decode business logic instead of the field codec.",
+    "proposedTarget": "Use the existing path transformation schema on the field, e.g. `file: NativePathToPosixPath` (or a repo-configs re-export of it) and delete `normalizeAllowlistEntries`. In-package exemplar: `EffectLawsAllowlistLookupKey.file` already uses `PosixPath` at line 56; repo exemplar: `packages/foundation/modeling/schema/src/PosixPath.ts:70-80` defines `NativePathToPosixPath` with Effect v4 `S.decodeTo(..., SchemaTransformation.transform(...))`.",
+    "confidence": 0.92,
+    "mechanization": "codemod",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
+    "line": 389,
+    "symbol": "makeMdxPlugin",
+    "smell": "`extension: withDefault(config.extension, DEFAULT_MDX_EXTENSION)` defaults a schema-modeled `BeepNextMdxConfigOptions.extension` field in plugin assembly; the field is currently only `optional(S.RegExp)` at line 143.",
+    "proposedTarget": "Move the constant default onto `BeepNextMdxConfigOptions.extension`, using Effect v4 `S.withConstructorDefault(Effect.succeed(DEFAULT_MDX_EXTENSION))` plus `S.withDecodingDefaultKey(...)` if missing decoded keys should also default. In-package exemplar: `EffectLawsAllowlistSchemas.ts:27-41` applies constructor+decoding defaults on schema fields; Effect v4 defaults verified at `.repos/effect-v4/packages/effect/src/Schema.ts:5646` and `:5717`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
+    "line": 400,
+    "symbol": "makePwaPlugin",
+    "smell": "`swSrc` and `swDest` are defaulted with `withDefault(config.swSrc, 'src/app/sw.ts')` and `withDefault(config.swDest, 'public/sw.js')` even though both are fields on `BeepNextPwaConfigOptions` (lines 187-188).",
+    "proposedTarget": "Move the two Serwist path defaults onto `BeepNextPwaConfigOptions.swSrc` and `.swDest` with `S.withConstructorDefault`/`S.withDecodingDefaultKey`; keep the env-derived `enabled` calculation in the resolved plugin step. Same in-package default exemplar as `EffectLawsAllowlistSchemas.ts:27-41`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/security/index.ts",
+    "line": 166,
+    "symbol": "headerSource",
+    "smell": "`headerSource` computes `O.getOrElse(() => defaultHeaderSource)` for `SecureHeadersConfigValue.source`, which is a repo-owned config field currently modeled as `S.optionalKey(S.String)` at line 60.",
+    "proposedTarget": "Put the route-source default on the schema: `source: S.String.pipe(S.optionalKey, S.withConstructorDefault(Effect.succeed(defaultHeaderSource)), S.withDecodingDefaultKey(Effect.succeed(defaultHeaderSource)))`, or the local `SchemaUtils.withKeyDefaults(defaultHeaderSource)` equivalent. Then `headerSource` can read the decoded field for object configs.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/security/index.ts",
+    "line": 189,
+    "symbol": "makeSecureHeaders",
+    "smell": "`headers` defaults to `DEFAULT_BEEP_SECURE_HEADERS`, `additionalHeaders` defaults to `A.empty`, and absent config defaults again at line 199. Both object-form fields are schema-modeled optional keys at lines 63-66.",
+    "proposedTarget": "Move object-form defaults onto `SecureHeadersConfigValue`: `headers` gets a constructor/decoding default of `DEFAULT_BEEP_SECURE_HEADERS`; `additionalHeaders` gets an empty-array default (repo helper exemplar: `SchemaUtils.withEmptyArrayDefaults` at `packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:114-158`). Keep the top-level `false` disable branch explicit.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
+    "line": 324,
+    "symbol": "mergeUniqueStrings",
+    "smell": "`mergeUniqueStrings` accepts `ReadonlyArray<string> | undefined` groups and erases absence with `O.getOrElse(A.empty)`. The repo-owned `additionalPageExtensions`, `additionalTranspilePackages`, and `additionalOptimizePackageImports` fields are optional array keys on `BeepNextConfigOptions` (lines 262-267).",
+    "proposedTarget": "Default the repo-owned additional-list fields to empty arrays with `S.withConstructorDefault`/`S.withDecodingDefaultKey` or `SchemaUtils.withEmptyArrayDefaults`, then reserve the optional-group fallback for raw `NextConfig` arrays from the external Next.js contract. Local default exemplar: `EffectLawsAllowlistSchemas.ts:27-41`; repo helper exemplar: `SchemaUtils.withEmptyArrayDefaults`.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/RuleAstSchemas.ts",
+    "line": 80,
+    "symbol": "resolveImportSpecifierImportKind",
+    "smell": "Exported helper returns `ImportKind | undefined` and uses `undefined` as absence for decoded ESTree import-kind data, even though the surrounding rule helpers already use `Option` for AST partiality.",
+    "proposedTarget": "Return `O.Option<ImportKind>` instead of `ImportKind | undefined`, using `O.fromNullishOr(importDeclarationKind)` for the fallback and `O.liftPredicate`/`O.flatMap` for reflected node values. In-package exemplar: `RuleHelpers.ts:11-24` exposes `Option`-first helper shapes for AST partiality.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
+    "line": 415,
+    "symbol": "makeBaseConfig",
+    "smell": "`const next = withDefault(options.next, {})`, plus `experimental`, `turbopack`, and `typescript` object fallbacks at lines 416-418, are detector hits for body-level object defaults.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "These defaults are adapter merge scaffolding for the external Next.js config object; nested absence belongs to Next's public optional config contract, while the shared preset overlays repo defaults afterward.",
+      "boundary": "3rd-party Next.js config merge adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/NextConfig.model.ts",
+    "line": 193,
+    "symbol": "NextConfig",
+    "smell": "`S.NullOr` / `S.UndefinedOr` appear on fields such as `i18n`, `webpack`, `env`, `cacheHandler`, and `reactStrictMode`, which are detector hits for nullish schema surfaces.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "`NextConfig` explicitly models the public `next` package configuration declaration, including its null/undefined wire shapes; replacing these with domain `Option` would change the external adapter contract.",
+      "boundary": "3rd-party Next.js public config schema"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/policy-pack/repo-configs/src/next/models/ImageConfig.schema.ts",
+    "line": 383,
+    "symbol": "ImageConfig.default",
+    "smell": "`maximumDiskCacheSize: undefined` and `localPatterns: undefined` are detector hits inside the default image config static.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "The static mirrors Next.js image-config semantics: `undefined` means auto-detect maximum disk cache size and allow all local image patterns. This is external config shape preservation, not repo-domain absence modeling.",
+      "boundary": "3rd-party Next.js image config default contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSnapshotCodegen.ts",
+    "line": 73,
+    "symbol": "renderAllowlistSnapshotModule",
+    "smell": "`Effect.map(O.getOrElse(thunkEmptyStr))` is a getOrElse-as-default detector hit after `SchemaGetter.stringifyJson(...).run(O.some(encodedSnapshot), {})`.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 11,
+    "exception": {
+      "reason": "The Option is produced by the SchemaGetter API while rendering a generated snapshot module; the input is always `O.some(encodedSnapshot)`, so this is a terminal render adapter fallback rather than a schema-field default.",
+      "boundary": "schema getter / generated snapshot rendering adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSchemas.ts",
+    "line": 142,
+    "symbol": "formatSchemaDiagnostics",
+    "smell": "`O.getOrElse(() => '<root>')` defaults a missing Standard Schema issue path while formatting diagnostics.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 12,
+    "exception": {
+      "reason": "This is presentation-only diagnostic labeling for a missing schema-issue path, not a domain data default.",
+      "boundary": "diagnostic formatting"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/policy-pack/repo-configs/src/eslint/RequireCategoryTagRule.ts",
+    "line": 74,
+    "symbol": "getNodeName",
+    "smell": "`O.getOrElse(() => 'exported symbol')` defaults an absent ESTree node name for ESLint reporting.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 13,
+    "exception": {
+      "reason": "Fallback text is an ESLint report label for anonymous/undecodable syntax, not a schema-modeled domain value.",
+      "boundary": "ESLint diagnostic reporting"
+    }
+  }
+]

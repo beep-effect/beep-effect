@@ -1,0 +1,17 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/shared/tables/src/Schema.ts",
+    "line": 64,
+    "symbol": "DbSchema",
+    "smell": "Exported type alias over a local object shape can look like a schema-first data-model alias.",
+    "proposedTarget": "None -- Drizzle metadata/type-level projection carve-out. Keep `DbSchema` as the typed object of live table handles, matching the Drizzle metadata exception in `goals/repo-crispening-orchestration/ops/inventory/S1/beep__architecture-lab-tables.json`.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "The alias describes a map of Drizzle table runtime handles, not a decoded payload. Tables are already projected from schema-backed shared-domain entities via `EntityTable.pgTableFrom(...)`.",
+      "boundary": "Drizzle table metadata registry"
+    }
+  }
+]

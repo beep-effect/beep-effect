@@ -1,0 +1,39 @@
+[
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/drivers/uspto/src/Uspto.errors.ts",
+    "line": 95,
+    "symbol": "UsptoError.fromReason",
+    "smell": "Heterogeneous optional error fields are assembled through adjacent single-key R.getSomes spreads for cause and status. R.getSomes is Effect Record's homogeneous dictionary helper (verified at .repos/effect-v4/packages/effect/src/Record.ts:824); here the fixed struct fields have different domains and are part of one options object.",
+    "proposedTarget": "Replace the two spreads with one ...O.getSomesStruct({ cause: O.fromUndefinedOr(options.cause), status: O.fromUndefinedOr(options.status) }). O.getSomesStruct is the repo heterogeneous Option-struct helper verified at packages/foundation/modeling/utils/src/Option.ts:102; keep the finding judgment-held until D5.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 1.8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/uspto/src/Uspto.service.ts",
+    "line": 179,
+    "symbol": "documentFromRecord",
+    "smell": "The downloadOptionBag branch narrows with two casts, options as Array<unknown> and option as Record<string, unknown>, before reading downloadUrl. This is a hand-rolled structural discriminator where repo Predicate helpers can express the narrowing without banned casts.",
+    "proposedTarget": "Introduce a named download-option refinement using P.isObject, P.hasProperty(\"downloadUrl\"), and P.isString (verified in Effect v4 Predicate) or P.chainRefinements from @beep/utils (verified at packages/foundation/modeling/utils/src/Predicate.ts:203), then feed that refinement to A.findFirst so downloadUrl is statically available without casts.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2.1
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/drivers/uspto/src/Uspto.service.ts",
+    "line": 132,
+    "symbol": "optionalField",
+    "smell": "R.getSomes({ [key]: stringField(record, key) }) is a computed-key Option record that a broad getSomes detector may catch.",
+    "proposedTarget": "None -- keep R.getSomes here.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This helper projects one dynamic metadata key from USPTO response records. The key is computed and the value domain is homogeneous Option<string>, so Effect Record.getSomes is the correct dictionary form rather than O.getSomesStruct.",
+      "boundary": "USPTO metadata wrapper dynamic string-field projection"
+    }
+  }
+]

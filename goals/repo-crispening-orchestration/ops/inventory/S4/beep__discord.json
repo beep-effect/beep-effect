@@ -1,0 +1,35 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/discord/src/Discord.errors.ts",
+    "line": 28,
+    "symbol": "DiscordErrorReason",
+    "smell": "LiteralKit statics are lost after `.pipe($I.annoteSchema(...))`; the docs already expect `DiscordErrorReason.is.transport(...)` at line 21, which belongs on the kit/static schema value after annotation.",
+    "proposedTarget": "Capture `DiscordErrorReasonBase = LiteralKit(...)`, then pipe annotation through `SchemaUtils.withLiteralKitStatics(DiscordErrorReasonBase)` and `SchemaUtils.withCodecStatics`, following the verified helpers at packages/foundation/modeling/schema/src/SchemaUtils/withLiteralKitStatics.ts:37 and withCodecStatics.ts:90.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/discord/src/Discord.service.ts",
+    "line": 31,
+    "symbol": "decodeChannelRequest",
+    "smell": "Decode wall for public request classes: `decodeChannelRequest` and `decodeCreateMessageRequest` are free constants instead of statics on `DiscordChannelRequest` and `DiscordCreateMessageRequest`.",
+    "proposedTarget": "Move to in-body class statics such as `static readonly decodeEffect = S.decodeUnknownEffect(DiscordChannelRequest)`, following Pattern/RDF class-static decode exemplars at packages/foundation/modeling/nlp/src/Core/Pattern.ts:582 and packages/foundation/modeling/rdf/src/Rdf.ts:394.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/discord/src/Discord.service.ts",
+    "line": 56,
+    "symbol": "decodeRawChannel",
+    "smell": "Decode wall for private raw response classes: `decodeRawChannel` and `decodeRawMessage` are free constants immediately after `DiscordRawChannel` / `DiscordRawMessage` class definitions.",
+    "proposedTarget": "Attach in-body statics (`decodeEffect`) to the raw classes and replace the free constants with `DiscordRawChannel.decodeEffect` / `DiscordRawMessage.decodeEffect`; `S.decodeUnknownEffect` is verified at .repos/effect-v4/packages/effect/src/Schema.ts:1325.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 3
+  }
+]

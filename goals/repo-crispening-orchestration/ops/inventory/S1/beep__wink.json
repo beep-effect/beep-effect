@@ -1,0 +1,181 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/wink/src/Wink.service.ts",
+    "line": 22,
+    "symbol": "WinkEngineShape",
+    "smell": "Service-shape type literal contains Effect-returning methods and live wink runtime accessors.",
+    "proposedTarget": "Hypothetical schema/Fn model for the `WinkEngine` service methods — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "`WinkEngineShape` is consumed by `export class WinkEngine extends Context.Service<WinkEngine, WinkEngineShape>()`; service contracts are explicit S1 carve-outs.",
+      "boundary": "Context.Service contract"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/wink/src/WinkEngineRef.service.ts",
+    "line": 21,
+    "symbol": "WinkEngineRefShape",
+    "smell": "Service-shape type literal exposes a live `Ref` handle and an Effect-returning update method.",
+    "proposedTarget": "Hypothetical schema/Fn model for the ref compatibility service — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "`WinkEngineRefShape` is the `Context.Service` shape for `WinkEngineRef` and intentionally exposes a runtime `Ref`; this is a service/runtime-handle boundary, not a data payload.",
+      "boundary": "Context.Service contract with runtime handle"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/wink/src/WinkVectorizer.service.ts",
+    "line": 91,
+    "symbol": "ScopedVectorizer",
+    "smell": "Exported interface with Effect-returning methods matches the schema-first-inventory detector surface.",
+    "proposedTarget": "Hypothetical schema/Fn model for scoped vectorizer methods — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "`ScopedVectorizer` is an explicit scoped workflow port passed to `withFreshInstance`, not a wire/domain payload. Port interfaces are an S1 carve-out.",
+      "boundary": "scoped service/port interface"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/wink/src/WinkVectorizer.service.ts",
+    "line": 99,
+    "symbol": "WinkVectorizerShape",
+    "smell": "Service-shape type literal contains Effect-returning vectorizer operations and a higher-order workflow port.",
+    "proposedTarget": "Hypothetical schema/Fn model for vectorizer service methods — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "`WinkVectorizerShape` is consumed by `export class WinkVectorizer extends Context.Service<WinkVectorizer, WinkVectorizerShape>()`; the higher-order `withFreshInstance` member is a service/port contract.",
+      "boundary": "Context.Service contract"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/wink/src/WinkSimilarity.service.ts",
+    "line": 70,
+    "symbol": "WinkSimilarityShape",
+    "smell": "Service-shape type literal contains Effect-returning similarity operations.",
+    "proposedTarget": "Hypothetical schema/Fn model for similarity service methods — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "`WinkSimilarityShape` is the `Context.Service` method surface for wink similarity helpers. Service contracts stay as interfaces/type literals under S1 fence 1.",
+      "boundary": "Context.Service contract"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/wink/src/WinkCorpus.service.ts",
+    "line": 211,
+    "symbol": "WinkCorpusManagerShape",
+    "smell": "Service-shape type literal contains Effect-returning corpus-management operations.",
+    "proposedTarget": "Hypothetical schema/Fn model for corpus manager service methods — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "`WinkCorpusManagerShape` is consumed by `export class WinkCorpusManager extends Context.Service<WinkCorpusManager, WinkCorpusManagerShape>()`; service contracts are outside S1 schema-ification.",
+      "boundary": "Context.Service contract"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/wink/src/WinkUtils.service.ts",
+    "line": 67,
+    "symbol": "WinkUtilsShape",
+    "smell": "Service-shape type literal contains overloaded and Effect-returning utility operations.",
+    "proposedTarget": "Hypothetical schema/Fn model for wink-utils service methods — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "`WinkUtilsShape` is the `Context.Service` surface for overloaded utility helpers; service contracts and overload surfaces are S1 carve-outs.",
+      "boundary": "Context.Service contract with overload surface"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/wink/src/Wink.service.ts",
+    "line": 136,
+    "symbol": "WinkEngineRuntimeState",
+    "smell": "Exported type literal looks like runtime state data but contains a live `wink-nlp` runtime handle.",
+    "proposedTarget": "Hypothetical `S.Class` for runtime state — audited and rejected; use the existing serializable `WinkEngineState` schema at line 97 for cross-boundary metadata.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.08,
+    "exception": {
+      "reason": "The file already documents that this state is in-memory only and includes the live `WinkMethods` object. Runtime handles are not schema payloads; `WinkEngineState` carries the serializable metadata schema.",
+      "boundary": "in-memory runtime handle state"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/wink/src/WinkTokenization.service.ts",
+    "line": 69,
+    "symbol": "decodeDocumentIdOption",
+    "smell": "Local `const decodeDocumentIdOption = S.decodeUnknownOption(DocumentId)` textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Inline `S.decodeUnknownOption(DocumentId)` at the tokenization boundary — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This is a local schema-derived decoder for unknown wink token metadata. It keeps `DocumentId` as the truth source and centralizes an external-runtime boundary check.",
+      "boundary": "wink token metadata boundary codec"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/wink/src/WinkTools.service.ts",
+    "line": 189,
+    "symbol": "decodeEntityOutputDetails",
+    "smell": "Hand-rolled entity-detail decoding maps `unknown` through `P.isObject` and `as ReadonlyArray<unknown>` even though `EntityOutputDetail` is already an `S.Class`.",
+    "proposedTarget": "Introduce an annotated `EntityOutputDetails = S.Array(EntityOutputDetail)` and decode `winkDoc.entities().out(its.detail)` / `customEntities().out(its.detail)` with `S.decodeUnknownOption` or `S.decodeUnknownEffect`, preserving the current empty-array fallback at the boundary. Use the existing `S.Array(S.Finite)` schema-array pattern from `packages/drivers/wink/src/WinkCorpus.service.ts:182` and `packages/foundation/modeling/schema/src/ArrayOf.ts:144`.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.58
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/wink/src/WinkTools.service.ts",
+    "line": 198,
+    "symbol": "decodeEntityOutputSpans",
+    "smell": "Hand-rolled span decoding uses array predicates and casts instead of a schema for wink entity spans.",
+    "proposedTarget": "Introduce an annotated span schema, e.g. `EntityOutputSpan = S.Array(S.Finite)` or a tuple/range schema if wink guarantees two entries, then decode `S.Array(EntityOutputSpan)` at the two entity-output call sites. Tuple exemplar: `MarkRange = S.Tuple([NonNegativeInt, NonNegativeInt])` in `packages/foundation/modeling/nlp/src/Core/Pattern.ts:452`; array exemplar: `documentTermMatrix: S.Array(S.Finite).pipe(S.Array)` in `packages/drivers/wink/src/WinkCorpus.service.ts:182`.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 0.53
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/wink/src/WinkVectorizer.service.ts",
+    "line": 125,
+    "symbol": "decodeStringArray / decodeTermFrequencyPairs",
+    "smell": "Wink vectorizer output validation is hand-rolled with `A.isArray`, `P.isString`, and `P.isNumber` guards where small schemas directly fit.",
+    "proposedTarget": "Replace the local predicates with annotated schemas such as `WinkStringArray = S.Array(S.String)` and `TermFrequencyPair = S.Tuple([S.String, S.Finite])`, then use `S.decodeUnknownEffect` and map schema errors through `VectorizerError.fromMessage`. Existing in-repo exemplars: `ArrayOfNumbers` at `packages/foundation/modeling/schema/src/ArrayOf.ts:144` and `MarkRange` tuple at `packages/foundation/modeling/nlp/src/Core/Pattern.ts:452`.",
+    "confidence": 0.76,
+    "mechanization": "assisted",
+    "roiRank": 0.56
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/wink/src/WinkCorpus.service.ts",
+    "line": 253,
+    "symbol": "decodeStringArray / decodeNumberArray / decodeTermScorePairs",
+    "smell": "Corpus/vectorizer output validation repeats hand-rolled array and tuple checks instead of colocating the contracts in schemas.",
+    "proposedTarget": "Introduce shared local schemas for string arrays, finite-number arrays, and `[term, score]` pairs (`S.Array(S.String)`, `S.Array(S.Finite)`, `S.Tuple([S.String, S.Finite])`) and decode with `S.decodeUnknownEffect`, mapping failures through `CorpusManagerError.fromMessage`. This mirrors the existing matrix schema at `packages/drivers/wink/src/WinkCorpus.service.ts:182`.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.6
+  }
+]

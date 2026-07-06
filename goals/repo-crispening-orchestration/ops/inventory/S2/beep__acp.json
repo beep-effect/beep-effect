@@ -1,0 +1,273 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/acp/src/Acp.errors.ts",
+    "line": 162,
+    "symbol": "AcpRequestError.data",
+    "smell": "`data: S.optionalKey(S.Unknown)` keeps driver-domain absence as `undefined`; the constructors and protocol conversion repeatedly rebuild sparse objects with `R.getSomes({ data: O.fromUndefinedOr(...) })` at lines 194-196, 218-220, 242-244, 287-289, 311-313, 335-337, 359-361, and 383-385.",
+    "proposedTarget": "Model the driver error field as Option: `data: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault)`. Then constructors pass `data: O.fromUndefinedOr(data)` and `toProtocolError` emits the ACP wire optional key with `O.getSomesStruct({ data: this.data })`. In-repo exemplars: `packages/drivers/firecrawl/src/Firecrawl.errors.ts:165-168` uses `OptionFromOptionalKey` for optional API diagnostics, and `packages/foundation/modeling/ontology/src/Ontology.models.ts:284-288` shows `OptionFromOptionalKey` plus `SchemaUtils.withNoneDefault`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/acp/src/Acp.errors.ts",
+    "line": 35,
+    "symbol": "AcpSpawnError.cause",
+    "smell": "`cause: S.optionalKey(S.Defect({ includeStack: true }))` models absent technical cause as `undefined` on a domain error class.",
+    "proposedTarget": "`cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault)`, with make sites wrapping raw causes via `O.some`/`O.fromUndefinedOr`. In-repo error exemplars: `packages/foundation/capability/file-processing/src/PathSafety/index.ts:95-99`, `packages/foundation/modeling/schema/src/StatusCauseError.ts:39-43`, and `packages/foundation/modeling/ontology/src/Ontology.models.ts:284-288` for the `withNoneDefault` constructor default.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/acp/src/Acp.errors.ts",
+    "line": 36,
+    "symbol": "AcpSpawnError.command",
+    "smell": "`command: S.optionalKey(S.String)` leaks absence into the error instance; `message` branches on `this.command !== undefined` at lines 43-45.",
+    "proposedTarget": "`command: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` and render the message through `O.match(this.command, ...)`. Same Option-field target as `packages/foundation/modeling/ontology/src/Ontology.models.ts:284-288`; this keeps the encoded key optional while making the decoded error field explicit.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/acp/src/Acp.errors.ts",
+    "line": 66,
+    "symbol": "AcpProcessExitedError.cause",
+    "smell": "`cause: S.optionalKey(S.Defect({ includeStack: true }))` repeats the undefined-backed optional cause pattern on a tagged error.",
+    "proposedTarget": "`cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault)`, matching the cause-field exemplars at `packages/foundation/capability/file-processing/src/PathSafety/index.ts:95-99` and `packages/foundation/modeling/schema/src/StatusCauseError.ts:39-43`; call sites that have a raw cause wrap it as `O.some(cause)`.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/acp/src/Acp.errors.ts",
+    "line": 67,
+    "symbol": "AcpProcessExitedError.code",
+    "smell": "`code: S.optionalKey(S.Finite)` plus `this.code === undefined` in `message` at line 74 keeps process-exit-code absence as a nullable domain branch.",
+    "proposedTarget": "`code: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault)` and render with `O.match`. This is the same optional numeric-field shape as `packages/drivers/firecrawl/src/Firecrawl.errors.ts:165-168`, with the constructor default helper shown at `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:31-51`.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/acp/src/Acp.errors.ts",
+    "line": 95,
+    "symbol": "AcpProtocolParseError.cause",
+    "smell": "`cause: S.optionalKey(S.Defect({ includeStack: true }))` is undefined-backed even though parse failures are domain errors and most call sites have an explicit cause.",
+    "proposedTarget": "`cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault)`; update `AcpProtocolParseError.new` and direct `make` call sites to pass `O.some(cause)`/`O.fromUndefinedOr(cause)`. In-repo exemplars: `packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Errors.ts:199-203` and `packages/foundation/modeling/ontology/src/Ontology.models.ts:284-288`.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/acp/src/Acp.errors.ts",
+    "line": 136,
+    "symbol": "AcpTransportError.cause",
+    "smell": "`cause: S.optionalKey(S.Defect({ includeStack: true }))` repeats the undefined-backed optional cause pattern on the transport error.",
+    "proposedTarget": "`cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault)`, then wrap raw causes in `AcpProtocol.service.ts`, `internal/shared.ts`, `internal/stdio.ts`, and tests. Same target pattern as `packages/foundation/capability/file-processing/src/PathSafety/index.ts:95-99` plus the `withNoneDefault` helper documented at `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:31-51`.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 171,
+    "symbol": "AcpProtocolLoggingOptions.logIncoming",
+    "smell": "`logIncoming: S.optionalKey(S.Boolean)` leaves the default in protocol logic: `options.logIncoming !== true` at line 333 treats missing as false.",
+    "proposedTarget": "Use the schema boolean default: `logIncoming: SchemaUtils.BoolKeyDefaultFalse.annotateKey(...)` (exemplars: `packages/foundation/modeling/md/src/Md.model.ts:1101-1103` and `packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:190-211`). Because `AcpClientOptions`/`AcpAgentOptions` extend this model, remediation should sweep the client/agent forwarding sites at `AcpClient.service.ts:492` and `AcpAgent.service.ts:338` in the same PR.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 172,
+    "symbol": "AcpProtocolLoggingOptions.logOutgoing",
+    "smell": "`logOutgoing: S.optionalKey(S.Boolean)` has the same leaked default; protocol logging checks `options.logOutgoing !== true` at line 336.",
+    "proposedTarget": "`logOutgoing: SchemaUtils.BoolKeyDefaultFalse.annotateKey(...)`, matching `packages/foundation/modeling/md/src/Md.model.ts:1468-1470`; sweep the option forwarding sites at `AcpClient.service.ts:493` and `AcpAgent.service.ts:339` with the `logIncoming` change.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 9
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 427,
+    "symbol": "handleTermination",
+    "smell": "`classification: Effect.Effect<AcpError.AcpError | undefined>` plus `if (error === undefined) return` at lines 435-438 uses undefined as the no-error channel inside protocol logic. Current callers pass `Effect<AcpError>` at lines 654 and 658-665, so the undefined branch appears over-modeled.",
+    "proposedTarget": "Either narrow `classification` to `Effect.Effect<AcpError.AcpError>` and delete the undefined branch, or if normal termination really is a value, model it as `Effect.Effect<O.Option<AcpError.AcpError>>` and use `O.match`. Effect v4 `S.OptionFromOptionalKey`/Option APIs were verified in `.repos/effect-v4/packages/effect/src/Schema.ts:8653-8672`; repo Option style is already used in this package at `AcpClient.service.ts:383-388`.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 10
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/drivers/acp/scripts/generate.ts",
+    "line": 355,
+    "symbol": "propertyNameToString",
+    "smell": "`function propertyNameToString(...): string | undefined` returns bare `undefined` at line 359 and the caller branches on `key === undefined` at lines 384-386.",
+    "proposedTarget": "Return `O.Option<string>` from `propertyNameToString` and have `collectAnnotationExtraEntries` use `O.match`/`O.filter` for the unsupported-key path. This is a private codegen helper, so a small manual edit is enough; downranked because it is generator parser logic, not a runtime schema boundary.",
+    "confidence": 0.62,
+    "mechanization": "assisted",
+    "roiRank": 11
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 339,
+    "symbol": "logProtocol",
+    "smell": "`options.logger?.(event) ?? Effect.logDebug(...)` is a detector hit for nullish defaulting in a function body.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 12,
+    "exception": {
+      "reason": "The default is for a function-valued service option, not a schema-modeled value field. The fallback is the adapter behavior when no logger callback is supplied.",
+      "boundary": "function-valued service option / protocol adapter logging"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 658,
+    "symbol": "makeAcpPatchedProtocol",
+    "smell": "`options.terminationError ?? Effect.succeed(AcpTransportError.make(...))` is a detector hit for an optional fallback in protocol construction.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 13,
+    "exception": {
+      "reason": "`terminationError` is an Effect-valued protocol hook used to adapt child-process termination into a transport error. It is not serializable or schema-modelable, and the fallback is derived adapter behavior.",
+      "boundary": "function/effect-valued protocol hook"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/acp/src/AcpClient.service.ts",
+    "line": 525,
+    "symbol": "ClientRpcs.fs_write_text_file",
+    "smell": "`Effect.map((result) => result ?? {})` converts an optional handler result into the ACP empty response object.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 14,
+    "exception": {
+      "reason": "This is an adapter from the public handler convenience type `WriteTextFileResponse | void` to the external ACP wire response shape. Service-contract/interface carve-out applies; changing it would be a public handler API decision, not a schema default absorption.",
+      "boundary": "ACP wire adapter + service handler convenience contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/acp/src/AcpClient.service.ts",
+    "line": 549,
+    "symbol": "ClientRpcs.terminal_kill",
+    "smell": "`Effect.map((result) => result ?? {})` converts an optional terminal kill handler result into the ACP empty response object.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 15,
+    "exception": {
+      "reason": "Same carve-out as `fs_write_text_file`: handler may return `void` by local service contract, while the protocol response must be an object.",
+      "boundary": "ACP wire adapter + service handler convenience contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/acp/src/AcpClient.service.ts",
+    "line": 555,
+    "symbol": "ClientRpcs.terminal_release",
+    "smell": "`Effect.map((result) => result ?? {})` converts an optional terminal release handler result into the ACP empty response object.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 16,
+    "exception": {
+      "reason": "Same carve-out as `fs_write_text_file`: handler may return `void` by local service contract, while the protocol response must be an object.",
+      "boundary": "ACP wire adapter + service handler convenience contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/drivers/acp/src/internal/shared.ts",
+    "line": 27,
+    "symbol": "RunHandlerOptions.handler",
+    "smell": "`readonly handler: ((payload: A) => Effect.Effect<B, AcpError.AcpError>) | undefined` is a nullish-union detector hit.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 17,
+    "exception": {
+      "reason": "This private helper mirrors optional function slots from ACP client handler registration and immediately maps absence to a method-not-found protocol error. It is function-valued service state, not a schema-modeled value.",
+      "boundary": "function-valued service handler registry"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/acp/test/fixtures/acp-mock-peer.ts",
+    "line": 135,
+    "symbol": "handleUnknownExtRequest",
+    "smell": "`echoedParams: params ?? null` is a detector hit for nullish fallback.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 18,
+    "exception": {
+      "reason": "This is a test fixture echo payload deliberately materializing absent JSON params as `null` for mock-peer interoperability. It is not package domain modeling.",
+      "boundary": "test fixture / external JSON mock peer"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/drivers/acp/scripts/generate.ts",
+    "line": 465,
+    "symbol": "collectSchemaEntries",
+    "smell": "`A.map(Str.trim)` trims generated TypeScript lines while parsing generator output.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 19,
+    "exception": {
+      "reason": "Codegen text parsing normalization, not runtime field normalization. The generated output files themselves remain excluded from S2 scans.",
+      "boundary": "code generator source / generated text parser"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/drivers/acp/scripts/generate.ts",
+    "line": 632,
+    "symbol": "generateSchemas",
+    "smell": "`Str.trim(generator.generate(...))` trims the third-party generator's emitted source before splitting it into schema entries.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 20,
+    "exception": {
+      "reason": "Codegen output cleanup for generated TypeScript source, not a schema-field normalization invariant.",
+      "boundary": "code generator source / generated text cleanup"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/acp/scripts/generate.ts",
+    "line": 722,
+    "symbol": "generateCommand.skipDownload",
+    "smell": "`Flag.boolean(\"skip-download\").pipe(Flag.withDefault(false))` is a detector hit for a default outside an S.Class.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 21,
+    "exception": {
+      "reason": "This is the Effect CLI command parser's own flag-default API for a generator command, not a domain model field or decoded package schema.",
+      "boundary": "CLI flag parser boundary"
+    }
+  }
+]

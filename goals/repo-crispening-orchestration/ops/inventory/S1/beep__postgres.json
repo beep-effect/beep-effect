@@ -1,0 +1,118 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+    "line": 44,
+    "symbol": "PostgresDrizzleDatabase / PostgresDrizzleConfig",
+    "smell": "Exported type aliases in a driver service file can look like schema-first-inventory hits.",
+    "proposedTarget": "None while excepted. These aliases bind Drizzle Effect database/config handles to the `PostgresDrizzle` Context.Service at `packages/drivers/postgres/src/PostgresDrizzle.service.ts:82`, matching the service-contract carve-out used for `OpenAiCompatClientShape` at `standards/schema-first.inventory.jsonc:441`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The aliases describe native Drizzle/Pg service handles, generic relations, and a phantom schema marker rather than decoded driver data. Schema-as-truth applies to payloads and errors, not to the live database handle.",
+      "boundary": "Drizzle Effect Postgres service handle and configuration port"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/postgres/src/PostgresClient.service.ts",
+    "line": 34,
+    "symbol": "PostgresPoolConfig / PostgresClientValue",
+    "smell": "Exported type aliases in a service module can look like data-model aliases.",
+    "proposedTarget": "None while excepted. Keep them as aliases to `@effect/sql-pg/PgClient` surfaces consumed by `PostgresClient extends Context.Service` at `packages/drivers/postgres/src/PostgresClient.service.ts:66`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "`Pg.PgPoolConfig` and `Pg.PgClient` are upstream service/config handles. Wrapping them in local schemas would alter a native Effect SQL port rather than move a first-party invariant into Schema.",
+      "boundary": "native Effect Postgres client service boundary"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/postgres/src/PostgresInterop.models.ts",
+    "line": 25,
+    "symbol": "NativeMigrationError",
+    "smell": "Exported union type alias in a models file can look like a schema-first-inventory hit.",
+    "proposedTarget": "None while excepted. Keep this as a native interop alias over Drizzle/Effect SQL error types; `PostgresError.fromUnknown` already normalizes these unknown native causes into the schema-backed driver error at `packages/drivers/postgres/src/Postgres.errors.ts:392`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This is a third-party native error union emitted by Drizzle migration APIs, not a first-party wire/domain payload. The schema boundary is the normalized `PostgresError` class.",
+      "boundary": "Drizzle/Effect SQL migration interop error boundary"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/postgres/src/PostgresSqlState.models.ts",
+    "line": 846,
+    "symbol": "PgErrorName / PgErrorCode",
+    "smell": "Exported SQLSTATE type aliases are derived from `PostgresErrorCodeByName` instead of from the nearby `LiteralKit` schemas that model the same domains.",
+    "proposedTarget": "Make the LiteralKit schema values the type source: keep `PgErrorCode` at `packages/drivers/postgres/src/PostgresSqlState.models.ts:1461` and `PgErrorName` at `packages/drivers/postgres/src/PostgresSqlState.models.ts:1483`, then derive `export type PgErrorCode = typeof PgErrorCode.Type` and `export type PgErrorName = typeof PgErrorName.Type`. In-repo exemplars: `packages/drivers/m365/src/M365.errors.ts:32`/`:61` and `packages/drivers/govinfo/src/Govinfo.errors.ts:28`/`:54` derive exported literal-domain types from their schema values.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.74
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/postgres/src/PostgresSqlState.models.ts",
+    "line": 1503,
+    "symbol": "isPgErrorCode",
+    "smell": "Exported `const isPgErrorCode = S.is(PgErrorCode)` textually matches the guard-helper-wall smell.",
+    "proposedTarget": "Inline `S.is(PgErrorCode)` at call sites or switch callers to `PgErrorCode.is` if this package later standardizes on LiteralKit helper statics -- audited and rejected for S1. Effect v4 `S.is` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1256`; LiteralKit exposes `is` at `packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:659`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The guard is schema-derived and exported as a convenience predicate for a public literal domain. It does not duplicate validation logic; `PgErrorCode` remains the source of truth.",
+      "boundary": "public SQLSTATE literal-domain guard"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/postgres/src/Postgres.errors.ts",
+    "line": 74,
+    "symbol": "isPostgresError",
+    "smell": "Local Postgres error guard wraps `S.is(PostgresError)` and can look like a guard-helper wall.",
+    "proposedTarget": "Inline `S.is(PostgresError)(value)` in `extractPostgresError` -- audited and rejected. Effect v4 `S.is` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1256`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Schema-derived guard used to recognize the package's own `TaggedErrorClass` while walking arbitrary `Cause`/unknown error graphs. The `safeBoolean` wrapper protects the trust boundary rather than replacing schema truth.",
+      "boundary": "unknown failure normalization into PostgresError"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/postgres/src/PostgresDiagnostics.service.ts",
+    "line": 149,
+    "symbol": "isPostgresError",
+    "smell": "Diagnostic renderer guard wraps `S.is(PostgresError)` and can look like a guard-helper wall.",
+    "proposedTarget": "Inline `S.is(PostgresError)(value)` in `normalizePostgresError` -- audited and rejected. Effect v4 `S.is` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1256`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The guard is schema-derived and scoped to rendering arbitrary unknown failures. It preserves `PostgresError` as the schema source and avoids hand-rolled object validation for the driver error itself.",
+      "boundary": "unknown diagnostic formatting boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/postgres/src/Postgres.errors.ts",
+    "line": 392,
+    "symbol": "extractPostgresDiagnostics",
+    "smell": "Exported function in a schema-modeled error file has a plain `unknown -> PostgresError` signature.",
+    "proposedTarget": "Hypothetical `Fn({ input: S.Unknown, output: PostgresError })` wrapper -- audited and rejected. The returned value is already built through `PostgresError.fromUnknown` and the `PostgresError` `S.Class`; Fn `.implementSync` would add invocation-time decode/throw semantics verified at `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:403`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "This is an unknown-failure normalization boundary. The output contract is schema-backed, while the input intentionally accepts any thrown/cause value.",
+      "boundary": "diagnostics adapter from unknown native failure to PostgresError"
+    }
+  }
+]

@@ -1,0 +1,80 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
+    "line": 813,
+    "symbol": "PrefixMap",
+    "smell": "PrefixMap validates keys with PrefixMapSchema = S.Record(S.String, IRI).check(PrefixMapKeyChecks) and then uses a repo-banned double cast to recover S.Codec<Readonly<Record<PrefixLabel, IRI>>, ...>. The schema key proof is outside the Record key schema, so TypeScript cannot carry the branded PrefixLabel key type without `as unknown as`.",
+    "proposedTarget": "Use the branded key schema directly: S.Record(PrefixLabel, IRI), then annotate it as PrefixMap. Effect v4 Record accepts a key schema (verified at .repos/effect-v4/packages/effect/src/Schema.ts:3780-3793), and its decoded Record.Type indexes by Key[\"Type\"] (verified at .repos/effect-v4/packages/effect/src/Schema.ts:3643-3648), so PrefixLabel checks move into the key codec and the cast plus PrefixMapKeyChecks/isPrefixLabel helper can disappear.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3.4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/rdf/src/Prov.ts",
+    "line": 922,
+    "symbol": "ProvRecord",
+    "smell": "ProvRecord is a 19-member S.Union where the entity/agent classes carry provType tags (for example Entity at lines 262-265 and Agent at lines 349-352) but the relation classes Usage through End have no discriminator fields (for example Usage at 593-598 and Generation at 623-628). The public union therefore cannot derive ProvRecord.match/.guards via S.toTaggedUnion, and docs still show S.is(Agent) branch narrowing at lines 912-915.",
+    "proposedTarget": "Add provType: S.tag(\"Usage\" | \"Generation\" | ... | \"End\") to the relation classes, then pipe ProvRecord through S.toTaggedUnion(\"provType\"). In-repo exemplars: Rdf.ts:536-537 derives Term with S.toTaggedUnion(\"termType\"), Evidence.ts:194-195 derives EvidenceSelector with S.toTaggedUnion(\"kind\"), and WebAnnotation.ts:161-166 derives WebAnnotationSelector with S.toTaggedUnion(\"type\"). This is a public wire-form change and needs the SPEC §5.4 consumer sweep plus encoded snapshot proof.",
+    "confidence": 0.58,
+    "mechanization": "judgment",
+    "roiRank": 1.74
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/rdf/src/Adapters/WebAnnotation.ts",
+    "line": 324,
+    "symbol": "webAnnotationSelectorToEvidenceSelector",
+    "smell": "webAnnotationSelectorToEvidenceSelector manually dispatches a schema-tagged WebAnnotationSelector with Match.value(selector), two Match.when({ type: ... }) arms, and a Match.orElse fallback that silently treats every future selector type as FragmentSelector. WebAnnotationSelector already derives .match from S.toTaggedUnion(\"type\") at lines 161-166.",
+    "proposedTarget": "Replace the Match.value pipeline with WebAnnotationSelector.match(selector, { TextQuoteSelector: ..., TextPositionSelector: ..., FragmentSelector: ... }). Same-file exemplar: evidenceSelectorToWebAnnotationSelector already uses EvidenceSelector.match at lines 275-296; another package-local exemplar is Term.match in Rdf.ts:1106-1115.",
+    "confidence": 0.95,
+    "mechanization": "codemod",
+    "roiRank": 3.8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/rdf/src/Prov.ts",
+    "line": 1026,
+    "symbol": "ProvO",
+    "smell": "ProvO = S.Union([ProvBundle, ProvRecord]) is a public entrypoint union that a broad undiscriminated-union detector can flag as another S.toTaggedUnion candidate.",
+    "proposedTarget": "None -- keep as-is after the ProvRecord discriminator gap above is handled.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "ProvO deliberately accepts either a bundle object ({ records, lifecycle? }) or a single PROV record as the public convenience entrypoint. Adding a wrapper discriminator to ProvBundle would change the documented simple bundle payload shape; the actionable exhaustiveness gap is inside ProvRecord, where relation records lack their own provType tags.",
+      "boundary": "public @beep/rdf/Prov provenance entrypoint wire shape"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/rdf/src/JsonLd.ts",
+    "line": 147,
+    "symbol": "JsonLdContext",
+    "smell": "JsonLdContext.terms uses S.Record(S.String, S.Union([S.String, JsonLdTermDefinition])), which a broad undiscriminated-union detector can mistake for a tagged-union candidate.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "JSON-LD 1.1 term definitions are externally specified as either a compact IRI string or an expanded term-definition object. Adding a discriminator would stop accepting the standard JSON-LD context wire form; the two shapes are structurally disjoint (string vs object) and decode unambiguously at the boundary.",
+      "boundary": "external JSON-LD context wire compatibility"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/rdf/src/JsonLd.ts",
+    "line": 352,
+    "symbol": "JsonLdPropertyValue",
+    "smell": "JsonLdPropertyValue = S.Union([JsonLdReferenceValue, JsonLdLiteralValue]) is an undiscriminated object union over JSON-LD @id-reference and @value-literal forms, and examples narrow with S.is(JsonLdLiteralValue) at lines 341-345.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The discriminator is the JSON-LD standard shape itself: node references carry @id, value objects carry @value. Injecting a first-party tag would change the accepted/encoded JSON-LD wire object, and the required keys make the branches structurally disjoint.",
+      "boundary": "external JSON-LD value/reference wire compatibility"
+    }
+  }
+]

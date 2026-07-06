@@ -1,0 +1,139 @@
+[
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/ui-system/ui/test/hooks.test.ts",
+    "line": 7,
+    "symbol": "@beep/ui exported schema models",
+    "smell": "The package has behavior fixtures for number input, theme mode, country/color helpers, URL sanitization, and the MUI DateTime adapter, but rg finds no S.toArbitrary-derived law for exported reusable schemas such as ThemeMode, ResolvedThemeMode, BoundaryParams, SpinParams, NumberInputChangeMetadata, CountryCode, ActionType, ActionStyle, NotificationAction, ToastVariant, ToastData, ReactContextInvariantOptions, and ReactContextInvariantError.",
+    "proposedTarget": "Add an additive schema law test importing production schemas from @beep/ui subpaths. Use S.toArbitrary and S.toEquivalence (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970 and :13201) with S.decodeUnknownSync/S.encodeUnknownSync (verified :1718 and :2123), following in-repo patterns at packages/foundation/modeling/md/test/Md.test.ts:45-47 and :150-158 plus packages/foundation/modeling/schema/test/SchemaUtils.test.ts:176-183. Keep existing UI/static fixtures; this is complementary coverage.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/ui-system/ui/src/components/country-select.tsx",
+    "line": 47,
+    "symbol": "CountryCode",
+    "smell": "Exported reusable LiteralKit schema CountryCode has package JSDoc but no runtime-retrievable $I.annoteSchema annotation, unlike neighboring exported literal schemas such as ThemeMode, ToastVariant, ActionType, and ActionStyle.",
+    "proposedTarget": "Pipe the LiteralKit through $I.annoteSchema(\"CountryCode\", { description: \"ISO 3166-1 alpha-2 country code accepted by country UI primitives.\" }) as ThemeMode does at packages/foundation/ui-system/ui/src/themes/theme-provider.tsx:69-73. $I.annoteSchema preserves schema statics per packages/foundation/modeling/identity/src/Id.ts:1380-1387.",
+    "confidence": 0.95,
+    "mechanization": "codemod",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+    "line": 230,
+    "symbol": "BoundaryParams/SpinParams/NumberInputChangeMetadata",
+    "smell": "Exported reusable schema classes have whole-schema $I.annote metadata but their fields carry no per-key annotations; the public hook option and change-metadata fields are currently invisible to the annotation catalog at field level.",
+    "proposedTarget": "Annotate the fields with the identity helper, e.g. min: S.optionalKey(S.Finite).pipe($I.annoteKey(\"BoundaryParams.min\", { description: \"Minimum value allowed by the number input.\" })) and valueText: S.optionalKey(NumberInputText).pipe($I.annoteKey(\"NumberInputChangeMetadata.valueText\", { description: \"Editable text after formatting/parser normalization.\" })). In-repo helper example: packages/foundation/modeling/identity/src/Id.ts:853-855; helper implementation: :1398-1414; Effect v4 annotateKey verified at .repos/effect-v4/packages/effect/src/Schema.ts:185 and :605.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+    "line": 259,
+    "symbol": "SpinParams.step",
+    "smell": "Spinner step is modeled as optional S.Finite, so zero or negative steps decode even though the hook treats step as a positive increment/decrement magnitude; negative values invert the direction of increment/decrement.",
+    "proposedTarget": "Introduce a local PositiveFiniteStep = S.Finite.check(S.isGreaterThan(0)).pipe($I.annoteSchema(\"PositiveFiniteStep\", { description: \"Positive step size for number input spinner changes.\" })) and use S.optionalKey(PositiveFiniteStep). S.isGreaterThan is verified at .repos/effect-v4/packages/effect/src/Schema.ts:7286; keep BoundaryParams min/max/value as S.Finite because negative and fractional numeric values are valid there.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/ui-system/ui/src/components/notification-card.tsx",
+    "line": 120,
+    "symbol": "NotificationActionFields.id/label",
+    "smell": "NotificationAction is an exported tagged-union schema, but its shared id and label fields are broad S.String and have no per-key annotations. Empty ids produce unstable button keys/callback ids, and empty labels produce action buttons with icon-only text content even though the model calls the field a label.",
+    "proposedTarget": "Tighten id and label to S.NonEmptyString (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420) and pipe each through $I.annoteKey(\"NotificationAction.id\"/\"NotificationAction.label\", { description: ... }). If an empty label is intentionally allowed for icon-only actions, record that as a component-level exception and still annotate the field.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/ui-system/ui/src/lib/react-invariant.ts",
+    "line": 32,
+    "symbol": "ReactContextInvariantOptions.message/ReactContextInvariantError.message",
+    "smell": "The exported invariant option and tagged-error schemas model message as broad S.String; an empty invariant error message decodes even though this domain is a human-facing diagnostic.",
+    "proposedTarget": "Use S.NonEmptyString for both message fields (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420) and add per-key annotations via $I.annoteKey, keeping the public field name stable. The same file already has whole-schema $I.annote entries at lines 34-36 and 60-62.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/ui-system/ui/src/components/upload.tsx",
+    "line": 110,
+    "symbol": "UploadImagePreview.url",
+    "smell": "UploadImagePreview.url is broad S.String, but every producer builds it from URL.createObjectURL(file) for image previews, so the actual domain is a non-empty browser blob URL owned by the component's revoke lifecycle.",
+    "proposedTarget": "Replace url with a local BlobObjectUrl schema such as S.String.check(S.isPattern(/^blob:/u)).pipe($I.annoteSchema(\"BlobObjectUrl\", { description: \"Browser object URL created for an upload preview.\" })) or at least S.NonEmptyString plus an annoteKey on UploadImagePreview.url. S.isPattern and S.NonEmptyString are verified at .repos/effect-v4/packages/effect/src/Schema.ts:6521 and :8420; producer evidence is URL.createObjectURL at packages/foundation/ui-system/ui/src/components/upload.tsx:202-207.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/ui-system/ui/src/components/editor/editor-ui/content-editable.tsx",
+    "line": 25,
+    "symbol": "ContentEditable Props",
+    "smell": "Detector candidate: private S.Class props wrapper has broad S.String fields and no whole-schema or per-key annotations.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is a JSX-facing React component props wrapper for placeholder/className plumbing, not a reusable domain or boundary data model. The S5 package instruction explicitly carves out React component props/interfaces and JSX-facing surfaces.",
+      "boundary": "React JSX component props surface"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/ui-system/ui/test/url.test.ts",
+    "line": 4,
+    "symbol": "sanitizeAnchorHref static fixtures",
+    "smell": "Detector candidate: trust-boundary sanitizer is covered by hand-written static fixtures rather than schema-derived arbitrary laws.",
+    "proposedTarget": "None - keep these regression fixtures; any schema-derived URL law would be additive only.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "URL/script-protocol sanitization is an explicit trust boundary. The static fixtures cover known attack strings, obfuscations, invalid numeric references, and bounded decode behavior; replacing them with weaker generated samples would violate the S5 trust-boundary carve-out.",
+      "boundary": "anchor href sanitization guard tests"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/ui-system/ui/src/components/country-select.tsx",
+    "line": 324,
+    "symbol": "CountryOption",
+    "smell": "Detector candidate: CountryOption contains broad S.String fields for callingCode, label, nativeLabel, and searchText.",
+    "proposedTarget": "None - keep the display model permissive at this boundary.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The values are derived from the third-party countries-list dataset and the component deliberately preserves that display/search text, including an empty callingCode fallback when a phone prefix is absent at line 359. Tightening belongs in a separate generated country-data model if that data source is normalized.",
+      "boundary": "third-party countries-list display/search data"
+    }
+  },
+  {
+    "ruleId": "SFV4-equivalence",
+    "file": "packages/foundation/ui-system/ui/src/components/field.tsx",
+    "line": 318,
+    "symbol": "FieldError uniqueErrors",
+    "smell": "Detector candidate: hand-written equality dedupes field errors by optional message with a?.message === b?.message.",
+    "proposedTarget": "None - keep the local render dedupe.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is a JSX-facing render helper over a component prop array, not a schema-modeled error domain. There is no reusable schema for S.toEquivalence to derive from, and the equality is scoped to rendering duplicate messages.",
+      "boundary": "React FieldError render props"
+    }
+  }
+]

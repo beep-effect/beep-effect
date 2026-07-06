@@ -1,0 +1,91 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
+    "line": 236,
+    "symbol": "GroundedExtraction",
+    "smell": "Literal-union field `alignmentStatus: AlignmentStatus` (4-member LiteralKit: match_exact | match_lesser | match_fuzzy | unaligned) on a plain S.Class with non-disjoint optional fields (`span`, `matchedText`) whose presence correlates with the status; the 'match_* implies span+matchedText present, unaligned implies absent' invariant (enforced only by makeGrounded call-site discipline at Alignment/index.ts:234-247) is unexpressed in the schema, and consumers hand-restore it: Handoff definedExtractions hand-rolled type predicate `(extraction): extraction is GroundedExtraction & { readonly span: Contract.Span } => extraction.span !== undefined` (src/Handoff/index.ts:52-57), Service filter `alignmentStatus !== \"unaligned\"` (src/Service/index.ts:197), and cross-package law-practice branches `extraction.alignmentStatus === \"unaligned\"` (packages/law-practice/use-cases/src/IrToLaw/IrToLaw.service.ts:75, 99) — all without derived guards.",
+    "proposedTarget": "Rebuild per the repo build order: AlignmentStatus LiteralKit -> member S.Classes (aligned variants require span + matchedText; unaligned forbids them) -> AlignmentStatus.toTaggedUnion(\"alignmentStatus\")({ ... }) (LiteralKit.toTaggedUnion verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:667; non-_tag discriminator precedent StorageKind.toTaggedUnion(\"storageKind\") at packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.persist.ts:401, kit-form at :176), so Handoff/Service/law-practice branch via derived .match/.guards and the span-presence invariant becomes schema-owned; definedExtractions collapses to the derived unaligned-complement guard. Encoded wire shape is unchanged (discriminator keeps the alignmentStatus key; optional keys are already absent per variant), satisfying the 5.3 parity proof. CAUTION: public-form change whose 5.4 consumer sweep crosses the foundation wave boundary into packages/law-practice/use-cases (IrToLaw.ports.ts:96 embeds S.Array(GroundedExtraction)) — fence 8 means this remodel must be scheduled with or after the law-practice-touching wave, not squeezed into a foundation-only touch set. Not a REQUIRED_TAGGED_UNIONS family (packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts:65).",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 1.7
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/foundation/capability/langextract/src/Alignment/index.ts",
+    "line": 36,
+    "symbol": "makeGrounded",
+    "smell": "Heterogeneous optional-key struct assembly via a locally mutated `input` record with four conditional undefined-guarded assignments (`if (candidate.attributes !== undefined) input.attributes = ...` for attributes/confidence/matchedText/span, lines 56-67) plus a hand-written 7-field type annotation, feeding GroundedExtraction.make — the imperative sibling of the R.getSomes struct-spread smell where O.getSomesStruct is the fit. No R.getSomes call exists in this package.",
+    "proposedTarget": "GroundedExtraction.make({ alignmentStatus: status, label: candidate.label, text: candidate.text, ...O.getSomesStruct({ attributes: O.fromUndefinedOr(candidate.attributes), confidence: O.fromUndefinedOr(candidate.confidence), matchedText: O.fromUndefinedOr(matchedText), span: O.fromUndefinedOr(span) }) }) using O.getSomesStruct (verified at packages/foundation/modeling/utils/src/Option.ts:102) and O.fromUndefinedOr (verified at .repos/effect-v4/packages/effect/src/Option.ts:860); deletes the mutable record and its hand-written input type. Behavior-identical for S.optionalKey fields (None keys are omitted entirely, matching exact-optional semantics). Held at judgment per D5 until the Law 20/47 amendment merges.",
+    "confidence": 0.75,
+    "mechanization": "judgment",
+    "roiRank": 1.5
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/foundation/capability/langextract/src/Handoff/index.ts",
+    "line": 59,
+    "symbol": "makeEntity",
+    "smell": "Same imperative optional-key assembly pattern as Alignment makeGrounded: locally mutated `input` record with hand-written 6-field type annotation and a conditional `if (extraction.confidence !== undefined) input.confidence = extraction.confidence` (lines 66-84) feeding Contract.Entity.make — the manual variant of the R.getSomes struct-spread smell where O.getSomesStruct is the fit.",
+    "proposedTarget": "Contract.Entity.make({ canonicalName: extraction.text, id: Contract.EntityId.make(`${documentId}:entity:${index}`), mentions: [mentionId], provenance, type: extraction.label, ...O.getSomesStruct({ confidence: O.fromUndefinedOr(extraction.confidence) }) }) using O.getSomesStruct (packages/foundation/modeling/utils/src/Option.ts:102) and O.fromUndefinedOr (.repos/effect-v4/packages/effect/src/Option.ts:860); mechanically simpler single-key transform than the makeGrounded site, held at judgment per D5 until the Law 20/47 amendment merges.",
+    "confidence": 0.8,
+    "mechanization": "judgment",
+    "roiRank": 1.4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/langextract/test/Service.test.ts",
+    "line": 15,
+    "symbol": "makeLanguageModelLayerFromEffect",
+    "smell": "Four repo-banned type assertions constructing the fake LanguageModel service: `Effect.die(\"generateObject is not used by V1 tests\") as never` (:15), `effect as never` (:16), `Stream.empty as never` (:17), and the object-level `as LanguageModel.Service` (:18) — casts that fabricate the service shape instead of using the provided constructors/testing primitives.",
+    "proposedTarget": "Build the fake with LanguageModel.make({ generateText: () => Effect.map(effect, ({ text }) => [Response.makePart(\"text\", { text }), finishPart]), streamText: () => Stream.empty }) (LanguageModel.make verified at .repos/effect-v4/packages/effect/src/unstable/ai/LanguageModel.ts:748; the package's own docs example already demonstrates exactly this at src/Service/index.ts:232-244, and Effect.never for the stalled-model case is assignable without any cast), or with Layer.mock(LanguageModel.LanguageModel)({ ... }) (verified at .repos/effect-v4/packages/effect/src/Layer.ts:2262) which proxies unimplemented methods such as generateObject to UnimplementedError, removing the die-plus-cast entirely.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 0.8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
+    "line": 87,
+    "symbol": "LangExtractError",
+    "smell": "Literal-union field `reason: LangExtractErrorReason` (6-member LiteralKit) on a single tagged error class; a naive literal-union-field heuristic surfaces it as a tagged-union candidate (split into per-reason error classes).",
+    "proposedTarget": "None — keep as-is. The capability boundary deliberately exposes ONE sanitized error type (annotated 'Sanitized error emitted by provider-neutral LangExtract operations') with a machine-readable reason attribute; all reasons carry the identical message+details payload, so per-reason classes add no structural invariant while changing the public error contract of LangExtractService.extract and every consumer signature (e.g. packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.ports.ts:105).",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "reason is an enum-valued data attribute of one sanitized boundary error, not a variant discriminator: payloads are homogeneous across all six reasons, no code path switches shape on it (tests only assert equality), and the single-error surface is the deliberate sanitization design of the capability boundary. Splitting would multiply the public error union without an invariant gain; error-tag family shape at boundaries is governed by the fence-3 doctrine (standards/architecture/09-errors-across-boundaries.md).",
+      "boundary": "public capability-boundary error contract of @beep/langextract (LangExtractService.extract, parseModelOutput)"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/langextract/src/Target/index.ts",
+    "line": 62,
+    "symbol": "ExtractionTarget",
+    "smell": "Literal-union field `kind: ExtractionTargetKind` (entity | relation | attribute | event | custom) on a plain S.Class; a naive literal-union-field heuristic flags it as a tagged-union candidate.",
+    "proposedTarget": "None — keep as-is. All five kinds share the identical payload (name, optional attributes, optional description) and no code path anywhere branches on kind (the only read interpolates it into the prompt string at src/Service/index.ts:103), so there is no derived-guard win and no divergent-payload invariant to encode; revisit only if V2 targets grow kind-specific fields.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "kind is prompt data — an enum-valued attribute rendered into the model prompt — not a structural discriminator: variants are payload-homogeneous and zero branching exists in the package or its consumers, so a 5-member tagged union of identical classes is pure ceremony. Matches the S3 carve-out that homogeneous-payload literal fields without discriminator branching are out of scope.",
+      "boundary": "provider-neutral V1 prompt contract (@beep/langextract/Target ExtractionTarget), uniform-shape by design"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
+    "line": 389,
+    "symbol": "ModelOutput",
+    "smell": "ModelOutput = S.Union([ModelOutputObject, ModelOutputCandidates]) is an undiscriminated union (object-with-extractions | bare candidate array) dispatched via the hand-rolled predicate isCandidateArray (:393) and a ternary in outputToCandidates (:401-402); an undiscriminated-union detector would flag it as a toTaggedUnion candidate.",
+    "proposedTarget": "None — keep as-is. This is a module-private boundary codec for untrusted LLM wire output: language models legitimately emit either {\"extractions\":[...]} or a top-level array (both shapes are covered by tests at test/Extraction.test.ts:9-30), the wire format cannot carry an imposed discriminator field, and the members are structurally disjoint (array vs object) so decode order is unambiguous. Narrowing already uses the sanctioned primitive A.isArray (verified at .repos/effect-v4/packages/effect/src/Array.ts:797) rather than a cast.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "External untrusted wire shapes cannot be tagged: the union's members are what third-party models actually emit, discrimination is structural (array vs object) and total, the schema is module-private (not exported), and parseModelOutput normalizes both branches to ReadonlyArray<ExtractionCandidate> immediately at the boundary. Tagging would require rewriting model output before decoding it — inverting the boundary-codec direction.",
+      "boundary": "untrusted LLM output boundary codec inside parseModelOutput (@beep/langextract/Extraction), module-private"
+    }
+  }
+]

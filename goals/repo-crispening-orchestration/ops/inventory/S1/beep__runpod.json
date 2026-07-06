@@ -1,0 +1,148 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 176,
+    "symbol": "RunpodShape",
+    "smell": "Exported interface extends a generated operations shape and adds an Effect-returning service method.",
+    "proposedTarget": "Hypothetical schema/Fn wrapper for the generated operation service surface — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "`RunpodShape` is the public `Context.Service` shape for `export class Runpod extends Context.Service<Runpod, RunpodShape>()`; it also extends the generated OpenAPI operation port. Service and port interfaces are explicit S1 carve-outs.",
+      "boundary": "Context.Service contract over generated OpenAPI operations"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/runpod/src/RunpodDocs.service.ts",
+    "line": 86,
+    "symbol": "RunpodDocsShape",
+    "smell": "Interface with an Effect-typed service member appears inside a schema-modeled file.",
+    "proposedTarget": "Hypothetical schema/Fn wrapper for `fetchIndex` — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "`RunpodDocsShape` is the local shape consumed by `export class RunpodDocs extends Context.Service<RunpodDocs, RunpodDocsShape>()`. It is a service contract, not a data payload.",
+      "boundary": "Context.Service contract"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 207,
+    "symbol": "JsonOperationSpec",
+    "smell": "Generic interface in a schema-modeled service file contains schema decoder handles.",
+    "proposedTarget": "Hypothetical schema model for operation specs — audited and rejected.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.06,
+    "exception": {
+      "reason": "This is an internal generic helper contract tying a generated operation descriptor to request/response `S.ConstraintDecoder` handles. Generic type-level utility/helper contracts are excluded from schema-ification by the S1 carve-outs.",
+      "boundary": "generic operation helper contract"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 213,
+    "symbol": "VoidOperationSpec",
+    "smell": "Generic interface in a schema-modeled service file contains a schema decoder handle.",
+    "proposedTarget": "Hypothetical schema model for void operation specs — audited and rejected.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.06,
+    "exception": {
+      "reason": "Companion to `JsonOperationSpec`: an internal generic helper contract over generated descriptors and request decoders, not a wire/domain payload.",
+      "boundary": "generic operation helper contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/runpod/src/RunpodDocs.service.ts",
+    "line": 205,
+    "symbol": "parseRunpodDocsIndex",
+    "smell": "Exported parser function in a schema-modeled file has a stable string-to-`RunpodDocsIndex` Effect contract, but the function contract is not represented as an `Fn` schema.",
+    "proposedTarget": "Introduce an annotated `RunpodDocsIndexParser = Fn({ input: S.String, output: RunpodDocsIndex, error: RunpodDocsError })` and implement the exported parser with `.implementEffect(...)`. Use the existing `Fn` pattern from `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66` and `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`; `Fn.schema.ts` verifies `.implementEffect`/`.implementSync` support.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.55
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 63,
+    "symbol": "isRunpodQueryScalarArray",
+    "smell": "Top-of-file `const isRunpodQueryScalarArray = S.is(RunpodQueryScalarArray)` textually matches the guard-helper-wall smell.",
+    "proposedTarget": "Inline `S.is(RunpodQueryScalarArray)` at the single branch in `queryValueToStrings` — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The guard is local, schema-derived, and used to discriminate the `RunpodQueryValue` union before rendering URL params. It does not bypass the schema; inlining would be a terseness-only change better handled by S4/static-api cleanup if desired.",
+      "boundary": "schema-derived local union guard"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 227,
+    "symbol": "decodeQueryValueOption",
+    "smell": "Local `const decodeQueryValueOption = S.decodeUnknownOption(RunpodQueryValue)` textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Inline `S.decodeUnknownOption(RunpodQueryValue)` in `queryEntry` — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This is a schema-derived boundary decoder for raw query values read from unknown request objects. It is scoped to URL-param construction and keeps `RunpodQueryValue` as the truth source.",
+      "boundary": "raw request query boundary codec"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 228,
+    "symbol": "isRunpodError",
+    "smell": "Local `const isRunpodError = S.is(RunpodError)` textually matches the guard-helper-wall smell.",
+    "proposedTarget": "Inline `S.is(RunpodError)` in `operationSpan` — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The guard is a local schema-derived filter used only to avoid logging non-driver errors in a generic span helper. It does not introduce a parallel validation model.",
+      "boundary": "schema-derived local error guard"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/runpod/src/Runpod.errors.ts",
+    "line": 102,
+    "symbol": "isRunpodOperationDescriptor",
+    "smell": "Local `const isRunpodOperationDescriptor = S.is(RunpodOperationDescriptor)` textually matches the guard-helper-wall smell.",
+    "proposedTarget": "Inline `S.is(RunpodOperationDescriptor)` in the `dual` predicate for `RunpodError.fromDescriptor` — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The guard is a schema-derived overload discriminator for a dual static constructor. Overload/dual surfaces are S1 carve-outs, and the generated `RunpodOperationDescriptor` schema remains the truth source.",
+      "boundary": "overload discriminator over generated schema"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/runpod/scripts/generate.ts",
+    "line": 139,
+    "symbol": "decodeOpenApiDocument",
+    "smell": "Local decode helper in a package script textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Inline `S.decodeEffect(S.fromJsonString(OpenApiDocument))` at the OpenAPI file-read site — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This is the generator's JSON trust boundary and already uses the verified Effect v4 schema codec form (`S.fromJsonString(OpenApiDocument)` plus `S.decodeEffect`). It is not ad-hoc JSON parsing and does not bypass schema truth.",
+      "boundary": "OpenAPI generator JSON boundary codec"
+    }
+  }
+]

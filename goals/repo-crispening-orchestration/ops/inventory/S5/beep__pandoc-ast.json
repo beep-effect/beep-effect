@@ -1,0 +1,91 @@
+[
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
+    "line": 528,
+    "symbol": "decodePandocJson",
+    "smell": "The Pandoc JSON wire codec (decodePandocJson:528 / encodePandocJson:569, plus the string forms) absorbs the whole decode/encode invariant for the v1 model surface, but test/ has zero schema-derived property tests — Pandoc.codec.test.ts and the integration test exercise static fixtures only (test/fixtures/green-core.pandoc.json, gap-docx-styles.pandoc.json). The model is pure data (S.TaggedClass unions via S.toTaggedUnion), so decode(encode(doc)) === doc is derivable across the schema domain for the supported constructors.",
+    "proposedTarget": "Additive property test: fc.assert over S.toArbitrary(PandocDocument) (S.toArbitrary verified .repos/effect-v4/packages/effect/src/Schema.ts:12970; Unknown maps to fc.anything() and Suspend recursion is depth-bounded — verified .repos/effect-v4/packages/effect/src/internal/schema/arbitrary.ts:587-589/880-906), asserting decodePandocJson(encodePandocJson(doc)) round-trips under S.toEquivalence(PandocDocument) (verified Schema.ts:13201). CAUTION: the law only holds for the supported surface — arbitrary Table.payload fails decodeTablePayloadWire and degrades to unknownBlock (Pandoc.codec.ts:414-423), and an UnknownBlock/UnknownInline whose generated constructor collides with a known tag (e.g. \"Para\") re-decodes as that constructor — so either filter/omit table+unknown* nodes in the generator or assert the weaker encode∘decode∘encode = encode idempotence law for the full domain. Existing fixtures stay (static-fixture carve-out; PROVENANCE.md documents them as golden payloads).",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.report.ts",
+    "line": 110,
+    "symbol": "JsonPathSegment",
+    "smell": "JsonPathSegment is S.Union([S.String, S.Finite]) — the numeric arm admits negative and fractional values, but every numeric segment in the package is a non-negative array index produced by appendIndex (Pandoc.mapping.ts:79, always a forEach index) and rendered into JSON Pointers by jsonPointerFromPath (Pandoc.report.ts:160).",
+    "proposedTarget": "Narrow the numeric arm to a non-negative integer: S.Union([S.String, S.Int.check(S.isGreaterThanOrEqualTo(0))]) — S.Int verified .repos/effect-v4/packages/effect/src/Schema.ts:11398, S.isGreaterThanOrEqualTo at 7314. All in-repo constructors already satisfy it (rg shows path segments only from string keys and forEach indices); public-form narrowing, so the §5.4 consumer sweep applies (consumers are in-package plus @beep/md-side callers of PandocMappingIssue.fromPath).",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
+    "line": 27,
+    "symbol": "PandocApiVersion",
+    "smell": "PandocApiVersion is S.Array(S.Int) — unbounded and possibly empty, admitting negative components — for a value that is always a short non-empty tuple of non-negative version components ([1,23,1]); documentToPandoc hardcodes [1, 23, 1] (Pandoc.mapping.ts:1015) and the wire boundary requires the key (Pandoc.codec.ts:109).",
+    "proposedTarget": "S.NonEmptyArray(S.Int.check(S.isGreaterThanOrEqualTo(0))) — S.NonEmptyArray verified .repos/effect-v4/packages/effect/src/Schema.ts:4533, S.isGreaterThanOrEqualTo at 7314. Fail-closed is correct at this wire boundary: a Pandoc JSON document with an empty or negative api-version tuple is malformed, and rejecting the whole decode is the codec's existing behavior for malformed required keys. Same-PR §5.4 sweep: PandocDocument.make call sites and fixtures already pass [1,23,1].",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
+    "line": 1134,
+    "symbol": "Header.level",
+    "smell": "Header.level is bare S.Int with no 1..6 range check while Md headings are a closed 1|2|3|4|5|6 domain.",
+    "proposedTarget": "Keep as-is. The breadth is load-bearing: the model mirrors Pandoc's Haskell `Header Int` wire type, and the pandoc-to-md projection explicitly represents out-of-range levels so it can clamp them and emit a lossy compatibility issue (pandocHeadingLevelProjection, Pandoc.mapping.ts:327-341). Tightening to 1..6 would turn a reportable compatibility gap into a whole-document decode failure.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Third-party wire mirror whose out-of-range values are an explicit, tested compatibility-report path (clamp + lossy issue); range-checking the model would delete the gap-reporting behavior the package exists to provide.",
+      "boundary": "Pandoc JSON wire (Header constructor payload, Pandoc.codec.ts:430-436) and the pandoc-to-md clamp at Pandoc.mapping.ts:308-341"
+    }
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
+    "line": 1314,
+    "symbol": "OrderedList.start",
+    "smell": "OrderedList.start is bare S.Int with no non-negativity or range check.",
+    "proposedTarget": "Keep as-is. Pandoc's ListAttributes start is a plain Int (negative and zero starts are representable in the wire), and the mapping already detects non-default markers (start !== 1) to emit a lossy issue (hasOrderedListMarkerLoss, Pandoc.mapping.ts:74-75). A range check would reject representable Pandoc documents instead of reporting them.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Third-party wire mirror of Pandoc ListAttributes; unusual starts are compatibility-report data, not invalid input.",
+      "boundary": "Pandoc JSON wire (OrderedList payload, Pandoc.codec.ts:399-412)"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts",
+    "line": 1605,
+    "symbol": "PandocMeta",
+    "smell": "PandocMeta is a broad S.Record(S.String, S.Unknown) on the root document model.",
+    "proposedTarget": "Keep as-is. Pandoc metadata is an open, arbitrarily nested MetaValue map owned by the external Pandoc format; the package passes it through verbatim (decodePandocJson/encodePandocJson copy wire.meta / document.meta untouched, Pandoc.codec.ts:528-533/569-576). Modeling MetaValue would be new scope, not a precision fix on this compatibility slice.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Intentionally loose passthrough mirror of Pandoc's open metadata map on a third-party boundary; the v1 compatibility slice never inspects it.",
+      "boundary": "Pandoc JSON wire `meta` key (Pandoc.codec.ts:115-117)"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
+    "line": 982,
+    "symbol": "pandocToDocument",
+    "smell": "The bidirectional mapping (pandocToDocument:982 / documentToPandoc:1009) carries domain-wide laws — totality over the full model union (Match.tagsExhaustive), report.profile === \"supported\" iff issues is empty (profileFromIssues, Pandoc.report.ts:250-251), and every issue.pointer consistent with jsonPointerFromPath(issue.path) — but is covered only by hand-picked fixtures in test/Pandoc.mapping.test.ts.",
+    "proposedTarget": "Additive property test over S.toArbitrary(PandocDocument) and S.toArbitrary(Md.Document) (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) asserting: mapping succeeds for every generated document, profile/issues consistency, and pointer === jsonPointerFromPath(path) for every emitted issue. A full md→pandoc→md round-trip law does NOT hold (the mapping is deliberately lossy for tables, task lists, youtube, notes, math), so scope the round-trip assertion to the lossless core subset or assert issue-reporting instead — writer judgment on the subset generator. Existing fixtures stay (static-fixture carve-out).",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 2
+  }
+]

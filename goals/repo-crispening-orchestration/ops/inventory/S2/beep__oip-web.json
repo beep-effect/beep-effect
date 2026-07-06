@@ -1,0 +1,132 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "apps/oip-web/src/contact/ContactSubmission.model.ts",
+    "line": 143,
+    "symbol": "ContactSubmission",
+    "smell": "`company`, `phone`, `posture`, `technology`, and `website` are modeled as `S.optionalKey(TrimmedContactText)`, so downstream domain code repeatedly rebuilds absence with `O.fromUndefinedOr(submission.company)` / `O.fromUndefinedOr(submission.phone)` / etc. in ContactSubmission.service.ts:140-191.",
+    "proposedTarget": "Move the optional contact fields to `S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault)` so decoded `ContactSubmission` values carry `Option` directly while the encoded wire key remains optional. Verified APIs: `S.OptionFromOptionalKey` in .repos/effect-v4/packages/effect/src/Schema.ts:8653-8668 and `withNoneDefault` in packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46-51. In-repo exemplars: packages/foundation/modeling/schema/src/SafeRemoteHost.ts:91 and packages/foundation/modeling/schema/src/StatusCauseError.ts:42.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "apps/oip-web/src/contact/ContactSubmission.service.ts",
+    "line": 45,
+    "symbol": "ContactSubmissionError",
+    "smell": "`provider`, `providerReason`, and `status` are `S.optionalKey(...)` fields plus an optional options bag, forcing `fromReason` to spread `O.fromUndefinedOr(options.provider)` / `providerReason` / `status` at lines 60-64.",
+    "proposedTarget": "Model optional error metadata as `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` and let `fromReason` accept `O.Option` values or decode an options schema before `make`. Same in-repo Option-field exemplar as SafeRemoteHost.ts:91 and StatusCauseError.ts:42; `O.getSomesStruct` is already the local heterogenous-Option spread helper at packages/foundation/modeling/utils/src/Option.ts:102.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "apps/oip-web/src/content/OipContent.runtime.ts",
+    "line": 42,
+    "symbol": "OipContentLoadError",
+    "smell": "`provider`, `providerReason`, and `status` are `S.optionalKey(...)` fields with an optional options bag, then `fromReason` manually drops undefined members through `R.getSomes` at lines 57-63.",
+    "proposedTarget": "Mirror the ContactSubmissionError target: `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` for optional error metadata, then carry `Option` through the constructor path instead of `provider?: string` / `O.fromUndefinedOr`. Use `O.getSomesStruct` for the heterogenous inline Option struct.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "apps/oip-web/src/contact/ContactSubmission.service.ts",
+    "line": 125,
+    "symbol": "textField",
+    "smell": "`textField`, `noteLine`, and `validateSpamControls` re-trim decoded contact-submission fields with `O.map(Str.trim)` at lines 128, 150, and 191 even though contact text already flows through `TrimmedContactText` / `ContactEmail` schemas.",
+    "proposedTarget": "Once ContactSubmission optional fields decode as `Option<TrimmedContactText>`, treat the decoded values as already normalized and delete the adapter-side trim/filter, or introduce a HubSpot-specific field schema if the provider boundary needs a separate invariant. Verified schema-transform target: `SchemaTransformation.trim()` exists in .repos/effect-v4/packages/effect/src/SchemaTransformation.ts:397-428; in-repo exemplar `TrimmedNonEmptyText` carries trim in packages/foundation/modeling/schema/src/CommonTextSchemas.ts:36-47.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "apps/oip-web/src/contact/ContactSubmission.model.ts",
+    "line": 220,
+    "symbol": "formTextOption",
+    "smell": "`formTextOption` hand-normalizes `FormDataEntryValue | null` with `O.fromNullishOr` + `P.isString` + `O.map(Str.trim)` + `O.filter(Str.isNonEmpty)`, and `requiredFormTextValue` then defaults missing required fields to `\"\"` at line 226 before the schema sees the value.",
+    "proposedTarget": "Add a small form-entry boundary schema/transformation for `FormDataEntryValue | null` -> trimmed optional text, then let `ContactSubmissionFormPayload` perform the required-field decode. Keep the File/null boundary explicit, but move the trim/non-empty invariant into a schema transformation (`SchemaTransformation.trim()` verified in effect-v4; `TrimmedNonEmptyText` exemplar at CommonTextSchemas.ts:36-47).",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "apps/oip-web/src/content/OipSeo.ts",
+    "line": 94,
+    "symbol": "oipTwitterHandle",
+    "smell": "Exported helper returns `string | undefined` via `O.getOrUndefined` for the absent X/Twitter profile case.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "The helper is an adapter for Next.js Metadata fields (`creator` and `site` at app/page.tsx:83-84 and app/layout.tsx:194-195), where undefined is the framework-facing omission value.",
+      "boundary": "Next.js Metadata adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "apps/oip-web/src/components/HeroVideo.tsx",
+    "line": 58,
+    "symbol": "HeroVideoState",
+    "smell": "`element: S.NullOr(DOMHtmlVideoElement).pipe(SchemaUtils.withKeyDefaults(null))` stores DOM ref absence as null rather than Option.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "This state mirrors the React DOM ref contract (`HTMLVideoElement | null`) and is local UI/browser state, not a domain or wire model.",
+      "boundary": "React DOM ref boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "apps/oip-web/src/components/OipHomePage.tsx",
+    "line": 171,
+    "symbol": "Hero",
+    "smell": "`hero.portrait.width ?? 700` and `hero.portrait.height ?? 1245` are UI fallback dimensions over optional asset metadata.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "The fallback is a Next/Image layout hint for one rendered asset, not a reusable content invariant; different `SiteAsset` uses have different dimensions.",
+      "boundary": "React/Next Image rendering boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "apps/oip-web/next.config.ts",
+    "line": 60,
+    "symbol": "webpack",
+    "smell": "`config.plugins = config.plugins ?? []` and adjacent `config.resolve = config.resolve ?? {}` default third-party webpack config members.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "The values are mutable framework config slots supplied by Next/Webpack, not package domain data that can be moved onto an Effect Schema.",
+      "boundary": "Next.js/Webpack config mutation boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "apps/oip-web/src/contact/ContactSubmission.service.ts",
+    "line": 203,
+    "symbol": "validateSpamControls",
+    "smell": "`return undefined;` appears in an `Effect.fn.Return<void, ContactSubmissionError>` generator.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "This is the success value for an Effect returning `void`, not a domain helper exposing undefined as data.",
+      "boundary": "Effect<void> success channel"
+    }
+  }
+]

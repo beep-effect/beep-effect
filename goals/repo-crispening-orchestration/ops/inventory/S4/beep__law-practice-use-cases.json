@@ -1,0 +1,91 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.errors.ts",
+    "line": 33,
+    "symbol": "IrToLawExtractionErrorReason",
+    "smell": "Branded/union const `LiteralKit([...]).pipe($I.annoteSchema(...))` missing `SchemaUtils.withCodecStatics`. Only the per-literal `LiteralKit.is` guard map survives via `$I.annoteSchema`'s `preserveSchemaStatics` (packages/foundation/modeling/identity/src/Id.ts:70-87) — confirmed by the module's own JSDoc at line 27 calling `IrToLawExtractionErrorReason.is[\"required-extraction-unaligned\"](reason)`, the per-literal shape, not a single overall guard. No `.fromUnknown`/`.decodeOption` exists anywhere on the const.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the pipe (signature verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90) so `IrToLawExtractionErrorReason.is(value)` (overall guard), `.fromUnknown`, and `.decodeOption` exist alongside the kit's per-literal `.is` map.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.ports.ts",
+    "line": 103,
+    "symbol": "OfficeActionReviewError",
+    "smell": "Union-of-tagged-errors const built with raw `S.Union([...]).annotate($I.annote(...))` (not `$I.annoteSchema`, so no `preserveSchemaStatics` wrapping runs at all — `.annotate` returns a bare `this[\"Rebuild\"]`, verified at .repos/effect-v4/packages/effect/src/Schema.ts:184) — zero statics survive. The module's own JSDoc (line 97) demonstrates the resulting free-floating-guard workaround: `S.is(OfficeActionReviewError)(error)`.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after the annotate step so callers use `OfficeActionReviewError.is(error)` / `.decodeOption` / `.fromUnknown` directly instead of wrapping the schema in `S.is(...)` at each call site.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.service.ts",
+    "line": 35,
+    "symbol": "decodeOfficeAction",
+    "smell": "Top-of-file decode wall (lines 35-39: decodeOfficeAction/decodeClaim/decodePriorArtReference/decodeRejection/decodeDistinction, each `S.decodeUnknownSync(Entity)`) — behavior separated from the `@beep/law-practice-domain` entity classes it decodes; none of Claim/OfficeAction/PriorArtReference/Rejection/Distinction currently expose an in-body `.fromUnknown`, so the wall compensates locally instead of the entities colocating the decoder.",
+    "proposedTarget": "Depends on an upstream fix in @beep/law-practice-domain/@beep/shared-domain (BaseEntity.Class) to attach in-body `static readonly fromUnknown = S.decodeUnknownSync(Self)` per entity; once available, delete this wall and call `Claim.fromUnknown(...)` etc. directly at each of the five call sites in buildLawEntities (lines 135-172). Filed here since the wall physically sits in this package; the fix lands in the entity classes, not this file.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts",
+    "line": 33,
+    "symbol": "decodeCandidateClaim",
+    "smell": "Top-of-file decode wall (lines 33-34: decodeCandidateClaim/decodeEvidence, each `S.decodeUnknownSync(Entity)`) for `@beep/epistemic-domain` entities — same duplicate-decode-helper pattern as IrToLaw.service.ts, decoding CandidateClaim/Evidence instead of calling colocated statics.",
+    "proposedTarget": "Depends on an upstream fix in @beep/epistemic-domain (out of this packet's touch scope) to attach in-body `.fromUnknown` on CandidateClaim/Evidence; once available, delete this wall and call `CandidateClaim.fromUnknown(...)` / `Evidence.fromUnknown(...)` directly at candidateClaimOf (line 74) / evidenceOf (line 82).",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts",
+    "line": 94,
+    "symbol": "IrToLawShape",
+    "smell": "Detector hit: `S.Class`-modeled DI shape carrying a `Fn`-typed `toLaw` field with no `withCodecStatics`/in-body `.is` — superficially a colocation candidate since it is schema-backed rather than a plain `interface`.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "IrToLawShape is a pure dependency-injection shape paired 1:1 with the IrToLaw Context.Service tag (line 131); it is only ever constructed in-process via `IrToLawShape.make({...})` from a trusted implementation (makeIrToLaw in IrToLaw.service.ts) or a test fake, never decoded from untrusted/serialized input. Attaching guard/decode statics to a service-shape carrier has no real caller.",
+      "boundary": "SPEC fence 1 — service-contract carve-out (spirit extends to the schema-backed DI-shape wrapper around the service contract, even though the literal type is S.Class rather than `interface`)."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.ports.ts",
+    "line": 168,
+    "symbol": "OfficeActionReviewShape",
+    "smell": "Detector hit: plain `interface` service shape — superficially a colocation candidate.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "Plain service-contract interface for the OfficeActionReview loop; paired with the Context.Service tag at line 203. Service shapes stay interfaces per fence 1.",
+      "boundary": "SPEC fence 1 — service-contract carve-out."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts",
+    "line": 149,
+    "symbol": "OfficeActionReviewDeps",
+    "smell": "Detector hit: plain `interface` bundling injected service dependencies — superficially a colocation candidate.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "Dependency-bag interface for makeOfficeActionReview's constructor parameter; each field is itself a service shape (FileProcessingServiceShape, ClaimGateShape, IrToLawShape, ClaimTransitionShape) or an inline port. This is a composition-root wiring contract, not schema-modeled data.",
+      "boundary": "SPEC fence 1 — service-contract carve-out."
+    }
+  }
+]

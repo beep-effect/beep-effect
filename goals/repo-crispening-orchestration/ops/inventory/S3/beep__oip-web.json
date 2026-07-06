@@ -1,0 +1,91 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "apps/oip-web/src/contact/ContactSubmission.model.ts",
+    "line": 327,
+    "symbol": "ContactSubmissionResponse",
+    "smell": "Public contact response is modeled as one S.Class with status: ContactSubmissionStatus, then route code branches manually on response.status at apps/oip-web/src/app/api/contact/route.ts:25 and apps/oip-web/src/app/api/contact/ContactHttpApiRoute.ts:19. The accepted/rejected HTTP response shapes already exist as status-tagged classes at ContactSubmission.http.ts:38 and :66, so the literal status field is doing discriminator work without the schema-derived match/guards.",
+    "proposedTarget": "Promote ContactSubmissionResponse to a status-tagged response union, for example ContactSubmissionStatus.toTaggedUnion(\"status\")({ accepted: { message: S.String }, rejected: { message: S.String } }), or reuse ContactSubmissionAccepted/ContactSubmissionRejected as the public response union; then dispatch contactJsonStatus/contactHttpApiResponse through the union's .match. Verified API/exemplars: LiteralKit.toTaggedUnion at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:721, S.toTaggedUnion adds match/guards at .repos/effect-v4/packages/effect/src/Schema.ts:6094-6104, and this package's S.tag response classes are at apps/oip-web/src/contact/ContactSubmission.http.ts:38 and :66. Same-PR consumer sweep required for ContactSubmissionResponse.make sites such as apps/oip-web/src/contact/ContactSubmission.service.ts:178 and :183.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 2.9
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "apps/oip-web/src/content/OipContent.runtime.ts",
+    "line": 57,
+    "symbol": "OipContentLoadError.fromReason",
+    "smell": "Two adjacent R.getSomes spreads assemble one fixed optional error-options struct: provider/providerReason are optional strings at lines 57-60 and status is an optional number at lines 61-63. R.getSomes is the homogeneous record helper, so this split loses the single heterogeneous struct shape that the OipContentLoadError constructor consumes.",
+    "proposedTarget": "Coalesce the optional fields into one O.getSomesStruct({ provider: O.fromUndefinedOr(options.provider), providerReason: O.fromUndefinedOr(options.providerReason), status: O.fromUndefinedOr(options.status) }) spread. In-package exemplar: ContactSubmissionError.fromReason already uses O.getSomesStruct for the same provider/providerReason/status shape at apps/oip-web/src/contact/ContactSubmission.service.ts:60-64. Verified target helper: packages/foundation/modeling/utils/src/Option.ts:102; verified Record.getSomes homogeneous signature: .repos/effect-v4/packages/effect/src/Record.ts:824-826. Held at judgment pending D5.",
+    "confidence": 0.8,
+    "mechanization": "judgment",
+    "roiRank": 1.6
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "apps/oip-web/src/content/OipContent.runtime.ts",
+    "line": 98,
+    "symbol": "sanityConfig",
+    "smell": "SanityConfigInput.make is populated through four R.getSomes spreads over fixed config fields at lines 98-101. The fields are a heterogeneous constructor payload: projectId/dataset/apiHost/apiVersion are strings while apiToken decodes through S.RedactedFromValue in SanityConfigInput at packages/drivers/sanity/src/Sanity.config.ts:68-73.",
+    "proposedTarget": "Build the optional config payload with one O.getSomesStruct call from @beep/utils, e.g. { ...O.getSomesStruct({ projectId, dataset, apiHost: yield* readTextConfigOption(\"SANITY_API_HOST\"), apiVersion: yield* readTextConfigOption(\"SANITY_API_VERSION\"), apiToken: yield* readRedactedConfigOption(\"SANITY_API_TOKEN\") }) }, preserving per-key value types for SanityConfigInput.make. Verified target helper: packages/foundation/modeling/utils/src/Option.ts:102; verified Option.fromUndefinedOr/source Option APIs in Effect v4 at .repos/effect-v4/packages/effect/src/Option.ts:860. Held at judgment pending D5.",
+    "confidence": 0.78,
+    "mechanization": "judgment",
+    "roiRank": 1.6
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "apps/oip-web/src/content/OipContent.runtime.ts",
+    "line": 137,
+    "symbol": "fallbackToStaticContent",
+    "smell": "Structured log annotations assemble a fixed heterogeneous optional payload through adjacent R.getSomes spreads: provider/providerReason strings at lines 137-140 and status number at lines 141-143. This mirrors the error-options shape above and should preserve named optional fields as one struct.",
+    "proposedTarget": "Use one O.getSomesStruct({ provider: O.fromUndefinedOr(error.provider), providerReason: O.fromUndefinedOr(error.providerReason), status: O.fromUndefinedOr(error.status) }) inside Effect.annotateLogs. In-package exemplar: submitContact already annotates provider/providerReason/status with O.getSomesStruct at apps/oip-web/src/contact/ContactSubmission.service.ts:298-302. Verified target helper: packages/foundation/modeling/utils/src/Option.ts:102; R.getSomes homogeneous signature: .repos/effect-v4/packages/effect/src/Record.ts:824-826. Held at judgment pending D5.",
+    "confidence": 0.76,
+    "mechanization": "judgment",
+    "roiRank": 1.5
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "apps/oip-web/src/contact/ContactSubmission.model.ts",
+    "line": 233,
+    "symbol": "contactSubmissionPayloadInputFromFormData",
+    "smell": "R.getSomes is used for fixed optional form fields at lines 233-240 and again in contactSubmissionPayloadFallback at lines 249-255; a broad inline-object detector will see both.",
+    "proposedTarget": "None -- keep under this S3 card.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Every option in these calls is produced by formTextOption and carries the same Option<string> value domain before ContactSubmissionFormPayload decodes submittedAt. The user instruction says R.getSomes is only a finding for heterogeneous Option-structs; this is a homogeneous form-text compaction, not a mixed per-key payload.",
+      "boundary": "browser FormData text normalization before ContactSubmissionFormPayload decoding"
+    }
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "apps/oip-web/src/content/OipContent.runtime.ts",
+    "line": 125,
+    "symbol": "loadFromSanity",
+    "smell": "R.getSomes({ status: O.fromUndefinedOr(error.status) }) is a single-key optional spread inside the provider error options object; the current detector flags inline object literals.",
+    "proposedTarget": "None -- keep under this S3 card.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This call contains only one optional value and therefore is not a heterogeneous Option struct. The surrounding provider/providerReason fields are required literals in this object, so there is no mixed optional struct for O.getSomesStruct to preserve.",
+      "boundary": "Sanity provider error status option at the catch boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "apps/oip-web/src/content/OipSeo.ts",
+    "line": 20,
+    "symbol": "profileUrls",
+    "smell": "SEO projections compare SocialLink.platform to literal SocialPlatform values at line 20 and line 96; a broad discriminator detector could suggest SocialPlatform.$match or a tagged union.",
+    "proposedTarget": "None -- keep as simple predicates.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "SocialPlatform is a literal domain for filtering links, not a variant family with per-case payload or required exhaustive behavior. A nine-case match would add noise without proving a domain invariant.",
+      "boundary": "SEO/read-model projection over SocialLink.platform"
+    }
+  }
+]

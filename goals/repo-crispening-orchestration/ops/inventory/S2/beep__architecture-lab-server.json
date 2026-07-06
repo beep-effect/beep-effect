@@ -1,0 +1,62 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/architecture-lab/server/src/entities/Worker/Worker.repo.ts",
+    "line": 185,
+    "symbol": "makeDrizzleWorkerRepository.create",
+    "smell": "`O.getOrElse(() => worker)` after `insert(...).returning()` is an O.getOrElse-as-default detector hit.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Repository adapter fallback when Drizzle/Postgres returns no row from `returning()`; not a schema-field default and not domain absence.",
+      "boundary": "persistence adapter return-shape fallback"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/architecture-lab/server/src/aggregates/WorkItem/WorkItem.repo.ts",
+    "line": 197,
+    "symbol": "makeDrizzleWorkItemRepository.create",
+    "smell": "`O.getOrElse(() => workItem)` after `insert(...).returning()` is an O.getOrElse-as-default detector hit.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 2,
+    "exception": {
+      "reason": "Repository adapter fallback when Drizzle/Postgres returns no row from `returning()`; not a schema-field default and not domain absence.",
+      "boundary": "persistence adapter return-shape fallback"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/architecture-lab/server/src/aggregates/WorkItem/WorkItem.repo.ts",
+    "line": 220,
+    "symbol": "makeDrizzleWorkItemRepository.save",
+    "smell": "`O.getOrElse(() => workItem)` after `update(...).returning()` is an O.getOrElse-as-default detector hit.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Repository adapter fallback when Drizzle/Postgres returns no row from `returning()` after an update already guarded by `getDrizzleWorkItem`; not a schema-field default.",
+      "boundary": "persistence adapter return-shape fallback"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/architecture-lab/server/test/integration/WorkItemDrizzleRepository.pglite.test.ts",
+    "line": 40,
+    "symbol": "migrateArchitectureLab",
+    "smell": "`O.getOrElse(() => \"drizzle\")` defaults the optional PGlite test schema name.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "Test-only database fixture fallback; not production schema modeling.",
+      "boundary": "test fixture default"
+    }
+  }
+]

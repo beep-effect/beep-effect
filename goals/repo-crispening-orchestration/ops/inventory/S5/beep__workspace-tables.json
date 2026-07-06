@@ -1,0 +1,43 @@
+[
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+    "line": 86,
+    "symbol": "Thread/Message/Turn row converter round-trips",
+    "smell": "Thread, Message, and Turn table converters are covered by one hand-written row fixture each; no S.toArbitrary-derived law proves toThreadInsert/fromThreadRow, toMessageInsert/fromMessageRow, and toTurnInsert/fromTurnRow over generated production domain values.",
+    "proposedTarget": "Add additive converter laws using S.toArbitrary(ThreadModel), S.toArbitrary(MessageModel), and S.toArbitrary(TurnModel), then encode to insert, re-add a selected-row id plus concrete SQL nulls where required, decode with the from*Row helper, and compare through S.toEquivalence on the production domain schema. S.toArbitrary and S.toEquivalence are verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:12970 and :13201; the same table-package pattern is recorded for architecture-lab at goals/repo-crispening-orchestration/ops/inventory/S5/beep__architecture-lab-tables.json.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+    "line": 19,
+    "symbol": "workspace table metadata fixtures",
+    "smell": "Detector candidate: table tests use fixed table names, column names, Drizzle column kinds, and identity assertions.",
+    "proposedTarget": "None - keep these fixed table-shape fixtures; the schema-derived converter law above is additive coverage.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These tests pin Drizzle table names, primary-key flags, column names, metadata identity, and storage-kind contracts; generated domain values cannot replace those persistence metadata assertions.",
+      "boundary": "workspace Drizzle table contract fixtures"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+    "line": 114,
+    "symbol": "Turn.parentTurnId SQL-null row fixture",
+    "smell": "Detector candidate: Turn row fixture and converter example use concrete `parentTurnId: null` and normalize optional insert absence back to row null.",
+    "proposedTarget": "None - keep SQL row null at the table boundary.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "SPEC fence 2 requires persisted-model absence to stay `null` at the SQL row/wire boundary; Option lives in the decoded domain entity (`Turn.parentTurnId`), not in the selected row codec.",
+      "boundary": "workspace_turn.parent_turn_id SQL row boundary"
+    }
+  }
+]

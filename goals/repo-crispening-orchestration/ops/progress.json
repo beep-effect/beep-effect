@@ -13,8 +13,8 @@
     ]
   },
   "phases": {
-    "P0_enforce": "in_progress",
-    "P1_baseline": "pending",
+    "P0_enforce": "done",
+    "P1_baseline": "in_progress",
     "P1_5_mechanize": "pending",
     "P2_waves": "pending",
     "P3_catalog": "pending",
@@ -60,14 +60,1866 @@
     "status": "pending"
   },
   "waveOrder": ["foundation", "drivers", "tooling", "apps-slices"],
-  "sharedAssignment": "TBD-P1",
-  "infraAssignment": "TBD-P1",
+  "sharedAssignment": {
+    "family": "apps-slices",
+    "decidedOn": "2026-07-05",
+    "rationale": "packages/shared/{domain,tables} are consumed exclusively by slice packages (agents, architecture-lab, epistemic, law-practice, workspace) and apps/professional-desktop; upstream deps are foundation-only (identity, schema, utils). Shared kernel rides the apps-slices wave so its public-form changes and consumer sweeps stay inside one family."
+  },
+  "infraAssignment": {
+    "family": "tooling",
+    "decidedOn": "2026-07-05",
+    "rationale": "@beep/infra has zero workspace dependents and depends on foundation + @beep/repo-ai-metrics (tooling); it is an operational surface maintained alongside tooling, so it rides the tooling wave."
+  },
   "pilot": {
     "family": "foundation",
     "package": "TBD (foundation/modeling exemplar, e.g. @beep/md or @beep/lexical)",
     "status": "pending"
   },
-  "packages": {},
+  "packages": {
+    "@beep/architecture-lab-proof": {
+      "path": "apps/architecture-lab-proof",
+      "sanitized": "beep__architecture-lab-proof",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 0,
+        "S3": 0,
+        "S4": 1,
+        "S5": 2
+      },
+      "actionableCount": 2,
+      "exceptionCount": 3,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/oip-web": {
+      "path": "apps/oip-web",
+      "sanitized": "beep__oip-web",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 9,
+        "S2": 10,
+        "S3": 7,
+        "S4": 7,
+        "S5": 12
+      },
+      "actionableCount": 24,
+      "exceptionCount": 21,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/professional-desktop": {
+      "path": "apps/professional-desktop",
+      "sanitized": "beep__professional-desktop",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 7,
+        "S2": 10,
+        "S3": 2,
+        "S4": 8,
+        "S5": 7
+      },
+      "actionableCount": 16,
+      "exceptionCount": 18,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/storybook": {
+      "path": "apps/storybook",
+      "sanitized": "beep__storybook",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 3,
+        "S3": 0,
+        "S4": 0,
+        "S5": 0
+      },
+      "actionableCount": 0,
+      "exceptionCount": 3,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/infra": {
+      "path": "infra",
+      "sanitized": "beep__infra",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 17,
+        "S3": 4,
+        "S4": 5,
+        "S5": 11
+      },
+      "actionableCount": 21,
+      "exceptionCount": 19,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/agents-client": {
+      "path": "packages/agents/client",
+      "sanitized": "beep__agents-client",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 5,
+        "S2": 4,
+        "S3": 1,
+        "S4": 1,
+        "S5": 4
+      },
+      "actionableCount": 9,
+      "exceptionCount": 6,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/agents-domain": {
+      "path": "packages/agents/domain",
+      "sanitized": "beep__agents-domain",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 4,
+        "S3": 3,
+        "S4": 5,
+        "S5": 8
+      },
+      "actionableCount": 12,
+      "exceptionCount": 8,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/agents-server": {
+      "path": "packages/agents/server",
+      "sanitized": "beep__agents-server",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 6,
+        "S2": 9,
+        "S3": 3,
+        "S4": 0,
+        "S5": 7
+      },
+      "actionableCount": 7,
+      "exceptionCount": 18,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/agents-use-cases": {
+      "path": "packages/agents/use-cases",
+      "sanitized": "beep__agents-use-cases",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 7,
+        "S2": 5,
+        "S3": 2,
+        "S4": 4,
+        "S5": 9
+      },
+      "actionableCount": 15,
+      "exceptionCount": 12,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/architecture-lab-client": {
+      "path": "packages/architecture-lab/client",
+      "sanitized": "beep__architecture-lab-client",
+      "family": "apps-slices",
+      "discovery": "in_progress",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 0,
+        "S3": 0,
+        "S4": null,
+        "S5": 0
+      },
+      "actionableCount": 0,
+      "exceptionCount": 2,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/architecture-lab-config": {
+      "path": "packages/architecture-lab/config",
+      "sanitized": "beep__architecture-lab-config",
+      "family": "apps-slices",
+      "discovery": "in_progress",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 3,
+        "S3": 0,
+        "S4": null,
+        "S5": 5
+      },
+      "actionableCount": 7,
+      "exceptionCount": 2,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/architecture-lab-domain": {
+      "path": "packages/architecture-lab/domain",
+      "sanitized": "beep__architecture-lab-domain",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 3,
+        "S3": 4,
+        "S4": 1,
+        "S5": 6
+      },
+      "actionableCount": 13,
+      "exceptionCount": 4,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/architecture-lab-server": {
+      "path": "packages/architecture-lab/server",
+      "sanitized": "beep__architecture-lab-server",
+      "family": "apps-slices",
+      "discovery": "in_progress",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 4,
+        "S3": 2,
+        "S4": null,
+        "S5": 4
+      },
+      "actionableCount": 5,
+      "exceptionCount": 6,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/architecture-lab-tables": {
+      "path": "packages/architecture-lab/tables",
+      "sanitized": "beep__architecture-lab-tables",
+      "family": "apps-slices",
+      "discovery": "in_progress",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 4,
+        "S3": 0,
+        "S4": null,
+        "S5": 2
+      },
+      "actionableCount": 2,
+      "exceptionCount": 7,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/architecture-lab-ui": {
+      "path": "packages/architecture-lab/ui",
+      "sanitized": "beep__architecture-lab-ui",
+      "family": "apps-slices",
+      "discovery": "in_progress",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 2,
+        "S3": 1,
+        "S4": null,
+        "S5": 6
+      },
+      "actionableCount": 7,
+      "exceptionCount": 3,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/architecture-lab-use-cases": {
+      "path": "packages/architecture-lab/use-cases",
+      "sanitized": "beep__architecture-lab-use-cases",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 10,
+        "S2": 3,
+        "S3": 6,
+        "S4": 2,
+        "S5": 5
+      },
+      "actionableCount": 17,
+      "exceptionCount": 9,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/acp": {
+      "path": "packages/drivers/acp",
+      "sanitized": "beep__acp",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 17,
+        "S2": 21,
+        "S3": 9,
+        "S4": 24,
+        "S5": 12
+      },
+      "actionableCount": 36,
+      "exceptionCount": 47,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/ai-provider-cli": {
+      "path": "packages/drivers/ai-provider-cli",
+      "sanitized": "beep__ai-provider-cli",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 3,
+        "S3": 0,
+        "S4": 4,
+        "S5": 7
+      },
+      "actionableCount": 10,
+      "exceptionCount": 6,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/anthropic": {
+      "path": "packages/drivers/anthropic",
+      "sanitized": "beep__anthropic",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 1,
+        "S3": 0,
+        "S4": 0,
+        "S5": 7
+      },
+      "actionableCount": 7,
+      "exceptionCount": 1,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/box": {
+      "path": "packages/drivers/box",
+      "sanitized": "beep__box",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 9,
+        "S2": 8,
+        "S3": 7,
+        "S4": 15,
+        "S5": 7
+      },
+      "actionableCount": 18,
+      "exceptionCount": 28,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/courtlistener": {
+      "path": "packages/drivers/courtlistener",
+      "sanitized": "beep__courtlistener",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0,
+        "S5": 0
+      },
+      "actionableCount": 0,
+      "exceptionCount": 0,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/discord": {
+      "path": "packages/drivers/discord",
+      "sanitized": "beep__discord",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 7,
+        "S3": 1,
+        "S4": 3,
+        "S5": 7
+      },
+      "actionableCount": 12,
+      "exceptionCount": 8,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/dol": {
+      "path": "packages/drivers/dol",
+      "sanitized": "beep__dol",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0,
+        "S5": 0
+      },
+      "actionableCount": 0,
+      "exceptionCount": 0,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/drizzle": {
+      "path": "packages/drivers/drizzle",
+      "sanitized": "beep__drizzle",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 5,
+        "S2": 8,
+        "S3": 1,
+        "S4": 5,
+        "S5": 8
+      },
+      "actionableCount": 9,
+      "exceptionCount": 18,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/duckdb": {
+      "path": "packages/drivers/duckdb",
+      "sanitized": "beep__duckdb",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 5,
+        "S2": 6,
+        "S3": 0,
+        "S4": 6,
+        "S5": 8
+      },
+      "actionableCount": 11,
+      "exceptionCount": 14,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/ecfr": {
+      "path": "packages/drivers/ecfr",
+      "sanitized": "beep__ecfr",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 5,
+        "S3": 1,
+        "S4": 3,
+        "S5": 5
+      },
+      "actionableCount": 9,
+      "exceptionCount": 7,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/face-detection": {
+      "path": "packages/drivers/face-detection",
+      "sanitized": "beep__face-detection",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 5,
+        "S2": 8,
+        "S3": 0,
+        "S4": 10,
+        "S5": 7
+      },
+      "actionableCount": 15,
+      "exceptionCount": 15,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/federal-register": {
+      "path": "packages/drivers/federal-register",
+      "sanitized": "beep__federal-register",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0,
+        "S5": 0
+      },
+      "actionableCount": 0,
+      "exceptionCount": 0,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/ffmpeg": {
+      "path": "packages/drivers/ffmpeg",
+      "sanitized": "beep__ffmpeg",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 7,
+        "S2": 11,
+        "S3": 1,
+        "S4": 10,
+        "S5": 10
+      },
+      "actionableCount": 23,
+      "exceptionCount": 16,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/firecrawl": {
+      "path": "packages/drivers/firecrawl",
+      "sanitized": "beep__firecrawl",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 8,
+        "S2": 5,
+        "S3": 4,
+        "S4": 18,
+        "S5": 8
+      },
+      "actionableCount": 21,
+      "exceptionCount": 22,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/govinfo": {
+      "path": "packages/drivers/govinfo",
+      "sanitized": "beep__govinfo",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 4,
+        "S3": 1,
+        "S4": 3,
+        "S5": 9
+      },
+      "actionableCount": 14,
+      "exceptionCount": 5,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/hubspot": {
+      "path": "packages/drivers/hubspot",
+      "sanitized": "beep__hubspot",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 7,
+        "S3": 0,
+        "S4": 8,
+        "S5": 9
+      },
+      "actionableCount": 16,
+      "exceptionCount": 11,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/libpff": {
+      "path": "packages/drivers/libpff",
+      "sanitized": "beep__libpff",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 6,
+        "S3": 1,
+        "S4": 5,
+        "S5": 7
+      },
+      "actionableCount": 16,
+      "exceptionCount": 6,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/m365-mcp": {
+      "path": "packages/drivers/m365-mcp",
+      "sanitized": "beep__m365-mcp",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 0,
+        "S4": 0,
+        "S5": 4
+      },
+      "actionableCount": 3,
+      "exceptionCount": 3,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/m365": {
+      "path": "packages/drivers/m365",
+      "sanitized": "beep__m365",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 7,
+        "S2": 8,
+        "S3": 3,
+        "S4": 7,
+        "S5": 8
+      },
+      "actionableCount": 14,
+      "exceptionCount": 19,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/nlp-mcp": {
+      "path": "packages/drivers/nlp-mcp",
+      "sanitized": "beep__nlp-mcp",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 22,
+        "S2": 13,
+        "S3": 4,
+        "S4": 13,
+        "S5": 11
+      },
+      "actionableCount": 26,
+      "exceptionCount": 37,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/onepassword-cli": {
+      "path": "packages/drivers/onepassword-cli",
+      "sanitized": "beep__onepassword-cli",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 3,
+        "S3": 0,
+        "S4": 3,
+        "S5": 7
+      },
+      "actionableCount": 10,
+      "exceptionCount": 5,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/openai-compat": {
+      "path": "packages/drivers/openai-compat",
+      "sanitized": "beep__openai-compat",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 6,
+        "S2": 8,
+        "S3": 6,
+        "S4": 7,
+        "S5": 8
+      },
+      "actionableCount": 19,
+      "exceptionCount": 16,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/pglite": {
+      "path": "packages/drivers/pglite",
+      "sanitized": "beep__pglite",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 0,
+        "S3": 1,
+        "S4": 1,
+        "S5": 4
+      },
+      "actionableCount": 2,
+      "exceptionCount": 6,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/phoenix": {
+      "path": "packages/drivers/phoenix",
+      "sanitized": "beep__phoenix",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 4,
+        "S2": 10,
+        "S3": 4,
+        "S4": 5,
+        "S5": 10
+      },
+      "actionableCount": 19,
+      "exceptionCount": 14,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/postgres": {
+      "path": "packages/drivers/postgres",
+      "sanitized": "beep__postgres",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 8,
+        "S2": 7,
+        "S3": 3,
+        "S4": 7,
+        "S5": 5
+      },
+      "actionableCount": 10,
+      "exceptionCount": 20,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/rdf-canonize": {
+      "path": "packages/drivers/rdf-canonize",
+      "sanitized": "beep__rdf-canonize",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 2,
+        "S3": 7,
+        "S4": 0,
+        "S5": 2
+      },
+      "actionableCount": 7,
+      "exceptionCount": 5,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/runpod": {
+      "path": "packages/drivers/runpod",
+      "sanitized": "beep__runpod",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 10,
+        "S2": 18,
+        "S3": 7,
+        "S4": 19,
+        "S5": 10
+      },
+      "actionableCount": 35,
+      "exceptionCount": 29,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/sanity": {
+      "path": "packages/drivers/sanity",
+      "sanitized": "beep__sanity",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 8,
+        "S3": 1,
+        "S4": 4,
+        "S5": 9
+      },
+      "actionableCount": 15,
+      "exceptionCount": 9,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/tika": {
+      "path": "packages/drivers/tika",
+      "sanitized": "beep__tika",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 5,
+        "S3": 1,
+        "S4": 3,
+        "S5": 7
+      },
+      "actionableCount": 12,
+      "exceptionCount": 7,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/uspto-mcp": {
+      "path": "packages/drivers/uspto-mcp",
+      "sanitized": "beep__uspto-mcp",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 1,
+        "S3": 2,
+        "S4": 4,
+        "S5": 6
+      },
+      "actionableCount": 11,
+      "exceptionCount": 5,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/uspto": {
+      "path": "packages/drivers/uspto",
+      "sanitized": "beep__uspto",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 5,
+        "S2": 11,
+        "S3": 3,
+        "S4": 7,
+        "S5": 6
+      },
+      "actionableCount": 23,
+      "exceptionCount": 9,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/venice-ai": {
+      "path": "packages/drivers/venice-ai",
+      "sanitized": "beep__venice-ai",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 9,
+        "S2": 13,
+        "S3": 7,
+        "S4": 6,
+        "S5": 7
+      },
+      "actionableCount": 26,
+      "exceptionCount": 16,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/wink": {
+      "path": "packages/drivers/wink",
+      "sanitized": "beep__wink",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 13,
+        "S2": 19,
+        "S3": 5,
+        "S4": 23,
+        "S5": 9
+      },
+      "actionableCount": 30,
+      "exceptionCount": 39,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/xai": {
+      "path": "packages/drivers/xai",
+      "sanitized": "beep__xai",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 6,
+        "S2": 11,
+        "S3": 10,
+        "S4": 21,
+        "S5": 9
+      },
+      "actionableCount": 37,
+      "exceptionCount": 20,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/epistemic-domain": {
+      "path": "packages/epistemic/domain",
+      "sanitized": "beep__epistemic-domain",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 2,
+        "S3": 0,
+        "S4": 5,
+        "S5": 8
+      },
+      "actionableCount": 9,
+      "exceptionCount": 7,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/epistemic-server": {
+      "path": "packages/epistemic/server",
+      "sanitized": "beep__epistemic-server",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0,
+        "S5": 1
+      },
+      "actionableCount": 0,
+      "exceptionCount": 1,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/epistemic-tables": {
+      "path": "packages/epistemic/tables",
+      "sanitized": "beep__epistemic-tables",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 5,
+        "S2": 2,
+        "S3": 1,
+        "S4": 4,
+        "S5": 2
+      },
+      "actionableCount": 4,
+      "exceptionCount": 10,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/epistemic-use-cases": {
+      "path": "packages/epistemic/use-cases",
+      "sanitized": "beep__epistemic-use-cases",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 4,
+        "S2": 0,
+        "S3": 3,
+        "S4": 7,
+        "S5": 2
+      },
+      "actionableCount": 7,
+      "exceptionCount": 9,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/api-transport": {
+      "path": "packages/foundation/capability/api-transport",
+      "sanitized": "beep__api-transport",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 5,
+        "S2": 5,
+        "S3": 2,
+        "S4": 3,
+        "S5": 6
+      },
+      "actionableCount": 10,
+      "exceptionCount": 11,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/chalk": {
+      "path": "packages/foundation/capability/chalk",
+      "sanitized": "beep__chalk",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 15,
+        "S2": 29,
+        "S3": 10,
+        "S4": 25,
+        "S5": 13
+      },
+      "actionableCount": 61,
+      "exceptionCount": 31,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/colors": {
+      "path": "packages/foundation/capability/colors",
+      "sanitized": "beep__colors",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 5,
+        "S2": 9,
+        "S3": 0,
+        "S4": 5,
+        "S5": 7
+      },
+      "actionableCount": 14,
+      "exceptionCount": 12,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/file-processing": {
+      "path": "packages/foundation/capability/file-processing",
+      "sanitized": "beep__file-processing",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 13,
+        "S2": 17,
+        "S3": 6,
+        "S4": 20,
+        "S5": 35
+      },
+      "actionableCount": 68,
+      "exceptionCount": 23,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/langextract": {
+      "path": "packages/foundation/capability/langextract",
+      "sanitized": "beep__langextract",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 12,
+        "S2": 15,
+        "S3": 7,
+        "S4": 5,
+        "S5": 11
+      },
+      "actionableCount": 34,
+      "exceptionCount": 16,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/mcp-kit": {
+      "path": "packages/foundation/capability/mcp-kit",
+      "sanitized": "beep__mcp-kit",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 16,
+        "S2": 9,
+        "S3": 16,
+        "S4": 20,
+        "S5": 15
+      },
+      "actionableCount": 47,
+      "exceptionCount": 29,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/nlp-processing": {
+      "path": "packages/foundation/capability/nlp-processing",
+      "sanitized": "beep__nlp-processing",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 22,
+        "S2": 21,
+        "S3": 4,
+        "S4": 17,
+        "S5": 15
+      },
+      "actionableCount": 48,
+      "exceptionCount": 31,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/observability": {
+      "path": "packages/foundation/capability/observability",
+      "sanitized": "beep__observability",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 21,
+        "S2": 13,
+        "S3": 4,
+        "S4": 18,
+        "S5": 8
+      },
+      "actionableCount": 46,
+      "exceptionCount": 18,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/semantic-web": {
+      "path": "packages/foundation/capability/semantic-web",
+      "sanitized": "beep__semantic-web",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 16,
+        "S2": 12,
+        "S3": 2,
+        "S4": 10,
+        "S5": 5
+      },
+      "actionableCount": 19,
+      "exceptionCount": 26,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/html": {
+      "path": "packages/foundation/modeling/html",
+      "sanitized": "beep__html",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 12,
+        "S3": 1,
+        "S4": 16,
+        "S5": 9
+      },
+      "actionableCount": 12,
+      "exceptionCount": 29,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/identity": {
+      "path": "packages/foundation/modeling/identity",
+      "sanitized": "beep__identity",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 13,
+        "S2": 6,
+        "S3": 5,
+        "S4": 10,
+        "S5": 6
+      },
+      "actionableCount": 12,
+      "exceptionCount": 28,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/lexical-schema": {
+      "path": "packages/foundation/modeling/lexical",
+      "sanitized": "beep__lexical-schema",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 6,
+        "S2": 7,
+        "S3": 5,
+        "S4": 3,
+        "S5": 3
+      },
+      "actionableCount": 8,
+      "exceptionCount": 16,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/md": {
+      "path": "packages/foundation/modeling/md",
+      "sanitized": "beep__md",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 12,
+        "S2": 7,
+        "S3": 0,
+        "S4": 10,
+        "S5": 5
+      },
+      "actionableCount": 10,
+      "exceptionCount": 24,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/nlp": {
+      "path": "packages/foundation/modeling/nlp",
+      "sanitized": "beep__nlp",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 11,
+        "S2": 31,
+        "S3": 3,
+        "S4": 30,
+        "S5": 19
+      },
+      "actionableCount": 64,
+      "exceptionCount": 30,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/ontology": {
+      "path": "packages/foundation/modeling/ontology",
+      "sanitized": "beep__ontology",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 0,
+        "S3": 2,
+        "S4": 1,
+        "S5": 6
+      },
+      "actionableCount": 4,
+      "exceptionCount": 5,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/pandoc-ast": {
+      "path": "packages/foundation/modeling/pandoc-ast",
+      "sanitized": "beep__pandoc-ast",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 10,
+        "S2": 8,
+        "S3": 4,
+        "S4": 8,
+        "S5": 7
+      },
+      "actionableCount": 17,
+      "exceptionCount": 20,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/provenance": {
+      "path": "packages/foundation/modeling/provenance",
+      "sanitized": "beep__provenance",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 0,
+        "S3": 0,
+        "S4": 1,
+        "S5": 3
+      },
+      "actionableCount": 5,
+      "exceptionCount": 1,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/rdf": {
+      "path": "packages/foundation/modeling/rdf",
+      "sanitized": "beep__rdf",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 8,
+        "S2": 19,
+        "S3": 6,
+        "S4": 28,
+        "S5": 14
+      },
+      "actionableCount": 53,
+      "exceptionCount": 22,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/schema": {
+      "path": "packages/foundation/modeling/schema",
+      "sanitized": "beep__schema",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 9,
+        "S2": 19,
+        "S3": 9,
+        "S4": 28,
+        "S5": 16
+      },
+      "actionableCount": 58,
+      "exceptionCount": 23,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/utils": {
+      "path": "packages/foundation/modeling/utils",
+      "sanitized": "beep__utils",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 9,
+        "S2": 17,
+        "S3": 4,
+        "S4": 2,
+        "S5": 10
+      },
+      "actionableCount": 10,
+      "exceptionCount": 32,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/data": {
+      "path": "packages/foundation/primitive/data",
+      "sanitized": "beep__data",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 11,
+        "S3": 3,
+        "S4": 8,
+        "S5": 6
+      },
+      "actionableCount": 6,
+      "exceptionCount": 25,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/types": {
+      "path": "packages/foundation/primitive/types",
+      "sanitized": "beep__types",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 3,
+        "S4": 0,
+        "S5": 4
+      },
+      "actionableCount": 0,
+      "exceptionCount": 9,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/editor": {
+      "path": "packages/foundation/ui-system/editor",
+      "sanitized": "beep__editor",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 7,
+        "S2": 11,
+        "S3": 3,
+        "S4": 5,
+        "S5": 9
+      },
+      "actionableCount": 13,
+      "exceptionCount": 22,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/form": {
+      "path": "packages/foundation/ui-system/form",
+      "sanitized": "beep__form",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 8,
+        "S2": 14,
+        "S3": 5,
+        "S4": 4,
+        "S5": 6
+      },
+      "actionableCount": 2,
+      "exceptionCount": 35,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/ui": {
+      "path": "packages/foundation/ui-system/ui",
+      "sanitized": "beep__ui",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 12,
+        "S2": 13,
+        "S3": 5,
+        "S4": 11,
+        "S5": 11
+      },
+      "actionableCount": 28,
+      "exceptionCount": 24,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/db-admin": {
+      "path": "packages/_internal/db-admin",
+      "sanitized": "beep__db-admin",
+      "family": "apps-slices",
+      "discovery": "in_progress",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 3,
+        "S3": 0,
+        "S4": null,
+        "S5": 4
+      },
+      "actionableCount": 2,
+      "exceptionCount": 7,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/law-practice-domain": {
+      "path": "packages/law-practice/domain",
+      "sanitized": "beep__law-practice-domain",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": 6,
+        "S5": 7
+      },
+      "actionableCount": 12,
+      "exceptionCount": 1,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/law-practice-server": {
+      "path": "packages/law-practice/server",
+      "sanitized": "beep__law-practice-server",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 0,
+        "S3": 2,
+        "S4": 0,
+        "S5": 1
+      },
+      "actionableCount": 1,
+      "exceptionCount": 3,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/law-practice-use-cases": {
+      "path": "packages/law-practice/use-cases",
+      "sanitized": "beep__law-practice-use-cases",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 6,
+        "S2": 5,
+        "S3": 4,
+        "S4": 7,
+        "S5": 7
+      },
+      "actionableCount": 17,
+      "exceptionCount": 12,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/shared-domain": {
+      "path": "packages/shared/domain",
+      "sanitized": "beep__shared-domain",
+      "family": "apps-slices",
+      "discovery": "in_progress",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 9,
+        "S2": 7,
+        "S3": 3,
+        "S4": null,
+        "S5": 8
+      },
+      "actionableCount": 11,
+      "exceptionCount": 16,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/shared-tables": {
+      "path": "packages/shared/tables",
+      "sanitized": "beep__shared-tables",
+      "family": "apps-slices",
+      "discovery": "in_progress",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 0,
+        "S3": 0,
+        "S4": null,
+        "S5": 1
+      },
+      "actionableCount": 0,
+      "exceptionCount": 2,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/repo-ai-metrics": {
+      "path": "packages/tooling/library/ai-metrics",
+      "sanitized": "beep__repo-ai-metrics",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 17,
+        "S2": 13,
+        "S3": 15,
+        "S4": 10,
+        "S5": 15
+      },
+      "actionableCount": 36,
+      "exceptionCount": 34,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/ai-sync": {
+      "path": "packages/tooling/library/ai-sync",
+      "sanitized": "beep__ai-sync",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 12,
+        "S3": 1,
+        "S4": 7,
+        "S5": 8
+      },
+      "actionableCount": 18,
+      "exceptionCount": 13,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/repo-utils": {
+      "path": "packages/tooling/library/repo-utils",
+      "sanitized": "beep__repo-utils",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 11,
+        "S2": 13,
+        "S3": 10,
+        "S4": 17,
+        "S5": 19
+      },
+      "actionableCount": 44,
+      "exceptionCount": 26,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/lint-rules": {
+      "path": "packages/tooling/policy-pack/lint-rules",
+      "sanitized": "beep__lint-rules",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 6,
+        "S2": 9,
+        "S3": 2,
+        "S4": 5,
+        "S5": 8
+      },
+      "actionableCount": 6,
+      "exceptionCount": 24,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/repo-configs": {
+      "path": "packages/tooling/policy-pack/repo-configs",
+      "sanitized": "beep__repo-configs",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 6,
+        "S2": 13,
+        "S3": 6,
+        "S4": 12,
+        "S5": 10
+      },
+      "actionableCount": 26,
+      "exceptionCount": 21,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/test-utils": {
+      "path": "packages/tooling/test-kit/test-utils",
+      "sanitized": "beep__test-utils",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 7,
+        "S2": 10,
+        "S3": 1,
+        "S4": 3,
+        "S5": 7
+      },
+      "actionableCount": 8,
+      "exceptionCount": 20,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/repo-cli": {
+      "path": "packages/tooling/tool/cli",
+      "sanitized": "beep__repo-cli",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 38,
+        "S2": 47,
+        "S3": 31,
+        "S4": 95,
+        "S5": 43
+      },
+      "actionableCount": 181,
+      "exceptionCount": 73,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/repo-docgen": {
+      "path": "packages/tooling/tool/docgen",
+      "sanitized": "beep__repo-docgen",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 19,
+        "S2": 12,
+        "S3": 6,
+        "S4": 7,
+        "S5": 12
+      },
+      "actionableCount": 29,
+      "exceptionCount": 27,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/workspace-domain": {
+      "path": "packages/workspace/domain",
+      "sanitized": "beep__workspace-domain",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 2,
+        "S3": 0,
+        "S4": 0,
+        "S5": 8
+      },
+      "actionableCount": 6,
+      "exceptionCount": 4,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/workspace-server": {
+      "path": "packages/workspace/server",
+      "sanitized": "beep__workspace-server",
+      "family": "apps-slices",
+      "discovery": "in_progress",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 7,
+        "S3": 4,
+        "S4": null,
+        "S5": 5
+      },
+      "actionableCount": 8,
+      "exceptionCount": 11,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/workspace-tables": {
+      "path": "packages/workspace/tables",
+      "sanitized": "beep__workspace-tables",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 16,
+        "S2": 1,
+        "S3": 3,
+        "S4": 4,
+        "S5": 3
+      },
+      "actionableCount": 7,
+      "exceptionCount": 20,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/workspace-use-cases": {
+      "path": "packages/workspace/use-cases",
+      "sanitized": "beep__workspace-use-cases",
+      "family": "apps-slices",
+      "discovery": "in_progress",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 3,
+        "S3": 0,
+        "S4": null,
+        "S5": 7
+      },
+      "actionableCount": 7,
+      "exceptionCount": 4,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    }
+  },
   "_note": "Populated during P1 baseline, one entry per package touched, mirroring goals/effect-native-migration/ops/progress.json's resumable per-package model. Each package entry shape: { \"path\": \"packages/...\", \"sanitized\": \"beep__<name>\", \"family\": \"foundation|drivers|tooling|apps-slices\", \"discovery\": \"pending|in_progress|done\", \"remediation\": \"pending|in_progress|blocked|exception|done\", \"findingsByDomain\": { \"S1\": 0, \"S2\": 0, \"S3\": 0, \"S4\": 0, \"S5\": 0 }, \"actionableCount\": 0, \"exceptionCount\": 0, \"parityProofRef\": null, \"policyFlipped\": false, \"remediationNote\": \"\" }. Reconcile against this file before each wave; skip packages already \"done\". `findingsByDomain` counts come from the §5.5 inventory records at ops/inventory/<Sn>/<sanitized-pkg>.json; `actionableCount` excludes ledgered exceptions; `policyFlipped` tracks whether this package's family has had its lint cards flipped advisory->blocking in standards/schema-crispening.policy.jsonc (G4/§5.7).",
   "activeBlockers": [],
   "scopeNotes": {

@@ -1,0 +1,39 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/api-transport/src/Transport.ts",
+    "line": 262,
+    "symbol": "makeApiTransport.transformClient (RateLimiterError catchTag handler)",
+    "smell": "Trivial wrapper lambda `(cause) => Effect.die(cause)` passed to `HttpClient.catchTag` inside the transformClient pipe; repo law prefers direct helper refs over trivial lambdas (S4 pipeability smell).",
+    "proposedTarget": "Eta-reduce to a direct helper reference: `HttpClient.catchTag(\"RateLimiterError\", Effect.die)`. Verified against .repos/effect-v4: `Effect.die: (defect: unknown) => Effect<never>` (packages/effect/src/Effect.ts:1612) is unary and non-dual, and `HttpClient.catchTag`'s handler slot `(e) => Effect<HttpClientResponse, E1, R1>` (packages/effect/src/unstable/http/HttpClient.ts:346) accepts it since `Effect<never>` is assignable with A=never.",
+    "confidence": 0.95,
+    "mechanization": "codemod",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/api-transport/src/Transport.ts",
+    "line": 128,
+    "symbol": "parseSnapshot (with private helper parseNumberHeader at line 116)",
+    "smell": "Pure header-parsing constructor behavior for the `RateLimitSnapshot` S.Class lives as free module-private functions (`parseSnapshot: Headers -> Option<RateLimitSnapshot>`, plus `parseNumberHeader`) instead of being colocated on the class — behavior separated from its data.",
+    "proposedTarget": "Colocate as an in-body static on the class: `static readonly fromHeaders = (headers: Headers.Headers): O.Option<RateLimitSnapshot> => ...` inside `RateLimitSnapshot` (in-body statics are the S4 mechanism for S.Class; `SchemaUtils.withCodecStatics` does NOT apply — its bound is `S.Top & S.ConstraintDecoder<unknown>` per packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90 and piping an S.Class would lose statics). `parseNumberHeader` can remain a private module helper or become a private static. Call site in `makeApiTransport.recordSnapshot` becomes `RateLimitSnapshot.fromHeaders(response.headers)`. Low blast radius: both helpers are module-private and single-use.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/api-transport/src/Transport.ts",
+    "line": 76,
+    "symbol": "applyAuth (fold over ApiAuth Data.TaggedEnum)",
+    "smell": "Candidate 'behavior separated from its data': `applyAuth` is the canonical request-mutation fold for the exported `ApiAuth` tagged enum but lives as a free module-private function.",
+    "proposedTarget": "None within S4 scope — record as exception. `ApiAuth` is `Data.taggedEnum<ApiAuth>()` (verified .repos/effect-v4/packages/effect/src/Data.ts:590), not a schema-modeled const/class, so neither `SchemaUtils.withCodecStatics` (requires `S.Top & S.ConstraintDecoder<unknown>`) nor in-body S.Class statics apply; `Object.assign(ApiAuth, {...})` is itself an S4 smell. Converting the union to a schema tagged union (S.TaggedClass/S.toTaggedUnion) would create an attachment point but that is S1/S2 schema-first domain work, not S4 colocation.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Data.TaggedEnum has no sanctioned S4 statics attachment point; the helper is module-private, single-use, and immediately adjacent to its data definition, so colocation is already effectively satisfied at file scope.",
+      "boundary": "Any statics/colocation refactor here requires first schema-ifying ApiAuth (S1/S2 domain); S4 must not propose Object.assign onto the taggedEnum constructor object."
+    }
+  }
+]

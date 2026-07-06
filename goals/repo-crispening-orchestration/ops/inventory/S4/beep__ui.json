@@ -1,0 +1,139 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/hooks/useSpinner.ts",
+    "line": 13,
+    "symbol": "SpinnerSchedule",
+    "smell": "S.Class model has a free-floating decode helper: decodeSpinnerSchedule wraps S.decodeUnknownResult(SpinnerSchedule) plus schemaIssueToError at lines 23-24, and the sole caller at line 26 immediately uses throw-on-failure semantics to build the module-level spinnerSchedule.",
+    "proposedTarget": "Colocate codec behavior on the class with in-body statics, e.g. static readonly is = S.is(SpinnerSchedule), static readonly fromUnknown = S.decodeUnknownSync(SpinnerSchedule), and static readonly decodeOption = S.decodeUnknownOption(SpinnerSchedule); then build spinnerSchedule via SpinnerSchedule.fromUnknown({...}) and delete decodeSpinnerSchedule/schemaIssueToError. S.Class, S.is, S.decodeUnknownSync, and S.decodeUnknownOption were verified in .repos/effect-v4/packages/effect/src/Schema.ts:1256,1499-1503,1718.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+    "line": 80,
+    "symbol": "NumberInputText",
+    "smell": "Refined string schema missing colocated codec statics; line 93 rebuilds the guard as free-floating const isNumberInputText = S.is(NumberInputText), and handleChange consumes only that detached guard at line 728.",
+    "proposedTarget": "Append SchemaUtils.withCodecStatics to the NumberInputText pipe and replace the detached guard with NumberInputText.is. withCodecStatics attaches is/fromUnknown/decodeOption and is verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90-97; underlying S.is/decodeUnknownOption/decodeUnknownSync APIs were verified in .repos/effect-v4/packages/effect/src/Schema.ts.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+    "line": 17,
+    "symbol": "NumberInputEventKey",
+    "smell": "LiteralKit schema is annotated without explicitly reattaching kit/codec statics, and line 94 rebuilds the guard as free-floating const isNumberInputEventKey = S.is(NumberInputEventKey); normalizeEventKey uses that detached guard at line 109.",
+    "proposedTarget": "Capture a NumberInputEventKeyBase LiteralKit, then pipe the annotated schema through SchemaUtils.withLiteralKitStatics(NumberInputEventKeyBase) and SchemaUtils.withCodecStatics so normalizeEventKey can call NumberInputEventKey.is directly. withLiteralKitStatics is verified at packages/foundation/modeling/schema/src/SchemaUtils/withLiteralKitStatics.ts:37-50 and documents that annotations rebuild LiteralKit schemas.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/components/country-select.tsx",
+    "line": 47,
+    "symbol": "CountryCode",
+    "smell": "UI owns a second CountryCode LiteralKit even though @beep/schema/CountryCode already exports the canonical schema (packages/foundation/modeling/schema/src/CountryCode.ts:30). The file then exports isCountryCode at line 401 by scanning countryOptions, despite its own docs at lines 36-41 showing the schema-derived S.is(CountryCode) guard.",
+    "proposedTarget": "Import CountryCode and its type from @beep/schema/CountryCode, keep the phone metadata-specific isSupportedCountry check in phone-input.tsx:264, and replace isCountryCode with the colocated schema guard (CountryCode.is once the shared schema preserves LiteralKit statics via withLiteralKitStatics, or S.is(CountryCode) as the interim direct schema guard).",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/components/color-picker.tsx",
+    "line": 37,
+    "symbol": "normalizeHexColorInput",
+    "smell": "Exported helper rebuilds soft decode behavior around Color.NormalizeHexColor with S.decodeUnknownResult + Result.match at lines 37-44. The helper is tested at FormWidgets.test.ts:19-21 and reused by ColorPicker state initialization/updates at lines 83, 127, and 131, but the codec behavior belongs on the NormalizeHexColor schema (defined at packages/foundation/modeling/schema/src/Color/Color.hex.ts:173-184).",
+    "proposedTarget": "Attach SchemaUtils.withCodecStatics to NormalizeHexColor in @beep/schema/Color, then rewrite this UI helper as the thin consumer of Color.NormalizeHexColor.decodeOption, returning O.getOrUndefined. This follows the withCodecStatics contract verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90-97.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/components/notification-card.tsx",
+    "line": 193,
+    "symbol": "toUtcDateTime",
+    "smell": "Passthrough pipe lambda const toUtcDateTime = (value) => pipe(DateTime.makeUnsafe(value), DateTime.toUtc); the same helper shape is duplicated in todo-item.tsx:84.",
+    "proposedTarget": "Use flow for the passthrough composition: const toUtcDateTime: (value: Date | string) => DateTime.Utc = flow(DateTime.makeUnsafe, DateTime.toUtc), or hoist one shared helper if both components keep it. Effect v4 flow was verified at .repos/effect-v4/packages/effect/src/Function.ts:1162-1168.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/components/todo-item.tsx",
+    "line": 84,
+    "symbol": "toUtcDateTime",
+    "smell": "Passthrough pipe lambda const toUtcDateTime = (value) => pipe(DateTime.makeUnsafe(value), DateTime.toUtc); this duplicates notification-card.tsx:193 and is an exact flow candidate.",
+    "proposedTarget": "Use flow(DateTime.makeUnsafe, DateTime.toUtc) with an explicit (value: Date | string) => DateTime.Utc type, or share the helper with notification-card.tsx if keeping both date renderers aligned. Effect v4 flow was verified at .repos/effect-v4/packages/effect/src/Function.ts:1162-1168.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/hooks/useSpinner.ts",
+    "line": 149,
+    "symbol": "useSpinner",
+    "smell": "Detector hit: exported 2-arg function is not dual.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "React hook APIs are call-order-sensitive UI boundaries, not public data-first/data-last helpers; currying the hook with dual would create an unnatural hook call surface and invite rule-of-hooks misuse.",
+      "boundary": "React hook boundary carve-out for JSX-facing state hooks."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+    "line": 555,
+    "symbol": "useNumberBoundary",
+    "smell": "Detector hit: exported 2-arg function is not dual.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "The second argument is an optional React atom scope used to coordinate hook state; this is a React hook boundary with optional setup state, not a pipeable helper surface.",
+      "boundary": "React hook boundary carve-out for UI state orchestration."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/components/editor/editor-ui/content-editable.tsx",
+    "line": 25,
+    "symbol": "Props",
+    "smell": "Detector hit: S.Class named Props lacks colocated codec statics.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "This class is a React component props boundary consumed directly by ContentEditable at line 58; the user instructions explicitly carve out React component props/interfaces and JSX-facing surfaces from S4 remediation.",
+      "boundary": "React component props / JSX-facing surface carve-out."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",
+    "line": 305,
+    "symbol": "HashSet.fromIterable",
+    "smell": "Detector hit during false-positive pass: graph visualization code uses HashSet to derive unique node types, superficially suggesting collection/schema colocation work.",
+    "proposedTarget": "None - leave as-is in S4.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 11,
+    "exception": {
+      "reason": "SPEC fences 6/7 exclude Graph and native/effect collection migration from this packet; this component is a visualization surface, not a schema-modeled const/class missing statics.",
+      "boundary": "SPEC fences 6/7 - no Graph/MutableHash/native-collection migration in S4."
+    }
+  }
+]

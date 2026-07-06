@@ -1,0 +1,50 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/workspace/tables/src/entities/Message/Message.converters.ts",
+    "line": 49,
+    "symbol": "encodeMessage",
+    "smell": "Top-of-file codec wall `const encodeMessage = S.encodeSync(Message)` / `const decodeMessageRow = S.decodeUnknownSync(Message)` (line 50) duplicates encode/decode behavior that could live as in-body statics on the `Message` entity class (`@beep/workspace-domain/entities/Message`, defined via `Model.Class`/`BaseEntity.Class`, verified at packages/workspace/domain/src/entities/Message/Message.model.ts:65). Same repeated pattern also present in Thread.converters.ts:49-50, Turn.converters.ts:49-50, and cross-package in packages/epistemic/tables/src/entities/UsageRecord/UsageRecord.converters.ts:92-93 — a recurring cross-package convention, not a one-off.",
+    "proposedTarget": "Colocate `static readonly encode = S.encodeSync(Self)` and `static readonly decodeRow = S.decodeUnknownSync(Self)` in-body on the `Message`/`Thread`/`Turn` classes in `@beep/workspace-domain` (S.Class/Model.Class lose constructor identity when piped, so in-body statics are the sanctioned form per SPEC S4 rule card); `toMessageInsert`/`fromMessageRow` in this package would then call `Message.encode(...)`/`Message.decodeRow(...)` instead of the free-floating local consts. This is a cross-package change (workspace-domain owns the fix, workspace-tables owns the call-site update) so it is judgment-tier, not a same-file mechanizable edit.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/workspace/tables/src/entities/Thread/Thread.converters.ts",
+    "line": 49,
+    "symbol": "encodeThread",
+    "smell": "Top-of-file codec wall `const encodeThread = S.encodeSync(Thread)` / `const decodeThreadRow = S.decodeUnknownSync(Thread)` (line 50) — same pattern as Message.converters.ts:49-50; duplicates behavior that belongs as an in-body static on the `Thread` entity class (@beep/workspace-domain).",
+    "proposedTarget": "Same fix as the Message.converters.ts finding: in-body `static readonly encode`/`static readonly decodeRow` on `Thread` in @beep/workspace-domain, consumed here as `Thread.encode`/`Thread.decodeRow`.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/workspace/tables/src/entities/Turn/Turn.converters.ts",
+    "line": 49,
+    "symbol": "encodeTurn",
+    "smell": "Top-of-file codec wall `const encodeTurn = S.encodeSync(Turn)` / `const decodeTurnRow = S.decodeUnknownSync(Turn)` (line 50) — same pattern as Message.converters.ts:49-50; duplicates behavior that belongs as an in-body static on the `Turn` entity class (@beep/workspace-domain).",
+    "proposedTarget": "Same fix as the Message.converters.ts finding: in-body `static readonly encode`/`static readonly decodeRow` on `Turn` in @beep/workspace-domain, consumed here as `Turn.encode`/`Turn.decodeRow`.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/workspace/tables/src/entities/Message/Message.converters.ts",
+    "line": 94,
+    "symbol": "toMessageInsert",
+    "smell": "Detector hit: `const { id: _id, ...rest } = encodeMessage(message); return rest as MessageInsert;` looks like a candidate passthrough/pipe helper, but it destructures to drop a field and requires an `as` cast for the Drizzle insert shape — not a pure pipe/flow passthrough.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "Field-dropping destructure plus a structural cast to the Drizzle-inferred insert type is not expressible as `flow(...)` (no single unary transform chain exists) and is not a `dual`-eligible helper (single fixed-shape argument, no data-last/data-first overload). This is the sanctioned row-projection shape used identically across every *-tables converters file in the repo (see UsageRecord.converters.ts:139-142).",
+      "boundary": "Table row projection at the persistence boundary; SQL row shape carve-out (fence 2 adjacent — not a nullable-column case, but the same persistence-boundary rationale for leaving wire-shape plumbing as-is)."
+    }
+  }
+]

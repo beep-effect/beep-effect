@@ -1,0 +1,144 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TSCategory.model.ts",
+    "line": 1420,
+    "symbol": "getCandidateCategories",
+    "smell": "getCandidateCategories groups TSCategoryTag-typed inputs with A.groupBy((signal) => String(signal.category)), then recovers the erased key type with categoryName as TSCategoryTag before calling getCategory. The category domain is already a LiteralKit (TSCategoryTag at lines 988-1006), so the cast bypasses the schema/kit-owned narrowing that should prove the key before lookup.",
+    "proposedTarget": "Remove the cast by deriving iteration/narrowing from the kit: either iterate TSCategoryTag.Options and R.get(grouped, tag), or decode each grouped key with S.decodeOption(TSCategoryTag) before getCategory. Verified APIs: LiteralKit.Options is part of the kit surface at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:657-668 and attached at :787-800; Effect v4 S.decodeOption is exported at .repos/effect-v4/packages/effect/src/Schema.ts:1530.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 2.1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/test/Graph.test.ts",
+    "line": 86,
+    "symbol": "topologicalSort cycle tests",
+    "smell": "Two test assertions narrow caught cycle failures with result as CyclicDependencyError after expect(result).toBeInstanceOf(CyclicDependencyError) at lines 86 and 103. That is a repo-banned narrowing cast where the runtime predicate can own the TypeScript narrowing directly.",
+    "proposedTarget": "Replace each cast with an actual narrowing branch, e.g. if (!(result instanceof CyclicDependencyError)) return; then assert result.cycles/message inside the narrowed block. In-package exemplar: TSMorph.service.test.ts:374-382 and :569-596 uses explicit runtime branches after _tag checks before reading variant-specific fields.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 0.9
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
+    "line": 250,
+    "symbol": "PackageJson wire-shape unions",
+    "smell": "False-positive-audited undiscriminated-union cluster: PackageJson.ts models package.json/npm wire shapes with scalar/object/array/null unions such as Json (:250), BrowserReplacement (:258), Person (:323), Repository (:400), Funding (:440), Bin (:460), Browser (:479), Man (:545), SideEffects (:564), BundleDependencies (:583), PackageExports (:782), OverrideValue (:874), and Workspaces (:922). A broad S.Union detector can mistake these for first-party tagged-union candidates.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These schemas intentionally mirror external package.json/npm JSON wire forms. The members are structurally disjoint enough for boundary decoding (string vs object vs array vs boolean/null), and adding first-party discriminator fields would stop accepting standard package.json shapes or require a pre-decode rewrite layer.",
+      "boundary": "external package.json/npm metadata wire compatibility in @beep/repo-utils/schemas/PackageJson"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
+    "line": 470,
+    "symbol": "TSConfig wire-shape unions",
+    "smell": "False-positive-audited undiscriminated-union cluster: TSConfigExtends is string | string[] (:470), TSNodeIgnoreDiagnostic is string | number (:536), and TSNodeTranspiler is string | tuple (:560). These are finite-looking unions but they model tsconfig/ts-node JSON configuration syntax rather than first-party variant state.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These are external configuration wire codecs. Tagging them would change accepted tsconfig/ts-node JSON documents; the existing unions preserve the documented JSON forms and normalize only at the decode boundary.",
+      "boundary": "external tsconfig.json and ts-node configuration wire compatibility"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/FsUtils.ts",
+    "line": 42,
+    "symbol": "GlobOptions.ignore",
+    "smell": "False-positive-audited undiscriminated-union candidate: GlobOptions.ignore accepts S.Union([S.String, S.Array(S.String)]), matching the package's glob wrapper API where a single ignore pattern and many ignore patterns are both accepted.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is ergonomic input polymorphism at a pure utility boundary, not a finite variant family with case-specific behavior. Tagging it would make simple string ignore patterns incompatible and mirrors the accepted @beep/utils PathInput/Glob.Pattern exception.",
+      "boundary": "FsUtils glob option input boundary"
+    }
+  },
+  {
+    "ruleId": "literal-kit-const-assertion",
+    "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
+    "line": 26,
+    "symbol": "named literal tuples",
+    "smell": "Named as-const literal tuples feed LiteralKit by identifier or through the package's case-insensitive literal helper: TSConfig MODULE_VALUES/TARGET_VALUES/etc. (lines 26-199), TS_CATEGORY_TAG_VALUES in TSCategory.model.ts:22, TSSyntaxKindEntries/TSSyntaxKindNames in TSSyntaxKind.model.ts:13-445, and tagNames in JSDoc/models/tag-values/index.ts:391-540. A loose literal-kit-const-assertion search keyed only on as const near LiteralKit could flag them.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The literal-kit-const-assertion card covers inline LiteralKit([... ] as const) array arguments. These are named tuples that are reused as schema inputs, generated lookup tables, examples, or helper inputs before the LiteralKit call; as const is needed to preserve tuple literals at the binding boundary.",
+      "boundary": "named literal tuple sources consumed by LiteralKit by identifier or generic helper, outside the inline-argument card scope"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/TypeScript/models/TSSyntaxKind.model.ts",
+    "line": 425,
+    "symbol": "TSSyntaxKindNames",
+    "smell": "False-positive-audited no-as candidate: toNameOptions uses a double cast (as unknown as readonly tuple) to recover the mapped name tuple from TSSyntaxKindEntries, and TSSyntaxKindCode casts Struct.fromEntries(TSSyntaxKindEntries) at line 441 to retain exact name-to-code types.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "TSSyntaxKindEntries is the single source of truth for a TypeScript compiler table with duplicate numeric aliases, so MappedLiteralKit is not a fit for the code map. TypeScript does not preserve tuple positions through A.map or Struct.fromEntries here; the casts are local type-system bridges around a canonical data table, not runtime variant discrimination.",
+      "boundary": "TypeScript SyntaxKind generated-table model and exact lookup typing"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
+    "line": 276,
+    "symbol": "makeLooseJsonObject",
+    "smell": "False-positive-audited no-as candidate: makeLooseJsonObject casts pickKnownKeys(input) as S.Schema.Type<typeof strict> before encodeStrict because the generic key filter preserves runtime keys but erases the strict schema field type.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is an internal schema-construction bridge for StructWithRest open JSON extension points. The strict field set is derived from the schema fields, the unknown keys are decoded separately as JsonRecord, and no discriminator or literal-family dispatch exists to replace with schema-derived matching.",
+      "boundary": "TSConfig StructWithRest codec bridge for open JSON-valued extension fields"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
+    "line": 861,
+    "symbol": "symbolIdentity",
+    "smell": "False-positive-audited no-as candidate: the toArbitrary annotation for symbolIdentity casts the interpolated template literal to typeof symbolIdentity.Type after drawing each component from the component schemas.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The arbitrary generator constructs the branded template literal from SymbolFilePath, SymbolQualifiedName, and SymbolKind arbitraries, so the runtime shape is guaranteed by construction. The cast is the local brand/template-literal type bridge inside the schema's own toArbitrary hook, not a value-level discriminator or unsafe branch.",
+      "boundary": "SymbolId schema arbitrary generation for branded template literal"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/test/schemas/TSConfig.test.ts",
+    "line": 134,
+    "symbol": "TSConfig open-extra fixture assertions",
+    "smell": "False-positive-audited test-only no-as cluster: TSConfig tests cast decoded open-extension records to fixture-specific shapes to assert plugin tags and ts-node custom options at lines 134, 167, 202, and 210.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These casts are local test inspections of deliberately open JSON extension fields accepted by TSConfig's StructWithRest codecs. The schema cannot know fixture-specific custom plugin/ts-node keys without closing the extension boundary the tests are proving.",
+      "boundary": "test-only assertions for open tsconfig/ts-node JSON extension fields"
+    }
+  }
+]

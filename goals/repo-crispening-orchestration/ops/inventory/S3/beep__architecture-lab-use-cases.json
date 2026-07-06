@@ -1,0 +1,84 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.service.ts",
+    "line": 73,
+    "symbol": "toWorkItemActionError",
+    "smell": "toWorkItemActionError translates WorkItemRepositoryError | WorkItemDomainError through three S.is guard branches and then falls through to WorkItemActionRejected using error._tag. This is manual tagged-error dispatch; adding another repository/domain tag can silently route to the fallback instead of forcing an exhaustive mapping.",
+    "proposedTarget": "Rewrite the translator as Match.tagsExhaustive over the combined tagged-error union, with explicit cases for WorkItemRepositoryNotFound/Conflict/Unavailable and each WorkItem domain error tag while preserving domain error._tag as the public rejection reason. Verified Effect v4 target API: Match.tagsExhaustive at .repos/effect-v4/packages/effect/src/Match.ts:1095-1106; in-repo usage exemplar: packages/drivers/acp/src/AcpProtocol.service.ts:579.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 3.1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.service.ts",
+    "line": 63,
+    "symbol": "toWorkerActionError",
+    "smell": "toWorkerActionError translates WorkerRepositoryError through three S.is guard branches and an \"Unknown Worker repository failure\" fallback even though WorkerRepositoryError is a finite tagged-error union. The fallback makes the function non-exhaustive at the type level.",
+    "proposedTarget": "Replace the S.is if-chain with Match.tagsExhaustive cases for WorkerRepositoryNotFound, WorkerRepositoryConflict, and WorkerRepositoryUnavailable so new repository error tags fail the mapping at compile time. Verified Effect v4 target API: Match.tagsExhaustive at .repos/effect-v4/packages/effect/src/Match.ts:1095-1106; in-repo usage exemplar: packages/tooling/tool/docgen/src/Printer.ts:449.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 2.9
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.errors.ts",
+    "line": 195,
+    "symbol": "WorkItemActionError",
+    "smell": "WorkItemActionError is an S.Union of distinct public TaggedErrorClass action failures and can look like a collapse-to-one-tag candidate to a broad union detector.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The SPEC fence forbids merging distinct action/port/driver error tags. These public action errors intentionally expose separate not-found, conflict, rejected, and failed cases.",
+      "boundary": "public WorkItem use-case error surface"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.errors.ts",
+    "line": 163,
+    "symbol": "WorkerActionError",
+    "smell": "WorkerActionError is an S.Union of distinct public TaggedErrorClass action failures and can look like a collapse-to-one-tag candidate to a broad union detector.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The SPEC fence forbids merging distinct action/port/driver error tags. These public action errors intentionally preserve separate not-found, conflict, and failed cases.",
+      "boundary": "public Worker use-case error surface"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/architecture-lab/use-cases/test/WorkItem.test.ts",
+    "line": 83,
+    "symbol": "WorkItem public error assertions",
+    "smell": "The WorkItem use-case tests assert public error tags directly at lines 83-84, 105, and 117, which a direct-_tag detector can flag.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These are test-only public-contract assertions proving the use-case boundary returns the intended externally visible error tags. They are not production dispatch and should remain independent of matcher implementation details.",
+      "boundary": "test-only WorkItem use-case public error contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/architecture-lab/use-cases/test/Worker.test.ts",
+    "line": 69,
+    "symbol": "Worker public error assertion",
+    "smell": "The Worker use-case test asserts error._tag === \"WorkerNotFound\", which a direct-_tag detector can flag.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is a test-only public-contract assertion proving the use-case boundary returns the intended externally visible error tag. It is not production dispatch.",
+      "boundary": "test-only Worker use-case public error contract"
+    }
+  }
+]

@@ -1,0 +1,242 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+    "line": 86,
+    "symbol": "TierGateAuditRecord (S.Class) — missing in-body `static readonly is`",
+    "smell": "Consumers derive the guard free-floating instead of reading it off the class: test/TierGate.test.ts:32,55,90 each call `S.is(TierGateAuditRecord)(result.audit)` inline — the exact duplicate-guard-derivation pattern SFV4-static-api targets. The class declares no in-body statics.",
+    "proposedTarget": "Add in-body `static readonly is = S.is(TierGateAuditRecord);` (exemplar: packages/foundation/modeling/md/src/Md.model.ts:873 `static readonly is = S.is(Heading);` — in-body is the S4 mechanism for S.Class since piping the class would lose constructor identity, per withCodecStatics doc packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:10-12). Call sites become `TierGateAuditRecord.is(result.audit)`. Purely additive; existing call sites keep compiling.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 388,
+    "symbol": "FetchableHandle (S.Class) — missing in-body `static readonly is`",
+    "smell": "test/FieldTier.test.ts:94 derives the guard inline via `S.is(FetchableHandle)(projected.handle)` instead of a colocated class static; the class declares no in-body statics.",
+    "proposedTarget": "Add in-body `static readonly is = S.is(FetchableHandle);` (exemplar Md.model.ts:873). Additive; update the test call site to `FetchableHandle.is(...)`. Other classes in this package (OversizedFieldProjection, ColumnarEnvelope, SourceAuthRegistration, ApiKeyRequiredFailure, FourHintAnnotations, TierGatePolicy) have no observed free guard/decode derivations, so blanket static-is addition there was rejected as speculative — only evidence-backed sites are recorded.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/ToolAnnotations.ts",
+    "line": 76,
+    "symbol": "annotateFourHints",
+    "smell": "Public 2-arg helper `(tool, hints) => T` is not `dual`. It is the kit's most-used combinator (~28 data-first call sites across drivers/m365-mcp/src/M365Tools.ts, drivers/nlp-mcp/src/StreamingTools.ts, drivers/uspto-mcp/src/UsptoTools.ts) and `Tool` is Pipeable (v4 unstable/ai/Tool.ts imports pipeArguments at :19), yet `tool.pipe(annotateFourHints(hints))` is impossible.",
+    "proposedTarget": "Wrap in `dual(2, <T extends AiTool.Any>(tool: T, hints: FourHintAnnotations): T => ...)` (`dual` verified at .repos/effect-v4/packages/effect/src/Function.ts:102) with the standard two-overload const type. Non-breaking: dual preserves the existing data-first arity, so all ~28 existing call sites compile unchanged while enabling `Tool.make(...).pipe(annotateFourHints(readOnlyToolHints))`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+    "line": 441,
+    "symbol": "withEnabledWhenApprovedTool",
+    "smell": "Public 2-arg helper `(tool, policy) => T` is not `dual`; same shape and same Pipeable `Tool` self as annotateFourHints, so the `with*` combinator cannot participate in a tool's `.pipe(...)` chain.",
+    "proposedTarget": "Wrap in `dual(2, <T extends AiTool.Any>(tool: T, policy: TierGatePolicy): T => ...)` (Function.ts:102). Non-breaking for the data-first form; enables `tool.pipe(annotateFourHints(hints), withEnabledWhenApprovedTool(policy))` composition at MCP host wiring sites.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+    "line": 158,
+    "symbol": "withSanitizedToolSpan",
+    "smell": "Public 2-3-arg helper takes its `self` (the wrapped Effect) in SECOND position (`(spanName, effect, options?)`), so it is neither dual nor pipeable at all — `pipe(effect, withSanitizedToolSpan(name))` cannot exist. It inverts the platform idiom it wraps: v4 `Effect.withSpan` is dual with effect-first (verified .repos/effect-v4/packages/effect/src/Effect.ts:8291).",
+    "proposedTarget": "Reorder to `(self, spanName, options?)` and wrap in `dual` with a predicate arity check (`dual((args) => Effect.isEffect(args[0]), ...)`; `Effect.isEffect` verified at Effect.ts:229) to handle the optional options arg. Breaking signature change with small blast radius: internal call site src/SanitizedSpan.ts:207, tests test/SanitizedSpan.test.ts:60,75, plus the JSDoc example — no external repo consumers call it directly (drivers use `sanitizedToolkit`).",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 165,
+    "symbol": "projectFieldTier",
+    "smell": "Public 3-arg helper `(tiers, tier, value)` is not `dual` and takes its natural self (the payload `value` flowing through pipes) LAST. Real consumer cost: drivers/uspto-mcp/src/UsptoDocumentTiers.ts:154,161 must write the trivial wrapper lambda `rows.map((row) => projectFieldTier(usptoDocumentFieldTiers, tier, row))`.",
+    "proposedTarget": "Reorder to `(value, tiers, tier)` and wrap in `dual(3, ...)` (Function.ts:102). The uspto call sites eta-reduce to `A.map(rows, projectFieldTier(usptoDocumentFieldTiers, tier))` — a direct helper reference, the exact 'flow/direct-ref over trivial lambda' win S4 names. Breaking reorder: 2 external call sites plus internal use at FieldTier.ts:291,296 and JSDoc examples.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+    "line": 407,
+    "symbol": "dispatchWithTierGate",
+    "smell": "Public 2-arg wrapper takes its self (the `onApproved` Effect being gated) in SECOND position (`(request, onApproved)`), so the gate cannot be applied in an effect pipeline: `pipe(handlerEffect, dispatchWithTierGate(request))` is impossible — inverted relative to the Effect.withSpan-style wrap-combinator idiom (Effect.ts:8291).",
+    "proposedTarget": "Reorder to `(self, request)` and wrap the Effect.fn-built implementation in `dual(2, ...)`: `export const dispatchWithTierGate = dual(2, Effect.fn(\"dispatchWithTierGate\")(function* <A, E, R>(onApproved, request) {...}))`. Keeps the traced Effect.fn body. No external repo call sites today (JSDoc example + future hosts), so the reorder is cheap now and costly later.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+    "line": 73,
+    "symbol": "sanitizeTracerAttributes",
+    "smell": "Public 2-arg helper `(tracer, sanitizedKeys?)` is self-first but not `dual`, so it cannot be used data-last (`pipe(tracer, sanitizeTracerAttributes(keys))`) even though it is a pure Tracer -> Tracer transformation.",
+    "proposedTarget": "Wrap in `dual` with a predicate check (`dual((args) => !Array.isArray(args[0]) ...)` or a Tracer-shape guard) because the optional second arg makes plain arity detection ambiguous (1-arg call is data-first-with-default OR data-last). Non-breaking for existing data-first sites (src/SanitizedSpan.ts:166, test usage). Moderate value: only one in-repo call site benefits today.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
+    "line": 102,
+    "symbol": "apiKeyRequiredFailure",
+    "smell": "Free-floating constructor helper for the `ApiKeyRequiredFailure` S.Class defined in the same file — behavior separated from its data. It only forwards `tool`, derives `envVar` from the registration, and pins the `error` tag.",
+    "proposedTarget": "Colocate as an in-body static on the class, e.g. `static readonly forTool = (params: { readonly tool: string; readonly registration: SourceAuthRegistration }): ApiKeyRequiredFailure => ApiKeyRequiredFailure.make({...})` (in-body statics are the S4 mechanism for S.Class; class bindings are referenceable in their own static initializers — exemplar Md.model.ts:873). One external call site to update: drivers/uspto-mcp/src/UsptoHandlers.ts:45 becomes `Effect.fail(ApiKeyRequiredFailure.forTool({ registration, tool }))`. Keep-and-deprecate the free helper if API stability is wanted during migration.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 357,
+    "symbol": "toColumnarEnvelope",
+    "smell": "Free-floating constructor for the `ColumnarEnvelope` S.Class defined directly above it — behavior separated from its data (the canonical rows->envelope constructor lives outside the class).",
+    "proposedTarget": "Colocate as in-body static `static readonly fromRows = (rows: ReadonlyArray<Record<string, unknown>>): ColumnarEnvelope => ...` on `ColumnarEnvelope`. External call sites: drivers/uspto-mcp/src/UsptoDocumentTiers.ts:154,160 become `ColumnarEnvelope.fromRows(...)`. While moving, the body's native `rows.map(...)`/`columns.map(...)` should become `A.map` per repo law (noted for the fixer; the native-method swap itself is not an S4 finding).",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/ToolAnnotations.ts",
+    "line": 102,
+    "symbol": "readOnlyToolHints",
+    "smell": "Canonical named instance of `FourHintAnnotations` lives as a free module const instead of on the class — data's well-known values separated from the data type. Heavily consumed (~28 references across m365-mcp/nlp-mcp/uspto-mcp tool modules).",
+    "proposedTarget": "Colocate as in-body static `static readonly readOnly: FourHintAnnotations = FourHintAnnotations.make({ readOnly: true, destructive: false, idempotent: true, openWorld: true })` on `FourHintAnnotations` (class binding is available in its own static initializers; `make` is inherited from the S.Class base which is fully evaluated before subclass static fields run). Consumer churn is wide but mechanical (`readOnlyToolHints` -> `FourHintAnnotations.readOnly` + import updates); keep-and-deprecate re-export eases migration.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/ToolAnnotations.ts",
+    "line": 124,
+    "symbol": "destructiveWriteToolHints",
+    "smell": "Second canonical `FourHintAnnotations` instance as a free const — same colocation smell as readOnlyToolHints; currently has no external consumers (only mcp-kit JSDoc), so the move is nearly free.",
+    "proposedTarget": "Colocate as in-body static `static readonly destructiveWrite: FourHintAnnotations = FourHintAnnotations.make({...})` on `FourHintAnnotations`, alongside the readOnly static, so both named hint profiles read as `FourHintAnnotations.readOnly` / `FourHintAnnotations.destructiveWrite`.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+    "line": 142,
+    "symbol": "TierGateVerdict",
+    "smell": "Exported tagged-union const ends its pipe at `$I.annoteSchema(...)` without `SchemaUtils.withCodecStatics`, so consumers must derive decoders free-floating (its own JSDoc example at TierGate.ts:124 reaches for `S.decodeUnknownSync(TierGateVerdict)(...)` instead of a colocated static).",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the existing pipe — exact exemplar packages/foundation/modeling/md/src/Md.model.ts:1612 (`S.Union([...]).pipe(S.toTaggedUnion(\"_tag\"), $I.annoteSchema(...), SchemaUtils.withCodecStatics)`). No name clash: the toTaggedUnion utils are `cases`/`isAnyOf`/`guards`/`match` (verified .repos/effect-v4/packages/effect/src/Schema.ts:6030-6057), and `$I.annoteSchema` preserves them (preserveSchemaStatics, identity/src/Id.ts:1386) before withCodecStatics adds `is`/`fromUnknown`/`decodeOption` (withCodecStatics.ts:90, bound `S.Top & S.ConstraintDecoder<unknown>`, ConstraintDecoder verified v4 Schema.ts:732). Demand is currently doc-example-only, hence mid confidence.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 285,
+    "symbol": "projectWithinBudget",
+    "smell": "Public 3-arg helper `(tiers, value, options)` is not `dual` and takes its natural self (the payload `value`) in the middle position, blocking `pipe(payload, projectWithinBudget(tiers, options))`.",
+    "proposedTarget": "Candidate reorder to `(value, tiers, options)` + `dual(3, ...)`. Judgment call: no external call sites exist (uspto-mcp deliberately reimplements a bulk variant instead, UsptoDocumentTiers.ts:8-10), the options-record last position is already idiomatic, and the right self (value vs tiers) is arguable — decide alongside the projectFieldTier reorder so the two projectors stay signature-consistent.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+    "line": 342,
+    "symbol": "fromApprovedToolsPolicy (with private isPolicyApproved at line 304)",
+    "smell": "Candidate 'behavior separated from its data': the canonical TierGatePolicy -> TierGateShape derivation and the policy-approval predicate live as free functions instead of on the `TierGatePolicy` S.Class (TierGate.ts:284).",
+    "proposedTarget": "Candidate in-body statics on TierGatePolicy: `static readonly isApproved = (policy, tool) => ...` and `static readonly toGate = (policy): TierGateShape => ...`. Judgment call: colocating drags AiTool/DateTime/audit-record machinery onto the schema class; the helpers already sit in the same small module directly beside the class and `withEnabledWhenApprovedTool` shares `isPolicyApproved`, so file-scope colocation is arguably already satisfied. The TierGateShape target itself is a service shape and stays an interface (fence 1).",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 45,
+    "symbol": "FieldTierName (LiteralKit const)",
+    "smell": "Detector candidate 'union const missing withCodecStatics': exported literal-union const built with LiteralKit and piped through $I.annoteSchema without withCodecStatics.",
+    "proposedTarget": "None — keep as-is. LiteralKit already colocates the kit statics (`Options`/`is` guards/`Enum`/`$match`/..., LiteralKit.schema.ts:657-670) and they survive the annotation pipe both at type level (`Rebuild: LiteralKit<L, M>`, LiteralKit.schema.ts:691) and at runtime ($I.annoteSchema calls preserveSchemaStatics, Id.ts:1386; the kit additionally wraps `annotate` to re-attach helpers, LiteralKit.schema.ts:626-643) — `FieldTierName.Enum.minimal` in the JSDoc example typechecks today. Applying withCodecStatics would collide: kit `is` is a per-literal guards RECORD (`IsGuards`, LiteralKit.schema.ts:659) while CodecStatics `is` is a single whole-union guard (withCodecStatics.ts:63).",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "LiteralKit consts already carry colocated kit statics preserved through $I.annoteSchema; withCodecStatics would shadow/clash with the kit's `is` guards record, breaking `X.is.<literal>(...)` consumers.",
+      "boundary": "If whole-union decode statics are ever needed on a LiteralKit const, attach non-clashing keys via SchemaUtils.withStatics (e.g. fromUnknown/decodeOption only) — never pipe withCodecStatics over a LiteralKit."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/SourceAuth.ts",
+    "line": 50,
+    "symbol": "SourceAuthGate (LiteralKit const)",
+    "smell": "Detector candidate 'union const missing withCodecStatics': LiteralKit literal-union const piped through $I.annoteSchema without withCodecStatics.",
+    "proposedTarget": "None — keep as-is; same analysis as FieldTierName (kit statics preserved by preserveSchemaStatics Id.ts:1386 + wrapped annotate LiteralKit.schema.ts:626-643; `SourceAuthGate.Enum.soft` typechecks in the JSDoc example; withCodecStatics `is` would clash with the kit `is` guards record).",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "LiteralKit const with colocated kit statics intact; withCodecStatics collides with the kit's `is` guards record.",
+      "boundary": "Use SchemaUtils.withStatics with non-clashing keys if decode statics are ever demanded; do not pipe withCodecStatics over LiteralKit consts."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+    "line": 45,
+    "symbol": "TierGateOutcome (LiteralKit const)",
+    "smell": "Detector candidate 'union const missing withCodecStatics': LiteralKit literal-union const (`TierGateOutcomeTag` at :35) piped through $I.annoteSchema without withCodecStatics.",
+    "proposedTarget": "None — keep as-is; same LiteralKit carve-out as FieldTierName/SourceAuthGate. The sibling raw kits `TierGateOutcomeTag` (:35) and `TierGateVerdictTag` (:112) are module-private single-use bases feeding the exported consts, not separate findings.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "LiteralKit const with colocated kit statics intact; withCodecStatics collides with the kit's `is` guards record.",
+      "boundary": "Use SchemaUtils.withStatics with non-clashing keys if decode statics are ever demanded; do not pipe withCodecStatics over LiteralKit consts."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+    "line": 119,
+    "symbol": "sanitizeTracerAttributes span proxy delegates (end/event/addLinks)",
+    "smell": "Detector candidate 'trivial wrapper lambdas / direct helper refs': `end: (endTime, exit) => span.end(endTime, exit)`, `event: (...) => span.event(...)` (:126), `addLinks: (links) => span.addLinks(links)` (:128) look eta-reducible to `end: span.end` etc.",
+    "proposedTarget": "None — keep as-is. The lambdas are load-bearing: Span implementations define these methods on the class prototype (the file's own comment at :80-84 documents this), so a bare method reference like `end: span.end` detaches `this` and breaks at call time. `span.end.bind(span)` is no tersest-form improvement over the explicit delegate and loses parameter-name clarity.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Delegate lambdas preserve the `this` binding of prototype-defined Tracer.Span methods; eta-reduction to direct method references would produce unbound-`this` runtime failures.",
+      "boundary": "Applies to any object-proxy wrapper over a class-instance API; the S4 direct-ref rule targets free-function passthroughs, not method delegation."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/ToolkitComposition.ts",
+    "line": 70,
+    "symbol": "gatedLayer",
+    "smell": "Detector candidate 'public 2-arg helper not dual': `gatedLayer(registration, layer)` matches the arity pattern mechanically.",
+    "proposedTarget": "None — keep as-is. It is a pair CONSTRUCTOR producing a `GatedLayer` record, not a self-transformation: neither argument is a 'self' that flows through a pipe and comes back out, which is what `dual` (Function.ts:102) models. Its single call site (drivers/uspto-mcp/src/Server.ts:89) uses the natural data-first form inside `composeGatedLayers(...)`.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Constructors that pair two values into a new record are not dual candidates; dual models self-transformations, and forcing it here would invent a fake self.",
+      "boundary": "Non-dual 2-3-arg detectors must exempt pure constructors whose return type differs from every parameter type."
+    }
+  }
+]

@@ -1,0 +1,77 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/drizzle/src/EntityTable.models.ts",
+    "line": 139,
+    "symbol": "ColumnBuilderFor / ColumnBuilderMapFor / TableFor",
+    "smell": "Exported type aliases in a schema-aware models file match the schema-first-inventory detector surface.",
+    "proposedTarget": "None -- type-level utility carve-out. Keep these aliases as Drizzle/EntitySchema compile-time projections; package guidance says `EntityTable.pgTableFrom(entity)` projects `@beep/schema/EntitySchema` definitions into typed Drizzle `pgTable` metadata.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "These aliases are conditional/mapped type-level utilities over `EntitySchema.Definition` and Drizzle column-builder types. They are not wire, persisted, config, or domain payloads to decode.",
+      "boundary": "Drizzle table metadata type-level projection"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/drizzle/src/Drizzle.service.ts",
+    "line": 90,
+    "symbol": "DrizzleClient",
+    "smell": "Exported interface with Effect-returning SQL execution and transaction methods matches the schema-first-inventory detector surface.",
+    "proposedTarget": "None -- fence 1 service/port carve-out. Keep `DrizzleRows` as the row-array schema and keep this as the narrow product-neutral adapter contract supplied to `Drizzle.makeLayer`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "The interface describes a live SQL execution/transaction adapter. Schema-as-truth applies to row payloads and technical errors, not to the adapter port itself.",
+      "boundary": "product-neutral Drizzle adapter port"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/drizzle/src/Drizzle.service.ts",
+    "line": 129,
+    "symbol": "DrizzleShape",
+    "smell": "Exported interface with Effect-returning service methods matches the schema-first-inventory detector surface.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. Keep this as the `Context.Service` shape used by `Drizzle` at line 168; Effect v4 class-style `Context.Service<Self, Shape>()(\"Key\")` verified at `.repos/effect-v4/packages/effect/src/Context.ts:162-163`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Service shapes are explicitly carved out by S1. This shape exposes SQL execution behavior; the row boundary is separately schema-modeled as `DrizzleRows`.",
+      "boundary": "Context.Service shape for the Drizzle driver"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/drizzle/src/EntityTable.models.ts",
+    "line": 504,
+    "symbol": "pgTableFrom",
+    "smell": "Exported function in a schema-aware file can look like an SFV4-fn-schema hit.",
+    "proposedTarget": "Hypothetical `Fn({ input: EntitySchema.EntityClass.Any, output: TableFor<Entity> })` wrapper -- audited and rejected.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "`pgTableFrom` is a generic metadata projection from an `EntitySchema` class into Drizzle `pgTable` builders. The input is already an EntitySchema value, while the output is third-party table metadata whose generic type relation is compile-time only.",
+      "boundary": "EntitySchema-to-Drizzle metadata projection"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/drizzle/src/EntityTable.models.ts",
+    "line": 549,
+    "symbol": "columns",
+    "smell": "Exported function value aliases a Drizzle metadata getter and can look like an exported function-contract hit.",
+    "proposedTarget": "None for S1. Keep `columns = getColumns` as the thin Drizzle metadata getter re-export.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 0.02,
+    "exception": {
+      "reason": "The helper exposes Drizzle table metadata for tables built by `pgTableFrom`; it is not a function over first-party payloads and has no schema-owned invariant to absorb.",
+      "boundary": "third-party Drizzle metadata getter"
+    }
+  }
+]

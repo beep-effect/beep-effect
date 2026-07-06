@@ -1,0 +1,73 @@
+[
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/agents/client/src/Chat.atoms.ts",
+    "line": 264,
+    "symbol": "createThreadAtom",
+    "smell": "Exported runtime atom function uses an inline object write contract `{ readonly workspaceId: WorkspaceId; readonly title: string }` in a schema-modeled file.",
+    "proposedTarget": "Lift the write payload into a named schema, e.g. `CreateThreadAtomInput extends S.Class` with `workspaceId: WorkspaceIdentity.WorkspaceId` and `title: S.String`, or reuse the `CreateThreadRpc` payload shape (`packages/agents/use-cases/src/processes/Chat/Chat.rpc.ts:67`). The same file already models the richer write union as `SendTurnRequest`/`EditTurnRequest` plus `TurnRequest` (`packages/agents/client/src/Chat.atoms.ts:563` and `:619`).",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.55
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/agents/client/src/Chat.atoms.ts",
+    "line": 172,
+    "symbol": "threadsAtoms",
+    "smell": "Exported `Atom.family` callback in a schema-modeled file could look like a function contract hit.",
+    "proposedTarget": "Hypothetical `Fn({ input: WorkspaceIdentity.WorkspaceId, output: ... })` wrapper is rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Atom family selector over a schema-derived identity value. The returned value is a Reactivity query atom backed by `ChatRpcs`, whose wire request payload is already schema-modeled by `ListThreadsRpc`.",
+      "boundary": "client Atom family selector"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/agents/client/src/Chat.atoms.ts",
+    "line": 229,
+    "symbol": "threadTimelineAtoms",
+    "smell": "Exported `Atom.family` callback in a schema-modeled file could look like a function contract hit.",
+    "proposedTarget": "Hypothetical `Fn({ input: WorkspaceIdentity.ThreadId, output: ... })` wrapper is rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Atom family selector over a schema-derived thread id. The actual wire payload is the `GetTimelineRpc` schema; wrapping the UI selector would not move a data payload into schema.",
+      "boundary": "client Atom family selector"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/agents/client/src/Chat.atoms.ts",
+    "line": 314,
+    "symbol": "draftAtoms",
+    "smell": "Exported `Atom.family` callback in a schema-modeled file could look like a function contract hit.",
+    "proposedTarget": "Hypothetical `Fn({ input: WorkspaceIdentity.ThreadId, output: ... })` wrapper is rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Atom family selector over a schema-derived id. The persisted localStorage value already uses a schema boundary (`S.OptionFromNullOr(Document)` at line 318).",
+      "boundary": "client Atom family selector / localStorage schema boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/agents/client/src/Chat.atoms.ts",
+    "line": 692,
+    "symbol": "runTurnAtom",
+    "smell": "Exported runtime atom function in a schema-modeled file.",
+    "proposedTarget": "Hypothetical `Fn({ input: TurnRequest, output: S.Void })` wrapper is rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The write input is already the `TurnRequest` tagged-union schema (line 619), and the return is Atom runtime side effects. This is a UI workflow over schema-modeled send/edit requests, not an inline payload contract.",
+      "boundary": "client Atom runtime workflow"
+    }
+  }
+]

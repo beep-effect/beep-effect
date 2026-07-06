@@ -1,0 +1,180 @@
+[
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+    "line": 425,
+    "symbol": "RDF/JSON-LD/PROV schema tests",
+    "smell": "The package has extensive fixture coverage for RDF terms, JSON-LD, vocabulary constants, and semantic metadata, but only SemanticSchemaMetadata has an S.toArbitrary-derived round-trip proof. Core RDF terms, datasets, JSON-LD models, evidence models, and PROV models are not property-tested from their production schemas.",
+    "proposedTarget": "Add additive property tests using S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) for NamedNode, BlankNode, Literal, Quad, Dataset, JsonLdDocument, JsonLdFrame, EvidenceSelector/EvidenceAnchor, and ProvO where generated values are stable. IRI schemas already define custom toArbitrary annotations at packages/foundation/modeling/rdf/src/Iri.ts:887. Mirror packages/foundation/modeling/md/test/Md.test.ts:45 and :150 or packages/tooling/test-kit/test-utils/src/Schema.ts:36.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
+    "line": 913,
+    "symbol": "MakeLiteralOptions.language",
+    "smell": "MakeLiteralOptions.language is S.optional(S.String) while Literal.language decodes through the LanguageTag schema. Invalid language tags can enter the helper options surface and fail only later when constructing Literal.",
+    "proposedTarget": "Use LanguageTag in MakeLiteralOptions, or decode the overload's string language into LanguageTag before constructing Literal. The existing LanguageTag schema is packages/foundation/modeling/rdf/src/Rdf.ts:329 and Literal.language already uses it at :465.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/rdf/src/JsonLd.ts",
+    "line": 103,
+    "symbol": "JsonLdTermDefinition.@id/@type",
+    "smell": "JSON-LD term definition @id and @type are modeled as broad strings even though the package already has IRIReference and JsonLdNodeIdentifier schemas and examples use IRI values.",
+    "proposedTarget": "Use IRIReference or JsonLdNodeIdentifier for @id, depending on whether blank node identifiers and relative references should be accepted, and use S.OptionFromOptionalKey(IRIReference) for @type. IRIReference is verified locally at packages/foundation/modeling/rdf/src/Iri.ts:887 and includes a toArbitrary annotation.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/rdf/src/JsonLd.ts",
+    "line": 147,
+    "symbol": "JsonLdContext.terms",
+    "smell": "JsonLdContext.terms uses S.Record(S.String, S.Union([S.String, JsonLdTermDefinition])). Empty keys and arbitrary string values decode even though term bindings should be compact terms or IRI references.",
+    "proposedTarget": "Introduce a JsonLdTermName schema, at minimum S.NonEmptyString with keyword exclusions if needed, and use S.Record(JsonLdTermName, S.Union([IRIReference, JsonLdTermDefinition])). S.NonEmptyString is verified at .repos/effect-v4/packages/effect/src/Schema.ts:8420.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/rdf/src/JsonLd.ts",
+    "line": 317,
+    "symbol": "JsonLdLiteralValue.@language",
+    "smell": "JsonLdLiteralValue.@language is S.OptionFromOptionalKey(S.String), duplicating the broader form already tightened by RDF Literal.language.",
+    "proposedTarget": "Use LanguageTag for @language. If importing LanguageTag from Rdf.ts would introduce a cycle, move the language-tag schema to a small shared module and re-export it from Rdf.ts. The target schema is packages/foundation/modeling/rdf/src/Rdf.ts:329.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/rdf/src/JsonLd.ts",
+    "line": 399,
+    "symbol": "JsonLdNodeObject.properties",
+    "smell": "JsonLdNodeObject.properties uses S.Record(S.String, S.Array(JsonLdPropertyValue)), allowing empty property names and empty value arrays.",
+    "proposedTarget": "Use JsonLdTermName or IRIReference for property keys, and consider S.NonEmptyArray(JsonLdPropertyValue) for property values if empty property arrays are not meaningful. S.NonEmptyArray is verified at .repos/effect-v4/packages/effect/src/Schema.ts:4533.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/rdf/src/JsonLd.ts",
+    "line": 473,
+    "symbol": "JsonLdFrame.includeProperties",
+    "smell": "JsonLdFrame.includeProperties is an optional array of broad strings. The test fixture uses an IRI value, and empty property names or empty include lists decode.",
+    "proposedTarget": "Use IRIReference or JsonLdTermName for includeProperties elements, and use S.NonEmptyArray when present. The fixture at packages/foundation/modeling/rdf/test/Rdf.test.ts:535 uses https://schema.org/name.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/modeling/rdf/src/Evidence.ts",
+    "line": 116,
+    "symbol": "TextPositionSelector/WebAnnotationTextPositionSelector",
+    "smell": "Text-position selectors use NonNegativeInt for start and end but do not enforce end >= start. The Web Annotation adapter mirrors the same unordered pair at WebAnnotation.ts:93.",
+    "proposedTarget": "Add a start <= end check to TextPositionSelector and WebAnnotationTextPositionSelector, and add a custom toArbitrary annotation if schema-derived arbitrary tests are added. The NLP handoff Span model is the local exemplar for this exact invariant at packages/foundation/modeling/nlp/src/Handoff/Contract.ts:151 through :198.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-equivalence",
+    "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
+    "line": 1180,
+    "symbol": "areDatasetsEquivalent",
+    "smell": "Dataset equivalence is implemented by sorting quads and comparing serialized forms rather than using S.toEquivalence(Dataset).",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.92,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "RDF dataset equivalence is intentionally order-insensitive and based on sorted quad serialization. S.toEquivalence(Dataset) would compare array order and miss the package's semantic equivalence basis.",
+      "boundary": "RDF dataset canonicalization/equivalence semantics"
+    }
+  },
+  {
+    "ruleId": "SFV4-equivalence",
+    "file": "packages/foundation/modeling/rdf/src/Uri.ts",
+    "line": 406,
+    "symbol": "areUrisEquivalent",
+    "smell": "URI equality is a hand comparison after normalization rather than schema-derived equivalence.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The helper intentionally normalizes URI references before comparison, including case/default-port/percent-encoding behavior. Schema-derived equality over strings would be too strict.",
+      "boundary": "RFC3986 URI normalization equivalence"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/modeling/rdf/test/VocabDrift.test.ts",
+    "line": 45,
+    "symbol": "vocabulary drift constants",
+    "smell": "Vocabulary drift coverage is table/golden based rather than S.toArbitrary based.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The test compares namespace and term constants against the identity CoreVocab registry. This is a deliberate drift guard over a finite checked-in vocabulary, not a schema law.",
+      "boundary": "RDF vocabulary registry drift guard"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/modeling/rdf/test/Rdf.test.ts",
+    "line": 610,
+    "symbol": "vocabulary namespace constants",
+    "smell": "Vocabulary namespace assertions are golden constant checks rather than property-based tests.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These assertions pin well-known RDF/OA/OWL/PROV/SKOS/XSD namespace and term constants. Property generation would not verify the registry constants these tests are protecting.",
+      "boundary": "Well-known vocabulary constant guard"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
+    "line": 464,
+    "symbol": "Literal.value",
+    "smell": "RDF Literal.value is a broad S.String and can look like an unbounded primitive smell.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "RDF literal lexical forms are arbitrary strings; datatype and language are modeled separately. Tightening Literal.value would be datatype-specific and outside the generic RDF literal boundary.",
+      "boundary": "RDF literal lexical-form boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/rdf/src/Prov.ts",
+    "line": 274,
+    "symbol": "Entity.value",
+    "smell": "PROV Entity.value permits a broad scalar union of string, finite number, or boolean.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "prov:value is a generic provenance attribute whose datatype is supplied by the represented artifact or downstream RDF serialization. A closed scalar domain here would be profile-specific.",
+      "boundary": "Generic PROV-O value literal boundary"
+    }
+  }
+]

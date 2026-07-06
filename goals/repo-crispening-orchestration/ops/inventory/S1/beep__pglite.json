@@ -1,0 +1,32 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/pglite/src/PgliteClient.service.ts",
+    "line": 73,
+    "symbol": "PgliteClientOptions",
+    "smell": "Exported type alias can look like a schema-first-inventory hit.",
+    "proposedTarget": "None -- keep as a third-party config passthrough to `@effect/sql-pglite` (`Pglite.PgliteClientConfig.Create`). A first-party S.Class would need to mirror upstream client options and risk drift.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The alias names an upstream Effect SQL client configuration surface rather than a first-party domain/wire payload. The driver's first-party failure payload is schema-modeled as `PgliteError`.",
+      "boundary": "third-party PGlite client config passthrough"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/pglite/src/Pglite.errors.ts",
+    "line": 64,
+    "symbol": "PgliteError.fromUnknown",
+    "smell": "Exported static constructor in a schema-modeled error file has a plain `unknown -> PgliteError` normalization contract.",
+    "proposedTarget": "None while excepted. A hypothetical `Fn({ input: S.Unknown, output: PgliteError })` wrapper was audited and rejected; Fn `.implementSync` is verified at `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:403`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Unknown native/third-party failure normalization boundary. The output is already built through the `PgliteError` tagged schema, while the input intentionally accepts any thrown value.",
+      "boundary": "PGlite native failure to PgliteError adapter"
+    }
+  }
+]

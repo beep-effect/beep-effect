@@ -1,0 +1,415 @@
+[
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
+    "line": 203,
+    "symbol": "isPathWithinRoot",
+    "smell": "Trust-boundary path-containment guard (isPathWithinRoot / validateResolvedPath / resolvePathWithinRoot) has zero tests anywhere in the repo despite consumers in drivers/ffmpeg, drivers/nlp-mcp, tooling/library/ai-metrics, and tooling/tool/cli; fence 4 presumes guards stay explicit AND property-tested.",
+    "proposedTarget": "Add additive property tests (FastCheck via @effect/vitest) for the containment invariants: root itself passes, descendants pass, sibling-prefix paths like /srv/data-evil fail, any surviving `..` segment fails, trailing-separator and backslash normalization are containment-invariant. Never replaces the explicit guard; this is the missing explicit coverage.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 938,
+    "symbol": "encodeProcessRunManifestJson",
+    "smell": "Wire codec S.encodeUnknownEffect(S.fromJsonString(ProcessRunManifest)) has no S.toArbitrary round-trip law; run.json is the package's root proof manifest and only example-based coverage exists.",
+    "proposedTarget": "Extend test/FileProcessing.test.ts property suite: fc.assert over S.toArbitrary(ProcessRunManifest) asserting decode(encodeProcessRunManifestJson(x)) round-trips via S.fromJsonString(ProcessRunManifest).",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 974,
+    "symbol": "encodeFileProcessingCoverageSummaryJson",
+    "smell": "Wire codec for FileProcessingCoverageSummary (coverage.json) has no S.toArbitrary round-trip law.",
+    "proposedTarget": "Add fc property over S.toArbitrary(FileProcessingCoverageSummary) asserting JSON string encode/decode round-trip.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 1013,
+    "symbol": "encodeSourceProcessingRecordJson",
+    "smell": "JSONL codec for the SourceProcessingRecord tagged union (sources.jsonl) has no S.toArbitrary round-trip law across its three status variants.",
+    "proposedTarget": "Add fc property over S.toArbitrary(SourceProcessingRecord) asserting JSONL string encode/decode round-trip preserves the status discriminant and payload.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 1048,
+    "symbol": "encodeFileProcessingFailureRecordJson",
+    "smell": "JSONL codec for the FileProcessingFailureRecord tagged union (failures.jsonl) has no S.toArbitrary round-trip law.",
+    "proposedTarget": "Add fc property over S.toArbitrary(FileProcessingFailureRecord) asserting JSONL string encode/decode round-trip across skipped/failed variants.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 1083,
+    "symbol": "encodeChildArtifactRecordJson",
+    "smell": "JSONL codec for ChildArtifactRecord (children/<id>/artifacts.jsonl) has no S.toArbitrary round-trip law.",
+    "proposedTarget": "Add fc property over S.toArbitrary(ChildArtifactRecord) asserting JSONL string encode/decode round-trip.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 95,
+    "symbol": "TextSpan.endOffset",
+    "smell": "endOffset: S.Finite — a byte/character offset modeled as any finite number; negative and fractional offsets decode successfully.",
+    "proposedTarget": "NonNegativeInt from @beep/schema (already imported in this file and used for sizeBytes); consider an additional cross-field check endOffset >= startOffset on TextSpan. Zero external consumers of TextSpan found, so blast radius is package-local.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 96,
+    "symbol": "TextSpan.startOffset",
+    "smell": "startOffset: S.Finite — offset modeled as any finite number; negative and fractional offsets decode successfully.",
+    "proposedTarget": "NonNegativeInt from @beep/schema.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
+    "line": 172,
+    "symbol": "DetectionResult.confidence",
+    "smell": "confidence: S.optionalKey(S.Finite) — detection confidence is a probability but any finite number decodes; all current producers emit 0, 0.95, or 1 (drivers/tika Tika.service.ts:129, drivers/libpff Libpff.service.ts:169, this package's test engine).",
+    "proposedTarget": "S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })) (S.isBetween verified at .repos/effect-v4/packages/effect/src/Schema.ts:7401). Public-form tightening; ripple limited to in-range driver emitters, but drivers are a different wave family (fence 8 coordination needed).",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
+    "line": 219,
+    "symbol": "ExtractFileOperation.maxMaterializedBytes",
+    "smell": "maxMaterializedBytes: S.optionalKey(S.Finite) — a byte budget where negative and fractional values decode successfully.",
+    "proposedTarget": "S.optionalKey(NonNegativeInt) from @beep/schema, matching sizeBytes fields across the package.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
+    "line": 264,
+    "symbol": "ExportArchiveOperation.maxMaterializedBytes",
+    "smell": "maxMaterializedBytes: S.optionalKey(S.Finite) — byte budget accepts negative/fractional values.",
+    "proposedTarget": "S.optionalKey(NonNegativeInt) from @beep/schema.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
+    "line": 310,
+    "symbol": "ProcessFileOperation.maxMaterializedBytes",
+    "smell": "maxMaterializedBytes: S.optionalKey(S.Finite) — byte budget accepts negative/fractional values.",
+    "proposedTarget": "S.optionalKey(NonNegativeInt) from @beep/schema.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+    "line": 398,
+    "symbol": "FileProcessingEngineDescriptor.name",
+    "smell": "name: S.String — the engine display/identity name that flows into every result/record `engine` field is an unbranded broad string (family root of 13 engine-name fields across Extraction/Operation).",
+    "proposedTarget": "Introduce one branded FileProcessingEngineName (S.NonEmptyString.pipe(S.brand(...)) with $I.annoteSchema) in Strategy and reuse it here and for all downstream engine fields. Ripples to drivers/tika, drivers/libpff, and tooling/tool/cli Files commands (cross-family §5.4 sweep).",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 131,
+    "symbol": "ExtractionResult.engine",
+    "smell": "engine: S.String — engine-name field unbranded (member of the FileProcessingEngineDescriptor.name family).",
+    "proposedTarget": "Reuse the proposed branded FileProcessingEngineName from Strategy.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 171,
+    "symbol": "ArchiveExportResult.engine",
+    "smell": "engine: S.String — engine-name field unbranded (family member).",
+    "proposedTarget": "Reuse the proposed branded FileProcessingEngineName from Strategy.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 223,
+    "symbol": "ExtractedProcessFileResult.engine",
+    "smell": "engine: S.String — engine-name field unbranded (family member).",
+    "proposedTarget": "Reuse the proposed branded FileProcessingEngineName from Strategy.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 279,
+    "symbol": "ArchiveExportProcessFileResult.engine",
+    "smell": "engine: S.String — engine-name field unbranded (family member).",
+    "proposedTarget": "Reuse the proposed branded FileProcessingEngineName from Strategy.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 325,
+    "symbol": "SkippedProcessFileResult.engine",
+    "smell": "engine: S.String — engine-name field unbranded (family member).",
+    "proposedTarget": "Reuse the proposed branded FileProcessingEngineName from Strategy.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 432,
+    "symbol": "SucceededSourceProcessingRecord.engine",
+    "smell": "engine: S.optionalKey(S.String) — engine-name field unbranded (family member; JSONL row).",
+    "proposedTarget": "S.optionalKey(FileProcessingEngineName) once the Strategy brand exists.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 488,
+    "symbol": "SkippedSourceProcessingRecord.engine",
+    "smell": "engine: S.optionalKey(S.String) — engine-name field unbranded (family member; JSONL row).",
+    "proposedTarget": "S.optionalKey(FileProcessingEngineName) once the Strategy brand exists.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 542,
+    "symbol": "FailedSourceProcessingRecord.engine",
+    "smell": "engine: S.optionalKey(S.String) — engine-name field unbranded (family member; JSONL row).",
+    "proposedTarget": "S.optionalKey(FileProcessingEngineName) once the Strategy brand exists.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 666,
+    "symbol": "SkippedFileProcessingFailureRecord.engine",
+    "smell": "engine: S.optionalKey(S.String) — engine-name field unbranded (family member; JSONL row).",
+    "proposedTarget": "S.optionalKey(FileProcessingEngineName) once the Strategy brand exists.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 717,
+    "symbol": "FailedFileProcessingFailureRecord.engine",
+    "smell": "engine: S.optionalKey(S.String) — engine-name field unbranded (family member; JSONL row).",
+    "proposedTarget": "S.optionalKey(FileProcessingEngineName) once the Strategy brand exists.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 882,
+    "symbol": "ProcessRunManifest.engine",
+    "smell": "engine: S.String — engine-name field unbranded (family member; run.json manifest).",
+    "proposedTarget": "Reuse the proposed branded FileProcessingEngineName from Strategy.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
+    "line": 76,
+    "symbol": "FileProcessingOperationError.engine",
+    "smell": "engine: S.optionalKey(S.String) — engine-name field unbranded on the boundary error (family member); the fromReason static's `engine?: string` option widens with it.",
+    "proposedTarget": "S.optionalKey(FileProcessingEngineName) once the Strategy brand exists; update the fromReason options type in the same change.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+    "line": 400,
+    "symbol": "FileProcessingEngineDescriptor.version",
+    "smell": "version: S.optionalKey(S.String) — engine version modeled as any string, including empty.",
+    "proposedTarget": "S.optionalKey(S.NonEmptyString) at minimum; a semver-ish pattern is NOT proposed because 3rd-party engines (Tika, libpff) report heterogeneous version formats.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 886,
+    "symbol": "ProcessRunManifest.sourceRootLabel",
+    "smell": "sourceRootLabel: S.String — display label accepts the empty string.",
+    "proposedTarget": "S.NonEmptyString; low value, only worth doing alongside the other ProcessRunManifest tightenings.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+    "line": 396,
+    "symbol": "FileProcessingEngineDescriptor.capabilities",
+    "smell": "capabilities: S.Array(FileProcessingCapability) — a zero-capability engine decodes successfully yet is still selectable by service methods that pass no capability filter (Service selectEngine with capability undefined).",
+    "proposedTarget": "S.NonEmptyArray(FileProcessingCapability) (verified at .repos/effect-v4/packages/effect/src/Schema.ts:4533) IF zero-capability engines are truly invalid; needs a design ruling, hence judgment tier.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
+    "line": 95,
+    "symbol": "PathSafetyError.candidate",
+    "smell": "candidate/root/resolved modeled as broad S.String on the path-safety error (a broad-primitive detector would flag them).",
+    "proposedTarget": "Keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These fields carry raw, pre-validation, potentially malicious input paths plus canonicalized diagnostics; branding them (e.g. PosixPath) would require the untrusted input to already satisfy the invariant the guard exists to check, inverting the fail-closed design. Fence 4: trust-boundary guards stay explicit.",
+      "boundary": "path-traversal trust boundary (PathSafety guard error payload)"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 133,
+    "symbol": "ExtractionResult.metadata",
+    "smell": "metadata: S.Record(S.String, S.String) — broad record on a domain result (candidate for keyed/branded tightening).",
+    "proposedTarget": "Keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Passthrough of 3rd-party engine metadata (Apache Tika emits arbitrary, engine-specific keys); precision is intentionally loose at this external boundary.",
+      "boundary": "3rd-party extraction-engine metadata surface"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
+    "line": 75,
+    "symbol": "FileProcessingOperationError.details",
+    "smell": "details: S.optionalKey(S.Record(S.String, S.String)) — broad record on the boundary error.",
+    "proposedTarget": "Keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Sanitized free-form diagnostic context whose keys deliberately vary per driver failure; the schema's documented purpose is to hide driver/process/HTTP/filesystem detail behind a loose sanitized bag.",
+      "boundary": "capability boundary error diagnostics"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 138,
+    "symbol": "ExtractionResult.warnings",
+    "smell": "warnings: S.Array(S.String) — unbounded array of broad strings (same shape on ArchiveExportResult:174, ExtractedProcessFileResult:229, ArchiveExportProcessFileResult:284, SkippedProcessFileResult:331).",
+    "proposedTarget": "Keep as-is (representative record for the warnings family).",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Free-text engine warnings; legitimately empty and legitimately arbitrary prose from 3rd-party engines. Bounding or branding adds no invariant the domain holds.",
+      "boundary": "3rd-party engine warning passthrough"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
+    "line": 78,
+    "symbol": "FileProcessingOperationError.message",
+    "smell": "message: S.String — broad string on error schema (same shape on PathSafetyError.message and failure-record message fields).",
+    "proposedTarget": "Keep as-is (representative record for the message-field family).",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Human-readable prose; `message: S.String` is the repo-wide TaggedErrorClass convention (matches the canonical Postgres.errors exemplar and CauseTaggedError reserved fields).",
+      "boundary": "TaggedErrorClass message convention"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+    "line": 399,
+    "symbol": "FileProcessingEngineDescriptor.supportedFormats",
+    "smell": "supportedFormats: S.Array(FileFormatFamily) — unbounded, possibly-empty array (a non-empty-collection detector would flag it).",
+    "proposedTarget": "Keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Detect-only engines legitimately advertise zero supported extraction formats (Service.detectWithAvailableEngine filters on the detect capability, not formats); emptiness is meaningful.",
+      "boundary": "engine capability negotiation"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+    "line": 170,
+    "symbol": "ArchiveExportResult.children",
+    "smell": "children: S.Array(ArtifactReference) — possibly-empty array (non-empty-collection detector candidate; same reasoning covers ProcessRunManifest.strategies:887).",
+    "proposedTarget": "Keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "An archive can legitimately export zero children (empty PST folder), and a proof run can legitimately record zero strategies; empty collections carry meaning here.",
+      "boundary": "archive export result semantics"
+    }
+  }
+]

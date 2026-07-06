@@ -1,0 +1,87 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts",
+    "line": 94,
+    "symbol": "IrToLawShape",
+    "smell": "Exported schema-backed service contract `IrToLawShape` is an `S.Class` without the third-argument `$I.annote(...)` metadata used by neighboring classes.",
+    "proposedTarget": "Add the third argument to the class factory: `export class IrToLawShape extends S.Class<IrToLawShape>($I`IrToLawShape`)({ ... }, $I.annote(\"IrToLawShape\", { description: ... })) {}`. Local annotated class exemplars are `LawEntities` at packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts:51-63 and `OfficeActionReviewInput` at packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.ports.ts:69-79.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.errors.ts",
+    "line": 89,
+    "symbol": "IrToLawExtractionError.alignmentStatus/message",
+    "smell": "`alignmentStatus` is `S.optionalKey(S.String)` even though it copies `GroundedExtraction.alignmentStatus`, and `message` is broad `S.String` despite every constructor path producing a non-empty diagnostic.",
+    "proposedTarget": "Import and reuse `AlignmentStatus` from `@beep/langextract/Extraction` for `alignmentStatus`, and tighten `message` to `S.NonEmptyString` with field annotations. The upstream `AlignmentStatus` kit is defined at packages/foundation/capability/langextract/src/Extraction/index.ts:126-130, `GroundedExtraction.alignmentStatus` uses it at :236-245, and Effect v4 `S.NonEmptyString` is verified at .repos/effect-v4/packages/effect/src/Schema.ts:8420.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/law-practice/use-cases/src/internal/spikeEntity.ts",
+    "line": 90,
+    "symbol": "EntityInput.createdAt/id/updatedAt",
+    "smell": "Spike audit-envelope numeric fields are bare `S.Finite`; the generated ids and timestamps are integer audit fields, with `id` positive and timestamps non-negative/positive.",
+    "proposedTarget": "Use named internal schemas such as `SpikeEntityId = S.Int.check(S.isGreaterThan(0))` and `SpikeAuditMillis = S.Int.check(S.isGreaterThanOrEqualTo(0))`, each annotated with `$I.annoteSchema`, before they feed `EntityInput`. Effect v4 `S.Int` is verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398, `S.isGreaterThan` at :7286, and `S.isGreaterThanOrEqualTo` at :7314.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts",
+    "line": 51,
+    "symbol": "law-practice use-case schema fields",
+    "smell": "Reusable S.Class / TaggedErrorClass schemas (`LawEntities`, `OfficeActionReviewInput`, `IrToLawExtractionError`, and internal `EntityInput`) have whole-schema annotations but their public fields do not carry `annotateKey` metadata.",
+    "proposedTarget": "Add `.annotateKey({ description })` to schema fields while preserving imported domain schemas and existing effects. In-repo exemplars: packages/agents/server/src/AssistantTurn/BlockRepair.ts:62-64 and packages/drivers/uspto-mcp/src/UsptoTools.ts:73-79; Effect v4 `annotateKey` is verified at .repos/effect-v4/packages/effect/src/Schema.ts:185 and :605.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.errors.ts",
+    "line": 33,
+    "symbol": "law-practice use-case schema laws",
+    "smell": "The package exports schema-backed error/input/service contract values but has no `S.toArbitrary`-derived property coverage for those schemas.",
+    "proposedTarget": "Add focused schema-law tests using `assertSchemaArbitraryDecodesToSelf` from @beep/test-utils (packages/tooling/test-kit/test-utils/src/Schema.ts:30-43) for `IrToLawExtractionErrorReason`, `IrToLawExtractionError`, `OfficeActionReviewInput`, and `OfficeActionReviewError`; attempt `LawEntities` after domain entity arbitrary laws are in place. `S.toArbitrary` is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:12970.",
+    "confidence": 0.62,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts",
+    "line": 96,
+    "symbol": "IrToLawShape.toLaw input",
+    "smell": "Detector candidate: `toLaw` accepts an unbounded `S.Array(GroundedExtraction)` instead of a non-empty/bounded extraction set.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "An empty extraction array is valid input to the port and must fail through the typed `IrToLawExtractionError` path (`required-extraction-missing`); LangExtract owns extraction count policy and already carries `maxExtractions` options.",
+      "boundary": "provider-neutral extraction service input boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.candidates.ts",
+    "line": 28,
+    "symbol": "OfficeActionReviewSpikeCandidates",
+    "smell": "Detector candidate: the package exposes fixed extraction candidates for spike/integration tests.",
+    "proposedTarget": "None - keep these static fixtures.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These candidates are explicit spike fixtures for deterministic office-action review tests and are not a substitute for schema-derived laws on exported schemas.",
+      "boundary": "law-practice office-action spike fixture surface"
+    }
+  }
+]

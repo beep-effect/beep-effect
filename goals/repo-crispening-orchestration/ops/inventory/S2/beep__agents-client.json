@@ -1,0 +1,50 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/agents/client/src/Chat.atoms.ts",
+    "line": 367,
+    "symbol": "StreamingTurn",
+    "smell": "`truncateFrom: S.Option(WorkspaceIdentity.TurnId)` is an Option field without a constructor default, so examples and send-turn construction still carry explicit `O.none()` values (`Chat.atoms.ts:350`, `:401`, `:710`).",
+    "proposedTarget": "Apply `SchemaUtils.withNoneDefault` to `truncateFrom` and construct streaming-turn values through `StreamingTurn.make` where the default should apply. In-repo Option default exemplars: `packages/foundation/modeling/lexical/src/Lexical.model.ts:1534-1535` and `packages/foundation/modeling/ontology/src/Ontology.models.ts:152-160`; helper definition at `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46-52`.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/agents/client/src/Chat.atoms.ts",
+    "line": 436,
+    "symbol": "messageFromUnknownError",
+    "smell": "`Str.trim(error.message)` plus the empty-string fallback at lines 436-437 normalizes a user-facing `ChatActionError.message` in the client body while the target error schema is `message: S.String` (`packages/agents/use-cases/src/processes/Chat/Chat.errors.ts:31-40`).",
+    "proposedTarget": "Promote a `ChatActionErrorMessage` schema/static in `@beep/agents-use-cases` that trims and falls back to the canonical non-empty message before `ChatActionError.make`; then the client only extracts a raw candidate message from `unknown`. Use v4 `S.decodeTo` + `SchemaGetter.transform` (in-repo transformation exemplar: `packages/foundation/modeling/md/src/Md.model.ts:1295-1301`) targeting `S.NonEmptyString` (verified at `.repos/effect-v4/packages/effect/src/Schema.ts:8409-8420`); v4 `S.Trim`/trim transformation verified at `.repos/effect-v4/packages/effect/src/Schema.ts:11526-11546` and `SchemaTransformation.ts:428-430`.",
+    "confidence": 0.62,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/agents/client/src/ClientObservability.ts",
+    "line": 70,
+    "symbol": "ClientObservabilityLive",
+    "smell": "`otlpBaseUrl` uses `\"\"` as an absence sentinel and `Str.isEmpty(otlpBaseUrl)` to select `Layer.empty`.",
+    "proposedTarget": "Return `O.Option<string>` from the runtime-derived OTLP URL resolver and build `ClientObservabilityLive` with `O.match({ onNone: () => Layer.empty, onSome: (baseUrl) => Otlp.layer({ baseUrl, ... }) })`. This keeps the browser/globalThis boundary explicit while removing the empty-string sentinel. In-repo Option-first exemplar: `packages/agents/client/src/Chat.atoms.ts:205` and `:431` use `Atom.make<O.Option<...>>(O.none())` for absence.",
+    "confidence": 0.62,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/agents/client/src/Chat.atoms.ts",
+    "line": 723,
+    "symbol": "runTurnAtom",
+    "smell": "`A.isReadonlyArrayEmpty(blocks)` is an empty-array detector hit before recording first-block perceived latency.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "Runtime control flow over the in-memory streamed-block accumulator; the empty/non-empty distinction drives a first-block metric, not a schema/default invariant.",
+      "boundary": "client streaming metric control flow"
+    }
+  }
+]

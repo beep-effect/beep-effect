@@ -1,0 +1,113 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
+    "line": 94,
+    "symbol": "AttachmentSizeBytes",
+    "smell": "AttachmentSizeBytes absorbs the byte-count invariant with S.Int + S.isBetween but is not piped through $I.annoteSchema, so the reusable size schema has no schema-level identifier/description in the annotation catalog.",
+    "proposedTarget": "Pipe the checked schema through $I.annoteSchema(\"AttachmentSizeBytes\", { description: \"Integer attachment byte count accepted by the composer capture policy.\" }). S.isBetween is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:7401; $I.annoteSchema usage is already present for ImageAttachmentMimeType and FileFromSelf in the same file.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
+    "line": 251,
+    "symbol": "ComposerAttachment",
+    "smell": "ComposerAttachment is a reusable S.Class but its fields rely on TypeScript comments instead of runtime .annotateKey metadata; id, filename, mimeType, size, objectUrl, and file disappear as field-level annotations.",
+    "proposedTarget": "Convert the field comments into .annotateKey({ description: ... }) calls, following packages/foundation/modeling/ontology/src/Ontology.models.ts:119-186. This is annotation-only and leaves the in-memory UI attachment shape unchanged.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/ui-system/editor/src/chat/config.ts",
+    "line": 83,
+    "symbol": "ComposerFeatures/SlashItem/MentionOption fields",
+    "smell": "The schema-backed chat configuration classes carry whole-class annotations but none of their fields use .annotateKey; the code comments for toolbar/slash/mentions/sendOn/key/label/etc. are not runtime-retrievable.",
+    "proposedTarget": "Add .annotateKey descriptions to ComposerFeatures, SlashItem, and MentionOption fields. This mirrors the existing EditorViewerProps field annotation pattern at packages/foundation/ui-system/editor/src/viewer.tsx:30-35.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
+    "line": 130,
+    "symbol": "AttachmentTooLarge.size/maxBytes",
+    "smell": "AttachmentTooLarge records size and maxBytes as bare S.Finite, allowing negative and fractional byte counts in the rejection model.",
+    "proposedTarget": "Introduce an unbounded non-negative integer byte-count schema, e.g. AttachmentByteCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe($I.annoteSchema(...)), and use it for AttachmentTooLarge.size/maxBytes. S.Int is verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and S.isGreaterThanOrEqualTo at 7314. Do not reuse AttachmentSizeBytes for rejected size because the rejected value can legitimately exceed DEFAULT_MAX_ATTACHMENT_BYTES.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/ui-system/editor/src/chat/config.ts",
+    "line": 149,
+    "symbol": "SlashItem.key/label and MentionOption.id/label",
+    "smell": "Menu identity/display fields are broad S.String even though empty keys and labels are unusable UI configuration; SlashItem.key/label, SlashItem.keywords elements, and MentionOption.id/label are the main cases.",
+    "proposedTarget": "Use S.NonEmptyString for stable ids and visible labels, and S.Array(S.NonEmptyString) for keywords (S.NonEmptyString verified .repos/effect-v4/packages/effect/src/Schema.ts:8420). This is schema-backed app config, not a React prop interface, so the React boundary carve-out does not apply.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/ui-system/editor/src/chat/config.ts",
+    "line": 83,
+    "symbol": "ComposerFeatures/SendOn/AttachmentRejection schemas",
+    "smell": "The package has schema-backed config and attachment rejection models, but the tests cover a Lexical integration fixture only and have no S.toArbitrary-derived round-trip/property laws for these pure data schemas.",
+    "proposedTarget": "Add additive property tests for derivable pure schemas such as SendOn, ComposerFeatures, ImageAttachmentMimeType, AttachmentTooLarge, AttachmentInvalidMimeType, and AttachmentRejection using S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) plus S.toEquivalence (verified Schema.ts:13201). Keep DOM File/function declaration schemas out of this law unless a custom toArbitrary annotation is supplied.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+    "line": 108,
+    "symbol": "ChatComposerProps/EditorComposerProps",
+    "smell": "Detector candidate: public React component props expose broad strings, numbers, callbacks, ReactNode children, and partial config objects.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These are React-facing component props, explicitly carved out by the package instructions. Runtime validation lives in the schema-backed config/domain models where the component chooses to decode, not in every JSX prop surface.",
+      "boundary": "public React component props API"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
+    "line": 88,
+    "symbol": "FileFromSelf/EditorEffectSchema/MentionSource",
+    "smell": "Detector candidate: S.declare schemas for DOM File instances, editor side-effect callbacks, and app-provided mention source functions cannot derive default S.toArbitrary values.",
+    "proposedTarget": "None — keep as is unless a future test specifically needs a custom generator.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Effect v4 arbitrary derivation throws for Declaration ASTs; these schemas are DOM/function boundary guards rather than serializable domain data. Property laws should target the pure config/rejection schemas, or add custom toArbitrary annotations only for a concrete test need.",
+      "boundary": "React/Lexical DOM File and app callback boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
+    "line": 163,
+    "symbol": "AttachmentInvalidMimeType.mimeType",
+    "smell": "Detector candidate: rejected MIME type is stored as broad S.String.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This field intentionally preserves the invalid `file.type` string that caused rejection so the UI can report/debug it. Replacing it with MimeType would make the invalid-rejection case unrepresentable.",
+      "boundary": "browser File capture rejection diagnostic"
+    }
+  }
+]

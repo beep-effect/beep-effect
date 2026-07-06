@@ -1,0 +1,39 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/architecture-lab/domain/src/aggregates/WorkItem/WorkItem.errors.ts",
+    "line": 169,
+    "symbol": "WorkItemDomainError",
+    "smell": "Hand-written exported union type aliases the same variants that are modeled again by the same-name `S.Union` at line 194, so the companion type is not derived from the executable schema.",
+    "proposedTarget": "Make the `S.Union` value the type source and derive `export type WorkItemDomainError = typeof WorkItemDomainError.Type`, matching `ThreadStoreError` at `packages/workspace/use-cases/src/aggregates/Thread/Thread.errors.ts:128`/`:155` and `TSMorphServiceError` at `packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts:301`/`:321`.",
+    "confidence": 0.95,
+    "mechanization": "codemod",
+    "roiRank": 0.82
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/architecture-lab/domain/src/aggregates/WorkItem/WorkItem.errors.ts",
+    "line": 105,
+    "symbol": "WorkItemInvalidTransition.fromStatus",
+    "smell": "Public static factory on an exported schema-backed tagged error class carries an inline object input contract that duplicates the `WorkItemInvalidTransition` schema fields.",
+    "proposedTarget": "Type the input from the tagged-error schema, e.g. `input: TaggedErrorNewInput<typeof WorkItemInvalidTransition>` from `@beep/schema/TaggedErrorClass` (export verified at `packages/foundation/modeling/schema/src/TaggedErrorClass/TaggedErrorClass.errors.ts:84`), or delete the wrapper and call `WorkItemInvalidTransition.make({ workItemId, from, to })` directly.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 0.5
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/architecture-lab/domain/src/entities/Worker/Worker.model.ts",
+    "line": 244,
+    "symbol": "decodeWorker",
+    "smell": "Module-level `const decodeWorker = S.decodeUnknownResult(Worker)` textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Inline `S.decodeUnknownResult(Worker)` inside `create` at line 272 - audited and rejected as not actionable. Effect v4 `S.decodeUnknownResult` belongs to the current decode family adjacent to `S.decodeUnknownEffect` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Single non-exported decoder used by the entity factory to validate the assembled BaseEntity payload. The `Worker` schema remains the source of truth; inlining would only move the same boundary decode.",
+      "boundary": "domain factory assembled payload -> Worker"
+    }
+  }
+]

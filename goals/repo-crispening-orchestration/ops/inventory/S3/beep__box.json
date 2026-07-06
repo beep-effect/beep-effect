@@ -1,0 +1,103 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/src/Box.errors.ts",
+    "line": 274,
+    "symbol": "sdkThrownReason",
+    "smell": "Hand-rolled `_tag` narrowing: sdkThrownReason reads readString(\"_tag\")(cause), filters with tag === \"BoxSdkShapeError\" (lines 276-278), then maps that one sentinel to the \"sdk shape\" reason. This is the local form of a manual _tag guard rather than using the Effect predicate primitive already meant for tagged values.",
+    "proposedTarget": "Introduce a small `const isBoxSdkShapeError = P.isTagged(\"BoxSdkShapeError\")` and branch through that guard, preserving the distinct BoxSdkShapeError sentinel (no error-tag merging). Verified Effect v4 `Predicate.isTagged` at .repos/effect-v4/packages/effect/src/Predicate.ts:1166; in-repo examples include packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:23 and packages/foundation/modeling/nlp/src/Core/PatternOperations.ts:27.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 1.5
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/drivers/box/src/Box.service.ts",
+    "line": 93,
+    "symbol": "makeCcgClient",
+    "smell": "False-positive-audited R.getSomes candidate: makeCcgClient spreads R.getSomes({ enterpriseId: O.fromUndefinedOr(config.enterpriseId), userId: O.fromUndefinedOr(config.userId) }) into the Box SDK CcgConfig constructor.",
+    "proposedTarget": "None -- keep as-is unless a later style pass chooses to normalize fixed optional structs after D5. This is not an SFV4-getsomes-struct finding under the current rule because the values are homogeneous Option<string>; R.getSomes is the verified homogeneous form at .repos/effect-v4/packages/effect/src/Record.ts:824, while O.getSomesStruct is specifically for heterogeneous per-key value preservation at packages/foundation/modeling/utils/src/Option.ts:102.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Both fields are optional strings from BoxCcgConfig, so this is not the mixed-type Option-struct shape the novel card targets.",
+      "boundary": "Box SDK CcgConfig optional subject payload (enterpriseId/userId)"
+    }
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/drivers/box/src/Box.errors.ts",
+    "line": 177,
+    "symbol": "BoxError.fromReason",
+    "smell": "False-positive-audited R.getSomes candidate: fromReason splits optional constructor properties into a homogeneous string-ish group (cause/code/helpUrl/method/requestId, lines 177-183) and singleton context/status groups (lines 184-189).",
+    "proposedTarget": "None -- keep as-is for S3. The multi-key group is homogeneous at the value level and the singleton groups are not heterogeneous structs; the current card is only for mixed-type Option structs where O.getSomesStruct preserves per-key values (packages/foundation/modeling/utils/src/Option.ts:102).",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The code deliberately avoids a mixed-type R.getSomes object by grouping strings separately from context and status.",
+      "boundary": "BoxError optional constructor payload assembly"
+    }
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/drivers/box/src/Box.errors.ts",
+    "line": 218,
+    "symbol": "BoxError.fromUnknown",
+    "smell": "False-positive-audited R.getSomes candidate: fromUnknown spreads a homogeneous string group (code/helpUrl/requestId, lines 218-222) plus singleton context/status groups (lines 223-228) into BoxError.fromReason options.",
+    "proposedTarget": "None -- keep as-is for S3. This is not the heterogeneous R.getSomes struct-smell; it follows the homogeneous Record.getSomes shape verified at .repos/effect-v4/packages/effect/src/Record.ts:824.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The multi-key group is homogeneous Option<string> and the non-string values are isolated in singleton calls, so the novel card should not report it.",
+      "boundary": "Box SDK unknown-error sanitization path"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/src/Box.streaming.ts",
+    "line": 33,
+    "symbol": "BoxByteInputValue",
+    "smell": "False-positive-audited undiscriminated-union candidate: BoxByteInputValue is S.Union([S.Uint8Array, S.instanceOf(Readable), BoxByteEffectStream]) for upload byte input.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is a public boundary union over existing runtime byte carriers, not finite variant state owned by this package; tagging it would change the accepted upload API shape.",
+      "boundary": "Box streaming upload input boundary (Uint8Array | Readable | Effect Stream)"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/src/experimental/domain/values/SerializedData/SerializedData.model.ts",
+    "line": 73,
+    "symbol": "SerializedData",
+    "smell": "False-positive-audited undiscriminated-union candidate: SerializedData is a recursive S.Union over JSON-like wire primitives, arrays, and string-keyed maps.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "SerializedData mirrors the recursive serialized payload/wire shape; tagging primitives, arrays, or maps would break the encoded form and touch a load-bearing declare namespace recursion block.",
+      "boundary": "Box experimental serialized-data wire model"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/src/experimental/Box.schemas.ts",
+    "line": 63,
+    "symbol": "SerializedData",
+    "smell": "False-positive-audited undiscriminated-union candidate: the experimental Box.schemas SerializedData repeats the recursive S.Union over JSON-like wire primitives, arrays, and string-keyed maps.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This schema represents Box serialized payload data directly; adding a discriminator would change the public encoded shape rather than prove exhaustiveness.",
+      "boundary": "Box experimental SDK payload schema boundary"
+    }
+  }
+]

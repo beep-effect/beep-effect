@@ -1,0 +1,43 @@
+[
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/libpff/src/Libpff.errors.ts",
+    "line": 88,
+    "symbol": "LibpffError.fromReason / makeLibpffError",
+    "smell": "Exported/static error constructors accept an inline options object (`{ cause?: string; exitCode?: NonNegativeInt }`) that duplicates optional fields on the `LibpffError` tagged schema.",
+    "proposedTarget": "Promote the options bag to `LibpffErrorOptions extends S.Class` beside `LibpffError`, mirroring `GovinfoErrorOptions` at `packages/drivers/govinfo/src/Govinfo.errors.ts:70`; change `fromReason` and `makeLibpffError` to accept `LibpffErrorOptions = LibpffErrorOptions.make({})` while preserving the public fields.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.62
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/libpff/src/Libpff.service.ts",
+    "line": 163,
+    "symbol": "makeLibpffFileProcessingEngine",
+    "smell": "Exported function in a schema-modeled file can look like an SFV4-fn-schema hit because it accepts `LibpffFileProcessingEngineOptions` and returns a runtime engine object.",
+    "proposedTarget": "None -- a hypothetical `Fn({ input: LibpffFileProcessingEngineOptions, output: FileProcessingEngineShape })` wrapper was audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This is a port constructor for a file-processing runtime object. The input options are already schema-modeled, while the output is a service/port handle (`FileProcessingEngineShape`) with Effect methods, which fence 1 keeps out of schemas.",
+      "boundary": "file-processing engine factory / runtime port"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
+    "line": 181,
+    "symbol": "makePffexportFileProcessingEngine",
+    "smell": "Exported Effect.fn in a schema-modeled file can look like an SFV4-fn-schema hit because it accepts `PffexportEngineConfig` and returns a runtime engine object.",
+    "proposedTarget": "None -- a hypothetical `Fn({ input: PffexportEngineConfig, output: FileProcessingEngineShape })` wrapper was audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This constructor captures FileSystem, Path, and ChildProcessSpawner services and returns a file-processing engine port. The input config is schema-backed; the output is runtime service wiring, not data.",
+      "boundary": "subprocess file-processing engine factory"
+    }
+  }
+]

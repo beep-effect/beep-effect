@@ -1,0 +1,84 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/policy-pack/lint-rules/src/index.ts",
+    "line": 124,
+    "symbol": "RULES",
+    "smell": "Exported registry of first-party rule metadata is typed by a plain `RuleMetadata` object type rather than a schema-backed model.",
+    "proposedTarget": "Introduce schema-backed `RuleName`/`RuleSeverity` literal domains and a `RuleMetadata` S.Class or S.Struct, then construct or decode `RULES` through that schema. In-repo exemplars: `AiSyncSourceMetadata` S.Class at `packages/tooling/library/ai-sync/src/models.ts:249` and `EffectLawsAllowlistEntry` at `packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSchemas.ts:15`.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 0.42
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
+    "line": 25,
+    "symbol": "AstNode",
+    "smell": "Exported type alias is a large union of third-party ESTree node families.",
+    "proposedTarget": "Hypothetical target: schema model for AST node families; audited and rejected because the source of truth is the `@oxlint/plugins` ESTree type surface.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "This is a type-level adapter over third-party AST node unions, not a first-party payload. Re-modeling ESTree in this package would duplicate an external parser contract.",
+      "boundary": "third-party ESTree adapter type"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
+    "line": 133,
+    "symbol": "MemberAccess",
+    "smell": "Exported object type alias looks like a schema-first struct candidate.",
+    "proposedTarget": "Hypothetical target: `S.Class` for peeled member access; audited and rejected because both fields are parser-node adapter slots (`O.Option<AstNode>` and nullable ESTree children).",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The shape is an internal lint visitor adapter carrying third-party AST node handles. It is not a serialized/config/domain payload, and schema decoding would duplicate parser typing.",
+      "boundary": "lint visitor ESTree adapter shape"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
+    "line": 277,
+    "symbol": "ImportBinding",
+    "smell": "Exported discriminated union of first-party normalized import binding data is a bare type alias.",
+    "proposedTarget": "Model with a schema-backed tagged union, e.g. `S.TaggedUnion` (verified in Effect v4 at `.repos/effect-v4/packages/effect/src/Schema.ts:6078`) or a `LiteralKit(...).toTaggedUnion(\"kind\")` pattern like `RouteHas` in `packages/tooling/policy-pack/repo-configs/src/next/models/Routes.schema.ts:65`.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 0.46
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
+    "line": 351,
+    "symbol": "toRepoPath",
+    "smell": "Exported overloaded helper in an adapter-heavy file can look like an SFV4-fn-schema function-contract hit.",
+    "proposedTarget": "Hypothetical target: `Fn({ input, output })` wrapper for path normalization; audited and rejected because this is a deliberate dual overload surface.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Overload surfaces are an explicit S1 carve-out. This helper uses `dual(2, ...)` to provide data-first/data-last call forms, and Fn would not preserve that public overload shape.",
+      "boundary": "dual overload helper surface"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
+    "line": 379,
+    "symbol": "pathMatchesSuffix",
+    "smell": "Exported overloaded helper in an adapter-heavy file can look like an SFV4-fn-schema function-contract hit.",
+    "proposedTarget": "Hypothetical target: `Fn({ input, output })` wrapper for suffix matching; audited and rejected because this is a deliberate dual overload surface.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Overload surfaces are an explicit S1 carve-out. This helper uses `dual(2, ...)` to provide data-first/data-last call forms, and Fn would not preserve that public overload shape.",
+      "boundary": "dual overload helper surface"
+    }
+  }
+]

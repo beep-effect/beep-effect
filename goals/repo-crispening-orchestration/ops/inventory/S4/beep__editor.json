@@ -1,0 +1,65 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
+    "line": 58,
+    "symbol": "ImageAttachmentMimeType / isImageMimeType",
+    "smell": "Package-owned schema const `ImageAttachmentMimeType = S.Literals(IMAGE_MIME_TYPES).pipe($I.annoteSchema(...))` immediately grows a free-floating guard `const isImageMimeType = S.is(ImageAttachmentMimeType)` at line 64, used only by `isImageAttachment` at line 370. This is the direct duplicate-guard helper shape SFV4-static-api targets.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to `ImageAttachmentMimeType` and replace `isImageMimeType(attachment.mimeType)` with `ImageAttachmentMimeType.is(attachment.mimeType)`, then delete the helper. In-repo exemplar: `ArtifactRefId` attaches `SchemaUtils.withCodecStatics` after annotation in packages/foundation/modeling/lexical/src/Lexical.model.ts:366-379; helper contract verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90-97.",
+    "confidence": 0.92,
+    "mechanization": "codemod",
+    "roiRank": 2.2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
+    "line": 191,
+    "symbol": "AttachmentRejection",
+    "smell": "Exported tagged-union const `S.Union([AttachmentTooLarge, AttachmentInvalidMimeType]).pipe(S.toTaggedUnion(\"_tag\"), $I.annoteSchema(...))` has no colocated `is`/`fromUnknown`/`decodeOption` statics, unlike the repo's tagged-union exemplars.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` as the final pipe step, matching packages/foundation/modeling/md/src/Md.model.ts:608-614 and packages/foundation/modeling/md/src/Md.model.ts:1612-1618. Additive only: no encoded-form change and no React public prop change.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 1.8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+    "line": 78,
+    "symbol": "decodeSerializedState",
+    "smell": "Duplicate decode wall for `SerializedEditorState`: `const decodeSerializedState = S.decodeUnknownOption(SerializedEditorState)` appears here and again in chat/atoms.ts:37. The upstream schema class has no colocated decodeOption static today, so two editor modules rebuild the same decoder.",
+    "proposedTarget": "After @beep/lexical-schema adds an in-body `SerializedEditorState.decodeOption = S.decodeUnknownOption(SerializedEditorState)` static (tracked by the lexical S4 inventory), replace both editor-local helpers with `SerializedEditorState.decodeOption`. If the upstream wave also adds `decodeEffect`, composer.tsx:121 can collapse its inline `S.decodeUnknownEffect(SerializedEditorState)` call too.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 2.4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
+    "line": 32,
+    "symbol": "decodeMimeType",
+    "smell": "Detector hit: top-of-file `const decodeMimeType = S.decodeUnknownResult(MimeType)` looks like a decode-wall entry.",
+    "proposedTarget": "None — leave as-is for this package.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0.3,
+    "exception": {
+      "reason": "The decoded schema is `MimeType` from @beep/schema, not editor-owned; it does not expose a Result-returning static today, and this capture pipeline specifically needs Result.match to map MIME parse failure into `AttachmentInvalidMimeType` instead of throwing or dropping. Replacing it requires an upstream @beep/schema static, not an editor-local S4 edit.",
+      "boundary": "@beep/schema/MimeType ownership plus Result-shaped attachment capture boundary in packages/foundation/ui-system/editor/src/chat/attachment-model.ts."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+    "line": 108,
+    "symbol": "ChatComposerProps / local React props interfaces",
+    "smell": "Detector hit: exported `ChatComposerProps` plus local component props interfaces in composer.tsx, typeahead.tsx, toolbar.tsx, chat-composer.tsx, and mermaid-code-decorator-plugin.tsx are interface-shaped rather than schema/static-shaped.",
+    "proposedTarget": "None — leave as React component props/interfaces.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0.3,
+    "exception": {
+      "reason": "React component props and local UI wiring props are an explicit UI boundary carve-out for @beep/editor; converting them to schema classes or colocated statics would add runtime modeling to React-only surfaces and change component public form without deleting a schema helper wall.",
+      "boundary": "@beep/editor React UI component props boundary."
+    }
+  }
+]

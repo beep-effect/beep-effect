@@ -1,0 +1,39 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.service.ts",
+    "line": 77,
+    "symbol": "AiProviderCliPaths",
+    "smell": "`claudePath` and `codexPath` are optional schema fields, then `commandFor` defaults them with `paths.claudePath ?? \"claude\"` and `paths.codexPath ?? \"codex\"` at lines 92-93.",
+    "proposedTarget": "Move executable defaults onto the schema fields with `S.String.pipe(SchemaUtils.withKeyDefaults(\"claude\"))` and `S.String.pipe(SchemaUtils.withKeyDefaults(\"codex\"))`; local exemplars include `packages/drivers/uspto/src/Uspto.config.ts:47` and `packages/drivers/discord/src/Discord.models.ts:54`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.errors.ts",
+    "line": 41,
+    "symbol": "AiProviderCliError",
+    "smell": "Diagnostic fields (`command`, `exitCode`, `stderr`, `stdout`) are `S.optionalKey(...)`, so absent process context decodes to `undefined`.",
+    "proposedTarget": "Use `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` for optional diagnostic fields; local exemplar: `packages/drivers/pglite/src/Pglite.errors.ts:43`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.service.ts",
+    "line": 139,
+    "symbol": "checkAuth",
+    "smell": "`result.exitCode === 0 ? \"authenticated\" : \"not-authenticated\"` is a zero-check detector hit.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "This is CLI status classification from a child-process exit code, not a schema default or nullish value normalization.",
+      "boundary": "child-process status adapter"
+    }
+  }
+]

@@ -1,0 +1,116 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.models.ts",
+    "line": 30,
+    "symbol": "PositiveFrameRate",
+    "smell": "Public refined frame-rate schema has no colocated codec statics; runtime checks/decoders for this reusable scalar would have to be rebuilt as free `S.is` / `S.decodeUnknown*` helpers.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` so `PositiveFrameRate.is`, `.fromUnknown`, and `.decodeOption` are available. Helper verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.models.ts",
+    "line": 89,
+    "symbol": "PositiveMilliseconds",
+    "smell": "Public refined timeout schema has no colocated codec statics despite being reused by configuration models.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after the annotation pipe.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.models.ts",
+    "line": 148,
+    "symbol": "SafeFramePrefix",
+    "smell": "Public refined frame-prefix schema carries the path-containment filename invariant but exposes no schema-owned guard/decoder statics.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.models.ts",
+    "line": 603,
+    "symbol": "FFmpegEvent",
+    "smell": "Public tagged union const `S.Union(...).pipe(S.toTaggedUnion(\"kind\"), $I.annoteSchema(...))` is missing codec statics, so event guards/decoders would be rebuilt outside the union.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)`, matching the union precedent in packages/foundation/modeling/md/src/Md.model.ts:608 and line 1612. v4 `S.toTaggedUnion` verified at .repos/effect-v4/packages/effect/src/Schema.ts:6094.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.models.ts",
+    "line": 640,
+    "symbol": "decodeExtractFramesRequest",
+    "smell": "Exported schema-derived decoder `S.decodeUnknownEffect(ExtractFramesRequest)` sits as a free function instead of on the S.Class model it serves; the service imports it back into FFmpeg.service.ts:19 and calls it at FFmpeg.service.ts:883.",
+    "proposedTarget": "Move the decoder onto `ExtractFramesRequest` as an in-body static such as `static readonly decodeEffect = S.decodeUnknownEffect(ExtractFramesRequest)`, then keep `decodeExtractFramesRequest` only as a compatibility alias or switch internal callers to `ExtractFramesRequest.decodeEffect`. In-repo class-static codec precedent: `Pattern.decode` at packages/foundation/modeling/nlp/src/Core/Pattern.ts:582; v4 `S.decodeUnknownEffect` verified at .repos/effect-v4/packages/effect/src/Schema.ts:1325.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.models.ts",
+    "line": 656,
+    "symbol": "decodeProbeVideoRequest",
+    "smell": "Exported schema-derived decoder `S.decodeUnknownEffect(ProbeVideoRequest)` duplicates behavior that belongs on the `ProbeVideoRequest` S.Class; FFmpeg.service.ts imports it at line 20 and calls it at line 837.",
+    "proposedTarget": "Move the decoder onto `ProbeVideoRequest` as an in-body `decodeEffect` static and keep this export as a compatibility alias if the public API must remain stable. Use the same class-static pattern as packages/foundation/modeling/nlp/src/Core/Pattern.ts:582.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.models.ts",
+    "line": 681,
+    "symbol": "encodeExtractFramesManifest",
+    "smell": "Exported schema-derived encoder `S.encodeUnknownEffect(ExtractFramesManifest)` is detached from the manifest S.Class; FFmpeg.service.ts imports it at line 27 and calls it from `renderManifest` at line 740.",
+    "proposedTarget": "Move the encoder onto `ExtractFramesManifest` as an in-body `encodeEffect` static and keep `encodeExtractFramesManifest` as a compatibility alias or replace the service call with `ExtractFramesManifest.encodeEffect(manifest)`. In-repo precedent: `Pattern.encode` at packages/foundation/modeling/nlp/src/Core/Pattern.ts:568; v4 `S.encodeUnknownEffect` verified at .repos/effect-v4/packages/effect/src/Schema.ts:1788.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
+    "line": 75,
+    "symbol": "decodeFfprobeOutput",
+    "smell": "Top-of-file decode helper `S.decodeUnknownEffect(S.fromJsonString(FfprobeOutput))` is separated from the internal `FfprobeOutput` S.Class defined just above it and is consumed once at FFmpeg.service.ts:867.",
+    "proposedTarget": "Move this onto `FfprobeOutput` as an in-body static such as `decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(FfprobeOutput))`, then call `FfprobeOutput.decodeJsonEffect(result.stdout)`. v4 `S.fromJsonString` verified at .repos/effect-v4/packages/effect/src/Schema.ts:10983.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.errors.ts",
+    "line": 47,
+    "symbol": "existingFfmpegError",
+    "smell": "Private guard helper wraps `S.is(FFmpegError)` so `FFmpegError.fromUnknown` can recognize already-normalized errors; the behavior is class-owned but not colocated on the `FFmpegError` class.",
+    "proposedTarget": "Add `static readonly is = S.is(FFmpegError)` inside `FFmpegError` and replace the helper body with `FFmpegError.is(cause) ? O.some(cause) : O.none()`. In-repo class guard precedent: packages/foundation/modeling/md/src/Md.model.ts:873; v4 `S.is` verified at .repos/effect-v4/packages/effect/src/Schema.ts:1256.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 9
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
+    "line": 112,
+    "symbol": "FFmpegShape",
+    "smell": "Detector hit: exported service-shape interface contains function members and can look like detached behavior or non-dual public helpers.",
+    "proposedTarget": "None -- leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "Service-contract interfaces are an explicit S4 carve-out; this type defines the Context.Service contract and should remain an interface.",
+      "boundary": "Service-contract/interface carve-out for `FFmpegShape`."
+    }
+  }
+]

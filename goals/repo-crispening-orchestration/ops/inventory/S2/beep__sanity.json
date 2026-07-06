@@ -1,0 +1,102 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/sanity/src/Sanity.service.ts",
+    "line": 187,
+    "symbol": "resolveConfig",
+    "smell": "`apiHost: normalizeBaseUrl(input.apiHost ?? \"https://api.sanity.io\")` combines a body default and trailing-slash normalization for a field already modeled in `SanityConfigInput`.",
+    "proposedTarget": "Move both behaviors onto `SanityConfigInput.apiHost`: `S.String.pipe(S.decodeTo(S.String, SchemaTransformation.transform({ decode: normalizeBaseUrl, encode: identity })), SchemaUtils.withKeyDefaults(\"https://api.sanity.io\"))`; local exemplars: `packages/foundation/modeling/schema/src/CommonTextSchemas.ts:36` for `S.decodeTo` normalization and `packages/drivers/uspto/src/Uspto.config.ts:47` for config defaults.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/sanity/src/Sanity.service.ts",
+    "line": 191,
+    "symbol": "resolveConfig",
+    "smell": "`headers: input.headers ?? {}` defaults an optional record in the resolver body.",
+    "proposedTarget": "Change `SanityConfigInput.headers` to `S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty()))` or an equivalent empty record default; driver exemplars include `packages/drivers/xai/src/XAi.config.ts:86` and `packages/drivers/phoenix/src/Phoenix.config.ts:53`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/sanity/src/Sanity.service.ts",
+    "line": 90,
+    "symbol": "SanityQueryRequest.params",
+    "smell": "`params` is `S.optionalKey(S.Record(...))`, then request encoding falls back with `decoded.params ?? {}` at line 248.",
+    "proposedTarget": "Give `params` an empty-record schema default, e.g. `S.Record(S.String, SanityQueryParamValue).pipe(SchemaUtils.withKeyDefaults(R.empty()))`; this mirrors `packages/drivers/xai/src/XAi.config.ts:86` for defaulted records.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/sanity/src/Sanity.service.ts",
+    "line": 116,
+    "symbol": "SanityQueryResponse.ms",
+    "smell": "The decoded response model uses `ms: S.optionalKey(S.Finite)`, exposing absence as `undefined` on the domain response.",
+    "proposedTarget": "Use `ms: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault)` so decoded responses are Option-shaped while encoded Sanity responses may still omit `ms`; see `packages/drivers/pglite/src/Pglite.errors.ts:43`.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/sanity/src/Sanity.errors.ts",
+    "line": 82,
+    "symbol": "SanityError",
+    "smell": "`SanityError` and `SanityErrorOptions` use `S.optionalKey(...)` for cause/status/url context, then `fromReason` rebuilds omitted values through `O.getSomesStruct`.",
+    "proposedTarget": "Model error context with `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` on both `SanityError` and `SanityErrorOptions`; local driver exemplar: `packages/drivers/pglite/src/Pglite.errors.ts:43`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/sanity/src/Sanity.errors.ts",
+    "line": 156,
+    "symbol": "readProperty",
+    "smell": "`Result.getOrElse(..., thunkUndefined)` is a get-or-default detector hit while probing unknown error objects.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "The helper immediately wraps the unsafe reflective read in `O.fromUndefinedOr`; the default is an exception-safe unknown-object boundary fallback, not a schema-field default.",
+      "boundary": "unknown error-cause reflection boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/sanity/src/Sanity.errors.ts",
+    "line": 167,
+    "symbol": "safeBoolean",
+    "smell": "`Result.getOrElse(Result.try(evaluate), thunkFalse)` defaults a failed predicate to false.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "This is a fail-closed guard around `HttpClientError.isHttpClientError` on unknown values; it does not represent a persisted or domain schema default.",
+      "boundary": "unknown error-cause predicate guard"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/sanity/test/Sanity.service.test.ts",
+    "line": 52,
+    "symbol": "SanityTestHttp.handle",
+    "smell": "`O.getOrElse(() => request.url)` defaults a captured test URL when `HttpClientRequest.toUrl` cannot parse it.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "Test harness fallback for request capture assertions, not first-party domain behavior.",
+      "boundary": "test fixture"
+    }
+  }
+]

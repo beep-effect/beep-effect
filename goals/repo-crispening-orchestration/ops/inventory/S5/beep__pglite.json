@@ -1,0 +1,54 @@
+[
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/pglite/test/PgliteClient.test.ts",
+    "line": 8,
+    "symbol": "PgliteError",
+    "smell": "The package's only hand-authored schema-backed model, PgliteError, is covered by a single fromUnknown example but has no S.toArbitrary-derived schema law.",
+    "proposedTarget": "Add an additive law for PgliteError using S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970), following packages/shared/domain/test/Organization.test.ts:13 and :79 or assertSchemaArbitraryDecodesToSelf at packages/tooling/test-kit/test-utils/src/Schema.ts:30-43.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/pglite/src/Pglite.errors.ts",
+    "line": 39,
+    "symbol": "PgliteError fields",
+    "smell": "The exported TaggedErrorClass schema has whole-schema $I.annote metadata but no annotateKey descriptions; operation is broad S.String and message is OptionFromOptionalKey(S.String) even though both should be non-empty when present.",
+    "proposedTarget": "Add annotateKey metadata to operation, cause, and message; model operation as S.NonEmptyString and message as S.OptionFromOptionalKey(S.NonEmptyString). S.NonEmptyString is verified at .repos/effect-v4/packages/effect/src/Schema.ts:8420; field annotation style is shown in packages/drivers/govinfo/src/domain/values/SearchBody/SearchBody.model.ts:42-65.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-equivalence",
+    "file": "packages/drivers/pglite/test/PgliteClient.test.ts",
+    "line": 53,
+    "symbol": "PgClient tag-shim identity assertion",
+    "smell": "Detector candidate: the test uses object identity equality to prove the PgClient tag resolves to the same in-process PGliteClient value.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The assertion intentionally proves tag identity, not schema-modeled value equivalence; S.toEquivalence would be the wrong semantics for this integration boundary.",
+      "boundary": "Effect context tag-shim identity proof"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/pglite/test/integration/PgliteClient.persistent.test.ts",
+    "line": 119,
+    "symbol": "persistent PGlite SQL fixtures",
+    "smell": "Detector candidate: file-backed PGlite and Drizzle CRUD tests use fixed SQL/table fixtures instead of generated values.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These fixtures prove database lifecycle, persistence across reopen, and PgClient alias compatibility with Drizzle. They are integration proofs, not schema-domain laws.",
+      "boundary": "PGlite SQL/Drizzle integration fixture"
+    }
+  }
+]

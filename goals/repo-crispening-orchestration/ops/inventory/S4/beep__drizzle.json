@@ -1,0 +1,69 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/drizzle/src/Drizzle.service.ts",
+    "line": 36,
+    "symbol": "DrizzleRows",
+    "smell": "Public schema const `S.Array(S.Unknown).pipe($I.annoteSchema(...))` has no colocated codec statics even though package docs and tests decode it with `S.decodeUnknownSync(DrizzleRows)`.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` so consumers can call `DrizzleRows.is`, `.fromUnknown`, or `.decodeOption` instead of rebuilding schema helpers. Union/schema const precedent: packages/foundation/modeling/md/src/Md.model.ts:608; helper verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/drizzle/src/Drizzle.errors.ts",
+    "line": 88,
+    "symbol": "isExistingDrizzleError",
+    "smell": "Private guard helper wraps `S.is(DrizzleError)` for the error-normalization path; the guard is behavior of the `DrizzleError` class but lives outside it.",
+    "proposedTarget": "Move the defensive guard onto `DrizzleError`, e.g. `static readonly is = (value: unknown): value is DrizzleError => safeBoolean(() => S.is(DrizzleError)(value))`, then replace this helper with `DrizzleError.is`. Plain class-static guard precedent: packages/foundation/modeling/md/src/Md.model.ts:873; v4 `S.is` verified at .repos/effect-v4/packages/effect/src/Schema.ts:1256.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/drizzle/src/Drizzle.service.ts",
+    "line": 90,
+    "symbol": "DrizzleClient",
+    "smell": "Detector hit: exported adapter interface contains function members and a two-argument `execute` member.",
+    "proposedTarget": "None -- leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "This is the narrow adapter/service contract accepted by `Drizzle.makeLayer`; S4 explicitly excludes service-shape and port interfaces.",
+      "boundary": "Service-contract/interface carve-out for `DrizzleClient`."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/drizzle/src/Drizzle.service.ts",
+    "line": 129,
+    "symbol": "DrizzleShape",
+    "smell": "Detector hit: exported service interface contains function members and can look like a public-helper surface.",
+    "proposedTarget": "None -- leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "This is the Context.Service shape exposed by `Drizzle`; service-contract interfaces stay interfaces under the S4 carve-out.",
+      "boundary": "Service-contract/interface carve-out for `DrizzleShape`."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/drizzle/src/Drizzle.errors.ts",
+    "line": 291,
+    "symbol": "DrizzleError.fromUnknown",
+    "smell": "Detector hit: public static 3-argument constructor helper is not `dual`.",
+    "proposedTarget": "None -- leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "`cause` is optional and `context` defaults to `{}`; `dual(3, ...)` dispatch would change valid one- and two-argument calls into data-last partial application.",
+      "boundary": "Error-normalization constructor with optional trailing arguments."
+    }
+  }
+]

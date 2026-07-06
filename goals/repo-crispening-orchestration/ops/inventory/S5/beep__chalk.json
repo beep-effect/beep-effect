@@ -1,0 +1,165 @@
+[
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/capability/chalk/test/index.test.ts",
+    "line": 146,
+    "symbol": "ChalkConstructorOptions/ChalkOptions/ColorSupportLevel schema tests",
+    "smell": "The barrel-exported schema family (ColorSupportLevel, ColorSupport, ColorInfo, ChalkOptions, ChalkConstructorOptions, ModifierName/ColorName kits) is covered only by a hand-written happy-path fixture test ('backs public option models with Effect schemas'); no S.toArbitrary-derived round-trip/property law exists anywhere in the package.",
+    "proposedTarget": "Add an additive property test using S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) + @effect/vitest FastCheck: fc.assert(fc.property(S.toArbitrary(ColorSupport), (v) => Equal.equals(S.decodeUnknownSync(ColorSupport)(S.encodeUnknownSync(ColorSupport)(v)), v))) and the same law for ChalkOptions/ChalkConstructorOptions/ColorSupportLevel, importing the production schemas from @beep/chalk.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkRuntime.ts",
+    "line": 65,
+    "symbol": "ChalkState",
+    "smell": "Exported reusable schema `ChalkState` (ColorSupportLevel.mapMembers(...).pipe(S.toTaggedUnion(\"level\"))) is the only schema in the package without a $I.annoteSchema annotation; every sibling schema carries identifier/description annotations.",
+    "proposedTarget": "Annotate the mapped union BEFORE piping into S.toTaggedUnion(\"level\") — e.g. ColorSupportLevel.mapMembers(Tuple.evolve([...])).pipe($I.annoteSchema(\"ChalkState\", { description: ... }), S.toTaggedUnion(\"level\")) — because toTaggedUnion returns Object.assign(self, { cases, guards, match, isAnyOf }) (.repos/effect-v4/packages/effect/src/Schema.ts:6094) and annotating after the pipe risks dropping the assigned statics.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
+    "line": 99,
+    "symbol": "StylerEntry",
+    "smell": "StylerEntry.open and StylerEntry.close are broad S.String, but every value constructed (toStyleEntry) is an ANSI escape sequence matching \\u001B[<digits>m; the domain is far narrower than string.",
+    "proposedTarget": "Tighten both fields to S.String.check(S.isPattern(/^\\u001B\\[[0-9;]*m$/)) (S.isPattern verified at .repos/effect-v4/packages/effect/src/Schema.ts:6521) or at minimum S.NonEmptyString; checks do not change the Type so no call-site changes are needed, and all StylerEntry.make call sites already conform.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkRuntime.ts",
+    "line": 78,
+    "symbol": "Styler",
+    "smell": "Styler.open/close/openAll/closeAll are broad S.String though the domain is concatenations of ANSI escape sequences; createStyler also builds plain object literals rather than Styler.make, so the schema's constructor checks never run.",
+    "proposedTarget": "Tighten fields to S.NonEmptyString (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420) or an ANSI-sequence S.isPattern check; v4 checks keep Type = string so the declare-namespace Styler.Codec block used for S.suspend recursion needs NO restructuring (fence 5 respected). Optionally route createStyler through Styler.make so the checks actually execute.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
+    "line": 302,
+    "symbol": "BlueChannelOptionsModel.blue",
+    "smell": "RGB blue channel modeled as bare S.Finite; the true domain is an integer 0-255. The model is used only as `typeof .Encoded` for the dual-helper options bag and is never decoded, so tightening is documentation-only and cannot change runtime behavior.",
+    "proposedTarget": "S.Int.check(...) with 0-255 bounds via S.isGreaterThanOrEqualTo(0) + S.isLessThanOrEqualTo(255) (or a S.makeFilterGroup mirroring ColorSupportLevelInputChecks in PublicSurface.ts).",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/chalk/src/internal/Utilities.ts",
+    "line": 110,
+    "symbol": "StringEncaseCrlfOptionsModel.index",
+    "smell": "Line-break index modeled as bare S.Finite; the only call site (ChalkRuntime.applyStyle) passes a found indexOf result >= 0, so the true domain is a non-negative integer.",
+    "proposedTarget": "S.Int.check(S.isGreaterThanOrEqualTo(0)) (S.Int verified .repos/effect-v4/packages/effect/src/Schema.ts:11398, S.isGreaterThanOrEqualTo :7314).",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+    "line": 96,
+    "symbol": "WindowsReleaseModel.build/major",
+    "smell": "Windows release build/major modeled as bare S.Finite; the true domain is non-negative integers from Number.parseInt over version segments. parseWindowsRelease can produce NaN for garbage osRelease (parseInt(\"bar\") -> NaN), which current comparison logic silently treats as level1 fallback; the model is type-only (never decoded), so today no check catches this.",
+    "proposedTarget": "S.Int.check(S.isGreaterThanOrEqualTo(0)) on both fields; optionally parse segments via N.parse -> Option with an explicit 0 fallback (pattern already used in SupportsColor.browser.ts:71) so NaN cannot enter the model at all.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+    "line": 108,
+    "symbol": "TermProgramInfoModel.majorVersion",
+    "smell": "Terminal program major version modeled as bare S.Finite; true domain is a non-negative integer, and Number.parseInt over TERM_PROGRAM_VERSION segments can yield NaN for non-numeric versions (firstVersionSegment only defaults missing segments to \"0\", not non-numeric ones). Model is type-only, never decoded.",
+    "proposedTarget": "S.Int.check(S.isGreaterThanOrEqualTo(0)); or align with SupportsColor.browser.ts:71 and parse via N.parse -> Option so the iTerm heuristic handles unparseable versions explicitly instead of via NaN comparison falling through to level2.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/chalk/src/internal/PublicSurface.ts",
+    "line": 53,
+    "symbol": "ColorSupportLevelInput",
+    "smell": "Detector candidate: type-level input is broad number rather than the 0|1|2|3 literal union.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Breadth is deliberate and documented ('keeps the public constructor input broad as number'): runtime values are fully validated to integer 0-3 by ColorSupportLevelInputChecks (annotated filter group), and dtslint/Chalk.tst.ts:33 pins `new Chalk({ level: broadLevel })` accepting number for upstream-chalk API parity.",
+      "boundary": "public chalk-compatible constructor/setter API"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
+    "line": 335,
+    "symbol": "hexToRgb",
+    "smell": "Detector candidate: broad `hex: string` input with silent [0, 0, 0] fallback on malformed hex instead of a branded/pattern-checked HexColor schema.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Upstream chalk tolerates malformed hex by rendering black; introducing a validating HexColor brand on hex()/bgHex() would change public behavior from fallback to throw, breaking chalk API compatibility.",
+      "boundary": "public chalk-compatible color model API (hex/bgHex)"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/chalk/src/internal/PublicSurface.ts",
+    "line": 82,
+    "symbol": "ChalkInstanceSurface",
+    "smell": "Detector candidate: broad primitive method parameters (ansi256(index: number), rgb(red: number, green: number, blue: number), hex(color: string)) on the public instance surface.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is a declared abstract class mirroring the upstream chalk instance API, not a schema; narrowing parameter types would break drop-in compatibility that the dtslint suite pins (dtslint/Chalk.tst.ts:63-75).",
+      "boundary": "public chalk-compatible builder API surface"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+    "line": 47,
+    "symbol": "RuntimeProcessLikeModel.env/argv",
+    "smell": "Detector candidate: stringly S.Record(S.String, S.UndefinedOr(S.String)) env and unbounded S.Array(S.String) argv.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The model deliberately mirrors Node's process.env/process.argv shapes at a third-party runtime boundary; the schema's looseness matches the actual external domain, and normalizeRuntimeProcessLike already decodes defensively with an empty-model fallback.",
+      "boundary": "Node.js process introspection boundary (process.env/process.argv/os.release)"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/capability/chalk/test/index.test.ts",
+    "line": 42,
+    "symbol": "ANSI escape golden fixtures",
+    "smell": "Detector candidate: hand-written static fixtures asserting exact ANSI escape strings across the styling suite.",
+    "proposedTarget": "None — keep as is (schema-derived round-trip laws are additive coverage recorded separately, not a replacement).",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These are golden/regression fixtures for rendering behavior (escape-code composition, nesting, CRLF re-opening) — a legitimate static-fixture use per the S5 carve-out; they test the renderer, not a schema's domain-wide law.",
+      "boundary": "ANSI rendering golden fixtures"
+    }
+  }
+]

@@ -1,0 +1,102 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.config.ts",
+    "line": 50,
+    "symbol": "FirecrawlConfigInput.apiUrl",
+    "smell": "FirecrawlConfigInput.apiUrl is modeled as broad S.String even though the default and runtime use it as an absolute API base URL.",
+    "proposedTarget": "Use URLStr or HttpsUrl from @beep/schema/URL (URLStr verified packages/foundation/modeling/schema/src/URL.ts:44-53; HttpsUrl :103-108), following the resolved-config pattern in packages/drivers/govinfo/src/Govinfo.service.ts:62-75. If preserving decoded Type = string is required for public input compatibility, use S.String.check(URLStr.filter) so callers still pass strings while malformed base URLs fail at the schema boundary.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.config.ts",
+    "line": 51,
+    "symbol": "FirecrawlConfigInput.backoffFactor/maxRetries/timeoutMs",
+    "smell": "Retry/backoff/timeout configuration accepts any finite number; maxRetries and timeoutMs should not accept fractions or negatives, and backoffFactor should be positive.",
+    "proposedTarget": "Use existing numeric domains where possible: maxRetries -> NonNegativeInt (packages/foundation/modeling/schema/src/Number.ts:182-200), timeoutMs -> PosInt (packages/foundation/modeling/schema/src/Int.ts:77-88), and backoffFactor -> S.Finite.check(S.isGreaterThan(0)) or an existing PositiveNumber-style schema. Effect v4 checks were verified at .repos/effect-v4/packages/effect/src/Schema.ts:7286, :7314, and S.Int at :11398; PosInt usage exemplar: packages/drivers/uspto-mcp/src/UsptoTools.ts:154-161.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.errors.ts",
+    "line": 168,
+    "symbol": "FirecrawlApiFailure.status/FirecrawlError.status/retryAfterSeconds",
+    "smell": "HTTP statuses and Retry-After seconds are modeled as S.Finite, so negative numbers and fractional values pass the schema even though the domain is integer status codes and non-negative retry delays.",
+    "proposedTarget": "Prefer HttpStatus from @beep/schema/HttpStatus for actual HTTP status codes (packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.schema.ts:34-45) or NonNegativeInt when Firecrawl may emit non-standard numeric status values; use NonNegativeInt for retryAfterSeconds. Driver exemplars already use NonNegativeInt for status-like error fields in packages/drivers/tika/src/Tika.errors.ts:72-78 and packages/drivers/uspto/src/Uspto.errors.ts:72-78.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.models.ts",
+    "line": 2030,
+    "symbol": "Firecrawl request URL payload fields",
+    "smell": "FirecrawlScrapePayload/MapPayload/StartCrawlPayload/CrawlPayload/CrawlParamsPreviewPayload use url: S.String, and batch scrape payloads use urls: S.Array(S.String), even though the operations require URL strings and batch requests are meaningless with an empty URL list.",
+    "proposedTarget": "Introduce a local FirecrawlUrlInput = S.String.check(URLStr.filter) or HttpsUrl-compatible schema and reuse it for scalar url fields; use S.NonEmptyArray(FirecrawlUrlInput) for urls fields. URLStr.filter is exposed at packages/foundation/modeling/schema/src/URL.ts:44-53; S.NonEmptyArray is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:4533.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
+    "line": 164,
+    "symbol": "FirecrawlConfigInput/FirecrawlError/Firecrawl payload schema laws",
+    "smell": "The package has hand-written fixtures and a default decode test, but no S.toArbitrary-derived round-trip/property law for the non-opaque Firecrawl schemas (config, errors, and handwritten request payload classes).",
+    "proposedTarget": "Add an additive property test using S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) for FirecrawlConfigInput, FirecrawlApiFailure/FirecrawlErrorOptions, FirecrawlError, and handwritten request payload classes whose fields are not typedUnknown SDK mirrors. Follow packages/drivers/wink/test/ToolValidation.test.ts:81-91 or packages/foundation/modeling/schema/test/Options.test.ts:58-67 for decode(encode(value)) laws.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.models.ts",
+    "line": 61,
+    "symbol": "typedUnknown Firecrawl SDK mirrors",
+    "smell": "Detector candidate: many exported Firecrawl SDK request/response mirrors are S.declare(...P.isUnknown...), which is intentionally broader than the imported SDK TypeScript types.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The schemas deliberately preserve Firecrawl SDK compatibility for opaque upstream shapes imported from the firecrawl package; duplicating the SDK's evolving models locally would create a stale second contract. The driver wraps these opaque values in typed payload/success/error classes at its own boundary.",
+      "boundary": "Firecrawl SDK request/response passthrough boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.models.ts",
+    "line": 4557,
+    "symbol": "FirecrawlWatcherSnapshotEvent.snapshot",
+    "smell": "Detector candidate: watcher snapshot payload is S.Unknown.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Snapshot events are delivered by the SDK watcher and are not decoded by this driver beyond preserving the event tag; no in-repo schema owns the SDK snapshot structure today.",
+      "boundary": "Firecrawl watcher event passthrough boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/firecrawl/test/Firecrawl.service.test.ts",
+    "line": 61,
+    "symbol": "Firecrawl fake SDK response fixtures",
+    "smell": "Detector candidate: tests rely on static fake SDK response objects instead of generated arbitrary data.",
+    "proposedTarget": "None - keep as is (schema-derived laws should be additive coverage, not a replacement for these SDK compatibility fixtures).",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The fixtures pin exact SDK method routing, wrapper class construction, watcher translation, and sanitized error mapping; these are regression fixtures for integration behavior rather than schema law tests.",
+      "boundary": "Firecrawl SDK compatibility unit fixtures"
+    }
+  }
+]

@@ -1,0 +1,184 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+    "line": 639,
+    "symbol": "ArchitectureOperation",
+    "smell": "ArchitectureOperation is an S.Union of four S.Class variants with a literal kind field, but it is exported without S.toTaggedUnion(\"kind\"); downstream helpers branch over operation.kind manually at OperationPlan.ts:1680-1698, while OperationPlanExecution has to use Match.discriminatorsExhaustive(\"kind\") at lines 218 and 294 because no schema-owned match/cases/guards API exists.",
+    "proposedTarget": "Pipe the union through S.toTaggedUnion(\"kind\") like AiMetricsProgramError at packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts:390-404 and CorpusRestorationRecord at packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts:497-502; then dispatch metadata reconstruction with ArchitectureOperation.match/cases instead of the if-chain. Verified Effect v4 S.toTaggedUnion attaches cases/isAnyOf/guards/match at .repos/effect-v4/packages/effect/src/Schema.ts:6094-6125.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 3.3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+    "line": 1659,
+    "symbol": "writeModeForKind",
+    "smell": "writeModeForKind and conflictPolicyForKind are parallel if-chains over the ArchitectureOperationKind LiteralKit domain (lines 1659-1669), with a final default arm for the two write variants. Adding an operation kind can silently inherit the write default instead of forcing an exhaustive handler update.",
+    "proposedTarget": "Use ArchitectureOperationKind.$match(kind, { \"write-file\": ..., \"write-package-json\": ..., \"ensure-file\": ..., \"ensure-absent-path\": ... }) for both derived defaults, keeping the current shared return values explicit per case. LiteralKit.$match is verified on the kit API at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:657-668 and constructed at lines 787-800.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 2.3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
+    "line": 50,
+    "symbol": "DOCGEN_REQUIRED_TAGS",
+    "smell": "The required JSDoc tag domain is hand-repeated as DOCGEN_REQUIRED_TAGS in Operations.ts:50 and QUALITY_REQUIRED_EXPORT_TAGS / QUALITY_REQUIRED_MODULE_TAGS in Quality.ts:59-60, with Operations deriving DocgenRequiredTag from a tuple while Quality works with untyped strings. This is a duplicate literal family spanning the docgen planner and quality worker.",
+    "proposedTarget": "Promote one DocgenRequiredTag LiteralKit([\"@category\", \"@example\", \"@since\"]) in the docgen internal model surface, export its Type/Options, derive the module subset with pickOptions([\"@since\"]), and share that kit between Operations and Quality. In-scope exemplar: DocgenPackageStatus already uses a docgen-internal LiteralKit at packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts:106; LiteralKit Options/pickOptions are verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:657-668.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 2.6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
+    "line": 292,
+    "symbol": "UnsafeMetadataVideoExtensions",
+    "smell": "UnsafeMetadataVideoExtensions is a raw as-const literal tuple with an ad-hoc guard that narrows by casting normalizeBareExtension(extension) as (typeof UnsafeMetadataVideoExtensions)[number] at line 297. This is a small literal domain plus hand-rolled guard instead of a schema-derived guard.",
+    "proposedTarget": "Move the domain beside the existing Files extension kits in Files.schemas.ts as UnsafeMetadataVideoExtension = LiteralKit([\"asf\", \"asx\", \"m3u\", \"m3u8\", \"m4u\", \"mxu\"]).pipe($I.annoteSchema(...)), then implement isUnsafeMetadataVideoExtension with S.is(UnsafeMetadataVideoExtension)(normalizeBareExtension(extension)) and delete the cast. In-scope exemplars: SupportedMetadataImageExtension at Files.schemas.ts:170 and NormalizeImageFormat at Files.schemas.ts:220; S.is is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:1256.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2.3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
+    "line": 3811,
+    "symbol": "processCoverageFormats",
+    "smell": "processCoverageFormats repeats every FileFormatFamily literal by hand (lines 3811-3825) instead of deriving from the FileFormatFamily LiteralKit, and makeProcessCoverageByFormat later rebuilds a full byFormat record with R.fromEntries plus an as FileProcessingCoverageSummary[\"byFormat\"] cast at line 4438.",
+    "proposedTarget": "Use FileFormatFamily.Options as the single format-domain source (verified at packages/foundation/capability/file-processing/src/Strategy/index.ts:82 and LiteralKit.Options at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:657-668). For makeProcessCoverageByFormat, map the existing full byFormat record with R.map(byFormat, counts => ({ failed: processCount(...), skipped: ..., succeeded: ... })) so the FileFormatFamily key proof is preserved without the cast; Effect v4 R.map preserves K at .repos/effect-v4/packages/effect/src/Record.ts:619-626.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 3.0
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
+    "line": 1161,
+    "symbol": "TemplateContext.make",
+    "smell": "TemplateContext.make builds a heterogeneous optional struct with ...R.getSomes({ family: packageFamily, kind: packageKind, appKind }), where the fields are distinct LiteralKit-derived domains (PackageFamily, PackageKind, AppKind) and should retain per-key value types.",
+    "proposedTarget": "Use O.getSomesStruct({ family: packageFamily, kind: packageKind, appKind }) from @beep/utils/Option (repo helper verified at packages/foundation/modeling/utils/src/Option.ts:83-103) rather than effect/Record.getSomes, whose homogeneous dictionary signature is verified at .repos/effect-v4/packages/effect/src/Record.ts:824-836. Keep this at judgment until the Law 20/47 D5 amendment authorizes the sweep.",
+    "confidence": 0.86,
+    "mechanization": "judgment",
+    "roiRank": 1.9
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
+    "line": 4272,
+    "symbol": "makeProcessSkippedFailureRecord",
+    "smell": "makeProcessSkippedFailureRecord and makeProcessFailedFailureRecord use ...R.getSomes({ engine: O.fromUndefinedOr(options.engine), format: O.fromUndefinedOr(options.format) }) at lines 4272 and 4294 to assemble a heterogeneous optional struct: engine is a string and format is the FileFormatFamily literal domain.",
+    "proposedTarget": "Use O.getSomesStruct for the engine/format struct, importing O from @beep/utils or @beep/utils/Option so the existing O.fromUndefinedOr calls and the new getSomesStruct come from the same namespace. O.getSomesStruct is verified at packages/foundation/modeling/utils/src/Option.ts:83-103; Effect v4 O.fromUndefinedOr is verified at .repos/effect-v4/packages/effect/src/Option.ts:860; R.getSomes remains the homogeneous dictionary helper at .repos/effect-v4/packages/effect/src/Record.ts:824-836. Held at judgment pending D5.",
+    "confidence": 0.84,
+    "mechanization": "judgment",
+    "roiRank": 1.8
+  },
+  {
+    "ruleId": "literal-kit-const-assertion",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
+    "line": 110,
+    "symbol": "VALID_TYPES",
+    "smell": "VALID_TYPES, VALID_APP_KINDS, VALID_FAMILIES, VALID_FOUNDATION_KINDS, and VALID_TOOLING_KINDS are named as-const arrays passed to LiteralKit by identifier at lines 118, 127, 142, 157, and 174; a loose literal-kit-const-assertion search could flag them.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The literal-kit-const-assertion card covers inline LiteralKit array arguments. These are named tuples reused for error messages and LiteralKit construction; as const is needed to preserve tuple literals before the kit call.",
+      "boundary": "named CreatePackage literal tuples consumed by LiteralKit by identifier, not inline LiteralKit([... ] as const)"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
+    "line": 188,
+    "symbol": "PackageKind",
+    "smell": "PackageKind = S.Union([FoundationKind, ToolingKind]) is a scalar union of two LiteralKit domains that a naive S.Union detector could treat as an undiscriminated variant family.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "PackageKind is a scalar literal-domain composition, not an object variant family; there is no discriminator field for S.toTaggedUnion, and the member domains are already modeled with LiteralKit.",
+      "boundary": "CreatePackage scalar CLI option domain"
+    }
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/tooling/tool/cli/src/commands/Codex/Codex.errors.ts",
+    "line": 63,
+    "symbol": "CodexCommandError.new",
+    "smell": "CodexCommandError.new uses ...R.getSomes({ exitCode: O.fromUndefinedOr(exitCode) }); a broad R.getSomes detector would see an object-constructor spread.",
+    "proposedTarget": "None -- keep as-is for this card.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is a single optional key, not a heterogeneous Option struct. The SFV4-getsomes-struct card is for mixed per-key structs where R.getSomes erases key-specific value types.",
+      "boundary": "single-key optional error metadata spread"
+    }
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts",
+    "line": 597,
+    "symbol": "docgenGenerateAggregateCommand",
+    "smell": "docgenGenerateAggregateCommand and docgenAggregateCommand use single-key package selector spreads via R.getSomes at lines 597 and 626; Docs.aggregate.ts has the same package selector shape at line 53.",
+    "proposedTarget": "None -- keep as-is for this card.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These are single-key selector spreads, not heterogeneous Option structs. They are useful negative fixtures so the detector does not flag every R.getSomes object literal.",
+      "boundary": "single-key package selector bridge to aggregateGeneratedDocs"
+    }
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts",
+    "line": 640,
+    "symbol": "parseRetentionSelector",
+    "smell": "parseRetentionSelector uses R.getSomes for beforeEpochMillis, sinceEpochMillis, and untilEpochMillis at lines 640-644; a broad fixed-struct detector would see three optional keys.",
+    "proposedTarget": "None -- keep as-is for this card.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "All three fields share the same epoch-millis numeric domain (the target AiMetricsRetentionSelector schema uses S.Finite for each), so this is not the heterogeneous mixed-type struct covered by SFV4-getsomes-struct.",
+      "boundary": "homogeneous retention-window selector fields"
+    }
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
+    "line": 632,
+    "symbol": "makeNormalizeManifestOptions",
+    "smell": "Files.service contains several R.getSomes spreads that a broad detector could flag: single-key spreads at lines 632, 633, 1743, 1747, 3353, 3354, 4227, 4236, 4352, 4392, 4491, and 4522, plus same-value text/string pairs at lines 686 and 4205.",
+    "proposedTarget": "None -- keep these out of the SFV4-getsomes-struct actionable set.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The listed spreads are either single optional keys or same-value-domain string/text pairs. They do not present the mixed per-key value typing problem that O.getSomesStruct is meant to preserve.",
+      "boundary": "Files command object-builder escape hatches for single-key and homogeneous string Option spreads"
+    }
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+    "line": 1114,
+    "symbol": "extractCorpus",
+    "smell": "Corpus.service has R.getSomes spreads at lines 1114, 1120, 1164, 2463, 2469, and 2838; the multi-key structs at 2463 and 2838 are all S.String-backed optional metadata fields.",
+    "proposedTarget": "None -- keep these out of the SFV4-getsomes-struct actionable set.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The single-key spreads are not heterogeneous, and the multi-key corpus metadata/enrichment spreads are homogeneous string fields in the target schemas. This batch found no mixed-type R.getSomes struct in Corpus.service.",
+      "boundary": "Corpus command optional path/string metadata spreads"
+    }
+  }
+]

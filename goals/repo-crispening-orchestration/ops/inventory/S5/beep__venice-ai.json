@@ -1,0 +1,87 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 284,
+    "symbol": "VeniceAIRequestOptions / VeniceAIConfigInput / VeniceAIOperationDescriptor / response/error/event schemas",
+    "smell": "Production schema classes have class-level $I.annote annotations but almost no field-level .annotateKey metadata, including request options, config, operation descriptors, response variants, SSE events, and errors.",
+    "proposedTarget": "Add .annotateKey descriptions to production schema fields, following packages/drivers/govinfo/src/domain/values/SummaryItem/SummaryItem.model.ts:41 and packages/drivers/m365/src/M365.schemas.ts:22. Effect v4 exposes annotateKey at .repos/effect-v4/packages/effect/src/Schema.ts:185 and :605.",
+    "confidence": 0.84,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 381,
+    "symbol": "VeniceAIJsonResponse.status / VeniceAITextResponse.status / VeniceAIBinaryResponse.status / VeniceAIError.status",
+    "smell": "HTTP response and error statuses are modeled as S.Finite, allowing negative and fractional values even though they are copied from Response.status.",
+    "proposedTarget": "Use HttpStatus from @beep/schema/HttpStatus (packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.schema.ts:34) for response/error status fields, matching the same driver-family target used in packages/drivers/xai/src/XAi.models.ts inventory and the GovInfo contract exemplar.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 514,
+    "symbol": "VeniceAIServerSentEvent.index",
+    "smell": "SSE event index decodes as S.Finite even though the service initializes it at 0 and increments it by parsed event offsets.",
+    "proposedTarget": "Use NonNegativeInt from @beep/schema/Number (packages/foundation/modeling/schema/src/Number.ts:182); the generator starts at 0 in makeSseDecodeState and advances by values.length in VeniceAI.service.ts:1622 and :1673.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 320,
+    "symbol": "VeniceAIConfigInput.baseUrl / headers and VeniceAiLanguageModelOptions.model",
+    "smell": "Local configuration accepts arbitrary baseUrl strings and empty model ids; baseUrl is concatenated into request URLs after only trailing-slash normalization, and the model id is forwarded to OpenAI-compatible request bodies.",
+    "proposedTarget": "Use URLStr from packages/foundation/modeling/schema/src/URL.ts:44 for baseUrl, S.NonEmptyString for model ids (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420), and keep headers as a generic string record unless a shared header-name schema is promoted.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+    "line": 380,
+    "symbol": "VeniceAI production schemas",
+    "smell": "The suite has an S.toArbitrary round-trip law for test-local OpenAPI fixture and prompt-body schemas, but production schemas such as VeniceAIRequestOptions, VeniceAIConfigInput, VeniceAIOperationDescriptor, VeniceAIResponse, VeniceAIServerSentEvent, and VeniceAIError do not have schema-derived laws.",
+    "proposedTarget": "Add additive production-schema laws using S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) and S.toEquivalence (verified .repos/effect-v4/packages/effect/src/Schema.ts:13201), reusing the existing fc.property style at packages/drivers/venice-ai/test/VeniceAI.service.test.ts:380.",
+    "confidence": 0.64,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 236,
+    "symbol": "VeniceAIQueryValue / VeniceAIRequestOptions.body/path/query/header records",
+    "smell": "Detector candidate: raw request options expose broad body, header, path, and query escape hatches.",
+    "proposedTarget": "Keep the raw request boundary; narrow only driver-owned configuration, status, index, and annotation metadata in S5.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The Venice driver intentionally exposes a generic operation surface for dozens of OpenAPI endpoints with JSON, multipart, binary, path, query, and provider-specific payload shapes; endpoint-specific body modeling would be a separate driver-modeling effort.",
+      "boundary": "Venice AI raw OpenAPI operation request boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/venice-ai/test/VeniceAI.service.test.ts",
+    "line": 396,
+    "symbol": "Venice operation registry and transport fixtures",
+    "smell": "Detector candidate: the suite relies on checked-in swagger.yaml, operation descriptors, and fake transport captures rather than generated schema data for endpoint coverage.",
+    "proposedTarget": "Keep these fixtures; add production schema laws separately.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The fixtures verify descriptor alignment with swagger.yaml, service surface coverage, request construction, SSE streaming, redaction, and content-type behavior; schema arbitraries do not replace those compatibility checks.",
+      "boundary": "Venice OpenAPI registry and transport behavior tests"
+    }
+  }
+]
