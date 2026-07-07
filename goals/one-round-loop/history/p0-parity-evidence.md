@@ -62,3 +62,31 @@ Fixture branch: `goals/one-round-loop-p0-parity-fixtures` (never merged).
   proof; CI rounds: **1** (all 17 required checks green first round).
 - P0 PR: `bun run beep ci local` (full battery) run from this branch
   before push: _pending log reference_.
+
+### Pre-push battery round 1 (2026-07-07, failed → fixed locally)
+
+The first full-battery run against the P0 branch itself caught four
+defect classes locally — each would previously have been a CI round:
+
+1. `lint-policy` / schema-first: exported pure-data alias
+   `CiLaneRunOptions` → remodeled as an annotated `S.Class`.
+2. `lint-policy` / dual-arity: `ciLaneStepsForTesting` (3 positional,
+   not dual) and `ciLocalStepsForTesting` (4 positional) → both made
+   `dual(3)`; the local-battery shape folded into a `CiLocalStepPlan`
+   schema.
+3. `lint-policy` / terse-effect: conditional optional-object spread →
+   `O.getSomesStruct`.
+4. Stale `standards/schema-catalog.generated.jsonc` (new Ci schemas) →
+   regenerated via `lint schema-catalog --write`. NOTE: this gate is
+   currently reachable only via `beep lint schema-catalog` — no CI lane
+   runs it (observed while fixing; out of P0 scope).
+
+Notable: the earlier bounded loop (`github-checks review-fix`, affected
+lint) did NOT catch 1–3 — affected-mode lint suppresses repo-wide
+policy steps, exactly the Lint-Policy shape delta in the parity table.
+
+Operational lesson re-learned: a foreground `laws terse-effect --check`
+probe ran concurrently with the battery's check lane and coincided with
+a turbo child-process spawn failure (PlatformError) plus a possibly
+spurious `@beep/xai` TS2589 — round 2 runs with zero concurrent
+commands to get a clean signal.
