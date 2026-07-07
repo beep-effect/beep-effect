@@ -457,6 +457,10 @@
       "@beep/schema/test/Yaml": [
         "../../../packages/foundation/modeling/schema/src/internal/test/Yaml.test-kit.ts"
       ],
+      "@beep/utils": [
+        "../../../packages/foundation/modeling/utils/src/index.ts"
+      ],
+      "@beep/utils/*": ["../../../packages/foundation/modeling/utils/src/*.ts"],
       "@beep/wink": ["../../../packages/drivers/wink/src/index.ts"],
       "@beep/wink/*": ["../../../packages/drivers/wink/src/*.ts"]
     }

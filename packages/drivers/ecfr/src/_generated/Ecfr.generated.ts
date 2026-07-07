@@ -39,7 +39,9 @@ export class Agency extends S.Class<Agency>($I`Agency`)(
     description:
       "A single agency represented in the CFR, with the naming and slug metadata the eCFR versioner reports for it.",
   })
-) {}
+) {
+  static readonly is = S.is(Agency);
+}
 
 /**
  * Response envelope for the eCFR agencies listing endpoint, wrapping the full roster of agencies represented in the CFR.
@@ -57,7 +59,9 @@ export class AgenciesResponse extends S.Class<AgenciesResponse>($I`AgenciesRespo
     description:
       "Response envelope for the eCFR agencies listing endpoint, wrapping the full roster of agencies represented in the CFR.",
   })
-) {}
+) {
+  static readonly is = S.is(AgenciesResponse);
+}
 
 /**
  * A single CFR title with the currency metadata the eCFR versioner reports for it (identity plus the dates that describe how current the published content is).
@@ -88,7 +92,9 @@ export class Title extends S.Class<Title>($I`Title`)(
     description:
       "A single CFR title with the currency metadata the eCFR versioner reports for it (identity plus the dates that describe how current the published content is).",
   })
-) {}
+) {
+  static readonly is = S.is(Title);
+}
 
 /**
  * Response envelope for the eCFR titles listing endpoint, wrapping the full catalog of CFR titles.
@@ -103,7 +109,9 @@ export class TitlesResponse extends S.Class<TitlesResponse>($I`TitlesResponse`)(
   $I.annote("TitlesResponse", {
     description: "Response envelope for the eCFR titles listing endpoint, wrapping the full catalog of CFR titles.",
   })
-) {}
+) {
+  static readonly is = S.is(TitlesResponse);
+}
 
 /**
  * Descriptor for a single eCFR REST operation.
