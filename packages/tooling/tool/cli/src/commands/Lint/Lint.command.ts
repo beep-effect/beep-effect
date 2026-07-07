@@ -22,6 +22,7 @@ import { runRootLintPolicyTask } from "../Quality/Tasks.js";
 import { LintCircularAnalysisError, LintFileDiscoveryError } from "./Lint.errors.js";
 import { lintPackageTestImportsCommand } from "./PackageTestImports.js";
 import { lintReflectionArtifactsCommand } from "./ReflectionArtifact.ts";
+import { lintSchemaCatalogCommand } from "./SchemaCatalog.ts";
 import { lintSchemaFirstCommand } from "./SchemaFirst.ts";
 import { lintSchemaTopologyCommand } from "./SchemaTopology.ts";
 
@@ -564,6 +565,7 @@ export const lintCommand = Command.make("lint", {}, () =>
     "- bun run beep lint package-test-imports",
     "- bun run beep lint policy",
     "- bun run beep lint reflection-artifacts",
+    "- bun run beep lint schema-catalog",
     "- bun run beep lint schema-first",
     "- bun run beep lint schema-topology",
     "- bun run beep lint tooling-schema-first",
@@ -576,6 +578,7 @@ export const lintCommand = Command.make("lint", {}, () =>
     lintPackageTestImportsCommand,
     lintPolicyCommand,
     lintReflectionArtifactsCommand,
+    lintSchemaCatalogCommand,
     lintSchemaFirstCommand,
     lintSchemaTopologyCommand,
     lintToolingSchemaFirstCommand,

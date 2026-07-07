@@ -26,6 +26,34 @@ const INVENTORY_PATH = "standards/schema-first.inventory.jsonc";
 const POLICY_PATH = "standards/schema-crispening.policy.jsonc";
 const INCLUDED_GLOBS = ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"] as const;
 const SOURCE_FILE_GLOBS = [...INCLUDED_GLOBS, "!**/docs/**"] as const;
+
+/**
+ * Source glob scope used by schema-first lint and schema catalog scans.
+ *
+ * @example
+ * ```ts
+ * import { SchemaFirstIncludedGlobs } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(SchemaFirstIncludedGlobs)
+ * ```
+ * @category configuration
+ * @since 0.0.0
+ */
+export const SchemaFirstIncludedGlobs: ReadonlyArray<string> = A.fromIterable(INCLUDED_GLOBS);
+
+/**
+ * Source glob scope plus scan exclusions used by schema-first ts-morph projects.
+ *
+ * @example
+ * ```ts
+ * import { SchemaFirstSourceFileGlobs } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(SchemaFirstSourceFileGlobs)
+ * ```
+ * @category configuration
+ * @since 0.0.0
+ */
+export const SchemaFirstSourceFileGlobs: ReadonlyArray<string> = A.fromIterable(SOURCE_FILE_GLOBS);
 const IDENTIFIER_PROPERTY_PATTERN = /^[A-Za-z_$][A-Za-z0-9_$]*$/;
 const FUNCTION_LIKE_TEXT_PATTERN = /=>|\bEffect\.Effect</;
 const NON_SCHEMA_SIGNAL_PATTERN =
@@ -533,7 +561,19 @@ const writeInventoryDocument = Effect.fn("writeInventoryDocument")(function* (do
   yield* fs.writeFileString(absolutePath, `${serialized}\n`);
 });
 
-const makeOwnerResolver = Effect.fn("makeOwnerResolver")(function* () {
+/**
+ * Create the package-owner resolver used by schema-first repository scans.
+ *
+ * @example
+ * ```ts
+ * import { makeSchemaFirstOwnerResolver } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(makeSchemaFirstOwnerResolver)
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+export const makeSchemaFirstOwnerResolver = Effect.fn("makeSchemaFirstOwnerResolver")(function* () {
   const workspaces = yield* resolveWorkspaceDirs(process.cwd());
   const workspaceEntries = pipe(
     HashMap.toEntries(workspaces),
@@ -557,6 +597,30 @@ const makeOwnerResolver = Effect.fn("makeOwnerResolver")(function* () {
     }
     return "@beep/root";
   };
+});
+
+/**
+ * Create a ts-morph project loaded with the schema-first scan source globs.
+ *
+ * @example
+ * ```ts
+ * import { makeSchemaFirstProject } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(makeSchemaFirstProject)
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+export const makeSchemaFirstProject = Effect.fn("makeSchemaFirstProject")(function* () {
+  const path = yield* Path.Path;
+  const project = new Project({
+    tsConfigFilePath: path.join(process.cwd(), "tsconfig.json"),
+    skipAddingFilesFromTsConfig: true,
+  });
+
+  project.addSourceFilesAtPaths(SOURCE_FILE_GLOBS);
+
+  return project;
 });
 
 const SCHEMA_CRISPENING_FAMILY_PREFIXES: ReadonlyArray<readonly [string, typeof SchemaCrispeningFamily.Type]> = [
@@ -1505,12 +1569,7 @@ const isLiteralKitConstAssertionArgument = (argument: Node): boolean =>
 
 const collectLiteralKitConstAssertionViolations = Effect.fn(function* () {
   const path = yield* Path.Path;
-  const project = new Project({
-    tsConfigFilePath: path.join(process.cwd(), "tsconfig.json"),
-    skipAddingFilesFromTsConfig: true,
-  });
-
-  project.addSourceFilesAtPaths(SOURCE_FILE_GLOBS);
+  const project = yield* makeSchemaFirstProject();
 
   const violations = A.empty<LiteralKitConstAssertionViolation>();
 
@@ -1549,15 +1608,10 @@ const collectLiteralKitConstAssertionViolations = Effect.fn(function* () {
 
 const scanSchemaFirstInventory = Effect.fn(function* () {
   const path = yield* Path.Path;
-  const ownerResolver = yield* makeOwnerResolver();
-  const project = new Project({
-    tsConfigFilePath: path.join(process.cwd(), "tsconfig.json"),
-    skipAddingFilesFromTsConfig: true,
-  });
+  const ownerResolver = yield* makeSchemaFirstOwnerResolver();
+  const project = yield* makeSchemaFirstProject();
   const thunkCandidate = () => "candidate" as const;
   const thunkException = () => "exception" as const;
-
-  project.addSourceFilesAtPaths(SOURCE_FILE_GLOBS);
 
   const entries = A.empty<SchemaFirstInventoryEntry>();
   const pushEntry = (
