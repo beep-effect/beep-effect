@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-07T23:16:50.735Z
+Generated: 2026-07-07T23:54:53.786Z
 
 ## Scope
 
@@ -17,10 +17,10 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | publicModules | 1618 |
 | publicExports | 14469 |
 | openModules | 129 |
-| openExports | 2206 |
-| missingExportExamples | 2012 |
-| missingExportCategories | 91 |
-| missingExportSince | 91 |
+| openExports | 2208 |
+| missingExportExamples | 2014 |
+| missingExportCategories | 93 |
+| missingExportSince | 93 |
 | forbiddenTagFindings | 2 |
 | malformedConditionalTagFindings | 0 |
 | exampleImportFindings | 24 |
@@ -61,7 +61,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 18 | `@beep/discord` | `packages/drivers/discord` | needs-remediation | 4 | 15 | 0 | 3 |
 | 19 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 33 | 0 | 0 |
 | 20 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 2 |
-| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 101 | 676 | 0 | 141 |
+| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 101 | 676 | 0 | 143 |
 | 22 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 0 | 3 |
 | 23 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 24 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 7 | 27 | 0 | 6 |
@@ -284,6 +284,8 @@ Export findings:
 - `src/commands/Architecture/index.ts:7` `export * from "./Architecture.command.js";` (re-export) - missing @example
 - `src/commands/Architecture/index.ts:14` `export * from "./OperationPlan.js";` (re-export) - missing @example
 - `src/commands/Architecture/index.ts:21` `export * from "./OperationPlanExecution.js";` (re-export) - missing @example
+- `src/commands/Ci/CiLane.ts:860` `runCiLane` (const) - missing summary; missing @example, @category, @since
+- `src/commands/Ci/CiLane.ts:1134` `runCiLocal` (const) - missing summary; missing @example, @category, @since
 - `src/commands/Ci/index.ts:13` `export * from "./Ci.command.js";` (re-export) - missing @example
 - `src/commands/Ci/index.ts:20` `export * from "./Ci.errors.js";` (re-export) - missing @example
 - `src/commands/Ci/index.ts:27` `export * from "./CiLane.js";` (re-export) - missing @example

@@ -25,7 +25,14 @@ export const parityFixtureBrokenExample: number = "seeded type error";
 
 export const parityFixtureUnusedExport = (): unknown => {
   debugger;
-  return eval(globalThis.process.argv.join(" "));
+  return globalThis.process.argv.join(" ");
 };
 
 export const parityFixtureUndocumented = nothing;
+
+export const parityFixtureFakeKey = [
+  "-----BEGIN RSA PRIVATE KEY-----",
+  "MIIBOgIBAAJBAKj34GkxFhD90vcNLYLInFEX6Ppy1tPf9Cnzj4p4WGeKLs1Pt8Qu",
+  "KUpRKfFLfRYC9AIKjbJTWit+CqvjWYzvQwECAwEAAQJAIJLixBy2qpFoS4DSmoEm",
+  "-----END RSA PRIVATE KEY-----",
+].join("\n");

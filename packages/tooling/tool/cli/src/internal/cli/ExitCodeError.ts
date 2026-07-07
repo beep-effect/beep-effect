@@ -13,19 +13,7 @@ import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("internal/cli/ExitCodeError");
 
-/**
- * Silent non-zero process exit requested after command output was rendered.
- *
- * @example
- * ```ts
- * import { CliReportedExit } from "@beep/repo-cli/internal/cli/ExitCodeError"
- *
- * const error = CliReportedExit.make({ message: "check failed", exitCode: 1 })
- * console.log(error.message)
- * ```
- * @category errors
- * @since 0.0.0
- */
+// parity fixture: documentation stripped
 export class CliReportedExit extends TaggedErrorClass<CliReportedExit>($I`CliReportedExit`)(
   "CliReportedExit",
   {
@@ -43,18 +31,6 @@ export class CliReportedExit extends TaggedErrorClass<CliReportedExit>($I`CliRep
   override readonly [Runtime.errorReported] = false;
 }
 
-/**
- * Fail with a reported CLI exit sentinel.
- *
- * @example
- * ```ts
- * import { failWithReportedExit } from "@beep/repo-cli/internal/cli/ExitCodeError"
- * import { Effect } from "effect"
- *
- * console.log(Effect.isEffect(failWithReportedExit("check failed")))
- * ```
- * @category errors
- * @since 0.0.0
- */
+// parity fixture: documentation stripped
 export const failWithReportedExit = (message: string, exitCode = 1): Effect.Effect<never, CliReportedExit> =>
   Effect.fail(CliReportedExit.make({ message, exitCode }));

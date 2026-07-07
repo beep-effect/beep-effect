@@ -63,9 +63,6 @@
       "path": "../../library/ai-metrics/tsconfig.json"
     },
     {
-      "path": "../../library/repo-utils/tsconfig.json"
-    },
-    {
       "path": "../../policy-pack/repo-configs/tsconfig.json"
     },
     {

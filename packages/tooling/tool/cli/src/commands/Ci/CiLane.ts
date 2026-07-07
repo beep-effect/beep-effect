@@ -856,32 +856,7 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
   yield* runQualityTaskStreamingStepGroup(`ci:${laneId}`, steps);
 });
 
-/**
- * Run a CI lane body exactly as hosted CI would.
- *
- * @param laneId - CI lane to run.
- * @param options - Lane shape options (affected/base/mode/range flags).
- * @returns Effect that fails when the lane's verdict is red.
- * @example
- * ```ts
- * import { CiLaneRunOptions, runCiLane } from "@beep/repo-cli/commands/Ci"
- *
- * const program = runCiLane("knip", CiLaneRunOptions.make({
- *   affected: false,
- *   base: "origin/main",
- *   head: "HEAD",
- *   summarize: false,
- *   mode: "affected",
- *   to: "HEAD",
- *   last: false,
- *   changesetStatus: false,
- *   validateEnvelopes: false
- * }))
- * console.log(typeof program)
- * ```
- * @category use-cases
- * @since 0.0.0
- */
+// parity fixture: documentation stripped
 export const runCiLane = Effect.fn("CiLane.runCiLane")(function* (
   laneId: CiLaneId,
   options: CiLaneRunOptions
@@ -1155,27 +1130,7 @@ export const ciLocalStepsForTesting: {
     )
 );
 
-/**
- * Run the faithful local CI battery: every locally-runnable check.yml lane.
- *
- * @param options - Local battery options (lane selection, fast preset, shape).
- * @returns Effect that fails when any selected lane's verdict is red.
- * @example
- * ```ts
- * import { runCiLocal } from "@beep/repo-cli/commands/Ci"
- * import * as O from "effect/Option"
- *
- * const program = runCiLocal({
- *   affected: true,
- *   base: "origin/main",
- *   fast: true,
- *   lanes: O.none()
- * })
- * console.log(typeof program)
- * ```
- * @category use-cases
- * @since 0.0.0
- */
+// parity fixture: documentation stripped
 export const runCiLocal = Effect.fn("CiLane.runCiLocal")(function* (
   options: CiLocalOptions
 ): Effect.fn.Return<void, CiCommandError | QualityTaskConfigurationError | QualityTaskGroupFailed, CiLaneEnvironment> {
