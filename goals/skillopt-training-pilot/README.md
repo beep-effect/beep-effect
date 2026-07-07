@@ -2,7 +2,9 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained` — PR #309 merged; verdict: PARK with findings
+(loop proven at full scale, zero lift at edit-budget-1 patch mode; gate
+rejected all 6 candidate edits). Harness is rerunnable via one config edit.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -40,7 +42,15 @@ before generalizing anything.
 
 ## Latest Evidence
 
-2026-07-06: **P2 + P3 complete — full production stack proven live.**
+2026-07-06: **Goal complete — PR #309 merged (`fb7ce421ce`); P5 training run
+finished** (8 steps, 90 min, exit 0): accept=0 reject=6 skip=2, best skill =
+unmodified baseline (val 0.4714); every candidate edit degraded validation
+and the gate refused each one — the anti-regression mechanism working at
+full scale. Verdict: PARK with findings
+([`history/p5-training/FINDINGS.md`](./history/p5-training/FINDINGS.md));
+reflection in [`history/reflections/`](./history/reflections/).
+
+Earlier — **P2 + P3: full production stack proven live.**
 12-task corpus (4 SFV4 rule classes) baseline-calibrated at 0.146–0.25 by
 the real scorer (`history/p3-smoke/baseline-scores.jsonl`); `beep
 agent-effectiveness evals score` deterministic with violation breakdowns;

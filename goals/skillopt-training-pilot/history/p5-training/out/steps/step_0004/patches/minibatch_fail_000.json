@@ -1,0 +1,20 @@
+{
+  "batch_size": 2,
+  "failure_summary": [
+    {
+      "failure_type": "rule_missing",
+      "count": 1,
+      "description": "Function-contract refactors need a repo-specific builder+implement call (e.g. Fn(...).implementSync(...)) that the skill still doesn't name; agent defaulted to S.Class alone and failed the exact-pattern completion check — same gap already targeted (and rejected) in the two prior edit attempts this epoch."
+    },
+    {
+      "failure_type": "other",
+      "count": 1,
+      "description": "Target execution crashed (codex exec exit -11) before any agent action occurred; not a skill-content issue and not fixable via a documentation edit."
+    }
+  ],
+  "patch": {
+    "reasoning": "Both prior edits this epoch (Step 2 and Step 3) already tried to patch this exact function-contract/Fn(...)/implementSync gap with increasingly specific paragraphs, and both were rejected with the batch score dropping further each time (0.4714125 -> 0.377315 -> 0.4089125 -> 0.33217625). Trajectory 2 in this batch is the same failure mode recurring, which confirms the gap is real but also that this style of verbose, rule-by-rule addition is not the fix — it is measurably making the skill worse on the broader task distribution, likely by adding noise/length that crowds out or conflicts with existing Fast Rules rather than by being wrong per se. Repeating a third variant of the same paragraph is very likely to continue the losing trend rather than reverse it. Trajectory 1's failure is an infrastructure crash unrelated to skill content and offers no signal for a documentation edit. Given the budget (L=1) and the strong empirical evidence that this specific edit direction is net-harmful, the responsible action is to withhold an edit this round rather than submit a third near-duplicate of an already-twice-rejected change. Future attempts at this gap should try a fundamentally different shape (e.g., a much shorter one-line pointer into references/repo-laws.md or pattern-catalog.md rather than an inline prose rule) instead of another expanded paragraph in the Fast Rules list.",
+    "edits": []
+  },
+  "source_type": "failure"
+}

@@ -1,0 +1,31 @@
+{
+  "batch_size": 2,
+  "failure_summary": [
+    {
+      "failure_type": "scorer_contract",
+      "count": 2,
+      "description": "Agents typechecked and shipped semantically-equivalent refactors but never consulted the Task Manifest JSON's exact required/forbidden regex patterns, so literal pattern greps (e.g. required `S.Class` construction, required `O.Option`/`O.some`/`O.none` shapes, forbidden bare `type` alias) missed even though the schema-first intent was satisfied."
+    },
+    {
+      "failure_type": "rule_ignored",
+      "count": 1,
+      "description": "Skill's own step-5 checklist ('No exported pure-data interface or type literal remains') was not applied during a narrowly-worded refactor task, leaving `export type BoxErrorDetails = {...}` in place instead of converting to `S.Class`."
+    },
+    {
+      "failure_type": "rule_missing",
+      "count": 1,
+      "description": "Skill doesn't state that the canonical alias for the `Option` module is the short form used by repo lint/completion checks; agent used the spelled-out `Option` namespace (`Option.Option`, `Option.some`, `Option.none`) instead of the `O.`-prefixed forms the scorer greps for."
+    }
+  ],
+  "patch": {
+    "reasoning": "Both trajectories produced plausible, typechecking, idiomatically-schema-first code yet lost most of their score to the deterministic completion checker's literal regex patterns — one missed a required S.Class conversion despite the skill already prohibiting bare exported type aliases, the other used a spelled-out Option import instead of the short alias the check greps for. Rather than encode another specific literal pattern (two prior attempts at that were rejected), the highest-leverage, generalizable fix is to make agents treat the Task Manifest JSON — which the task prompt already points to and which the scorer output shows contains the exact required/forbidden regexes — as the authoritative completion contract to check against before finishing, on top of typechecking. This is a single, non-task-specific instruction that directly targets the shared root cause (verifying against literal patterns, not just semantic/typecheck correctness) without hardcoding any fixture's filenames or exact API shapes.",
+    "edits": [
+      {
+        "op": "insert_after",
+        "target": "5. Verify before finishing.",
+        "content": "\n- Read the Task Manifest JSON referenced in the task prompt (`## Task Manifest`) before writing code, and re-read it before finishing. It contains the deterministic scorer's exact required/forbidden regex patterns for the entrypoint file (e.g. a required class/call construction, or a forbidden bare `type`/`interface` alias) — these are literal grep checks, not stylistic suggestions, and a narrowly-worded task description does not waive a standing repo law the manifest still enforces. A typechecking, idiomatic-looking refactor that satisfies the schema-first *intent* but misses one exact required/forbidden pattern still scores as incomplete. Confirm every required pattern is present and every forbidden pattern is absent in the final entrypoint file before finishing, including the exact aliasing/casing the manifest expects for any repo-canonical module (e.g. short vs. spelled-out namespace imports)."
+      }
+    ]
+  },
+  "source_type": "failure"
+}
