@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-07T12:47:53.012Z
+Generated: 2026-07-07T15:23:19.569Z
 
 ## Scope
 
@@ -14,18 +14,18 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 19 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 78 |
-| publicModules | 1615 |
-| publicExports | 14428 |
+| publicModules | 1616 |
+| publicExports | 14444 |
 | openModules | 129 |
-| openExports | 2203 |
-| missingExportExamples | 2010 |
+| openExports | 2205 |
+| missingExportExamples | 2011 |
 | missingExportCategories | 91 |
 | missingExportSince | 91 |
 | forbiddenTagFindings | 2 |
 | malformedConditionalTagFindings | 0 |
 | exampleImportFindings | 24 |
 | unsafeExampleFindings | 71 |
-| schemaAnnotationFindings | 126 |
+| schemaAnnotationFindings | 127 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -61,7 +61,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 18 | `@beep/discord` | `packages/drivers/discord` | needs-remediation | 4 | 15 | 0 | 3 |
 | 19 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 33 | 0 | 0 |
 | 20 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 2 |
-| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 99 | 637 | 0 | 138 |
+| 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 100 | 652 | 0 | 140 |
 | 22 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 0 | 3 |
 | 23 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 24 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 7 | 27 | 0 | 6 |
@@ -90,7 +90,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 47 | `@beep/shared-tables` | `packages/shared/tables` | needs-remediation | 11 | 14 | 0 | 9 |
 | 48 | `@beep/scratchpad` | `scratchpad` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 49 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 6 | 170 | 0 | 48 |
-| 50 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 12 | 29 | 0 | 0 |
+| 50 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 12 | 30 | 0 | 0 |
 | 51 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 27 | 60 | 0 | 0 |
 | 52 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | needs-remediation | 28 | 107 | 0 | 27 |
 | 53 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 26 | 213 | 0 | 22 |
@@ -345,25 +345,42 @@ Export findings:
 - `src/commands/Image/index.ts:35` `export * from "./Image.service.js";` (re-export) - missing @example
 - `src/commands/Laws/index.ts:13` `export * from "./Laws.command.js";` (re-export) - missing @example
 - `src/commands/Laws/index.ts:20` `export * from "./Laws.errors.js";` (re-export) - missing @example
-- `src/commands/Lint/SchemaFirst.ts:128` `SchemaFirstPolicyRuleId` (const) - missing @example; 1 schema annotation/type-alias gap(s)
-- `src/commands/Lint/SchemaFirst.ts:161` `SchemaFirstEntryKind` (const) - missing @example; 1 schema annotation/type-alias gap(s)
-- `src/commands/Lint/SchemaFirst.ts:179` `SchemaFirstEntryStatus` (const) - missing @example; 1 schema annotation/type-alias gap(s)
-- `src/commands/Lint/SchemaFirst.ts:317` `SchemaCrispeningFamily` (const) - missing @example; 1 schema annotation/type-alias gap(s)
+- `src/commands/Lint/SchemaCatalog.ts:48` `SchemaCatalogEntryKind` (const) - 1 schema annotation/type-alias gap(s)
+- `src/commands/Lint/SchemaFirst.ts:156` `SchemaFirstPolicyRuleId` (const) - missing @example; 1 schema annotation/type-alias gap(s)
+- `src/commands/Lint/SchemaFirst.ts:189` `SchemaFirstEntryKind` (const) - missing @example; 1 schema annotation/type-alias gap(s)
+- `src/commands/Lint/SchemaFirst.ts:207` `SchemaFirstEntryStatus` (const) - missing @example; 1 schema annotation/type-alias gap(s)
+- `src/commands/Lint/SchemaFirst.ts:345` `SchemaCrispeningFamily` (const) - missing @example; 1 schema annotation/type-alias gap(s)
 - `src/commands/Lint/index.ts:13` `export * from "./Lint.command.js";` (re-export) - missing @example
 - `src/commands/Lint/index.ts:20` `export * from "./Lint.errors.js";` (re-export) - missing @example
 - `src/commands/Lint/index.ts:27` `export {
+  generateSchemaCatalogDocument,
+  generateSchemaCatalogText,
+  lintSchemaCatalogCommand,
+  renderSchemaCatalogDocument,
+  runSchemaCatalog,
+  SchemaCatalogDocument,
+  SchemaCatalogEntry,
+  SchemaCatalogEntryKind,
+  SchemaCatalogOptions,
+  SchemaCatalogSummary,
+} from "./SchemaCatalog.ts";` (re-export) - missing @example
+- `src/commands/Lint/index.ts:45` `export {
   fnSchemaEntryFromFunctionLike,
   getsomesStructEntryFromCallExpression,
   isSchemaCrispeningPolicyExempt,
+  makeSchemaFirstOwnerResolver,
+  makeSchemaFirstProject,
   normalizationEntryFromCallExpression,
   nullReturnEntryFromFunctionLike,
   SchemaCrispeningFamilyPolicy,
   SchemaCrispeningPolicyDocument,
+  SchemaFirstIncludedGlobs,
   SchemaFirstInventoryEntry,
+  SchemaFirstSourceFileGlobs,
   schemaCrispeningFamilyForFile,
   sourceTextHasSchemaArbitraryPropertyCoverage,
 } from "./SchemaFirst.ts";` (re-export) - missing @example
-- `src/commands/Lint/index.ts:45` `export * from "./SchemaTopology.ts";` (re-export) - missing @example
+- `src/commands/Lint/index.ts:67` `export * from "./SchemaTopology.ts";` (re-export) - missing @example
 - `src/commands/Purge/index.ts:14` `export * from "./Purge.command.js";` (re-export) - missing @example
 - `src/commands/Quality/ChangesetGraph.ts:27` `export { ChangesetGraphError } from "./Quality.errors.js";` (re-export) - missing @example
 - `src/commands/Quality/Quality.command.ts:51` `export { QualityScriptCommandError } from "./Quality.errors.js";` (re-export) - missing @example
