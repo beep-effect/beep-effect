@@ -90,3 +90,41 @@ probe ran concurrently with the battery's check lane and coincided with
 a turbo child-process spawn failure (PlatformError) plus a possibly
 spurious `@beep/xai` TS2589 — round 2 runs with zero concurrent
 commands to get a clean signal.
+
+### Pre-push battery round 2 (2026-07-07, clean run)
+
+**18/19 lanes green** in ~16.4 min serial wall time (warm turbo caches;
+well under the D8 ~40-min budget). Round 1's `check` failure did not
+reproduce (contention artifact confirmed). Per-lane: commitlint 1s,
+repo-sanity 22s, lint-policy 65s, lint 62s, check 125s, codegen 3s,
+knip 12s, jsdoc-ratchet 169s, secrets 4s, sast 7s, security 6s,
+build 39s, test-unit 154s, test-integration 71s, docgen 26s,
+desktop-ipc 5s, fallow 64s, nix 3s — coverage FAILED (146s).
+
+**Coverage lane finding (pre-existing, not this branch):** full-shape
+coverage is red EVERYWHERE right now, with two distinct first-failures:
+
+- Local: `@beep/oip-web` 39/48 tests fail in `beforeEach`
+  (`window.localStorage` undefined under the coverage lane's plain-node
+  vitest); passes under the bun-runtime test lane. Filed as a spawned
+  task (local env wiring, product scope — fence 4 bars fixing it here).
+- Hosted CI on main (push runs 28901536716 @ ae39301d8f and
+  28883862875 @ 5783560ecd): `@beep/lexical-schema`
+  `Lexical.model.test.ts` fails 1/22 — the SAME suite passes locally
+  22/22. Nondeterministic on a REQUIRED check: main is known-red. This
+  is (a) live motivating evidence for the P1 seed-dependent property
+  class and (b) the S4 quarantine scenario occurring in the wild. Filed
+  as a spawned task.
+
+**PR-shape verdict (what CI will render for this PR):**
+`beep ci lane coverage --affected --base origin/main` → GREEN
+(`[coverage-ratchet] ok: compared 1 package(s) with epsilon 0.001`).
+Neither oip-web nor lexical-schema is in this PR's affected graph.
+
+Dogfood disposition per SPEC stop-condition handling (file it, ledger
+it, continue): the battery FAITHFULLY reproduced the red full-coverage
+verdict (that is the fidelity property working — the old pre-push
+battery had no coverage lane at all and would have shown green), the
+red is demonstrably pre-existing and out of packet scope, and the
+PR-shape gate is green. Proceeding to push with this note as the
+ledger entry.
