@@ -27,7 +27,15 @@
     "S4_cancel_rerun_quarantine": { "status": "pending", "rationale": null }
   },
   "dogfoodLedger": {
-    "activeFrom": null,
-    "prRounds": []
+    "activeFrom": "2026-07-07",
+    "prRounds": [
+      {
+        "pr": 319,
+        "title": "docs(one-round-loop): author follow-up goal packet",
+        "ciRounds": 1,
+        "localProof": "pre-P0 (beep ci local did not exist): packet hygiene checks + typos clean; docs-only per D8",
+        "outcome": "merged"
+      }
+    ]
   }
 }
