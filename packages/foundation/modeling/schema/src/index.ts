@@ -272,6 +272,23 @@ export * from "./Options.ts";
  */
 export * from "./PascalStr.ts";
 /**
+ * Transport-layer port number schemas and codecs.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { PortFromString } from "@beep/schema"
+ *
+ * const port = await Effect.runPromise(S.decodeUnknownEffect(PortFromString)("443"))
+ * console.log(port) // 443
+ * ```
+ *
+ * @since 0.0.0
+ * @category validation
+ */
+export * from "./Port.ts";
+/**
  * @since 0.0.0
  * @category validation
  */

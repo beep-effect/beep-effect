@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-07T04:19:46.085Z
+Generated: 2026-07-07T04:56:36.568Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 18 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 79 |
-| publicModules | 1603 |
-| publicExports | 14314 |
+| publicModules | 1604 |
+| publicExports | 14320 |
 | openModules | 129 |
 | openExports | 2215 |
 | missingExportExamples | 2008 |
@@ -117,7 +117,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 74 | `@beep/infra` | `infra` | clean | 4 | 31 | 0 | 0 |
 | 75 | `@beep/runpod` | `packages/drivers/runpod` | needs-remediation | 6 | 178 | 0 | 7 |
 | 76 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 635 | 2 | 75 |
-| 77 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 240 | 1560 | 0 | 640 |
+| 77 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 241 | 1566 | 0 | 640 |
 | 78 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 2 | 3 | 0 | 1 |
 | 79 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 17 | 208 | 0 | 8 |
 | 80 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | needs-remediation | 4 | 16 | 0 | 5 |
@@ -1396,13 +1396,13 @@ Path: `packages/drivers/ecfr`
 Export findings:
 - `src/Ecfr.service.ts:47` `EcfrShape` (interface) - 1 unsafe example violation(s)
 - `src/_generated/Ecfr.generated.ts:22` `Agency` (class) - missing @example
-- `src/_generated/Ecfr.generated.ts:50` `AgenciesResponse` (class) - missing @example
-- `src/_generated/Ecfr.generated.ts:68` `Title` (class) - missing @example
-- `src/_generated/Ecfr.generated.ts:99` `TitlesResponse` (class) - missing @example
-- `src/_generated/Ecfr.generated.ts:114` `EcfrOperationDescriptor` (class) - missing @example
-- `src/_generated/Ecfr.generated.ts:131` `listAgenciesOperation` (const) - missing @example
-- `src/_generated/Ecfr.generated.ts:143` `listTitlesOperation` (const) - missing @example
-- `src/_generated/Ecfr.generated.ts:155` `ECFR_OPERATIONS` (const) - missing @example
+- `src/_generated/Ecfr.generated.ts:52` `AgenciesResponse` (class) - missing @example
+- `src/_generated/Ecfr.generated.ts:72` `Title` (class) - missing @example
+- `src/_generated/Ecfr.generated.ts:105` `TitlesResponse` (class) - missing @example
+- `src/_generated/Ecfr.generated.ts:122` `EcfrOperationDescriptor` (class) - missing @example
+- `src/_generated/Ecfr.generated.ts:139` `listAgenciesOperation` (const) - missing @example
+- `src/_generated/Ecfr.generated.ts:151` `listTitlesOperation` (const) - missing @example
+- `src/_generated/Ecfr.generated.ts:163` `ECFR_OPERATIONS` (const) - missing @example
 - `src/index.ts:13` `export * from "./_generated/Ecfr.generated.ts";` (re-export) - missing @example
 - `src/index.ts:20` `export * from "./Ecfr.config.ts";` (re-export) - missing @example
 - `src/index.ts:27` `export * from "./Ecfr.errors.ts";` (re-export) - missing @example
@@ -2516,31 +2516,31 @@ Export findings:
 - `src/index.ts:263` `export * from "./MutableHashSet.ts";` (re-export) - missing @example
 - `src/index.ts:268` `export * from "./Options.ts";` (re-export) - missing @example
 - `src/index.ts:273` `export * from "./PascalStr.ts";` (re-export) - missing @example
-- `src/index.ts:278` `export * from "./PosixPath.ts";` (re-export) - missing @example
-- `src/index.ts:283` `export * from "./Primitive.ts";` (re-export) - missing @example
-- `src/index.ts:288` `export * from "./PromiseSchema.ts";` (re-export) - missing @example
-- `src/index.ts:293` `export * from "./Record/index.ts";` (re-export) - missing @example
-- `src/index.ts:298` `export * from "./RegExp.ts";` (re-export) - missing @example
-- `src/index.ts:303` `export * from "./SafeRemoteHost.ts";` (re-export) - missing @example
-- `src/index.ts:308` `export * as SchemaUtils from "./SchemaUtils/index.ts";` (re-export) - missing @example
-- `src/index.ts:313` `export * from "./SemanticVersion.ts";` (re-export) - missing @example
-- `src/index.ts:318` `export * from "./Semver.ts";` (re-export) - missing @example
-- `src/index.ts:323` `export * from "./SeverityLevel.ts";` (re-export) - missing @example
-- `src/index.ts:328` `export * from "./Sha256.ts";` (re-export) - missing @example
-- `src/index.ts:333` `export * from "./Slug.ts";` (re-export) - missing @example
-- `src/index.ts:338` `export * from "./SnakeStr.ts";` (re-export) - missing @example
-- `src/index.ts:343` `export * from "./StatusCauseError.ts";` (re-export) - missing @example
-- `src/index.ts:348` `export * from "./StatusCauseTaggedErrorClass/index.ts";` (re-export) - missing @example
-- `src/index.ts:353` `export * from "./String.ts";` (re-export) - missing @example
-- `src/index.ts:358` `export * from "./TaggedErrorClass/index.ts";` (re-export) - missing @example
-- `src/index.ts:363` `export * from "./TerritoryCode.ts";` (re-export) - missing @example
-- `src/index.ts:368` `export * from "./Timezone.ts";` (re-export) - missing @example
-- `src/index.ts:373` `export * from "./Toml.ts";` (re-export) - missing @example
-- `src/index.ts:378` `export * from "./Transformations.ts";` (re-export) - missing @example
-- `src/index.ts:383` `export * from "./URL.ts";` (re-export) - missing @example
-- `src/index.ts:388` `export * as VariantSchema from "./VariantSchema/index.ts";` (re-export) - missing @example
-- `src/index.ts:393` `export * from "./Xml.ts";` (re-export) - missing @example
-- `src/index.ts:398` `export * from "./Yaml.ts";` (re-export) - missing @example
+- `src/index.ts:295` `export * from "./PosixPath.ts";` (re-export) - missing @example
+- `src/index.ts:300` `export * from "./Primitive.ts";` (re-export) - missing @example
+- `src/index.ts:305` `export * from "./PromiseSchema.ts";` (re-export) - missing @example
+- `src/index.ts:310` `export * from "./Record/index.ts";` (re-export) - missing @example
+- `src/index.ts:315` `export * from "./RegExp.ts";` (re-export) - missing @example
+- `src/index.ts:320` `export * from "./SafeRemoteHost.ts";` (re-export) - missing @example
+- `src/index.ts:325` `export * as SchemaUtils from "./SchemaUtils/index.ts";` (re-export) - missing @example
+- `src/index.ts:330` `export * from "./SemanticVersion.ts";` (re-export) - missing @example
+- `src/index.ts:335` `export * from "./Semver.ts";` (re-export) - missing @example
+- `src/index.ts:340` `export * from "./SeverityLevel.ts";` (re-export) - missing @example
+- `src/index.ts:345` `export * from "./Sha256.ts";` (re-export) - missing @example
+- `src/index.ts:350` `export * from "./Slug.ts";` (re-export) - missing @example
+- `src/index.ts:355` `export * from "./SnakeStr.ts";` (re-export) - missing @example
+- `src/index.ts:360` `export * from "./StatusCauseError.ts";` (re-export) - missing @example
+- `src/index.ts:365` `export * from "./StatusCauseTaggedErrorClass/index.ts";` (re-export) - missing @example
+- `src/index.ts:370` `export * from "./String.ts";` (re-export) - missing @example
+- `src/index.ts:375` `export * from "./TaggedErrorClass/index.ts";` (re-export) - missing @example
+- `src/index.ts:380` `export * from "./TerritoryCode.ts";` (re-export) - missing @example
+- `src/index.ts:385` `export * from "./Timezone.ts";` (re-export) - missing @example
+- `src/index.ts:390` `export * from "./Toml.ts";` (re-export) - missing @example
+- `src/index.ts:395` `export * from "./Transformations.ts";` (re-export) - missing @example
+- `src/index.ts:400` `export * from "./URL.ts";` (re-export) - missing @example
+- `src/index.ts:405` `export * as VariantSchema from "./VariantSchema/index.ts";` (re-export) - missing @example
+- `src/index.ts:410` `export * from "./Xml.ts";` (re-export) - missing @example
+- `src/index.ts:415` `export * from "./Yaml.ts";` (re-export) - missing @example
 
 ### @beep/epistemic-server
 
@@ -3330,8 +3330,8 @@ Export findings:
 - `src/hooks/index.ts:13` `export * from "./use-scribe.ts";` (re-export) - missing @example
 - `src/hooks/index.ts:18` `export * from "./useNumberInput.ts";` (re-export) - missing @example
 - `src/hooks/use-scribe.ts:66` `ScribeStatus` (type) - 1 unsafe example violation(s)
-- `src/hooks/useNumberInput.ts:482` `NumberInputEventType` (type) - missing @example
-- `src/hooks/useNumberInput.ts:509` `NumberInputError` (type) - missing @example
+- `src/hooks/useNumberInput.ts:503` `NumberInputEventType` (type) - missing @example
+- `src/hooks/useNumberInput.ts:530` `NumberInputError` (type) - missing @example
 - `src/lib/index.ts:5` `export * from "./date-time.ts";` (re-export) - missing @example
 - `src/lib/index.ts:10` `export * from "./url.ts";` (re-export) - missing @example
 - `src/lib/index.ts:15` `export * from "./utils.ts";` (re-export) - missing @example

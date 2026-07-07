@@ -162,3 +162,25 @@ export const make: {
     _returnSchema: TSchema
   ): S.declare<() => S.Schema.Type<TSchema>> => S.declare<() => S.Schema.Type<TSchema>>(guard)
 );
+
+/**
+ * Schema instance returned by {@link make} for a specific return schema.
+ *
+ * @example
+ * ```ts
+ * import * as P from "effect/Predicate"
+ * import * as S from "effect/Schema"
+ * import { make, type Instance } from "@beep/schema/Thunk"
+ *
+ * type StringThunk = Instance<typeof S.String>
+ * const schema: StringThunk = make(
+ *   (u: unknown): u is () => string => P.isFunction(u) && P.isString(u()),
+ *   S.String
+ * )
+ * console.log(schema)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type Instance<TSchema extends S.Top> = S.declare<() => S.Schema.Type<TSchema>>;

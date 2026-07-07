@@ -1,4 +1,5 @@
 import { isMutableHashSet, MutableHashSet, MutableHashSetFromSelf } from "@beep/schema/MutableHashSet";
+import { withKeyDefaults } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as MutableHashSet_ from "effect/MutableHashSet";
@@ -81,5 +82,19 @@ describe("MutableHashSet", () => {
     expect(() => S.decodeUnknownSync(schema)(MutableHashSet_.make("1", null))).toThrow(
       `Expected array, got MutableHashSet(["1",null])`
     );
+  });
+
+  it("supports decoded mutable hash set defaults for missing struct keys", () => {
+    const schema = S.Struct({
+      values: MutableHashSet(S.String).pipe(withKeyDefaults(MutableHashSet_.empty<string>())),
+    });
+
+    const constructed = schema.make({});
+    const decoded = S.decodeUnknownSync(schema)({});
+
+    expect(isMutableHashSet(constructed.values)).toBe(true);
+    expect(isMutableHashSet(decoded.values)).toBe(true);
+    expect(A.fromIterable(constructed.values)).toEqual([]);
+    expect(A.fromIterable(decoded.values)).toEqual([]);
   });
 });

@@ -20,9 +20,9 @@ const $I = $SchemaId.create("SchemaUtils/withKeyDefaults");
  * defaults and decoding-time missing keys.
  *
  * This helper combines `Schema.withConstructorDefault` and
- * `Schema.withDecodingDefaultKey` using the same value, so the provided default
- * must be valid for both the schema's runtime `Type` and encoded `Encoded`
- * representation.
+ * `Schema.withDecodingDefaultTypeKey` using the same decoded value, so the
+ * provided default must be valid as both the schema's runtime `Type` and
+ * constructor input.
  *
  * Supports both call styles:
  * - Data-last: `pipe(S.String, withKeyDefaults("draft"))`
@@ -49,22 +49,22 @@ const $I = $SchemaId.create("SchemaUtils/withKeyDefaults");
  */
 export const withKeyDefaults: {
   <const TSchema extends S.Top & S.WithoutConstructorDefault>(
-    defaultValue: TSchema["Type"] & TSchema["Encoded"]
-  ): (self: TSchema) => S.withDecodingDefaultKey<S.withConstructorDefault<TSchema>>;
+    defaultValue: TSchema["~type.make.in"] & TSchema["Type"]
+  ): (self: TSchema) => S.withDecodingDefaultTypeKey<S.withConstructorDefault<TSchema>>;
   <const TSchema extends S.Top & S.WithoutConstructorDefault>(
     self: TSchema,
-    defaultValue: TSchema["Type"] & TSchema["Encoded"]
-  ): S.withDecodingDefaultKey<S.withConstructorDefault<TSchema>>;
+    defaultValue: TSchema["~type.make.in"] & TSchema["Type"]
+  ): S.withDecodingDefaultTypeKey<S.withConstructorDefault<TSchema>>;
 } = dual(
   2,
   <const TSchema extends S.Top & S.WithoutConstructorDefault>(
     self: TSchema,
-    defaultValue: TSchema["Type"] & TSchema["Encoded"]
-  ): S.withDecodingDefaultKey<S.withConstructorDefault<TSchema>> =>
+    defaultValue: TSchema["~type.make.in"] & TSchema["Type"]
+  ): S.withDecodingDefaultTypeKey<S.withConstructorDefault<TSchema>> =>
     pipe(
       self,
       S.withConstructorDefault(Effect.succeed(defaultValue)),
-      S.withDecodingDefaultKey(Effect.succeed(defaultValue))
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultValue))
     )
 );
 
