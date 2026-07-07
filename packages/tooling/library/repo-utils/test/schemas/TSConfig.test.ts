@@ -11,6 +11,7 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit } from "effect";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
@@ -248,6 +249,18 @@ describe("TSConfig schema", () => {
       expect(Exit.isFailure(nested)).toBe(true);
       expect(renderSchemaFailure(nested)).toContain("Unexpected key");
       expect(renderSchemaFailure(nested)).toContain('["compilerOptions"]["unexpected"]');
+    });
+
+    it("drops prototype-polluting keys instead of carrying them into the model", () => {
+      // JSON parsing creates `__proto__` as an own data property, but effect's
+      // record decode cannot carry it, so it never reaches the Type domain.
+      // The TSConfigJsonKey check mirrors that boundary on the Type side so
+      // schema-derived arbitraries only generate round-trippable records.
+      const parsed = Effect.runSync(jsonParse('{"compilerOptions":{"paths":{"__proto__":["./src"],"@x":["./x"]}}}'));
+      const result = decodeTSConfig(parsed);
+
+      const paths = O.getOrThrow(result.compilerOptions).paths;
+      expect(O.map(paths, R.keys)).toEqual(O.some(["@x"]));
     });
 
     it("rejects duplicate uniqueItems arrays", () => {

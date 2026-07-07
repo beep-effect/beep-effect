@@ -198,7 +198,19 @@ const TS_NODE_EXPERIMENTAL_SPECIFIER_RESOLUTION_VALUES = ["explicit", "node"] as
 
 const TS_NODE_MODULE_TYPE_VALUES = ["cjs", "esm", "package"] as const;
 
-const JsonRecord = S.Record(S.String, S.Json).pipe(
+// `__proto__` cannot exist as an own data property after effect's record
+// rebuilds (plain assignment sets the prototype instead), so admitting it on
+// the wire both breaks round-tripping and invites prototype pollution.
+const TSConfigJsonKey = S.String.check(
+  S.makeFilter((key: string) => key !== "__proto__", {
+    identifier: $I.make("TSConfigJsonKeyCheck"),
+    title: "TSConfig JSON Key",
+    description: 'A tsconfig JSON object key; the prototype-polluting "__proto__" is rejected.',
+    message: 'Key must not be "__proto__".',
+  })
+);
+
+const JsonRecord = S.Record(TSConfigJsonKey, S.Json).pipe(
   $I.annoteSchema("TSConfigJsonRecord", {
     description: "A JSON object used for open tsconfig extension points such as plugin extras and ts-node overrides.",
   })
@@ -527,7 +539,7 @@ const TSConfigPathTargets = S.NullOr(TSConfigUniqueStringArray).pipe(
   })
 );
 
-const TSConfigPaths = S.Record(S.String, TSConfigPathTargets).pipe(
+const TSConfigPaths = S.Record(TSConfigJsonKey, TSConfigPathTargets).pipe(
   $I.annoteSchema("TSConfigPaths", {
     description: "The compilerOptions.paths map from module specifier aliases to arrays of target paths or null.",
   })
@@ -563,7 +575,7 @@ const TSNodeTranspiler = S.Union([S.String, TSNodeTranspilerTuple]).pipe(
   })
 );
 
-const TSNodeModuleTypes = S.Record(S.String, TSNodeModuleType).pipe(
+const TSNodeModuleTypes = S.Record(TSConfigJsonKey, TSNodeModuleType).pipe(
   $I.annoteSchema("TSNodeModuleTypes", {
     description: "A ts-node module type override map from glob patterns to `cjs`, `esm`, or `package`.",
   })
