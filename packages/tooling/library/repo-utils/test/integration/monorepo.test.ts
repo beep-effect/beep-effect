@@ -21,8 +21,9 @@ import { Effect, FileSystem, HashMap, HashSet, Layer, Order } from "effect";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 const TestLayer = FsUtilsLive.pipe(Layer.provideMerge(PlatformLayer));
+const MONOREPO_INTEGRATION_TIMEOUT = 300_000;
 
-layer(TestLayer, { timeout: 300_000 })("integration (real monorepo)", (it) => {
+layer(TestLayer, { timeout: MONOREPO_INTEGRATION_TIMEOUT })("integration (real monorepo)", (it) => {
   // ── findRepoRoot ─────────────────────────────────────────────────────
   describe("findRepoRoot", () => {
     it.effect(
@@ -40,7 +41,7 @@ layer(TestLayer, { timeout: 300_000 })("integration (real monorepo)", (it) => {
         expect(hasTurboJson).toBe(true);
         expect(hasBunLock).toBe(true);
       }),
-      120_000
+      MONOREPO_INTEGRATION_TIMEOUT
     );
   });
 
@@ -58,7 +59,7 @@ layer(TestLayer, { timeout: 300_000 })("integration (real monorepo)", (it) => {
         // At least 2 workspaces (could be more as repo grows)
         expect(HashMap.size(workspaces)).toBeGreaterThanOrEqual(2);
       }),
-      120_000
+      MONOREPO_INTEGRATION_TIMEOUT
     );
   });
 
@@ -85,7 +86,7 @@ layer(TestLayer, { timeout: 300_000 })("integration (real monorepo)", (it) => {
           }
         }
       }),
-      120_000
+      MONOREPO_INTEGRATION_TIMEOUT
     );
   });
 
@@ -110,7 +111,7 @@ layer(TestLayer, { timeout: 300_000 })("integration (real monorepo)", (it) => {
           expect(deps.npm).toHaveProperty("devDependencies");
         }
       }),
-      120_000
+      MONOREPO_INTEGRATION_TIMEOUT
     );
   });
 
@@ -136,7 +137,7 @@ layer(TestLayer, { timeout: 300_000 })("integration (real monorepo)", (it) => {
         expect(HashSet.size(HashSet.fromIterable(unique.dependencies))).toBe(unique.dependencies.length);
         expect(HashSet.size(HashSet.fromIterable(unique.devDependencies))).toBe(unique.devDependencies.length);
       }),
-      120_000
+      MONOREPO_INTEGRATION_TIMEOUT
     );
   });
 });

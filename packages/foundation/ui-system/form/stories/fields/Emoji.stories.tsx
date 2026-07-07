@@ -30,9 +30,10 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await userEvent.click(canvas.getByRole("button", { name: /select emoji/i }));
-    await expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
+    return userEvent.click(canvas.getByRole("button", { name: /select emoji/i })).then(() => {
+      expect(screen.getByPlaceholderText(/search/i)).toBeInTheDocument();
+    });
   },
 };

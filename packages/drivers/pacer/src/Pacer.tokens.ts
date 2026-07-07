@@ -1,5 +1,5 @@
 /**
- * Branded value objects and literal enumerations shared across the PACER POC.
+ * Branded value objects and literal enumerations shared across the PACER driver.
  *
  * These are the small, dependency-free schema primitives that the auth and PCL
  * models build on: the opaque `NextGenCSO` auth token, the `loginResult` codes
@@ -9,23 +9,46 @@
  * @since 0.0.0
  */
 
-import { $ScratchpadId } from "@beep/identity";
+import { $PacerId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
-const $I = $ScratchpadId.create("pacer/Pacer.tokens");
+const $I = $PacerId.create("pacer/Pacer.tokens");
+
+const NEXT_GEN_CSO_TOKEN_LENGTH = 128;
 
 /**
  * The opaque 128-character PACER `nextGenCSO` authentication token.
  *
  * Branded so it can never be confused with an ordinary string; the service
- * layer wraps it in {@link effect/Redacted.Redacted} before it is stored or
+ * layer wraps it in a redacted value before it is stored or
  * threaded onto downstream PCL requests.
+ *
+ * @example
+ * ```ts
+ * import { NextGenCsoToken } from "@beep/pacer"
+ * import * as Str from "effect/String"
+ *
+ * const token = NextGenCsoToken.make(Str.repeat(128)("Q"))
+ * console.log(token.length)
+ * ```
  *
  * @category models
  * @since 0.0.0
  */
 export const NextGenCsoToken = S.String.pipe(
+  S.check(
+    S.isMinLength(NEXT_GEN_CSO_TOKEN_LENGTH, {
+      identifier: $I`NextGenCsoTokenMinLengthCheck`,
+      title: "NextGenCSO Min Length",
+      description: "PACER nextGenCSO tokens must contain exactly 128 characters.",
+    }),
+    S.isMaxLength(NEXT_GEN_CSO_TOKEN_LENGTH, {
+      identifier: $I`NextGenCsoTokenMaxLengthCheck`,
+      title: "NextGenCSO Max Length",
+      description: "PACER nextGenCSO tokens must contain exactly 128 characters.",
+    })
+  ),
   S.brand("NextGenCsoToken"),
   $I.annoteSchema("NextGenCsoToken", {
     description: "Opaque PACER nextGenCSO authentication token (128 characters on success).",
@@ -34,6 +57,16 @@ export const NextGenCsoToken = S.String.pipe(
 
 /**
  * Type for {@link NextGenCsoToken}.
+ *
+ * @example
+ * ```ts
+ * import { NextGenCsoToken } from "@beep/pacer"
+ * import type { NextGenCsoToken as NextGenCsoTokenType } from "@beep/pacer"
+ * import * as Str from "effect/String"
+ *
+ * const token: NextGenCsoTokenType = NextGenCsoToken.make(Str.repeat(128)("Q"))
+ * console.log(token.length)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -48,17 +81,34 @@ export type NextGenCsoToken = typeof NextGenCsoToken.Type;
  * filer omitted the redaction flag; `"13"` = invalid username, password, or OTP.
  * Any non-`"0"` value means authentication failed and `nextGenCSO` is empty.
  *
+ * @example
+ * ```ts
+ * import { LoginResult } from "@beep/pacer"
+ *
+ * console.log(LoginResult.Enum["13"])
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
 export const LoginResult = LiteralKit(["0", "1", "13"]).pipe(
   $I.annoteSchema("LoginResult", {
-    description: "Documented PACER cso-auth loginResult codes: 0 ok, 1 redaction-flag missing, 13 invalid creds/OTP.",
+    description:
+      "Documented PACER cso-auth loginResult codes: 0 ok, 1 redaction-flag missing, 13 invalid credentials/OTP.",
   })
 );
 
 /**
  * Type for {@link LoginResult}.
+ *
+ * @example
+ * ```ts
+ * import { LoginResult } from "@beep/pacer"
+ * import type { LoginResult as LoginResultType } from "@beep/pacer"
+ *
+ * const result: LoginResultType = LoginResult.Enum["0"]
+ * console.log(result)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -67,8 +117,15 @@ export type LoginResult = typeof LoginResult.Type;
 
 /**
  * PCL request `jurisdictionType` codes (lowercase): appellate, bankruptcy,
- * criminal, civil, and JPML/multidistrict. Note the PCL *response* spells
+ * criminal, civil, and multidistrict litigation. Note the PCL *response* spells
  * jurisdiction out (e.g. `"Civil"`), so responses keep a plain string.
+ *
+ * @example
+ * ```ts
+ * import { JurisdictionType } from "@beep/pacer"
+ *
+ * console.log(JurisdictionType.Enum.cv)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -82,6 +139,15 @@ export const JurisdictionType = LiteralKit(["ap", "bk", "cr", "cv", "mdl"]).pipe
 /**
  * Type for {@link JurisdictionType}.
  *
+ * @example
+ * ```ts
+ * import { JurisdictionType } from "@beep/pacer"
+ * import type { JurisdictionType as JurisdictionTypeType } from "@beep/pacer"
+ *
+ * const jurisdiction: JurisdictionTypeType = JurisdictionType.Enum.cv
+ * console.log(jurisdiction)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -94,6 +160,14 @@ export type JurisdictionType = typeof JurisdictionType.Type;
  * annotation so any schema-derived generation (`Schema.toArbitrary` for mock
  * bodies and property tests) produces realistic case numbers instead of random
  * unicode — exercising the real shape rather than hardcoded fixtures.
+ *
+ * @example
+ * ```ts
+ * import { CaseNumberFull } from "@beep/pacer"
+ *
+ * const caseNumber = CaseNumberFull.make("1:2002bk20340")
+ * console.log(caseNumber)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -110,6 +184,15 @@ export const CaseNumberFull = S.String.pipe(
 /**
  * Type for {@link CaseNumberFull}.
  *
+ * @example
+ * ```ts
+ * import { CaseNumberFull } from "@beep/pacer"
+ * import type { CaseNumberFull as CaseNumberFullType } from "@beep/pacer"
+ *
+ * const caseNumber: CaseNumberFullType = CaseNumberFull.make("1:2002bk20340")
+ * console.log(caseNumber)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -118,6 +201,13 @@ export type CaseNumberFull = typeof CaseNumberFull.Type;
 /**
  * Which PACER environment the POC targets. QA is non-billable test data; prod
  * is the real, billable service.
+ *
+ * @example
+ * ```ts
+ * import { PacerEnvironment } from "@beep/pacer"
+ *
+ * console.log(PacerEnvironment.Enum.qa)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -131,6 +221,15 @@ export const PacerEnvironment = LiteralKit(["qa", "prod"]).pipe(
 /**
  * Type for {@link PacerEnvironment}.
  *
+ * @example
+ * ```ts
+ * import { PacerEnvironment } from "@beep/pacer"
+ * import type { PacerEnvironment as PacerEnvironmentType } from "@beep/pacer"
+ *
+ * const environment: PacerEnvironmentType = PacerEnvironment.Enum.qa
+ * console.log(environment)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -138,6 +237,13 @@ export type PacerEnvironment = typeof PacerEnvironment.Type;
 
 /**
  * Status of a PCL asynchronous batch/download report job.
+ *
+ * @example
+ * ```ts
+ * import { ReportStatus } from "@beep/pacer"
+ *
+ * console.log(ReportStatus.Enum.COMPLETED)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -150,6 +256,15 @@ export const ReportStatus = LiteralKit(["WAITING", "RUNNING", "COMPLETED", "FAIL
 
 /**
  * Type for {@link ReportStatus}.
+ *
+ * @example
+ * ```ts
+ * import { ReportStatus } from "@beep/pacer"
+ * import type { ReportStatus as ReportStatusType } from "@beep/pacer"
+ *
+ * const status: ReportStatusType = ReportStatus.Enum.COMPLETED
+ * console.log(status)
+ * ```
  *
  * @category models
  * @since 0.0.0

@@ -30,10 +30,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const input = canvas.getByLabelText("Bio");
-    await userEvent.type(input, "hello");
-    await expect(input).toHaveValue("hello");
+    return userEvent.type(input, "hello").then(() => {
+      expect(input).toHaveValue("hello");
+    });
   },
 };
