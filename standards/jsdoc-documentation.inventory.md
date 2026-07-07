@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-06T22:50:34.197Z
+Generated: 2026-07-06T23:51:11.295Z
 
 ## Scope
 
@@ -11,14 +11,14 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 104 |
-| cleanPackages | 18 |
+| cleanPackages | 17 |
 | packagesWithoutPublicSrcSurface | 3 |
-| packagesNeedingRemediation | 79 |
-| publicModules | 1584 |
-| publicExports | 14142 |
+| packagesNeedingRemediation | 80 |
+| publicModules | 1596 |
+| publicExports | 14230 |
 | openModules | 129 |
-| openExports | 2211 |
-| missingExportExamples | 2003 |
+| openExports | 2222 |
+| missingExportExamples | 2014 |
 | missingExportCategories | 91 |
 | missingExportSince | 91 |
 | forbiddenTagFindings | 2 |
@@ -52,7 +52,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 9 | `@beep/rdf-canonize` | `packages/drivers/rdf-canonize` | needs-remediation | 2 | 2 | 0 | 1 |
 | 10 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | needs-remediation | 3 | 7 | 0 | 1 |
 | 11 | `@beep/root` | `.` | no-public-src-surface | 0 | 0 | 0 | 0 |
-| 12 | `@beep/pacer` | `packages/drivers/pacer` | clean | 1 | 1 | 0 | 0 |
+| 12 | `@beep/pacer` | `packages/drivers/pacer` | needs-remediation | 13 | 89 | 0 | 11 |
 | 13 | `@beep/workspace-tables` | `packages/workspace/tables` | needs-remediation | 16 | 34 | 0 | 1 |
 | 14 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | needs-remediation | 8 | 57 | 0 | 11 |
 | 15 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 2 | 3 | 0 | 1 |
@@ -177,6 +177,23 @@ Path: `packages/architecture-lab/ui`
 
 Export findings:
 - `src/aggregates/WorkItem/WorkItem.view-model.ts:75` `WorkItemVisibleAction` (type) - 1 unsafe example violation(s)
+
+### @beep/pacer
+
+Path: `packages/drivers/pacer`
+
+Export findings:
+- `src/index.ts:19` `export * from "./CsoAuth.models.ts";` (re-export) - missing @example
+- `src/index.ts:26` `export * from "./Pacer.config.ts";` (re-export) - missing @example
+- `src/index.ts:33` `export * from "./Pacer.errors.ts";` (re-export) - missing @example
+- `src/index.ts:40` `export * from "./Pacer.layer.ts";` (re-export) - missing @example
+- `src/index.ts:47` `export * from "./Pacer.mock.ts";` (re-export) - missing @example
+- `src/index.ts:54` `export * from "./Pacer.mock-data.ts";` (re-export) - missing @example
+- `src/index.ts:61` `export * from "./Pacer.tokens.ts";` (re-export) - missing @example
+- `src/index.ts:68` `export * from "./PacerAuth.service.ts";` (re-export) - missing @example
+- `src/index.ts:75` `export * from "./Pcl.api.ts";` (re-export) - missing @example
+- `src/index.ts:82` `export * from "./Pcl.models.ts";` (re-export) - missing @example
+- `src/index.ts:89` `export * from "./PclClient.service.ts";` (re-export) - missing @example
 
 ### @beep/workspace-tables
 

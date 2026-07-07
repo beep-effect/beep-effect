@@ -12,18 +12,27 @@
  * @since 0.0.0
  */
 
-import { $ScratchpadId } from "@beep/identity";
+import { $PacerId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
-import { CaseNumberFull, JurisdictionType, ReportStatus } from "../Pacer.tokens.ts";
+import { CaseNumberFull, JurisdictionType, ReportStatus } from "./Pacer.tokens.ts";
 
-const $I = $ScratchpadId.create("pacer/pcl/Pcl.models");
+const $I = $PacerId.create("pacer/pcl/Pcl.models");
 
 /** Permissive numeric field: PACER returns these as int (immediate) or string (batch). */
 const NumberOrString = S.Union([S.Finite, S.String]);
 
 /**
  * `CourtCaseSearchDto` — request body for `/cases/find` (pragmatic subset).
+ *
+ * @example
+ * ```ts
+ * import { CourtCaseSearchDto } from "@beep/pacer"
+ * import * as O from "effect/Option"
+ *
+ * const search = CourtCaseSearchDto.make({ caseNumberFull: O.some("1:2002bk20340") })
+ * console.log(search.caseNumberFull)
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -47,14 +56,23 @@ export class CourtCaseSearchDto extends S.Class<CourtCaseSearchDto>($I`CourtCase
 /**
  * `PartySearchDto` — request body for `/parties/find` (pragmatic subset).
  *
+ * @example
+ * ```ts
+ * import { PartySearchDto } from "@beep/pacer"
+ * import * as O from "effect/Option"
+ *
+ * const search = PartySearchDto.make({ lastName: O.some("Henderson") })
+ * console.log(search.lastName)
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
 export class PartySearchDto extends S.Class<PartySearchDto>($I`PartySearchDto`)(
   {
-    lastName: S.String.pipe(S.OptionFromOptionalKey,SchemaUtils.withNoneDefault),
-    firstName: S.String.pipe(S.OptionFromOptionalKey,SchemaUtils.withNoneDefault),
-    middleName: S.String.pipe(S.OptionFromOptionalKey,SchemaUtils.withNoneDefault),
+    lastName: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    firstName: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    middleName: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     exactNameMatch: S.Boolean.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     courtId: S.String.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     jurisdictionType: JurisdictionType.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
@@ -66,6 +84,15 @@ export class PartySearchDto extends S.Class<PartySearchDto>($I`PartySearchDto`)(
 
 /**
  * Billing receipt block returned with each immediate search.
+ *
+ * @example
+ * ```ts
+ * import { Receipt } from "@beep/pacer"
+ * import * as O from "effect/Option"
+ *
+ * const receipt = Receipt.make({ billablePages: O.some(1), searchFee: O.some("0.10") })
+ * console.log(receipt.billablePages)
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -91,6 +118,15 @@ export class Receipt extends S.Class<Receipt>($I`Receipt`)(
 /**
  * Pagination block. `last` drives the pagination stream's stop condition.
  *
+ * @example
+ * ```ts
+ * import { PageInfo } from "@beep/pacer"
+ * import * as O from "effect/Option"
+ *
+ * const pageInfo = PageInfo.make({ number: O.some(0), last: O.some(false) })
+ * console.log(pageInfo.last)
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -111,6 +147,15 @@ export class PageInfo extends S.Class<PageInfo>($I`PageInfo`)(
 
 /**
  * A single case search result (pragmatic subset).
+ *
+ * @example
+ * ```ts
+ * import { CaseResult } from "@beep/pacer"
+ * import * as O from "effect/Option"
+ *
+ * const result = CaseResult.make({ caseTitle: O.some("In re Example") })
+ * console.log(result.caseTitle)
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -139,6 +184,15 @@ export class CaseResult extends S.Class<CaseResult>($I`CaseResult`)(
 /**
  * A single party search result (pragmatic subset).
  *
+ * @example
+ * ```ts
+ * import { PartyResult } from "@beep/pacer"
+ * import * as O from "effect/Option"
+ *
+ * const result = PartyResult.make({ lastName: O.some("Henderson") })
+ * console.log(result.lastName)
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -165,6 +219,15 @@ export class PartyResult extends S.Class<PartyResult>($I`PartyResult`)(
 /**
  * `/cases/find` response envelope.
  *
+ * @example
+ * ```ts
+ * import { CaseReportList, CaseResult } from "@beep/pacer"
+ * import * as O from "effect/Option"
+ *
+ * const report = CaseReportList.make({ content: O.some([CaseResult.make({})]) })
+ * console.log(report.content)
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -172,7 +235,7 @@ export class CaseReportList extends S.Class<CaseReportList>($I`CaseReportList`)(
   {
     receipt: Receipt.pipe(S.NullOr, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     pageInfo: PageInfo.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
-    content: CaseResult.pipe(S.Array ,S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    content: CaseResult.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("CaseReportList", {
     description: "PCL /cases/find response envelope.",
@@ -181,6 +244,15 @@ export class CaseReportList extends S.Class<CaseReportList>($I`CaseReportList`)(
 
 /**
  * `/parties/find` response envelope.
+ *
+ * @example
+ * ```ts
+ * import { PartyReportList, PartyResult } from "@beep/pacer"
+ * import * as O from "effect/Option"
+ *
+ * const report = PartyReportList.make({ content: O.some([PartyResult.make({})]) })
+ * console.log(report.content)
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -202,6 +274,15 @@ export class PartyReportList extends S.Class<PartyReportList>($I`PartyReportList
  * by `POST /cases/download` and the `/download/status/{reportId}` poll. Note
  * `reportId` is an integer for batch jobs (vs a UUID string in immediate
  * receipts), so it is modeled permissively.
+ *
+ * @example
+ * ```ts
+ * import { ReportInfoType } from "@beep/pacer"
+ * import * as O from "effect/Option"
+ *
+ * const info = ReportInfoType.make({ reportId: 1078, status: O.some("COMPLETED") })
+ * console.log(info.status)
+ * ```
  *
  * @category schemas
  * @since 0.0.0
