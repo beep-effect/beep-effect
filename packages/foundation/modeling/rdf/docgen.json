@@ -298,6 +298,9 @@
       "@beep/schema/PermittedCrossDomainPolicies": [
         "../../../../packages/foundation/modeling/schema/src/PermittedCrossDomainPolicies/index.ts"
       ],
+      "@beep/schema/Port": [
+        "../../../../packages/foundation/modeling/schema/src/Port.ts"
+      ],
       "@beep/schema/PosixPath": [
         "../../../../packages/foundation/modeling/schema/src/PosixPath.ts"
       ],

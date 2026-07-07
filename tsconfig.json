@@ -1334,6 +1334,9 @@
       "@beep/repo-cli/commands/Worktree": [
         "./packages/tooling/tool/cli/src/commands/Worktree/index.ts"
       ],
+      "@beep/schema/Port": [
+        "./packages/foundation/modeling/schema/src/Port.ts"
+      ],
       "@beep/law-practice-domain/values": [
         "./packages/law-practice/domain/src/values/index.ts"
       ],
