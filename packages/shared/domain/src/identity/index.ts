@@ -6,6 +6,7 @@
  */
 
 import { $SharedDomainId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { pipe } from "effect";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
@@ -116,7 +117,8 @@ export const isIdentityComposer = (value: unknown): value is IdentityComposerTyp
 export const AnyIdentityComposer = S.declare<IdentityComposerType<string>>(isIdentityComposer).pipe(
   $I.annoteSchema("AnyIdentityComposer", {
     description: "Runtime schema for callable identity composer values.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

@@ -1,49 +1,5 @@
 [
   {
-    "ruleId": "SFV4-defaults",
-    "file": "apps/professional-desktop/src/runtime/Migrations.ts",
-    "line": 209,
-    "symbol": "ProfessionalDesktopMigrationOptions",
-    "smell": "`migrationsSchema` is `S.optionalKey(S.String)`, but the default is applied later in the body with `const schema = options.migrationsSchema ?? migrationsSchema;` at line 238.",
-    "proposedTarget": "Move the default to the schema: `migrationsSchema: S.String.pipe(SchemaUtils.withKeyDefaults(migrationsSchema)).annotateKey(...)`, then construct/decode `ProfessionalDesktopMigrationOptions` at the boundary so `migrateProfessionalDesktopDatabase` reads `options.migrationsSchema` without `??`. Verified helper: packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:50-68; in-repo exemplar: packages/drivers/phoenix/src/Phoenix.models.ts:459-460.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-normalization",
-    "file": "apps/professional-desktop/src/chat/ChatOrchestrator.ts",
-    "line": 55,
-    "symbol": "deriveThreadTitle",
-    "smell": "Thread-title normalization lives in a body: split rendered text, `A.map(Str.trim)`, first non-empty, slice to `DERIVED_THREAD_TITLE_MAX_CHARS`, trim again, and filter non-empty at lines 57-64. The downstream `SetThreadTitleIfEmptyInput.title` schema is only `S.NonEmptyString` (packages/workspace/use-cases/src/aggregates/Thread/ThreadStore.ts:152-157).",
-    "proposedTarget": "Introduce a `DerivedThreadTitle` / `ThreadTitleInput` schema using a trim transformation plus non-empty and max-length checks, or promote that invariant to the workspace title command schema if this is the canonical title boundary. Keep the document first-line extraction as behavior, but decode the candidate title through the schema. Verified transform: .repos/effect-v4/packages/effect/src/SchemaTransformation.ts:397-428; in-repo trim exemplar: packages/foundation/modeling/schema/src/CommonTextSchemas.ts:36-47.",
-    "confidence": 0.6,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
-    "line": 213,
-    "symbol": "inboundFrames",
-    "smell": "`onOpen: Effect.Effect<void> | undefined` carries internal absence as an undefined union, then branches with `if (onOpen !== undefined)` at lines 213 and 233.",
-    "proposedTarget": "Use `O.Option<Effect.Effect<void>>` for the internal optional hook, or accept an `Effect.void` default when the absence is not semantically meaningful. This keeps nullish absence out of transport logic without touching the Tauri event payload schemas.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-null-return",
-    "file": "apps/professional-desktop/scripts/sync-migration-bundle.ts",
-    "line": 32,
-    "symbol": "readMigrationBundleEntry",
-    "smell": "Script helper returns bare `undefined` for non-directory entries at line 32 and missing `migration.sql` at line 38, then downstream filters `migration !== undefined` at lines 56-58.",
-    "proposedTarget": "Return `O.Option<MigrationBundleEntry>` (`O.none()` for skipped entries, `O.some(...)` for valid migrations) and collapse the options after `Effect.all`; this preserves the generated-bundle behavior while avoiding undefined-as-data in first-party transformation logic.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
     "ruleId": "SFV4-null-return",
     "file": "apps/professional-desktop/src/App.tsx",
     "line": 75,

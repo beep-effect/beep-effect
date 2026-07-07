@@ -8,7 +8,7 @@ import { $AgentsDomainId } from "@beep/identity/packages";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as Agents from "@beep/shared-domain/identity/Agents";
-import * as S from "effect/Schema";
+import { SkillFixtureKey, SkillName } from "../Fixture.values.js";
 
 const $I = $AgentsDomainId.create("entities/Skill/Skill.model");
 
@@ -29,8 +29,8 @@ export class Skill extends BaseEntity.Class<Skill>($I`Skill`)(
   Agents.SkillId,
   {
     fields: {
-      fixtureKey: S.String,
-      name: S.String,
+      fixtureKey: SkillFixtureKey,
+      name: SkillName,
     },
     persisted: {
       fixtureKey: EntitySchema.persist.text({

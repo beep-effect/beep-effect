@@ -1,39 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "apps/professional-desktop/src/App.tsx",
-    "line": 41,
-    "symbol": "decodeSidecarTransport",
-    "smell": "Free-floating boundary decoder `S.decodeUnknownEffect(SidecarTransport)` sits beside the `SidecarTransport` S.Class instead of on the class; the only consumer immediately feeds it into the Tauri transport probe at line 53.",
-    "proposedTarget": "Move the decoder into `SidecarTransport` as `static readonly decodeUnknownEffect = S.decodeUnknownEffect(this)` (Effect v4 API verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`) and call `SidecarTransport.decodeUnknownEffect` from the probe.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
-    "line": 71,
-    "symbol": "decodeInboundFrame",
-    "smell": "Free-floating IPC frame decoder `S.decodeUnknownEffect(InboundFrame)` duplicates behavior that belongs on the annotated `InboundFrame` boundary schema at line 63.",
-    "proposedTarget": "Attach `decodeUnknownEffect` to `InboundFrame` with `SchemaUtils.withStatics((schema) => ({ decodeUnknownEffect: S.decodeUnknownEffect(schema) }))` (helper verified at `packages/foundation/modeling/schema/src/SchemaUtils/withStatics.ts:103`) and replace the wall const with `InboundFrame.decodeUnknownEffect`.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
-    "line": 90,
-    "symbol": "decodeSidecarClosedPayload",
-    "smell": "Free-floating decoder `S.decodeUnknownEffect(SidecarClosedPayload)` sits outside the `SidecarClosedPayload` S.Class and is consumed only by the closed-event branch at line 190.",
-    "proposedTarget": "Move the decoder into the class as `static readonly decodeUnknownEffect = S.decodeUnknownEffect(this)` and call `SidecarClosedPayload.decodeUnknownEffect(payload)` from `decodeInboundEvent`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "apps/professional-desktop/src/chat/ChatOrchestrator.ts",
     "line": 156,
     "symbol": "decodeUsageAppend",
@@ -41,7 +8,11 @@
     "proposedTarget": "Add `static readonly decodeUnknownSync = S.decodeUnknownSync(this)` to `TurnFinalizationUsageAppend` in its owning model and replace this helper with `TurnFinalizationUsageAppend.decodeUnknownSync(...)`.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "The static belongs on `TurnFinalizationUsageAppend` in `@beep/epistemic-domain`; adding it from this package would edit an external schema owner.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -52,18 +23,11 @@
     "proposedTarget": "Add `static readonly is = S.is(ChatActionError)` to `ChatActionError` in its owning class and use `ChatActionError.is(error)` here, matching S4's in-body class static pattern.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "apps/professional-desktop/src/chat/ui/StreamingBlocks.tsx",
-    "line": 51,
-    "symbol": "stableOccurrenceKeys",
-    "smell": "Exported two-argument pure helper is not `dual`, so callers cannot use the pipeable `stableOccurrenceKeys(renderKey)` form even though the helper is data-first over `items`.",
-    "proposedTarget": "Wrap with Effect v4 `dual(2, (items, renderKey) => ...)` (verified at `.repos/effect-v4/packages/effect/src/Function.ts:102`) and keep the current data-first call sites unchanged.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 6
+    "roiRank": 5,
+    "exception": {
+      "reason": "The guard static belongs on `ChatActionError` in `@beep/agents-use-cases`; adding it from this package would edit an external schema owner.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

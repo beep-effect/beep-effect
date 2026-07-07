@@ -6,9 +6,11 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("entities/Matter/Matter.values");
+const MatterTypeBase = LiteralKit(["patent_application"]);
 
 /**
  * Matter type accepted by the law-practice proof fixtures.
@@ -25,10 +27,15 @@ const $I = $LawPracticeDomainId.create("entities/Matter/Matter.values");
  * @category value-objects
  * @since 0.0.0
  */
-export const MatterType = LiteralKit(["patent_application"]).pipe(
+export const MatterType = MatterTypeBase.pipe(
   $I.annoteSchema("MatterType", {
     description: "Matter type accepted by law-practice proof fixtures.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(MatterTypeBase),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**

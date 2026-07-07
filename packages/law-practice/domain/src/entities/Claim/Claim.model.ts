@@ -5,11 +5,11 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { NonNegativeInt } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import * as S from "effect/Schema";
+import { ClaimNumber, LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.js";
 
 const $I = $LawPracticeDomainId.create("entities/Claim/Claim.model");
 
@@ -53,11 +53,21 @@ export class Claim extends BaseEntity.Class<Claim>($I`Claim`)(
   LawPractice.ClaimId,
   {
     fields: {
-      claimNumber: NonNegativeInt,
-      fixtureKey: S.String,
-      independent: S.Boolean,
-      patentAssetFixtureKey: S.String,
-      text: S.String,
+      claimNumber: ClaimNumber.annotateKey({
+        description: "One-based patent claim number.",
+      }),
+      fixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Stable fixture key for the claim.",
+      }),
+      independent: S.Boolean.annotateKey({
+        description: "Whether the claim is independent.",
+      }),
+      patentAssetFixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Fixture key for the patent asset this claim belongs to.",
+      }),
+      text: LawPracticeText.annotateKey({
+        description: "Full claim text.",
+      }),
     },
     persisted: {
       claimNumber: EntitySchema.persist.int({

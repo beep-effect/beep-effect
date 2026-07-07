@@ -30,12 +30,12 @@ const $I = $ArchitectureLabDomainId.create("aggregates/WorkItem/WorkItem.values"
  * @category entity-ids
  * @since 0.0.0
  */
-export const WorkItemId = S.String.pipe(
+export const WorkItemId = S.NonEmptyString.pipe(
   S.brand("ArchitectureLabWorkItemId"),
   $I.annoteSchema("WorkItemId", {
     identifier: "WorkItemId",
     title: "WorkItem ID",
-    description: "Stable identifier for the canonical architecture lab WorkItem aggregate.",
+    description: "Non-empty stable identifier for the canonical architecture lab WorkItem aggregate.",
   })
 );
 
@@ -78,11 +78,11 @@ export type WorkItemId = S.Schema.Type<typeof WorkItemId>;
  * @category value-objects
  * @since 0.0.0
  */
-export const WorkItemTitle = S.String.pipe(
+export const WorkItemTitle = S.NonEmptyString.pipe(
   $I.annoteSchema("WorkItemTitle", {
     identifier: "WorkItemTitle",
     title: "WorkItem title",
-    description: "Human-readable WorkItem title.",
+    description: "Non-empty human-readable WorkItem title.",
   })
 );
 

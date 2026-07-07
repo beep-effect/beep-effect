@@ -8,7 +8,11 @@
     "proposedTarget": "Delete the module-level const; call `ClaimGateResult.fromUnknown({...})` directly at both call sites once `withCodecStatics` lands upstream on `ClaimGateResult`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "`ClaimGateResult` is defined in `@beep/epistemic-domain`; adding `fromUnknown` there would require a cross-package schema-static ripple outside this writer's package. The file-scoped static-api-colocation codemod proposer was run and returned unchanged because the owner schema is imported.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

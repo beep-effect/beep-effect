@@ -30,8 +30,12 @@ export class Thread extends BaseEntity.Class<Thread>($I`Thread`)(
   WorkspaceIdentity.ThreadId,
   {
     fields: {
-      title: S.NonEmptyString,
-      workspaceId: WorkspaceIdentity.WorkspaceId,
+      title: S.NonEmptyString.annotateKey({
+        description: "Human-readable thread title.",
+      }),
+      workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
+        description: "Workspace containing the thread.",
+      }),
     },
     persisted: {
       title: EntitySchema.persist.text({

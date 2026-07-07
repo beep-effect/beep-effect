@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { NonNegativeInt, UnknownRecord } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils, UnknownRecord } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import * as BaseEntitySchema from "@beep/shared-domain/entity/BaseEntity";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
@@ -15,6 +15,18 @@ import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordRefe
 import * as S from "effect/Schema";
 
 const $I = $EpistemicDomainId.create("entities/UsageRecord/UsageRecord.model");
+const UsageModelName = S.NonEmptyString.pipe(
+  $I.annoteSchema("UsageModelName", {
+    description: "Non-empty model name recorded for usage attribution.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+const UsageProviderName = S.NonEmptyString.pipe(
+  $I.annoteSchema("UsageProviderName", {
+    description: "Non-empty provider name recorded for usage attribution.",
+  }),
+  SchemaUtils.withCodecStatics
+);
 
 /**
  * Append-only usage attribution for model, tool, or agent work.
@@ -67,9 +79,9 @@ export class UsageRecord extends BaseEntity.Class<UsageRecord>($I`UsageRecord`)(
       inputTokens: NonNegativeInt.pipe(S.OptionFromNullOr),
       latencyMillis: NonNegativeInt.pipe(S.OptionFromNullOr),
       metadata: UnknownRecord,
-      model: S.String,
+      model: UsageModelName.annotateKey({ description: "Provider model name recorded for usage attribution." }),
       outputTokens: NonNegativeInt.pipe(S.OptionFromNullOr),
-      provider: S.String,
+      provider: UsageProviderName.annotateKey({ description: "Provider name recorded for usage attribution." }),
       totalTokens: NonNegativeInt.pipe(S.OptionFromNullOr),
       unitCount: NonNegativeInt.pipe(S.OptionFromNullOr),
     },

@@ -2,17 +2,6 @@
   {
     "ruleId": "SFV4-static-api",
     "file": "packages/architecture-lab/ui/src/aggregates/WorkItem/WorkItem.view-model.ts",
-    "line": 44,
-    "symbol": "WorkItemVisibleAction",
-    "smell": "LiteralKit const `LiteralKit([\"assign\", \"complete\", \"reopen\", \"archive\"]).pipe($I.annoteSchema(...))` has no `withLiteralKitStatics`/`withCodecStatics` attached; the file's own doc comment (line 34) falls back to bare `S.decodeUnknownSync(WorkItemVisibleAction)(\"archive\")` instead of a colocated `.fromUnknown`/`.decodeOption`, and `makeVisibleActions` (line 127) compares raw string literals (`action !== \"assign\"`) rather than using `WorkItemVisibleAction.Enum.assign`-style colocated members through a guard.",
-    "proposedTarget": "Capture the kit in a base const and compose both statics, mirroring packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts:30-35: `const WorkItemVisibleActionBase = LiteralKit([\"assign\", \"complete\", \"reopen\", \"archive\"]); export const WorkItemVisibleAction = WorkItemVisibleActionBase.pipe($I.annoteSchema(\"WorkItemVisibleAction\", {...}), SchemaUtils.withLiteralKitStatics(WorkItemVisibleActionBase), SchemaUtils.withCodecStatics)` (statics verified at packages/foundation/modeling/schema/src/SchemaUtils/withLiteralKitStatics.ts:37 and withCodecStatics.ts:90).",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/architecture-lab/ui/src/aggregates/WorkItem/WorkItem.view-model.ts",
     "line": 178,
     "symbol": "toWorkItemSummaryViewModel",
     "smell": "Detector scan hit: public 2-arg helper with explicit dual-call overload signature.",

@@ -1,28 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
-    "line": 105,
-    "symbol": "InlineNode",
-    "smell": "Exported tagged-union const `S.Union([TextInline, LinkInline]).pipe(S.toTaggedUnion(\"type\"), $I.annoteSchema(...))` has tagged-union helpers but no colocated codec statics, so consumers still need `S.is(InlineNode)` / `S.decodeUnknown*` for guard and decode behavior.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)`, matching the union pattern in `packages/foundation/modeling/md/src/Md.model.ts:608` and the helper contract at `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`; Effect v4 `S.toTaggedUnion` returns tagged helpers via `Object.assign` at `.repos/effect-v4/packages/effect/src/Schema.ts:6094`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
-    "line": 456,
-    "symbol": "AssistantBlock",
-    "smell": "Exported block tagged-union const has `.match` from `S.toTaggedUnion(\"type\")` but lacks the S4 codec statics (`is`, `fromUnknown`, `decodeOption`) that colocate guard/decode behavior on public union schemas.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)`, following `Md.Block` at `packages/foundation/modeling/md/src/Md.model.ts:1612` and `SchemaUtils.withCodecStatics` at `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/agents/domain/src/entities/Agent/Agent.values.ts",
     "line": 26,
     "symbol": "AgentMode",

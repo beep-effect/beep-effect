@@ -6,6 +6,20 @@
  */
 
 /**
+ * Office-action extraction label exports.
+ *
+ * @example
+ * ```ts
+ * import * as Module from "@beep/law-practice-use-cases/OfficeActionReview"
+ *
+ * console.log(Object.keys(Module).includes("OfficeActionExtractionLabel")) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export * from "./OfficeActionExtractionLabel.js";
+/**
  * Office-action review port exports.
  *
  * @example

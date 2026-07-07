@@ -2,16 +2,25 @@ import { CodeBlock, HeadingBlock, ParagraphBlock, TextInline } from "@beep/agent
 import {
   AgentTurnKernel,
   AssistantTurnHistoryItem,
+  IndexedBlock,
   TurnHistoryItem,
   UserTurnHistoryItem,
 } from "@beep/agents-use-cases/public";
 import { FixtureTurnKernel, fixtureBlocksFor } from "@beep/agents-use-cases/test";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Stream } from "effect";
+import { Effect, Result, Stream } from "effect";
+import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 const userItem = (text: string) => UserTurnHistoryItem.make({ text });
 const assistantItem = (text: string) => AssistantTurnHistoryItem.make({ text });
+const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
+  const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
+  const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
+
+  expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value)).toBe(true);
+};
 
 describe("@beep/agents-use-cases AssistantTurn", () => {
   it("models history as a role-tagged union of user and assistant items", () => {
@@ -28,6 +37,34 @@ describe("@beep/agents-use-cases AssistantTurn", () => {
         user: (item) => `user:${item.text}`,
       })
     ).toBe("user:hello");
+  });
+
+  it("keeps touched encoded shapes stable", () => {
+    const block = ParagraphBlock.make({ children: [TextInline.make({ text: "Hello" })] });
+    const indexed = IndexedBlock.make({ block, index: 0 });
+
+    expect(Result.getOrThrow(S.encodeResult(TurnHistoryItem)(userItem("hello")))).toStrictEqual({
+      role: "user",
+      text: "hello",
+    });
+    expect(Result.getOrThrow(S.encodeResult(IndexedBlock)(indexed))).toStrictEqual({
+      block: {
+        type: "paragraph",
+        children: [{ type: "text", text: "Hello" }],
+      },
+      index: 0,
+    });
+  });
+
+  it("round-trips touched schemas with schema-derived arbitraries", () => {
+    const schemas: ReadonlyArray<S.Codec<unknown>> = [TurnHistoryItem, IndexedBlock];
+
+    for (const schema of schemas) {
+      fc.assert(
+        fc.property(S.toArbitrary(schema), (value) => roundTrip(schema, value)),
+        { numRuns: 10 }
+      );
+    }
   });
 
   it("derives the deterministic scripted block sequence from the last user prompt", () => {

@@ -8,7 +8,7 @@
 
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.errors");
@@ -86,8 +86,12 @@ export class WorkItemNotFound extends TaggedErrorClass<WorkItemNotFound>($I`Work
 export class WorkItemConflict extends TaggedErrorClass<WorkItemConflict>($I`WorkItemConflict`)(
   "WorkItemConflict",
   {
-    workItemId: DomainWorkItem.WorkItemId,
-    reason: S.String,
+    workItemId: DomainWorkItem.WorkItemId.annotateKey({
+      description: "WorkItem identity whose command conflicted with persisted state.",
+    }),
+    reason: S.NonEmptyString.annotateKey({
+      description: "Non-empty public conflict reason.",
+    }),
   },
   $I.annote("WorkItemConflict", {
     title: "WorkItem conflict",
@@ -118,8 +122,12 @@ export class WorkItemConflict extends TaggedErrorClass<WorkItemConflict>($I`Work
 export class WorkItemActionRejected extends TaggedErrorClass<WorkItemActionRejected>($I`WorkItemActionRejected`)(
   "WorkItemActionRejected",
   {
-    workItemId: DomainWorkItem.WorkItemId,
-    reason: S.String,
+    workItemId: DomainWorkItem.WorkItemId.annotateKey({
+      description: "WorkItem identity whose domain action was rejected.",
+    }),
+    reason: S.NonEmptyString.annotateKey({
+      description: "Non-empty public rejection reason.",
+    }),
   },
   $I.annote("WorkItemActionRejected", {
     title: "WorkItem action rejected",
@@ -145,7 +153,9 @@ export class WorkItemActionRejected extends TaggedErrorClass<WorkItemActionRejec
 export class WorkItemActionFailed extends TaggedErrorClass<WorkItemActionFailed>($I`WorkItemActionFailed`)(
   "WorkItemActionFailed",
   {
-    reason: S.String,
+    reason: S.NonEmptyString.annotateKey({
+      description: "Non-empty public failure reason with internal repository details redacted.",
+    }),
   },
   $I.annote("WorkItemActionFailed", {
     title: "WorkItem action failed",
@@ -154,7 +164,39 @@ export class WorkItemActionFailed extends TaggedErrorClass<WorkItemActionFailed>
 ) {}
 
 /**
- * Public WorkItem use-case failure.
+ * Public WorkItem use-case failure schema.
+ *
+ * @example
+ * ```ts
+ * import {
+ *   WorkItemActionError,
+ *   WorkItemActionFailed,
+ * } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
+ *
+ * const isActionError = WorkItemActionError.is
+ *
+ * console.log(isActionError(WorkItemActionFailed.make({ reason: "Repository unavailable" }))) // true
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const WorkItemActionError = S.Union([
+  WorkItemNotFound,
+  WorkItemConflict,
+  WorkItemActionRejected,
+  WorkItemActionFailed,
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("WorkItemActionError", {
+    title: "WorkItem action error",
+    description: "Tagged union of public WorkItem use-case failures.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime type for {@link WorkItemActionError}.
  *
  * @example
  * ```ts
@@ -171,30 +213,4 @@ export class WorkItemActionFailed extends TaggedErrorClass<WorkItemActionFailed>
  * @category errors
  * @since 0.0.0
  */
-export type WorkItemActionError = WorkItemNotFound | WorkItemConflict | WorkItemActionRejected | WorkItemActionFailed;
-
-/**
- * Public WorkItem use-case failure schema.
- *
- * @example
- * ```ts
- * import {
- *   WorkItemActionError,
- *   WorkItemActionFailed
- * } from "@beep/architecture-lab-use-cases/aggregates/WorkItem"
- * import * as S from "effect/Schema"
- *
- * const isActionError = S.is(WorkItemActionError)
- *
- * console.log(isActionError(WorkItemActionFailed.make({ reason: "Repository unavailable" }))) // true
- * ```
- *
- * @category errors
- * @since 0.0.0
- */
-export const WorkItemActionError = S.Union([
-  WorkItemNotFound,
-  WorkItemConflict,
-  WorkItemActionRejected,
-  WorkItemActionFailed,
-]);
+export type WorkItemActionError = typeof WorkItemActionError.Type;

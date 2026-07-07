@@ -4,12 +4,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { EpistemicFixtureKey } from "@beep/epistemic-domain/values";
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { UnknownRecord } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
-import * as S from "effect/Schema";
 
 const $I = $EpistemicDomainId.create("entities/Activity/Activity.model");
 
@@ -47,7 +48,9 @@ export class Activity extends BaseEntity.Class<Activity>($I`Activity`)(
   Epistemic.ActivityId,
   {
     fields: {
-      fixtureKey: S.String,
+      fixtureKey: EpistemicFixtureKey.annotateKey({
+        description: "Stable fixture key for the provenance activity.",
+      }),
       snapshot: UnknownRecord,
     },
     persisted: {

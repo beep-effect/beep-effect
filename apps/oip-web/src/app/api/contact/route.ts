@@ -7,15 +7,17 @@
 
 import { Str } from "@beep/utils";
 import { Effect } from "effect";
-import * as S from "effect/Schema";
-import { ContactSubmissionPayload, ContactSubmissionResponse, contactResponseBody } from "../../../contact";
+import {
+  ContactSubmissionPayload,
+  ContactSubmissionResponse,
+  ContactSubmissionStatus,
+  contactResponseBody,
+} from "../../../contact";
 import { oipContactHttpApiWebHandler } from "./ContactHttpApiRoute";
 import { contactRequestResponse } from "./ContactRouteResponse";
 
 const isJsonContactSubmission = (request: Request): boolean =>
   Str.includes("application/json")(request.headers.get("content-type") ?? "");
-
-const decodeJsonContactSubmissionPayload = S.decodeUnknownEffect(ContactSubmissionPayload);
 
 const rejectedContactSubmission = ContactSubmissionResponse.make({
   message: "The submission could not be accepted.",
@@ -23,7 +25,10 @@ const rejectedContactSubmission = ContactSubmissionResponse.make({
 });
 
 const contactJsonStatus = (response: ContactSubmissionResponse): 202 | 400 =>
-  response.status === "accepted" ? 202 : 400;
+  ContactSubmissionStatus.$match(response.status, {
+    accepted: () => 202 as const,
+    rejected: () => 400 as const,
+  });
 
 const readJsonContactPayload = Effect.fn("OipContact.readJsonContactPayload")(function* (request: Request) {
   const body = yield* Effect.tryPromise({
@@ -31,7 +36,9 @@ const readJsonContactPayload = Effect.fn("OipContact.readJsonContactPayload")(fu
     catch: () => rejectedContactSubmission,
   });
 
-  return yield* decodeJsonContactSubmissionPayload(body).pipe(Effect.mapError(() => rejectedContactSubmission));
+  return yield* ContactSubmissionPayload.decodeUnknownEffect(body).pipe(
+    Effect.mapError(() => rejectedContactSubmission)
+  );
 });
 
 const rejectedJsonContactResponse = (response: ContactSubmissionResponse): Response =>

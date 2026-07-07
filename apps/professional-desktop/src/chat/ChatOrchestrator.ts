@@ -24,12 +24,14 @@ import {
 } from "@beep/agents-use-cases/public";
 import { appendTurnFinalizationUsageRecord, TurnFinalizationUsageAppend } from "@beep/epistemic-domain";
 import { renderPlainTextUnsafe } from "@beep/md/Md.render";
+import { MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Thread } from "@beep/workspace-use-cases/server";
 import { Clock, Duration, Effect, Metric, Order, pipe, Ref, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { DerivedThreadTitle } from "./DerivedThreadTitle.ts";
 import { UsageRecordSink } from "./UsageRecordSink.ts";
 import type { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
 import type { IndexedBlock, TurnGenerationError, TurnHistoryItem } from "@beep/agents-use-cases/public";
@@ -50,25 +52,17 @@ import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
 export const documentToPlainText = (document: Document.Type): string => renderPlainTextUnsafe(document);
 
 const UNTITLED_THREAD_TITLE = "New thread" as const;
-const DERIVED_THREAD_TITLE_MAX_CHARS = 64;
+
+const decodeDerivedThreadTitle = S.decodeUnknownOption(DerivedThreadTitle);
+const decodeDerivedThreadTitleLine = (line: string): O.Option<string> => decodeDerivedThreadTitle(line);
 
 const deriveThreadTitle = (document: Document.Type): O.Option<string> =>
-  pipe(
-    documentToPlainText(document),
-    Str.split("\n"),
-    A.map(Str.trim),
-    A.findFirst(Str.isNonEmpty),
-    O.filter(Str.isNonEmpty),
-    O.map(Str.slice(0, DERIVED_THREAD_TITLE_MAX_CHARS)),
-    O.map(Str.trim),
-    O.filter(Str.isNonEmpty)
-  );
+  pipe(documentToPlainText(document), Str.split("\n"), A.map(decodeDerivedThreadTitleLine), A.getSomes, A.head);
 
-const turnHasUserMessage = (turn: Thread.TimelineTurn): boolean =>
-  A.some(turn.items, (item) => item.kind === "message" && item.role === "user");
+const turnHasUserMessage = (turn: Thread.TimelineTurn): boolean => A.some(turn.items, isUserMessageItem);
 
 const isUserMessageItem = (item: Thread.TimelineItem): item is Thread.TimelineMessageItem =>
-  item.kind === "message" && item.role === "user";
+  Thread.TimelineItem.guards.message(item) && MessageRole.is.user(item.role);
 
 const firstUserMessageTurn = (timeline: Thread.ThreadTimeline): O.Option<Thread.TimelineTurn> =>
   pipe(timeline.turns, A.findFirst(turnHasUserMessage));
@@ -118,6 +112,15 @@ const titleGuardForEditedFirstUserTurn = (
 
 const indexOf = (indexed: IndexedBlock): number => indexed.index;
 
+const messageItemToHistory = (item: Thread.TimelineMessageItem): ReadonlyArray<TurnHistoryItem> =>
+  MessageRole.$match(item.role, {
+    agent: () => [UserTurnHistoryItem.make({ text: documentToPlainText(item.content) })],
+    assistant: () => [AssistantTurnHistoryItem.make({ text: documentToPlainText(item.content) })],
+    system: () => [UserTurnHistoryItem.make({ text: documentToPlainText(item.content) })],
+    tool: () => [UserTurnHistoryItem.make({ text: documentToPlainText(item.content) })],
+    user: () => [UserTurnHistoryItem.make({ text: documentToPlainText(item.content) })],
+  });
+
 const projectTimelineToHistory = (timeline: Thread.ThreadTimeline): ReadonlyArray<TurnHistoryItem> =>
   pipe(
     timeline.turns,
@@ -125,13 +128,10 @@ const projectTimelineToHistory = (timeline: Thread.ThreadTimeline): ReadonlyArra
       A.flatMap(
         turn.items,
         (item): ReadonlyArray<TurnHistoryItem> =>
-          item.kind === "message"
-            ? [
-                item.role === "assistant"
-                  ? AssistantTurnHistoryItem.make({ text: documentToPlainText(item.content) })
-                  : UserTurnHistoryItem.make({ text: documentToPlainText(item.content) }),
-              ]
-            : []
+          Thread.TimelineItem.match({
+            message: messageItemToHistory,
+            tool_call: () => [],
+          })(item)
       )
     )
   );

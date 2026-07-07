@@ -7,6 +7,10 @@ import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
+
+const UsageRecordArbitrary = S.toArbitrary(UsageRecordModel);
+const UsageRecordEquivalence = S.toEquivalence(UsageRecordModel);
 
 const usageRecordInput = (id: number) => ({
   ...baseEntityFixtureInput("EpistemicUsageRecord", id),
@@ -89,4 +93,25 @@ describe("EpistemicTables", () => {
     expect(O.getOrNull(decoded.costUsdApproxMicros)).toBeNull();
     expect(O.isNone(decoded.unitCount)).toBe(true);
   });
+
+  it("round-trips schema-derived UsageRecords through the row converters", () =>
+    fc.assert(
+      fc.property(UsageRecordArbitrary, (record) => {
+        const insert = UsageRecord.toUsageRecordInsert(record);
+        const decoded = UsageRecord.fromUsageRecordRow({
+          ...insert,
+          id: record.id,
+          costUsdApproxMicros: insert.costUsdApproxMicros ?? null,
+          credentialReference: insert.credentialReference ?? null,
+          inputTokens: insert.inputTokens ?? null,
+          latencyMillis: insert.latencyMillis ?? null,
+          outputTokens: insert.outputTokens ?? null,
+          totalTokens: insert.totalTokens ?? null,
+          unitCount: insert.unitCount ?? null,
+        });
+
+        expect(UsageRecordEquivalence(decoded, record)).toBe(true);
+      }),
+      { numRuns: 50 }
+    ));
 });

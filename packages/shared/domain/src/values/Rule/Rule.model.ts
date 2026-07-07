@@ -5,10 +5,39 @@
  * @since 0.0.0
  */
 import { $SharedDomainId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $SharedDomainId.create("values/Rule/Rule.model");
+const EffectBase = LiteralKit(["allow", "deny", "ask"]);
+const ruleTokenPattern = /^[a-z][a-z0-9:_-]*$/u;
+const ruleResourcePattern = /^[a-z][a-z0-9:_-]*(?:\.[a-z][a-z0-9:_-]*)*$/u;
+
+const RuleAction = S.NonEmptyString.check(
+  S.isPattern(ruleTokenPattern, {
+    identifier: $I`RuleActionPattern`,
+    title: "Rule action token pattern",
+    description: "Lowercase rule action token.",
+    message: "Expected a lowercase rule action token",
+  })
+).pipe(
+  $I.annoteSchema("RuleAction", {
+    description: "Lowercase action token used by shared rule values.",
+  })
+);
+
+const RuleResource = S.NonEmptyString.check(
+  S.isPattern(ruleResourcePattern, {
+    identifier: $I`RuleResourcePattern`,
+    title: "Rule resource token pattern",
+    description: "Lowercase dot-separated resource token.",
+    message: "Expected a lowercase rule resource token",
+  })
+).pipe(
+  $I.annoteSchema("RuleResource", {
+    description: "Lowercase resource token used by shared rule values.",
+  })
+);
 
 /**
  * Rule-effect literal schema used as the discriminator for rule decisions.
@@ -26,10 +55,15 @@ const $I = $SharedDomainId.create("values/Rule/Rule.model");
  * @category schemas
  * @since 0.0.0
  */
-export const Effect = LiteralKit(["allow", "deny", "ask"]).pipe(
+export const Effect = EffectBase.pipe(
   $I.annoteSchema("Effect", {
     description: "Effect of a rule: allow, deny, ask.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(EffectBase),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**
@@ -87,11 +121,11 @@ export declare namespace Effect {
  */
 export class Base extends S.Class<Base>($I`Base`)(
   {
-    action: S.String,
-    resource: S.String,
+    action: RuleAction.annotateKey({ description: "Action token the rule evaluates." }),
+    resource: RuleResource.annotateKey({ description: "Resource token the rule evaluates." }),
   },
   $I.annote("Base", {
-    description: "Base class for ",
+    description: "Shared action and resource fields for rule decision variants.",
   })
 ) {}
 
@@ -117,7 +151,7 @@ export class Base extends S.Class<Base>($I`Base`)(
  */
 export class Allow extends Base.extend<Allow>($I`Allow`)(
   {
-    effect: S.tag(Effect.Enum.allow),
+    effect: S.tag(Effect.Enum.allow).annotateKey({ description: "Rule discriminator for an allow decision." }),
   },
   $I.annote("Allow", {
     description: " with discriminated `allow` effect field",
@@ -146,7 +180,7 @@ export class Allow extends Base.extend<Allow>($I`Allow`)(
  */
 export class Deny extends Base.extend<Deny>($I`Deny`)(
   {
-    effect: S.tag(Effect.Enum.deny),
+    effect: S.tag(Effect.Enum.deny).annotateKey({ description: "Rule discriminator for a deny decision." }),
   },
   $I.annote("Deny", {
     description: " with discriminated `deny` effect field",
@@ -175,7 +209,7 @@ export class Deny extends Base.extend<Deny>($I`Deny`)(
  */
 export class Ask extends Base.extend<Ask>($I`Ask`)(
   {
-    effect: S.tag(Effect.Enum.ask),
+    effect: S.tag(Effect.Enum.ask).annotateKey({ description: "Rule discriminator for an ask decision." }),
   },
   $I.annote("Ask", {
     description: " with discriminated `ask` effect field",
@@ -206,7 +240,8 @@ export const Rule = S.Union([Allow, Deny, Ask]).pipe(
   S.toTaggedUnion("effect"),
   $I.annoteSchema("Rule", {
     description: "RuleEffect tagged union",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

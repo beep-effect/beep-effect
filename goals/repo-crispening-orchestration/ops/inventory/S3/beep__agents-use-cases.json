@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.fixtures.ts",
-    "line": 688,
-    "symbol": "fixtureRunnerForScenario",
-    "smell": "Runtime fixture scenario ids are a closed family in practice (\"law-patent-intake\" and \"wealth-cash-request\") but remain plain S.String fields at ProfessionalRuntime.fixtures.ts:22 and :55, ProfessionalRuntime.contracts.ts:600 and :656, and ProfessionalRuntime.queries.ts:39; dispatch is a manual Match.type<string>() chain at lines 688-696 instead of a kit-derived domain.",
-    "proposedTarget": "Add RuntimeFixtureScenarioId = LiteralKit([\"law-patent-intake\", \"wealth-cash-request\"]) in the ProfessionalRuntime value vocabulary, use it for scenarioId schemas across fixture/query/output contracts, and replace fixtureRunnerForScenario's string matcher with RuntimeFixtureScenarioId.$match or a RuntimeFixtureScenarioId-keyed runner table. In-repo exemplar: RuntimeActivityType = LiteralKit([\"artifact_ingested\", \"candidate_work_proposed\"]) at packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:132.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/agents/use-cases/test/Chat.test.ts",
     "line": 5,
     "symbol": "tags",

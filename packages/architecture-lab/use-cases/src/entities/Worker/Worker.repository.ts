@@ -8,7 +8,7 @@
 
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import type { Effect } from "effect";
@@ -43,7 +43,9 @@ export class WorkerRepositoryNotFound extends TaggedErrorClass<WorkerRepositoryN
     title: "Worker repository not found",
     description: "The Worker repository could not find the requested entity.",
   })
-) {}
+) {
+  static readonly is = S.is(WorkerRepositoryNotFound);
+}
 
 /**
  * Persistence failure raised when a Worker write conflicts.
@@ -69,13 +71,17 @@ export class WorkerRepositoryConflict extends TaggedErrorClass<WorkerRepositoryC
   "WorkerRepositoryConflict",
   {
     workerId: DomainWorker.WorkerId,
-    reason: S.String,
+    reason: S.NonEmptyString.annotateKey({
+      description: "Non-empty repository conflict diagnostic.",
+    }),
   },
   $I.annote("WorkerRepositoryConflict", {
     title: "Worker repository conflict",
     description: "The Worker repository rejected a conflicting write.",
   })
-) {}
+) {
+  static readonly is = S.is(WorkerRepositoryConflict);
+}
 
 /**
  * Persistence failure raised when the Worker repository is unavailable.
@@ -97,16 +103,51 @@ export class WorkerRepositoryUnavailable extends TaggedErrorClass<WorkerReposito
 )(
   "WorkerRepositoryUnavailable",
   {
-    reason: S.String,
+    reason: S.NonEmptyString.annotateKey({
+      description: "Non-empty repository availability diagnostic.",
+    }),
   },
   $I.annote("WorkerRepositoryUnavailable", {
     title: "Worker repository unavailable",
     description: "The Worker repository could not serve the request.",
   })
-) {}
+) {
+  static readonly is = S.is(WorkerRepositoryUnavailable);
+}
 
 /**
- * Worker repository failure.
+ * Worker repository failure schema.
+ *
+ * @example
+ * ```ts
+ * import {
+ *   WorkerRepositoryError,
+ *   WorkerRepositoryUnavailable,
+ * } from "@beep/architecture-lab-use-cases/entities/Worker/server"
+ *
+ * const isRepositoryError = WorkerRepositoryError.is
+ *
+ * console.log(isRepositoryError(WorkerRepositoryUnavailable.make({ reason: "maintenance" }))) // true
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export const WorkerRepositoryError = S.Union([
+  WorkerRepositoryNotFound,
+  WorkerRepositoryConflict,
+  WorkerRepositoryUnavailable,
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("WorkerRepositoryError", {
+    title: "Worker repository error",
+    description: "Tagged union of Worker repository port failures.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime type for {@link WorkerRepositoryError}.
  *
  * @example
  * ```ts
@@ -123,7 +164,7 @@ export class WorkerRepositoryUnavailable extends TaggedErrorClass<WorkerReposito
  * @category repositories
  * @since 0.0.0
  */
-export type WorkerRepositoryError = WorkerRepositoryNotFound | WorkerRepositoryConflict | WorkerRepositoryUnavailable;
+export type WorkerRepositoryError = typeof WorkerRepositoryError.Type;
 
 /**
  * Worker repository port consumed by the server-side use-case factory.

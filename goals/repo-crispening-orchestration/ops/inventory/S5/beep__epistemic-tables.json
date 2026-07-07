@@ -2,17 +2,6 @@
   {
     "ruleId": "SFV4-arbitrary-tests",
     "file": "packages/epistemic/tables/test/EpistemicTables.test.ts",
-    "line": 56,
-    "symbol": "UsageRecord row converter round-trip",
-    "smell": "The UsageRecord row converters are covered by one hand-written row fixture; there is no `S.toArbitrary`-derived property proving `toUsageRecordInsert` / `fromUsageRecordRow` preserve every generated UsageRecord row shape.",
-    "proposedTarget": "Add an additive converter law using `S.toArbitrary(UsageRecordModel)` (verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:12970): generate a `UsageRecord`, encode to insert, re-add the selected-row `id` plus concrete SQL `null` values for absent nullable columns, decode with `fromUsageRecordRow`, and compare through `S.toEquivalence(UsageRecordModel)` (verified at :13201). Keep the existing fixture for exact Drizzle column metadata.",
-    "confidence": 0.68,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/epistemic/tables/test/EpistemicTables.test.ts",
     "line": 15,
     "symbol": "UsageRecord SQL row fixtures",
     "smell": "Detector candidate: converter tests use static nullable row data and explicit `null` normalization for SQL columns.",

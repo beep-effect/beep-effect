@@ -12,10 +12,11 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { NextResponse } from "next/server";
 import { ContactSubmissionResponse, contactSubmissionPayloadFromFormDataEffect, submitContact } from "../../../contact";
+import type { ContactSubmissionPayload } from "../../../contact";
 
 const $I = $OipWebId.create("app/api/contact/ContactRouteResponse");
 
-type SubmitContact = (payload: unknown) => Effect.Effect<ContactSubmissionResponse>;
+type SubmitContact = (payload: ContactSubmissionPayload) => Effect.Effect<ContactSubmissionResponse>;
 
 const ContactRoutePayloadErrorReason = LiteralKit(["form-data", "schema"]).pipe(
   $I.annoteSchema("ContactRoutePayloadErrorReason", {

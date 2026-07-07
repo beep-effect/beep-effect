@@ -6,9 +6,11 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import * as S from "effect/Schema";
 
 const $I = $LawPracticeDomainId.create("entities/LegalClient/LegalClient.values");
+const LegalClientStatusBase = LiteralKit(["active_client"]);
 
 /**
  * Legal client lifecycle status accepted by the law-practice proof fixtures.
@@ -25,10 +27,15 @@ const $I = $LawPracticeDomainId.create("entities/LegalClient/LegalClient.values"
  * @category value-objects
  * @since 0.0.0
  */
-export const LegalClientStatus = LiteralKit(["active_client"]).pipe(
+export const LegalClientStatus = LegalClientStatusBase.pipe(
   $I.annoteSchema("LegalClientStatus", {
     description: "Legal client lifecycle status accepted by law-practice proof fixtures.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(LegalClientStatusBase),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**

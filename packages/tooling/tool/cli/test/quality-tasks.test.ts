@@ -1290,7 +1290,12 @@ describe("quality task adapter", () => {
           }
 
           const commandLog = yield* fs.readFileString(commandLogPath);
-          expectSubstringBefore(commandLog, "bunx turbo run lint", "bun run beep laws effect-imports --check");
+          // The aggregate lint step and the policy steps run grouped-concurrent
+          // (LINT_POLICY_STEP_CONCURRENCY), so log order between them is not
+          // guaranteed — the resilience property is that every policy check
+          // still executes after the aggregate lint step fails.
+          expect(commandLog).toContain("bunx turbo run lint");
+          expect(commandLog).toContain("bun run beep laws effect-imports --check");
           expect(commandLog).toContain("bun run beep docgen check --reuse-proof-manifest");
           expect(commandLog).toContain("bunx typos");
         })

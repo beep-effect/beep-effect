@@ -13,17 +13,24 @@ import {
   HubSpotUpsertContactRequest,
 } from "@beep/hubspot";
 import { $OipWebId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
-import { A, O, Str } from "@beep/utils";
-import { Clock, Config, Effect, flow, Layer, pipe, Redacted } from "effect";
+import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { A, O } from "@beep/utils";
+import { Clock, Effect, Layer, pipe } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
+import { makeRedactedConfigOptionReader, makeTextConfigOptionReader } from "../runtime/OipRuntimeConfig.ts";
 import { ContactSubmissionResponse, decodeContactSubmission } from "./ContactSubmission.model.ts";
 import type { HubSpotError } from "@beep/hubspot";
-import type { ContactSubmission } from "./ContactSubmission.model.ts";
+import type { ContactResponseMessage, ContactSubmission } from "./ContactSubmission.model.ts";
 
 const $I = $OipWebId.create("contact/ContactSubmission.service");
 const minimumElapsedMs = 3_000;
+
+const ContactProviderHttpStatus = S.Int.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
+  $I.annoteSchema("ContactProviderHttpStatus", {
+    description: "Integer HTTP status code recorded for contact provider errors.",
+  })
+);
 
 const ContactSubmissionErrorReason = LiteralKit(["config", "decode", "provider", "spam"]).pipe(
   $I.annoteSchema("ContactSubmissionErrorReason", {
@@ -42,10 +49,10 @@ type ContactSubmissionErrorOptions = {
 class ContactSubmissionError extends TaggedErrorClass<ContactSubmissionError>($I`ContactSubmissionError`)(
   "ContactSubmissionError",
   {
-    provider: S.optionalKey(S.String),
-    providerReason: S.optionalKey(S.String),
+    provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    providerReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     reason: ContactSubmissionErrorReason,
-    status: S.optionalKey(S.Finite),
+    status: S.OptionFromOptionalKey(ContactProviderHttpStatus).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ContactSubmissionError", {
     description: "Typed server-side contact submission boundary failure.",
@@ -57,34 +64,18 @@ class ContactSubmissionError extends TaggedErrorClass<ContactSubmissionError>($I
   ): ContactSubmissionError =>
     ContactSubmissionError.make({
       reason,
-      ...O.getSomesStruct({
-        provider: O.fromUndefinedOr(options.provider),
-        providerReason: O.fromUndefinedOr(options.providerReason),
-        status: O.fromUndefinedOr(options.status),
-      }),
+      provider: O.fromUndefinedOr(options.provider),
+      providerReason: O.fromUndefinedOr(options.providerReason),
+      status: O.fromUndefinedOr(options.status),
     });
 }
 
-const trimConfigOption: (value: O.Option<string>) => O.Option<string> = flow(O.map(Str.trim), O.filter(Str.isNonEmpty));
-
-const readTextConfigOption = Effect.fn("OipContact.readTextConfigOption")(function* (key: string) {
-  const value = yield* Config.string(key).pipe(
-    Config.option,
-    Effect.mapError(() => ContactSubmissionError.fromReason("config"))
-  );
-  return trimConfigOption(value);
-});
-
-const readRedactedConfigOption = Effect.fn("OipContact.readRedactedConfigOption")(function* (key: string) {
-  const value = yield* Config.redacted(key).pipe(
-    Config.option,
-    Effect.mapError(() => ContactSubmissionError.fromReason("config"))
-  );
-  return pipe(
-    value,
-    O.filter((secret) => Str.isNonEmpty(Str.trim(Redacted.value(secret))))
-  );
-});
+const readTextConfigOption = makeTextConfigOptionReader("OipContact.readTextConfigOption", () =>
+  ContactSubmissionError.fromReason("config")
+);
+const readRedactedConfigOption = makeRedactedConfigOptionReader("OipContact.readRedactedConfigOption", () =>
+  ContactSubmissionError.fromReason("config")
+);
 
 const firstTextConfigOption = Effect.fn("OipContact.firstTextConfigOption")(function* (keys: ReadonlyArray<string>) {
   const values = yield* Effect.forEach(keys, readTextConfigOption, { concurrency: A.length(keys) });
@@ -125,8 +116,6 @@ const hubSpotConfig = Effect.fn("OipContact.hubSpotConfig")(function* (): Effect
 const textField = (name: string, value: O.Option<string>): ReadonlyArray<HubSpotFormField> =>
   pipe(
     value,
-    O.map(Str.trim),
-    O.filter(Str.isNonEmpty),
     O.match({
       onNone: A.empty,
       onSome: (fieldValue) => [HubSpotFormField.make({ name, value: fieldValue })],
@@ -137,18 +126,16 @@ const submissionFields = (submission: ContactSubmission): ReadonlyArray<HubSpotF
   A.flatten([
     textField("email", O.some(submission.email)),
     textField("firstname", O.some(submission.name)),
-    textField("company", O.fromUndefinedOr(submission.company)),
-    textField("phone", O.fromUndefinedOr(submission.phone)),
+    textField("company", submission.company),
+    textField("phone", submission.phone),
     textField("message", O.some(submission.message)),
-    textField("technology", O.fromUndefinedOr(submission.technology)),
-    textField("posture", O.fromUndefinedOr(submission.posture)),
+    textField("technology", submission.technology),
+    textField("posture", submission.posture),
   ]);
 
 const noteLine = (label: string, value: O.Option<string>): ReadonlyArray<string> =>
   pipe(
     value,
-    O.map(Str.trim),
-    O.filter(Str.isNonEmpty),
     O.match({
       onNone: A.empty,
       onSome: (fieldValue) => [`${label}: ${fieldValue}`],
@@ -159,8 +146,8 @@ const crmMessage = (submission: ContactSubmission): string =>
   pipe(
     A.flatten([
       [`Message:\n${submission.message}`],
-      noteLine("Technology", O.fromUndefinedOr(submission.technology)),
-      noteLine("Relationship", O.fromUndefinedOr(submission.posture)),
+      noteLine("Technology", submission.technology),
+      noteLine("Relationship", submission.posture),
     ]),
     A.join("\n\n")
   );
@@ -170,25 +157,28 @@ const contactProperties = (submission: ContactSubmission): Readonly<Record<strin
   firstname: submission.name,
   message: crmMessage(submission),
   ...O.getSomesStruct({
-    company: O.fromUndefinedOr(submission.company),
-    phone: O.fromUndefinedOr(submission.phone),
+    company: submission.company,
+    phone: submission.phone,
   }),
 });
 
+const acceptedMessage: ContactResponseMessage = "Your note was received.";
+const rejectedMessage: ContactResponseMessage = "The submission could not be accepted.";
+
 const accepted = ContactSubmissionResponse.make({
-  message: "Your note was received.",
+  message: acceptedMessage,
   status: "accepted",
 });
 
 const rejected = ContactSubmissionResponse.make({
-  message: "The submission could not be accepted.",
+  message: rejectedMessage,
   status: "rejected",
 });
 
 const validateSpamControls = Effect.fn("OipContact.validateSpamControls")(function* (
   submission: ContactSubmission
 ): Effect.fn.Return<void, ContactSubmissionError> {
-  const honeypot = pipe(O.fromUndefinedOr(submission.website), O.map(Str.trim), O.filter(Str.isNonEmpty));
+  const honeypot = submission.website;
   const now = yield* Clock.currentTimeMillis;
   const elapsedMs = now - submission.submittedAt;
 
@@ -296,9 +286,9 @@ export const submitContact: (input: unknown) => Effect.Effect<ContactSubmissionR
           outcome: "rejected",
           reason: error.reason,
           ...O.getSomesStruct({
-            provider: O.fromUndefinedOr(error.provider),
-            providerReason: O.fromUndefinedOr(error.providerReason),
-            status: O.fromUndefinedOr(error.status),
+            provider: error.provider,
+            providerReason: error.providerReason,
+            status: error.status,
           }),
         }),
         Effect.as(contactResponseForError(error))

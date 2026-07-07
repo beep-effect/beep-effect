@@ -1,13 +1,1 @@
-[
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/architecture-lab/ui/src/aggregates/WorkItem/WorkItem.view-model.ts",
-    "line": 127,
-    "symbol": "makeVisibleActions",
-    "smell": "makeVisibleActions hand-branches on workItem.status at lines 131 and 135 and returns raw visible-action string arrays. The status discriminator is the domain WorkItemStatus LiteralKit at packages/architecture-lab/domain/src/aggregates/WorkItem/WorkItem.values.ts:130, and the UI action family is a local LiteralKit at line 44, but the status-to-actions table is not kit-exhaustive.",
-    "proposedTarget": "Drive the base action list from DomainWorkItem.WorkItemStatus.$match(workItem.status, { open, assigned, completed, archived }) and use WorkItemVisibleAction.Enum values in the action arrays before the existing config filters. Verified target API: LiteralKit.$match overloads at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:600-607; in-package action kit source: WorkItemVisibleAction at WorkItem.view-model.ts:44.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 3.2
-  }
-]
+[]

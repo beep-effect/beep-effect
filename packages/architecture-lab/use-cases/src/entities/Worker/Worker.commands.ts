@@ -8,8 +8,7 @@
 
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { Effect } from "effect";
-import * as O from "effect/Option";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.commands");
@@ -37,9 +36,15 @@ const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.commands");
  */
 export class CreateWorkerCommand extends S.Class<CreateWorkerCommand>($I`CreateWorkerCommand`)(
   {
-    id: DomainWorker.WorkerId,
-    organizationId: DomainWorker.WorkerOrganizationId,
-    displayName: S.NonEmptyString,
+    id: DomainWorker.WorkerId.annotateKey({
+      description: "Worker identity assigned by the caller.",
+    }),
+    organizationId: DomainWorker.WorkerOrganizationId.annotateKey({
+      description: "Organization identity that owns the Worker.",
+    }),
+    displayName: S.NonEmptyString.annotateKey({
+      description: "Human-readable Worker display name.",
+    }),
   },
   $I.annote("CreateWorkerCommand", {
     title: "Create Worker command",
@@ -68,7 +73,9 @@ export class CreateWorkerCommand extends S.Class<CreateWorkerCommand>($I`CreateW
  */
 export class GetWorkerQuery extends S.Class<GetWorkerQuery>($I`GetWorkerQuery`)(
   {
-    id: DomainWorker.WorkerId,
+    id: DomainWorker.WorkerId.annotateKey({
+      description: "Worker identity to load.",
+    }),
   },
   $I.annote("GetWorkerQuery", {
     title: "Get Worker query",
@@ -94,9 +101,9 @@ export class GetWorkerQuery extends S.Class<GetWorkerQuery>($I`GetWorkerQuery`)(
  */
 export class ListWorkersQuery extends S.Class<ListWorkersQuery>($I`ListWorkersQuery`)(
   {
-    status: S.OptionFromOptionalKey(DomainWorker.WorkerStatus).pipe(
-      S.withConstructorDefault(Effect.succeed(O.none<DomainWorker.WorkerStatus>()))
-    ),
+    status: S.OptionFromOptionalKey(DomainWorker.WorkerStatus).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional lifecycle status filter applied after repository listing.",
+    }),
   },
   $I.annote("ListWorkersQuery", {
     title: "List Workers query",

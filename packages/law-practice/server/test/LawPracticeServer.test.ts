@@ -1,6 +1,6 @@
 import { LangExtractRequest } from "@beep/langextract/Extraction";
 import { layer as LangExtractLayer, LangExtractService } from "@beep/langextract/Service";
-import { Distinction } from "@beep/law-practice-domain";
+import { Distinction, DistinctionDetail } from "@beep/law-practice-domain";
 import { LawPracticeServerLive } from "@beep/law-practice-server/layer";
 import { IrToLaw, IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
 import { OfficeActionReview, officeActionExtractionTargets } from "@beep/law-practice-use-cases/OfficeActionReview";
@@ -8,6 +8,7 @@ import { DocumentId } from "@beep/nlp/Core";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Stream } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import {
@@ -83,7 +84,8 @@ describe("@beep/law-practice-server", () => {
 
           // (a) exactly one Distinction, well-formed.
           expect(law.distinction).toBeInstanceOf(Distinction);
-          expect(law.distinction.detail.kind).toBe("missing_limitation");
+          const distinctionDetail = law.distinction.detail;
+          expect(DistinctionDetail.guards.missing_limitation(distinctionDetail)).toBe(true);
 
           // (b) the anchor re-slices the source to its own quote, and that quote is
           // the original-case substring recovered via the case-insensitive match.
@@ -92,9 +94,9 @@ describe("@beep/law-practice-server", () => {
           expect(quote).toBe(EXPECTED_DISTINCTION_QUOTE);
 
           // (d) the distinction's answer: missing limitation + recovered anchor quote.
-          if (law.distinction.detail.kind === "missing_limitation") {
-            expect(law.distinction.detail.limitation).toBe(EXPECTED_DISTINCTION_LIMITATION);
-          }
+          DistinctionDetail.match(distinctionDetail, {
+            missing_limitation: (detail) => expect(detail.limitation).toBe(EXPECTED_DISTINCTION_LIMITATION),
+          });
         })
       );
 
@@ -132,7 +134,7 @@ describe("@beep/law-practice-server", () => {
     (it) => {
       it.effect("review rejects unaligned distinction text before admission", () =>
         expectReviewExtractionError("required-extraction-unaligned", (error) => {
-          expect(error.alignmentStatus).toBe("unaligned");
+          expect(error.alignmentStatus).toEqual(O.some("unaligned"));
         })
       );
     }

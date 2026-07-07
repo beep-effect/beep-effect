@@ -7,6 +7,7 @@
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { NonNegativeInt } from "@beep/schema";
 import * as S from "effect/Schema";
+import { EpistemicFixtureKey } from "../EpistemicFixtureKey/index.js";
 
 const $I = $EpistemicDomainId.create("values/ClaimProjection/ClaimProjectionView.model");
 
@@ -33,10 +34,10 @@ const $I = $EpistemicDomainId.create("values/ClaimProjection/ClaimProjectionView
  */
 export class ClaimStateCounts extends S.Class<ClaimStateCounts>($I`ClaimStateCounts`)(
   {
-    candidate: NonNegativeInt,
-    shape_valid: NonNegativeInt,
-    consistency_checked: NonNegativeInt,
-    admitted: NonNegativeInt,
+    candidate: NonNegativeInt.annotateKey({ description: "Number of candidate claims." }),
+    shape_valid: NonNegativeInt.annotateKey({ description: "Number of shape-valid claims." }),
+    consistency_checked: NonNegativeInt.annotateKey({ description: "Number of consistency-checked claims." }),
+    admitted: NonNegativeInt.annotateKey({ description: "Number of admitted claims." }),
   },
   $I.annote("ClaimStateCounts", {
     description: "Count of claims in each lifecycle state.",
@@ -67,9 +68,11 @@ export class ClaimStateCounts extends S.Class<ClaimStateCounts>($I`ClaimStateCou
  */
 export class ClaimProjectionView extends S.Class<ClaimProjectionView>($I`ClaimProjectionView`)(
   {
-    total: NonNegativeInt,
-    counts: ClaimStateCounts,
-    admittedKeys: S.Array(S.String),
+    total: NonNegativeInt.annotateKey({ description: "Total claim count represented by the projection." }),
+    counts: ClaimStateCounts.annotateKey({ description: "Claim counts by lifecycle state." }),
+    admittedKeys: S.Array(EpistemicFixtureKey).annotateKey({
+      description: "Stable fixture keys for admitted claims, sorted deterministically.",
+    }),
   },
   $I.annote("ClaimProjectionView", {
     description: "Deterministic in-memory read model folded from a single-owner authority array.",

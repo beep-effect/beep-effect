@@ -5,6 +5,7 @@ import {
   assistantContentToDocument,
   AssistantBlock as RootAssistantBlock,
   AssistantContent as RootAssistantContent,
+  Skill,
   TableBlock,
   YouTubeBlock,
 } from "@beep/agents-domain";
@@ -12,6 +13,7 @@ import * as AssistantContentSubpath from "@beep/agents-domain/values/AssistantCo
 import {
   AssistantBlock,
   AssistantContent,
+  InlineNode,
   ParagraphBlock,
   TextInline,
 } from "@beep/agents-domain/values/AssistantContent";
@@ -21,8 +23,10 @@ import { baseEntityFixtureInput, provideScopedLayer } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Path } from "effect";
+import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { PlatformError } from "effect";
@@ -30,6 +34,12 @@ import type { PlatformError } from "effect";
 const AgentModeArbitrary = S.toArbitrary(AgentMode);
 
 const repoRoot = fileURLToPath(new URL("../../../..", import.meta.url));
+const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): void => {
+  const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
+  const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
+
+  expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value)).toBe(true);
+};
 const assistantContentSchemaId = (schema: {
   readonly ast: { readonly annotations: Record<string, unknown> | undefined };
 }): symbol => {
@@ -60,13 +70,14 @@ describe("@beep/agents-domain", () => {
   });
 
   it("decodes and constructs an Agent row", () => {
-    const decoded = S.decodeUnknownSync(Agent)({
+    const encoded = {
       ...baseEntityFixtureInput("AgentsAgent", 4),
       fixtureKey: "agent.reviewer",
       mode: "deterministic_fixture",
       name: "Reviewer Agent",
       skillFixtureKey: "skill.review",
-    });
+    };
+    const decoded = S.decodeUnknownSync(Agent)(encoded);
     const constructed = Agent.make(decoded);
 
     expect(decoded).toBeInstanceOf(Agent);
@@ -74,6 +85,23 @@ describe("@beep/agents-domain", () => {
     expect(constructed.entityType).toBe("AgentsAgent");
     expect(constructed.mode).toBe("deterministic_fixture");
     expect(constructed.skillFixtureKey).toBe("skill.review");
+    expect(Result.getOrThrow(S.encodeResult(Agent)(decoded))).toStrictEqual(encoded);
+  });
+
+  it("decodes and constructs a Skill row", () => {
+    const encoded = {
+      ...baseEntityFixtureInput("AgentsSkill", 5),
+      fixtureKey: "skill.review",
+      name: "Review Skill",
+    };
+    const decoded = S.decodeUnknownSync(Skill)(encoded);
+    const constructed = Skill.make(decoded);
+
+    expect(decoded).toBeInstanceOf(Skill);
+    expect(constructed).toBeInstanceOf(Skill);
+    expect(constructed.entityType).toBe("AgentsSkill");
+    expect(constructed.fixtureKey).toBe("skill.review");
+    expect(Result.getOrThrow(S.encodeResult(Skill)(decoded))).toStrictEqual(encoded);
   });
 
   it("round-trips schema-derived agent modes", () =>
@@ -120,6 +148,48 @@ describe("@beep/agents-domain", () => {
     });
 
     expect(decoded).toStrictEqual(ParagraphBlock.make({ children: [TextInline.make({ text: "hello" })] }));
+  });
+
+  it("keeps assistant content encoded shape stable", () => {
+    const encoded = {
+      blocks: [
+        {
+          type: "heading",
+          level: "h2",
+          children: [{ type: "text", text: "Install" }],
+        },
+        {
+          type: "list",
+          listType: "number",
+          items: [{ children: [{ type: "text", text: "Step one" }] }],
+        },
+        {
+          type: "table",
+          headerRow: true,
+          rows: [{ cells: [{ children: [{ type: "text", text: "Name" }] }] }],
+        },
+        {
+          type: "youtube",
+          videoId: "dQw4w9WgXcQ",
+        },
+      ],
+    };
+    const decoded = Result.getOrThrow(S.decodeUnknownResult(AssistantContent)(encoded));
+
+    expect(Result.getOrThrow(S.encodeResult(AssistantContent)(decoded))).toStrictEqual(encoded);
+    expect(AssistantBlock.is(AssistantBlock.fromUnknown(encoded.blocks[0]))).toBe(true);
+    expect(InlineNode.is(InlineNode.fromUnknown({ type: "text", text: "Install" }))).toBe(true);
+  });
+
+  it("round-trips crispened schemas with schema-derived arbitraries", () => {
+    const schemas: ReadonlyArray<S.Codec<unknown>> = [Agent, Skill, AssistantContent, AssistantBlock, InlineNode];
+
+    for (const schema of schemas) {
+      fc.assert(
+        fc.property(S.toArbitrary(schema), (value) => roundTrip(schema, value)),
+        { numRuns: 10 }
+      );
+    }
   });
 
   it.effect("keeps agents source code off removed turn subpath imports", () =>

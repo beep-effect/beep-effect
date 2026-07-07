@@ -64,7 +64,10 @@ export const ListThreadsRpc = Rpc.make("ListThreads", {
  * @since 0.0.0
  */
 export const CreateThreadRpc = Rpc.make("CreateThread", {
-  payload: { workspaceId: WorkspaceIdentity.WorkspaceId, title: S.String },
+  payload: {
+    workspaceId: WorkspaceIdentity.WorkspaceId,
+    title: S.NonEmptyString.annotateKey({ description: "Initial non-empty title for the new thread." }),
+  },
   success: Thread,
   error: ChatActionError,
 });

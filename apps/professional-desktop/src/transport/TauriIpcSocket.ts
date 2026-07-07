@@ -27,7 +27,7 @@
  */
 
 import { $ProfessionalDesktopId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { Effect, Layer, Queue, Ref, Stream } from "effect";
@@ -59,35 +59,76 @@ const SidecarEvent = {
  * bridge only forwards complete, newline-delimited, non-blank UTF-8 frames, so a
  * frame is decoded as a non-empty string at the boundary instead of trusting an
  * `unknown` event payload.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { InboundFrame } from "@/transport/TauriIpcSocket"
+ *
+ * const frame = Effect.runSync(InboundFrame.decodeUnknownEffect("{\"jsonrpc\":\"2.0\"}\n"))
+ * console.log(frame.length > 0) // true
+ * ```
+ *
+ * @category transport
+ * @since 0.0.0
  */
-const InboundFrame = S.NonEmptyString.pipe(
+export const InboundFrame = S.NonEmptyString.pipe(
   $I.annoteSchema("InboundFrame", {
     description: "A single complete inbound ndjson rpc frame emitted on `sidecar://rx`.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    decodeUnknownEffect: S.decodeUnknownEffect(schema),
+  }))
 );
 
 type InboundFrame = typeof InboundFrame.Type;
 
-const decodeInboundFrame = S.decodeUnknownEffect(InboundFrame);
+const SidecarClosedKind = LiteralKit(["error", "terminated", "event-stream-closed"]).pipe(
+  $I.annoteSchema("SidecarClosedKind", {
+    description: "Finite sidecar lifecycle reason emitted on `sidecar://closed`.",
+  })
+);
 
 /**
  * The `sidecar://closed` payload carrying the sidecar's terminal lifecycle
  * reason. Nullable wire fields decode to `Option` at the boundary so absence is
  * explicit downstream (see effect-first EF-17).
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ * import { SidecarClosedPayload } from "@/transport/TauriIpcSocket"
+ *
+ * const payload = Effect.runSync(
+ *   SidecarClosedPayload.decodeUnknownEffect({
+ *     code: 0,
+ *     kind: "terminated",
+ *     message: null,
+ *     signal: null,
+ *   })
+ * )
+ * console.log(O.isNone(payload.message)) // true
+ * ```
+ *
+ * @category transport
+ * @since 0.0.0
  */
-class SidecarClosedPayload extends S.Class<SidecarClosedPayload>($I`SidecarClosedPayload`)(
+export class SidecarClosedPayload extends S.Class<SidecarClosedPayload>($I`SidecarClosedPayload`)(
   {
-    code: S.OptionFromNullOr(S.Finite),
-    kind: S.String,
-    message: S.OptionFromNullOr(S.String),
-    signal: S.OptionFromNullOr(S.Finite),
+    code: S.OptionFromNullOr(S.Int).pipe(SchemaUtils.withNoneDefault),
+    kind: SidecarClosedKind.annotateKey({
+      description: "Terminal sidecar lifecycle reason.",
+    }),
+    message: S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault),
+    signal: S.OptionFromNullOr(S.Int).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("SidecarClosedPayload", {
     description: "Terminal sidecar lifecycle payload delivered on `sidecar://closed`.",
   })
-) {}
-
-const decodeSidecarClosedPayload = S.decodeUnknownEffect(SidecarClosedPayload);
+) {
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(SidecarClosedPayload);
+}
 
 // `none` when an optional lifecycle field is absent, else its string form —
 // hoisted so the message match below is not an option-match nested in a match.
@@ -146,8 +187,19 @@ const toSocketError = (cause: unknown): Socket.SocketError =>
  * A raw inbound Tauri event, tagged by its source channel. The event payloads
  * stay `unknown` here and are decoded downstream in the stream pipeline, so the
  * synchronous Tauri callbacks only offer onto the queue and never spawn fibers.
+ *
+ * @example
+ * ```ts
+ * import { InboundEvent } from "@/transport/TauriIpcSocket"
+ *
+ * const event = InboundEvent.cases.Rx.make({ payload: "frame\n" })
+ * console.log(event._tag) // "Rx"
+ * ```
+ *
+ * @category transport
+ * @since 0.0.0
  */
-const InboundEvent = S.TaggedUnion({
+export const InboundEvent = S.TaggedUnion({
   Closed: { payload: S.Unknown },
   Rx: { payload: S.Unknown },
 }).annotate(
@@ -187,7 +239,7 @@ const scopedListen = (
 const decodeInboundEvent = (event: InboundEvent): Effect.Effect<InboundFrame, Socket.SocketError> =>
   InboundEvent.match({
     Closed: ({ payload }) =>
-      decodeSidecarClosedPayload(payload).pipe(
+      SidecarClosedPayload.decodeUnknownEffect(payload).pipe(
         Effect.matchEffect({
           onFailure: (error) => Effect.fail(toSocketError(error)),
           onSuccess: (decoded) =>
@@ -196,7 +248,7 @@ const decodeInboundEvent = (event: InboundEvent): Effect.Effect<InboundFrame, So
             ),
         })
       ),
-    Rx: ({ payload }) => decodeInboundFrame(payload).pipe(Effect.mapError(toSocketError)),
+    Rx: ({ payload }) => InboundFrame.decodeUnknownEffect(payload).pipe(Effect.mapError(toSocketError)),
   })(event);
 
 /**
@@ -210,7 +262,7 @@ const decodeInboundEvent = (event: InboundEvent): Effect.Effect<InboundFrame, So
  * Listener teardown rides the stream's scope, so no manual unlisten bookkeeping
  * is needed.
  */
-const inboundFrames = (onOpen: Effect.Effect<void> | undefined): Stream.Stream<InboundFrame, Socket.SocketError> =>
+const inboundFrames = (onOpen: O.Option<Effect.Effect<void>>): Stream.Stream<InboundFrame, Socket.SocketError> =>
   Stream.callback<InboundEvent, Socket.SocketError>(
     Effect.fnUntraced(function* (queue: Queue.Enqueue<InboundEvent, Socket.SocketError | Cause.Done>) {
       // `Stream.callback` does not surface the register body's own failure, so a
@@ -230,9 +282,7 @@ const inboundFrames = (onOpen: Effect.Effect<void> | undefined): Stream.Stream<I
 
         // The transport is subscribed and Rust has replayed buffered frames; only
         // now run the read handler's open hook.
-        if (onOpen !== undefined) {
-          yield* onOpen;
-        }
+        yield* O.getOrElse(onOpen, () => Effect.void);
       });
       yield* Effect.onError(setup, (cause) => Queue.failCause(queue, cause));
     })
@@ -312,7 +362,7 @@ const makeWriter: Effect.Effect<
 const makeSocket: Effect.Effect<Socket.Socket> = Effect.sync(() =>
   Socket.make({
     runRaw: (handler, options) =>
-      inboundFrames(options?.onOpen).pipe(
+      inboundFrames(O.fromUndefinedOr(options?.onOpen)).pipe(
         Stream.runForEach((frame) => {
           const result = handler(frame);
           return Effect.isEffect(result) ? Effect.asVoid(result) : Effect.void;

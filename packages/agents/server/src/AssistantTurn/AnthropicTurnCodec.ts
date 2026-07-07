@@ -25,6 +25,7 @@ import {
   YouTubeBlock,
 } from "@beep/agents-domain/values/AssistantContent";
 import { make } from "@beep/identity";
+import { LiteralKit } from "@beep/schema";
 import { thunkFalse } from "@beep/utils";
 import { flow, pipe } from "effect";
 import * as A from "effect/Array";
@@ -38,7 +39,20 @@ import { AnthropicStructuredOutput } from "effect/unstable/ai";
 const { $AgentsServerId } = make("agents-server");
 const $I = $AgentsServerId.create("AssistantTurn/AnthropicTurnCodec");
 
-const mermaidDiagramTypes: ReadonlyArray<string> = [
+/**
+ * Mermaid diagram declarations accepted by the Anthropic code-block adapter.
+ *
+ * @example
+ * ```ts
+ * import { MermaidDiagramType } from "@beep/agents-server/AnthropicTurnCodec"
+ *
+ * console.log(MermaidDiagramType.is.graph("graph")) // true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const MermaidDiagramType = LiteralKit([
   "flowchart",
   "graph",
   "sequenceDiagram",
@@ -53,11 +67,32 @@ const mermaidDiagramTypes: ReadonlyArray<string> = [
   "timeline",
   "journey",
   "quadrantChart",
-];
+]).pipe(
+  $I.annoteSchema("MermaidDiagramType", {
+    description: "Mermaid diagram declarations accepted by the Anthropic code-block adapter.",
+  })
+);
+
+/**
+ * Runtime type for {@link MermaidDiagramType}.
+ *
+ * @example
+ * ```ts
+ * import type { MermaidDiagramType } from "@beep/agents-server/AnthropicTurnCodec"
+ *
+ * const diagramType: MermaidDiagramType = "graph"
+ * console.log(diagramType)
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export type MermaidDiagramType = typeof MermaidDiagramType.Type;
 
 const youtubeVideoIdPattern = /^[A-Za-z0-9_-]{11}$/u;
 
 const firstToken: (source: string) => O.Option<string> = flow(Str.match(/\S+/u), O.flatMap(A.get(0)));
+const isMermaidDiagramType = S.is(MermaidDiagramType);
 
 const isValidMermaidCodeBlock = (block: CodeBlock): boolean =>
   block.language !== "mermaid" ||
@@ -65,7 +100,7 @@ const isValidMermaidCodeBlock = (block: CodeBlock): boolean =>
     firstToken(block.code),
     O.match({
       onNone: thunkFalse,
-      onSome: (token) => A.contains(mermaidDiagramTypes, token),
+      onSome: isMermaidDiagramType,
     })
   );
 
@@ -88,7 +123,7 @@ const CheckedCodeBlock = CodeBlock.check(
     identifier: $I`CheckedMermaidCodeBlock`,
     title: "Checked Mermaid Code Block",
     description: "Checks mermaid code blocks for a non-empty recognized mermaid diagram declaration.",
-    message: `Mermaid code blocks must start with one of: ${A.join(mermaidDiagramTypes, ", ")}`,
+    message: `Mermaid code blocks must start with one of: ${A.join(MermaidDiagramType.Options, ", ")}`,
   })
 );
 

@@ -8,7 +8,7 @@ import { $LawPracticeDomainId } from "@beep/identity/packages";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import * as S from "effect/Schema";
+import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.js";
 import { LegalContactRole } from "./LegalContact.values.js";
 
 const $I = $LawPracticeDomainId.create("entities/LegalContact/LegalContact.model");
@@ -49,10 +49,18 @@ export class LegalContact extends BaseEntity.Class<LegalContact>($I`LegalContact
   LawPractice.LegalContactId,
   {
     fields: {
-      displayName: S.String,
-      fixtureKey: S.String,
-      legalClientFixtureKey: S.String,
-      role: LegalContactRole,
+      displayName: LawPracticeText.annotateKey({
+        description: "Human-readable legal contact display name.",
+      }),
+      fixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Stable fixture key for the legal contact.",
+      }),
+      legalClientFixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Fixture key for the legal client this contact belongs to.",
+      }),
+      role: LegalContactRole.annotateKey({
+        description: "Legal contact role.",
+      }),
     },
     persisted: {
       displayName: EntitySchema.persist.text({

@@ -15,17 +15,6 @@
     }
   },
   {
-    "ruleId": "SFV4-boundary-codec",
-    "file": "packages/architecture-lab/tables/src/aggregates/WorkItem/WorkItem.table.ts",
-    "line": 214,
-    "symbol": "fromWorkItemRow / toWorkItemInsert",
-    "smell": "Persisted WorkItem row conversion is hand-mapped between Drizzle row aliases and the domain aggregate, including SQL `null` to `Option` conversion, without an executable row codec carrying the boundary contract.",
-    "proposedTarget": "Introduce a named WorkItem SQL row/insert codec near `workItemTable` and route `toWorkItemInsert`/`fromWorkItemRow` through it, preserving SQL `null` at the row boundary per SPEC fence 2. Use `S.NullOr(...)` for nullable row fields (Effect v4 `S.NullOr` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:4829`-`:4844`) and keep the domain aggregate as `DomainWorkItem.WorkItem.make(...)`; `Worker.table.ts:121`-`:122` is the local exemplar for table-boundary schema codecs.",
-    "confidence": 0.68,
-    "mechanization": "assisted",
-    "roiRank": 0.58
-  },
-  {
     "ruleId": "schema-first-inventory",
     "file": "packages/architecture-lab/tables/src/tables.ts",
     "line": 59,

@@ -30,9 +30,15 @@ export class ContextPacket extends BaseEntity.Class<ContextPacket>($I`ContextPac
   Workspace.ContextPacketId,
   {
     fields: {
-      fixtureKey: S.String,
-      scenarioFixtureKey: S.String,
-      snapshot: UnknownRecord,
+      fixtureKey: S.NonEmptyString.annotateKey({
+        description: "Stable fixture key for the context packet.",
+      }),
+      scenarioFixtureKey: S.NonEmptyString.annotateKey({
+        description: "Stable fixture key for the scenario that produced the packet.",
+      }),
+      snapshot: UnknownRecord.annotateKey({
+        description: "Opaque context snapshot returned through the SDK facade.",
+      }),
     },
     persisted: {
       fixtureKey: EntitySchema.persist.text({

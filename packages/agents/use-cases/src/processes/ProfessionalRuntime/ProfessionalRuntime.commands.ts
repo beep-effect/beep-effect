@@ -63,9 +63,11 @@ const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalR
  */
 export class ProposeCandidateOutputSet extends S.Class<ProposeCandidateOutputSet>($I`ProposeCandidateOutputSet`)(
   {
-    outputSet: CandidateOutputSet,
-    producedByPrincipalId: S.String,
-    scope: RuntimeScope,
+    outputSet: CandidateOutputSet.annotateKey({ description: "Candidate output set proposed through the SDK." }),
+    producedByPrincipalId: S.NonEmptyString.annotateKey({
+      description: "Principal identifier for the runtime producer proposing the output set.",
+    }),
+    scope: RuntimeScope.annotateKey({ description: "Runtime scope for the proposal command." }),
   },
   $I.annote("ProposeCandidateOutputSet", {
     description: "Command proposing a candidate output set with producing-principal provenance.",

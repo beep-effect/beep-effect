@@ -10,6 +10,7 @@ import { $ArchitectureLabDomainId } from "@beep/identity/packages";
 import { TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
 import { WorkItemId, WorkItemStatus } from "./WorkItem.values.js";
+import type { TaggedErrorNewInput } from "@beep/schema";
 
 const $I = $ArchitectureLabDomainId.create("aggregates/WorkItem/WorkItem.errors");
 
@@ -36,7 +37,9 @@ const $I = $ArchitectureLabDomainId.create("aggregates/WorkItem/WorkItem.errors"
 export class WorkItemAlreadyArchived extends TaggedErrorClass<WorkItemAlreadyArchived>($I`WorkItemAlreadyArchived`)(
   "WorkItemAlreadyArchived",
   {
-    workItemId: WorkItemId,
+    workItemId: WorkItemId.annotateKey({
+      description: "WorkItem aggregate id that is already archived.",
+    }),
   },
   $I.annote("WorkItemAlreadyArchived", {
     title: "WorkItem already archived",
@@ -71,9 +74,15 @@ export class WorkItemInvalidTransition extends TaggedErrorClass<WorkItemInvalidT
 )(
   "WorkItemInvalidTransition",
   {
-    workItemId: WorkItemId,
-    from: WorkItemStatus,
-    to: WorkItemStatus,
+    workItemId: WorkItemId.annotateKey({
+      description: "WorkItem aggregate id whose transition was rejected.",
+    }),
+    from: WorkItemStatus.annotateKey({
+      description: "Current WorkItem lifecycle status.",
+    }),
+    to: WorkItemStatus.annotateKey({
+      description: "Requested WorkItem lifecycle status.",
+    }),
   },
   $I.annote("WorkItemInvalidTransition", {
     title: "WorkItem invalid transition",
@@ -102,11 +111,7 @@ export class WorkItemInvalidTransition extends TaggedErrorClass<WorkItemInvalidT
    * @category factories
    * @since 0.0.0
    */
-  static fromStatus(input: {
-    readonly workItemId: WorkItemId;
-    readonly from: WorkItemStatus;
-    readonly to: WorkItemStatus;
-  }) {
+  static fromStatus(input: TaggedErrorNewInput<typeof WorkItemInvalidTransition>) {
     return WorkItemInvalidTransition.make({
       workItemId: input.workItemId,
       from: input.from,
@@ -138,35 +143,15 @@ export class WorkItemInvalidTransition extends TaggedErrorClass<WorkItemInvalidT
 export class WorkItemAssigneeRequired extends TaggedErrorClass<WorkItemAssigneeRequired>($I`WorkItemAssigneeRequired`)(
   "WorkItemAssigneeRequired",
   {
-    workItemId: WorkItemId,
+    workItemId: WorkItemId.annotateKey({
+      description: "WorkItem aggregate id that requires an assignee.",
+    }),
   },
   $I.annote("WorkItemAssigneeRequired", {
     title: "WorkItem assignee required",
     description: "Assigning a WorkItem requires a valid Worker identity.",
   })
 ) {}
-
-/**
- * WorkItem aggregate domain failure.
- *
- * @example
- * ```ts
- * import { WorkItemAssigneeRequired, WorkItemId, type WorkItemDomainError } from "@beep/architecture-lab-domain/aggregates/WorkItem"
- * import * as S from "effect/Schema"
- *
- * const error: WorkItemDomainError = WorkItemAssigneeRequired.make({
- *   workItemId: S.decodeUnknownSync(WorkItemId)("work-item-1")
- * })
- *
- * if (error._tag !== "WorkItemAssigneeRequired") {
- *   throw new Error("expected WorkItem domain error union member")
- * }
- * ```
- *
- * @category errors
- * @since 0.0.0
- */
-export type WorkItemDomainError = WorkItemAlreadyArchived | WorkItemInvalidTransition | WorkItemAssigneeRequired;
 
 /**
  * WorkItem aggregate domain failure schema.
@@ -195,4 +180,31 @@ export const WorkItemDomainError = S.Union([
   WorkItemAlreadyArchived,
   WorkItemInvalidTransition,
   WorkItemAssigneeRequired,
-]);
+]).pipe(
+  $I.annoteSchema("WorkItemDomainError", {
+    title: "WorkItem domain error",
+    description: "Tagged union of WorkItem aggregate domain failures.",
+  })
+);
+
+/**
+ * Runtime type for {@link WorkItemDomainError}.
+ *
+ * @example
+ * ```ts
+ * import { WorkItemAssigneeRequired, WorkItemId, type WorkItemDomainError } from "@beep/architecture-lab-domain/aggregates/WorkItem"
+ * import * as S from "effect/Schema"
+ *
+ * const error: WorkItemDomainError = WorkItemAssigneeRequired.make({
+ *   workItemId: S.decodeUnknownSync(WorkItemId)("work-item-1")
+ * })
+ *
+ * if (error._tag !== "WorkItemAssigneeRequired") {
+ *   throw new Error("expected WorkItem domain error union member")
+ * }
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export type WorkItemDomainError = typeof WorkItemDomainError.Type;

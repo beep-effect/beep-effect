@@ -79,6 +79,9 @@
       "@beep/epistemic-domain/values/ClaimProjection": [
         "../../../packages/epistemic/domain/src/values/ClaimProjection/index.ts"
       ],
+      "@beep/epistemic-domain/values/EpistemicFixtureKey": [
+        "../../../packages/epistemic/domain/src/values/EpistemicFixtureKey/index.ts"
+      ],
       "@beep/epistemic-domain/values/EvidenceSpan": [
         "../../../packages/epistemic/domain/src/values/EvidenceSpan/index.ts"
       ],

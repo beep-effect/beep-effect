@@ -2,50 +2,6 @@
   {
     "ruleId": "SFV4-static-api",
     "file": "apps/oip-web/src/content/OipContent.model.ts",
-    "line": 29,
-    "symbol": "ReviewStatus",
-    "smell": "LiteralKit statics are piped through `$I.annoteSchema(...)` without reattaching kit/codec statics; downstream still relies on the detached kit API (`OipContent.data.ts:19/24` uses `ReviewStatus.Enum`, `test/oip-web.test.tsx:533` uses `ReviewStatus.is.needs_review`).",
-    "proposedTarget": "Capture `ReviewStatusBase = LiteralKit([...])`, then export `ReviewStatus = ReviewStatusBase.pipe($I.annoteSchema(...), SchemaUtils.withLiteralKitStatics(ReviewStatusBase), SchemaUtils.withCodecStatics)` as in the `beep__chalk` exemplar; helpers verified at `packages/foundation/modeling/schema/src/SchemaUtils/withLiteralKitStatics.ts:37` and `withCodecStatics.ts:90`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "apps/oip-web/src/contact/ContactSubmission.model.ts",
-    "line": 95,
-    "symbol": "ContactSubmissionStatus",
-    "smell": "LiteralKit status domain is annotated without reattaching statics; the home route rebuilds the guard as free-floating `const isContactSubmissionStatus = S.is(ContactSubmissionStatus)` (`src/app/page.tsx:22`) before parsing the `contact` search param (`src/app/page.tsx:109`).",
-    "proposedTarget": "Use a base LiteralKit const plus `SchemaUtils.withLiteralKitStatics(base)` and `SchemaUtils.withCodecStatics`, then replace the route-level guard with `ContactSubmissionStatus.is(...)`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "apps/oip-web/src/contact/ContactSubmission.http.ts",
-    "line": 97,
-    "symbol": "ContactSubmissionPayload",
-    "smell": "Wire payload schema is a piped alias of `ContactSubmissionFormPayload` with no colocated decoder statics; the JSON route compensates with `const decodeJsonContactSubmissionPayload = S.decodeUnknownEffect(ContactSubmissionPayload)` (`src/app/api/contact/route.ts:18`).",
-    "proposedTarget": "Attach the needed decoder on the alias with `SchemaUtils.withStatics((schema) => ({ decodeUnknownEffect: S.decodeUnknownEffect(schema) }))` and optionally `SchemaUtils.withCodecStatics` for `is/fromUnknown/decodeOption`; replace the route-local decoder with `ContactSubmissionPayload.decodeUnknownEffect`. `withStatics` is verified at `packages/foundation/modeling/schema/src/SchemaUtils/withStatics.ts:103`.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "apps/oip-web/src/contact/ContactSubmission.model.ts",
-    "line": 217,
-    "symbol": "decodeContactSubmissionFormPayloadResult",
-    "smell": "Local decode-wall aliases (`decodeContactSubmissionFormPayloadResult` / `decodeContactSubmissionFormPayloadEffect`) duplicate the class statics already attached on `ContactSubmissionFormPayload` at lines 213-214.",
-    "proposedTarget": "Delete the aliases and call `ContactSubmissionFormPayload.decodeUnknownResult(...)` / `ContactSubmissionFormPayload.decodeUnknownEffect(...)` directly at lines 278 and 304.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "apps/oip-web/src/content/OipContent.model.ts",
     "line": 607,
     "symbol": "decodeOipSiteContentResult/decodeOipSiteContent",
     "smell": "Detector hit: exported decode aliases duplicate `OipSiteContent.decodeUnknownResult` / `OipSiteContent.decodeUnknownEffect` attached in-body at lines 588-589.",

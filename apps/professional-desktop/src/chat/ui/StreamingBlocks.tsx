@@ -17,6 +17,7 @@ import { AssistantBlock, InlineNode } from "@beep/agents-domain/values/Assistant
 import { MermaidView, YouTubeEmbed } from "@beep/editor";
 import { A, O, Str } from "@beep/utils";
 import { Hash, MutableHashMap } from "effect";
+import { dual } from "effect/Function";
 import type { TableBlock } from "@beep/agents-domain/values/AssistantContent";
 import type { JSX, ReactNode } from "react";
 
@@ -48,10 +49,10 @@ export const boundedKey = (raw: string): string => {
  * `renderKey` for every earlier candidate (O(n^2) over untrusted content); a
  * running `MutableHashMap` count keeps this linear and the emitted keys bounded.
  */
-export const stableOccurrenceKeys = <Item,>(
-  items: ReadonlyArray<Item>,
-  renderKey: (item: Item) => string
-): ReadonlyArray<string> => {
+export const stableOccurrenceKeys: {
+  <Item>(renderKey: (item: Item) => string): (items: ReadonlyArray<Item>) => ReadonlyArray<string>;
+  <Item>(items: ReadonlyArray<Item>, renderKey: (item: Item) => string): ReadonlyArray<string>;
+} = dual(2, <Item,>(items: ReadonlyArray<Item>, renderKey: (item: Item) => string): ReadonlyArray<string> => {
   const counts = MutableHashMap.empty<string, number>();
   return A.map(items, (item) => {
     const baseKey = boundedKey(renderKey(item));
@@ -59,7 +60,7 @@ export const stableOccurrenceKeys = <Item,>(
     MutableHashMap.set(counts, baseKey, occurrence + 1);
     return occurrence === 0 ? baseKey : `${baseKey}#${occurrence}`;
   });
-};
+});
 
 const inlineRenderKey = (node: InlineNode): string =>
   InlineNode.match(node, {

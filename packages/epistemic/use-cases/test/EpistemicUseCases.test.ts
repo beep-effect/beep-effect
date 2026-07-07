@@ -1,13 +1,18 @@
-import { CandidateClaim, ClaimGateResult, Evidence } from "@beep/epistemic-domain";
+import { CandidateClaim, ClaimGateResult, ClaimLifecycle, ClaimProjectionView, Evidence } from "@beep/epistemic-domain";
 import * as ClaimGateUC from "@beep/epistemic-use-cases/ClaimGate";
 import * as ClaimLifecycleUC from "@beep/epistemic-use-cases/ClaimLifecycle";
-import { projectClaims } from "@beep/epistemic-use-cases/ClaimProjection";
+import { ClaimProjection, projectClaims } from "@beep/epistemic-use-cases/ClaimProjection";
 import { ShaclValidationServiceLive } from "@beep/semantic-web/adapters/shacl-engine";
 import { ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
 import { baseEntityFixtureInput } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Equal } from "effect";
+import { Effect } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
+
+const ClaimProjectionAuthorityArbitrary = S.toArbitrary(ClaimProjection.inputSchema);
+const sameClaimProjectionView = S.toEquivalence(ClaimProjectionView);
 
 const makeCandidate = (id: number, fixtureKey: string, lifecycle: string): CandidateClaim =>
   S.decodeUnknownSync(CandidateClaim)({
@@ -54,7 +59,7 @@ describe("@beep/epistemic-use-cases", () => {
 
         const verdict = yield* gate.evaluate(candidate, []);
         expect(verdict.verdict).toBe("rejected");
-        if (verdict.verdict === "rejected") {
+        if (ClaimGateResult.guards.rejected(verdict)) {
           expect(verdict.violations.length).toBeGreaterThan(0);
           expect(verdict.violations[0].severity).toBe("violation");
         }
@@ -87,12 +92,39 @@ describe("@beep/epistemic-use-cases", () => {
 
     const view1 = projectClaims(authority);
     const view2 = projectClaims(authority);
+    const encoded = S.encodeSync(ClaimProjection.outputSchema)(view1);
 
     expect(view1.total).toBe(3);
     expect(view1.counts.candidate).toBe(1);
     expect(view1.counts.shape_valid).toBe(1);
     expect(view1.counts.admitted).toBe(1);
     expect([...view1.admittedKeys]).toEqual(["claim.novelty"]);
-    expect(Equal.equals(view1, view2)).toBe(true);
+    expect(encoded).toStrictEqual({
+      admittedKeys: ["claim.novelty"],
+      counts: {
+        admitted: 1,
+        candidate: 1,
+        consistency_checked: 0,
+        shape_valid: 1,
+      },
+      total: 3,
+    });
+    expect(sameClaimProjectionView(view1, view2)).toBe(true);
   });
+
+  it("round-trips schema-derived projection outputs without changing encoded shape", () =>
+    fc.assert(
+      fc.property(ClaimProjectionAuthorityArbitrary, (authority) => {
+        const view = projectClaims(authority);
+        const encoded = S.encodeSync(ClaimProjection.outputSchema)(view);
+        const decoded = S.decodeUnknownSync(ClaimProjection.outputSchema)(encoded);
+
+        expect(encoded.total).toBe(A.length(authority));
+        for (const state of ClaimLifecycle.Options) {
+          expect(encoded.counts[state]).toBe(A.length(A.filter(authority, (claim) => claim.lifecycle === state)));
+        }
+        expect(sameClaimProjectionView(decoded, view)).toBe(true);
+      }),
+      { numRuns: 50 }
+    ));
 });

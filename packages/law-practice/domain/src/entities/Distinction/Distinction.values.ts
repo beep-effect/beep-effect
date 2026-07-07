@@ -6,12 +6,16 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
-import * as S from "effect/Schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LawPracticeText } from "../LawPracticeEntity.fields.js";
 
 const $I = $LawPracticeDomainId.create("entities/Distinction/Distinction.values");
 
-const DistinctionKind = LiteralKit(["missing_limitation"]);
+const DistinctionKind = LiteralKit(["missing_limitation"]).annotate(
+  $I.annote("DistinctionKind", {
+    description: "Distinction detail kinds supported by law-practice proof entities.",
+  })
+);
 
 /**
  * The substantive detail of a distinction, discriminated on its kind. The single
@@ -35,11 +39,16 @@ const DistinctionKind = LiteralKit(["missing_limitation"]);
  * @since 0.0.0
  */
 export const DistinctionDetail = DistinctionKind.toTaggedUnion("kind")({
-  missing_limitation: { limitation: S.String },
+  missing_limitation: {
+    limitation: LawPracticeText.annotateKey({
+      description: "Claim limitation missing from the cited prior art.",
+    }),
+  },
 }).pipe(
   $I.annoteSchema("DistinctionDetail", {
     description: "Substantive detail of a distinction, discriminated on its kind.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

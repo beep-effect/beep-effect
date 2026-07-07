@@ -5,13 +5,25 @@
  * @since 0.0.0
  */
 import { $WorkspaceDomainId } from "@beep/identity/packages";
-import { UnknownRecord } from "@beep/schema";
+import { ArrayOfNonEmptyStrings, UnknownRecord } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as Workspace from "@beep/shared-domain/identity/Workspace";
 import * as S from "effect/Schema";
 
 const $I = $WorkspaceDomainId.create("entities/EmailArtifact/EmailArtifact.model");
+const UtcIsoTimestamp = S.NonEmptyString.check(
+  S.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/u, {
+    identifier: $I`UtcIsoTimestampPatternCheck`,
+    title: "UTC ISO timestamp",
+    description: "Checks that imported email timestamps use a UTC ISO 8601 shape.",
+    message: "Expected a UTC ISO timestamp such as 2024-01-01T00:00:00Z.",
+  })
+).pipe(
+  $I.annoteSchema("UtcIsoTimestamp", {
+    description: "UTC ISO 8601 timestamp string for imported email artifacts.",
+  })
+);
 
 /**
  * Normalized email artifact imported into a workspace thread.
@@ -30,14 +42,30 @@ export class EmailArtifact extends BaseEntity.Class<EmailArtifact>($I`EmailArtif
   Workspace.EmailArtifactId,
   {
     fields: {
-      artifactFixtureKey: S.String,
-      body: S.String,
-      from: UnknownRecord,
-      receivedAt: S.String,
-      sourceSpans: S.Array(S.String),
-      subject: S.String,
-      threadFixtureKey: S.String,
-      to: S.Array(UnknownRecord),
+      artifactFixtureKey: S.NonEmptyString.annotateKey({
+        description: "Stable fixture key for the imported email artifact.",
+      }),
+      body: S.String.annotateKey({
+        description: "Literal email body content preserved from the import source.",
+      }),
+      from: UnknownRecord.annotateKey({
+        description: "Provider-specific sender contact payload.",
+      }),
+      receivedAt: UtcIsoTimestamp.annotateKey({
+        description: "ISO timestamp when the email artifact was received.",
+      }),
+      sourceSpans: ArrayOfNonEmptyStrings.annotateKey({
+        description: "Source span identifiers covered by this email artifact.",
+      }),
+      subject: S.String.annotateKey({
+        description: "Literal email subject preserved from the import source.",
+      }),
+      threadFixtureKey: S.NonEmptyString.annotateKey({
+        description: "Stable fixture key for the workspace thread containing the artifact.",
+      }),
+      to: S.Array(UnknownRecord).annotateKey({
+        description: "Provider-specific recipient contact payloads.",
+      }),
     },
     persisted: {
       artifactFixtureKey: EntitySchema.persist.text({

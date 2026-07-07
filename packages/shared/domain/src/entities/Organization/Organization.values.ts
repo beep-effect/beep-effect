@@ -6,11 +6,12 @@
  */
 
 import { $SharedDomainId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { PosInt } from "@beep/schema/Int";
 import * as S from "effect/Schema";
 
 const $I = $SharedDomainId.create("entities/Organization/Organization.values");
+const LicenseTierBase = LiteralKit(["solo", "team", "enterprise"]);
 
 /**
  * Commercial license tier assigned to an organization.
@@ -31,10 +32,15 @@ const $I = $SharedDomainId.create("entities/Organization/Organization.values");
  * @category schemas
  * @since 0.0.0
  */
-export const LicenseTier = LiteralKit(["solo", "team", "enterprise"]).pipe(
+export const LicenseTier = LicenseTierBase.pipe(
   $I.annoteSchema("LicenseTier", {
     description: "Commercial license tier assigned to a shared-kernel organization.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(LicenseTierBase),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**
@@ -78,8 +84,12 @@ export type LicenseTier = typeof LicenseTier.Type;
  */
 export class Settings extends S.Class<Settings>($I`Settings`)(
   {
-    allowAgentActions: S.Boolean,
-    defaultRetentionDays: PosInt,
+    allowAgentActions: S.Boolean.annotateKey({
+      description: "Whether this organization allows agent-driven actions.",
+    }),
+    defaultRetentionDays: PosInt.annotateKey({
+      description: "Default retention period for organization-owned records, in days.",
+    }),
   },
   $I.annote("Settings", {
     description: "Compliance and audit settings owned by a shared-kernel organization.",

@@ -1,14 +1,18 @@
 [
   {
-    "ruleId": "SFV4-fn-schema",
+    "ruleId": "schema-first-inventory",
     "file": "packages/agents/client/src/Chat.atoms.ts",
-    "line": 264,
-    "symbol": "createThreadAtom",
-    "smell": "Exported runtime atom function uses an inline object write contract `{ readonly workspaceId: WorkspaceId; readonly title: string }` in a schema-modeled file.",
-    "proposedTarget": "Lift the write payload into a named schema, e.g. `CreateThreadAtomInput extends S.Class` with `workspaceId: WorkspaceIdentity.WorkspaceId` and `title: S.String`, or reuse the `CreateThreadRpc` payload shape (`packages/agents/use-cases/src/processes/Chat/Chat.rpc.ts:67`). The same file already models the richer write union as `SendTurnRequest`/`EditTurnRequest` plus `TurnRequest` (`packages/agents/client/src/Chat.atoms.ts:563` and `:619`).",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 0.55
+    "line": 253,
+    "symbol": "CreateThreadAtomInput",
+    "smell": "Live schema-first detector reports the exported structural S.Struct payload should prefer an annotated S.Class.",
+    "proposedTarget": "Rejected for this wave: converting the atom write payload to S.Class would change the public write type consumed by app callers outside packages/agents/client.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0.5,
+    "exception": {
+      "reason": "Structural schema preserves the public atom write payload while still making the contract schema-owned; S.Class conversion is a public-form change requiring app consumer edits.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-fn-schema",

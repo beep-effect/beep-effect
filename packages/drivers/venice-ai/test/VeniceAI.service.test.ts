@@ -433,11 +433,9 @@ describe("@beep/venice-ai", () => {
     });
     expect(
       Effect.runSync(
-        encodeVeniceAIConfigInput(
-          VeniceAIConfigInput.make({
-            baseUrl: URLStr.make(`${VENICE_API_URL}///`),
-          })
-        )
+        decodeVeniceAIConfigInput({
+          baseUrl: `${VENICE_API_URL}///`,
+        }).pipe(Effect.flatMap(encodeVeniceAIConfigInput))
       )
     ).toEqual({
       baseUrl: VENICE_API_URL,
@@ -739,10 +737,14 @@ describe("@beep/venice-ai", () => {
 
   layer(
     makeVeniceAIUnitLayer(
-      VeniceAIConfigInput.make({
-        apiKey: O.some(Redacted.make("test-key")),
-        baseUrl: URLStr.make("https://example.test/api/v1///"),
-      })
+      // Normalization is a decode-side concern: the Type-side constructor now
+      // rejects non-normalized URLs, so the raw trailing-slash form decodes.
+      Effect.runSync(
+        decodeVeniceAIConfigInput({
+          apiKey: "test-key",
+          baseUrl: "https://example.test/api/v1///",
+        })
+      )
     )
   )((it) =>
     it.effect(

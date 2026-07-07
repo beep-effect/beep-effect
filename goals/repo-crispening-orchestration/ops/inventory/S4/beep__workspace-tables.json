@@ -8,7 +8,11 @@
     "proposedTarget": "Colocate `static readonly encode = S.encodeSync(Self)` and `static readonly decodeRow = S.decodeUnknownSync(Self)` in-body on the `Message`/`Thread`/`Turn` classes in `@beep/workspace-domain` (S.Class/Model.Class lose constructor identity when piped, so in-body statics are the sanctioned form per SPEC S4 rule card); `toMessageInsert`/`fromMessageRow` in this package would then call `Message.encode(...)`/`Message.decodeRow(...)` instead of the free-floating local consts. This is a cross-package change (workspace-domain owns the fix, workspace-tables owns the call-site update) so it is judgment-tier, not a same-file mechanizable edit.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "The proposed static colocation requires adding public codec statics to the owning `@beep/workspace-domain` Message entity and sweeping consumers. That public-form ripple is outside this single-package writer scope.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -19,7 +23,11 @@
     "proposedTarget": "Same fix as the Message.converters.ts finding: in-body `static readonly encode`/`static readonly decodeRow` on `Thread` in @beep/workspace-domain, consumed here as `Thread.encode`/`Thread.decodeRow`.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "The proposed static colocation requires adding public codec statics to the owning `@beep/workspace-domain` Thread entity and sweeping consumers. That public-form ripple is outside this single-package writer scope.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -30,7 +38,11 @@
     "proposedTarget": "Same fix as the Message.converters.ts finding: in-body `static readonly encode`/`static readonly decodeRow` on `Turn` in @beep/workspace-domain, consumed here as `Turn.encode`/`Turn.decodeRow`.",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "The proposed static colocation requires adding public codec statics to the owning `@beep/workspace-domain` Turn entity and sweeping consumers. That public-form ripple is outside this single-package writer scope.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

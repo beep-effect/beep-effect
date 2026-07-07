@@ -1,137 +1,31 @@
 {
   "version": 1,
   "generatedOn": "2026-07-07",
-  "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
+  "scope": [
+    "apps/**/*.{ts,tsx}",
+    "packages/**/*.{ts,tsx}",
+    "infra/**/*.ts"
+  ],
   "entries": [
     {
       "file": "apps/oip-web/src/components/HeroVideo.tsx",
       "symbol": "HeroVideo",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-fn-schema",
       "line": 292,
       "owner": "@beep/oip-web",
-      "reason": "Exported function \"HeroVideo\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
-    },
-    {
-      "file": "apps/oip-web/src/contact/ContactSubmission.model.ts",
-      "symbol": "contactSubmissionPayloadFallback.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 249,
-      "owner": "@beep/oip-web",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "apps/oip-web/src/contact/ContactSubmission.model.ts",
-      "symbol": "contactSubmissionPayloadInputFromFormData.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 233,
-      "owner": "@beep/oip-web",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "apps/oip-web/src/content/OipContent.runtime.ts",
-      "symbol": "OipContentLoadError.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 57,
-      "owner": "@beep/oip-web",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "apps/oip-web/src/content/OipContent.runtime.ts",
-      "symbol": "OipContentLoadError.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 61,
-      "owner": "@beep/oip-web",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "apps/oip-web/src/content/OipContent.runtime.ts",
-      "symbol": "fallbackToStaticContent.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 137,
-      "owner": "@beep/oip-web",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "apps/oip-web/src/content/OipContent.runtime.ts",
-      "symbol": "fallbackToStaticContent.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 141,
-      "owner": "@beep/oip-web",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "apps/oip-web/src/content/OipContent.runtime.ts",
-      "symbol": "loadFromSanity.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 125,
-      "owner": "@beep/oip-web",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "apps/oip-web/src/content/OipContent.runtime.ts",
-      "symbol": "sanityConfig.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 100,
-      "owner": "@beep/oip-web",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "apps/oip-web/src/content/OipContent.runtime.ts",
-      "symbol": "sanityConfig.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 101,
-      "owner": "@beep/oip-web",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "apps/oip-web/src/content/OipContent.runtime.ts",
-      "symbol": "sanityConfig.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 98,
-      "owner": "@beep/oip-web",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "apps/oip-web/src/content/OipContent.runtime.ts",
-      "symbol": "sanityConfig.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 99,
-      "owner": "@beep/oip-web",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
+      "reason": "React component props are a framework boundary; modeling JSX component inputs with Fn would change the public component contract without adding runtime validation."
     },
     {
       "file": "apps/oip-web/src/content/OipSeo.ts",
       "symbol": "oipTwitterHandle",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-null-return",
       "line": 94,
       "owner": "@beep/oip-web",
-      "reason": "Exported helper \"oipTwitterHandle\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
+      "reason": "Next.js Metadata twitter fields accept undefined for omitted handles, so this helper is a React framework boundary adapter that preserves the required shape."
     },
     {
       "file": "apps/professional-desktop/src/chat/UsageRecordSink.ts",
@@ -142,16 +36,6 @@
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
-      "file": "apps/professional-desktop/src/runtime/Migrations.ts",
-      "symbol": "migrateProfessionalDesktopDatabase",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-null-return",
-      "line": 232,
-      "owner": "@beep/professional-desktop",
-      "reason": "Exported helper \"migrateProfessionalDesktopDatabase\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
-    },
-    {
       "file": "infra/src/OipWeb.ts",
       "symbol": "OipWebRuntimeSecrets",
       "kind": "exported-type-literal",
@@ -160,8 +44,16 @@
       "reason": "Type alias contains non-schema signals such as function members or runtime handles."
     },
     {
+      "file": "packages/agents/client/src/Chat.atoms.ts",
+      "symbol": "CreateThreadAtomInput",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/agents-client",
+      "reason": "Structural S.Struct preserves the public atom write payload consumed by app callers; converting to S.Class would change public form and requires the family-close consumer sweep."
+    },
+    {
       "file": "packages/agents/domain/src/entities/Agent/Agent.model.ts",
-      "symbol": "anonymous@64",
+      "symbol": "anonymous@65",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/agents-domain",
@@ -169,7 +61,7 @@
     },
     {
       "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
-      "symbol": "anonymous@242",
+      "symbol": "anonymous@316",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/agents-domain",
@@ -716,16 +608,6 @@
       "status": "exception",
       "owner": "@beep/epistemic-use-cases",
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/epistemic/use-cases/test/EpistemicUseCases.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 13,
-      "owner": "@beep/epistemic-use-cases",
-      "reason": "Schema-heavy test file has 3 Schema codec assertions but no schema-derived property coverage."
     },
     {
       "file": "packages/foundation/capability/api-transport/src/Transport.ts",
@@ -2220,16 +2102,6 @@
       "reason": "Derived interface with extends clauses is tracked as an exception."
     },
     {
-      "file": "packages/law-practice/domain/src/values/PatentMetadata/PatentMetadata.model.ts",
-      "symbol": "getKindCodeExplanation",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-null-return",
-      "line": 881,
-      "owner": "@beep/law-practice-domain",
-      "reason": "Exported helper \"getKindCodeExplanation\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
-    },
-    {
       "file": "packages/law-practice/server/test/fixture.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -2238,6 +2110,14 @@
       "line": 51,
       "owner": "@beep/law-practice-server",
       "reason": "Synthetic golden fixture helper decodes branded file-processing IDs and PosixPath values for one deterministic office-action source artifact; property coverage belongs in the file-processing package schemas."
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts",
+      "symbol": "LawEntities",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Declaration-merged structural companion for the LawEntities S.Class: the explicit Self interface breaks a TS7056 inferred-type explosion, and merged declarations must share export-ness with the exported class, which IS the annotated schema."
     },
     {
       "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.ports.ts",
@@ -2808,32 +2688,12 @@
       "reason": "Exception: CLI tsconfig-sync command-behavior test; Schema codecs are incidental JSON-boundary plumbing for tsconfig fixtures and CLI output, not schema-value laws."
     },
     {
-      "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 86,
-      "owner": "@beep/workspace-tables",
-      "reason": "Exception: golden converter round-trip test (decode -> toInsert -> fromRow) asserting concrete Thread/Turn/Message table column mappings and jsonb/text storage kinds; this is targeted table-projection coverage, not a schema-value property law for S.toArbitrary."
-    },
-    {
       "file": "packages/workspace/use-cases/src/aggregates/Thread/ThreadStore.ts",
       "symbol": "ThreadStoreShape",
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/workspace-use-cases",
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 12,
-      "owner": "@beep/workspace-use-cases",
-      "reason": "Exception: golden decode test exercising the ThreadTimeline tagged-union item resolution (message vs tool_call) over fixed fixtures; targeted boundary-decode coverage, not a schema-value property law for S.toArbitrary."
     }
   ]
 }

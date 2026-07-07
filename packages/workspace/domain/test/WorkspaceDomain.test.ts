@@ -2,12 +2,20 @@ import { Document, P, Text } from "@beep/md";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import {
   ApprovalDecision,
+  ApprovalGate,
+  CandidateDraft,
   CandidateLifecycle,
+  CandidateProject,
+  CandidateTask,
+  ContextPacket,
+  EmailArtifact,
   Message,
   MessageItem,
   MessageRole,
   Thread,
   Turn,
+  TurnItem,
+  TurnItems,
   Workspace as WorkspaceEntity,
 } from "@beep/workspace-domain";
 import { describe, expect, it } from "@effect/vitest";
@@ -17,6 +25,23 @@ import { FastCheck as fc } from "effect/testing";
 
 const systemPrincipal = { kind: "System", component: "Runtime" } as const;
 const MessageRoleArbitrary = S.toArbitrary(MessageRole);
+const schemaLawCases: ReadonlyArray<readonly [string, S.Codec<unknown>]> = [
+  ["ApprovalDecision", ApprovalDecision],
+  ["CandidateLifecycle", CandidateLifecycle],
+  ["MessageRole", MessageRole],
+  ["TurnItem", TurnItem],
+  ["TurnItems", TurnItems],
+  ["Workspace", WorkspaceEntity],
+  ["Thread", Thread],
+  ["Message", Message],
+  ["Turn", Turn],
+  ["EmailArtifact", EmailArtifact],
+  ["ContextPacket", ContextPacket],
+  ["ApprovalGate", ApprovalGate],
+  ["CandidateDraft", CandidateDraft],
+  ["CandidateProject", CandidateProject],
+  ["CandidateTask", CandidateTask],
+];
 
 const baseEntityInput = (entityType: string, id: number) => ({
   createdAt: id,
@@ -30,6 +55,20 @@ const baseEntityInput = (entityType: string, id: number) => ({
   updatedAt: id + 1,
   updatedByPrincipal: systemPrincipal,
 });
+
+const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(schema: Schema): void => {
+  const arbitrary = S.toArbitrary(schema);
+  const decode = S.decodeUnknownSync(schema);
+  const encode = S.encodeSync(schema);
+  const equivalent = S.toEquivalence(schema);
+
+  fc.assert(
+    fc.property(arbitrary, (value) => {
+      expect(equivalent(decode(encode(value)), value)).toBe(true);
+    }),
+    { numRuns: 10 }
+  );
+};
 
 describe("@beep/workspace-domain", () => {
   it("exports value schemas from the package identity", () => {
@@ -75,6 +114,32 @@ describe("@beep/workspace-domain", () => {
     expect(constructed.entityType).toBe("WorkspaceWorkspace");
     expect(constructed.organizationFixtureKey).toBe("org.acme");
     expect(constructed.ownerPrincipalFixtureKey).toBe("principal.owner");
+  });
+
+  it("preserves crispened workspace and email wire shapes", () => {
+    const workspaceWire = {
+      ...baseEntityInput("WorkspaceWorkspace", 20),
+      fixtureKey: "workspace.acme",
+      name: "Acme Workspace",
+      organizationFixtureKey: "org.acme",
+      ownerPrincipalFixtureKey: "principal.owner",
+    };
+    const emailWire = {
+      ...baseEntityInput("WorkspaceEmailArtifact", 21),
+      artifactFixtureKey: "artifact.email-intake",
+      body: "We need help preparing a provisional patent application.",
+      from: { address: "ada@example.com" },
+      receivedAt: "2024-01-01T00:00:00Z",
+      sourceSpans: ["law-email-001-s2"],
+      subject: "Provisional patent help",
+      threadFixtureKey: "thread.law-intake",
+      to: [{ address: "agent@example.com" }],
+    };
+
+    expect(S.encodeSync(WorkspaceEntity)(S.decodeUnknownSync(WorkspaceEntity)(workspaceWire))).toStrictEqual(
+      workspaceWire
+    );
+    expect(S.encodeSync(EmailArtifact)(S.decodeUnknownSync(EmailArtifact)(emailWire))).toStrictEqual(emailWire);
   });
 
   it("wires Thread, Turn, and Message to workspace identities", () => {
@@ -127,6 +192,29 @@ describe("@beep/workspace-domain", () => {
     );
     expect(rootTurn.parentTurnId).toEqual(O.none());
     expect(branchTurn.parentTurnId).toEqual(O.some(12));
-    expect(rootTurn.items).toEqual([MessageItem.make({ messageId: 11 })]);
+    expect(rootTurn.items).toEqual([MessageItem.make({ messageId: WorkspaceIdentity.MessageId.make(11) })]);
+  });
+
+  it("keeps turn wire shape stable while defaulting root lineage at construction", () => {
+    const turnWire = {
+      ...baseEntityInput("WorkspaceTurn", 14),
+      items: [{ itemType: "message", messageId: 11 }],
+      parentTurnId: null,
+      threadId: 10,
+      turnIndex: 0,
+    };
+    const decoded = S.decodeUnknownSync(Turn)(turnWire);
+    const { parentTurnId: _parentTurnId, ...turnInput } = decoded;
+    const constructed = Turn.make(turnInput);
+
+    expect(constructed.parentTurnId).toEqual(O.none());
+    expect(S.encodeSync(Turn)(constructed)).toStrictEqual(turnWire);
+    expect(() => S.decodeUnknownSync(TurnItems)([])).toThrow();
+  });
+
+  it("round-trips schema-derived exported workspace domain schemas", () => {
+    for (const [, schema] of schemaLawCases) {
+      assertSchemaArbitraryRoundTrips(schema);
+    }
   });
 });

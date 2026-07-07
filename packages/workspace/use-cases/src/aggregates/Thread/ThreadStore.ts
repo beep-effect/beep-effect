@@ -13,6 +13,7 @@
 
 import { $WorkspaceUseCasesId } from "@beep/identity/packages";
 import { Document } from "@beep/md/Md.model";
+import { SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Message, MessageRole } from "@beep/workspace-domain/entities/Message";
 import { Turn } from "@beep/workspace-domain/entities/Turn";
@@ -33,12 +34,12 @@ const $I = $WorkspaceUseCasesId.create("aggregates/Thread/ThreadStore");
  * import { Effect } from "effect"
  * import * as S from "effect/Schema"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
- * import type { CreateThreadInput } from "@beep/workspace-use-cases/aggregates/Thread/server"
+ * import { CreateThreadInput } from "@beep/workspace-use-cases/aggregates/Thread/server"
  *
  * const input = Effect.runSync(
  *   Effect.gen(function* () {
  *     const workspaceId = yield* S.decodeUnknownEffect(Workspace.WorkspaceId)(7)
- *     return { title: "Matter intake", workspaceId } satisfies CreateThreadInput
+ *     return CreateThreadInput.make({ title: "Matter intake", workspaceId })
  *   })
  * )
  * console.log(input.title) // "Matter intake"
@@ -47,10 +48,14 @@ const $I = $WorkspaceUseCasesId.create("aggregates/Thread/ThreadStore");
  * @category repositories
  * @since 0.0.0
  */
-class CreateThreadInput extends S.Class<CreateThreadInput>($I`CreateThreadInput`)(
+export class CreateThreadInput extends S.Class<CreateThreadInput>($I`CreateThreadInput`)(
   {
-    title: S.String,
-    workspaceId: WorkspaceIdentity.WorkspaceId,
+    title: S.NonEmptyString.annotateKey({
+      description: "Initial non-empty title for the thread.",
+    }),
+    workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
+      description: "Workspace that owns the new thread.",
+    }),
   },
   $I.annote("CreateThreadInput", {
     description: "Input accepted by {@link ThreadStoreShape.createThread}.",
@@ -64,34 +69,41 @@ class CreateThreadInput extends S.Class<CreateThreadInput>($I`CreateThreadInput`
  * ```ts
  * import { Document } from "@beep/md/Md.model"
  * import { Effect } from "effect"
- * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
- * import type { AppendTurnInput } from "@beep/workspace-use-cases/aggregates/Thread/server"
+ * import * as O from "effect/Option"
+ * import { AppendTurnInput } from "@beep/workspace-use-cases/aggregates/Thread/server"
  *
  * const input = Effect.runSync(
  *   Effect.gen(function* () {
  *     const threadId = yield* S.decodeUnknownEffect(Workspace.ThreadId)(42)
- *     return {
+ *     return AppendTurnInput.make({
  *       content: Document.make({ children: [] }),
- *       parentTurnId: O.none(),
  *       role: "user",
  *       threadId,
- *     } satisfies AppendTurnInput
+ *     })
  *   })
  * )
- * console.log(input.role) // "user"
+ * console.log(O.isNone(input.parentTurnId)) // true
  * ```
  *
  * @category repositories
  * @since 0.0.0
  */
-class AppendTurnInput extends S.Class<AppendTurnInput>($I`AppendTurnInput`)(
+export class AppendTurnInput extends S.Class<AppendTurnInput>($I`AppendTurnInput`)(
   {
-    content: Document,
-    parentTurnId: S.Option(WorkspaceIdentity.TurnId),
-    role: MessageRole,
-    threadId: WorkspaceIdentity.ThreadId,
+    content: Document.annotateKey({
+      description: "Message content appended as the turn's first visible message.",
+    }),
+    parentTurnId: S.Option(WorkspaceIdentity.TurnId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional parent turn when appending a branch/edit.",
+    }),
+    role: MessageRole.annotateKey({
+      description: "Role assigned to the appended message.",
+    }),
+    threadId: WorkspaceIdentity.ThreadId.annotateKey({
+      description: "Thread that receives the appended turn.",
+    }),
   },
   $I.annote("AppendTurnInput", {
     description: "Input for {@link ThreadStoreShape.appendTurn}.",
@@ -114,10 +126,14 @@ class AppendTurnInput extends S.Class<AppendTurnInput>($I`AppendTurnInput`)(
  * @category repositories
  * @since 0.0.0
  */
-class AppendTurnResult extends S.Class<AppendTurnResult>($I`AppendTurnResult`)(
+export class AppendTurnResult extends S.Class<AppendTurnResult>($I`AppendTurnResult`)(
   {
-    message: Message,
-    turn: Turn,
+    message: Message.annotateKey({
+      description: "Persisted message created for the appended turn.",
+    }),
+    turn: Turn.annotateKey({
+      description: "Persisted turn created by the append operation.",
+    }),
   },
   $I.annote("AppendTurnResult", {
     description: "Result returned by {@link ThreadStoreShape.appendTurn}.",
@@ -151,9 +167,15 @@ class AppendTurnResult extends S.Class<AppendTurnResult>($I`AppendTurnResult`)(
  */
 export class SetThreadTitleIfEmptyInput extends S.Class<SetThreadTitleIfEmptyInput>($I`SetThreadTitleIfEmptyInput`)(
   {
-    emptyTitle: S.NonEmptyString,
-    threadId: WorkspaceIdentity.ThreadId,
-    title: S.NonEmptyString,
+    emptyTitle: S.NonEmptyString.annotateKey({
+      description: "Expected current title that still represents the empty/new-thread placeholder.",
+    }),
+    threadId: WorkspaceIdentity.ThreadId.annotateKey({
+      description: "Thread whose placeholder title may be replaced.",
+    }),
+    title: S.NonEmptyString.annotateKey({
+      description: "Replacement title derived from user-visible content.",
+    }),
   },
   $I.annote("SetThreadTitleIfEmptyInput", {
     description: "Compare-and-set title update accepted by the ThreadStore when a thread still has its empty title.",

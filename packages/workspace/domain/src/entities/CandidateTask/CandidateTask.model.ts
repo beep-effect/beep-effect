@@ -31,9 +31,15 @@ export class CandidateTask extends BaseEntity.Class<CandidateTask>($I`CandidateT
   Workspace.CandidateTaskId,
   {
     fields: {
-      fixtureKey: S.String,
-      lifecycle: CandidateLifecycle,
-      snapshot: UnknownRecord,
+      fixtureKey: S.NonEmptyString.annotateKey({
+        description: "Stable fixture key for the candidate task.",
+      }),
+      lifecycle: CandidateLifecycle.annotateKey({
+        description: "Lifecycle state for the candidate task.",
+      }),
+      snapshot: UnknownRecord.annotateKey({
+        description: "Opaque runtime proof snapshot for the candidate task.",
+      }),
     },
     persisted: {
       fixtureKey: EntitySchema.persist.text({

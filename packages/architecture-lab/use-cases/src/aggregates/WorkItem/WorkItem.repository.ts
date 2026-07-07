@@ -8,7 +8,7 @@
 
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import type { Effect } from "effect";
@@ -45,7 +45,9 @@ export class WorkItemRepositoryNotFound extends TaggedErrorClass<WorkItemReposit
     title: "WorkItem repository not found",
     description: "The WorkItem repository could not find the requested aggregate.",
   })
-) {}
+) {
+  static readonly is = S.is(WorkItemRepositoryNotFound);
+}
 
 /**
  * Persistence failure raised when a WorkItem write conflicts.
@@ -73,13 +75,17 @@ export class WorkItemRepositoryConflict extends TaggedErrorClass<WorkItemReposit
   "WorkItemRepositoryConflict",
   {
     workItemId: DomainWorkItem.WorkItemId,
-    reason: S.String,
+    reason: S.NonEmptyString.annotateKey({
+      description: "Non-empty repository conflict diagnostic.",
+    }),
   },
   $I.annote("WorkItemRepositoryConflict", {
     title: "WorkItem repository conflict",
     description: "The WorkItem repository rejected a conflicting write.",
   })
-) {}
+) {
+  static readonly is = S.is(WorkItemRepositoryConflict);
+}
 
 /**
  * Persistence failure raised when the WorkItem repository is unavailable.
@@ -101,16 +107,51 @@ export class WorkItemRepositoryUnavailable extends TaggedErrorClass<WorkItemRepo
 )(
   "WorkItemRepositoryUnavailable",
   {
-    reason: S.String,
+    reason: S.NonEmptyString.annotateKey({
+      description: "Non-empty repository availability diagnostic.",
+    }),
   },
   $I.annote("WorkItemRepositoryUnavailable", {
     title: "WorkItem repository unavailable",
     description: "The WorkItem repository could not serve the request.",
   })
-) {}
+) {
+  static readonly is = S.is(WorkItemRepositoryUnavailable);
+}
 
 /**
- * WorkItem repository failure.
+ * WorkItem repository failure schema.
+ *
+ * @example
+ * ```ts
+ * import {
+ *   WorkItemRepositoryError,
+ *   WorkItemRepositoryUnavailable,
+ * } from "@beep/architecture-lab-use-cases/aggregates/WorkItem/server"
+ *
+ * const isRepositoryError = WorkItemRepositoryError.is
+ *
+ * console.log(isRepositoryError(WorkItemRepositoryUnavailable.make({ reason: "maintenance" }))) // true
+ * ```
+ *
+ * @category repositories
+ * @since 0.0.0
+ */
+export const WorkItemRepositoryError = S.Union([
+  WorkItemRepositoryNotFound,
+  WorkItemRepositoryConflict,
+  WorkItemRepositoryUnavailable,
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("WorkItemRepositoryError", {
+    title: "WorkItem repository error",
+    description: "Tagged union of WorkItem repository port failures.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime type for {@link WorkItemRepositoryError}.
  *
  * @example
  * ```ts
@@ -127,10 +168,7 @@ export class WorkItemRepositoryUnavailable extends TaggedErrorClass<WorkItemRepo
  * @category repositories
  * @since 0.0.0
  */
-export type WorkItemRepositoryError =
-  | WorkItemRepositoryNotFound
-  | WorkItemRepositoryConflict
-  | WorkItemRepositoryUnavailable;
+export type WorkItemRepositoryError = typeof WorkItemRepositoryError.Type;
 
 /**
  * WorkItem repository port consumed by the server-side use-case factory.

@@ -2,34 +2,16 @@
   {
     "ruleId": "SFV4-defaults",
     "file": "packages/architecture-lab/domain/src/aggregates/WorkItem/WorkItem.model.ts",
-    "line": 53,
-    "symbol": "WorkItem",
-    "smell": "`assignee: S.OptionFromOptionalKey(WorkerId)` and `priority: S.OptionFromOptionalKey(WorkPriority)` are Option fields without constructor defaults; `create` and `reopen` have to pass `assignee: O.none()` at lines 127 and 278.",
-    "proposedTarget": "Pipe the Option fields through `SchemaUtils.withNoneDefault` so constructor-side absence is modeled by the schema. Verified helper: packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46-51; in-repo exemplar: packages/foundation/modeling/lexical/src/Lexical.model.ts:686-688. `create` and `reopen` can then omit the `assignee` key without changing encoded optional-key semantics.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/architecture-lab/domain/src/aggregates/WorkItem/WorkItem.model.ts",
-    "line": 88,
-    "symbol": "CreateWorkItemInput.priority",
-    "smell": "`S.OptionFromOptionalKey(WorkPriority).pipe(S.withConstructorDefault(Effect.succeed(O.none<WorkPriority>())))` hand-rolls the repo helper for Option absence.",
-    "proposedTarget": "Replace the explicit `S.withConstructorDefault(Effect.succeed(O.none()))` with `SchemaUtils.withNoneDefault` (verified at packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46-51; exemplar packages/foundation/modeling/lexical/src/Lexical.model.ts:686-688).",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/architecture-lab/domain/src/aggregates/WorkItem/WorkItem.model.ts",
     "line": 128,
     "symbol": "create",
     "smell": "`priority: O.some(O.getOrElse(input.priority, () => defaultWorkPriority))` applies the new-WorkItem priority default in the aggregate factory body even though `CreateWorkItemInput.priority` is already schema-modeled.",
     "proposedTarget": "If omitted creation priority semantically means normal, move that default onto `CreateWorkItemInput.priority` with `S.withConstructorDefault(Effect.succeed(O.some(defaultWorkPriority)))` or a small SchemaUtils default helper, then have `create` pass `priority: input.priority`. Verified v4 API: .repos/effect-v4/packages/effect/src/Schema.ts:5646-5652; local default value: packages/architecture-lab/domain/src/values/WorkPriority/WorkPriority.behavior.ts:33. Needs a design check because current docs assert constructor-time absence before `create` applies the default.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Keeping the normal-priority default in the aggregate factory preserves the public CreateWorkItemInput.make({ id, title }) constructor semantics, where omitted priority remains Option.none before create applies the aggregate default.",
+      "boundary": "public CreateWorkItemInput constructor semantics"
+    }
   }
 ]

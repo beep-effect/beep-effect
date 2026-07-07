@@ -10,8 +10,7 @@ import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkIt
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import * as DomainWorkPriority from "@beep/architecture-lab-domain/values/WorkPriority";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { Effect } from "effect";
-import * as O from "effect/Option";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.commands");
@@ -40,11 +39,15 @@ const $I = $ArchitectureLabUseCasesId.create("aggregates/WorkItem/WorkItem.comma
  */
 export class CreateWorkItemCommand extends S.Class<CreateWorkItemCommand>($I`CreateWorkItemCommand`)(
   {
-    id: DomainWorkItem.WorkItemId,
-    title: DomainWorkItem.WorkItemTitle,
-    priority: S.OptionFromOptionalKey(DomainWorkPriority.WorkPriority).pipe(
-      S.withConstructorDefault(Effect.succeed(O.none<DomainWorkPriority.WorkPriority>()))
-    ),
+    id: DomainWorkItem.WorkItemId.annotateKey({
+      description: "WorkItem identity assigned by the caller.",
+    }),
+    title: DomainWorkItem.WorkItemTitle.annotateKey({
+      description: "Human-readable WorkItem title.",
+    }),
+    priority: S.OptionFromOptionalKey(DomainWorkPriority.WorkPriority).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional requested WorkItem priority.",
+    }),
   },
   $I.annote("CreateWorkItemCommand", {
     title: "Create WorkItem command",
@@ -75,8 +78,12 @@ export class CreateWorkItemCommand extends S.Class<CreateWorkItemCommand>($I`Cre
  */
 export class AssignWorkItemCommand extends S.Class<AssignWorkItemCommand>($I`AssignWorkItemCommand`)(
   {
-    id: DomainWorkItem.WorkItemId,
-    assignee: DomainWorker.WorkerId,
+    id: DomainWorkItem.WorkItemId.annotateKey({
+      description: "WorkItem identity to assign.",
+    }),
+    assignee: DomainWorker.WorkerId.annotateKey({
+      description: "Worker identity receiving the WorkItem assignment.",
+    }),
   },
   $I.annote("AssignWorkItemCommand", {
     title: "Assign WorkItem command",
@@ -105,7 +112,9 @@ export class AssignWorkItemCommand extends S.Class<AssignWorkItemCommand>($I`Ass
  */
 export class CompleteWorkItemCommand extends S.Class<CompleteWorkItemCommand>($I`CompleteWorkItemCommand`)(
   {
-    id: DomainWorkItem.WorkItemId,
+    id: DomainWorkItem.WorkItemId.annotateKey({
+      description: "WorkItem identity to complete.",
+    }),
   },
   $I.annote("CompleteWorkItemCommand", {
     title: "Complete WorkItem command",
@@ -134,7 +143,9 @@ export class CompleteWorkItemCommand extends S.Class<CompleteWorkItemCommand>($I
  */
 export class ReopenWorkItemCommand extends S.Class<ReopenWorkItemCommand>($I`ReopenWorkItemCommand`)(
   {
-    id: DomainWorkItem.WorkItemId,
+    id: DomainWorkItem.WorkItemId.annotateKey({
+      description: "WorkItem identity to reopen.",
+    }),
   },
   $I.annote("ReopenWorkItemCommand", {
     title: "Reopen WorkItem command",
@@ -163,7 +174,9 @@ export class ReopenWorkItemCommand extends S.Class<ReopenWorkItemCommand>($I`Reo
  */
 export class ArchiveWorkItemCommand extends S.Class<ArchiveWorkItemCommand>($I`ArchiveWorkItemCommand`)(
   {
-    id: DomainWorkItem.WorkItemId,
+    id: DomainWorkItem.WorkItemId.annotateKey({
+      description: "WorkItem identity to archive.",
+    }),
   },
   $I.annote("ArchiveWorkItemCommand", {
     title: "Archive WorkItem command",
@@ -192,7 +205,9 @@ export class ArchiveWorkItemCommand extends S.Class<ArchiveWorkItemCommand>($I`A
  */
 export class GetWorkItemQuery extends S.Class<GetWorkItemQuery>($I`GetWorkItemQuery`)(
   {
-    id: DomainWorkItem.WorkItemId,
+    id: DomainWorkItem.WorkItemId.annotateKey({
+      description: "WorkItem identity to load.",
+    }),
   },
   $I.annote("GetWorkItemQuery", {
     title: "Get WorkItem query",
@@ -218,9 +233,9 @@ export class GetWorkItemQuery extends S.Class<GetWorkItemQuery>($I`GetWorkItemQu
  */
 export class ListWorkItemsQuery extends S.Class<ListWorkItemsQuery>($I`ListWorkItemsQuery`)(
   {
-    status: S.OptionFromOptionalKey(DomainWorkItem.WorkItemStatus).pipe(
-      S.withConstructorDefault(Effect.succeed(O.none<DomainWorkItem.WorkItemStatus>()))
-    ),
+    status: S.OptionFromOptionalKey(DomainWorkItem.WorkItemStatus).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional lifecycle status filter applied after repository listing.",
+    }),
   },
   $I.annote("ListWorkItemsQuery", {
     title: "List WorkItems query",

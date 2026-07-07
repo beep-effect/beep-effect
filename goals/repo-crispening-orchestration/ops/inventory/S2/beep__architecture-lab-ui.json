@@ -1,16 +1,5 @@
 [
   {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/architecture-lab/ui/src/aggregates/WorkItem/WorkItem.view-model.ts",
-    "line": 116,
-    "symbol": "WorkItemSummaryViewModel.assigneeLabel",
-    "smell": "`assigneeLabel: S.OptionFromOptionalKey(S.String)` lacks `SchemaUtils.withNoneDefault`, so constructor-side absence is not modeled on the view-model schema.",
-    "proposedTarget": "Pipe `assigneeLabel` through `SchemaUtils.withNoneDefault` (verified packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46-51; in-repo exemplar packages/foundation/modeling/lexical/src/Lexical.model.ts:686-688). This keeps the encoded optional key while allowing direct `WorkItemSummaryViewModel.make` call sites to omit the label.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
     "ruleId": "SFV4-normalization",
     "file": "packages/architecture-lab/ui/src/aggregates/WorkItem/WorkItem.view-model.ts",
     "line": 125,

@@ -1356,7 +1356,10 @@
         "./packages/law-practice/domain/src/values/PatentNumber/index.ts"
       ],
       "@beep/pacer": ["./packages/drivers/pacer/src/index.ts"],
-      "@beep/pacer/*": ["./packages/drivers/pacer/src/*"]
+      "@beep/pacer/*": ["./packages/drivers/pacer/src/*"],
+      "@beep/epistemic-domain/values/EpistemicFixtureKey": [
+        "./packages/epistemic/domain/src/values/EpistemicFixtureKey/index.ts"
+      ]
     }
   }
 }

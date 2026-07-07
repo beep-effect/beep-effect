@@ -8,18 +8,20 @@
 
 import { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public";
 import { $ArchitectureLabServerId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
-import { Effect } from "effect";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Effect, Match } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabServerId.create("aggregates/WorkItem/WorkItem.http");
 
-const isNotFound = S.is(WorkItemUseCases.WorkItemNotFound);
-const isConflict = S.is(WorkItemUseCases.WorkItemConflict);
-const isActionRejected = S.is(WorkItemUseCases.WorkItemActionRejected);
 const serviceUnavailableBody = WorkItemUseCases.WorkItemActionFailed.make({
   reason: WorkItemUseCases.WORK_ITEM_ACTION_UNAVAILABLE_REASON,
 });
+const WorkItemHttpStatusBase = LiteralKit([200, 201, 404, 409, 422, 503]);
+const withWorkItemHttpStatusCodecStatics = SchemaUtils.withStatics((schema: typeof WorkItemHttpStatusBase) => ({
+  decodeOption: S.decodeUnknownOption(schema),
+  fromUnknown: S.decodeUnknownSync(schema),
+}));
 
 /**
  * HTTP status values emitted by the WorkItem proof protocol adapter.
@@ -30,22 +32,22 @@ const serviceUnavailableBody = WorkItemUseCases.WorkItemActionFailed.make({
  *   WorkItemHttpStatus,
  *   type WorkItemHttpStatus as WorkItemHttpStatusType
  * } from "@beep/architecture-lab-server/aggregates/WorkItem"
- * import * as S from "effect/Schema"
  *
- * const isHttpStatus = S.is(WorkItemHttpStatus)
- * const created: WorkItemHttpStatusType = 201
+ * const created: WorkItemHttpStatusType = WorkItemHttpStatus.fromUnknown(201)
  *
- * console.log(isHttpStatus(created)) // true
+ * console.log(WorkItemHttpStatus.is.number201(created)) // true
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const WorkItemHttpStatus = LiteralKit([200, 201, 404, 409, 422, 503]).pipe(
+export const WorkItemHttpStatus = WorkItemHttpStatusBase.pipe(
   $I.annoteSchema("WorkItemHttpStatus", {
     title: "WorkItem HTTP status",
     description: "HTTP status vocabulary emitted by the WorkItem proof protocol adapter.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(WorkItemHttpStatusBase),
+  withWorkItemHttpStatusCodecStatics
 );
 
 /**
@@ -85,13 +87,17 @@ export type WorkItemHttpStatus = typeof WorkItemHttpStatus.Type;
  */
 export class WorkItemHttpResponse extends S.Class<WorkItemHttpResponse>($I`WorkItemHttpResponse`)(
   {
-    body: S.Unknown,
-    status: WorkItemHttpStatus,
+    body: S.Unknown.annotateKey({
+      description: "HTTP response body emitted by the proof adapter.",
+    }),
+    status: WorkItemHttpStatus.annotateKey({
+      description: "HTTP status emitted with the body.",
+    }),
   },
-  {
+  $I.annote("WorkItemHttpResponse", {
     title: "WorkItem HTTP response",
     description: "Minimal protocol response envelope used by the architecture lab proof.",
-  }
+  })
 ) {}
 
 /**
@@ -115,18 +121,15 @@ export class WorkItemHttpResponse extends S.Class<WorkItemHttpResponse>($I`WorkI
  * @category handlers
  * @since 0.0.0
  */
-export const toWorkItemHttpError = (error: WorkItemUseCases.WorkItemActionError): WorkItemHttpResponse => {
-  if (isNotFound(error)) {
-    return WorkItemHttpResponse.make({ status: 404, body: error });
-  }
-  if (isConflict(error)) {
-    return WorkItemHttpResponse.make({ status: 409, body: error });
-  }
-  if (isActionRejected(error)) {
-    return WorkItemHttpResponse.make({ status: 422, body: error });
-  }
-  return WorkItemHttpResponse.make({ status: 503, body: serviceUnavailableBody });
-};
+export const toWorkItemHttpError = Match.type<WorkItemUseCases.WorkItemActionError>().pipe(
+  Match.withReturnType<WorkItemHttpResponse>(),
+  Match.tagsExhaustive({
+    WorkItemActionFailed: () => WorkItemHttpResponse.make({ status: 503, body: serviceUnavailableBody }),
+    WorkItemActionRejected: (error) => WorkItemHttpResponse.make({ status: 422, body: error }),
+    WorkItemConflict: (error) => WorkItemHttpResponse.make({ status: 409, body: error }),
+    WorkItemNotFound: (error) => WorkItemHttpResponse.make({ status: 404, body: error }),
+  })
+);
 
 const toSuccess =
   (status: 200 | 201) =>

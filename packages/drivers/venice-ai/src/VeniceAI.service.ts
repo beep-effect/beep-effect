@@ -76,11 +76,23 @@ const VeniceAIBaseUrl = URLStr.pipe(
   S.decode({
     decode: SchemaGetter.transform(makeVeniceAIBaseUrl),
     encode: SchemaGetter.transform(makeVeniceAIBaseUrl),
-  }),
-  $I.annoteSchema("VeniceAIBaseUrl", {
-    description: "Normalized Venice AI API base URL without trailing slash separators.",
   })
-);
+)
+  // The Type domain admits only normalization fixed points so schema-derived
+  // arbitraries generate values the codec round-trips byte-identically.
+  .check(
+    S.makeFilter((value: string) => Str.Equivalence(value, normalizeBaseUrl(value)), {
+      identifier: $I.make("VeniceAIBaseUrlNormalizedCheck"),
+      title: "VeniceAIBaseUrl Normalized",
+      description: "A Venice AI base URL already stripped of trailing slash separators.",
+      message: "Base URL must not end with trailing slash separators.",
+    })
+  )
+  .pipe(
+    $I.annoteSchema("VeniceAIBaseUrl", {
+      description: "Normalized Venice AI API base URL without trailing slash separators.",
+    })
+  );
 
 /**
  * Supported HTTP methods in the checked-in Venice OpenAPI document.

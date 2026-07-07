@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/agents/server/src/AssistantTurn/AnthropicTurnCodec.ts",
-    "line": 41,
-    "symbol": "mermaidDiagramTypes",
-    "smell": "Mermaid diagram types are a finite allowlist stored as ReadonlyArray<string> and checked with A.contains at line 68, so the literal family is widened to string and has no schema/kit guard even though it drives provider validation.",
-    "proposedTarget": "Replace mermaidDiagramTypes with a named MermaidDiagramType = LiteralKit([...]) and validate the first token with S.is(MermaidDiagramType)(token) or kit guards; keep A.join(MermaidDiagramType.Options, \", \") for the error message. Verified targets: LiteralKit const-parameter API at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:743-761 and Effect v4 S.is at .repos/effect-v4/packages/effect/src/Schema.ts:1256.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 3.4
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/agents/server/src/AssistantTurn/AnthropicTurnKernel.ts",
     "line": 129,
     "symbol": "parts",

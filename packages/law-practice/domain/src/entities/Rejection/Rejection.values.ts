@@ -6,12 +6,17 @@
  */
 
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
+import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.js";
 
 const $I = $LawPracticeDomainId.create("entities/Rejection/Rejection.values");
 
-const RejectionStatute = LiteralKit(["102", "103", "101", "112"]);
+const RejectionStatute = LiteralKit(["102", "103", "101", "112"]).annotate(
+  $I.annote("RejectionStatute", {
+    description: "Patent statute sections supported by law-practice rejection grounds.",
+  })
+);
 
 /**
  * The statutory ground of a rejection, discriminated on the statute section it
@@ -38,14 +43,26 @@ const RejectionStatute = LiteralKit(["102", "103", "101", "112"]);
  */
 export const RejectionGround = RejectionStatute.toTaggedUnion("statute")({
   "101": {},
-  "102": { referenceFixtureKey: S.String },
-  "103": { combinationRationale: S.String, referenceFixtureKeys: S.NonEmptyArray(S.String) },
+  "102": {
+    referenceFixtureKey: LawPracticeFixtureKey.annotateKey({
+      description: "Fixture key for the prior-art reference cited by a §102 rejection.",
+    }),
+  },
+  "103": {
+    combinationRationale: LawPracticeText.annotateKey({
+      description: "Reason the cited prior-art references are combined for a §103 rejection.",
+    }),
+    referenceFixtureKeys: S.NonEmptyArray(LawPracticeFixtureKey).annotateKey({
+      description: "Fixture keys for the prior-art references combined by a §103 rejection.",
+    }),
+  },
   "112": {},
 }).pipe(
   $I.annoteSchema("RejectionGround", {
     description:
       "Statutory ground of a rejection, encoding prior-art cardinality per statute section (§102 = 1 reference, §103 = >=1 references + rationale, §101/§112 = 0 references).",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

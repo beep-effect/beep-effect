@@ -7,13 +7,12 @@
 
 import { $OipWebId } from "@beep/identity/packages";
 import { Sanity, SanityConfigInput, SanityQueryRequest } from "@beep/sanity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
-import { Str } from "@beep/utils";
-import { Config, Effect, flow, Layer, pipe, Redacted } from "effect";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
+import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { O } from "@beep/utils";
+import { Effect, Layer } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
+import { makeRedactedConfigOptionReader, makeTextConfigOptionReader } from "../runtime/OipRuntimeConfig.ts";
 import { oipSiteContent } from "./OipContent.data.ts";
 import { decodeOipSiteContent } from "./OipContent.model.ts";
 import type { SanityError } from "@beep/sanity";
@@ -21,6 +20,12 @@ import type { OipSiteContent } from "./OipContent.model.ts";
 
 const $I = $OipWebId.create("content/OipContent.runtime");
 const query = '*[_type == "oipSiteContent" && slug.current == "home"][0]';
+
+const OipContentProviderHttpStatus = S.Int.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
+  $I.annoteSchema("OipContentProviderHttpStatus", {
+    description: "Integer HTTP status code recorded for OIP content provider errors.",
+  })
+);
 
 const OipContentLoadErrorReason = LiteralKit(["config", "decode", "provider"]).pipe(
   $I.annoteSchema("OipContentLoadErrorReason", {
@@ -39,10 +44,10 @@ type OipContentLoadErrorOptions = {
 class OipContentLoadError extends TaggedErrorClass<OipContentLoadError>($I`OipContentLoadError`)(
   "OipContentLoadError",
   {
-    provider: S.optionalKey(S.String),
-    providerReason: S.optionalKey(S.String),
+    provider: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    providerReason: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     reason: OipContentLoadErrorReason,
-    status: S.optionalKey(S.Finite),
+    status: S.OptionFromOptionalKey(OipContentProviderHttpStatus).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("OipContentLoadError", {
     description: "Typed server-side OIP content loading failure.",
@@ -54,36 +59,18 @@ class OipContentLoadError extends TaggedErrorClass<OipContentLoadError>($I`OipCo
   ): OipContentLoadError =>
     OipContentLoadError.make({
       reason,
-      ...R.getSomes({
-        provider: O.fromUndefinedOr(options.provider),
-        providerReason: O.fromUndefinedOr(options.providerReason),
-      }),
-      ...R.getSomes({
-        status: O.fromUndefinedOr(options.status),
-      }),
+      provider: O.fromUndefinedOr(options.provider),
+      providerReason: O.fromUndefinedOr(options.providerReason),
+      status: O.fromUndefinedOr(options.status),
     });
 }
 
-const trimConfigOption: (value: O.Option<string>) => O.Option<string> = flow(O.map(Str.trim), O.filter(Str.isNonEmpty));
-
-const readTextConfigOption = Effect.fn("OipContent.readTextConfigOption")(function* (key: string) {
-  const value = yield* Config.string(key).pipe(
-    Config.option,
-    Effect.mapError(() => OipContentLoadError.fromReason("config"))
-  );
-  return trimConfigOption(value);
-});
-
-const readRedactedConfigOption = Effect.fn("OipContent.readRedactedConfigOption")(function* (key: string) {
-  const value = yield* Config.redacted(key).pipe(
-    Config.option,
-    Effect.mapError(() => OipContentLoadError.fromReason("config"))
-  );
-  return pipe(
-    value,
-    O.filter((secret) => Str.isNonEmpty(Str.trim(Redacted.value(secret))))
-  );
-});
+const readTextConfigOption = makeTextConfigOptionReader("OipContent.readTextConfigOption", () =>
+  OipContentLoadError.fromReason("config")
+);
+const readRedactedConfigOption = makeRedactedConfigOptionReader("OipContent.readRedactedConfigOption", () =>
+  OipContentLoadError.fromReason("config")
+);
 
 const sanityConfig = Effect.fn("OipContent.sanityConfig")(function* () {
   const projectId = yield* readTextConfigOption("SANITY_PROJECT_ID");
@@ -95,10 +82,13 @@ const sanityConfig = Effect.fn("OipContent.sanityConfig")(function* () {
 
   return O.some(
     SanityConfigInput.make({
-      ...R.getSomes({ projectId, dataset }),
-      ...R.getSomes({ apiHost: yield* readTextConfigOption("SANITY_API_HOST") }),
-      ...R.getSomes({ apiVersion: yield* readTextConfigOption("SANITY_API_VERSION") }),
-      ...R.getSomes({ apiToken: yield* readRedactedConfigOption("SANITY_API_TOKEN") }),
+      ...O.getSomesStruct({
+        projectId,
+        dataset,
+        apiHost: yield* readTextConfigOption("SANITY_API_HOST"),
+        apiVersion: yield* readTextConfigOption("SANITY_API_VERSION"),
+        apiToken: yield* readRedactedConfigOption("SANITY_API_TOKEN"),
+      }),
     })
   );
 });
@@ -122,7 +112,7 @@ const loadFromSanity = (config: SanityConfigInput): Effect.Effect<OipSiteContent
         OipContentLoadError.fromReason("provider", {
           provider: "sanity",
           providerReason: error.reason,
-          ...R.getSomes({ status: O.fromUndefinedOr(error.status) }),
+          ...O.getSomesStruct({ status: O.fromUndefinedOr(error.status) }),
         })
       )
     )
@@ -134,12 +124,10 @@ const fallbackToStaticContent = (error: OipContentLoadError): Effect.Effect<OipS
       operation: "oip.content.load",
       outcome: "fallback",
       reason: error.reason,
-      ...R.getSomes({
-        provider: O.fromUndefinedOr(error.provider),
-        providerReason: O.fromUndefinedOr(error.providerReason),
-      }),
-      ...R.getSomes({
-        status: O.fromUndefinedOr(error.status),
+      ...O.getSomesStruct({
+        provider: error.provider,
+        providerReason: error.providerReason,
+        status: error.status,
       }),
     }),
     Effect.as(oipSiteContent)

@@ -7,6 +7,7 @@
  */
 
 import { $ArchitectureLabDomainId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -47,11 +48,25 @@ const $I = $ArchitectureLabDomainId.create("aggregates/WorkItem/WorkItem.model")
  */
 export class WorkItem extends S.Class<WorkItem>($I`WorkItem`)(
   {
-    id: WorkItemId,
-    title: WorkItemTitle,
-    status: WorkItemStatus,
-    assignee: S.OptionFromOptionalKey(WorkerId),
-    priority: S.OptionFromOptionalKey(WorkPriority),
+    id: WorkItemId.annotateKey({
+      description: "Stable WorkItem aggregate id.",
+    }),
+    title: WorkItemTitle.annotateKey({
+      description: "Human-readable WorkItem title.",
+    }),
+    status: WorkItemStatus.annotateKey({
+      description: "Current WorkItem lifecycle status.",
+    }),
+    assignee: S.OptionFromOptionalKey(WorkerId)
+      .annotateKey({
+        description: "Worker assigned to the WorkItem, when assigned.",
+      })
+      .pipe(SchemaUtils.withNoneDefault),
+    priority: S.OptionFromOptionalKey(WorkPriority)
+      .annotateKey({
+        description: "Relative WorkItem priority, when explicitly carried.",
+      })
+      .pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("WorkItem", {
     title: "WorkItem",
@@ -83,11 +98,17 @@ export class WorkItem extends S.Class<WorkItem>($I`WorkItem`)(
  */
 export class CreateWorkItemInput extends S.Class<CreateWorkItemInput>($I`CreateWorkItemInput`)(
   {
-    id: WorkItemId,
-    title: WorkItemTitle,
-    priority: S.OptionFromOptionalKey(WorkPriority).pipe(
-      S.withConstructorDefault(Effect.succeed(O.none<WorkPriority>()))
-    ),
+    id: WorkItemId.annotateKey({
+      description: "Stable WorkItem aggregate id.",
+    }),
+    title: WorkItemTitle.annotateKey({
+      description: "Human-readable WorkItem title.",
+    }),
+    priority: S.OptionFromOptionalKey(WorkPriority)
+      .annotateKey({
+        description: "Optional priority requested for the new WorkItem.",
+      })
+      .pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("CreateWorkItemInput", {
     title: "Create WorkItem input",
@@ -124,12 +145,61 @@ export const create = (input: CreateWorkItemInput): WorkItem =>
     id: input.id,
     title: input.title,
     status: "open",
-    assignee: O.none(),
     priority: O.some(O.getOrElse(input.priority, () => defaultWorkPriority)),
   });
 
+const isArchived = WorkItemStatus.$match({
+  open: () => false,
+  assigned: () => false,
+  completed: () => false,
+  archived: () => true,
+});
+
+const isCompleted = WorkItemStatus.$match({
+  open: () => false,
+  assigned: () => false,
+  completed: () => true,
+  archived: () => false,
+});
+
+const acceptsAssignment = WorkItemStatus.$match({
+  open: () => true,
+  assigned: () => true,
+  completed: () => false,
+  archived: () => false,
+});
+
+const acceptsCompletion = WorkItemStatus.$match({
+  open: () => true,
+  assigned: () => true,
+  completed: () => true,
+  archived: () => false,
+});
+
+const acceptsReopen = WorkItemStatus.$match({
+  open: () => false,
+  assigned: () => false,
+  completed: () => true,
+  archived: () => false,
+});
+
 const requireMutable = (workItem: WorkItem): Effect.Effect<void, WorkItemAlreadyArchived> =>
-  workItem.status === "archived" ? Effect.fail(WorkItemAlreadyArchived.make({ workItemId: workItem.id })) : Effect.void;
+  isArchived(workItem.status) ? Effect.fail(WorkItemAlreadyArchived.make({ workItemId: workItem.id })) : Effect.void;
+
+const requireTransition = (
+  workItem: WorkItem,
+  to: WorkItemStatus,
+  accepts: (status: WorkItemStatus) => boolean
+): Effect.Effect<void, WorkItemInvalidTransition> =>
+  accepts(workItem.status)
+    ? Effect.void
+    : Effect.fail(
+        WorkItemInvalidTransition.fromStatus({
+          workItemId: workItem.id,
+          from: workItem.status,
+          to,
+        })
+      );
 
 /**
  * Assign an open or already assigned WorkItem to a concrete Worker identifier.
@@ -170,13 +240,7 @@ export const assign = Effect.fn("WorkItem.assign")(function* (workItem: WorkItem
   if (assignee <= 0) {
     return yield* WorkItemAssigneeRequired.make({ workItemId: workItem.id });
   }
-  if (workItem.status !== "open" && workItem.status !== "assigned") {
-    return yield* WorkItemInvalidTransition.fromStatus({
-      workItemId: workItem.id,
-      from: workItem.status,
-      to: "assigned",
-    });
-  }
+  yield* requireTransition(workItem, "assigned", acceptsAssignment);
   return WorkItem.make({
     ...workItem,
     status: "assigned",
@@ -217,16 +281,10 @@ export const assign = Effect.fn("WorkItem.assign")(function* (workItem: WorkItem
  */
 export const complete = Effect.fn("WorkItem.complete")(function* (workItem: WorkItem) {
   yield* requireMutable(workItem);
-  if (workItem.status === "completed") {
+  if (isCompleted(workItem.status)) {
     return workItem;
   }
-  if (workItem.status !== "open" && workItem.status !== "assigned") {
-    return yield* WorkItemInvalidTransition.fromStatus({
-      workItemId: workItem.id,
-      from: workItem.status,
-      to: "completed",
-    });
-  }
+  yield* requireTransition(workItem, "completed", acceptsCompletion);
   return WorkItem.make({
     ...workItem,
     status: "completed",
@@ -269,13 +327,10 @@ export const complete = Effect.fn("WorkItem.complete")(function* (workItem: Work
  */
 export const reopen = Effect.fn("WorkItem.reopen")(function* (workItem: WorkItem) {
   yield* requireMutable(workItem);
-  if (workItem.status !== "completed") {
-    return yield* WorkItemInvalidTransition.fromStatus({ workItemId: workItem.id, from: workItem.status, to: "open" });
-  }
+  yield* requireTransition(workItem, "open", acceptsReopen);
   return WorkItem.make({
     ...workItem,
     status: "open",
-    assignee: O.none(),
   });
 });
 

@@ -15,7 +15,7 @@
       "status": "candidate",
       "owner": "@beep/oip-web",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 157,
+      "line": 201,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -27,7 +27,7 @@
       "status": "candidate",
       "owner": "@beep/oip-web",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 214,
+      "line": 258,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -39,7 +39,7 @@
       "status": "candidate",
       "owner": "@beep/oip-web",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 213,
+      "line": 257,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -51,7 +51,7 @@
       "status": "candidate",
       "owner": "@beep/oip-web",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 589,
+      "line": 638,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -63,7 +63,7 @@
       "status": "candidate",
       "owner": "@beep/oip-web",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 588,
+      "line": 637,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -82,14 +82,26 @@
       "diagnostics": ["missing-dual"]
     },
     {
-      "file": "apps/professional-desktop/src/chat/ui/StreamingBlocks.tsx",
-      "qualifiedName": "stableOccurrenceKeys",
-      "kind": "exported-const-function",
+      "file": "apps/professional-desktop/src/transport/SidecarTransport.ts",
+      "qualifiedName": "SidecarTransport.decodeUnknownEffect",
+      "kind": "static-function-property",
       "status": "candidate",
       "owner": "@beep/professional-desktop",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 51,
-      "column": 14,
+      "line": 36,
+      "column": 19,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
+      "qualifiedName": "SidecarClosedPayload.decodeUnknownEffect",
+      "kind": "static-function-property",
+      "status": "candidate",
+      "owner": "@beep/professional-desktop",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 143,
+      "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
     },
@@ -101,8 +113,32 @@
       "owner": "@beep/agents-server",
       "reason": "scanChunk is the (state, text) => [nextState, completed] fold step of the incremental streaming JSON extractor, always invoked data-first inside the per-chunk scan loop; its dtslint contract asserts the data-first [ScanState, Array<string>] tuple result. A data-last dual would add no pipeable ergonomics to a reducer step and would obscure the proven fold signature.",
       "issue": "AGENTS-SERVER-SCANSTATE-FOLD-STEP",
-      "line": 80,
+      "line": 208,
       "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.contracts.ts",
+      "qualifiedName": "CandidateOutputSet.fromUnknown",
+      "kind": "static-function-property",
+      "status": "candidate",
+      "owner": "@beep/agents-use-cases",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 830,
+      "column": 19,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/architecture-lab/domain/src/entities/Worker/Worker.model.ts",
+      "qualifiedName": "Worker.fromUnknown",
+      "kind": "static-function-property",
+      "status": "candidate",
+      "owner": "@beep/architecture-lab-domain",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 207,
+      "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
     },
@@ -1260,7 +1296,7 @@
       "status": "candidate",
       "owner": "@beep/repo-configs",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 281,
+      "line": 287,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]

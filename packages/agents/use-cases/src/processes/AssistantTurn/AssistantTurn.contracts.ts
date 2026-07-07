@@ -10,6 +10,18 @@ import { $AgentsUseCasesId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 
 const $I = $AgentsUseCasesId.create("processes/AssistantTurn/AssistantTurn.contracts");
+const BlockIndex = S.Int.check(
+  S.isGreaterThanOrEqualTo(0, {
+    identifier: $I`BlockIndexNonNegativeCheck`,
+    title: "Block Index Non Negative",
+    description: "A generated assistant block index must be zero or greater.",
+    message: "Expected a non-negative assistant block index",
+  })
+).pipe(
+  $I.annoteSchema("BlockIndex", {
+    description: "Zero-based generated assistant block index.",
+  })
+);
 
 /**
  * The plain-text prompt projection of a single thread item. The kernel consumes
@@ -28,8 +40,8 @@ const $I = $AgentsUseCasesId.create("processes/AssistantTurn/AssistantTurn.contr
  */
 export class UserTurnHistoryItem extends S.Class<UserTurnHistoryItem>($I`UserTurnHistoryItem`)(
   {
-    role: S.tag("user"),
-    text: S.String,
+    role: S.tag("user").annotateKey({ description: "User-authored turn discriminator." }),
+    text: S.String.annotateKey({ description: "Plain-text user prompt projection consumed by the turn kernel." }),
   },
   $I.annote("UserTurnHistoryItem", {
     description: "Plain-text prompt projection of a user thread item consumed by the turn kernel.",
@@ -52,8 +64,10 @@ export class UserTurnHistoryItem extends S.Class<UserTurnHistoryItem>($I`UserTur
  */
 export class AssistantTurnHistoryItem extends S.Class<AssistantTurnHistoryItem>($I`AssistantTurnHistoryItem`)(
   {
-    role: S.tag("assistant"),
-    text: S.String,
+    role: S.tag("assistant").annotateKey({ description: "Assistant-authored turn discriminator." }),
+    text: S.String.annotateKey({
+      description: "Plain-text assistant response projection consumed by the turn kernel.",
+    }),
   },
   $I.annote("AssistantTurnHistoryItem", {
     description: "Plain-text prompt projection of an assistant thread item consumed by the turn kernel.",
@@ -122,8 +136,8 @@ export type TurnHistoryItem = typeof TurnHistoryItem.Type;
  */
 export class IndexedBlock extends S.Class<IndexedBlock>($I`IndexedBlock`)(
   {
-    block: AssistantBlock,
-    index: S.Finite,
+    block: AssistantBlock.annotateKey({ description: "Generated assistant block payload." }),
+    index: BlockIndex.annotateKey({ description: "Zero-based block position in the generated assistant turn." }),
   },
   $I.annote("IndexedBlock", {
     description: "Generated assistant block paired with the block's position in the turn stream.",

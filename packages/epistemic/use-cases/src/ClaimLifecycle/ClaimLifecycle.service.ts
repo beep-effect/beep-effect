@@ -10,10 +10,9 @@
  * @since 0.0.0
  */
 import * as DomainCandidateClaim from "@beep/epistemic-domain/entities/CandidateClaim";
-import { ClaimInvalidTransition } from "@beep/epistemic-domain/values";
+import { ClaimGateResult, ClaimInvalidTransition } from "@beep/epistemic-domain/values";
 import { $EpistemicUseCasesId } from "@beep/identity/packages";
 import { Context, Effect } from "effect";
-import type { ClaimGateResult } from "@beep/epistemic-domain/values";
 
 const $I = $EpistemicUseCasesId.create("ClaimLifecycle/ClaimLifecycle.service");
 
@@ -113,9 +112,11 @@ export class ClaimTransition extends Context.Service<ClaimTransition, ClaimTrans
  */
 export const makeClaimTransition = (): ClaimTransitionShape => ({
   advance: (claim, gateResult) =>
-    gateResult.verdict === "rejected"
-      ? Effect.succeed(claim)
-      : claim.lifecycle === "candidate"
-        ? Effect.succeed(DomainCandidateClaim.CandidateClaim.make({ ...claim, lifecycle: "shape_valid" }))
-        : Effect.fail(ClaimInvalidTransition.between(claim.lifecycle, "shape_valid")),
+    ClaimGateResult.match(gateResult, {
+      rejected: () => Effect.succeed(claim),
+      admitted: () =>
+        claim.lifecycle === "candidate"
+          ? Effect.succeed(DomainCandidateClaim.CandidateClaim.make({ ...claim, lifecycle: "shape_valid" }))
+          : Effect.fail(ClaimInvalidTransition.between(claim.lifecycle, "shape_valid")),
+    }),
 });

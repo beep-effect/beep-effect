@@ -6,19 +6,124 @@
  */
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
-import { EmailString } from "@beep/schema";
+import { EmailString, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import {
   RuntimeActivityType,
   RuntimeApprovalDecision,
   RuntimeCandidateLifecycle,
   RuntimeClaimConfidence,
+  RuntimeFixtureScenarioId,
   RuntimeRequestKind,
   RuntimeSourceKind,
   RuntimeUsageMode,
 } from "./ProfessionalRuntime.values.js";
 
 const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalRuntime.contracts");
+const RuntimeOrganizationId = S.NonEmptyString.pipe(
+  $I.annoteSchema("RuntimeOrganizationId", {
+    description: "Non-empty organization identifier used by runtime DTOs.",
+  })
+);
+const RuntimeWorkspaceId = S.NonEmptyString.pipe(
+  $I.annoteSchema("RuntimeWorkspaceId", {
+    description: "Non-empty workspace identifier used by runtime DTOs.",
+  })
+);
+const RuntimeThreadId = S.NonEmptyString.pipe(
+  $I.annoteSchema("RuntimeThreadId", {
+    description: "Non-empty thread identifier used by runtime DTOs.",
+  })
+);
+const RuntimeArtifactId = S.NonEmptyString.pipe(
+  $I.annoteSchema("RuntimeArtifactId", {
+    description: "Non-empty source or draft artifact identifier used by runtime DTOs.",
+  })
+);
+const RuntimeSpanId = S.NonEmptyString.pipe(
+  $I.annoteSchema("RuntimeSpanId", {
+    description: "Non-empty source span identifier used by runtime evidence references.",
+  })
+);
+const RuntimeEntityId = S.NonEmptyString.pipe(
+  $I.annoteSchema("RuntimeEntityId", {
+    description: "Non-empty vertical or runtime entity identifier.",
+  })
+);
+const RuntimeEntityKind = S.NonEmptyString.pipe(
+  $I.annoteSchema("RuntimeEntityKind", {
+    description: "Non-empty vertical or runtime entity kind.",
+  })
+);
+const RuntimeClaimId = S.NonEmptyString.pipe(
+  $I.annoteSchema("RuntimeClaimId", {
+    description: "Non-empty candidate claim identifier.",
+  })
+);
+const RuntimeProjectId = S.NonEmptyString.pipe(
+  $I.annoteSchema("RuntimeProjectId", {
+    description: "Non-empty candidate project identifier.",
+  })
+);
+const RuntimeTaskId = S.NonEmptyString.pipe(
+  $I.annoteSchema("RuntimeTaskId", {
+    description: "Non-empty candidate task identifier.",
+  })
+);
+const RuntimeDraftId = S.NonEmptyString.pipe(
+  $I.annoteSchema("RuntimeDraftId", {
+    description: "Non-empty candidate draft identifier.",
+  })
+);
+const RuntimeApprovalGateId = S.NonEmptyString.pipe(
+  $I.annoteSchema("RuntimeApprovalGateId", {
+    description: "Non-empty candidate approval-gate identifier.",
+  })
+);
+const RuntimePrincipalId = S.NonEmptyString.pipe(
+  $I.annoteSchema("RuntimePrincipalId", {
+    description: "Non-empty principal identifier used for runtime provenance.",
+  })
+);
+const RuntimeContextPacketId = S.NonEmptyString.pipe(
+  $I.annoteSchema("RuntimeContextPacketId", {
+    description: "Non-empty context packet identifier.",
+  })
+);
+const RuntimeUsageRecordId = S.NonEmptyString.pipe(
+  $I.annoteSchema("RuntimeUsageRecordId", {
+    description: "Non-empty usage attribution record identifier.",
+  })
+);
+const RuntimeLocalDateText = S.String.check(
+  S.isPattern(/^\d{4}-\d{2}-\d{2}$/u, {
+    identifier: $I`RuntimeLocalDateTextCheck`,
+    title: "Runtime Local Date Text",
+    description: "A local calendar date encoded as YYYY-MM-DD.",
+    message: "Expected a local date encoded as YYYY-MM-DD",
+  })
+).pipe(
+  $I.annoteSchema("RuntimeLocalDateText", {
+    description: "Local calendar date text encoded as YYYY-MM-DD.",
+  })
+);
+const RuntimeIsoInstantText = S.String.check(
+  S.isPattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/u, {
+    identifier: $I`RuntimeIsoInstantTextCheck`,
+    title: "Runtime ISO Instant Text",
+    description: "An ISO-like UTC instant encoded as YYYY-MM-DDTHH:mm:ssZ.",
+    message: "Expected an ISO UTC instant encoded as YYYY-MM-DDTHH:mm:ssZ",
+  })
+).pipe(
+  $I.annoteSchema("RuntimeIsoInstantText", {
+    description: "UTC instant text encoded as YYYY-MM-DDTHH:mm:ssZ.",
+  })
+);
+const RuntimeContextPacketSchemaVersion = S.Literal("runtime-data-loop.expected.context-packet.v1").pipe(
+  $I.annoteSchema("RuntimeContextPacketSchemaVersion", {
+    description: "Schema version literal emitted by deterministic runtime context packets.",
+  })
+);
 
 /**
  * Scope for an SDK request.
@@ -41,9 +146,13 @@ const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalR
  */
 export class RuntimeScope extends S.Class<RuntimeScope>($I`RuntimeScope`)(
   {
-    organizationId: S.String,
-    threadId: S.String,
-    workspaceId: S.String,
+    organizationId: RuntimeOrganizationId.annotateKey({
+      description: "Organization scope identifier for the runtime request.",
+    }),
+    threadId: RuntimeThreadId.annotateKey({ description: "Thread scope identifier for the runtime request." }),
+    workspaceId: RuntimeWorkspaceId.annotateKey({
+      description: "Workspace scope identifier for the runtime request.",
+    }),
   },
   $I.annote("RuntimeScope", {
     description: "Tenant, workspace, and thread scope for an SDK request.",
@@ -70,8 +179,8 @@ export class RuntimeScope extends S.Class<RuntimeScope>($I`RuntimeScope`)(
  */
 export class RuntimeEntityRef extends S.Class<RuntimeEntityRef>($I`RuntimeEntityRef`)(
   {
-    id: S.String,
-    kind: S.String,
+    id: RuntimeEntityId.annotateKey({ description: "Identifier of the referenced runtime or vertical entity." }),
+    kind: RuntimeEntityKind.annotateKey({ description: "Kind of the referenced runtime or vertical entity." }),
   },
   $I.annote("RuntimeEntityRef", {
     description: "Kind/id reference to a vertical or runtime entity.",
@@ -84,13 +193,14 @@ export class RuntimeEntityRef extends S.Class<RuntimeEntityRef>($I`RuntimeEntity
  * @example
  * ```ts
  * import { RuntimeEvidenceRef } from "@beep/agents-use-cases/public"
+ * import * as O from "effect/Option"
  *
  * const evidence = RuntimeEvidenceRef.make({
  *   artifactId: "email-artifact-001",
- *   spanIds: ["email-001-s2", "email-001-s3"]
+ *   spanIds: O.some(["email-001-s2", "email-001-s3"])
  * })
  *
- * console.log(evidence.spanIds?.length) // 2
+ * console.log(O.getOrElse(evidence.spanIds, () => []).length) // 2
  * ```
  *
  * @category models
@@ -98,9 +208,13 @@ export class RuntimeEntityRef extends S.Class<RuntimeEntityRef>($I`RuntimeEntity
  */
 export class RuntimeEvidenceRef extends S.Class<RuntimeEvidenceRef>($I`RuntimeEvidenceRef`)(
   {
-    artifactId: S.String,
-    spanId: S.optionalKey(S.String),
-    spanIds: S.Array(S.String).pipe(S.optionalKey),
+    artifactId: RuntimeArtifactId.annotateKey({ description: "Source artifact identifier carrying the evidence." }),
+    spanId: RuntimeSpanId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional single source span identifier.",
+    }),
+    spanIds: S.Array(RuntimeSpanId).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional source span identifiers when evidence covers multiple spans.",
+    }),
   },
   $I.annote("RuntimeEvidenceRef", {
     description: "Reference to one or more source spans on an artifact.",
@@ -117,12 +231,13 @@ export class RuntimeEvidenceRef extends S.Class<RuntimeEvidenceRef>($I`RuntimeEv
  *   RuntimeEntityRef,
  *   RuntimeEvidenceRef
  * } from "@beep/agents-use-cases/public"
+ * import * as O from "effect/Option"
  *
  * const claim = RuntimeCandidateClaim.make({
  *   claimId: "claim-cash-need-001",
  *   claimType: "client_cash_need",
  *   confidence: "high",
- *   evidence: [RuntimeEvidenceRef.make({ artifactId: "email-001", spanId: "s2" })],
+ *   evidence: [RuntimeEvidenceRef.make({ artifactId: "email-001", spanId: O.some("s2") })],
  *   lifecycle: "candidate",
  *   producedByPrincipalId: "principal-agent-runtime-fixture",
  *   statement: "The household needs cash available by June 3.",
@@ -137,15 +252,19 @@ export class RuntimeEvidenceRef extends S.Class<RuntimeEvidenceRef>($I`RuntimeEv
  */
 export class RuntimeCandidateClaim extends S.Class<RuntimeCandidateClaim>($I`RuntimeCandidateClaim`)(
   {
-    claimId: S.String,
-    claimType: S.String,
-    confidence: RuntimeClaimConfidence,
-    eventDate: S.optionalKey(S.String),
-    evidence: S.Array(RuntimeEvidenceRef),
-    lifecycle: RuntimeCandidateLifecycle,
-    producedByPrincipalId: S.String,
-    statement: S.String,
-    subjectRef: RuntimeEntityRef,
+    claimId: RuntimeClaimId.annotateKey({ description: "Candidate claim identifier." }),
+    claimType: S.NonEmptyString.annotateKey({ description: "Domain-specific candidate claim type." }),
+    confidence: RuntimeClaimConfidence.annotateKey({ description: "Confidence assigned to the candidate claim." }),
+    eventDate: RuntimeLocalDateText.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional local date associated with the claim event.",
+    }),
+    evidence: S.Array(RuntimeEvidenceRef).annotateKey({ description: "Evidence references supporting the claim." }),
+    lifecycle: RuntimeCandidateLifecycle.annotateKey({ description: "Lifecycle state of the candidate claim." }),
+    producedByPrincipalId: RuntimePrincipalId.annotateKey({
+      description: "Principal identifier for the agent that produced the claim.",
+    }),
+    statement: S.NonEmptyString.annotateKey({ description: "Human-readable candidate claim statement." }),
+    subjectRef: RuntimeEntityRef.annotateKey({ description: "Subject entity that the claim is about." }),
   },
   $I.annote("RuntimeCandidateClaim", {
     description: "Candidate claim with source evidence and producing principal provenance.",
@@ -162,9 +281,10 @@ export class RuntimeCandidateClaim extends S.Class<RuntimeCandidateClaim>($I`Run
  *   RuntimeEntityRef,
  *   RuntimeEvidenceRef
  * } from "@beep/agents-use-cases/public"
+ * import * as O from "effect/Option"
  *
  * const project = RuntimeCandidateProject.make({
- *   evidence: [RuntimeEvidenceRef.make({ artifactId: "email-001", spanId: "s2" })],
+ *   evidence: [RuntimeEvidenceRef.make({ artifactId: "email-001", spanId: O.some("s2") })],
  *   lifecycle: "candidate",
  *   projectId: "project-cash-need-001",
  *   title: "Review household cash need",
@@ -182,12 +302,14 @@ export class RuntimeCandidateClaim extends S.Class<RuntimeCandidateClaim>($I`Run
  */
 export class RuntimeCandidateProject extends S.Class<RuntimeCandidateProject>($I`RuntimeCandidateProject`)(
   {
-    evidence: S.Array(RuntimeEvidenceRef),
-    lifecycle: RuntimeCandidateLifecycle,
-    projectId: S.String,
-    title: S.String,
-    verticalContextRefs: S.Array(RuntimeEntityRef),
-    workspaceId: S.String,
+    evidence: S.Array(RuntimeEvidenceRef).annotateKey({ description: "Evidence references supporting the project." }),
+    lifecycle: RuntimeCandidateLifecycle.annotateKey({ description: "Lifecycle state of the candidate project." }),
+    projectId: RuntimeProjectId.annotateKey({ description: "Candidate project identifier." }),
+    title: S.NonEmptyString.annotateKey({ description: "Candidate project title." }),
+    verticalContextRefs: S.Array(RuntimeEntityRef).annotateKey({
+      description: "Vertical context entities attached to the candidate project.",
+    }),
+    workspaceId: RuntimeWorkspaceId.annotateKey({ description: "Workspace identifier for the candidate project." }),
   },
   $I.annote("RuntimeCandidateProject", {
     description: "Candidate project with workspace, context references, and source evidence.",
@@ -200,11 +322,12 @@ export class RuntimeCandidateProject extends S.Class<RuntimeCandidateProject>($I
  * @example
  * ```ts
  * import { RuntimeCandidateTask, RuntimeEvidenceRef } from "@beep/agents-use-cases/public"
+ * import * as O from "effect/Option"
  *
  * const task = RuntimeCandidateTask.make({
  *   assigneePrincipalId: "principal-user-wealth-tia-rowan",
  *   dueDate: "2026-05-08",
- *   evidence: [RuntimeEvidenceRef.make({ artifactId: "email-001", spanId: "s5" })],
+ *   evidence: [RuntimeEvidenceRef.make({ artifactId: "email-001", spanId: O.some("s5") })],
  *   lifecycle: "candidate",
  *   projectId: "project-cash-need-001",
  *   taskId: "task-schedule-call-001",
@@ -219,13 +342,15 @@ export class RuntimeCandidateProject extends S.Class<RuntimeCandidateProject>($I
  */
 export class RuntimeCandidateTask extends S.Class<RuntimeCandidateTask>($I`RuntimeCandidateTask`)(
   {
-    assigneePrincipalId: S.String,
-    dueDate: S.String,
-    evidence: S.Array(RuntimeEvidenceRef),
-    lifecycle: RuntimeCandidateLifecycle,
-    projectId: S.String,
-    taskId: S.String,
-    title: S.String,
+    assigneePrincipalId: RuntimePrincipalId.annotateKey({
+      description: "Principal identifier assigned to the candidate task.",
+    }),
+    dueDate: RuntimeLocalDateText.annotateKey({ description: "Task due date encoded as YYYY-MM-DD." }),
+    evidence: S.Array(RuntimeEvidenceRef).annotateKey({ description: "Evidence references supporting the task." }),
+    lifecycle: RuntimeCandidateLifecycle.annotateKey({ description: "Lifecycle state of the candidate task." }),
+    projectId: RuntimeProjectId.annotateKey({ description: "Candidate project identifier for this task." }),
+    taskId: RuntimeTaskId.annotateKey({ description: "Candidate task identifier." }),
+    title: S.NonEmptyString.annotateKey({ description: "Candidate task title." }),
   },
   $I.annote("RuntimeCandidateTask", {
     description: "Candidate task with assignee, due date, and source evidence.",
@@ -254,8 +379,8 @@ export class RuntimeCandidateTask extends S.Class<RuntimeCandidateTask>($I`Runti
  */
 export class RuntimeDraftRecipient extends S.Class<RuntimeDraftRecipient>($I`RuntimeDraftRecipient`)(
   {
-    displayName: S.String,
-    email: EmailString,
+    displayName: S.NonEmptyString.annotateKey({ description: "Display name for the draft recipient." }),
+    email: EmailString.annotateKey({ description: "Email address for the draft recipient." }),
   },
   $I.annote("RuntimeDraftRecipient", {
     description: "Draft recipient display name and email address.",
@@ -273,6 +398,7 @@ export class RuntimeDraftRecipient extends S.Class<RuntimeDraftRecipient>($I`Run
  *   RuntimeEvidenceRef
  * } from "@beep/agents-use-cases/public"
  * import { EmailString } from "@beep/schema"
+ * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
  * const draft = RuntimeCandidateDraft.make({
@@ -280,7 +406,7 @@ export class RuntimeDraftRecipient extends S.Class<RuntimeDraftRecipient>($I`Run
  *   body: "I will review the cash options before recommending movement.",
  *   draftId: "draft-cash-acknowledgement-001",
  *   draftKind: "client_email_reply",
- *   evidence: [RuntimeEvidenceRef.make({ artifactId: "email-001", spanId: "s5" })],
+ *   evidence: [RuntimeEvidenceRef.make({ artifactId: "email-001", spanId: O.some("s5") })],
  *   lifecycle: "candidate",
  *   producedByPrincipalId: "principal-agent-runtime-fixture",
  *   requiresApproval: true,
@@ -301,16 +427,18 @@ export class RuntimeDraftRecipient extends S.Class<RuntimeDraftRecipient>($I`Run
  */
 export class RuntimeCandidateDraft extends S.Class<RuntimeCandidateDraft>($I`RuntimeCandidateDraft`)(
   {
-    artifactId: S.String,
-    body: S.String,
-    draftId: S.String,
-    draftKind: S.String,
-    evidence: S.Array(RuntimeEvidenceRef),
-    lifecycle: RuntimeCandidateLifecycle,
-    producedByPrincipalId: S.String,
-    requiresApproval: S.Boolean,
-    subject: S.String,
-    to: S.Array(RuntimeDraftRecipient),
+    artifactId: RuntimeArtifactId.annotateKey({ description: "Draft artifact identifier." }),
+    body: S.NonEmptyString.annotateKey({ description: "Draft body text proposed by the runtime." }),
+    draftId: RuntimeDraftId.annotateKey({ description: "Candidate draft identifier." }),
+    draftKind: S.NonEmptyString.annotateKey({ description: "Domain-specific draft kind." }),
+    evidence: S.Array(RuntimeEvidenceRef).annotateKey({ description: "Evidence references supporting the draft." }),
+    lifecycle: RuntimeCandidateLifecycle.annotateKey({ description: "Lifecycle state of the candidate draft." }),
+    producedByPrincipalId: RuntimePrincipalId.annotateKey({
+      description: "Principal identifier for the agent that produced the draft.",
+    }),
+    requiresApproval: S.Boolean.annotateKey({ description: "Whether the draft requires approval before use." }),
+    subject: S.NonEmptyString.annotateKey({ description: "Draft subject line." }),
+    to: S.Array(RuntimeDraftRecipient).annotateKey({ description: "Draft recipients." }),
   },
   $I.annote("RuntimeCandidateDraft", {
     description: "Candidate draft artifact with approval requirement, evidence, and producing principal.",
@@ -323,12 +451,13 @@ export class RuntimeCandidateDraft extends S.Class<RuntimeCandidateDraft>($I`Run
  * @example
  * ```ts
  * import { RuntimeApprovalGate, RuntimeEvidenceRef } from "@beep/agents-use-cases/public"
+ * import * as O from "effect/Option"
  *
  * const gate = RuntimeApprovalGate.make({
  *   approvalGateId: "approval-cash-request-001",
  *   candidateRefs: ["claim-cash-need-001", "draft-cash-acknowledgement-001"],
  *   decision: "pending",
- *   evidence: [RuntimeEvidenceRef.make({ artifactId: "email-001", spanIds: ["s2", "s5"] })],
+ *   evidence: [RuntimeEvidenceRef.make({ artifactId: "email-001", spanIds: O.some(["s2", "s5"]) })],
  *   lifecycle: "candidate",
  *   policyBasis: "Advisor approval is required before sending client-facing drafts.",
  *   requestedActions: ["approve_or_revise_client_email_draft"],
@@ -343,14 +472,18 @@ export class RuntimeCandidateDraft extends S.Class<RuntimeCandidateDraft>($I`Run
  */
 export class RuntimeApprovalGate extends S.Class<RuntimeApprovalGate>($I`RuntimeApprovalGate`)(
   {
-    approvalGateId: S.String,
-    candidateRefs: S.Array(S.String),
-    decision: RuntimeApprovalDecision,
-    evidence: S.Array(RuntimeEvidenceRef),
-    lifecycle: RuntimeCandidateLifecycle,
-    policyBasis: S.String,
-    requestedActions: S.Array(S.String),
-    reviewerPrincipalId: S.String,
+    approvalGateId: RuntimeApprovalGateId.annotateKey({ description: "Candidate approval-gate identifier." }),
+    candidateRefs: S.Array(S.NonEmptyString).annotateKey({
+      description: "Candidate claim, task, draft, or project identifiers covered by the gate.",
+    }),
+    decision: RuntimeApprovalDecision.annotateKey({ description: "Current approval decision for the gate." }),
+    evidence: S.Array(RuntimeEvidenceRef).annotateKey({ description: "Evidence references supporting the gate." }),
+    lifecycle: RuntimeCandidateLifecycle.annotateKey({ description: "Lifecycle state of the approval gate." }),
+    policyBasis: S.NonEmptyString.annotateKey({ description: "Policy rationale for requiring approval." }),
+    requestedActions: S.Array(S.NonEmptyString).annotateKey({
+      description: "Actions requested from the reviewer.",
+    }),
+    reviewerPrincipalId: RuntimePrincipalId.annotateKey({ description: "Principal identifier for the reviewer." }),
   },
   $I.annote("RuntimeApprovalGate", {
     description: "Human approval gate over candidate claims, tasks, and drafts.",
@@ -377,8 +510,10 @@ export class RuntimeApprovalGate extends S.Class<RuntimeApprovalGate>($I`Runtime
  */
 export class RuntimeContextPacketRequest extends S.Class<RuntimeContextPacketRequest>($I`RuntimeContextPacketRequest`)(
   {
-    artifactId: S.String,
-    kind: RuntimeRequestKind,
+    artifactId: RuntimeArtifactId.annotateKey({
+      description: "Source artifact identifier that triggered the context packet.",
+    }),
+    kind: RuntimeRequestKind.annotateKey({ description: "Runtime request kind summarized by the packet." }),
   },
   $I.annote("RuntimeContextPacketRequest", {
     description: "Original runtime request summarized inside a context packet.",
@@ -405,8 +540,8 @@ export class RuntimeContextPacketRequest extends S.Class<RuntimeContextPacketReq
  */
 export class RuntimeSourceSpanRef extends S.Class<RuntimeSourceSpanRef>($I`RuntimeSourceSpanRef`)(
   {
-    purpose: S.String,
-    spanId: S.String,
+    purpose: S.NonEmptyString.annotateKey({ description: "Evidence purpose represented by the source span." }),
+    spanId: RuntimeSpanId.annotateKey({ description: "Source span identifier declared by the artifact." }),
   },
   $I.annote("RuntimeSourceSpanRef", {
     description: "Declared source span and its evidence purpose.",
@@ -437,10 +572,12 @@ export class RuntimeSourceSpanRef extends S.Class<RuntimeSourceSpanRef>($I`Runti
  */
 export class RuntimeSourceArtifact extends S.Class<RuntimeSourceArtifact>($I`RuntimeSourceArtifact`)(
   {
-    artifactId: S.String,
-    sourceKind: RuntimeSourceKind,
-    spanRefs: S.Array(RuntimeSourceSpanRef),
-    title: S.String,
+    artifactId: RuntimeArtifactId.annotateKey({ description: "Source artifact identifier." }),
+    sourceKind: RuntimeSourceKind.annotateKey({ description: "Source artifact kind." }),
+    spanRefs: S.Array(RuntimeSourceSpanRef).annotateKey({
+      description: "Source spans declared on the artifact.",
+    }),
+    title: S.NonEmptyString.annotateKey({ description: "Human-readable source artifact title." }),
   },
   $I.annote("RuntimeSourceArtifact", {
     description: "Source artifact and the spans available for evidence references.",
@@ -453,12 +590,13 @@ export class RuntimeSourceArtifact extends S.Class<RuntimeSourceArtifact>($I`Run
  * @example
  * ```ts
  * import { RuntimeActivity } from "@beep/agents-use-cases/public"
+ * import * as O from "effect/Option"
  *
  * const activity = RuntimeActivity.make({
  *   activityId: "activity-candidates-proposed-001",
  *   activityType: "candidate_work_proposed",
  *   principalId: "principal-agent-runtime-fixture",
- *   spanIds: ["email-001-s2", "email-001-s5"]
+ *   spanIds: O.some(["email-001-s2", "email-001-s5"])
  * })
  *
  * console.log(activity.activityType)
@@ -469,11 +607,15 @@ export class RuntimeSourceArtifact extends S.Class<RuntimeSourceArtifact>($I`Run
  */
 export class RuntimeActivity extends S.Class<RuntimeActivity>($I`RuntimeActivity`)(
   {
-    activityId: S.String,
-    activityType: RuntimeActivityType,
-    artifactId: S.optionalKey(S.String),
-    principalId: S.String,
-    spanIds: S.Array(S.String).pipe(S.optionalKey),
+    activityId: S.NonEmptyString.annotateKey({ description: "Runtime provenance activity identifier." }),
+    activityType: RuntimeActivityType.annotateKey({ description: "Runtime provenance activity type." }),
+    artifactId: RuntimeArtifactId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional artifact identifier linked to the activity.",
+    }),
+    principalId: RuntimePrincipalId.annotateKey({ description: "Principal identifier responsible for the activity." }),
+    spanIds: S.Array(RuntimeSpanId).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional span identifiers linked to the activity.",
+    }),
   },
   $I.annote("RuntimeActivity", {
     description: "Provenance activity for ingestion and candidate proposal events.",
@@ -502,10 +644,10 @@ export class RuntimeActivity extends S.Class<RuntimeActivity>($I`RuntimeActivity
  */
 export class RuntimeUsageRecord extends S.Class<RuntimeUsageRecord>($I`RuntimeUsageRecord`)(
   {
-    mode: RuntimeUsageMode,
-    model: S.String,
-    provider: S.String,
-    usageRecordId: S.String,
+    mode: RuntimeUsageMode.annotateKey({ description: "Runtime usage mode." }),
+    model: S.NonEmptyString.annotateKey({ description: "Model name or sentinel used by the runtime path." }),
+    provider: S.NonEmptyString.annotateKey({ description: "Provider name or sentinel used by the runtime path." }),
+    usageRecordId: RuntimeUsageRecordId.annotateKey({ description: "Runtime usage attribution record identifier." }),
   },
   $I.annote("RuntimeUsageRecord", {
     description: "Usage attribution for the runtime path that produced candidate work.",
@@ -527,13 +669,14 @@ export class RuntimeUsageRecord extends S.Class<RuntimeUsageRecord>($I`RuntimeUs
  *   RuntimeUsageRecord,
  *   SdkContextPacket
  * } from "@beep/agents-use-cases/public"
+ * import * as O from "effect/Option"
  *
  * const packet = SdkContextPacket.make({
  *   activities: [
  *     RuntimeActivity.make({
  *       activityId: "activity-ingested-001",
  *       activityType: "artifact_ingested",
- *       artifactId: "email-001",
+ *       artifactId: O.some("email-001"),
  *       principalId: "principal-agent-runtime-fixture"
  *     })
  *   ],
@@ -587,22 +730,40 @@ export class RuntimeUsageRecord extends S.Class<RuntimeUsageRecord>($I`RuntimeUs
  */
 export class SdkContextPacket extends S.Class<SdkContextPacket>($I`SdkContextPacket`)(
   {
-    activities: S.Array(RuntimeActivity),
-    approvalGates: S.Array(S.String),
-    candidateClaims: S.Array(S.String),
-    candidateDrafts: S.Array(S.String),
-    candidateTasks: S.Array(S.String),
-    contextPacketId: S.String,
-    exclusions: S.Array(S.String),
-    generatedAt: S.String,
-    principals: S.Array(S.String),
-    request: RuntimeContextPacketRequest,
-    scenarioId: S.String,
-    schemaVersion: S.String,
-    scope: RuntimeScope,
-    sourceArtifacts: S.Array(RuntimeSourceArtifact),
-    usage: S.Array(RuntimeUsageRecord),
-    verticalContext: S.Array(RuntimeEntityRef),
+    activities: S.Array(RuntimeActivity).annotateKey({ description: "Runtime provenance activities in the packet." }),
+    approvalGates: S.Array(RuntimeApprovalGateId).annotateKey({
+      description: "Approval-gate identifiers included in the packet.",
+    }),
+    candidateClaims: S.Array(RuntimeClaimId).annotateKey({
+      description: "Candidate claim identifiers included in the packet.",
+    }),
+    candidateDrafts: S.Array(RuntimeDraftId).annotateKey({
+      description: "Candidate draft identifiers included in the packet.",
+    }),
+    candidateTasks: S.Array(RuntimeTaskId).annotateKey({
+      description: "Candidate task identifiers included in the packet.",
+    }),
+    contextPacketId: RuntimeContextPacketId.annotateKey({ description: "Context packet identifier." }),
+    exclusions: S.Array(S.NonEmptyString).annotateKey({
+      description: "Explicit exclusions and unavailable capabilities for the packet.",
+    }),
+    generatedAt: RuntimeIsoInstantText.annotateKey({ description: "UTC instant when the packet was generated." }),
+    principals: S.Array(RuntimePrincipalId).annotateKey({
+      description: "Principal identifiers available in the packet context.",
+    }),
+    request: RuntimeContextPacketRequest.annotateKey({ description: "Runtime request summarized by the packet." }),
+    scenarioId: RuntimeFixtureScenarioId.annotateKey({ description: "Fixture scenario identifier for the packet." }),
+    schemaVersion: RuntimeContextPacketSchemaVersion.annotateKey({
+      description: "Context packet schema version literal.",
+    }),
+    scope: RuntimeScope.annotateKey({ description: "Request scope for the context packet." }),
+    sourceArtifacts: S.Array(RuntimeSourceArtifact).annotateKey({
+      description: "Source artifacts available as evidence in the packet.",
+    }),
+    usage: S.Array(RuntimeUsageRecord).annotateKey({ description: "Runtime usage attribution records." }),
+    verticalContext: S.Array(RuntimeEntityRef).annotateKey({
+      description: "Vertical context entities relevant to the packet.",
+    }),
   },
   $I.annote("SdkContextPacket", {
     description: "Evidence-bounded context packet returned through the runtime SDK.",
@@ -648,15 +809,23 @@ export class SdkContextPacket extends S.Class<SdkContextPacket>($I`SdkContextPac
  */
 export class CandidateOutputSet extends S.Class<CandidateOutputSet>($I`CandidateOutputSet`)(
   {
-    approvalGates: S.Array(RuntimeApprovalGate),
-    candidateProject: RuntimeCandidateProject,
-    claims: S.Array(RuntimeCandidateClaim),
-    contextPacket: SdkContextPacket,
-    drafts: S.Array(RuntimeCandidateDraft),
-    scenarioId: S.String,
-    tasks: S.Array(RuntimeCandidateTask),
+    approvalGates: S.Array(RuntimeApprovalGate).annotateKey({
+      description: "Candidate approval gates proposed by the runtime.",
+    }),
+    candidateProject: RuntimeCandidateProject.annotateKey({
+      description: "Candidate project proposed by the runtime.",
+    }),
+    claims: S.Array(RuntimeCandidateClaim).annotateKey({ description: "Candidate claims proposed by the runtime." }),
+    contextPacket: SdkContextPacket.annotateKey({ description: "Evidence-bounded context packet for the output set." }),
+    drafts: S.Array(RuntimeCandidateDraft).annotateKey({ description: "Candidate drafts proposed by the runtime." }),
+    scenarioId: RuntimeFixtureScenarioId.annotateKey({
+      description: "Fixture scenario identifier for the output set.",
+    }),
+    tasks: S.Array(RuntimeCandidateTask).annotateKey({ description: "Candidate tasks proposed by the runtime." }),
   },
   $I.annote("CandidateOutputSet", {
     description: "Structured candidate claims, project, tasks, drafts, gates, and context packet.",
   })
-) {}
+) {
+  static readonly fromUnknown = S.decodeUnknownSync(CandidateOutputSet);
+}

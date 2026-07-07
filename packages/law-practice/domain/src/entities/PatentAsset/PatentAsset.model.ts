@@ -8,7 +8,7 @@ import { $LawPracticeDomainId } from "@beep/identity/packages";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import * as S from "effect/Schema";
+import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.js";
 import { PatentAssetStatus } from "./PatentAsset.values.js";
 
 const $I = $LawPracticeDomainId.create("entities/PatentAsset/PatentAsset.model");
@@ -49,10 +49,18 @@ export class PatentAsset extends BaseEntity.Class<PatentAsset>($I`PatentAsset`)(
   LawPractice.PatentAssetId,
   {
     fields: {
-      fixtureKey: S.String,
-      matterFixtureKey: S.String,
-      status: PatentAssetStatus,
-      title: S.String,
+      fixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Stable fixture key for the patent asset.",
+      }),
+      matterFixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Fixture key for the matter this patent asset belongs to.",
+      }),
+      status: PatentAssetStatus.annotateKey({
+        description: "Patent asset lifecycle status.",
+      }),
+      title: LawPracticeText.annotateKey({
+        description: "Human-readable patent asset title.",
+      }),
     },
     persisted: {
       fixtureKey: EntitySchema.persist.text({

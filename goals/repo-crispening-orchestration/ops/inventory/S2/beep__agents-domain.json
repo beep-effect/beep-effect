@@ -8,7 +8,11 @@
     "proposedTarget": "Move the false defaults onto the schema with `SchemaUtils.BoolKeyDefaultFalse` for all three flags (in-repo exemplars: `packages/foundation/modeling/md/src/Md.model.ts:1101` and `:1468`). Then `inlineToMd` consumes decoded booleans instead of optional flags. `SchemaUtils.BoolKeyDefaultFalse` is exported from `@beep/schema` (`packages/foundation/modeling/schema/src/index.ts:303`; helper definition at `SchemaUtils/withKeyDefaults.ts:207`).",
     "confidence": 0.86,
     "mechanization": "assisted",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "Moving `bold`, `italic`, and `code` to `SchemaUtils.BoolKeyDefaultFalse` changes the exported TextInline/InlineNode decoded form from optional flags to required booleans. The §5.4 sweep found raw AssistantBlock/TextInline consumers outside this package, including @beep/agents-client, @beep/agents-use-cases, and apps/professional-desktop.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -19,7 +23,11 @@
     "proposedTarget": "Model the field as an Option/codec boundary in `CodeBlock`: `S.OptionFromOptionalKey(S.String).pipe(S.decodeTo(S.Option(Md.CodeFenceLanguage), { decode: SchemaGetter.transform((language) => O.flatMap(language, S.decodeUnknownOption(Md.CodeFenceLanguage))), encode: SchemaGetter.transform((language) => language) }), SchemaUtils.withNoneDefault)`. The same normalization pattern exists in `packages/foundation/modeling/md/src/Md.model.ts:1295-1301`; `S.OptionFromOptionalKey` and `S.decodeTo` were verified in `.repos/effect-v4/packages/effect/src/Schema.ts:8653-8669` and `:5408-5416`.",
     "confidence": 0.78,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Moving CodeBlock.language to an Option/code-fence codec changes the exported CodeBlock/AssistantBlock decoded form from `string | undefined` to an Option value. The §5.4 sweep found live CodeBlock and AssistantBlock consumers outside this package in @beep/agents-server, @beep/agents-use-cases, and apps/professional-desktop.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -30,7 +38,11 @@
     "proposedTarget": "Change `TableBlock.headerRow` to `SchemaUtils.BoolKeyDefaultFalse` (direct in-repo exemplar: `Md.Table.headerRow` at `packages/foundation/modeling/md/src/Md.model.ts:1468-1469`), then pass `headerRow: b.headerRow` in the projection.",
     "confidence": 0.88,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Moving TableBlock.headerRow to `SchemaUtils.BoolKeyDefaultFalse` changes the exported TableBlock/AssistantBlock decoded form from an optional flag to a required boolean. The §5.4 sweep found downstream AssistantBlock/TableBlock consumers outside this package that construct or branch on the optional public form.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",

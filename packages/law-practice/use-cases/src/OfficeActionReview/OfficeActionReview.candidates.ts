@@ -6,6 +6,7 @@
  */
 
 import { ExtractionCandidate } from "@beep/langextract/Extraction";
+import { OfficeActionExtractionLabel } from "./OfficeActionExtractionLabel.js";
 
 /**
  * Fixed candidate set for the office-action review spike mapping tests.
@@ -26,8 +27,14 @@ import { ExtractionCandidate } from "@beep/langextract/Extraction";
  * @since 0.0.0
  */
 export const OfficeActionReviewSpikeCandidates = [
-  ExtractionCandidate.make({ label: "office_action", text: "Office Action" }),
-  ExtractionCandidate.make({ label: "claim", text: "A widget comprising a lid and a base." }),
-  ExtractionCandidate.make({ label: "rejection_reference", text: "Smith" }),
-  ExtractionCandidate.make({ label: "distinction", text: "a hinge coupling the lid to the base" }),
+  ExtractionCandidate.make({ label: OfficeActionExtractionLabel.Enum.office_action, text: "Office Action" }),
+  ExtractionCandidate.make({
+    label: OfficeActionExtractionLabel.Enum.claim,
+    text: "A widget comprising a lid and a base.",
+  }),
+  ExtractionCandidate.make({ label: OfficeActionExtractionLabel.Enum.rejection_reference, text: "Smith" }),
+  ExtractionCandidate.make({
+    label: OfficeActionExtractionLabel.Enum.distinction,
+    text: "a hinge coupling the lid to the base",
+  }),
 ];

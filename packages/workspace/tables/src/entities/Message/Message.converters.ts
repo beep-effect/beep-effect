@@ -92,8 +92,23 @@ const decodeMessageRow = S.decodeUnknownSync(Message);
  * @since 0.0.0
  */
 export const toMessageInsert = (message: Message): MessageInsert => {
-  const { id: _id, ...rest } = encodeMessage(message);
-  return rest as MessageInsert;
+  const encoded = encodeMessage(message);
+
+  return {
+    content: encoded.content,
+    createdAt: encoded.createdAt,
+    createdByPrincipal: encoded.createdByPrincipal,
+    entityType: encoded.entityType,
+    orgId: encoded.orgId,
+    role: encoded.role,
+    rowVersion: encoded.rowVersion,
+    schemaVersion: encoded.schemaVersion,
+    source: encoded.source,
+    threadId: encoded.threadId,
+    turnId: encoded.turnId,
+    updatedAt: encoded.updatedAt,
+    updatedByPrincipal: encoded.updatedByPrincipal,
+  } satisfies MessageInsert;
 };
 
 /**

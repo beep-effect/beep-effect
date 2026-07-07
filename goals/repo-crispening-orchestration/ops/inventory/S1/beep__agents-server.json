@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "SFV4-fn-schema",
-    "file": "packages/agents/server/src/AssistantTurn/ScanState.ts",
-    "line": 80,
-    "symbol": "scanChunk",
-    "smell": "Exported function in a schema-modeled file (`ScanState` is an `S.Class`) returns a raw tuple `[ScanState, Array<string>]`; the transition result contract is not carried by a schema.",
-    "proposedTarget": "Introduce a schema-backed transition contract, e.g. `ScanChunkInput`/`ScanChunkResult` `S.Class` models or `ScanChunkResult = S.Tuple([ScanState, S.Array(S.String)]).pipe($I.annoteSchema(...))` like `OWLSearchResult` (`packages/foundation/modeling/ontology/src/Ontology.models.ts:695`), then model the implementation with `Fn({ input, output })` like `Formatter` (`packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66`) while keeping a thin binary adapter for `Stream.mapAccum` at `AnthropicTurnKernel.ts:143`.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 0.58
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
     "file": "packages/agents/server/src/AssistantTurn/BlockRepair.ts",
     "line": 134,
     "symbol": "BlockRepairCall",

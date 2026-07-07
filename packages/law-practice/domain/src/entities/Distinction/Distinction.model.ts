@@ -10,7 +10,7 @@ import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
 import { ClaimLifecycle } from "@beep/shared-domain/values/ClaimLifecycle";
-import * as S from "effect/Schema";
+import { LawPracticeFixtureKey } from "../LawPracticeEntity.fields.js";
 import { DistinctionDetail } from "./Distinction.values.ts";
 
 const $I = $LawPracticeDomainId.create("entities/Distinction/Distinction.model");
@@ -60,12 +60,24 @@ export class Distinction extends BaseEntity.Class<Distinction>($I`Distinction`)(
   LawPractice.DistinctionId,
   {
     fields: {
-      anchor: TextAnchor,
-      claimFixtureKey: S.String,
-      detail: DistinctionDetail,
-      fixtureKey: S.String,
-      lifecycleState: ClaimLifecycle,
-      rejectionFixtureKey: S.String,
+      anchor: TextAnchor.annotateKey({
+        description: "Source text anchor for the asserted distinction.",
+      }),
+      claimFixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Fixture key for the claim defended by this distinction.",
+      }),
+      detail: DistinctionDetail.annotateKey({
+        description: "Substantive distinction detail.",
+      }),
+      fixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Stable fixture key for the distinction.",
+      }),
+      lifecycleState: ClaimLifecycle.annotateKey({
+        description: "Lifecycle state of the distinction claim.",
+      }),
+      rejectionFixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Fixture key for the rejection answered by this distinction.",
+      }),
     },
     persisted: {
       anchor: EntitySchema.persist.jsonb({

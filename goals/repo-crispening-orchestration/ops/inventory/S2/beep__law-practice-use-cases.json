@@ -8,18 +8,11 @@
     "proposedTarget": "Move the invariant to the extraction schema: replace `ExtractionCandidate.text` / `GroundedExtraction.text` with a named nonblank text schema. Existing direct exemplar: `TrimmedNonEmptyText` at packages/foundation/modeling/schema/src/CommonTextSchemas.ts:36-43 uses `S.decodeTo` + `SchemaTransformation.transform`; Effect v4 `S.Trim` / `SchemaTransformation.trim()` are verified at .repos/effect-v4/packages/effect/src/Schema.ts:11544 and .repos/effect-v4/packages/effect/src/SchemaTransformation.ts:428. Design choice for the fixer: trim-on-decode (`TrimmedNonEmptyText`) vs reject whitespace-only while preserving raw text.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.errors.ts",
-    "line": 89,
-    "symbol": "IrToLawExtractionError",
-    "smell": "`alignmentStatus: S.optionalKey(S.String)` plus `readonly alignmentStatus?: string` at line 107 keeps absence as an optional property on a TaggedErrorClass instead of an Option field.",
-    "proposedTarget": "Model the decoded field as Option: `alignmentStatus: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` (v4 `S.OptionFromOptionalKey` verified at .repos/effect-v4/packages/effect/src/Schema.ts:8668; `withNoneDefault` exemplar at packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:33-51). Then update `fromReason` to build the optional field intentionally, e.g. with `O.fromUndefinedOr(options.alignmentStatus)` / `O.getSomesStruct`, while preserving the encoded optional-key wire shape.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 1,
+    "exception": {
+      "reason": "The nonblank-after-trim invariant belongs on upstream @beep/langextract ExtractionCandidate/GroundedExtraction text schemas; this package must keep the adapter guard until that DTO wire decision is swept with its consumers.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",

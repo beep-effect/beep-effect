@@ -6,11 +6,12 @@
  */
 
 import { $OipWebId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import { HttpApi, HttpApiEndpoint, HttpApiGroup, HttpApiSchema } from "effect/unstable/httpapi";
 import { AtomHttpApi } from "effect/unstable/reactivity";
-import { ContactSubmissionFormPayload } from "./ContactSubmission.model.ts";
+import { ContactResponseMessage, ContactSubmissionFormPayload } from "./ContactSubmission.model.ts";
 
 const $I = $OipWebId.create("contact/ContactSubmission.http");
 
@@ -37,7 +38,7 @@ const contactClientBaseUrl = (): string =>
  */
 export class ContactSubmissionAccepted extends S.Class<ContactSubmissionAccepted>($I`ContactSubmissionAccepted`)(
   {
-    message: S.String,
+    message: ContactResponseMessage,
     status: S.tag("accepted"),
   },
   $I.annote("ContactSubmissionAccepted", {
@@ -65,7 +66,7 @@ export class ContactSubmissionAccepted extends S.Class<ContactSubmissionAccepted
  */
 export class ContactSubmissionRejected extends S.Class<ContactSubmissionRejected>($I`ContactSubmissionRejected`)(
   {
-    message: S.String,
+    message: ContactResponseMessage,
     status: S.tag("rejected"),
   },
   $I.annote("ContactSubmissionRejected", {
@@ -97,7 +98,10 @@ export class ContactSubmissionRejected extends S.Class<ContactSubmissionRejected
 export const ContactSubmissionPayload = ContactSubmissionFormPayload.pipe(
   $I.annoteSchema("ContactSubmissionPayload", {
     description: "Browser wire payload accepted by the OIP contact HTTP API.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    decodeUnknownEffect: S.decodeUnknownEffect(schema),
+  }))
 );
 
 /**

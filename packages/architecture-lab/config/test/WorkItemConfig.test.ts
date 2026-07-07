@@ -1,7 +1,19 @@
-import { WorkItemConfig } from "@beep/architecture-lab-config/layer";
-import { ArchitectureLabConfigTest } from "@beep/architecture-lab-config/test";
+import {
+  ArchitectureLabConfigTest,
+  defaultWorkItemPublicConfig,
+  defaultWorkItemSecretConfig,
+  defaultWorkItemServerConfig,
+  testWorkItemConfig,
+  WorkItemConfig,
+  WorkItemConfigValue,
+  WorkItemPublicConfig,
+  WorkItemSecretConfig,
+  WorkItemServerConfig,
+} from "@beep/architecture-lab-config/aggregates/WorkItem";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer } from "effect";
+import { Effect, Equal, Layer } from "effect";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -17,4 +29,57 @@ describe("WorkItem configuration", () => {
       expect(config.serverConfig.migrationSchemaName).toBe("architecture_lab");
     }, provideScopedLayer(ArchitectureLabConfigTest))
   );
+
+  it("keeps default encoded configuration shape byte-identical", () => {
+    expect(S.encodeSync(WorkItemPublicConfig)(defaultWorkItemPublicConfig)).toEqual({
+      assignmentEnabled: true,
+      reopenCompletedEnabled: true,
+    });
+    expect(S.encodeSync(WorkItemServerConfig)(defaultWorkItemServerConfig)).toEqual({
+      migrationSchemaName: "architecture_lab",
+      repositoryName: "architecture-lab-work-items",
+    });
+    expect(S.encodeSync(WorkItemSecretConfig)(defaultWorkItemSecretConfig)).toEqual({
+      connectionName: "architecture-lab-proof",
+    });
+    expect(S.encodeSync(WorkItemConfigValue)(testWorkItemConfig)).toEqual({
+      publicConfig: {
+        assignmentEnabled: true,
+        reopenCompletedEnabled: true,
+      },
+      secretConfig: {
+        connectionName: "architecture-lab-proof",
+      },
+      serverConfig: {
+        migrationSchemaName: "architecture_lab",
+        repositoryName: "architecture-lab-work-items",
+      },
+    });
+  });
+
+  it("round-trips schema-derived WorkItem config values", () => {
+    const encodePublicConfig = S.encodeSync(WorkItemPublicConfig);
+    const decodePublicConfig = S.decodeUnknownSync(WorkItemPublicConfig);
+    const encodeServerConfig = S.encodeSync(WorkItemServerConfig);
+    const decodeServerConfig = S.decodeUnknownSync(WorkItemServerConfig);
+    const encodeSecretConfig = S.encodeSync(WorkItemSecretConfig);
+    const decodeSecretConfig = S.decodeUnknownSync(WorkItemSecretConfig);
+    const encodeConfigValue = S.encodeSync(WorkItemConfigValue);
+    const decodeConfigValue = S.decodeUnknownSync(WorkItemConfigValue);
+
+    fc.assert(
+      fc.property(
+        S.toArbitrary(WorkItemPublicConfig),
+        S.toArbitrary(WorkItemServerConfig),
+        S.toArbitrary(WorkItemSecretConfig),
+        S.toArbitrary(WorkItemConfigValue),
+        (publicConfig, serverConfig, secretConfig, configValue) =>
+          Equal.equals(decodePublicConfig(encodePublicConfig(publicConfig)), publicConfig) &&
+          Equal.equals(decodeServerConfig(encodeServerConfig(serverConfig)), serverConfig) &&
+          Equal.equals(decodeSecretConfig(encodeSecretConfig(secretConfig)), secretConfig) &&
+          Equal.equals(decodeConfigValue(encodeConfigValue(configValue)), configValue)
+      ),
+      { numRuns: 25 }
+    );
+  });
 });

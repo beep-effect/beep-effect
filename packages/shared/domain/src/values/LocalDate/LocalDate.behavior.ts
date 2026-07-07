@@ -11,20 +11,16 @@
 
 import { $SharedDomainId } from "@beep/identity";
 import { Str } from "@beep/utils";
-import { DateTime, Duration, Effect, Match, Order as Ord, pipe, SchemaGetter, SchemaIssue } from "effect";
+import { DateTime, Duration, Effect, Order as Ord, pipe, SchemaGetter, SchemaIssue } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { daysInGregorianMonth, isGregorianLeapYear } from "./LocalDate.calendar.ts";
 import * as LocalDate from "./LocalDate.model.ts";
 import type * as AST from "effect/SchemaAST";
+import type { CalendarParts } from "./LocalDate.calendar.ts";
 
 const $I = $SharedDomainId.create("values/LocalDate/LocalDate.behavior");
-
-type CalendarParts = {
-  readonly year: number;
-  readonly month: number;
-  readonly day: number;
-};
 
 /**
  * Unsafe constructor for a `LocalDate` model.
@@ -113,38 +109,15 @@ export const makeEffect = (input: CalendarParts): Effect.Effect<LocalDate.Model,
  * @returns `true` when the value is a LocalDate model.
  * @since 0.0.0
  */
-export const isLocalDate = S.is(LocalDate.Model);
+export const isLocalDate = LocalDate.Model.is;
 
 const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
-
-const decodeLocalDate = S.decodeUnknownEffect(LocalDate.Model);
-
-const isLeapYearInternal = (year: number): boolean => (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-
-const getDaysInMonth = (year: number, month: number): number =>
-  Match.value(month).pipe(
-    Match.when(2, () => (isLeapYearInternal(year) ? 29 : 28)),
-    Match.whenOr(4, 6, 9, 11, () => 30),
-    Match.orElse(() => 31)
-  );
-
-const makeInvalidLocalDateError: {
-  (message: string): (dateString: string) => S.SchemaError;
-  (dateString: string, message: string): S.SchemaError;
-} = dual(
-  2,
-  (dateString: string, message: string): S.SchemaError =>
-    new S.SchemaError(new SchemaIssue.InvalidValue(O.some(dateString), { message }))
-);
 
 const toCalendarParts = ([, yearString, monthString, dayString]: RegExpMatchArray): CalendarParts => ({
   year: globalThis.Number.parseInt(yearString, 10),
   month: globalThis.Number.parseInt(monthString, 10),
   day: globalThis.Number.parseInt(dayString, 10),
 });
-
-const isValidCalendarDate = ({ month, day, year }: CalendarParts): boolean =>
-  month >= 1 && month <= 12 && day >= 1 && day <= getDaysInMonth(year, month);
 
 const decodeLocalDateFromString: (
   dateString: string,
@@ -171,7 +144,7 @@ const decodeLocalDateFromString: (
     return yield* Effect.fail(new SchemaIssue.InvalidType(S.String.ast, O.some(dateString)));
   }
 
-  if (parts.day < 1 || parts.day > getDaysInMonth(parts.year, parts.month)) {
+  if (parts.day < 1 || parts.day > daysInGregorianMonth(parts.year, parts.month)) {
     return yield* Effect.fail(new SchemaIssue.InvalidType(S.String.ast, O.some(dateString)));
   }
 
@@ -186,6 +159,7 @@ const formatCalendarParts = ({ day, month, year }: CalendarParts): string => {
 };
 
 const encodeLocalDateFromString = (localDate: CalendarParts): string => formatCalendarParts(localDate);
+const LocalDateEquivalence = S.toEquivalence(LocalDate.Model);
 
 /**
  * Parse a `YYYY-MM-DD` string into a `LocalDate` model.
@@ -214,17 +188,7 @@ const encodeLocalDateFromString = (localDate: CalendarParts): string => formatCa
  * @since 0.0.0
  */
 export const fromString = (dateString: string): Effect.Effect<LocalDate.Model, S.SchemaError> =>
-  O.match(Str.match(ISO_DATE_PATTERN)(dateString), {
-    onNone: () =>
-      Effect.fail(makeInvalidLocalDateError(dateString, "Expected an ISO 8601 local date in YYYY-MM-DD format")),
-    onSome: (match) => {
-      const parts = toCalendarParts(match);
-
-      return isValidCalendarDate(parts)
-        ? decodeLocalDate(parts)
-        : Effect.fail(makeInvalidLocalDateError(dateString, "Invalid calendar date"));
-    },
-  });
+  S.decodeUnknownEffect(LocalDateFromString)(dateString);
 
 /**
  * Create a `LocalDate` from a JavaScript `Date` using UTC calendar components.
@@ -413,11 +377,7 @@ export const isAfter: {
 export const equals: {
   (that: LocalDate.Model): (self: LocalDate.Model) => boolean;
   (self: LocalDate.Model, that: LocalDate.Model): boolean;
-} = dual(
-  2,
-  (self: LocalDate.Model, that: LocalDate.Model): boolean =>
-    self.year === that.year && self.month === that.month && self.day === that.day
-);
+} = dual(2, LocalDateEquivalence);
 
 /**
  * Add whole days to a LocalDate.
@@ -580,7 +540,7 @@ export const endOfMonth = (date: LocalDate.Model): LocalDate.Model =>
   LocalDate.Model.make({
     year: date.year,
     month: date.month,
-    day: getDaysInMonth(date.year, date.month),
+    day: daysInGregorianMonth(date.year, date.month),
   });
 
 /**
@@ -647,7 +607,7 @@ export const endOfYear = (date: LocalDate.Model): LocalDate.Model =>
  * @returns `true` when the year is a Gregorian leap year.
  * @since 0.0.0
  */
-export const isLeapYear = (year: number): boolean => isLeapYearInternal(year);
+export const isLeapYear = (year: number): boolean => isGregorianLeapYear(year);
 
 /**
  * Get the number of days in a given month.
@@ -671,7 +631,7 @@ export const isLeapYear = (year: number): boolean => isLeapYearInternal(year);
 export const daysInMonth: {
   (month: number): (year: number) => number;
   (year: number, month: number): number;
-} = dual(2, (year: number, month: number): number => getDaysInMonth(year, month));
+} = dual(2, (year: number, month: number): number => daysInGregorianMonth(year, month));
 
 /**
  * Schema that transforms ISO 8601 date strings into LocalDate models.

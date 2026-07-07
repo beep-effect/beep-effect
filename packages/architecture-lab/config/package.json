@@ -66,6 +66,7 @@
   },
   "dependencies": {
     "@beep/identity": "workspace:^",
+    "@beep/schema": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {

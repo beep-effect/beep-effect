@@ -8,7 +8,7 @@ import { $LawPracticeDomainId } from "@beep/identity/packages";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import * as S from "effect/Schema";
+import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.js";
 import { MatterType } from "./Matter.values.js";
 
 const $I = $LawPracticeDomainId.create("entities/Matter/Matter.model");
@@ -49,10 +49,18 @@ export class Matter extends BaseEntity.Class<Matter>($I`Matter`)(
   LawPractice.MatterId,
   {
     fields: {
-      displayName: S.String,
-      fixtureKey: S.String,
-      legalClientFixtureKey: S.String,
-      matterType: MatterType,
+      displayName: LawPracticeText.annotateKey({
+        description: "Human-readable matter display name.",
+      }),
+      fixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Stable fixture key for the matter.",
+      }),
+      legalClientFixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Fixture key for the legal client this matter belongs to.",
+      }),
+      matterType: MatterType.annotateKey({
+        description: "Matter type.",
+      }),
     },
     persisted: {
       displayName: EntitySchema.persist.text({

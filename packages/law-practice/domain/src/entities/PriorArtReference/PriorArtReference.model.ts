@@ -8,7 +8,7 @@ import { $LawPracticeDomainId } from "@beep/identity/packages";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import * as S from "effect/Schema";
+import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.js";
 
 const $I = $LawPracticeDomainId.create("entities/PriorArtReference/PriorArtReference.model");
 
@@ -51,10 +51,18 @@ export class PriorArtReference extends BaseEntity.Class<PriorArtReference>($I`Pr
   LawPractice.PriorArtReferenceId,
   {
     fields: {
-      documentNumber: S.String,
-      fixtureKey: S.String,
-      officeActionFixtureKey: S.String,
-      title: S.String,
+      documentNumber: LawPracticeText.annotateKey({
+        description: "Examiner-cited prior-art document number.",
+      }),
+      fixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Stable fixture key for the prior-art reference.",
+      }),
+      officeActionFixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Fixture key for the office action that cited this prior art.",
+      }),
+      title: LawPracticeText.annotateKey({
+        description: "Human-readable prior-art reference title.",
+      }),
     },
     persisted: {
       documentNumber: EntitySchema.persist.text({

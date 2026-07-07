@@ -431,8 +431,13 @@ describe("G4 foundation family-flip regression fixture", () => {
     expect(isExempt(driversViolation)).toBe(false);
     expect(schemaCrispeningFamilyForFile(toolingFile)).toEqual(O.some("tooling"));
     expect(isExempt(toolingViolation)).toBe(false);
-    // apps-slices has not flipped yet — identical violation stays fully exempt.
+    // All four families are flipped — the ratchet is fully closed.
     expect(schemaCrispeningFamilyForFile(appsFile)).toEqual(O.some("apps-slices"));
-    expect(isExempt(appsViolation)).toBe(true);
+    expect(isExempt(appsViolation)).toBe(false);
+    // A path outside every wave family resolves to no family and stays exempt
+    // (PLAN: unassigned surfaces are non-blocking by construction).
+    const unassignedViolation = fnSchemaViolationForFile("scripts/OneOff.ts");
+    expect(O.isNone(schemaCrispeningFamilyForFile("scripts/OneOff.ts"))).toBe(true);
+    expect(isExempt(unassignedViolation)).toBe(true);
   });
 });

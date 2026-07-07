@@ -15,6 +15,14 @@ import { getColumns } from "drizzle-orm";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
+
+const ThreadArbitrary = S.toArbitrary(ThreadModel);
+const ThreadEquivalence = S.toEquivalence(ThreadModel);
+const MessageArbitrary = S.toArbitrary(MessageModel);
+const MessageEquivalence = S.toEquivalence(MessageModel);
+const TurnArbitrary = S.toArbitrary(TurnModel);
+const TurnEquivalence = S.toEquivalence(TurnModel);
 
 const expectBaseProjectionColumns = (table: typeof CandidateDraft.Table | typeof CandidateProject.Table) => {
   const columns = getColumns(table);
@@ -131,4 +139,27 @@ describe("WorkspaceTables", () => {
     expect(roundTripped.items[0]?.itemType).toBe("message");
     expect(O.isNone(roundTripped.parentTurnId)).toBe(true);
   });
+
+  it("round-trips schema-derived Thread, Message, and Turn entities through the row converters", () =>
+    fc.assert(
+      fc.property(ThreadArbitrary, MessageArbitrary, TurnArbitrary, (thread, message, turn) => {
+        const threadInsert = Thread.toThreadInsert(thread);
+        const messageInsert = Message.toMessageInsert(message);
+        const turnInsert = Turn.toTurnInsert(turn);
+
+        expect(ThreadEquivalence(Thread.fromThreadRow({ ...threadInsert, id: thread.id }), thread)).toBe(true);
+        expect(MessageEquivalence(Message.fromMessageRow({ ...messageInsert, id: message.id }), message)).toBe(true);
+        expect(
+          TurnEquivalence(
+            Turn.fromTurnRow({
+              ...turnInsert,
+              id: turn.id,
+              parentTurnId: turnInsert.parentTurnId ?? null,
+            }),
+            turn
+          )
+        ).toBe(true);
+      }),
+      { numRuns: 50 }
+    ));
 });

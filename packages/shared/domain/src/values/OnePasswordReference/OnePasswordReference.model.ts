@@ -7,6 +7,7 @@
  */
 
 import { $SharedDomainId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $SharedDomainId.create("values/OnePasswordReference/OnePasswordReference.model");
@@ -50,7 +51,8 @@ export const OnePasswordReference = S.String.check(OnePasswordReferenceChecks).p
     identifier: "OnePasswordReference",
     title: "1Password reference",
     description: "A typed reference to a 1Password item field, never the plaintext secret value.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -88,4 +90,4 @@ export type OnePasswordReference = typeof OnePasswordReference.Type;
  * @category guards
  * @since 0.0.0
  */
-export const isOnePasswordReference = S.is(OnePasswordReference);
+export const isOnePasswordReference = OnePasswordReference.is;
