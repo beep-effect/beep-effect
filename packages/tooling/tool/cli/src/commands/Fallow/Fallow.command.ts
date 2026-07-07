@@ -271,7 +271,7 @@ const makeBoundaryConfig = Effect.fn("Fallow.makeBoundaryConfig")(function* (
     })
   );
 
-  const config = {
+  return {
     $schema: FALLOW_CONFIG_SCHEMA_URL,
     extends: [rootConfigExtendsPath],
     boundaries: {
@@ -282,8 +282,6 @@ const makeBoundaryConfig = Effect.fn("Fallow.makeBoundaryConfig")(function* (
       "boundary-violation": "warn",
     },
   } satisfies FallowBoundaryConfig;
-
-  return config;
 });
 
 const renderBoundaryConfig = Effect.fn("Fallow.renderBoundaryConfig")(function* (repoRoot: string, outputPath: string) {

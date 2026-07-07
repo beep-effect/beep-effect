@@ -204,9 +204,9 @@ export const pairRecycleBinEntries = (entries: ReadonlyArray<RecycleBinScanEntry
     }
   }
 
-  const matched: Array<RecycleBinPairedEntry> = [];
-  const unmatchedMetadata: Array<RecycleBinScanEntry> = [];
-  const unmatchedContent: Array<RecycleBinScanEntry> = [];
+  const matched = A.empty<RecycleBinPairedEntry>();
+  const unmatchedMetadata = A.empty<RecycleBinScanEntry>();
+  const unmatchedContent = A.empty<RecycleBinScanEntry>();
 
   for (const [pairKey, metadata] of metadataByKey) {
     const content = contentByKey.get(pairKey);

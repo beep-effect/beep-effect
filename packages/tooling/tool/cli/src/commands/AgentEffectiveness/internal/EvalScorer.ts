@@ -322,28 +322,48 @@ class SchemaFirstPolicyIssue extends S.Class<SchemaFirstPolicyIssue>($I`SchemaFi
 const decodeTaskManifestJson = S.decodeUnknownEffect(S.fromJsonString(SkillOptTaskManifest));
 const decodeSchemaFirstIssueJson = S.decodeUnknownOption(S.fromJsonString(SchemaFirstPolicyIssue));
 
-type SourceFileSnapshot = {
-  readonly absolutePath: string;
-  readonly relativePath: string;
-  readonly text: string;
-};
+class SourceFileSnapshot extends S.Class<SourceFileSnapshot>($I`SourceFileSnapshot`)(
+  {
+    absolutePath: S.String,
+    relativePath: S.String,
+    text: S.String,
+  },
+  $I.annote("SourceFileSnapshot", {
+    description: "Snapshot of a source file.",
+  })
+) {}
 
-type SubprocessResult = {
-  readonly command: string;
-  readonly output: string;
-  readonly exitCode: number;
-};
+class SubprocessResult extends S.Class<SubprocessResult>($I`SubprocessResult`)(
+  {
+    command: S.String,
+    output: S.String,
+    exitCode: S.Finite,
+  },
+  $I.annote("SubprocessResult", {
+    description: "Result of a subprocess.",
+  })
+) {}
 
-type CompletionResult = {
-  readonly fraction: number;
-  readonly violations: ReadonlyArray<AgentEffectivenessEvalViolation>;
-};
+class CompletionResult extends S.Class<CompletionResult>($I`CompletionResult`)(
+  {
+    fraction: S.Finite,
+    violations: S.Array(AgentEffectivenessEvalViolation),
+  },
+  $I.annote("CompletionResult", {
+    description: "Result of a completion.",
+  })
+) {}
 
-type LawEvaluation = {
-  readonly schemaFirst: ReadonlyArray<AgentEffectivenessEvalViolation>;
-  readonly tsgo: ReadonlyArray<AgentEffectivenessEvalViolation>;
-  readonly biome: ReadonlyArray<AgentEffectivenessEvalViolation>;
-};
+class LawEvaluation extends S.Class<LawEvaluation>($I`LawEvaluation`)(
+  {
+    schemaFirst: S.Array(AgentEffectivenessEvalViolation),
+    tsgo: S.Array(AgentEffectivenessEvalViolation),
+    biome: S.Array(AgentEffectivenessEvalViolation),
+  },
+  $I.annote("LawEvaluation", {
+    description: "Result of a law evaluation.",
+  })
+) {}
 
 /**
  * Encode a score report as the fixed compact JSON output.
@@ -1102,6 +1122,20 @@ export const scoreAgentEffectivenessEval = Effect.fn("AgentEffectivenessEvalScor
 const recordNote = (report: AgentEffectivenessEvalScoreReport): string =>
   `skillopt scorer score=${report.score} completion=${report.breakdown.completion} schemaFirst=${report.breakdown.schemaFirst} tsgo=${report.breakdown.tsgo} biome=${report.breakdown.biome}`;
 
+class RecordAgentEffectivenessEvalScoreOptions extends S.Class<RecordAgentEffectivenessEvalScoreOptions>(
+  $I`RecordAgentEffectivenessEvalScoreOptions`
+)(
+  {
+    dataRoot: S.String.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_AGENT_EFFECTIVENESS_DATA_ROOT))),
+    report: AgentEffectivenessEvalScoreReport,
+    task: SkillOptTaskManifest,
+    taskPath: S.String,
+  },
+  $I.annote("RecordAgentEffectivenessEvalScoreOptions", {
+    description: "Options for recording an agent effectiveness eval score.",
+  })
+) {}
+
 /**
  * Record a score report as an ai-metrics BenchmarkRun row.
  *
@@ -1117,12 +1151,7 @@ export const recordAgentEffectivenessEvalScore = Effect.fn("AgentEffectivenessEv
   report,
   task,
   taskPath,
-}: {
-  readonly dataRoot?: string;
-  readonly report: AgentEffectivenessEvalScoreReport;
-  readonly task: SkillOptTaskManifest;
-  readonly taskPath: string;
-}): Effect.fn.Return<
+}: RecordAgentEffectivenessEvalScoreOptions): Effect.fn.Return<
   AgentEffectivenessEvalRecordResult,
   AgentEffectivenessEvalScorerError,
   FileSystem.FileSystem | Path.Path
@@ -1197,6 +1226,21 @@ export const recordAgentEffectivenessEvalScore = Effect.fn("AgentEffectivenessEv
   });
 });
 
+class RunAgentEffectivenessEvalScoreCommandOptions extends S.Class<RunAgentEffectivenessEvalScoreCommandOptions>(
+  $I`RunAgentEffectivenessEvalScoreCommandOptions`
+)(
+  {
+    dataRoot: S.String.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_AGENT_EFFECTIVENESS_DATA_ROOT))),
+    dir: S.String,
+    json: S.Boolean,
+    record: S.Boolean,
+    taskPath: S.String,
+  },
+  $I.annote("RunAgentEffectivenessEvalScoreCommandOptions", {
+    description: "Options for running an agent effectiveness eval score.",
+  })
+) {}
+
 /**
  * Render one scorer report to stdout and optionally record it.
  *
@@ -1209,13 +1253,7 @@ export const runAgentEffectivenessEvalScoreCommand = Effect.fn("AgentEffectivene
   json,
   record,
   taskPath,
-}: {
-  readonly dataRoot?: string;
-  readonly dir: string;
-  readonly json: boolean;
-  readonly record: boolean;
-  readonly taskPath: string;
-}): Effect.fn.Return<
+}: RunAgentEffectivenessEvalScoreCommandOptions): Effect.fn.Return<
   void,
   AgentEffectivenessEvalScorerError | S.SchemaError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner

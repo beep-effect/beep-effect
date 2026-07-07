@@ -20,16 +20,20 @@ import { VersionSyncOptions } from "@beep/repo-cli/test/VersionSync";
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A } from "@beep/utils";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { parse } from "jsonc-parser";
 import { Project, SyntaxKind } from "ts-morph";
+import ts from "typescript";
 import { describe, expect, it } from "vitest";
 
-// Top-level read keeps the on-disk policy binding synchronous inside the test
-// body (the tests-tsgo lane rejects async test closures).
-const committedPolicyText = await Bun.file(
-  new URL("../../../../../standards/schema-crispening.policy.jsonc", import.meta.url)
-).text();
+const committedPolicyText = O.getOrElse(
+  O.liftPredicate(
+    ts.sys.readFile(new URL("../../../../../standards/schema-crispening.policy.jsonc", import.meta.url).pathname),
+    P.isString
+  ),
+  () => ""
+);
 
 describe("packages/tooling/tool/cli schema-first models", () => {
   it("applies decoding defaults for FileGenerationPlanInput.symlinks", () => {
