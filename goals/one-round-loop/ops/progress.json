@@ -6,14 +6,14 @@
     "wontFixRule": "Stretch items only; requires a rationale string."
   },
   "phases": {
-    "P0_ci_inversion": "pending",
+    "P0_ci_inversion": "in_progress",
     "P1_property_lane": "pending",
     "P2_medium_tier": "pending",
     "P3_stretch": "pending",
     "P4_close": "pending"
   },
   "coreItems": {
-    "C1_ci_lane_inversion": { "status": "pending" },
+    "C1_ci_lane_inversion": { "status": "in_progress" },
     "C2_property_law_lane": { "status": "pending" },
     "C3_coverage_baseline_v2": { "status": "pending" },
     "C4_cwd_independence": { "status": "pending" },
