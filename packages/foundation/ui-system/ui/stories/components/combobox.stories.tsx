@@ -131,16 +131,21 @@ export const Filtering: Story = {
       </ComboboxContent>
     </Combobox>
   ),
-  play: async ({ canvasElement }) => {
+  play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const input = canvas.getByRole("combobox", { name: "Framework" });
-    await userEvent.click(input);
-    await userEvent.type(input, "Rem");
-    await waitFor(() => {
-      const option = screen.getByRole("option", { name: "Remix" });
-      expect(option).toBeVisible();
-    });
-    expect(screen.queryByRole("option", { name: "Astro" })).toBeNull();
+    return userEvent
+      .click(input)
+      .then(() => userEvent.type(input, "Rem"))
+      .then(() =>
+        waitFor(() => {
+          const option = screen.getByRole("option", { name: "Remix" });
+          expect(option).toBeVisible();
+        })
+      )
+      .then(() => {
+        expect(screen.queryByRole("option", { name: "Astro" })).toBeNull();
+      });
   },
 };
 
