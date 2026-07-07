@@ -20,16 +20,16 @@ export const MakeSourceMetadata = SourceMetadataInput.pipe(
           sourcePath: input.sourcePath,
           owner: input.owner,
           generatedBy: "sync-data-to-ts",
-        }),
+        })
     ),
     encode: SG.transform(
       (metadata: SourceMetadata) =>
         new SourceMetadataInput({
           sourcePath: metadata.sourcePath,
           owner: metadata.owner,
-        }),
+        })
     ),
-  }),
+  })
 );
 
 export const makeSourceMetadata = S.decodeSync(MakeSourceMetadata);

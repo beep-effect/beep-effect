@@ -7,9 +7,7 @@
     {
       "pattern": "rule_missing: Skill has no guidance for exposing an 'executable function contract' derived from a schema input model via the repo's Fn(...)/implementSync(...) pattern; agent only produced the schema class and a plain function, missing the Fn contract wrapper entirely.",
       "count": 1,
-      "task_ids": [
-        "sfv4-fn-schema-001"
-      ]
+      "task_ids": ["sfv4-fn-schema-001"]
     }
   ],
   "score_before": 0.6666666666666666,

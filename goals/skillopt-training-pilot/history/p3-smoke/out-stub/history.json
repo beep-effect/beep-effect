@@ -44,9 +44,7 @@
     "n_edits_ranked": 1,
     "edit_budget": 1,
     "lr_control_mode": "fixed",
-    "support_counts": [
-      1
-    ],
+    "support_counts": [1],
     "candidate_hash": "b142f27fc7deedab",
     "candidate_skill_len": 6814,
     "edit_apply_summary": {

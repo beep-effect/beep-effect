@@ -1,7 +1,7 @@
 export interface FrameFileNameInput {
   readonly basename: string;
-  readonly frame: number;
   readonly extension: "jpg" | "png";
+  readonly frame: number;
 }
 
 export const formatFrameFileName = (input: FrameFileNameInput): string =>

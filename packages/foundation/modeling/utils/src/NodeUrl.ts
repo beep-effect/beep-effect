@@ -7,8 +7,39 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import * as NodeUrl from "node:url";
+import { $UtilsId } from "@beep/identity/packages";
 import { Effect, PlatformError } from "effect";
+import * as S from "effect/Schema";
+
+const $I = $UtilsId.create("NodeUrl");
+
+class NodeUrlUnavailableError extends S.TaggedErrorClass<NodeUrlUnavailableError>($I`NodeUrlUnavailableError`)(
+  "NodeUrlUnavailableError",
+  {
+    module: S.Literal("node:url"),
+  },
+  $I.annote("NodeUrlUnavailableError", {
+    description: "Thrown when node:url is unavailable to URL conversion helpers.",
+  })
+) {}
+
+/**
+ * `node:url` handle, resolved lazily via `process.getBuiltinModule` on first
+ * call (never via a static Node import) so browser bundles can import this
+ * module — and `@beep/utils/Path`, which re-exports from it — without
+ * evaluating Node builtins. Only invoking a helper requires a Node-compatible
+ * runtime.
+ */
+let nodeUrlHandle: typeof import("node:url") | undefined;
+const NodeUrl = (): typeof import("node:url") => {
+  if (nodeUrlHandle === undefined) {
+    nodeUrlHandle = globalThis.process?.getBuiltinModule?.("node:url");
+    if (nodeUrlHandle === undefined) {
+      throw NodeUrlUnavailableError.make({ module: "node:url" });
+    }
+  }
+  return nodeUrlHandle;
+};
 
 /**
  * Converts a `file:` URL into a platform path string.
@@ -52,7 +83,7 @@ import { Effect, PlatformError } from "effect";
  */
 export const fromFileUrl = (url: URL): Effect.Effect<string, PlatformError.BadArgument> =>
   Effect.try({
-    try: () => NodeUrl.fileURLToPath(url),
+    try: () => NodeUrl().fileURLToPath(url),
     catch: () =>
       new PlatformError.BadArgument({
         module: "Path",
@@ -101,7 +132,7 @@ export const fromFileUrl = (url: URL): Effect.Effect<string, PlatformError.BadAr
  */
 export const toFileUrl = (path: string): Effect.Effect<URL, PlatformError.BadArgument> =>
   Effect.try({
-    try: () => NodeUrl.pathToFileURL(path),
+    try: () => NodeUrl().pathToFileURL(path),
     catch: () =>
       new PlatformError.BadArgument({
         module: "Path",
@@ -124,4 +155,4 @@ export const toFileUrl = (path: string): Effect.Effect<URL, PlatformError.BadArg
  * @category utilities
  * @since 0.0.0
  */
-export const fileURLToPath = NodeUrl.fileURLToPath;
+export const fileURLToPath = (url: string | URL): string => NodeUrl().fileURLToPath(url);

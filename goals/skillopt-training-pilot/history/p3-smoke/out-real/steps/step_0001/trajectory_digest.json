@@ -7,9 +7,7 @@
     {
       "pattern": "rule_missing: Skill has no guidance on the repo's executable function-contract pattern (`export const X = Fn(...)` with `X.implementSync(...)`), so the agent invented an ad-hoc S.Class-based 'schema transform' instead of the required Fn contract, failing two required-pattern completion checks.",
       "count": 1,
-      "task_ids": [
-        "sfv4-fn-schema-001"
-      ]
+      "task_ids": ["sfv4-fn-schema-001"]
     }
   ],
   "score_before": 0.444445,

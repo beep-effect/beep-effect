@@ -7,9 +7,7 @@
     {
       "pattern": "answer_format: Agent gave the raw token value but omitted the required 'beep: ' prefix specified by the 'beep spike response convention' referenced in the question.",
       "count": 1,
-      "task_ids": [
-        "gate-reject-train"
-      ]
+      "task_ids": ["gate-reject-train"]
     }
   ],
   "score_before": 0.0,

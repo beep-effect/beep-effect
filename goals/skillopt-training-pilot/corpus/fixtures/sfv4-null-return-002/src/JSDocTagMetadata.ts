@@ -1,6 +1,6 @@
 export interface JSDocTagMetadata {
-  readonly tag: string;
   readonly repeatable: boolean;
+  readonly tag: string;
 }
 
 const metadataByTag: Readonly<Record<string, JSDocTagMetadata>> = {

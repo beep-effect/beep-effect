@@ -1,9 +1,7 @@
 import * as S from "effect/Schema";
 import * as ST from "effect/SchemaTransformation";
 
-export class SourceMetadataInput extends S.Class<SourceMetadataInput>(
-  "SourceMetadataInput",
-)({
+export class SourceMetadataInput extends S.Class<SourceMetadataInput>("SourceMetadataInput")({
   sourcePath: S.String,
   owner: S.String,
 }) {}
@@ -27,8 +25,8 @@ export const MakeSourceMetadata = SourceMetadataInput.pipe(
         sourcePath: metadata.sourcePath,
         owner: metadata.owner,
       }),
-    }),
-  ),
+    })
+  )
 );
 
 export const makeSourceMetadata = S.decodeUnknownSync(MakeSourceMetadata);

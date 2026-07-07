@@ -70,9 +70,7 @@
   "epoch_stats": [
     {
       "epoch": 1,
-      "steps": [
-        1
-      ],
+      "steps": [1],
       "accepts": 1,
       "rejects": 0,
       "skips": 0,

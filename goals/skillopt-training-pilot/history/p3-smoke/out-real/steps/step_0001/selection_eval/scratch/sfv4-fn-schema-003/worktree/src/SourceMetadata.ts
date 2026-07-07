@@ -15,9 +15,7 @@ export const SourceMetadata = S.Struct({
 
 export type SourceMetadata = typeof SourceMetadata.Type;
 
-export interface MakeSourceMetadata {
-  (input: SourceMetadataInput): SourceMetadata;
-}
+export type MakeSourceMetadata = (input: SourceMetadataInput) => SourceMetadata;
 
 export const makeSourceMetadata: MakeSourceMetadata = (input) => ({
   sourcePath: input.sourcePath,
