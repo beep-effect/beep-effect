@@ -465,7 +465,7 @@ const analyzeModule = (
   const presentTags = fileoverview === undefined ? [] : tagsFromComment(fileoverview);
   const missingTags = exportCount === 0 ? [] : missingRequiredTags(presentTags, requiredModuleTags);
   const forbidden = forbiddenTagsIn(presentTags);
-  const missingSummary = fileoverview === undefined ? exportCount > 0 : summaryFromComment(fileoverview) === undefined;
+  const missingSummary = fileoverview === undefined ? exportCount > 0 : O.isNone(summaryFromComment(fileoverview));
   let docKind = "jsdoc";
   if (A.contains(presentTags, "@packageDocumentation")) {
     docKind = "packageDocumentation";
@@ -517,7 +517,7 @@ const analyzeExportDeclaration = (
   const unsafeIssues = unsafeExampleViolations(commentText);
   const categoryIssues = categoryViolations(commentText);
   const forbidden = forbiddenTagsIn(presentTags);
-  const missingSummary = summaryFromComment(commentText) === undefined;
+  const missingSummary = O.isNone(summaryFromComment(commentText));
   const findingCount =
     missingTags.length +
     forbidden.length +
@@ -566,7 +566,7 @@ const analyzeDirectExport = (
   const unsafeIssues = unsafeExampleViolations(docText);
   const categoryIssues = categoryViolations(docText);
   const forbidden = forbiddenTagsIn(presentTags);
-  const missingSummary = summaryFromComment(docText) === undefined;
+  const missingSummary = O.isNone(summaryFromComment(docText));
   const schemaGaps = schemaAnnotationGaps(name, declaration, sourceFile);
   const findingCount =
     missingTags.length +

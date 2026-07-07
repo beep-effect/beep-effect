@@ -52,6 +52,7 @@ import {
   TurboPlanSnapshot,
   TurboPlanTask,
   TurboWorkspacePackage,
+  YeetCommandError,
   YeetExecutedStep,
   YeetProofLockStateForTesting,
   YeetStatusArtifact,
@@ -318,6 +319,22 @@ const findStep = (steps: ReadonlyArray<RepoPlanStep>, label: string): RepoPlanSt
   );
 
 describe("yeet planner", () => {
+  it("keeps yeet command error optional context at the command boundary", () => {
+    const emptyError = YeetCommandError.new(new Error("cause"), "failed");
+    expect(emptyError.command).toBeUndefined();
+    expect(emptyError.exitCode).toBeUndefined();
+    expect(emptyError.file).toBeUndefined();
+
+    const detailedError = YeetCommandError.new(new Error("cause"), "failed", {
+      command: "git push",
+      exitCode: 1,
+      file: ".beep/yeet/status.json",
+    });
+    expect(detailedError.command).toBe("git push");
+    expect(detailedError.exitCode).toBe(1);
+    expect(detailedError.file).toBe(".beep/yeet/status.json");
+  });
+
   it("builds publish as advisory feedback, commit, pre-push proof, then push", () => {
     const plan = buildYeetRunPlanForTesting({ context, message: O.some("feat(repo-cli): add yeet") });
 

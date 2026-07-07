@@ -8,6 +8,7 @@ import { A, Str } from "@beep/utils";
 import { flow, pipe } from "effect";
 import * as O from "effect/Option";
 import { AiMetricsTranscriptSource } from "../models.ts";
+import type { Path } from "effect";
 
 const codexEventNames = [
   "assistant_message",
@@ -33,17 +34,12 @@ const openClawEventNames = [
   "tool_result",
 ] as const;
 
-const eventNamesForSource = (sourceKind: AiMetricsTranscriptSource): ReadonlyArray<string> => {
-  if (sourceKind === AiMetricsTranscriptSource.Enum.codex) {
-    return codexEventNames;
-  }
-
-  if (sourceKind === AiMetricsTranscriptSource.Enum.claude) {
-    return claudeEventNames;
-  }
-
-  return openClawEventNames;
-};
+const eventNamesForSource = (sourceKind: AiMetricsTranscriptSource): ReadonlyArray<string> =>
+  AiMetricsTranscriptSource.$match(sourceKind, {
+    claude: () => claudeEventNames,
+    codex: () => codexEventNames,
+    openclaw: () => openClawEventNames,
+  });
 
 /**
  * Trim transcript JSONL text into non-empty lines.
@@ -65,6 +61,23 @@ export const transcriptLines: (content: string) => ReadonlyArray<string> = flow(
  */
 export const firstString = (...values: ReadonlyArray<string | undefined>): O.Option<string> =>
   pipe(values, A.map(O.fromNullishOr), A.getSomes, A.head);
+
+/**
+ * Convert a repository path into Claude's project-directory name.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const repoPathToClaudeProjectName: (repoRoot: string) => string = Str.replace(/[/\\]/gu, "-");
+
+/**
+ * Normalize a source path relative to a root with POSIX separators.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const normalizedRelativePath = (pathApi: Path.Path, root: string, filePath: string): string =>
+  pipe(pathApi.relative(root, filePath), Str.replace(/\\/gu, "/"));
 
 /**
  * Build an optional timestamp object for schema class constructors.

@@ -1,61 +1,6 @@
 [
   {
     "ruleId": "SFV4-defaults",
-    "file": "infra/src/AIMetrics.ts",
-    "line": 42,
-    "symbol": "targetFromPulumiConfig",
-    "smell": "`targetFromPulumiConfig` and `toolFromPulumiConfig` default absent raw Pulumi strings to `AiMetricsDeployTarget.Enum.local` and `AiMetricsTool.Enum.phoenix` before constructing `AiMetricsInstallInput`, even though `AiMetricsInstallInput` already owns those schema defaults (`packages/tooling/library/ai-metrics/src/install.ts:146-167`).",
-    "proposedTarget": "Decode present Pulumi strings, but omit absent `target` / `defaultTool` from the `AiMetricsInstallInput.make` payload so the existing schema defaults fire. A small helper can return `O.Option<AiMetricsDeployTarget>` / `O.Option<AiMetricsTool>` and feed `O.getSomesStruct`; repo helpers verified: `S.OptionFromOptionalKey` in Effect v4 at `.repos/effect-v4/packages/effect/src/Schema.ts:8668` and `O.getSomesStruct` at `packages/foundation/modeling/utils/src/Option.ts:102`.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "infra/src/AIMetrics.ts",
-    "line": 268,
-    "symbol": "AIMetricsRemoteSshConfig.agentSocketPath",
-    "smell": "`agentSocketPath: S.optionalKey(S.String)` leaves absence as `string | undefined`, then `remoteSshConnection` rewraps it with `O.fromUndefinedOr` at line 75 and the Pulumi trigger list flattens it with `args.remote.ssh.agentSocketPath ?? \"\"` at line 598.",
-    "proposedTarget": "Model the field as `S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` and convert to the Pulumi provider's optional property only at the provider boundary. Same-package pattern to preserve: concrete defaults already live on `AIMetricsRemoteSshConfig.host/user` with `SchemaUtils.withKeyDefaults` at lines 269-270; repo exemplar for `withNoneDefault` is `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46-51`.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "infra/src/Storybook.ts",
-    "line": 177,
-    "symbol": "StorybookVercelProjectConfig.teamId",
-    "smell": "`teamId: S.optionalKey(S.String)` keeps Vercel team absence as `string | undefined`; `makeStorybookStackArgsFromConfigValues` then converts `vercelTeamId` with `O.fromUndefinedOr` at line 251 and `optionalTeamArgs` branches on `teamId === undefined` at line 287.",
-    "proposedTarget": "Use `teamId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` in the repo-owned project config, then make the Vercel provider adapter accept `O.Option<string>` and produce `{ teamId }` only for `Some`. Effect v4 API verified at `.repos/effect-v4/packages/effect/src/Schema.ts:8668`; repo helper exemplar: `withNoneDefault` at `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46-51`.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "infra/src/OipWeb.ts",
-    "line": 232,
-    "symbol": "OipDnsConfig",
-    "smell": "`cloudflareZoneId`, `legacyCloudflareZoneId`, and DNS import-id fields are schema-modeled as `S.optionalKey(S.String)` at lines 232-239, then repeatedly flow through `O.fromUndefinedOr` in `makeOipWebStackArgsFromConfigValues` and `zoneId === undefined` branches in `makeDnsRecord`.",
-    "proposedTarget": "Promote the optional DNS identifiers to `S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` on `OipDnsConfig`; keep the Cloudflare/Pulumi provider args as the only boundary that receives omitted keys. This mirrors Option-first schema exemplars such as `packages/foundation/modeling/schema/src/Http/Http.headers.shared.ts:171` and uses the same `withNoneDefault` helper verified at `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46-51`.",
-    "confidence": 0.76,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "infra/src/OipWeb.ts",
-    "line": 266,
-    "symbol": "OipVercelProjectConfig",
-    "smell": "`hubSpotAccountId`, `hubSpotFormGuid`, `sanityDataset`, `sanityProjectId`, and `teamId` are repo-owned config fields modeled as `S.optionalKey(S.String)` at lines 266-275. Their absence is converted back and forth with `O.fromUndefinedOr` at lines 425-435 and with provider helpers that branch on `undefined`.",
-    "proposedTarget": "Use `S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` for the optional integration/team fields on `OipVercelProjectConfig`; the Vercel environment-variable and team provider adapters should unwrap `Option` at the edge. Same-package default exemplar: required Vercel fields already use `SchemaUtils.withKeyDefaults` at lines 268-277.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-defaults",
     "file": "infra/src/Storybook.ts",
     "line": 120,
     "symbol": "StorybookPulumiConfigValues",

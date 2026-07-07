@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoConfigsId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { pipe } from "effect";
 import * as Eq from "effect/Equal";
@@ -55,15 +56,49 @@ const HeaderList = SecureHeader.pipe(
   })
 );
 
+const defaultBeepSecureHeaders: Array<SecureHeader> = [
+  SecureHeader.make({
+    key: "Referrer-Policy",
+    value: "strict-origin-when-cross-origin",
+  }),
+  SecureHeader.make({
+    key: "X-Content-Type-Options",
+    value: "nosniff",
+  }),
+  SecureHeader.make({
+    key: "X-Frame-Options",
+    value: "DENY",
+  }),
+  SecureHeader.make({
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=()",
+  }),
+];
+const emptySecureHeaders: Array<SecureHeader> = [];
+
+/**
+ * Default secure headers shared by current Next.js apps in this repo.
+ *
+ * @example
+ * ```ts
+ * import { DEFAULT_BEEP_SECURE_HEADERS } from "@beep/repo-configs/next/security"
+ * const headers = DEFAULT_BEEP_SECURE_HEADERS
+ * console.log(headers)
+ * ```
+ * @category configuration
+ * @since 0.0.0
+ */
+export const DEFAULT_BEEP_SECURE_HEADERS: ReadonlyArray<SecureHeader> = defaultBeepSecureHeaders;
+
 class SecureHeadersConfigValue extends S.Class<SecureHeadersConfigValue>($I`SecureHeadersConfigValue`)(
   {
-    source: S.optionalKey(S.String).annotateKey({
+    source: S.String.pipe(SchemaUtils.withKeyDefaults(defaultHeaderSource)).annotateKey({
       description: "Next.js route source receiving the secure headers.",
     }),
-    headers: S.optionalKey(HeaderList).annotateKey({
+    headers: HeaderList.pipe(SchemaUtils.withKeyDefaults(defaultBeepSecureHeaders)).annotateKey({
       description: "Replacement secure header list.",
     }),
-    additionalHeaders: S.optionalKey(HeaderList).annotateKey({
+    additionalHeaders: HeaderList.pipe(SchemaUtils.withKeyDefaults(emptySecureHeaders)).annotateKey({
       description: "Additional secure headers merged with the repo default list.",
     }),
   },
@@ -83,6 +118,8 @@ class SecureHeadersConfigValue extends S.Class<SecureHeadersConfigValue>($I`Secu
  * ```ts
  * import type { SecureHeadersConfig } from "@beep/repo-configs/next/security"
  * const config: SecureHeadersConfig = {
+ *   source: "/(.*)",
+ *   headers: [{ key: "X-Content-Type-Options", value: "nosniff" }],
  *   additionalHeaders: [{ key: "X-Beep", value: "1" }]
  * }
  * console.log(config)
@@ -103,7 +140,9 @@ export const SecureHeadersConfig = S.Union([S.Literal(false), SecureHeadersConfi
  * ```ts
  * import type { SecureHeadersConfig } from "@beep/repo-configs/next/security"
  * const config: SecureHeadersConfig = {
- *   source: "/(.*)"
+ *   source: "/(.*)",
+ *   headers: [{ key: "X-Frame-Options", value: "DENY" }],
+ *   additionalHeaders: []
  * }
  * console.log(config)
  * ```
@@ -111,37 +150,6 @@ export const SecureHeadersConfig = S.Union([S.Literal(false), SecureHeadersConfi
  * @since 0.0.0
  */
 export type SecureHeadersConfig = typeof SecureHeadersConfig.Type;
-
-/**
- * Default secure headers shared by current Next.js apps in this repo.
- *
- * @example
- * ```ts
- * import { DEFAULT_BEEP_SECURE_HEADERS } from "@beep/repo-configs/next/security"
- * const headers = DEFAULT_BEEP_SECURE_HEADERS
- * console.log(headers)
- * ```
- * @category configuration
- * @since 0.0.0
- */
-export const DEFAULT_BEEP_SECURE_HEADERS: ReadonlyArray<SecureHeader> = [
-  {
-    key: "Referrer-Policy",
-    value: "strict-origin-when-cross-origin",
-  },
-  {
-    key: "X-Content-Type-Options",
-    value: "nosniff",
-  },
-  {
-    key: "X-Frame-Options",
-    value: "DENY",
-  },
-  {
-    key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=()",
-  },
-];
 
 const replaceHeaderByKey = (headers: ReadonlyArray<SecureHeader>, header: SecureHeader): ReadonlyArray<SecureHeader> =>
   pipe(
@@ -156,14 +164,35 @@ const mergeHeadersByKey = (
 ): ReadonlyArray<SecureHeader> => pipe(additionalHeaders, A.reduce(baseHeaders, replaceHeaderByKey));
 
 type SecureHeadersConfigObject = Exclude<SecureHeadersConfig, false>;
-
-const configValue = (config: SecureHeadersConfig | undefined): O.Option<SecureHeadersConfigObject> => {
-  if (isFalse(config)) return O.none();
-  if (P.isUndefined(config)) return O.none();
-  return O.some(config);
+type SecureHeadersConfigObjectInput = {
+  readonly source?: string | null | undefined;
+  readonly headers?: ReadonlyArray<SecureHeader> | null | undefined;
+  readonly additionalHeaders?: ReadonlyArray<SecureHeader> | null | undefined;
 };
 
-const headerSource = (config: SecureHeadersConfig | undefined): string =>
+/**
+ * Constructor input accepted by direct secure-header helpers.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SecureHeadersConfigInput = false | SecureHeadersConfigObjectInput;
+
+const decodeSecureHeadersConfigValue = S.decodeUnknownOption(SecureHeadersConfigValue);
+
+const secureHeadersConfigValueInput = (value: SecureHeadersConfigObjectInput) => ({
+  source: value.source ?? defaultHeaderSource,
+  headers: value.headers ?? defaultBeepSecureHeaders,
+  additionalHeaders: value.additionalHeaders ?? emptySecureHeaders,
+});
+
+const configValue = (config: SecureHeadersConfigInput | undefined): O.Option<SecureHeadersConfigObject> => {
+  if (isFalse(config)) return O.none();
+  if (P.isUndefined(config)) return O.none();
+  return decodeSecureHeadersConfigValue(secureHeadersConfigValueInput(config));
+};
+
+const headerSource = (config: SecureHeadersConfigInput | undefined): string =>
   pipe(
     configValue(config),
     O.flatMap((value) => O.fromNullishOr(value.source)),
@@ -179,6 +208,8 @@ const headerSource = (config: SecureHeadersConfig | undefined): string =>
  * ```ts
  * import { makeSecureHeaders } from "@beep/repo-configs/next/security"
  * const headers = makeSecureHeaders({
+ *   source: "/(.*)",
+ *   headers: [{ key: "X-Content-Type-Options", value: "nosniff" }],
  *   additionalHeaders: [{ key: "X-Beep", value: "1" }]
  * })
  * console.log(headers)
@@ -186,16 +217,10 @@ const headerSource = (config: SecureHeadersConfig | undefined): string =>
  * @category constructors
  * @since 0.0.0
  */
-export const makeSecureHeaders = (config?: SecureHeadersConfig): ReadonlyArray<SecureHeader> =>
+export const makeSecureHeaders = (config?: SecureHeadersConfigInput): ReadonlyArray<SecureHeader> =>
   pipe(
     configValue(config),
-    O.map((value) =>
-      pipe(
-        O.fromNullishOr(value.headers),
-        O.getOrElse(() => DEFAULT_BEEP_SECURE_HEADERS),
-        (headers) => mergeHeadersByKey(headers, pipe(O.fromNullishOr(value.additionalHeaders), O.getOrElse(A.empty)))
-      )
-    ),
+    O.map((value) => mergeHeadersByKey(value.headers, value.additionalHeaders)),
     O.getOrElse(() => (isFalse(config) ? A.empty<SecureHeader>() : DEFAULT_BEEP_SECURE_HEADERS))
   );
 
@@ -218,7 +243,7 @@ export const makeSecureHeaders = (config?: SecureHeadersConfig): ReadonlyArray<S
  * @category combinators
  * @since 0.0.0
  */
-export const withSecureHeaders = (config: NextConfig, secureHeadersConfig?: SecureHeadersConfig): NextConfig =>
+export const withSecureHeaders = (config: NextConfig, secureHeadersConfig?: SecureHeadersConfigInput): NextConfig =>
   pipe(
     makeSecureHeaders(secureHeadersConfig),
     A.match({

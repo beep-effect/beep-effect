@@ -7,7 +7,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { TaggedErrorClass } from "@beep/schema";
-import { O, R } from "@beep/utils";
+import { O } from "@beep/utils";
 import { Runtime } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
@@ -65,7 +65,7 @@ export class WorktreeCommandError extends TaggedErrorClass<WorktreeCommandError>
       WorktreeCommandError.make({
         cause,
         message,
-        ...R.getSomes({
+        ...O.getSomesStruct({
           command: O.fromUndefinedOr(command),
           exitCode: O.fromUndefinedOr(exitCode),
           path: O.fromUndefinedOr(path),

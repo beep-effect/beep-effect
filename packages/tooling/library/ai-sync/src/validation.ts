@@ -6,30 +6,31 @@
  */
 
 import { decodeTomlTextAs } from "@beep/schema/Toml";
-import { Str } from "@beep/utils";
-import { Effect, FileSystem, Path } from "effect";
+import { O, Str } from "@beep/utils";
+import { Effect, FileSystem, Path, SchemaIssue } from "effect";
 import * as S from "effect/Schema";
-import { AiSyncError, AiSyncValidationResult } from "./models.ts";
-import { AgentInstructionDocument, ClaudeMcpJson, ClaudeSettings, CodexConfig } from "./schemas.ts";
+import { AiSyncError, AiSyncValidationResult, ValidateRepoConfig } from "./models.ts";
+import { ClaudeMcpJson, ClaudeSettings, CodexConfig, NormalizedAgentInstructionDocument } from "./schemas.ts";
+import type { AiSyncValidatedConfigPath, AiSyncValidationSchemaId, ValidateRepoConfigInput } from "./models.ts";
 
 const decodeJsonTextAs = <Schema extends S.Top>(schema: Schema) => S.decodeUnknownEffect(S.fromJsonString(schema));
 
 const decodeCodexToml = decodeTomlTextAs(CodexConfig);
 const decodeClaudeMcpJson = decodeJsonTextAs(ClaudeMcpJson);
 const decodeClaudeSettingsJson = decodeJsonTextAs(ClaudeSettings);
-const decodeInstructionDocument = S.decodeUnknownEffect(AgentInstructionDocument);
 
 const renderValidationCause = (cause: unknown): string => Str.replaceAll(/, got [^\n)]+/g, "")(String(cause));
 
-const validationError = (relativePath: string, schemaId: string) => (cause: unknown) =>
-  AiSyncError.make({
-    message: `Agent config validation failed for ${relativePath} using ${schemaId}: ${renderValidationCause(cause)}`,
-    relativePath,
-    schemaId,
-    cause,
-  });
+const validationError =
+  (relativePath: AiSyncValidatedConfigPath, schemaId: AiSyncValidationSchemaId) => (cause: unknown) =>
+    AiSyncError.make({
+      message: `Agent config validation failed for ${relativePath} using ${schemaId}: ${renderValidationCause(cause)}`,
+      relativePath: O.some(relativePath),
+      schemaId: O.some(schemaId),
+      cause: O.some(cause),
+    });
 
-const validateByRelativePath = (relativePath: string, content: string) => {
+const validateByRelativePath = (relativePath: ValidateRepoConfigInput["config"], content: string) => {
   if (relativePath === ".codex/config.toml") {
     return decodeCodexToml(content).pipe(
       Effect.as(AiSyncValidationResult.make({ relativePath, schemaId: "codex-config" })),
@@ -49,7 +50,7 @@ const validateByRelativePath = (relativePath: string, content: string) => {
     );
   }
   if (relativePath === "AGENTS.md" || relativePath === "CLAUDE.md") {
-    return decodeInstructionDocument(content).pipe(
+    return NormalizedAgentInstructionDocument.decodeEffect(content).pipe(
       Effect.as(AiSyncValidationResult.make({ relativePath, schemaId: "agent-instruction-document" })),
       Effect.mapError(validationError(relativePath, "agent-instruction-document"))
     );
@@ -57,10 +58,35 @@ const validateByRelativePath = (relativePath: string, content: string) => {
   return Effect.fail(
     AiSyncError.make({
       message: `No V1 AI sync schema is registered for ${relativePath}.`,
-      relativePath,
+      relativePath: O.some(relativePath),
     })
   );
 };
+
+const validateRepoConfigContract = ValidateRepoConfig.implementEffect(
+  Effect.fn("AiSync.validateRepoConfig.contract")(function* (options) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const content = yield* fs.readFileString(path.join(options.repoRoot, options.config)).pipe(
+      Effect.mapError((cause) =>
+        AiSyncError.make({
+          message: `Unable to read agent config file ${options.config}.`,
+          relativePath: O.some(options.config),
+          cause: O.some(cause),
+        })
+      )
+    );
+    return yield* validateByRelativePath(options.config, content);
+  })
+);
+
+const mapValidateRepoConfigError = (cause: AiSyncError | SchemaIssue.Issue): AiSyncError =>
+  SchemaIssue.isIssue(cause)
+    ? AiSyncError.make({
+        message: `Repo config validation contract failed: ${renderValidationCause(cause)}`,
+        cause: O.some(cause),
+      })
+    : cause;
 
 /**
  * Validate one repo-local config file through its native schema.
@@ -90,18 +116,7 @@ export const validateRepoConfig = Effect.fn("AiSync.validateRepoConfig")(functio
   readonly repoRoot: string;
   readonly config: string;
 }) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const content = yield* fs.readFileString(path.join(options.repoRoot, options.config)).pipe(
-    Effect.mapError((cause) =>
-      AiSyncError.make({
-        message: `Unable to read agent config file ${options.config}.`,
-        relativePath: options.config,
-        cause,
-      })
-    )
-  );
-  return yield* validateByRelativePath(options.config, content);
+  return yield* validateRepoConfigContract(options).pipe(Effect.mapError(mapValidateRepoConfigError));
 });
 
 /**

@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "SFV4-fn-schema",
-    "file": "packages/tooling/library/ai-sync/src/validation.ts",
-    "line": 89,
-    "symbol": "validateRepoConfig",
-    "smell": "Exported Effect function carries an inline object parameter contract (`repoRoot`, `config`) in a package that already defines schema-backed validation models.",
-    "proposedTarget": "Add a `ValidateRepoConfigInput` S.Class near `AiSyncValidationResult` (`packages/tooling/library/ai-sync/src/models.ts:395`) and expose a function schema such as `Fn({ input: ValidateRepoConfigInput, output: AiSyncValidationResult, error: AiSyncError }).implementEffect(...)`; verified Fn supports `error` and `implementEffect` (`packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:637`, `:369`).",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 0.56
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
     "file": "packages/tooling/library/ai-sync/src/drift.ts",
     "line": 169,
     "symbol": "checkSourceDriftWithFetcher",

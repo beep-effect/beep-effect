@@ -2,6 +2,7 @@ import { HashMap, HashSet } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import type { ESTree } from "@oxlint/plugins";
 
 /**
@@ -258,14 +259,54 @@ export const identifierName = (node: MaybeNode): O.Option<string> =>
     expression.type === "Identifier" && P.isString(expression.name) ? O.some(expression.name) : O.none()
   );
 
+class NamedImportBinding extends S.Class<NamedImportBinding>("NamedImportBinding")({
+  kind: S.tag("named"),
+  imported: S.String,
+  local: S.String,
+}) {}
+
+class NamespaceImportBinding extends S.Class<NamespaceImportBinding>("NamespaceImportBinding")({
+  kind: S.tag("namespace"),
+  local: S.String,
+}) {}
+
+class DefaultImportBinding extends S.Class<DefaultImportBinding>("DefaultImportBinding")({
+  kind: S.tag("default"),
+  local: S.String,
+}) {}
+
 /**
- * A value (non-type) import specifier, classified by how it binds a local name.
+ * Schema-backed import binding classified by how a value import binds a local name.
  * `named` carries the original exported name; `namespace`/`default` bind the module itself.
  *
  * @example
  * ```ts
  * import { deepStrictEqual } from "node:assert/strict"
- * import type { ImportBinding } from "../../src/rules/utils"
+ * import { ImportBinding } from "@beep/lint-rules/oxlint"
+ * import * as S from "effect/Schema"
+ *
+ * const binding = S.decodeUnknownSync(ImportBinding)({
+ *   kind: "named",
+ *   imported: "Effect",
+ *   local: "Effect"
+ * })
+ *
+ * deepStrictEqual(binding, { kind: "named", imported: "Effect", local: "Effect" })
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const ImportBinding = S.Union([NamedImportBinding, NamespaceImportBinding, DefaultImportBinding]).pipe(
+  S.toTaggedUnion("kind")
+);
+
+/**
+ * A value (non-type) import specifier classified by how it binds a local name.
+ *
+ * @example
+ * ```ts
+ * import { deepStrictEqual } from "node:assert/strict"
+ * import type { ImportBinding } from "@beep/lint-rules/oxlint"
  *
  * const binding: ImportBinding = { kind: "named", imported: "Effect", local: "Effect" }
  *
@@ -274,10 +315,10 @@ export const identifierName = (node: MaybeNode): O.Option<string> =>
  * @category models
  * @since 0.1.0
  */
-export type ImportBinding =
-  | { readonly kind: "named"; readonly imported: string; readonly local: string }
-  | { readonly kind: "namespace"; readonly local: string }
-  | { readonly kind: "default"; readonly local: string };
+export type ImportBinding = S.Schema.Type<typeof ImportBinding>;
+
+const makeModuleBinding = (kind: "namespace" | "default", local: string): ImportBinding =>
+  kind === "namespace" ? NamespaceImportBinding.make({ local }) : DefaultImportBinding.make({ local });
 
 /**
  * Classify a single import specifier into an {@link ImportBinding}, dropping type-only
@@ -315,14 +356,15 @@ export const classifyImportSpecifier = (
   specifier: ESTree.ImportDeclaration["specifiers"][number]
 ): O.Option<ImportBinding> =>
   O.match(HashMap.get(MODULE_BINDING_KINDS, specifier.type), {
-    onSome: (kind) => O.some<ImportBinding>({ kind, local: specifier.local.name }),
+    onSome: (kind) => O.some(makeModuleBinding(kind, specifier.local.name)),
     onNone: () =>
       specifier.type === "ImportSpecifier" && specifier.importKind !== "type"
-        ? O.map(getPropertyName(specifier.imported), (imported) => ({
-            kind: "named" as const,
-            imported,
-            local: specifier.local.name,
-          }))
+        ? O.map(getPropertyName(specifier.imported), (imported) =>
+            NamedImportBinding.make({
+              imported,
+              local: specifier.local.name,
+            })
+          )
         : O.none(),
   });
 

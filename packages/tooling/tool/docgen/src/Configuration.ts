@@ -37,10 +37,36 @@ const PACKAGE_JSON_FILE_NAME = "package.json";
 const CONFIG_FILE_NAME = "docgen.json";
 
 const CompilerOptionsShape = S.toEncoded(TSConfigCompilerOptions);
-const CompilerOptionsSchema = S.Union([S.String, CompilerOptionsShape]);
+/**
+ * Schema for accepted CLI or config-file compiler options input.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CompilerOptionsInput } from "@beep/repo-docgen/Configuration"
+ *
+ * console.log(S.is(CompilerOptionsInput)("tsconfig.json")) // true
+ * ```
+ * @category configuration
+ * @since 0.0.0
+ */
+export const CompilerOptionsInput = S.Union([S.String, CompilerOptionsShape]).pipe(
+  $I.annoteSchema("CompilerOptionsInput", {
+    description: "Accepted CLI or config-file input for TypeScript compiler options.",
+  })
+);
 const encodeCompilerOptions = S.encodeEffect(TSConfigCompilerOptions);
 const isStringArray = (value: unknown): value is ReadonlyArray<string> =>
   A.isArray(value) && A.every(value, P.isString);
+
+const stringKeyDefault = (value: string) =>
+  S.String.pipe(S.withConstructorDefault(Effect.succeed(value)), S.withDecodingDefaultKey(Effect.succeed(value)));
+const booleanKeyDefault = (value: boolean) =>
+  S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(value)), S.withDecodingDefaultKey(Effect.succeed(value)));
+const stringArrayKeyDefault = S.Array(S.String).pipe(
+  S.withConstructorDefault(Effect.succeed(A.empty<string>())),
+  S.withDecodingDefaultKey(Effect.succeed(A.empty<string>()))
+);
 
 /**
  * Schema for the optional package-local `docgen.json` document.
@@ -62,36 +88,73 @@ const isStringArray = (value: unknown): value is ReadonlyArray<string> =>
  * @category configuration
  * @since 0.0.0
  */
-export class ConfigurationSchema extends S.Class<ConfigurationSchema>($I`ConfigurationSchema`)({
-  $schema: S.optionalKey(S.String),
-  enableSearch: S.optionalKey(S.Boolean),
-  enforceDescriptions: S.optionalKey(S.Boolean),
-  enforceExamples: S.optionalKey(S.Boolean),
-  enforceVersion: S.optionalKey(S.Boolean),
-  examplesCompilerOptions: S.optionalKey(CompilerOptionsSchema),
-  exclude: S.Array(S.String).pipe(S.optionalKey),
-  include: S.Array(S.String).pipe(S.optionalKey),
-  outDir: S.optionalKey(S.String),
-  parseCompilerOptions: S.optionalKey(CompilerOptionsSchema),
-  projectHomepage: S.optionalKey(S.String),
-  runExamples: S.optionalKey(S.Boolean),
-  srcDir: S.optionalKey(S.String),
-  srcLink: S.optionalKey(S.String),
-  theme: S.optionalKey(S.String),
-  tscExecutable: S.optionalKey(S.String),
-}) {}
+export class ConfigurationSchema extends S.Class<ConfigurationSchema>($I`ConfigurationSchema`)(
+  {
+    $schema: S.optionalKey(S.String).annotateKey({
+      description: "Optional JSON schema URI for editor tooling.",
+    }),
+    enableSearch: booleanKeyDefault(true).annotateKey({
+      description: "Whether generated docs include search support.",
+    }),
+    enforceDescriptions: booleanKeyDefault(false).annotateKey({
+      description: "Whether docgen requires descriptions on documented exports.",
+    }),
+    enforceExamples: booleanKeyDefault(false).annotateKey({
+      description: "Whether docgen requires examples on documented exports.",
+    }),
+    enforceVersion: booleanKeyDefault(true).annotateKey({
+      description: "Whether docgen requires @since tags on documented exports.",
+    }),
+    examplesCompilerOptions: S.optionalKey(CompilerOptionsInput).annotateKey({
+      description: "Compiler options or TSConfig path used when checking generated examples.",
+    }),
+    exclude: stringArrayKeyDefault.annotateKey({
+      description: "Glob patterns excluded from docgen source discovery.",
+    }),
+    include: stringArrayKeyDefault.annotateKey({
+      description: "Source file globs or paths included in docgen source discovery.",
+    }),
+    outDir: stringKeyDefault("docs").annotateKey({
+      description: "Output directory for generated documentation.",
+    }),
+    parseCompilerOptions: S.optionalKey(CompilerOptionsInput).annotateKey({
+      description: "Compiler options or TSConfig path used when parsing package source files.",
+    }),
+    projectHomepage: S.optionalKey(S.String).annotateKey({
+      description: "Project homepage URL used as the base for generated links.",
+    }),
+    runExamples: booleanKeyDefault(false).annotateKey({
+      description: "Whether generated examples are executed after type-checking.",
+    }),
+    srcDir: stringKeyDefault("src").annotateKey({
+      description: "Source directory scanned by docgen.",
+    }),
+    srcLink: S.optionalKey(S.String).annotateKey({
+      description: "Source URL prefix used for generated source links.",
+    }),
+    theme: stringKeyDefault(DEFAULT_THEME).annotateKey({
+      description: "Jekyll remote theme emitted into generated documentation.",
+    }),
+    tscExecutable: stringKeyDefault("tsc").annotateKey({
+      description: "TypeScript compiler executable used for example checks.",
+    }),
+  },
+  $I.annote("ConfigurationSchema", {
+    description: "Optional package-local docgen.json document.",
+  })
+) {}
 
 /**
  * Runtime type for decoded `docgen.json` configuration documents.
  *
  * @example
  * ```ts
- * import type { ConfigurationDocument } from "@beep/repo-docgen/Configuration"
+ * import { ConfigurationSchema, type ConfigurationDocument } from "@beep/repo-docgen/Configuration"
  *
- * const document: ConfigurationDocument = {
+ * const document: ConfigurationDocument = ConfigurationSchema.make({
  *   enforceVersion: true,
  *   srcDir: "src"
- * }
+ * })
  *
  * console.log(document.srcDir)
  * ```
@@ -135,24 +198,61 @@ export type ConfigurationDocument = ConfigurationSchema;
  * @category configuration
  * @since 0.0.0
  */
-export class ConfigurationShape extends S.Class<ConfigurationShape>($I`ConfigurationShape`)({
-  enableSearch: S.Boolean,
-  enforceDescriptions: S.Boolean,
-  enforceExamples: S.Boolean,
-  enforceVersion: S.Boolean,
-  examplesCompilerOptions: CompilerOptionsShape,
-  exclude: S.Array(S.String),
-  include: S.Array(S.String),
-  outDir: S.String,
-  parseCompilerOptions: CompilerOptionsShape,
-  projectHomepage: S.String,
-  projectName: S.String,
-  runExamples: S.Boolean,
-  srcDir: S.String,
-  srcLink: S.String,
-  theme: S.String,
-  tscExecutable: S.String,
-}) {}
+export class ConfigurationShape extends S.Class<ConfigurationShape>($I`ConfigurationShape`)(
+  {
+    enableSearch: S.Boolean.annotateKey({
+      description: "Whether generated docs include search support.",
+    }),
+    enforceDescriptions: S.Boolean.annotateKey({
+      description: "Whether docgen requires descriptions on documented exports.",
+    }),
+    enforceExamples: S.Boolean.annotateKey({
+      description: "Whether docgen requires examples on documented exports.",
+    }),
+    enforceVersion: S.Boolean.annotateKey({
+      description: "Whether docgen requires @since tags on documented exports.",
+    }),
+    examplesCompilerOptions: CompilerOptionsShape.annotateKey({
+      description: "Resolved compiler options used when checking generated examples.",
+    }),
+    exclude: S.Array(S.String).annotateKey({
+      description: "Resolved glob patterns excluded from docgen source discovery.",
+    }),
+    include: S.Array(S.String).annotateKey({
+      description: "Resolved source file globs or paths included in docgen source discovery.",
+    }),
+    outDir: S.String.annotateKey({
+      description: "Resolved output directory for generated documentation.",
+    }),
+    parseCompilerOptions: CompilerOptionsShape.annotateKey({
+      description: "Resolved compiler options used when parsing package source files.",
+    }),
+    projectHomepage: S.String.annotateKey({
+      description: "Resolved project homepage URL used as the base for generated links.",
+    }),
+    projectName: S.String.annotateKey({
+      description: "Resolved package name read from package.json.",
+    }),
+    runExamples: S.Boolean.annotateKey({
+      description: "Whether generated examples are executed after type-checking.",
+    }),
+    srcDir: S.String.annotateKey({
+      description: "Resolved source directory scanned by docgen.",
+    }),
+    srcLink: S.String.annotateKey({
+      description: "Resolved source URL prefix used for generated source links.",
+    }),
+    theme: S.String.annotateKey({
+      description: "Resolved Jekyll remote theme emitted into generated documentation.",
+    }),
+    tscExecutable: S.String.annotateKey({
+      description: "Resolved TypeScript compiler executable used for example checks.",
+    }),
+  },
+  $I.annote("ConfigurationShape", {
+    description: "Fully resolved configuration values used by parser, checker, and printer workflows.",
+  })
+) {}
 
 /**
  * Runtime configuration service consumed by docgen parsing, checking, and printing effects.
@@ -230,7 +330,7 @@ export class Configuration extends Context.Service<Configuration, ConfigurationS
  * @category configuration
  * @since 0.0.0
  */
-export type CompilerOptionsInput = string | S.Schema.Type<typeof CompilerOptionsShape>;
+export type CompilerOptionsInput = typeof CompilerOptionsInput.Type;
 
 /**
  * @internal
@@ -395,12 +495,6 @@ const resolveString = (fromCLI: O.Option<string>, fromDocgenJson: O.Option<strin
     () => fallback
   );
 
-const resolveBoolean = (fromCLI: O.Option<boolean>, fromDocgenJson: O.Option<boolean>, fallback: boolean): boolean =>
-  O.getOrElse(
-    O.orElse(fromCLI, () => fromDocgenJson),
-    () => fallback
-  );
-
 /**
  * Loads and resolves the effective docgen configuration from CLI input and repo files.
  *
@@ -445,41 +539,37 @@ export const load = Effect.fn("load")(function* (args: LoadArgs) {
 
   const packageJson = yield* readPackageJson(path.join(cwd, PACKAGE_JSON_FILE_NAME));
   const maybeConfig = yield* readDocgenConfig(path.join(cwd, CONFIG_FILE_NAME));
-  const docgenConfig = O.getOrUndefined(maybeConfig);
+  const docgenConfig = O.getOrElse(maybeConfig, () => ConfigurationSchema.make({}));
 
   const projectName = packageJson.name;
   const projectHomepage = resolveString(
     args.projectHomepage,
-    O.fromNullishOr(docgenConfig?.projectHomepage),
+    O.fromNullishOr(docgenConfig.projectHomepage),
     packageJson.homepage
   );
   const srcLink = resolveString(
     args.srcLink,
-    O.fromNullishOr(docgenConfig?.srcLink),
+    O.fromNullishOr(docgenConfig.srcLink),
     `${projectHomepage}/blob/main/src/`
   );
-  const srcDir = resolveString(args.srcDir, O.fromNullishOr(docgenConfig?.srcDir), "src");
-  const outDir = resolveString(args.outDir, O.fromNullishOr(docgenConfig?.outDir), "docs");
-  const theme = resolveString(args.theme, O.fromNullishOr(docgenConfig?.theme), DEFAULT_THEME);
-  const enableSearch = resolveBoolean(args.enableSearch, O.fromNullishOr(docgenConfig?.enableSearch), true);
-  const enforceDescriptions = resolveBoolean(
-    args.enforceDescriptions,
-    O.fromNullishOr(docgenConfig?.enforceDescriptions),
-    false
-  );
-  const enforceExamples = resolveBoolean(args.enforceExamples, O.fromNullishOr(docgenConfig?.enforceExamples), false);
-  const enforceVersion = resolveBoolean(args.enforceVersion, O.fromNullishOr(docgenConfig?.enforceVersion), true);
-  const tscExecutable = resolveString(args.tscExecutable, O.fromNullishOr(docgenConfig?.tscExecutable), "tsc");
-  const runExamples = resolveBoolean(args.runExamples, O.fromNullishOr(docgenConfig?.runExamples), false);
-  const include = O.getOrElse(args.include, () => docgenConfig?.include ?? []);
-  const exclude = O.getOrElse(args.exclude, () => docgenConfig?.exclude ?? []);
+  const srcDir = O.getOrElse(args.srcDir, () => docgenConfig.srcDir);
+  const outDir = O.getOrElse(args.outDir, () => docgenConfig.outDir);
+  const theme = O.getOrElse(args.theme, () => docgenConfig.theme);
+  const enableSearch = O.getOrElse(args.enableSearch, () => docgenConfig.enableSearch);
+  const enforceDescriptions = O.getOrElse(args.enforceDescriptions, () => docgenConfig.enforceDescriptions);
+  const enforceExamples = O.getOrElse(args.enforceExamples, () => docgenConfig.enforceExamples);
+  const enforceVersion = O.getOrElse(args.enforceVersion, () => docgenConfig.enforceVersion);
+  const tscExecutable = O.getOrElse(args.tscExecutable, () => docgenConfig.tscExecutable);
+  const runExamples = O.getOrElse(args.runExamples, () => docgenConfig.runExamples);
+  const include = O.getOrElse(args.include, () => docgenConfig.include);
+  const exclude = O.getOrElse(args.exclude, () => docgenConfig.exclude);
   const parseCompilerOptions = yield* resolveCompilerOptions(
     args.parseCompilerOptions,
-    O.fromNullishOr(docgenConfig?.parseCompilerOptions)
+    O.fromNullishOr(docgenConfig.parseCompilerOptions)
   );
   const resolvedExamplesCompilerOptions = yield* resolveCompilerOptions(
     args.examplesCompilerOptions,
-    O.fromNullishOr(docgenConfig?.examplesCompilerOptions)
+    O.fromNullishOr(docgenConfig.examplesCompilerOptions)
   );
   // Examples commonly include illustrative bindings that are intentionally unused.
   // Force-disable unused checks to keep docs validation focused on type correctness.

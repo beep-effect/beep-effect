@@ -23,7 +23,11 @@
     "proposedTarget": "Append `SchemaUtils.withCodecStatics` after annotation, following the union exemplar `packages/foundation/modeling/md/src/Md.model.ts:1612` and `withCodecStatics` API verified at `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 34
+    "roiRank": 34,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -34,7 +38,11 @@
     "proposedTarget": "Capture `ArchitectureDomainKindKit`, then pipe annotation, `SchemaUtils.withLiteralKitStatics(ArchitectureDomainKindKit)`, and `SchemaUtils.withCodecStatics`; use the same pattern as `packages/foundation/modeling/nlp/src/Core/Similarity.ts:35` and `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -45,7 +53,11 @@
     "proposedTarget": "Use a base kit plus `SchemaUtils.withLiteralKitStatics(base)` and `SchemaUtils.withCodecStatics`, then colocate the command-facing decode wrapper via `SchemaUtils.withStatics` if the custom `DomainError` text must remain.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -56,7 +68,11 @@
     "proposedTarget": "Reattach literal-kit and codec statics with the base-kit pattern used by `SimilarityMethod` (`packages/foundation/modeling/nlp/src/Core/Similarity.ts:35`) and move custom decode text into a colocated static if still needed.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -67,7 +83,11 @@
     "proposedTarget": "Capture a base kit and reattach with `SchemaUtils.withLiteralKitStatics(base)`; keep `$match` colocated on `ArchitecturePackageRole` and add `SchemaUtils.withCodecStatics` for guard/decode callers.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -78,7 +98,11 @@
     "proposedTarget": "Use `const ArchitectureOperationKindKit = LiteralKit([...])` followed by annotation, `SchemaUtils.withLiteralKitStatics(ArchitectureOperationKindKit)`, and `SchemaUtils.withCodecStatics`.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 11
+    "roiRank": 11,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -89,7 +113,11 @@
     "proposedTarget": "Reattach `withLiteralKitStatics` from a base kit and add `withCodecStatics`; `withLiteralKitStatics` is verified at `packages/foundation/modeling/schema/src/SchemaUtils/withLiteralKitStatics.ts:37`.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 15
+    "roiRank": 15,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -100,7 +128,11 @@
     "proposedTarget": "Pipe the union through annotation plus `SchemaUtils.withCodecStatics` as in `packages/foundation/modeling/md/src/Md.model.ts:1612`; if JSON helpers remain public, add a colocated `SchemaUtils.withStatics` block like `FileGenerationPlanService.ts:218` for `encodeJson` / `decodeJson`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 16
+    "roiRank": 16,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -111,7 +143,11 @@
     "proposedTarget": "Capture `PackageTypeKit`, reattach kit and codec statics, and colocate equivalence with `SchemaUtils.withStatics`; consumers can call `PackageType.is` / `PackageType.equivalence` instead of the free helpers.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -122,7 +158,11 @@
     "proposedTarget": "Use base-kit reattachment plus `SchemaUtils.withStatics` for `decodeEffect` with the current `DomainError` message; keep call sites pipeable by reading from `AppKind` statics.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 6
+    "roiRank": 6,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -133,7 +173,11 @@
     "proposedTarget": "Reattach literal-kit and codec statics, then colocate the custom CLI decode wrapper and equivalence via `SchemaUtils.withStatics` as demonstrated in `FileGenerationPlanService.ts:218`.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 7
+    "roiRank": 7,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -144,7 +188,11 @@
     "proposedTarget": "Move the guard/decode behavior onto `FoundationKind` with `withLiteralKitStatics`, `withCodecStatics`, and a small `withStatics` decode wrapper for the existing error message.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 8
+    "roiRank": 8,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -155,40 +203,11 @@
     "proposedTarget": "Move the guard/decode behavior onto `ToolingKind` with `withLiteralKitStatics`, `withCodecStatics`, and `withStatics` for the command-specific decode error.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 9
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
-    "line": 201,
-    "symbol": "ParentDir",
-    "smell": "Branded/refined const schema lacks `withCodecStatics`; `isParentDir` is rebuilt as a free guard at line 207.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after annotation, matching the branded schema pattern in `packages/foundation/modeling/md/src/Md.model.ts:32`; replace `isParentDir` with `ParentDir.is`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 12
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
-    "line": 209,
-    "symbol": "PackageName",
-    "smell": "Branded/refined const schema lacks `withCodecStatics`; `isPackageName` is rebuilt as a free guard at line 215.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after annotation and replace `isPackageName` call sites with `PackageName.is`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 13
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/ConfigUpdater.ts",
-    "line": 140,
-    "symbol": "PackagePath",
-    "smell": "Branded path schema lacks `withCodecStatics`; `isPackagePath` is rebuilt as a free guard at line 174 and guards config matching at line 230.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to `PackagePath` and replace the free guard with `PackagePath.is`; keep the `PackagePathToTstychePattern` transform separate.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 14
+    "roiRank": 9,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -199,7 +218,11 @@
     "proposedTarget": "Capture a `GenerationActionKindKit` base const and reattach `SchemaUtils.withLiteralKitStatics(GenerationActionKindKit)` plus `withCodecStatics`, matching the colocated `GenerationAction.toStr` pattern at `FileGenerationPlanService.ts:218`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 30
+    "roiRank": 30,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -210,7 +233,11 @@
     "proposedTarget": "Use the base-kit plus `withLiteralKitStatics` pattern, and add `withCodecStatics` if callers need schema-owned guards.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 31
+    "roiRank": 31,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -221,7 +248,11 @@
     "proposedTarget": "Use a base kit and pipe annotation, `SchemaUtils.withLiteralKitStatics(base)`, and `SchemaUtils.withCodecStatics`, as in `packages/foundation/modeling/nlp/src/Core/Similarity.ts:35`.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 17
+    "roiRank": 17,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -232,7 +263,11 @@
     "proposedTarget": "Reattach kit statics from a base `CorpusDuplicateScopeKit` and add `withCodecStatics` for guard/decode use.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 18
+    "roiRank": 18,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -243,7 +278,11 @@
     "proposedTarget": "Reattach literal-kit statics and codec statics with the verified `SchemaUtils` helpers.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 29
+    "roiRank": 29,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -254,7 +293,11 @@
     "proposedTarget": "Capture `RecycleBinEntryKindKit` and reattach `withLiteralKitStatics` plus `withCodecStatics`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 32
+    "roiRank": 32,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -265,7 +308,11 @@
     "proposedTarget": "Reattach literal-kit statics so category options/enums stay on `CorpusOrganizeCategory`; add `withCodecStatics` for guards/decoders.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 19
+    "roiRank": 19,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -276,7 +323,11 @@
     "proposedTarget": "Attach `decodeJson` / `encodeJson` through in-body statics on `CorpusProvenanceRecord` or a `SchemaUtils.withStatics` companion; keep exported aliases only as compatibility shims if public form must stay stable.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 37
+    "roiRank": 37,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -287,7 +338,11 @@
     "proposedTarget": "Attach decode-array statics to the local row classes or colocate the row decoder block beside the schemas with `SchemaUtils.withStatics`; keep custom `CorpusCommandError.mapError` at call boundaries.",
     "confidence": 0.6,
     "mechanization": "assisted",
-    "roiRank": 40
+    "roiRank": 40,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -298,7 +353,11 @@
     "proposedTarget": "Use a base `MediaKindKit` with `SchemaUtils.withLiteralKitStatics(MediaKindKit)` and `SchemaUtils.withCodecStatics`; then `mediaKindFromExtension` can return `MediaKind.Enum.image` / `MediaKind.Enum.video` if desired.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 20
+    "roiRank": 20,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -309,7 +368,11 @@
     "proposedTarget": "Reattach literal-kit and codec statics, then replace the free guard with `SupportedMetadataImageExtension.is` after colocation.",
     "confidence": 0.9,
     "mechanization": "codemod",
-    "roiRank": 10
+    "roiRank": 10,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -320,7 +383,11 @@
     "proposedTarget": "Reattach `withLiteralKitStatics` from a base kit and add `withCodecStatics` for schema-owned guard/decode behavior.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 33
+    "roiRank": 33,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -331,7 +398,11 @@
     "proposedTarget": "Use base-kit reattachment plus `withCodecStatics`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 35
+    "roiRank": 35,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -342,7 +413,11 @@
     "proposedTarget": "Reattach literal-kit statics and codec statics from a base `NormalizeSkippedReasonKit`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 36
+    "roiRank": 36,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -353,7 +428,11 @@
     "proposedTarget": "Reattach literal-kit statics and replace the separate `borderSides` tuple with `BorderSide.Options` after colocation.",
     "confidence": 0.9,
     "mechanization": "codemod",
-    "roiRank": 21
+    "roiRank": 21,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -364,7 +443,11 @@
     "proposedTarget": "Reattach literal-kit statics and codec statics so classification values can be named through `BorderDetectionKind.Enum`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 38
+    "roiRank": 38,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -375,7 +458,11 @@
     "proposedTarget": "Reattach `DetectFacesFlag` kit and codec statics; consider replacing raw string construction with `DetectFacesFlag.Enum` members.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 39
+    "roiRank": 39,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -386,7 +473,11 @@
     "proposedTarget": "Reattach literal-kit statics and codec statics from a base kit.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 41
+    "roiRank": 41,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -397,7 +488,11 @@
     "proposedTarget": "Reattach literal-kit statics and codec statics; use `CandidateAssessmentReason.Enum` for new reason construction.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 42
+    "roiRank": 42,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -408,7 +503,11 @@
     "proposedTarget": "Reattach `withLiteralKitStatics` from a base kit and add `withCodecStatics`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 43
+    "roiRank": 43,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -419,7 +518,11 @@
     "proposedTarget": "Move high-traffic codecs onto the owning classes/consts with in-body statics or `SchemaUtils.withStatics`; keep exported names as compatibility aliases during the same consumer sweep.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 22
+    "roiRank": 22,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -430,7 +533,11 @@
     "proposedTarget": "After upstream `ImageFileExtension` gets `withLiteralKitStatics`/`withCodecStatics`, replace this export and internal calls with `ImageFileExtension.is` or keep only a compatibility alias.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 23
+    "roiRank": 23,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -441,7 +548,11 @@
     "proposedTarget": "After upstream `VideoFileExtension` gets `withLiteralKitStatics`/`withCodecStatics`, replace this export and internal calls with `VideoFileExtension.is` or keep only a compatibility alias.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 24
+    "roiRank": 24,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -452,7 +563,11 @@
     "proposedTarget": "Replace with `SupportedMetadataImageExtension.is` once that schema reattaches `withLiteralKitStatics` and `withCodecStatics`; compatibility alias can remain if public API requires it.",
     "confidence": 0.9,
     "mechanization": "codemod",
-    "roiRank": 25
+    "roiRank": 25,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -463,7 +578,11 @@
     "proposedTarget": "Capture a base kit and reattach with `SchemaUtils.withLiteralKitStatics(base)` plus `withCodecStatics`; use the same pattern as `packages/foundation/modeling/nlp/src/Core/Similarity.ts:35`.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 26
+    "roiRank": 26,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -474,7 +593,11 @@
     "proposedTarget": "Reattach literal-kit statics and consider colocating the priority-rank behavior with `SchemaUtils.withStatics` on `DocgenIssuePriority`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 44
+    "roiRank": 44,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -485,7 +608,11 @@
     "proposedTarget": "Reattach literal-kit statics and codec statics from a base `DocgenExportKindKit`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 46
+    "roiRank": 46,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -496,7 +623,11 @@
     "proposedTarget": "Use a base `DocgenLocalModeKit` and reattach `SchemaUtils.withLiteralKitStatics` plus `withCodecStatics`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 47
+    "roiRank": 47,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -507,7 +638,11 @@
     "proposedTarget": "Reattach from a base kit with `SchemaUtils.withLiteralKitStatics` and add `withCodecStatics`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 48
+    "roiRank": 48,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -518,7 +653,11 @@
     "proposedTarget": "Reattach literal-kit and codec statics from a base `DocgenQualityScoreModeKit`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 49
+    "roiRank": 49,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -529,7 +668,11 @@
     "proposedTarget": "Reattach literal-kit and codec statics; consider colocating display/rank behavior if it remains repeated.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 50
+    "roiRank": 50,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -540,7 +683,11 @@
     "proposedTarget": "Capture `DocgenQualityFindingCodeKit`, reattach `SchemaUtils.withLiteralKitStatics`, and add `withCodecStatics`.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 27
+    "roiRank": 27,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -551,7 +698,11 @@
     "proposedTarget": "Reattach literal-kit statics and codec statics from a base kit.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 28
+    "roiRank": 28,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -562,7 +713,11 @@
     "proposedTarget": "Reattach from a base kit with `withLiteralKitStatics` and `withCodecStatics`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 51
+    "roiRank": 51,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -573,7 +728,11 @@
     "proposedTarget": "Reattach literal-kit and codec statics from a base kit.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 52
+    "roiRank": 52,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -584,7 +743,11 @@
     "proposedTarget": "Reattach literal-kit and codec statics; use enum/statics in summary code where practical.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 53
+    "roiRank": 53,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -595,7 +758,11 @@
     "proposedTarget": "Reattach literal-kit and codec statics; use enum/statics in summary code where practical.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 54
+    "roiRank": 54,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -606,7 +773,11 @@
     "proposedTarget": "Capture a base kit, reattach `withLiteralKitStatics`, and add `withCodecStatics`.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 55
+    "roiRank": 55,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -617,7 +788,11 @@
     "proposedTarget": "Attach a `static readonly decodeJson = S.decodeUnknownEffect(S.fromJsonString(Self))` style member in-body, or use `SchemaUtils.withStatics` on a companion if constructor identity must remain untouched.",
     "confidence": 0.6,
     "mechanization": "assisted",
-    "roiRank": 56
+    "roiRank": 56,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -733,7 +908,11 @@
     "proposedTarget": "Append `SchemaUtils.withCodecStatics` after annotation, matching the branded exemplar `packages/foundation/modeling/md/src/Md.model.ts:36` and verified helper `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`; replace the free guard with `TypeScriptSourceFileName.is` and the throw path with `TypeScriptSourceFileName.fromUnknown` where Result wrapping is not required.",
     "confidence": 0.9,
     "mechanization": "codemod",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -744,7 +923,11 @@
     "proposedTarget": "Append `SchemaUtils.withCodecStatics` and replace the helper wall call sites with `TypeScriptTestFileName.is`.",
     "confidence": 0.9,
     "mechanization": "codemod",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -755,7 +938,11 @@
     "proposedTarget": "Attach codec behavior to the transformation with `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)`; then `toImportPath` can call a colocated static instead of a top-of-file decoder wall.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -766,7 +953,11 @@
     "proposedTarget": "Append `SchemaUtils.withCodecStatics` and replace `isInternalDirectoryName(entry)` with `InternalDirectoryName.is(entry)`.",
     "confidence": 0.9,
     "mechanization": "codemod",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -777,7 +968,11 @@
     "proposedTarget": "Append `SchemaUtils.withCodecStatics` and replace `isRootIndexFileName(entry)` with `RootIndexFileName.is(entry)`.",
     "confidence": 0.9,
     "mechanization": "codemod",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -788,7 +983,11 @@
     "proposedTarget": "Capture a `ContainerHealthStateKit` base, then pipe annotation, `SchemaUtils.withLiteralKitStatics(ContainerHealthStateKit)`, and `SchemaUtils.withCodecStatics`; use `ContainerHealthState.decodeOption(...)` in container-health parsing.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 6
+    "roiRank": 6,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -799,7 +998,11 @@
     "proposedTarget": "Use the base-kit reattachment pattern from `packages/foundation/modeling/nlp/src/Core/Similarity.ts:35` with `SchemaUtils.withLiteralKitStatics` verified at `packages/foundation/modeling/schema/src/SchemaUtils/withLiteralKitStatics.ts:37`; replace the free guard with `GraphitiProxyFastMcpMethod.is`.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 7
+    "roiRank": 7,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -810,7 +1013,11 @@
     "proposedTarget": "Use a base kit plus `SchemaUtils.withLiteralKitStatics(base)` and `SchemaUtils.withCodecStatics`; replace `isGraphitiProxyFastMcpToolName` with `GraphitiProxyFastMcpToolName.is`.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 8
+    "roiRank": 8,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -821,7 +1028,11 @@
     "proposedTarget": "Append `SchemaUtils.withCodecStatics` after annotation, following the union exemplar `packages/foundation/modeling/md/src/Md.model.ts:1612`.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 9
+    "roiRank": 9,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -832,7 +1043,11 @@
     "proposedTarget": "Colocate as in-body class statics, e.g. `static readonly decodeUnknownEffect = S.decodeUnknownEffect(ExtractFramesOptions)` and the same for `ExtractFramesDirOptions`; keep exported aliases only if public compatibility requires them.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 10
+    "roiRank": 10,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -843,7 +1058,11 @@
     "proposedTarget": "Capture `QualityTaskNameKit`, then annotate and reattach `SchemaUtils.withLiteralKitStatics(QualityTaskNameKit)` plus `SchemaUtils.withCodecStatics`; replace `isQualityTaskName` with `QualityTaskName.is` and preserve public enum access on the schema.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 11
+    "roiRank": 11,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -854,7 +1073,11 @@
     "proposedTarget": "Use a base kit plus `SchemaUtils.withLiteralKitStatics(base)` and `SchemaUtils.withCodecStatics`; replace `isExactQualityTaskBypassArgName` with `QualityTaskBypassArgName.is` and keep option iteration on `QualityTaskBypassArgName.Options`.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 12
+    "roiRank": 12,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -865,7 +1088,11 @@
     "proposedTarget": "Capture a base kit, reattach literal-kit and codec statics, then replace `isLintPolicySubcommandName` with `LintPolicySubcommand.is`.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 13
+    "roiRank": 13,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -876,7 +1103,11 @@
     "proposedTarget": "Capture a base kit, reattach literal-kit and codec statics, then replace `isRootAuditMode` with `RootAuditMode.is`.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 14
+    "roiRank": 14,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -887,7 +1118,11 @@
     "proposedTarget": "Capture `FallowFeatureFamilyKit`, then annotate, `SchemaUtils.withLiteralKitStatics(FallowFeatureFamilyKit)`, and `SchemaUtils.withCodecStatics`; delete the free guard and keep matching/option access colocated on `FallowFeatureFamily`.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 15
+    "roiRank": 15,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -898,7 +1133,11 @@
     "proposedTarget": "Use a base kit with `SchemaUtils.withLiteralKitStatics(base)` and `SchemaUtils.withCodecStatics`; replace the free decode option helper with `FallowEnvelopeStatus.decodeOption`.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 16
+    "roiRank": 16,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -909,7 +1148,11 @@
     "proposedTarget": "Pipe the union through annotation plus `SchemaUtils.withCodecStatics` as in `packages/foundation/modeling/md/src/Md.model.ts:1612`; keep command-specific JSON string wrappers as colocated statics via `SchemaUtils.withStatics` only if the exact wire helper names remain public.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 17
+    "roiRank": 17,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -920,7 +1163,11 @@
     "proposedTarget": "Capture the kit, reattach `SchemaUtils.withLiteralKitStatics(VersionCategoryKit)` and `SchemaUtils.withCodecStatics`, then either alias `VersionCategoryOptions = VersionCategory.Options` or remove the detached alias in a public-form sweep.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 18
+    "roiRank": 18,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -931,7 +1178,11 @@
     "proposedTarget": "Reattach literal-kit statics to `VersionCategoryStatus`; then aliases can point to `VersionCategoryStatus.$match` / `.Enum` / `.thunk` for compatibility or be removed with the same-PR consumer sweep.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 19
+    "roiRank": 19,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -942,7 +1193,11 @@
     "proposedTarget": "Reattach literal-kit and codec statics to `VersionSyncMode`; keep `VersionSyncModeMatch` as an alias to `VersionSyncMode.$match` if public compatibility requires it.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 20
+    "roiRank": 20,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -953,7 +1208,11 @@
     "proposedTarget": "Use `SyncDataRunModeKit.pipe($I.annoteSchema(...), SchemaUtils.withLiteralKitStatics(SyncDataRunModeKit), SchemaUtils.withCodecStatics)` so mode predicates, thunks, and matches live on the exported schema.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 21
+    "roiRank": 21,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -964,7 +1223,11 @@
     "proposedTarget": "Capture `GithubCheckModeKit`, reattach literal-kit and codec statics, then replace the free guard and ensure `$match` is read from the schema-owned static.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 22
+    "roiRank": 22,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -975,7 +1238,11 @@
     "proposedTarget": "Reattach literal-kit and codec statics to `RepoProofSurface` using the base-kit pattern; keep `repoProofStepDefinition`'s match colocated on the schema value.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 23
+    "roiRank": 23,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -986,7 +1253,11 @@
     "proposedTarget": "Capture `RepoPlanPhaseKit`, then annotate, `SchemaUtils.withLiteralKitStatics(RepoPlanPhaseKit)`, and `SchemaUtils.withCodecStatics` so phase matching stays on the schema value.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 24
+    "roiRank": 24,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -997,7 +1268,11 @@
     "proposedTarget": "Use a `YeetRunModeKit` base const and reattach `SchemaUtils.withLiteralKitStatics(YeetRunModeKit)` plus `SchemaUtils.withCodecStatics`, matching the `SimilarityMethod` base-kit exemplar.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 25
+    "roiRank": 25,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

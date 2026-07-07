@@ -7,10 +7,9 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Inspectable, Runtime } from "effect";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Quality/Quality.errors");
@@ -65,7 +64,7 @@ export class ChangesetGraphError extends TaggedErrorClass<ChangesetGraphError>($
       ChangesetGraphError.make({
         cause,
         message,
-        ...R.getSomes({
+        ...O.getSomesStruct({
           file: O.fromUndefinedOr(file),
         }),
       })
@@ -116,7 +115,7 @@ export class QualityScriptCommandError extends TaggedErrorClass<QualityScriptCom
       QualityScriptCommandError.make({
         cause,
         message,
-        ...R.getSomes({
+        ...O.getSomesStruct({
           command: O.fromUndefinedOr(command),
           exitCode: O.fromUndefinedOr(exitCode),
         }),

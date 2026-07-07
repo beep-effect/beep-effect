@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-07T04:56:36.568Z
+Generated: 2026-07-07T08:06:06.755Z
 
 ## Scope
 
@@ -14,18 +14,18 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 18 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 79 |
-| publicModules | 1604 |
-| publicExports | 14320 |
+| publicModules | 1605 |
+| publicExports | 14366 |
 | openModules | 129 |
-| openExports | 2215 |
+| openExports | 2207 |
 | missingExportExamples | 2008 |
 | missingExportCategories | 91 |
 | missingExportSince | 91 |
 | forbiddenTagFindings | 2 |
 | malformedConditionalTagFindings | 0 |
 | exampleImportFindings | 24 |
-| unsafeExampleFindings | 72 |
-| schemaAnnotationFindings | 140 |
+| unsafeExampleFindings | 71 |
+| schemaAnnotationFindings | 132 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -63,17 +63,17 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 20 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 2 |
 | 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 99 | 637 | 0 | 138 |
 | 22 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 0 | 3 |
-| 23 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 66 | 0 | 0 |
+| 23 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 24 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 7 | 23 | 0 | 6 |
 | 25 | `@beep/courtlistener` | `packages/drivers/courtlistener` | clean | 1 | 1 | 0 | 0 |
 | 26 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | needs-remediation | 8 | 22 | 0 | 7 |
 | 27 | `@beep/editor` | `packages/foundation/ui-system/editor` | needs-remediation | 21 | 86 | 0 | 20 |
 | 28 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 93 | 0 | 11 |
 | 29 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 49 | 115 | 0 | 45 |
-| 30 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 9 | 81 | 0 | 23 |
+| 30 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 9 | 82 | 0 | 16 |
 | 31 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | needs-remediation | 8 | 94 | 0 | 24 |
 | 32 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | clean | 4 | 14 | 0 | 0 |
-| 33 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 8 | 27 | 7 | 6 |
+| 33 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 8 | 32 | 7 | 8 |
 | 34 | `@beep/colors` | `packages/foundation/capability/colors` | clean | 1 | 9 | 0 | 0 |
 | 35 | `@beep/agents-use-cases` | `packages/agents/use-cases` | needs-remediation | 23 | 70 | 0 | 7 |
 | 36 | `@beep/m365-mcp` | `packages/drivers/m365-mcp` | needs-remediation | 4 | 21 | 0 | 20 |
@@ -81,7 +81,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 38 | `@beep/chalk` | `packages/foundation/capability/chalk` | clean | 1 | 35 | 0 | 0 |
 | 39 | `@beep/uspto` | `packages/drivers/uspto` | needs-remediation | 5 | 24 | 0 | 9 |
 | 40 | `@beep/phoenix` | `packages/drivers/phoenix` | needs-remediation | 5 | 50 | 0 | 10 |
-| 41 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 5 | 29 | 0 | 9 |
+| 41 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 5 | 32 | 0 | 8 |
 | 42 | `@beep/types` | `packages/foundation/primitive/types` | clean | 5 | 10 | 0 | 0 |
 | 43 | `@beep/oip-web` | `apps/oip-web` | needs-remediation | 30 | 80 | 1 | 11 |
 | 44 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
@@ -94,7 +94,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 51 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 27 | 60 | 0 | 0 |
 | 52 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | needs-remediation | 28 | 107 | 0 | 27 |
 | 53 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 26 | 213 | 0 | 22 |
-| 54 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 17 | 257 | 0 | 4 |
+| 54 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 17 | 258 | 0 | 4 |
 | 55 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | needs-remediation | 7 | 21 | 0 | 6 |
 | 56 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 4 | 16 | 0 | 3 |
 | 57 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 4 | 19 | 0 | 5 |
@@ -114,9 +114,9 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 71 | `@beep/ecfr` | `packages/drivers/ecfr` | needs-remediation | 5 | 23 | 0 | 13 |
 | 72 | `@beep/acp` | `packages/drivers/acp` | clean | 10 | 410 | 0 | 0 |
 | 73 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 312 | 0 | 34 |
-| 74 | `@beep/infra` | `infra` | clean | 4 | 31 | 0 | 0 |
+| 74 | `@beep/infra` | `infra` | clean | 5 | 34 | 0 | 0 |
 | 75 | `@beep/runpod` | `packages/drivers/runpod` | needs-remediation | 6 | 178 | 0 | 7 |
-| 76 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 635 | 2 | 75 |
+| 76 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 649 | 2 | 73 |
 | 77 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 241 | 1566 | 0 | 640 |
 | 78 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 2 | 3 | 0 | 1 |
 | 79 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 17 | 208 | 0 | 8 |
@@ -137,7 +137,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 94 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 5 | 339 | 0 | 333 |
 | 95 | `@beep/ui` | `packages/foundation/ui-system/ui` | needs-remediation | 132 | 578 | 114 | 64 |
 | 96 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | needs-remediation | 5 | 119 | 0 | 92 |
-| 97 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 25 | 135 | 0 | 5 |
+| 97 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 25 | 137 | 0 | 5 |
 | 98 | `@beep/wink` | `packages/drivers/wink` | needs-remediation | 14 | 71 | 0 | 13 |
 | 99 | `@beep/postgres` | `packages/drivers/postgres` | needs-remediation | 7 | 36 | 0 | 6 |
 | 100 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | needs-remediation | 15 | 52 | 0 | 19 |
@@ -294,7 +294,7 @@ Export findings:
 - `src/commands/Corpus/Corpus.schemas.ts:514` `CorpusRestorationRecord` (type) - missing @example
 - `src/commands/Corpus/Corpus.schemas.ts:628` `RecycleBinEntryKind` (type) - missing @example
 - `src/commands/Corpus/Corpus.schemas.ts:955` `CorpusOrganizeCategory` (type) - missing @example
-- `src/commands/Corpus/Corpus.service.ts:154` `CorpusCommandServiceShape` (interface) - 1 unsafe example violation(s)
+- `src/commands/Corpus/Corpus.service.ts:153` `CorpusCommandServiceShape` (interface) - 1 unsafe example violation(s)
 - `src/commands/Corpus/index.ts:15` `export * from "./Corpus.command.js";` (re-export) - missing @example
 - `src/commands/Corpus/index.ts:22` `export * from "./Corpus.errors.js";` (re-export) - missing @example
 - `src/commands/Corpus/index.ts:29` `export * from "./Corpus.recyclebin.js";` (re-export) - missing @example
@@ -329,7 +329,7 @@ Export findings:
 - `src/commands/Files/Files.schemas.ts:779` `RgbChannel` (type) - missing @example
 - `src/commands/Files/Files.schemas.ts:923` `SafeFilePrefix` (type) - missing @example
 - `src/commands/Files/Files.schemas.ts:2256` `ProcessFilesFailurePolicy` (type) - missing @example
-- `src/commands/Files/Files.service.ts:345` `FilesCommandServiceShape` (interface) - 1 unsafe example violation(s)
+- `src/commands/Files/Files.service.ts:346` `FilesCommandServiceShape` (interface) - 1 unsafe example violation(s)
 - `src/commands/Files/index.ts:15` `export * from "./Files.command.js";` (re-export) - missing @example
 - `src/commands/Files/index.ts:22` `export * from "./Files.errors.js";` (re-export) - missing @example
 - `src/commands/Files/index.ts:29` `export * from "./Files.media.js";` (re-export) - missing @example
@@ -739,22 +739,15 @@ Export findings:
 Path: `packages/tooling/tool/docgen`
 
 Export findings:
-- `src/Configuration.ts:65` `ConfigurationSchema` (class) - 1 schema annotation/type-alias gap(s)
-- `src/Configuration.ts:138` `ConfigurationShape` (class) - 1 schema annotation/type-alias gap(s)
-- `src/Domain.ts:78` `Position` (class) - 1 schema annotation/type-alias gap(s)
-- `src/Domain.ts:122` `Doc` (class) - 1 schema annotation/type-alias gap(s)
-- `src/Domain.ts:200` `DocEntry` (class) - 1 unsafe example violation(s); 1 schema annotation/type-alias gap(s)
-- `src/Domain.ts:256` `Class` (class) - 1 unsafe example violation(s)
-- `src/Domain.ts:368` `Function` (class) - 1 unsafe example violation(s)
-- `src/Domain.ts:474` `Constant` (class) - 1 unsafe example violation(s)
-- `src/Domain.ts:661` `Module` (class) - 1 schema annotation/type-alias gap(s)
-- `src/Domain.ts:776` `File` (class) - 1 schema annotation/type-alias gap(s)
-- `src/Domain.ts:841` `DocgenError` (class) - 1 schema annotation/type-alias gap(s)
-- `src/Printer.ts:448` `print` (const) - 1 unsafe example violation(s)
-- `src/Printer.ts:555` `printModule` (const) - 1 unsafe example violation(s)
-- `src/ProofManifest.ts:47` `DocgenProofManifestStandard` (type) - missing @example
-- `src/ProofManifest.ts:73` `DocgenProofManifestSchemaVersion` (type) - missing @example
-- `src/ProofManifest.ts:99` `DocgenProofManifestStatus` (type) - missing @example
+- `src/Domain.ts:226` `DocEntry` (class) - 1 unsafe example violation(s)
+- `src/Domain.ts:308` `Class` (class) - 1 unsafe example violation(s)
+- `src/Domain.ts:454` `Function` (class) - 1 unsafe example violation(s)
+- `src/Domain.ts:588` `Constant` (class) - 1 unsafe example violation(s)
+- `src/Printer.ts:446` `print` (const) - 1 unsafe example violation(s)
+- `src/Printer.ts:553` `printModule` (const) - 1 unsafe example violation(s)
+- `src/ProofManifest.ts:45` `DocgenProofManifestStandard` (type) - missing @example
+- `src/ProofManifest.ts:71` `DocgenProofManifestSchemaVersion` (type) - missing @example
+- `src/ProofManifest.ts:97` `DocgenProofManifestStatus` (type) - missing @example
 - `src/index.ts:12` `export * as Checker from "./Checker.js";` (re-export) - missing @example
 - `src/index.ts:17` `export * as Configuration from "./Configuration.js";` (re-export) - missing @example
 - `src/index.ts:22` `export * as Core from "./Core.js";` (re-export) - missing @example
@@ -807,12 +800,14 @@ Module findings:
 - `src/rules/utils.ts:1` (none) - missing summary; missing @since
 
 Export findings:
-- `src/rules/index.ts:23` `default` (CallExpression) - missing summary; missing @example, @category, @since
+- `src/index.ts:154` `RuleRegistrySchema` (class) - 1 schema annotation/type-alias gap(s)
+- `src/rules/index.ts:43` `default` (CallExpression) - missing summary; missing @example, @category, @since
 - `src/rules/namespace-node-imports.ts:59` `default` (CallExpression) - missing summary; missing @example, @category, @since
 - `src/rules/no-global-process-runtime.ts:53` `default` (CallExpression) - missing summary; missing @example, @category, @since
-- `src/rules/no-inline-schema-compile.ts:79` `default` (CallExpression) - missing summary; missing @example, @category, @since
-- `src/rules/no-manual-effect-runtime-in-tests.ts:151` `default` (CallExpression) - missing summary; missing @example, @category, @since
-- `src/rules/no-opaque-instance-fields.ts:32` `default` (CallExpression) - missing summary; missing @example, @category, @since
+- `src/rules/no-inline-schema-compile.ts:85` `default` (CallExpression) - missing summary; missing @example, @category, @since
+- `src/rules/no-manual-effect-runtime-in-tests.ts:152` `default` (CallExpression) - missing summary; missing @example, @category, @since
+- `src/rules/no-opaque-instance-fields.ts:38` `default` (CallExpression) - missing summary; missing @example, @category, @since
+- `src/rules/utils.ts:299` `ImportBinding` (const) - 1 schema annotation/type-alias gap(s)
 
 ### @beep/agents-use-cases
 
@@ -899,11 +894,10 @@ Export findings:
 Path: `packages/tooling/test-kit/test-utils`
 
 Export findings:
-- `src/SqlTest.ts:203` `PgliteTestcontainersTestDriverConfigInput` (type) - 1 unsafe example violation(s)
-- `src/SqlTest.ts:261` `PgExternalTestDriverConfigInput` (type) - 1 unsafe example violation(s)
-- `src/SqlTest.ts:276` `PgliteSqlTestLayerMode` (type) - 1 unsafe example violation(s)
-- `src/SqlTest.ts:290` `PgliteSqlTestLayerOptions` (interface) - 1 unsafe example violation(s)
-- `src/SqlTest.ts:484` `PgliteTestcontainerResource` (interface) - 1 unsafe example violation(s)
+- `src/SqlTest.ts:304` `PgliteTestcontainersTestDriverConfigInput` (type) - 1 unsafe example violation(s)
+- `src/SqlTest.ts:383` `PgExternalTestDriverConfigInput` (type) - 1 unsafe example violation(s)
+- `src/SqlTest.ts:430` `PgliteSqlTestLayerOptions` (interface) - 1 unsafe example violation(s)
+- `src/SqlTest.ts:643` `PgliteTestcontainerResource` (interface) - 1 unsafe example violation(s)
 - `src/index.ts:16` `export * from "./Entity.js";` (re-export) - missing @example
 - `src/index.ts:23` `export * from "./Layer.js";` (re-export) - missing @example
 - `src/index.ts:30` `export * from "./Schema.js";` (re-export) - missing @example
@@ -1138,10 +1132,10 @@ Export findings:
 Path: `packages/tooling/library/ai-metrics`
 
 Export findings:
-- `src/agent-effectiveness.ts:107` `AgentEffectivenessStatus` (type) - missing @example
-- `src/agent-effectiveness.ts:135` `AgentEffectivenessAnnotationValue` (type) - missing @example
-- `src/agent-effectiveness.ts:919` `AgentEffectivenessDatasetKind` (type) - missing @example
-- `src/agent-effectiveness.ts:1046` `AgentEffectivenessPromptRole` (type) - missing @example
+- `src/agent-effectiveness.ts:105` `AgentEffectivenessStatus` (type) - missing @example
+- `src/agent-effectiveness.ts:132` `AgentEffectivenessAnnotationValue` (type) - missing @example
+- `src/agent-effectiveness.ts:916` `AgentEffectivenessDatasetKind` (type) - missing @example
+- `src/agent-effectiveness.ts:1043` `AgentEffectivenessPromptRole` (type) - missing @example
 
 ### @beep/architecture-lab-tables
 
@@ -1495,26 +1489,24 @@ Export findings:
 - `src/JSDoc/models/index.ts:54` `export * from "./TagParameters.model.js";` (re-export) - missing @example
 - `src/JSDoc/models/index.ts:59` `export * from "./TagValue.model.js";` (re-export) - missing @example
 - `src/JSDoc/models/index.ts:64` `export * from "./TSCategory.model.js";` (re-export) - missing @example
-- `src/JSDoc/models/tag-values/index.ts:16` `export * from "./AccessModifierTagValues.js";` (re-export) - missing @example
-- `src/JSDoc/models/tag-values/index.ts:21` `export * from "./ClosureTagValues.js";` (re-export) - missing @example
-- `src/JSDoc/models/tag-values/index.ts:26` `export * from "./DocumentationTagValues.js";` (re-export) - missing @example
-- `src/JSDoc/models/tag-values/index.ts:31` `export * from "./EventDependencyTagValues.js";` (re-export) - missing @example
-- `src/JSDoc/models/tag-values/index.ts:36` `export * from "./InlineTagValues.js";` (re-export) - missing @example
-- `src/JSDoc/models/tag-values/index.ts:41` `export * from "./OrganizationalTagValues.js";` (re-export) - missing @example
-- `src/JSDoc/models/tag-values/index.ts:46` `export * from "./RemainingTagValues.js";` (re-export) - missing @example
-- `src/JSDoc/models/tag-values/index.ts:52` `export * from "./StructuralTagValues.js";` (re-export) - missing @example
-- `src/JSDoc/models/tag-values/index.ts:57` `export * from "./TSDocTagValues.js";` (re-export) - missing @example
-- `src/JSDoc/models/tag-values/index.ts:62` `export * from "./TypeDocTagValues.js";` (re-export) - missing @example
-- `src/JSDoc/models/tag-values/index.ts:67` `export * from "./TypeScriptTagValues.js";` (re-export) - missing @example
-- `src/JSDoc/models/tag-values/index.ts:359` `TagValue` (const) - 1 schema annotation/type-alias gap(s)
-- `src/JSDoc/models/tag-values/index.ts:540` `TagName` (const) - 1 schema annotation/type-alias gap(s)
+- `src/JSDoc/models/tag-values/index.ts:19` `export * from "./AccessModifierTagValues.js";` (re-export) - missing @example
+- `src/JSDoc/models/tag-values/index.ts:24` `export * from "./ClosureTagValues.js";` (re-export) - missing @example
+- `src/JSDoc/models/tag-values/index.ts:29` `export * from "./DocumentationTagValues.js";` (re-export) - missing @example
+- `src/JSDoc/models/tag-values/index.ts:34` `export * from "./EventDependencyTagValues.js";` (re-export) - missing @example
+- `src/JSDoc/models/tag-values/index.ts:39` `export * from "./InlineTagValues.js";` (re-export) - missing @example
+- `src/JSDoc/models/tag-values/index.ts:44` `export * from "./OrganizationalTagValues.js";` (re-export) - missing @example
+- `src/JSDoc/models/tag-values/index.ts:49` `export * from "./RemainingTagValues.js";` (re-export) - missing @example
+- `src/JSDoc/models/tag-values/index.ts:55` `export * from "./StructuralTagValues.js";` (re-export) - missing @example
+- `src/JSDoc/models/tag-values/index.ts:60` `export * from "./TSDocTagValues.js";` (re-export) - missing @example
+- `src/JSDoc/models/tag-values/index.ts:65` `export * from "./TypeDocTagValues.js";` (re-export) - missing @example
+- `src/JSDoc/models/tag-values/index.ts:70` `export * from "./TypeScriptTagValues.js";` (re-export) - missing @example
 - `src/ProcessArgs.ts:46` `export { OptionInjectionError } from "./errors/OptionInjectionError.js";` (re-export) - missing @example
-- `src/TSMorph/TSMorph.model.ts:410` `SymbolKind` (const) - 1 schema annotation/type-alias gap(s)
-- `src/TSMorph/TSMorph.model.ts:437` `SymbolCategory` (const) - 1 schema annotation/type-alias gap(s)
-- `src/TSMorph/TSMorph.model.ts:718` `TsMorphScopeMode` (const) - 1 schema annotation/type-alias gap(s)
-- `src/TSMorph/TSMorph.model.ts:745` `TsMorphReferencePolicy` (const) - 1 schema annotation/type-alias gap(s)
-- `src/TSMorph/TSMorph.model.ts:1842` `TsMorphDiagnosticCategory` (const) - 1 schema annotation/type-alias gap(s)
-- `src/TSMorph/TSMorph.service.ts:301` `TSMorphServiceError` (const) - 1 schema annotation/type-alias gap(s)
+- `src/TSMorph/TSMorph.model.ts:428` `SymbolKind` (const) - 1 schema annotation/type-alias gap(s)
+- `src/TSMorph/TSMorph.model.ts:455` `SymbolCategory` (const) - 1 schema annotation/type-alias gap(s)
+- `src/TSMorph/TSMorph.model.ts:744` `TsMorphScopeMode` (const) - 1 schema annotation/type-alias gap(s)
+- `src/TSMorph/TSMorph.model.ts:771` `TsMorphReferencePolicy` (const) - 1 schema annotation/type-alias gap(s)
+- `src/TSMorph/TSMorph.model.ts:1946` `TsMorphDiagnosticCategory` (const) - 1 schema annotation/type-alias gap(s)
+- `src/TSMorph/TSMorph.service.ts:278` `TSMorphServiceError` (const) - 1 schema annotation/type-alias gap(s)
 - `src/TSMorph/index.ts:7` `export * from "./TSMorph.model.js";` (re-export) - missing @example
 - `src/TSMorph/index.ts:14` `export * from "./TSMorph.service.js";` (re-export) - missing @example
 - `src/TypeScript/index.ts:5` `export * from "./models/index.js";` (re-export) - missing @example
@@ -3450,7 +3442,7 @@ Export findings:
 - `src/next.ts:14` `export * from "./next/index.ts";` (re-export) - missing @example
 - `src/next/internal.ts:19` `schemaIssueToError` (const) - missing @example
 - `src/next/internal.ts:31` `isFunctionValue` (const) - missing @example
-- `src/next/models/AllowedDevOrigin.schema.ts:57` `AllowedDevOrigin` (type) - 1 unsafe example violation(s)
+- `src/next/models/AllowedDevOrigin.schema.ts:59` `AllowedDevOrigin` (type) - 1 unsafe example violation(s)
 - `src/next/models/ImageConfig.schema.ts:29` `LoaderValue` (const) - 1 schema annotation/type-alias gap(s)
 
 ### @beep/wink

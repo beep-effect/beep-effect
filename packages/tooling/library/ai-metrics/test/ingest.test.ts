@@ -1,5 +1,6 @@
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import {
+  AgentEffectivenessAnnotationValue,
   AiMetricsBenchmarkCaseInput,
   AiMetricsBenchmarkRunInput,
   AiMetricsConfigSnapshotInput,
@@ -7,11 +8,13 @@ import {
   AiMetricsDerivedStorageWriteInput,
   AiMetricsDerivedTranscriptRecord,
   AiMetricsForwarderInput,
+  AiMetricsForwarderOtlpExport,
   AiMetricsForwarderTimerInput,
   AiMetricsInstallDoctorInput,
   AiMetricsInstallInput,
   AiMetricsLabelQueueInput,
   AiMetricsMirrorBundleInput,
+  AiMetricsOtlpAttributeValue,
   AiMetricsOtlpExportInput,
   AiMetricsOutcomeLabelInput,
   AiMetricsParquetExportMode,
@@ -19,11 +22,13 @@ import {
   AiMetricsQualityGateStatus,
   AiMetricsRawArchiveObject,
   AiMetricsRetentionEnforcementPolicy,
+  AiMetricsRetentionMutationResult,
   AiMetricsRetentionRestoreDrillInput,
   AiMetricsRetentionSelector,
   AiMetricsSourceDiscoveryInput,
   AiMetricsTool,
   AiMetricsTranscriptSource,
+  AiMetricsTranscriptTextSummaryInput,
   AiMetricsWeeklyReportInput,
   addAiMetricsOutcomeLabel,
   aiMetricsInstallApplyDryRunToJson,
@@ -31,6 +36,8 @@ import {
   aiMetricsInstallPlanToJson,
   aiMetricsRetentionEnforcementToJson,
   buildAiMetricsMirrorBundle,
+  ClaudeTranscriptLine,
+  CodexTranscriptLine,
   configSnapshotToJson,
   decryptEncryptedRawArchiveEnvelope,
   discoverAiMetricsSources,
@@ -39,6 +46,7 @@ import {
   forwarderRunResultToJson,
   forwarderTimerPlanToJson,
   generateAiMetricsWeeklyReport,
+  hashPrivateIdentifier,
   hashPublicTextSha256,
   listAiMetricsBenchmarkCases,
   listAiMetricsRetentionInventory,
@@ -49,6 +57,8 @@ import {
   makeAiMetricsInstallPlan,
   makeAiMetricsInstallSpec,
   makeAiMetricsPrivacyCheckResult,
+  makeAiMetricsSourceAttribution,
+  OpenClawTranscriptLine,
   otlpExportResultToJson,
   privacyCheckToJson,
   queueAiMetricsLabels,
@@ -69,13 +79,15 @@ import {
   writeAiMetricsConfigSnapshotArtifacts,
   writeAiMetricsDerivedStorage,
 } from "@beep/repo-ai-metrics";
+import { NonEmptyTrimmedStr } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
-import { Effect, Encoding, Exit, FileSystem, Layer, Order, Path, pipe, Redacted } from "effect";
+import { Effect, Encoding, Equal, Exit, FileSystem, Layer, Order, Path, pipe, Redacted } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import type { TUnsafe } from "@beep/types";
 
 const provideScopedLayer =
@@ -113,6 +125,25 @@ const relativeSnapshotPaths = (files: ReadonlyArray<{ readonly relativePath: str
 
 const sqlString = (value: string): string => `'${pipe(value, Str.replace(/'/gu, "''"))}'`;
 const AI_METRICS_LONG_TEST_TIMEOUT = 90_000;
+
+const assertSchemaEncodeDecodeRoundTrip = <Schema extends S.Codec<unknown>>(
+  schema: Schema,
+  options?: { readonly numRuns?: number }
+): void => {
+  const arbitrary = S.toArbitrary(schema);
+  const decode = S.decodeUnknownSync(schema);
+  const encode = S.encodeUnknownSync(schema);
+  const equivalent = S.toEquivalence(schema);
+
+  fc.assert(
+    fc.property(arbitrary, (value) => {
+      const decoded = decode(encode(value));
+
+      return Equal.equals(decoded, value) || equivalent(decoded, value);
+    }),
+    { numRuns: options?.numRuns ?? 12 }
+  );
+};
 
 const phoenixService = <A extends { readonly tool: string }>(spec: { readonly services: ReadonlyArray<A> }) =>
   pipe(
@@ -164,6 +195,50 @@ layer(NodeServices.layer as Layer.Layer<TUnsafe.Any>)("@beep/repo-ai-metrics", (
       expect(summary.acceptedEvents).toBe(1);
       expect(summary.eventNames).toEqual(["message"]);
       expect(summary.sourcePathHash).not.toBe("claude.jsonl");
+    })
+  );
+
+  it("preserves crispened schema wire shapes and arbitrary round trips", () => {
+    expect(
+      S.encodeUnknownSync(S.fromJsonString(CodexTranscriptLine))(CodexTranscriptLine.make({ type: "event_msg" }))
+    ).toBe('{"type":"event_msg"}');
+    expect(
+      S.encodeUnknownSync(S.fromJsonString(ClaudeTranscriptLine))(ClaudeTranscriptLine.make({ type: "message" }))
+    ).toBe('{"type":"message"}');
+    expect(
+      S.encodeUnknownSync(S.fromJsonString(OpenClawTranscriptLine))(OpenClawTranscriptLine.make({ event: "message" }))
+    ).toBe('{"event":"message"}');
+
+    assertSchemaEncodeDecodeRoundTrip(AiMetricsTranscriptTextSummaryInput);
+    assertSchemaEncodeDecodeRoundTrip(CodexTranscriptLine, { numRuns: 8 });
+    assertSchemaEncodeDecodeRoundTrip(ClaudeTranscriptLine, { numRuns: 8 });
+    assertSchemaEncodeDecodeRoundTrip(OpenClawTranscriptLine, { numRuns: 8 });
+    assertSchemaEncodeDecodeRoundTrip(AiMetricsOtlpAttributeValue);
+    assertSchemaEncodeDecodeRoundTrip(AiMetricsForwarderOtlpExport);
+    assertSchemaEncodeDecodeRoundTrip(AgentEffectivenessAnnotationValue);
+    assertSchemaEncodeDecodeRoundTrip(AiMetricsRetentionMutationResult);
+    assertSchemaEncodeDecodeRoundTrip(NonEmptyTrimmedStr);
+  });
+
+  it.effect(
+    "normalizes Codex attribution metadata before hashing",
+    Effect.fn(function* () {
+      const hashSalt = "test-salt";
+      const attribution = yield* makeAiMetricsSourceAttribution({
+        content:
+          '{"type":"session_meta","payload":{"id":" session-1 ","parent_session_id":"   ","source":{"subagent":{"agent_nickname":"   ","agent_role":" reviewer ","parent_thread_id":" thread-1 "}}}}',
+        hashSalt,
+        relativePath: "subagents/session-1.jsonl",
+        sourceKind: AiMetricsTranscriptSource.Enum.codex,
+        sourcePath: "/repo/.codex/sessions/subagents/session-1.jsonl",
+      });
+
+      expect(attribution.sourceRole).toBe("subagent");
+      expect(attribution.agentNicknameHash).toBeUndefined();
+      expect(attribution.parentSessionIdHash).toBeUndefined();
+      expect(attribution.agentRoleHash).toBe(yield* hashPrivateIdentifier("reviewer", hashSalt));
+      expect(attribution.parentThreadIdHash).toBe(yield* hashPrivateIdentifier("thread-1", hashSalt));
+      expect(attribution.sessionIdHash).toBe(yield* hashPrivateIdentifier("session-1", hashSalt));
     })
   );
 

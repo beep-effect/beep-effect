@@ -1,28 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/RuleAstSchemas.ts",
-    "line": 6,
-    "symbol": "ImportKindSchema",
-    "smell": "Import kind is modeled three times: S.Literals([\"type\", \"value\"]) at line 6, a parallel type alias at line 8, and a hand-written equality guard in resolveImportSpecifierImportKind at line 89. This duplicates a finite literal family instead of deriving the type and guard surface from one kit/schema.",
-    "proposedTarget": "Replace ImportKindSchema with a single LiteralKit([\"type\", \"value\"]) source, derive type ImportKind from typeof ImportKind.Type, and replace the line 89 equality chain with S.is(ImportKind)(importKind) or the kit-derived literal guards. Verified in-repo: LiteralKit exposes Options/Enum/is/$match/toTaggedUnion at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:645 and const type parameters at line 743; Effect v4 S.is is .repos/effect-v4/packages/effect/src/Schema.ts:1256.",
-    "confidence": 0.86,
-    "mechanization": "assisted",
-    "roiRank": 2.6
-  },
-  {
-    "ruleId": "SFV4-getsomes-struct",
-    "file": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
-    "line": 377,
-    "symbol": "makeBundleAnalyzerPlugin",
-    "smell": "Known-key optional object assembly is hand-rolled with conditional spreads for analyzerMode/logLevel/openAnalyzer at lines 377-379 and register/cacheOnNavigation/reloadOnOnline at lines 403-405. This is the heterogeneous Option-struct spread shape that should use the repo O.getSomesStruct helper rather than per-key object literals.",
-    "proposedTarget": "Use the repo-local O alias and spread O.getSomesStruct({ analyzerMode: O.fromUndefinedOr(config.analyzerMode), logLevel: O.fromUndefinedOr(config.logLevel), openAnalyzer: O.fromUndefinedOr(config.openAnalyzer) }) and the equivalent Serwist option struct. Verified O.getSomesStruct at packages/foundation/modeling/utils/src/Option.ts:102 and Effect v4 O.fromUndefinedOr at .repos/effect-v4/packages/effect/src/Option.ts:860. Keep this judgment-tier until the S3/D5 sweep is allowed.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 1.4
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/tooling/policy-pack/repo-configs/src/next/SharedNextConfig.model.ts",
     "line": 121,
     "symbol": "BeepNextBundleAnalyzerConfig",

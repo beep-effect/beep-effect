@@ -6,6 +6,7 @@
  */
 
 import { $RepoUtilsId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Effect, flow, HashMap, HashSet, Order, Path, pipe } from "effect";
 import * as Eq from "effect/Equal";
@@ -14,11 +15,14 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { RepoPackageName } from "./PackageJson.js";
 import {
   buildDocgenAliasTargets,
+  RootAliasTarget,
   resolveRootExportTarget,
   resolveSubpathExportTarget,
   resolveWildcardExportTarget,
+  WildcardAliasTarget,
 } from "./TsconfigAliasTargets.js";
 import type { PackageJson } from "./PackageJson.js";
 
@@ -26,6 +30,11 @@ const $I = $RepoUtilsId.create("schemas/DocgenConfig");
 
 const EMPTY_STRING_RECORD: R.ReadonlyRecord<string, string> = R.empty();
 const byStringAscending: Order.Order<string> = Order.String;
+const DocgenWildcardAliasTarget = S.Union([WildcardAliasTarget, S.Literal("")]).pipe(
+  $I.annoteSchema("DocgenWildcardAliasTarget", {
+    description: "A concrete wildcard alias target, or an empty string when the package exports no wildcard.",
+  })
+);
 
 const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
 
@@ -84,10 +93,20 @@ export const DEFAULT_DOCGEN_EXCLUDE = ["src/internal/**/*.ts"] as const;
  */
 export class DocgenAliasSource extends S.Class<DocgenAliasSource>($I`DocgenAliasSource`)(
   {
-    packageName: S.String,
-    rootAliasTarget: S.String,
-    wildcardAliasTarget: S.String,
-    subpathAliasTargets: S.Record(S.String, S.String).pipe(S.UndefinedOr, S.optionalKey),
+    packageName: RepoPackageName.annotateKey({
+      description: "Workspace package name that owns these docgen aliases.",
+    }),
+    rootAliasTarget: RootAliasTarget.annotateKey({
+      description: "Root alias target used for bare package imports.",
+    }),
+    wildcardAliasTarget: DocgenWildcardAliasTarget.annotateKey({
+      description: "Wildcard alias target used for package subpath imports, or empty when disabled.",
+    }),
+    subpathAliasTargets: S.Record(S.String, RootAliasTarget)
+      .pipe(SchemaUtils.withKeyDefaults(EMPTY_STRING_RECORD))
+      .annotateKey({
+        description: "Concrete package subpath aliases derived from package export entries.",
+      }),
   },
   $I.annote("DocgenAliasSource", {
     description: "Workspace alias metadata used to build docgen example path mappings.",
@@ -115,12 +134,24 @@ export class DocgenAliasSource extends S.Class<DocgenAliasSource>($I`DocgenAlias
  */
 export class CanonicalDocgenConfigInput extends S.Class<CanonicalDocgenConfigInput>($I`CanonicalDocgenConfigInput`)(
   {
-    rootDir: S.String,
-    packageAbsolutePath: S.String,
-    packageRelativePath: S.String,
-    packageName: S.String,
-    directWorkspaceDependencies: S.Array(S.String),
-    workspaceAliasSources: S.Array(DocgenAliasSource),
+    rootDir: S.NonEmptyString.annotateKey({
+      description: "Absolute repository root directory.",
+    }),
+    packageAbsolutePath: S.NonEmptyString.annotateKey({
+      description: "Absolute package directory path.",
+    }),
+    packageRelativePath: S.NonEmptyString.annotateKey({
+      description: "Repository-relative package directory path.",
+    }),
+    packageName: RepoPackageName.annotateKey({
+      description: "Workspace package name being configured for docgen.",
+    }),
+    directWorkspaceDependencies: S.Array(RepoPackageName).annotateKey({
+      description: "Direct workspace package dependencies used for example path aliases.",
+    }),
+    workspaceAliasSources: S.Array(DocgenAliasSource).annotateKey({
+      description: "Alias metadata for workspace packages visible to examples.",
+    }),
   },
   $I.annote("CanonicalDocgenConfigInput", {
     description: "Input used to build the canonical repo docgen config for a package.",
@@ -478,7 +509,7 @@ export const collectDocgenWorkspaceDependencyNames = (packageJson: PackageJson.T
  *     }
  *   })
  * )
- * console.log(source.subpathAliasTargets?.["@beep/example/testing"])
+ * console.log(source.subpathAliasTargets["@beep/example/testing"])
  * // "./packages/example/src/testing.ts"
  * ```
  * @category models
@@ -562,7 +593,7 @@ const docgenAliasPathEntries = (
     [aliasSource.packageName, [withRootRelativePrefix(rootRelativePrefix, aliasSource.rootAliasTarget)]],
     ...wildcardEntries,
     ...pipe(
-      aliasSource.subpathAliasTargets ?? EMPTY_STRING_RECORD,
+      aliasSource.subpathAliasTargets,
       R.toEntries,
       A.map(([alias, target]) => [alias, [withRootRelativePrefix(rootRelativePrefix, target)]] as const)
     ),

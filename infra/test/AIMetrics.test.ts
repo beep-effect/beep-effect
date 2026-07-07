@@ -1,13 +1,17 @@
 import {
   AIMetricsPulumiConfigValues,
   AIMetricsRemoteDeploymentConfig,
+  AIMetricsRemoteSshConfig,
   AIMetricsStackArgs,
   makeAIMetricsStackArgsFromConfigValues,
 } from "@beep/infra";
 import { AiMetricsDeployTarget, AiMetricsInstallInput, makeAiMetricsInstallSpec } from "@beep/repo-ai-metrics";
+import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
+import * as O from "@beep/utils/Option";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { describe, expect, it } from "vitest";
+import { expectSchemaRoundTrip } from "./schemaParity.js";
 
 describe("@beep/infra AIMetrics", () => {
   it("keeps stack args import-safe and target-aware", () => {
@@ -84,7 +88,7 @@ describe("@beep/infra AIMetrics", () => {
     expect(args.install.publicBaseUrl).toBe("https://dankserver.tail.example.ts.net:9446");
     expect(args.remote.remoteConfigRoot).toBe("/srv/ai-metrics");
     expect(args.remote.remoteMirrorRoot).toBe("/srv/ai-metrics/p7-mirror");
-    expect(args.remote.ssh.agentSocketPath).toBe("/tmp/agent.sock");
+    expect(O.getOrUndefined(args.remote.ssh.agentSocketPath)).toBe("/tmp/agent.sock");
     expect(args.remote.ssh.host).toBe("dankserver-yubi");
     expect(args.remote.ssh.user).toBe("deploy");
     expect(spec.services).toEqual(
@@ -103,7 +107,7 @@ describe("@beep/infra AIMetrics", () => {
 
   it("decodes numeric Pulumi tailnet HTTPS port values", () => {
     const decoded = Effect.runSync(
-      S.decodeUnknownEffect(AIMetricsPulumiConfigValues)({
+      AIMetricsPulumiConfigValues.decodeEffect({
         phoenixTailnetHttpsPort: 9446,
       })
     );
@@ -111,8 +115,15 @@ describe("@beep/infra AIMetrics", () => {
     expect(decoded.phoenixTailnetHttpsPort).toBe(9446);
     expect(() =>
       Effect.runSync(
-        S.decodeUnknownEffect(AIMetricsPulumiConfigValues)({
+        AIMetricsPulumiConfigValues.decodeEffect({
           phoenixTailnetHttpsPort: "9446",
+        })
+      )
+    ).toThrow();
+    expect(() =>
+      Effect.runSync(
+        AIMetricsPulumiConfigValues.decodeEffect({
+          phoenixTailnetHttpsPort: 0,
         })
       )
     ).toThrow();
@@ -124,5 +135,45 @@ describe("@beep/infra AIMetrics", () => {
     expect(() => Effect.runSync(makeAiMetricsInstallSpec(args.install))).toThrow(
       "non-local installs require hashSaltSecretRef"
     );
+  });
+
+  it("encodes AI metrics remote config with unchanged optional-key wire shapes", () => {
+    const encodedSsh = Effect.runSync(
+      S.encodeUnknownEffect(AIMetricsRemoteSshConfig)(
+        AIMetricsRemoteSshConfig.make({
+          agentSocketPath: O.some("/tmp/agent.sock"),
+        })
+      )
+    );
+    const encodedRemote = Effect.runSync(
+      S.encodeUnknownEffect(AIMetricsRemoteDeploymentConfig)(
+        AIMetricsRemoteDeploymentConfig.make({
+          phoenixTailnetHttpsPort: 9446,
+        })
+      )
+    );
+
+    expect(encodedSsh).toEqual({
+      agentSocketPath: "/tmp/agent.sock",
+      host: "dankserver",
+      user: "elpresidank",
+    });
+    expect(encodedRemote).toEqual({
+      phoenixTailnetHttpsPort: 9446,
+      remoteConfigRoot: "/home/elpresidank/ai-metrics",
+      remoteMirrorRoot: "/srv/data/ai-metrics/p7-derived-mirror",
+      ssh: {
+        host: "dankserver",
+        user: "elpresidank",
+      },
+      tailnetFqdn: "dankserver.tailc7c348.ts.net",
+    });
+  });
+
+  it("round-trips AI metrics config schemas through encoded wire values", () => {
+    assertSchemaArbitraryDecodesToSelf(AIMetricsPulumiConfigValues, { numRuns: 25 });
+    expectSchemaRoundTrip(AIMetricsPulumiConfigValues);
+    expectSchemaRoundTrip(AIMetricsRemoteSshConfig);
+    expectSchemaRoundTrip(AIMetricsRemoteDeploymentConfig);
   });
 });

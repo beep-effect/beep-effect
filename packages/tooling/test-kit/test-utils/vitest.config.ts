@@ -22,6 +22,12 @@ export default mergeConfig(
     test: {
       coverage: coverageThresholds,
       globals: true,
+      // This package owns the shared PGLite integration harness. The CI server
+      // is single-connection, so package files cannot run concurrently when the
+      // shared external URL is present.
+      sequence: {
+        concurrent: false,
+      },
     },
   })
 );

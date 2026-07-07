@@ -8,10 +8,9 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Runtime } from "effect";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Yeet/Yeet.errors");
@@ -67,7 +66,7 @@ export class YeetCommandError extends TaggedErrorClass<YeetCommandError>($I`Yeet
       YeetCommandError.make({
         cause,
         message,
-        ...R.getSomes({
+        ...O.getSomesStruct({
           command: O.fromUndefinedOr(command),
           exitCode: O.fromUndefinedOr(exitCode),
           file: O.fromUndefinedOr(file),

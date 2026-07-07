@@ -1,10 +1,14 @@
+import { $RepoConfigsId } from "@beep/identity";
+import { NativePathToPosixPath, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Effect, flow, Inspectable, pipe, Result, SchemaIssue, SchemaTransformation } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { parse, printParseErrorCode } from "jsonc-parser";
-import { normalizePath, PosixPath } from "../../eslint/Shared.ts";
+import { PosixPath } from "../../eslint/Shared.ts";
 import type { ParseError } from "jsonc-parser";
+
+const $I = $RepoConfigsId.create("internal/eslint/EffectLawsAllowlistSchemas");
 
 export const ALLOWLIST_PATH = "standards/effect-laws.allowlist.jsonc";
 const DATE_YMD_PATTERN = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
@@ -12,51 +16,83 @@ const DATE_YMD_PATTERN = /^[0-9]{4}-[0-9]{2}-[0-9]{2}$/;
 const NonEmptyString = S.NonEmptyString;
 const DateYmdString = S.String.check(S.isPattern(DATE_YMD_PATTERN));
 const ArrayOfStrings = S.Array(S.String);
-export class EffectLawsAllowlistEntry extends S.Class<EffectLawsAllowlistEntry>("EffectLawsAllowlistEntry")({
-  rule: NonEmptyString,
-  file: NonEmptyString,
-  kind: NonEmptyString,
-  reason: NonEmptyString,
-  owner: NonEmptyString,
-  issue: NonEmptyString,
-  expiresOn: S.OptionFromOptionalKey(DateYmdString).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
-}) {}
+export class EffectLawsAllowlistEntry extends S.Class<EffectLawsAllowlistEntry>($I`EffectLawsAllowlistEntry`)(
+  {
+    rule: NonEmptyString,
+    file: NativePathToPosixPath,
+    kind: NonEmptyString,
+    reason: NonEmptyString,
+    owner: NonEmptyString,
+    issue: NonEmptyString,
+    expiresOn: S.OptionFromOptionalKey(DateYmdString).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
+  },
+  $I.annote("EffectLawsAllowlistEntry", {
+    description: "One allowlisted effect-law finding from the standards allowlist artifact.",
+  })
+) {}
 
-export class EffectLawsAllowlistDocument extends S.Class<EffectLawsAllowlistDocument>("EffectLawsAllowlistDocument")({
-  version: S.Literal(1),
-  entries: S.Array(EffectLawsAllowlistEntry).pipe(
-    S.withConstructorDefault(Effect.succeed(A.empty<EffectLawsAllowlistEntry>())),
-    S.withDecodingDefault(Effect.succeed(A.empty<(typeof EffectLawsAllowlistEntry)["Encoded"]>()))
-  ),
-}) {}
+export class EffectLawsAllowlistDocument extends S.Class<EffectLawsAllowlistDocument>($I`EffectLawsAllowlistDocument`)(
+  {
+    version: S.Literal(1),
+    entries: S.Array(EffectLawsAllowlistEntry).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<EffectLawsAllowlistEntry>())),
+      S.withDecodingDefault(Effect.succeed(A.empty<(typeof EffectLawsAllowlistEntry)["Encoded"]>()))
+    ),
+  },
+  $I.annote("EffectLawsAllowlistDocument", {
+    description: "Decoded effect-law allowlist document loaded from JSONC.",
+  })
+) {}
 
-export class EffectLawsAllowlistSnapshot extends S.Class<EffectLawsAllowlistSnapshot>("EffectLawsAllowlistSnapshot")({
-  path: PosixPath,
-  entries: S.Array(EffectLawsAllowlistEntry).pipe(
-    S.withConstructorDefault(Effect.succeed(A.empty<EffectLawsAllowlistEntry>())),
-    S.withDecodingDefault(Effect.succeed(A.empty<(typeof EffectLawsAllowlistEntry)["Encoded"]>()))
-  ),
-  diagnostics: ArrayOfStrings.pipe(
-    S.withConstructorDefault(Effect.succeed(A.empty<string>())),
-    S.withDecodingDefault(Effect.succeed(A.empty<string>()))
-  ),
-}) {}
+export class EffectLawsAllowlistSnapshot extends S.Class<EffectLawsAllowlistSnapshot>($I`EffectLawsAllowlistSnapshot`)(
+  {
+    path: PosixPath,
+    entries: S.Array(EffectLawsAllowlistEntry).pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<EffectLawsAllowlistEntry>())),
+      S.withDecodingDefault(Effect.succeed(A.empty<(typeof EffectLawsAllowlistEntry)["Encoded"]>()))
+    ),
+    diagnostics: ArrayOfStrings.pipe(
+      S.withConstructorDefault(Effect.succeed(A.empty<string>())),
+      S.withDecodingDefault(Effect.succeed(A.empty<string>()))
+    ),
+  },
+  $I.annote("EffectLawsAllowlistSnapshot", {
+    description: "Generated snapshot of the effect-law allowlist and any schema diagnostics.",
+  })
+) {
+  static readonly decodeResult = S.decodeUnknownResult(EffectLawsAllowlistSnapshot);
+  static readonly encodeResult = S.encodeResult(EffectLawsAllowlistSnapshot);
+}
 
 export class EffectLawsAllowlistCheckInput extends S.Class<EffectLawsAllowlistCheckInput>(
-  "EffectLawsAllowlistCheckInput"
-)({
-  ruleId: NonEmptyString,
-  filePath: NonEmptyString,
-  kind: NonEmptyString,
-}) {}
+  $I`EffectLawsAllowlistCheckInput`
+)(
+  {
+    ruleId: NonEmptyString,
+    filePath: NonEmptyString,
+    kind: NonEmptyString,
+  },
+  $I.annote("EffectLawsAllowlistCheckInput", {
+    description: "Runtime lookup input checked against the effect-law allowlist snapshot.",
+  })
+) {
+  static readonly decodeOption = S.decodeUnknownOption(EffectLawsAllowlistCheckInput);
+}
 
-export class EffectLawsAllowlistLookupKey extends S.Class<EffectLawsAllowlistLookupKey>("EffectLawsAllowlistLookupKey")(
+export class EffectLawsAllowlistLookupKey extends S.Class<EffectLawsAllowlistLookupKey>(
+  $I`EffectLawsAllowlistLookupKey`
+)(
   {
     rule: NonEmptyString,
     file: PosixPath,
     kind: NonEmptyString,
-  }
-) {}
+  },
+  $I.annote("EffectLawsAllowlistLookupKey", {
+    description: "Normalized key used to compare effect-law findings with allowlist entries.",
+  })
+) {
+  static readonly equivalence = S.toEquivalence(EffectLawsAllowlistLookupKey);
+}
 
 const toInvalidValueIssue = (actual: unknown, message: string): SchemaIssue.Issue =>
   new SchemaIssue.InvalidValue(O.some(actual), { message });
@@ -97,33 +133,25 @@ export const AllowlistJsoncTextToUnknown = S.String.pipe(
       decode: parseAllowlistJsonc,
       encode: encodeUnsupported("AllowlistJsoncTextToUnknown"),
     })
-  )
+  ),
+  $I.annoteSchema("AllowlistJsoncTextToUnknown", {
+    description: "JSONC text transformation that parses allowlist source into unknown data.",
+  }),
+  SchemaUtils.withStatics((self) => ({
+    decodeDocumentEffect: S.decodeUnknownEffect(self.pipe(S.decodeTo(EffectLawsAllowlistDocument))),
+  }))
 );
 
-export const decodeAllowlistDocumentFromJsoncText = S.decodeUnknownEffect(
-  AllowlistJsoncTextToUnknown.pipe(S.decodeTo(EffectLawsAllowlistDocument))
-);
+export const decodeAllowlistDocumentFromJsoncText = AllowlistJsoncTextToUnknown.decodeDocumentEffect;
 
-export const decodeAllowlistCheckInput = S.decodeUnknownOption(EffectLawsAllowlistCheckInput);
-const decodeAllowlistSnapshotResult = S.decodeUnknownResult(EffectLawsAllowlistSnapshot);
-const encodeAllowlistSnapshotResult = S.encodeUnknownResult(EffectLawsAllowlistSnapshot);
+export const decodeAllowlistCheckInput = EffectLawsAllowlistCheckInput.decodeOption;
 export const decodeAllowlistSnapshot = (input: unknown): EffectLawsAllowlistSnapshot =>
-  Result.getOrThrow(decodeAllowlistSnapshotResult(input));
+  Result.getOrThrow(EffectLawsAllowlistSnapshot.decodeResult(input));
 export const encodeAllowlistSnapshot = (
   input: EffectLawsAllowlistSnapshot
-): (typeof EffectLawsAllowlistSnapshot)["Encoded"] => Result.getOrThrow(encodeAllowlistSnapshotResult(input));
-export const areLookupKeysEquivalent = S.toEquivalence(EffectLawsAllowlistLookupKey);
-
-export const normalizeAllowlistEntries: (
-  entries: ReadonlyArray<EffectLawsAllowlistEntry>
-) => ReadonlyArray<EffectLawsAllowlistEntry> = flow(
-  A.map((entry) =>
-    EffectLawsAllowlistEntry.make({
-      ...entry,
-      file: normalizePath(entry.file),
-    })
-  )
-);
+): (typeof EffectLawsAllowlistSnapshot)["Encoded"] =>
+  Result.getOrThrow(EffectLawsAllowlistSnapshot.encodeResult(input));
+export const areLookupKeysEquivalent = EffectLawsAllowlistLookupKey.equivalence;
 
 export const formatSchemaDiagnostics = (issue: SchemaIssue.Issue): ReadonlyArray<string> => {
   const formatter = SchemaIssue.makeFormatterStandardSchemaV1();

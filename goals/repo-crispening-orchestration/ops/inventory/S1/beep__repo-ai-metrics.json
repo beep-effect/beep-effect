@@ -45,28 +45,6 @@
     }
   },
   {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/tooling/library/ai-metrics/src/ingest.ts",
-    "line": 59,
-    "symbol": "TranscriptTextSummaryInput",
-    "smell": "Exported `summarizeTranscriptText(input: TranscriptTextSummaryInput)` uses a named object type alias for its input contract in a schema-modeled package.",
-    "proposedTarget": "Add `AiMetricsTranscriptTextSummaryInput extends S.Class` near the ingest model boundary, following `AiMetricsSourceDiscoveryInput` at packages/tooling/library/ai-metrics/src/source-discovery.ts:83; then type the exported function from that schema or model the callable with `Fn({ input, output, error })` as in packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 0.58
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/tooling/library/ai-metrics/src/ingest.ts",
-    "line": 27,
-    "symbol": "decodeCodexTranscriptLine",
-    "smell": "Top-of-file transcript JSON codec wall: three `S.decodeUnknownOption(S.fromJsonString(...))` helpers plus a summary encoder are module-local while the transcript line schemas live in `models.ts`.",
-    "proposedTarget": "Colocate JSON codecs with `CodexTranscriptLine` / `ClaudeTranscriptLine` / `OpenClawTranscriptLine` in packages/tooling/library/ai-metrics/src/models.ts:770, :793, and :818, either as exported `decode...Json` helpers like packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts:183 or class statics like packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:294.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 0.5
-  },
-  {
     "ruleId": "schema-first-inventory",
     "file": "packages/tooling/library/ai-metrics/src/forwarder.ts",
     "line": 429,
@@ -150,7 +128,11 @@
     "proposedTarget": "Move row-array decoders and JSON encoders next to the corresponding row/result schemas as exported codecs, matching packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts:183, or attach class statics where the schema class owns the boundary as in packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:294.",
     "confidence": 0.84,
     "mechanization": "assisted",
-    "roiRank": 0.72
+    "roiRank": 0.72,
+    "exception": {
+      "reason": "Scorecard row and JSON codecs are grouped at the DuckDB/report boundary; moving imported model encoders and private row-array decoders would be API expansion without absorbing a new invariant in this package wave.",
+      "boundary": "focused package-local DuckDB/report codec section"
+    }
   },
   {
     "ruleId": "schema-first-inventory",
@@ -161,7 +143,11 @@
     "proposedTarget": "Split these boundary codecs onto the owning row/result schemas or into a focused codec section/module, using exported schema codecs like packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts:183 and class-level statics like packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts:294 as exemplars.",
     "confidence": 0.86,
     "mechanization": "assisted",
-    "roiRank": 0.78
+    "roiRank": 0.78,
+    "exception": {
+      "reason": "Agent-effectiveness codecs cover a mixed DuckDB, Phoenix GraphQL, worker-eval JSON, and report-encoding boundary; colocating all nineteen helpers is broad API churn with no schema-form change, so it belongs in a dedicated codec-colocation sweep.",
+      "boundary": "focused agent-effectiveness boundary codec section"
+    }
   },
   {
     "ruleId": "schema-first-inventory",

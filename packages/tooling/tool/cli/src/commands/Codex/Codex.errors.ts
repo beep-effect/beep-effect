@@ -7,10 +7,9 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Runtime } from "effect";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Codex/Codex.errors");
@@ -60,7 +59,7 @@ export class CodexCommandError extends TaggedErrorClass<CodexCommandError>($I`Co
       CodexCommandError.make({
         cause,
         message,
-        ...R.getSomes({ exitCode: O.fromUndefinedOr(exitCode) }),
+        ...O.getSomesStruct({ exitCode: O.fromUndefinedOr(exitCode) }),
       })
   );
 

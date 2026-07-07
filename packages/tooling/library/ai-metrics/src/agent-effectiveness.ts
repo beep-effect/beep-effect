@@ -19,7 +19,7 @@ import {
   PhoenixPromptChatMessage,
   PhoenixPromptCreateInput,
 } from "@beep/phoenix";
-import { LiteralKit, TaggedErrorClass, UnknownRecord } from "@beep/schema";
+import { LiteralKit, SchemaUtils, TaggedErrorClass, UnknownRecord } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
 import { DateTime, Effect, FileSystem, flow, Match, Path, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -84,10 +84,8 @@ query AgentEffectivenessPhoenixInventory {
  * @example
  * ```ts
  * import { AgentEffectivenessStatus } from "@beep/repo-ai-metrics"
- * import * as S from "effect/Schema"
  *
- * const isStatus = S.is(AgentEffectivenessStatus)
- * console.log(isStatus("passed"))
+ * console.log(AgentEffectivenessStatus.is.passed("passed"))
  * ```
  * @category models
  * @since 0.0.0
@@ -112,10 +110,8 @@ export type AgentEffectivenessStatus = typeof AgentEffectivenessStatus.Type;
  * @example
  * ```ts
  * import { AgentEffectivenessAnnotationValue } from "@beep/repo-ai-metrics"
- * import * as S from "effect/Schema"
  *
- * const acceptsValue = S.is(AgentEffectivenessAnnotationValue)
- * console.log(acceptsValue(0.98))
+ * console.log(AgentEffectivenessAnnotationValue.is(0.98))
  * ```
  * @category models
  * @since 0.0.0
@@ -123,7 +119,8 @@ export type AgentEffectivenessStatus = typeof AgentEffectivenessStatus.Type;
 export const AgentEffectivenessAnnotationValue = S.Union([S.String, S.Finite, S.Boolean]).pipe(
   $I.annoteSchema("AgentEffectivenessAnnotationValue", {
     description: "Sanitized primitive value allowed in an agent-effectiveness annotation plan.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -1584,21 +1581,13 @@ const sectionStatus = (
   readonly failures: ReadonlyArray<string>;
   readonly unavailable: ReadonlyArray<string>;
   readonly warnings: ReadonlyArray<string>;
-} => {
-  if (status === AgentEffectivenessStatus.Enum.failed) {
-    return { failures: [`${label}: ${message}`], unavailable: [], warnings: [] };
-  }
-
-  if (status === AgentEffectivenessStatus.Enum.unavailable) {
-    return { failures: [], unavailable: [`${label}: ${message}`], warnings: [] };
-  }
-
-  if (status === AgentEffectivenessStatus.Enum.warning) {
-    return { failures: [], unavailable: [], warnings: [`${label}: ${message}`] };
-  }
-
-  return { failures: [], unavailable: [], warnings: [] };
-};
+} =>
+  AgentEffectivenessStatus.$match(status, {
+    failed: () => ({ failures: [`${label}: ${message}`], unavailable: [], warnings: [] }),
+    passed: () => ({ failures: [], unavailable: [], warnings: [] }),
+    unavailable: () => ({ failures: [], unavailable: [`${label}: ${message}`], warnings: [] }),
+    warning: () => ({ failures: [], unavailable: [], warnings: [`${label}: ${message}`] }),
+  });
 
 const aggregateSummary = (
   sections: ReadonlyArray<{
@@ -1697,7 +1686,7 @@ const resolveWorkerEvalReportPath = Effect.fn("AiMetrics.agentEffectiveness.reso
   }
 
   const manifest = yield* readJsonFile(absolutePath).pipe(Effect.flatMap(decodeWorkerEvalManifestJson), Effect.option);
-  if (manifest._tag === "None") {
+  if (O.isNone(manifest)) {
     return absolutePath;
   }
 
@@ -1736,7 +1725,7 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
   const root = yield* client.get(input.phoenixBaseUrl).pipe(Effect.option);
   const projects = yield* client.get(`${input.phoenixBaseUrl}/projects`).pipe(Effect.option);
 
-  if (root._tag === "None" || projects._tag === "None") {
+  if (O.isNone(root) || O.isNone(projects)) {
     return buildPhoenixUnavailable(input, "Phoenix endpoint was not reachable.");
   }
 
@@ -1753,7 +1742,7 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
     query: phoenixInventoryQuery,
   }).pipe(Effect.option);
 
-  if (request._tag === "None") {
+  if (O.isNone(request)) {
     return buildPhoenixUnavailable(input, "Phoenix GraphQL request could not be encoded.");
   }
 
@@ -1761,7 +1750,7 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
     .execute(pipe(request.value, HttpClientRequest.accept("application/json")))
     .pipe(Effect.option);
 
-  if (response._tag === "None" || response.value.status < 200 || response.value.status >= 300) {
+  if (O.isNone(response) || response.value.status < 200 || response.value.status >= 300) {
     return buildPhoenixUnavailable(input, "Phoenix GraphQL inventory query failed.");
   }
 
@@ -1770,7 +1759,7 @@ const probePhoenix = Effect.fn("AiMetrics.agentEffectiveness.probePhoenix")(func
     Effect.option
   );
 
-  if (inventory._tag === "None") {
+  if (O.isNone(inventory)) {
     return buildPhoenixUnavailable(input, "Phoenix GraphQL inventory response could not be decoded.");
   }
 
@@ -2024,7 +2013,7 @@ const buildJsdocWorkerSection = Effect.fn("AiMetrics.agentEffectiveness.buildJsd
 
   const decoded = yield* readJsonFile(reportPath).pipe(Effect.flatMap(decodeRunpodWorkerEvalReportJson), Effect.option);
 
-  if (decoded._tag === "None") {
+  if (O.isNone(decoded)) {
     return AgentEffectivenessJsdocWorkerSection.make({
       cleanupDeleteStatus: null,
       cleanupStopStatus: null,

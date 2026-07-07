@@ -12,6 +12,7 @@ import { Context, Effect, flow, Layer, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as ast from "ts-morph";
 import * as Configuration from "./Configuration.js";
 import * as Domain from "./Domain.js";
@@ -102,10 +103,15 @@ const getDocComment: (ranges: ReadonlyArray<ast.CommentRange>) => O.Option<ast.C
   A.last
 );
 
-type Comment = {
-  readonly description: string | undefined;
-  readonly tags: Record<string, ReadonlyArray<string> | undefined>;
-};
+class ParsedComment extends S.Class<ParsedComment>($I`ParsedComment`)(
+  {
+    description: S.String.pipe(S.UndefinedOr),
+    tags: S.Record(S.String, S.Array(S.String).pipe(S.UndefinedOr)),
+  },
+  $I.annote("ParsedComment", {
+    description: "Normalized description and grouped tag values parsed from a raw JSDoc block.",
+  })
+) {}
 
 /**
  * Parses a raw JSDoc block into a normalized description and grouped tag map.
@@ -122,7 +128,7 @@ type Comment = {
  * @category parsing
  * @since 0.0.0
  */
-export const parseComment = (text: string): Comment => {
+export const parseComment = (text: string): ParsedComment => {
   const annotation: doctrine.Annotation = doctrine.parse(text, {
     unwrap: true,
   });
@@ -142,7 +148,7 @@ export const parseComment = (text: string): Comment => {
     )
   );
 
-  return { description, tags };
+  return ParsedComment.make({ description, tags });
 };
 
 const isVariableDeclarationList = (
@@ -448,9 +454,7 @@ const parseExportSpecifier = Effect.fn("parseExportSpecifier")(function* (
   });
 });
 
-const parseExportStar = Effect.fn("parseExportStar")(function* (ed: ast.ExportDeclaration) {
-  const moduleSpecifier = ed.getModuleSpecifier();
-  const name = moduleSpecifier?.getText() ?? "";
+const parseExportStar = Effect.fn("parseExportStar")(function* (ed: ast.ExportDeclaration, name: string) {
   const namespace = ed.getNamespaceExport()?.getName();
   const signature = `export *${namespace === undefined ? "" : ` as ${namespace}`} from ${name}`;
   const docComment = getDocComment(ed.getLeadingCommentRanges());
@@ -469,12 +473,23 @@ const parseExportStar = Effect.fn("parseExportStar")(function* (ed: ast.ExportDe
   );
 });
 
-const parseNamedExports = (ed: ast.ExportDeclaration) => {
+const parseNamedExports = (ed: ast.ExportDeclaration): Effect.Effect<Array<Domain.Export>, never, Source> => {
   const namedExports = ed.getNamedExports();
   const declarationDocComment = getDocComment(ed.getLeadingCommentRanges());
-  return namedExports.length === 0
-    ? parseExportStar(ed).pipe(Effect.map(A.of))
-    : Effect.forEach(namedExports, (specifier) => parseExportSpecifier(specifier, declarationDocComment));
+  return A.match(namedExports, {
+    onEmpty: () =>
+      pipe(
+        O.fromNullishOr(ed.getModuleSpecifier()?.getText()),
+        O.map((moduleSpecifier) =>
+          parseExportStar(ed, moduleSpecifier).pipe(Effect.map((exportValue): Array<Domain.Export> => [exportValue]))
+        ),
+        O.getOrElse((): Effect.Effect<Array<Domain.Export>, never, Source> => Effect.succeed([]))
+      ),
+    onNonEmpty: (specifiers) =>
+      Effect.forEach(specifiers, (specifier) => parseExportSpecifier(specifier, declarationDocComment)).pipe(
+        Effect.map(A.fromIterable)
+      ),
+  });
 };
 
 /**

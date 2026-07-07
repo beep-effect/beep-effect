@@ -6,7 +6,8 @@
  */
 
 import { $AiSyncId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { Fn, LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { Sha256Hex } from "@beep/schema/Sha256";
 import * as S from "effect/Schema";
 
 const $I = $AiSyncId.create("models");
@@ -227,17 +228,198 @@ export const AiSyncTransformStatus = LiteralKit(["lossless", "lossy", "declined"
 export type AiSyncTransformStatus = typeof AiSyncTransformStatus.Type;
 
 /**
+ * Stable source-map identifier.
+ *
+ * @example
+ * ```ts
+ * import { AiSyncSourceId } from "@beep/ai-sync"
+ *
+ * const sourceId = AiSyncSourceId.make("codex-config")
+ * console.log(sourceId)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const AiSyncSourceId = S.String.check(
+  S.isPattern(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+    message: "AI sync source ids must be lowercase kebab-case tokens.",
+  })
+)
+  .annotate({
+    toArbitrary: () => (fc) => fc.constant("codex-config"),
+  })
+  .pipe(
+    S.brand("AiSyncSourceId"),
+    $I.annoteSchema("AiSyncSourceId", {
+      description: "Lowercase kebab-case identifier for an upstream AI sync source.",
+    })
+  );
+
+/**
+ * Runtime type for {@link AiSyncSourceId}.
+ *
+ * @example
+ * ```ts
+ * import { AiSyncSourceId } from "@beep/ai-sync"
+ * import type { AiSyncSourceId as AiSyncSourceIdType } from "@beep/ai-sync"
+ *
+ * const sourceId: AiSyncSourceIdType = AiSyncSourceId.make("codex-config")
+ * console.log(sourceId)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type AiSyncSourceId = typeof AiSyncSourceId.Type;
+
+/**
+ * HTTP(S) source URL.
+ *
+ * @example
+ * ```ts
+ * import { AiSyncSourceUrl } from "@beep/ai-sync"
+ *
+ * const url = AiSyncSourceUrl.make("https://example.com/schema.json")
+ * console.log(url.startsWith("https://"))
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const AiSyncSourceUrl = S.String.check(
+  S.isPattern(/^https?:\/\/\S+$/, {
+    message: "AI sync source URLs must be absolute http(s) URLs without whitespace.",
+  })
+)
+  .annotate({
+    toArbitrary: () => (fc) => fc.constant("https://example.com/schema.json"),
+  })
+  .pipe(
+    S.brand("AiSyncSourceUrl"),
+    $I.annoteSchema("AiSyncSourceUrl", {
+      description: "Absolute HTTP(S) URL for a schema or documentation source.",
+    })
+  );
+
+/**
+ * Runtime type for {@link AiSyncSourceUrl}.
+ *
+ * @example
+ * ```ts
+ * import { AiSyncSourceUrl } from "@beep/ai-sync"
+ * import type { AiSyncSourceUrl as AiSyncSourceUrlType } from "@beep/ai-sync"
+ *
+ * const url: AiSyncSourceUrlType = AiSyncSourceUrl.make("https://example.com/schema.json")
+ * console.log(url)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type AiSyncSourceUrl = typeof AiSyncSourceUrl.Type;
+
+/**
+ * Upstream release or schema version pin.
+ *
+ * @example
+ * ```ts
+ * import { AiSyncVersionPin } from "@beep/ai-sync"
+ *
+ * const pin = AiSyncVersionPin.make("rust-v0.133.0")
+ * console.log(pin)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const AiSyncVersionPin = S.NonEmptyString.pipe(
+  S.brand("AiSyncVersionPin"),
+  $I.annoteSchema("AiSyncVersionPin", {
+    description: "Non-empty upstream version or release pin for a source.",
+  })
+);
+
+/**
+ * Runtime type for {@link AiSyncVersionPin}.
+ *
+ * @example
+ * ```ts
+ * import { AiSyncVersionPin } from "@beep/ai-sync"
+ * import type { AiSyncVersionPin as AiSyncVersionPinType } from "@beep/ai-sync"
+ *
+ * const pin: AiSyncVersionPinType = AiSyncVersionPin.make("2025-11-25")
+ * console.log(pin)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type AiSyncVersionPin = typeof AiSyncVersionPin.Type;
+
+/**
+ * Source content SHA-256 hash.
+ *
+ * @example
+ * ```ts
+ * import { AiSyncContentHash } from "@beep/ai-sync"
+ *
+ * const hash = AiSyncContentHash.make(
+ *   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ * )
+ * console.log(hash.length)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const AiSyncContentHash = Sha256Hex.pipe(
+  $I.annoteSchema("AiSyncContentHash", {
+    description: "Canonical lowercase SHA-256 digest for upstream source content.",
+  })
+);
+
+/**
+ * Runtime type for {@link AiSyncContentHash}.
+ *
+ * @example
+ * ```ts
+ * import { AiSyncContentHash } from "@beep/ai-sync"
+ * import type { AiSyncContentHash as AiSyncContentHashType } from "@beep/ai-sync"
+ *
+ * const hash: AiSyncContentHashType = AiSyncContentHash.make(
+ *   "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ * )
+ * console.log(hash)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type AiSyncContentHash = typeof AiSyncContentHash.Type;
+
+class AiSyncSourceMetadataIdentity extends S.Class<AiSyncSourceMetadataIdentity>($I`AiSyncSourceMetadataIdentity`)(
+  {
+    id: AiSyncSourceId,
+    agent: AiSyncAgentId,
+    domain: AiSyncDomainId,
+    tier: AiSyncSourceTier,
+    url: AiSyncSourceUrl,
+    versionPin: S.Option(AiSyncVersionPin),
+    isOfficial: S.Boolean,
+    driftMechanism: AiSyncDriftMechanism,
+  },
+  $I.annote("AiSyncSourceMetadataIdentity", {
+    description: "Comparable source identity fields excluding the generated content hash.",
+  })
+) {}
+
+/**
  * Metadata for one upstream source.
  *
  * @example
  * ```ts
- * import { AiSyncSourceMetadata } from "@beep/ai-sync"
+ * import { AiSyncSourceId, AiSyncSourceMetadata, AiSyncSourceUrl, AiSyncVersionPin } from "@beep/ai-sync"
+ * import * as O from "effect/Option"
  * const source = AiSyncSourceMetadata.make({
- *   id: "codex-config",
+ *   id: AiSyncSourceId.make("codex-config"),
  *   agent: "codex",
  *   domain: "config",
  *   tier: "tier_1",
- *   url: "https://example.com/schema.json",
+ *   url: AiSyncSourceUrl.make("https://example.com/schema.json"),
+ *   versionPin: O.some(AiSyncVersionPin.make("rust-v0.133.0")),
  *   isOfficial: true,
  *   driftMechanism: "hash"
  * })
@@ -248,20 +430,41 @@ export type AiSyncTransformStatus = typeof AiSyncTransformStatus.Type;
  */
 export class AiSyncSourceMetadata extends S.Class<AiSyncSourceMetadata>($I`AiSyncSourceMetadata`)(
   {
-    id: S.String,
+    id: AiSyncSourceId,
     agent: AiSyncAgentId,
     domain: AiSyncDomainId,
     tier: AiSyncSourceTier,
-    url: S.String,
-    versionPin: S.optionalKey(S.String),
-    contentHash: S.optionalKey(S.String),
+    url: AiSyncSourceUrl,
+    versionPin: AiSyncVersionPin.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    contentHash: AiSyncContentHash.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     isOfficial: S.Boolean,
     driftMechanism: AiSyncDriftMechanism,
   },
   $I.annote("AiSyncSourceMetadata", {
     description: "Source tier, pin, and drift metadata for one upstream evidence item.",
   })
-) {}
+) {
+  static readonly decodeArrayEffect = S.decodeUnknownEffect(S.Array(AiSyncSourceMetadata));
+  static readonly identityEquivalence = S.toEquivalence(AiSyncSourceMetadataIdentity);
+
+  static readonly toIdentity = (source: AiSyncSourceMetadata): AiSyncSourceMetadataIdentity =>
+    AiSyncSourceMetadataIdentity.make({
+      id: source.id,
+      agent: source.agent,
+      domain: source.domain,
+      tier: source.tier,
+      url: source.url,
+      versionPin: source.versionPin,
+      isOfficial: source.isOfficial,
+      driftMechanism: source.driftMechanism,
+    });
+
+  static readonly hasSameIdentity = (left: AiSyncSourceMetadata, right: AiSyncSourceMetadata): boolean =>
+    AiSyncSourceMetadata.identityEquivalence(
+      AiSyncSourceMetadata.toIdentity(left),
+      AiSyncSourceMetadata.toIdentity(right)
+    );
+}
 
 /**
  * Support matrix cell.
@@ -285,7 +488,7 @@ export class AiSyncSchemaCell extends S.Class<AiSyncSchemaCell>($I`AiSyncSchemaC
     agent: AiSyncAgentId,
     domain: AiSyncDomainId,
     status: AiSyncSupportStatus,
-    sourceId: S.optionalKey(S.String),
+    sourceId: AiSyncSourceId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
     rationale: S.String,
   },
   $I.annote("AiSyncSchemaCell", {
@@ -298,11 +501,14 @@ export class AiSyncSchemaCell extends S.Class<AiSyncSchemaCell>($I`AiSyncSchemaC
  *
  * @example
  * ```ts
- * import { AiSyncDriftFinding } from "@beep/ai-sync"
+ * import { AiSyncContentHash, AiSyncDriftFinding, AiSyncSourceId } from "@beep/ai-sync"
+ * import * as O from "effect/Option"
  * const finding = AiSyncDriftFinding.make({
- *   sourceId: "codex-config",
- *   expectedHash: "old",
- *   actualHash: "new",
+ *   sourceId: AiSyncSourceId.make("codex-config"),
+ *   expectedHash: O.none(),
+ *   actualHash: AiSyncContentHash.make(
+ *     "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ *   ),
  *   message: "Source moved"
  * })
  * console.log(finding.sourceId)
@@ -312,13 +518,116 @@ export class AiSyncSchemaCell extends S.Class<AiSyncSchemaCell>($I`AiSyncSchemaC
  */
 export class AiSyncDriftFinding extends S.Class<AiSyncDriftFinding>($I`AiSyncDriftFinding`)(
   {
-    sourceId: S.String,
-    expectedHash: S.String,
-    actualHash: S.String,
+    sourceId: AiSyncSourceId,
+    expectedHash: AiSyncContentHash.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    actualHash: AiSyncContentHash,
     message: S.String,
   },
   $I.annote("AiSyncDriftFinding", {
     description: "Structured drift finding for a source whose current content differs from the committed pin.",
+  })
+) {}
+
+/**
+ * Validated repo-local config path.
+ *
+ * @example
+ * ```ts
+ * import { AiSyncValidatedConfigPath } from "@beep/ai-sync"
+ *
+ * console.log(AiSyncValidatedConfigPath.Enum[".codex/config.toml"])
+ * ```
+ * @category validation
+ * @since 0.0.0
+ */
+export const AiSyncValidatedConfigPath = LiteralKit([
+  ".codex/config.toml",
+  ".mcp.json",
+  ".claude/settings.json",
+  "AGENTS.md",
+  "CLAUDE.md",
+]).pipe(
+  $I.annoteSchema("AiSyncValidatedConfigPath", {
+    description: "Repo-local paths with first-party V1 AI sync validation coverage.",
+  })
+);
+
+/**
+ * Runtime type for {@link AiSyncValidatedConfigPath}.
+ *
+ * @example
+ * ```ts
+ * import type { AiSyncValidatedConfigPath } from "@beep/ai-sync"
+ *
+ * const path: AiSyncValidatedConfigPath = ".codex/config.toml"
+ * console.log(path)
+ * ```
+ * @category validation
+ * @since 0.0.0
+ */
+export type AiSyncValidatedConfigPath = typeof AiSyncValidatedConfigPath.Type;
+
+/**
+ * Validation schema identifiers.
+ *
+ * @example
+ * ```ts
+ * import { AiSyncValidationSchemaId } from "@beep/ai-sync"
+ *
+ * console.log(AiSyncValidationSchemaId.Enum["codex-config"])
+ * ```
+ * @category validation
+ * @since 0.0.0
+ */
+export const AiSyncValidationSchemaId = LiteralKit([
+  "codex-config",
+  "claude-mcp-json",
+  "claude-settings",
+  "agent-instruction-document",
+]).pipe(
+  $I.annoteSchema("AiSyncValidationSchemaId", {
+    description: "Native V1 schemas available to the repo-local config validator.",
+  })
+);
+
+/**
+ * Runtime type for {@link AiSyncValidationSchemaId}.
+ *
+ * @example
+ * ```ts
+ * import type { AiSyncValidationSchemaId } from "@beep/ai-sync"
+ *
+ * const schemaId: AiSyncValidationSchemaId = "codex-config"
+ * console.log(schemaId)
+ * ```
+ * @category validation
+ * @since 0.0.0
+ */
+export type AiSyncValidationSchemaId = typeof AiSyncValidationSchemaId.Type;
+
+/**
+ * Input for the repo config validation contract.
+ *
+ * @example
+ * ```ts
+ * import { ValidateRepoConfigInput } from "@beep/ai-sync"
+ *
+ * const input = ValidateRepoConfigInput.make({
+ *   repoRoot: "/workspace/repo",
+ *   config: ".codex/config.toml"
+ * })
+ * console.log(input.config)
+ * ```
+ * @category validation
+ * @since 0.0.0
+ */
+export class ValidateRepoConfigInput extends S.Class<ValidateRepoConfigInput>($I`ValidateRepoConfigInput`)(
+  {
+    repoRoot: S.NonEmptyString,
+    config: S.NonEmptyString,
+  },
+  $I.annote("ValidateRepoConfigInput", {
+    description: "Input accepted by the schema contract for repo-local AI sync config validation.",
   })
 ) {}
 
@@ -394,8 +703,8 @@ export class AiSyncTransformEvidence extends S.Class<AiSyncTransformEvidence>($I
  */
 export class AiSyncValidationResult extends S.Class<AiSyncValidationResult>($I`AiSyncValidationResult`)(
   {
-    relativePath: S.String,
-    schemaId: S.String,
+    relativePath: AiSyncValidatedConfigPath,
+    schemaId: AiSyncValidationSchemaId,
   },
   $I.annote("AiSyncValidationResult", {
     description: "Successful validation result for a repo-local agent config file.",
@@ -418,12 +727,51 @@ export class AiSyncError extends TaggedErrorClass<AiSyncError>($I`AiSyncError`)(
   "AiSyncError",
   {
     message: S.String,
-    sourceId: S.optionalKey(S.String),
-    relativePath: S.optionalKey(S.String),
-    schemaId: S.optionalKey(S.String),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    sourceId: AiSyncSourceId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    relativePath: S.NonEmptyString.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    schemaId: AiSyncValidationSchemaId.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    cause: S.Defect({ includeStack: true }).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("AiSyncError", {
     description: "Typed operational error for AI sync generation, drift checks, transforms, and validation.",
   })
 ) {}
+
+/**
+ * Schema contract for {@link validateRepoConfig}.
+ *
+ * @example
+ * ```ts
+ * import { ValidateRepoConfig } from "@beep/ai-sync"
+ *
+ * console.log(ValidateRepoConfig.inputSchema.ast)
+ * ```
+ * @category validation
+ * @since 0.0.0
+ */
+export const ValidateRepoConfig = Fn({
+  input: ValidateRepoConfigInput,
+  output: AiSyncValidationResult,
+  error: AiSyncError,
+}).pipe(
+  $I.annoteSchema("ValidateRepoConfig", {
+    description: "Function schema for repo-local AI sync config validation.",
+  })
+);
+
+/**
+ * Runtime type for {@link ValidateRepoConfig}.
+ *
+ * @example
+ * ```ts
+ * import { AiSyncValidationResult } from "@beep/ai-sync"
+ * import type { ValidateRepoConfig } from "@beep/ai-sync"
+ *
+ * const validate: ValidateRepoConfig = () =>
+ *   AiSyncValidationResult.make({ relativePath: ".codex/config.toml", schemaId: "codex-config" })
+ * console.log(validate)
+ * ```
+ * @category validation
+ * @since 0.0.0
+ */
+export type ValidateRepoConfig = typeof ValidateRepoConfig.Type;

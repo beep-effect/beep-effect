@@ -8,11 +8,9 @@
 import { createHash } from "node:crypto";
 import { $RepoDocgenId } from "@beep/identity/packages";
 import { FsUtils } from "@beep/repo-utils";
-import { LiteralKit } from "@beep/schema";
-import { A, Str, thunkFalse } from "@beep/utils";
+import { LiteralKit, NonNegativeInt, Sha256Hex } from "@beep/schema";
+import { A, O, Str, thunkFalse } from "@beep/utils";
 import { DateTime, Effect, FileSystem, Order, Path } from "effect";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Configuration from "./Configuration.js";
 import * as Domain from "./Domain.js";
@@ -103,12 +101,13 @@ export type DocgenProofManifestStatus = typeof DocgenProofManifestStatus.Type;
  *
  * @example
  * ```ts
+ * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
  * import { DocgenProofManifestFile } from "@beep/repo-docgen/ProofManifest"
  *
  * const file = DocgenProofManifestFile.make({
  *   path: "src/index.ts",
- *   sha256: "0".repeat(64),
- *   bytes: 128
+ *   sha256: Sha256Hex.make("0".repeat(64)),
+ *   bytes: NonNegativeInt.make(128)
  * })
  *
  * console.log(file.path) // "src/index.ts"
@@ -119,8 +118,8 @@ export type DocgenProofManifestStatus = typeof DocgenProofManifestStatus.Type;
 export class DocgenProofManifestFile extends S.Class<DocgenProofManifestFile>($I`DocgenProofManifestFile`)(
   {
     path: S.String,
-    sha256: S.String,
-    bytes: S.Finite,
+    sha256: Sha256Hex,
+    bytes: NonNegativeInt,
   },
   $I.annote("DocgenProofManifestFile", {
     description: "File-level SHA-256 digest included in a docgen proof manifest.",
@@ -132,14 +131,15 @@ export class DocgenProofManifestFile extends S.Class<DocgenProofManifestFile>($I
  *
  * @example
  * ```ts
+ * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
  * import { DocgenProofManifestFingerprint } from "@beep/repo-docgen/ProofManifest"
  *
  * const fingerprint = DocgenProofManifestFingerprint.make({
- *   sha256: "a".repeat(64),
- *   inputSha256: "b".repeat(64),
- *   outputSha256: "c".repeat(64),
- *   inputFileCount: 12,
- *   outputFileCount: 4,
+ *   sha256: Sha256Hex.make("a".repeat(64)),
+ *   inputSha256: Sha256Hex.make("b".repeat(64)),
+ *   outputSha256: Sha256Hex.make("c".repeat(64)),
+ *   inputFileCount: NonNegativeInt.make(12),
+ *   outputFileCount: NonNegativeInt.make(4),
  *   toolVersion: "0.0.2"
  * })
  *
@@ -152,11 +152,11 @@ export class DocgenProofManifestFingerprint extends S.Class<DocgenProofManifestF
   $I`DocgenProofManifestFingerprint`
 )(
   {
-    sha256: S.String,
-    inputSha256: S.String,
-    outputSha256: S.String,
-    inputFileCount: S.Finite,
-    outputFileCount: S.Finite,
+    sha256: Sha256Hex,
+    inputSha256: Sha256Hex,
+    outputSha256: Sha256Hex,
+    inputFileCount: NonNegativeInt,
+    outputFileCount: NonNegativeInt,
     toolVersion: S.String,
   },
   $I.annote("DocgenProofManifestFingerprint", {
@@ -178,17 +178,18 @@ export class DocgenProofManifestFingerprint extends S.Class<DocgenProofManifestF
  *   DocgenProofManifestFile,
  *   DocgenProofManifestFingerprint
  * } from "@beep/repo-docgen/ProofManifest"
+ * import { NonNegativeInt, Sha256Hex } from "@beep/schema"
  * const source = DocgenProofManifestFile.make({
  *   path: "src/index.ts",
- *   sha256: "0".repeat(64),
- *   bytes: 128
+ *   sha256: Sha256Hex.make("0".repeat(64)),
+ *   bytes: NonNegativeInt.make(128)
  * })
  * const fingerprint = DocgenProofManifestFingerprint.make({
- *   sha256: "1".repeat(64),
- *   inputSha256: "2".repeat(64),
- *   outputSha256: "3".repeat(64),
- *   inputFileCount: 1,
- *   outputFileCount: 0,
+ *   sha256: Sha256Hex.make("1".repeat(64)),
+ *   inputSha256: Sha256Hex.make("2".repeat(64)),
+ *   outputSha256: Sha256Hex.make("3".repeat(64)),
+ *   inputFileCount: NonNegativeInt.make(1),
+ *   outputFileCount: NonNegativeInt.make(0),
  *   toolVersion: "0.0.2"
  * })
  * const manifest = DocgenProofManifest.make({
@@ -222,7 +223,9 @@ export class DocgenProofManifest extends S.Class<DocgenProofManifest>($I`DocgenP
   $I.annote("DocgenProofManifest", {
     description: "Package-local docgen proof manifest written after successful generation.",
   })
-) {}
+) {
+  static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(DocgenProofManifest));
+}
 
 /**
  * Result of checking a package-local docgen proof manifest.
@@ -259,7 +262,6 @@ export class DocgenProofManifestVerification extends S.Class<DocgenProofManifest
   })
 ) {}
 
-const decodeDocgenProofManifest = S.decodeUnknownEffect(S.fromJsonString(DocgenProofManifest));
 const encodeUnknownJson = S.encodeUnknownSync(S.UnknownFromJsonString);
 const DOCGEN_PROOF_MANIFEST_PATH = ".beep/docgen/proof.json" as const;
 const DOCGEN_PROOF_INPUT_GLOBS = [
@@ -275,9 +277,11 @@ const DOCGEN_PROOF_GLOB_IGNORES = ["**/.beep/**", "**/.turbo/**", "**/node_modul
 
 const sha256Text = (value: string): string => createHash("sha256").update(value).digest("hex");
 
+const sha256Hex = (value: string): Sha256Hex => Sha256Hex.make(sha256Text(value));
+
 const jsonText = (value: unknown): string => encodeUnknownJson(value);
 
-const sha256Json = (value: unknown): string => sha256Text(jsonText(value));
+const sha256Json = (value: unknown): Sha256Hex => sha256Hex(jsonText(value));
 
 const byFilePathAscending: Order.Order<DocgenProofManifestFile> = Order.mapInput(
   Order.String,
@@ -306,8 +310,8 @@ const readFileDigest = Effect.fn("DocgenProofManifest.readFileDigest")(function*
 
   return DocgenProofManifestFile.make({
     path: Str.replace(/\\/g, "/")(path.relative(packagePath, filePath)),
-    sha256: sha256Text(content),
-    bytes: content.length,
+    sha256: sha256Hex(content),
+    bytes: NonNegativeInt.make(content.length),
   });
 });
 
@@ -348,8 +352,8 @@ const fingerprintForFiles = (options: {
     sha256: sha256Json({ inputSha256, outputSha256, toolVersion }),
     inputSha256,
     outputSha256,
-    inputFileCount: options.inputs.length,
-    outputFileCount: options.outputs.length,
+    inputFileCount: NonNegativeInt.make(options.inputs.length),
+    outputFileCount: NonNegativeInt.make(options.outputs.length),
     toolVersion,
   });
 };
@@ -379,7 +383,7 @@ const makeVerification = (options: {
     packagePath: options.packagePath,
     manifestPath: options.manifestPath,
     status: options.status,
-    ...R.getSomes({ reason: O.fromUndefinedOr(options.reason) }),
+    ...O.getSomesStruct({ reason: O.fromUndefinedOr(options.reason) }),
   });
 
 /**
@@ -498,7 +502,7 @@ export const verifyDocgenProofManifest = Effect.fn("DocgenProofManifest.verifyDo
       })
     )
   );
-  const manifest = yield* decodeDocgenProofManifest(content).pipe(
+  const manifest = yield* DocgenProofManifest.decodeJsonEffect(content).pipe(
     Effect.mapError((cause) =>
       Domain.DocgenError.make({
         message: `[ProofManifest.verifyDocgenProofManifest] Failed to decode '${manifestPath}'\n${String(cause)}`,

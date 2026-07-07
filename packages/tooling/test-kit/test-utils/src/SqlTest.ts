@@ -7,7 +7,7 @@
 
 import { randomUUID } from "node:crypto";
 import { $TestUtilsId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { O, Str } from "@beep/utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -100,6 +100,47 @@ const PgExternalSchemaPrefix = S.String.check(
 );
 
 /**
+ * PostgreSQL-compatible connection URI accepted by the external SQL test driver.
+ *
+ * @example
+ * ```ts
+ * import { PgExternalConnectionUri } from "@beep/test-utils"
+ *
+ * console.log(PgExternalConnectionUri.is("postgres://postgres:postgres@127.0.0.1:5432/postgres"))
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const PgExternalConnectionUri = S.NonEmptyString.check(
+  S.isPattern(/^postgres(?:ql)?:\/\//, {
+    description: "A PostgreSQL connection URI must use the postgres or postgresql protocol.",
+    identifier: $I`PgExternalConnectionUriProtocol`,
+    message: "External PostgreSQL connection URIs must start with postgres:// or postgresql://",
+    title: "PostgreSQL External Connection URI",
+  })
+).pipe(
+  $I.annoteSchema("PgExternalConnectionUri", {
+    description: "PostgreSQL-compatible connection URI accepted by the external SQL test driver.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * PostgreSQL-compatible connection URI accepted by the external SQL test driver.
+ *
+ * @example
+ * ```ts
+ * import type { PgExternalConnectionUri } from "@beep/test-utils"
+ *
+ * const uri: PgExternalConnectionUri = "postgres://postgres:postgres@127.0.0.1:5432/postgres"
+ * console.log(uri)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type PgExternalConnectionUri = typeof PgExternalConnectionUri.Type;
+
+/**
  * Runtime metadata for an ephemeral integration-test database instance.
  *
  * @example
@@ -125,16 +166,56 @@ const PgExternalSchemaPrefix = S.String.check(
  */
 export class TestDatabaseInfoShape extends S.Class<TestDatabaseInfoShape>($I`TestDatabaseInfoShape`)(
   {
-    connectionUri: S.Option(S.String),
-    containerId: S.Option(S.String),
-    database: S.Option(S.String),
-    databasePath: S.Option(S.String),
-    driver: TestDatabaseDriver,
-    host: S.Option(S.String),
-    port: S.Option(PgliteTcpPort),
-    schema: S.Option(S.String),
-    tempDir: S.Option(S.String),
-    username: S.Option(S.String),
+    connectionUri: S.Option(PgExternalConnectionUri).pipe(
+      $I.annoteKey("TestDatabaseInfoShape.connectionUri", {
+        description: "PostgreSQL-compatible connection URI for drivers that expose a network endpoint.",
+      })
+    ),
+    containerId: S.Option(S.String).pipe(
+      $I.annoteKey("TestDatabaseInfoShape.containerId", {
+        description: "Container runtime identifier for container-backed SQL test drivers.",
+      })
+    ),
+    database: S.Option(S.String).pipe(
+      $I.annoteKey("TestDatabaseInfoShape.database", {
+        description: "Database name selected by the active SQL test driver.",
+      })
+    ),
+    databasePath: S.Option(S.String).pipe(
+      $I.annoteKey("TestDatabaseInfoShape.databasePath", {
+        description: "Filesystem path for file-backed SQL test drivers.",
+      })
+    ),
+    driver: TestDatabaseDriver.pipe(
+      $I.annoteKey("TestDatabaseInfoShape.driver", {
+        description: "Driver that provisioned the SQL integration-test database.",
+      })
+    ),
+    host: S.Option(S.String).pipe(
+      $I.annoteKey("TestDatabaseInfoShape.host", {
+        description: "Network host for drivers that expose a PostgreSQL endpoint.",
+      })
+    ),
+    port: S.Option(PgliteTcpPort).pipe(
+      $I.annoteKey("TestDatabaseInfoShape.port", {
+        description: "Network port for drivers that expose a PostgreSQL endpoint.",
+      })
+    ),
+    schema: S.Option(S.String).pipe(
+      $I.annoteKey("TestDatabaseInfoShape.schema", {
+        description: "Temporary PostgreSQL schema used for external-driver isolation.",
+      })
+    ),
+    tempDir: S.Option(S.String).pipe(
+      $I.annoteKey("TestDatabaseInfoShape.tempDir", {
+        description: "Scoped temporary directory backing local file-based SQL test drivers.",
+      })
+    ),
+    username: S.Option(S.String).pipe(
+      $I.annoteKey("TestDatabaseInfoShape.username", {
+        description: "Database username selected by the active SQL test driver.",
+      })
+    ),
   },
   $I.annote("TestDatabaseInfoShape", {
     description: "Runtime metadata for an ephemeral integration-test database instance.",
@@ -159,33 +240,53 @@ export class PgliteTestcontainersTestDriverConfig extends S.Class<PgliteTestcont
   {
     database: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("postgres")),
-      S.withDecodingDefaultKey(Effect.succeed("postgres"))
+      S.withDecodingDefaultKey(Effect.succeed("postgres")),
+      $I.annoteKey("PgliteTestcontainersTestDriverConfig.database", {
+        description: "Database name configured inside the PGLite Testcontainers server.",
+      })
     ),
     internalPort: PgliteTcpPort.pipe(
       S.withConstructorDefault(Effect.succeed(5432)),
-      S.withDecodingDefaultKey(Effect.succeed(5432))
+      S.withDecodingDefaultKey(Effect.succeed(5432)),
+      $I.annoteKey("PgliteTestcontainersTestDriverConfig.internalPort", {
+        description: "Internal PostgreSQL TCP port exposed inside the PGLite container.",
+      })
     ),
     maxConnections: PglitePositiveInteger.pipe(
       S.withConstructorDefault(Effect.succeed(1)),
-      S.withDecodingDefaultKey(Effect.succeed(1))
+      S.withDecodingDefaultKey(Effect.succeed(1)),
+      $I.annoteKey("PgliteTestcontainersTestDriverConfig.maxConnections", {
+        description: "Maximum PostgreSQL client connections for the PGLite test driver.",
+      })
     ),
     password: S.String.pipe(
       S.withConstructorDefault(Effect.sync(randomUUID)),
-      S.withDecodingDefaultKey(Effect.sync(randomUUID))
+      S.withDecodingDefaultKey(Effect.sync(randomUUID)),
+      $I.annoteKey("PgliteTestcontainersTestDriverConfig.password", {
+        description: "Generated PostgreSQL password configured for the PGLite test driver.",
+      })
     ),
     startupTimeoutMs: PglitePositiveInteger.pipe(
       S.withConstructorDefault(Effect.succeed(60_000)),
-      S.withDecodingDefaultKey(Effect.succeed(60_000))
+      S.withDecodingDefaultKey(Effect.succeed(60_000)),
+      $I.annoteKey("PgliteTestcontainersTestDriverConfig.startupTimeoutMs", {
+        description: "Startup timeout in milliseconds for the PGLite Testcontainers server.",
+      })
     ),
     username: S.String.pipe(
       S.withConstructorDefault(Effect.succeed("postgres")),
-      S.withDecodingDefaultKey(Effect.succeed("postgres"))
+      S.withDecodingDefaultKey(Effect.succeed("postgres")),
+      $I.annoteKey("PgliteTestcontainersTestDriverConfig.username", {
+        description: "PostgreSQL username configured for the PGLite test driver.",
+      })
     ),
   },
   $I.annote("PgliteTestcontainersTestDriverConfig", {
     description: "Runtime configuration for the PGLite Testcontainers SQL test driver.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(PgliteTestcontainersTestDriverConfig);
+}
 
 /**
  * Constructor input accepted by the PGLite Testcontainers SQL test driver.
@@ -220,30 +321,51 @@ export class PgExternalTestDriverConfig extends S.Class<PgExternalTestDriverConf
   {
     connectTimeoutMs: PglitePositiveInteger.pipe(
       S.withConstructorDefault(Effect.succeed(5_000)),
-      S.withDecodingDefaultKey(Effect.succeed(5_000))
+      S.withDecodingDefaultKey(Effect.succeed(5_000)),
+      $I.annoteKey("PgExternalTestDriverConfig.connectTimeoutMs", {
+        description: "Connection timeout in milliseconds for the external PostgreSQL test driver.",
+      })
     ),
-    connectionUri: S.String,
+    connectionUri: PgExternalConnectionUri.pipe(
+      $I.annoteKey("PgExternalTestDriverConfig.connectionUri", {
+        description: "PostgreSQL-compatible connection URI for the external SQL test driver.",
+      })
+    ),
     isolation: PgExternalIsolationMode.pipe(
       S.withConstructorDefault(Effect.succeed("schema" as const)),
-      S.withDecodingDefaultKey(Effect.succeed("schema" as const))
+      S.withDecodingDefaultKey(Effect.succeed("schema" as const)),
+      $I.annoteKey("PgExternalTestDriverConfig.isolation", {
+        description: "Isolation strategy applied around external PostgreSQL integration tests.",
+      })
     ),
     maxConnections: PglitePositiveInteger.pipe(
       S.withConstructorDefault(Effect.succeed(1)),
-      S.withDecodingDefaultKey(Effect.succeed(1))
+      S.withDecodingDefaultKey(Effect.succeed(1)),
+      $I.annoteKey("PgExternalTestDriverConfig.maxConnections", {
+        description: "Maximum PostgreSQL client connections for the external SQL test driver.",
+      })
     ),
     schemaPrefix: PgExternalSchemaPrefix.pipe(
       S.withConstructorDefault(Effect.succeed("beep_test")),
-      S.withDecodingDefaultKey(Effect.succeed("beep_test"))
+      S.withDecodingDefaultKey(Effect.succeed("beep_test")),
+      $I.annoteKey("PgExternalTestDriverConfig.schemaPrefix", {
+        description: "Prefix used when generating temporary external PostgreSQL schemas.",
+      })
     ),
     ssl: S.Literal(false).pipe(
       S.withConstructorDefault(Effect.succeed(false as const)),
-      S.withDecodingDefaultKey(Effect.succeed(false as const))
+      S.withDecodingDefaultKey(Effect.succeed(false as const)),
+      $I.annoteKey("PgExternalTestDriverConfig.ssl", {
+        description: "SSL toggle for the external PostgreSQL test driver; currently fixed to false.",
+      })
     ),
   },
   $I.annote("PgExternalTestDriverConfig", {
     description: "Runtime configuration for an externally managed PostgreSQL-compatible SQL test driver.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(PgExternalTestDriverConfig);
+}
 
 /**
  * Constructor input accepted by the external PostgreSQL SQL test driver.
@@ -265,15 +387,33 @@ export type PgExternalTestDriverConfigInput = Partial<PgExternalTestDriverConfig
  *
  * @example
  * ```ts
- * import type { PgliteSqlTestLayerMode } from "@beep/test-utils/SqlTest"
+ * import { PgliteSqlTestLayerMode } from "@beep/test-utils"
  *
- * const value = {} as PgliteSqlTestLayerMode
- * console.log(value)
+ * console.log(PgliteSqlTestLayerMode.is.auto("auto"))
  * ```
  * @category models
  * @since 0.0.0
  */
-export type PgliteSqlTestLayerMode = "auto" | "external" | "testcontainers" | "in-process";
+export const PgliteSqlTestLayerMode = LiteralKit(["auto", "external", "testcontainers", "in-process"]).pipe(
+  $I.annoteSchema("PgliteSqlTestLayerMode", {
+    description: "Mode selector for the public PGLite SQL test layer helper.",
+  })
+);
+
+/**
+ * Mode selector for the public PGLite SQL test layer helper.
+ *
+ * @example
+ * ```ts
+ * import type { PgliteSqlTestLayerMode } from "@beep/test-utils/SqlTest"
+ *
+ * const mode: PgliteSqlTestLayerMode = "auto"
+ * console.log(mode)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type PgliteSqlTestLayerMode = typeof PgliteSqlTestLayerMode.Type;
 
 /**
  * Options for `makePgliteSqlTestLayer`.
@@ -331,15 +471,34 @@ export class TestDatabaseInfo extends Context.Service<TestDatabaseInfo, TestData
 export class SqlTestHarnessError extends TaggedErrorClass<SqlTestHarnessError>($I`SqlTestHarnessError`)(
   "SqlTestHarnessError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
-    driver: TestDatabaseDriver,
-    message: S.String,
-    phase: SqlTestHarnessPhase,
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("SqlTestHarnessError.cause", {
+        description: "Optional underlying defect captured while provisioning or preparing the SQL test harness.",
+      })
+    ),
+    driver: TestDatabaseDriver.pipe(
+      $I.annoteKey("SqlTestHarnessError.driver", {
+        description: "SQL test driver active when the harness failure occurred.",
+      })
+    ),
+    message: S.String.pipe(
+      $I.annoteKey("SqlTestHarnessError.message", {
+        description: "Human-readable SQL test harness failure message.",
+      })
+    ),
+    phase: SqlTestHarnessPhase.pipe(
+      $I.annoteKey("SqlTestHarnessError.phase", {
+        description: "Lifecycle phase active when the harness failure occurred.",
+      })
+    ),
   },
   $I.annote("SqlTestHarnessError", {
     description: "Typed integration-test harness error for SQL database provisioning and setup hooks.",
   })
-) {}
+) {
+  static readonly is = S.is(SqlTestHarnessError);
+}
 
 /**
  * Optional database setup hooks executed after the driver layer has been built.
@@ -615,13 +774,10 @@ const loadPgModule = Effect.tryPromise({
 
 const PgConnectRetryPolicy = Schedule.both(Schedule.spaced(Duration.millis(250)), Schedule.recurs(20));
 
-const decodePgliteTestcontainersTestDriverConfig = S.decodeUnknownEffect(PgliteTestcontainersTestDriverConfig);
-const decodePgExternalTestDriverConfig = S.decodeUnknownEffect(PgExternalTestDriverConfig);
-
 const makePgliteConfig = Effect.fn("SqlTest.PgliteTestcontainersTestDriver.makeConfig")(function* (
   configInput: PgliteTestcontainersTestDriverConfigInput
 ) {
-  return yield* decodePgliteTestcontainersTestDriverConfig(configInput === undefined ? {} : configInput).pipe(
+  return yield* PgliteTestcontainersTestDriverConfig.decodeEffect(configInput === undefined ? {} : configInput).pipe(
     Effect.mapError((cause) =>
       toHarnessError("pglite-testcontainers", "provision", "Invalid PGLite Testcontainers SQL test config.", cause)
     )
@@ -631,7 +787,7 @@ const makePgliteConfig = Effect.fn("SqlTest.PgliteTestcontainersTestDriver.makeC
 const makePgExternalConfig = Effect.fn("SqlTest.PgExternalTestDriver.makeConfig")(function* (
   configInput: PgExternalTestDriverConfigInput
 ) {
-  return yield* decodePgExternalTestDriverConfig(configInput === undefined ? {} : configInput).pipe(
+  return yield* PgExternalTestDriverConfig.decodeEffect(configInput === undefined ? {} : configInput).pipe(
     Effect.mapError((cause) =>
       toHarnessError("pg-external", "provision", "Invalid external PostgreSQL SQL test config.", cause)
     )
@@ -862,7 +1018,7 @@ const buildPgliteTestcontainersLayer = Effect.fn("SqlTest.PgliteTestcontainersTe
     );
   },
   Effect.mapError((cause) =>
-    S.is(SqlTestHarnessError)(cause)
+    SqlTestHarnessError.is(cause)
       ? cause
       : toHarnessError(
           "pglite-testcontainers",
@@ -951,7 +1107,7 @@ const buildPgExternalLayer: (
     );
   },
   Effect.mapError((cause) =>
-    S.is(SqlTestHarnessError)(cause)
+    SqlTestHarnessError.is(cause)
       ? cause
       : toHarnessError(
           "pg-external",
@@ -999,7 +1155,7 @@ const buildBunSqliteLayer = Effect.gen(function* () {
   );
 }).pipe(
   Effect.mapError((cause) =>
-    S.is(SqlTestHarnessError)(cause)
+    SqlTestHarnessError.is(cause)
       ? cause
       : toHarnessError("bun-sqlite", "provision", "Failed to provision the Bun SQLite test driver.", cause)
   ),
@@ -1059,7 +1215,7 @@ const buildNodeSqliteLayer = Effect.gen(function* () {
   );
 }).pipe(
   Effect.mapError((cause) =>
-    S.is(SqlTestHarnessError)(cause)
+    SqlTestHarnessError.is(cause)
       ? cause
       : toHarnessError("node-sqlite", "provision", "Failed to provision the Node SQLite test driver.", cause)
   ),
@@ -1147,7 +1303,7 @@ const buildPgliteInProcessLayer = Effect.fn("SqlTest.PgliteInProcessTestDriver.b
     );
   },
   Effect.mapError((cause) =>
-    S.is(SqlTestHarnessError)(cause)
+    SqlTestHarnessError.is(cause)
       ? cause
       : toHarnessError(
           "pglite-inprocess",
@@ -1227,10 +1383,20 @@ const resolvePgliteExternalConfig = Effect.fn("SqlTest.resolvePgliteExternalConf
 });
 
 const shouldUseExternalPgliteLayer = (mode: PgliteSqlTestLayerMode, config: PgExternalTestDriverConfigInput): boolean =>
-  mode === "external" || (mode === "auto" && config?.connectionUri !== undefined);
+  PgliteSqlTestLayerMode.$match(mode, {
+    auto: () => config?.connectionUri !== undefined,
+    external: () => true,
+    "in-process": () => false,
+    testcontainers: () => false,
+  });
 
 const shouldUseTestcontainersPgliteLayer = (mode: PgliteSqlTestLayerMode): boolean =>
-  mode === "testcontainers" || (mode === "auto" && Bun.env.BEEP_TEST_DATABASE_DRIVER === "pglite-testcontainers");
+  PgliteSqlTestLayerMode.$match(mode, {
+    auto: () => Bun.env.BEEP_TEST_DATABASE_DRIVER === "pglite-testcontainers",
+    external: () => false,
+    "in-process": () => false,
+    testcontainers: () => true,
+  });
 
 const makeConfiguredSqlTestLayer = <Config, Services, SqlService extends Services, MigrateError, SeedError>(
   driver: SqlTestDriver<Config, Services, SqlService>,

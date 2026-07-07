@@ -37,8 +37,16 @@ const retentionSchemaVersion = "beep.ai_metrics.retention_inventory.v1";
 const retentionMutationSchemaVersion = "beep.ai_metrics.retention_mutation.v1";
 const retentionEnforcementSchemaVersion = "beep.ai_metrics.retention_enforcement.v1";
 const restoreDrillSchemaVersion = "beep.ai_metrics.retention_restore_drill.v1";
-const AiMetricsRetentionMutationMode = LiteralKit(["delete", "compact"]);
+const AiMetricsRetentionMutationMode = LiteralKit(["delete", "compact"]).pipe(
+  $I.annoteSchema("AiMetricsRetentionMutationMode", {
+    description: "Mutation operation recorded by AI metrics retention delete and compact workflows.",
+  })
+);
 const RawArchiveObjectIdPattern = /^raw-[a-f0-9]{64}$/u;
+const isAiMetricsTranscriptSource = (value: string): value is AiMetricsTranscriptSource =>
+  AiMetricsTranscriptSource.is.claude(value) ||
+  AiMetricsTranscriptSource.is.codex(value) ||
+  AiMetricsTranscriptSource.is.openclaw(value);
 
 class RawArchivePlanItem extends S.Class<RawArchivePlanItem>($I`RawArchivePlanItem`)(
   {
@@ -595,7 +603,7 @@ const readRetentionPlan = Effect.fn("AiMetrics.retention.readPlan")(function* (i
         encryptedAtEpochMillis: numberValue(row.encryptedAtEpochMillis),
         ingestRunId: stringValue(row.ingestRunId),
         plaintextContentHash: stringValue(row.plaintextContentHash),
-        sourceKind: S.is(AiMetricsTranscriptSource)(sourceKind) ? sourceKind : AiMetricsTranscriptSource.Enum.codex,
+        sourceKind: isAiMetricsTranscriptSource(sourceKind) ? sourceKind : AiMetricsTranscriptSource.Enum.codex,
         sourcePathHash: stringValue(row.sourcePathHash),
       };
     }),

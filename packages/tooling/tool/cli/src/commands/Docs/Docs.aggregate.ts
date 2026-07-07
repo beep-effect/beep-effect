@@ -10,9 +10,8 @@
 
 import { DomainError } from "@beep/repo-utils";
 import { A, Str } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Console, Effect } from "effect";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
 import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
 import { aggregateGeneratedDocs } from "../Docgen/internal/Operations.js";
@@ -50,7 +49,7 @@ const resolveAggregateSelector = Effect.fn("DocsAggregate.resolveAggregateSelect
 const aggregateDocs = Effect.fn(function* (selector: O.Option<string>, clean: boolean) {
   const results = yield* aggregateGeneratedDocs({
     clean,
-    ...R.getSomes({ package: selector }),
+    ...O.getSomesStruct({ package: selector }),
   });
 
   yield* A.match(results, {

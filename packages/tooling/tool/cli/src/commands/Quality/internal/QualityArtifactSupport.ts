@@ -4,11 +4,10 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { TaggedErrorClass } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Err, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Effect, FileSystem, MutableHashMap, MutableHashSet, Order, Path, Result, SchemaGetter, Stream } from "effect";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
 import { Node } from "ts-morph";
@@ -62,9 +61,9 @@ export class QualityArtifactGeneratorError extends TaggedErrorClass<QualityArtif
       QualityArtifactGeneratorError.make({
         cause,
         message,
-        ...R.getSomes({ command: O.fromUndefinedOr(command) }),
-        ...R.getSomes({ exitCode: O.fromUndefinedOr(exitCode) }),
-        ...R.getSomes({ filePath: O.fromUndefinedOr(filePath) }),
+        ...O.getSomesStruct({ command: O.fromUndefinedOr(command) }),
+        ...O.getSomesStruct({ exitCode: O.fromUndefinedOr(exitCode) }),
+        ...O.getSomesStruct({ filePath: O.fromUndefinedOr(filePath) }),
       })
   );
 
@@ -617,15 +616,15 @@ export const stripCommentFraming = (commentText: string): ReadonlyArray<string> 
  * @category jsdoc
  * @since 0.0.0
  */
-export const summaryFromComment = (commentText: string): string | undefined => {
+export const summaryFromComment = (commentText: string): O.Option<string> => {
   for (const line of stripCommentFraming(commentText)) {
     const trimmed = Str.trim(line);
     if (trimmed.length === 0 || Str.startsWith("@")(trimmed) || Str.startsWith("```")(trimmed)) {
       continue;
     }
-    return trimmed;
+    return O.some(trimmed);
   }
-  return undefined;
+  return O.none();
 };
 
 /**

@@ -2,17 +2,6 @@
   {
     "ruleId": "SFV4-static-api",
     "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-    "line": 277,
-    "symbol": "ImportBinding",
-    "smell": "ImportBinding is a repo-owned discriminated union over kind (\"named\" | \"namespace\" | \"default\"), but consumers branch by hand: classifyImportSpecifier constructs kind at lines 317-326, no-manual-effect-runtime-in-tests.ts branches at line 227, no-opaque-instance-fields.ts branches at line 116, and no-inline-schema-compile.ts branches with a ternary at lines 142-145. The namespace/default cases are usually collapsed through an else path, so adding a new binding kind would not produce an exhaustive failure.",
-    "proposedTarget": "Keep the three tags distinct, but centralize dispatch through Match.discriminatorsExhaustive(\"kind\") or a small matchImportBinding helper exported from utils.ts, with named/namespace/default arms even when namespace and default delegate to the same module-binding helper. Verified Effect v4 Match.discriminatorsExhaustive at .repos/effect-v4/packages/effect/src/Match.ts:880.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 2.2
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
     "line": 156,
     "symbol": "unwrapMemberExpression",
     "smell": "The lint-rule helpers and rules contain many checks against ESTree node.type fields (for example MemberExpression at utils.ts:158, Identifier/Literal at utils.ts:214 and 237, ImportSpecifier at utils.ts:320, and CallExpression/MethodDefinition/ImportSpecifier checks in the rule modules). A broad S3 detector for .type discriminator branches would flag these as manual tagged-union dispatch.",

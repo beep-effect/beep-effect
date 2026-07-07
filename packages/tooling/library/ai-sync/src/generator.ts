@@ -9,7 +9,7 @@ import * as O from "@beep/utils/Option";
 import { Console, Effect, Encoding, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import { FetchHttpClient, HttpClient, HttpClientResponse } from "effect/unstable/http";
-import { AiSyncError, AiSyncSourceMetadata } from "./models.ts";
+import { AiSyncContentHash, AiSyncError, AiSyncSourceMetadata } from "./models.ts";
 import { TIER_ONE_SOURCES } from "./source-map.ts";
 
 /**
@@ -60,8 +60,11 @@ const SJsonString: (value: string) => string = JSON.stringify;
 
 const quote = (value: string) => SJsonString(value);
 
-const renderOptionalStringField = (name: string, value: string | undefined): ReadonlyArray<string> =>
-  value === undefined ? [] : [`    ${name}: ${quote(value)},`];
+const renderOptionalStringField = (name: string, value: O.Option<string>): ReadonlyArray<string> =>
+  O.match(value, {
+    onNone: () => [],
+    onSome: (some) => [`    ${name}: ${quote(some)},`],
+  });
 
 const renderOptionalLiteralKitField = (name: string, literals: ReadonlyArray<string>): ReadonlyArray<string> => [
   `    ${name}: LiteralKit([`,
@@ -341,16 +344,19 @@ const renderSchemasFile = (): string =>
  * @category utilities
  * @since 0.0.0
  */
-export const hashSourceText: (value: string) => Effect.Effect<string, AiSyncError> = Effect.fn("AiSync.hashSourceText")(
+export const hashSourceText: (value: string) => Effect.Effect<AiSyncContentHash, AiSyncError> = Effect.fn(
+  "AiSync.hashSourceText"
+)(
+  // fallow-ignore-next-line code-duplication -- Cross-package SHA-256 hashing maps into AiSyncContentHash and AiSyncError.
   function* (value) {
     return yield* Effect.tryPromise({
       try: () => globalThis.crypto.subtle.digest("SHA-256", new TextEncoder().encode(value)),
       catch: (cause) =>
         AiSyncError.make({
           message: "Failed to compute source content hash.",
-          cause,
+          cause: O.some(cause),
         }),
-    }).pipe(Effect.map((buffer) => Encoding.encodeHex(new Uint8Array(buffer))));
+    }).pipe(Effect.map((buffer) => AiSyncContentHash.make(Encoding.encodeHex(new Uint8Array(buffer)))));
   }
 );
 
@@ -362,15 +368,15 @@ export const hashSourceText: (value: string) => Effect.Effect<string, AiSyncErro
  * @example
  * ```ts
  * import { Effect } from "effect"
- * import { AiSyncSourceMetadata } from "@beep/ai-sync"
+ * import { AiSyncSourceId, AiSyncSourceMetadata, AiSyncSourceUrl } from "@beep/ai-sync"
  * import { AiSyncHttpLayer, fetchSourceText } from "@beep/ai-sync/generator"
  *
  * const source = AiSyncSourceMetadata.make({
- *   id: "codex-config",
+ *   id: AiSyncSourceId.make("codex-config"),
  *   agent: "codex",
  *   domain: "config",
  *   tier: "tier_1",
- *   url: "https://example.com/config.schema.json",
+ *   url: AiSyncSourceUrl.make("https://example.com/config.schema.json"),
  *   isOfficial: true,
  *   driftMechanism: "hash"
  * })
@@ -391,8 +397,8 @@ export const fetchSourceText = Effect.fn("AiSync.fetchSourceText")(function* (so
     Effect.mapError((cause) =>
       AiSyncError.make({
         message: `Failed to fetch upstream source ${source.id}.`,
-        sourceId: source.id,
-        cause,
+        sourceId: O.some(source.id),
+        cause: O.some(cause),
       })
     )
   );
@@ -410,8 +416,8 @@ const withSourceHashes = Effect.forEach(
           domain: source.domain,
           tier: source.tier,
           url: source.url,
-          ...O.getSomesStruct({ versionPin: O.fromUndefinedOr(source.versionPin) }),
-          contentHash,
+          versionPin: source.versionPin,
+          contentHash: O.some(contentHash),
           isOfficial: source.isOfficial,
           driftMechanism: source.driftMechanism,
         })

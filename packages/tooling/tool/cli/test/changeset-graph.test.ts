@@ -1,4 +1,5 @@
 import {
+  ChangesetGraphError,
   ChangesetGraphPackageReference,
   changesetPackageReferencesFromText,
   findMissingChangesetPackageReferences,
@@ -92,6 +93,14 @@ const writeFixtureRepo = Effect.fn("ChangesetGraphTest.writeFixtureRepo")(functi
 });
 
 describe("changeset graph", () => {
+  it("keeps changeset graph error optional file context at the command boundary", () => {
+    const emptyError = ChangesetGraphError.new(new Error("cause"), "failed");
+    expect(emptyError.file).toBeUndefined();
+
+    const detailedError = ChangesetGraphError.new(new Error("cause"), "failed", ".changeset/demo.md");
+    expect(detailedError.file).toBe(".changeset/demo.md");
+  });
+
   it.effect(
     "parses package names from changeset frontmatter",
     Effect.fnUntraced(function* () {

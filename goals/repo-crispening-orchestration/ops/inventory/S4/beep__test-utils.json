@@ -1,28 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-    "line": 331,
-    "symbol": "SqlTestHarnessError",
-    "smell": "`SqlTestHarnessError` guard behavior is rebuilt repeatedly with `S.is(SqlTestHarnessError)`: five source error-normalization sites (`SqlTest.ts:865,954,1002,1062,1150`) and two package tests (`test/SqlTest.test.ts:26`, `test/integration/SqlTest.pglite.test.ts:26`).",
-    "proposedTarget": "Add an in-body static on the tagged error class, `static readonly is = S.is(SqlTestHarnessError)`, then replace call sites with `SqlTestHarnessError.is(cause)`. In-body statics are the S.Class/TaggedClass-safe pattern documented at `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:10-12`; local exemplars include `packages/foundation/modeling/md/src/Md.model.ts:873`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-    "line": 618,
-    "symbol": "PgliteTestcontainersTestDriverConfig decoders",
-    "smell": "SQL driver config class decoders are split into module-level helpers (`decodePgliteTestcontainersTestDriverConfig`, `decodePgExternalTestDriverConfig`) and consumed immediately by config constructors at lines 624 and 634.",
-    "proposedTarget": "Move the decoders onto the config classes as in-body statics, e.g. `PgliteTestcontainersTestDriverConfig.decodeEffect` and `PgExternalTestDriverConfig.decodeEffect`, and have `makePgliteConfig` / `makePgExternalConfig` call those statics. `S.decodeUnknownEffect` is verified in Effect v4 at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/tooling/test-kit/test-utils/src/Schema.ts",
     "line": 37,
     "symbol": "assertSchemaArbitraryDecodesToSelf",

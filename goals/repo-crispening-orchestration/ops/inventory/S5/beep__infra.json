@@ -1,39 +1,6 @@
 [
   {
     "ruleId": "SFV4-precision-audit",
-    "file": "infra/src/OipWeb.ts",
-    "line": 80,
-    "symbol": "VercelAuthenticationDeploymentType",
-    "smell": "OIP's reusable Vercel authentication LiteralKit is unannotated, while the sibling Storybook LiteralKit for the same provider enum carries $I.annoteSchema metadata.",
-    "proposedTarget": "Mirror infra/src/Storybook.ts:60-70: const VercelAuthenticationDeploymentType = LiteralKit([...]).pipe($I.annoteSchema(\"OipWebVercelAuthenticationDeploymentType\", { description: \"Vercel deployment authentication modes accepted by the OIP web project.\" })).",
-    "confidence": 0.86,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "infra/src/AIMetrics.ts",
-    "line": 233,
-    "symbol": "AIMetricsPulumiConfigValues.defaultTool/target",
-    "smell": "AIMetricsPulumiConfigValues decodes defaultTool and target as broad S.String even though the module imports the production AiMetricsTool and AiMetricsDeployTarget LiteralKits and immediately re-decodes those strings in toolFromPulumiConfig/targetFromPulumiConfig.",
-    "proposedTarget": "Use the existing production schemas directly in the raw Pulumi config schema: defaultTool: AiMetricsTool and target: AiMetricsDeployTarget, matching StorybookPulumiConfigValues.vercelAuthenticationDeploymentType at infra/src/Storybook.ts:129. The production kits are annotated at packages/tooling/library/ai-metrics/src/models.ts:26-30 and :57-61.",
-    "confidence": 0.86,
-    "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-numeric-domain",
-    "file": "infra/src/AIMetrics.ts",
-    "line": 239,
-    "symbol": "AIMetricsPulumiConfigValues.phoenixTailnetHttpsPort / AIMetricsRemoteDeploymentConfig.phoenixTailnetHttpsPort",
-    "smell": "Phoenix Tailnet HTTPS port is modeled as bare S.Int in both the raw Pulumi config schema and the resolved remote deployment schema; the real TCP/HTTPS port domain is 1-65535.",
-    "proposedTarget": "Introduce a local TailnetHttpsPort schema and reuse it at infra/src/AIMetrics.ts:239 and :294: const TailnetHttpsPort = S.Int.check(S.isBetween({ minimum: 1, maximum: 65535 })). S.Int and S.isBetween were verified in .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7401; branded numeric exemplars exist in packages/foundation/modeling/schema/src/Number.ts:182-200.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
     "file": "infra/src/AIMetrics.ts",
     "line": 268,
     "symbol": "AIMetricsRemoteSshConfig.agentSocketPath / AIMetricsRemoteDeploymentConfig.remote*Root",
@@ -41,7 +8,11 @@
     "proposedTarget": "Use the existing @beep/schema path primitives: NativePathToPosixPath or PosixPath for agentSocketPath, remoteConfigRoot, and remoteMirrorRoot, preserving defaults via SchemaUtils.withKeyDefaults. PosixPath is the in-repo branded exemplar at packages/foundation/modeling/schema/src/PosixPath.ts:31-36 and NativePathToPosixPath at :70-81.",
     "confidence": 0.74,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "These values are provider and remote-shell paths crossing local, SSH, and Pulumi command boundaries. Tightening them to a shared path brand here would change existing exported helper inputs and needs a dedicated provider path design.",
+      "boundary": "provider path precision deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -52,7 +23,11 @@
     "proposedTarget": "Extract local schemas such as DnsName = S.NonEmptyString.check(S.isPattern(...)), CloudflareImportId = S.NonEmptyString.check(S.isPattern(/^[^/]+\\/.+$/u)), and VercelApexTarget = S.NonEmptyString.check(S.isPattern(/^\\d{1,3}(?:\\.\\d{1,3}){3}$/u)); use them for OipDnsConfig and OipWebPulumiConfigValues. S.NonEmptyString and S.isPattern were verified in .repos/effect-v4/packages/effect/src/Schema.ts:8420 and :6521.",
     "confidence": 0.66,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Cloudflare record identifiers and DNS targets are provider-owned wire values. Local regex brands risk rejecting valid provider values without a provider-backed contract, so the provider boundary remains string-shaped.",
+      "boundary": "provider identifier boundary"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -63,18 +38,11 @@
     "proposedTarget": "Add field-level annotateKey to the public config fields as they are crispened, starting with user-provided Pulumi keys and cloud-provider identifiers. Follow the local field annotation pattern in packages/tooling/library/repo-utils/src/JSDoc/models/ASTSignal.model.ts:34-52.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "infra/test/Storybook.test.ts",
-    "line": 7,
-    "symbol": "infra config schema laws",
-    "smell": "Infra schema coverage is static default/override fixture testing only; no S.toArbitrary-derived round-trip/property laws cover the exported config schemas with defaults and precision checks.",
-    "proposedTarget": "Add additive property tests using S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) for pure config schemas such as StorybookVercelProjectConfig, OipDnsConfig/OipPulumiStateBackendConfig, and AIMetricsRemoteDeploymentConfig; assert decode/encode round-trip with Equal.equals or S.toEquivalence (verified :13201), importing production schemas from @beep/infra.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 3,
+    "exception": {
+      "reason": "The remaining annotateKey work is metadata-only across Pulumi provider input fields. The touched invariants now have schema annotations and parity tests; broad field metadata cleanup is deferred to a documentation sweep.",
+      "boundary": "documentation metadata sweep deferred"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",

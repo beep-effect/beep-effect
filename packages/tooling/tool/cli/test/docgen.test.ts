@@ -8,6 +8,7 @@ import {
   buildDocgenLocalPlan,
   createDocgenConfigDocument,
   DocgenAnalysisSummary,
+  DocgenConfigDocument,
   DocgenExportAnalysis,
   DocgenLocalSelectedPackage,
   DocgenPackageAnalysis,
@@ -69,6 +70,8 @@ const CommandTestLayer = Layer.mergeAll(
 const runDocgenCommand = Command.runWith(docgenCommand, { version: "0.0.0" });
 const encodeJson = S.encodeUnknownSync(S.UnknownFromJsonString);
 const decodeUnknownJson = S.decodeUnknownSync(S.fromJsonString(S.Unknown));
+const encodeDocgenConfigDocument = S.encodeSync(DocgenConfigDocument);
+const decodeDocgenConfigDocument = S.decodeUnknownSync(DocgenConfigDocument);
 const decodeWorkerEvalReportJson = S.decodeUnknownSync(S.fromJsonString(DocgenQualityWorkerEvalReport));
 const isString = (value: unknown): value is string => typeof value === "string";
 const DOCGEN_COMMAND_TEST_TIMEOUT = 30_000;
@@ -138,6 +141,30 @@ const withTempRepoCommand = <A, E, R>(use: Effect.Effect<A, E, R>) =>
   ).pipe(provideScopedLayer(CommandTestLayer));
 
 describe("Docgen operations", () => {
+  it("defaults docgen config source fields in the schema without changing explicit wire shape", () => {
+    const explicitConfig = DocgenConfigDocument.make({
+      srcDir: "custom-src",
+      exclude: ["dist", "coverage"],
+    });
+    expect(encodeDocgenConfigDocument(explicitConfig)).toEqual({
+      srcDir: "custom-src",
+      exclude: ["dist", "coverage"],
+    });
+
+    const decoded = decodeDocgenConfigDocument({});
+    expect(decoded.srcDir).toBe("src");
+    expect(decoded.exclude).toEqual([]);
+
+    const arbitrary = S.toArbitrary(DocgenConfigDocument);
+    const sameConfig = S.toEquivalence(DocgenConfigDocument);
+    fc.assert(
+      fc.property(arbitrary, (config) =>
+        sameConfig(config, decodeDocgenConfigDocument(encodeDocgenConfigDocument(config)))
+      ),
+      { numRuns: 16 }
+    );
+  });
+
   it("selects package-local inputs for the bounded local docgen lane", () =>
     Effect.runPromise(
       withTempRepo(

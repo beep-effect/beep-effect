@@ -24,9 +24,6 @@ import { hashPrivateIdentifier } from "./privacy.ts";
 
 const $I = $RepoAiMetricsId.create("ingest");
 
-const decodeCodexTranscriptLine = S.decodeUnknownOption(S.fromJsonString(CodexTranscriptLine));
-const decodeClaudeTranscriptLine = S.decodeUnknownOption(S.fromJsonString(ClaudeTranscriptLine));
-const decodeOpenClawTranscriptLine = S.decodeUnknownOption(S.fromJsonString(OpenClawTranscriptLine));
 const encodeTranscriptIngestSummaryJson = S.encodeUnknownEffect(S.fromJsonString(TranscriptIngestSummary));
 
 /**
@@ -56,12 +53,36 @@ export class AiMetricsIngestError extends TaggedErrorClass<AiMetricsIngestError>
   })
 ) {}
 
-type TranscriptTextSummaryInput = {
-  readonly content: string;
-  readonly hashSalt?: string;
-  readonly sourceKind: AiMetricsTranscriptSource;
-  readonly sourcePath: string;
-};
+/**
+ * Input contract for summarizing one transcript text blob.
+ *
+ * @example
+ * ```ts
+ * import { AiMetricsTranscriptTextSummaryInput } from "@beep/repo-ai-metrics"
+ *
+ * const input = AiMetricsTranscriptTextSummaryInput.make({
+ *   content: "{\"type\":\"event_msg\"}",
+ *   sourceKind: "codex",
+ *   sourcePath: "sample.jsonl"
+ * })
+ * console.log(input.sourceKind)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class AiMetricsTranscriptTextSummaryInput extends S.Class<AiMetricsTranscriptTextSummaryInput>(
+  $I`AiMetricsTranscriptTextSummaryInput`
+)(
+  {
+    content: S.String,
+    hashSalt: S.optionalKey(S.String),
+    sourceKind: AiMetricsTranscriptSource,
+    sourcePath: S.String,
+  },
+  $I.annote("AiMetricsTranscriptTextSummaryInput", {
+    description: "Schema-backed input for summarizing one in-memory transcript JSONL document.",
+  })
+) {}
 
 const codexTurn = (sourcePathHash: string, lineNumber: number, line: CodexTranscriptLine): AgentTurn =>
   AgentTurn.make({
@@ -113,26 +134,24 @@ const decodeTranscriptTurn = (
   sourcePathHash: string,
   lineNumber: number,
   line: string
-): O.Option<AgentTurn> => {
-  if (sourceKind === AiMetricsTranscriptSource.Enum.codex) {
-    return pipe(
-      decodeCodexTranscriptLine(line),
-      O.map((decoded) => codexTurn(sourcePathHash, lineNumber, decoded))
-    );
-  }
-
-  if (sourceKind === AiMetricsTranscriptSource.Enum.claude) {
-    return pipe(
-      decodeClaudeTranscriptLine(line),
-      O.map((decoded) => claudeTurn(sourcePathHash, lineNumber, decoded))
-    );
-  }
-
-  return pipe(
-    decodeOpenClawTranscriptLine(line),
-    O.map((decoded) => openClawTurn(sourcePathHash, lineNumber, decoded))
-  );
-};
+): O.Option<AgentTurn> =>
+  AiMetricsTranscriptSource.$match(sourceKind, {
+    codex: () =>
+      pipe(
+        CodexTranscriptLine.decodeJsonOption(line),
+        O.map((decoded) => codexTurn(sourcePathHash, lineNumber, decoded))
+      ),
+    claude: () =>
+      pipe(
+        ClaudeTranscriptLine.decodeJsonOption(line),
+        O.map((decoded) => claudeTurn(sourcePathHash, lineNumber, decoded))
+      ),
+    openclaw: () =>
+      pipe(
+        OpenClawTranscriptLine.decodeJsonOption(line),
+        O.map((decoded) => openClawTurn(sourcePathHash, lineNumber, decoded))
+      ),
+  });
 
 const eventNameList: (events: ReadonlyArray<AgentTurn>) => ReadonlyArray<string> = flow(
   A.map((event) => event.eventName),
@@ -180,7 +199,7 @@ const summaryTimestampFields = (
  * @since 0.0.0
  */
 export const summarizeTranscriptText: (
-  input: TranscriptTextSummaryInput
+  input: AiMetricsTranscriptTextSummaryInput
 ) => Effect.Effect<TranscriptIngestSummary, AiMetricsIngestError> = Effect.fn("AiMetrics.summarizeTranscriptText")(
   function* ({ content, hashSalt, sourceKind, sourcePath }) {
     const sourcePathHash = yield* hashPrivateIdentifier(sourcePath, hashSalt).pipe(

@@ -9,7 +9,7 @@ import { $RepoUtilsId } from "@beep/identity/packages";
 import { ArrayOfStrings } from "@beep/schema";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, flow, identity, JsonPointer, Order, pipe, Result, SchemaIssue, Tuple } from "effect";
+import { Effect, flow, identity, JsonPointer, Order, pipe, SchemaIssue, Tuple } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -41,14 +41,12 @@ const isStringRecord = (value: unknown): value is Readonly<Record<string, unknow
 
 type IssuePathSegment = NonNullable<StandardSchemaV1.Issue["path"]>[number];
 
-const decodeBrowserResult = S.decodeUnknownResult(Browser);
-const decodePackageExportsResult = S.decodeUnknownResult(PackageExports);
-const decodePackageImportsResult = S.decodeUnknownResult(PackageImports);
-const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
-  cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
-const decodePeerDependenciesMetaResult = S.decodeUnknownResult(PeerDependenciesMeta);
-const decodePublishConfigResult = S.decodeUnknownResult(PublishConfig);
-const decodeTypesVersionsResult = S.decodeUnknownResult(TypesVersions);
+const JsonPointerText = S.String.check(S.isPattern(/^$|^\//u)).pipe(
+  $I.annoteSchema("JsonPointerText", {
+    title: "JSON Pointer Text",
+    description: "A JSON Pointer string, including the empty root pointer.",
+  })
+);
 
 const isIssuePathSegmentObject = (value: IssuePathSegment): value is StandardSchemaV1.PathSegment =>
   P.isObject(value) &&
@@ -128,7 +126,7 @@ const canonicalizePublishConfig = (
     out = R.set(out, key, canonicalizeUnknownValue(entryValue));
   }
 
-  return Result.getOrThrowWith(decodePublishConfigResult(out), schemaIssueToError);
+  return PublishConfig.fromUnknown(out);
 };
 
 const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJson.Encoded =>
@@ -159,19 +157,17 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     ...O.getSomesStruct({ typings: O.fromUndefinedOr(encoded.typings) }),
     ...O.getSomesStruct({
       exports: O.map(O.fromUndefinedOr(encoded.exports), (exports) =>
-        Result.getOrThrowWith(decodePackageExportsResult(canonicalizeUnknownValue(exports)), schemaIssueToError)
+        PackageExports.fromUnknown(canonicalizeUnknownValue(exports))
       ),
     }),
     ...O.getSomesStruct({
       imports: O.map(O.fromUndefinedOr(encoded.imports), (imports) =>
-        Result.getOrThrowWith(decodePackageImportsResult(canonicalizeUnknownValue(imports)), schemaIssueToError)
+        PackageImports.fromUnknown(canonicalizeUnknownValue(imports))
       ),
     }),
     ...O.getSomesStruct({
       browser: O.map(O.fromUndefinedOr(encoded.browser), (browser) =>
-        P.isString(browser)
-          ? browser
-          : Result.getOrThrowWith(decodeBrowserResult(canonicalizeUnknownValue(browser)), schemaIssueToError)
+        P.isString(browser) ? browser : Browser.fromUnknown(canonicalizeUnknownValue(browser))
       ),
     }),
     ...O.getSomesStruct({ bin: O.fromUndefinedOr(encoded.bin) }),
@@ -202,7 +198,7 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     }),
     ...O.getSomesStruct({
       peerDependenciesMeta: O.map(O.fromUndefinedOr(encoded.peerDependenciesMeta), (peerDependenciesMeta) =>
-        Result.getOrThrow(decodePeerDependenciesMetaResult(canonicalizeUnknownValue(peerDependenciesMeta)))
+        PeerDependenciesMeta.fromUnknown(canonicalizeUnknownValue(peerDependenciesMeta))
       ),
     }),
     ...O.getSomesStruct({
@@ -236,7 +232,7 @@ const canonicalizePackageJsonEncoded = (encoded: PackageJson.Encoded): PackageJs
     ...O.getSomesStruct({ readme: O.fromUndefinedOr(encoded.readme) }),
     ...O.getSomesStruct({
       typesVersions: O.map(O.fromUndefinedOr(encoded.typesVersions), (typesVersions) =>
-        Result.getOrThrowWith(decodeTypesVersionsResult(canonicalizeUnknownValue(typesVersions)), schemaIssueToError)
+        TypesVersions.fromUnknown(canonicalizeUnknownValue(typesVersions))
       ),
     }),
   }) satisfies PackageJson.Encoded;
@@ -265,9 +261,15 @@ const renderIssuePath = (path: StandardSchemaV1.Issue["path"]): ReadonlyArray<st
  */
 export class PackageJsonValidationIssue extends S.Class<PackageJsonValidationIssue>($I`PackageJsonValidationIssue`)(
   {
-    path: ArrayOfStrings,
-    pointer: S.String,
-    message: S.String,
+    path: ArrayOfStrings.annotateKey({
+      description: "Path segments identifying the invalid package.json location.",
+    }),
+    pointer: JsonPointerText.annotateKey({
+      description: "JSON Pointer for the invalid package.json location; the empty string points at the root.",
+    }),
+    message: S.NonEmptyString.annotateKey({
+      description: "Human-readable validation message returned by Effect Schema.",
+    }),
   },
   $I.annote("PackageJsonValidationIssue", {
     description: "A formatted package.json validation issue with both path segments and a JSON Pointer.",

@@ -8,10 +8,12 @@
 /// <reference path="./markdown-toc.d.ts" />
 
 import chalk from "@beep/chalk";
+import { $RepoDocgenId } from "@beep/identity/packages";
 import { encodeTSConfigPrettyEffect, FsUtils } from "@beep/repo-utils";
 import { A, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import markdownToc from "@effect/markdown-toc";
 import { Effect, FileSystem, flow, HashSet, Order, Path, pipe, Stream } from "effect";
+import * as S from "effect/Schema";
 import * as ChildProcess from "effect/unstable/process/ChildProcess";
 import * as Checker from "./Checker.js";
 import * as Configuration from "./Configuration.js";
@@ -20,15 +22,27 @@ import * as Parser from "./Parser.js";
 import * as Printer from "./Printer.js";
 import { writeDocgenProofManifest } from "./ProofManifest.js";
 
+const $I = $RepoDocgenId.create("Core");
+
 const SOURCE_FILE_EXTENSIONS = [".ts", ".tsx", ".mts", ".cts"] as const;
 const DECLARATION_FILE_EXTENSIONS = [".d.ts", ".d.mts", ".d.cts"] as const;
 
 type SourceFileExtension = (typeof SOURCE_FILE_EXTENSIONS)[number];
 
-type FencedCodeBlock = {
-  readonly code: string;
-  readonly extension: ".ts" | ".tsx";
-};
+const FencedCodeBlockExtension = S.Union([S.Literal(".ts"), S.Literal(".tsx")]).pipe(
+  $I.annoteSchema("FencedCodeBlockExtension", {
+    description: "Generated file extension for an extracted TypeScript example block.",
+  })
+);
+class FencedCodeBlock extends S.Class<FencedCodeBlock>($I`FencedCodeBlock`)(
+  {
+    code: S.String,
+    extension: FencedCodeBlockExtension,
+  },
+  $I.annote("FencedCodeBlock", {
+    description: "Extracted TypeScript fenced code payload and generated file extension.",
+  })
+) {}
 
 const normalizeSlashes = (value: string): string => Str.replace(/\\/g, "/")(value);
 
@@ -269,10 +283,12 @@ export const extractFencedCodeBlocks = (
       const isSkipTypeChecking = Str.includes(SKIP_TYPE_CHECKING_FENCE_METADATA)(metadata);
       return isTypeScriptFence(metadata) && !isSkipTypeChecking;
     }),
-    A.map((match) => ({
-      code: Str.trim(match[2] ?? ""),
-      extension: fenceExtension(match[1] ?? ""),
-    }))
+    A.map((match) =>
+      FencedCodeBlock.make({
+        code: Str.trim(match[2] ?? ""),
+        extension: fenceExtension(match[1] ?? ""),
+      })
+    )
   );
 
   return [examples, warnings];

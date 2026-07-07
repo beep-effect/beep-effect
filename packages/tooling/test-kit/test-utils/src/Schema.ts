@@ -5,14 +5,13 @@
  * @since 0.0.0
  */
 
-import { isDeepStrictEqual } from "node:util";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 /**
  * Assert that a schema-derived arbitrary only emits values accepted by the same schema without transformation.
  *
- * Decoded values are compared structurally so object and class schemas can use the helper.
+ * Decoded values are compared with schema-derived equivalence so object and class schemas can use the helper.
  *
  * @param schema - Schema whose generated values must decode back to themselves.
  * @param options - Optional FastCheck tuning for the assertion.
@@ -35,10 +34,11 @@ export const assertSchemaArbitraryDecodesToSelf = <Schema extends S.Codec<unknow
 ): void => {
   const arbitrary = S.toArbitrary(schema);
   const decode = S.decodeUnknownSync(schema);
+  const equivalent = S.toEquivalence(schema);
   const isValue = S.is(schema);
 
   fc.assert(
-    fc.property(arbitrary, (value) => isValue(value) && isDeepStrictEqual(decode(value), value)),
+    fc.property(arbitrary, (value) => isValue(value) && equivalent(decode(value), value)),
     { numRuns: options?.numRuns ?? 50 }
   );
 };

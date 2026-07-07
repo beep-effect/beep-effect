@@ -15,7 +15,7 @@ import {
   toCanonicalDocgenConfigJson,
 } from "@beep/repo-utils/schemas/DocgenConfig";
 import { normalizeJSDocCategory } from "@beep/repo-utils/schemas/JSDocCategories";
-import { LiteralKit, normalizePath } from "@beep/schema";
+import { LiteralKit, normalizePath, SchemaUtils } from "@beep/schema";
 import { A, Str, thunk0, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import {
@@ -153,7 +153,7 @@ export class DocgenConfigDocument extends S.Class<DocgenConfigDocument>($I`Docge
     $schema: S.optionalKey(S.String),
     projectHomepage: S.optionalKey(S.String),
     srcLink: S.optionalKey(S.String),
-    srcDir: S.optionalKey(S.String),
+    srcDir: S.String.pipe(SchemaUtils.withKeyDefaults("src")),
     outDir: S.optionalKey(S.String),
     theme: S.optionalKey(S.String),
     enableSearch: S.optionalKey(S.Boolean),
@@ -163,7 +163,7 @@ export class DocgenConfigDocument extends S.Class<DocgenConfigDocument>($I`Docge
     tscExecutable: S.optionalKey(S.String),
     runExamples: S.optionalKey(S.Boolean),
     include: S.String.pipe(S.Array, S.optionalKey),
-    exclude: S.String.pipe(S.Array, S.optionalKey),
+    exclude: S.Array(S.String).pipe(SchemaUtils.withKeyDefaults(A.empty<string>())),
     parseCompilerOptions: S.optionalKey(S.Union([S.String, DocgenJsonObject])),
     examplesCompilerOptions: S.optionalKey(S.Union([S.String, DocgenJsonObject])),
   },
@@ -1504,8 +1504,8 @@ export const analyzePackageDocumentation: (
         exclude: A.empty(),
       });
   const project = new Project({ skipAddingFilesFromTsConfig: true });
-  const srcDir = config.srcDir ?? "src";
-  const exclude = config.exclude ?? A.empty();
+  const srcDir = config.srcDir;
+  const exclude = config.exclude;
   const requiredTags = resolveRequiredTags(config);
   const analyses = pipe(
     getSourceFiles(project, targetPackage.absolutePath, srcDir, exclude),

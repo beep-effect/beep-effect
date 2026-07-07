@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import {
@@ -235,67 +236,68 @@ const statusFlags = {
 
 class SharedOptions extends S.Class<SharedOptions>($I`SharedOptions`)(
   {
-    allowStaleBase: S.optionalKey(S.Boolean),
-    amend: S.optionalKey(S.Boolean),
+    allowStaleBase: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    amend: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     base: S.String,
-    bots: S.optionalKey(S.String),
-    fast: S.optionalKey(S.Boolean),
+    bots: S.String.pipe(SchemaUtils.withKeyDefaults("greptile")),
+    fast: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     head: S.String,
     json: S.Boolean,
-    monitor: S.optionalKey(S.Boolean),
-    noEdit: S.optionalKey(S.Boolean),
+    monitor: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    noEdit: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     packetDir: S.String,
     plan: S.Boolean,
-    pr: S.optionalKey(S.Boolean),
-    pushOnly: S.optionalKey(S.Boolean),
-    remote: S.optionalKey(S.Boolean),
-    replyBody: S.optionalKey(S.String),
-    replyThread: S.optionalKey(S.String),
+    pr: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    pushOnly: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    remote: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    replyBody: S.String.pipe(SchemaUtils.withKeyDefaults("")),
+    replyThread: S.String.pipe(SchemaUtils.withKeyDefaults("")),
     requireGreptileIssues: S.optionalKey(S.Finite),
-    requireGreptileScore: S.optionalKey(S.String),
+    requireGreptileScore: S.String.pipe(SchemaUtils.withKeyDefaults("")),
     requireReviewComments: S.optionalKey(S.Finite),
-    resolveThreads: S.optionalKey(S.String),
-    retriggerGreptile: S.optionalKey(S.Boolean),
-    reuseVerified: S.optionalKey(S.Boolean),
-    stagedOnly: S.optionalKey(S.Boolean),
-    startPrEarly: S.optionalKey(S.Boolean),
-    summary: S.optionalKey(S.Boolean),
-    tier: S.optionalKey(YeetProofTier),
+    resolveThreads: S.String.pipe(SchemaUtils.withKeyDefaults("")),
+    retriggerGreptile: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    reuseVerified: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    stagedOnly: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    startPrEarly: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    summary: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    tier: YeetProofTier.pipe(SchemaUtils.withKeyDefaults("full")),
   },
   $I.annote("SharedOptions", {
     description: "CLI option bag shared by Yeet commands before handler defaults are applied.",
   })
 ) {}
+type SharedOptionsInput = (typeof SharedOptions)["~type.make.in"];
 
-const runYeetMode = (mode: YeetRunMode, options: SharedOptions & { readonly message?: string }) => {
+const runYeetMode = (mode: YeetRunMode, options: SharedOptionsInput & { readonly message?: string }) => {
   const sharedOptions = SharedOptions.make(options);
 
   return runYeet(
     YeetRunOptions.make({
       ...sharedOptions,
-      allowStaleBase: sharedOptions.allowStaleBase ?? false,
-      amend: sharedOptions.amend ?? false,
-      bots: sharedOptions.bots ?? "greptile",
-      fast: sharedOptions.fast ?? false,
+      allowStaleBase: sharedOptions.allowStaleBase,
+      amend: sharedOptions.amend,
+      bots: sharedOptions.bots,
+      fast: sharedOptions.fast,
       message: options.message ?? "",
       mode,
-      monitor: sharedOptions.monitor ?? false,
-      noEdit: sharedOptions.noEdit ?? false,
-      pr: sharedOptions.pr ?? false,
-      pushOnly: sharedOptions.pushOnly ?? false,
-      remote: sharedOptions.remote ?? false,
-      replyBody: sharedOptions.replyBody ?? "",
-      replyThread: sharedOptions.replyThread ?? "",
+      monitor: sharedOptions.monitor,
+      noEdit: sharedOptions.noEdit,
+      pr: sharedOptions.pr,
+      pushOnly: sharedOptions.pushOnly,
+      remote: sharedOptions.remote,
+      replyBody: sharedOptions.replyBody,
+      replyThread: sharedOptions.replyThread,
       requireGreptileIssues: sharedOptions.requireGreptileIssues ?? -1,
-      requireGreptileScore: sharedOptions.requireGreptileScore ?? "",
+      requireGreptileScore: sharedOptions.requireGreptileScore,
       requireReviewComments: sharedOptions.requireReviewComments ?? -1,
-      resolveThreads: sharedOptions.resolveThreads ?? "",
-      retriggerGreptile: sharedOptions.retriggerGreptile ?? false,
-      reuseVerified: sharedOptions.reuseVerified ?? false,
-      stagedOnly: sharedOptions.stagedOnly ?? false,
-      startPrEarly: sharedOptions.startPrEarly ?? false,
-      summary: sharedOptions.summary ?? false,
-      tier: sharedOptions.tier ?? "full",
+      resolveThreads: sharedOptions.resolveThreads,
+      retriggerGreptile: sharedOptions.retriggerGreptile,
+      reuseVerified: sharedOptions.reuseVerified,
+      stagedOnly: sharedOptions.stagedOnly,
+      startPrEarly: sharedOptions.startPrEarly,
+      summary: sharedOptions.summary,
+      tier: sharedOptions.tier,
     })
   );
 };

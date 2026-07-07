@@ -6,6 +6,25 @@ import noManualEffectRuntimeInTests from "./no-manual-effect-runtime-in-tests.ts
 import noOpaqueInstanceFields from "./no-opaque-instance-fields.ts";
 
 /**
+ * Re-exported import-binding model used by individual lint-rule helpers.
+ *
+ * @example
+ * ```ts
+ * import type { ImportBinding } from "@beep/lint-rules/oxlint"
+ *
+ * const binding: ImportBinding = {
+ *   kind: "named",
+ *   imported: "Effect",
+ *   local: "Effect"
+ * }
+ * console.log(binding.local)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export { ImportBinding } from "./utils.ts";
+
+/**
  * Oxlint plugin that exposes the repo-local TypeScript policy rules under the
  * `beep` plugin namespace.
  *

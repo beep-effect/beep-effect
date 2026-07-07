@@ -8,8 +8,8 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Effect, Order, pipe, Stream } from "effect";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -112,8 +112,8 @@ export class TurboConfigProofError extends TaggedErrorClass<TurboConfigProofErro
   static readonly new = (message: string, options: { readonly command?: string; readonly exitCode?: number } = {}) =>
     TurboConfigProofError.make({
       message,
-      ...R.getSomes({ command: O.fromUndefinedOr(options.command) }),
-      ...R.getSomes({ exitCode: O.fromUndefinedOr(options.exitCode) }),
+      ...O.getSomesStruct({ command: O.fromUndefinedOr(options.command) }),
+      ...O.getSomesStruct({ exitCode: O.fromUndefinedOr(options.exitCode) }),
     });
 
   /**
@@ -131,8 +131,8 @@ export class TurboConfigProofError extends TaggedErrorClass<TurboConfigProofErro
       TurboConfigProofError.make({
         cause,
         message,
-        ...R.getSomes({ command: O.fromUndefinedOr(options.command) }),
-        ...R.getSomes({ exitCode: O.fromUndefinedOr(options.exitCode) }),
+        ...O.getSomesStruct({ command: O.fromUndefinedOr(options.command) }),
+        ...O.getSomesStruct({ exitCode: O.fromUndefinedOr(options.exitCode) }),
       });
 }
 

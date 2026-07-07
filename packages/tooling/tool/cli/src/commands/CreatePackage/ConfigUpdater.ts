@@ -141,7 +141,8 @@ const PackagePath = S.String.check(S.isPattern(PACKAGE_PATH_PATTERN)).pipe(
   S.brand("PackagePath"),
   $I.annoteSchema("PackagePath", {
     description: "Repo-relative package path segment used by root config updaters.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 const TstycheTestFileMatchPattern = S.String.check(S.isPattern(TSTYCHE_TEST_FILE_MATCH_PATTERN)).pipe(
@@ -171,7 +172,6 @@ const toTstychePattern = (packagePath: string): string =>
     decodeTstychePattern(packagePath),
     O.getOrElse(() => fallbackTstychePattern(packagePath))
   );
-const isPackagePath = S.is(PackagePath);
 const stringArrayEquivalence = S.toEquivalence(S.Array(S.String));
 const JsoncUnknownObject = S.Record(S.String, S.Unknown).pipe(
   $I.annoteSchema("JsoncUnknownObject", {
@@ -227,7 +227,7 @@ const isTstycheEntryCovered: {
   (testFileMatch: ReadonlyArray<unknown>, packagePath: string): boolean;
   (packagePath: string): (testFileMatch: ReadonlyArray<unknown>) => boolean;
 } = dual(2, (testFileMatch: ReadonlyArray<unknown>, packagePath: string): boolean => {
-  if (!isPackagePath(packagePath)) return false;
+  if (!PackagePath.is(packagePath)) return false;
   const candidatePattern = toTstychePattern(packagePath);
   if (A.some(testFileMatch, (entry) => P.isString(entry) && Str.equivalence(entry, candidatePattern))) return true;
   const lastSlash = pipe(packagePath, Str.lastIndexOf("/"), O.getOrElse(thunkNegative1));
@@ -447,7 +447,7 @@ export const updateTstycheConfig: {
 
         const candidatePattern = pipe(
           packagePath,
-          O.liftPredicate(isPackagePath),
+          O.liftPredicate(PackagePath.is),
           O.map(toTstychePattern),
           O.getOrElse(() => fallbackTstychePattern(packagePath))
         );

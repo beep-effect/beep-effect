@@ -5,7 +5,20 @@
  * @since 0.0.0
  */
 
-import { AiSyncSchemaCell, AiSyncSourceMetadata, AiSyncTransformEvidence } from "./models.ts";
+import * as O from "@beep/utils/Option";
+import {
+  AiSyncSchemaCell,
+  AiSyncSourceId,
+  AiSyncSourceMetadata,
+  AiSyncSourceUrl,
+  AiSyncTransformEvidence,
+  AiSyncVersionPin,
+} from "./models.ts";
+
+const makeSourceId = (value: string) => AiSyncSourceId.make(value);
+const makeSourceUrl = (value: string) => AiSyncSourceUrl.make(value);
+const someSourceId = (value: string) => O.some(makeSourceId(value));
+const someVersionPin = (value: string) => O.some(AiSyncVersionPin.make(value));
 
 /**
  * Tier-1 sources fetched by the generator and strict drift checker.
@@ -20,87 +33,93 @@ import { AiSyncSchemaCell, AiSyncSourceMetadata, AiSyncTransformEvidence } from 
  */
 export const TIER_ONE_SOURCES = [
   AiSyncSourceMetadata.make({
-    id: "codex-config",
+    id: makeSourceId("codex-config"),
     agent: "codex",
     domain: "config",
     tier: "tier_1",
-    url: "https://raw.githubusercontent.com/openai/codex/rust-v0.133.0/codex-rs/core/config.schema.json",
-    versionPin: "rust-v0.133.0",
+    url: makeSourceUrl("https://raw.githubusercontent.com/openai/codex/rust-v0.133.0/codex-rs/core/config.schema.json"),
+    versionPin: someVersionPin("rust-v0.133.0"),
     isOfficial: true,
     driftMechanism: "version_and_hash",
   }),
   AiSyncSourceMetadata.make({
-    id: "codex-hooks",
+    id: makeSourceId("codex-hooks"),
     agent: "codex",
     domain: "hooks",
     tier: "tier_1",
-    url: "https://raw.githubusercontent.com/openai/codex/rust-v0.133.0/codex-rs/hooks/schema/generated/session-start.command.input.schema.json",
-    versionPin: "rust-v0.133.0",
+    url: makeSourceUrl(
+      "https://raw.githubusercontent.com/openai/codex/rust-v0.133.0/codex-rs/hooks/schema/generated/session-start.command.input.schema.json"
+    ),
+    versionPin: someVersionPin("rust-v0.133.0"),
     isOfficial: true,
     driftMechanism: "version_and_hash",
   }),
   AiSyncSourceMetadata.make({
-    id: "mcp-schema",
+    id: makeSourceId("mcp-schema"),
     agent: "mcp",
     domain: "protocol",
     tier: "tier_1",
-    url: "https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/main/schema/2025-11-25/schema.json",
-    versionPin: "2025-11-25",
+    url: makeSourceUrl(
+      "https://raw.githubusercontent.com/modelcontextprotocol/modelcontextprotocol/main/schema/2025-11-25/schema.json"
+    ),
+    versionPin: someVersionPin("2025-11-25"),
     isOfficial: true,
     driftMechanism: "version_and_hash",
   }),
   AiSyncSourceMetadata.make({
-    id: "acp-schema",
+    id: makeSourceId("acp-schema"),
     agent: "acp",
     domain: "protocol",
     tier: "tier_1",
-    url: "https://raw.githubusercontent.com/agentclientprotocol/agent-client-protocol/v0.13.3/schema/schema.json",
-    versionPin: "v0.13.3",
+    url: makeSourceUrl(
+      "https://raw.githubusercontent.com/agentclientprotocol/agent-client-protocol/v0.13.3/schema/schema.json"
+    ),
+    versionPin: someVersionPin("v0.13.3"),
     isOfficial: true,
     driftMechanism: "version_and_hash",
   }),
   AiSyncSourceMetadata.make({
-    id: "claude-code-settings",
+    id: makeSourceId("claude-code-settings"),
     agent: "claude-code",
     domain: "settings",
     tier: "tier_1",
-    url: "https://json.schemastore.org/claude-code-settings.json",
+    url: makeSourceUrl("https://json.schemastore.org/claude-code-settings.json"),
     isOfficial: false,
     driftMechanism: "hash",
   }),
   AiSyncSourceMetadata.make({
-    id: "claude-code-plugin-manifest",
+    id: makeSourceId("claude-code-plugin-manifest"),
     agent: "claude-code",
     domain: "plugin-manifest",
     tier: "tier_1",
-    url: "https://json.schemastore.org/claude-code-plugin-manifest.json",
+    url: makeSourceUrl("https://json.schemastore.org/claude-code-plugin-manifest.json"),
     isOfficial: false,
     driftMechanism: "hash",
   }),
   AiSyncSourceMetadata.make({
-    id: "claude-code-marketplace",
+    id: makeSourceId("claude-code-marketplace"),
     agent: "claude-code",
     domain: "marketplace",
     tier: "tier_1",
-    url: "https://json.schemastore.org/claude-code-marketplace.json",
+    url: makeSourceUrl("https://json.schemastore.org/claude-code-marketplace.json"),
     isOfficial: false,
     driftMechanism: "hash",
   }),
   AiSyncSourceMetadata.make({
-    id: "rulesync-config",
+    id: makeSourceId("rulesync-config"),
     agent: "rulesync",
     domain: "unified-config",
     tier: "tier_1",
-    url: "https://github.com/dyoshikawa/rulesync/releases/latest/download/config-schema.json",
+    url: makeSourceUrl("https://github.com/dyoshikawa/rulesync/releases/latest/download/config-schema.json"),
     isOfficial: false,
     driftMechanism: "hash",
   }),
   AiSyncSourceMetadata.make({
-    id: "rulesync-mcp",
+    id: makeSourceId("rulesync-mcp"),
     agent: "rulesync",
     domain: "mcp-servers",
     tier: "tier_1",
-    url: "https://github.com/dyoshikawa/rulesync/releases/latest/download/mcp-schema.json",
+    url: makeSourceUrl("https://github.com/dyoshikawa/rulesync/releases/latest/download/mcp-schema.json"),
     isOfficial: false,
     driftMechanism: "hash",
   }),
@@ -140,14 +159,14 @@ export const V1_SCHEMA_COVERAGE = [
     agent: "claude-code",
     domain: "hooks",
     status: "supported",
-    sourceId: "claude-code-settings",
+    sourceId: someSourceId("claude-code-settings"),
     rationale: "Settings SchemaStore mirror covers hook placement; docs explain event semantics.",
   }),
   AiSyncSchemaCell.make({
     agent: "claude-code",
     domain: "plugins",
     status: "supported",
-    sourceId: "claude-code-plugin-manifest",
+    sourceId: someSourceId("claude-code-plugin-manifest"),
     rationale: "SchemaStore plugin manifest and marketplace schemas are pinned by content hash.",
   }),
   AiSyncSchemaCell.make({
@@ -160,7 +179,7 @@ export const V1_SCHEMA_COVERAGE = [
     agent: "codex",
     domain: "skills",
     status: "supported",
-    sourceId: "codex-config",
+    sourceId: someSourceId("codex-config"),
     rationale: "Codex config schema and skills docs cover repo skill settings.",
   }),
   AiSyncSchemaCell.make({
@@ -179,21 +198,21 @@ export const V1_SCHEMA_COVERAGE = [
     agent: "codex",
     domain: "hooks",
     status: "supported",
-    sourceId: "codex-hooks",
+    sourceId: someSourceId("codex-hooks"),
     rationale: "Codex publishes generated hook schemas at the pinned release.",
   }),
   AiSyncSchemaCell.make({
     agent: "codex",
     domain: "plugins",
     status: "supported",
-    sourceId: "codex-config",
+    sourceId: someSourceId("codex-config"),
     rationale: "Codex plugin configuration is represented through the config schema and docs.",
   }),
   AiSyncSchemaCell.make({
     agent: "codex",
     domain: "mcp-servers",
     status: "supported",
-    sourceId: "codex-config",
+    sourceId: someSourceId("codex-config"),
     rationale: "Codex TOML mcp_servers entries are modeled and transformable to Claude-style JSON.",
   }),
   AiSyncSchemaCell.make({

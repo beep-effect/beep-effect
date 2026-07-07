@@ -11,7 +11,6 @@ import {
 import { A, O } from "@beep/utils";
 import { beforeAll, describe, expect, it } from "@effect/vitest";
 import { Cause, Context, Duration, Effect, Exit, Layer, pipe, Scope } from "effect";
-import * as S from "effect/Schema";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import type { SqlTestHooks } from "@beep/test-utils";
 
@@ -23,7 +22,6 @@ const provideScopedLayer =
 const sharedConnectionUri = Bun.env.BEEP_TEST_DATABASE_URL;
 const hasSharedConnectionUri = sharedConnectionUri !== undefined && sharedConnectionUri !== "";
 let pgliteTestcontainersAvailable = false;
-const isSqlTestHarnessError = S.is(SqlTestHarnessError);
 const ContainerInspectTimeout = Duration.seconds(5);
 const SharedPgliteIntegrationTimeoutMs = 60_000;
 const PgliteTestcontainersIntegrationTimeoutMs = 120_000;
@@ -359,7 +357,7 @@ describe("PGLite shared external SQL test driver", { concurrent: false }, () => 
         const failure = Cause.squash(exit.cause);
 
         expect(failure).toBeInstanceOf(SqlTestHarnessError);
-        if (isSqlTestHarnessError(failure)) {
+        if (SqlTestHarnessError.is(failure)) {
           expect(failure.phase).toBe("migrate");
           expect(failure.driver).toBe("pg-external");
         }

@@ -577,6 +577,12 @@ const typeAcquisitionDescription =
 const tsNodeDescription =
   "ts-node options used to execute or transpile TypeScript directly from tsconfig-compatible JSON documents.";
 
+const MaxNodeModuleJsDepth = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+  $I.annoteSchema("CompilerOptionsMaxNodeModuleJsDepthValue", {
+    description: "Non-negative integer depth for JavaScript files checked under node_modules.",
+  })
+);
+
 const tsConfigCompilerOptionsFields = {
   allowArbitraryExtensions: nullableOptionalField(
     S.Boolean,
@@ -1002,7 +1008,7 @@ const tsConfigCompilerOptionsFields = {
     "When type checking, take into account `null` and `undefined`."
   ),
   maxNodeModuleJsDepth: nullableOptionalField(
-    S.Finite,
+    MaxNodeModuleJsDepth,
     "CompilerOptionsMaxNodeModuleJsDepth",
     "Specify the maximum folder depth used for checking JavaScript files from `node_modules`."
   ),
@@ -1601,7 +1607,123 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
       "A strict TypeScript tsconfig document schema derived from the official SchemaStore definition, with JSONC-aware decode helpers.",
     messageUnexpectedKey: "Unexpected tsconfig key",
   })
-) {}
+) {
+  /**
+   * Strictly decode an unknown value into the semantic `TSConfig` shape.
+   *
+   * @param input - Unknown value to decode as strict tsconfig data.
+   * @returns Decode result containing a `TSConfig` value or schema error.
+   * @example
+   * ```ts
+   * import { TSConfig } from "@beep/repo-utils/schemas/TSConfig"
+   * const result = TSConfig.decodeStrictResult({ compilerOptions: { strict: true } })
+   * console.log(result)
+   * ```
+   * @category validation
+   * @since 0.0.0
+   */
+  static readonly decodeStrictResult = (input: unknown): Result.Result<TSConfig.Type, S.SchemaError> =>
+    Result.map(decodeTSConfigSemanticUnknownResult(input, strictDecodeOptions), (value) => TSConfig.make(value));
+
+  /**
+   * Strictly decode an unknown value into `TSConfig`, preserving failures in an `Exit`.
+   *
+   * @param input - Unknown value to decode as strict tsconfig data.
+   * @returns Exit containing a `TSConfig` value or schema error.
+   * @example
+   * ```ts
+   * import { TSConfig } from "@beep/repo-utils/schemas/TSConfig"
+   * const exit = TSConfig.decodeStrictExit({ compilerOptions: { noEmit: true } })
+   * console.log(exit)
+   * ```
+   * @category validation
+   * @since 0.0.0
+   */
+  static readonly decodeStrictExit = (input: unknown): Exit.Exit<TSConfig.Type, S.SchemaError> =>
+    pipe(
+      decodeTSConfigSemanticUnknownExit(input, strictDecodeOptions),
+      Exit.map((value) => TSConfig.make(value))
+    );
+
+  /**
+   * Strictly decode an unknown value into `TSConfig` as an Effect.
+   *
+   * @param input - Unknown value to decode as strict tsconfig data.
+   * @returns Effect that succeeds with `TSConfig` or fails with a schema error.
+   * @example
+   * ```ts
+   * import { Effect } from "effect"
+   * import { TSConfig } from "@beep/repo-utils/schemas/TSConfig"
+   * const config = Effect.runSync(TSConfig.decodeStrictEffect({ compilerOptions: { strict: true } }))
+   * console.log(config.compilerOptions)
+   * ```
+   * @category validation
+   * @since 0.0.0
+   */
+  static readonly decodeStrictEffect = (input: unknown): Effect.Effect<TSConfig.Type, S.SchemaError> =>
+    decodeTSConfigSemanticUnknownEffect(input, strictDecodeOptions).pipe(Effect.map((value) => TSConfig.make(value)));
+
+  /**
+   * Decode JSONC text into strict `TSConfig`.
+   *
+   * @example
+   * ```ts
+   * import { Effect } from "effect"
+   * import { TSConfig } from "@beep/repo-utils/schemas/TSConfig"
+   * const config = Effect.runSync(TSConfig.decodeJsoncTextEffect("{\"compilerOptions\":{\"strict\":true}}"))
+   * console.log(config.compilerOptions)
+   * ```
+   * @category validation
+   * @since 0.0.0
+   */
+  static readonly decodeJsoncTextEffect: (input: string) => Effect.Effect<TSConfig.Type, S.SchemaError> = Effect.fn(
+    "RepoUtils.TSConfig.decodeJsoncText"
+  )(function* (input) {
+    const parsed = yield* decodeJsoncUnknownText(input);
+    const decoded = yield* decodeTSConfigSemanticUnknownEffect(parsed, strictDecodeOptions);
+    return TSConfig.make(decoded);
+  });
+
+  /**
+   * Encode strict `TSConfig` input back to its external shape.
+   *
+   * @example
+   * ```ts
+   * import { Effect } from "effect"
+   * import { TSConfig } from "@beep/repo-utils/schemas/TSConfig"
+   * const encoded = Effect.runSync(TSConfig.encodeStrictEffect({ compilerOptions: { strict: true } }))
+   * console.log(encoded.compilerOptions?.strict)
+   * ```
+   * @category validation
+   * @since 0.0.0
+   */
+  static readonly encodeStrictEffect: (input: unknown) => Effect.Effect<TSConfig.Encoded, S.SchemaError> = Effect.fn(
+    "RepoUtils.TSConfig.encodeStrict"
+  )(function* (input) {
+    const validated = yield* TSConfig.decodeStrictEffect(input);
+    return yield* encodeTSConfigUnknownEffect(validated);
+  });
+
+  /**
+   * Encode strict `TSConfig` input to compact JSON text.
+   *
+   * @example
+   * ```ts
+   * import { Effect } from "effect"
+   * import { TSConfig } from "@beep/repo-utils/schemas/TSConfig"
+   * const json = Effect.runSync(TSConfig.encodeJsonStringEffect({ compilerOptions: { strict: true } }))
+   * console.log(json.includes("\"strict\":true"))
+   * ```
+   * @category validation
+   * @since 0.0.0
+   */
+  static readonly encodeJsonStringEffect: (input: unknown) => Effect.Effect<string, S.SchemaError> = Effect.fn(
+    "RepoUtils.TSConfig.encodeJsonString"
+  )(function* (input) {
+    const validated = yield* TSConfig.decodeStrictEffect(input);
+    return yield* encodeTSConfigJsonStringEffect(validated);
+  });
+}
 
 /**
  * Namespace helpers for the strict tsconfig schema.
@@ -1665,8 +1787,7 @@ const encodeTSConfigJsonStringEffect = S.encodeUnknownEffect(S.fromJsonString(TS
  * @category validation
  * @since 0.0.0
  */
-export const decodeTSConfig = (input: unknown): TSConfig.Type =>
-  TSConfig.make(Result.getOrThrow(decodeTSConfigSemanticUnknownResult(input, strictDecodeOptions)));
+export const decodeTSConfig = (input: unknown): TSConfig.Type => Result.getOrThrow(TSConfig.decodeStrictResult(input));
 
 /**
  * Synchronously decode an unknown value into a strict `TSConfig`,
@@ -1684,10 +1805,7 @@ export const decodeTSConfig = (input: unknown): TSConfig.Type =>
  * @since 0.0.0
  */
 export const decodeTSConfigExit: (input: unknown) => Exit.Exit<TSConfig.Type, S.SchemaError> = (input) =>
-  pipe(
-    decodeTSConfigSemanticUnknownExit(input, strictDecodeOptions),
-    Exit.map((value) => TSConfig.make(value))
-  );
+  TSConfig.decodeStrictExit(input);
 
 /**
  * Decode an unknown value into a strict `TSConfig` as an Effect.
@@ -1719,7 +1837,7 @@ export const decodeTSConfigExit: (input: unknown) => Exit.Exit<TSConfig.Type, S.
  * @since 0.0.0
  */
 export const decodeTSConfigEffect: (input: unknown) => Effect.Effect<TSConfig.Type, S.SchemaError> = (input) =>
-  decodeTSConfigSemanticUnknownEffect(input, strictDecodeOptions).pipe(Effect.map((value) => TSConfig.make(value)));
+  TSConfig.decodeStrictEffect(input);
 
 /**
  * Decode JSONC text into a strict `TSConfig`.
@@ -1749,11 +1867,7 @@ export const decodeTSConfigEffect: (input: unknown) => Effect.Effect<TSConfig.Ty
  * @since 0.0.0
  */
 export const decodeTSConfigFromJsoncTextEffect: (input: string) => Effect.Effect<TSConfig.Type, S.SchemaError> =
-  Effect.fn("RepoUtils.TSConfig.decodeFromJsoncText")(function* (input) {
-    const parsed = yield* decodeJsoncUnknownText(input);
-    const decoded = yield* decodeTSConfigSemanticUnknownEffect(parsed, strictDecodeOptions);
-    return TSConfig.make(decoded);
-  });
+  TSConfig.decodeJsoncTextEffect;
 
 /**
  * Encode a strict `TSConfig` value back to its encoded form as an Effect.
@@ -1777,12 +1891,8 @@ export const decodeTSConfigFromJsoncTextEffect: (input: string) => Effect.Effect
  * @category validation
  * @since 0.0.0
  */
-export const encodeTSConfigEffect: (input: unknown) => Effect.Effect<TSConfig.Encoded, S.SchemaError> = Effect.fn(
-  "RepoUtils.TSConfig.encode"
-)(function* (input) {
-  const validated = yield* decodeTSConfigEffect(input);
-  return yield* encodeTSConfigUnknownEffect(validated);
-});
+export const encodeTSConfigEffect: (input: unknown) => Effect.Effect<TSConfig.Encoded, S.SchemaError> =
+  TSConfig.encodeStrictEffect;
 
 /**
  * Encode a strict `TSConfig` value to a compact JSON string as an Effect.
@@ -1802,12 +1912,8 @@ export const encodeTSConfigEffect: (input: unknown) => Effect.Effect<TSConfig.En
  * @category validation
  * @since 0.0.0
  */
-export const encodeTSConfigToJsonEffect: (input: unknown) => Effect.Effect<string, S.SchemaError> = Effect.fn(
-  "RepoUtils.TSConfig.encodeToJson"
-)(function* (input) {
-  const validated = yield* decodeTSConfigEffect(input);
-  return yield* encodeTSConfigJsonStringEffect(validated);
-});
+export const encodeTSConfigToJsonEffect: (input: unknown) => Effect.Effect<string, S.SchemaError> =
+  TSConfig.encodeJsonStringEffect;
 
 /**
  * Encode a strict `TSConfig` value to a pretty-printed JSON string.

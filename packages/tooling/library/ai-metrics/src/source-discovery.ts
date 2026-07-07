@@ -13,7 +13,7 @@ import { Clock, Effect, FileSystem, flow, Order, Path, pipe, Stream } from "effe
 import * as S from "effect/Schema";
 import { fileSizeBytes } from "./internal/file-info.ts";
 import { collectJsonlFiles, statOption } from "./internal/jsonl-discovery.ts";
-import { transcriptLines } from "./internal/transcript-utils.ts";
+import { normalizedRelativePath, repoPathToClaudeProjectName, transcriptLines } from "./internal/transcript-utils.ts";
 import {
   AiMetricsDeployTarget,
   AiMetricsSourceRole,
@@ -276,7 +276,6 @@ export class AiMetricsSourceDiscoveryError extends TaggedErrorClass<AiMetricsSou
 ) {}
 
 const encodeSourceDiscoveryJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsSourceDiscoveryResult));
-const decodeCodexTranscriptLine = S.decodeUnknownOption(S.fromJsonString(CodexTranscriptLine));
 
 const byPathHashAscending: Order.Order<AiMetricsDiscoveredTranscriptFile> = Order.mapInput(
   Order.String,
@@ -304,14 +303,11 @@ const byCandidateModifiedDescending: Order.Order<SourceCandidateFile> = Order.ma
 const fileSystemFailure = (message: string, cause: unknown): AiMetricsSourceDiscoveryError =>
   AiMetricsSourceDiscoveryError.make({ cause, message });
 
-const normalizedRelativePath = (pathApi: Path.Path, root: string, filePath: string): string =>
-  pipe(pathApi.relative(root, filePath), Str.replace(/\\/gu, "/"));
-
 const contentHasCodexSessionMetaLine: (content: string) => boolean = flow(
   transcriptLines,
   A.some((line) =>
     pipe(
-      decodeCodexTranscriptLine(line),
+      CodexTranscriptLine.decodeJsonOption(line),
       O.exists((decoded) => decoded.type === "session_meta")
     )
   )
@@ -334,8 +330,6 @@ const readAttributionContent = (
     Effect.map(O.getOrElse(() => ""))
   );
 };
-
-const repoPathToClaudeProjectName: (repoRoot: string) => string = Str.replace(/[/\\]/gu, "-");
 
 const optionalModifiedAtMillis = (info: FileSystem.File.Info): O.Option<number> =>
   pipe(

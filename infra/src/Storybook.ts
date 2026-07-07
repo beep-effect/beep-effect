@@ -6,13 +6,14 @@
  */
 
 import { $InfraId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { Struct } from "@beep/utils";
+import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import * as pulumi from "@pulumi/pulumi";
 import * as vercel from "@pulumiverse/vercel";
-import { Result } from "effect";
+import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
+import { optionalPulumiConfigFields, withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.js";
+import { VercelAuthenticationDeploymentType } from "./Vercel.js";
 
 const $I = $InfraId.create("Storybook");
 
@@ -23,7 +24,8 @@ const defaultProductionBranch = "main";
 const defaultProjectName = "beep-storybook";
 const defaultRepository = "beep-effect/beep-effect";
 const defaultRootDirectory = "apps/storybook";
-const defaultVercelAuthenticationDeploymentType: StorybookVercelAuthenticationDeploymentType = "none";
+const defaultVercelAuthenticationDeploymentType: VercelAuthenticationDeploymentType =
+  VercelAuthenticationDeploymentType.Enum.none;
 
 type StorybookPulumiConfigValuesFields = {
   readonly buildCommand?: string | undefined;
@@ -57,17 +59,7 @@ type StorybookPulumiConfigInputValues = Omit<
  * @category models
  * @since 0.0.0
  */
-export const StorybookVercelAuthenticationDeploymentType = LiteralKit([
-  "standardProtectionNew",
-  "standardProtection",
-  "allDeployments",
-  "onlyPreviewDeployments",
-  "none",
-]).pipe(
-  $I.annoteSchema("StorybookVercelAuthenticationDeploymentType", {
-    description: "Vercel deployment authentication modes accepted by the Storybook project.",
-  })
-);
+export const StorybookVercelAuthenticationDeploymentType = VercelAuthenticationDeploymentType;
 
 /**
  * Runtime type for {@link StorybookVercelAuthenticationDeploymentType}.
@@ -90,17 +82,13 @@ const schemaIssueToPulumiConfigError =
   (cause: S.SchemaError): pulumi.RunError =>
     new pulumi.RunError(`Invalid storybook:${key} Pulumi config value "${value}": ${cause.message}`);
 
-const decodeStorybookVercelAuthenticationDeploymentType = S.decodeUnknownResult(
-  StorybookVercelAuthenticationDeploymentType
-);
-
 const storybookVercelAuthenticationDeploymentTypeFromPulumiConfig = (
   value: string | undefined
 ): StorybookVercelAuthenticationDeploymentType | undefined =>
   value === undefined
     ? undefined
     : Result.getOrThrowWith(
-        decodeStorybookVercelAuthenticationDeploymentType(value),
+        StorybookVercelAuthenticationDeploymentType.decodeResult(value),
         schemaIssueToPulumiConfigError("vercelAuthenticationDeploymentType", value)
       );
 
@@ -132,7 +120,9 @@ export const StorybookPulumiConfigValues = S.Class<StorybookPulumiConfigValuesFi
   $I.annote("StorybookPulumiConfigValues", {
     description: "Optional Pulumi config values before Storybook deploy defaults are applied.",
   })
-).mapFields(Struct.map(S.optionalKey));
+)
+  .mapFields(optionalPulumiConfigFields)
+  .pipe(withPulumiConfigDecodeEffect);
 
 /**
  * Runtime type for {@link StorybookPulumiConfigValues}.
@@ -174,7 +164,7 @@ export class StorybookVercelProjectConfig extends S.Class<StorybookVercelProject
     projectName: S.String.pipe(SchemaUtils.withKeyDefaults(defaultProjectName)),
     repository: S.String.pipe(SchemaUtils.withKeyDefaults(defaultRepository)),
     rootDirectory: S.String.pipe(SchemaUtils.withKeyDefaults(defaultRootDirectory)),
-    teamId: S.optionalKey(S.String),
+    teamId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     vercelAuthenticationDeploymentType: StorybookVercelAuthenticationDeploymentType.pipe(
       SchemaUtils.withKeyDefaults(defaultVercelAuthenticationDeploymentType)
     ),
@@ -199,7 +189,10 @@ export class StorybookVercelProjectConfig extends S.Class<StorybookVercelProject
  */
 export class StorybookStackArgs extends S.Class<StorybookStackArgs>($I`StorybookStackArgs`)(
   {
-    vercel: StorybookVercelProjectConfig.pipe(SchemaUtils.withKeyDefaults(StorybookVercelProjectConfig.make())),
+    vercel: StorybookVercelProjectConfig.pipe(
+      S.withConstructorDefault(Effect.succeed(StorybookVercelProjectConfig.make({}))),
+      S.withDecodingDefaultKey(Effect.succeed({}))
+    ),
   },
   $I.annote("StorybookStackArgs", {
     description: "Pulumi-facing args for the Storybook Vercel stack.",
@@ -239,8 +232,8 @@ export const makeStorybookStackArgsFromConfigValues = ({
   );
 
   return StorybookStackArgs.make({
-    vercel: StorybookVercelProjectConfig.make(
-      O.getSomesStruct({
+    vercel: StorybookVercelProjectConfig.make({
+      ...O.getSomesStruct({
         buildCommand: O.fromUndefinedOr(buildCommand),
         installCommand: O.fromUndefinedOr(installCommand),
         outputDirectory: O.fromUndefinedOr(outputDirectory),
@@ -248,10 +241,10 @@ export const makeStorybookStackArgsFromConfigValues = ({
         projectName: O.fromUndefinedOr(projectName),
         repository: O.fromUndefinedOr(repository),
         rootDirectory: O.fromUndefinedOr(rootDirectory),
-        teamId: O.fromUndefinedOr(vercelTeamId),
         vercelAuthenticationDeploymentType: O.fromUndefinedOr(resolvedVercelAuthenticationDeploymentType),
-      })
-    ),
+      }),
+      teamId: O.fromUndefinedOr(vercelTeamId),
+    }),
   });
 };
 
@@ -284,7 +277,7 @@ export const loadStorybookStackArgs = (): StorybookStackArgs => {
   });
 };
 
-const optionalTeamArgs = (teamId: string | undefined) => (teamId === undefined ? {} : { teamId });
+const optionalTeamArgs = (teamId: O.Option<string>) => O.getSomesStruct({ teamId });
 
 /**
  * Import-safe Pulumi component for the public Storybook Vercel project.

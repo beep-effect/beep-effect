@@ -1,9 +1,15 @@
 import { defineRule } from "@oxlint/plugins";
 import { HashSet, MutableHashSet } from "effect";
 import * as O from "effect/Option";
-import { classifyImportSpecifier, getPropertyName, unwrapExpression, unwrapMemberExpression } from "./utils.ts";
+import {
+  classifyImportSpecifier,
+  getPropertyName,
+  ImportBinding,
+  unwrapExpression,
+  unwrapMemberExpression,
+} from "./utils.ts";
 import type { ESTree } from "@oxlint/plugins";
-import type { AstNode, ImportBinding, MaybeNode, MemberAccess } from "./utils.ts";
+import type { AstNode, MaybeNode, MemberAccess } from "./utils.ts";
 
 // `effect` exposes Schema as a named/namespace member; `effect/Schema` exposes it as the
 // module itself (namespace/default) and re-exports `Schema`/`Opaque` as named members.
@@ -112,10 +118,12 @@ export default defineRule({
       else if (source === EFFECT_ROOT_SOURCE) MutableHashSet.add(effectRootNamespaces, local);
     };
 
-    const recordBinding = (source: string, binding: ImportBinding) => {
-      if (binding.kind === "named") return recordNamedBinding(binding.imported, binding.local);
-      recordModuleBinding(source, binding.local);
-    };
+    const recordBinding = (source: string, binding: ImportBinding) =>
+      ImportBinding.match(binding, {
+        named: ({ imported, local }) => recordNamedBinding(imported, local),
+        namespace: ({ local }) => recordModuleBinding(source, local),
+        default: ({ local }) => recordModuleBinding(source, local),
+      });
 
     return {
       // Record identifiers for Schema/Opaque/effect imports so we don't match unrelated modules.

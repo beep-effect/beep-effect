@@ -389,10 +389,14 @@ export class NextConfig extends S.Class<NextConfig>($I`NextConfig`)(
     description: "Public Next.js configuration schema.",
     documentation: "https://nextjs.org/docs/app/api-reference/config/next-config-js",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(NextConfig);
+  static readonly decodeResult = S.decodeUnknownResult(NextConfig);
+  static readonly encodeResult = S.encodeResult(NextConfig);
+}
 
-const decodeNextConfigResult = S.decodeUnknownResult(NextConfig);
-const encodeNextConfigResult = S.encodeResult(NextConfig);
+const decodeNextConfigResult = NextConfig.decodeResult;
+const encodeNextConfigResult = NextConfig.encodeResult;
 
 /**
  * Decode unknown input into a public Next.js configuration value.
@@ -407,7 +411,7 @@ const encodeNextConfigResult = S.encodeResult(NextConfig);
  * @category decoding
  * @since 0.0.0
  */
-export const decodeNextConfig = S.decodeUnknownEffect(NextConfig);
+export const decodeNextConfig = NextConfig.decodeEffect;
 
 /**
  * Synchronously validate and normalize a user-authored Next.js config.

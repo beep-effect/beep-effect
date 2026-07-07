@@ -594,7 +594,7 @@ const docgenRunCommand = Command.make(
 
       const aggregateResults = yield* aggregateGeneratedDocs({
         clean,
-        ...R.getSomes({
+        ...O.getSomesStruct({
           package: selector,
         }),
       });
@@ -623,7 +623,7 @@ const docgenAggregateCommand = Command.make(
       const selector = yield* resolvePackageSelector(packageSelector, filterSelector);
       const results = yield* aggregateGeneratedDocs({
         clean,
-        ...R.getSomes({ package: selector }),
+        ...O.getSomesStruct({ package: selector }),
       });
       yield* logAggregateResults(results);
     },

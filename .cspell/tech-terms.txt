@@ -28,6 +28,7 @@ BYOS
 bytea
 Bytea
 caddyfile
+canonicalizer
 callees
 callsites
 cata

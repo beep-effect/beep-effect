@@ -8,7 +8,11 @@
     "proposedTarget": "Add field-level annotateKey descriptions on exported reusable models, starting with public input/output DTOs. In-repo exemplars: packages/tooling/library/repo-utils/src/JSDoc/models/TSCategory.model.ts:116-193 annotates every field, and packages/foundation/capability/mcp-kit/src/TierGate.ts:88-103 shows concise field descriptions on domain schemas.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Package-wide annotateKey coverage is metadata-only and not an invariant or wire-shape defect; defer the broad public DTO annotation pass to a dedicated metadata sweep to avoid unrelated churn in this package wave.",
+      "boundary": "package-wide annotation metadata sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -19,7 +23,11 @@
     "proposedTarget": "Reuse @beep/schema NonNegativeInt (packages/foundation/modeling/schema/src/Number.ts:182-199) or local aliases such as AiMetricsCount/AiMetricsEpochMillis/AiMetricsByteCount built from S.Int.check(S.isGreaterThanOrEqualTo(0)); use S.Int.check(S.isGreaterThanOrEqualTo(1)) for positive-only knobs. Effect v4 S.Int and S.isGreaterThanOrEqualTo were verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7314.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Tightening count, limit, epoch, and size fields across exported DTOs changes public validation and may reject existing CLI, infra, DuckDB, and test payloads; it requires a same-sweep consumer audit outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -30,7 +38,11 @@
     "proposedTarget": "Introduce an annotated AiMetricsUnitScore schema as S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })) and reuse it for AiMetricsScoreWeights.cost/flow/outcome, OutcomeLabel.rating, Scorecard scores, TaskAggregateRow averages/passRate, BenchmarkAggregateRow scores/passRate, and agent-effectiveness summary scores. In-repo exemplar: RgbChannel uses the same bounded numeric pattern at packages/foundation/modeling/schema/src/Color/Color.rgb.ts:11-22 and :69-75; Effect v4 S.isBetween was verified at .repos/effect-v4/packages/effect/src/Schema.ts:7401.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Unit-score tightening changes exported scorecard and label schemas consumed by CLI/report flows; the public-form sweep must cover those consumers together.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -41,7 +53,11 @@
     "proposedTarget": "Replace with an annotated AiMetricsExitStatus schema such as S.Int.check(S.isBetween({ minimum: 0, maximum: 255 })) or reuse the positive/failure exit-status pattern from packages/tooling/tool/cli/src/commands/Quality/internal/FallowEnvelope.schema.ts:109 where failure-only status is intended. Effect v4 S.Int and S.isBetween were verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7401.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Process status semantics need a transcript-source survey before constraining to 0..255; tightening the exported ToolInvocation field here risks rejecting valid stored/native status values.",
+      "boundary": "public numeric-domain semantic sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -52,7 +68,11 @@
     "proposedTarget": "Model expectedChecks as S.NonEmptyArray(S.NonEmptyString) or the existing NonEmptyArrayOfNonEmptyStrings helper at packages/foundation/modeling/schema/src/ArrayOf.ts:115-127; mirror the same schema into AiMetricsBenchmarkCaseInput.expectedChecks at packages/tooling/library/ai-metrics/src/scorecard.ts:231 and the DuckDB JSON decoder at scorecard.ts:532.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Non-empty expected-check tightening changes BenchmarkCase and AiMetricsBenchmarkCaseInput public constructors used by the CLI eval scorer and package tests; it needs a consumer sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -63,7 +83,11 @@
     "proposedTarget": "Promote AiMetricsCoverageGap to the shared model surface and use S.Array(AiMetricsCoverageGap) for Scorecard.coverageGaps, AiMetricsWeeklyReportDocument.coverageGaps, AgentEffectivenessScorecardSummary.coverageGaps, and decodeCoverageGapsJson. This mirrors the package's existing LiteralKit + $I.annoteSchema pattern in models.ts:26-30 and source-discovery.ts:45-49.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Promoting coverage-gap literals into shared exported models changes Scorecard, weekly report, and agent-effectiveness public forms and report/CLI consumers; defer to a scoped shared-model sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -74,7 +98,11 @@
     "proposedTarget": "Use the existing Sha256Hex schema for sourcePathHash, rawEventHash, plaintextContentHash, inputPathHash, configHash, contentHash, and repoRootHash where the value is produced by hashPublicTextSha256/hashPrivateIdentifier; model archiveObjectId as S.TemplateLiteral([\"raw-\", Sha256Hex]) or an equivalent S.String.check(S.isPattern(/^raw-[a-f0-9]{64}$/u)). Sha256Hex is defined at packages/foundation/modeling/schema/src/Sha256.ts:62-70; S.TemplateLiteral and S.isPattern were verified at .repos/effect-v4/packages/effect/src/Schema.ts:2737 and :6521.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Hash and archive object-id tightening affects persisted DuckDB/archive wire validation and downstream retention/derived-storage consumers; it requires a migration-aware consumer sweep.",
+      "boundary": "cross-package/persistence ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -85,29 +113,11 @@
     "proposedTarget": "Move the key-format invariant into the schema with an annotated base64/AES-256-GCM key codec before S.RedactedFromValue, keeping decodeRawArchiveKey as defensive import-time validation. Use the package's existing $I.annoteSchema pattern at archive.ts:137-142 and v4 S.isPattern (verified .repos/effect-v4/packages/effect/src/Schema.ts:6521); add a custom toArbitrary annotation if byte-length validation requires generated base64 payloads.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/tooling/library/ai-metrics/src/retention.ts",
-    "line": 40,
-    "symbol": "AiMetricsRetentionMutationMode",
-    "smell": "Internal reusable LiteralKit AiMetricsRetentionMutationMode is used by exported AiMetricsRetentionMutationResult.mode but has no $I.annoteSchema annotation.",
-    "proposedTarget": "Pipe the LiteralKit through $I.annoteSchema(\"AiMetricsRetentionMutationMode\", { description: ... }) exactly like AiMetricsParquetExportMode at packages/tooling/library/ai-metrics/src/derived-storage.ts:50-54.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/tooling/library/ai-metrics/test/ingest.test.ts",
-    "line": 123,
-    "symbol": "@beep/repo-ai-metrics exported schema families",
-    "smell": "The package exports many annotated schema models across models, archive, source-discovery, privacy, derived-storage, forwarder, retention, mirror, scorecard, and agent-effectiveness, but package tests contain no S.toArbitrary-derived decode/encode/property law; current coverage is static integration and golden payload fixtures.",
-    "proposedTarget": "Add additive property tests importing production schemas from @beep/repo-ai-metrics and using S.toArbitrary plus either assertSchemaArbitraryDecodesToSelf (packages/tooling/test-kit/test-utils/src/Schema.ts:30-43) or the md package's direct S.toArbitrary pattern (packages/foundation/modeling/md/test/Md.test.ts:45-47). S.toArbitrary was verified at .repos/effect-v4/packages/effect/src/Schema.ts:12970.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 3,
+    "exception": {
+      "reason": "Raw archive key validation is an explicit crypto trust boundary today: base64 decode, AES-GCM byte length, and typed errors stay in decodeRawArchiveKey until a dedicated key codec can preserve that behavior and arbitrary generation.",
+      "boundary": "SPEC fence 4 - secret/key validation"
+    }
   },
   {
     "ruleId": "SFV4-arbitrary-tests",

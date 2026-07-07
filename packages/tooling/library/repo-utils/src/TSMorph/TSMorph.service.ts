@@ -84,30 +84,7 @@ const DEFAULT_REFERENCE_POLICY = TsMorphReferencePolicy.Enum.workspaceOnly;
 const DEFAULT_TSCONFIG_FILE_NAME = "tsconfig.json";
 const utf8Encoder = new TextEncoder();
 
-const decodeByteLength = S.decodeUnknownEffect(ByteLength);
-const decodeByteOffset = S.decodeUnknownEffect(ByteOffset);
-const decodeColumnNumber = S.decodeUnknownEffect(ColumnNumber);
-const decodeContentHashFromSourceText = S.decodeUnknownEffect(ContentHashFromSourceText);
-const decodeLineNumber = S.decodeUnknownEffect(LineNumber);
 const decodeNonNegativeInt = S.decodeUnknownEffect(NonNegativeInt);
-const decodeProjectScopeIdParts = S.decodeUnknownEffect(ProjectScopeIdParts);
-const decodeRepoRootPath = S.decodeUnknownEffect(RepoRootPath);
-const decodeSourceText = S.decodeUnknownEffect(SourceText);
-const decodeSymbolFilePath = S.decodeUnknownEffect(SymbolFilePath);
-const decodeSymbolNameSegment = S.decodeUnknownEffect(SymbolNameSegment);
-const decodeSymbolQualifiedName = S.decodeUnknownEffect(SymbolQualifiedName);
-const decodeTsMorphDiagnostic = S.decodeUnknownEffect(TsMorphDiagnostic);
-const decodeTsConfigFilePath = S.decodeUnknownEffect(TsConfigFilePath);
-const decodeTypeScriptFilePath = S.decodeUnknownEffect(TypeScriptFilePath);
-const decodeTypeScriptImplementationFilePath = S.decodeUnknownEffect(TypeScriptImplementationFilePath);
-const decodeTypeScriptImplementationToSymbolFilePath = S.decodeUnknownEffect(
-  TypeScriptImplementationFilePathToSymbolFilePath
-);
-const decodeWorkspaceDirectoryPath = S.decodeUnknownEffect(WorkspaceDirectoryPath);
-const decodeTypeScriptImplementationFilePathOption = S.decodeOption(TypeScriptImplementationFilePath);
-
-const isSymbolNameSegment = S.is(SymbolNameSegment);
-const isSymbolQualifiedName = S.is(SymbolQualifiedName);
 /**
  * Typed error retained for compatibility with older placeholder service wiring.
  *
@@ -225,7 +202,7 @@ export class TsMorphSourceFileError extends TaggedErrorClass<TsMorphSourceFileEr
   ): TsMorphSourceFileError {
     return TsMorphSourceFileError.make({
       scopeId,
-      filePath: S.decodeOption(TypeScriptFilePath)(filePathInput),
+      filePath: TypeScriptFilePath.decodeOption(filePathInput),
       message,
     });
   }
@@ -508,19 +485,19 @@ const normalizeOutlineSymbol = Effect.fn("normalizeOutlineSymbol")(function* (
     return O.none<ScopeSymbolEntry>();
   }
 
-  if (!isSymbolNameSegment(declarationName.value.name)) {
+  if (!SymbolNameSegment.is(declarationName.value.name)) {
     return O.none<ScopeSymbolEntry>();
   }
 
   const qualifiedName = pipeQualifiedName(parentSymbol, declarationName.value.name);
-  if (!isSymbolQualifiedName(qualifiedName)) {
+  if (!SymbolQualifiedName.is(qualifiedName)) {
     return O.none<ScopeSymbolEntry>();
   }
 
   const startOffset = declaration.getStart(true);
   const endOffset = declaration.getEnd();
   const symbolText = yield* decodeOrFail(
-    decodeSourceText,
+    SourceText.decodeEffect,
     Str.slice(startOffset, endOffset)(sourceFileText),
     (message) =>
       TsMorphSourceFileError.at(
@@ -528,7 +505,7 @@ const normalizeOutlineSymbol = Effect.fn("normalizeOutlineSymbol")(function* (
         `Failed to decode extracted symbol source for "${qualifiedName}": ${message}`
       )
   );
-  const contentHash = yield* decodeContentHashFromSourceText(symbolText).pipe(
+  const contentHash = yield* ContentHashFromSourceText.decodeEffect(symbolText).pipe(
     Effect.mapError((error) =>
       TsMorphSourceFileError.at(
         symbolFilePath,
@@ -541,13 +518,13 @@ const normalizeOutlineSymbol = Effect.fn("normalizeOutlineSymbol")(function* (
   const byteSpan = utf8Encoder.encode(symbolText);
   const docstring = readDocstring(declaration);
   const symbol = makeSymbol({
-    filePath: yield* decodeOrFail(decodeSymbolFilePath, symbolFilePath, (message) =>
+    filePath: yield* decodeOrFail(SymbolFilePath.decodeEffect, symbolFilePath, (message) =>
       TsMorphSourceFileError.at(symbolFilePath, `Failed to decode symbol file path for "${qualifiedName}": ${message}`)
     ),
-    name: yield* decodeOrFail(decodeSymbolNameSegment, declarationName.value.name, (message) =>
+    name: yield* decodeOrFail(SymbolNameSegment.decodeEffect, declarationName.value.name, (message) =>
       TsMorphSourceFileError.at(symbolFilePath, `Failed to decode symbol name for "${qualifiedName}": ${message}`)
     ),
-    qualifiedName: yield* decodeOrFail(decodeSymbolQualifiedName, qualifiedName, (message) =>
+    qualifiedName: yield* decodeOrFail(SymbolQualifiedName.decodeEffect, qualifiedName, (message) =>
       TsMorphSourceFileError.at(symbolFilePath, `Failed to decode qualified name "${qualifiedName}": ${message}`)
     ),
     kind: declarationName.value.kind,
@@ -557,16 +534,16 @@ const normalizeOutlineSymbol = Effect.fn("normalizeOutlineSymbol")(function* (
     decorators: readDecorators(declaration),
     keywords: makeKeywords(declarationName.value.name, qualifiedName, { kind: declarationName.value.kind }),
     parentId: O.map(parentSymbol, (parent) => parent.id),
-    startLine: yield* decodeOrFail(decodeLineNumber, declaration.getStartLineNumber(true), (message) =>
+    startLine: yield* decodeOrFail(LineNumber.decodeEffect, declaration.getStartLineNumber(true), (message) =>
       TsMorphSourceFileError.at(symbolFilePath, `Failed to decode start line for "${qualifiedName}": ${message}`)
     ),
-    endLine: yield* decodeOrFail(decodeLineNumber, declaration.getEndLineNumber(), (message) =>
+    endLine: yield* decodeOrFail(LineNumber.decodeEffect, declaration.getEndLineNumber(), (message) =>
       TsMorphSourceFileError.at(symbolFilePath, `Failed to decode end line for "${qualifiedName}": ${message}`)
     ),
-    byteOffset: yield* decodeOrFail(decodeByteOffset, bytePrefix.length, (message) =>
+    byteOffset: yield* decodeOrFail(ByteOffset.decodeEffect, bytePrefix.length, (message) =>
       TsMorphSourceFileError.at(symbolFilePath, `Failed to decode byte offset for "${qualifiedName}": ${message}`)
     ),
-    byteLength: yield* decodeOrFail(decodeByteLength, byteSpan.length, (message) =>
+    byteLength: yield* decodeOrFail(ByteLength.decodeEffect, byteSpan.length, (message) =>
       TsMorphSourceFileError.at(symbolFilePath, `Failed to decode byte length for "${qualifiedName}": ${message}`)
     ),
     contentHash,
@@ -583,18 +560,24 @@ const normalizeOutlineSymbol = Effect.fn("normalizeOutlineSymbol")(function* (
 const resolveSymbolFilePath = Effect.fn(function* (
   filePath: TypeScriptFilePath
 ): Effect.fn.Return<SymbolFilePath, TsMorphUnsupportedFileError> {
-  const implementationFilePath = yield* decodeOrFail(decodeTypeScriptImplementationFilePath, filePath, (message) =>
-    TsMorphUnsupportedFileError.make({
-      filePath,
-      message: `File outlines currently support TypeScript implementation files only: ${message}`,
-    })
+  const implementationFilePath = yield* decodeOrFail(
+    TypeScriptImplementationFilePath.decodeEffect,
+    filePath,
+    (message) =>
+      TsMorphUnsupportedFileError.make({
+        filePath,
+        message: `File outlines currently support TypeScript implementation files only: ${message}`,
+      })
   );
 
-  return yield* decodeOrFail(decodeTypeScriptImplementationToSymbolFilePath, implementationFilePath, (message) =>
-    TsMorphUnsupportedFileError.make({
-      filePath,
-      message: `Failed to normalize implementation file path "${implementationFilePath}" for symbol ids: ${message}`,
-    })
+  return yield* decodeOrFail(
+    TypeScriptImplementationFilePathToSymbolFilePath.decodeEffect,
+    implementationFilePath,
+    (message) =>
+      TsMorphUnsupportedFileError.make({
+        filePath,
+        message: `Failed to normalize implementation file path "${implementationFilePath}" for symbol ids: ${message}`,
+      })
   );
 });
 
@@ -700,7 +683,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
   ): Effect.fn.Return<RepoRootPath, TsMorphScopeResolutionError> {
     if (O.isSome(repoRootPath)) {
       return yield* decodeOrFail(
-        decodeRepoRootPath,
+        RepoRootPath.decodeEffect,
         pathApi.normalize(
           pathApi.isAbsolute(repoRootPath.value)
             ? repoRootPath.value
@@ -724,7 +707,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
       )
     );
 
-    return yield* decodeOrFail(decodeRepoRootPath, pathApi.normalize(discoveredRepoRoot), (message) =>
+    return yield* decodeOrFail(RepoRootPath.decodeEffect, pathApi.normalize(discoveredRepoRoot), (message) =>
       TsMorphScopeResolutionError.make({
         entrypoint: discoveredRepoRoot,
         message: `Failed to normalize discovered repository root "${discoveredRepoRoot}": ${message}`,
@@ -745,7 +728,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
     );
 
     const repoRelativeTsConfigPath = yield* decodeRepoRelativePath(pathApi, repoRootPath, absoluteTsConfigPath);
-    return yield* decodeOrFail(decodeTsConfigFilePath, repoRelativeTsConfigPath, (message) =>
+    return yield* decodeOrFail(TsConfigFilePath.decodeEffect, repoRelativeTsConfigPath, (message) =>
       TsMorphScopeResolutionError.make({
         entrypoint: tsConfigPath,
         message: `Resolved tsconfig path "${repoRelativeTsConfigPath}" is not a valid TsConfigFilePath: ${message}`,
@@ -771,7 +754,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
     const repoRelativeFilePath = yield* decodeRepoRelativePath(pathApi, repoRootPath, absoluteFilePath);
     return {
       absoluteFilePath,
-      filePath: yield* decodeOrFail(decodeTypeScriptFilePath, repoRelativeFilePath, (message) =>
+      filePath: yield* decodeOrFail(TypeScriptFilePath.decodeEffect, repoRelativeFilePath, (message) =>
         TsMorphSourceFileError.at(
           filePath,
           `Resolved file path "${repoRelativeFilePath}" is not a valid TypeScriptFilePath: ${message}`
@@ -793,7 +776,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
 
       if (candidateExists) {
         const repoRelativeTsConfigPath = yield* decodeRepoRelativePath(pathApi, repoRootPath, candidateTsConfigPath);
-        return yield* decodeOrFail(decodeTsConfigFilePath, repoRelativeTsConfigPath, (message) =>
+        return yield* decodeOrFail(TsConfigFilePath.decodeEffect, repoRelativeTsConfigPath, (message) =>
           TsMorphScopeResolutionError.make({
             entrypoint: filePath,
             message: `Resolved tsconfig path "${repoRelativeTsConfigPath}" is not a valid TsConfigFilePath: ${message}`,
@@ -826,7 +809,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
   ) {
     const absoluteTsConfigPath = resolveAbsolutePath(pathApi, repoRootPath, tsConfigPath);
     const workspaceDirectoryPath = yield* decodeOrFail(
-      decodeWorkspaceDirectoryPath,
+      WorkspaceDirectoryPath.decodeEffect,
       pathApi.dirname(absoluteTsConfigPath),
       (message) =>
         TsMorphScopeResolutionError.make({
@@ -882,7 +865,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
     }
 
     const [tsConfigPath, _scopeSeparator, mode, _policySeparator, referencePolicy] = yield* decodeOrFail(
-      decodeProjectScopeIdParts,
+      ProjectScopeIdParts.decodeEffect,
       scopeId,
       (message) =>
         TsMorphScopeResolutionError.make({
@@ -968,7 +951,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
         continue;
       }
 
-      const implementationFilePath = decodeTypeScriptImplementationFilePathOption(repoRelativeFilePath);
+      const implementationFilePath = TypeScriptImplementationFilePath.decodeOption(repoRelativeFilePath);
       if (O.isSome(implementationFilePath)) {
         const sourceEntries = yield* collectOutlineEntries(implementationFilePath.value, sourceFile).pipe(
           Effect.provide(cryptoContext)
@@ -1050,14 +1033,17 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
       DEFAULT_REFERENCE_POLICY
     );
     const loadedSourceFile = yield* loadSourceFile(scope, request.filePath);
-    const sourceText = yield* decodeOrFail(decodeSourceText, loadedSourceFile.sourceFile.getFullText(), (message) =>
-      TsMorphSourceFileError.at(
-        loadedSourceFile.filePath,
-        `Failed to decode source text for "${loadedSourceFile.filePath}": ${message}`,
-        O.some(scope.scopeId)
-      )
+    const sourceText = yield* decodeOrFail(
+      SourceText.decodeEffect,
+      loadedSourceFile.sourceFile.getFullText(),
+      (message) =>
+        TsMorphSourceFileError.at(
+          loadedSourceFile.filePath,
+          `Failed to decode source text for "${loadedSourceFile.filePath}": ${message}`,
+          O.some(scope.scopeId)
+        )
     );
-    const contentHash = yield* decodeContentHashFromSourceText(sourceText).pipe(
+    const contentHash = yield* ContentHashFromSourceText.decodeEffect(sourceText).pipe(
       Effect.mapError((error) =>
         TsMorphSourceFileError.at(
           loadedSourceFile.filePath,
@@ -1166,7 +1152,7 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
           const startPosition = loadedSourceFile.sourceFile.getLineAndColumnAtPos(start);
           const endPosition = loadedSourceFile.sourceFile.getLineAndColumnAtPos(end);
           const source = diagnostic.getSource();
-          const filePathOption = S.decodeOption(TypeScriptFilePath)(loadedSourceFile.filePath);
+          const filePathOption = TypeScriptFilePath.decodeOption(loadedSourceFile.filePath);
           const decodeDiagnosticField = <A>(
             decode: (value: unknown) => Effect.Effect<A, S.SchemaError>,
             value: unknown,
@@ -1181,16 +1167,20 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
             );
 
           return yield* decodeOrFail(
-            decodeTsMorphDiagnostic,
+            TsMorphDiagnostic.decodeEffect,
             {
               category: normalizeDiagnosticCategory(diagnostic.getCategory()),
               code: yield* decodeDiagnosticField(decodeNonNegativeInt, diagnostic.getCode(), "code"),
               message: flattenDiagnosticMessageText(diagnostic.getMessageText()),
               source: source ?? null,
-              startLine: yield* decodeDiagnosticField(decodeLineNumber, startPosition.line, "start line"),
-              startColumn: yield* decodeDiagnosticField(decodeColumnNumber, startPosition.column, "start column"),
-              endLine: yield* decodeDiagnosticField(decodeLineNumber, endPosition.line, "end line"),
-              endColumn: yield* decodeDiagnosticField(decodeColumnNumber, endPosition.column, "end column"),
+              startLine: yield* decodeDiagnosticField(LineNumber.decodeEffect, startPosition.line, "start line"),
+              startColumn: yield* decodeDiagnosticField(
+                ColumnNumber.decodeEffect,
+                startPosition.column,
+                "start column"
+              ),
+              endLine: yield* decodeDiagnosticField(LineNumber.decodeEffect, endPosition.line, "end line"),
+              endColumn: yield* decodeDiagnosticField(ColumnNumber.decodeEffect, endPosition.column, "end column"),
             },
             (message) =>
               TsMorphSourceFileError.make({

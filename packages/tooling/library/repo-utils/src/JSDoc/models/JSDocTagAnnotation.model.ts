@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { SchemaAST } from "effect";
+import * as O from "effect/Option";
 import type * as S from "effect/Schema";
 import type { JSDocTagDefinition } from "./JSDocTagDefinition.model.js";
 
@@ -36,11 +37,12 @@ declare module "effect/Schema" {
  * Retrieve the JSDoc tag metadata annotation from a schema, if present.
  *
  * @param schema - Any Effect schema.
- * @returns The JSDocTagDefinition metadata or `undefined`.
+ * @returns The JSDocTagDefinition metadata when present.
  * @example
  * ```ts
  * import { JSDocTagDefinition, make } from "@beep/repo-utils/JSDoc/models/JSDocTagDefinition.model"
  * import { getJSDocTagMetadata } from "@beep/repo-utils/JSDoc/models/JSDocTagAnnotation.model"
+ * import * as O from "effect/Option"
  *
  * const meta: Omit<JSDocTagDefinition.Encoded, "_tag"> = {
  *   synonyms: [],
@@ -61,10 +63,10 @@ declare module "effect/Schema" {
  * }
  * const tagSchema = make("param", meta)
  * const metadata = getJSDocTagMetadata(tagSchema)
- * console.log(metadata?._tag)
+ * console.log(O.getOrUndefined(metadata)?._tag)
  * ```
  * @category models
  * @since 0.0.0
  */
-export const getJSDocTagMetadata = (schema: S.Top): JSDocTagAnnotationPayload | undefined =>
-  SchemaAST.resolve(schema.ast)?.jsDocTagMetadata;
+export const getJSDocTagMetadata = (schema: S.Top): O.Option<JSDocTagAnnotationPayload> =>
+  O.fromUndefinedOr(SchemaAST.resolve(schema.ast)?.jsDocTagMetadata);

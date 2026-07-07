@@ -55,6 +55,8 @@ type Finding = {
   readonly line: number;
 };
 
+const ReportLine = S.Int.check(S.isGreaterThanOrEqualTo(1));
+
 /** Build the single-rule oxlint config object (native categories off, plugin loaded). */
 const ruleConfig = (rule: OxlintRule) => ({
   plugins: [],
@@ -71,14 +73,29 @@ const ruleConfig = (rule: OxlintRule) => ({
   rules: { [`beep/${rule}`]: "warn" },
 });
 
-/** Lenient schema over the subset of oxlint's `--format=json` report the harness reads. */
-const OxlintReport = S.Struct({
+/**
+ * Lenient schema over the subset of oxlint's `--format=json` report the harness reads.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert/strict"
+ * import { OxlintReport } from "./oxlint-harness.ts"
+ * import * as S from "effect/Schema"
+ *
+ * const report = S.decodeUnknownSync(OxlintReport)({ diagnostics: [] })
+ *
+ * strictEqual(report.diagnostics?.length, 0)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const OxlintReport = S.Struct({
   diagnostics: S.Array(
     S.Struct({
       code: S.String.pipe(S.optional),
       labels: S.Array(
         S.Struct({
-          span: S.Struct({ line: S.Finite.pipe(S.optional) }).pipe(S.optional),
+          span: S.Struct({ line: ReportLine.pipe(S.optional) }).pipe(S.optional),
         })
       ).pipe(S.optional),
     })

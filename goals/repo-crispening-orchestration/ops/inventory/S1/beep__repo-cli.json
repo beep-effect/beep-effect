@@ -8,7 +8,11 @@
     "proposedTarget": "Introduce `ArchitecturePackageOperationPlanInput` as an `S.Class` beside `ArchitecturePlanTarget` (same-file exemplar: `ArchitecturePlanTarget` at line 457 and `WritePackageJsonOperation` at line 532), with `boundedContext: S.String` and `role: ArchitecturePackageRole`. Then type the exported builder from that schema, optionally via `Fn({ input: ArchitecturePackageOperationPlanInput, output: CanonicalSliceOperationPlan }).implementEffect(...)` (Fn and `.implementEffect` verified at packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:637 and :224).",
     "confidence": 0.78,
     "mechanization": "assisted",
-    "roiRank": 5.1
+    "roiRank": 5.1,
+    "exception": {
+      "reason": "Promoting this exported workflow/helper contract to a schema-derived public form would require a consumer-signature sweep beyond this focused writer pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-fn-schema",
@@ -19,7 +23,11 @@
     "proposedTarget": "Add a small `CorpusDocketMatch` `S.Class` in `Corpus.schemas.ts` near `CorpusOrganizeRecord` (line 981; its `docket` and `docketFamily` fields show the downstream payload shape). Return `O.Option<CorpusDocketMatch>` and construct with `CorpusDocketMatch.make`; if the function is wrapped, use `Fn({ input: S.String, output: S.Option(CorpusDocketMatch) }).implementSync(...)` (`S.Option` verified at .repos/effect-v4/packages/effect/src/Schema.ts:8492; Fn `.implementSync` verified at packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:225).",
     "confidence": 0.74,
     "mechanization": "assisted",
-    "roiRank": 4.4
+    "roiRank": 4.4,
+    "exception": {
+      "reason": "Promoting this exported workflow/helper contract to a schema-derived public form would require a consumer-signature sweep beyond this focused writer pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-fn-schema",
@@ -30,7 +38,11 @@
     "proposedTarget": "Add `RecycleBinNameClassification` as an `S.Class` near `RecycleBinEntryKind` and `RecycleBinScanEntry` (Corpus.schemas.ts:616 and :647) with `kind: RecycleBinEntryKind` and `pairKey: S.NonEmptyString`. Return `O.Option<RecycleBinNameClassification>` from `classifyRecycleBinName` using `S.Option(RecycleBinNameClassification)` as the Fn output if wrapped (`S.Option` verified at .repos/effect-v4/packages/effect/src/Schema.ts:8492).",
     "confidence": 0.78,
     "mechanization": "assisted",
-    "roiRank": 4.6
+    "roiRank": 4.6,
+    "exception": {
+      "reason": "Promoting this exported workflow/helper contract to a schema-derived public form would require a consumer-signature sweep beyond this focused writer pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-fn-schema",
@@ -41,7 +53,11 @@
     "proposedTarget": "Promote `DocgenLocalOptions` to an `S.Class` near the existing local docgen schemas, e.g. `base/head: S.String`, `full/json/plan: S.Boolean`, `packageSelector: S.Option(S.String)`, and `parallel: S.Finite`; keep `type DocgenLocalOptions = typeof DocgenLocalOptions.Type`. Same-file schema exemplars: `DocgenLocalSelectedPackage` at line 186 and `DocgenLocalPlan` at line 246; `S.Option` verified at .repos/effect-v4/packages/effect/src/Schema.ts:8492.",
     "confidence": 0.82,
     "mechanization": "assisted",
-    "roiRank": 5.8
+    "roiRank": 5.8,
+    "exception": {
+      "reason": "Promoting this exported workflow/helper contract to a schema-derived public form would require a consumer-signature sweep beyond this focused writer pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-fn-schema",
@@ -52,7 +68,11 @@
     "proposedTarget": "Replace the type literal with `RunDocgenForPackageOptions extends S.Class` using `include: S.optionalKey(S.Array(S.String))`, colocated near `DocgenGenerationResult` at line 418. Keep the existing dual overload shape but make the options type schema-derived. The local file already has an options S.Class pattern at `ResolveDocgenWorkspacePackageOptions` line 62.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 3.1
+    "roiRank": 3.1,
+    "exception": {
+      "reason": "Promoting this exported workflow/helper contract to a schema-derived public form would require a consumer-signature sweep beyond this focused writer pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-fn-schema",
@@ -63,7 +83,11 @@
     "proposedTarget": "Introduce `AggregateGeneratedDocsOptions extends S.Class` near `DocgenAggregateResult` (line 458) with optional `clean` and package selector fields, then type `aggregateGeneratedDocs` with that schema-derived options type. This gives the `--package` and `--clean` input shape the same executable contract as the result model.",
     "confidence": 0.68,
     "mechanization": "assisted",
-    "roiRank": 3.3
+    "roiRank": 3.3,
+    "exception": {
+      "reason": "Promoting this exported workflow/helper contract to a schema-derived public form would require a consumer-signature sweep beyond this focused writer pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-fn-schema",
@@ -74,7 +98,11 @@
     "proposedTarget": "Add `DocgenQualityTargetSelection extends S.Class` near `DocgenQualityScopeMode` (line 104) with `all: S.Boolean`, `changedFiles: S.Boolean`, and `packageSelector: S.Option(S.String)`. Then accept that schema-derived type in `resolveDocgenQualityTargets`; `S.Option` verified at .repos/effect-v4/packages/effect/src/Schema.ts:8492.",
     "confidence": 0.76,
     "mechanization": "assisted",
-    "roiRank": 4.2
+    "roiRank": 4.2,
+    "exception": {
+      "reason": "Promoting this exported workflow/helper contract to a schema-derived public form would require a consumer-signature sweep beyond this focused writer pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-fn-schema",
@@ -85,7 +113,11 @@
     "proposedTarget": "Split the schema-carrying part into an `AnalyzeDocgenQualityOptions` S.Class near `DocgenQualityReport` (line 402): `scope: DocgenQualityScopeMode`, `scoreMode: DocgenQualityScoreMode`, `targets: S.Array(DocgenWorkspacePackage)`, `packetLimit: S.optionalKey(S.Finite)`. Keep `packageTimeout: Duration.Duration` as a runtime-only override or model it separately if a Duration schema is chosen by the writer.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Promoting this exported workflow/helper contract to a schema-derived public form would require a consumer-signature sweep beyond this focused writer pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-fn-schema",
@@ -96,7 +128,11 @@
     "proposedTarget": "Introduce `DocgenQualityWorkerRunpodPodCreateOptions extends S.Class` beside `RunDocgenQualityWorkerRunpodEvalOptions` (line 269), or derive this helper from that existing options schema's relevant subset. The function can continue returning `PodCreateInput.make(...)`; the first-party pod recipe contract should be schema-derived.",
     "confidence": 0.64,
     "mechanization": "assisted",
-    "roiRank": 2.6
+    "roiRank": 2.6,
+    "exception": {
+      "reason": "Promoting this exported workflow/helper contract to a schema-derived public form would require a consumer-signature sweep beyond this focused writer pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "schema-first-inventory",
@@ -257,7 +293,11 @@
     "proposedTarget": "Replace the augmented-array alias with a small schema model, e.g. `ParsedCsvRecords extends S.Class` beside `ParsedCsvRecord` with `rows: S.Array(ParsedCsvRecord)` and `columns: S.Array(S.String)`, then update `parseCsvSource` to return `.make({ rows, columns })` and consumers to read `.rows`. In-repo exemplars: `ParsedCsvRecord` at line 32 and `SyncDataOutputFile` at packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts:94. Effect v4 APIs verified: `S.Class` at .repos/effect-v4/packages/effect/src/Schema.ts:12696 and `S.Array` export at .repos/effect-v4/packages/effect/src/Schema.ts:4462-4483.",
     "confidence": 0.78,
     "mechanization": "assisted",
-    "roiRank": 4.1
+    "roiRank": 4.1,
+    "exception": {
+      "reason": "Promoting this exported workflow/helper contract to a schema-derived public form would require a consumer-signature sweep beyond this focused writer pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "schema-first-inventory",
@@ -268,7 +308,11 @@
     "proposedTarget": "Promote `SyncDataFetchedSource` to an `S.Class` in this module or in `internal/Models.ts` with `bytes: S.Uint8Array`, `id/url/text/sha256: S.String`, and return `SyncDataFetchedSource.make(...)` from `fetchSource`. In-repo exemplars: `SyncDataSourceMetadata` at packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts:75 and binary schema usage at packages/drivers/xai/src/XAi.models.ts:180. Effect v4 API verified: `S.Uint8Array` at .repos/effect-v4/packages/effect/src/Schema.ts:11781.",
     "confidence": 0.66,
     "mechanization": "assisted",
-    "roiRank": 3.8
+    "roiRank": 3.8,
+    "exception": {
+      "reason": "Promoting this exported workflow/helper contract to a schema-derived public form would require a consumer-signature sweep beyond this focused writer pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-fn-schema",
@@ -279,7 +323,11 @@
     "proposedTarget": "Introduce `SyncDataSourceMetadataExtras` as an `S.Class` or boundary `S.Struct` near `SyncDataSourceMetadata` with `version` and `published` optional keys, then type `sourceMetadata` from that schema-derived type. Same-package exemplar: `SyncDataSourceMetadata` at packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts:75. Effect v4 API verified: `S.optionalKey` at .repos/effect-v4/packages/effect/src/Schema.ts:2270.",
     "confidence": 0.69,
     "mechanization": "assisted",
-    "roiRank": 3.1
+    "roiRank": 3.1,
+    "exception": {
+      "reason": "Promoting this exported workflow/helper contract to a schema-derived public form would require a consumer-signature sweep beyond this focused writer pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-fn-schema",
@@ -290,7 +338,11 @@
     "proposedTarget": "Add `YeetVerdictBuildInput extends S.Class` beside `YeetVerdict` with the current fields (`executed: S.Array(YeetExecutedStep)`, `planned: S.Array(RepoPlanStep)`, optional `baseFreshness/indexPath/stash`, and an outcome literal schema), then type `buildYeetVerdict` from `typeof YeetVerdictBuildInput.Type` or wrap it with `Fn({ input: YeetVerdictBuildInput, output: YeetVerdict }).implementSync(...)`. Same-file exemplars: `YeetVerdict` at line 165 and `YeetExecutedStep` at line 201. Fn `.implementSync` verified at packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:225.",
     "confidence": 0.78,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Promoting this exported workflow/helper contract to a schema-derived public form would require a consumer-signature sweep beyond this focused writer pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "schema-first-inventory",

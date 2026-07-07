@@ -9,6 +9,7 @@
  */
 import { $RepoUtilsId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import { NonEmptyStringValue, NpmPackageName, RepoPackageName } from "./PackageJson.js";
 
 const $I = $RepoUtilsId.create("schemas/WorkspaceDeps");
 
@@ -24,9 +25,9 @@ const $I = $RepoUtilsId.create("schemas/WorkspaceDeps");
  * @category models
  * @since 0.0.0
  */
-export const DependencyRecord = S.Record(S.String, S.String).pipe(
+export const DependencyRecord = S.Record(NpmPackageName, NonEmptyStringValue).pipe(
   $I.annoteSchema("DependencyRecord", {
-    description: "A mapping of dependency package names to version specifiers.",
+    description: "A mapping of npm-compatible dependency package names to non-empty version specifiers.",
   })
 );
 
@@ -48,10 +49,18 @@ export type DependencyRecord = typeof DependencyRecord.Type;
 
 class WorkspaceDependencyBuckets extends S.Class<WorkspaceDependencyBuckets>($I`WorkspaceDependencyBuckets`)(
   {
-    dependencies: DependencyRecord,
-    devDependencies: DependencyRecord,
-    peerDependencies: DependencyRecord,
-    optionalDependencies: DependencyRecord,
+    dependencies: DependencyRecord.annotateKey({
+      description: "Runtime dependency package names mapped to version specifiers.",
+    }),
+    devDependencies: DependencyRecord.annotateKey({
+      description: "Development dependency package names mapped to version specifiers.",
+    }),
+    peerDependencies: DependencyRecord.annotateKey({
+      description: "Peer dependency package names mapped to version specifiers.",
+    }),
+    optionalDependencies: DependencyRecord.annotateKey({
+      description: "Optional dependency package names mapped to version specifiers.",
+    }),
   },
   $I.annote("WorkspaceDependencyBuckets", {
     description: "Dependency buckets grouped by dependency kind for either workspace or npm references.",
@@ -76,9 +85,15 @@ class WorkspaceDependencyBuckets extends S.Class<WorkspaceDependencyBuckets>($I`
  */
 export class WorkspaceDeps extends S.Class<WorkspaceDeps>($I`WorkspaceDeps`)(
   {
-    npm: WorkspaceDependencyBuckets,
-    packageName: S.String,
-    workspace: WorkspaceDependencyBuckets,
+    npm: WorkspaceDependencyBuckets.annotateKey({
+      description: "External npm dependency buckets for this workspace.",
+    }),
+    packageName: RepoPackageName.annotateKey({
+      description: "Workspace package name these dependencies belong to.",
+    }),
+    workspace: WorkspaceDependencyBuckets.annotateKey({
+      description: "Workspace-local dependency buckets for this package.",
+    }),
   },
   $I.annote("WorkspaceDeps", {
     description:

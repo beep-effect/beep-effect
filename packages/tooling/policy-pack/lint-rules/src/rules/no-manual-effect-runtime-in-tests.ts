@@ -4,11 +4,12 @@ import * as O from "effect/Option";
 import {
   classifyImportSpecifier,
   getPropertyName,
+  ImportBinding,
   pathMatchesSuffix,
   toRepoPath,
   unwrapMemberExpression,
 } from "./utils.ts";
-import type { AstNode, ImportBinding, MaybeNode } from "./utils.ts";
+import type { AstNode, MaybeNode } from "./utils.ts";
 
 const TEST_FILE_PATTERN = /\.(?:test|spec)\.[cm]?[jt]sx?$/u;
 const EFFECT_RUNTIME_METHODS = HashSet.fromIterable([
@@ -223,10 +224,12 @@ export default defineRule({
       else if (source === EFFECT_ROOT_SOURCE) MutableHashSet.add(effectRootNamespaces, local);
     };
 
-    const recordBinding = (source: string, binding: ImportBinding) => {
-      if (binding.kind === "named") return recordNamed(binding.imported, binding.local, source);
-      recordModule(binding.local, source);
-    };
+    const recordBinding = (source: string, binding: ImportBinding) =>
+      ImportBinding.match(binding, {
+        named: ({ imported, local }) => recordNamed(imported, local, source),
+        namespace: ({ local }) => recordModule(local, source),
+        default: ({ local }) => recordModule(local, source),
+      });
 
     return {
       ImportDeclaration(node) {

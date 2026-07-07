@@ -1,28 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TSCategory.model.ts",
-    "line": 1420,
-    "symbol": "getCandidateCategories",
-    "smell": "getCandidateCategories groups TSCategoryTag-typed inputs with A.groupBy((signal) => String(signal.category)), then recovers the erased key type with categoryName as TSCategoryTag before calling getCategory. The category domain is already a LiteralKit (TSCategoryTag at lines 988-1006), so the cast bypasses the schema/kit-owned narrowing that should prove the key before lookup.",
-    "proposedTarget": "Remove the cast by deriving iteration/narrowing from the kit: either iterate TSCategoryTag.Options and R.get(grouped, tag), or decode each grouped key with S.decodeOption(TSCategoryTag) before getCategory. Verified APIs: LiteralKit.Options is part of the kit surface at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:657-668 and attached at :787-800; Effect v4 S.decodeOption is exported at .repos/effect-v4/packages/effect/src/Schema.ts:1530.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 2.1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/tooling/library/repo-utils/test/Graph.test.ts",
-    "line": 86,
-    "symbol": "topologicalSort cycle tests",
-    "smell": "Two test assertions narrow caught cycle failures with result as CyclicDependencyError after expect(result).toBeInstanceOf(CyclicDependencyError) at lines 86 and 103. That is a repo-banned narrowing cast where the runtime predicate can own the TypeScript narrowing directly.",
-    "proposedTarget": "Replace each cast with an actual narrowing branch, e.g. if (!(result instanceof CyclicDependencyError)) return; then assert result.cycles/message inside the narrowed block. In-package exemplar: TSMorph.service.test.ts:374-382 and :569-596 uses explicit runtime branches after _tag checks before reading variant-specific fields.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 0.9
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
     "line": 250,
     "symbol": "PackageJson wire-shape unions",

@@ -6,8 +6,11 @@
  * @category models
  * @since 0.0.0
  */
+import { $RepoUtilsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
+
+const $I = $RepoUtilsId.create("JSDoc/models/tag-values");
 
 /**
  * @category models
@@ -368,7 +371,12 @@ export const TagValue = S.Union([
   ClosureEnc,
   TypeDocEnc,
   TypeScriptEnc,
-]).pipe(S.toTaggedUnion("_tag"));
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("TagValue", {
+    description: "Tagged union over all canonical JSDoc tag occurrence shapes.",
+  })
+);
 
 /**
  * Static type represented by the `TagValue` tagged union schema.
@@ -537,7 +545,11 @@ const tagNames = [
  * @category models
  * @since 0.0.0
  */
-export const TagName = LiteralKit(tagNames);
+export const TagName = LiteralKit(tagNames).pipe(
+  $I.annoteSchema("TagName", {
+    description: "Literal domain of all canonical JSDoc tag names.",
+  })
+);
 
 /**
  * Static literal union represented by the `TagName` LiteralKit.

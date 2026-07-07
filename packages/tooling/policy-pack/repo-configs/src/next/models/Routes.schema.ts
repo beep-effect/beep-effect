@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoConfigsId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoConfigsId.create("next/models/Routes.schema");
@@ -82,7 +82,8 @@ export const RouteHas = RouteHasType.toTaggedUnion("type")({
 }).pipe(
   $I.annoteSchema("RouteHas", {
     description: "Match predicate used by Next.js rewrites, headers, redirects, and middleware.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -113,6 +114,38 @@ const RouteBaseFields = {
   ...RouteMatchFields,
 };
 
+/**
+ * HTTP redirect status codes supported by Next.js custom redirects.
+ *
+ * @example
+ * ```ts
+ * import { RedirectStatusCodeValue } from "@beep/repo-configs/next/models/Routes.schema"
+ * const statusCode = 307 satisfies RedirectStatusCodeValue
+ * console.log(statusCode)
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RedirectStatusCodeValue = LiteralKit([301, 302, 303, 307, 308]).pipe(
+  $I.annoteSchema("RedirectStatusCodeValue", {
+    description: "HTTP redirect status codes supported by Next.js custom redirects.",
+  })
+);
+
+/**
+ * HTTP redirect status codes supported by Next.js custom redirects.
+ *
+ * @example
+ * ```ts
+ * import type { RedirectStatusCodeValue } from "@beep/repo-configs/next/models/Routes.schema"
+ * const statusCode: RedirectStatusCodeValue = 308
+ * console.log(statusCode)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type RedirectStatusCodeValue = typeof RedirectStatusCodeValue.Type;
+
 class HeaderEntry extends S.Class<HeaderEntry>($I`HeaderEntry`)(
   {
     key: S.String,
@@ -141,7 +174,7 @@ class RedirectStatusCode extends S.Class<RedirectStatusCode>($I`RedirectStatusCo
     ...RouteBaseFields,
     destination: S.String,
     priority: S.optionalKey(S.Boolean),
-    statusCode: S.Finite,
+    statusCode: RedirectStatusCodeValue,
     permanent: S.optionalKey(S.Never),
   },
   $I.annote("RedirectStatusCode", {
@@ -289,7 +322,8 @@ export const Redirect = S.Union([RedirectPermanent, RedirectStatusCode]).pipe(
   $I.annoteSchema("Redirect", {
     description: "User-facing Next.js redirect route configuration.",
     documentation: "Models the public Next.js redirect fields and omits internal routing fields such as internal.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

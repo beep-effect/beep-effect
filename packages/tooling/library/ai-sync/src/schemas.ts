@@ -6,8 +6,11 @@
  */
 
 import { $AiSyncId } from "@beep/identity/packages";
-import { UnknownRecord } from "@beep/schema";
+import { SchemaUtils, UnknownRecord } from "@beep/schema";
+import { flow, identity, SchemaTransformation } from "effect";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import {
   ClaudeMcpJson,
   ClaudeSettings,
@@ -17,8 +20,11 @@ import {
   CodexSkills,
   McpJsonServer,
 } from "./_generated/schemas.gen.ts";
+import { AiSyncAgentId, AiSyncDomainId } from "./models.ts";
 
 const $I = $AiSyncId.create("schemas");
+
+const normalizeInstructionText = flow(Str.split("\n"), A.map(Str.trimEnd), A.join("\n"), Str.trim);
 
 /**
  * Agent instruction markdown document.
@@ -37,7 +43,12 @@ const $I = $AiSyncId.create("schemas");
 export const AgentInstructionDocument = S.NonEmptyString.pipe(
   $I.annoteSchema("AgentInstructionDocument", {
     description: "Non-empty markdown instructions read by agents such as Codex, Claude Code, Grok Build, and Junie.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    decodeEffect: S.decodeUnknownEffect(schema),
+    is: S.is(schema),
+    normalize: normalizeInstructionText,
+  }))
 );
 
 /**
@@ -53,6 +64,53 @@ export const AgentInstructionDocument = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type AgentInstructionDocument = typeof AgentInstructionDocument.Type;
+
+/**
+ * Normalized agent instruction markdown document.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { NormalizedAgentInstructionDocument } from "@beep/ai-sync"
+ *
+ * const program = NormalizedAgentInstructionDocument.decodeEffect("# Rules  ")
+ * Effect.runPromise(program).then((document) => console.log(document))
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
+export const NormalizedAgentInstructionDocument = S.String.pipe(
+  S.decodeTo(
+    AgentInstructionDocument,
+    SchemaTransformation.transform({
+      decode: normalizeInstructionText,
+      encode: identity,
+    })
+  ),
+  $I.annoteSchema("NormalizedAgentInstructionDocument", {
+    description: "Markdown instruction document normalized by trimming trailing line whitespace and outer whitespace.",
+    toArbitrary: () => (fc) => fc.constant("# Rules"),
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    decodeEffect: S.decodeUnknownEffect(schema),
+    is: S.is(schema),
+  }))
+);
+
+/**
+ * Runtime type for {@link NormalizedAgentInstructionDocument}.
+ *
+ * @example
+ * ```ts
+ * import type { NormalizedAgentInstructionDocument } from "@beep/ai-sync"
+ *
+ * const document: NormalizedAgentInstructionDocument = "# Instructions"
+ * console.log(document)
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
+export type NormalizedAgentInstructionDocument = typeof NormalizedAgentInstructionDocument.Type;
 
 /**
  * Generic agent skill frontmatter shared by compatible agents.
@@ -78,7 +136,13 @@ export class AgentSkillFrontmatter extends S.Class<AgentSkillFrontmatter>($I`Age
   $I.annote("AgentSkillFrontmatter", {
     description: "Common skill frontmatter fields shared by Claude Code, Codex, Grok Build, and Junie skill packages.",
   })
-) {}
+) {
+  static readonly normalize = (frontmatter: AgentSkillFrontmatter): AgentSkillFrontmatter =>
+    AgentSkillFrontmatter.make({
+      name: frontmatter.name,
+      description: frontmatter.description,
+    });
+}
 
 /**
  * Unknown native schema marker for documented-but-undisclosed surfaces.
@@ -98,8 +162,8 @@ export class AgentSkillFrontmatter extends S.Class<AgentSkillFrontmatter>($I`Age
  */
 export class UnknownNativeSchemaCell extends S.Class<UnknownNativeSchemaCell>($I`UnknownNativeSchemaCell`)(
   {
-    agent: S.String,
-    domain: S.String,
+    agent: AiSyncAgentId,
+    domain: AiSyncDomainId,
     reason: S.String,
   },
   $I.annote("UnknownNativeSchemaCell", {
@@ -123,7 +187,7 @@ export class AgentCommandMetadata extends S.Class<AgentCommandMetadata>($I`Agent
   {
     name: S.String,
     description: S.String,
-    arguments: S.Array(S.String).pipe(S.optionalKey),
+    arguments: S.Array(S.String).pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("AgentCommandMetadata", {
     description: "Portable metadata for agents with documented custom command concepts.",
@@ -146,8 +210,8 @@ export class AgentPluginManifestMetadata extends S.Class<AgentPluginManifestMeta
   {
     name: S.String,
     version: S.String,
-    description: S.String.pipe(S.optionalKey),
-    metadata: UnknownRecord.pipe(S.optionalKey),
+    description: S.String.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
+    metadata: UnknownRecord.pipe(S.OptionFromOptionalKey, SchemaUtils.withNoneDefault),
   },
   $I.annote("AgentPluginManifestMetadata", {
     description: "Plugin manifest metadata for documented plugin surfaces.",

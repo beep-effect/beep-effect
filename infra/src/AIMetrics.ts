@@ -13,11 +13,12 @@ import {
   makeAiMetricsInstallSpec,
 } from "@beep/repo-ai-metrics";
 import { SchemaUtils } from "@beep/schema";
-import { A, O, Str, Struct } from "@beep/utils";
+import { A, O, Str } from "@beep/utils";
 import * as command from "@pulumi/command";
 import * as pulumi from "@pulumi/pulumi";
 import { Effect, pipe, Result } from "effect";
 import * as S from "effect/Schema";
+import { optionalPulumiConfigFields, withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.js";
 import type { AiMetricsInstallSpec, AiMetricsOtlpEndpointSpec, AiMetricsServiceSpec } from "@beep/repo-ai-metrics";
 
 const $I = $InfraId.create("AIMetrics");
@@ -31,6 +32,25 @@ const remotePhoenixServiceName = "ai-metrics-phoenix.service";
 const remotePhoenixComposeFile = "phoenix.compose.yaml";
 const remotePhoenixTailnetPortStateFile = "phoenix-tailnet-https-port";
 
+const TailnetHttpsPortRange = S.isBetween(
+  {
+    minimum: 1,
+    maximum: 65_535,
+  },
+  {
+    identifier: $I`TailnetHttpsPortRange`,
+    title: "Tailnet HTTPS Port Range",
+    description: "A Tailscale Serve HTTPS port in the inclusive TCP port range 1 through 65535.",
+    message: "Expected a Tailnet HTTPS port between 1 and 65535",
+  }
+);
+
+const TailnetHttpsPort = S.Int.check(TailnetHttpsPortRange).pipe(
+  $I.annoteSchema("TailnetHttpsPort", {
+    description: "A Tailscale Serve HTTPS port in the inclusive TCP port range 1 through 65535.",
+  })
+);
+
 const schemaIssueToPulumiConfigError =
   (key: string, value: string) =>
   (cause: S.SchemaError): pulumi.RunError =>
@@ -39,15 +59,15 @@ const schemaIssueToPulumiConfigError =
 const decodeAiMetricsDeployTarget = S.decodeUnknownResult(AiMetricsDeployTarget);
 const decodeAiMetricsTool = S.decodeUnknownResult(AiMetricsTool);
 
-const targetFromPulumiConfig = (value: string | undefined): AiMetricsDeployTarget =>
-  value === undefined
-    ? AiMetricsDeployTarget.Enum.local
-    : Result.getOrThrowWith(decodeAiMetricsDeployTarget(value), schemaIssueToPulumiConfigError("target", value));
+const targetFromPulumiConfig = (value: string | undefined): O.Option<AiMetricsDeployTarget> =>
+  O.map(O.fromUndefinedOr(value), (value) =>
+    Result.getOrThrowWith(decodeAiMetricsDeployTarget(value), schemaIssueToPulumiConfigError("target", value))
+  );
 
-const toolFromPulumiConfig = (value: string | undefined): AiMetricsTool =>
-  value === undefined
-    ? AiMetricsTool.Enum.phoenix
-    : Result.getOrThrowWith(decodeAiMetricsTool(value), schemaIssueToPulumiConfigError("defaultTool", value));
+const toolFromPulumiConfig = (value: string | undefined): O.Option<AiMetricsTool> =>
+  O.map(O.fromUndefinedOr(value), (value) =>
+    Result.getOrThrowWith(decodeAiMetricsTool(value), schemaIssueToPulumiConfigError("defaultTool", value))
+  );
 
 const defaultServiceForSpec = (spec: AiMetricsInstallSpec): AiMetricsServiceSpec =>
   pipe(
@@ -72,7 +92,7 @@ const remotePhoenixComposePath = (remoteConfigRoot: string): string =>
 
 const remoteSshConnection = (remote: AIMetricsRemoteDeploymentConfig): command.types.input.remote.ConnectionArgs => ({
   host: remote.ssh.host,
-  ...O.getSomesStruct({ agentSocketPath: O.fromUndefinedOr(remote.ssh.agentSocketPath) }),
+  ...O.getSomesStruct({ agentSocketPath: remote.ssh.agentSocketPath }),
   user: remote.ssh.user,
 });
 
@@ -200,9 +220,9 @@ const renderRemoteHealthCommand = (_remote: AIMetricsRemoteDeploymentConfig, ser
     )
   )}`;
 
-type AIMetricsPulumiConfigValues = {
+type AIMetricsPulumiConfigValuesFields = {
   readonly dataRoot?: string | undefined;
-  readonly defaultTool?: string | undefined;
+  readonly defaultTool?: AiMetricsTool | undefined;
   readonly hashSaltSecretRef?: string | undefined;
   readonly phoenixImage?: string | undefined;
   readonly phoenixTailnetHttpsPort?: number | undefined;
@@ -214,6 +234,11 @@ type AIMetricsPulumiConfigValues = {
   readonly sshHost?: string | undefined;
   readonly sshUser?: string | undefined;
   readonly tailnetFqdn?: string | undefined;
+  readonly target?: AiMetricsDeployTarget | undefined;
+};
+
+type AIMetricsPulumiConfigInputValues = Omit<AIMetricsPulumiConfigValuesFields, "defaultTool" | "target"> & {
+  readonly defaultTool?: string | undefined;
   readonly target?: string | undefined;
 };
 
@@ -230,13 +255,13 @@ type AIMetricsPulumiConfigValues = {
  * @category models
  * @since 0.0.0
  */
-export const AIMetricsPulumiConfigValues = S.Class<AIMetricsPulumiConfigValues>($I`AIMetricsPulumiConfigValues`)(
+export const AIMetricsPulumiConfigValues = S.Class<AIMetricsPulumiConfigValuesFields>($I`AIMetricsPulumiConfigValues`)(
   {
     dataRoot: S.String,
-    defaultTool: S.String,
+    defaultTool: AiMetricsTool,
     hashSaltSecretRef: S.String,
     phoenixImage: S.String,
-    phoenixTailnetHttpsPort: S.Int,
+    phoenixTailnetHttpsPort: TailnetHttpsPort,
     publicBaseUrl: S.String,
     rawArchiveKeySecretRef: S.String,
     remoteConfigRoot: S.String,
@@ -245,10 +270,12 @@ export const AIMetricsPulumiConfigValues = S.Class<AIMetricsPulumiConfigValues>(
     sshHost: S.String,
     sshUser: S.String,
     tailnetFqdn: S.String,
-    target: S.String,
+    target: AiMetricsDeployTarget,
   },
   $I.annote("AIMetricsPulumiConfigValues", { description: "Configuration values for AIMetrics Pulumi resources" })
-).mapFields(Struct.map(S.optionalKey));
+)
+  .mapFields(optionalPulumiConfigFields)
+  .pipe(withPulumiConfigDecodeEffect);
 
 /**
  * SSH connection inputs for native Pulumi command resources.
@@ -265,7 +292,7 @@ export const AIMetricsPulumiConfigValues = S.Class<AIMetricsPulumiConfigValues>(
  */
 export class AIMetricsRemoteSshConfig extends S.Class<AIMetricsRemoteSshConfig>($I`AIMetricsRemoteSshConfig`)(
   {
-    agentSocketPath: S.optionalKey(S.String),
+    agentSocketPath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     host: S.String.pipe(SchemaUtils.withKeyDefaults(defaultSshHost)),
     user: S.String.pipe(SchemaUtils.withKeyDefaults(defaultSshUser)),
   },
@@ -291,10 +318,13 @@ export class AIMetricsRemoteDeploymentConfig extends S.Class<AIMetricsRemoteDepl
   $I`AIMetricsRemoteDeploymentConfig`
 )(
   {
-    phoenixTailnetHttpsPort: S.Int.pipe(SchemaUtils.withKeyDefaults(defaultPhoenixTailnetHttpsPort)),
+    phoenixTailnetHttpsPort: TailnetHttpsPort.pipe(SchemaUtils.withKeyDefaults(defaultPhoenixTailnetHttpsPort)),
     remoteConfigRoot: S.String.pipe(SchemaUtils.withKeyDefaults(defaultRemoteConfigRoot)),
     remoteMirrorRoot: S.String.pipe(SchemaUtils.withKeyDefaults(defaultRemoteMirrorRoot)),
-    ssh: AIMetricsRemoteSshConfig.pipe(SchemaUtils.withKeyDefaults(AIMetricsRemoteSshConfig.make())),
+    ssh: AIMetricsRemoteSshConfig.pipe(
+      S.withConstructorDefault(Effect.succeed(AIMetricsRemoteSshConfig.make({}))),
+      S.withDecodingDefaultKey(Effect.succeed({}))
+    ),
     tailnetFqdn: S.String.pipe(SchemaUtils.withKeyDefaults(defaultTailnetFqdn)),
   },
   $I.annote("AIMetricsRemoteDeploymentConfig", {
@@ -320,7 +350,7 @@ export class AIMetricsStackArgs extends S.Class<AIMetricsStackArgs>($I`AIMetrics
     install: AiMetricsInstallInput,
     remote: AIMetricsRemoteDeploymentConfig.pipe(
       S.withConstructorDefault(Effect.succeed(AIMetricsRemoteDeploymentConfig.make({}))),
-      S.withDecodingDefaultKey(Effect.succeed(AIMetricsRemoteDeploymentConfig.make({})))
+      S.withDecodingDefaultKey(Effect.succeed({}))
     ),
   },
   $I.annote("AIMetricsStackArgs", {
@@ -378,34 +408,36 @@ export const makeAIMetricsStackArgsFromConfigValues = ({
   sshUser,
   tailnetFqdn,
   target,
-}: AIMetricsPulumiConfigValues = {}): AIMetricsStackArgs => {
+}: AIMetricsPulumiConfigInputValues = {}): AIMetricsStackArgs => {
   const resolvedTarget = targetFromPulumiConfig(target);
   const remote = AIMetricsRemoteDeploymentConfig.make({
     ...O.getSomesStruct({ phoenixTailnetHttpsPort: O.fromUndefinedOr(phoenixTailnetHttpsPort) }),
     ...O.getSomesStruct({ remoteConfigRoot: O.fromUndefinedOr(remoteConfigRoot) }),
     ...O.getSomesStruct({ remoteMirrorRoot: O.fromUndefinedOr(remoteMirrorRoot) }),
     ssh: AIMetricsRemoteSshConfig.make({
-      ...O.getSomesStruct({ agentSocketPath: O.fromUndefinedOr(sshAgentSocketPath) }),
       ...O.getSomesStruct({ host: O.fromUndefinedOr(sshHost) }),
       ...O.getSomesStruct({ user: O.fromUndefinedOr(sshUser) }),
+      agentSocketPath: O.fromUndefinedOr(sshAgentSocketPath),
     }),
     ...O.getSomesStruct({ tailnetFqdn: O.fromUndefinedOr(tailnetFqdn) }),
   });
-  const resolvedPublicBaseUrl =
-    publicBaseUrl ??
-    (resolvedTarget === AiMetricsDeployTarget.Enum.dankserver
-      ? `https://${remote.tailnetFqdn}:${remote.phoenixTailnetHttpsPort}`
-      : undefined);
+  const installTarget = AiMetricsInstallInput.make(O.getSomesStruct({ target: resolvedTarget })).target;
+  const resolvedPublicBaseUrl = O.orElse(O.fromUndefinedOr(publicBaseUrl), () =>
+    AiMetricsDeployTarget.$match(installTarget, {
+      dankserver: () => O.some(`https://${remote.tailnetFqdn}:${remote.phoenixTailnetHttpsPort}`),
+      local: O.none<string>,
+    })
+  );
 
   return AIMetricsStackArgs.new(
     AiMetricsInstallInput.make({
-      defaultTool: toolFromPulumiConfig(defaultTool),
+      ...O.getSomesStruct({ defaultTool: toolFromPulumiConfig(defaultTool) }),
       ...O.getSomesStruct({ dataRoot: O.fromUndefinedOr(dataRoot) }),
       ...O.getSomesStruct({ hashSaltSecretRef: O.fromUndefinedOr(hashSaltSecretRef) }),
       ...O.getSomesStruct({ phoenixImage: O.fromUndefinedOr(phoenixImage) }),
-      ...O.getSomesStruct({ publicBaseUrl: O.fromUndefinedOr(resolvedPublicBaseUrl) }),
+      ...O.getSomesStruct({ publicBaseUrl: resolvedPublicBaseUrl }),
       ...O.getSomesStruct({ rawArchiveKeySecretRef: O.fromUndefinedOr(rawArchiveKeySecretRef) }),
-      target: resolvedTarget,
+      ...O.getSomesStruct({ target: resolvedTarget }),
     }),
     remote
   );
@@ -574,72 +606,72 @@ export class AIMetricsStack extends pulumi.ComponentResource {
 
     const spec = Effect.runSync(makeAiMetricsInstallSpec(args.install));
     const defaultService = defaultServiceForSpec(spec);
-    const remoteResources =
-      spec.target === AiMetricsDeployTarget.Enum.dankserver
-        ? (() => {
-            const remoteDefaultService = remotePhoenixDefaultService(defaultService);
-            const remoteDeploymentTriggers = [
-              remoteDefaultService.image,
-              remoteDefaultService.publicUrl,
-              renderRemotePhoenixCompose(remoteDefaultService),
-              renderRemotePhoenixSystemdService(args.remote.remoteConfigRoot),
+    const remoteResources = AiMetricsDeployTarget.$match(spec.target, {
+      dankserver: () => {
+        const remoteDefaultService = remotePhoenixDefaultService(defaultService);
+        const remoteDeploymentTriggers = [
+          remoteDefaultService.image,
+          remoteDefaultService.publicUrl,
+          renderRemotePhoenixCompose(remoteDefaultService),
+          renderRemotePhoenixSystemdService(args.remote.remoteConfigRoot),
+          args.remote.phoenixTailnetHttpsPort,
+        ];
+        const connection = remoteSshConnection(args.remote);
+        const preflight = new command.remote.Command(
+          `${name}-phoenix-preflight`,
+          {
+            connection,
+            create: renderRemotePreflightCommand(args.remote),
+            logging: command.types.enums.remote.Logging.StdoutAndStderr,
+            triggers: [
+              args.remote.ssh.host,
+              args.remote.ssh.user,
+              O.getOrElse(args.remote.ssh.agentSocketPath, () => ""),
+              args.remote.remoteConfigRoot,
+              args.remote.tailnetFqdn,
               args.remote.phoenixTailnetHttpsPort,
-            ];
-            const connection = remoteSshConnection(args.remote);
-            const preflight = new command.remote.Command(
-              `${name}-phoenix-preflight`,
-              {
-                connection,
-                create: renderRemotePreflightCommand(args.remote),
-                logging: command.types.enums.remote.Logging.StdoutAndStderr,
-                triggers: [
-                  args.remote.ssh.host,
-                  args.remote.ssh.user,
-                  args.remote.ssh.agentSocketPath ?? "",
-                  args.remote.remoteConfigRoot,
-                  args.remote.tailnetFqdn,
-                  args.remote.phoenixTailnetHttpsPort,
-                ],
-                update: renderRemotePreflightCommand(args.remote),
-              },
-              { parent: this }
-            );
-            const apply = new command.remote.Command(
-              `${name}-phoenix-apply`,
-              {
-                connection,
-                create: renderRemoteApplyCommand(args.remote, remoteDefaultService),
-                logging: command.types.enums.remote.Logging.StdoutAndStderr,
-                triggers: remoteDeploymentTriggers,
-                update: renderRemoteApplyCommand(args.remote, remoteDefaultService),
-              },
-              {
-                dependsOn: preflight,
-                parent: this,
-              }
-            );
-            const health = new command.remote.Command(
-              `${name}-phoenix-health`,
-              {
-                connection,
-                create: renderRemoteHealthCommand(args.remote, remoteDefaultService),
-                logging: command.types.enums.remote.Logging.StdoutAndStderr,
-                triggers: remoteDeploymentTriggers,
-                update: renderRemoteHealthCommand(args.remote, remoteDefaultService),
-              },
-              {
-                dependsOn: apply,
-                parent: this,
-              }
-            );
+            ],
+            update: renderRemotePreflightCommand(args.remote),
+          },
+          { parent: this }
+        );
+        const apply = new command.remote.Command(
+          `${name}-phoenix-apply`,
+          {
+            connection,
+            create: renderRemoteApplyCommand(args.remote, remoteDefaultService),
+            logging: command.types.enums.remote.Logging.StdoutAndStderr,
+            triggers: remoteDeploymentTriggers,
+            update: renderRemoteApplyCommand(args.remote, remoteDefaultService),
+          },
+          {
+            dependsOn: preflight,
+            parent: this,
+          }
+        );
+        const health = new command.remote.Command(
+          `${name}-phoenix-health`,
+          {
+            connection,
+            create: renderRemoteHealthCommand(args.remote, remoteDefaultService),
+            logging: command.types.enums.remote.Logging.StdoutAndStderr,
+            triggers: remoteDeploymentTriggers,
+            update: renderRemoteHealthCommand(args.remote, remoteDefaultService),
+          },
+          {
+            dependsOn: apply,
+            parent: this,
+          }
+        );
 
-            return {
-              apply,
-              health,
-              preflight,
-            };
-          })()
-        : undefined;
+        return {
+          apply,
+          health,
+          preflight,
+        };
+      },
+      local: () => undefined,
+    });
 
     this.installSpec = pulumi.output(spec);
     this.rawArchiveDir = pulumi.output(spec.storage.rawArchiveDir);

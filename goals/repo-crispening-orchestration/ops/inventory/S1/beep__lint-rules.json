@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "schema-first-inventory",
-    "file": "packages/tooling/policy-pack/lint-rules/src/index.ts",
-    "line": 124,
-    "symbol": "RULES",
-    "smell": "Exported registry of first-party rule metadata is typed by a plain `RuleMetadata` object type rather than a schema-backed model.",
-    "proposedTarget": "Introduce schema-backed `RuleName`/`RuleSeverity` literal domains and a `RuleMetadata` S.Class or S.Struct, then construct or decode `RULES` through that schema. In-repo exemplars: `AiSyncSourceMetadata` S.Class at `packages/tooling/library/ai-sync/src/models.ts:249` and `EffectLawsAllowlistEntry` at `packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSchemas.ts:15`.",
-    "confidence": 0.68,
-    "mechanization": "assisted",
-    "roiRank": 0.42
-  },
-  {
-    "ruleId": "schema-first-inventory",
     "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
     "line": 25,
     "symbol": "AstNode",
@@ -39,17 +28,6 @@
       "reason": "The shape is an internal lint visitor adapter carrying third-party AST node handles. It is not a serialized/config/domain payload, and schema decoding would duplicate parser typing.",
       "boundary": "lint visitor ESTree adapter shape"
     }
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-    "line": 277,
-    "symbol": "ImportBinding",
-    "smell": "Exported discriminated union of first-party normalized import binding data is a bare type alias.",
-    "proposedTarget": "Model with a schema-backed tagged union, e.g. `S.TaggedUnion` (verified in Effect v4 at `.repos/effect-v4/packages/effect/src/Schema.ts:6078`) or a `LiteralKit(...).toTaggedUnion(\"kind\")` pattern like `RouteHas` in `packages/tooling/policy-pack/repo-configs/src/next/models/Routes.schema.ts:65`.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 0.46
   },
   {
     "ruleId": "SFV4-fn-schema",

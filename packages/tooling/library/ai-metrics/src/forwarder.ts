@@ -6,7 +6,7 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
@@ -27,6 +27,7 @@ import { summarizeTranscriptText } from "./ingest.ts";
 import { AiMetricsInstallInput, makeAiMetricsInstallSpec } from "./install.ts";
 import { fileSizeBytes } from "./internal/file-info.ts";
 import { collectJsonlFiles, statOption } from "./internal/jsonl-discovery.ts";
+import { normalizedRelativePath, repoPathToClaudeProjectName } from "./internal/transcript-utils.ts";
 import { AiMetricsDeployTarget, AiMetricsTranscriptSource } from "./models.ts";
 import { hashPrivateIdentifier, makeAiMetricsPrivacyCheckResult } from "./privacy.ts";
 import { shellQuote } from "./shell.ts";
@@ -257,7 +258,6 @@ export class AiMetricsForwarderOtlpExportFailed extends S.Class<AiMetricsForward
  *   AiMetricsForwarderOtlpExport,
  *   AiMetricsForwarderOtlpExported
  * } from "@beep/repo-ai-metrics"
- * import * as S from "effect/Schema"
  *
  * const exported = AiMetricsForwarderOtlpExported.make({
  *   endpointTraceUrl: "http://127.0.0.1:6006/projects/default/traces",
@@ -268,7 +268,7 @@ export class AiMetricsForwarderOtlpExportFailed extends S.Class<AiMetricsForward
  *   target: "local",
  *   turnSpanCount: 2
  * })
- * const isForwarderOtlpExport = S.is(AiMetricsForwarderOtlpExport)(exported)
+ * const isForwarderOtlpExport = AiMetricsForwarderOtlpExport.is(exported)
  * console.log(isForwarderOtlpExport)
  * ```
  * @category schemas
@@ -278,9 +278,11 @@ export const AiMetricsForwarderOtlpExport = S.Union([
   AiMetricsForwarderOtlpExported,
   AiMetricsForwarderOtlpExportFailed,
 ]).pipe(
+  S.toTaggedUnion("status"),
   $I.annoteSchema("AiMetricsForwarderOtlpExport", {
     description: "Tagged post-forwarder derived OTLP export status for the same ingest run.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -446,11 +448,6 @@ type ForwarderSourceSelection = {
 
 const forwarderFailure = (message: string, cause: unknown): AiMetricsForwarderError =>
   AiMetricsForwarderError.make({ cause, message });
-
-const repoPathToClaudeProjectName: (repoRoot: string) => string = Str.replace(/[/\\]/gu, "-");
-
-const normalizedRelativePath = (pathApi: Path.Path, root: string, filePath: string): string =>
-  pipe(pathApi.relative(root, filePath), Str.replace(/\\/gu, "/"));
 
 const requireForwarderHashSalt = Effect.fn("AiMetrics.forwarder.requireHashSalt")(function* (
   input: AiMetricsForwarderInput

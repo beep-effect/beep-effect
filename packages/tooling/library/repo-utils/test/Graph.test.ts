@@ -4,6 +4,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, HashMap, HashSet } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 
 /**
  * Helper to build an adjacency list from a record for readability.
@@ -18,6 +19,8 @@ const makeAdj = (entries: Record<string, ReadonlyArray<string>>): HashMap.HashMa
 
 const indexOfOrThrow = (values: ReadonlyArray<string>, value: string): number =>
   O.getOrThrowWith(A.indexOf(values, value), () => new Error(`Missing expected value: ${value}`));
+
+const isCyclicDependencyError = S.is(CyclicDependencyError);
 
 // ---------------------------------------------------------------------------
 // topologicalSort
@@ -82,10 +85,11 @@ describe("topologicalSort", () => {
         Effect.catchTag("CyclicDependencyError", (e) => Effect.succeed(e))
       );
 
-      expect(result).toBeInstanceOf(CyclicDependencyError);
-      const err = result as CyclicDependencyError;
-      expect(err.cycles.length).toBeGreaterThan(0);
-      expect(err.message).toContain("Cyclic dependencies detected");
+      expect(isCyclicDependencyError(result)).toBe(true);
+      if (isCyclicDependencyError(result)) {
+        expect(result.cycles.length).toBeGreaterThan(0);
+        expect(result.message).toContain("Cyclic dependencies detected");
+      }
     })
   );
 
@@ -99,9 +103,10 @@ describe("topologicalSort", () => {
         Effect.catchTag("CyclicDependencyError", (e) => Effect.succeed(e))
       );
 
-      expect(result).toBeInstanceOf(CyclicDependencyError);
-      const err = result as CyclicDependencyError;
-      expect(err.cycles.length).toBeGreaterThan(0);
+      expect(isCyclicDependencyError(result)).toBe(true);
+      if (isCyclicDependencyError(result)) {
+        expect(result.cycles.length).toBeGreaterThan(0);
+      }
     })
   );
 

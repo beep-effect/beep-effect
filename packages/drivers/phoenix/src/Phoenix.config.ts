@@ -6,23 +6,30 @@
  */
 
 import { $PhoenixId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
-import { identity, SchemaTransformation } from "effect";
+import { SchemaUtils, URLStr } from "@beep/schema";
+import { SchemaGetter } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const $I = $PhoenixId.create("Phoenix.config");
 const normalizePhoenixBaseUrl = Str.replace(/\/+$/, "");
+const makePhoenixBaseUrl = (value: string): URLStr => URLStr.make(normalizePhoenixBaseUrl(value));
+const isNormalizedPhoenixBaseUrl = (value: unknown): value is URLStr =>
+  URLStr.is(value) && Str.Equivalence(normalizePhoenixBaseUrl(value), value);
+
+const normalizedPhoenixBaseUrlFilter = S.makeFilter(isNormalizedPhoenixBaseUrl, {
+  identifier: $I`PhoenixNormalizedBaseUrl`,
+  title: "Phoenix normalized base URL",
+  description: "A valid Phoenix API base URL without trailing slash separators.",
+  message: "Phoenix API base URLs must be valid and normalized without trailing slash separators.",
+});
 
 const PhoenixBaseUrl = S.String.pipe(
-  S.decodeTo(
-    S.String,
-    SchemaTransformation.transform({
-      decode: normalizePhoenixBaseUrl,
-      encode: identity,
-    })
-  ),
+  S.decodeTo(S.String.check(normalizedPhoenixBaseUrlFilter), {
+    decode: SchemaGetter.transform(normalizePhoenixBaseUrl),
+    encode: SchemaGetter.transform(normalizePhoenixBaseUrl),
+  }),
   $I.annoteSchema("PhoenixBaseUrl", {
     description: "Phoenix API base URL normalized without trailing slashes.",
   })
@@ -65,10 +72,12 @@ export const PHOENIX_API_URL = "http://localhost:6006";
  */
 export class PhoenixConfigInput extends S.Class<PhoenixConfigInput>($I`PhoenixConfigInput`)(
   {
-    apiKey: S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(SchemaUtils.withNoneDefault).annotateKey({
-      description: "Optional Phoenix API key used to build the Authorization header.",
-    }),
-    baseUrl: PhoenixBaseUrl.pipe(SchemaUtils.withKeyDefaults(PHOENIX_API_URL)).annotateKey({
+    apiKey: S.OptionFromOptionalKey(S.NonEmptyString.pipe(S.RedactedFromValue))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Optional Phoenix API key used to build the Authorization header.",
+      }),
+    baseUrl: PhoenixBaseUrl.pipe(SchemaUtils.withKeyDefaults(makePhoenixBaseUrl(PHOENIX_API_URL))).annotateKey({
       description: "Phoenix API base URL accepted by the SDK client.",
     }),
     headers: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({

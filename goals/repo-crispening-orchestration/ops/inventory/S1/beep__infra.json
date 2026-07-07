@@ -2,17 +2,6 @@
   {
     "ruleId": "schema-first-inventory",
     "file": "infra/src/OipWeb.ts",
-    "line": 485,
-    "symbol": "loadOipWebStackArgs",
-    "smell": "Pulumi config string is cast to the `VercelAuthenticationDeploymentType` LiteralKit type instead of being decoded through the schema.",
-    "proposedTarget": "Mirror the local schema-first Pulumi boundary patterns: add `const decodeVercelAuthenticationDeploymentType = S.decodeUnknownResult(VercelAuthenticationDeploymentType)` and a `vercelAuthenticationDeploymentTypeFromPulumiConfig` helper like `infra/src/Storybook.ts:93-104`, or the `targetFromPulumiConfig` / `toolFromPulumiConfig` pattern in `infra/src/AIMetrics.ts:39-50`; then pass the decoded value into `makeOipWebStackArgsFromConfigValues`.",
-    "confidence": 0.94,
-    "mechanization": "codemod",
-    "roiRank": 0.82
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "infra/src/OipWeb.ts",
     "line": 304,
     "symbol": "OipWebRuntimeSecrets",
     "smell": "Exported object type alias for OIP runtime secrets looks like a schema-first payload candidate.",

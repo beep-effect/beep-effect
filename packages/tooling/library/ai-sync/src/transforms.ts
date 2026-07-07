@@ -6,11 +6,16 @@
  */
 
 import * as O from "@beep/utils/Option";
-import { flow, pipe } from "effect";
-import * as A from "effect/Array";
+import { pipe } from "effect";
 import * as R from "effect/Record";
-import * as Str from "effect/String";
-import { AgentSkillFrontmatter, ClaudeMcpJson, CodexConfig, CodexMcpServer, McpJsonServer } from "./schemas.ts";
+import {
+  AgentInstructionDocument,
+  AgentSkillFrontmatter,
+  ClaudeMcpJson,
+  CodexConfig,
+  CodexMcpServer,
+  McpJsonServer,
+} from "./schemas.ts";
 
 const codexServerToMcpJsonServer = (server: {
   readonly command?: string | undefined;
@@ -129,7 +134,7 @@ export const junieMcpJsonToClaudeMcpJson = (config: ClaudeMcpJson): ClaudeMcpJso
  * @category normalization
  * @since 0.0.0
  */
-export const normalizeInstructionDocument = flow(Str.split("\n"), A.map(Str.trimEnd), A.join("\n"), Str.trim);
+export const normalizeInstructionDocument = AgentInstructionDocument.normalize;
 
 /**
  * Keep only the shared Agent Skills frontmatter fields modeled in V1.
@@ -145,8 +150,4 @@ export const normalizeInstructionDocument = flow(Str.split("\n"), A.map(Str.trim
  * @category normalization
  * @since 0.0.0
  */
-export const normalizeAgentSkillFrontmatter = (frontmatter: AgentSkillFrontmatter): AgentSkillFrontmatter =>
-  AgentSkillFrontmatter.make({
-    name: frontmatter.name,
-    description: frontmatter.description,
-  });
+export const normalizeAgentSkillFrontmatter = AgentSkillFrontmatter.normalize;

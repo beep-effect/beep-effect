@@ -1,16 +1,5 @@
 [
   {
-    "ruleId": "SFV4-normalization",
-    "file": "packages/tooling/library/ai-metrics/src/privacy.ts",
-    "line": 426,
-    "symbol": "firstNonEmptyString",
-    "smell": "`firstNonEmptyString(...values: ReadonlyArray<string | undefined>)` maps optional transcript metadata through `Str.trim` + `Str.isNonEmpty` in business logic. The source schemas at privacy.ts:292-318 model the same metadata as `S.optionalKey(S.String)`, so trim/non-empty normalization leaks out of codecs.",
-    "proposedTarget": "Introduce a shared optional trimmed-text field for Codex metadata, e.g. `const OptionalNonEmptyTrimmed = S.OptionFromOptionalKey(NonEmptyTrimmedStr).pipe(SchemaUtils.withNoneDefault)`, and use it for `CodexSubagentSource` / `CodexSessionPayload` string fields. Effect v4 APIs verified at `.repos/effect-v4/packages/effect/src/Schema.ts:8648-8669`; local exemplars: `packages/foundation/modeling/schema/src/String.ts:61` (`NonEmptyTrimmedStr`) and `packages/foundation/modeling/lexical/src/Lexical.model.ts:687-688` (`OptionFromOptionalKey` + `withNoneDefault`).",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
     "ruleId": "SFV4-defaults",
     "file": "packages/tooling/library/ai-metrics/src/source-discovery.ts",
     "line": 395,
@@ -19,7 +8,11 @@
     "proposedTarget": "Change the optional attribution fields in `AiMetricsSourceAttribution` (models.ts:152-159) and `AiMetricsDiscoveredTranscriptFile` (source-discovery.ts:137-148) to `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` so the constructor consumes Options directly and the spread wall disappears. In-repo exemplars: `packages/foundation/modeling/lexical/src/Lexical.model.ts:687-688` and `packages/drivers/openai-compat/src/OpenAiCompat.models.ts:19-23`.",
     "confidence": 0.78,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Changing exported attribution/discovered-file optional fields from optional properties to Option fields changes the public constructor/domain form and requires a CLI/source-discovery consumer sweep outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -30,7 +23,11 @@
     "proposedTarget": "Model `maxFileBytes` and `sinceEpochMillis` as `S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault)` on `AiMetricsSourceDiscoveryResult` and carry `O.Option<number>` through the result constructor. Same pattern as `packages/foundation/modeling/lexical/src/Lexical.model.ts:687-688`; Effect v4 `OptionFromOptionalKey` verified in `.repos/effect-v4/packages/effect/src/Schema.ts:8648-8669`.",
     "confidence": 0.72,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Changing AiMetricsSourceDiscoveryResult maxFileBytes/sinceEpochMillis to Option fields changes exported result construction and JSON/result consumers outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -41,7 +38,11 @@
     "proposedTarget": "Replace the two secret-reference fields with an optional trimmed non-empty schema (`S.OptionFromOptionalKey(NonEmptyTrimmedStr).pipe(SchemaUtils.withNoneDefault)`) and make `requireHashSaltSecretRef` / `requireRawArchiveKeySecretRef` accept Options. Local exemplars: `packages/foundation/modeling/schema/src/String.ts:61` for trim+non-empty and `packages/foundation/modeling/lexical/src/Lexical.model.ts:687-688` for optional-key-to-Option.",
     "confidence": 0.68,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Normalizing install secret refs as Option schema fields changes AiMetricsInstallInput/AiMetricsInstallSpec public constructor surfaces used by infra and CLI consumers outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -52,7 +53,11 @@
     "proposedTarget": "Add an input codec for the selector, e.g. `AiMetricsOtlpIngestRunSelector = S.OptionFromOptionalKey(S.Trim).pipe(...)` with `\"latest\"` decoded to `O.none()` via `S.decodeTo(..., SchemaTransformation.transformOrFail)`; keep the DB lookup branch on `O.none()`. Effect v4 `S.Trim` and `S.decodeTo` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:11526-11546` and `:5324-5425`; local normalization exemplar: `packages/foundation/modeling/schema/src/String.ts:61`.",
     "confidence": 0.62,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Modeling the latest/blank ingest-run selector as an Option codec changes AiMetricsOtlpExportInput public form and CLI call sites; keep the service-level selector until the consumer sweep is scoped.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",

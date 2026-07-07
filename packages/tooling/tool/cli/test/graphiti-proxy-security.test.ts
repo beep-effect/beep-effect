@@ -1,6 +1,7 @@
 import {
   backupDirectoryNameFromEpochMillisForTesting,
   GraphitiProxyConfig,
+  GraphitiProxyOpsError,
   isFastMcpRequestBody,
   makeGraphitiProxyForwarderService,
   ProxyServiceConfig,
@@ -66,6 +67,22 @@ const provideWebHandlerClient =
     effect.pipe(Effect.provideService(HttpClient.HttpClient, makeWebHandlerClient(handler)));
 
 layer(NodeServices.layer)("Graphiti proxy security", (it) => {
+  it.effect(
+    "keeps proxy ops error optional fields at the command boundary",
+    Effect.fn(function* () {
+      const emptyError = GraphitiProxyOpsError.new(new Error("cause"), "failed");
+      expect(emptyError.command).toBeUndefined();
+      expect(emptyError.exitCode).toBeUndefined();
+
+      const detailedError = GraphitiProxyOpsError.new(new Error("cause"), "failed", {
+        command: "docker compose up",
+        exitCode: 17,
+      });
+      expect(detailedError.command).toBe("docker compose up");
+      expect(detailedError.exitCode).toBe(17);
+    })
+  );
+
   it.effect(
     "forwards the configured /mcp endpoint subtree and preserves query parameters",
     Effect.fn(function* () {

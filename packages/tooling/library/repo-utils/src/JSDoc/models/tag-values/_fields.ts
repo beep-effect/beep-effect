@@ -19,7 +19,11 @@ import * as S from "effect/Schema";
  * @category models
  * @since 0.0.0
  */
-export const typeField = { type: S.String } as const;
+export const typeField = {
+  type: S.NonEmptyString.annotateKey({
+    description: "Required JSDoc type expression.",
+  }),
+} as const;
 /**
  * Reusable optional `type` field fragment.
  *
@@ -32,7 +36,11 @@ export const typeField = { type: S.String } as const;
  * @category models
  * @since 0.0.0
  */
-export const optionalType = { type: S.optionalKey(S.String) } as const;
+export const optionalType = {
+  type: S.optionalKey(S.NonEmptyString).annotateKey({
+    description: "Optional JSDoc type expression.",
+  }),
+} as const;
 /**
  * Reusable required `name` field fragment.
  *
@@ -45,7 +53,11 @@ export const optionalType = { type: S.optionalKey(S.String) } as const;
  * @category models
  * @since 0.0.0
  */
-export const nameField = { name: S.String } as const;
+export const nameField = {
+  name: S.NonEmptyString.annotateKey({
+    description: "Required JSDoc symbol or parameter name.",
+  }),
+} as const;
 /**
  * Reusable optional `name` field fragment.
  *
@@ -58,7 +70,11 @@ export const nameField = { name: S.String } as const;
  * @category models
  * @since 0.0.0
  */
-export const optionalName = { name: S.optionalKey(S.String) } as const;
+export const optionalName = {
+  name: S.optionalKey(S.NonEmptyString).annotateKey({
+    description: "Optional JSDoc symbol or parameter name.",
+  }),
+} as const;
 /**
  * Reusable optional `description` field fragment.
  *
@@ -71,7 +87,11 @@ export const optionalName = { name: S.optionalKey(S.String) } as const;
  * @category models
  * @since 0.0.0
  */
-export const optionalDesc = { description: S.optionalKey(S.String) } as const;
+export const optionalDesc = {
+  description: S.optionalKey(S.NonEmptyString).annotateKey({
+    description: "Optional human-authored JSDoc description text.",
+  }),
+} as const;
 /**
  * Reusable empty field fragment.
  *
