@@ -26,7 +26,7 @@ const $I = $RepoUtilsId.create("JSDoc/models/DependencyProfile.model");
  */
 export const FanValue = LiteralKit(["low", "medium", "high"]).pipe(
   $I.annoteSchema("FanValue", {
-    description: "",
+    description: "Relative fan-in/fan-out intensity used by JSDoc category dependency-profile metadata.",
   })
 );
 

@@ -11,10 +11,12 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Exit } from "effect";
 import * as O from "effect/Option";
-import type * as S from "effect/Schema";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 const renderSchemaFailure = (exit: Exit.Exit<unknown, S.SchemaError>): string =>
   Exit.isFailure(exit) ? Cause.pretty(exit.cause) : "";
+const TSConfigCompilerOptionsArbitrary = S.toArbitrary(TSConfig.fields.compilerOptions);
 
 describe("TSConfig schema", () => {
   describe("valid structures", () => {
@@ -25,6 +27,18 @@ describe("TSConfig schema", () => {
       expect(result.compilerOptions).toEqual(O.none());
       expect(result.extends).toEqual(O.none());
       expect(result.references).toEqual(O.none());
+    });
+
+    it("round-trips schema-derived compiler options through the encoded wire shape", () => {
+      fc.assert(
+        fc.property(TSConfigCompilerOptionsArbitrary.filter(O.isSome), (value) => {
+          const encoded = S.encodeSync(TSConfig.fields.compilerOptions)(value);
+          const decoded = S.decodeUnknownSync(TSConfig.fields.compilerOptions)(encoded);
+
+          expect(decoded).toEqual(value);
+        }),
+        { numRuns: 20 }
+      );
     });
 
     it("decodes references and collapses nullable fields to Option.none", () => {
@@ -282,6 +296,26 @@ describe("TSConfig schema", () => {
       expect(Exit.isFailure(exit)).toBe(true);
       expect(renderSchemaFailure(exit)).toContain("maxNodeModuleJsDepth");
       expect(renderSchemaFailure(exit)).toContain("allowJs");
+    });
+
+    it("rejects negative and fractional maxNodeModuleJsDepth values", () => {
+      const negative = decodeTSConfigExit({
+        compilerOptions: {
+          allowJs: true,
+          maxNodeModuleJsDepth: -1,
+        },
+      });
+      const fractional = decodeTSConfigExit({
+        compilerOptions: {
+          allowJs: true,
+          maxNodeModuleJsDepth: 1.5,
+        },
+      });
+
+      expect(Exit.isFailure(negative)).toBe(true);
+      expect(renderSchemaFailure(negative)).toContain("maxNodeModuleJsDepth");
+      expect(Exit.isFailure(fractional)).toBe(true);
+      expect(renderSchemaFailure(fractional)).toContain("maxNodeModuleJsDepth");
     });
 
     it("enforces ts-node experimentalReplAwait to require target >= ES2018", () => {

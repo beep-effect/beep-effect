@@ -23,6 +23,11 @@ import type * as Crypto from "effect/Crypto";
 
 const $I = $RepoUtilsId.create("TSMorph/TSMorph.model");
 
+const withDecodeEffectStatic = <const Schema extends S.Top & S.Constraint>(schema: Schema) =>
+  SchemaUtils.withStatics(schema, (self) => ({
+    decodeEffect: S.decodeUnknownEffect(self),
+  }));
+
 const TS_CONFIG_FILE_PATTERN = /(?:^|[\\/])tsconfig(?:\.[^\\/]+)?\.json$/;
 const TYPE_SCRIPT_IMPLEMENTATION_FILE_PATTERN = /\.(?:ts|tsx|mts|cts)$/;
 const TYPE_SCRIPT_DECLARATION_FILE_PATTERN = /\.d\.(?:ts|mts|cts)$/;
@@ -124,7 +129,8 @@ export const RepoRootPath = FilePath.pipe(
   S.brand("RepoRootPath"),
   $I.annoteSchema("RepoRootPath", {
     description: "Absolute or repo-anchored path representing the repository root directory.",
-  })
+  }),
+  withDecodeEffectStatic
 );
 
 /**
@@ -156,7 +162,8 @@ export const WorkspaceDirectoryPath = FilePath.pipe(
   S.brand("WorkspaceDirectoryPath"),
   $I.annoteSchema("WorkspaceDirectoryPath", {
     description: "Directory path representing a workspace root inside the repository.",
-  })
+  }),
+  withDecodeEffectStatic
 );
 
 /**
@@ -188,7 +195,9 @@ export const TsConfigFilePath = FilePath.check(tsConfigFilePathChecks).pipe(
   S.brand("TsConfigFilePath"),
   $I.annoteSchema("TsConfigFilePath", {
     description: "A tsconfig*.json file path that is safe to embed in TSMorph scope identities.",
-  })
+  }),
+  SchemaUtils.withCodecStatics,
+  withDecodeEffectStatic
 );
 
 /**
@@ -220,7 +229,9 @@ export const TypeScriptImplementationFilePath = FilePath.check(typeScriptImpleme
   S.brand("TypeScriptImplementationFilePath"),
   $I.annoteSchema("TypeScriptImplementationFilePath", {
     description: "A TypeScript implementation file path for .ts, .tsx, .mts, or .cts files.",
-  })
+  }),
+  SchemaUtils.withCodecStatics,
+  withDecodeEffectStatic
 );
 
 /**
@@ -283,7 +294,9 @@ export type TypeScriptDeclarationFilePath = typeof TypeScriptDeclarationFilePath
 export const TypeScriptFilePath = S.Union([TypeScriptImplementationFilePath, TypeScriptDeclarationFilePath]).pipe(
   $I.annoteSchema("TypeScriptFilePath", {
     description: "A TypeScript source file path covering implementation and declaration files.",
-  })
+  }),
+  SchemaUtils.withCodecStatics,
+  withDecodeEffectStatic
 );
 
 /**
@@ -315,7 +328,8 @@ export const SymbolFilePath = TypeScriptImplementationFilePath.check(symbolIdSaf
   S.brand("SymbolFilePath"),
   $I.annoteSchema("SymbolFilePath", {
     description: "A TypeScript implementation file path that is safe to embed in symbol identities.",
-  })
+  }),
+  withDecodeEffectStatic
 );
 
 /**
@@ -347,7 +361,9 @@ export const SymbolNameSegment = S.String.check(S.isPattern(SYMBOL_NAME_SEGMENT_
   S.brand("SymbolNameSegment"),
   $I.annoteSchema("SymbolNameSegment", {
     description: "A single identifier-like segment in a TypeScript symbol path.",
-  })
+  }),
+  SchemaUtils.withCodecStatics,
+  withDecodeEffectStatic
 );
 
 /**
@@ -379,7 +395,9 @@ export const SymbolQualifiedName = S.String.check(S.isPattern(SYMBOL_QUALIFIED_N
   S.brand("SymbolQualifiedName"),
   $I.annoteSchema("SymbolQualifiedName", {
     description: "Dot-delimited symbol path such as UserService.login.",
-  })
+  }),
+  SchemaUtils.withCodecStatics,
+  withDecodeEffectStatic
 );
 
 /**
@@ -527,7 +545,8 @@ export const SourceText = S.NonEmptyString.pipe(
   S.brand("SourceText"),
   $I.annoteSchema("SourceText", {
     description: "Non-empty source text extracted from a TypeScript file or declaration.",
-  })
+  }),
+  withDecodeEffectStatic
 );
 
 /**
@@ -559,7 +578,8 @@ export const LineNumber = S.Int.check(S.isGreaterThan(0)).pipe(
   S.brand("LineNumber"),
   $I.annoteSchema("LineNumber", {
     description: "A positive 1-based line number.",
-  })
+  }),
+  withDecodeEffectStatic
 );
 
 /**
@@ -591,7 +611,8 @@ export const ColumnNumber = S.Int.check(S.isGreaterThan(0)).pipe(
   S.brand("ColumnNumber"),
   $I.annoteSchema("ColumnNumber", {
     description: "A positive 1-based column number.",
-  })
+  }),
+  withDecodeEffectStatic
 );
 
 /**
@@ -623,7 +644,8 @@ export const ByteOffset = NonNegativeInt.pipe(
   S.brand("ByteOffset"),
   $I.annoteSchema("ByteOffset", {
     description: "A non-negative byte offset within a source file.",
-  })
+  }),
+  withDecodeEffectStatic
 );
 
 /**
@@ -655,7 +677,8 @@ export const ByteLength = NonNegativeInt.pipe(
   S.brand("ByteLength"),
   $I.annoteSchema("ByteLength", {
     description: "A non-negative byte length for a source span.",
-  })
+  }),
+  withDecodeEffectStatic
 );
 
 /**
@@ -687,7 +710,10 @@ export const ContentHash = Sha256Hex.pipe(
   S.brand("ContentHash"),
   $I.annoteSchema("ContentHash", {
     description: "Canonical SHA-256 digest for source text or symbol content.",
-  })
+  }),
+  SchemaUtils.withStatics((self) => ({
+    decodeEffect: S.decodeUnknownEffect(self),
+  }))
 );
 
 /**
@@ -765,6 +791,24 @@ const resolvedProjectIdentity = S.TemplateLiteral([
   TsMorphReferencePolicy,
 ]);
 
+type ProjectIdentityParts = {
+  readonly tsConfigPath: TsConfigFilePath;
+  readonly mode: TsMorphScopeMode;
+  readonly referencePolicy: TsMorphReferencePolicy;
+};
+
+const renderProjectIdentity = (parts: ProjectIdentityParts): string =>
+  `${parts.tsConfigPath}::${parts.mode}#${parts.referencePolicy}`;
+
+const withProjectIdentityStatics = <Schema extends S.ConstraintDecoder<string, never>>(self: Schema) => {
+  const decode = S.decodeUnknownResult(self);
+
+  return {
+    fromString: (value: string): Schema["Type"] => Result.getOrThrow(decode(value)),
+    fromParts: (parts: ProjectIdentityParts): Schema["Type"] => Result.getOrThrow(decode(renderProjectIdentity(parts))),
+  };
+};
+
 /**
  * Stable identity schema for a resolved ts-morph project scope.
  *
@@ -781,7 +825,8 @@ export const ProjectScopeId = resolvedProjectIdentity.pipe(
   S.brand("ProjectScopeId"),
   $I.annoteSchema("ProjectScopeId", {
     description: "Stable resolved ts-morph scope identity string: tsconfig::mode#referencePolicy.",
-  })
+  }),
+  SchemaUtils.withStatics(withProjectIdentityStatics)
 );
 
 /**
@@ -818,7 +863,8 @@ export const ProjectScopeIdParts = S.TemplateLiteralParser([
 ]).pipe(
   $I.annoteSchema("ProjectScopeIdParts", {
     description: "Parsed project scope identity tuple for tsconfig path, scope mode, and reference policy.",
-  })
+  }),
+  withDecodeEffectStatic
 );
 
 /**
@@ -837,7 +883,8 @@ export const ProjectCacheKey = resolvedProjectIdentity.pipe(
   S.brand("ProjectCacheKey"),
   $I.annoteSchema("ProjectCacheKey", {
     description: "Cache-key string for a memoized ts-morph project instance.",
-  })
+  }),
+  SchemaUtils.withStatics(withProjectIdentityStatics)
 );
 
 /**
@@ -877,6 +924,18 @@ export const SymbolId = symbolIdentity.pipe(
   S.brand("SymbolId"),
   $I.annoteSchema("SymbolId", {
     description: "Stable TypeScript symbol identity string: file::qualifiedName#kind",
+  }),
+  SchemaUtils.withStatics((self) => {
+    const decode = S.decodeUnknownResult(self);
+
+    return {
+      fromString: (value: string) => Result.getOrThrow(decode(value)),
+      fromParts: (parts: {
+        readonly filePath: SymbolFilePath;
+        readonly qualifiedName: SymbolQualifiedName;
+        readonly kind: SymbolKind;
+      }) => Result.getOrThrow(decode(`${parts.filePath}::${parts.qualifiedName}#${parts.kind}`)),
+    };
   })
 );
 
@@ -1018,12 +1077,10 @@ export const TypeScriptImplementationFilePathToSymbolFilePath = TypeScriptImplem
   }),
   $I.annoteSchema("TypeScriptImplementationFilePathToSymbolFilePath", {
     description: "Schema transformation from a TypeScript implementation file path to a symbol-id-safe file path.",
-  })
+  }),
+  withDecodeEffectStatic
 );
 
-const decodeSymbolIdResult = S.decodeUnknownResult(SymbolId);
-const decodeProjectScopeIdResult = S.decodeUnknownResult(ProjectScopeId);
-const decodeContentHashEffect = S.decodeUnknownEffect(ContentHash);
 const decodeSha256HexFromBytesEffect = S.decodeUnknownEffect(Sha256HexFromBytes);
 
 /**
@@ -1042,7 +1099,7 @@ export const ContentHashFromBytes = S.Uint8Array.pipe(
   S.decodeTo(ContentHash, {
     decode: SchemaGetter.transformOrFail<ContentHash, Uint8Array, Crypto.Crypto>((value) =>
       decodeSha256HexFromBytesEffect(value).pipe(
-        Effect.flatMap(decodeContentHashEffect),
+        Effect.flatMap(ContentHash.decodeEffect),
         Effect.mapError((error) => error.issue)
       )
     ),
@@ -1052,11 +1109,13 @@ export const ContentHashFromBytes = S.Uint8Array.pipe(
   }),
   $I.annoteSchema("ContentHashFromBytes", {
     description: "Effectful one-way schema transformation from source bytes to a canonical content hash.",
-  })
+  }),
+  SchemaUtils.withStatics((self) => ({
+    decodeEffect: S.decodeUnknownEffect(self),
+  }))
 );
 
 const textEncoder = new TextEncoder();
-const decodeContentHashFromBytesEffect = S.decodeUnknownEffect(ContentHashFromBytes);
 
 /**
  * Effectful one-way schema transformation from source text to a canonical content hash.
@@ -1073,7 +1132,7 @@ const decodeContentHashFromBytesEffect = S.decodeUnknownEffect(ContentHashFromBy
 export const ContentHashFromSourceText = SourceText.pipe(
   S.decodeTo(ContentHash, {
     decode: SchemaGetter.transformOrFail<ContentHash, SourceText, Crypto.Crypto>((value) =>
-      decodeContentHashFromBytesEffect(textEncoder.encode(value)).pipe(Effect.mapError((error) => error.issue))
+      ContentHashFromBytes.decodeEffect(textEncoder.encode(value)).pipe(Effect.mapError((error) => error.issue))
     ),
     encode: SchemaGetter.forbidden(
       () => "Encoding ContentHash back to original source text is not supported by ContentHashFromSourceText."
@@ -1081,7 +1140,10 @@ export const ContentHashFromSourceText = SourceText.pipe(
   }),
   $I.annoteSchema("ContentHashFromSourceText", {
     description: "Effectful one-way schema transformation from source text to a canonical content hash.",
-  })
+  }),
+  SchemaUtils.withStatics((self) => ({
+    decodeEffect: S.decodeUnknownEffect(self),
+  }))
 );
 
 /**
@@ -1258,16 +1320,41 @@ export declare namespace Symbol {
  *
  * @example
  * ```ts
- * import type { SymbolInit } from "@beep/repo-utils"
- * type Example = SymbolInit
+ * import { SymbolInit } from "@beep/repo-utils"
+ * const identifier = SymbolInit.ast.annotations?.identifier
+ * console.log(identifier)
  * ```
  * @category models
  * @since 0.0.0
  */
-export type SymbolInit = Omit<Symbol.Type, "id" | "category"> & {
-  readonly id?: SymbolId | undefined;
-  readonly category?: SymbolCategory | undefined;
-};
+export class SymbolInit extends S.Class<SymbolInit>($I`SymbolInit`)(
+  {
+    filePath: Symbol.fields.filePath,
+    name: Symbol.fields.name,
+    qualifiedName: Symbol.fields.qualifiedName,
+    kind: Symbol.fields.kind,
+    signature: Symbol.fields.signature,
+    docstring: Symbol.fields.docstring,
+    summary: Symbol.fields.summary,
+    decorators: Symbol.fields.decorators,
+    keywords: Symbol.fields.keywords,
+    parentId: Symbol.fields.parentId,
+    startLine: Symbol.fields.startLine,
+    endLine: Symbol.fields.endLine,
+    byteOffset: Symbol.fields.byteOffset,
+    byteLength: Symbol.fields.byteLength,
+    contentHash: Symbol.fields.contentHash,
+    id: S.optionalKey(SymbolId).annotateKey({
+      description: "Optional precomputed stable symbol id.",
+    }),
+    category: S.optionalKey(SymbolCategory).annotateKey({
+      description: "Optional precomputed coarse symbol category.",
+    }),
+  },
+  $I.annote("SymbolInit", {
+    description: "Input shape for constructing a normalized Symbol.",
+  })
+) {}
 
 /**
  * Builds a stable `SymbolId` from validated symbol identity parts.
@@ -1291,7 +1378,7 @@ export const makeSymbolId = (parts: {
   readonly filePath: SymbolFilePath;
   readonly qualifiedName: SymbolQualifiedName;
   readonly kind: SymbolKind;
-}): SymbolId => Result.getOrThrow(decodeSymbolIdResult(`${parts.filePath}::${parts.qualifiedName}#${parts.kind}`));
+}): SymbolId => SymbolId.fromParts(parts);
 
 /**
  * Builds a stable `ProjectScopeId` from validated scope identity parts.
@@ -1318,10 +1405,7 @@ export const makeProjectScopeId = (parts: {
   readonly tsConfigPath: TsConfigFilePath;
   readonly mode: TsMorphScopeMode;
   readonly referencePolicy: TsMorphReferencePolicy;
-}): ProjectScopeId =>
-  Result.getOrThrow(decodeProjectScopeIdResult(`${parts.tsConfigPath}::${parts.mode}#${parts.referencePolicy}`));
-
-const decodeProjectCacheKeyResult = S.decodeUnknownResult(ProjectCacheKey);
+}): ProjectScopeId => ProjectScopeId.fromParts(parts);
 
 /**
  * Builds a stable `ProjectCacheKey` from validated scope identity parts.
@@ -1348,8 +1432,7 @@ export const makeProjectCacheKey = (parts: {
   readonly tsConfigPath: TsConfigFilePath;
   readonly mode: TsMorphScopeMode;
   readonly referencePolicy: TsMorphReferencePolicy;
-}): ProjectCacheKey =>
-  Result.getOrThrow(decodeProjectCacheKeyResult(`${parts.tsConfigPath}::${parts.mode}#${parts.referencePolicy}`));
+}): ProjectCacheKey => ProjectCacheKey.fromParts(parts);
 
 /**
  * Normalizes symbol input by deriving missing identity and category fields.
@@ -1462,15 +1545,16 @@ export const TsMorphScopeEntrypoint = S.Union([TsMorphScopeEntrypointTsConfig, T
   S.toTaggedUnion("_tag"),
   SchemaUtils.withStatics(() => {
     const make = Match.type<string>().pipe(
-      Match.when(S.is(TsConfigFilePath), TsMorphScopeEntrypointTsConfig.new),
-      Match.when(S.is(TypeScriptFilePath), TsMorphScopeEntrypointFile.new),
+      Match.when(TsConfigFilePath.is, TsMorphScopeEntrypointTsConfig.new),
+      Match.when(TypeScriptFilePath.is, TsMorphScopeEntrypointFile.new),
       Match.orElseAbsurd
     );
 
     return {
       make,
     };
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -1745,11 +1829,21 @@ export type TsMorphSearchLimit = typeof TsMorphSearchLimit.Type;
  */
 export class TsMorphSymbolSearchRequest extends S.Class<TsMorphSymbolSearchRequest>($I`TsMorphSymbolSearchRequest`)(
   {
-    scopeId: ProjectScopeId,
-    query: S.NonEmptyString,
-    categories: S.Array(SymbolCategory),
-    kinds: S.Array(SymbolKind),
-    limit: TsMorphSearchLimit,
+    scopeId: ProjectScopeId.annotateKey({
+      description: "Resolved ts-morph project scope to search.",
+    }),
+    query: S.NonEmptyString.annotateKey({
+      description: "Non-empty search query matched against symbol metadata.",
+    }),
+    categories: S.Array(SymbolCategory).annotateKey({
+      description: "Symbol categories included in the search.",
+    }),
+    kinds: S.Array(SymbolKind).annotateKey({
+      description: "TypeScript symbol kinds included in the search.",
+    }),
+    limit: TsMorphSearchLimit.annotateKey({
+      description: "Maximum number of matching symbols to return.",
+    }),
   },
   $I.annote("TsMorphSymbolSearchRequest", {
     description: "Request to search normalized symbols within a resolved ts-morph scope.",
@@ -1770,11 +1864,21 @@ export class TsMorphSymbolSearchRequest extends S.Class<TsMorphSymbolSearchReque
  */
 export class TsMorphSymbolSearchResult extends S.Class<TsMorphSymbolSearchResult>($I`TsMorphSymbolSearchResult`)(
   {
-    scopeId: ProjectScopeId,
-    query: S.NonEmptyString,
-    limit: TsMorphSearchLimit,
-    symbols: S.Array(Symbol),
-    total: NonNegativeInt,
+    scopeId: ProjectScopeId.annotateKey({
+      description: "Resolved ts-morph project scope searched.",
+    }),
+    query: S.NonEmptyString.annotateKey({
+      description: "Search query used to produce the result.",
+    }),
+    limit: TsMorphSearchLimit.annotateKey({
+      description: "Maximum number of symbols requested.",
+    }),
+    symbols: S.Array(Symbol).annotateKey({
+      description: "Matching normalized symbols in rank order.",
+    }),
+    total: NonNegativeInt.annotateKey({
+      description: "Total number of matching symbols before limit truncation.",
+    }),
   },
   $I.annote("TsMorphSymbolSearchResult", {
     description: "Normalized symbol search results for a query within a resolved scope.",
@@ -1935,7 +2039,8 @@ export const TsMorphDiagnostic = TsMorphDiagnosticCategory.mapMembers(
   $I.annoteSchema("TsMorphDiagnostic", {
     description: "Tagged union of normalized TypeScript diagnostics keyed by category.",
   }),
-  S.toTaggedUnion("category")
+  S.toTaggedUnion("category"),
+  withDecodeEffectStatic
 );
 
 /**

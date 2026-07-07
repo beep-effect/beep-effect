@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoConfigsId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Str } from "@beep/utils";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -33,7 +33,8 @@ export const FileSizeSuffix = S.TemplateLiteral([FileSizeScale, FileSizeByte]).p
   $I.annoteSchema("FileSizeSuffix", {
     description: "File-size suffix accepted by Next.js size limit strings.",
     documentation: "Matches Next.js FileSizeSuffix: one of k/K/m/M/g/G/t/T/p/P followed by b or B.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -84,7 +85,8 @@ export const SizeLimit = S.Union([NonNegativeSizeLimitNumber, SizeLimitText]).pi
     description: "Non-negative numeric or suffixed string size limit accepted by Next.js.",
     documentation:
       "Matches Next.js SizeLimit shape while rejecting negative values that are not meaningful size limits.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

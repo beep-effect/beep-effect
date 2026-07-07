@@ -6,15 +6,17 @@
  */
 
 import { $InfraId } from "@beep/identity/packages";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { A, Str, Struct } from "@beep/utils";
+import { SchemaUtils } from "@beep/schema";
+import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as aws from "@pulumi/aws";
 import * as cloudflare from "@pulumi/cloudflare";
 import * as pulumi from "@pulumi/pulumi";
 import * as vercel from "@pulumiverse/vercel";
-import { pipe } from "effect";
+import { Effect, pipe, Result } from "effect";
 import * as S from "effect/Schema";
+import { optionalPulumiConfigFields, withPulumiConfigDecodeEffect } from "./internal/PulumiConfigSchema.js";
+import { VercelAuthenticationDeploymentType } from "./Vercel.js";
 
 const $I = $InfraId.create("OipWeb");
 
@@ -32,7 +34,8 @@ const defaultRootDirectory = "apps/oip-web";
 const defaultStagingBranch = "staging";
 const defaultStagingDomain = "staging.oip.law";
 const defaultVercelApexTarget = "76.76.21.21";
-const defaultVercelAuthenticationDeploymentType: VercelAuthenticationDeploymentType = "none";
+const defaultVercelAuthenticationDeploymentType: VercelAuthenticationDeploymentType =
+  VercelAuthenticationDeploymentType.Enum.none;
 const defaultVercelCnameTarget = "cname.vercel-dns.com";
 const defaultWwwDomain = "www.oip.law";
 const productionRedirectStatusCode = 308;
@@ -77,14 +80,20 @@ type OipWebPulumiConfigValues = {
   readonly wwwDomain?: string | undefined;
 };
 
-const VercelAuthenticationDeploymentType = LiteralKit([
-  "standardProtectionNew",
-  "standardProtection",
-  "allDeployments",
-  "onlyPreviewDeployments",
-  "none",
-]);
-type VercelAuthenticationDeploymentType = typeof VercelAuthenticationDeploymentType.Type;
+const schemaIssueToPulumiConfigError =
+  (key: string, value: string) =>
+  (cause: S.SchemaError): pulumi.RunError =>
+    new pulumi.RunError(`Invalid oipWeb:${key} Pulumi config value "${value}": ${cause.message}`);
+
+const vercelAuthenticationDeploymentTypeFromPulumiConfig = (
+  value: string | undefined
+): VercelAuthenticationDeploymentType | undefined =>
+  value === undefined
+    ? undefined
+    : Result.getOrThrowWith(
+        VercelAuthenticationDeploymentType.decodeResult(value),
+        schemaIssueToPulumiConfigError("vercelAuthenticationDeploymentType", value)
+      );
 
 /**
  * Optional Pulumi config values before OIP deploy defaults are applied.
@@ -135,7 +144,9 @@ export const OipWebPulumiConfigValues = S.Class<OipWebPulumiConfigValues>($I`Oip
   $I.annote("OipWebPulumiConfigValues", {
     description: "Optional Pulumi config values before OIP deploy defaults are applied.",
   })
-).mapFields(Struct.map(S.optionalKey));
+)
+  .mapFields(optionalPulumiConfigFields)
+  .pipe(withPulumiConfigDecodeEffect);
 
 /**
  * Pulumi DIY state backend settings for OIP.
@@ -229,14 +240,14 @@ export class OipDnsConfig extends S.Class<OipDnsConfig>($I`OipDnsConfig`)(
   {
     attachProductionDomains: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     attachStagingDomain: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-    cloudflareZoneId: S.optionalKey(S.String),
-    legacyCloudflareZoneId: S.optionalKey(S.String),
-    legacyProductionDnsRecordImportId: S.optionalKey(S.String),
+    cloudflareZoneId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    legacyCloudflareZoneId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    legacyProductionDnsRecordImportId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     legacyProductionDomain: S.String.pipe(SchemaUtils.withKeyDefaults(defaultLegacyProductionDomain)),
     legacyStagingDomain: S.String.pipe(SchemaUtils.withKeyDefaults(defaultLegacyStagingDomain)),
-    legacyWwwDnsRecordImportId: S.optionalKey(S.String),
+    legacyWwwDnsRecordImportId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     legacyWwwDomain: S.String.pipe(SchemaUtils.withKeyDefaults(defaultLegacyWwwDomain)),
-    productionDnsRecordImportId: S.optionalKey(S.String),
+    productionDnsRecordImportId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     productionDomain: S.String.pipe(SchemaUtils.withKeyDefaults(defaultProductionDomain)),
     stagingDomain: S.String.pipe(SchemaUtils.withKeyDefaults(defaultStagingDomain)),
     vercelApexTarget: S.String.pipe(SchemaUtils.withKeyDefaults(defaultVercelApexTarget)),
@@ -263,16 +274,16 @@ export class OipDnsConfig extends S.Class<OipDnsConfig>($I`OipDnsConfig`)(
  */
 export class OipVercelProjectConfig extends S.Class<OipVercelProjectConfig>($I`OipVercelProjectConfig`)(
   {
-    hubSpotAccountId: S.optionalKey(S.String),
-    hubSpotFormGuid: S.optionalKey(S.String),
+    hubSpotAccountId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    hubSpotFormGuid: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     projectName: S.String.pipe(SchemaUtils.withKeyDefaults(defaultProjectName)),
     productionBranch: S.String.pipe(SchemaUtils.withKeyDefaults(defaultProductionBranch)),
     repository: S.String.pipe(SchemaUtils.withKeyDefaults(defaultRepository)),
     rootDirectory: S.String.pipe(SchemaUtils.withKeyDefaults(defaultRootDirectory)),
-    sanityDataset: S.optionalKey(S.String),
-    sanityProjectId: S.optionalKey(S.String),
+    sanityDataset: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    sanityProjectId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     stagingBranch: S.String.pipe(SchemaUtils.withKeyDefaults(defaultStagingBranch)),
-    teamId: S.optionalKey(S.String),
+    teamId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     vercelAuthenticationDeploymentType: VercelAuthenticationDeploymentType.pipe(
       SchemaUtils.withKeyDefaults(defaultVercelAuthenticationDeploymentType)
     ),
@@ -322,9 +333,15 @@ export type OipWebRuntimeSecrets = {
 export class OipWebStackArgs extends S.Class<OipWebStackArgs>($I`OipWebStackArgs`)(
   {
     assets: OipAssetsBucketConfig.pipe(SchemaUtils.withKeyDefaults(OipAssetsBucketConfig.make())),
-    dns: OipDnsConfig.pipe(SchemaUtils.withKeyDefaults(OipDnsConfig.make())),
+    dns: OipDnsConfig.pipe(
+      S.withConstructorDefault(Effect.succeed(OipDnsConfig.make({}))),
+      S.withDecodingDefaultKey(Effect.succeed({}))
+    ),
     state: OipPulumiStateBackendConfig.pipe(SchemaUtils.withKeyDefaults(OipPulumiStateBackendConfig.make())),
-    vercel: OipVercelProjectConfig.pipe(SchemaUtils.withKeyDefaults(OipVercelProjectConfig.make())),
+    vercel: OipVercelProjectConfig.pipe(
+      S.withConstructorDefault(Effect.succeed(OipVercelProjectConfig.make({}))),
+      S.withDecodingDefaultKey(Effect.succeed({}))
+    ),
   },
   $I.annote("OipWebStackArgs", {
     description: "Pulumi-facing args for the OIP web stack.",
@@ -390,25 +407,25 @@ export const makeOipWebStackArgsFromConfigValues = ({
         bucketName: O.fromUndefinedOr(assetsBucketName),
       })
     ),
-    dns: OipDnsConfig.make(
-      O.getSomesStruct({
+    dns: OipDnsConfig.make({
+      ...O.getSomesStruct({
         attachProductionDomains: O.fromUndefinedOr(attachProductionDomains),
         attachStagingDomain: O.fromUndefinedOr(attachStagingDomain),
-        cloudflareZoneId: O.fromUndefinedOr(cloudflareZoneId),
-        legacyCloudflareZoneId: O.fromUndefinedOr(legacyCloudflareZoneId),
-        legacyProductionDnsRecordImportId: O.fromUndefinedOr(legacyProductionDnsRecordImportId),
         legacyProductionDomain: O.fromUndefinedOr(legacyProductionDomain),
         legacyStagingDomain: O.fromUndefinedOr(legacyStagingDomain),
-        legacyWwwDnsRecordImportId: O.fromUndefinedOr(legacyWwwDnsRecordImportId),
         legacyWwwDomain: O.fromUndefinedOr(legacyWwwDomain),
-        productionDnsRecordImportId: O.fromUndefinedOr(productionDnsRecordImportId),
         productionDomain: O.fromUndefinedOr(productionDomain),
         stagingDomain: O.fromUndefinedOr(stagingDomain),
         vercelApexTarget: O.fromUndefinedOr(vercelApexTarget),
         vercelCnameTarget: O.fromUndefinedOr(vercelCnameTarget),
         wwwDomain: O.fromUndefinedOr(wwwDomain),
-      })
-    ),
+      }),
+      cloudflareZoneId: O.fromUndefinedOr(cloudflareZoneId),
+      legacyCloudflareZoneId: O.fromUndefinedOr(legacyCloudflareZoneId),
+      legacyProductionDnsRecordImportId: O.fromUndefinedOr(legacyProductionDnsRecordImportId),
+      legacyWwwDnsRecordImportId: O.fromUndefinedOr(legacyWwwDnsRecordImportId),
+      productionDnsRecordImportId: O.fromUndefinedOr(productionDnsRecordImportId),
+    }),
     state: OipPulumiStateBackendConfig.make(
       O.getSomesStruct({
         region: O.fromUndefinedOr(awsRegion),
@@ -420,21 +437,21 @@ export const makeOipWebStackArgsFromConfigValues = ({
         ),
       })
     ),
-    vercel: OipVercelProjectConfig.make(
-      O.getSomesStruct({
-        hubSpotAccountId: O.fromUndefinedOr(hubSpotAccountId),
-        hubSpotFormGuid: O.fromUndefinedOr(hubSpotFormGuid),
+    vercel: OipVercelProjectConfig.make({
+      ...O.getSomesStruct({
         projectName: O.fromUndefinedOr(projectName),
         productionBranch: O.fromUndefinedOr(productionBranch),
         repository: O.fromUndefinedOr(repository),
         rootDirectory: O.fromUndefinedOr(rootDirectory),
-        sanityDataset: O.fromUndefinedOr(sanityDataset),
-        sanityProjectId: O.fromUndefinedOr(sanityProjectId),
         stagingBranch: O.fromUndefinedOr(stagingBranch),
         vercelAuthenticationDeploymentType: O.fromUndefinedOr(vercelAuthenticationDeploymentType),
-        teamId: O.fromUndefinedOr(vercelTeamId),
-      })
-    ),
+      }),
+      hubSpotAccountId: O.fromUndefinedOr(hubSpotAccountId),
+      hubSpotFormGuid: O.fromUndefinedOr(hubSpotFormGuid),
+      sanityDataset: O.fromUndefinedOr(sanityDataset),
+      sanityProjectId: O.fromUndefinedOr(sanityProjectId),
+      teamId: O.fromUndefinedOr(vercelTeamId),
+    }),
   });
 
 /**
@@ -482,9 +499,9 @@ export const loadOipWebStackArgs = (): OipWebStackArgs => {
     stagingBranch: config.get("stagingBranch"),
     stagingDomain: config.get("stagingDomain"),
     vercelApexTarget: config.get("vercelApexTarget"),
-    vercelAuthenticationDeploymentType: config.get("vercelAuthenticationDeploymentType") as
-      | VercelAuthenticationDeploymentType
-      | undefined,
+    vercelAuthenticationDeploymentType: vercelAuthenticationDeploymentTypeFromPulumiConfig(
+      config.get("vercelAuthenticationDeploymentType")
+    ),
     vercelCnameTarget: config.get("vercelCnameTarget"),
     vercelTeamId: config.get("vercelTeamId"),
     wwwDomain: config.get("wwwDomain"),
@@ -589,7 +606,7 @@ const makeBucketBaseline = (
   );
 };
 
-const optionalTeamArgs = (teamId: string | undefined) => (teamId === undefined ? {} : { teamId });
+const optionalTeamArgs = (teamId: O.Option<string>) => O.getSomesStruct({ teamId });
 
 const makeRuntimeEnvironmentVariableTargets = (sensitive: boolean): Array<"production" | "preview"> =>
   sensitive ? ["production"] : ["production", "preview"];
@@ -597,15 +614,16 @@ const makeRuntimeEnvironmentVariableTargets = (sensitive: boolean): Array<"produ
 const makeRuntimeEnvironmentVariable = (
   name: string,
   project: vercel.Project,
-  teamId: string | undefined,
+  teamId: O.Option<string>,
   key: string,
-  value: pulumi.Input<string> | undefined,
+  value: O.Option<pulumi.Input<string>>,
   sensitive: boolean,
   opts: pulumi.CustomResourceOptions
 ) =>
-  value === undefined
-    ? undefined
-    : new vercel.ProjectEnvironmentVariable(
+  O.match(value, {
+    onNone: () => undefined,
+    onSome: (value) =>
+      new vercel.ProjectEnvironmentVariable(
         `${name}-${pipe(key, Str.toLowerCase, Str.replaceAll("_", "-"))}`,
         {
           ...optionalTeamArgs(teamId),
@@ -616,20 +634,22 @@ const makeRuntimeEnvironmentVariable = (
           value,
         },
         opts
-      );
+      ),
+  });
 
 const makeDnsRecord = (
   name: string,
-  zoneId: string | undefined,
+  zoneId: O.Option<string>,
   recordName: string,
   type: "A" | "CNAME",
   content: string,
-  importId: string | undefined,
+  importId: O.Option<string>,
   opts: pulumi.CustomResourceOptions
 ) =>
-  zoneId === undefined
-    ? undefined
-    : new cloudflare.DnsRecord(
+  O.match(zoneId, {
+    onNone: () => undefined,
+    onSome: (zoneId) =>
+      new cloudflare.DnsRecord(
         name,
         {
           comment: "Managed by Pulumi for oip.law Vercel routing.",
@@ -642,25 +662,26 @@ const makeDnsRecord = (
         },
         {
           ...opts,
-          ...O.getSomesStruct({ import: O.fromUndefinedOr(importId) }),
+          ...O.getSomesStruct({ import: importId }),
         }
-      );
+      ),
+  });
 
 const makeARecord = (
   name: string,
-  zoneId: string | undefined,
+  zoneId: O.Option<string>,
   recordName: string,
   content: string,
-  importId: string | undefined,
+  importId: O.Option<string>,
   opts: pulumi.CustomResourceOptions
 ) => makeDnsRecord(name, zoneId, recordName, "A", content, importId, opts);
 
 const makeCnameRecord = (
   name: string,
-  zoneId: string | undefined,
+  zoneId: O.Option<string>,
   recordName: string,
   content: string,
-  importId: string | undefined,
+  importId: O.Option<string>,
   opts: pulumi.CustomResourceOptions
 ) => makeDnsRecord(name, zoneId, recordName, "CNAME", content, importId, opts);
 
@@ -811,7 +832,7 @@ export class OipWebStack extends pulumi.ComponentResource {
     );
 
     const envOpts = { parent: this };
-    makeRuntimeEnvironmentVariable(name, project, args.vercel.teamId, "NEXT_DISABLE_PWA", "0", false, envOpts);
+    makeRuntimeEnvironmentVariable(name, project, args.vercel.teamId, "NEXT_DISABLE_PWA", O.some("0"), false, envOpts);
     makeRuntimeEnvironmentVariable(
       name,
       project,
@@ -835,7 +856,7 @@ export class OipWebStack extends pulumi.ComponentResource {
       project,
       args.vercel.teamId,
       "SANITY_API_TOKEN",
-      secrets.sanityApiToken,
+      O.fromUndefinedOr(secrets.sanityApiToken),
       true,
       envOpts
     );
@@ -862,7 +883,7 @@ export class OipWebStack extends pulumi.ComponentResource {
       project,
       args.vercel.teamId,
       "CRM_HUBSPOT_SERVICE_KEY",
-      secrets.hubSpotServiceKey,
+      O.fromUndefinedOr(secrets.hubSpotServiceKey),
       true,
       envOpts
     );
@@ -974,7 +995,7 @@ export class OipWebStack extends pulumi.ComponentResource {
         args.dns.cloudflareZoneId,
         args.dns.wwwDomain,
         args.dns.vercelCnameTarget,
-        undefined,
+        O.none(),
         dnsOpts
       );
       makeARecord(
@@ -1000,7 +1021,7 @@ export class OipWebStack extends pulumi.ComponentResource {
         args.dns.cloudflareZoneId,
         args.dns.stagingDomain,
         args.dns.vercelCnameTarget,
-        undefined,
+        O.none(),
         dnsOpts
       );
       makeCnameRecord(
@@ -1008,7 +1029,7 @@ export class OipWebStack extends pulumi.ComponentResource {
         args.dns.legacyCloudflareZoneId,
         args.dns.legacyStagingDomain,
         args.dns.vercelCnameTarget,
-        undefined,
+        O.none(),
         legacyDnsOpts
       );
     }

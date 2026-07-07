@@ -8,7 +8,11 @@
     "proposedTarget": "Reuse the existing RelativePlanPath schema from packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts:34-65 for TemplateSpec.outputPath and RenderedTemplate.outputPath, or promote that schema to a shared CreatePackage path block. This keeps template rendering from producing paths that FileGenerationPlanInput later rejects. S.String.check and S.isPattern/check filters are verified v4 APIs at .repos/effect-v4/packages/effect/src/Schema.ts:6521.",
     "confidence": 0.78,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -19,7 +23,11 @@
     "proposedTarget": "Use the repo's NonNegativeInt schema for all five counters (packages/foundation/modeling/schema/src/Number.ts:182-199, already imported elsewhere from @beep/schema in this package family). S.Int is verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and S.isGreaterThanOrEqualTo at :7314.",
     "confidence": 0.86,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -30,7 +38,11 @@
     "proposedTarget": "Move the integer/range domain into schemas: PosInt (packages/foundation/modeling/schema/src/Int.ts:77) or S.Int.check(S.isGreaterThan(0)) for concurrency/sampleStride, and NonNegativeInt for maxFiles/maxLookups/lookupDelayMillis. S.isGreaterThan is verified at .repos/effect-v4/packages/effect/src/Schema.ts:7286.",
     "confidence": 0.82,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -41,7 +53,11 @@
     "proposedTarget": "Pipe the S.Union through $I.annoteSchema(\"ArchitectureOperation\", { description: ... }) before exporting the type, matching GenerationAction in CreatePackage/FileGenerationPlanService.ts:209-216 and other annotated union/literal domains in this package.",
     "confidence": 0.95,
     "mechanization": "codemod",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -52,7 +68,11 @@
     "proposedTarget": "Define an ArchitectureOperationPath schema that carries the same repo-relative/non-traversal invariant currently enforced at OperationPlanExecution.ts:35-42, then use it for operation path fields and S.Array(ArchitectureOperationPath) result arrays. The CreatePackage RelativePlanPath filter group at FileGenerationPlanService.ts:34-65 is the closest in-repo exemplar.",
     "confidence": 0.74,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -63,7 +83,11 @@
     "proposedTarget": "Use NonNegativeInt for the error exitCode, or a stricter local S.Int.check(S.isBetween({ minimum: 0, maximum: 255 })) if the CLI wants POSIX-style byte exit statuses. S.isBetween is verified at .repos/effect-v4/packages/effect/src/Schema.ts:7401.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -74,7 +98,11 @@
     "proposedTarget": "Use NonNegativeInt for index and PosInt or S.Int.check(S.isGreaterThan(0)) for width; RenamePlanEntry.index at Files.schemas.ts:976 should use the same index schema. The value flow is visible at Files.service.ts:3240-3255.",
     "confidence": 0.82,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -85,7 +113,11 @@
     "proposedTarget": "Use PositiveMediaDimension from Files.schemas.ts:31 for height/width and define a local RawImageChannelCount as S.Int.check(S.isBetween({ minimum: 1, maximum: 4 })) or the actual sharp channel range. This mirrors existing RgbChannel bounds at Files.schemas.ts:745-771.",
     "confidence": 0.76,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -96,7 +128,11 @@
     "proposedTarget": "Replace these count fields with the already-imported NonNegativeInt, matching ProcessFilesSummary at Files.schemas.ts:2295-2301. Representative producers are Files.service.ts:2818-2827 and :2860-2865.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -107,7 +143,11 @@
     "proposedTarget": "Use NonNegativeInt for pixelArea, widthPx, borderCount, and faceCount; use FaceDetectionPercentage for primaryFaceAreaPct; use BorderDetectionPercentage or a local zero-inclusive percentage for widthPct; and use S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })) for score. Existing percentage schemas are Files.schemas.ts:604 and @beep/face-detection FaceDetectionPercentage.",
     "confidence": 0.74,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-equivalence",
@@ -118,7 +158,11 @@
     "proposedTarget": "Add const mediaDimensionsEquivalence = S.toEquivalence(MediaDimensions) and implement mediaDimensionsChanged as !mediaDimensionsEquivalence(left, right). S.toEquivalence is verified at .repos/effect-v4/packages/effect/src/Schema.ts:13201, and CreatePackage/ConfigUpdater.ts:175 already uses schema-derived equivalence for arrays.",
     "confidence": 0.9,
     "mechanization": "codemod",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -129,7 +173,11 @@
     "proposedTarget": "Use ContentHash from @beep/repo-utils for DocgenQualitySubject.contentHash, matching the value produced at Quality.ts:1302 and the in-repo branded schema at packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts:686-689.",
     "confidence": 0.88,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -140,7 +188,11 @@
     "proposedTarget": "Introduce annotated DocgenQualityScoreImpact and DocgenQualityScore schemas using S.Int.check with S.isBetween bounds, mirroring the already precise DocgenQualityWorkerEvalLocalScore at QualityWorkerEval.ts:38-64.",
     "confidence": 0.84,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -151,7 +203,11 @@
     "proposedTarget": "Use NonNegativeInt for summary counts, omittedPacketCount, and durationMs (including PackageReportOptions.durationMs at line 1893). This matches the repo's count modeling in packages/foundation/modeling/schema/src/Number.ts:182-199.",
     "confidence": 0.82,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -162,7 +218,11 @@
     "proposedTarget": "Use PosInt or S.Int.check(S.isGreaterThan(0)) for source line numbers and NonNegativeInt for all count fields. The same file already groups docgen report schemas, so the shared numeric aliases can live near the model block.",
     "confidence": 0.82,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -173,7 +233,11 @@
     "proposedTarget": "Use PosInt for parallel/packet limits and positive resource knobs, and NonNegativeInt for durations, timeouts, exportedSpans, and summary counts across Local.ts:254, QualityWorkerEval.ts:321-366, and QualityWorkerRunpodEval.ts:144, 173, 189, 203-206, 281, 283.",
     "confidence": 0.78,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -244,7 +308,11 @@
     "proposedTarget": "Introduce or reuse a shared exit-status schema: failure-only paths can use the existing PositiveExitStatus exemplar at packages/tooling/tool/cli/src/commands/Quality/internal/FallowEnvelope.schema.ts:109, while status fields that can be zero should use S.Int.check(S.isBetween({ minimum: 0, maximum: 255 })) or an equivalent branded ExitStatus. Effect v4 S.Int and S.isBetween were verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7401.",
     "confidence": 0.82,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -255,7 +323,11 @@
     "proposedTarget": "Use NonNegativeInt for count fields and parameterCount, and PosInt for source line/column fields where the producer emits 1-based positions. Existing repo targets are NonNegativeInt at packages/foundation/modeling/schema/src/Number.ts:182 and PosInt at packages/foundation/modeling/schema/src/Int.ts:77; Laws already uses LiteralKit annotations in DualArity.ts:53-82 as the local precision style.",
     "confidence": 0.84,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -266,7 +338,11 @@
     "proposedTarget": "Pipe NoNativeRuntimeSeverity and EffectFnRecommendation through $I.annoteSchema, mirroring DualArityEntryKind and DualArityDiagnosticKind at packages/tooling/tool/cli/src/commands/Laws/DualArity.ts:53 and :70.",
     "confidence": 0.9,
     "mechanization": "codemod",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -277,7 +353,11 @@
     "proposedTarget": "Use cards: S.Array(SchemaFirstPolicyRuleId) and families: S.Record(SchemaCrispeningFamily, SchemaCrispeningFamilyPolicy), preserving ownerOverrides as S.Record(S.String, ...) because owner names are open. Effect v4 S.Record key schemas were verified at .repos/effect-v4/packages/effect/src/Schema.ts:3780.",
     "confidence": 0.92,
     "mechanization": "codemod",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -288,7 +368,11 @@
     "proposedTarget": "Use PosInt for 1-based source line fields, NonNegativeInt for zero-based argument indexes and counts, and keep existing schema-first literal rule ids. Existing helpers are NonNegativeInt at packages/foundation/modeling/schema/src/Number.ts:182 and PosInt at packages/foundation/modeling/schema/src/Int.ts:77.",
     "confidence": 0.83,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -299,7 +383,11 @@
     "proposedTarget": "Use PosInt for turboConcurrency, docgenParallel, fullProofSlots, reviewFixSlots, and cpuCount. Use S.Finite.check(S.isGreaterThan(0)) or a branded positive finite schema for memoryGiB. PosInt exists at packages/foundation/modeling/schema/src/Int.ts:77 and Effect v4 S.isGreaterThan was verified at .repos/effect-v4/packages/effect/src/Schema.ts:7286.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -310,7 +398,11 @@
     "proposedTarget": "Use NonNegativeInt for counts and millisecond durations. For record values such as byTask/byReason/byStatus, use S.Record(S.String, NonNegativeInt). In-package exemplar: FallowEnvelope.schema.ts already uses NonNegativeInt for attribution counts and findingCount at packages/tooling/tool/cli/src/commands/Quality/internal/FallowEnvelope.schema.ts:156 and :198.",
     "confidence": 0.84,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -336,7 +428,11 @@
     "proposedTarget": "Decode to PosInt or to S.Int.check(S.isGreaterThan(0)) after the string transform, and reuse that positive-int schema for GraphitiRestoreConfig waitSeconds and GraphitiProxyOpsConfig timeoutSeconds/waitSeconds. PosInt exists at packages/foundation/modeling/schema/src/Int.ts:77; S.Int and S.isGreaterThan were verified in .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7286.",
     "confidence": 0.83,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -347,7 +443,11 @@
     "proposedTarget": "Use NonNegativeInt for active/queued/peakQueueDepth/processed/failed/rejected and PosInt for concurrency/maxQueue. These helpers are already exported through @beep/schema from packages/foundation/modeling/schema/src/Number.ts:182 and packages/foundation/modeling/schema/src/Int.ts:77.",
     "confidence": 0.84,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -358,7 +458,11 @@
     "proposedTarget": "Use NonNegativeInt for completedCount, failedCount, and totalCount, matching the repo-wide count schema at packages/foundation/modeling/schema/src/Number.ts:182 and the CLI count exemplars in Corpus/Files schemas.",
     "confidence": 0.86,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -369,7 +473,11 @@
     "proposedTarget": "Use NonNegativeInt for the three core tuple components and the numeric branch of BunSemverIdentifier. The parser at BunResolver.ts:111-113 already matches NonNegativeInt semantics; the schema helper exists at packages/foundation/modeling/schema/src/Number.ts:182.",
     "confidence": 0.86,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -380,7 +488,11 @@
     "proposedTarget": "Use S.Array(S.Union([S.String, NonNegativeInt])) for YAML path segments, PosInt for 1-based drift lines, and NonNegativeInt for driftCount. NodeResolver already imports NonNegativeInt at packages/tooling/tool/cli/src/commands/VersionSync/internal/resolvers/NodeResolver.ts:12 for stepIndex, making this a local reuse target.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -391,7 +503,11 @@
     "proposedTarget": "Use NonNegativeInt for recordCount and driftCount. This matches the repo count schema at packages/foundation/modeling/schema/src/Number.ts:182 and existing CLI generated-data count usage in Corpus/Files schemas.",
     "confidence": 0.87,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -402,7 +518,11 @@
     "proposedTarget": "Use NonNegativeInt for digits, or a narrower bounded integer if ISO minor-unit maximums are locked later. The immediate safe target is NonNegativeInt from packages/foundation/modeling/schema/src/Number.ts:182.",
     "confidence": 0.72,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -413,7 +533,11 @@
     "proposedTarget": "Pipe IanaMediaTypeName through $I.annoteSchema(\"IanaMediaTypeName\", { description: \"Media type name node emitted by the IANA registry parser.\" }) mirroring Iso4217CurrencyName at packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/Iso4217.ts:58.",
     "confidence": 0.94,
     "mechanization": "codemod",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -424,7 +548,11 @@
     "proposedTarget": "Use Sha256Hex for computedHash and decode/construct the value at sha256Hex or makeLockEntry boundaries. Sha256Hex is exported from @beep/schema via packages/foundation/modeling/schema/src/Sha256.ts:62 and includes a toArbitrary annotation at :64.",
     "confidence": 0.87,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -435,7 +563,11 @@
     "proposedTarget": "Use S.optionalKey(NonNegativeInt) for GitHubTreeEntry.size and NonNegativeInt for SkillsDriftError.driftCount. Existing helper: packages/foundation/modeling/schema/src/Number.ts:182.",
     "confidence": 0.71,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -446,7 +578,11 @@
     "proposedTarget": "Use NonNegativeInt for counts and thresholds, PosInt for PR numbers and 1-based source positions, and the shared exit-status schema proposed for exitCode fields. This affects PrCloseoutReport, PrCloseoutOptions, GreptileSummary, PrCloseoutGateState, QualityIssue/PackageQualityReport, YeetStatusWorktree/Remote/Artifact, YeetBaseFreshness, and YeetVerdictLane.",
     "confidence": 0.78,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",
@@ -457,7 +593,11 @@
     "proposedTarget": "Use NonNegativeInt for TsconfigSyncResultSync.changedFiles, TsconfigSyncResultCheck.changedFiles, TsconfigSyncResultDryRun.changedFiles, and TsconfigSyncDriftError.fileCount. Existing helper: packages/foundation/modeling/schema/src/Number.ts:182.",
     "confidence": 0.88,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -483,7 +623,11 @@
     "proposedTarget": "Use NonNegativeInt for mtimeMillis and durationMs, keeping the raw Turbo summary adapter separate. Existing helper: packages/foundation/modeling/schema/src/Number.ts:182.",
     "confidence": 0.76,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Tightening this exported schema precision/equivalence surface would change public Type/Encoded expectations or require a package-wide call-site update.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-numeric-domain",

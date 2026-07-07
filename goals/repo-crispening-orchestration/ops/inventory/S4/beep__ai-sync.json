@@ -8,40 +8,11 @@
     "proposedTarget": "Update the source generator (`src/generator.ts:153,231,257,287,312`) to emit in-body statics on generated classes, e.g. `CodexConfig.decodeTomlEffect = decodeTomlTextAs(CodexConfig)` and `ClaudeMcpJson.decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(ClaudeMcpJson))`; then replace validation helpers with those statics. `decodeTomlTextAs` is verified at `packages/foundation/modeling/schema/src/Toml.ts:128`, and v4 `S.fromJsonString` is verified at `.repos/effect-v4/packages/effect/src/Schema.ts:10983`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/tooling/library/ai-sync/src/schemas.ts",
-    "line": 37,
-    "symbol": "AgentInstructionDocument",
-    "smell": "Public refined instruction-document schema has its Effect decoder separated as `decodeInstructionDocument = S.decodeUnknownEffect(AgentInstructionDocument)` in `validation.ts:20`, then used in the `AGENTS.md` / `CLAUDE.md` validation branch (`validation.ts:51-55`).",
-    "proposedTarget": "Import `SchemaUtils` and attach schema-owned statics with `SchemaUtils.withStatics((schema) => ({ decodeEffect: S.decodeUnknownEffect(schema), is: S.is(schema) }))` after annotation; replace the validation wall with `AgentInstructionDocument.decodeEffect`. `withStatics` is verified at `packages/foundation/modeling/schema/src/SchemaUtils/withStatics.ts:103`, and `S.decodeUnknownEffect` is verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/tooling/library/ai-sync/src/drift.ts",
-    "line": 23,
-    "symbol": "decodeGeneratedSources",
-    "smell": "Generated source metadata array decoding is a free helper (`S.decodeUnknownEffect(S.Array(AiSyncSourceMetadata))`) consumed by `getGeneratedSourceMetadata` at line 55, instead of living with `AiSyncSourceMetadata`.",
-    "proposedTarget": "Add an in-body static to `AiSyncSourceMetadata` such as `static readonly decodeArrayEffect = S.decodeUnknownEffect(S.Array(AiSyncSourceMetadata))` in `models.ts:249`, then call `AiSyncSourceMetadata.decodeArrayEffect(...)`. Use in-body statics for the class per `SchemaUtils/withCodecStatics.ts:10-12`.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/tooling/library/ai-sync/src/transforms.ts",
-    "line": 148,
-    "symbol": "normalizeAgentSkillFrontmatter",
-    "smell": "Pure projection for `AgentSkillFrontmatter` is exported as a detached function that simply reconstructs the same schema class fields with `AgentSkillFrontmatter.make(...)`.",
-    "proposedTarget": "Move the projection onto `AgentSkillFrontmatter` as an in-body static such as `static readonly normalize = (frontmatter: AgentSkillFrontmatter) => AgentSkillFrontmatter.make({ name: frontmatter.name, description: frontmatter.description })`; keep `normalizeAgentSkillFrontmatter` as a compatibility alias unless a same-PR consumer sweep removes it.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 1,
+    "exception": {
+      "reason": "Generated native config decoder statics require changing generator templates and committed `src/_generated/*.gen.ts` output. The P2 writer fence excludes generated-file edits, and the package freshness check would require updating generated output together with the template.",
+      "boundary": "generated native schema output; generated files are excluded from P2 writer edits"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -52,7 +23,11 @@
     "proposedTarget": "Have `generator.ts` emit class-side conversion statics (for example `McpJsonServer.fromCodexServer` and `CodexMcpServer.fromMcpJsonServer`) next to the generated class definitions; then keep the public package transforms as aliases/compositions over those statics. This is judgment-tier because the behavior spans two generated schema classes rather than one obvious owner.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Colocating these conversions as class statics requires changing generator templates and committed generated schema output for `CodexMcpServer` / `McpJsonServer`. That crosses the generated-file freshness boundary for this package-scoped writer.",
+      "boundary": "generated native schema class conversions; generated files are excluded from P2 writer edits"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

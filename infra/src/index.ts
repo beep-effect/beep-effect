@@ -69,3 +69,17 @@ export * from "./OipWeb.js";
  * @since 0.0.0
  */
 export * from "./Storybook.js";
+/**
+ * Shared Vercel provider schemas for infra stacks.
+ *
+ * @example
+ * ```ts
+ * import { VercelAuthenticationDeploymentType } from "@beep/infra"
+ *
+ * console.log(VercelAuthenticationDeploymentType.Enum.none)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Vercel.js";

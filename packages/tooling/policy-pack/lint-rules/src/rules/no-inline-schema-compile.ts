@@ -1,9 +1,15 @@
 import { defineRule } from "@oxlint/plugins";
 import { HashSet, MutableHashSet } from "effect";
 import * as O from "effect/Option";
-import { classifyImportSpecifier, getPropertyName, unwrapExpression, unwrapMemberExpression } from "./utils.ts";
+import {
+  classifyImportSpecifier,
+  getPropertyName,
+  ImportBinding,
+  unwrapExpression,
+  unwrapMemberExpression,
+} from "./utils.ts";
 import type { ESTree } from "@oxlint/plugins";
-import type { AstNode, ImportBinding, MaybeNode } from "./utils.ts";
+import type { AstNode, MaybeNode } from "./utils.ts";
 
 // Effect Schema decoder/encoder APIs allocate compiled functions. Keep them
 // outside function bodies so hot paths do not rebuild compilers per call.
@@ -140,9 +146,11 @@ export default defineRule({
     };
 
     const tracksSchema = (source: string, binding: ImportBinding): boolean =>
-      binding.kind === "named"
-        ? binding.imported === "Schema" && HashSet.has(SCHEMA_NAMED_SOURCES, source)
-        : HashSet.has(SCHEMA_MODULE_SOURCES, source);
+      ImportBinding.match(binding, {
+        named: ({ imported }) => imported === "Schema" && HashSet.has(SCHEMA_NAMED_SOURCES, source),
+        namespace: () => HashSet.has(SCHEMA_MODULE_SOURCES, source),
+        default: () => HashSet.has(SCHEMA_MODULE_SOURCES, source),
+      });
 
     // Record `import { Schema }` / `import * as Schema` / `import Schema` bindings to the Schema module.
     const recordBinding = (source: string, binding: ImportBinding) => {

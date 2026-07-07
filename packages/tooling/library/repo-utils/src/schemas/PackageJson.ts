@@ -10,7 +10,7 @@
  */
 
 import { $RepoUtilsId } from "@beep/identity/packages";
-import { EmailString, LiteralKit } from "@beep/schema";
+import { EmailString, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect, pipe, Result, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -34,17 +34,42 @@ const exportTopLevelPattern = /^(?:\.|\.\/.+)$/;
 const importSpecifierPattern = /^#.+$/;
 const exportConditionPattern = /^(?:[^.0-9]+|types@.+)$/;
 
-const NpmPackageName = S.String.check(S.isMinLength(1))
+/**
+ * Schema for npm-compatible package names.
+ *
+ * @example
+ * ```ts
+ * import { NpmPackageName } from "@beep/repo-utils/schemas/PackageJson"
+ * const isValid = NpmPackageName.is("@beep/example")
+ * console.log(isValid)
+ * ```
+ * @category validation
+ * @since 0.0.0
+ */
+export const NpmPackageName = S.String.check(S.isMinLength(1))
   .check(S.isMaxLength(214))
   .check(S.isPattern(npmPackageNamePattern))
   .pipe(
     $I.annoteSchema("NpmPackageName", {
       title: "Npm Package Name",
       description: "An npm package name that satisfies the package.json SchemaStore constraints.",
-    })
+    }),
+    SchemaUtils.withCodecStatics
   );
 
-const RepoPackageName = S.String.check(S.isMinLength(1))
+/**
+ * Schema for repository workspace package names.
+ *
+ * @example
+ * ```ts
+ * import { RepoPackageName } from "@beep/repo-utils/schemas/PackageJson"
+ * const isValid = RepoPackageName.is("@beep/repo-utils")
+ * console.log(isValid)
+ * ```
+ * @category validation
+ * @since 0.0.0
+ */
+export const RepoPackageName = S.String.check(S.isMinLength(1))
   .check(S.isMaxLength(214))
   .check(S.isPattern(repoPackageNamePattern))
   .pipe(
@@ -52,7 +77,8 @@ const RepoPackageName = S.String.check(S.isMinLength(1))
       title: "Repo Package Name",
       description:
         "A repo-local package name, including the legacy mixed-case workspace names currently present in this monorepo.",
-    })
+    }),
+    SchemaUtils.withCodecStatics
   );
 
 const PackageManager = S.String.check(S.isPattern(packageManagerPattern)).pipe(
@@ -62,32 +88,48 @@ const PackageManager = S.String.check(S.isPattern(packageManagerPattern)).pipe(
   })
 );
 
-const RelativeDotPath = S.String.check(S.isPattern(relativeDotPathPattern)).pipe(
+/**
+ * Schema for package.json relative dot paths.
+ *
+ * @example
+ * ```ts
+ * import { RelativeDotPath } from "@beep/repo-utils/schemas/PackageJson"
+ * const isPath = RelativeDotPath.is("./src/index.ts")
+ * console.log(isPath)
+ * ```
+ * @category validation
+ * @since 0.0.0
+ */
+export const RelativeDotPath = S.String.check(S.isPattern(relativeDotPathPattern)).pipe(
   $I.annoteSchema("RelativeDotPath", {
     title: "Relative Dot Path",
     description: "A relative path that starts with ./, used by exports and publishConfig.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 const ExportTopLevelKey = S.String.check(S.isPattern(exportTopLevelPattern)).pipe(
   $I.annoteSchema("ExportTopLevelKey", {
     title: "Export Top Level Key",
     description: "A top-level package exports key such as . or ./subpath.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 const ImportSpecifierKey = S.String.check(S.isPattern(importSpecifierPattern)).pipe(
   $I.annoteSchema("ImportSpecifierKey", {
     title: "Import Specifier Key",
     description: "A package imports specifier key such as #internal or #config/*.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 const ExportConditionKey = S.String.check(S.isPattern(exportConditionPattern)).pipe(
   $I.annoteSchema("ExportConditionKey", {
     title: "Export Condition Key",
     description: "A conditional exports/imports key such as import, require, default, node, or types@>=5.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 const StringArray = S.Array(S.String).pipe(
@@ -97,19 +139,25 @@ const StringArray = S.Array(S.String).pipe(
   })
 );
 
-const NonEmptyStringValue = S.String.check(S.isMinLength(1)).pipe(
+/**
+ * Schema for non-empty package metadata strings.
+ *
+ * @example
+ * ```ts
+ * import { NonEmptyStringValue } from "@beep/repo-utils/schemas/PackageJson"
+ * const isNonEmpty = NonEmptyStringValue.is("catalog:")
+ * console.log(isNonEmpty)
+ * ```
+ * @category validation
+ * @since 0.0.0
+ */
+export const NonEmptyStringValue = S.String.check(S.isMinLength(1)).pipe(
   $I.annoteSchema("NonEmptyStringValue", {
     title: "Non Empty String Value",
     description: "A non-empty string value used for package metadata fields that should not be blank.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
-
-const isNpmPackageName = S.is(NpmPackageName);
-const isRepoPackageName = S.is(RepoPackageName);
-const isExportTopLevelKey = S.is(ExportTopLevelKey);
-const isImportSpecifierKey = S.is(ImportSpecifierKey);
-const isExportConditionKey = S.is(ExportConditionKey);
-const isNonEmptyStringValue = S.is(NonEmptyStringValue);
 
 const makeStrictStringKeyRecord = <Value extends S.Top>(
   keyGuard: (key: string) => boolean,
@@ -141,7 +189,7 @@ const StringRecord = S.Record(S.String, S.String).pipe(
 );
 
 const NpmDependencyRecord = makeStrictStringKeyRecord(
-  isNpmPackageName,
+  NpmPackageName.is,
   NonEmptyStringValue,
   "Dependency names must be valid npm package names"
 ).pipe(
@@ -152,7 +200,7 @@ const NpmDependencyRecord = makeStrictStringKeyRecord(
 );
 
 const RepoDependencyRecord = makeStrictStringKeyRecord(
-  isRepoPackageName,
+  RepoPackageName.is,
   NonEmptyStringValue,
   "Dependency names must be valid repo package names"
 ).pipe(
@@ -164,7 +212,7 @@ const RepoDependencyRecord = makeStrictStringKeyRecord(
 );
 
 const NonEmptyStringRecord = makeStrictStringKeyRecord(
-  isNonEmptyStringValue,
+  NonEmptyStringValue.is,
   NonEmptyStringValue,
   "Record keys must not be empty"
 ).pipe(
@@ -325,7 +373,8 @@ export const Person = S.Union([S.String, PersonObject]).pipe(
     title: "Person",
     description:
       "A package author, contributor, or maintainer, either as a string or a structured object with a required name.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -402,7 +451,8 @@ export const Repository = S.Union([S.String, RepositoryObject]).pipe(
     title: "Repository",
     description:
       "A package repository reference represented as a shorthand string or a structured object with required type and url.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -422,7 +472,8 @@ export const Bugs = S.Union([S.String, BugsObject]).pipe(
     title: "Bugs",
     description:
       "A package bug tracker reference represented as a URL string or a structured object with optional url and email.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -442,7 +493,8 @@ export const Funding = S.Union([S.String, FundingEntry, S.NonEmptyArray(S.Union(
     title: "Funding",
     description:
       "Package funding metadata represented as a URL string, a structured funding object, or a non-empty array of those.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -461,7 +513,8 @@ export const Bin = S.Union([S.String, StringRecord]).pipe(
   $I.annoteSchema("Bin", {
     title: "Bin",
     description: "Executable binaries, either as a single file path string or a record mapping command names to paths.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -481,7 +534,8 @@ export const Browser = S.Union([S.String, S.Record(S.String, BrowserReplacement)
     title: "Browser",
     description:
       "Browser-specific entry points represented as a replacement path string or a record of module replacements.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -546,7 +600,8 @@ export const Man = S.Union([S.String, StringArray]).pipe(
   $I.annoteSchema("Man", {
     title: "Man",
     description: "A man page reference represented as a single file path or an array of file paths.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -565,7 +620,8 @@ export const SideEffects = S.Union([S.Boolean, StringArray]).pipe(
   $I.annoteSchema("SideEffects", {
     title: "Side Effects",
     description: "Whether the package has side effects, represented as a boolean or an array of glob patterns.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -584,7 +640,8 @@ export const BundleDependencies = S.Union([S.Boolean, StringArray]).pipe(
   $I.annoteSchema("BundleDependencies", {
     title: "Bundle Dependencies",
     description: "Bundled dependency metadata represented as a boolean or an array of package names.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -606,7 +663,8 @@ export const PeerDependenciesMeta = S.Record(
   $I.annoteSchema("PeerDependenciesMeta", {
     title: "Peer Dependencies Meta",
     description: "Metadata describing peer dependency usage, including whether a peer dependency is optional.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -625,7 +683,8 @@ export const TypesVersions = S.Record(S.String, S.Record(S.String, StringArray))
   $I.annoteSchema("TypesVersions", {
     title: "Types Versions",
     description: "TypeScript version-specific path mappings for declarations.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -719,7 +778,7 @@ const PackageExportsEntryObject: S.Codec<
   { readonly [key: string]: PackageExportsEntryOrFallback }
 > = S.suspend(() =>
   makeStrictStringKeyRecord(
-    isExportConditionKey,
+    ExportConditionKey.is,
     PackageExportsEntryOrFallback,
     "Package exports condition keys must be valid condition names"
   )
@@ -757,7 +816,7 @@ const PackageExportsEntryOrFallback: S.Codec<PackageExportsEntryOrFallback, Pack
 );
 
 const PackageExportsSubpathMap = makeStrictStringKeyRecord(
-  isExportTopLevelKey,
+  ExportTopLevelKey.is,
   PackageExportsEntryOrFallback,
   "Package exports subpath keys must be . or start with ./"
 ).pipe(
@@ -789,7 +848,8 @@ export const PackageExports = S.Union([
     title: "Package Exports",
     description:
       "The package exports field modeled as a path target, conditional exports object, subpath map, or fallback array.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 type PackageImportsEntry = string | null | { readonly [key: string]: PackageImportsEntryOrFallback };
@@ -808,7 +868,7 @@ const PackageImportsEntryObject: S.Codec<
   { readonly [key: string]: PackageImportsEntryOrFallback }
 > = S.suspend(() =>
   makeStrictStringKeyRecord(
-    isExportConditionKey,
+    ExportConditionKey.is,
     PackageImportsEntryOrFallback,
     "Package imports condition keys must be valid condition names"
   )
@@ -858,14 +918,15 @@ const PackageImportsEntryOrFallback: S.Codec<PackageImportsEntryOrFallback, Pack
  * @since 0.0.0
  */
 export const PackageImports = makeStrictStringKeyRecord(
-  isImportSpecifierKey,
+  ImportSpecifierKey.is,
   PackageImportsEntryOrFallback,
   "Package imports keys must start with #"
 ).pipe(
   $I.annoteSchema("PackageImports", {
     title: "Package Imports",
     description: "Private package import mappings keyed by # specifiers.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 type OverrideValue = string | { readonly [key: string]: OverrideValue };
@@ -924,7 +985,8 @@ export const Workspaces = S.Union([StringArray, WorkspacesObject]).pipe(
     title: "Workspaces",
     description:
       "Workspace package globs represented as an array of strings or an object with packages and optional nohoist.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -944,7 +1006,8 @@ export const PublishConfig = S.StructWithRest(PublishConfigBase, [S.Record(S.Str
     title: "Publish Config",
     description:
       "npm publish configuration with explicit support for access, tag, registry, provenance, bin, exports, and additional JSON-valued config keys.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 const npmPackageJsonFields = {
@@ -1058,7 +1121,73 @@ export class PackageJson extends S.Class<PackageJson>($I`PackageJson`)(
     description: "A strict repo-aware package.json schema that extends the npm surface with monorepo-only metadata.",
     messageUnexpectedKey: "Unexpected package.json key",
   })
-) {}
+) {
+  /**
+   * Decode an unknown strict package.json value into a Result.
+   *
+   * @example
+   * ```ts
+   * import { PackageJson } from "@beep/repo-utils/schemas/PackageJson"
+   * const result = PackageJson.decodeStrictResult({ name: "@beep/example" })
+   * console.log(result)
+   * ```
+   * @category validation
+   * @since 0.0.0
+   */
+  static readonly decodeStrictResult = S.decodeUnknownResult(PackageJson);
+  /**
+   * Decode an unknown strict package.json value into an Exit.
+   *
+   * @example
+   * ```ts
+   * import { PackageJson } from "@beep/repo-utils/schemas/PackageJson"
+   * const exit = PackageJson.decodeStrictExit({ name: "@beep/example" })
+   * console.log(exit)
+   * ```
+   * @category validation
+   * @since 0.0.0
+   */
+  static readonly decodeStrictExit = S.decodeUnknownExit(PackageJson);
+  /**
+   * Decode an unknown strict package.json value as an Effect.
+   *
+   * @example
+   * ```ts
+   * import { PackageJson } from "@beep/repo-utils/schemas/PackageJson"
+   * const effect = PackageJson.decodeStrictEffect({ name: "@beep/example" })
+   * console.log(effect)
+   * ```
+   * @category validation
+   * @since 0.0.0
+   */
+  static readonly decodeStrictEffect = S.decodeUnknownEffect(PackageJson);
+  /**
+   * Encode a strict package.json value as an Effect.
+   *
+   * @example
+   * ```ts
+   * import { PackageJson } from "@beep/repo-utils/schemas/PackageJson"
+   * const effect = PackageJson.encodeStrictEffect(PackageJson.make({ name: "@beep/example" }))
+   * console.log(effect)
+   * ```
+   * @category validation
+   * @since 0.0.0
+   */
+  static readonly encodeStrictEffect = S.encodeUnknownEffect(PackageJson);
+  /**
+   * Encode a strict package.json value to a JSON string as an Effect.
+   *
+   * @example
+   * ```ts
+   * import { PackageJson } from "@beep/repo-utils/schemas/PackageJson"
+   * const effect = PackageJson.encodeJsonStringEffect(PackageJson.make({ name: "@beep/example" }))
+   * console.log(effect)
+   * ```
+   * @category validation
+   * @since 0.0.0
+   */
+  static readonly encodeJsonStringEffect = S.encodeUnknownEffect(S.fromJsonString(PackageJson));
+}
 
 /**
  * Namespace helpers for the strict npm package-json schema.
@@ -1117,6 +1246,59 @@ export declare namespace PackageJson {
    */
   export type Encoded = S.Codec.Encoded<typeof PackageJson>;
 }
+
+/**
+ * Runtime type for {@link NpmPackageName}.
+ *
+ * @example
+ * ```ts
+ * import type { NpmPackageName } from "@beep/repo-utils/schemas/PackageJson"
+ * const acceptPackageName = (_value: NpmPackageName) => undefined
+ * console.log(acceptPackageName)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type NpmPackageName = (typeof NpmPackageName)["Type"];
+/**
+ * Runtime type for {@link RepoPackageName}.
+ *
+ * @example
+ * ```ts
+ * import type { RepoPackageName } from "@beep/repo-utils/schemas/PackageJson"
+ * const acceptPackageName = (_value: RepoPackageName) => undefined
+ * console.log(acceptPackageName)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type RepoPackageName = (typeof RepoPackageName)["Type"];
+/**
+ * Runtime type for {@link RelativeDotPath}.
+ *
+ * @example
+ * ```ts
+ * import type { RelativeDotPath } from "@beep/repo-utils/schemas/PackageJson"
+ * const acceptPath = (_value: RelativeDotPath) => undefined
+ * console.log(acceptPath)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type RelativeDotPath = (typeof RelativeDotPath)["Type"];
+/**
+ * Runtime type for {@link NonEmptyStringValue}.
+ *
+ * @example
+ * ```ts
+ * import type { NonEmptyStringValue } from "@beep/repo-utils/schemas/PackageJson"
+ * const acceptText = (_value: NonEmptyStringValue) => undefined
+ * console.log(acceptText)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type NonEmptyStringValue = (typeof NonEmptyStringValue)["Type"];
 
 /**
  * Runtime type for {@link Person}.
@@ -1392,12 +1574,6 @@ export type Workspaces = (typeof Workspaces)["Type"];
  */
 export type PublishConfig = (typeof PublishConfig)["Type"];
 
-const decodePackageJsonUnknownResult = S.decodeUnknownResult(PackageJson);
-const decodePackageJsonUnknownExit = S.decodeUnknownExit(PackageJson);
-const decodePackageJsonUnknownEffect = S.decodeUnknownEffect(PackageJson);
-const encodePackageJsonUnknownEffect = S.encodeUnknownEffect(PackageJson);
-const encodePackageJsonJsonStringEffect = S.encodeUnknownEffect(S.fromJsonString(PackageJson));
-
 /**
  * Synchronously decode an unknown value into a strict `PackageJson`.
  * Throws a `SchemaError` if validation fails.
@@ -1414,7 +1590,7 @@ const encodePackageJsonJsonStringEffect = S.encodeUnknownEffect(S.fromJsonString
  * @since 0.0.0
  */
 export const decodePackageJson = (input: unknown): PackageJson.Type =>
-  Result.getOrThrow(decodePackageJsonUnknownResult(input, strictDecodeOptions));
+  Result.getOrThrow(PackageJson.decodeStrictResult(input, strictDecodeOptions));
 
 /**
  * Synchronously decode an unknown value into a strict `PackageJson`,
@@ -1432,7 +1608,7 @@ export const decodePackageJson = (input: unknown): PackageJson.Type =>
  * @since 0.0.0
  */
 export const decodePackageJsonExit: (input: unknown) => Exit.Exit<PackageJson.Type, S.SchemaError> = (input) =>
-  decodePackageJsonUnknownExit(input, strictDecodeOptions);
+  PackageJson.decodeStrictExit(input, strictDecodeOptions);
 
 /**
  * Decode an unknown value into a strict `PackageJson` as an Effect.
@@ -1462,7 +1638,7 @@ export const decodePackageJsonExit: (input: unknown) => Exit.Exit<PackageJson.Ty
  * @since 0.0.0
  */
 export const decodePackageJsonEffect: (input: unknown) => Effect.Effect<PackageJson.Type, S.SchemaError> = (input) =>
-  decodePackageJsonUnknownEffect(input, strictDecodeOptions);
+  PackageJson.decodeStrictEffect(input, strictDecodeOptions);
 
 /**
  * Encode a strict `PackageJson` value back to its encoded form as an Effect.
@@ -1493,7 +1669,7 @@ export const decodePackageJsonEffect: (input: unknown) => Effect.Effect<PackageJ
 export const encodePackageJsonEffect: (input: unknown) => Effect.Effect<PackageJson.Encoded, S.SchemaError> = Effect.fn(
   function* (input) {
     const validated = yield* decodePackageJsonEffect(input);
-    return yield* encodePackageJsonUnknownEffect(validated);
+    return yield* PackageJson.encodeStrictEffect(validated);
   }
 );
 
@@ -1521,7 +1697,7 @@ export const encodePackageJsonEffect: (input: unknown) => Effect.Effect<PackageJ
 export const encodePackageJsonToJsonEffect: (input: unknown) => Effect.Effect<string, S.SchemaError> = Effect.fn(
   function* (input) {
     const validated = yield* decodePackageJsonEffect(input);
-    return yield* encodePackageJsonJsonStringEffect(validated);
+    return yield* PackageJson.encodeJsonStringEffect(validated);
   }
 );
 

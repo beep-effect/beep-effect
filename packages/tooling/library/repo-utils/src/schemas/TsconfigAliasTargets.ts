@@ -6,6 +6,7 @@
  */
 
 import { $RepoUtilsId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { pipe } from "effect";
 import { dual } from "effect/Function";
@@ -16,11 +17,79 @@ import * as S from "effect/Schema";
 
 const $I = $RepoUtilsId.create("schemas/TsconfigAliasTargets");
 const EXPORT_CONDITION_PRIORITY = ["types", "import", "default", "require", "node", "bun", "browser"] as const;
+const rootAliasTargetPattern = /^\.\/(?!.*\*).+/u;
+const wildcardAliasTargetPattern = /^\.\/.*\*.*$/u;
 
 type BuildDocgenAliasTargetsOptions = {
   readonly rootExportTarget: string;
   readonly wildcardExportTarget?: string | undefined;
 };
+
+/**
+ * Root alias target emitted into tsconfig/docgen path mappings.
+ *
+ * @example
+ * ```ts
+ * import { RootAliasTarget } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
+ * const isRootTarget = RootAliasTarget.is("./packages/example/src/index.ts")
+ * console.log(isRootTarget)
+ * ```
+ * @category validation
+ * @since 0.0.0
+ */
+export const RootAliasTarget = S.String.check(S.isPattern(rootAliasTargetPattern)).pipe(
+  $I.annoteSchema("RootAliasTarget", {
+    description: "A repo-relative alias target beginning with ./ and containing no wildcard segment.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime type for {@link RootAliasTarget}.
+ *
+ * @example
+ * ```ts
+ * import type { RootAliasTarget } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
+ * const acceptRootTarget = (_value: RootAliasTarget) => undefined
+ * console.log(acceptRootTarget)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type RootAliasTarget = typeof RootAliasTarget.Type;
+
+/**
+ * Wildcard alias target emitted into tsconfig/docgen path mappings.
+ *
+ * @example
+ * ```ts
+ * import { WildcardAliasTarget } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
+ * const isWildcardTarget = WildcardAliasTarget.is("./packages/example/src/*")
+ * console.log(isWildcardTarget)
+ * ```
+ * @category validation
+ * @since 0.0.0
+ */
+export const WildcardAliasTarget = S.String.check(S.isPattern(wildcardAliasTargetPattern)).pipe(
+  $I.annoteSchema("WildcardAliasTarget", {
+    description: "A repo-relative alias target beginning with ./ and containing a wildcard segment.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime type for {@link WildcardAliasTarget}.
+ *
+ * @example
+ * ```ts
+ * import type { WildcardAliasTarget } from "@beep/repo-utils/schemas/TsconfigAliasTargets"
+ * const acceptWildcardTarget = (_value: WildcardAliasTarget) => undefined
+ * console.log(acceptWildcardTarget)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type WildcardAliasTarget = typeof WildcardAliasTarget.Type;
 
 /**
  * Canonical alias targets derived for a package root export.
@@ -39,8 +108,12 @@ type BuildDocgenAliasTargetsOptions = {
  */
 export class CanonicalAliasTargets extends S.Class<CanonicalAliasTargets>($I`CanonicalAliasTargets`)(
   {
-    rootAliasTarget: S.String,
-    wildcardAliasTarget: S.String,
+    rootAliasTarget: RootAliasTarget.annotateKey({
+      description: "Concrete root import target for the package alias.",
+    }),
+    wildcardAliasTarget: WildcardAliasTarget.annotateKey({
+      description: "Wildcard import target for package subpath aliases.",
+    }),
   },
   $I.annote("CanonicalAliasTargets", {
     description: "Canonical root and wildcard alias targets derived for a package root export.",

@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoConfigsId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { pipe } from "effect";
 import * as Eq from "effect/Equal";
@@ -55,15 +56,49 @@ const HeaderList = SecureHeader.pipe(
   })
 );
 
+const defaultBeepSecureHeaders: Array<SecureHeader> = [
+  SecureHeader.make({
+    key: "Referrer-Policy",
+    value: "strict-origin-when-cross-origin",
+  }),
+  SecureHeader.make({
+    key: "X-Content-Type-Options",
+    value: "nosniff",
+  }),
+  SecureHeader.make({
+    key: "X-Frame-Options",
+    value: "DENY",
+  }),
+  SecureHeader.make({
+    key: "Permissions-Policy",
+    value: "camera=(), microphone=(), geolocation=()",
+  }),
+];
+const emptySecureHeaders: Array<SecureHeader> = [];
+
+/**
+ * Default secure headers shared by current Next.js apps in this repo.
+ *
+ * @example
+ * ```ts
+ * import { DEFAULT_BEEP_SECURE_HEADERS } from "@beep/repo-configs/next/security"
+ * const headers = DEFAULT_BEEP_SECURE_HEADERS
+ * console.log(headers)
+ * ```
+ * @category configuration
+ * @since 0.0.0
+ */
+export const DEFAULT_BEEP_SECURE_HEADERS: ReadonlyArray<SecureHeader> = defaultBeepSecureHeaders;
+
 class SecureHeadersConfigValue extends S.Class<SecureHeadersConfigValue>($I`SecureHeadersConfigValue`)(
   {
-    source: S.optionalKey(S.String).annotateKey({
+    source: S.String.pipe(SchemaUtils.withKeyDefaults(defaultHeaderSource)).annotateKey({
       description: "Next.js route source receiving the secure headers.",
     }),
-    headers: S.optionalKey(HeaderList).annotateKey({
+    headers: HeaderList.pipe(SchemaUtils.withKeyDefaults(defaultBeepSecureHeaders)).annotateKey({
       description: "Replacement secure header list.",
     }),
-    additionalHeaders: S.optionalKey(HeaderList).annotateKey({
+    additionalHeaders: HeaderList.pipe(SchemaUtils.withKeyDefaults(emptySecureHeaders)).annotateKey({
       description: "Additional secure headers merged with the repo default list.",
     }),
   },
@@ -112,37 +147,6 @@ export const SecureHeadersConfig = S.Union([S.Literal(false), SecureHeadersConfi
  */
 export type SecureHeadersConfig = typeof SecureHeadersConfig.Type;
 
-/**
- * Default secure headers shared by current Next.js apps in this repo.
- *
- * @example
- * ```ts
- * import { DEFAULT_BEEP_SECURE_HEADERS } from "@beep/repo-configs/next/security"
- * const headers = DEFAULT_BEEP_SECURE_HEADERS
- * console.log(headers)
- * ```
- * @category configuration
- * @since 0.0.0
- */
-export const DEFAULT_BEEP_SECURE_HEADERS: ReadonlyArray<SecureHeader> = [
-  {
-    key: "Referrer-Policy",
-    value: "strict-origin-when-cross-origin",
-  },
-  {
-    key: "X-Content-Type-Options",
-    value: "nosniff",
-  },
-  {
-    key: "X-Frame-Options",
-    value: "DENY",
-  },
-  {
-    key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=()",
-  },
-];
-
 const replaceHeaderByKey = (headers: ReadonlyArray<SecureHeader>, header: SecureHeader): ReadonlyArray<SecureHeader> =>
   pipe(
     headers,
@@ -166,7 +170,7 @@ const configValue = (config: SecureHeadersConfig | undefined): O.Option<SecureHe
 const headerSource = (config: SecureHeadersConfig | undefined): string =>
   pipe(
     configValue(config),
-    O.flatMap((value) => O.fromNullishOr(value.source)),
+    O.map((value) => value.source),
     O.getOrElse(() => defaultHeaderSource)
   );
 
@@ -189,13 +193,7 @@ const headerSource = (config: SecureHeadersConfig | undefined): string =>
 export const makeSecureHeaders = (config?: SecureHeadersConfig): ReadonlyArray<SecureHeader> =>
   pipe(
     configValue(config),
-    O.map((value) =>
-      pipe(
-        O.fromNullishOr(value.headers),
-        O.getOrElse(() => DEFAULT_BEEP_SECURE_HEADERS),
-        (headers) => mergeHeadersByKey(headers, pipe(O.fromNullishOr(value.additionalHeaders), O.getOrElse(A.empty)))
-      )
-    ),
+    O.map((value) => mergeHeadersByKey(value.headers, value.additionalHeaders)),
     O.getOrElse(() => (isFalse(config) ? A.empty<SecureHeader>() : DEFAULT_BEEP_SECURE_HEADERS))
   );
 

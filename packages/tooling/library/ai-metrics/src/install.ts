@@ -36,21 +36,13 @@ const defaultCandidateTools = [
 const defaultPhoenixImage = "arizephoenix/phoenix:latest";
 const localCollectorDataRoot = ".beep/ai-metrics";
 
-const servicePort = (tool: AiMetricsTool): number => {
-  if (tool === AiMetricsTool.Enum.langfuse) {
-    return 3001;
-  }
-
-  if (tool === AiMetricsTool.Enum.phoenix) {
-    return 6006;
-  }
-
-  if (tool === AiMetricsTool.Enum.opik) {
-    return 5173;
-  }
-
-  return 8000;
-};
+const servicePort = (tool: AiMetricsTool): number =>
+  AiMetricsTool.$match(tool, {
+    langfuse: () => 3001,
+    opik: () => 5173,
+    phoenix: () => 6006,
+    posthog: () => 8000,
+  });
 
 const defaultDataRoot = (target: AiMetricsDeployTarget): string =>
   target === AiMetricsDeployTarget.Enum.dankserver ? "/srv/data/ai-metrics" : ".beep/ai-metrics";
@@ -673,21 +665,13 @@ const makeStorageLayout = (dataRoot: string): AiMetricsStorageLayout =>
     rawArchiveDir: childPath(dataRoot, "raw"),
   });
 
-const serviceImage = (tool: AiMetricsTool, phoenixImage: string): string => {
-  if (tool === AiMetricsTool.Enum.phoenix) {
-    return phoenixImage;
-  }
-
-  if (tool === AiMetricsTool.Enum.langfuse) {
-    return "langfuse/langfuse:latest";
-  }
-
-  if (tool === AiMetricsTool.Enum.opik) {
-    return "comet/opik:latest";
-  }
-
-  return "posthog/posthog:latest";
-};
+const serviceImage = (tool: AiMetricsTool, phoenixImage: string): string =>
+  AiMetricsTool.$match(tool, {
+    langfuse: () => "langfuse/langfuse:latest",
+    opik: () => "comet/opik:latest",
+    phoenix: () => phoenixImage,
+    posthog: () => "posthog/posthog:latest",
+  });
 
 const composeServiceName = (tool: AiMetricsTool): string => `ai-metrics-${tool}`;
 

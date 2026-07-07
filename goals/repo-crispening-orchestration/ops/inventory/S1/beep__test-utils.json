@@ -32,17 +32,6 @@
   {
     "ruleId": "schema-first-inventory",
     "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-    "line": 276,
-    "symbol": "PgliteSqlTestLayerMode",
-    "smell": "Exported string-literal mode domain is a bare type alias rather than a schema-backed literal domain.",
-    "proposedTarget": "Replace with `export const PgliteSqlTestLayerMode = LiteralKit([\"auto\", \"external\", \"testcontainers\", \"in-process\"]).pipe($I.annoteSchema(...)); export type PgliteSqlTestLayerMode = typeof PgliteSqlTestLayerMode.Type;`, matching local `TestDatabaseDriver` and `PgExternalIsolationMode` patterns at lines 37 and 49.",
-    "confidence": 0.93,
-    "mechanization": "codemod",
-    "roiRank": 0.78
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
     "line": 290,
     "symbol": "PgliteSqlTestLayerOptions",
     "smell": "Exported generic interface looks like a payload options object for `makePgliteSqlTestLayer`.",

@@ -7,8 +7,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Config, Effect, flow, MutableHashMap, Order, pipe, Redacted } from "effect";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -262,7 +262,7 @@ const normalizeSubdivisionRow = Effect.fn("SyncDataToTs.Iso3166.normalizeSubdivi
     localCode,
     name,
     type,
-    ...R.getSomes({ parentCode }),
+    ...O.getSomesStruct({ parentCode }),
   });
 });
 

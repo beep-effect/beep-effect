@@ -51,6 +51,7 @@ import { NonNegativeInt, Sha256HexFromBytes } from "@beep/schema";
 import { NativePathToPosixPath, normalizePath } from "@beep/schema/PosixPath";
 import { makeTikaFileProcessingEngine } from "@beep/tika";
 import { A, P, Str } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import {
   Config,
   Console,
@@ -67,7 +68,6 @@ import {
   pipe,
   Result,
 } from "effect";
-import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
@@ -180,6 +180,7 @@ import type {
 } from "@beep/file-processing/Extraction";
 import type { FileProcessingEngineShape } from "@beep/file-processing/Service";
 import type { FileFormatFamily, FileProcessingSkipReason, SelectedStrategy } from "@beep/file-processing/Strategy";
+import type { MimeType } from "@beep/schema/MimeType";
 import type { PosixPath } from "@beep/schema/PosixPath";
 import type { Terminal } from "effect";
 import type * as Crypto from "effect/Crypto";
@@ -629,8 +630,8 @@ const makeNormalizeManifestOptions = (
   NormalizeManifestOptions.make({
     dedupe,
     format,
-    ...R.getSomes({ maxLongEdge: maxLongEdge }),
-    ...R.getSomes({ moveDuplicatesTo: moveDuplicatesTo }),
+    ...O.getSomesStruct({ maxLongEdge }),
+    ...O.getSomesStruct({ moveDuplicatesTo }),
     overwrite,
   });
 
@@ -683,7 +684,7 @@ const makeCreateCaptionFilesSkippedEntry = (
   message: string
 ): CreateCaptionFilesSkippedEntry =>
   CreateCaptionFilesSkippedEntry.make({
-    ...R.getSomes({ captionName, extension }),
+    ...O.getSomesStruct({ captionName, extension }),
     message,
     reason,
     sourceName,
@@ -1740,11 +1741,11 @@ const makeDetectFacesReportOptions = (
   DetectFacesReportOptions.make({
     edgeMarginPct: options.edgeMarginPct,
     json: options.json,
-    ...R.getSomes({ manifest: options.manifest }),
+    ...O.getSomesStruct({ manifest: options.manifest }),
     minConfidence: options.minConfidence,
     minFaceAreaPct: options.minFaceAreaPct,
     modelPath: options.modelPath,
-    ...R.getSomes({ moveNoFaceTo: moveNoFaceDirectory }),
+    ...O.getSomesStruct({ moveNoFaceTo: moveNoFaceDirectory }),
   });
 
 const archiveCandidateCollectedFile = (file: SortableFile): ArchiveCandidateCollectedEntries => ({
@@ -3350,8 +3351,8 @@ const withDetectFacesMovedNoFaceTarget = (
     movedNoFaceName: targetName,
     movedNoFacePath: targetPath,
     movedNoFaceRelativePath: targetRelativePath,
-    ...R.getSomes({ primaryFace: primaryFace }),
-    ...R.getSomes({ primaryFaceAreaPct: primaryFaceAreaPct }),
+    ...O.getSomesStruct({ primaryFace }),
+    ...O.getSomesStruct({ primaryFaceAreaPct }),
     sourceName: entry.sourceName,
     sourcePath: entry.sourcePath,
     width: entry.width,
@@ -3837,13 +3838,13 @@ const processCount = (count: number): NonNegativeInt => NonNegativeInt.make(coun
 const classifyProcessExtension = classifyFormatFromExtension;
 
 const mediaTypeForProcessFormat = Match.type<FileFormatFamily>().pipe(
-  Match.when("html", () => O.some("text/html")),
-  Match.when("xhtml", () => O.some("application/xhtml+xml")),
-  Match.when("markdown", () => O.some("text/markdown")),
-  Match.when("plain-text", () => O.some("text/plain")),
-  Match.when("rtf", () => O.some("application/rtf")),
-  Match.when("pdf-text-layer", () => O.some("application/pdf")),
-  Match.orElse(O.none<string>)
+  Match.when("html", (): O.Option<MimeType> => O.some("text/html")),
+  Match.when("xhtml", (): O.Option<MimeType> => O.some("application/xhtml+xml")),
+  Match.when("markdown", (): O.Option<MimeType> => O.some("text/markdown")),
+  Match.when("plain-text", (): O.Option<MimeType> => O.some("text/plain")),
+  Match.when("rtf", (): O.Option<MimeType> => O.some("application/rtf")),
+  Match.when("pdf-text-layer", (): O.Option<MimeType> => O.some("application/pdf")),
+  Match.orElse(O.none<MimeType>)
 );
 
 const processOperationErrorStatus = (error: FileProcessingOperationError): SourceProcessingRecord["status"] =>
@@ -4202,7 +4203,7 @@ const prepareProcessSource = Effect.fn("Files.prepareProcessSource")(function* (
       name: sourceFile.name,
       relativePath,
       sizeBytes: sourceFile.sizeBytes,
-      ...R.getSomes({ mediaType, text: sourceText }),
+      ...O.getSomesStruct({ mediaType, text: sourceText }),
     }),
     sourceFile,
   };
@@ -4224,7 +4225,7 @@ const makeProcessSourceRecord = (
     operationId: prepared.operationId,
     relativePath: prepared.source.relativePath,
     sizeBytes: prepared.sourceFile.sizeBytes,
-    ...R.getSomes({
+    ...O.getSomesStruct({
       engine: O.fromUndefinedOr(options.engine),
     }),
   };
@@ -4233,7 +4234,7 @@ const makeProcessSourceRecord = (
     return SucceededSourceProcessingRecord.make({
       ...base,
       status,
-      ...R.getSomes({
+      ...O.getSomesStruct({
         textPath: O.fromUndefinedOr(options.textPath),
       }),
     });
@@ -4269,7 +4270,7 @@ const makeProcessSkippedFailureRecord = (
     reason,
     relativePath: prepared.source.relativePath,
     status: "skipped",
-    ...R.getSomes({
+    ...O.getSomesStruct({
       engine: O.fromUndefinedOr(options.engine),
       format: O.fromUndefinedOr(options.format),
     }),
@@ -4291,7 +4292,7 @@ const makeProcessFailedFailureRecord = (
     reason,
     relativePath: prepared.source.relativePath,
     status: "failed",
-    ...R.getSomes({
+    ...O.getSomesStruct({
       engine: O.fromUndefinedOr(options.engine),
       format: O.fromUndefinedOr(options.format),
     }),
@@ -4349,7 +4350,7 @@ const processFailureOutcome = (
     ),
     sourceRecord: makeProcessSourceRecord(prepared, status, {
       engine: error.engine ?? engine.descriptor.name,
-      ...R.getSomes({ skipReason }),
+      ...O.getSomesStruct({ skipReason }),
     }),
     strategy: makeProcessStrategy(engine, prepared, O.isNone(skipReason) ? "supported" : "deferred", skipReason),
     text: O.none<readonly [string, string]>(),
@@ -4389,7 +4390,7 @@ const processExtractionSuccessOutcome = (
     failure: O.none<FileProcessingFailureRecord>(),
     sourceRecord: makeProcessSourceRecord(prepared, "succeeded", {
       engine: engine.descriptor.name,
-      ...R.getSomes({ textPath: textRelativePath }),
+      ...O.getSomesStruct({ textPath: textRelativePath }),
     }),
     strategy: makeProcessStrategy(engine, prepared, "supported", O.none<FileProcessingSkipReason>()),
     text:
@@ -4488,7 +4489,7 @@ const processPreparedSource = Effect.fn("Files.processPreparedSource")(function*
         operationKind: "export-archive",
         preference: { engine: options.engine },
         source: prepared.source,
-        ...R.getSomes({
+        ...O.getSomesStruct({
           maxMaterializedBytes: O.fromUndefinedOr(options.maxMaterializedBytes),
         }),
       })
@@ -4519,7 +4520,7 @@ const processPreparedSource = Effect.fn("Files.processPreparedSource")(function*
       operationKind: "extract",
       preference: { engine: options.engine },
       source: prepared.source,
-      ...R.getSomes({
+      ...O.getSomesStruct({
         maxMaterializedBytes: O.fromUndefinedOr(options.maxMaterializedBytes),
       }),
     })

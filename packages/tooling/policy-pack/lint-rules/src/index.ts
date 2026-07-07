@@ -11,6 +11,8 @@
  * @since 0.1.0
  */
 
+import * as S from "effect/Schema";
+
 /**
  * Package version for `@beep/lint-rules`.
  *
@@ -52,6 +54,24 @@ export const RULE_NAMES = [
 ] as const;
 
 /**
+ * Schema-backed literal domain for rule slugs shipped by this package.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert/strict"
+ * import { RuleNameSchema } from "@beep/lint-rules"
+ * import * as S from "effect/Schema"
+ *
+ * const decodeRuleName = S.decodeUnknownSync(RuleNameSchema)
+ *
+ * strictEqual(decodeRuleName("prefer-array-flat-map"), "prefer-array-flat-map")
+ * ```
+ * @category configuration
+ * @since 0.0.0
+ */
+export const RuleNameSchema = S.Literals(RULE_NAMES);
+
+/**
  * The slug of a single GritQL rule shipped by this package.
  *
  * @example
@@ -66,7 +86,25 @@ export const RULE_NAMES = [
  * @category type-level
  * @since 0.1.0
  */
-export type RuleName = (typeof RULE_NAMES)[number];
+export type RuleName = S.Schema.Type<typeof RuleNameSchema>;
+
+/**
+ * Schema-backed literal domain for rule diagnostic severities.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert/strict"
+ * import { RuleSeveritySchema } from "@beep/lint-rules"
+ * import * as S from "effect/Schema"
+ *
+ * const decodeSeverity = S.decodeUnknownSync(RuleSeveritySchema)
+ *
+ * strictEqual(decodeSeverity("warn"), "warn")
+ * ```
+ * @category configuration
+ * @since 0.0.0
+ */
+export const RuleSeveritySchema = S.Literals(["warn", "error"]);
 
 /**
  * Diagnostic severity used to gate a rule. `warn` is advisory (Biome exits 0);
@@ -85,27 +123,40 @@ export type RuleName = (typeof RULE_NAMES)[number];
  * @category type-level
  * @since 0.1.0
  */
-export type RuleSeverity = "warn" | "error";
+export type RuleSeverity = S.Schema.Type<typeof RuleSeveritySchema>;
+
+class RuleMetadataSchema extends S.Class<RuleMetadataSchema>("RuleMetadataSchema")({
+  name: RuleNameSchema,
+  severity: RuleSeveritySchema,
+  replaces: S.OptionFromNullOr(S.String),
+  summary: S.String,
+  scope: S.OptionFromNullOr(S.String),
+}) {}
+
+type RuleMetadata = S.Schema.Type<typeof RuleMetadataSchema>;
 
 /**
- * Static metadata describing one GritQL rule. Internal: the public surface is the
- * `RULES` record, whose values are inferred from this shape.
+ * Schema for the finite rule registry keyed by rule slug.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert/strict"
+ * import { RULES, RuleRegistrySchema } from "@beep/lint-rules"
+ * import * as S from "effect/Schema"
+ *
+ * const encoded = S.encodeSync(RuleRegistrySchema)(RULES)
+ *
+ * strictEqual(encoded["no-bigint-literals"].replaces, null)
+ * ```
+ * @category configuration
+ * @since 0.0.0
  */
-type RuleMetadata = {
-  /** Rule slug; matches the `.grit` filename stem. */
-  readonly name: RuleName;
-  /** Current diagnostic severity baked into the `.grit` file. */
-  readonly severity: RuleSeverity;
-  /** The `bun run beep ...` CLI check this rule supersedes, if any. */
-  readonly replaces: string | null;
-  /** One-line description of what the rule flags. */
-  readonly summary: string;
-  /**
-   * Glob-ish path scope, when the rule is registered via biome.jsonc `overrides`
-   * rather than the top-level `plugins` array. `null` means repo-wide.
-   */
-  readonly scope: string | null;
-};
+export class RuleRegistrySchema extends S.Class<RuleRegistrySchema>("RuleRegistrySchema")({
+  "no-native-error": RuleMetadataSchema,
+  "no-bigint-literals": RuleMetadataSchema,
+  "no-empty-named-blocks": RuleMetadataSchema,
+  "prefer-array-flat-map": RuleMetadataSchema,
+}) {}
 
 /**
  * Canonical registry of GritQL rule metadata, keyed by rule slug.
@@ -121,7 +172,7 @@ type RuleMetadata = {
  * @category configuration
  * @since 0.1.0
  */
-export const RULES: { readonly [K in RuleName]: RuleMetadata } = {
+export const RULES: { readonly [K in RuleName]: RuleMetadata } = S.decodeUnknownSync(RuleRegistrySchema)({
   "no-native-error": {
     name: "no-native-error",
     severity: "error",
@@ -150,7 +201,7 @@ export const RULES: { readonly [K in RuleName]: RuleMetadata } = {
     summary: "Prefer `.flatMap(f)` over `.map(f).flat()`.",
     scope: null,
   },
-} as const;
+});
 
 /**
  * Absolute filesystem path to a rule's `.grit` file, resolved relative to this

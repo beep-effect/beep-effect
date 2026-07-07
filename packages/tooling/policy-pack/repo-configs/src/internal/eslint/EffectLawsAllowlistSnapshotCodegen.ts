@@ -8,7 +8,6 @@ import {
   EffectLawsAllowlistSnapshot,
   encodeAllowlistSnapshot,
   formatSchemaDiagnostics,
-  normalizeAllowlistEntries,
 } from "./EffectLawsAllowlistSchemas.ts";
 import type { SchemaIssue } from "effect";
 
@@ -38,7 +37,7 @@ export const buildAllowlistSnapshotFromJsoncText = (
     Effect.map((document) =>
       EffectLawsAllowlistSnapshot.make({
         path: normalizedAllowlistPath,
-        entries: normalizeAllowlistEntries(document.entries),
+        entries: document.entries,
         diagnostics: EMPTY_DIAGNOSTICS,
       })
     ),

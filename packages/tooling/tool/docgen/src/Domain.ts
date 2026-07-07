@@ -6,7 +6,7 @@
  */
 
 import { $RepoDocgenId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { PosInt, TaggedErrorClass } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Context, Effect, Layer, Order, pipe } from "effect";
 import { dual } from "effect/Function";
@@ -18,50 +18,36 @@ const $I = $RepoDocgenId.create("Domain");
 const StringArray = S.Array(S.String);
 const OptionalString = S.UndefinedOr(S.String);
 const OptionalStringArray = S.UndefinedOr(StringArray);
+const DocgenSymbolName = S.NonEmptyString.pipe(
+  $I.annoteSchema("DocgenSymbolName", {
+    description: "Non-empty source symbol name rendered by docgen.",
+  })
+);
+const DocgenSignatureText = S.NonEmptyString.pipe(
+  $I.annoteSchema("DocgenSignatureText", {
+    description: "Non-empty TypeScript declaration text rendered by docgen.",
+  })
+);
+const DocgenPathSegments = S.Array(S.NonEmptyString).pipe(
+  $I.annoteSchema("DocgenPathSegments", {
+    description: "Non-empty path segments identifying a parsed source module.",
+  })
+);
 
-type DocNewOptions = {
-  readonly since: ReadonlyArray<string>;
-  readonly deprecated: ReadonlyArray<string>;
-  readonly examples: ReadonlyArray<string>;
-  readonly category: ReadonlyArray<string>;
-  readonly throws: ReadonlyArray<string>;
-  readonly sees: ReadonlyArray<string>;
-  readonly tags: Record<string, ReadonlyArray<string> | undefined>;
-};
-
-type SignaturePositionOptions = {
-  readonly signature: string;
-  readonly position: Position;
-};
-
-type ClassNewOptions = SignaturePositionOptions & {
-  readonly methods: ReadonlyArray<DocEntry>;
-  readonly staticMethods: ReadonlyArray<DocEntry>;
-  readonly properties: ReadonlyArray<DocEntry>;
-};
-
-type ExportNewOptions = SignaturePositionOptions & {
-  readonly isNamespaceExport: boolean;
-};
-
-type NamespaceNewOptions = {
-  readonly position: Position;
-  readonly interfaces: ReadonlyArray<Interface>;
-  readonly typeAliases: ReadonlyArray<TypeAlias>;
-  readonly namespaces: ReadonlyArray<Namespace>;
-};
-
-type ModuleNewOptions = {
-  readonly doc: Doc;
-  readonly path: ReadonlyArray<string>;
-  readonly classes: ReadonlyArray<Class>;
-  readonly interfaces: ReadonlyArray<Interface>;
-  readonly functions: ReadonlyArray<Function>;
-  readonly typeAliases: ReadonlyArray<TypeAlias>;
-  readonly constants: ReadonlyArray<Constant>;
-  readonly exports: ReadonlyArray<Export>;
-  readonly namespaces: ReadonlyArray<Namespace>;
-};
+class DocNewOptions extends S.Class<DocNewOptions>($I`DocNewOptions`)(
+  {
+    since: StringArray,
+    deprecated: StringArray,
+    examples: StringArray,
+    category: StringArray,
+    throws: StringArray,
+    sees: StringArray,
+    tags: S.Record(S.String, OptionalStringArray),
+  },
+  $I.annote("DocNewOptions", {
+    description: "Constructor options carrying grouped JSDoc tag values for a normalized Doc.",
+  })
+) {}
 
 /**
  * Represents a one-based source location in a parsed file.
@@ -75,10 +61,19 @@ type ModuleNewOptions = {
  * @category models
  * @since 0.0.0
  */
-export class Position extends S.Class<Position>($I`Position`)({
-  column: S.Finite,
-  line: S.Finite,
-}) {
+export class Position extends S.Class<Position>($I`Position`)(
+  {
+    column: PosInt.annotateKey({
+      description: "One-based source column number.",
+    }),
+    line: PosInt.annotateKey({
+      description: "One-based source line number.",
+    }),
+  },
+  $I.annote("Position", {
+    description: "One-based source location in a parsed file.",
+  })
+) {
   /**
    * Creates a source position from line and column coordinates.
    *
@@ -93,8 +88,8 @@ export class Position extends S.Class<Position>($I`Position`)({
     2,
     (line: number, column: number): Position =>
       Position.make({
-        column,
-        line,
+        column: PosInt.make(column),
+        line: PosInt.make(line),
       })
   );
 }
@@ -119,16 +114,37 @@ export class Position extends S.Class<Position>($I`Position`)({
  * @category models
  * @since 0.0.0
  */
-export class Doc extends S.Class<Doc>($I`Doc`)({
-  description: OptionalString,
-  since: StringArray,
-  deprecated: StringArray,
-  examples: StringArray,
-  category: StringArray,
-  throws: StringArray,
-  sees: StringArray,
-  tags: S.Record(S.String, OptionalStringArray),
-}) {
+export class Doc extends S.Class<Doc>($I`Doc`)(
+  {
+    description: OptionalString.annotateKey({
+      description: "Trimmed main JSDoc description when present.",
+    }),
+    since: StringArray.annotateKey({
+      description: "Collected @since tag values.",
+    }),
+    deprecated: StringArray.annotateKey({
+      description: "Collected @deprecated tag values.",
+    }),
+    examples: StringArray.annotateKey({
+      description: "Collected @example tag bodies.",
+    }),
+    category: StringArray.annotateKey({
+      description: "Collected @category tag values.",
+    }),
+    throws: StringArray.annotateKey({
+      description: "Collected @throws tag values.",
+    }),
+    sees: StringArray.annotateKey({
+      description: "Collected @see tag values.",
+    }),
+    tags: S.Record(S.String, OptionalStringArray).annotateKey({
+      description: "Raw grouped JSDoc tag values preserved for downstream quality checks.",
+    }),
+  },
+  $I.annote("Doc", {
+    description: "Normalized JSDoc metadata for a documented symbol.",
+  })
+) {
   /**
    * Creates a normalized documentation record.
    *
@@ -173,6 +189,16 @@ export class Doc extends S.Class<Doc>($I`Doc`)({
   }
 }
 
+class SignaturePositionOptions extends S.Class<SignaturePositionOptions>($I`SignaturePositionOptions`)(
+  {
+    signature: DocgenSignatureText,
+    position: Position,
+  },
+  $I.annote("SignaturePositionOptions", {
+    description: "Constructor options carrying declaration text and source position.",
+  })
+) {}
+
 /**
  * Represents a named documented API member with source and signature metadata.
  *
@@ -197,12 +223,25 @@ export class Doc extends S.Class<Doc>($I`Doc`)({
  * @category models
  * @since 0.0.0
  */
-export class DocEntry extends S.Class<DocEntry>($I`DocEntry`)({
-  name: S.String,
-  doc: Doc,
-  signature: S.String,
-  position: Position,
-}) {
+export class DocEntry extends S.Class<DocEntry>($I`DocEntry`)(
+  {
+    name: DocgenSymbolName.annotateKey({
+      description: "Documented API member name.",
+    }),
+    doc: Doc.annotateKey({
+      description: "Parsed documentation for the API member.",
+    }),
+    signature: DocgenSignatureText.annotateKey({
+      description: "Printable TypeScript signature for the API member.",
+    }),
+    position: Position.annotateKey({
+      description: "Source location for the API member.",
+    }),
+  },
+  $I.annote("DocEntry", {
+    description: "Named documented API member with source and signature metadata.",
+  })
+) {
   /**
    * Creates a documented entry for a named API member.
    *
@@ -225,6 +264,19 @@ export class DocEntry extends S.Class<DocEntry>($I`DocEntry`)({
       })
   );
 }
+
+class ClassNewOptions extends S.Class<ClassNewOptions>($I`ClassNewOptions`)(
+  {
+    signature: DocgenSignatureText,
+    position: Position,
+    methods: S.Array(DocEntry),
+    staticMethods: S.Array(DocEntry),
+    properties: S.Array(DocEntry),
+  },
+  $I.annote("ClassNewOptions", {
+    description: "Constructor options carrying class signature and member entries.",
+  })
+) {}
 
 /**
  * Represents a documented class and its emitted member structure.
@@ -253,15 +305,35 @@ export class DocEntry extends S.Class<DocEntry>($I`DocEntry`)({
  * @category models
  * @since 0.0.0
  */
-export class Class extends S.TaggedClass<Class>($I`Class`)("Class", {
-  name: S.String,
-  doc: Doc,
-  signature: S.String,
-  position: Position,
-  methods: S.Array(DocEntry),
-  staticMethods: S.Array(DocEntry),
-  properties: S.Array(DocEntry),
-}) {
+export class Class extends S.TaggedClass<Class>($I`Class`)(
+  "Class",
+  {
+    name: DocgenSymbolName.annotateKey({
+      description: "Class name rendered in generated documentation.",
+    }),
+    doc: Doc.annotateKey({
+      description: "Parsed class documentation.",
+    }),
+    signature: DocgenSignatureText.annotateKey({
+      description: "Printable TypeScript class signature.",
+    }),
+    position: Position.annotateKey({
+      description: "Source location for the class declaration.",
+    }),
+    methods: S.Array(DocEntry).annotateKey({
+      description: "Documented instance methods.",
+    }),
+    staticMethods: S.Array(DocEntry).annotateKey({
+      description: "Documented static methods.",
+    }),
+    properties: S.Array(DocEntry).annotateKey({
+      description: "Documented class properties.",
+    }),
+  },
+  $I.annote("Class", {
+    description: "Documented class and its emitted member structure.",
+  })
+) {
   /**
    * Creates a documented class model.
    *
@@ -312,12 +384,26 @@ export class Class extends S.TaggedClass<Class>($I`Class`)("Class", {
  * @category models
  * @since 0.0.0
  */
-export class Interface extends S.TaggedClass<Interface>($I`Interface`)("Interface", {
-  name: S.String,
-  doc: Doc,
-  signature: S.String,
-  position: Position,
-}) {
+export class Interface extends S.TaggedClass<Interface>($I`Interface`)(
+  "Interface",
+  {
+    name: DocgenSymbolName.annotateKey({
+      description: "Interface name rendered in generated documentation.",
+    }),
+    doc: Doc.annotateKey({
+      description: "Parsed interface documentation.",
+    }),
+    signature: DocgenSignatureText.annotateKey({
+      description: "Printable TypeScript interface signature.",
+    }),
+    position: Position.annotateKey({
+      description: "Source location for the interface declaration.",
+    }),
+  },
+  $I.annote("Interface", {
+    description: "Documented interface declaration.",
+  })
+) {
   /**
    * Creates a documented interface model.
    *
@@ -365,12 +451,26 @@ export class Interface extends S.TaggedClass<Interface>($I`Interface`)("Interfac
  * @category models
  * @since 0.0.0
  */
-export class Function extends S.TaggedClass<Function>($I`Function`)("Function", {
-  name: S.String,
-  doc: Doc,
-  signature: S.String,
-  position: Position,
-}) {
+export class Function extends S.TaggedClass<Function>($I`Function`)(
+  "Function",
+  {
+    name: DocgenSymbolName.annotateKey({
+      description: "Function name rendered in generated documentation.",
+    }),
+    doc: Doc.annotateKey({
+      description: "Parsed function documentation.",
+    }),
+    signature: DocgenSignatureText.annotateKey({
+      description: "Printable TypeScript function signature.",
+    }),
+    position: Position.annotateKey({
+      description: "Source location for the function declaration.",
+    }),
+  },
+  $I.annote("Function", {
+    description: "Documented function declaration or function-valued export.",
+  })
+) {
   /**
    * Creates a documented function model.
    *
@@ -418,12 +518,26 @@ export class Function extends S.TaggedClass<Function>($I`Function`)("Function", 
  * @category models
  * @since 0.0.0
  */
-export class TypeAlias extends S.TaggedClass<TypeAlias>($I`TypeAlias`)("TypeAlias", {
-  name: S.String,
-  doc: Doc,
-  signature: S.String,
-  position: Position,
-}) {
+export class TypeAlias extends S.TaggedClass<TypeAlias>($I`TypeAlias`)(
+  "TypeAlias",
+  {
+    name: DocgenSymbolName.annotateKey({
+      description: "Type alias name rendered in generated documentation.",
+    }),
+    doc: Doc.annotateKey({
+      description: "Parsed type alias documentation.",
+    }),
+    signature: DocgenSignatureText.annotateKey({
+      description: "Printable TypeScript type alias signature.",
+    }),
+    position: Position.annotateKey({
+      description: "Source location for the type alias declaration.",
+    }),
+  },
+  $I.annote("TypeAlias", {
+    description: "Documented type alias declaration.",
+  })
+) {
   /**
    * Creates a documented type alias model.
    *
@@ -471,12 +585,26 @@ export class TypeAlias extends S.TaggedClass<TypeAlias>($I`TypeAlias`)("TypeAlia
  * @category models
  * @since 0.0.0
  */
-export class Constant extends S.TaggedClass<Constant>($I`Constant`)("Constant", {
-  name: S.String,
-  doc: Doc,
-  signature: S.String,
-  position: Position,
-}) {
+export class Constant extends S.TaggedClass<Constant>($I`Constant`)(
+  "Constant",
+  {
+    name: DocgenSymbolName.annotateKey({
+      description: "Constant name rendered in generated documentation.",
+    }),
+    doc: Doc.annotateKey({
+      description: "Parsed constant documentation.",
+    }),
+    signature: DocgenSignatureText.annotateKey({
+      description: "Printable TypeScript constant signature.",
+    }),
+    position: Position.annotateKey({
+      description: "Source location for the constant declaration.",
+    }),
+  },
+  $I.annote("Constant", {
+    description: "Documented exported constant declaration.",
+  })
+) {
   /**
    * Creates a documented constant model.
    *
@@ -499,6 +627,17 @@ export class Constant extends S.TaggedClass<Constant>($I`Constant`)("Constant", 
       })
   );
 }
+
+class ExportNewOptions extends S.Class<ExportNewOptions>($I`ExportNewOptions`)(
+  {
+    signature: DocgenSignatureText,
+    position: Position,
+    isNamespaceExport: S.Boolean,
+  },
+  $I.annote("ExportNewOptions", {
+    description: "Constructor options carrying export signature, position, and namespace-export marker.",
+  })
+) {}
 
 /**
  * Represents a named export declaration that is documented separately from its original declaration.
@@ -528,13 +667,29 @@ export class Constant extends S.TaggedClass<Constant>($I`Constant`)("Constant", 
  * @category models
  * @since 0.0.0
  */
-export class Export extends S.TaggedClass<Export>($I`Export`)("Export", {
-  name: S.String,
-  doc: Doc,
-  signature: S.String,
-  position: Position,
-  isNamespaceExport: S.Boolean,
-}) {
+export class Export extends S.TaggedClass<Export>($I`Export`)(
+  "Export",
+  {
+    name: DocgenSymbolName.annotateKey({
+      description: "Export name rendered in generated documentation.",
+    }),
+    doc: Doc.annotateKey({
+      description: "Parsed export documentation.",
+    }),
+    signature: DocgenSignatureText.annotateKey({
+      description: "Printable TypeScript export signature.",
+    }),
+    position: Position.annotateKey({
+      description: "Source location for the export declaration.",
+    }),
+    isNamespaceExport: S.Boolean.annotateKey({
+      description: "Whether the export came from a namespace export declaration.",
+    }),
+  },
+  $I.annote("Export", {
+    description: "Named export declaration documented separately from its original declaration.",
+  })
+) {
   /**
    * Creates a documented manual export model.
    *
@@ -558,6 +713,21 @@ export class Export extends S.TaggedClass<Export>($I`Export`)("Export", {
       })
   );
 }
+
+class NamespaceNewOptionsShape extends S.Class<NamespaceNewOptionsShape>($I`NamespaceNewOptions`)(
+  {
+    position: Position,
+    interfaces: S.Array(Interface),
+    typeAliases: S.Array(TypeAlias),
+    namespaces: S.Array(S.Any),
+  },
+  $I.annote("NamespaceNewOptions", {
+    description: "Constructor options carrying nested namespace members.",
+  })
+) {}
+type NamespaceNewOptions = Omit<NamespaceNewOptionsShape, "namespaces"> & {
+  readonly namespaces: ReadonlyArray<Namespace>;
+};
 
 /**
  * Represents a documented namespace and its nested exported members.
@@ -585,14 +755,32 @@ export class Export extends S.TaggedClass<Export>($I`Export`)("Export", {
  * @category models
  * @since 0.0.0
  */
-export class Namespace extends S.TaggedClass<Namespace>($I`Namespace`)("Namespace", {
-  name: S.String,
-  doc: Doc,
-  position: Position,
-  interfaces: S.Array(Interface),
-  typeAliases: S.Array(TypeAlias),
-  namespaces: S.Array(S.Any),
-}) {
+export class Namespace extends S.TaggedClass<Namespace>($I`Namespace`)(
+  "Namespace",
+  {
+    name: DocgenSymbolName.annotateKey({
+      description: "Namespace name rendered in generated documentation.",
+    }),
+    doc: Doc.annotateKey({
+      description: "Parsed namespace documentation.",
+    }),
+    position: Position.annotateKey({
+      description: "Source location for the namespace declaration.",
+    }),
+    interfaces: S.Array(Interface).annotateKey({
+      description: "Documented interfaces nested in the namespace.",
+    }),
+    typeAliases: S.Array(TypeAlias).annotateKey({
+      description: "Documented type aliases nested in the namespace.",
+    }),
+    namespaces: S.Array(S.Any).annotateKey({
+      description: "Documented child namespaces.",
+    }),
+  },
+  $I.annote("Namespace", {
+    description: "Documented namespace and its nested exported members.",
+  })
+) {
   declare readonly namespaces: ReadonlyArray<Namespace>;
 
   /**
@@ -619,6 +807,23 @@ export class Namespace extends S.TaggedClass<Namespace>($I`Namespace`)("Namespac
       })
   );
 }
+
+class ModuleNewOptions extends S.Class<ModuleNewOptions>($I`ModuleNewOptions`)(
+  {
+    doc: Doc,
+    path: DocgenPathSegments,
+    classes: S.Array(Class),
+    interfaces: S.Array(Interface),
+    functions: S.Array(Function),
+    typeAliases: S.Array(TypeAlias),
+    constants: S.Array(Constant),
+    exports: S.Array(Export),
+    namespaces: S.Array(Namespace),
+  },
+  $I.annote("ModuleNewOptions", {
+    description: "Constructor options carrying parsed module documentation and members.",
+  })
+) {}
 
 /**
  * Represents a fully parsed module ready for validation and printing.
@@ -658,19 +863,44 @@ export class Namespace extends S.TaggedClass<Namespace>($I`Namespace`)("Namespac
  * @category models
  * @since 0.0.0
  */
-export class Module extends S.Class<Module>($I`Module`)({
-  source: S.Any,
-  name: S.String,
-  doc: Doc,
-  path: S.Array(S.String),
-  classes: S.Array(Class),
-  interfaces: S.Array(Interface),
-  functions: S.Array(Function),
-  typeAliases: S.Array(TypeAlias),
-  constants: S.Array(Constant),
-  exports: S.Array(Export),
-  namespaces: S.Array(Namespace),
-}) {
+export class Module extends S.Class<Module>($I`Module`)(
+  {
+    source: S.Any,
+    name: DocgenSymbolName.annotateKey({
+      description: "Module display name rendered in generated documentation.",
+    }),
+    doc: Doc.annotateKey({
+      description: "Parsed module-level documentation.",
+    }),
+    path: DocgenPathSegments.annotateKey({
+      description: "Normalized source path segments for the module.",
+    }),
+    classes: S.Array(Class).annotateKey({
+      description: "Documented classes exported by the module.",
+    }),
+    interfaces: S.Array(Interface).annotateKey({
+      description: "Documented interfaces exported by the module.",
+    }),
+    functions: S.Array(Function).annotateKey({
+      description: "Documented functions exported by the module.",
+    }),
+    typeAliases: S.Array(TypeAlias).annotateKey({
+      description: "Documented type aliases exported by the module.",
+    }),
+    constants: S.Array(Constant).annotateKey({
+      description: "Documented constants exported by the module.",
+    }),
+    exports: S.Array(Export).annotateKey({
+      description: "Documented export declarations emitted by the module.",
+    }),
+    namespaces: S.Array(Namespace).annotateKey({
+      description: "Documented namespaces exported by the module.",
+    }),
+  },
+  $I.annote("Module", {
+    description: "Fully parsed module ready for validation and printing.",
+  })
+) {
   declare readonly source: Parser.SourceShape;
 
   /**
@@ -703,9 +933,18 @@ export class Module extends S.Class<Module>($I`Module`)({
   );
 }
 
-type FileNewOptions = {
-  readonly isOverwritable?: boolean;
-};
+class FileNewOptions extends S.Class<FileNewOptions>($I`FileNewOptions`)(
+  {
+    isOverwritable: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultKey(Effect.succeed(false))
+    ),
+  },
+  $I.annote("FileNewOptions", {
+    description: "Constructor options for output file overwrite behavior.",
+  })
+) {}
+type FileNewOptionsInput = Exclude<(typeof FileNewOptions)["~type.make.in"], void>;
 
 /**
  * Ordering that sorts modules by their normalized lowercase source path.
@@ -773,11 +1012,22 @@ export const ByPath: Order.Order<Module> = Order.mapInput(Str.Order, (module: Mo
  * @category models
  * @since 0.0.0
  */
-export class File extends S.Class<File>($I`File`)({
-  path: S.String,
-  content: S.String,
-  isOverwritable: S.Boolean,
-}) {
+export class File extends S.Class<File>($I`File`)(
+  {
+    path: S.String.annotateKey({
+      description: "Output file path.",
+    }),
+    content: S.String.annotateKey({
+      description: "Output file content.",
+    }),
+    isOverwritable: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))).annotateKey({
+      description: "Whether an existing output file may be overwritten.",
+    }),
+  },
+  $I.annote("File", {
+    description: "Output file descriptor used by docgen write workflows.",
+  })
+) {
   /**
    * Creates an output file descriptor.
    *
@@ -787,14 +1037,14 @@ export class File extends S.Class<File>($I`File`)({
    * @returns File descriptor instance.
    */
   static readonly new: {
-    (path: string, content: string, options: FileNewOptions): File;
-    (content: string, options: FileNewOptions): (path: string) => File;
-  } = dual(3, (path: string, content: string, options: FileNewOptions): File => {
-    const isOverwritable = options.isOverwritable ?? false;
+    (path: string, content: string, options: FileNewOptionsInput): File;
+    (content: string, options: FileNewOptionsInput): (path: string) => File;
+  } = dual(3, (path: string, content: string, options: FileNewOptionsInput): File => {
+    const fileOptions = FileNewOptions.make(options);
     return File.make({
       path,
       content,
-      isOverwritable,
+      isOverwritable: fileOptions.isOverwritable,
     });
   });
 }
@@ -838,7 +1088,17 @@ export type DocgenErrorTypeId = typeof DocgenErrorTypeId;
  * @category models
  * @since 0.0.0
  */
-export class DocgenError extends TaggedErrorClass<DocgenError>($I`DocgenError`)("DocgenError", { message: S.String }) {}
+export class DocgenError extends TaggedErrorClass<DocgenError>($I`DocgenError`)(
+  "DocgenError",
+  {
+    message: S.String.annotateKey({
+      description: "Human-readable docgen failure message.",
+    }),
+  },
+  $I.annote("DocgenError", {
+    description: "Typed error used throughout docgen parsing and generation operations.",
+  })
+) {}
 
 /**
  * Service shape for the process APIs used by docgen.

@@ -44,6 +44,7 @@
     "@pulumiverse/vercel": "catalog:"
   },
   "devDependencies": {
+    "@beep/test-utils": "workspace:^",
     "@types/bun": "catalog:",
     "@types/node": "catalog:",
     "effect": "catalog:",

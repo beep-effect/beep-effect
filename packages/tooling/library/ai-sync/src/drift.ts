@@ -7,7 +7,7 @@
 
 import { Effect, FileSystem, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import * as S from "effect/Schema";
+import * as O from "effect/Option";
 import { GENERATED_TIER_ONE_SOURCE_METADATA } from "./_generated/source-metadata.gen.ts";
 import {
   fetchSourceText,
@@ -19,8 +19,6 @@ import {
 } from "./generator.ts";
 import { AiSyncDriftFinding, AiSyncDriftReport, AiSyncError, AiSyncSourceMetadata } from "./models.ts";
 import { TIER_ONE_SOURCES } from "./source-map.ts";
-
-const decodeGeneratedSources = S.decodeUnknownEffect(S.Array(AiSyncSourceMetadata));
 
 const packageRoot = Effect.fn("AiSync.driftPackageRoot")(function* () {
   const path = yield* Path.Path;
@@ -52,11 +50,11 @@ const readPackageFile = Effect.fn("AiSync.readPackageFile")(function* (relativeP
  * @since 0.0.0
  */
 export const getGeneratedSourceMetadata = Effect.fn("AiSync.getGeneratedSourceMetadata")(function* () {
-  return yield* decodeGeneratedSources(GENERATED_TIER_ONE_SOURCE_METADATA).pipe(
+  return yield* AiSyncSourceMetadata.decodeArrayEffect(GENERATED_TIER_ONE_SOURCE_METADATA).pipe(
     Effect.mapError((cause) =>
       AiSyncError.make({
         message: "Generated source metadata failed schema validation.",
-        cause,
+        cause: O.some(cause),
       })
     )
   );
@@ -89,7 +87,7 @@ export const checkGeneratedArtifacts = Effect.fn("AiSync.checkGeneratedArtifacts
     Effect.mapError((cause) =>
       AiSyncError.make({
         message: `Missing generated schemas at ${GENERATED_SCHEMAS_PATH}. Run bun run generate.`,
-        cause,
+        cause: O.some(cause),
       })
     )
   );
@@ -97,7 +95,7 @@ export const checkGeneratedArtifacts = Effect.fn("AiSync.checkGeneratedArtifacts
     Effect.mapError((cause) =>
       AiSyncError.make({
         message: `Missing generated source metadata at ${GENERATED_SOURCE_METADATA_PATH}. Run bun run generate.`,
-        cause,
+        cause: O.some(cause),
       })
     )
   );
@@ -109,16 +107,7 @@ export const checkGeneratedArtifacts = Effect.fn("AiSync.checkGeneratedArtifacts
     A.every(expectedSources, (expected) =>
       A.some(
         generatedSources,
-        (actual) =>
-          actual.id === expected.id &&
-          actual.agent === expected.agent &&
-          actual.domain === expected.domain &&
-          actual.tier === expected.tier &&
-          actual.url === expected.url &&
-          actual.versionPin === expected.versionPin &&
-          actual.isOfficial === expected.isOfficial &&
-          actual.driftMechanism === expected.driftMechanism &&
-          actual.contentHash !== undefined
+        (actual) => AiSyncSourceMetadata.hasSameIdentity(actual, expected) && O.isSome(actual.contentHash)
       )
     );
   const expectedSourceMetadataText = renderGeneratedSourceMetadata(generatedSources);
@@ -144,15 +133,16 @@ export const checkGeneratedArtifacts = Effect.fn("AiSync.checkGeneratedArtifacts
  * @example
  * ```ts
  * import { Effect } from "effect"
- * import { AiSyncSourceMetadata, checkSourceDriftWithFetcher } from "@beep/ai-sync"
+ * import { AiSyncContentHash, AiSyncSourceId, AiSyncSourceMetadata, AiSyncSourceUrl, checkSourceDriftWithFetcher } from "@beep/ai-sync"
+ * import * as O from "effect/Option"
  *
  * const source = AiSyncSourceMetadata.make({
- *   id: "synthetic",
+ *   id: AiSyncSourceId.make("synthetic"),
  *   agent: "codex",
  *   domain: "config",
  *   tier: "tier_1",
- *   url: "https://example.com/schema.json",
- *   contentHash: "expected",
+ *   url: AiSyncSourceUrl.make("https://example.com/schema.json"),
+ *   contentHash: O.some(AiSyncContentHash.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")),
  *   isOfficial: true,
  *   driftMechanism: "hash"
  * })
@@ -176,12 +166,12 @@ export const checkSourceDriftWithFetcher = <R>(options: {
       options.fetcher(source).pipe(
         Effect.flatMap(hashSourceText),
         Effect.map((actualHash) =>
-          source.contentHash === actualHash
+          O.contains(source.contentHash, actualHash)
             ? A.empty<AiSyncDriftFinding>()
             : A.make(
                 AiSyncDriftFinding.make({
                   sourceId: source.id,
-                  expectedHash: source.contentHash ?? "missing",
+                  expectedHash: source.contentHash,
                   actualHash,
                   message: `${source.id} content hash differs from committed metadata.`,
                 })
@@ -254,7 +244,10 @@ export const assertNoStrictDrift = Effect.fn("AiSync.assertNoStrictDrift")(funct
             AiSyncError.make({
               message: pipe(
                 report.findings,
-                A.map((finding) => `${finding.sourceId}: ${finding.expectedHash} -> ${finding.actualHash}`),
+                A.map(
+                  (finding) =>
+                    `${finding.sourceId}: ${O.getOrElse(finding.expectedHash, () => "missing")} -> ${finding.actualHash}`
+                ),
                 A.join("\n")
               ),
             })

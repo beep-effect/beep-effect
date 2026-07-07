@@ -20,14 +20,46 @@ const $I = $RepoConfigsId.create("next/models/ExperimentalConfig.schema");
 const StringArray = S.String.pipe(S.Array, S.mutable);
 const UnknownRecord = S.Record(S.String, S.Unknown);
 const BooleanOrStrict = S.Union([S.Boolean, S.Literal("strict")]);
-const ProxyPrefetchMode = LiteralKit(["strict", "flexible"]);
-const WebVitalsMetric = LiteralKit(["CLS", "FCP", "FID", "INP", "LCP", "TTFB"]);
-const TurbopackRuntimeStrategy = LiteralKit(["workerThreads", "childProcesses"]);
-const TurbopackModuleIds = LiteralKit(["named", "deterministic"]);
-const MdxType = LiteralKit(["gfm", "commonmark"]);
-const BrowserDebugLevel = LiteralKit(["error", "warn", "verbose"]);
-const ReportSystemEnvInlining = LiteralKit(["error", "warn"]);
-const SwcEnvMode = LiteralKit(["usage", "entry"]);
+const ProxyPrefetchMode = LiteralKit(["strict", "flexible"]).pipe(
+  $I.annoteSchema("ProxyPrefetchMode", {
+    description: "Allowed Next.js proxy prefetch modes.",
+  })
+);
+const WebVitalsMetric = LiteralKit(["CLS", "FCP", "FID", "INP", "LCP", "TTFB"]).pipe(
+  $I.annoteSchema("WebVitalsMetric", {
+    description: "Web Vitals metric identifiers accepted by Next.js experimental config.",
+  })
+);
+const TurbopackRuntimeStrategy = LiteralKit(["workerThreads", "childProcesses"]).pipe(
+  $I.annoteSchema("TurbopackRuntimeStrategy", {
+    description: "Runtime strategies accepted by Next.js Turbopack configuration.",
+  })
+);
+const TurbopackModuleIds = LiteralKit(["named", "deterministic"]).pipe(
+  $I.annoteSchema("TurbopackModuleIds", {
+    description: "Turbopack module id strategies accepted by Next.js experimental config.",
+  })
+);
+const MdxType = LiteralKit(["gfm", "commonmark"]).pipe(
+  $I.annoteSchema("MdxType", {
+    description: "MDX parser modes accepted by Next.js experimental config.",
+  })
+);
+const BrowserDebugLevel = LiteralKit(["error", "warn", "verbose"]).pipe(
+  $I.annoteSchema("BrowserDebugLevel", {
+    description: "Browser debug log levels accepted by Next.js experimental config.",
+  })
+);
+const ReportSystemEnvInlining = LiteralKit(["error", "warn"]).pipe(
+  $I.annoteSchema("ReportSystemEnvInlining", {
+    description: "System environment inlining report levels accepted by Next.js experimental config.",
+  })
+);
+const SwcEnvMode = LiteralKit(["usage", "entry"]).pipe(
+  $I.annoteSchema("SwcEnvMode", {
+    description: "SWC environment transform modes accepted by Next.js experimental config.",
+  })
+);
 
 const typedUnknown = <A>(name: string, description: string) =>
   S.declare<A>((value: unknown): value is A => P.isUnknown(value), {

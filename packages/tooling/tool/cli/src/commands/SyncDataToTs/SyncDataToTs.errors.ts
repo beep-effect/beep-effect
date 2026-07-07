@@ -7,11 +7,10 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Inspectable } from "effect";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/SyncDataToTs/SyncDataToTs.errors");
@@ -74,7 +73,7 @@ export class SyncDataToTsError extends TaggedErrorClass<SyncDataToTsError>($I`Sy
       SyncDataToTsError.make({
         message: `${message}: ${causeMessage(cause)}`,
         cause,
-        ...R.getSomes({
+        ...O.getSomesStruct({
           targetId: O.fromUndefinedOr(targetId),
           file: O.fromUndefinedOr(file),
         }),

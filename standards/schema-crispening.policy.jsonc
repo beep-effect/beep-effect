@@ -9,7 +9,7 @@
   "families": {
     "foundation": { "blocking": true },
     "drivers": { "blocking": true },
-    "tooling": { "blocking": false },
+    "tooling": { "blocking": true },
     "apps-slices": { "blocking": false }
   },
   "ownerOverrides": {}

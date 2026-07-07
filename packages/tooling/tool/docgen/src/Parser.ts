@@ -12,6 +12,7 @@ import { Context, Effect, flow, Layer, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as ast from "ts-morph";
 import * as Configuration from "./Configuration.js";
 import * as Domain from "./Domain.js";
@@ -102,10 +103,15 @@ const getDocComment: (ranges: ReadonlyArray<ast.CommentRange>) => O.Option<ast.C
   A.last
 );
 
-type Comment = {
-  readonly description: string | undefined;
-  readonly tags: Record<string, ReadonlyArray<string> | undefined>;
-};
+class ParsedComment extends S.Class<ParsedComment>($I`ParsedComment`)(
+  {
+    description: S.String.pipe(S.UndefinedOr),
+    tags: S.Record(S.String, S.Array(S.String).pipe(S.UndefinedOr)),
+  },
+  $I.annote("ParsedComment", {
+    description: "Normalized description and grouped tag values parsed from a raw JSDoc block.",
+  })
+) {}
 
 /**
  * Parses a raw JSDoc block into a normalized description and grouped tag map.
@@ -122,7 +128,7 @@ type Comment = {
  * @category parsing
  * @since 0.0.0
  */
-export const parseComment = (text: string): Comment => {
+export const parseComment = (text: string): ParsedComment => {
   const annotation: doctrine.Annotation = doctrine.parse(text, {
     unwrap: true,
   });
@@ -142,7 +148,7 @@ export const parseComment = (text: string): Comment => {
     )
   );
 
-  return { description, tags };
+  return ParsedComment.make({ description, tags });
 };
 
 const isVariableDeclarationList = (

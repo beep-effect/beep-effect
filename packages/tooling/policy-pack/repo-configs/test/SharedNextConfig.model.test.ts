@@ -1,13 +1,31 @@
 import {
+  BeepNextMdxConfig,
+  BeepNextPwaConfig,
   composeNextConfig,
+  DEFAULT_BEEP_SECURE_HEADERS,
   decodeBeepNextConfigEnv,
   defineBeepNextConfig,
   makeBeepNextBaseConfig,
+  makeSecureHeaders,
+  SecureHeadersConfig,
 } from "@beep/repo-configs/next";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Result } from "effect";
+import * as Equal from "effect/Equal";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import type { NextConfig } from "next";
+
+const expectRoundTrip = <Schema extends S.Top & S.ConstraintEncoder<unknown> & S.ConstraintDecoder<unknown>>(
+  schema: Schema,
+  value: Schema["Type"]
+) => {
+  const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
+  const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
+
+  expect(Equal.equals(decoded, value)).toBe(true);
+};
 
 describe("Shared Next.js config preset", () => {
   it.effect(
@@ -61,6 +79,22 @@ describe("Shared Next.js config preset", () => {
     expect(Object.getOwnPropertyNames(config.typescript ?? {})).not.toContain("pipe");
   });
 
+  it("keeps omitted repo-owned list options byte-equivalent to explicit empty lists", () => {
+    const omitted = makeBeepNextBaseConfig({
+      repoRoot: "/repo",
+      allowedDevOrigins: ["oip-web.localhost"],
+    });
+    const explicitEmpty = makeBeepNextBaseConfig({
+      repoRoot: "/repo",
+      allowedDevOrigins: ["oip-web.localhost"],
+      additionalPageExtensions: [],
+      additionalTranspilePackages: [],
+      additionalOptimizePackageImports: [],
+    });
+
+    expect(omitted).toEqual(explicitEmpty);
+  });
+
   it("adds secure headers without invoking app headers during construction", () =>
     Effect.gen(function* () {
       let headersCalled = false;
@@ -110,6 +144,33 @@ describe("Shared Next.js config preset", () => {
 
     expect(config.headers).toBeUndefined();
     expect(config.webpack).toBeUndefined();
+  });
+
+  it("applies secure-header object defaults through the schema", () => {
+    const config = Result.getOrThrow(S.decodeUnknownResult(SecureHeadersConfig)({}));
+
+    expect(makeSecureHeaders(config)).toEqual(DEFAULT_BEEP_SECURE_HEADERS);
+  });
+
+  it("round-trips defaulted shared feature schemas", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(BeepNextMdxConfig), (value) => expectRoundTrip(BeepNextMdxConfig, value)),
+      {
+        numRuns: 25,
+      }
+    );
+    fc.assert(
+      fc.property(S.toArbitrary(BeepNextPwaConfig), (value) => expectRoundTrip(BeepNextPwaConfig, value)),
+      {
+        numRuns: 25,
+      }
+    );
+    fc.assert(
+      fc.property(S.toArbitrary(SecureHeadersConfig), (value) => expectRoundTrip(SecureHeadersConfig, value)),
+      {
+        numRuns: 25,
+      }
+    );
   });
 
   it("composes plugin helpers in explicit left-to-right order", () => {

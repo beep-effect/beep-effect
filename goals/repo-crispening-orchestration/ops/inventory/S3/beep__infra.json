@@ -1,39 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "infra/src/Storybook.ts",
-    "line": 60,
-    "symbol": "StorybookVercelAuthenticationDeploymentType",
-    "smell": "The same Vercel authentication deployment literal family is defined twice: exported as StorybookVercelAuthenticationDeploymentType at Storybook.ts:60-66 and redefined privately as VercelAuthenticationDeploymentType at OipWeb.ts:80-86. The duplicate kits must stay in lockstep by hand.",
-    "proposedTarget": "Collapse to one shared infra VercelAuthenticationDeploymentType kit and preserve the Storybook-named public export as an alias if needed for compatibility. OipWeb and Storybook should import/use the same kit, decoder, Enum.none default, and type alias. Verified LiteralKit helper surface at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:645 and const type parameters at line 743.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 2.7
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "infra/src/OipWeb.ts",
-    "line": 485,
-    "symbol": "loadOipWebStackArgs",
-    "smell": "vercelAuthenticationDeploymentType is read from Pulumi config and cast to VercelAuthenticationDeploymentType | undefined instead of being narrowed by the LiteralKit-backed schema. Storybook has the safer sibling path: decodeStorybookVercelAuthenticationDeploymentType at Storybook.ts:93-105 turns invalid Pulumi strings into a pulumi.RunError.",
-    "proposedTarget": "Mirror Storybook: add decodeVercelAuthenticationDeploymentType = S.decodeUnknownResult(VercelAuthenticationDeploymentType) and a vercelAuthenticationDeploymentTypeFromPulumiConfig helper, then pass its decoded result into makeOipWebStackArgsFromConfigValues with no cast. Verified Effect v4 S.decodeUnknownResult at .repos/effect-v4/packages/effect/src/Schema.ts:1564 and the existing Storybook in-repo exemplar at infra/src/Storybook.ts:93.",
-    "confidence": 0.88,
-    "mechanization": "assisted",
-    "roiRank": 3.5
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "infra/src/AIMetrics.ts",
-    "line": 396,
-    "symbol": "makeAIMetricsStackArgsFromConfigValues",
-    "smell": "AiMetricsDeployTarget is a LiteralKit domain from @beep/repo-ai-metrics, but infra branches on it by hand: resolvedTarget === AiMetricsDeployTarget.Enum.dankserver at lines 396-397 for publicBaseUrl derivation and spec.target === AiMetricsDeployTarget.Enum.dankserver at lines 577-579 for remote resources. Adding a new deploy target would not force these handlers to be revisited.",
-    "proposedTarget": "Dispatch through AiMetricsDeployTarget.$match for target-derived defaults and remote resource construction, following in-repo LiteralKit match exemplars such as packages/drivers/ai-provider-cli/src/AiProviderCli.service.ts:91 and packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:369. LiteralKit $match is verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:657-667.",
-    "confidence": 0.68,
-    "mechanization": "assisted",
-    "roiRank": 2.0
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "infra/src/OipWeb.ts",
     "line": 594,
     "symbol": "makeRuntimeEnvironmentVariableTargets",

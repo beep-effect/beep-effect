@@ -2264,26 +2264,6 @@
       "reason": "Internal S.Struct field block feeds an S.Class constructor and stays tied to the class model."
     },
     {
-      "file": "packages/tooling/library/ai-metrics/src/otlp.ts",
-      "symbol": "sessionProjection.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 411,
-      "owner": "@beep/repo-ai-metrics",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/library/ai-metrics/src/otlp.ts",
-      "symbol": "turnProjection.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 436,
-      "owner": "@beep/repo-ai-metrics",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
       "file": "packages/tooling/library/repo-utils/src/FsUtils.ts",
       "symbol": "FsUtilsShape",
       "kind": "exported-interface",
@@ -2292,64 +2272,34 @@
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
-      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/JSDocTagAnnotation.model.ts",
-      "symbol": "getJSDocTagMetadata",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-null-return",
-      "line": 69,
-      "owner": "@beep/repo-utils",
-      "reason": "Exported helper \"getJSDocTagMetadata\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TSCategory.model.ts",
-      "symbol": "getCategory",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-null-return",
-      "line": 1252,
-      "owner": "@beep/repo-utils",
-      "reason": "Exported helper \"getCategory\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TSCategory.model.ts",
-      "symbol": "getTSCategoryMetadata",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-null-return",
-      "line": 261,
-      "owner": "@beep/repo-utils",
-      "reason": "Exported helper \"getTSCategoryMetadata\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
-    },
-    {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
       "symbol": "makeProjectCacheKey",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1347,
+      "line": 1431,
       "owner": "@beep/repo-utils",
-      "reason": "Exported function \"makeProjectCacheKey\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+      "reason": "Exception: thin branded-id constructor over already schema-validated TsMorph scope parts; wrapping this utility in Fn/S.Class would add no boundary validation."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
       "symbol": "makeProjectScopeId",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1317,
+      "line": 1404,
       "owner": "@beep/repo-utils",
-      "reason": "Exported function \"makeProjectScopeId\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+      "reason": "Exception: thin branded-id constructor over already schema-validated TsMorph scope parts; wrapping this utility in Fn/S.Class would add no boundary validation."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
       "symbol": "makeSymbolId",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1290,
+      "line": 1377,
       "owner": "@beep/repo-utils",
-      "reason": "Exported function \"makeSymbolId\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+      "reason": "Exception: thin branded-id constructor over already schema-validated symbol identity parts; wrapping this utility in Fn/S.Class would add no boundary validation."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
@@ -2363,11 +2313,11 @@
       "file": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
       "symbol": "toCanonicalDocgenConfigJson",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 406,
+      "line": 437,
       "owner": "@beep/repo-utils",
-      "reason": "Exported function \"toCanonicalDocgenConfigJson\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+      "reason": "Exception: JSON serializer adapter from the canonical DocgenConfig S.Class to a config-file wire object; the return shape is command-output formatting, not a reusable domain contract."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
@@ -2482,16 +2432,6 @@
       "reason": "Type alias holds non-schema runtime handles (Option<AstNode> plus the raw ESTree property node from oxlint member-access traversal); it is an internal AST-visitor return shape, not decodable domain data."
     },
     {
-      "file": "packages/tooling/policy-pack/repo-configs/src/internal/eslint/RuleAstSchemas.ts",
-      "symbol": "resolveImportSpecifierImportKind",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-null-return",
-      "line": 80,
-      "owner": "@beep/repo-configs",
-      "reason": "Exported helper \"resolveImportSpecifierImportKind\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
-    },
-    {
       "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
       "symbol": "PgliteSqlTestLayerOptions",
       "kind": "exported-interface",
@@ -2524,26 +2464,6 @@
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts",
-      "symbol": "parseRetentionSelector.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 640,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Codex/Codex.errors.ts",
-      "symbol": "CodexCommandError.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 63,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
       "symbol": "CorpusCommandServiceShape",
       "kind": "exported-interface",
@@ -2555,111 +2475,51 @@
       "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
       "symbol": "extensionOf.toLowerCase",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-normalization",
-      "line": 879,
+      "line": 878,
       "owner": "@beep/repo-cli",
-      "reason": "Normalization call \".toLowerCase()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-      "symbol": "extractCorpusImpl.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 1114,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-      "symbol": "extractCorpusImpl.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 1120,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-      "symbol": "lookups.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 2838,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-      "symbol": "organizeRecordFor.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 2463,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-      "symbol": "organizeRecordFor.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 2469,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
+      "reason": "Exception: filename-extension parser helper for filesystem input; normalization is local classifier glue before optional inclusion in output records, not a standalone schema boundary."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
       "symbol": "pipeDocket.toUpperCase",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-normalization",
-      "line": 2155,
+      "line": 2154,
       "owner": "@beep/repo-cli",
-      "reason": "Normalization call \".toUpperCase()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-      "symbol": "processOneSource.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 1164,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
+      "reason": "Exception: attorney-docket extraction is a regex parser over filenames and paths; uppercasing is local parser normalization before returning an Option result."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
       "symbol": "sanitizeSegment.trim",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-normalization",
-      "line": 2162,
+      "line": 2161,
       "owner": "@beep/repo-cli",
-      "reason": "Normalization call \".trim()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
+      "reason": "Exception: path-segment sanitizer for generated filesystem names; slash/NUL replacement plus empty fallback is local imperative filename hygiene, not a reusable decoded model."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
       "symbol": "versionStem.toLowerCase",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-normalization",
-      "line": 2175,
+      "line": 2174,
       "owner": "@beep/repo-cli",
-      "reason": "Normalization call \".toLowerCase()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
+      "reason": "Exception: version grouping key normalization for organized corpus filenames; the normalized string is an ephemeral grouping key, not persisted domain data."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
       "symbol": "versionStem.trim",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-normalization",
-      "line": 2175,
+      "line": 2174,
       "owner": "@beep/repo-cli",
-      "reason": "Normalization call \".trim()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
+      "reason": "Exception: version grouping key normalization for organized corpus filenames; the normalized string is an ephemeral grouping key, not persisted domain data."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts",
@@ -2668,16 +2528,6 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
-      "symbol": "createPackageCommand.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 1161,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/CreatePackage/TemplateService.ts",
@@ -2704,44 +2554,14 @@
       "reason": "Type alias contains non-schema signals such as function members or runtime handles."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts",
-      "symbol": "docgenAggregateCommand.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 626,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.command.ts",
-      "symbol": "docgenRunCommand.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 597,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerRunpodEval.ts",
       "symbol": "makeQualityWorkerRunpodEvalPodCreateInput",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-fn-schema",
       "line": 443,
       "owner": "@beep/repo-cli",
-      "reason": "Exported function \"makeQualityWorkerRunpodEvalPodCreateInput\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docs/Docs.aggregate.ts",
-      "symbol": "aggregateDocs.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 53,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
+      "reason": "Exception: Runpod API body builder with defaults for an external service request; PodCreateInput is already schema-modeled at the output boundary."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
@@ -2752,204 +2572,24 @@
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-      "symbol": "makeCreateCaptionFilesSkippedEntry.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 686,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-      "symbol": "makeDetectFacesReportOptions.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 1743,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-      "symbol": "makeDetectFacesReportOptions.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 1747,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-      "symbol": "makeNormalizeManifestOptions.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 632,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-      "symbol": "makeNormalizeManifestOptions.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 633,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-      "symbol": "makeProcessFailedFailureRecord.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 4294,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-      "symbol": "makeProcessSkippedFailureRecord.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 4272,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-      "symbol": "makeProcessSourceRecord.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 4227,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-      "symbol": "makeProcessSourceRecord.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 4236,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-      "symbol": "prepareProcessSource.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 4205,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-      "symbol": "processExtractionSuccessOutcome.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 4392,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-      "symbol": "processFailureOutcome.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 4352,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-      "symbol": "processPreparedSource.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 4491,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-      "symbol": "processPreparedSource.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 4522,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-      "symbol": "withDetectFacesMovedNoFaceTarget.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 3353,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-      "symbol": "withDetectFacesMovedNoFaceTarget.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 3354,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.errors.ts",
-      "symbol": "GraphitiProxyOpsError.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 107,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyConfig.ts",
-      "symbol": "loadGraphitiProxyConfig.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 210,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyOps.ts",
       "symbol": "shouldInstallProxyServiceForTesting",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-fn-schema",
       "line": 387,
       "owner": "@beep/repo-cli",
-      "reason": "Exported function \"shouldInstallProxyServiceForTesting\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+      "reason": "Exception: exported testing seam for pure systemd-unit drift checks; inline input keeps the test helper lightweight and avoids promoting test-only data to a public schema."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyOps.ts",
       "symbol": "shouldRecoverGraphitiStackForTesting",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-fn-schema",
       "line": 1293,
       "owner": "@beep/repo-cli",
-      "reason": "Exported function \"shouldRecoverGraphitiStackForTesting\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+      "reason": "Exception: exported testing seam for pure recovery-branch decisions; inline input keeps the test helper lightweight and avoids promoting test-only data to a public schema."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Image/Image.service.ts",
@@ -3008,34 +2648,14 @@
       "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
-      "symbol": "ChangesetGraphError.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 68,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
-      "symbol": "QualityScriptCommandError.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 119,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
       "symbol": "textLooksLikeSchemaExport.trim",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-normalization",
       "line": 413,
       "owner": "@beep/repo-cli",
-      "reason": "Normalization call \".trim()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
+      "reason": "Exception: ts-morph initializer text parser for generated JSDoc inventory; trim is local AST-source inspection before regex classification, not schema data normalization."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/KnipRatchet.ts",
@@ -3044,86 +2664,6 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
-      "symbol": "QualityArtifactGeneratorError.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 65,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
-      "symbol": "QualityArtifactGeneratorError.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 66,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
-      "symbol": "QualityArtifactGeneratorError.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 67,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
-      "symbol": "summaryFromComment",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-null-return",
-      "line": 620,
-      "owner": "@beep/repo-cli",
-      "reason": "Exported helper \"summaryFromComment\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts",
-      "symbol": "TurboConfigProofError.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 115,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts",
-      "symbol": "TurboConfigProofError.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 116,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts",
-      "symbol": "TurboConfigProofError.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 134,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/TurboConfigProof.ts",
-      "symbol": "TurboConfigProofError.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 135,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Research/Research.service.ts",
@@ -3137,31 +2677,21 @@
       "file": "packages/tooling/tool/cli/src/commands/Research/Research.service.ts",
       "symbol": "selected.toLowerCase",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-normalization",
       "line": 512,
       "owner": "@beep/repo-cli",
-      "reason": "Normalization call \".toLowerCase()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
+      "reason": "Exception: CLI filter matching against clone directory basenames; lowercasing is transient search normalization, not a decoded command model field."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Research/internal/BrowserHistory.ts",
       "symbol": "canonicalizeForSift.toLowerCase",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-normalization",
       "line": 259,
       "owner": "@beep/repo-cli",
-      "reason": "Normalization call \".toLowerCase()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.errors.ts",
-      "symbol": "SyncDataToTsError.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 77,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
+      "reason": "Exception: URL canonicalizer for browser-history sift deduplication; host lowercasing is parser-local key normalization before URL re-emission."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
@@ -3191,11 +2721,11 @@
       "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Source.ts",
       "symbol": "sourceMetadata",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-fn-schema",
       "line": 125,
       "owner": "@beep/repo-cli",
-      "reason": "Exported function \"sourceMetadata\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+      "reason": "Exception: sync-data-to-ts codegen helper that lifts fetched-source metadata into an existing S.Class output; optional extras are generator-local call-site sugar."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/CldrTerritories.ts",
@@ -3204,26 +2734,6 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/Iso3166.ts",
-      "symbol": "normalizeSubdivisionRow.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 265,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
-      "symbol": "tsconfigSyncCommand.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 1757,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/CategorySelectionService.ts",
@@ -3258,94 +2768,34 @@
       "reason": "Type alias contains non-schema signals such as function members or runtime handles."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Worktree/Worktree.errors.ts",
-      "symbol": "WorktreeCommandError.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 68,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts",
-      "symbol": "YeetCommandError.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 70,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
       "symbol": "closeoutGateStatesForTesting",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-fn-schema",
       "line": 890,
       "owner": "@beep/repo-cli",
-      "reason": "Exported function \"closeoutGateStatesForTesting\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+      "reason": "Exception: exported testing seam that adapts simplified test inputs into closeout gate states; inline shape avoids promoting test-only fixtures to schema models."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
       "symbol": "buildYeetRunPlanForTesting",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-fn-schema",
       "line": 2825,
       "owner": "@beep/repo-cli",
-      "reason": "Exported function \"buildYeetRunPlanForTesting\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
-      "symbol": "artifactFromVerdict.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 303,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
-      "symbol": "collectRemoteStatus.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 450,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Status.ts",
-      "symbol": "collectRemoteStatus.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 455,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
+      "reason": "Exception: exported testing seam for yeet plan construction; inline option bag mirrors CLI flags and avoids promoting test-only fixture data to a public schema."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
       "symbol": "buildYeetVerdict",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 266,
+      "line": 265,
       "owner": "@beep/repo-cli",
-      "reason": "Exported function \"buildYeetVerdict\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
-      "symbol": "laneFromExecuted.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 227,
-      "owner": "@beep/repo-cli",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
+      "reason": "Exception: internal verdict assembler from already schema-modeled RepoRun and Yeet pieces; YeetVerdict is the durable schema boundary, while this input bag is construction glue."
     },
     {
       "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
@@ -3356,16 +2806,6 @@
       "line": 23,
       "owner": "@beep/repo-cli",
       "reason": "Exception: CLI tsconfig-sync command-behavior test; Schema codecs are incidental JSON-boundary plumbing for tsconfig fixtures and CLI output, not schema-value laws."
-    },
-    {
-      "file": "packages/tooling/tool/docgen/src/ProofManifest.ts",
-      "symbol": "makeVerification.R.getSomes",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-getsomes-struct",
-      "line": 382,
-      "owner": "@beep/repo-docgen",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
     },
     {
       "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",

@@ -36,6 +36,12 @@ const TS_CATEGORY_TAG_VALUES = [
   "Uncategorized",
 ] as const;
 
+const DocumentationPriority = S.Int.check(S.isBetween({ minimum: 1, maximum: 99 })).pipe(
+  $I.annoteSchema("DocumentationPriority", {
+    description: "Integer documentation ordering priority from 1 through 99; lower values sort first.",
+  })
+);
+
 /**
  * Internal base literal schema for all supported TypeDoc `@category` values.
  *
@@ -100,9 +106,10 @@ export type CategoryPurity = typeof CategoryPurity.Type;
  * @example
  * ```ts
  * import { getCategory } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
+ * import * as O from "effect/Option"
  *
  * const category = getCategory("Utility")
- * console.log(category?._tag)
+ * console.log(O.getOrUndefined(category)?._tag)
  * ```
  * @category models
  * @since 0.0.0
@@ -190,7 +197,7 @@ export class TSCategoryDefinition extends S.Class<TSCategoryDefinition>($I`TSCat
       description: "Typical dependency direction profile.",
     }),
     /** Lower means document first in topological ordering. */
-    documentationPriority: S.Finite.annotateKey({
+    documentationPriority: DocumentationPriority.annotateKey({
       description: "Lower means document first in topological ordering.",
     }),
   },
@@ -215,6 +222,12 @@ export class TSCategoryDefinition extends S.Class<TSCategoryDefinition>($I`TSCat
  * @since 0.0.0
  */
 export type TSCategory = typeof TSCategoryDefinition.Encoded;
+
+const EncodedTSCategoryDefinition = S.toEncoded(TSCategoryDefinition).pipe(
+  $I.annoteSchema("EncodedTSCategoryDefinition", {
+    description: "Encoded category metadata shape used in public taxonomy arrays and candidate payloads.",
+  })
+);
 
 /**
  * The payload type stored in the `tsCategoryMetadata` annotation key.
@@ -244,22 +257,23 @@ declare module "effect/Schema" {
  * Retrieve TS category metadata annotation from a schema, if present.
  *
  * @param schema - Any Effect schema.
- * @returns The TSCategoryDefinition metadata or `undefined`.
+ * @returns The TSCategoryDefinition metadata when present.
  * @example
  * ```ts
  * import { getCategory, getTSCategoryMetadata, make } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
+ * import * as O from "effect/Option"
  *
  * const utility = getCategory("Utility")
- * if (utility !== undefined) {
- *   const tagSchema = make("Utility", utility)
- *   console.log(getTSCategoryMetadata(tagSchema)?._tag)
+ * if (O.isSome(utility)) {
+ *   const tagSchema = make("Utility", utility.value)
+ *   console.log(O.getOrUndefined(getTSCategoryMetadata(tagSchema))?._tag)
  * }
  * ```
  * @category models
  * @since 0.0.0
  */
-export const getTSCategoryMetadata = (schema: S.Top): TSCategoryAnnotationPayload | undefined =>
-  SchemaAST.resolve(schema.ast)?.tsCategoryMetadata;
+export const getTSCategoryMetadata = (schema: S.Top): O.Option<TSCategoryAnnotationPayload> =>
+  O.fromUndefinedOr(SchemaAST.resolve(schema.ast)?.tsCategoryMetadata);
 
 /**
  * Build a TS category fibration schema for a concrete category tag.
@@ -273,11 +287,12 @@ export const getTSCategoryMetadata = (schema: S.Top): TSCategoryAnnotationPayloa
  * @example
  * ```ts
  * import { getCategory, getTSCategoryMetadata, make } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
+ * import * as O from "effect/Option"
  *
  * const utility = getCategory("Utility")
- * if (utility !== undefined) {
- *   const tagSchema = make("Utility", utility)
- *   console.log(getTSCategoryMetadata(tagSchema)?._tag)
+ * if (O.isSome(utility)) {
+ *   const tagSchema = make("Utility", utility.value)
+ *   console.log(O.getOrUndefined(getTSCategoryMetadata(tagSchema))?._tag)
  * }
  * ```
  * @category models
@@ -1018,7 +1033,34 @@ export const TSCategoryTag = LiteralKit([
  * @category models
  * @since 0.0.0
  */
-export type TSCategoryTag = typeof TSCategoryTag.Type;
+export type TSCategoryTag =
+  | "DomainModel"
+  | "DomainLogic"
+  | "PortContract"
+  | "Validation"
+  | "Utility"
+  | "UseCase"
+  | "Presentation"
+  | "DataAccess"
+  | "Integration"
+  | "Configuration"
+  | "CrossCutting"
+  | "Uncategorized";
+
+const CATEGORY_TAG_OPTIONS: ReadonlyArray<TSCategoryTag> = [
+  "DomainModel",
+  "DomainLogic",
+  "PortContract",
+  "Validation",
+  "Utility",
+  "UseCase",
+  "Presentation",
+  "DataAccess",
+  "Integration",
+  "Configuration",
+  "CrossCutting",
+  "Uncategorized",
+];
 
 const CATEGORY_TAG_SCHEMAS = [
   DomainModel,
@@ -1049,15 +1091,13 @@ const CATEGORY_TAG_SCHEMAS = [
  */
 export const CATEGORY_TAXONOMY: ReadonlyArray<TSCategory> = pipe(
   CATEGORY_TAG_SCHEMAS,
-  A.reduce(A.empty<TSCategory>(), (categories, schema) => {
-    const metadata = getTSCategoryMetadata(schema);
-
-    if (metadata === undefined) {
-      return categories;
-    }
-
-    return A.append(categories, Result.getOrThrow(S.encodeResult(TSCategoryDefinition)(metadata)));
-  })
+  A.map((schema) =>
+    pipe(
+      getTSCategoryMetadata(schema),
+      O.map((metadata) => Result.getOrThrow(S.encodeResult(TSCategoryDefinition)(metadata)))
+    )
+  ),
+  A.getSomes
 );
 
 /**
@@ -1243,17 +1283,17 @@ export function getCategoryPrecedence(tag: CategoryTag): number {
  * @example
  * ```ts
  * import { getCategory } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
+ * import * as O from "effect/Option"
  *
- * console.log(getCategory("Utility")?._tag)
+ * console.log(O.getOrUndefined(getCategory("Utility"))?._tag)
  * ```
  * @category utilities
  * @since 0.0.0
  */
-export function getCategory(tag: TSCategoryTag): TSCategory | undefined {
+export function getCategory(tag: TSCategoryTag): O.Option<TSCategory> {
   return pipe(
     CATEGORY_TAXONOMY_RUNTIME,
-    A.findFirst((category) => category._tag === tag),
-    O.getOrUndefined
+    A.findFirst((category) => category._tag === tag)
   );
 }
 
@@ -1340,33 +1380,64 @@ export function getCategoriesByEffectAnalog(analog: string): ReadonlyArray<TSCat
  * @since 0.0.0
  */
 export function getCategoriesForApplicableTo(applicableTo: ApplicableTo): ReadonlyArray<TSCategory> {
-  return pipe(
-    APPLICABLE_TO_CATEGORY_ROUTING[applicableTo],
-    A.reduce(A.empty<TSCategory>(), (categories, tag) => {
-      const category = getCategory(tag);
-      return category === undefined ? categories : A.append(categories, category);
-    })
-  );
+  return pipe(APPLICABLE_TO_CATEGORY_ROUTING[applicableTo], A.map(getCategory), A.getSomes);
 }
+
+/**
+ * Category signal tuple consumed by candidate resolution.
+ *
+ * @example
+ * ```ts
+ * import { CategorySignal } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
+ * const signal = CategorySignal.make({ category: "Validation", confidence: 0.9 })
+ * console.log(signal.category)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CategorySignal extends S.Class<CategorySignal>($I`CategorySignal`)(
+  {
+    category: TSCategoryTag.annotateKey({
+      description: "Category tag suggested by an AST signal.",
+    }),
+    confidence: ASTSignal.fields.confidence.annotateKey({
+      description: "Confidence for this category signal.",
+    }),
+  },
+  $I.annote("CategorySignal", {
+    description: "Category signal tuple consumed by candidate resolution.",
+  })
+) {}
 
 /**
  * Scored category candidate shape produced by candidate resolution.
  *
  * @example
  * ```ts
- * import type { ScoredCategoryCandidate } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
- *
- * type Example = ScoredCategoryCandidate
- * const accept = <A extends Example>(value: A): A => value
- * console.log(accept)
+ * import { ScoredCategoryCandidate, getCategory } from "@beep/repo-utils/JSDoc/models/TSCategory.model"
+ * import * as O from "effect/Option"
+ * const candidate = ScoredCategoryCandidate.make({
+ *   category: O.getOrThrow(getCategory("Validation")),
+ *   combinedConfidence: 0.9
+ * })
+ * console.log(candidate.combinedConfidence)
  * ```
  * @category models
  * @since 0.0.0
  */
-export type ScoredCategoryCandidate = Readonly<{
-  readonly category: TSCategory;
-  readonly combinedConfidence: number;
-}>;
+export class ScoredCategoryCandidate extends S.Class<ScoredCategoryCandidate>($I`ScoredCategoryCandidate`)(
+  {
+    category: EncodedTSCategoryDefinition.annotateKey({
+      description: "Encoded category metadata selected as a candidate.",
+    }),
+    combinedConfidence: ASTSignal.fields.confidence.annotateKey({
+      description: "Combined confidence after merging all signals for the category.",
+    }),
+  },
+  $I.annote("ScoredCategoryCandidate", {
+    description: "Scored category candidate shape produced by candidate resolution.",
+  })
+) {}
 
 const scoredCategoryCandidateOrder = Order.make<ScoredCategoryCandidate>((left, right) => {
   if (left.combinedConfidence > right.combinedConfidence) {
@@ -1406,42 +1477,36 @@ const scoredCategoryCandidateOrder = Order.make<ScoredCategoryCandidate>((left, 
  * @category utilities
  * @since 0.0.0
  */
-export function getCandidateCategories(
-  signals: ReadonlyArray<{ category: TSCategoryTag; confidence: number }>
-): ReadonlyArray<ScoredCategoryCandidate> {
+export function getCandidateCategories(signals: ReadonlyArray<CategorySignal>): ReadonlyArray<ScoredCategoryCandidate> {
   const grouped = pipe(
     signals,
     A.groupBy((signal) => String(signal.category))
   );
 
-  const candidates = pipe(
-    R.toEntries(grouped),
-    A.map(([categoryName, categorySignals]) => {
-      const category = getCategory(categoryName as TSCategoryTag);
-      return {
-        category,
-        combinedConfidence: combineSignalConfidences(
-          pipe(
-            categorySignals,
-            A.map((signal) => signal.confidence)
-          )
-        ),
-      };
-    })
-  );
-
   return pipe(
-    candidates,
-    A.reduce(A.empty<ScoredCategoryCandidate>(), (candidates, entry) => {
-      if (entry.category === undefined) {
-        return candidates;
-      }
-
-      return A.append(candidates, {
-        category: entry.category,
-        combinedConfidence: entry.combinedConfidence,
-      });
-    }),
+    CATEGORY_TAG_OPTIONS,
+    A.map((tag) =>
+      pipe(
+        R.get(grouped, tag),
+        O.flatMap((categorySignals) =>
+          pipe(
+            getCategory(tag),
+            O.map((category) =>
+              ScoredCategoryCandidate.make({
+                category,
+                combinedConfidence: combineSignalConfidences(
+                  pipe(
+                    categorySignals,
+                    A.map((signal) => signal.confidence)
+                  )
+                ),
+              })
+            )
+          )
+        )
+      )
+    ),
+    A.getSomes,
     A.sort(scoredCategoryCandidateOrder)
   );
 }
@@ -1526,7 +1591,8 @@ export const Category = S.Union(CATEGORY_TAG_SCHEMAS).pipe(
   })),
   $I.annoteSchema("Category", {
     description: "A TypeScript category tag, representing a categorization of TypeScript constructs.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

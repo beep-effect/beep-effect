@@ -22,11 +22,10 @@ import {
 } from "@beep/repo-utils";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str, Text, thunkFalse } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Console, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { ChildProcess } from "effect/unstable/process";
@@ -202,17 +201,17 @@ const ParentDir = S.String.check(S.isPattern(PARENT_DIR_PATTERN)).pipe(
   S.brand("ParentDir"),
   $I.annoteSchema("ParentDir", {
     description: "Validated repo-relative parent directory for package scaffolding.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
-const isParentDir = S.is(ParentDir);
 
 const PackageName = S.String.check(S.isPattern(PACKAGE_NAME_PATTERN)).pipe(
   S.brand("PackageName"),
   $I.annoteSchema("PackageName", {
     description: "Package name segment used for @beep scoped package creation.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
-const isPackageName = S.is(PackageName);
 
 /**
  * Mapping from template source to output path.
@@ -1039,7 +1038,7 @@ export const createPackageCommand = Command.make(
     }
 
     // ── Validate package name ─────────────────────────────────────────
-    if (!isPackageName(name)) {
+    if (!PackageName.is(name)) {
       return yield* DomainError.make({
         message: `Invalid package name "${name}". Must start with a lowercase letter or underscore, contain only [a-z0-9._-].`,
       });
@@ -1047,7 +1046,7 @@ export const createPackageCommand = Command.make(
 
     // ── Resolve directory name ─────────────────────────────────────────
     const dirName = Str.isNonEmpty(dirNameOverride) ? dirNameOverride : name;
-    if (Str.isNonEmpty(dirNameOverride) && !isPackageName(dirName)) {
+    if (Str.isNonEmpty(dirNameOverride) && !PackageName.is(dirName)) {
       return yield* DomainError.make({
         message: `Invalid dir name "${dirName}". Must start with a lowercase letter or underscore, contain only [a-z0-9._-].`,
       });
@@ -1078,7 +1077,7 @@ export const createPackageCommand = Command.make(
       O.getOrElse(() => "packages/tooling/library")
     );
     const parentDir = Str.isNonEmpty(parentDirOverride) ? parentDirOverride : defaultParentDir;
-    if (!isParentDir(parentDir)) {
+    if (!ParentDir.is(parentDir)) {
       return yield* DomainError.make({
         message: `Invalid parent dir "${parentDir}". Use a repo-relative path like "packages/tooling/library", "apps", or "packages/shared".`,
       });
@@ -1158,7 +1157,7 @@ export const createPackageCommand = Command.make(
       parentDir,
       packagePath,
       rootRelative: toRootRelative(packagePath),
-      ...R.getSomes({ family: packageFamily, kind: packageKind, appKind }),
+      ...O.getSomesStruct({ family: packageFamily, kind: packageKind, appKind }),
       isTool: packageTypeEquivalence(packageType, "tool"),
       isApp: packageTypeEquivalence(packageType, "app"),
       isLibrary: packageTypeEquivalence(packageType, "library"),

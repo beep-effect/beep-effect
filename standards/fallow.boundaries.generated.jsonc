@@ -1289,6 +1289,7 @@
           "@beep/infra",
           "@beep/repo-ai-metrics",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1296,6 +1297,7 @@
           "@beep/infra",
           "@beep/repo-ai-metrics",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },

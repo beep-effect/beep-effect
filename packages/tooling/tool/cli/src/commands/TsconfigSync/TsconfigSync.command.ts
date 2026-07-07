@@ -34,9 +34,9 @@ import {
 import { LiteralKit, normalizePath } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Str, thunkFalse, thunkUndefined } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Console, Effect, FileSystem, flow, HashMap, HashSet, Order, Path, pipe, Tuple } from "effect";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -1754,7 +1754,7 @@ export const tsconfigSyncCommand = Command.make(
     const syncOptions = {
       mode,
       verbose,
-      ...R.getSomes({ filter }),
+      ...O.getSomesStruct({ filter }),
     };
 
     yield* syncTsconfigAtRoot(rootDir, syncOptions).pipe(

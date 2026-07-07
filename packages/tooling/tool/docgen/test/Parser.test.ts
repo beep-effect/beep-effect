@@ -973,10 +973,7 @@ Since v1.0.0`
           }),
           {
             signature: "declare const b: 1",
-            position: {
-              column: 11,
-              line: 7,
-            },
+            position: Domain.Position.new(7, 11),
             isNamespaceExport: false,
           }
         ),
@@ -1014,10 +1011,7 @@ Since v1.0.0`
           }),
           {
             signature: "export * from './example'",
-            position: {
-              column: 10,
-              line: 5,
-            },
+            position: Domain.Position.new(5, 10),
             isNamespaceExport: true,
           }
         ),
@@ -1055,10 +1049,7 @@ Since v1.0.0`
           }),
           {
             signature: "export * as example from './example'",
-            position: {
-              column: 11,
-              line: 5,
-            },
+            position: Domain.Position.new(5, 11),
             isNamespaceExport: true,
           }
         ),

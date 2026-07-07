@@ -1,49 +1,5 @@
 [
   {
-    "ruleId": "SFV4-equivalence",
-    "file": "packages/tooling/test-kit/test-utils/src/Schema.ts",
-    "line": 40,
-    "symbol": "assertSchemaArbitraryDecodesToSelf",
-    "smell": "The schema property-test helper compares decoded arbitrary values with node:util isDeepStrictEqual even though the helper already receives the schema and can derive the comparison from schema semantics.",
-    "proposedTarget": "Replace isDeepStrictEqual with const equivalent = S.toEquivalence(schema) and assert isValue(value) && equivalent(decode(value), value). This removes native structural equality from a schema-modeled helper and follows the repo's S.toEquivalence pattern (for example packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSchemas.ts:115); S.toEquivalence is verified in v4 at .repos/effect-v4/packages/effect/src/Schema.ts:13201.",
-    "confidence": 0.88,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-    "line": 219,
-    "symbol": "PgExternalTestDriverConfig.connectionUri",
-    "smell": "External PostgreSQL connection URI is modeled as broad S.String, with the postgres/postgresql protocol invariant enforced later in parsePgExternalConnectionUri instead of carried by the schema.",
-    "proposedTarget": "Introduce PgExternalConnectionUri = S.NonEmptyString.check(S.isPattern(/^postgres(?:ql)?:\\/\\//, { identifier: $I`PgExternalConnectionUriProtocol`, ... })).pipe($I.annoteSchema(...)) and use it for PgExternalTestDriverConfig.connectionUri and TestDatabaseInfoShape.connectionUri where appropriate. S.isPattern is verified in v4 at .repos/effect-v4/packages/effect/src/Schema.ts:6521; Posix/path-style schema exemplars live at packages/foundation/modeling/schema/src/PosixPath.ts:31.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-    "line": 126,
-    "symbol": "SQL harness public schema fields",
-    "smell": "Public SQL harness schemas carry class-level $I.annote annotations, but their reusable fields (connectionUri, databasePath, schema, tempDir, database, username, connectTimeoutMs, maxConnections, etc.) have no annotateKey descriptions; only the standalone numeric/prefix schema building blocks describe their own invariants.",
-    "proposedTarget": "Add field-level annotateKey metadata to TestDatabaseInfoShape, PgliteTestcontainersTestDriverConfig, PgExternalTestDriverConfig, and SqlTestHarnessError fields, reusing existing field descriptions from JSDoc/examples and the standalone PgliteTcpPort/PgExternalSchemaPrefix annotations. Effect v4 annotateKey is verified at .repos/effect-v4/packages/effect/src/Schema.ts:605.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/tooling/test-kit/test-utils/test/SqlTest.test.ts",
-    "line": 187,
-    "symbol": "SQL harness schema laws",
-    "smell": "SQL harness runtime schemas have representative fixture tests and invalid-port checks, but no S.toArbitrary-derived law coverage for TestDatabaseInfoShape, PgliteTestcontainersTestDriverConfig, PgExternalTestDriverConfig, or SqlTestHarnessError.",
-    "proposedTarget": "Use the package's own assertSchemaArbitraryDecodesToSelf helper to add additive property tests for the exported SQL harness schemas; for PgExternalTestDriverConfig, pair with the proposed PgExternalConnectionUri schema so generated values satisfy the same URI invariant. S.toArbitrary is verified in v4 at .repos/effect-v4/packages/effect/src/Schema.ts:12970.",
-    "confidence": 0.68,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
     "ruleId": "SFV4-precision-audit",
     "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
     "line": 126,

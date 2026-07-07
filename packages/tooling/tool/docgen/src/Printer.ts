@@ -6,6 +6,7 @@
  */
 
 import { $RepoDocgenId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { Effect, Layer, Match, Order, pipe } from "effect";
 import { dual, flow } from "effect/Function";
@@ -43,7 +44,8 @@ export const Printable = S.Union([
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("Printable", {
     description: "Union of documented entities that the markdown printer can render.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -65,28 +67,24 @@ const Markdown = {
   strikethrough: (content: string) => `~~${content}~~`,
 };
 
-function replaceJSDocLinks(text: string): string {
-  return pipe(
-    text,
-    Str.replaceWith(/\{@link\s+([^\s}]+)(?:\s+([^}]+))?}/g, (_match, link, label) => {
-      const linkText = P.isString(link) ? link : "";
-      const labelText = P.isString(label) ? label : linkText;
-      return `\`${Str.trim(labelText)}\``;
-    })
-  );
-}
+const replaceJSDocLinks: (text: string) => string = Str.replaceWith(
+  /\{@link\s+([^\s}]+)(?:\s+([^}]+))?}/g,
+  (_match, link, label) => {
+    const linkText = P.isString(link) ? link : "";
+    const labelText = P.isString(label) ? label : linkText;
+    return `\`${Str.trim(labelText)}\``;
+  }
+);
 
-function removeFenceMetadata(markdown: string): string {
-  return pipe(
-    markdown,
-    Str.replaceWith(/^(`{3,})([^\n]*)/gm, (_match, fence, info) => {
-      const fenceText = P.isString(fence) ? fence : "";
-      const infoText = P.isString(info) ? info : "";
-      const tokens = pipe(infoText, Str.trim, Str.split(/\s+/));
-      return `${fenceText}${pipe(tokens, A.head, O.getOrElse(thunkEmptyStr))}`;
-    })
-  );
-}
+const removeFenceMetadata: (markdown: string) => string = Str.replaceWith(
+  /^(`{3,})([^\n]*)/gm,
+  (_match, fence, info) => {
+    const fenceText = P.isString(fence) ? fence : "";
+    const infoText = P.isString(info) ? info : "";
+    const tokens = pipe(infoText, Str.trim, Str.split(/\s+/));
+    return `${fenceText}${pipe(tokens, A.head, O.getOrElse(thunkEmptyStr))}`;
+  }
+);
 
 const printOptionalDescription = Effect.fn("printOptionalDescription")(function* (description: string | undefined) {
   if (P.isUndefined(description)) {

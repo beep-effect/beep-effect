@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "SFV4-null-return",
-    "file": "packages/tooling/policy-pack/lint-rules/src/index.ts",
-    "line": 100,
-    "symbol": "RuleMetadata",
-    "smell": "`replaces: string | null` and `scope: string | null` model absence in the repo-owned rule registry with literal `null`; `RULES` then stores `null` at lines 135, 142, 144, 149, and 151.",
-    "proposedTarget": "Use `O.Option<string>` for `replaces` and `scope` (values `O.some(...)` / `O.none()`), or introduce a tiny `RuleMetadata` schema with `S.OptionFromNullOr(S.String)` if the registry is decoded from JSON later. In-package exemplar: rule utilities such as `getPropertyName` at `src/rules/utils.ts:190` and `classifyImportSpecifier` at `src/rules/utils.ts:314` already return `Option` rather than nullish sentinels.",
-    "confidence": 0.92,
-    "mechanization": "codemod",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-null-return",
     "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
     "line": 48,
     "symbol": "MaybeNode",

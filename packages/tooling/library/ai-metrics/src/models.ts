@@ -776,7 +776,9 @@ export class CodexTranscriptLine extends S.Class<CodexTranscriptLine>($I`CodexTr
   $I.annote("CodexTranscriptLine", {
     description: "Boundary shape decoded from Codex session JSONL lines.",
   })
-) {}
+) {
+  static readonly decodeJsonOption = S.decodeUnknownOption(S.fromJsonString(CodexTranscriptLine));
+}
 
 /**
  * Minimal external Claude JSONL shape.
@@ -801,7 +803,9 @@ export class ClaudeTranscriptLine extends S.Class<ClaudeTranscriptLine>($I`Claud
   $I.annote("ClaudeTranscriptLine", {
     description: "Boundary shape decoded from Claude Code project JSONL lines.",
   })
-) {}
+) {
+  static readonly decodeJsonOption = S.decodeUnknownOption(S.fromJsonString(ClaudeTranscriptLine));
+}
 
 /**
  * Minimal external OpenClaw JSONL shape.
@@ -826,4 +830,6 @@ export class OpenClawTranscriptLine extends S.Class<OpenClawTranscriptLine>($I`O
   $I.annote("OpenClawTranscriptLine", {
     description: "Boundary shape decoded from OpenClaw JSONL or exported event lines.",
   })
-) {}
+) {
+  static readonly decodeJsonOption = S.decodeUnknownOption(S.fromJsonString(OpenClawTranscriptLine));
+}

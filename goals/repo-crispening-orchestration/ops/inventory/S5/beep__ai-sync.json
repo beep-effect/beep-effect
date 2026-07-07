@@ -1,61 +1,6 @@
 [
   {
     "ruleId": "SFV4-precision-audit",
-    "file": "packages/tooling/library/ai-sync/src/models.ts",
-    "line": 249,
-    "symbol": "AiSyncSourceMetadata",
-    "smell": "Source identity, URL, version pin, and SHA-256 content hash fields are broad S.String values even though source-map.ts constructs finite kebab-case ids, HTTP(S) upstream URLs, release/version pins, and hashSourceText returns lowercase SHA-256 hex.",
-    "proposedTarget": "Introduce named schemas such as AiSyncSourceId = Slug or S.NonEmptyString.check(S.isPattern(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)), AiSyncSourceUrl = S.NonEmptyString.check(S.isPattern(/^https?:\\/\\//)), and AiSyncContentHash = Sha256Hex from @beep/schema/Sha256 (canonical exemplar at packages/foundation/modeling/schema/src/Sha256.ts:62). Use those in AiSyncSourceMetadata.contentHash and AiSyncDriftFinding.expectedHash/actualHash; decode hashSourceText output through AiSyncContentHash before constructing metadata.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/tooling/library/ai-sync/src/models.ts",
-    "line": 395,
-    "symbol": "AiSyncValidationResult.relativePath/schemaId",
-    "smell": "Validation result fields are broad S.String even though validation.ts has a closed mapping of supported relative paths to schema ids (.codex/config.toml, .mcp.json, .claude/settings.json, AGENTS.md, CLAUDE.md).",
-    "proposedTarget": "Model the finite mapping with annotated LiteralKit domains (for example AiSyncValidatedConfigPath and AiSyncValidationSchemaId) or a MappedLiteralKit path->schema-id map, then use those schemas in AiSyncValidationResult and AiSyncError.schemaId/relativePath. LiteralKit is already the local pattern for finite domains in this file at models.ts:25,65,109.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/tooling/library/ai-sync/src/schemas.ts",
-    "line": 99,
-    "symbol": "UnknownNativeSchemaCell",
-    "smell": "The unknown-native-schema marker repeats agent/domain as broad S.String even though @beep/ai-sync already defines AiSyncAgentId and AiSyncDomainId literal domains for the same matrix axes.",
-    "proposedTarget": "Import AiSyncAgentId and AiSyncDomainId from ./models.ts and replace agent/domain with those schemas while leaving reason as S.NonEmptyString or S.String depending on whether empty rationale is allowed; add annotateKey descriptions if the class remains a public schema.",
-    "confidence": 0.86,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-equivalence",
-    "file": "packages/tooling/library/ai-sync/src/drift.ts",
-    "line": 108,
-    "symbol": "metadataMatchesSourceMap",
-    "smell": "Generated-source freshness comparison is a hand-written structural equality chain over AiSyncSourceMetadata fields, while the package already models the compared data with schemas.",
-    "proposedTarget": "Create a small annotated comparable schema/projection for source-map identity fields (id, agent, domain, tier, url, versionPin, isOfficial, driftMechanism) and derive its comparator with S.toEquivalence; keep the explicit actual.contentHash presence check because full AiSyncSourceMetadata equality intentionally differs there. S.toEquivalence is verified in v4 at .repos/effect-v4/packages/effect/src/Schema.ts:13201 and the repo pattern exists at packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSchemas.ts:115.",
-    "confidence": 0.64,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/tooling/library/ai-sync/test/ai-sync.test.ts",
-    "line": 46,
-    "symbol": "AiSync authored schema test coverage",
-    "smell": "The package has representative fixture tests for generated artifacts, validation, drift, and transforms, but no S.toArbitrary-derived round-trip laws for hand-authored schema families such as AiSyncSourceMetadata, AiSyncSchemaCell, AiSyncDriftFinding/Report, AiSyncValidationResult, AgentInstructionDocument, and UnknownNativeSchemaCell.",
-    "proposedTarget": "Add additive @effect/vitest FastCheck laws that import production schemas from @beep/ai-sync and assert decode/encode stability for hand-authored schemas, e.g. fc.assert(fc.property(S.toArbitrary(AiSyncSourceMetadata), (value) => Equal.equals(S.decodeUnknownSync(AiSyncSourceMetadata)(S.encodeUnknownSync(AiSyncSourceMetadata)(value)), value))). S.toArbitrary is verified in v4 at .repos/effect-v4/packages/effect/src/Schema.ts:12970.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
     "file": "packages/tooling/library/ai-sync/src/generator.ts",
     "line": 153,
     "symbol": "Generated native-agent schema fields",

@@ -42,6 +42,7 @@ import { NonNegativeInt, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { makeTikaAppFileProcessingEngine, TikaAppEngineConfig } from "@beep/tika";
 import { makeUsptoError, normalizeUsptoApplicationNumber, normalizeUsptoPatentNumber, Uspto } from "@beep/uspto";
+import * as O from "@beep/utils/Option";
 import {
   Console,
   Context,
@@ -59,9 +60,7 @@ import {
   Stream,
 } from "effect";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { printLines } from "../../internal/cli/Printer.js";
@@ -1111,13 +1110,13 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
   const libpffEngine = yield* makePffexportFileProcessingEngine(
     PffexportEngineConfig.make({
       exportRoot: childrenRoot,
-      ...R.getSomes({ pffexportPath: O.fromUndefinedOr(options.pffexportPath) }),
+      ...O.getSomesStruct({ pffexportPath: O.fromUndefinedOr(options.pffexportPath) }),
     })
   );
   const tikaEngine = yield* makeTikaAppFileProcessingEngine(
     TikaAppEngineConfig.make({
       jarPath: options.tikaJarPath,
-      ...R.getSomes({ javaPath: O.fromUndefinedOr(options.javaPath) }),
+      ...O.getSomesStruct({ javaPath: O.fromUndefinedOr(options.javaPath) }),
     })
   );
   const engines: ReadonlyArray<FileProcessingEngineShape> = [libpffEngine, tikaEngine];
@@ -1161,7 +1160,7 @@ const extractCorpusImpl = Effect.fn("CorpusCommandService.extractCorpus")(functi
       name: basenameOf(record.relativePath),
       relativePath: `${record.sourceLabel}/${record.relativePath}`,
       sizeBytes: record.sizeBytes,
-      ...R.getSomes({ extension: O.fromUndefinedOr(extensionOf(basenameOf(record.relativePath))) }),
+      ...O.getSomesStruct({ extension: O.fromUndefinedOr(extensionOf(basenameOf(record.relativePath))) }),
     }).pipe(Effect.option);
 
     if (O.isNone(source)) {
@@ -2460,13 +2459,13 @@ const organizeRecordFor = (
     restoredFromRecycleBin: row.restored,
     sourceLabel: row.sourceLabel,
     sourceRelativePath: row.sourceRelativePath,
-    ...R.getSomes({
+    ...O.getSomesStruct({
       client: O.fromUndefinedOr(row.client),
       docket: O.fromUndefinedOr(row.docket),
       docketFamily: O.fromUndefinedOr(row.docketFamily),
       organizedRelativePath: O.fromUndefinedOr(organizedRelative),
     }),
-    ...R.getSomes({ versionIndex: O.map(O.fromUndefinedOr(versionIndex), NonNegativeInt.make) }),
+    ...O.getSomesStruct({ versionIndex: O.map(O.fromUndefinedOr(versionIndex), NonNegativeInt.make) }),
   });
 
 const writeOrganizedTable = Effect.fn("CorpusCommandService.writeOrganizedTable")(function* (
@@ -2835,11 +2834,11 @@ const enrichCorpusImpl = Effect.fn("CorpusCommandService.enrichCorpus")(function
           occurrenceCount: NonNegativeInt.make(candidate.occurrenceCount),
           parentApplicationNumbers: continuity.parentApplicationNumbers,
           status: "resolved",
-          ...R.getSomes({
-            firstApplicantName: O.fromUndefinedOr(resolved.success.firstApplicantName),
-            firstInventorName: O.fromUndefinedOr(resolved.success.firstInventorName),
-            inventionTitle: O.fromUndefinedOr(resolved.success.inventionTitle),
-            patentNumber: O.fromUndefinedOr(resolved.success.patentNumber),
+          ...O.getSomesStruct({
+            firstApplicantName: resolved.success.firstApplicantName,
+            firstInventorName: resolved.success.firstInventorName,
+            inventionTitle: resolved.success.inventionTitle,
+            patentNumber: resolved.success.patentNumber,
           }),
         });
       }),

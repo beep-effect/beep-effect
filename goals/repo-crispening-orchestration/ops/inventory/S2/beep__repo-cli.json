@@ -1,16 +1,5 @@
 [
   {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
-    "line": 151,
-    "symbol": "DocgenConfigDocument",
-    "smell": "`DocgenConfigDocument` models `srcDir` and `exclude` as optional keys, then both the operations and quality paths re-default them in bodies (`config.srcDir ?? 'src'`, `config.exclude ?? A.empty()` at Operations.ts:1507-1508 and Quality.ts:1338-1339).",
-    "proposedTarget": "Move the decode defaults onto `DocgenConfigDocument`: `srcDir: S.String.pipe(S.optionalKey, SchemaUtils.withKeyDefaults('src'))` and `exclude: S.String.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults(A.empty<string>()))`. In-scope exemplar: `CreatePackage/FileGenerationPlanService.ts:134` uses `SchemaUtils.withKeyDefaults(A.empty<PlannedSymlink>())`; package-local defaults already use v4 `S.withConstructorDefault`/`S.withDecodingDefault` in `OperationPlan.ts:375-405`.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
     "ruleId": "SFV4-normalization",
     "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
     "line": 1092,
@@ -19,7 +8,11 @@
     "proposedTarget": "Introduce a positive-int concurrency schema for `CorpusExtractOptions.concurrency` and give it a decode/default path (`SchemaUtils.withKeyDefaults(4)` if missing should decode to 4). Express the floor/clamp policy as a `SchemaTransformation` if compatibility requires accepting fractional/low values; otherwise reject with a bounded integer schema. V4 transformation APIs were verified in `.repos/effect-v4` (`SchemaTransformation.transform` / `transformOrFail`, `S.decodeTo`).",
     "confidence": 0.68,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -30,7 +23,11 @@
     "proposedTarget": "Move the default to `CorpusExtractOptions`: `outLabel: S.String.pipe(S.optionalKey, SchemaUtils.withKeyDefaults('extract'))`, then `extractCorpusImpl` can read `options.outLabel` directly. Use the same helper shape as `AnnotatedTextGraph.ts:274-283` for optional-key defaults.",
     "confidence": 0.8,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -41,7 +38,11 @@
     "proposedTarget": "Default the schema fields instead: `sources: CorpusSalvageSourceSpec.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults(A.empty<CorpusSalvageSourceSpec>()))`, `sampleStride` as a positive-int schema with `SchemaUtils.withKeyDefaults(1)`, and `dedupe` as a boolean key default if absence means false. Keep `runLabel` absence as Option via `S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault)`.",
     "confidence": 0.78,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -52,7 +53,11 @@
     "proposedTarget": "Model `lookupDelayMillis` as a non-negative integer schema with `SchemaUtils.withKeyDefaults(400)`; use a transformation only if the current floor/clamp acceptance is wire-compatible behavior that must remain. Same pattern can be reviewed for `maxLookups` at Corpus.schemas.ts:1115 / service line 2787.",
     "confidence": 0.76,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -63,7 +68,11 @@
     "proposedTarget": "Replace the partial-input helper with a schema-backed `ArchitecturePlanTargetInput` transformation: optional/defaulted keys decode to the full `ArchitecturePlanTarget` and derive `conceptPath`. Use the existing `OperationPlan.ts:375-405` field-default style for simple defaults and `CreatePackage/ConfigUpdater.ts:155-160` / `TemplateService.ts:116-123` as in-package `S.decodeTo(..., SchemaTransformation.transform(...))` exemplars for whole-object derivation.",
     "confidence": 0.72,
     "mechanization": "assisted",
-    "roiRank": 6
+    "roiRank": 6,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -74,7 +83,11 @@
     "proposedTarget": "Default `exitCode` in the schema (`S.Finite.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(1))`) and model `cause` as `S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault)`, following the repo error exemplar `packages/foundation/modeling/schema/src/StatusCauseError.ts:42` and the Option default exemplar `Lexical.model.ts:687-688`.",
     "confidence": 0.82,
     "mechanization": "assisted",
-    "roiRank": 7
+    "roiRank": 7,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -85,7 +98,11 @@
     "proposedTarget": "Use `S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault)` and update constructors to pass `O.some(cause)` / omit as `O.none()`. In-repo exemplars: `StatusCauseError.ts:42`, `Glob.ts:142`, and `Lexical.model.ts:687-688`.",
     "confidence": 0.74,
     "mechanization": "assisted",
-    "roiRank": 8
+    "roiRank": 8,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -96,7 +113,11 @@
     "proposedTarget": "Use the same `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` error-cause shape as `@beep/schema` / foundation exemplars, then let `FilesCommandError.new` construct an Option-valued cause.",
     "confidence": 0.74,
     "mechanization": "assisted",
-    "roiRank": 9
+    "roiRank": 9,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -107,7 +128,11 @@
     "proposedTarget": "Use a whole-record transformation for the input shape: decode optional override keys into a full `ConfigUpdateTarget` with alias targets derived from `packagePath`. Because the defaults depend on a sibling field, prefer `S.decodeTo(..., SchemaTransformation.transform(...))` (as in `ConfigUpdater.ts:155-160`) over per-field `withKeyDefaults`.",
     "confidence": 0.62,
     "mechanization": "assisted",
-    "roiRank": 10
+    "roiRank": 10,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -118,7 +143,11 @@
     "proposedTarget": "Keep the SQL encoder's `null` output per fence 2, but model the decoded/domain side as Option: `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` for the optional manifest fields. The SQL row writer then maps `O.none()` to `null` explicitly; public JSON compatibility may need an encode snapshot.",
     "confidence": 0.64,
     "mechanization": "assisted",
-    "roiRank": 11
+    "roiRank": 11,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -129,7 +158,11 @@
     "proposedTarget": "As with `CorpusOrganizeRecord`, keep SQL null encoding but decode/domain-model absence as `Option` via `S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)`. The enrichment service should stop carrying undefined through domain records before the SQL boundary.",
     "confidence": 0.64,
     "mechanization": "assisted",
-    "roiRank": 12
+    "roiRank": 12,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -140,7 +173,11 @@
     "proposedTarget": "Model these manifest option fields as `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` so `makeNormalizeManifestOptions` can pass the Options directly. In-package positive exemplar: `NormalizeFilesOptions.manifest/maxLongEdge/moveDuplicatesTo` already use `S.Option(...).pipe(S.withConstructorDefault(...))` at Files.schemas.ts:1237-1241.",
     "confidence": 0.66,
     "mechanization": "assisted",
-    "roiRank": 13
+    "roiRank": 13,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -151,7 +188,11 @@
     "proposedTarget": "Use `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` for report/entry absence fields, preserving the encoded optional-key form while making the decoded shape Option-first. The local constructor can then avoid sparse object defaults and use Option values as data.",
     "confidence": 0.63,
     "mechanization": "assisted",
-    "roiRank": 14
+    "roiRank": 14,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-null-return",
@@ -162,7 +203,11 @@
     "proposedTarget": "Decode/report absence with `S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault)` and make the helpers return `O.Option<string>`. If the JSON report must stay byte-identical, use the Option-from-null codec at the report boundary so `None` still encodes as `null`.",
     "confidence": 0.72,
     "mechanization": "assisted",
-    "roiRank": 15
+    "roiRank": 15,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-null-return",
@@ -173,7 +218,11 @@
     "proposedTarget": "Use `S.OptionFromNullOr(S.String).pipe(SchemaUtils.withNoneDefault)` for nullable report fields and return `O.Option<string>` from helpers such as `podGpuDisplayName`; keep the JSON wire form null through the codec if report compatibility requires it.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 16
+    "roiRank": 16,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -184,7 +233,11 @@
     "proposedTarget": "Move constant bool/count/string defaults to the option schema with `SchemaUtils.withKeyDefaults(...)`; for dynamic readiness timeout, use a constructor/default thunk if it must be evaluated at construction. This mirrors `Files.schemas.ts:1233-1241` and `OperationPlan.ts:375-405` defaulted option fields.",
     "confidence": 0.76,
     "mechanization": "assisted",
-    "roiRank": 17
+    "roiRank": 17,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -195,7 +248,11 @@
     "proposedTarget": "Represent CLI timestamp input as a transformation schema, e.g. `AiMetricsEpochMillisFromCliString = S.String.pipe(S.decodeTo(S.Finite, SchemaTransformation.transformOrFail(...)))`, then `parseSinceEpochMillis` / `parseOptionalEpochMillis` decode through the schema. In-scope schema-transformation exemplar: `CreatePackage/TemplateService.ts:116-123`.",
     "confidence": 0.6,
     "mechanization": "assisted",
-    "roiRank": 18
+    "roiRank": 18,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-null-return",
@@ -206,7 +263,11 @@
     "proposedTarget": "Keep secret values redacted, but keep absence typed: return `O.Option<string>` from the resolvers and make the require helpers consume Option. The final install input can then use Option-valued fields directly instead of round-tripping through undefined.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 19
+    "roiRank": 19,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -217,7 +278,11 @@
     "proposedTarget": "Introduce a `BareFileExtension` transformation schema (string -> no leading dot, lowercase) and decode extension-bearing fields through it before literal checks. Use `TemplateService.ts:116-123` and `.repos/effect-v4` `SchemaTransformation.trim/toLowerCase` as the API pattern; keep path-safety validation separate.",
     "confidence": 0.64,
     "mechanization": "assisted",
-    "roiRank": 20
+    "roiRank": 20,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -228,7 +293,11 @@
     "proposedTarget": "Decode the raw command flags once into a schema-backed command input where empty string means `O.none()` for optional fields and default package type stays on the schema. A small `EmptyStringAsNone` `S.decodeTo(..., SchemaTransformation.transform(...))` would match the package-local transformation style in `TemplateService.ts:116-123`.",
     "confidence": 0.58,
     "mechanization": "judgment",
-    "roiRank": 21
+    "roiRank": 21,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -329,7 +398,11 @@
     "proposedTarget": "Model absence on the error payloads with `S.OptionFromOptionalKey(...)` for cause/context fields and default `exitCode` on the schema (`S.Finite.pipe(SchemaUtils.withKeyDefaults(1))`) so `Runtime.errorExitCode` reads the decoded field directly. In-repo exemplars: `packages/foundation/modeling/schema/src/StatusCauseError.ts:42`, `packages/foundation/modeling/schema/src/SecureHeaderError/SecureHeaderError.errors.ts:16`, and `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:34` for `withNoneDefault`.",
     "confidence": 0.78,
     "mechanization": "assisted",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -340,7 +413,11 @@
     "proposedTarget": "Use Option-shaped context fields (`S.OptionFromOptionalKey(S.String)` / `S.OptionFromOptionalKey(S.Defect({ includeStack: true }))`) and a schema-level exit-code default for `QualityScriptCommandError`. Keep the encoded sparse object form with `OptionFromOptionalKey`; constructor helpers can accept raw option bags and normalize once at the boundary.",
     "confidence": 0.78,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -351,7 +428,11 @@
     "proposedTarget": "`exitCode: S.Finite.pipe(SchemaUtils.withKeyDefaults(1))`; `command`, `file`, and `cause` as `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` if constructor omission should remain ergonomic. This mirrors the repo error-cause Option shape verified in `StatusCauseFields` and `SecureHeaderError`.",
     "confidence": 0.82,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -362,7 +443,11 @@
     "proposedTarget": "Move absence to the schema with `S.OptionFromOptionalKey(S.String)` for `targetId`/`file` and `S.OptionFromOptionalKey(S.Defect({ includeStack: true }))` for `cause`; use `SchemaUtils.withNoneDefault` if call sites should omit absent Options. Keep rendering responsible for converting Options into CLI text.",
     "confidence": 0.74,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -373,7 +458,11 @@
     "proposedTarget": "Make `file`, `skill`, and `cause` Option-valued encoded-optional fields on `SkillsCommandError`, then replace the branchy builder with a single schema-normalized constructor (`file: O.fromUndefinedOr(file)`, `skill: O.fromUndefinedOr(skill)`, `cause: O.some(cause)`). In-repo helper: `optionalProp` is fine for final encoded sparse records, but the error payload itself should be Option-shaped.",
     "confidence": 0.72,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -384,7 +473,11 @@
     "proposedTarget": "`cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))` (plus `SchemaUtils.withNoneDefault` only if a no-cause constructor is introduced). This matches the repo's Option-first error-cause exemplars in `StatusCauseError` / `SecureHeaderError` and avoids another optional-key error variant.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 6
+    "roiRank": 6,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -395,7 +488,11 @@
     "proposedTarget": "Use `S.OptionFromOptionalKey(S.Defect({ includeStack: true }))` for `cause`; constructors pass `O.some(cause)` and any future no-cause path can omit via `SchemaUtils.withNoneDefault` rather than `undefined`.",
     "confidence": 0.68,
     "mechanization": "assisted",
-    "roiRank": 7
+    "roiRank": 7,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -406,7 +503,11 @@
     "proposedTarget": "`cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))`; update `new` / `mapError` to pass `O.some(cause)`. This is the same edit shape as the other command-suite tagged errors.",
     "confidence": 0.68,
     "mechanization": "assisted",
-    "roiRank": 8
+    "roiRank": 8,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -417,18 +518,11 @@
     "proposedTarget": "Decode a raw input schema into a resolved options schema: simple defaults (`rootDir`) can use `SchemaUtils.withKeyDefaults(defaultRepoRoot)`, dynamic `generatedAt` can use `S.withConstructorDefault(Effect.map(DateTime.now, DateTime.formatIso))`, and output paths should be derived in a whole-record `S.decodeTo(..., SchemaTransformation.transform/transformOrFail(...))` because they depend on `repoRoot`. Verified local exemplar: `Graphiti/internal/ProxyConfig.ts:19-70` carries env defaults/normalization in schema getters.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 9
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.command.ts",
-    "line": 236,
-    "symbol": "SharedOptions",
-    "smell": "`SharedOptions` models most shared command flags as optional keys, then `runYeetMode` applies a wall of `??` defaults (`false`, empty strings, `-1`, `\"full\"`, bot list) at lines 274-296 before constructing `YeetRunOptions`.",
-    "proposedTarget": "Move defaults into the option schema or a `SharedOptions -> YeetRunOptions` transformation: bools use `SchemaUtils.BoolKeyDefaultFalse`, strings/numbers/literals use `SchemaUtils.withKeyDefaults(...)`, and `message` should be included in the same normalized input shape instead of defaulted separately. Keep `Flag.withDefault(...)` at the CLI parser boundary; this finding is about the second default wall after parsing.",
-    "confidence": 0.84,
-    "mechanization": "assisted",
-    "roiRank": 10
+    "roiRank": 9,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -439,7 +533,11 @@
     "proposedTarget": "Keep the encoded sparse JSON form with `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` for optional issue metadata, then helpers consume Options directly and only rendering/grouping code chooses display defaults like `@beep/root`. Public JSON compatibility needs a before/after snapshot because this is a packet/index wire surface.",
     "confidence": 0.63,
     "mechanization": "assisted",
-    "roiRank": 11
+    "roiRank": 11,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -450,7 +548,11 @@
     "proposedTarget": "Promote a reusable `BareVideoFileExtension`/`BareFileExtension` transformation schema near `VideoFileExtension` (`packages/foundation/modeling/schema/src/FileExtension.ts:136`) that decodes `.MP4`-style input to the bare lowercase literal before the guard. This mirrors the part1 `Files.media.ts:355` candidate and keeps path-safety checks separate from extension normalization.",
     "confidence": 0.64,
     "mechanization": "assisted",
-    "roiRank": 12
+    "roiRank": 12,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -461,7 +563,11 @@
     "proposedTarget": "Represent the upstream XML row -> normalized entry parts as schema transformations: e.g. `NormalizedIsoCountryName = S.String.pipe(S.decodeTo(S.String, SchemaTransformation.transform(...)))` and an `Iso4217MinorUnits` transform that maps `\"N.A.\"` to `0` or fails with `SyncDataToTsError`. Then `normalizeIso4217Document` groups already-normalized values instead of carrying trim/titlecase/parse rules in the loop.",
     "confidence": 0.6,
     "mechanization": "assisted",
-    "roiRank": 13
+    "roiRank": 13,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -472,7 +578,11 @@
     "proposedTarget": "Add schema-level transforms for normalized media type tokens and the rendered entry input: decode `registry.title` and `record.name` through a lowercasing token schema, and model `date` as `S.OptionFromOptionalKey(S.String)` if it remains absent on some upstream records. `IanaMediaTypeEntry.make` should receive already-normalized values.",
     "confidence": 0.6,
     "mechanization": "assisted",
-    "roiRank": 14
+    "roiRank": 14,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -483,7 +593,11 @@
     "proposedTarget": "Follow the local `GraphitiProxyConfig` pattern: define raw env/input schemas for proxy ensure/restore/service config and decode them to resolved config via `S.decodeTo` + `SchemaGetter`/`SchemaTransformation`, with `S.withConstructorDefault` / `S.withDecodingDefault` on defaulted fields. This keeps env parsing at the config boundary and removes the duplicated default helpers from operational bodies.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 15
+    "roiRank": 15,
+    "exception": {
+      "reason": "Absorbing this default/normalization/nullish behavior changes command input construction or decoded public form and needs a coordinated consumer/parity sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",

@@ -120,7 +120,6 @@ import {
   pipe,
   Redacted,
 } from "effect";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { jsonFlag } from "../../internal/cli/Flags.js";
@@ -637,7 +636,7 @@ const parseRetentionSelector = Effect.fn("AIMetrics.parseRetentionSelector")(fun
 
   return AiMetricsRetentionSelector.make({
     dataRoot: O.getOrElse(dataRoot, () => localCollectorDataRoot),
-    ...R.getSomes({
+    ...O.getSomesStruct({
       beforeEpochMillis,
       sinceEpochMillis,
       untilEpochMillis,

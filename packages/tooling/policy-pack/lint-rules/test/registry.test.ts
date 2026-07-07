@@ -1,6 +1,9 @@
-import { RULE_NAMES, RULES, rulePath, rulesDir } from "@beep/lint-rules";
+import { RULE_NAMES, RULES, RuleRegistrySchema, rulePath, rulesDir } from "@beep/lint-rules";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Path } from "effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 import { provideScopedLayer } from "./harness.ts";
 
@@ -8,6 +11,9 @@ const run = <A, E>(program: Effect.Effect<A, E, NodeServices.NodeServices>): Pro
   Effect.runPromise(program.pipe(provideScopedLayer(NodeServices.layer)));
 
 const sortedRuleNames = [...RULE_NAMES].sort();
+const RuleRegistryArbitrary = S.toArbitrary(RuleRegistrySchema);
+const decodeRuleRegistry = S.decodeUnknownSync(RuleRegistrySchema);
+const encodeRuleRegistry = S.encodeSync(RuleRegistrySchema);
 
 /** Repo root (five levels up from `test/registry.test.ts`). */
 const repoRoot = decodeURIComponent(new URL("../../../../../", import.meta.url).pathname);
@@ -52,6 +58,52 @@ describe("rule registry", () => {
       expect(["warn", "error"]).toContain(RULES[name].severity);
       expect(RULES[name].summary.length).toBeGreaterThan(0);
     }
+    expect(O.isSome(RULES["no-native-error"].replaces)).toBe(true);
+    expect(O.isNone(RULES["no-bigint-literals"].replaces)).toBe(true);
+  });
+
+  it("preserves the encoded rule registry wire shape", () => {
+    expect(JSON.stringify(encodeRuleRegistry(RULES))).toBe(
+      JSON.stringify({
+        "no-native-error": {
+          name: "no-native-error",
+          severity: "error",
+          replaces: "lint tooling-tagged-errors",
+          summary: "Disallow native Error construction in tooling source; use TaggedErrorClass.",
+          scope: "packages/tooling/**/src/**",
+        },
+        "no-bigint-literals": {
+          name: "no-bigint-literals",
+          severity: "warn",
+          replaces: null,
+          summary: "Disallow bigint literals (1n, 0xFFn, ...); use BigInt(value).",
+          scope: "**/src/**",
+        },
+        "no-empty-named-blocks": {
+          name: "no-empty-named-blocks",
+          severity: "error",
+          replaces: null,
+          summary: 'Disallow empty named import blocks: `import {} from "..."`.',
+          scope: null,
+        },
+        "prefer-array-flat-map": {
+          name: "prefer-array-flat-map",
+          severity: "error",
+          replaces: null,
+          summary: "Prefer `.flatMap(f)` over `.map(f).flat()`.",
+          scope: null,
+        },
+      })
+    );
+  });
+
+  it("round-trips schema-derived rule registries", () => {
+    fc.assert(
+      fc.property(RuleRegistryArbitrary, (registry) => {
+        expect(decodeRuleRegistry(encodeRuleRegistry(registry))).toEqual(registry);
+      }),
+      { numRuns: 50 }
+    );
   });
 
   it("every rule is wired into the repo-root biome.jsonc lint pass", () =>

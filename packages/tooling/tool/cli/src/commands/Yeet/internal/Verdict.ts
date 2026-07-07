@@ -13,7 +13,6 @@ import { LiteralKit } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { commandTextForStep, RepoPlanStep, RepoStepRunResult } from "../../../internal/repo-run/index.ts";
 import { knownSubLaneRemediationFromOutput } from "./QualityIssueIndex.ts";
@@ -224,7 +223,7 @@ const laneFromExecuted = (executed: YeetExecutedStep): YeetVerdictLane => {
     phase: executed.step.phase,
     status: failed ? "failed" : "passed",
     exitCode: executed.result.exitCode,
-    ...R.getSomes({ repairCommand }),
+    ...O.getSomesStruct({ repairCommand }),
   });
 };
 

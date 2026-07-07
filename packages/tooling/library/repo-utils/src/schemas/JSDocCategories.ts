@@ -8,7 +8,7 @@
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Match, pipe } from "effect";
+import { Match, pipe, Result, SchemaGetter } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -112,6 +112,24 @@ export const CANONICAL_JSDOC_CATEGORIES = [
 ] as const;
 
 /**
+ * Canonical category literal schema used by `@category` JSDoc tags.
+ *
+ * @example
+ * ```ts
+ * import { JSDocCategory } from "@beep/repo-utils/schemas/JSDocCategories"
+ * const category = JSDocCategory.Enum.validation
+ * console.log(category)
+ * ```
+ * @category schemas
+ * @since 0.0.0
+ */
+export const JSDocCategory = LiteralKit(CANONICAL_JSDOC_CATEGORIES).pipe(
+  $I.annoteSchema("JSDocCategory", {
+    description: "Canonical category literal used by @category JSDoc tags.",
+  })
+);
+
+/**
  * Canonical category literal used by `@category` JSDoc tags.
  *
  * @example
@@ -123,7 +141,7 @@ export const CANONICAL_JSDOC_CATEGORIES = [
  * @category type-level
  * @since 0.0.0
  */
-export type JSDocCategory = (typeof CANONICAL_JSDOC_CATEGORIES)[number];
+export type JSDocCategory = typeof JSDocCategory.Type;
 
 /**
  * Normalization status for an observed `@category` value.
@@ -245,7 +263,7 @@ const JSDOC_CATEGORY_REJECTED_VALUES: Readonly<Record<string, string>> = {
 };
 
 const canonicalCategoryOption = (value: string): O.Option<JSDocCategory> =>
-  A.findFirst(CANONICAL_JSDOC_CATEGORIES, (category) => category === value);
+  A.findFirst(JSDocCategory.Options, (category) => category === value);
 
 const aliasedCategoryOption = (value: string): O.Option<JSDocCategory> => R.get(JSDOC_CATEGORY_ALIASES, value);
 
@@ -345,8 +363,7 @@ export const normalizeJSDocCategoryKey = (value: string): string => {
  * @category predicates
  * @since 0.0.0
  */
-export const isCanonicalJSDocCategory = (value: string): value is JSDocCategory =>
-  O.isSome(canonicalCategoryOption(value));
+export const isCanonicalJSDocCategory: (value: string) => value is JSDocCategory = S.is(JSDocCategory);
 
 /**
  * Normalize and classify a single observed `@category` value.
@@ -362,7 +379,7 @@ export const isCanonicalJSDocCategory = (value: string): value is JSDocCategory 
  * @category normalization
  * @since 0.0.0
  */
-export const normalizeJSDocCategory = (value: string): JSDocCategoryNormalization => {
+const normalizeJSDocCategoryInput = (value: string): JSDocCategoryNormalization => {
   const original = Str.trim(value);
 
   if (Str.length(original) > MAX_JSDOC_CATEGORY_LENGTH) {
@@ -434,6 +451,35 @@ export const normalizeJSDocCategory = (value: string): JSDocCategoryNormalizatio
     message: `Unknown @category value ${original}.`,
   });
 };
+
+const JSDocCategoryNormalizationFromString = S.String.pipe(
+  S.decodeTo(JSDocCategoryNormalization, {
+    decode: SchemaGetter.transform(normalizeJSDocCategoryInput),
+    encode: SchemaGetter.forbidden(() => "JSDoc category normalization is decode-only."),
+  }),
+  $I.annoteSchema("JSDocCategoryNormalizationFromString", {
+    description: "Decode-only normalization from free-form @category text to the canonical normalization result.",
+  })
+);
+
+/**
+ * Normalize and classify free-form `@category` text.
+ *
+ * @param value - Free-form category text read from a JSDoc block.
+ * @returns Canonical, alias, rejected, or unknown category normalization result.
+ * @example
+ * ```ts
+ * import { normalizeJSDocCategory } from "@beep/repo-utils/schemas/JSDocCategories"
+ *
+ * const normalized = normalizeJSDocCategory("DomainModel")
+ * console.log(normalized.status)
+ * ```
+ *
+ * @category normalization
+ * @since 0.0.0
+ */
+export const normalizeJSDocCategory = (value: string): JSDocCategoryNormalization =>
+  Result.getOrThrow(S.decodeUnknownResult(JSDocCategoryNormalizationFromString)(value));
 
 /**
  * Return true when a category is canonical or accepted as a migration alias.

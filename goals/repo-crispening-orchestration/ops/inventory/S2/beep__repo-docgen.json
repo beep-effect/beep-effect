@@ -2,46 +2,17 @@
   {
     "ruleId": "SFV4-defaults",
     "file": "packages/tooling/tool/docgen/src/Domain.ts",
-    "line": 793,
-    "symbol": "File.new",
-    "smell": "`const isOverwritable = options.isOverwritable ?? false;` is a constructor-only boolean default for `File.isOverwritable`, whose schema field is currently required (`isOverwritable: S.Boolean` at Domain.ts:779).",
-    "proposedTarget": "Move the default onto the field: `isOverwritable: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)))`, then `File.new` can pass `options.isOverwritable` directly or the options type can require only real overrides. Effect v4 `S.withConstructorDefault` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:5592-5652`; in-package exemplar: `Configuration.ts:138-155` shows resolved config values as schema fields, and repo exemplar `packages/tooling/library/ai-metrics/src/source-discovery.ts:186-188` applies the same boolean default pattern.",
-    "confidence": 0.92,
-    "mechanization": "codemod",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/tooling/tool/docgen/src/Configuration.ts",
-    "line": 474,
-    "symbol": "load",
-    "smell": "`const include = O.getOrElse(args.include, () => docgenConfig?.include ?? []);` and `exclude` at line 475 duplicate array defaults that belong on `ConfigurationSchema.include/exclude` (Configuration.ts:72-73).",
-    "proposedTarget": "Put empty-array defaults on the config schema: `include: S.Array(S.String).pipe(S.optionalKey, SchemaUtils.withEmptyArrayDefaults<string>())` and same for `exclude`, or use Effect v4 `S.withConstructorDefault` + `S.withDecodingDefaultKey` if avoiding `SchemaUtils`. Local exemplar: `packages/tooling/tool/cli/src/commands/CreatePackage/ConfigUpdater.ts:101` uses `SchemaUtils.withEmptyArrayDefaults`; Effect v4 `withDecodingDefaultKey` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:5656-5723`.",
-    "confidence": 0.86,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/tooling/tool/docgen/src/Configuration.ts",
-    "line": 461,
-    "symbol": "load",
-    "smell": "`srcDir`, `outDir`, `theme`, `tscExecutable`, `enableSearch`, `enforceDescriptions`, `enforceExamples`, `enforceVersion`, and `runExamples` are resolved by body-level fallback helpers even though most are constant defaults for `ConfigurationSchema` fields.",
-    "proposedTarget": "Move constant docgen.json defaults to `ConfigurationSchema` with `S.withDecodingDefaultKey(Effect.succeed(...))` (or `SchemaUtils.withKeyDefaults` for simple constants), leaving package-derived `projectHomepage` and `srcLink` in `load`. In-repo exemplars: `packages/tooling/library/ai-metrics/src/config-snapshot.ts:54-55` and `packages/tooling/library/ai-metrics/src/forwarder.ts:373-380` use constructor+decoding defaults for constants.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/tooling/tool/docgen/src/Domain.ts",
     "line": 123,
     "symbol": "Doc",
     "smell": "`description: OptionalString` is `S.UndefinedOr(S.String)` (Domain.ts:19), so the normalized Doc model carries absence as `undefined`; parser/printer helpers then branch on `undefined` instead of `Option`.",
     "proposedTarget": "Replace `OptionalString` with an Option codec for Doc-owned absence, e.g. `const OptionalDescription = S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault)` or `S.OptionFromOptionalKey` if the encoded key should be omitted. Effect v4 `OptionFromUndefinedOr`/`OptionFromOptionalKey` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:8589-8669`; local exemplar: `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:31-35`.",
     "confidence": 0.76,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Changing Doc.description from string | undefined to Option would alter the exported Doc model, Parser.parseComment shape, and CLI docgen quality consumers outside this package; keep the current absence contract until the consumer sweep can be scoped with the CLI package.",
+      "boundary": "cross-package public-form ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -52,7 +23,11 @@
     "proposedTarget": "Fold this into the Doc description schema: `DocDescription = S.OptionFromUndefinedOr(NonEmptyTrimmedStr).pipe(SchemaUtils.withNoneDefault)` and let `parseComment` return the decoded Option. Local trim+non-empty schema exemplar: `packages/foundation/modeling/schema/src/String.ts:61`; Effect v4 `S.Trim` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:11526-11546`.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Moving description normalization into Doc.description would change the exported parseComment return contract used by the CLI quality command; this requires a same-PR consumer sweep outside the package scope.",
+      "boundary": "cross-package public-form ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -63,18 +38,11 @@
     "proposedTarget": "Introduce a tag-text schema (`S.Trim` or `NonEmptyTrimmedStr` depending on whether empty tags are meaningful) and make `Doc.tags` carry the normalized type instead of a `string | undefined` array. Same local schema exemplar as `packages/foundation/modeling/schema/src/String.ts:61`; use a package-local decision for whether empty tag descriptions remain allowed.",
     "confidence": 0.62,
     "mechanization": "assisted",
-    "roiRank": 6
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/tooling/tool/docgen/src/ProofManifest.ts",
-    "line": 255,
-    "symbol": "DocgenProofManifestVerification",
-    "smell": "`reason: S.optionalKey(S.String)` is later reassembled with `...R.getSomes({ reason: O.fromUndefinedOr(options.reason) })` at ProofManifest.ts:382, mirroring optional field absence in constructor code.",
-    "proposedTarget": "Model `reason` as `S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` and pass `options.reason` as an Option, or keep the encoded optional key while using `O.getSomesStruct` if S3 owns the immediate cleanup. Local exemplar: `packages/foundation/modeling/lexical/src/Lexical.model.ts:687-688`.",
-    "confidence": 0.58,
-    "mechanization": "judgment",
-    "roiRank": 7
+    "roiRank": 6,
+    "exception": {
+      "reason": "Tag text normalization preserves parser fidelity today, including empty values such as @deprecated -> [\"\"]; changing the schema shape would alter exported parseComment tags consumed by the CLI quality command.",
+      "boundary": "cross-package parser-fidelity ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",

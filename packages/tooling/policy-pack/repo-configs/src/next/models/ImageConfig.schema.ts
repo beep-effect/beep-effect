@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoConfigsId } from "@beep/identity";
-import { LiteralKit, NonNegNum, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, NonNegNum, SchemaUtils } from "@beep/schema";
 import { Struct } from "@beep/utils";
 import { Result } from "effect";
 import * as S from "effect/Schema";
@@ -32,6 +32,12 @@ export const LoaderValue = LiteralKit(["default", "imgix", "cloudinary", "akamai
   })
 );
 
+const ImageQuality = S.Int.check(S.isBetween({ minimum: 1, maximum: 100 })).pipe(
+  $I.annoteSchema("ImageQuality", {
+    description: "Next.js image quality value from 1 through 100.",
+  })
+);
+
 /**
  * Configuration properties passed to a Next.js image loader function.
  *
@@ -48,7 +54,7 @@ export class ImageLoaderProps extends S.Class<ImageLoaderProps>($I`ImageLoaderPr
   {
     src: S.String,
     width: NonNegNum,
-    quality: S.optionalKey(S.Finite),
+    quality: S.optionalKey(ImageQuality),
   },
   $I.annote("ImageLoaderProps", {
     description: "Configuration properties for the image loader component.",
@@ -202,7 +208,7 @@ export type ImageFormat = typeof ImageFormat.Type;
 export class ImageConfigComplete extends S.Class<ImageConfigComplete>($I`ImageConfigComplete`)(
   {
     /** @see [Device sizes documentation](https://nextjs.org/docs/api-reference/next/image#device-sizes) */
-    deviceSizes: S.Finite.pipe(
+    deviceSizes: NonNegativeInt.pipe(
       S.Array,
       S.mutable,
       S.annotateKey({
@@ -211,7 +217,7 @@ export class ImageConfigComplete extends S.Class<ImageConfigComplete>($I`ImageCo
     ),
 
     /** @see [Image sizing documentation](https://nextjs.org/docs/app/building-your-application/optimizing/images#image-sizing) */
-    imageSizes: S.Finite.pipe(
+    imageSizes: NonNegativeInt.pipe(
       S.Array,
       S.mutable,
       S.annotateKey({
@@ -252,7 +258,7 @@ export class ImageConfigComplete extends S.Class<ImageConfigComplete>($I`ImageCo
     }),
 
     /** @see [Cache behavior](https://nextjs.org/docs/api-reference/next/image#caching-behavior) */
-    minimumCacheTTL: S.Finite.annotateKey({
+    minimumCacheTTL: NonNegativeInt.annotateKey({
       documentation: "https://nextjs.org/docs/api-reference/next/image#caching-behavior",
     }),
 
@@ -266,17 +272,17 @@ export class ImageConfigComplete extends S.Class<ImageConfigComplete>($I`ImageCo
     ),
 
     /** @see [Maximum Disk Cache Size (in bytes)](https://nextjs.org/docs/api-reference/next/image#maximumdiskcachesize) */
-    maximumDiskCacheSize: S.UndefinedOr(S.Finite).annotateKey({
+    maximumDiskCacheSize: S.UndefinedOr(NonNegativeInt).annotateKey({
       documentation: "https://nextjs.org/docs/api-reference/next/image#maximumdiskcachesize",
     }),
 
     /** @see [Maximum Redirects](https://nextjs.org/docs/api-reference/next/image#maximumredirects) */
-    maximumRedirects: S.Finite.annotateKey({
+    maximumRedirects: NonNegativeInt.annotateKey({
       documentation: "https://nextjs.org/docs/api-reference/next/image#maximumredirects",
     }),
 
     /** @see [Maximum Response Body](https://nextjs.org/docs/api-reference/next/image#maximumresponsebody) */
-    maximumResponseBody: S.Finite.annotateKey({
+    maximumResponseBody: NonNegativeInt.annotateKey({
       documentation: "https://nextjs.org/docs/api-reference/next/image#maximumresponsebody",
     }),
 
@@ -320,7 +326,7 @@ export class ImageConfigComplete extends S.Class<ImageConfigComplete>($I`ImageCo
     ),
 
     /** @see [Qualities](https://nextjs.org/docs/api-reference/next/image#qualities) */
-    qualities: S.Finite.pipe(
+    qualities: ImageQuality.pipe(
       S.Array,
       S.mutable,
       S.UndefinedOr,

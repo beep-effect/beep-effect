@@ -7,9 +7,8 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { NormalizedBooleanString } from "@beep/schema";
+import * as O from "@beep/utils/Option";
 import { Config, Effect, identity, pipe, SchemaGetter } from "effect";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { GraphitiProxyConfigLoadError } from "../Graphiti.errors.js";
 
@@ -207,7 +206,7 @@ export const loadGraphitiProxyConfig = Effect.gen(function* () {
   const upstream = yield* Config.option(Config.string("GRAPHITI_PROXY_UPSTREAM"));
 
   const raw = GraphitiProxyConfigInput.make(
-    R.getSomes({
+    O.getSomesStruct({
       listenHost,
       listenPort,
       concurrency,

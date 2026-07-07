@@ -22,6 +22,8 @@ import { FastCheck as fc } from "effect/testing";
 const objectKeys = (value: unknown): ReadonlyArray<string> => (P.isObject(value) ? Struct.keys(value) : A.empty());
 const decodeJsonPointerSegment = (segment: string): string => segment.replaceAll("~1", "/").replaceAll("~0", "~");
 const PackageJsonNameArbitrary = S.toArbitrary(PackageJson.fields.name);
+const PackageJsonDependenciesArbitrary = S.toArbitrary(PackageJson.fields.dependencies);
+const NpmPackageJsonPeerDependenciesMetaArbitrary = S.toArbitrary(NpmPackageJson.fields.peerDependenciesMeta);
 
 describe("PackageJson schema", () => {
   describe("valid structures", () => {
@@ -32,6 +34,30 @@ describe("PackageJson schema", () => {
 
           expect(S.is(PackageJson)(decoded)).toBe(true);
           expect(decoded.name).toBe(name);
+        }),
+        { numRuns: 20 }
+      );
+    });
+
+    it("round-trips schema-derived package.json dependency maps through the encoded wire shape", () => {
+      fc.assert(
+        fc.property(PackageJsonDependenciesArbitrary.filter(O.isSome), (value) => {
+          const encoded = S.encodeSync(PackageJson.fields.dependencies)(value);
+          const decoded = S.decodeUnknownSync(PackageJson.fields.dependencies)(encoded);
+
+          expect(decoded).toEqual(value);
+        }),
+        { numRuns: 20 }
+      );
+    });
+
+    it("round-trips schema-derived npm peer dependency metadata through the encoded wire shape", () => {
+      fc.assert(
+        fc.property(NpmPackageJsonPeerDependenciesMetaArbitrary.filter(O.isSome), (value) => {
+          const encoded = S.encodeSync(NpmPackageJson.fields.peerDependenciesMeta)(value);
+          const decoded = S.decodeUnknownSync(NpmPackageJson.fields.peerDependenciesMeta)(encoded);
+
+          expect(decoded).toEqual(value);
         }),
         { numRuns: 20 }
       );

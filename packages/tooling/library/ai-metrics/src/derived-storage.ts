@@ -824,18 +824,12 @@ const epochMillisParam = (value: number): string => globalThis.String(value);
 const countCreatedArchiveObjects = (records: ReadonlyArray<AiMetricsDerivedTranscriptRecord>): number =>
   A.filter(records, (record) => record.archiveObject.created).length;
 
-const parquetExportDirFor = (pathApi: Path.Path, input: AiMetricsDerivedStorageWriteInput): O.Option<string> => {
-  if (input.parquetExportMode === AiMetricsParquetExportMode.Enum.none) {
-    return O.none();
-  }
-
-  return O.some(
-    pathApi.join(
-      input.storage.parquetDir,
-      input.parquetExportMode === AiMetricsParquetExportMode.Enum.latest ? "latest" : input.ingestRunId
-    )
-  );
-};
+const parquetExportDirFor = (pathApi: Path.Path, input: AiMetricsDerivedStorageWriteInput): O.Option<string> =>
+  AiMetricsParquetExportMode.$match(input.parquetExportMode, {
+    latest: () => O.some(pathApi.join(input.storage.parquetDir, "latest")),
+    none: O.none,
+    snapshot: () => O.some(pathApi.join(input.storage.parquetDir, input.ingestRunId)),
+  });
 
 const prepareParquetExportDir = Effect.fn("AiMetrics.derivedStorage.prepareParquetExportDir")(function* (
   parquetRoot: string,

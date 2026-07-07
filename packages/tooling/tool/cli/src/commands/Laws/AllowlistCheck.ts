@@ -92,6 +92,7 @@ class EffectLawsAllowlistEntry extends S.Class<EffectLawsAllowlistEntry>($I`Effe
   })
 ) {}
 
+// fallow-ignore-next-line code-duplication -- CLI allowlist checks intentionally keep a command-local schema boundary.
 class EffectLawsAllowlistDocument extends S.Class<EffectLawsAllowlistDocument>($I`EffectLawsAllowlistDocument`)(
   {
     version: S.Literal(1),

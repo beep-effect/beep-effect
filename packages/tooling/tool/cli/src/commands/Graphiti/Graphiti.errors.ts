@@ -7,10 +7,9 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Runtime } from "effect";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Graphiti/Graphiti.errors");
@@ -104,7 +103,7 @@ export class GraphitiProxyOpsError extends TaggedErrorClass<GraphitiProxyOpsErro
       GraphitiProxyOpsError.make({
         cause,
         message,
-        ...R.getSomes({
+        ...O.getSomesStruct({
           command: O.fromUndefinedOr(command),
           exitCode: O.fromUndefinedOr(exitCode),
         }),

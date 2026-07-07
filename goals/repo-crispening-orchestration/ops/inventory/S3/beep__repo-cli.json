@@ -8,7 +8,11 @@
     "proposedTarget": "Pipe the union through S.toTaggedUnion(\"kind\") like AiMetricsProgramError at packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts:390-404 and CorpusRestorationRecord at packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts:497-502; then dispatch metadata reconstruction with ArchitectureOperation.match/cases instead of the if-chain. Verified Effect v4 S.toTaggedUnion attaches cases/isAnyOf/guards/match at .repos/effect-v4/packages/effect/src/Schema.ts:6094-6125.",
     "confidence": 0.82,
     "mechanization": "assisted",
-    "roiRank": 3.3
+    "roiRank": 3.3,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -19,7 +23,11 @@
     "proposedTarget": "Use ArchitectureOperationKind.$match(kind, { \"write-file\": ..., \"write-package-json\": ..., \"ensure-file\": ..., \"ensure-absent-path\": ... }) for both derived defaults, keeping the current shared return values explicit per case. LiteralKit.$match is verified on the kit API at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:657-668 and constructed at lines 787-800.",
     "confidence": 0.78,
     "mechanization": "assisted",
-    "roiRank": 2.3
+    "roiRank": 2.3,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -30,7 +38,11 @@
     "proposedTarget": "Promote one DocgenRequiredTag LiteralKit([\"@category\", \"@example\", \"@since\"]) in the docgen internal model surface, export its Type/Options, derive the module subset with pickOptions([\"@since\"]), and share that kit between Operations and Quality. In-scope exemplar: DocgenPackageStatus already uses a docgen-internal LiteralKit at packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts:106; LiteralKit Options/pickOptions are verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:657-668.",
     "confidence": 0.78,
     "mechanization": "assisted",
-    "roiRank": 2.6
+    "roiRank": 2.6,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -41,7 +53,11 @@
     "proposedTarget": "Move the domain beside the existing Files extension kits in Files.schemas.ts as UnsafeMetadataVideoExtension = LiteralKit([\"asf\", \"asx\", \"m3u\", \"m3u8\", \"m4u\", \"mxu\"]).pipe($I.annoteSchema(...)), then implement isUnsafeMetadataVideoExtension with S.is(UnsafeMetadataVideoExtension)(normalizeBareExtension(extension)) and delete the cast. In-scope exemplars: SupportedMetadataImageExtension at Files.schemas.ts:170 and NormalizeImageFormat at Files.schemas.ts:220; S.is is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:1256.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 2.3
+    "roiRank": 2.3,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -52,29 +68,11 @@
     "proposedTarget": "Use FileFormatFamily.Options as the single format-domain source (verified at packages/foundation/capability/file-processing/src/Strategy/index.ts:82 and LiteralKit.Options at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:657-668). For makeProcessCoverageByFormat, map the existing full byFormat record with R.map(byFormat, counts => ({ failed: processCount(...), skipped: ..., succeeded: ... })) so the FileFormatFamily key proof is preserved without the cast; Effect v4 R.map preserves K at .repos/effect-v4/packages/effect/src/Record.ts:619-626.",
     "confidence": 0.82,
     "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-getsomes-struct",
-    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
-    "line": 1161,
-    "symbol": "TemplateContext.make",
-    "smell": "TemplateContext.make builds a heterogeneous optional struct with ...R.getSomes({ family: packageFamily, kind: packageKind, appKind }), where the fields are distinct LiteralKit-derived domains (PackageFamily, PackageKind, AppKind) and should retain per-key value types.",
-    "proposedTarget": "Use O.getSomesStruct({ family: packageFamily, kind: packageKind, appKind }) from @beep/utils/Option (repo helper verified at packages/foundation/modeling/utils/src/Option.ts:83-103) rather than effect/Record.getSomes, whose homogeneous dictionary signature is verified at .repos/effect-v4/packages/effect/src/Record.ts:824-836. Keep this at judgment until the Law 20/47 D5 amendment authorizes the sweep.",
-    "confidence": 0.86,
-    "mechanization": "assisted",
-    "roiRank": 1.9
-  },
-  {
-    "ruleId": "SFV4-getsomes-struct",
-    "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
-    "line": 4272,
-    "symbol": "makeProcessSkippedFailureRecord",
-    "smell": "makeProcessSkippedFailureRecord and makeProcessFailedFailureRecord use ...R.getSomes({ engine: O.fromUndefinedOr(options.engine), format: O.fromUndefinedOr(options.format) }) at lines 4272 and 4294 to assemble a heterogeneous optional struct: engine is a string and format is the FileFormatFamily literal domain.",
-    "proposedTarget": "Use O.getSomesStruct for the engine/format struct, importing O from @beep/utils or @beep/utils/Option so the existing O.fromUndefinedOr calls and the new getSomesStruct come from the same namespace. O.getSomesStruct is verified at packages/foundation/modeling/utils/src/Option.ts:83-103; Effect v4 O.fromUndefinedOr is verified at .repos/effect-v4/packages/effect/src/Option.ts:860; R.getSomes remains the homogeneous dictionary helper at .repos/effect-v4/packages/effect/src/Record.ts:824-836. Held at judgment pending D5.",
-    "confidence": 0.84,
-    "mechanization": "assisted",
-    "roiRank": 1.8
+    "roiRank": 3,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "literal-kit-const-assertion",
@@ -182,17 +180,6 @@
     }
   },
   {
-    "ruleId": "SFV4-getsomes-struct",
-    "file": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.errors.ts",
-    "line": 107,
-    "symbol": "GraphitiProxyOpsError.new",
-    "smell": "GraphitiProxyOpsError.new spreads R.getSomes({ command, exitCode }) into a typed tagged-error constructor; command is string metadata and exitCode is numeric S.Finite metadata, so the inline Option struct is heterogeneous and Record.getSomes erases the per-key value proof.",
-    "proposedTarget": "Use O.getSomesStruct({ command: O.fromUndefinedOr(command), exitCode: O.fromUndefinedOr(exitCode) }) from @beep/utils/Option, matching the in-scope optional-struct exemplar at packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts:608 and the helper definition at packages/foundation/modeling/utils/src/Option.ts:102. Record.getSomes remains the homogeneous dictionary helper verified at .repos/effect-v4/packages/effect/src/Record.ts:824.",
-    "confidence": 0.84,
-    "mechanization": "assisted",
-    "roiRank": 1.8
-  },
-  {
     "ruleId": "SFV4-static-api",
     "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyServices.ts",
     "line": 1009,
@@ -201,7 +188,11 @@
     "proposedTarget": "Dispatch bodyOutcome with Match.type<RequestBodyOutcome>().pipe(Match.tagsExhaustive({ Body, Oversized, ReadError })) or a local matchRequestBodyOutcome helper. Match.tagsExhaustive is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Match.ts:1095, and the nearby in-scope renderExtractFramesDirOutcome uses Match.discriminatorsExhaustive at packages/tooling/tool/cli/src/commands/Image/Image.render.ts:164.",
     "confidence": 0.78,
     "mechanization": "assisted",
-    "roiRank": 2.3
+    "roiRank": 2.3,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -212,18 +203,11 @@
     "proposedTarget": "Replace driftLineFormatters plus the cast with Match.type<SkillDrift>().pipe(Match.tagsExhaustive({ RemoteSkillDrift, LockDrift, CodexConfigDrift, AgentsMirrorDrift })) so the formatter is exhaustive without retyping the selected function. Match.tagsExhaustive is verified at .repos/effect-v4/packages/effect/src/Match.ts:1095.",
     "confidence": 0.72,
     "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-getsomes-struct",
-    "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
-    "line": 119,
-    "symbol": "QualityScriptCommandError.new",
-    "smell": "QualityScriptCommandError.new spreads R.getSomes({ command, exitCode }) into a tagged-error constructor; command is string metadata and exitCode is numeric S.Finite metadata, so this is the heterogeneous Option-struct shape that belongs to O.getSomesStruct.",
-    "proposedTarget": "Use O.getSomesStruct({ command: O.fromUndefinedOr(command), exitCode: O.fromUndefinedOr(exitCode) }) from @beep/utils/Option, as already used in this package at packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts:320 and packages/tooling/tool/cli/src/commands/Quality/Tasks.ts:972. Helper definition verified at packages/foundation/modeling/utils/src/Option.ts:102; R.getSomes verified as homogeneous at .repos/effect-v4/packages/effect/src/Record.ts:824. Held at judgment pending D5.",
-    "confidence": 0.84,
-    "mechanization": "assisted",
-    "roiRank": 1.8
+    "roiRank": 2,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -234,7 +218,11 @@
     "proposedTarget": "Make the boundary explicit by deriving the matrix options from the exported FallowFeatureFamily plus a named matrix-only extension kit, or add the missing envelope/command cases if runtime-coverage and editor-mcp-hooks are real Fallow report families. LiteralKit Options/pickOptions/omitOptions are verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:647-667.",
     "confidence": 0.68,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -245,7 +233,11 @@
     "proposedTarget": "Derive the failure subset from the primary kit, for example LiteralKit(FallowEnvelopeStatus.omitOptions([\"ok\"])), so FallowEnvelopeStatus remains the single status source. LiteralKit.omitOptions is verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:661-662 and attached at lines 797-798.",
     "confidence": 0.9,
     "mechanization": "codemod",
-    "roiRank": 3.6
+    "roiRank": 3.6,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -256,7 +248,11 @@
     "proposedTarget": "Promote one shared AttributionKind kit for repo-quality issue attribution, or derive QualityIssueAttribution from the Fallow attribution kit if the Fallow envelope is the owning boundary. Keep the distinct exported names as aliases if public docs need them, but do not maintain two literal arrays. LiteralKit const type parameters and helpers are verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:743 and 647-667.",
     "confidence": 0.66,
     "mechanization": "assisted",
-    "roiRank": 1.8
+    "roiRank": 1.8,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -267,18 +263,11 @@
     "proposedTarget": "Import the VersionCategory schema value from ../Models.js and derive S.toEquivalence(VersionCategory), or export a VersionCategoryEquivalence beside VersionCategoryOptions. The in-package tagged-union exemplar is VersionCategoryReport at packages/tooling/tool/cli/src/commands/VersionSync/internal/Models.ts:214-226; S.toTaggedUnion is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:6094.",
     "confidence": 0.86,
     "mechanization": "assisted",
-    "roiRank": 2.8
-  },
-  {
-    "ruleId": "SFV4-getsomes-struct",
-    "file": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.errors.ts",
-    "line": 70,
-    "symbol": "YeetCommandError.new",
-    "smell": "YeetCommandError.new spreads R.getSomes({ command, exitCode, file }) into a tagged-error constructor; command/file are string fields while exitCode is numeric S.Finite metadata, so this is a heterogeneous Option struct.",
-    "proposedTarget": "Use O.getSomesStruct({ command: O.fromUndefinedOr(command), exitCode: O.fromUndefinedOr(exitCode), file: O.fromUndefinedOr(file) }) from @beep/utils/Option. Same-package exemplars already use O.getSomesStruct in Yeet/internal/Closeout.ts:608 and Yeet/internal/Verdict.ts:320; helper definition verified at packages/foundation/modeling/utils/src/Option.ts:102. Held at judgment pending D5.",
-    "confidence": 0.86,
-    "mechanization": "assisted",
-    "roiRank": 1.9
+    "roiRank": 2.8,
+    "exception": {
+      "reason": "Assisted static/API colocation remains a package-wide exported schema-value sweep; the safe codemod skipped this site, so this is deferred to a batch with dedicated parity/docgen review.",
+      "boundary": "package-wide static API sweep, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-getsomes-struct",

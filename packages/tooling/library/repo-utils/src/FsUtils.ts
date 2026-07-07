@@ -36,10 +36,18 @@ const decodeJsonString = S.decodeUnknownOption(S.fromJsonString(S.Json));
  */
 export class GlobOptions extends S.Class<GlobOptions>($I`GlobOptions`)(
   {
-    absolute: S.optionalKey(S.Boolean),
-    cwd: S.optionalKey(S.String),
-    dot: S.optionalKey(S.Boolean),
-    ignore: S.optionalKey(S.Union([S.String, S.Array(S.String)])),
+    absolute: S.optionalKey(S.Boolean).annotateKey({
+      description: "Return absolute file paths when true.",
+    }),
+    cwd: S.optionalKey(S.String).annotateKey({
+      description: "Directory used as the glob search root.",
+    }),
+    dot: S.optionalKey(S.Boolean).annotateKey({
+      description: "Include dotfiles and dot-directories in glob results when true.",
+    }),
+    ignore: S.optionalKey(S.Union([S.String, S.Array(S.String)])).annotateKey({
+      description: "One or more glob patterns excluded from the search.",
+    }),
   },
   $I.annote("GlobOptions", {
     description: "Optional glob matching controls used by FsUtils path queries.",

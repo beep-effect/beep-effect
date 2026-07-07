@@ -40,8 +40,26 @@ type PluginDiagnostic = {
   readonly column: number;
 };
 
-/** Lenient schema over the subset of Biome's JSON report the harness reads. */
-const BiomeReport = S.Struct({
+const ReportLine = S.Int.check(S.isGreaterThanOrEqualTo(1));
+const ReportColumn = S.Int.check(S.isGreaterThanOrEqualTo(0));
+
+/**
+ * Lenient schema over the subset of Biome's JSON report the harness reads.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert/strict"
+ * import { BiomeReport } from "./harness.ts"
+ * import * as S from "effect/Schema"
+ *
+ * const report = S.decodeUnknownSync(BiomeReport)({ diagnostics: [] })
+ *
+ * strictEqual(report.diagnostics?.length, 0)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export const BiomeReport = S.Struct({
   diagnostics: S.Array(
     S.Struct({
       category: S.String.pipe(S.optional),
@@ -49,8 +67,8 @@ const BiomeReport = S.Struct({
       severity: S.String.pipe(S.optional),
       location: S.Struct({
         start: S.Struct({
-          line: S.Finite.pipe(S.optional),
-          column: S.Finite.pipe(S.optional),
+          line: ReportLine.pipe(S.optional),
+          column: ReportColumn.pipe(S.optional),
         }).pipe(S.optional),
       }).pipe(S.optional),
     })

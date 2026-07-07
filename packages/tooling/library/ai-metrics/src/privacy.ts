@@ -6,10 +6,10 @@
  */
 
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonEmptyTrimmedStr, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, Encoding, flow, Order, pipe } from "effect";
+import { Effect, Encoding, flow, Order, pipe, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { firstString, metricEventName, optionalTimestamp, transcriptLines } from "./internal/transcript-utils.ts";
@@ -17,6 +17,29 @@ import { AiMetricsSourceAttribution, AiMetricsSourceRole, AiMetricsTranscriptSou
 import type { TranscriptIngestSummary } from "./models.ts";
 
 const $I = $RepoAiMetricsId.create("privacy");
+const decodeNonEmptyTrimmedOption = S.decodeUnknownOption(NonEmptyTrimmedStr);
+const NonEmptyTrimmedStringInput = S.Union([S.String, S.Option(NonEmptyTrimmedStr)]);
+
+const decodeOptionalNonEmptyTrimmed = (
+  value: O.Option<string | O.Option<NonEmptyTrimmedStr>>
+): O.Option<O.Option<string>> =>
+  O.some(
+    pipe(
+      value,
+      O.flatMap((input) => (O.isOption(input) ? input : decodeNonEmptyTrimmedOption(input)))
+    )
+  );
+
+const OptionalNonEmptyTrimmed = S.optionalKey(NonEmptyTrimmedStringInput).pipe(
+  S.decodeTo(
+    S.Option(NonEmptyTrimmedStr),
+    SchemaTransformation.transformOptional<O.Option<string>, string | O.Option<NonEmptyTrimmedStr>>({
+      decode: decodeOptionalNonEmptyTrimmed,
+      encode: (value) => O.flatten(value),
+    })
+  ),
+  SchemaUtils.withNoneDefault
+);
 
 /**
  * Local fallback salt used only for smoke-mode private identifier hashes.
@@ -285,15 +308,17 @@ class GenericTranscriptLine extends S.Class<GenericTranscriptLine>($I`GenericTra
   $I.annote("GenericTranscriptLine", {
     description: "Minimal event metadata decoded from arbitrary transcript JSONL lines.",
   })
-) {}
+) {
+  static readonly decodeJsonOption = S.decodeUnknownOption(S.fromJsonString(GenericTranscriptLine));
+}
 
 class CodexSubagentSource extends S.Class<CodexSubagentSource>($I`CodexSubagentSource`)(
   {
-    agent_nickname: S.optionalKey(S.String),
-    agent_role: S.optionalKey(S.String),
-    forked_from_id: S.optionalKey(S.String),
-    parent_session_id: S.optionalKey(S.String),
-    parent_thread_id: S.optionalKey(S.String),
+    agent_nickname: OptionalNonEmptyTrimmed,
+    agent_role: OptionalNonEmptyTrimmed,
+    forked_from_id: OptionalNonEmptyTrimmed,
+    parent_session_id: OptionalNonEmptyTrimmed,
+    parent_thread_id: OptionalNonEmptyTrimmed,
     thread_spawn: S.optionalKey(S.Boolean),
   },
   $I.annote("CodexSubagentSource", {
@@ -312,9 +337,9 @@ class CodexSessionSource extends S.Class<CodexSessionSource>($I`CodexSessionSour
 
 class CodexSessionPayload extends S.Class<CodexSessionPayload>($I`CodexSessionPayload`)(
   {
-    id: S.optionalKey(S.String),
-    parent_session_id: S.optionalKey(S.String),
-    parent_thread_id: S.optionalKey(S.String),
+    id: OptionalNonEmptyTrimmed,
+    parent_session_id: OptionalNonEmptyTrimmed,
+    parent_thread_id: OptionalNonEmptyTrimmed,
     source: S.optionalKey(CodexSessionSource),
   },
   $I.annote("CodexSessionPayload", {
@@ -330,10 +355,10 @@ class CodexSessionMetaLine extends S.Class<CodexSessionMetaLine>($I`CodexSession
   $I.annote("CodexSessionMetaLine", {
     description: "Codex JSONL session_meta line used to detect delegated subagent transcripts.",
   })
-) {}
+) {
+  static readonly decodeJsonOption = S.decodeUnknownOption(S.fromJsonString(CodexSessionMetaLine));
+}
 
-const decodeGenericTranscriptLine = S.decodeUnknownOption(S.fromJsonString(GenericTranscriptLine));
-const decodeCodexSessionMetaLine = S.decodeUnknownOption(S.fromJsonString(CodexSessionMetaLine));
 const encodePrivacyCheckJson = S.encodeUnknownEffect(S.fromJsonString(AiMetricsPrivacyCheckResult));
 
 /**
@@ -423,18 +448,8 @@ export const hashPrivateIdentifier: {
   })
 );
 
-const firstNonEmptyString = (...values: ReadonlyArray<string | undefined>): O.Option<string> =>
-  pipe(
-    values,
-    A.map((value) =>
-      pipe(
-        O.fromNullishOr(value),
-        O.filter((candidate) => Str.isNonEmpty(Str.trim(candidate)))
-      )
-    ),
-    A.getSomes,
-    A.head
-  );
+const firstNonEmptyString = (...values: ReadonlyArray<O.Option<string> | undefined>): O.Option<string> =>
+  pipe(values, A.map(O.fromNullishOr), A.getSomes, A.head, O.flatten);
 
 const optionalHashPrivateIdentifier = Effect.fn("AiMetrics.optionalHashPrivateIdentifier")(function* (
   value: O.Option<string>,
@@ -449,7 +464,7 @@ const optionalHashPrivateIdentifier = Effect.fn("AiMetrics.optionalHashPrivateId
 
 const codexSessionMetaLines: (content: string) => ReadonlyArray<CodexSessionMetaLine> = flow(
   transcriptLines,
-  A.map((line) => decodeCodexSessionMetaLine(line)),
+  A.map((line) => CodexSessionMetaLine.decodeJsonOption(line)),
   A.getSomes,
   A.filter((line) => line.type === "session_meta")
 );
@@ -461,10 +476,61 @@ const firstCodexSessionPayload: (lines: ReadonlyArray<CodexSessionMetaLine>) => 
 );
 
 const firstCodexSubagentSource: (lines: ReadonlyArray<CodexSessionMetaLine>) => O.Option<CodexSubagentSource> = flow(
-  A.map((line) => O.fromNullishOr(line.payload?.source?.subagent)),
+  A.map((line) =>
+    pipe(
+      O.fromUndefinedOr(line.payload),
+      O.flatMap((payload) => O.fromUndefinedOr(payload.source)),
+      O.flatMap((source) => O.fromUndefinedOr(source.subagent))
+    )
+  ),
   A.getSomes,
   A.head
 );
+
+const firstPayloadValue = <A>(
+  payload: O.Option<CodexSessionPayload>,
+  pick: (payload: CodexSessionPayload) => O.Option<A>
+): O.Option<A> => pipe(payload, O.flatMap(pick));
+
+const firstSubagentValue = <A>(
+  subagent: O.Option<CodexSubagentSource>,
+  pick: (subagent: CodexSubagentSource) => O.Option<A>
+): O.Option<A> => pipe(subagent, O.flatMap(pick));
+
+const firstSubagentNullableValue = <A>(
+  subagent: O.Option<CodexSubagentSource>,
+  pick: (subagent: CodexSubagentSource) => A | undefined
+): O.Option<A> =>
+  pipe(
+    subagent,
+    O.flatMap((value) => O.fromUndefinedOr(pick(value)))
+  );
+
+const codexAttributionMetadata = (content: string, sourcePath: string) => {
+  const sessionMetaLines = codexSessionMetaLines(content);
+  const payload = firstCodexSessionPayload(sessionMetaLines);
+  const subagent = firstCodexSubagentSource(sessionMetaLines);
+
+  return {
+    agentNickname: firstSubagentValue(subagent, (value) => value.agent_nickname),
+    agentRole: firstSubagentValue(subagent, (value) => value.agent_role),
+    forkedFromId: firstSubagentValue(subagent, (value) => value.forked_from_id),
+    parentSessionId: firstNonEmptyString(
+      firstSubagentValue(subagent, (value) => value.parent_session_id),
+      firstPayloadValue(payload, (value) => value.parent_session_id)
+    ),
+    parentThreadId: firstNonEmptyString(
+      firstSubagentValue(subagent, (value) => value.parent_thread_id),
+      firstPayloadValue(payload, (value) => value.parent_thread_id)
+    ),
+    sessionId: firstNonEmptyString(
+      firstPayloadValue(payload, (value) => value.id),
+      O.some(sourcePath)
+    ),
+    sourceRole: O.isSome(subagent) ? AiMetricsSourceRole.Enum.subagent : AiMetricsSourceRole.Enum.primary,
+    threadSpawn: firstSubagentNullableValue(subagent, (value) => value.thread_spawn),
+  };
+};
 
 const normalizeAttributionPath = flow(
   Str.replace(/\\/gu, "/"),
@@ -516,53 +582,43 @@ export const makeAiMetricsSourceAttribution = Effect.fn("AiMetrics.makeAiMetrics
   readonly sourceKind: AiMetricsTranscriptSource;
   readonly sourcePath: string;
 }) {
-  if (sourceKind === AiMetricsTranscriptSource.Enum.openclaw) {
-    return AiMetricsSourceAttribution.make({
-      sessionIdHash: yield* hashPrivateIdentifier("openclaw-gateway.service", hashSalt),
-      sourceRole: AiMetricsSourceRole.Enum.gateway_metadata,
-    });
-  }
-
-  if (sourceKind === AiMetricsTranscriptSource.Enum.claude) {
+  const claudeAttribution = Effect.fn("AiMetrics.makeAiMetricsSourceAttribution.claude")(function* () {
     return AiMetricsSourceAttribution.make({
       sessionIdHash: yield* hashPrivateIdentifier(sourcePath, hashSalt),
       sourceRole: pathRoleFor(relativePath),
     });
-  }
+  });
+  const codexAttribution = Effect.fn("AiMetrics.makeAiMetricsSourceAttribution.codex")(function* () {
+    const metadata = codexAttributionMetadata(content, sourcePath);
+    const agentNicknameHash = yield* optionalHashPrivateIdentifier(metadata.agentNickname, hashSalt);
+    const agentRoleHash = yield* optionalHashPrivateIdentifier(metadata.agentRole, hashSalt);
+    const forkedFromIdHash = yield* optionalHashPrivateIdentifier(metadata.forkedFromId, hashSalt);
+    const parentSessionIdHash = yield* optionalHashPrivateIdentifier(metadata.parentSessionId, hashSalt);
+    const parentThreadIdHash = yield* optionalHashPrivateIdentifier(metadata.parentThreadId, hashSalt);
+    const sessionIdHash = yield* optionalHashPrivateIdentifier(metadata.sessionId, hashSalt);
 
-  const sessionMetaLines = codexSessionMetaLines(content);
-  const payload = firstCodexSessionPayload(sessionMetaLines);
-  const subagent = firstCodexSubagentSource(sessionMetaLines);
-  const subagentValue = O.getOrUndefined(subagent);
-  const payloadValue = O.getOrUndefined(payload);
-  const sourceRole = O.isSome(subagent) ? AiMetricsSourceRole.Enum.subagent : AiMetricsSourceRole.Enum.primary;
-  const parentSessionId = firstNonEmptyString(subagentValue?.parent_session_id, payloadValue?.parent_session_id);
-  const parentThreadId = firstNonEmptyString(subagentValue?.parent_thread_id, payloadValue?.parent_thread_id);
-  const agentNicknameHash = yield* optionalHashPrivateIdentifier(
-    firstNonEmptyString(subagentValue?.agent_nickname),
-    hashSalt
-  );
-  const agentRoleHash = yield* optionalHashPrivateIdentifier(firstNonEmptyString(subagentValue?.agent_role), hashSalt);
-  const forkedFromIdHash = yield* optionalHashPrivateIdentifier(
-    firstNonEmptyString(subagentValue?.forked_from_id),
-    hashSalt
-  );
-  const parentSessionIdHash = yield* optionalHashPrivateIdentifier(parentSessionId, hashSalt);
-  const parentThreadIdHash = yield* optionalHashPrivateIdentifier(parentThreadId, hashSalt);
-  const sessionIdHash = yield* optionalHashPrivateIdentifier(
-    firstNonEmptyString(payloadValue?.id, sourcePath),
-    hashSalt
-  );
+    return AiMetricsSourceAttribution.make({
+      ...O.getSomesStruct({ threadSpawn: metadata.threadSpawn }),
+      ...O.getSomesStruct({ agentNicknameHash: O.fromUndefinedOr(agentNicknameHash) }),
+      ...O.getSomesStruct({ agentRoleHash: O.fromUndefinedOr(agentRoleHash) }),
+      ...O.getSomesStruct({ forkedFromIdHash: O.fromUndefinedOr(forkedFromIdHash) }),
+      ...O.getSomesStruct({ parentSessionIdHash: O.fromUndefinedOr(parentSessionIdHash) }),
+      ...O.getSomesStruct({ parentThreadIdHash: O.fromUndefinedOr(parentThreadIdHash) }),
+      ...O.getSomesStruct({ sessionIdHash: O.fromUndefinedOr(sessionIdHash) }),
+      sourceRole: metadata.sourceRole,
+    });
+  });
+  const openClawAttribution = Effect.fn("AiMetrics.makeAiMetricsSourceAttribution.openclaw")(function* () {
+    return AiMetricsSourceAttribution.make({
+      sessionIdHash: yield* hashPrivateIdentifier("openclaw-gateway.service", hashSalt),
+      sourceRole: AiMetricsSourceRole.Enum.gateway_metadata,
+    });
+  });
 
-  return AiMetricsSourceAttribution.make({
-    ...O.getSomesStruct({ threadSpawn: O.fromUndefinedOr(subagentValue?.thread_spawn) }),
-    ...O.getSomesStruct({ agentNicknameHash: O.fromUndefinedOr(agentNicknameHash) }),
-    ...O.getSomesStruct({ agentRoleHash: O.fromUndefinedOr(agentRoleHash) }),
-    ...O.getSomesStruct({ forkedFromIdHash: O.fromUndefinedOr(forkedFromIdHash) }),
-    ...O.getSomesStruct({ parentSessionIdHash: O.fromUndefinedOr(parentSessionIdHash) }),
-    ...O.getSomesStruct({ parentThreadIdHash: O.fromUndefinedOr(parentThreadIdHash) }),
-    ...O.getSomesStruct({ sessionIdHash: O.fromUndefinedOr(sessionIdHash) }),
-    sourceRole,
+  return yield* AiMetricsTranscriptSource.$match(sourceKind, {
+    claude: claudeAttribution,
+    codex: codexAttribution,
+    openclaw: openClawAttribution,
   });
 });
 
@@ -636,7 +692,7 @@ const rawEventEnvelopes = Effect.fn("AiMetrics.rawEventEnvelopes")(function* ({
   const envelopes = yield* Effect.forEach(
     lines,
     Effect.fnUntraced(function* (line, index) {
-      const decoded = decodeGenericTranscriptLine(line);
+      const decoded = GenericTranscriptLine.decodeJsonOption(line);
       if (O.isNone(decoded)) {
         return O.none<AiMetricsRawEventEnvelope>();
       }

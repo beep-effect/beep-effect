@@ -7,11 +7,11 @@
 
 import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { A, Str } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Effect, flow, pipe } from "effect";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import {
@@ -67,9 +67,8 @@ export const AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST = [
  * @example
  * ```ts
  * import { AiMetricsOtlpAttributeValue } from "@beep/repo-ai-metrics"
- * import * as S from "effect/Schema"
  *
- * const isAttributeValue = S.is(AiMetricsOtlpAttributeValue)(42)
+ * const isAttributeValue = AiMetricsOtlpAttributeValue.is(42)
  * console.log(isAttributeValue)
  * ```
  * @category schemas
@@ -78,7 +77,8 @@ export const AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST = [
 export const AiMetricsOtlpAttributeValue = S.Union([S.String, S.Finite, S.Boolean]).pipe(
   $I.annoteSchema("AiMetricsOtlpAttributeValue", {
     description: "Low-cardinality or hashed attribute value emitted on AI metrics OTLP spans.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -408,7 +408,7 @@ const readTurnRows = Effect.fn("AiMetrics.otlp.readTurnRows")(function* (ingestR
 const sessionProjection = (row: AiMetricsOtlpTurnExportRow): AiMetricsOtlpSpanProjection =>
   AiMetricsOtlpSpanProjection.make({
     attributes: allowlistedAttributes({
-      ...R.getSomes({
+      ...O.getSomesStruct({
         "ai_metrics.agent_nickname_hash": O.fromNullishOr(row.agentNicknameHash),
         "ai_metrics.agent_role_hash": O.fromNullishOr(row.agentRoleHash),
         "ai_metrics.forked_from_id_hash": O.fromNullishOr(row.forkedFromIdHash),
@@ -433,7 +433,7 @@ const turnProjection = (row: AiMetricsOtlpTurnExportRow): AiMetricsOtlpSpanProje
 
   return AiMetricsOtlpSpanProjection.make({
     attributes: allowlistedAttributes({
-      ...R.getSomes({
+      ...O.getSomesStruct({
         "ai_metrics.timestamp": O.fromNullishOr(row.timestamp),
         "ai_metrics.tool_name": toolName,
         "tool.name": toolName,

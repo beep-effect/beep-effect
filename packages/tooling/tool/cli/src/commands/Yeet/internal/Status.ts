@@ -7,10 +7,9 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as O from "@beep/utils/Option";
 import { DateTime, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runRepoCommandCapture } from "../../../internal/repo-run/index.js";
@@ -300,7 +299,7 @@ const artifactFromVerdict = (path: string, verdict: YeetVerdict): YeetStatusArti
     schemaVersion: verdict.schemaVersion,
     mode: verdict.mode,
     outcome: verdict.outcome,
-    ...R.getSomes({ repairCommand: firstFailedRepairCommand(verdict) }),
+    ...O.getSomesStruct({ repairCommand: firstFailedRepairCommand(verdict) }),
   });
 
 const artifactFromCloseout = (path: string, report: PrCloseoutReport): YeetStatusArtifact =>
@@ -447,12 +446,12 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     number: view.number,
     state: view.state,
     url: view.url,
-    ...R.getSomes({
+    ...O.getSomesStruct({
       checkCount,
       failingCheckCount,
       pendingCheckCount,
     }),
-    ...R.getSomes({
+    ...O.getSomesStruct({
       mergeStateStatus: O.fromNullishOr(view.mergeStateStatus),
       mergeable: O.fromNullishOr(view.mergeable),
       reviewDecision: O.fromNullishOr(view.reviewDecision),
