@@ -6,7 +6,13 @@ import {
   SourceArtifact,
 } from "@beep/file-processing/Artifact";
 import { ExportArchiveOperation } from "@beep/file-processing/Operation";
-import { LibpffFileProcessingEngine, makeLibpffFileProcessingEngine } from "@beep/libpff";
+import {
+  LibpffError,
+  LibpffFileProcessingEngine,
+  LibpffFileProcessingEngineOptions,
+  makeLibpffFileProcessingEngine,
+  PffexportEngineConfig,
+} from "@beep/libpff";
 import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { provideScopedLayer } from "@beep/test-utils";
@@ -18,10 +24,19 @@ import { FastCheck as fc } from "effect/testing";
 
 const SourceArtifactArbitrary = S.toArbitrary(SourceArtifact);
 const ExportArchiveOperationArbitrary = S.toArbitrary(ExportArchiveOperation);
+const PffexportEngineConfigArbitrary = S.toArbitrary(PffexportEngineConfig);
+const LibpffFileProcessingEngineOptionsArbitrary = S.toArbitrary(LibpffFileProcessingEngineOptions);
+const LibpffErrorArbitrary = S.toArbitrary(LibpffError);
 const encodeSourceArtifact = S.encodeEffect(SourceArtifact);
 const decodeSourceArtifact = S.decodeUnknownEffect(SourceArtifact);
 const encodeExportArchiveOperation = S.encodeEffect(ExportArchiveOperation);
 const decodeExportArchiveOperation = S.decodeUnknownEffect(ExportArchiveOperation);
+const encodePffexportEngineConfig = S.encodeEffect(PffexportEngineConfig);
+const decodePffexportEngineConfig = S.decodeUnknownEffect(PffexportEngineConfig);
+const encodeLibpffFileProcessingEngineOptions = S.encodeEffect(LibpffFileProcessingEngineOptions);
+const decodeLibpffFileProcessingEngineOptions = S.decodeUnknownEffect(LibpffFileProcessingEngineOptions);
+const encodeLibpffError = S.encodeEffect(LibpffError);
+const decodeLibpffError = S.decodeUnknownEffect(LibpffError);
 const providePlatform = provideScopedLayer(NodeServices.layer);
 
 const fixtureIds = Effect.all({
@@ -84,6 +99,55 @@ describe("@beep/libpff", () => {
       }),
       { numRuns: 25 }
     ));
+
+  it("round-trips libpff-owned schema-derived data through encoded shapes", () =>
+    fc.assert(
+      fc.property(
+        PffexportEngineConfigArbitrary,
+        LibpffFileProcessingEngineOptionsArbitrary,
+        LibpffErrorArbitrary,
+        (config, options, error) => {
+          const encodedConfig = Effect.runSync(encodePffexportEngineConfig(config));
+          const decodedConfig = Effect.runSync(decodePffexportEngineConfig(encodedConfig));
+          expect(Effect.runSync(encodePffexportEngineConfig(decodedConfig))).toEqual(encodedConfig);
+
+          const encodedOptions = Effect.runSync(encodeLibpffFileProcessingEngineOptions(options));
+          const decodedOptions = Effect.runSync(decodeLibpffFileProcessingEngineOptions(encodedOptions));
+          expect(Effect.runSync(encodeLibpffFileProcessingEngineOptions(decodedOptions))).toEqual(encodedOptions);
+
+          const encodedError = Effect.runSync(encodeLibpffError(error));
+          const decodedError = Effect.runSync(decodeLibpffError(encodedError));
+          expect(Effect.runSync(encodeLibpffError(decodedError))).toEqual(encodedError);
+        }
+      ),
+      { numRuns: 25 }
+    ));
+
+  it("preserves encoded libpff shapes for schema-owned defaults and option fields", () => {
+    const config = PffexportEngineConfig.make({ exportRoot: "/tmp/pst-out" });
+    const errorWithoutContext = LibpffError.fromReason("timeout");
+    const errorWithContext = LibpffError.fromReason("process", {
+      cause: "pffexport failed",
+      exitCode: NonNegativeInt.make(2),
+    });
+
+    expect(Effect.runSync(encodePffexportEngineConfig(config))).toStrictEqual({
+      exportFormat: "text",
+      exportMode: "items",
+      exportRoot: "/tmp/pst-out",
+      pffexportPath: "pffexport",
+    });
+    expect(Effect.runSync(encodeLibpffError(errorWithoutContext))).toStrictEqual({
+      _tag: "LibpffError",
+      reason: "timeout",
+    });
+    expect(Effect.runSync(encodeLibpffError(errorWithContext))).toStrictEqual({
+      _tag: "LibpffError",
+      cause: "pffexport failed",
+      exitCode: 2,
+      reason: "process",
+    });
+  });
 
   it.effect("maps unavailable libpff runtime to an operation-level deferral", () =>
     Effect.gen(function* () {

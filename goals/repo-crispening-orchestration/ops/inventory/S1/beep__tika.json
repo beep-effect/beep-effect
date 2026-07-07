@@ -1,16 +1,5 @@
 [
   {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/drivers/tika/src/Tika.errors.ts",
-    "line": 89,
-    "symbol": "TikaError.fromReason / makeTikaError",
-    "smell": "Exported/static error constructors accept an inline options object (`{ cause?: string; statusCode?: NonNegativeInt }`) that duplicates optional fields on the `TikaError` tagged schema.",
-    "proposedTarget": "Promote the options bag to `TikaErrorOptions extends S.Class` beside `TikaError`, mirroring `GovinfoErrorOptions` at `packages/drivers/govinfo/src/Govinfo.errors.ts:70`; change `fromReason` and `makeTikaError` to accept `TikaErrorOptions = TikaErrorOptions.make({})` while preserving the public fields.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 0.62
-  },
-  {
     "ruleId": "schema-first-inventory",
     "file": "packages/drivers/tika/src/Tika.tikaapp.ts",
     "line": 102,

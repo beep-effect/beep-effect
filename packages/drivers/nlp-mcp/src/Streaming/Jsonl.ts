@@ -12,6 +12,7 @@
  */
 
 import { $NlpMcpId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { Effect, Order, pipe, Random, Result, Stream } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
@@ -22,6 +23,7 @@ import type * as Path from "effect/Path";
 import type { PlatformError } from "effect/PlatformError";
 
 const $I = $NlpMcpId.create("Streaming/Jsonl");
+const NonNegativeInteger = S.Int.check(S.isGreaterThanOrEqualTo(0));
 
 /**
  * Structured parse failure for a single JSONL line.
@@ -43,7 +45,7 @@ export class JsonlLineError extends S.Class<JsonlLineError>($I`JsonlLineError`)(
     error: S.String.annotateKey({
       description: "Parser error message (the original line text is never included).",
     }),
-    lineNumber: S.Finite.annotateKey({
+    lineNumber: NonNegativeInteger.annotateKey({
       description: "Zero-based index of the offending line within the file.",
     }),
   },
@@ -69,18 +71,71 @@ export class JsonlLineError extends S.Class<JsonlLineError>($I`JsonlLineError`)(
 export class JsonlStats extends S.Class<JsonlStats>($I`JsonlStats`)(
   {
     /** Number of lines that failed to parse. */
-    errorCount: S.Finite.annotateKey({ description: "Number of lines that failed to parse." }),
+    errorCount: NonNegativeInteger.annotateKey({ description: "Number of lines that failed to parse." }),
     /** Reserved skipped-line count, always `0` because blanks are pre-filtered. */
-    skippedCount: S.Finite.annotateKey({
+    skippedCount: NonNegativeInteger.annotateKey({
       description: "Reserved skipped-line count, always `0` because blanks are pre-filtered.",
     }),
     /** Number of lines that parsed successfully. */
-    successCount: S.Finite.annotateKey({ description: "Number of lines that parsed successfully." }),
+    successCount: NonNegativeInteger.annotateKey({ description: "Number of lines that parsed successfully." }),
     /** Total number of non-empty lines examined. */
-    totalLines: S.Finite.annotateKey({ description: "Total number of non-empty lines examined." }),
+    totalLines: NonNegativeInteger.annotateKey({ description: "Total number of non-empty lines examined." }),
   },
   $I.annote("JsonlStats", {
     description: "Aggregate parse statistics for a JSONL file.",
+  })
+) {}
+
+/**
+ * Options shared by JSONL read and sample helpers.
+ *
+ * @example
+ * ```ts
+ * import { JsonlReadOptions } from "@beep/nlp-mcp/Streaming/Jsonl"
+ *
+ * const options = JsonlReadOptions.make({ skipInvalid: true })
+ * console.log(options.skipInvalid)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export class JsonlReadOptions extends S.Class<JsonlReadOptions>($I`JsonlReadOptions`)(
+  {
+    skipInvalid: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
+      description: "Drop malformed JSONL records instead of failing the stream.",
+    }),
+  },
+  $I.annote("JsonlReadOptions", {
+    description: "Options shared by JSONL read and sample helpers.",
+  })
+) {}
+
+/**
+ * Validation result containing parsed records and collected line errors.
+ *
+ * @example
+ * ```ts
+ * import { JsonlValidationResult } from "@beep/nlp-mcp/Streaming/Jsonl"
+ *
+ * const result = JsonlValidationResult.make({ errors: [], records: [{ id: 1 }] })
+ * console.log(result.records.length)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export class JsonlValidationResult extends S.Class<JsonlValidationResult>($I`JsonlValidationResult`)(
+  {
+    errors: S.Array(JsonlLineError).annotateKey({
+      description: "Collected JSONL parse errors.",
+    }),
+    records: S.Array(S.Unknown).annotateKey({
+      description: "Parsed JSONL records.",
+    }),
+  },
+  $I.annote("JsonlValidationResult", {
+    description: "Validation result containing parsed records and collected line errors.",
   })
 ) {}
 
@@ -132,11 +187,11 @@ const streamIndexedLines = (
  */
 export const streamJsonl = (
   filePath: string,
-  options: { readonly skipInvalid?: boolean | undefined } = {}
+  options: (typeof JsonlReadOptions)["~type.make.in"] = {}
 ): Stream.Stream<unknown, JsonlLineError | PlatformError, FileSystem.FileSystem | Path.Path> => {
-  const skipInvalid = options.skipInvalid ?? false;
+  const readOptions = JsonlReadOptions.make(options);
   return streamIndexedLines(filePath).pipe(
-    skipInvalid
+    readOptions.skipInvalid
       ? Stream.filterMap(([line, lineNumber]) => parseLine(line, lineNumber))
       : Stream.mapEffect(([line, lineNumber]) => Effect.fromResult(parseLine(line, lineNumber)))
   );
@@ -179,7 +234,7 @@ export const streamJsonlResults = (
  */
 export const readJsonl = (
   filePath: string,
-  options: { readonly skipInvalid?: boolean | undefined } = {}
+  options: (typeof JsonlReadOptions)["~type.make.in"] = {}
 ): Effect.Effect<ReadonlyArray<unknown>, JsonlLineError | PlatformError, FileSystem.FileSystem | Path.Path> =>
   Stream.runCollect(streamJsonl(filePath, options));
 
@@ -233,14 +288,7 @@ export const computeJsonlStats = (
  */
 export const validateJsonl = (
   filePath: string
-): Effect.Effect<
-  {
-    readonly errors: ReadonlyArray<JsonlLineError>;
-    readonly records: ReadonlyArray<unknown>;
-  },
-  PlatformError,
-  FileSystem.FileSystem | Path.Path
-> =>
+): Effect.Effect<JsonlValidationResult, PlatformError, FileSystem.FileSystem | Path.Path> =>
   streamJsonlResults(filePath).pipe(
     Stream.runFold(
       (): {
@@ -258,7 +306,8 @@ export const validateJsonl = (
             records: [...acc.records, value],
           }),
         })
-    )
+    ),
+    Effect.map(JsonlValidationResult.make)
   );
 
 /**
@@ -285,7 +334,7 @@ export const validateJsonl = (
 export const sampleJsonl = Effect.fn("Jsonl.sampleJsonl")(function* (
   filePath: string,
   sampleSize: number,
-  options: { readonly skipInvalid?: boolean | undefined } = {}
+  options: (typeof JsonlReadOptions)["~type.make.in"] = {}
 ) {
   const records = yield* readJsonl(filePath, options);
   if (A.length(records) <= sampleSize) {

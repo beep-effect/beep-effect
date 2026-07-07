@@ -15,6 +15,7 @@
 import { $NlpMcpId } from "@beep/identity";
 import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
 import { AiToolError } from "@beep/nlp-processing/Tools";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool, Toolkit } from "effect/unstable/ai";
 import { DatasetMeta } from "./Streaming/DatasetLoader.ts";
@@ -23,6 +24,15 @@ import { PipelineError, PipelineResult, PipelineStage } from "./Streaming/Pipeli
 import { TextEncoding, TextStreamStats } from "./Streaming/TextStream.ts";
 
 const $I = $NlpMcpId.create("StreamingTools");
+const NonNegativeInteger = S.Int.check(S.isGreaterThanOrEqualTo(0));
+const PositiveInteger = S.Int.check(S.isGreaterThan(0));
+
+const withOutputCodecStatics = <Sch extends S.Top & S.ConstraintDecoder<unknown>>(self: Sch) =>
+  SchemaUtils.withCodecStatics(self).pipe(
+    SchemaUtils.withStatics((schema) => ({
+      decodeResult: S.decodeUnknownResult(schema),
+    }))
+  );
 
 const JsonlLineErrorOutput = JsonlLineError.mapFields((fields) => fields).pipe(
   $I.annoteSchema("JsonlLineErrorOutput", {
@@ -57,7 +67,7 @@ export const LinesOutput = S.Class<{
   readonly truncated: boolean;
 }>($I`LinesOutput`)(
   {
-    count: S.Finite.annotateKey({
+    count: NonNegativeInteger.annotateKey({
       description: "Number of lines returned.",
     }),
     lines: S.Array(S.String).annotateKey({
@@ -75,7 +85,8 @@ export const LinesOutput = S.Class<{
   .pipe(
     $I.annoteSchema("LinesOutput", {
       description: "Lines returned from a streaming file operation with a truncation flag.",
-    })
+    }),
+    withOutputCodecStatics
   );
 
 /**
@@ -110,10 +121,10 @@ export const FileInfoOutput = S.Class<{
     exists: S.Boolean.annotateKey({
       description: "Whether the target file exists.",
     }),
-    lineCount: S.optionalKey(S.Finite).annotateKey({
+    lineCount: S.optionalKey(NonNegativeInteger).annotateKey({
       description: "Total line count when the file exists.",
     }),
-    sizeBytes: S.optionalKey(S.Finite).annotateKey({
+    sizeBytes: S.optionalKey(NonNegativeInteger).annotateKey({
       description: "File size in bytes when the file exists.",
     }),
   },
@@ -125,7 +136,8 @@ export const FileInfoOutput = S.Class<{
   .pipe(
     $I.annoteSchema("FileInfoOutput", {
       description: "File existence with optional line count and byte size.",
-    })
+    }),
+    withOutputCodecStatics
   );
 
 /**
@@ -161,7 +173,8 @@ export type FileInfoOutput = typeof FileInfoOutput.Type;
 export const TextStatsOutput = TextStreamStats.mapFields((fields) => fields).pipe(
   $I.annoteSchema("TextStatsOutput", {
     description: "Aggregate line-length and byte statistics for a text file.",
-  })
+  }),
+  withOutputCodecStatics
 );
 
 /**
@@ -194,7 +207,7 @@ export const JsonlOutput = S.Class<{
   readonly truncated: boolean;
 }>($I`JsonlOutput`)(
   {
-    count: S.Finite.annotateKey({
+    count: NonNegativeInteger.annotateKey({
       description: "Number of parsed records returned.",
     }),
     errors: JsonlLineErrorOutput.pipe(S.Array, S.optionalKey).annotateKey({
@@ -215,7 +228,8 @@ export const JsonlOutput = S.Class<{
   .pipe(
     $I.annoteSchema("JsonlOutput", {
       description: "JSONL records returned from a streaming operation with optional parse errors.",
-    })
+    }),
+    withOutputCodecStatics
   );
 
 /**
@@ -249,7 +263,8 @@ export type JsonlOutput = typeof JsonlOutput.Type;
 export const JsonlStatsOutput = JsonlStatsModel.mapFields((fields) => fields).pipe(
   $I.annoteSchema("JsonlStatsOutput", {
     description: "Aggregate parse statistics for a JSONL file.",
-  })
+  }),
+  withOutputCodecStatics
 );
 
 /**
@@ -283,7 +298,8 @@ export type JsonlStatsOutput = typeof JsonlStatsOutput.Type;
 export const DatasetMetaOutput = DatasetMeta.mapFields((fields) => fields).pipe(
   $I.annoteSchema("DatasetMetaOutput", {
     description: "Provenance metadata describing a loaded dataset.",
-  })
+  }),
+  withOutputCodecStatics
 );
 
 /**
@@ -332,7 +348,8 @@ export const DataOutput = S.Class<{
   .pipe(
     $I.annoteSchema("DataOutput", {
       description: "A loaded dataset payload paired with its provenance metadata.",
-    })
+    }),
+    withOutputCodecStatics
   );
 
 /**
@@ -371,7 +388,8 @@ export const PipelineOutput = PipelineResult.mapFields((fields) => ({
 })).pipe(
   $I.annoteSchema("PipelineOutput", {
     description: "Result of running a line-transform pipeline over a file.",
-  })
+  }),
+  withOutputCodecStatics
 );
 
 /**
@@ -384,7 +402,7 @@ export type PipelineOutput = typeof PipelineOutput.Type;
 
 const CountOutput = S.Class<{ readonly count: number }>($I`CountOutput`)(
   {
-    count: S.Finite.annotateKey({
+    count: NonNegativeInteger.annotateKey({
       description: "Computed count.",
     }),
   },
@@ -403,10 +421,10 @@ const CountWithErrorsOutput = S.Class<{ readonly count: number; readonly errors?
   $I`CountWithErrorsOutput`
 )(
   {
-    count: S.Finite.annotateKey({
+    count: NonNegativeInteger.annotateKey({
       description: "Computed count.",
     }),
-    errors: S.optionalKey(S.Finite).annotateKey({
+    errors: S.optionalKey(NonNegativeInteger).annotateKey({
       description: "Optional companion error count.",
     }),
   },
@@ -426,10 +444,10 @@ const ReadLinesParameters = S.Class<{ readonly options?: unknown; readonly path:
     options: S.optionalKey(
       S.Struct({
         encoding: S.optionalKey(TextEncoding),
-        maxLines: S.optionalKey(S.Finite.check(S.isGreaterThan(0))),
-        skip: S.optionalKey(S.Finite.check(S.isGreaterThanOrEqualTo(0))),
+        maxLines: S.optionalKey(PositiveInteger),
+        skip: S.optionalKey(NonNegativeInteger),
         skipEmpty: S.optionalKey(S.Boolean),
-        tail: S.optionalKey(S.Finite.check(S.isGreaterThan(0))),
+        tail: S.optionalKey(PositiveInteger),
         trim: S.optionalKey(S.Boolean),
       })
     ),
@@ -477,7 +495,7 @@ const SampleLinesParameters = S.Class<{
       })
     ),
     path: S.String.check(S.isMinLength(1)),
-    sampleSize: S.Finite.check(S.isGreaterThan(0), S.isLessThanOrEqualTo(10_000)),
+    sampleSize: PositiveInteger.check(S.isLessThanOrEqualTo(10_000)),
   },
   $I.annote("SampleLinesParameters", { description: "Inputs for randomly sampling text lines." })
 )
@@ -489,7 +507,7 @@ const ReadJsonlParameters = S.Class<{ readonly options?: unknown; readonly path:
     options: S.optionalKey(
       S.Struct({
         collectErrors: S.optionalKey(S.Boolean),
-        maxRecords: S.optionalKey(S.Finite.check(S.isGreaterThan(0))),
+        maxRecords: S.optionalKey(PositiveInteger),
         skipInvalid: S.optionalKey(S.Boolean),
       })
     ),
@@ -515,8 +533,8 @@ const ValidateJsonlParameters = S.Class<{ readonly options?: unknown; readonly p
   {
     options: S.optionalKey(
       S.Struct({
-        maxErrors: S.optionalKey(S.Finite.check(S.isGreaterThan(0))),
-        maxRecords: S.optionalKey(S.Finite.check(S.isGreaterThan(0))),
+        maxErrors: S.optionalKey(PositiveInteger),
+        maxRecords: S.optionalKey(PositiveInteger),
       })
     ),
     path: S.String.check(S.isMinLength(1)),
@@ -538,7 +556,7 @@ const SampleJsonlParameters = S.Class<{
       })
     ),
     path: S.String.check(S.isMinLength(1)),
-    sampleSize: S.Finite.check(S.isGreaterThan(0), S.isLessThanOrEqualTo(10_000)),
+    sampleSize: PositiveInteger.check(S.isLessThanOrEqualTo(10_000)),
   },
   $I.annote("SampleJsonlParameters", { description: "Inputs for randomly sampling JSONL records." })
 )
@@ -551,7 +569,7 @@ const LoadTextParameters = S.Class<{ readonly location: string; readonly options
     options: S.optionalKey(
       S.Struct({
         encoding: S.optionalKey(TextEncoding),
-        timeout: S.optionalKey(S.Finite.check(S.isGreaterThan(0))),
+        timeout: S.optionalKey(PositiveInteger),
       })
     ),
   },
@@ -565,9 +583,9 @@ const LoadLinesParameters = S.Class<{ readonly location: string; readonly option
     location: S.String.check(S.isMinLength(1)),
     options: S.optionalKey(
       S.Struct({
-        maxLines: S.optionalKey(S.Finite.check(S.isGreaterThan(0))),
+        maxLines: S.optionalKey(PositiveInteger),
         skipEmpty: S.optionalKey(S.Boolean),
-        timeout: S.optionalKey(S.Finite.check(S.isGreaterThan(0))),
+        timeout: S.optionalKey(PositiveInteger),
         trim: S.optionalKey(S.Boolean),
       })
     ),
@@ -582,9 +600,9 @@ const LoadJsonlParameters = S.Class<{ readonly location: string; readonly option
     location: S.String.check(S.isMinLength(1)),
     options: S.optionalKey(
       S.Struct({
-        maxRecords: S.optionalKey(S.Finite.check(S.isGreaterThan(0))),
+        maxRecords: S.optionalKey(PositiveInteger),
         skipInvalid: S.optionalKey(S.Boolean),
-        timeout: S.optionalKey(S.Finite.check(S.isGreaterThan(0))),
+        timeout: S.optionalKey(PositiveInteger),
       })
     ),
   },
@@ -598,7 +616,7 @@ const LoadJsonParameters = S.Class<{ readonly location: string; readonly options
     location: S.String.check(S.isMinLength(1)),
     options: S.optionalKey(
       S.Struct({
-        timeout: S.optionalKey(S.Finite.check(S.isGreaterThan(0))),
+        timeout: S.optionalKey(PositiveInteger),
       })
     ),
   },
@@ -613,7 +631,7 @@ const ProcessFileParameters = S.Class<{ readonly options?: unknown; readonly pat
   {
     options: S.optionalKey(
       S.Struct({
-        maxLines: S.optionalKey(S.Finite.check(S.isGreaterThan(0))),
+        maxLines: S.optionalKey(PositiveInteger),
         skipEmpty: S.optionalKey(S.Boolean),
         stopOnError: S.optionalKey(S.Boolean).annotateKey({
           description:
@@ -637,7 +655,7 @@ const FilterLinesParameters = S.Class<{ readonly options?: unknown; readonly pat
       S.Struct({
         caseInsensitive: S.optionalKey(S.Boolean),
         invert: S.optionalKey(S.Boolean),
-        maxLines: S.optionalKey(S.Finite.check(S.isGreaterThan(0))),
+        maxLines: S.optionalKey(PositiveInteger),
       })
     ),
     path: S.String.check(S.isMinLength(1)),
@@ -658,7 +676,7 @@ const ExtractMatchesParameters = S.Class<{
       S.Struct({
         caseInsensitive: S.optionalKey(S.Boolean),
         fullLines: S.optionalKey(S.Boolean),
-        maxMatches: S.optionalKey(S.Finite.check(S.isGreaterThan(0))),
+        maxMatches: S.optionalKey(PositiveInteger),
       })
     ),
     path: S.String.check(S.isMinLength(1)),

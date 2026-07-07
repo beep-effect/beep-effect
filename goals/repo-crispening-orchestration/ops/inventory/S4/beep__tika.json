@@ -2,17 +2,6 @@
   {
     "ruleId": "SFV4-static-api",
     "file": "packages/drivers/tika/src/Tika.errors.ts",
-    "line": 29,
-    "symbol": "TikaErrorReason",
-    "smell": "LiteralKit reason vocabulary is annotated without reattaching kit/static codec helpers, so reason guards and matches would need to be rebuilt away from the schema.",
-    "proposedTarget": "Capture the LiteralKit base and reattach `SchemaUtils.withLiteralKitStatics(base)` plus `SchemaUtils.withCodecStatics` after annotation.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/tika/src/Tika.errors.ts",
     "line": 89,
     "symbol": "TikaError.fromReason",
     "smell": "Detector hit: public two-argument static constructor is not `dual`.",
@@ -24,16 +13,5 @@
       "reason": "The second argument is optional with a default (`options = {}`). Arity-based `dual(2, ...)` would turn the valid `fromReason(reason)` call into data-last partial application instead of constructing an error.",
       "boundary": "Public error-constructor API with optional trailing args; dual dispatch is incompatible."
     }
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/tika/src/Tika.errors.ts",
-    "line": 114,
-    "symbol": "makeTikaError",
-    "smell": "Free exported constructor wrapper delegates directly to `TikaError.fromReason`, duplicating behavior already colocated on the error class.",
-    "proposedTarget": "Replace with a direct helper reference (`export const makeTikaError = TikaError.fromReason`) or remove in a public-form consumer sweep.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 3
   }
 ]

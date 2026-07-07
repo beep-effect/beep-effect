@@ -1,38 +1,5 @@
 [
   {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
-    "line": 116,
-    "symbol": "Phoenix public schema family",
-    "smell": "The package exports many schema-backed request/response/error models and LiteralKit domains, but the test suite has no S.toArbitrary-derived round-trip/property law; coverage is limited to hand-written SDK delegation fixtures.",
-    "proposedTarget": "Add additive property tests for representative production schemas such as PhoenixDatasetExample, PhoenixDatasetCreateInput, PhoenixPromptCreateInput, PhoenixAnnotationInput, and PhoenixExperimentInfoResult, following packages/shared/domain/test/Organization.test.ts:13 and :79. Use S.toArbitrary (verified at .repos/effect-v4/packages/effect/src/Schema.ts:12970) with FastCheck as fc from effect/testing, then encode/decode through the same exported schemas from @beep/phoenix.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/drivers/phoenix/src/Phoenix.models.ts",
-    "line": 267,
-    "symbol": "Phoenix exported schema fields",
-    "smell": "The exported Phoenix S.Class models have whole-schema $I.annote annotations, but no fields have annotateKey metadata, so key-level meanings for ids, selectors, payloads, templates, counts, and annotation targets are absent from the schema AST.",
-    "proposedTarget": "Add field-level .annotateKey({ description: ... }) metadata while preserving existing $I.annote/$I.annoteSchema calls; annotateKey is verified at .repos/effect-v4/packages/effect/src/Schema.ts:185 and :605, with in-repo exemplars at packages/agents/server/src/AssistantTurn/BlockRepair.ts:62-64 and packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts:46-51.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
-    "line": 127,
-    "symbol": "ResolvedPhoenixConfig",
-    "smell": "Internal reusable S.Class schema ResolvedPhoenixConfig has no $I.annote/$I.annoteSchema annotation at all, unlike the public PhoenixConfigInput and Phoenix model classes.",
-    "proposedTarget": "Pass a second argument to S.Class with $I.annote(\"ResolvedPhoenixConfig\", { description: \"Resolved Phoenix API client configuration.\" }) and consider annotateKey for apiKey/baseUrl/headers; package-local annotated class exemplars are PhoenixConfigInput at Phoenix.config.ts:49-58 and PhoenixDoctorResult at Phoenix.models.ts:267-277.",
-    "confidence": 0.95,
-    "mechanization": "codemod",
-    "roiRank": 3
-  },
-  {
     "ruleId": "SFV4-precision-audit",
     "file": "packages/drivers/phoenix/src/Phoenix.config.ts",
     "line": 52,
@@ -41,7 +8,11 @@
     "proposedTarget": "Move URL precision to the config schema by using URLStr after the trailing-slash normalization codec or by introducing a PhoenixBaseUrl schema that trims trailing slashes and brands via URLStr; URLStr is the in-repo schema at packages/foundation/modeling/schema/src/URL.ts:44-54 and is already the resolved field type at Phoenix.service.ts:129.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Trailing-slash normalization moved into PhoenixConfigInput, but making the exported config constructor require branded URLStr would force out-of-package callers such as the AgentEffectiveness CLI to brand plain string flags.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -52,7 +23,11 @@
     "proposedTarget": "Use S.Record(S.String, S.Json) or the repo JsonObject schema for dataset input/output/metadata and experiment/prompt/annotation metadata; S.Json is verified at .repos/effect-v4/packages/effect/src/Schema.ts:14064, and repo JSON object wrappers live at packages/foundation/modeling/schema/src/Json.ts:27.",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Tightening public payload records from unknown values to Json would require @beep/repo-ai-metrics payload model and forwarding changes; that package currently exposes and forwards Record<string, unknown> examples.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",
@@ -63,18 +38,11 @@
     "proposedTarget": "Introduce named non-empty string schemas for PhoenixId, PhoenixName, PhoenixVersionId, and PhoenixTag using S.NonEmptyString (verified at .repos/effect-v4/packages/effect/src/Schema.ts:8420) or narrower checks where the SDK documents a format, then reuse them on datasetId/value/versionId/promptVersionId/experimentId/targetId/name/modelName fields.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-numeric-domain",
-    "file": "packages/drivers/phoenix/src/Phoenix.models.ts",
-    "line": 655,
-    "symbol": "PhoenixExperimentCreateInput.repetitions / PhoenixExperimentInfoResult counts",
-    "smell": "Experiment repetitions and readback counts are bare S.Finite values even though repetitions is a positive integer count and example/failed/missing/successful run counts are non-negative integers.",
-    "proposedTarget": "Add PhoenixPositiveCount = S.Int.check(S.isGreaterThanOrEqualTo(1)) for repetitions and PhoenixCount = S.Int.check(S.isGreaterThanOrEqualTo(0)) for exampleCount/failedRunCount/missingRunCount/successfulRunCount; S.Int and S.isGreaterThanOrEqualTo are verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7314.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Branding exported Phoenix ids/names/tags/version strings as non-empty would change constructor input types for current out-of-package Phoenix consumers and requires a coordinated consumer sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-precision-audit",

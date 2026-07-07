@@ -2,50 +2,6 @@
   {
     "ruleId": "SFV4-arbitrary-tests",
     "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
-    "line": 77,
-    "symbol": "EcfrConfigInput/EcfrErrorOptions/EcfrError",
-    "smell": "The hand-authored package schemas are covered only by an offline HTTP fixture; there is no S.toArbitrary-derived law for EcfrConfigInput, EcfrErrorReason, EcfrErrorOptions, or EcfrError. Generated OpenAPI schemas under src/_generated are intentionally excluded from this S5 scan.",
-    "proposedTarget": "Add additive schema laws for the hand-authored schemas using S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970), following packages/shared/domain/test/Organization.test.ts:13 and :79 or assertSchemaArbitraryDecodesToSelf at packages/tooling/test-kit/test-utils/src/Schema.ts:30-43.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/drivers/ecfr/src/Ecfr.config.ts",
-    "line": 72,
-    "symbol": "EcfrConfigInput.apiUrl",
-    "smell": "The exported config schema has whole-schema $I.annote metadata but apiUrl lacks annotateKey metadata and is modeled as optional S.String even though the resolved config immediately converts it to URLStr.",
-    "proposedTarget": "Add apiUrl.annotateKey metadata and either type the public input as optional URLStr or keep public string input and explicitly decode into URLStr in the resolved path. URLStr is defined at packages/foundation/modeling/schema/src/URL.ts:44-53 and already used by ResolvedConfig at packages/drivers/ecfr/src/Ecfr.service.ts:53-64.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/drivers/ecfr/src/Ecfr.errors.ts",
-    "line": 64,
-    "symbol": "EcfrErrorOptions/EcfrError fields",
-    "smell": "The exported error option and TaggedErrorClass schemas have whole-schema $I.annote metadata but no annotateKey descriptions for cause, status, or reason.",
-    "proposedTarget": "Add annotateKey metadata to EcfrErrorOptions and EcfrError fields, matching packages/drivers/govinfo/src/domain/values/SearchBody/SearchBody.model.ts:42-65 while preserving the TaggedErrorClass layout.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-numeric-domain",
-    "file": "packages/drivers/ecfr/src/Ecfr.errors.ts",
-    "line": 67,
-    "symbol": "EcfrErrorOptions.status/EcfrError.status",
-    "smell": "HTTP status is optional S.Finite in both error schemas, allowing fractional or negative status values.",
-    "proposedTarget": "Use @beep/schema/HttpStatus (packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.schema.ts:34-43) or at least NonNegativeInt (packages/foundation/modeling/schema/src/Number.ts:182-197); S.Finite is verified at .repos/effect-v4/packages/effect/src/Schema.ts:11380.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/drivers/ecfr/test/Ecfr.service.test.ts",
     "line": 25,
     "symbol": "titlesBody fixture",
     "smell": "Detector candidate: eCFR response coverage uses a static titles JSON fixture rather than generated values.",

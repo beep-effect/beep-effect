@@ -6,10 +6,10 @@
  */
 
 import { $DiscordId } from "@beep/identity";
+import { SchemaUtils, URLStr } from "@beep/schema";
 import { Context, Effect, Layer, pipe, Redacted } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FetchHttpClient } from "effect/unstable/http";
@@ -21,40 +21,43 @@ import {
   DiscordChannelRequest,
   DiscordConfigInput,
   DiscordCreateMessageRequest,
+  DiscordHttpStatus,
   DiscordMessageProof,
 } from "./Discord.models.ts";
 import type * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
 const $I = $DiscordId.create("Discord.service");
 
-const normalizeBaseUrl = Str.replace(/\/+$/, "");
-const decodeChannelRequest = S.decodeUnknownEffect(DiscordChannelRequest);
-const decodeCreateMessageRequest = S.decodeUnknownEffect(DiscordCreateMessageRequest);
+const decodeConfigInput = S.decodeUnknownEffect(DiscordConfigInput);
+const decodeBaseUrl = S.decodeUnknownEffect(URLStr);
+const decodeErrorPathOption = S.decodeUnknownOption(S.NonEmptyString);
+const decodeErrorStatusOption = S.decodeUnknownOption(DiscordHttpStatus);
 
 class DiscordRawChannel extends S.Class<DiscordRawChannel>($I`DiscordRawChannel`)(
   {
-    guild_id: S.optionalKey(S.String),
+    guild_id: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     id: S.String,
-    name: S.optionalKey(S.String),
+    name: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("DiscordRawChannel", {
     description: "Subset of Discord channel response fields needed for sanitized proof.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(DiscordRawChannel);
+}
 
 class DiscordRawMessage extends S.Class<DiscordRawMessage>($I`DiscordRawMessage`)(
   {
     channel_id: S.String,
     id: S.String,
-    timestamp: S.optionalKey(S.String),
+    timestamp: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("DiscordRawMessage", {
     description: "Subset of Discord message response fields needed for sanitized proof.",
   })
-) {}
-
-const decodeRawChannel = S.decodeUnknownEffect(DiscordRawChannel);
-const decodeRawMessage = S.decodeUnknownEffect(DiscordRawMessage);
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(DiscordRawMessage);
+}
 
 /**
  * Runtime shape exposed by the Discord REST driver service.
@@ -90,11 +93,18 @@ const authRequest = (
 const ensureSuccess = (
   response: HttpClientResponse.HttpClientResponse,
   path: string,
-  method: string
+  method: "GET" | "POST"
 ): Effect.Effect<HttpClientResponse.HttpClientResponse, DiscordError> =>
   response.status >= 200 && response.status < 300
     ? Effect.succeed(response)
-    : Effect.fail(DiscordError.make({ method, path, reason: "response-status", status: response.status }));
+    : Effect.fail(
+        DiscordError.make({
+          method: O.some(method),
+          path: decodeErrorPathOption(path),
+          reason: "response-status",
+          status: decodeErrorStatusOption(response.status),
+        })
+      );
 
 const executeJson = Effect.fn("Discord.executeJson")(function* (
   client: HttpClient.HttpClient,
@@ -109,82 +119,89 @@ const executeJson = Effect.fn("Discord.executeJson")(function* (
   const request = yield* pipe(
     body === undefined ? Effect.succeed(rawRequest) : HttpClientRequest.bodyJson(rawRequest, body),
     Effect.mapError((cause) =>
-      DiscordError.make({ cause: errorCause(cause), method, path: fullPath, reason: "request" })
+      DiscordError.make({
+        cause: pipe(cause, errorCause, O.some),
+        method: O.some(method),
+        path: decodeErrorPathOption(fullPath),
+        reason: "request",
+      })
     ),
     Effect.map((requestWithBody) => authRequest(requestWithBody, botToken))
   );
 
-  const response = yield* client
-    .execute(request)
-    .pipe(
-      Effect.mapError((cause) =>
-        DiscordError.make({ cause: errorCause(cause), method, path: fullPath, reason: "transport" })
-      )
-    );
+  const response = yield* client.execute(request).pipe(
+    Effect.mapError((cause) =>
+      DiscordError.make({
+        cause: pipe(cause, errorCause, O.some),
+        method: O.some(method),
+        path: decodeErrorPathOption(fullPath),
+        reason: "transport",
+      })
+    )
+  );
   const successful = yield* ensureSuccess(response, fullPath, method);
 
   return yield* successful.json.pipe(
     Effect.mapError((cause) =>
-      DiscordError.make({ cause: errorCause(cause), method, path: fullPath, reason: "response-decoding" })
+      DiscordError.make({
+        cause: pipe(cause, errorCause, O.some),
+        method: O.some(method),
+        path: decodeErrorPathOption(fullPath),
+        reason: "response-decoding",
+      })
     )
   );
 });
 
-const makeService = (client: HttpClient.HttpClient, config: DiscordConfigInput): DiscordShape => {
-  const baseUrl = normalizeBaseUrl(config.baseUrl);
+const resolveBaseUrl = Effect.fnUntraced(function* (input: DiscordConfigInput) {
+  const config = yield* decodeConfigInput(input);
+  return yield* decodeBaseUrl(config.baseUrl);
+}, Effect.orDie);
 
-  return {
-    createMessage: Effect.fn("Discord.createMessage")(function* (rawRequest, botToken) {
-      const request = yield* decodeCreateMessageRequest(rawRequest).pipe(
-        Effect.mapError((cause) => DiscordError.make({ cause: errorCause(cause), reason: "request" }))
-      );
-      const body = {
-        allowed_mentions: {
-          parse: [],
-        },
-        content: request.content,
-      };
-      const raw = yield* executeJson(
-        client,
-        baseUrl,
-        `/channels/${request.channelId}/messages`,
-        "POST",
-        botToken,
-        body
-      );
-      const decoded = yield* decodeRawMessage(raw).pipe(
-        Effect.mapError((cause) => DiscordError.make({ cause: errorCause(cause), reason: "response-decoding" }))
-      );
+const makeService = (client: HttpClient.HttpClient, baseUrl: URLStr): DiscordShape => ({
+  createMessage: Effect.fn("Discord.createMessage")(function* (rawRequest, botToken) {
+    const request = yield* DiscordCreateMessageRequest.decodeEffect(rawRequest).pipe(
+      Effect.mapError((cause) => DiscordError.make({ cause: pipe(cause, errorCause, O.some), reason: "request" }))
+    );
+    const body = {
+      allowed_mentions: {
+        parse: [],
+      },
+      content: request.content,
+    };
+    const raw = yield* executeJson(client, baseUrl, `/channels/${request.channelId}/messages`, "POST", botToken, body);
+    const decoded = yield* DiscordRawMessage.decodeEffect(raw).pipe(
+      Effect.mapError((cause) =>
+        DiscordError.make({ cause: pipe(cause, errorCause, O.some), reason: "response-decoding" })
+      )
+    );
 
-      return DiscordMessageProof.make({
-        channelId: decoded.channel_id,
-        messageId: decoded.id,
-        status: 200,
-        ...R.getSomes({
-          timestamp: O.fromUndefinedOr(decoded.timestamp),
-        }),
-      });
-    }),
-    getChannel: Effect.fn("Discord.getChannel")(function* (rawRequest, botToken) {
-      const request = yield* decodeChannelRequest(rawRequest).pipe(
-        Effect.mapError((cause) => DiscordError.make({ cause: errorCause(cause), reason: "request" }))
-      );
-      const raw = yield* executeJson(client, baseUrl, `/channels/${request.channelId}`, "GET", botToken);
-      const decoded = yield* decodeRawChannel(raw).pipe(
-        Effect.mapError((cause) => DiscordError.make({ cause: errorCause(cause), reason: "response-decoding" }))
-      );
+    return DiscordMessageProof.make({
+      channelId: decoded.channel_id,
+      messageId: decoded.id,
+      status: 200,
+      timestamp: decoded.timestamp,
+    });
+  }),
+  getChannel: Effect.fn("Discord.getChannel")(function* (rawRequest, botToken) {
+    const request = yield* DiscordChannelRequest.decodeEffect(rawRequest).pipe(
+      Effect.mapError((cause) => DiscordError.make({ cause: pipe(cause, errorCause, O.some), reason: "request" }))
+    );
+    const raw = yield* executeJson(client, baseUrl, `/channels/${request.channelId}`, "GET", botToken);
+    const decoded = yield* DiscordRawChannel.decodeEffect(raw).pipe(
+      Effect.mapError((cause) =>
+        DiscordError.make({ cause: pipe(cause, errorCause, O.some), reason: "response-decoding" })
+      )
+    );
 
-      return DiscordChannelProof.make({
-        channelId: decoded.id,
-        status: 200,
-        ...R.getSomes({
-          guildId: O.fromUndefinedOr(decoded.guild_id),
-          name: O.fromUndefinedOr(decoded.name),
-        }),
-      });
-    }),
-  };
-};
+    return DiscordChannelProof.make({
+      channelId: decoded.id,
+      guildId: decoded.guild_id,
+      name: decoded.name,
+      status: 200,
+    });
+  }),
+});
 
 /**
  * Discord REST boundary for channel liveness checks and proof message creation.
@@ -202,6 +219,7 @@ const makeService = (client: HttpClient.HttpClient, config: DiscordConfigInput):
  *   DiscordConfigInput
  * } from "@beep/discord"
  * import { Effect, Layer, Redacted } from "effect"
+ * import * as O from "effect/Option"
  * import * as HttpClient from "effect/unstable/http/HttpClient"
  * import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse"
  *
@@ -212,8 +230,8 @@ const makeService = (client: HttpClient.HttpClient, config: DiscordConfigInput):
  *       HttpClientResponse.fromWeb(
  *         request,
  *         Response.json({
- *           guild_id: "guild-1",
- *           id: "channel-1",
+ *           guild_id: "987654321098765432",
+ *           id: "123456789012345678",
  *           name: "proof-channel"
  *         })
  *       )
@@ -230,10 +248,10 @@ const makeService = (client: HttpClient.HttpClient, config: DiscordConfigInput):
  * const program = Effect.gen(function* () {
  *   const discord = yield* Discord
  *   const proof = yield* discord.getChannel(
- *     DiscordChannelRequest.make({ channelId: "channel-1" }),
+ *     DiscordChannelRequest.make({ channelId: "123456789012345678" }),
  *     Redacted.make("bot-token")
  *   )
- *   return proof.name ?? "unnamed"
+ *   return O.getOrElse(proof.name, () => "unnamed")
  * }).pipe(Effect.provide(DiscordTest))
  *
  * const channelName = await Effect.runPromise(program)
@@ -265,7 +283,8 @@ export class Discord extends Context.Service<Discord, DiscordShape>()($I`Discord
       Discord,
       Effect.gen(function* () {
         const client = yield* HttpClient.HttpClient;
-        return Discord.of(makeService(client, config));
+        const baseUrl = yield* resolveBaseUrl(config);
+        return Discord.of(makeService(client, baseUrl));
       })
     );
 

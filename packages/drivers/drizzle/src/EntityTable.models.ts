@@ -335,15 +335,12 @@ const columnsFor = <const Definition extends EntitySchema.Definition>(
   return columns as ColumnBuilderMapFor<Definition>;
 };
 
-const columnNameForAny = (key: string, descriptor: EntitySchema.PersistDescriptor): string =>
-  descriptor.columnName ?? EntitySchema.columnNameFor(key, descriptor);
-
 const indexName = (
   tableName: string,
   key: string,
   descriptor: EntitySchema.PersistDescriptor,
   hint: EntitySchema.IndexHint
-): string => `${tableName}_${columnNameForAny(key, descriptor)}_${hint.kind}_idx`;
+): string => `${tableName}_${EntitySchema.columnNameFor(key, descriptor)}_${hint.kind}_idx`;
 
 const isJsonbIndexableStorageKind = (storageKind: EntitySchema.StorageKind): boolean =>
   EntitySchema.StorageKind.is.jsonb(storageKind);

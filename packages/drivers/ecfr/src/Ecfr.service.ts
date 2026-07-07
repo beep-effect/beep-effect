@@ -14,7 +14,8 @@
 
 import { ApiAuth, makeApiTransport } from "@beep/api-transport";
 import { $EcfrId } from "@beep/identity";
-import { URLStr } from "@beep/schema";
+import { NonNegativeInt, URLStr } from "@beep/schema";
+import { O } from "@beep/utils";
 import { Config, Context, Effect, Layer } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
@@ -25,7 +26,6 @@ import { AgenciesResponse, ECFR_OPERATIONS, TitlesResponse } from "./_generated/
 import { ECFR_API_URL, ECFR_RATE_LIMIT, ECFR_RATE_LIMIT_WINDOW, EcfrConfigInput } from "./Ecfr.config.ts";
 import { EcfrError, EcfrErrorOptions } from "./Ecfr.errors.ts";
 import type { RateLimitSnapshot } from "@beep/api-transport";
-import type { O } from "@beep/utils";
 import type { EcfrOperationDescriptor } from "./_generated/Ecfr.generated.ts";
 
 const $I = $EcfrId.create("Ecfr.service");
@@ -60,8 +60,10 @@ class ResolvedConfig extends S.Class<ResolvedConfig>($I`ResolvedConfig`)(
 ) {}
 
 const resolveConfig = (input: EcfrConfigInput): ResolvedConfig => ({
-  apiUrl: URLStr.make(input.apiUrl ?? ECFR_API_URL),
+  apiUrl: URLStr.make(input.apiUrl),
 });
+
+const decodeStatusOption = S.decodeUnknownOption(NonNegativeInt);
 
 const makeFromResolved = Effect.fnUntraced(function* (config: ResolvedConfig) {
   const transport = yield* makeApiTransport({
@@ -82,17 +84,20 @@ const makeFromResolved = Effect.fnUntraced(function* (config: ResolvedConfig) {
   ): Effect.fn.Return<A, EcfrError> {
     const response = yield* client
       .execute(HttpClientRequest.get(descriptor.path))
-      .pipe(Effect.mapError((cause) => EcfrError.of("transport", EcfrErrorOptions.make({ cause }))));
+      .pipe(Effect.mapError((cause) => EcfrError.of("transport", EcfrErrorOptions.make({ cause: O.some(cause) }))));
 
     if (response.status < 200 || response.status >= 300) {
-      return yield* EcfrError.of("response status", EcfrErrorOptions.make({ status: response.status }));
+      return yield* EcfrError.of(
+        "response status",
+        EcfrErrorOptions.make({ status: decodeStatusOption(response.status) })
+      );
     }
 
     const body = yield* response.json.pipe(
-      Effect.mapError((cause) => EcfrError.of("response decoding", EcfrErrorOptions.make({ cause })))
+      Effect.mapError((cause) => EcfrError.of("response decoding", EcfrErrorOptions.make({ cause: O.some(cause) })))
     );
     return yield* decode(body).pipe(
-      Effect.mapError((cause) => EcfrError.of("response decoding", EcfrErrorOptions.make({ cause }))),
+      Effect.mapError((cause) => EcfrError.of("response decoding", EcfrErrorOptions.make({ cause: O.some(cause) }))),
       Effect.withSpan(`Ecfr.${descriptor.operationId}`)
     );
   });

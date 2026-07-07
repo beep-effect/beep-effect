@@ -15,15 +15,14 @@ import { make } from "@beep/identity";
 import { A, O, thunkUndefined } from "@beep/utils";
 import { DuckDBInstance, quotedIdentifier, quotedString } from "@duckdb/node-api";
 import { Context, Effect, Exit, Layer, Scope, Semaphore } from "effect";
-import * as S from "effect/Schema";
 import { DuckDbError } from "./DuckDb.errors.ts";
 import { DuckDbRows } from "./DuckDb.models.ts";
 import type { DuckDBConnection, DuckDBValue } from "@duckdb/node-api";
+import type { DuckDbOperation } from "./DuckDb.errors.ts";
 import type { DuckDbConnectionOptions, DuckDbParquetExport } from "./DuckDb.models.ts";
 
 const { $DuckdbId } = make("duckdb");
 const $I = $DuckdbId.create("DuckDb.service");
-const decodeRows = S.decodeUnknownEffect(DuckDbRows);
 
 /**
  * Positional or named parameters accepted by DuckDB statements.
@@ -173,7 +172,12 @@ interface NativeConnection {
 type NativeUse<A, R = never> = (connection: DuckDBConnection) => Effect.Effect<A, DuckDbError, R>;
 
 const connectionFailure =
-  (operation: string, options: DuckDbConnectionOptions, statement?: string | undefined, message?: string | undefined) =>
+  (
+    operation: DuckDbOperation,
+    options: DuckDbConnectionOptions,
+    statement?: string | undefined,
+    message?: string | undefined
+  ) =>
   (cause: unknown): DuckDbError =>
     DuckDbError.fromUnknown(operation, cause, {
       databasePath: options.databasePath,
@@ -196,7 +200,7 @@ const releaseConnection = Effect.fn("DuckDb.releaseConnection")(
 
 const runOnConnection = Effect.fn("DuckDb.runOnConnection")(
   (
-    operation: string,
+    operation: DuckDbOperation,
     options: DuckDbConnectionOptions,
     connection: DuckDBConnection,
     statement: string,
@@ -218,7 +222,7 @@ const queryOnConnection = Effect.fn("DuckDb.queryOnConnection")(function* (
     try: () => connection.runAndReadAll(statement, parameters).then((reader) => reader.getRowObjectsJson()),
     catch: connectionFailure("query", options, statement),
   });
-  return yield* decodeRows(rows).pipe(
+  return yield* DuckDbRows.decodeEffect(rows).pipe(
     Effect.mapError((cause) =>
       DuckDbError.fromUnknown("query", cause, {
         databasePath: options.databasePath,
@@ -233,7 +237,7 @@ const acquireSharedConnection = (options: DuckDbConnectionOptions) => {
   let nativePromise: Promise<NativeConnection> | undefined;
 
   return Effect.fn("DuckDb.acquireSharedConnection")(
-    (operation: string): Effect.Effect<NativeConnection, DuckDbError> =>
+    (operation: DuckDbOperation): Effect.Effect<NativeConnection, DuckDbError> =>
       Effect.tryPromise({
         try: () => {
           nativePromise ??= DuckDBInstance.create(options.databasePath, options.databaseOptions)
@@ -253,7 +257,7 @@ const acquireScopedSharedConnection = (options: DuckDbConnectionOptions, scope: 
   const getConnection = acquireSharedConnection(options);
   let finalizerRegistered = false;
 
-  return Effect.fn("DuckDb.acquireScopedSharedConnection")(function* (operation: string) {
+  return Effect.fn("DuckDb.acquireScopedSharedConnection")(function* (operation: DuckDbOperation) {
     const native = yield* getConnection(operation);
     if (!finalizerRegistered) {
       finalizerRegistered = true;
@@ -268,7 +272,7 @@ const copyStatement = (request: DuckDbParquetExport): string =>
 
 const makeConnectionClient = (
   options: DuckDbConnectionOptions,
-  useConnection: <A, R>(operation: string, use: NativeUse<A, R>) => Effect.Effect<A, DuckDbError, R>,
+  useConnection: <A, R>(operation: DuckDbOperation, use: NativeUse<A, R>) => Effect.Effect<A, DuckDbError, R>,
   transactionScoped = false
 ): DuckDbClient => {
   const run = Effect.fn("DuckDb.run")(
@@ -332,7 +336,7 @@ const makeConnectionClient = (
             const transaction = makeConnectionClient(
               options,
               Effect.fn("DuckDb.useTransactionConnection")(function* <A, R>(
-                _operation: string,
+                _operation: DuckDbOperation,
                 useNative: NativeUse<A, R>
               ): Effect.fn.Return<A, DuckDbError, R> {
                 return yield* useNative(connection);
@@ -373,7 +377,7 @@ const makeNodeClient = (options: DuckDbConnectionOptions): DuckDbClient => {
   const getConnection = acquireSharedConnection(options);
   const connectionLock = Effect.runSync(Semaphore.make(1));
   const useNodeConnection = Effect.fn("DuckDb.useNodeConnection")(function* <A, R>(
-    operation: string,
+    operation: DuckDbOperation,
     use: NativeUse<A, R>
   ): Effect.fn.Return<A, DuckDbError, R> {
     return yield* connectionLock.withPermit(
@@ -393,7 +397,7 @@ const makeNodeLayer = (options: DuckDbConnectionOptions): Layer.Layer<DuckDb> =>
       const getConnection = acquireScopedSharedConnection(options, scope);
       const connectionLock = yield* Semaphore.make(1);
       const useLayerConnection = Effect.fn("DuckDb.useLayerConnection")(function* <A, R>(
-        operation: string,
+        operation: DuckDbOperation,
         useNative: NativeUse<A, R>
       ): Effect.fn.Return<A, DuckDbError, R> {
         return yield* connectionLock.withPermit(

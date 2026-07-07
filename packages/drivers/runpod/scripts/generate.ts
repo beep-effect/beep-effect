@@ -3,6 +3,7 @@
 // cspell:words cuda dtos uncapitalize
 
 import { $RunpodId } from "@beep/identity";
+import { LiteralKit, MappedLiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str, Struct } from "@beep/utils";
 import { Effect, Match, pipe } from "effect";
 import * as O from "effect/Option";
@@ -24,7 +25,17 @@ type JsonSchema = {
   readonly additionalProperties?: JsonSchema | boolean;
 };
 
-type HttpMethod = "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
+const RunpodGeneratorHttpMethod = MappedLiteralKit([
+  ["get", "GET"],
+  ["post", "POST"],
+  ["patch", "PATCH"],
+  ["put", "PUT"],
+  ["delete", "DELETE"],
+]);
+type HttpMethod = typeof RunpodGeneratorHttpMethod.Type;
+const OperationRequestBodyKind = LiteralKit(["json", "none"]);
+const OperationResponseBodyKind = LiteralKit(["json", "none", "text"]);
+type OperationResponseBodyKind = typeof OperationResponseBodyKind.Type;
 
 const JsonSchemaRef = S.suspend((): S.Codec<JsonSchema, JsonSchema> => JsonSchema);
 
@@ -33,11 +44,11 @@ class JsonSchema extends S.Class<JsonSchema>($I`JsonSchema`)(
     $ref: S.optionalKey(S.String),
     type: S.optionalKey(S.Union([S.String, S.Array(S.String)])),
     format: S.optionalKey(S.String),
-    enum: S.optionalKey(S.Array(S.Unknown)),
+    enum: S.Array(S.Unknown).pipe(SchemaUtils.withEmptyArrayDefaults<unknown>()),
     items: S.optionalKey(JsonSchemaRef),
     nullable: S.optionalKey(S.Boolean),
     properties: S.optionalKey(S.Record(S.String, JsonSchemaRef)),
-    required: S.optionalKey(S.Array(S.String)),
+    required: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
     additionalProperties: S.optionalKey(S.Union([JsonSchemaRef, S.Boolean])),
   },
   $I.annote("JsonSchema", {
@@ -91,9 +102,9 @@ class OpenApiOperation extends S.Class<OpenApiOperation>($I`OpenApiOperation`)(
     summary: S.optionalKey(S.String),
     description: S.optionalKey(S.String),
     tags: S.optionalKey(S.Array(S.String)),
-    parameters: S.optionalKey(S.Array(OpenApiParameter)),
+    parameters: S.Array(OpenApiParameter).pipe(SchemaUtils.withEmptyArrayDefaults<OpenApiParameter>()),
     requestBody: S.optionalKey(OpenApiRequestBody),
-    responses: S.optionalKey(S.Record(S.String, OpenApiResponse)),
+    responses: S.Record(S.String, OpenApiResponse).pipe(SchemaUtils.withKeyDefaults(R.empty())),
     security: S.optionalKey(S.Array(S.Record(S.String, S.Array(S.String)))),
   },
   $I.annote("OpenApiOperation", {
@@ -108,7 +119,7 @@ class OpenApiPathItem extends S.Class<OpenApiPathItem>($I`OpenApiPathItem`)(
     patch: S.optionalKey(OpenApiOperation),
     put: S.optionalKey(OpenApiOperation),
     delete: S.optionalKey(OpenApiOperation),
-    parameters: S.optionalKey(S.Array(OpenApiParameter)),
+    parameters: S.Array(OpenApiParameter).pipe(SchemaUtils.withEmptyArrayDefaults<OpenApiParameter>()),
   },
   $I.annote("OpenApiPathItem", {
     description: "OpenAPI path item subset consumed by the Runpod generator.",
@@ -117,7 +128,7 @@ class OpenApiPathItem extends S.Class<OpenApiPathItem>($I`OpenApiPathItem`)(
 
 class OpenApiComponents extends S.Class<OpenApiComponents>($I`OpenApiComponents`)(
   {
-    schemas: S.optionalKey(S.Record(S.String, JsonSchema)),
+    schemas: S.Record(S.String, JsonSchema).pipe(SchemaUtils.withKeyDefaults(R.empty())),
   },
   $I.annote("OpenApiComponents", {
     description: "OpenAPI components subset consumed by the Runpod generator.",
@@ -134,9 +145,9 @@ class OpenApiDocument extends S.Class<OpenApiDocument>($I`OpenApiDocument`)(
   $I.annote("OpenApiDocument", {
     description: "Runpod OpenAPI document subset consumed by the generator.",
   })
-) {}
-
-const decodeOpenApiDocument = S.decodeEffect(S.fromJsonString(OpenApiDocument));
+) {
+  static readonly decodeJsonEffect = S.decodeEffect(S.fromJsonString(OpenApiDocument));
+}
 
 type Operation = {
   readonly descriptorName: string;
@@ -148,7 +159,7 @@ type Operation = {
   readonly requestBodyRequired: boolean;
   readonly requestClassName: string;
   readonly requestFields: readonly RequestField[];
-  readonly responseBody: "json" | "none" | "text";
+  readonly responseBody: OperationResponseBodyKind;
   readonly responseSchemaExpression?: string;
   readonly responseSchemaName?: string;
   readonly responseTypeExpression: string;
@@ -172,7 +183,7 @@ const packageRoot = new URL("../", import.meta.url);
 const openApiPath = new URL("openapi.json", packageRoot);
 const generatedPath = new URL("src/_generated/Runpod.generated.ts", packageRoot);
 
-const HTTP_METHODS = ["get", "post", "patch", "put", "delete"] as const;
+const HTTP_METHODS = RunpodGeneratorHttpMethod.From.Options;
 const DYNAMIC_ENUM_HINTS = [
   "accelerator",
   "cpuFlavor",
@@ -187,7 +198,7 @@ let advisoryEnums: Record<string, readonly string[]> = {};
 
 const main = async (): Promise<void> => {
   const raw = await Bun.file(openApiPath).text();
-  const document = await Effect.runPromise(decodeOpenApiDocument(raw));
+  const document = await Effect.runPromise(OpenApiDocument.decodeJsonEffect(raw));
   const components = document.components?.schemas ?? {};
   const operations = buildOperations(document);
   const code = renderGeneratedFile({
@@ -215,7 +226,7 @@ const buildOperations = (document: OpenApiDocument): readonly Operation[] => {
         continue;
       }
 
-      const method = Str.toUpperCase(openApiMethod) as HttpMethod;
+      const method = RunpodGeneratorHttpMethod.Enum[openApiMethod];
       const baseMethodName = lowerFirst(operation.operationId);
       const disambiguated = disambiguateMethodName({
         baseMethodName,
@@ -227,11 +238,11 @@ const buildOperations = (document: OpenApiDocument): readonly Operation[] => {
       const methodName = disambiguated.methodName;
       const requestClassName = `${upperFirst(methodName)}Request`;
       const descriptorName = `${methodName}Operation`;
-      const parameters = mergeParameters(pathItem.parameters ?? [], operation.parameters ?? []);
+      const parameters = mergeParameters(pathItem.parameters, operation.parameters);
       const bodySchema = operation.requestBody?.content?.["application/json"]?.schema;
       const requestBodyRequired = operation.requestBody?.required === true;
       const requestFields = renderRequestFields(parameters, bodySchema, requestBodyRequired);
-      const response = chooseResponse(methodName, operation.responses ?? {});
+      const response = chooseResponse(methodName, operation.responses);
 
       operations = A.append(operations, {
         descriptorName,
@@ -333,7 +344,7 @@ const chooseResponse = (
   methodName: string,
   responses: Record<string, OpenApiResponse>
 ): {
-  readonly body: "json" | "none" | "text";
+  readonly body: OperationResponseBodyKind;
   readonly schemaExpression?: string;
   readonly schemaName?: string;
   readonly status: string;
@@ -360,18 +371,18 @@ const chooseResponse = (
 
   if (jsonSchema !== undefined) {
     const refName = refNameFromSchema(jsonSchema);
-    if (refName !== undefined) {
+    if (O.isSome(refName)) {
       return {
-        body: "json",
-        schemaExpression: refName,
+        body: OperationResponseBodyKind.Enum.json,
+        schemaExpression: refName.value,
         status: selectedStatus,
-        typeExpression: refName,
+        typeExpression: refName.value,
       };
     }
 
     const schemaName = `${upperFirst(methodName)}Status${selectedStatus}Response`;
     return {
-      body: "json",
+      body: OperationResponseBodyKind.Enum.json,
       schemaExpression: schemaExpression(jsonSchema, schemaName),
       schemaName,
       status: selectedStatus,
@@ -381,7 +392,7 @@ const chooseResponse = (
 
   if (textSchema !== undefined || R.has(content, "text/html")) {
     return {
-      body: "text",
+      body: OperationResponseBodyKind.Enum.text,
       schemaExpression: "S.String",
       schemaName: `${upperFirst(methodName)}Status${selectedStatus}TextResponse`,
       status: selectedStatus,
@@ -390,7 +401,7 @@ const chooseResponse = (
   }
 
   return {
-    body: "none",
+    body: OperationResponseBodyKind.Enum.none,
     status: selectedStatus,
     typeExpression: "void",
   };
@@ -448,14 +459,14 @@ import { pipe, type Effect } from "effect";
 import * as S from "effect/Schema";
 
 import { $RunpodId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 
 const $I = $RunpodId.create("Runpod.generated");
 `;
 
 const renderComponent = (name: string, schema: JsonSchema): Component => {
   if (schema.type === "object" || schema.properties !== undefined) {
-    const required = schema.required ?? [];
+    const required = schema.required;
     const properties = Struct.entries(schema.properties ?? {});
     const fields = pipe(
       properties,
@@ -501,18 +512,50 @@ ${pipe(fields, A.join("\n"))}
   };
 };
 
+const isLiteralKitExpression: (expression: string) => boolean = Str.startsWith("LiteralKit(");
+
+const isMultilineArrayPipeExpression = (expression: string): boolean =>
+  pipe(expression, Str.endsWith(".pipe(S.Array)")) && pipe(expression, Str.includes("\n"));
+
+const renderLiteralKitAliasExpression = (name: string, annotation: string): string => `${name}Base.pipe(
+  ${annotation},
+  SchemaUtils.withLiteralKitStatics(${name}Base),
+  SchemaUtils.withStatics((schema) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+    fromUnknown: S.decodeUnknownSync(schema),
+  }))
+)`;
+
+const renderArrayAliasExpression = (expression: string, annotation: string): string => `pipe(
+  ${Str.slice(0, -".pipe(S.Array)".length)(expression)},
+  S.Array,
+  ${annotation},
+  SchemaUtils.withCodecStatics,
+)`;
+
+const renderAliasExpressionWithAnnotation = (name: string, expression: string, annotation: string): string =>
+  Match.value(expression).pipe(
+    Match.when(isLiteralKitExpression, () => renderLiteralKitAliasExpression(name, annotation)),
+    Match.when(isMultilineArrayPipeExpression, (value) => renderArrayAliasExpression(value, annotation)),
+    Match.orElse((value) => pipeExpression(pipeExpression(value, annotation), "SchemaUtils.withCodecStatics"))
+  );
+
+const renderLiteralKitBaseExpression = (name: string, expression: string): string =>
+  pipe(
+    expression,
+    O.liftPredicate(isLiteralKitExpression),
+    O.match({
+      onNone: () => "",
+      onSome: (value) => `const ${name}Base = ${value};\n`,
+    })
+  );
+
 const renderSchemaAlias = (name: string, expression: string): string => {
   const annotation = `$I.annoteSchema("${name}", {
     description: "${name} schema generated from the Runpod OpenAPI document.",
   })`;
-  const expressionWithAnnotation =
-    pipe(expression, Str.endsWith(".pipe(S.Array)")) && pipe(expression, Str.includes("\n"))
-      ? `pipe(
-  ${Str.slice(0, -".pipe(S.Array)".length)(expression)},
-  S.Array,
-  ${annotation},
-)`
-      : pipeExpression(expression, annotation);
+  const expressionWithAnnotation = renderAliasExpressionWithAnnotation(name, expression, annotation);
+  const baseExpression = renderLiteralKitBaseExpression(name, expression);
 
   return `/**
  * ${name} schema generated from the Runpod OpenAPI document.
@@ -527,6 +570,7 @@ const renderSchemaAlias = (name: string, expression: string): string => {
  * @category schemas
  * @since 0.1.0
  */
+${baseExpression}
 export const ${name} = ${expressionWithAnnotation};
 
 /**
@@ -625,7 +669,8 @@ const renderOperationDescriptorClass = (operations: readonly Operation[]): strin
     )
   );
 
-  return `/**
+  return `const RunpodHttpMethodBase = LiteralKit(${JSON.stringify(methods)});
+/**
  * Supported Runpod HTTP methods.
  *
  * @example
@@ -636,9 +681,18 @@ const renderOperationDescriptorClass = (operations: readonly Operation[]): strin
  * \`\`\`
  *
  * @category schemas
- * @since 0.1.0
+ * @since 0.0.0
  */
-export const RunpodHttpMethod = LiteralKit(${JSON.stringify(methods)});
+export const RunpodHttpMethod = RunpodHttpMethodBase.pipe(
+  $I.annoteSchema("RunpodHttpMethod", {
+    description: "Supported Runpod HTTP methods.",
+  }),
+  SchemaUtils.withLiteralKitStatics(RunpodHttpMethodBase),
+  SchemaUtils.withStatics((schema) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+    fromUnknown: S.decodeUnknownSync(schema),
+  }))
+);
 
 /**
  * Supported Runpod HTTP method.
@@ -655,6 +709,7 @@ export const RunpodHttpMethod = LiteralKit(${JSON.stringify(methods)});
  */
 export type RunpodHttpMethod = typeof RunpodHttpMethod.Type;
 
+const RunpodOperationIdBase = LiteralKit(${JSON.stringify(operationIds)});
 /**
  * Operation ids exposed by Runpod REST API v1.
  *
@@ -666,9 +721,18 @@ export type RunpodHttpMethod = typeof RunpodHttpMethod.Type;
  * \`\`\`
  *
  * @category schemas
- * @since 0.1.0
+ * @since 0.0.0
  */
-export const RunpodOperationId = LiteralKit(${JSON.stringify(operationIds)});
+export const RunpodOperationId = RunpodOperationIdBase.pipe(
+  $I.annoteSchema("RunpodOperationId", {
+    description: "Operation ids exposed by Runpod REST API v1.",
+  }),
+  SchemaUtils.withLiteralKitStatics(RunpodOperationIdBase),
+  SchemaUtils.withStatics((schema) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+    fromUnknown: S.decodeUnknownSync(schema),
+  }))
+);
 
 /**
  * Operation id exposed by Runpod REST API v1.
@@ -685,6 +749,7 @@ export const RunpodOperationId = LiteralKit(${JSON.stringify(operationIds)});
  */
 export type RunpodOperationId = typeof RunpodOperationId.Type;
 
+const RunpodRequestBodyKindBase = LiteralKit(${JSON.stringify(OperationRequestBodyKind.Options)});
 /**
  * Request body encoding used by a Runpod operation.
  *
@@ -696,9 +761,18 @@ export type RunpodOperationId = typeof RunpodOperationId.Type;
  * \`\`\`
  *
  * @category schemas
- * @since 0.1.0
+ * @since 0.0.0
  */
-export const RunpodRequestBodyKind = LiteralKit(["json", "none"]);
+export const RunpodRequestBodyKind = RunpodRequestBodyKindBase.pipe(
+  $I.annoteSchema("RunpodRequestBodyKind", {
+    description: "Request body encoding used by a Runpod operation.",
+  }),
+  SchemaUtils.withLiteralKitStatics(RunpodRequestBodyKindBase),
+  SchemaUtils.withStatics((schema) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+    fromUnknown: S.decodeUnknownSync(schema),
+  }))
+);
 
 /**
  * Request body encoding used by a Runpod operation.
@@ -715,6 +789,7 @@ export const RunpodRequestBodyKind = LiteralKit(["json", "none"]);
  */
 export type RunpodRequestBodyKind = typeof RunpodRequestBodyKind.Type;
 
+const RunpodResponseBodyKindBase = LiteralKit(${JSON.stringify(OperationResponseBodyKind.Options)});
 /**
  * Response body decoding used by a Runpod operation.
  *
@@ -726,9 +801,18 @@ export type RunpodRequestBodyKind = typeof RunpodRequestBodyKind.Type;
  * \`\`\`
  *
  * @category schemas
- * @since 0.1.0
+ * @since 0.0.0
  */
-export const RunpodResponseBodyKind = LiteralKit(["json", "none", "text"]);
+export const RunpodResponseBodyKind = RunpodResponseBodyKindBase.pipe(
+  $I.annoteSchema("RunpodResponseBodyKind", {
+    description: "Response body decoding used by a Runpod operation.",
+  }),
+  SchemaUtils.withLiteralKitStatics(RunpodResponseBodyKindBase),
+  SchemaUtils.withStatics((schema) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+    fromUnknown: S.decodeUnknownSync(schema),
+  }))
+);
 
 /**
  * Response body decoding used by a Runpod operation.
@@ -775,7 +859,9 @@ export class RunpodOperationDescriptor extends S.Class<RunpodOperationDescriptor
   $I.annote("RunpodOperationDescriptor", {
     description: "Static metadata for one Runpod REST operation.",
   })
-) {}`;
+) {
+  static readonly is = S.is(RunpodOperationDescriptor);
+}`;
 };
 
 const renderOperationDescriptor = (operation: Operation): string => {
@@ -816,11 +902,11 @@ export const ${operation.descriptorName} = RunpodOperationDescriptor.make({
       operation.requestFields,
       A.some((field) => field.name === "body")
     )
-      ? '"json"'
-      : '"none"'
+      ? JSON.stringify(OperationRequestBodyKind.Enum.json)
+      : JSON.stringify(OperationRequestBodyKind.Enum.none)
   },
   requestBodyRequired: ${operation.requestBodyRequired ? "true" : "false"},
-  responseBody: "${operation.responseBody}",
+  responseBody: ${JSON.stringify(operation.responseBody)},
   status: "${operation.status}",
 });`;
 };
@@ -889,23 +975,19 @@ ${pipe(methods, A.join("\n"))}
 
 const schemaExpression = (schema: JsonSchema, hint: string): string => {
   const refName = refNameFromSchema(schema);
-  if (refName !== undefined) {
-    return wrapNullable(schema, `S.suspend(() => ${refName})`);
+  if (O.isSome(refName)) {
+    return wrapNullable(schema, `S.suspend(() => ${refName.value})`);
   }
 
-  if (schema.enum !== undefined) {
-    const values = pipe(schema.enum, A.filter(P.isString));
-    if (A.isReadonlyArrayNonEmpty(values)) {
-      if (shouldTrackAdvisoryEnum(hint)) {
-        advisoryEnums = R.set(advisoryEnums, Str.camelCase(hint), values);
+  const values = pipe(schema.enum, A.filter(P.isString));
+  if (A.isReadonlyArrayNonEmpty(values)) {
+    if (shouldTrackAdvisoryEnum(hint)) {
+      advisoryEnums = R.set(advisoryEnums, Str.camelCase(hint), values);
 
-        return wrapNullable(schema, "S.String");
-      }
-
-      return wrapNullable(schema, `LiteralKit(${JSON.stringify(values)})`);
+      return wrapNullable(schema, "S.String");
     }
 
-    return wrapNullable(schema, "S.String");
+    return wrapNullable(schema, `LiteralKit(${JSON.stringify(values)})`);
   }
 
   const type = A.isArray(schema.type) ? schema.type[0] : schema.type;
@@ -915,10 +997,11 @@ const schemaExpression = (schema: JsonSchema, hint: string): string => {
       wrapNullable(schema, pipeExpression(schemaExpression(schema.items ?? { type: "unknown" }, hint), "S.Array"))
     ),
     Match.when("boolean", () => wrapNullable(schema, "S.Boolean")),
-    Match.whenOr("integer", "number", () => wrapNullable(schema, "S.Finite")),
+    Match.when("integer", () => wrapNullable(schema, "S.Int")),
+    Match.when("number", () => wrapNullable(schema, "S.Finite")),
     Match.when("object", () => {
       if (schema.properties !== undefined) {
-        const required = schema.required ?? [];
+        const required = schema.required;
         const properties = pipe(
           Struct.entries(schema.properties),
           A.map(([propertyName, propertySchema]) => {
@@ -959,13 +1042,8 @@ const optionalExpression = (expression: string): string => pipeExpression(expres
 const wrapNullable = (schema: JsonSchema, expression: string): string =>
   schema.nullable === true ? pipeExpression(expression, "S.NullOr") : expression;
 
-const refNameFromSchema = (schema: JsonSchema): string | undefined => {
-  if (schema.$ref === undefined) {
-    return undefined;
-  }
-
-  return pipe(schema.$ref, Str.replace("#/components/schemas/", ""));
-};
+const refNameFromSchema = (schema: JsonSchema): O.Option<string> =>
+  pipe(O.fromUndefinedOr(schema.$ref), O.map(Str.replace("#/components/schemas/", "")));
 
 const shouldTrackAdvisoryEnum = (hint: string): boolean =>
   pipe(

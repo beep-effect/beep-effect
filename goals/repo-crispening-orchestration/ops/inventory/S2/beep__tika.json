@@ -2,39 +2,6 @@
   {
     "ruleId": "SFV4-defaults",
     "file": "packages/drivers/tika/src/Tika.tikaapp.ts",
-    "line": 45,
-    "symbol": "TikaAppEngineConfig",
-    "smell": "`javaPath` and `timeoutMillis` are optional schema fields, then `makeTikaAppFileProcessingEngine` defaults them in the body at lines 149-150.",
-    "proposedTarget": "Move the defaults into the schema: `javaPath: S.String.pipe(SchemaUtils.withKeyDefaults(defaultJavaPath))` and `timeoutMillis: S.Finite.pipe(SchemaUtils.withKeyDefaults(defaultTimeoutMillis))`; local exemplars include `packages/drivers/uspto/src/Uspto.config.ts:47` and `packages/drivers/m365/src/M365.config.ts:185`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/tika/src/Tika.errors.ts",
-    "line": 72,
-    "symbol": "TikaError",
-    "smell": "`cause` and `statusCode` are `S.optionalKey(...)`, and `fromReason` manually omits absent context with `O.fromUndefinedOr` + `R.getSomes`.",
-    "proposedTarget": "Use `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` for optional error context; `packages/drivers/pglite/src/Pglite.errors.ts:43` is the local driver exemplar for Option-shaped error context.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-normalization",
-    "file": "packages/drivers/tika/src/Tika.tikaapp.ts",
-    "line": 193,
-    "symbol": "extractImpl",
-    "smell": "Tika text output is trimmed in the engine body (`P.isString(value) ? O.some(Str.trim(value)) : O.none()`) before flowing into `ExtractionResult.make({ text })`.",
-    "proposedTarget": "Model this as a text-output codec, either package-local or in the shared extraction model: `S.String.pipe(S.decode(SchemaTransformation.trim()))` or `TrimmedNonEmptyText` if empty text should be rejected/omitted. Local exemplars: `packages/foundation/modeling/schema/src/internal/email.ts:36` and `packages/foundation/modeling/schema/src/CommonTextSchemas.ts:36`.",
-    "confidence": 0.6,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/tika/src/Tika.tikaapp.ts",
     "line": 94,
     "symbol": "metadataValueToString",
     "smell": "`A.length(strings) === 0 ? O.none() : O.some(...)` is an empty-array detector hit while converting heterogeneous Tika metadata.",

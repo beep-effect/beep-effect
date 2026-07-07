@@ -9,18 +9,30 @@
  * @since 0.0.0
  */
 
-import { composeGatedLayers, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit";
+import { composeGatedLayers, FetchableHandle, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit";
+import { PosInt } from "@beep/schema";
 import { assertSchemaArbitraryDecodesToSelf, provideScopedLayer } from "@beep/test-utils";
-import { Uspto, UsptoApplicationMetadata, UsptoConfigInput } from "@beep/uspto";
+import { Uspto, UsptoApplicationMetadata, UsptoConfigInput, UsptoDocumentReference } from "@beep/uspto";
 import {
   DocumentsProjectionOutput,
+  MintFetchableHandle,
+  ProjectDocumentsWithinBudgetOptions,
+  projectDocumentsWithinBudget,
+  UsptoGetDocumentsParams,
+  UsptoMcpFailure,
+  UsptoMcpServerConfig,
+  UsptoSearchApplicationsParams,
   UsptoSourceAuthRegistration,
+  UsptoToolError,
+  UsptoToolErrorReason,
   UsptoToolkit,
   UsptoToolkitHandlersLive,
+  usptoDocumentFieldTiers,
 } from "@beep/uspto-mcp";
 import { assert, describe, it } from "@effect/vitest";
-import { ConfigProvider, Effect, Layer, Redacted } from "effect";
+import { ConfigProvider, Effect, Equal, Layer, Redacted } from "effect";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import * as McpServer from "effect/unstable/ai/McpServer";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
@@ -108,6 +120,24 @@ const textOf = (result: {
   return first?.text as string;
 };
 
+const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
+  schema: Schema,
+  options?: { readonly numRuns?: number }
+): void => {
+  const arbitrary = S.toArbitrary(schema);
+  const encode = S.encodeEffect(schema);
+  const decode = S.decodeUnknownEffect(schema);
+
+  fc.assert(
+    fc.property(arbitrary, (value) => {
+      const encoded = Effect.runSync(encode(value));
+      const decoded = Effect.runSync(decode(encoded));
+      return Equal.equals(decoded, value);
+    }),
+    { numRuns: options?.numRuns ?? 20 }
+  );
+};
+
 describe("uspto-mcp fixture proofs", () => {
   it.effect("returns the api_key_required envelope when USPTO_API_KEY is absent", () =>
     Effect.gen(function* () {
@@ -152,22 +182,110 @@ describe("uspto-mcp fixture proofs", () => {
       // The complete-tier payload for 200 documents comfortably exceeds the
       // default 8000-byte budget; the response must have been reshaped down
       // to a smaller named tier rather than returned inline in full.
-      const decoded = yield* S.decodeUnknownEffect(S.fromJsonString(S.Unknown))(raw);
-      const projection = decoded as { readonly _tag: string; readonly tier?: string };
+      const projection = yield* S.decodeUnknownEffect(S.fromJsonString(DocumentsProjectionOutput))(raw);
 
       assert.strictEqual(projection._tag, "Inline");
-      assert.isTrue(projection.tier === "balanced" || projection.tier === "minimal", `tier was: ${projection.tier}`);
+      if (projection._tag === "Inline") {
+        assert.isTrue(projection.tier === "balanced" || projection.tier === "minimal", `tier was: ${projection.tier}`);
+      }
       assert.isAtMost(raw.length, 8000);
     })
   );
 });
 
-describe("uspto-mcp schema-derived arbitraries", () => {
-  it("only generates UsptoApplicationMetadata values that decode to themselves", () => {
-    assertSchemaArbitraryDecodesToSelf(UsptoApplicationMetadata);
+describe("uspto-mcp schema parity", () => {
+  it.effect("keeps explicit get-documents parameter wire shape and defaults missing budget in the schema", () =>
+    Effect.gen(function* () {
+      const explicitWire = { applicationNumber: "16138242", budgetBytes: 8000 };
+      const decoded = yield* S.decodeUnknownEffect(UsptoGetDocumentsParams)(explicitWire);
+      const encoded = yield* S.encodeEffect(UsptoGetDocumentsParams)(decoded);
+      const defaulted = yield* S.decodeUnknownEffect(UsptoGetDocumentsParams)({ applicationNumber: "16138242" });
+
+      assert.deepEqual(encoded, explicitWire);
+      assert.strictEqual(defaulted.budgetBytes, 8000);
+    })
+  );
+
+  it.effect("keeps failure and projection encoded shapes byte-identical", () =>
+    Effect.gen(function* () {
+      const failureWire = {
+        message: "USPTO get documents failed: transport",
+        reason: UsptoToolErrorReason.Enum.transport,
+        tool: "uspto_get_documents",
+      };
+      const projectionWire = {
+        _tag: "Inline" as const,
+        tier: "minimal" as const,
+        envelope: { columns: ["documentIdentifier"], rows: [["DOC-1"]] },
+      };
+
+      const failure = yield* S.decodeUnknownEffect(UsptoMcpFailure)(failureWire);
+      const projection = yield* S.decodeUnknownEffect(DocumentsProjectionOutput)(projectionWire);
+
+      assert.isTrue(UsptoMcpFailure.is(failure));
+      assert.isTrue(DocumentsProjectionOutput.is(projection));
+      assert.deepEqual(yield* S.encodeEffect(UsptoMcpFailure)(failure), failureWire);
+      assert.deepEqual(yield* S.encodeEffect(DocumentsProjectionOutput)(projection), projectionWire);
+    })
+  );
+
+  it("keeps the USPTO document tier field sets stable", () => {
+    assert.deepEqual(Object.keys(usptoDocumentFieldTiers.minimal.fields), ["documentIdentifier"]);
+    assert.deepEqual(Object.keys(usptoDocumentFieldTiers.balanced.fields), [
+      "documentCode",
+      "documentIdentifier",
+      "officialDate",
+    ]);
+    assert.deepEqual(Object.keys(usptoDocumentFieldTiers.complete.fields), [
+      "documentCode",
+      "documentCodeDescriptionText",
+      "documentIdentifier",
+      "downloadUrl",
+      "officialDate",
+    ]);
   });
 
-  it("only generates DocumentsProjectionOutput values that decode to themselves", () => {
+  it("supports data-last document projection without changing the two-argument form", () => {
+    const documents = [UsptoDocumentReference.make({ documentIdentifier: "DOC-1" })];
+    const options = ProjectDocumentsWithinBudgetOptions.make({
+      budgetBytes: PosInt.make(10_000),
+      mintFetchableHandle: MintFetchableHandle.implementSync((oversized) =>
+        FetchableHandle.make({
+          handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
+          expiresAt: "2026-07-01T01:00:00.000Z",
+          sizeBytes: oversized.sizeBytes,
+          tier: "minimal",
+        })
+      ),
+    });
+
+    assert.strictEqual(projectDocumentsWithinBudget(documents, options)._tag, "Inline");
+    assert.strictEqual(projectDocumentsWithinBudget(options)(documents)._tag, "Inline");
+  });
+});
+
+describe("uspto-mcp schema-derived arbitraries", () => {
+  it("only generates UsptoApplicationMetadata values that round-trip through their schema", () => {
+    assertSchemaArbitraryDecodesToSelf(UsptoApplicationMetadata);
+    assertSchemaArbitraryRoundTrips(UsptoApplicationMetadata);
+  });
+
+  it("only generates DocumentsProjectionOutput values that round-trip through their schema", () => {
     assertSchemaArbitraryDecodesToSelf(DocumentsProjectionOutput);
+    assertSchemaArbitraryRoundTrips(DocumentsProjectionOutput);
+  });
+
+  it("only generates package-owned tool schemas that round-trip through themselves", () => {
+    assertSchemaArbitraryDecodesToSelf(UsptoToolErrorReason);
+    assertSchemaArbitraryRoundTrips(UsptoToolErrorReason);
+    assertSchemaArbitraryDecodesToSelf(UsptoToolError);
+    assertSchemaArbitraryRoundTrips(UsptoToolError);
+    assertSchemaArbitraryRoundTrips(UsptoMcpFailure);
+    assertSchemaArbitraryDecodesToSelf(UsptoSearchApplicationsParams);
+    assertSchemaArbitraryRoundTrips(UsptoSearchApplicationsParams);
+    assertSchemaArbitraryDecodesToSelf(UsptoGetDocumentsParams);
+    assertSchemaArbitraryRoundTrips(UsptoGetDocumentsParams);
+    assertSchemaArbitraryDecodesToSelf(UsptoMcpServerConfig);
+    assertSchemaArbitraryRoundTrips(UsptoMcpServerConfig);
   });
 });

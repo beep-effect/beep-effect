@@ -13,7 +13,7 @@
 
 import { PathSafety } from "@beep/file-processing";
 import { $NlpMcpId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import {
   Context,
   Effect,
@@ -33,6 +33,9 @@ import type { Path } from "effect";
 import type { PlatformError } from "effect/PlatformError";
 
 const $I = $NlpMcpId.create("Streaming/TextStream");
+const NonNegativeFinite = S.Finite.check(S.isGreaterThanOrEqualTo(0));
+const NonNegativeInteger = S.Int.check(S.isGreaterThanOrEqualTo(0));
+const PositiveInteger = S.Int.check(S.isGreaterThan(0));
 
 /**
  * Configurable allow-list of directories the streaming file tools may read.
@@ -140,24 +143,30 @@ export const resolveLocalPath: (
   }
 );
 
+const TextEncodingBase = LiteralKit(["ascii", "latin1", "utf-8"]);
+
 /**
  * Text decoding labels accepted by the streaming text helpers.
  *
  * @example
  * ```ts
- * import type { TextEncoding } from "@beep/nlp-mcp/Streaming/TextStream"
+ * import { TextEncoding } from "@beep/nlp-mcp/Streaming/TextStream"
  *
- * const encoding: TextEncoding = "utf-8"
+ * const encoding = TextEncoding.fromUnknown("utf-8")
  * console.log(encoding)
  * ```
  *
+ * @category schemas
  * @since 0.0.0
- * @category models
  */
-export const TextEncoding = LiteralKit(["ascii", "latin1", "utf-8"]).annotate(
-  $I.annote("TextEncoding", {
+export const TextEncoding = TextEncodingBase.pipe(
+  $I.annoteSchema("TextEncoding", {
     description: "Text decoding labels accepted by the streaming text helpers.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**
@@ -194,13 +203,13 @@ const DEFAULT_ENCODING: TextEncoding = "utf-8";
  */
 export class TextReadOptions extends S.Class<TextReadOptions>($I`TextReadOptions`)(
   {
-    encoding: S.optionalKey(TextEncoding).annotateKey({
+    encoding: TextEncoding.pipe(SchemaUtils.withKeyDefaults(DEFAULT_ENCODING)).annotateKey({
       description: 'Text decoding label applied to file bytes (default: "utf-8").',
     }),
-    skipEmpty: S.optionalKey(S.Boolean).annotateKey({
+    skipEmpty: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
       description: "Drop lines that are empty after optional trimming (default: false).",
     }),
-    trim: S.optionalKey(S.Boolean).annotateKey({
+    trim: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
       description: "Trim surrounding whitespace from each line (default: false).",
     }),
   },
@@ -226,10 +235,10 @@ export class TextReadOptions extends S.Class<TextReadOptions>($I`TextReadOptions
 export class TextStreamOptions extends S.Class<TextStreamOptions>($I`TextStreamOptions`)(
   {
     ...TextReadOptions.fields,
-    maxLines: S.optionalKey(S.Finite).annotateKey({
+    maxLines: PositiveInteger.pipe(SchemaUtils.withKeyDefaults(Number.MAX_SAFE_INTEGER)).annotateKey({
       description: "Maximum number of lines to emit after skipping (default: unbounded).",
     }),
-    skip: S.optionalKey(S.Finite).annotateKey({
+    skip: NonNegativeInteger.pipe(SchemaUtils.withKeyDefaults(0)).annotateKey({
       description: "Number of leading lines to skip before emitting (default: 0).",
     }),
   },
@@ -261,22 +270,22 @@ export class TextStreamOptions extends S.Class<TextStreamOptions>($I`TextStreamO
  */
 export class TextStreamStats extends S.Class<TextStreamStats>($I`TextStreamStats`)(
   {
-    avgLineLength: S.Finite.annotateKey({
+    avgLineLength: NonNegativeFinite.annotateKey({
       description: "Mean processed line length across all counted lines.",
     }),
-    maxLineLength: S.Finite.annotateKey({
+    maxLineLength: NonNegativeInteger.annotateKey({
       description: "Longest processed line length seen.",
     }),
-    minLineLength: S.Finite.annotateKey({
+    minLineLength: NonNegativeInteger.annotateKey({
       description: "Shortest processed line length seen, or 0 for an empty file.",
     }),
-    nonEmptyLines: S.Finite.annotateKey({
+    nonEmptyLines: NonNegativeInteger.annotateKey({
       description: "Number of lines that were non-empty after processing.",
     }),
-    totalBytes: S.Finite.annotateKey({
+    totalBytes: NonNegativeInteger.annotateKey({
       description: "Total bytes attributed to processed lines, including newline separators.",
     }),
-    totalLines: S.Finite.annotateKey({
+    totalLines: NonNegativeInteger.annotateKey({
       description: "Total number of processed lines.",
     }),
   },
@@ -309,13 +318,9 @@ const byteLength = (value: string): number => new TextEncoder().encode(value).le
  */
 export const streamLines = (
   filePath: string,
-  options: TextStreamOptions = {}
+  options: (typeof TextStreamOptions)["~type.make.in"] = {}
 ): Stream.Stream<string, PlatformError, FileSystem.FileSystem | Path.Path> => {
-  const encoding = options.encoding ?? DEFAULT_ENCODING;
-  const skip = options.skip ?? 0;
-  const maxLines = options.maxLines ?? Number.MAX_SAFE_INTEGER;
-  const skipEmpty = options.skipEmpty ?? false;
-  const trim = options.trim ?? false;
+  const streamOptions = TextStreamOptions.make(options);
 
   return Stream.unwrap(
     Effect.gen(function* () {
@@ -323,12 +328,12 @@ export const streamLines = (
       const resolved = yield* resolveLocalPath(filePath);
 
       return fs.stream(resolved).pipe(
-        Stream.decodeText({ encoding }),
+        Stream.decodeText({ encoding: streamOptions.encoding }),
         Stream.splitLines,
-        Stream.drop(skip),
-        Stream.map((line) => (trim ? Str.trim(line) : line)),
-        Stream.filter((line) => !skipEmpty || Str.isNonEmpty(line)),
-        Stream.take(maxLines)
+        Stream.drop(streamOptions.skip),
+        Stream.map((line) => (streamOptions.trim ? Str.trim(line) : line)),
+        Stream.filter((line) => !streamOptions.skipEmpty || Str.isNonEmpty(line)),
+        Stream.take(streamOptions.maxLines)
       );
     })
   );
@@ -352,7 +357,7 @@ export const streamLines = (
  */
 export const readLines = (
   filePath: string,
-  options: TextStreamOptions = {}
+  options: (typeof TextStreamOptions)["~type.make.in"] = {}
 ): Effect.Effect<ReadonlyArray<string>, PlatformError, FileSystem.FileSystem | Path.Path> =>
   Stream.runCollect(streamLines(filePath, options));
 
@@ -397,7 +402,7 @@ export const readTextFile = Effect.fn("TextStream.readTextFile")(function* (
 export const head = (
   filePath: string,
   n: number,
-  options: TextReadOptions = {}
+  options: (typeof TextReadOptions)["~type.make.in"] = {}
 ): Effect.Effect<ReadonlyArray<string>, PlatformError, FileSystem.FileSystem | Path.Path> =>
   readLines(filePath, { ...options, maxLines: n });
 
@@ -417,7 +422,7 @@ export const head = (
 export const tail = (
   filePath: string,
   n: number,
-  options: TextReadOptions = {}
+  options: (typeof TextReadOptions)["~type.make.in"] = {}
 ): Effect.Effect<ReadonlyArray<string>, PlatformError, FileSystem.FileSystem | Path.Path> =>
   Effect.map(readLines(filePath, options), A.takeRight(n));
 
@@ -445,7 +450,7 @@ export const tail = (
 export const sampleLines = Effect.fn("TextStream.sampleLines")(function* (
   filePath: string,
   sampleSize: number,
-  options: TextReadOptions = {}
+  options: (typeof TextReadOptions)["~type.make.in"] = {}
 ) {
   const lines = yield* readLines(filePath, options);
   if (A.length(lines) <= sampleSize) {
@@ -476,7 +481,7 @@ export const sampleLines = Effect.fn("TextStream.sampleLines")(function* (
  */
 export const countLines = (
   filePath: string,
-  options: TextReadOptions = {}
+  options: (typeof TextReadOptions)["~type.make.in"] = {}
 ): Effect.Effect<number, PlatformError, FileSystem.FileSystem | Path.Path> =>
   Stream.runCount(streamLines(filePath, options));
 
@@ -543,7 +548,7 @@ export const getFileSize = Effect.fn("TextStream.getFileSize")(function* (filePa
  */
 export const computeStats = (
   filePath: string,
-  options: TextReadOptions = {}
+  options: (typeof TextReadOptions)["~type.make.in"] = {}
 ): Effect.Effect<TextStreamStats, PlatformError, FileSystem.FileSystem | Path.Path> =>
   streamLines(filePath, options).pipe(
     Stream.runFold(

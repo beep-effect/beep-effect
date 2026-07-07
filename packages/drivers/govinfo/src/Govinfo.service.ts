@@ -17,7 +17,6 @@ import { $GovinfoId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Cache, Config, Context, Effect, Layer } from "effect";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import * as HttpApiClient from "effect/unstable/httpapi/HttpApiClient";
@@ -32,7 +31,7 @@ import {
   GOVINFO_RATE_LIMIT_WINDOW,
   GovinfoConfigInput,
 } from "./Govinfo.config.ts";
-import { GovinfoError, GovinfoErrorOptions } from "./Govinfo.errors.ts";
+import { GovinfoError, GovinfoErrorOptions, GovinfoHttpStatus } from "./Govinfo.errors.ts";
 import type { RateLimitSnapshot } from "@beep/api-transport";
 import type * as Redacted from "effect/Redacted";
 import type * as HttpClient from "effect/unstable/http/HttpClient";
@@ -70,8 +69,8 @@ class ResolvedConfig extends S.Class<ResolvedConfig>($I`ResolvedConfig`)(
 ) {}
 
 const resolveConfig = (input: GovinfoConfigInput): ResolvedConfig => ({
-  apiKey: O.fromNullishOr(input.apiKey),
-  apiUrl: URLStr.make(input.apiUrl ?? GOVINFO_API_URL),
+  apiKey: input.apiKey,
+  apiUrl: input.apiUrl,
 });
 
 const authFromKey = (apiKey: O.Option<Redacted.Redacted<string>>): ApiAuth =>
@@ -80,17 +79,27 @@ const authFromKey = (apiKey: O.Option<Redacted.Redacted<string>>): ApiAuth =>
     onSome: (key) => ApiAuth.ApiKeyQueryAuth({ key, param: GOVINFO_API_KEY_PARAM }),
   });
 
-const readStatus = (cause: unknown): number | undefined => {
-  if (!P.isObject(cause)) return undefined;
-  const status = (cause as { readonly status?: unknown }).status;
-  return P.isNumber(status) ? status : undefined;
-};
+class StatusCause extends S.Class<StatusCause>($I`StatusCause`)(
+  {
+    status: GovinfoHttpStatus,
+  },
+  $I.annote("StatusCause", {
+    description: "External HTTP client cause shape carrying a numeric response status.",
+  })
+) {}
+
+const decodeStatusCause = S.decodeUnknownOption(StatusCause);
+
+const readStatus = (cause: unknown): O.Option<GovinfoHttpStatus> =>
+  O.map(decodeStatusCause(cause), ({ status }) => status);
 
 const mapClientError = (cause: unknown): GovinfoError => {
   const status = readStatus(cause);
-  return status === undefined
-    ? GovinfoError.of("transport", GovinfoErrorOptions.make({ cause }))
-    : GovinfoError.of("response status", GovinfoErrorOptions.make({ cause, status }));
+  return O.match(status, {
+    onNone: () => GovinfoError.of("transport", GovinfoErrorOptions.make({ cause: O.some(cause) })),
+    onSome: (value) =>
+      GovinfoError.of("response status", GovinfoErrorOptions.make({ cause: O.some(cause), status: O.some(value) })),
+  });
 };
 
 const makeFromResolved = Effect.fnUntraced(function* (config: ResolvedConfig) {

@@ -5,10 +5,9 @@
  * @packageDocumentation
  */
 
-import { createRequire } from "node:module";
 import { $WinkId } from "@beep/identity";
 import { BagOfWords, DefaultBM25Config, DocumentVector, TermFrequency } from "@beep/nlp/Core/Vectorization";
-import { TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Chunk, Context, Effect, Inspectable, Layer, pipe, Ref } from "effect";
 import * as Bool from "effect/Boolean";
@@ -17,38 +16,19 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { loadBM25Vectorizer, normalizeTokenText } from "./internal/bm25.ts";
 import { WinkEngine } from "./Wink.service.ts";
 import { observeWinkWorkflow } from "./WinkObservability.ts";
 import type { Document, DocumentId } from "@beep/nlp/Core/Document";
-import type { Token } from "@beep/nlp/Core/Token";
 import type { BM25Config } from "@beep/nlp/Core/Vectorization";
 import type { ItsHelpers } from "wink-nlp";
+import type { BM25VectorizerInstance, BM25VectorizerWithBowInstance } from "./internal/bm25.ts";
 
 const $I = $WinkId.create("Wink/WinkVectorizer");
-const require = createRequire(import.meta.url);
-
-type BM25Accessor<T> = (...args: ReadonlyArray<never>) => T;
-
-type BM25VectorizerInstance = {
-  readonly bowOf: (tokens: Array<string>, processOov?: boolean) => Record<string, number>;
-  readonly doc: (index: number) => {
-    readonly out: <T>(accessor: BM25Accessor<T>) => T;
-  };
-  readonly learn: (tokens: Array<string>) => void;
-  readonly out: <T>(accessor: BM25Accessor<T>) => T;
-  readonly vectorOf: (tokens: Array<string>) => Array<number>;
-};
-
-type BM25VectorizerFactory = (config?: {
-  readonly b?: number;
-  readonly k?: number;
-  readonly k1?: number;
-  readonly norm?: "none" | "l1" | "l2";
-}) => BM25VectorizerInstance;
 
 type VectorizerState = {
   readonly documentIds: ReadonlyArray<DocumentId>;
-  readonly vectorizer: BM25VectorizerInstance;
+  readonly vectorizer: BM25VectorizerWithBowInstance;
 };
 type WinkEngineService = typeof WinkEngine.Service;
 
@@ -111,35 +91,40 @@ type WinkVectorizerShape = {
   ) => Effect.Effect<A, E | VectorizerError, R>;
 };
 
-const loadBM25Vectorizer = (): BM25VectorizerFactory => require("wink-nlp/utilities/bm25-vectorizer");
-
-const normalizeTokenText = (token: Token): string =>
-  O.match(token.normal, {
-    onNone: () => token.text,
-    onSome: (normal) => normal ?? token.text,
-  });
-
 const toFiniteRecord = (record: Record<string, number>): Record<string, number> =>
   R.fromEntries(A.map(R.toEntries(record), ([key, value]) => [key, P.isNumber(value) ? value : 0] as const));
 
-const isStringArray = (value: unknown): value is ReadonlyArray<string> =>
-  A.isArray(value) && A.every(value, P.isString);
-
-const isTermFrequencyPair = (value: unknown): value is readonly [string, number] =>
-  A.isArray(value) && value.length >= 2 && P.isString(value[0]) && P.isNumber(value[1]);
+const WinkStringArray = S.Array(S.String).pipe(
+  $I.annoteSchema("WinkStringArray", {
+    description: "Array of strings returned by wink vectorizer accessors.",
+  })
+);
+const TermFrequencyPair = S.Tuple([S.String, S.Finite]).pipe(
+  $I.annoteSchema("TermFrequencyPair", {
+    description: "Term and finite frequency pair returned by wink vectorizer accessors.",
+  })
+);
+const TermFrequencyPairs = S.Array(TermFrequencyPair).pipe(
+  $I.annoteSchema("TermFrequencyPairs", {
+    description: "Array of term and frequency pairs returned by wink vectorizer accessors.",
+  })
+);
 
 const decodeStringArray = (value: unknown, operation: string): Effect.Effect<ReadonlyArray<string>, VectorizerError> =>
-  isStringArray(value)
-    ? Effect.succeed(value)
-    : Effect.fail(VectorizerError.fromMessage(`Invalid ${operation} result: expected string[]`, operation));
+  O.match(S.decodeUnknownOption(WinkStringArray)(value), {
+    onNone: () => Effect.fail(VectorizerError.fromMessage(`Invalid ${operation} result: expected string[]`, operation)),
+    onSome: Effect.succeed,
+  });
 
 const decodeTermFrequencyPairs = (
   value: unknown,
   operation: string
 ): Effect.Effect<ReadonlyArray<readonly [string, number]>, VectorizerError> =>
-  A.isArray(value) && A.every(value, isTermFrequencyPair)
-    ? Effect.succeed(value)
-    : Effect.fail(VectorizerError.fromMessage(`Invalid ${operation} result: expected [string, number][]`, operation));
+  O.match(S.decodeUnknownOption(TermFrequencyPairs)(value), {
+    onNone: () =>
+      Effect.fail(VectorizerError.fromMessage(`Invalid ${operation} result: expected [string, number][]`, operation)),
+    onSome: Effect.succeed,
+  });
 
 const readNormalizedTokensFromWink = (
   engine: WinkEngineService,
@@ -175,7 +160,7 @@ const observeVectorizer = (operation: string) =>
 export class VectorizerError extends TaggedErrorClass<VectorizerError>($I`VectorizerError`)(
   "VectorizerError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
     message: S.String,
     operation: S.String,
   },
@@ -197,7 +182,7 @@ export class VectorizerError extends TaggedErrorClass<VectorizerError>($I`Vector
     2,
     (cause: unknown, operation: string): VectorizerError =>
       VectorizerError.make({
-        cause,
+        cause: O.some(cause),
         message: `Wink vectorizer ${operation} failed: ${Inspectable.toStringUnknown(cause)}`,
         operation,
       })
@@ -217,7 +202,6 @@ export class VectorizerError extends TaggedErrorClass<VectorizerError>($I`Vector
     2,
     (message: string, operation: string): VectorizerError =>
       VectorizerError.make({
-        cause: undefined,
         message,
         operation,
       })
@@ -228,7 +212,7 @@ const makeWinkVectorizer = Effect.gen(function* () {
   const engine = yield* WinkEngine;
   const its = yield* engine.its;
   const bm25 = yield* Effect.try({
-    try: loadBM25Vectorizer,
+    try: () => loadBM25Vectorizer<BM25VectorizerWithBowInstance>(),
     catch: VectorizerError.fromCause("initialize"),
   });
 

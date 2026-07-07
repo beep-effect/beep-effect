@@ -7,6 +7,7 @@
 
 import { $WinkId } from "@beep/identity";
 import { MarkRange } from "@beep/nlp/Core/Pattern";
+import { SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Chunk, Match, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -16,22 +17,6 @@ import * as S from "effect/Schema";
 import type { Pattern, PatternElement } from "@beep/nlp/Core/Pattern";
 
 const $I = $WinkId.create("Wink/WinkPattern");
-
-const customEntityKey = (example: CustomEntityExample): string =>
-  pipe(
-    [
-      example.name,
-      pipe(
-        example.mark,
-        O.match({
-          onNone: () => "none",
-          onSome: ([start, end]) => `${start}:${end}`,
-        })
-      ),
-      A.join(example.patterns, "|"),
-    ],
-    A.join("#")
-  );
 
 const renderPatternElement = Match.type<PatternElement>().pipe(
   Match.tagsExhaustive({
@@ -53,10 +38,9 @@ const patternElementToBracketString = (pattern: Pattern): ReadonlyArray<string> 
  *
  * @example
  * ```ts
- * import * as S from "effect/Schema"
  * import { EntityGroupName } from "@beep/wink"
  *
- * const entityGroupName = S.decodeSync(EntityGroupName)("ProductName")
+ * const entityGroupName = EntityGroupName.fromUnknown("ProductName")
  * console.log(entityGroupName)
  * ```
  *
@@ -67,7 +51,8 @@ export const EntityGroupName = S.NonEmptyString.pipe(
   S.brand("EntityGroupName"),
   $I.annoteSchema("EntityGroupName", {
     description: "Stable identifier for a learned wink custom-entity group.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -109,7 +94,7 @@ export type EntityGroupName = typeof EntityGroupName.Type;
  */
 export class CustomEntityExample extends S.Class<CustomEntityExample>($I`CustomEntityExample`)(
   {
-    mark: S.OptionFromOptionalKey(MarkRange),
+    mark: S.OptionFromOptionalKey(MarkRange).pipe(SchemaUtils.withNoneDefault),
     name: S.NonEmptyString,
     patterns: S.NonEmptyArray(S.NonEmptyString),
   },
@@ -137,6 +122,8 @@ export class CustomEntityExample extends S.Class<CustomEntityExample>($I`CustomE
     };
   }
 }
+
+const sameCustomEntityExample = S.toEquivalence(CustomEntityExample);
 
 /**
  * Collection of custom-entity examples learned as one logical wink entity group.
@@ -258,13 +245,7 @@ export class WinkEngineCustomEntities extends S.Class<WinkEngineCustomEntities>(
   merge(other: WinkEngineCustomEntities, newName: EntityGroupName | string = this.name): WinkEngineCustomEntities {
     return WinkEngineCustomEntities.make({
       name: P.isString(newName) ? EntityGroupName.make(newName) : newName,
-      patterns: pipe(
-        this.patterns,
-        A.appendAll(other.patterns),
-        A.map((example) => [customEntityKey(example), example] as const),
-        A.dedupeWith(([left], [right]) => left === right),
-        A.map(([, example]) => example)
-      ),
+      patterns: pipe(this.patterns, A.appendAll(other.patterns), A.dedupeWith(sameCustomEntityExample)),
     });
   }
 

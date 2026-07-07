@@ -1,9 +1,15 @@
 import { makeLayer, PgliteClient, PgliteError, PgliteTestLayer } from "@beep/pglite";
 import * as Pg from "@effect/sql-pg/PgClient";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { Context, Effect, Exit, Layer, Scope } from "effect";
+import { Context, Effect, Exit, Layer, Result, Scope } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
+
+const PgliteErrorArbitrary = S.toArbitrary(PgliteError);
+const encodePgliteError = S.encodeUnknownResult(PgliteError);
+const decodePgliteError = S.decodeUnknownResult(PgliteError);
 
 describe("PgliteError", () => {
   it("normalizes an unknown failure into the tagged driver error", () => {
@@ -14,6 +20,17 @@ describe("PgliteError", () => {
     expect(error.operation).toBe("connect");
     expect(O.getOrNull(error.message)).toBe("boom");
   });
+
+  it("round-trips schema-derived driver errors through their encoded shape", () =>
+    fc.assert(
+      fc.property(PgliteErrorArbitrary, (error) => {
+        const encoded = Result.getOrThrow(encodePgliteError(error));
+        const decoded = Result.getOrThrow(decodePgliteError(encoded));
+
+        expect(decoded).toEqual(error);
+      }),
+      { numRuns: 50 }
+    ));
 });
 
 describe("PgliteClient layer lifecycle", () => {

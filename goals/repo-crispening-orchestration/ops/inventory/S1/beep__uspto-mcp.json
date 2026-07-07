@@ -16,17 +16,6 @@
   },
   {
     "ruleId": "SFV4-fn-schema",
-    "file": "packages/drivers/uspto-mcp/src/UsptoDocumentTiers.ts",
-    "line": 144,
-    "symbol": "projectDocumentsWithinBudget",
-    "smell": "Exported function in a schema-modeled file takes an inline options object with `budgetBytes: number` plus a callback `(oversized: OversizedFieldProjection) => FetchableHandle`, duplicating the mcp-kit budget/minter contract while returning schema-backed `DocumentsProjectionOutput`.",
-    "proposedTarget": "Introduce `ProjectDocumentsWithinBudgetOptions` as an annotated schema or import the eventual mcp-kit contract from `packages/foundation/capability/mcp-kit/src/FieldTier.ts:232`, with `budgetBytes: NonNegativeInt` and a shared `MintFetchableHandle = Fn({ input: OversizedFieldProjection, output: FetchableHandle })`. `OversizedFieldProjection` is at `FieldTier.ts:212`, `FetchableHandle` at `:388`, and the upstream mcp-kit S1 inventory already proposes the shared Fn. Use the same Fn exemplars: `Formatter` at `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66` and `HeaderTransformFunction` at `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`.",
-    "confidence": 0.66,
-    "mechanization": "assisted",
-    "roiRank": 0.45
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
     "file": "packages/drivers/uspto-mcp/src/Server.ts",
     "line": 83,
     "symbol": "makeServerLayer",

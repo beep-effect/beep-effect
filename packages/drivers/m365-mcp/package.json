@@ -62,6 +62,7 @@
     "@beep/identity": "workspace:^",
     "@beep/m365": "workspace:^",
     "@beep/mcp-kit": "workspace:^",
+    "@beep/schema": "workspace:^",
     "@effect/platform-node": "catalog:",
     "effect": "catalog:"
   },

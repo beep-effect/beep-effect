@@ -13,18 +13,20 @@
  */
 
 import { apiKeyRequiredFailure, FetchableHandle, resolveSourceCredential } from "@beep/mcp-kit";
-import { NonNegativeInt } from "@beep/schema";
 import { Uspto } from "@beep/uspto";
 import { DateTime, Effect, Random } from "effect";
 import * as O from "effect/Option";
-import { projectDocumentsWithinBudget } from "./UsptoDocumentTiers.ts";
+import {
+  MintFetchableHandle,
+  ProjectDocumentsWithinBudgetOptions,
+  projectDocumentsWithinBudget,
+} from "./UsptoDocumentTiers.ts";
 import { UsptoSourceAuthRegistration } from "./UsptoSourceAuth.ts";
 import { UsptoGetDocumentsTool, UsptoSearchApplicationsTool, UsptoToolError, UsptoToolkit } from "./UsptoTools.ts";
 import type { UsptoError } from "@beep/uspto";
 import type * as Layer from "effect/Layer";
 import type * as Tool from "effect/unstable/ai/Tool";
-
-const DEFAULT_DOCUMENT_BUDGET_BYTES = 8000;
+import type { UsptoGetDocumentsParams } from "./UsptoTools.ts";
 
 const toUsptoToolError =
   (tool: string) =>
@@ -64,13 +66,15 @@ const makeDiagnosticFetchableHandleMinter = Effect.fn("UsptoMcp.makeDiagnosticFe
   );
   const handleId = `uspto-doc-${Math.abs(random).toString(16)}`;
 
-  return (oversized: { readonly sizeBytes: number }): FetchableHandle =>
-    FetchableHandle.make({
-      handleId,
-      expiresAt,
-      sizeBytes: NonNegativeInt.make(oversized.sizeBytes),
-      tier: "minimal",
-    });
+  return MintFetchableHandle.implementSync(
+    (oversized): FetchableHandle =>
+      FetchableHandle.make({
+        handleId,
+        expiresAt,
+        sizeBytes: oversized.sizeBytes,
+        tier: "minimal",
+      })
+  );
 });
 
 /**
@@ -96,19 +100,19 @@ export const UsptoToolkitHandlersLive: Layer.Layer<
           .searchApplications(request.query)
           .pipe(Effect.mapError(toUsptoToolError(UsptoSearchApplicationsTool.name)));
       }),
-      uspto_get_documents: Effect.fn("UsptoMcp.uspto_get_documents")(function* (request: {
-        readonly applicationNumber: string;
-        readonly budgetBytes?: number;
-      }) {
+      uspto_get_documents: Effect.fn("UsptoMcp.uspto_get_documents")(function* (request: UsptoGetDocumentsParams) {
         yield* requireCredential(UsptoGetDocumentsTool.name);
         const documents = yield* uspto
           .getDocuments(request.applicationNumber)
           .pipe(Effect.mapError(toUsptoToolError(UsptoGetDocumentsTool.name)));
         const mintFetchableHandle = yield* makeDiagnosticFetchableHandleMinter();
-        return projectDocumentsWithinBudget(documents, {
-          budgetBytes: request.budgetBytes ?? DEFAULT_DOCUMENT_BUDGET_BYTES,
-          mintFetchableHandle,
-        });
+        return projectDocumentsWithinBudget(
+          documents,
+          ProjectDocumentsWithinBudgetOptions.make({
+            budgetBytes: request.budgetBytes,
+            mintFetchableHandle,
+          })
+        );
       }),
     });
   })

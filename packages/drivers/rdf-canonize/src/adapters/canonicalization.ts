@@ -10,26 +10,29 @@
 
 import {
   DefaultGraph,
+  GraphTerm,
   makeBlankNode,
   makeDataset,
   makeLiteral,
   makeNamedNode,
   makeQuad,
+  ObjectTerm,
+  Subject,
   sortDatasetQuads,
 } from "@beep/rdf/Rdf";
 import { Sha256Hex } from "@beep/schema";
 import {
   CanonicalDatasetResult,
+  CanonicalizationAlgorithm,
   CanonicalizationError,
   CanonicalizationService,
   DatasetFingerprint,
 } from "@beep/semantic-web/services/canonicalization";
-import { A, Str } from "@beep/utils";
+import { A, O, Str } from "@beep/utils";
 import { Duration, Effect, flow, Layer, Match, pipe } from "effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { canonize, NQuads } from "rdf-canonize";
-import type { GraphTerm, ObjectTerm, Quad, Subject } from "@beep/rdf/Rdf";
+import type { Quad } from "@beep/rdf/Rdf";
 import type { CanonicalizationServiceShape } from "@beep/semantic-web/services/canonicalization";
 import type { CanonizeGraph, CanonizeObject, CanonizeQuad, CanonizeSubject } from "rdf-canonize";
 
@@ -91,38 +94,29 @@ const lexicalCanonicalTextFromQuads = (quads: ReadonlyArray<Quad>): string =>
   pipe(NQuads.serialize(toCanonizeDataset(quads)), Str.trimEnd);
 
 const toCanonizeSubject = (subject: Subject): CanonizeSubject =>
-  subject.termType === "NamedNode"
-    ? { termType: "NamedNode", value: subject.value }
-    : { termType: "BlankNode", value: subject.value };
+  Subject.match(subject, {
+    NamedNode: (value): CanonizeSubject => ({ termType: "NamedNode", value: value.value }),
+    BlankNode: (value): CanonizeSubject => ({ termType: "BlankNode", value: value.value }),
+  });
 
-const toCanonizeObject = (object: ObjectTerm): CanonizeObject => {
-  if (object.termType === "NamedNode") {
-    return { termType: "NamedNode", value: object.value };
-  }
+const toCanonizeObject = (object: ObjectTerm): CanonizeObject =>
+  ObjectTerm.match(object, {
+    NamedNode: (value): CanonizeObject => ({ termType: "NamedNode", value: value.value }),
+    BlankNode: (value): CanonizeObject => ({ termType: "BlankNode", value: value.value }),
+    Literal: (value): CanonizeObject => ({
+      termType: "Literal",
+      value: value.value,
+      datatype: { termType: "NamedNode", value: value.datatype.value },
+      ...O.getSomesStruct({ language: value.language }),
+    }),
+  });
 
-  if (object.termType === "BlankNode") {
-    return { termType: "BlankNode", value: object.value };
-  }
-
-  return {
-    termType: "Literal",
-    value: object.value,
-    datatype: { termType: "NamedNode", value: object.datatype.value },
-    ...(O.isSome(object.language) ? { language: object.language.value } : {}),
-  };
-};
-
-const toCanonizeGraph = (graph: GraphTerm): CanonizeGraph => {
-  if (graph.termType === "NamedNode") {
-    return { termType: "NamedNode", value: graph.value };
-  }
-
-  if (graph.termType === "BlankNode") {
-    return { termType: "BlankNode", value: graph.value };
-  }
-
-  return { termType: "DefaultGraph", value: "" };
-};
+const toCanonizeGraph = (graph: GraphTerm): CanonizeGraph =>
+  GraphTerm.match(graph, {
+    NamedNode: (value): CanonizeGraph => ({ termType: "NamedNode", value: value.value }),
+    BlankNode: (value): CanonizeGraph => ({ termType: "BlankNode", value: value.value }),
+    DefaultGraph: (): CanonizeGraph => ({ termType: "DefaultGraph", value: "" }),
+  });
 
 const toCanonizeQuad = (quad: Quad): CanonizeQuad => ({
   subject: toCanonizeSubject(quad.subject),
@@ -134,25 +128,32 @@ const toCanonizeQuad = (quad: Quad): CanonizeQuad => ({
 const toCanonizeDataset: (quads: ReadonlyArray<Quad>) => ReadonlyArray<CanonizeQuad> = flow(A.map(toCanonizeQuad));
 
 const fromCanonizeSubject = (subject: CanonizeSubject): Subject =>
-  subject.termType === "NamedNode" ? makeNamedNode(subject.value) : makeBlankNode(subject.value);
+  Match.value(subject).pipe(
+    Match.withReturnType<Subject>(),
+    Match.discriminatorsExhaustive("termType")({
+      NamedNode: (value) => makeNamedNode(value.value),
+      BlankNode: (value) => makeBlankNode(value.value),
+    })
+  );
 
-const fromCanonizeObject = (object: CanonizeObject): ObjectTerm => {
-  if (object.termType === "NamedNode") {
-    return makeNamedNode(object.value);
-  }
-
-  if (object.termType === "BlankNode") {
-    return makeBlankNode(object.value);
-  }
-
-  return makeLiteral(object.value, object.datatype.value, { language: object.language });
-};
+const fromCanonizeObject = (object: CanonizeObject): ObjectTerm =>
+  Match.value(object).pipe(
+    Match.withReturnType<ObjectTerm>(),
+    Match.discriminatorsExhaustive("termType")({
+      NamedNode: (value) => makeNamedNode(value.value),
+      BlankNode: (value) => makeBlankNode(value.value),
+      Literal: (value) => makeLiteral(value.value, value.datatype.value, { language: value.language }),
+    })
+  );
 
 const fromCanonizeGraph = (graph: CanonizeGraph): GraphTerm =>
-  Match.value(graph.termType).pipe(
-    Match.when("NamedNode", () => makeNamedNode(graph.value)),
-    Match.when("BlankNode", () => makeBlankNode(graph.value)),
-    Match.orElse(() => DefaultGraph.make({ termType: "DefaultGraph", value: "" }))
+  Match.value(graph).pipe(
+    Match.withReturnType<GraphTerm>(),
+    Match.discriminatorsExhaustive("termType")({
+      NamedNode: (value) => makeNamedNode(value.value),
+      BlankNode: (value) => makeBlankNode(value.value),
+      DefaultGraph: () => DefaultGraph.make({ termType: "DefaultGraph", value: "" }),
+    })
   );
 
 const fromCanonizeQuad = (quad: CanonizeQuad): Quad =>
@@ -221,18 +222,10 @@ const getCanonicalDataset = (
   { readonly canonicalText: string; readonly dataset: ReturnType<typeof makeDataset> },
   CanonicalizationError
 > =>
-  Match.value(request.algorithm).pipe(
-    Match.when("rdfc-1.0", () => canonicalizeSemantically(request.dataset.quads)),
-    Match.when("lexical-sort-v1", () => Effect.succeed(canonicalizeLexically(request.dataset.quads))),
-    Match.orElse((algorithm) =>
-      Effect.fail(
-        CanonicalizationError.make({
-          reason: "unsupportedAlgorithm",
-          message: `Unsupported canonicalization algorithm: ${algorithm}`,
-        })
-      )
-    )
-  );
+  CanonicalizationAlgorithm.$match(request.algorithm, {
+    "rdfc-1.0": () => canonicalizeSemantically(request.dataset.quads),
+    "lexical-sort-v1": () => Effect.succeed(canonicalizeLexically(request.dataset.quads)),
+  });
 
 /**
  * Canonicalization service live layer.

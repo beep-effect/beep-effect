@@ -60,17 +60,6 @@
     }
   },
   {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/drivers/runpod/src/RunpodDocs.service.ts",
-    "line": 205,
-    "symbol": "parseRunpodDocsIndex",
-    "smell": "Exported parser function in a schema-modeled file has a stable string-to-`RunpodDocsIndex` Effect contract, but the function contract is not represented as an `Fn` schema.",
-    "proposedTarget": "Introduce an annotated `RunpodDocsIndexParser = Fn({ input: S.String, output: RunpodDocsIndex, error: RunpodDocsError })` and implement the exported parser with `.implementEffect(...)`. Use the existing `Fn` pattern from `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66` and `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`; `Fn.schema.ts` verifies `.implementEffect`/`.implementSync` support.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 0.55
-  },
-  {
     "ruleId": "schema-first-inventory",
     "file": "packages/drivers/runpod/src/Runpod.service.ts",
     "line": 63,

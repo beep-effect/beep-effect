@@ -1,4 +1,5 @@
 import { Effect, Sink, Stdio } from "effect";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as AcpError from "../Acp.errors.ts";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -21,7 +22,7 @@ export const makeTerminationError = (
     onFailure: (cause) =>
       AcpError.AcpTransportError.make({
         detail: "Failed to determine ACP process exit status",
-        cause,
+        cause: O.some(cause),
       }),
-    onSuccess: (code) => AcpError.AcpProcessExitedError.make({ code }),
+    onSuccess: (code) => AcpError.AcpProcessExitedError.make({ code: O.some(code) }),
   });

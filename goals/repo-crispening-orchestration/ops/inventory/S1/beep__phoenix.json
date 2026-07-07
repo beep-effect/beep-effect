@@ -43,16 +43,5 @@
       "reason": "The guard is schema-derived and used only as the overload discriminator for `PhoenixError.operation`; it does not duplicate validation logic and keeps `PhoenixOperation` as the source of truth.",
       "boundary": "dual overload discriminator over a LiteralKit domain"
     }
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/drivers/phoenix/src/Phoenix.errors.ts",
-    "line": 149,
-    "symbol": "PhoenixError.operation",
-    "smell": "Exported static constructor in a schema-modeled error file accepts `options?: PhoenixErrorOptions | { readonly cause?: unknown }`, so one overload bypasses the nearby options schema.",
-    "proposedTarget": "Promote the unknown-cause input to an annotated schema such as `PhoenixErrorOperationOptionsInput` (`cause: S.optionalKey(S.Unknown)`) and decode/construct it before `PhoenixError.make`, preserving current cause-label behavior. If the constructor is ever split out, use `Fn({ input, output })` as in `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66` and `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`; `Fn(...).implementSync` verified at `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:403`.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 0.55
   }
 ]

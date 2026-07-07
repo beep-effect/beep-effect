@@ -15,14 +15,15 @@
  *
  * @example
  * ```ts
+ * import * as O from "effect/Option"
  * import { AiProviderCliError } from "@beep/ai-provider-cli"
  *
  * const error = AiProviderCliError.make({
- *   command: "codex",
+ *   command: O.some("codex"),
  *   message: "Failed to execute provider CLI status command.",
  *   operation: "checkAuth",
  *   provider: "codex",
- *   stderr: "not logged in"
+ *   stderr: O.some("not logged in")
  * })
  *
  * console.log(error.provider) // "codex"

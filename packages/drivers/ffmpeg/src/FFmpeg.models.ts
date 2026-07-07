@@ -6,6 +6,7 @@
  */
 
 import { $FfmpegId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -52,7 +53,8 @@ export const PositiveFrameRate = S.Finite.check(
 ).pipe(
   $I.annoteSchema("PositiveFrameRate", {
     description: "Positive finite frame extraction rate in frames per second.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -111,7 +113,8 @@ export const PositiveMilliseconds = S.Finite.check(
 ).pipe(
   $I.annoteSchema("PositiveMilliseconds", {
     description: "Positive finite timeout value in milliseconds.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -170,7 +173,8 @@ export const SafeFramePrefix = S.String.check(
 ).pipe(
   $I.annoteSchema("SafeFramePrefix", {
     description: "Frame filename prefix that cannot escape the output directory.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -190,6 +194,291 @@ export const SafeFramePrefix = S.String.check(
 export type SafeFramePrefix = typeof SafeFramePrefix.Type;
 
 /**
+ * Non-negative finite duration measured in seconds.
+ *
+ * @example
+ * ```ts
+ * import { NonNegativeSeconds } from "@beep/ffmpeg"
+ *
+ * const seconds = NonNegativeSeconds.make(3)
+ * console.log(seconds)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const NonNegativeSeconds = S.Finite.check(
+  S.isGreaterThanOrEqualTo(0, {
+    identifier: $I`NonNegativeSecondsMinimumCheck`,
+    title: "Non Negative Seconds Minimum",
+    description: "Video durations must be zero or greater.",
+    message: "Expected non-negative seconds",
+  })
+).pipe(
+  $I.annoteSchema("NonNegativeSeconds", {
+    description: "Non-negative finite duration measured in seconds.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Non-negative finite duration measured in seconds.
+ *
+ * @example
+ * ```ts
+ * import { NonNegativeSeconds } from "@beep/ffmpeg"
+ * import type { NonNegativeSeconds as NonNegativeSecondsValue } from "@beep/ffmpeg"
+ *
+ * const seconds: NonNegativeSecondsValue = NonNegativeSeconds.make(3)
+ * console.log(seconds)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type NonNegativeSeconds = typeof NonNegativeSeconds.Type;
+
+/**
+ * Zero-based frame index.
+ *
+ * @example
+ * ```ts
+ * import { FrameIndex } from "@beep/ffmpeg"
+ *
+ * const index = FrameIndex.make(0)
+ * console.log(index)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FrameIndex = S.Int.check(
+  S.isGreaterThanOrEqualTo(0, {
+    identifier: $I`FrameIndexMinimumCheck`,
+    title: "Frame Index Minimum",
+    description: "Generated frame indexes are zero-based non-negative integers.",
+    message: "Expected a non-negative frame index",
+  })
+).pipe(
+  $I.annoteSchema("FrameIndex", {
+    description: "Zero-based non-negative integer frame index.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Zero-based frame index.
+ *
+ * @example
+ * ```ts
+ * import { FrameIndex } from "@beep/ffmpeg"
+ * import type { FrameIndex as FrameIndexValue } from "@beep/ffmpeg"
+ *
+ * const index: FrameIndexValue = FrameIndex.make(0)
+ * console.log(index)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FrameIndex = typeof FrameIndex.Type;
+
+/**
+ * Non-negative integer frame count.
+ *
+ * @example
+ * ```ts
+ * import { FrameCount } from "@beep/ffmpeg"
+ *
+ * const count = FrameCount.make(2)
+ * console.log(count)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FrameCount = S.Int.check(
+  S.isGreaterThanOrEqualTo(0, {
+    identifier: $I`FrameCountMinimumCheck`,
+    title: "Frame Count Minimum",
+    description: "Frame counts are non-negative integers.",
+    message: "Expected a non-negative frame count",
+  })
+).pipe(
+  $I.annoteSchema("FrameCount", {
+    description: "Non-negative integer frame count.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Non-negative integer frame count.
+ *
+ * @example
+ * ```ts
+ * import { FrameCount } from "@beep/ffmpeg"
+ * import type { FrameCount as FrameCountValue } from "@beep/ffmpeg"
+ *
+ * const count: FrameCountValue = FrameCount.make(2)
+ * console.log(count)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FrameCount = typeof FrameCount.Type;
+
+/**
+ * Positive integer pixel dimension.
+ *
+ * @example
+ * ```ts
+ * import { VideoDimension } from "@beep/ffmpeg"
+ *
+ * const width = VideoDimension.make(1920)
+ * console.log(width)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const VideoDimension = S.Int.check(
+  S.isGreaterThanOrEqualTo(1, {
+    identifier: $I`VideoDimensionMinimumCheck`,
+    title: "Video Dimension Minimum",
+    description: "Video dimensions are positive integer pixel counts.",
+    message: "Expected a positive integer pixel dimension",
+  })
+).pipe(
+  $I.annoteSchema("VideoDimension", {
+    description: "Positive integer pixel dimension.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Positive integer pixel dimension.
+ *
+ * @example
+ * ```ts
+ * import { VideoDimension } from "@beep/ffmpeg"
+ * import type { VideoDimension as VideoDimensionValue } from "@beep/ffmpeg"
+ *
+ * const width: VideoDimensionValue = VideoDimension.make(1920)
+ * console.log(width)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type VideoDimension = typeof VideoDimension.Type;
+
+/**
+ * FFmpeg progress percent in the closed 0-100 range.
+ *
+ * @example
+ * ```ts
+ * import { FFmpegProgressPercent } from "@beep/ffmpeg"
+ *
+ * const percent = FFmpegProgressPercent.make(50)
+ * console.log(percent)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FFmpegProgressPercent = S.Finite.check(
+  S.makeFilterGroup(
+    [
+      S.isGreaterThanOrEqualTo(0, {
+        identifier: $I`FFmpegProgressPercentMinimumCheck`,
+        title: "FFmpeg Progress Percent Minimum",
+        description: "FFmpeg progress percentages must be zero or greater.",
+        message: "Expected progress percent to be at least zero",
+      }),
+      S.isLessThanOrEqualTo(100, {
+        identifier: $I`FFmpegProgressPercentMaximumCheck`,
+        title: "FFmpeg Progress Percent Maximum",
+        description: "FFmpeg progress percentages must not exceed 100.",
+        message: "Expected progress percent to be at most 100",
+      }),
+    ],
+    {
+      identifier: $I`FFmpegProgressPercentChecks`,
+      title: "FFmpeg Progress Percent",
+      description: "Checks for FFmpeg progress percentages in the closed 0-100 range.",
+    }
+  )
+).pipe(
+  $I.annoteSchema("FFmpegProgressPercent", {
+    description: "Progress percentage in the closed 0-100 range.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * FFmpeg progress percent in the closed 0-100 range.
+ *
+ * @example
+ * ```ts
+ * import { FFmpegProgressPercent } from "@beep/ffmpeg"
+ * import type { FFmpegProgressPercent as FFmpegProgressPercentValue } from "@beep/ffmpeg"
+ *
+ * const percent: FFmpegProgressPercentValue = FFmpegProgressPercent.make(50)
+ * console.log(percent)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FFmpegProgressPercent = typeof FFmpegProgressPercent.Type;
+
+/**
+ * Minimum filename padding width used for generated frame numbers.
+ *
+ * @example
+ * ```ts
+ * import { FrameFilenamePadding } from "@beep/ffmpeg"
+ *
+ * const padding = FrameFilenamePadding.make(5)
+ * console.log(padding)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FrameFilenamePadding = S.Int.check(
+  S.isGreaterThanOrEqualTo(1, {
+    identifier: $I`FrameFilenamePaddingMinimumCheck`,
+    title: "Frame Filename Padding Minimum",
+    description: "Frame filename padding widths must be positive integers.",
+    message: "Expected a positive frame filename padding width",
+  })
+).pipe(
+  $I.annoteSchema("FrameFilenamePadding", {
+    description: "Positive integer filename padding width used for generated frame numbers.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Minimum filename padding width used for generated frame numbers.
+ *
+ * @example
+ * ```ts
+ * import { FrameFilenamePadding } from "@beep/ffmpeg"
+ * import type { FrameFilenamePadding as FrameFilenamePaddingValue } from "@beep/ffmpeg"
+ *
+ * const padding: FrameFilenamePaddingValue = FrameFilenamePadding.make(5)
+ * console.log(padding)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FrameFilenamePadding = typeof FrameFilenamePadding.Type;
+
+/**
  * Runtime path overrides for the native FFmpeg binaries.
  *
  * @example
@@ -205,9 +494,24 @@ export type SafeFramePrefix = typeof SafeFramePrefix.Type;
  */
 export class FFmpegConfigInput extends S.Class<FFmpegConfigInput>($I`FFmpegConfigInput`)(
   {
-    ffmpegPath: S.optionalKey(S.String),
-    ffprobePath: S.optionalKey(S.String),
-    forceKillAfterMillis: S.optionalKey(PositiveMilliseconds),
+    ffmpegPath: S.String.pipe(
+      SchemaUtils.withKeyDefaults("ffmpeg"),
+      $I.annoteKey("FFmpegConfigInput.ffmpegPath", {
+        description: "Executable path or command name used for ffmpeg.",
+      })
+    ),
+    ffprobePath: S.String.pipe(
+      SchemaUtils.withKeyDefaults("ffprobe"),
+      $I.annoteKey("FFmpegConfigInput.ffprobePath", {
+        description: "Executable path or command name used for ffprobe.",
+      })
+    ),
+    forceKillAfterMillis: PositiveMilliseconds.pipe(
+      SchemaUtils.withKeyDefaults(2000),
+      $I.annoteKey("FFmpegConfigInput.forceKillAfterMillis", {
+        description: "Timeout in milliseconds before an interrupted native process is force-killed.",
+      })
+    ),
   },
   $I.annote("FFmpegConfigInput", {
     description: "Optional runtime path overrides for native FFmpeg binaries.",
@@ -234,9 +538,21 @@ export class FFmpegConfigInput extends S.Class<FFmpegConfigInput>($I`FFmpegConfi
  */
 export class FFmpegConfig extends S.Class<FFmpegConfig>($I`FFmpegConfig`)(
   {
-    ffmpegPath: S.String,
-    ffprobePath: S.String,
-    forceKillAfterMillis: PositiveMilliseconds,
+    ffmpegPath: S.String.pipe(
+      $I.annoteKey("FFmpegConfig.ffmpegPath", {
+        description: "Resolved executable path or command name used for ffmpeg.",
+      })
+    ),
+    ffprobePath: S.String.pipe(
+      $I.annoteKey("FFmpegConfig.ffprobePath", {
+        description: "Resolved executable path or command name used for ffprobe.",
+      })
+    ),
+    forceKillAfterMillis: PositiveMilliseconds.pipe(
+      $I.annoteKey("FFmpegConfig.forceKillAfterMillis", {
+        description: "Resolved timeout in milliseconds before an interrupted native process is force-killed.",
+      })
+    ),
   },
   $I.annote("FFmpegConfig", {
     description: "Resolved runtime configuration for native FFmpeg command execution.",
@@ -259,12 +575,18 @@ export class FFmpegConfig extends S.Class<FFmpegConfig>($I`FFmpegConfig`)(
  */
 export class ProbeVideoRequest extends S.Class<ProbeVideoRequest>($I`ProbeVideoRequest`)(
   {
-    videoPath: S.String,
+    videoPath: S.String.pipe(
+      $I.annoteKey("ProbeVideoRequest.videoPath", {
+        description: "Video file path to inspect with ffprobe.",
+      })
+    ),
   },
   $I.annote("ProbeVideoRequest", {
     description: "Request to probe a video's first video stream.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(ProbeVideoRequest);
+}
 
 /**
  * Video metadata extracted from ffprobe.
@@ -272,8 +594,9 @@ export class ProbeVideoRequest extends S.Class<ProbeVideoRequest>($I`ProbeVideoR
  * @example
  * ```ts
  * import { VideoProbe } from "@beep/ffmpeg"
+ * import * as O from "effect/Option"
  *
- * const probe = VideoProbe.make({ videoPath: "./clip.mp4", durationSeconds: 3 })
+ * const probe = VideoProbe.make({ videoPath: "./clip.mp4", durationSeconds: O.some(3) })
  * console.log(probe)
  * ```
  *
@@ -282,12 +605,41 @@ export class ProbeVideoRequest extends S.Class<ProbeVideoRequest>($I`ProbeVideoR
  */
 export class VideoProbe extends S.Class<VideoProbe>($I`VideoProbe`)(
   {
-    videoPath: S.String,
-    durationSeconds: S.optionalKey(S.Finite),
-    fps: S.optionalKey(S.Finite),
-    frameCount: S.optionalKey(S.Finite),
-    height: S.optionalKey(S.Finite),
-    width: S.optionalKey(S.Finite),
+    videoPath: S.String.pipe(
+      $I.annoteKey("VideoProbe.videoPath", {
+        description: "Resolved video file path that was probed.",
+      })
+    ),
+    durationSeconds: S.OptionFromOptionalKey(NonNegativeSeconds).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("VideoProbe.durationSeconds", {
+        description: "Detected non-negative duration in seconds, when ffprobe reported one.",
+      })
+    ),
+    fps: S.OptionFromOptionalKey(PositiveFrameRate).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("VideoProbe.fps", {
+        description: "Detected positive frame rate, when ffprobe reported one.",
+      })
+    ),
+    frameCount: S.OptionFromOptionalKey(FrameCount).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("VideoProbe.frameCount", {
+        description: "Detected non-negative frame count, when ffprobe reported one.",
+      })
+    ),
+    height: S.OptionFromOptionalKey(VideoDimension).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("VideoProbe.height", {
+        description: "Detected positive video height in pixels, when ffprobe reported one.",
+      })
+    ),
+    width: S.OptionFromOptionalKey(VideoDimension).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("VideoProbe.width", {
+        description: "Detected positive video width in pixels, when ffprobe reported one.",
+      })
+    ),
   },
   $I.annote("VideoProbe", {
     description: "Video metadata extracted from the first ffprobe video stream.",
@@ -318,26 +670,49 @@ export class VideoProbe extends S.Class<VideoProbe>($I`VideoProbe`)(
  */
 export class ExtractFramesRequest extends S.Class<ExtractFramesRequest>($I`ExtractFramesRequest`)(
   {
-    fps: PositiveFrameRate,
+    fps: PositiveFrameRate.pipe(
+      $I.annoteKey("ExtractFramesRequest.fps", {
+        description: "Positive frame extraction rate in frames per second.",
+      })
+    ),
     manifestPath: S.Option(S.String).pipe(
       S.withConstructorDefault(Effect.succeed(O.none<string>())),
-      S.withDecodingDefault(Effect.succeed(O.none<string>()))
+      S.withDecodingDefault(Effect.succeed(O.none<string>())),
+      $I.annoteKey("ExtractFramesRequest.manifestPath", {
+        description: "Optional manifest path; defaults inside the output directory when absent.",
+      })
     ),
-    outDir: S.String,
+    outDir: S.String.pipe(
+      $I.annoteKey("ExtractFramesRequest.outDir", {
+        description: "Directory where extracted PNG frames and the manifest are written.",
+      })
+    ),
     overwrite: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
-      S.withDecodingDefault(Effect.succeed(false))
+      S.withDecodingDefault(Effect.succeed(false)),
+      $I.annoteKey("ExtractFramesRequest.overwrite", {
+        description: "Whether existing frame and manifest outputs may be overwritten.",
+      })
     ),
     prefix: S.Option(SafeFramePrefix).pipe(
       S.withConstructorDefault(Effect.succeed(O.none<SafeFramePrefix>())),
-      S.withDecodingDefault(Effect.succeed(O.none<SafeFramePrefix>()))
+      S.withDecodingDefault(Effect.succeed(O.none<SafeFramePrefix>())),
+      $I.annoteKey("ExtractFramesRequest.prefix", {
+        description: "Optional safe filename prefix for generated PNG frames.",
+      })
     ),
-    videoPath: S.String,
+    videoPath: S.String.pipe(
+      $I.annoteKey("ExtractFramesRequest.videoPath", {
+        description: "Video file path to extract frames from.",
+      })
+    ),
   },
   $I.annote("ExtractFramesRequest", {
     description: "Request to extract PNG frames from a video at a fixed frame rate.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(ExtractFramesRequest);
+}
 
 /**
  * A frame written by an extract-frames run.
@@ -360,10 +735,26 @@ export class ExtractFramesRequest extends S.Class<ExtractFramesRequest>($I`Extra
  */
 export class ExtractedFrame extends S.Class<ExtractedFrame>($I`ExtractedFrame`)(
   {
-    fileName: S.String,
-    index: S.Finite,
-    path: S.String,
-    relativePath: S.String,
+    fileName: S.String.pipe(
+      $I.annoteKey("ExtractedFrame.fileName", {
+        description: "Generated PNG file name for the extracted frame.",
+      })
+    ),
+    index: FrameIndex.pipe(
+      $I.annoteKey("ExtractedFrame.index", {
+        description: "Zero-based frame index in the committed output order.",
+      })
+    ),
+    path: S.String.pipe(
+      $I.annoteKey("ExtractedFrame.path", {
+        description: "Absolute or caller-visible path to the committed PNG frame.",
+      })
+    ),
+    relativePath: S.String.pipe(
+      $I.annoteKey("ExtractedFrame.relativePath", {
+        description: "Frame path relative to the output directory.",
+      })
+    ),
   },
   $I.annote("ExtractedFrame", {
     description: "A PNG frame written by an extract-frames run.",
@@ -388,9 +779,21 @@ export class ExtractFramesManifestOptions extends S.Class<ExtractFramesManifestO
   $I`ExtractFramesManifestOptions`
 )(
   {
-    fps: PositiveFrameRate,
-    overwrite: S.Boolean,
-    prefix: SafeFramePrefix,
+    fps: PositiveFrameRate.pipe(
+      $I.annoteKey("ExtractFramesManifestOptions.fps", {
+        description: "Frame extraction rate recorded in the manifest.",
+      })
+    ),
+    overwrite: S.Boolean.pipe(
+      $I.annoteKey("ExtractFramesManifestOptions.overwrite", {
+        description: "Whether the extraction run allowed overwriting outputs.",
+      })
+    ),
+    prefix: SafeFramePrefix.pipe(
+      $I.annoteKey("ExtractFramesManifestOptions.prefix", {
+        description: "Safe filename prefix used for generated PNG frames.",
+      })
+    ),
   },
   $I.annote("ExtractFramesManifestOptions", {
     description: "Options recorded in an extract-frames manifest.",
@@ -415,7 +818,11 @@ export class ExtractFramesManifestSummary extends S.Class<ExtractFramesManifestS
   $I`ExtractFramesManifestSummary`
 )(
   {
-    frameCount: S.Finite,
+    frameCount: FrameCount.pipe(
+      $I.annoteKey("ExtractFramesManifestSummary.frameCount", {
+        description: "Number of committed frame records in the manifest.",
+      })
+    ),
   },
   $I.annote("ExtractFramesManifestSummary", {
     description: "Summary recorded in an extract-frames manifest.",
@@ -427,14 +834,14 @@ export class ExtractFramesManifestSummary extends S.Class<ExtractFramesManifestS
  *
  * @example
  * ```ts
- * import { ExtractFramesManifest, ExtractFramesManifestOptions, ExtractFramesManifestSummary } from "@beep/ffmpeg"
+ * import { ExtractFramesManifest, ExtractFramesManifestOptions, ExtractFramesManifestSummary, VideoProbe } from "@beep/ffmpeg"
  *
  * const manifest = ExtractFramesManifest.make({
  *   frames: [],
  *   manifestPath: "./frames/extract-frames-manifest.json",
  *   options: ExtractFramesManifestOptions.make({ fps: 1, overwrite: false, prefix: "clip_frame" }),
  *   outputDirectory: "./frames",
- *   probe: { videoPath: "./clip.mp4" },
+ *   probe: VideoProbe.make({ videoPath: "./clip.mp4" }),
  *   schemaVersion: "beep.ffmpeg.extract-frames.v1",
  *   sourceVideo: "./clip.mp4",
  *   summary: ExtractFramesManifestSummary.make({ frameCount: 0 })
@@ -447,19 +854,53 @@ export class ExtractFramesManifestSummary extends S.Class<ExtractFramesManifestS
  */
 export class ExtractFramesManifest extends S.Class<ExtractFramesManifest>($I`ExtractFramesManifest`)(
   {
-    frames: S.Array(ExtractedFrame),
-    manifestPath: S.String,
-    options: ExtractFramesManifestOptions,
-    outputDirectory: S.String,
-    probe: VideoProbe,
-    schemaVersion: S.Literal("beep.ffmpeg.extract-frames.v1"),
-    sourceVideo: S.String,
-    summary: ExtractFramesManifestSummary,
+    frames: S.Array(ExtractedFrame).pipe(
+      $I.annoteKey("ExtractFramesManifest.frames", {
+        description: "Committed extracted frame records.",
+      })
+    ),
+    manifestPath: S.String.pipe(
+      $I.annoteKey("ExtractFramesManifest.manifestPath", {
+        description: "Path where this manifest was written.",
+      })
+    ),
+    options: ExtractFramesManifestOptions.pipe(
+      $I.annoteKey("ExtractFramesManifest.options", {
+        description: "Extraction options recorded for reproducibility.",
+      })
+    ),
+    outputDirectory: S.String.pipe(
+      $I.annoteKey("ExtractFramesManifest.outputDirectory", {
+        description: "Directory containing the committed frame files.",
+      })
+    ),
+    probe: VideoProbe.pipe(
+      $I.annoteKey("ExtractFramesManifest.probe", {
+        description: "Video metadata observed before extraction.",
+      })
+    ),
+    schemaVersion: S.Literal("beep.ffmpeg.extract-frames.v1").pipe(
+      $I.annoteKey("ExtractFramesManifest.schemaVersion", {
+        description: "Manifest schema version literal.",
+      })
+    ),
+    sourceVideo: S.String.pipe(
+      $I.annoteKey("ExtractFramesManifest.sourceVideo", {
+        description: "Resolved source video path used for extraction.",
+      })
+    ),
+    summary: ExtractFramesManifestSummary.pipe(
+      $I.annoteKey("ExtractFramesManifest.summary", {
+        description: "Aggregate frame counts for the extraction run.",
+      })
+    ),
   },
   $I.annote("ExtractFramesManifest", {
     description: "JSON manifest written by a successful extract-frames run.",
   })
-) {}
+) {
+  static readonly encodeEffect = S.encodeUnknownEffect(ExtractFramesManifest);
+}
 
 /**
  * Result returned after frames have been committed.
@@ -483,11 +924,31 @@ export class ExtractFramesManifest extends S.Class<ExtractFramesManifest>($I`Ext
  */
 export class ExtractFramesResult extends S.Class<ExtractFramesResult>($I`ExtractFramesResult`)(
   {
-    frameCount: S.Finite,
-    frames: S.Array(ExtractedFrame),
-    manifestPath: S.String,
-    outDir: S.String,
-    videoPath: S.String,
+    frameCount: FrameCount.pipe(
+      $I.annoteKey("ExtractFramesResult.frameCount", {
+        description: "Number of committed PNG frames.",
+      })
+    ),
+    frames: S.Array(ExtractedFrame).pipe(
+      $I.annoteKey("ExtractFramesResult.frames", {
+        description: "Committed extracted frame records.",
+      })
+    ),
+    manifestPath: S.String.pipe(
+      $I.annoteKey("ExtractFramesResult.manifestPath", {
+        description: "Path to the committed extract-frames manifest.",
+      })
+    ),
+    outDir: S.String.pipe(
+      $I.annoteKey("ExtractFramesResult.outDir", {
+        description: "Directory containing the committed outputs.",
+      })
+    ),
+    videoPath: S.String.pipe(
+      $I.annoteKey("ExtractFramesResult.videoPath", {
+        description: "Resolved source video path used for extraction.",
+      })
+    ),
   },
   $I.annote("ExtractFramesResult", {
     description: "Result returned after frames and manifest have been committed.",
@@ -516,11 +977,31 @@ export class ExtractFramesResult extends S.Class<ExtractFramesResult>($I`Extract
  */
 export class FFmpegStartedEvent extends S.Class<FFmpegStartedEvent>($I`FFmpegStartedEvent`)(
   {
-    args: S.Array(S.String),
-    command: S.String,
-    kind: S.tag("started"),
-    outDir: S.String,
-    videoPath: S.String,
+    args: S.Array(S.String).pipe(
+      $I.annoteKey("FFmpegStartedEvent.args", {
+        description: "Arguments passed to the native ffmpeg command.",
+      })
+    ),
+    command: S.String.pipe(
+      $I.annoteKey("FFmpegStartedEvent.command", {
+        description: "Native ffmpeg executable path or command name.",
+      })
+    ),
+    kind: S.tag("started").pipe(
+      $I.annoteKey("FFmpegStartedEvent.kind", {
+        description: "Discriminator for extraction start events.",
+      })
+    ),
+    outDir: S.String.pipe(
+      $I.annoteKey("FFmpegStartedEvent.outDir", {
+        description: "Output directory selected for frame extraction.",
+      })
+    ),
+    videoPath: S.String.pipe(
+      $I.annoteKey("FFmpegStartedEvent.videoPath", {
+        description: "Resolved source video path used for extraction.",
+      })
+    ),
   },
   $I.annote("FFmpegStartedEvent", {
     description: "Event emitted before the ffmpeg extraction process starts.",
@@ -533,8 +1014,16 @@ export class FFmpegStartedEvent extends S.Class<FFmpegStartedEvent>($I`FFmpegSta
  * @example
  * ```ts
  * import { FFmpegProgressEvent } from "@beep/ffmpeg"
+ * import * as O from "effect/Option"
  *
- * const event = FFmpegProgressEvent.make({ frameCount: 1, kind: "progress", percent: 50, progress: "continue" })
+ * const event = FFmpegProgressEvent.make({
+ *   frameCount: 1,
+ *   kind: "progress",
+ *   outTimeSeconds: O.none(),
+ *   percent: 50,
+ *   progress: "continue",
+ *   speed: O.none()
+ * })
  * console.log(event)
  * ```
  *
@@ -543,12 +1032,38 @@ export class FFmpegStartedEvent extends S.Class<FFmpegStartedEvent>($I`FFmpegSta
  */
 export class FFmpegProgressEvent extends S.Class<FFmpegProgressEvent>($I`FFmpegProgressEvent`)(
   {
-    frameCount: S.Finite,
-    kind: S.tag("progress"),
-    outTimeSeconds: S.optionalKey(S.Finite),
-    percent: S.Finite,
-    progress: S.String,
-    speed: S.optionalKey(S.String),
+    frameCount: FrameCount.pipe(
+      $I.annoteKey("FFmpegProgressEvent.frameCount", {
+        description: "Frame count reported by ffmpeg progress output.",
+      })
+    ),
+    kind: S.tag("progress").pipe(
+      $I.annoteKey("FFmpegProgressEvent.kind", {
+        description: "Discriminator for extraction progress events.",
+      })
+    ),
+    outTimeSeconds: S.OptionFromOptionalKey(NonNegativeSeconds).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegProgressEvent.outTimeSeconds", {
+        description: "Output timestamp in seconds, when ffmpeg reported one.",
+      })
+    ),
+    percent: FFmpegProgressPercent.pipe(
+      $I.annoteKey("FFmpegProgressEvent.percent", {
+        description: "Progress percentage clamped into the closed 0-100 range.",
+      })
+    ),
+    progress: S.String.pipe(
+      $I.annoteKey("FFmpegProgressEvent.progress", {
+        description: "Raw ffmpeg progress marker for this block.",
+      })
+    ),
+    speed: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegProgressEvent.speed", {
+        description: "Raw ffmpeg speed text, when ffmpeg reported one.",
+      })
+    ),
   },
   $I.annote("FFmpegProgressEvent", {
     description: "Event emitted when ffmpeg reports extraction progress.",
@@ -576,10 +1091,26 @@ export class FFmpegProgressEvent extends S.Class<FFmpegProgressEvent>($I`FFmpegP
  */
 export class FFmpegCompletedEvent extends S.Class<FFmpegCompletedEvent>($I`FFmpegCompletedEvent`)(
   {
-    frameCount: S.Finite,
-    kind: S.tag("completed"),
-    manifestPath: S.String,
-    outDir: S.String,
+    frameCount: FrameCount.pipe(
+      $I.annoteKey("FFmpegCompletedEvent.frameCount", {
+        description: "Number of committed PNG frames.",
+      })
+    ),
+    kind: S.tag("completed").pipe(
+      $I.annoteKey("FFmpegCompletedEvent.kind", {
+        description: "Discriminator for extraction completion events.",
+      })
+    ),
+    manifestPath: S.String.pipe(
+      $I.annoteKey("FFmpegCompletedEvent.manifestPath", {
+        description: "Path to the committed extract-frames manifest.",
+      })
+    ),
+    outDir: S.String.pipe(
+      $I.annoteKey("FFmpegCompletedEvent.outDir", {
+        description: "Directory containing committed outputs.",
+      })
+    ),
   },
   $I.annote("FFmpegCompletedEvent", {
     description: "Event emitted after frames and manifest are committed.",
@@ -604,7 +1135,8 @@ export const FFmpegEvent = S.Union([FFmpegStartedEvent, FFmpegProgressEvent, FFm
   S.toTaggedUnion("kind"),
   $I.annoteSchema("FFmpegEvent", {
     description: "Structured events emitted by extract-frames.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -637,7 +1169,7 @@ export type FFmpegEvent = typeof FFmpegEvent.Type;
  * @category decoding
  * @since 0.0.0
  */
-export const decodeExtractFramesRequest = S.decodeUnknownEffect(ExtractFramesRequest);
+export const decodeExtractFramesRequest = ExtractFramesRequest.decodeEffect;
 
 /**
  * Decode an unknown value into a probe request.
@@ -653,21 +1185,21 @@ export const decodeExtractFramesRequest = S.decodeUnknownEffect(ExtractFramesReq
  * @category decoding
  * @since 0.0.0
  */
-export const decodeProbeVideoRequest = S.decodeUnknownEffect(ProbeVideoRequest);
+export const decodeProbeVideoRequest = ProbeVideoRequest.decodeEffect;
 
 /**
  * Encode an extract-frames manifest into its JSON-safe shape.
  *
  * @example
  * ```ts
- * import { encodeExtractFramesManifest, ExtractFramesManifest, ExtractFramesManifestOptions, ExtractFramesManifestSummary } from "@beep/ffmpeg"
+ * import { encodeExtractFramesManifest, ExtractFramesManifest, ExtractFramesManifestOptions, ExtractFramesManifestSummary, VideoProbe } from "@beep/ffmpeg"
  *
  * const encoded = encodeExtractFramesManifest(ExtractFramesManifest.make({
  *   frames: [],
  *   manifestPath: "./frames/extract-frames-manifest.json",
  *   options: ExtractFramesManifestOptions.make({ fps: 1, overwrite: false, prefix: "clip_frame" }),
  *   outputDirectory: "./frames",
- *   probe: { videoPath: "./clip.mp4" },
+ *   probe: VideoProbe.make({ videoPath: "./clip.mp4" }),
  *   schemaVersion: "beep.ffmpeg.extract-frames.v1",
  *   sourceVideo: "./clip.mp4",
  *   summary: ExtractFramesManifestSummary.make({ frameCount: 0 })
@@ -678,4 +1210,4 @@ export const decodeProbeVideoRequest = S.decodeUnknownEffect(ProbeVideoRequest);
  * @category encoding
  * @since 0.0.0
  */
-export const encodeExtractFramesManifest = S.encodeUnknownEffect(ExtractFramesManifest);
+export const encodeExtractFramesManifest = ExtractFramesManifest.encodeEffect;

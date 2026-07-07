@@ -7,6 +7,7 @@ import { make as makeJsonSchemaGenerator } from "@effect/openapi-generator/JsonS
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { Effect, FileSystem, Layer, Logger, Order, Path, pipe } from "effect";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -75,8 +76,8 @@ class SchemaEntry extends S.Class<SchemaEntry>($I`SchemaEntry`)(
 ) {}
 class TextReplacement extends S.Class<TextReplacement>($I`TextReplacement`)(
   {
-    end: S.Finite,
-    start: S.Finite,
+    end: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    start: S.Int.check(S.isGreaterThanOrEqualTo(0)),
     text: S.String,
   },
   $I.annote("TextReplacement", {
@@ -103,7 +104,12 @@ class MetaJson extends S.Class<MetaJson>($I`MetaJson`)(
   $I.annote("MetaJson", {
     description: "ACP upstream metadata JSON downloaded by the generator.",
   })
-) {}
+) {
+  static readonly decodeJsonEffect = S.decodeEffect(S.fromJsonString(MetaJson));
+  static readonly encodeAgentMethods = S.encodeEffect(S.fromJsonString(MetaJson.fields.agentMethods));
+  static readonly encodeClientMethods = S.encodeEffect(S.fromJsonString(MetaJson.fields.clientMethods));
+  static readonly encodeVersion = S.encodeEffect(S.fromJsonString(MetaJson.fields.version));
+}
 
 class UpstreamJsonSchema extends S.Class<UpstreamJsonSchema>($I`UpstreamJsonSchema`)(
   {
@@ -112,13 +118,9 @@ class UpstreamJsonSchema extends S.Class<UpstreamJsonSchema>($I`UpstreamJsonSche
   $I.annote("UpstreamJsonSchema", {
     description: "ACP upstream JSON Schema document downloaded by the generator.",
   })
-) {}
-
-const decodeUpstreamSchema = S.decodeEffect(S.fromJsonString(UpstreamJsonSchema));
-const decodeMetaJson = S.decodeEffect(S.fromJsonString(MetaJson));
-const encodeAgentMethods = S.encodeEffect(S.fromJsonString(MetaJson.fields.agentMethods));
-const encodeClientMethods = S.encodeEffect(S.fromJsonString(MetaJson.fields.clientMethods));
-const encodeVersion = S.encodeEffect(S.fromJsonString(MetaJson.fields.version));
+) {
+  static readonly decodeJsonEffect = S.decodeEffect(S.fromJsonString(UpstreamJsonSchema));
+}
 
 const getGeneratedPaths = Effect.fn("getGeneratedPaths")(function* () {
   const path = yield* Path.Path;
@@ -352,11 +354,11 @@ function rewriteKeyAnnotations(schemaExpression: string): string {
   return stripGeneratedSchemaExpressionWrapper(applyTextReplacements(source, replacements));
 }
 
-function propertyNameToString(name: ts.PropertyName): string | undefined {
+function propertyNameToString(name: ts.PropertyName): O.Option<string> {
   if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name)) {
-    return name.text;
+    return O.some(name.text);
   }
-  return undefined;
+  return O.none();
 }
 
 function renderObjectPropertyKey(key: string): string {
@@ -382,12 +384,12 @@ function collectAnnotationExtraEntries(
     }
 
     const key = propertyNameToString(property.name);
-    if (key === undefined || key === "title") {
+    if (O.isNone(key) || key.value === "title") {
       continue;
     }
 
     entries = A.append(entries, {
-      key: key === "description" ? "documentation" : key,
+      key: key.value === "description" ? "documentation" : key.value,
       value: property.initializer.getText(sourceFile),
     });
   }
@@ -519,7 +521,8 @@ function renderSchemaEntry(name: string, constLine: string): string {
       " * @since 0.0.0",
       " */",
       `export const ${name} = ${schemaExpression.expression}.pipe(`,
-      renderSchemaAnnotation(name, schemaExpression.annotationExtras),
+      `${renderSchemaAnnotation(name, schemaExpression.annotationExtras)},`,
+      "  SchemaUtils.withCodecStatics",
       ");",
       "",
       "/**",
@@ -614,8 +617,10 @@ const generateSchemas = Effect.fn("generateSchemas")(function* (skipDownload: bo
     yield* downloadSchemas(CURRENT_SCHEMA_RELEASE);
   }
 
-  const upstreamSchema = yield* readFileString(upstreamSchemaPath).pipe(Effect.flatMap(decodeUpstreamSchema));
-  const upstreamMeta = yield* readFileString(upstreamMetaPath).pipe(Effect.flatMap(decodeMetaJson));
+  const upstreamSchema = yield* readFileString(upstreamSchemaPath).pipe(
+    Effect.flatMap(UpstreamJsonSchema.decodeJsonEffect)
+  );
+  const upstreamMeta = yield* readFileString(upstreamMetaPath).pipe(Effect.flatMap(MetaJson.decodeJsonEffect));
   const normalizedDefinitions = R.map(upstreamSchema.$defs, normalizeNullableTypes);
 
   const sortedEntries = pipe(
@@ -655,6 +660,7 @@ const generateSchemas = Effect.fn("generateSchemas")(function* (skipDownload: bo
     [
       ...prelude,
       'import { $AcpId } from "@beep/identity";',
+      'import { SchemaUtils } from "@beep/schema";',
       'import * as S from "effect/Schema";',
       "",
       `const $I = ${GENERATED_SCHEMA_ID};`,
@@ -679,19 +685,19 @@ const generateSchemas = Effect.fn("generateSchemas")(function* (skipDownload: bo
       "",
       renderMetaConst(
         "AGENT_METHODS",
-        yield* encodeAgentMethods(upstreamMeta.agentMethods),
+        yield* MetaJson.encodeAgentMethods(upstreamMeta.agentMethods),
         "Generated ACP agent method lookup table."
       ),
       "",
       renderMetaConst(
         "CLIENT_METHODS",
-        yield* encodeClientMethods(upstreamMeta.clientMethods),
+        yield* MetaJson.encodeClientMethods(upstreamMeta.clientMethods),
         "Generated ACP client method lookup table."
       ),
       "",
       renderMetaConst(
         "PROTOCOL_VERSION",
-        yield* encodeVersion(upstreamMeta.version),
+        yield* MetaJson.encodeVersion(upstreamMeta.version),
         "Generated ACP protocol version."
       ),
       "",

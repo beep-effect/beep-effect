@@ -6,12 +6,19 @@
  */
 
 import { $UsptoId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
+import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 
 const $I = $UsptoId.create("Uspto.errors");
+const UsptoErrorReasonKit = LiteralKit([
+  "config",
+  "not-found",
+  "rate-limited",
+  "response-decoding",
+  "response-status",
+  "transport",
+]);
 
 /**
  * Technical USPTO driver failure reasons.
@@ -26,17 +33,15 @@ const $I = $UsptoId.create("Uspto.errors");
  * @category errors
  * @since 0.0.0
  */
-export const UsptoErrorReason = LiteralKit([
-  "config",
-  "not-found",
-  "rate-limited",
-  "response-decoding",
-  "response-status",
-  "transport",
-]).pipe(
+export const UsptoErrorReason = UsptoErrorReasonKit.pipe(
   $I.annoteSchema("UsptoErrorReason", {
     description: "Redacted technical error reasons emitted by the USPTO driver.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(UsptoErrorReasonKit),
+  SchemaUtils.withStatics((schema: typeof UsptoErrorReasonKit) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+    fromUnknown: S.decodeUnknownSync(schema),
+  }))
 );
 
 /**
@@ -55,6 +60,26 @@ export const UsptoErrorReason = LiteralKit([
  */
 export type UsptoErrorReason = typeof UsptoErrorReason.Type;
 
+class UsptoErrorOptions extends S.Class<UsptoErrorOptions>($I`UsptoErrorOptions`)(
+  {
+    cause: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Sanitized technical cause when one is available.",
+      })
+    ),
+    status: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "HTTP response status associated with the failure when one is available.",
+      })
+    ),
+  },
+  $I.annote("UsptoErrorOptions", {
+    description: "Options for configuring sanitized USPTO driver errors.",
+  })
+) {}
+
 /**
  * Technical failure raised inside the USPTO driver boundary.
  *
@@ -72,9 +97,21 @@ export type UsptoErrorReason = typeof UsptoErrorReason.Type;
 export class UsptoError extends TaggedErrorClass<UsptoError>($I`UsptoError`)(
   "UsptoError",
   {
-    cause: S.optionalKey(S.String),
-    reason: UsptoErrorReason,
-    status: S.optionalKey(NonNegativeInt),
+    cause: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Sanitized technical cause when one is available.",
+      })
+    ),
+    reason: UsptoErrorReason.annotateKey({
+      description: "Redacted technical error reason.",
+    }),
+    status: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "HTTP response status associated with the failure when one is available.",
+      })
+    ),
   },
   $I.annote("UsptoError", {
     description: "Redacted technical failure raised inside the USPTO driver boundary.",
@@ -89,12 +126,17 @@ export class UsptoError extends TaggedErrorClass<UsptoError>($I`UsptoError`)(
   static readonly fromReason = (
     reason: UsptoErrorReason,
     options: { readonly cause?: string; readonly status?: NonNegativeInt } = {}
-  ): UsptoError =>
-    UsptoError.make({
-      reason,
-      ...R.getSomes({ cause: O.fromUndefinedOr(options.cause) }),
-      ...R.getSomes({ status: O.fromUndefinedOr(options.status) }),
+  ): UsptoError => {
+    const context = UsptoErrorOptions.make({
+      cause: O.fromUndefinedOr(options.cause),
+      status: O.fromUndefinedOr(options.status),
     });
+    return UsptoError.make({
+      cause: context.cause,
+      reason,
+      status: context.status,
+    });
+  };
 }
 
 /**
@@ -111,7 +153,7 @@ export class UsptoError extends TaggedErrorClass<UsptoError>($I`UsptoError`)(
  * @category constructors
  * @since 0.0.0
  */
-export const makeUsptoError = (
+export const makeUsptoError: (
   reason: UsptoErrorReason,
-  options: { readonly cause?: string; readonly status?: NonNegativeInt } = {}
-): UsptoError => UsptoError.fromReason(reason, options);
+  options?: { readonly cause?: string; readonly status?: NonNegativeInt }
+) => UsptoError = UsptoError.fromReason;

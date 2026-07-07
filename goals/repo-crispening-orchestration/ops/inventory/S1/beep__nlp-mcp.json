@@ -1,38 +1,5 @@
 [
   {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
-    "line": 393,
-    "symbol": "loadText / loadLines / loadJsonl / loadJson",
-    "smell": "Exported loader helpers in a schema-modeled file accept inline option object contracts (`encoding`, `skipEmpty`, `trim`, `skipInvalid`, `timeout`) while their returned data and provenance already live in `DatasetResult`/`DatasetMeta` schemas.",
-    "proposedTarget": "Promote the loader option contracts to named schemas in `DatasetLoader.ts` (for example `DatasetLoadTextOptions`, `DatasetLoadLinesOptions`, `DatasetLoadJsonlOptions`, and `DatasetLoadJsonOptions`, sharing a timeout building block if useful), derive the exported option types from those schemas, and reuse the same schemas in the matching `StreamingTools.ts` parameter option fields. In-repo exemplar: `TextReadOptions` and `TextStreamOptions` already carry analogous helper option contracts at `packages/drivers/nlp-mcp/src/Streaming/TextStream.ts:195` and `packages/drivers/nlp-mcp/src/Streaming/TextStream.ts:226`.",
-    "confidence": 0.74,
-    "mechanization": "assisted",
-    "roiRank": 1.05
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/drivers/nlp-mcp/src/Streaming/Jsonl.ts",
-    "line": 133,
-    "symbol": "streamJsonl / readJsonl / validateJsonl / sampleJsonl",
-    "smell": "Public JSONL helpers keep the `skipInvalid` option and the `validateJsonl` `{ errors, records }` result as inline object contracts even though adjacent JSONL errors and stats are schema-owned.",
-    "proposedTarget": "Add named JSONL option/result schemas next to `JsonlLineError` and `JsonlStats`, such as `JsonlReadOptions` for `skipInvalid` and `JsonlValidationResult` for `{ errors: S.Array(JsonlLineError), records: S.Array(S.Unknown) }`; derive helper types from those schemas and reuse them in `StreamingTools.ts` (`ReadJsonlParameters`, `SampleJsonlParameters`, and `ValidateJsonlParameters`). In-repo exemplar: `JsonlLineError` and `JsonlStats` are already `S.Class` models at `packages/drivers/nlp-mcp/src/Streaming/Jsonl.ts:40` and `packages/drivers/nlp-mcp/src/Streaming/Jsonl.ts:69`.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 0.82
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/drivers/nlp-mcp/src/Streaming/Pipeline.ts",
-    "line": 179,
-    "symbol": "processFile",
-    "smell": "Exported pipeline helper accepts an inline options object (`maxLines`, `skipEmpty`, `stopOnError`) while pipeline stages, errors, and results are already schema-owned.",
-    "proposedTarget": "Add a named `PipelineProcessOptions` schema beside `PipelineStage`, `PipelineError`, and `PipelineResult`, derive the helper option type from it, and reuse the schema for `ProcessFileParameters.options` in `packages/drivers/nlp-mcp/src/StreamingTools.ts:610`. In-repo exemplar: `PipelineResult` is already the schema truth for the process output at `packages/drivers/nlp-mcp/src/Streaming/Pipeline.ts:118`.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 0.78
-  },
-  {
     "ruleId": "schema-first-inventory",
     "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
     "line": 424,

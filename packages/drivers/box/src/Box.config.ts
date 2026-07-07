@@ -6,7 +6,9 @@
  */
 
 import { $BoxId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { Config, Context, Effect, Layer } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { BoxError } from "./Box.errors.ts";
 import type { Redacted } from "effect";
@@ -16,10 +18,10 @@ const $I = $BoxId.create("Box.config");
 const BoxCcgConfigShape = S.Struct({
   clientId: S.String,
   clientSecret: S.Redacted(S.String),
-  enterpriseId: S.String.pipe(S.optionalKey),
-  userId: S.String.pipe(S.optionalKey),
+  enterpriseId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  userId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
 }).check(
-  S.makeFilter((config) => config.enterpriseId !== undefined || config.userId !== undefined, {
+  S.makeFilter((config) => O.isSome(config.enterpriseId) || O.isSome(config.userId), {
     identifier: $I`BoxCcgSubjectCheck`,
     title: "Box CCG subject",
     description: "Requires either an enterprise id or user id for Box Client Credentials Grant auth.",
@@ -58,13 +60,14 @@ export class BoxDeveloperTokenConfig extends S.Class<BoxDeveloperTokenConfig>($I
  * ```ts
  * import { BoxCcgConfig } from "@beep/box"
  * import { Redacted } from "effect"
+ * import * as O from "effect/Option"
  *
  * const config = BoxCcgConfig.make({
  *   clientId: "client-id",
  *   clientSecret: Redacted.make("client-secret"),
- *   enterpriseId: "enterprise-id"
+ *   enterpriseId: O.some("enterprise-id")
  * })
- * console.log(config.enterpriseId)
+ * console.log(O.getOrUndefined(config.enterpriseId))
  * ```
  *
  * @category models

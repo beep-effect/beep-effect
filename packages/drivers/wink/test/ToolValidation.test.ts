@@ -1,3 +1,4 @@
+import { SentenceIndex } from "@beep/nlp/Core/Sentence";
 import { BowCosineSimilarity } from "@beep/nlp-processing/Tools/BowCosineSimilarity";
 import { ChunkBySentences } from "@beep/nlp-processing/Tools/ChunkBySentences";
 import { CreateCorpus } from "@beep/nlp-processing/Tools/CreateCorpus";
@@ -6,14 +7,21 @@ import { NlpToolkit } from "@beep/nlp-processing/Tools/NlpToolkit";
 import { TextSimilarity } from "@beep/nlp-processing/Tools/TextSimilarity";
 import { TverskySimilarity } from "@beep/nlp-processing/Tools/TverskySimilarity";
 import {
+  CorpusManagerError,
   CustomEntityExample,
   EntityGroupName,
+  InstanceId,
+  SentenceSpanFailure,
+  VectorizerError,
   WinkEngine,
   WinkEngineCustomEntities,
+  WinkEngineError,
   WinkEngineLive,
+  WinkEngineState,
+  WinkError,
   WinkNlpToolkitLive,
 } from "@beep/wink";
-import { Cause, Effect, Exit, Layer, Schema, Stream } from "effect";
+import { Cause, Effect, Equal, Exit, Layer, Schema, Stream } from "effect";
 import * as O from "effect/Option";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
@@ -22,6 +30,20 @@ const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+
+const assertRoundTrip = <SchemaT extends Schema.ConstraintCodec<unknown, unknown, never, never>>(
+  schema: SchemaT
+): void => {
+  const decode = Schema.decodeUnknownSync(schema);
+  const encode = Schema.encodeSync(schema);
+
+  fc.assert(
+    fc.property(Schema.toArbitrary(schema), (value) => {
+      expect(Equal.equals(decode(encode(value)), value)).toBe(true);
+    }),
+    { numRuns: 25 }
+  );
+};
 
 describe("Tool validation", () => {
   it("rejects fractional keyword limits at the schema boundary", () => {
@@ -79,16 +101,59 @@ describe("Tool validation", () => {
   });
 
   it("round-trips Tversky success payloads derived from the source schema", () => {
-    const arbitrary = Schema.toArbitrary(TverskySimilarity.successSchema);
-    const decode = Schema.decodeUnknownSync(TverskySimilarity.successSchema);
-    const encode = Schema.encodeUnknownSync(TverskySimilarity.successSchema);
+    assertRoundTrip(TverskySimilarity.successSchema);
+  });
 
-    fc.assert(
-      fc.property(arbitrary, (value) => {
-        expect(decode(encode(value))).toEqual(value);
-      }),
-      { numRuns: 50 }
-    );
+  it("round-trips wink schema models derived from the source schemas", () => {
+    assertRoundTrip(EntityGroupName);
+    assertRoundTrip(InstanceId);
+    assertRoundTrip(CustomEntityExample);
+    assertRoundTrip(WinkEngineCustomEntities);
+    assertRoundTrip(WinkEngineState);
+    assertRoundTrip(SentenceSpanFailure);
+  });
+
+  it("keeps absorbed wink schema invariants byte-stable at the wire boundary", () => {
+    const entityGroupName = EntityGroupName.make("ProductName");
+    const instanceId = InstanceId.make("wink-engine-example-4");
+    const customEntityExample = CustomEntityExample.make({
+      name: "SKU",
+      patterns: ["[PROPN]"],
+    });
+    const sentenceSpanFailure = SentenceSpanFailure.make({
+      reason: "Unable to derive a stable sentence token span.",
+      sentenceIndex: SentenceIndex.make(0),
+      sentenceText: "Hello world.",
+    });
+    const corpusManagerError = CorpusManagerError.fromMessage("Corpus does not exist", "support-docs");
+    const vectorizerError = VectorizerError.fromMessage("Document index is out of range", "tf");
+    const winkError = WinkEngineError.fromCause(new Error("missing model"), "initialize");
+
+    expect(EntityGroupName.is(entityGroupName)).toBe(true);
+    expect(InstanceId.is(instanceId)).toBe(true);
+    expect(WinkError.is(winkError)).toBe(true);
+    expect(Schema.encodeSync(EntityGroupName)(entityGroupName)).toBe("ProductName");
+    expect(Schema.encodeSync(InstanceId)(instanceId)).toBe("wink-engine-example-4");
+    expect(Schema.encodeSync(CustomEntityExample)(customEntityExample)).toEqual({
+      name: "SKU",
+      patterns: ["[PROPN]"],
+    });
+    expect(Schema.encodeSync(SentenceSpanFailure)(sentenceSpanFailure)).toEqual({
+      _tag: "SentenceSpanFailure",
+      reason: "Unable to derive a stable sentence token span.",
+      sentenceIndex: 0,
+      sentenceText: "Hello world.",
+    });
+    expect(Schema.encodeSync(CorpusManagerError)(corpusManagerError)).toEqual({
+      _tag: "CorpusManagerError",
+      corpusId: "support-docs",
+      message: "Corpus does not exist",
+    });
+    expect(Schema.encodeSync(VectorizerError)(vectorizerError)).toEqual({
+      _tag: "VectorizerError",
+      message: "Document index is out of range",
+      operation: "tf",
+    });
   });
 
   it("rejects invalid custom-entity bracket patterns during engine learning", () =>

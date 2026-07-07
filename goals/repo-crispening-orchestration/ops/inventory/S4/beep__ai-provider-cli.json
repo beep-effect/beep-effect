@@ -1,28 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
-    "line": 34,
-    "symbol": "AiProviderCliProvider",
-    "smell": "LiteralKit provider vocabulary is annotated without reattaching kit/statics; `commandFor` uses `AiProviderCliProvider.$match` at AiProviderCli.service.ts:91, so the kit helpers are intended public behavior and should survive annotation.",
-    "proposedTarget": "Capture a base LiteralKit const, then pipe annotation through `SchemaUtils.withLiteralKitStatics(base)` and `SchemaUtils.withCodecStatics`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
-    "line": 78,
-    "symbol": "AiProviderCliAuthStatus",
-    "smell": "LiteralKit auth-status vocabulary is annotated without reattaching kit/static codec helpers, leaving status guards and matches detached from the schema value.",
-    "proposedTarget": "Use the same base-const plus `SchemaUtils.withLiteralKitStatics(base)` and `SchemaUtils.withCodecStatics` pattern as `AiProviderCliProvider`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.service.ts",
     "line": 55,
     "symbol": "AiProviderCliRunner",

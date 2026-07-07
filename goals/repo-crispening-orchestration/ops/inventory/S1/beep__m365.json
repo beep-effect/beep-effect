@@ -1,16 +1,5 @@
 [
   {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/drivers/m365/src/M365.errors.ts",
-    "line": 128,
-    "symbol": "M365Error.fromReason",
-    "smell": "Exported static constructor in a schema-modeled file accepts `M365ErrorOptionsInput`, a plain object type literal that duplicates nearby `M365Error` option fields.",
-    "proposedTarget": "Promote `M365ErrorOptionsInput` at `packages/drivers/m365/src/M365.errors.ts:63` to an annotated input schema, e.g. `M365ErrorOptionsInput extends S.Class` with `cause: S.optionalKey(S.Unknown)` plus the optional string/finite fields, then normalize from that schema before `M365Error.make`. In-repo exemplars: `packages/drivers/govinfo/src/Govinfo.errors.ts:70` models `GovinfoErrorOptions` as an `S.Class`, and `packages/drivers/box/src/Box.errors.ts` has the same S1 target recorded in `goals/repo-crispening-orchestration/ops/inventory/S1/beep__box.json`.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 0.52
-  },
-  {
     "ruleId": "schema-first-inventory",
     "file": "packages/drivers/m365/src/M365.auth.ts",
     "line": 142,

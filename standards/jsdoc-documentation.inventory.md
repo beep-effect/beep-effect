@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-07T04:00:39.645Z
+Generated: 2026-07-07T04:56:36.568Z
 
 ## Scope
 
@@ -11,21 +11,21 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 104 |
-| cleanPackages | 17 |
+| cleanPackages | 18 |
 | packagesWithoutPublicSrcSurface | 3 |
-| packagesNeedingRemediation | 80 |
-| publicModules | 1603 |
-| publicExports | 14248 |
+| packagesNeedingRemediation | 79 |
+| publicModules | 1604 |
+| publicExports | 14320 |
 | openModules | 129 |
-| openExports | 2222 |
-| missingExportExamples | 2014 |
+| openExports | 2215 |
+| missingExportExamples | 2008 |
 | missingExportCategories | 91 |
 | missingExportSince | 91 |
 | forbiddenTagFindings | 2 |
 | malformedConditionalTagFindings | 0 |
 | exampleImportFindings | 24 |
 | unsafeExampleFindings | 72 |
-| schemaAnnotationFindings | 141 |
+| schemaAnnotationFindings | 140 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -46,7 +46,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 3 | `dependencies` | `<unresolved>` | missing-workspace-metadata | 0 | 0 | 0 | 0 |
 | 4 | `optionalDependencies` | `<unresolved>` | missing-workspace-metadata | 0 | 0 | 0 | 0 |
 | 5 | `@beep/dol` | `packages/drivers/dol` | clean | 1 | 1 | 0 | 0 |
-| 6 | `@beep/hubspot` | `packages/drivers/hubspot` | needs-remediation | 4 | 19 | 0 | 3 |
+| 6 | `@beep/hubspot` | `packages/drivers/hubspot` | needs-remediation | 4 | 22 | 0 | 4 |
 | 7 | `@beep/agents-domain` | `packages/agents/domain` | clean | 11 | 35 | 0 | 0 |
 | 8 | `@beep/ontology` | `packages/foundation/modeling/ontology` | needs-remediation | 2 | 22 | 0 | 1 |
 | 9 | `@beep/rdf-canonize` | `packages/drivers/rdf-canonize` | needs-remediation | 2 | 2 | 0 | 1 |
@@ -58,8 +58,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 15 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 2 | 3 | 0 | 1 |
 | 16 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 7 | 13 | 0 | 4 |
 | 17 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 39 | 221 | 0 | 7 |
-| 18 | `@beep/discord` | `packages/drivers/discord` | needs-remediation | 4 | 13 | 0 | 3 |
-| 19 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 27 | 0 | 0 |
+| 18 | `@beep/discord` | `packages/drivers/discord` | needs-remediation | 4 | 15 | 0 | 3 |
+| 19 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 33 | 0 | 0 |
 | 20 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 2 |
 | 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 99 | 637 | 0 | 138 |
 | 22 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 0 | 3 |
@@ -68,18 +68,18 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 25 | `@beep/courtlistener` | `packages/drivers/courtlistener` | clean | 1 | 1 | 0 | 0 |
 | 26 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | needs-remediation | 8 | 22 | 0 | 7 |
 | 27 | `@beep/editor` | `packages/foundation/ui-system/editor` | needs-remediation | 21 | 86 | 0 | 20 |
-| 28 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 86 | 0 | 11 |
+| 28 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 93 | 0 | 11 |
 | 29 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 49 | 115 | 0 | 45 |
 | 30 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 9 | 81 | 0 | 23 |
 | 31 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | needs-remediation | 8 | 94 | 0 | 24 |
-| 32 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | clean | 4 | 12 | 0 | 0 |
+| 32 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | clean | 4 | 14 | 0 | 0 |
 | 33 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 8 | 27 | 7 | 6 |
 | 34 | `@beep/colors` | `packages/foundation/capability/colors` | clean | 1 | 9 | 0 | 0 |
 | 35 | `@beep/agents-use-cases` | `packages/agents/use-cases` | needs-remediation | 23 | 70 | 0 | 7 |
 | 36 | `@beep/m365-mcp` | `packages/drivers/m365-mcp` | needs-remediation | 4 | 21 | 0 | 20 |
 | 37 | `@beep/workspace-server` | `packages/workspace/server` | needs-remediation | 6 | 14 | 0 | 4 |
 | 38 | `@beep/chalk` | `packages/foundation/capability/chalk` | clean | 1 | 35 | 0 | 0 |
-| 39 | `@beep/uspto` | `packages/drivers/uspto` | needs-remediation | 5 | 22 | 0 | 7 |
+| 39 | `@beep/uspto` | `packages/drivers/uspto` | needs-remediation | 5 | 24 | 0 | 9 |
 | 40 | `@beep/phoenix` | `packages/drivers/phoenix` | needs-remediation | 5 | 50 | 0 | 10 |
 | 41 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 5 | 29 | 0 | 9 |
 | 42 | `@beep/types` | `packages/foundation/primitive/types` | clean | 5 | 10 | 0 | 0 |
@@ -96,40 +96,40 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 53 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 26 | 213 | 0 | 22 |
 | 54 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | needs-remediation | 17 | 257 | 0 | 4 |
 | 55 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | needs-remediation | 7 | 21 | 0 | 6 |
-| 56 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 4 | 13 | 0 | 3 |
-| 57 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 4 | 18 | 0 | 5 |
+| 56 | `@beep/tika` | `packages/drivers/tika` | needs-remediation | 4 | 16 | 0 | 3 |
+| 57 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 4 | 19 | 0 | 5 |
 | 58 | `@beep/venice-ai` | `packages/drivers/venice-ai` | clean | 3 | 35 | 0 | 0 |
 | 59 | `@beep/form` | `packages/foundation/ui-system/form` | needs-remediation | 42 | 114 | 0 | 1 |
 | 60 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 6 | 166 | 0 | 21 |
-| 61 | `@beep/drizzle` | `packages/drivers/drizzle` | needs-remediation | 4 | 15 | 0 | 3 |
+| 61 | `@beep/drizzle` | `packages/drivers/drizzle` | needs-remediation | 4 | 17 | 0 | 3 |
 | 62 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | needs-remediation | 2 | 8 | 0 | 1 |
-| 63 | `@beep/box` | `packages/drivers/box` | needs-remediation | 103 | 4506 | 0 | 56 |
-| 64 | `@beep/openai-compat` | `packages/drivers/openai-compat` | clean | 4 | 50 | 0 | 0 |
+| 63 | `@beep/box` | `packages/drivers/box` | needs-remediation | 103 | 4497 | 0 | 53 |
+| 64 | `@beep/openai-compat` | `packages/drivers/openai-compat` | clean | 4 | 54 | 0 | 0 |
 | 65 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | needs-remediation | 48 | 311 | 0 | 21 |
 | 66 | `@beep/anthropic` | `packages/drivers/anthropic` | needs-remediation | 5 | 26 | 0 | 4 |
 | 67 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 23 | 42 | 2 | 23 |
 | 68 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 20 | 39 | 0 | 0 |
 | 69 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | needs-remediation | 18 | 62 | 0 | 20 |
-| 70 | `@beep/firecrawl` | `packages/drivers/firecrawl` | needs-remediation | 5 | 263 | 0 | 3 |
+| 70 | `@beep/firecrawl` | `packages/drivers/firecrawl` | needs-remediation | 5 | 267 | 0 | 3 |
 | 71 | `@beep/ecfr` | `packages/drivers/ecfr` | needs-remediation | 5 | 23 | 0 | 13 |
-| 72 | `@beep/acp` | `packages/drivers/acp` | needs-remediation | 10 | 406 | 0 | 1 |
+| 72 | `@beep/acp` | `packages/drivers/acp` | clean | 10 | 410 | 0 | 0 |
 | 73 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 312 | 0 | 34 |
 | 74 | `@beep/infra` | `infra` | clean | 4 | 31 | 0 | 0 |
-| 75 | `@beep/runpod` | `packages/drivers/runpod` | needs-remediation | 6 | 174 | 0 | 10 |
+| 75 | `@beep/runpod` | `packages/drivers/runpod` | needs-remediation | 6 | 178 | 0 | 7 |
 | 76 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 635 | 2 | 75 |
 | 77 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 241 | 1566 | 0 | 640 |
 | 78 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 2 | 3 | 0 | 1 |
 | 79 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 17 | 208 | 0 | 8 |
-| 80 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | needs-remediation | 4 | 12 | 0 | 5 |
+| 80 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | needs-remediation | 4 | 16 | 0 | 5 |
 | 81 | `@beep/architecture-lab-config` | `packages/architecture-lab/config` | needs-remediation | 9 | 21 | 0 | 7 |
-| 82 | `@beep/govinfo` | `packages/drivers/govinfo` | needs-remediation | 31 | 81 | 0 | 45 |
+| 82 | `@beep/govinfo` | `packages/drivers/govinfo` | needs-remediation | 32 | 85 | 0 | 45 |
 | 83 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 144 | 0 | 36 |
-| 84 | `@beep/xai` | `packages/drivers/xai` | clean | 7 | 62 | 0 | 0 |
+| 84 | `@beep/xai` | `packages/drivers/xai` | clean | 7 | 70 | 0 | 0 |
 | 85 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | needs-remediation | 13 | 34 | 0 | 13 |
-| 86 | `@beep/duckdb` | `packages/drivers/duckdb` | needs-remediation | 4 | 15 | 0 | 3 |
-| 87 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | needs-remediation | 4 | 38 | 0 | 6 |
+| 86 | `@beep/duckdb` | `packages/drivers/duckdb` | needs-remediation | 4 | 17 | 0 | 3 |
+| 87 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | needs-remediation | 4 | 54 | 0 | 6 |
 | 88 | `@beep/agents-client` | `packages/agents/client` | needs-remediation | 3 | 22 | 0 | 3 |
-| 89 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | needs-remediation | 7 | 26 | 0 | 18 |
+| 89 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | needs-remediation | 7 | 29 | 0 | 15 |
 | 90 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
 | 91 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | needs-remediation | 10 | 18 | 0 | 1 |
 | 92 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 6 | 74 | 0 | 5 |
@@ -153,6 +153,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 Path: `packages/drivers/hubspot`
 
 Export findings:
+- `src/HubSpot.config.ts:62` `HubSpotBaseUrl` (const) - 1 schema annotation/type-alias gap(s)
 - `src/index.ts:14` `export * from "./HubSpot.config.ts";` (re-export) - missing @example
 - `src/index.ts:21` `export * from "./HubSpot.errors.ts";` (re-export) - missing @example
 - `src/index.ts:28` `export * from "./HubSpot.service.ts";` (re-export) - missing @example
@@ -670,14 +671,14 @@ Export findings:
 Path: `packages/drivers/nlp-mcp`
 
 Export findings:
-- `src/StreamingTools.ts:87` `LinesOutput` (type) - missing @example
-- `src/StreamingTools.ts:137` `FileInfoOutput` (type) - missing @example
-- `src/StreamingTools.ts:173` `TextStatsOutput` (type) - missing @example
-- `src/StreamingTools.ts:227` `JsonlOutput` (type) - missing @example
-- `src/StreamingTools.ts:261` `JsonlStatsOutput` (type) - missing @example
-- `src/StreamingTools.ts:295` `DatasetMetaOutput` (type) - missing @example
-- `src/StreamingTools.ts:344` `DataOutput` (type) - missing @example
-- `src/StreamingTools.ts:383` `PipelineOutput` (type) - missing @example
+- `src/StreamingTools.ts:98` `LinesOutput` (type) - missing @example
+- `src/StreamingTools.ts:149` `FileInfoOutput` (type) - missing @example
+- `src/StreamingTools.ts:186` `TextStatsOutput` (type) - missing @example
+- `src/StreamingTools.ts:241` `JsonlOutput` (type) - missing @example
+- `src/StreamingTools.ts:276` `JsonlStatsOutput` (type) - missing @example
+- `src/StreamingTools.ts:311` `DatasetMetaOutput` (type) - missing @example
+- `src/StreamingTools.ts:361` `DataOutput` (type) - missing @example
+- `src/StreamingTools.ts:401` `PipelineOutput` (type) - missing @example
 - `src/index.ts:12` `export * from "./Server.ts";` (re-export) - missing @example
 - `src/index.ts:17` `export { StreamingToolkitHandlersLive } from "./StreamingHandlers.ts";` (re-export) - missing @example
 - `src/index.ts:22` `export { StreamingToolkit } from "./StreamingTools.ts";` (re-export) - missing @example
@@ -832,19 +833,19 @@ Path: `packages/drivers/m365-mcp`
 
 Export findings:
 - `src/M365Handlers.ts:88` `M365ToolkitHandlersLive` (const) - missing @example
-- `src/M365Tools.ts:94` `M365ListDrivesTool` (const) - missing @example
-- `src/M365Tools.ts:111` `M365ListSitesTool` (const) - missing @example
-- `src/M365Tools.ts:128` `M365GetSiteTool` (const) - missing @example
-- `src/M365Tools.ts:145` `M365DeltaDriveItemsTool` (const) - missing @example
-- `src/M365Tools.ts:162` `M365DownloadDriveItemContentTool` (const) - missing @example
-- `src/M365Tools.ts:179` `M365GetListItemTool` (const) - missing @example
-- `src/M365Tools.ts:196` `M365ListDriveItemVersionsTool` (const) - missing @example
-- `src/M365Tools.ts:213` `M365ListMessagesTool` (const) - missing @example
-- `src/M365Tools.ts:230` `M365GetMessageTool` (const) - missing @example
-- `src/M365Tools.ts:247` `M365ListEventsTool` (const) - missing @example
-- `src/M365Tools.ts:264` `M365GetEventTool` (const) - missing @example
-- `src/M365Tools.ts:281` `M365Toolkit` (const) - missing @example
-- `src/M365Tools.ts:301` `M365Toolkit` (type) - missing @example
+- `src/M365Tools.ts:97` `M365ListDrivesTool` (const) - missing @example
+- `src/M365Tools.ts:114` `M365ListSitesTool` (const) - missing @example
+- `src/M365Tools.ts:131` `M365GetSiteTool` (const) - missing @example
+- `src/M365Tools.ts:148` `M365DeltaDriveItemsTool` (const) - missing @example
+- `src/M365Tools.ts:165` `M365DownloadDriveItemContentTool` (const) - missing @example
+- `src/M365Tools.ts:182` `M365GetListItemTool` (const) - missing @example
+- `src/M365Tools.ts:199` `M365ListDriveItemVersionsTool` (const) - missing @example
+- `src/M365Tools.ts:216` `M365ListMessagesTool` (const) - missing @example
+- `src/M365Tools.ts:233` `M365GetMessageTool` (const) - missing @example
+- `src/M365Tools.ts:250` `M365ListEventsTool` (const) - missing @example
+- `src/M365Tools.ts:267` `M365GetEventTool` (const) - missing @example
+- `src/M365Tools.ts:284` `M365Toolkit` (const) - missing @example
+- `src/M365Tools.ts:304` `M365Toolkit` (type) - missing @example
 - `src/Server.ts:26` `M365McpServerConfig` (class) - missing @example
 - `src/Server.ts:46` `makeServerLayer` (const) - missing @example
 - `src/index.ts:32` `export * from "./M365Handlers.ts";` (re-export) - missing @example
@@ -867,9 +868,11 @@ Export findings:
 Path: `packages/drivers/uspto`
 
 Export findings:
-- `src/Uspto.models.ts:52` `UsptoApplicationNumber` (type) - missing @example
-- `src/Uspto.models.ts:87` `UsptoPatentNumber` (type) - missing @example
-- `src/Uspto.service.ts:41` `UsptoShape` (interface) - 1 unsafe example violation(s)
+- `src/Uspto.models.ts:54` `UsptoApplicationNumber` (type) - missing @example
+- `src/Uspto.models.ts:88` `UsptoApplicationNumberFromText` (const) - 1 schema annotation/type-alias gap(s)
+- `src/Uspto.models.ts:133` `UsptoPatentNumber` (type) - missing @example
+- `src/Uspto.models.ts:170` `UsptoPatentNumberFromText` (const) - 1 schema annotation/type-alias gap(s)
+- `src/Uspto.service.ts:45` `UsptoShape` (interface) - 1 unsafe example violation(s)
 - `src/index.ts:14` `export * from "./Uspto.config.ts";` (re-export) - missing @example
 - `src/index.ts:21` `export * from "./Uspto.errors.ts";` (re-export) - missing @example
 - `src/index.ts:28` `export * from "./Uspto.models.ts";` (re-export) - missing @example
@@ -880,16 +883,16 @@ Export findings:
 Path: `packages/drivers/phoenix`
 
 Export findings:
-- `src/Phoenix.errors.ts:57` `PhoenixOperation` (type) - missing @example
-- `src/Phoenix.errors.ts:85` `PhoenixErrorReason` (type) - missing @example
-- `src/Phoenix.models.ts:41` `PhoenixDoctorStatus` (type) - missing @example
-- `src/Phoenix.models.ts:68` `PhoenixDatasetSelectorKind` (type) - missing @example
-- `src/Phoenix.models.ts:95` `PhoenixAnnotationTargetKind` (type) - missing @example
-- `src/Phoenix.models.ts:122` `PhoenixAnnotatorKind` (type) - missing @example
-- `src/Phoenix.models.ts:149` `PhoenixAnnotationValue` (type) - missing @example
-- `src/Phoenix.models.ts:184` `PhoenixPromptChatRole` (type) - missing @example
-- `src/Phoenix.models.ts:211` `PhoenixPromptTemplateFormat` (type) - missing @example
-- `src/Phoenix.models.ts:246` `PhoenixPromptModelProvider` (type) - missing @example
+- `src/Phoenix.errors.ts:56` `PhoenixOperation` (type) - missing @example
+- `src/Phoenix.errors.ts:83` `PhoenixErrorReason` (type) - missing @example
+- `src/Phoenix.models.ts:53` `PhoenixDoctorStatus` (type) - missing @example
+- `src/Phoenix.models.ts:80` `PhoenixDatasetSelectorKind` (type) - missing @example
+- `src/Phoenix.models.ts:107` `PhoenixAnnotationTargetKind` (type) - missing @example
+- `src/Phoenix.models.ts:134` `PhoenixAnnotatorKind` (type) - missing @example
+- `src/Phoenix.models.ts:162` `PhoenixAnnotationValue` (type) - missing @example
+- `src/Phoenix.models.ts:197` `PhoenixPromptChatRole` (type) - missing @example
+- `src/Phoenix.models.ts:224` `PhoenixPromptTemplateFormat` (type) - missing @example
+- `src/Phoenix.models.ts:259` `PhoenixPromptModelProvider` (type) - missing @example
 
 ### @beep/test-utils
 
@@ -1166,8 +1169,8 @@ Export findings:
 Path: `packages/drivers/libpff`
 
 Export findings:
-- `src/Libpff.pffexport.ts:54` `PffexportMode` (type) - missing @example
-- `src/Libpff.pffexport.ts:80` `PffexportFormat` (type) - missing @example
+- `src/Libpff.pffexport.ts:57` `PffexportMode` (type) - missing @example
+- `src/Libpff.pffexport.ts:84` `PffexportFormat` (type) - missing @example
 - `src/index.ts:14` `export * from "./Libpff.errors.ts";` (re-export) - missing @example
 - `src/index.ts:21` `export * from "./Libpff.pffexport.ts";` (re-export) - missing @example
 - `src/index.ts:28` `export * from "./Libpff.service.ts";` (re-export) - missing @example
@@ -1227,11 +1230,8 @@ Export findings:
 Path: `packages/drivers/box`
 
 Export findings:
-- `src/experimental/Box.schemas.ts:84` `SerializedData` (type) - missing @example
-- `src/experimental/Box.schemas.ts:138` `SerializedDataList` (type) - missing @example
-- `src/experimental/Box.schemas.ts:197` `SerializedDataMap` (type) - missing @example
-- `src/experimental/Box.schemas.ts:290` `BoxSdkError` (type) - missing @example
-- `src/experimental/Box.schemas.ts:319` `BoxApiError` (type) - missing @example
+- `src/experimental/Box.schemas.ts:111` `BoxSdkError` (type) - missing @example
+- `src/experimental/Box.schemas.ts:141` `BoxApiError` (type) - missing @example
 - `src/experimental/domain/entities/AiTaxonomy/index.ts:9` `export * as AiTaxonomy from "./AiTaxonomy.model.ts";` (re-export) - missing @example
 - `src/experimental/domain/entities/AiTextGen/index.ts:9` `export * as AiTextGen from "./AiTextGen.model.ts";` (re-export) - missing @example
 - `src/experimental/domain/entities/AppItem/index.ts:9` `export * as AppItem from "./AppItem.model.ts";` (re-export) - missing @example
@@ -1385,9 +1385,9 @@ Export findings:
 Path: `packages/drivers/firecrawl`
 
 Export findings:
-- `src/Firecrawl.models.ts:412` `FirecrawlScrapeOptions` (const) - missing @example
-- `src/Firecrawl.models.ts:438` `FirecrawlParseFile` (const) - missing @example
-- `src/Firecrawl.models.ts:464` `FirecrawlParseOptions` (const) - missing @example
+- `src/Firecrawl.models.ts:436` `FirecrawlScrapeOptions` (const) - missing @example
+- `src/Firecrawl.models.ts:462` `FirecrawlParseFile` (const) - missing @example
+- `src/Firecrawl.models.ts:488` `FirecrawlParseOptions` (const) - missing @example
 
 ### @beep/ecfr
 
@@ -1396,24 +1396,17 @@ Path: `packages/drivers/ecfr`
 Export findings:
 - `src/Ecfr.service.ts:47` `EcfrShape` (interface) - 1 unsafe example violation(s)
 - `src/_generated/Ecfr.generated.ts:22` `Agency` (class) - missing @example
-- `src/_generated/Ecfr.generated.ts:50` `AgenciesResponse` (class) - missing @example
-- `src/_generated/Ecfr.generated.ts:68` `Title` (class) - missing @example
-- `src/_generated/Ecfr.generated.ts:99` `TitlesResponse` (class) - missing @example
-- `src/_generated/Ecfr.generated.ts:114` `EcfrOperationDescriptor` (class) - missing @example
-- `src/_generated/Ecfr.generated.ts:131` `listAgenciesOperation` (const) - missing @example
-- `src/_generated/Ecfr.generated.ts:143` `listTitlesOperation` (const) - missing @example
-- `src/_generated/Ecfr.generated.ts:155` `ECFR_OPERATIONS` (const) - missing @example
+- `src/_generated/Ecfr.generated.ts:52` `AgenciesResponse` (class) - missing @example
+- `src/_generated/Ecfr.generated.ts:72` `Title` (class) - missing @example
+- `src/_generated/Ecfr.generated.ts:105` `TitlesResponse` (class) - missing @example
+- `src/_generated/Ecfr.generated.ts:122` `EcfrOperationDescriptor` (class) - missing @example
+- `src/_generated/Ecfr.generated.ts:139` `listAgenciesOperation` (const) - missing @example
+- `src/_generated/Ecfr.generated.ts:151` `listTitlesOperation` (const) - missing @example
+- `src/_generated/Ecfr.generated.ts:163` `ECFR_OPERATIONS` (const) - missing @example
 - `src/index.ts:13` `export * from "./_generated/Ecfr.generated.ts";` (re-export) - missing @example
 - `src/index.ts:20` `export * from "./Ecfr.config.ts";` (re-export) - missing @example
 - `src/index.ts:27` `export * from "./Ecfr.errors.ts";` (re-export) - missing @example
 - `src/index.ts:34` `export * from "./Ecfr.service.ts";` (re-export) - missing @example
-
-### @beep/acp
-
-Path: `packages/drivers/acp`
-
-Export findings:
-- `src/Acp.errors.ts:405` `AcpError` (const) - 1 schema annotation/type-alias gap(s)
 
 ### @beep/nlp
 
@@ -1460,11 +1453,8 @@ Export findings:
 Path: `packages/drivers/runpod`
 
 Export findings:
-- `src/Runpod.service.ts:176` `RunpodShape` (interface) - 1 unsafe example violation(s)
-- `src/_generated/Runpod.generated.ts:2483` `RunpodHttpMethod` (const) - 1 schema annotation/type-alias gap(s)
-- `src/_generated/Runpod.generated.ts:2513` `RunpodOperationId` (const) - 1 schema annotation/type-alias gap(s)
-- `src/_generated/Runpod.generated.ts:2577` `RunpodRequestBodyKind` (const) - 1 schema annotation/type-alias gap(s)
-- `src/_generated/Runpod.generated.ts:2607` `RunpodResponseBodyKind` (const) - 1 schema annotation/type-alias gap(s)
+- `src/Runpod.config.ts:32` `RunpodConfigUrl` (const) - 1 schema annotation/type-alias gap(s)
+- `src/Runpod.service.ts:186` `RunpodShape` (interface) - 1 unsafe example violation(s)
 - `src/index.ts:14` `export * from "./_generated/Runpod.generated.ts";` (re-export) - missing @example
 - `src/index.ts:21` `export * from "./Runpod.config.ts";` (re-export) - missing @example
 - `src/index.ts:28` `export * from "./Runpod.errors.ts";` (re-export) - missing @example
@@ -2578,8 +2568,8 @@ Export findings:
 Path: `packages/drivers/onepassword-cli`
 
 Export findings:
-- `src/OnePasswordCli.models.ts:39` `OnePasswordReferenceProbeStatus` (type) - missing @example
-- `src/OnePasswordCli.service.ts:43` `OnePasswordCliRunner` (type) - 1 unsafe example violation(s)
+- `src/OnePasswordCli.models.ts:53` `OnePasswordReferenceProbeStatus` (type) - missing @example
+- `src/OnePasswordCli.service.ts:49` `OnePasswordCliRunner` (type) - 1 unsafe example violation(s)
 - `src/index.ts:14` `export * from "./OnePasswordCli.errors.ts";` (re-export) - missing @example
 - `src/index.ts:21` `export * from "./OnePasswordCli.models.ts";` (re-export) - missing @example
 - `src/index.ts:28` `export * from "./OnePasswordCli.service.ts";` (re-export) - missing @example
@@ -2611,8 +2601,8 @@ Export findings:
 Path: `packages/drivers/govinfo`
 
 Export findings:
-- `src/Govinfo.service.ts:57` `GovinfoShape` (interface) - 1 unsafe example violation(s)
-- `src/domain/contracts/Search/Search.contract.ts:230` `Failure` (namespace) - missing @example
+- `src/Govinfo.service.ts:56` `GovinfoShape` (interface) - 1 unsafe example violation(s)
+- `src/domain/contracts/Search/Search.contract.ts:228` `Failure` (namespace) - missing @example
 - `src/domain/contracts/Search/index.ts:17` `export * as Search from "./Search.contract.ts";` (re-export) - missing @example
 - `src/domain/contracts/Search/index.ts:25` `export * from "./Search.http.ts";` (re-export) - missing @example
 - `src/domain/contracts/index.ts:16` `export * from "./Api.ts";` (re-export) - missing @example
@@ -2623,23 +2613,23 @@ Export findings:
 - `src/domain/values/CollectionContainer/index.ts:16` `export * from "./CollectionContainer.model.ts";` (re-export) - missing @example
 - `src/domain/values/CollectionSummary/CollectionSummary.model.ts:74` `CollectionSummary` (namespace) - missing @example
 - `src/domain/values/CollectionSummary/index.ts:16` `export * from "./CollectionSummary.model.ts";` (re-export) - missing @example
-- `src/domain/values/GranuleContainer/GranuleContainer.model.ts:109` `GranuleContainer` (namespace) - missing @example
+- `src/domain/values/GranuleContainer/GranuleContainer.model.ts:104` `GranuleContainer` (namespace) - missing @example
 - `src/domain/values/GranuleContainer/index.ts:16` `export * from "./GranuleContainer.model.ts";` (re-export) - missing @example
-- `src/domain/values/GranuleMetadata/GranuleMetadata.model.ts:76` `GranuleMetadata` (namespace) - missing @example
+- `src/domain/values/GranuleMetadata/GranuleMetadata.model.ts:89` `GranuleMetadata` (namespace) - missing @example
 - `src/domain/values/GranuleMetadata/index.ts:16` `export * from "./GranuleMetadata.model.ts";` (re-export) - missing @example
 - `src/domain/values/PackageInfo/PackageInfo.model.ts:83` `PackageInfo` (namespace) - missing @example
 - `src/domain/values/PackageInfo/index.ts:15` `export * from "./PackageInfo.model.ts";` (re-export) - missing @example
-- `src/domain/values/SearchBody/SearchBody.model.ts:74` `SearchBody` (namespace) - missing @example
+- `src/domain/values/SearchBody/SearchBody.model.ts:75` `SearchBody` (namespace) - missing @example
 - `src/domain/values/SearchBody/index.ts:17` `export * from "./SearchBody.model.ts";` (re-export) - missing @example
 - `src/domain/values/SearchResponse/SearchResponse.model.ts:75` `SearchResponse` (namespace) - missing @example
 - `src/domain/values/SearchResponse/index.ts:16` `export * from "./SearchResponse.model.ts";` (re-export) - missing @example
 - `src/domain/values/SearchResult/SearchResult.model.ts:105` `SearchResult` (namespace) - missing @example
 - `src/domain/values/SearchResult/index.ts:16` `export * from "./SearchResult.model.ts";` (re-export) - missing @example
-- `src/domain/values/Sort/Sort.model.ts:52` `SortBase` (namespace) - missing @example
-- `src/domain/values/Sort/Sort.model.ts:111` `SortASC` (namespace) - missing @example
-- `src/domain/values/Sort/Sort.model.ts:175` `SortDESC` (namespace) - missing @example
-- `src/domain/values/Sort/Sort.model.ts:218` `Sort` (const) - 1 schema annotation/type-alias gap(s)
-- `src/domain/values/Sort/Sort.model.ts:231` `Sort` (namespace) - missing @example
+- `src/domain/values/Sort/Sort.model.ts:53` `SortBase` (namespace) - missing @example
+- `src/domain/values/Sort/Sort.model.ts:112` `SortASC` (namespace) - missing @example
+- `src/domain/values/Sort/Sort.model.ts:176` `SortDESC` (namespace) - missing @example
+- `src/domain/values/Sort/Sort.model.ts:219` `Sort` (const) - 1 schema annotation/type-alias gap(s)
+- `src/domain/values/Sort/Sort.model.ts:233` `Sort` (namespace) - missing @example
 - `src/domain/values/Sort/index.ts:15` `export * from "./Sort.model.ts";` (re-export) - missing @example
 - `src/domain/values/SummaryItem/SummaryItem.model.ts:73` `SummaryItem` (namespace) - missing @example
 - `src/domain/values/SummaryItem/index.ts:16` `export * from "./SummaryItem.model.ts";` (re-export) - missing @example
@@ -2732,9 +2722,9 @@ Export findings:
 Path: `packages/drivers/ffmpeg`
 
 Export findings:
-- `src/FFmpeg.models.ts:72` `PositiveFrameRate` (type) - 1 unsafe example violation(s)
-- `src/FFmpeg.models.ts:131` `PositiveMilliseconds` (type) - 1 unsafe example violation(s)
-- `src/FFmpeg.models.ts:190` `SafeFramePrefix` (type) - 1 unsafe example violation(s)
+- `src/FFmpeg.models.ts:74` `PositiveFrameRate` (type) - 1 unsafe example violation(s)
+- `src/FFmpeg.models.ts:134` `PositiveMilliseconds` (type) - 1 unsafe example violation(s)
+- `src/FFmpeg.models.ts:194` `SafeFramePrefix` (type) - 1 unsafe example violation(s)
 - `src/index.ts:14` `export * from "./FFmpeg.errors.ts";` (re-export) - missing @example
 - `src/index.ts:21` `export * from "./FFmpeg.models.ts";` (re-export) - missing @example
 - `src/index.ts:28` `export * from "./FFmpeg.service.ts";` (re-export) - missing @example
@@ -2753,19 +2743,16 @@ Export findings:
 Path: `packages/drivers/uspto-mcp`
 
 Export findings:
-- `src/UsptoDocumentTiers.ts:111` `DocumentsProjectionOutput` (const) - missing @example
-- `src/UsptoDocumentTiers.ts:126` `DocumentsProjectionOutput` (type) - missing @example
-- `src/UsptoHandlers.ts:82` `UsptoToolkitHandlersLive` (const) - missing @example
-- `src/UsptoTools.ts:31` `UsptoToolErrorReason` (const) - missing @example
-- `src/UsptoTools.ts:49` `UsptoToolErrorReason` (type) - missing @example
-- `src/UsptoTools.ts:96` `UsptoMcpFailure` (const) - missing @example
-- `src/UsptoTools.ts:108` `UsptoMcpFailure` (type) - missing @example
-- `src/UsptoTools.ts:116` `UsptoSearchApplicationsParams` (class) - missing @example
-- `src/UsptoTools.ts:137` `UsptoSearchApplicationsTool` (const) - missing @example
-- `src/UsptoTools.ts:154` `UsptoGetDocumentsParams` (class) - missing @example
-- `src/UsptoTools.ts:178` `UsptoGetDocumentsTool` (const) - missing @example
-- `src/UsptoTools.ts:197` `UsptoToolkit` (const) - missing @example
-- `src/UsptoTools.ts:205` `UsptoToolkit` (type) - missing @example
+- `src/UsptoDocumentTiers.ts:132` `DocumentsProjectionOutput` (const) - missing @example
+- `src/UsptoDocumentTiers.ts:148` `DocumentsProjectionOutput` (type) - missing @example
+- `src/UsptoHandlers.ts:86` `UsptoToolkitHandlersLive` (const) - missing @example
+- `src/UsptoTools.ts:65` `UsptoToolErrorReason` (type) - missing @example
+- `src/UsptoTools.ts:138` `UsptoMcpFailure` (type) - missing @example
+- `src/UsptoTools.ts:146` `UsptoSearchApplicationsParams` (class) - missing @example
+- `src/UsptoTools.ts:167` `UsptoSearchApplicationsTool` (const) - missing @example
+- `src/UsptoTools.ts:222` `UsptoGetDocumentsTool` (const) - missing @example
+- `src/UsptoTools.ts:241` `UsptoToolkit` (const) - missing @example
+- `src/UsptoTools.ts:249` `UsptoToolkit` (type) - missing @example
 - `src/index.ts:16` `export * from "./Server.ts";` (re-export) - missing @example
 - `src/index.ts:21` `export * from "./UsptoDocumentTiers.ts";` (re-export) - missing @example
 - `src/index.ts:26` `export { UsptoToolkitHandlersLive } from "./UsptoHandlers.ts";` (re-export) - missing @example

@@ -6,10 +6,9 @@
  */
 
 import { $AcpId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import * as O from "@beep/utils/Option";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as AcpSchema from "./_generated/schema.gen.ts";
 
@@ -20,9 +19,10 @@ const $I = $AcpId.create("errors");
  *
  * @example
  * ```ts
+ * import * as O from "effect/Option"
  * import { AcpSpawnError } from "@beep/acp/errors"
  *
- * const error = AcpSpawnError.make({ command: "acp-agent" })
+ * const error = AcpSpawnError.make({ command: O.some("acp-agent") })
  * console.log(error.message)
  * ```
  *
@@ -32,17 +32,24 @@ const $I = $AcpId.create("errors");
 export class AcpSpawnError extends TaggedErrorClass<AcpSpawnError>($I`AcpSpawnError`)(
   "AcpSpawnError",
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-    command: S.optionalKey(S.String),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Original spawn failure cause, when one was available.",
+      }),
+    command: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "ACP command that failed to spawn, when available.",
+    }),
   },
   $I.annote("AcpSpawnError", {
     description: "Failure raised when an ACP child process cannot be spawned.",
   })
 ) {
   override get message() {
-    return this.command !== undefined
-      ? `Failed to spawn ACP process for command: ${this.command}`
-      : "Failed to spawn ACP process";
+    return O.match(this.command, {
+      onNone: () => "Failed to spawn ACP process",
+      onSome: (command) => `Failed to spawn ACP process for command: ${command}`,
+    });
   }
 }
 
@@ -51,9 +58,10 @@ export class AcpSpawnError extends TaggedErrorClass<AcpSpawnError>($I`AcpSpawnEr
  *
  * @example
  * ```ts
+ * import * as O from "effect/Option"
  * import { AcpProcessExitedError } from "@beep/acp/errors"
  *
- * const error = AcpProcessExitedError.make({ code: 1 })
+ * const error = AcpProcessExitedError.make({ code: O.some(1) })
  * console.log(error.message)
  * ```
  *
@@ -63,15 +71,26 @@ export class AcpSpawnError extends TaggedErrorClass<AcpSpawnError>($I`AcpSpawnEr
 export class AcpProcessExitedError extends TaggedErrorClass<AcpProcessExitedError>($I`AcpProcessExitedError`)(
   "AcpProcessExitedError",
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-    code: S.optionalKey(S.Finite),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Original process-exit cause, when one was available.",
+      }),
+    code: S.OptionFromOptionalKey(S.Int.check(S.isGreaterThanOrEqualTo(0)))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Non-negative ACP process exit code, when the process returned one.",
+      }),
   },
   $I.annote("AcpProcessExitedError", {
     description: "Failure raised when an ACP process exits before the protocol completes.",
   })
 ) {
   override get message() {
-    return this.code === undefined ? "ACP process exited" : `ACP process exited with code ${this.code}`;
+    return O.match(this.code, {
+      onNone: () => "ACP process exited",
+      onSome: (code) => `ACP process exited with code ${code}`,
+    });
   }
 }
 
@@ -92,8 +111,14 @@ export class AcpProcessExitedError extends TaggedErrorClass<AcpProcessExitedErro
 export class AcpProtocolParseError extends TaggedErrorClass<AcpProtocolParseError>($I`AcpProtocolParseError`)(
   "AcpProtocolParseError",
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-    detail: S.String,
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Original parse failure cause, when one was available.",
+      }),
+    detail: S.String.annotateKey({
+      description: "Human-readable parse failure detail.",
+    }),
   },
   $I.annote("AcpProtocolParseError", {
     description: "Failure raised when ACP wire data cannot be encoded or decoded.",
@@ -110,7 +135,7 @@ export class AcpProtocolParseError extends TaggedErrorClass<AcpProtocolParseErro
     2,
     (cause: unknown, detail: string): AcpProtocolParseError =>
       AcpProtocolParseError.make({
-        cause,
+        cause: O.some(cause),
         detail,
       })
   );
@@ -133,8 +158,14 @@ export class AcpProtocolParseError extends TaggedErrorClass<AcpProtocolParseErro
 export class AcpTransportError extends TaggedErrorClass<AcpTransportError>($I`AcpTransportError`)(
   "AcpTransportError",
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-    detail: S.String,
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Original transport failure cause, when one was available.",
+      }),
+    detail: S.String.annotateKey({
+      description: "Human-readable transport failure detail.",
+    }),
   },
   $I.annote("AcpTransportError", {
     description: "Failure raised by the ACP transport boundary.",
@@ -158,14 +189,22 @@ export class AcpTransportError extends TaggedErrorClass<AcpTransportError>($I`Ac
 export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpRequestError`)(
   "AcpRequestError",
   {
-    code: AcpSchema.ErrorCode,
-    data: S.optionalKey(S.Unknown),
-    errorMessage: S.String,
+    code: AcpSchema.ErrorCode.annotateKey({
+      description: "JSON-RPC error code returned by the ACP peer.",
+    }),
+    data: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional JSON-RPC error data returned by the ACP peer.",
+    }),
+    errorMessage: S.String.annotateKey({
+      description: "JSON-RPC error message returned by the ACP peer.",
+    }),
   },
   $I.annote("AcpRequestError", {
     description: "JSON-RPC request failure returned by an ACP peer.",
   })
 ) {
+  static readonly is = S.is(AcpRequestError);
+
   override get message() {
     return this.errorMessage;
   }
@@ -190,10 +229,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
   static fromProtocolError(error: AcpSchema.Error) {
     return AcpRequestError.make({
       code: error.code,
+      data: O.fromUndefinedOr(error.data),
       errorMessage: error.message,
-      ...R.getSomes({
-        data: O.fromUndefinedOr(error.data),
-      }),
     });
   }
 
@@ -215,9 +252,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
     return AcpRequestError.make({
       code: -32700,
       errorMessage: message,
-      ...R.getSomes({
-        data: O.fromUndefinedOr(data),
-      }),
+      data: O.fromUndefinedOr(data),
     });
   }
 
@@ -239,9 +274,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
     return AcpRequestError.make({
       code: -32600,
       errorMessage: message,
-      ...R.getSomes({
-        data: O.fromUndefinedOr(data),
-      }),
+      data: O.fromUndefinedOr(data),
     });
   }
 
@@ -284,9 +317,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
     return AcpRequestError.make({
       code: -32602,
       errorMessage: message,
-      ...R.getSomes({
-        data: O.fromUndefinedOr(data),
-      }),
+      data: O.fromUndefinedOr(data),
     });
   }
 
@@ -308,9 +339,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
     return AcpRequestError.make({
       code: -32603,
       errorMessage: message,
-      ...R.getSomes({
-        data: O.fromUndefinedOr(data),
-      }),
+      data: O.fromUndefinedOr(data),
     });
   }
 
@@ -332,9 +361,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
     return AcpRequestError.make({
       code: -32000,
       errorMessage: message,
-      ...R.getSomes({
-        data: O.fromUndefinedOr(data),
-      }),
+      data: O.fromUndefinedOr(data),
     });
   }
 
@@ -356,9 +383,7 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
     return AcpRequestError.make({
       code: -32002,
       errorMessage: message,
-      ...R.getSomes({
-        data: O.fromUndefinedOr(data),
-      }),
+      data: O.fromUndefinedOr(data),
     });
   }
 
@@ -380,8 +405,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
     return AcpSchema.Error.make({
       code: this.code,
       message: this.errorMessage,
-      ...R.getSomes({
-        data: O.fromUndefinedOr(this.data),
+      ...O.getSomesStruct({
+        data: this.data,
       }),
     });
   }
@@ -393,10 +418,8 @@ export class AcpRequestError extends TaggedErrorClass<AcpRequestError>($I`AcpReq
  * @example
  * ```ts
  * import { AcpError, AcpRequestError } from "@beep/acp/errors"
- * import * as S from "effect/Schema"
  *
- * const isAcpError = S.is(AcpError)
- * console.log(isAcpError(AcpRequestError.methodNotFound("x/test")))
+ * console.log(AcpError.is(AcpRequestError.methodNotFound("x/test")))
  * ```
  *
  * @category errors
@@ -408,7 +431,13 @@ export const AcpError = S.Union([
   AcpProcessExitedError,
   AcpProtocolParseError,
   AcpTransportError,
-]).pipe(S.toTaggedUnion("_tag"));
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("AcpError", {
+    description: "Union of typed technical failures emitted by the ACP driver.",
+  }),
+  SchemaUtils.withCodecStatics
+);
 
 /**
  * Type for {@link AcpError}.

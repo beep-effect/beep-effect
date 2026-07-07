@@ -9,21 +9,22 @@ import { $FaceDetectionId } from "@beep/identity/packages";
 import { A, thunkUndefined } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Context, Effect, Layer, Order, pipe } from "effect";
+import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import sharp from "sharp";
 import { FaceDetectionError } from "./FaceDetection.errors.ts";
 import {
-  decodeFaceDetectionImageRequest,
-  decodeFaceDetectionModelConfig,
   FaceDetection,
   FaceDetectionBox,
+  FaceDetectionImageRequest,
   FaceDetectionLandmarks,
+  FaceDetectionModelConfig,
   FaceDetectionPoint,
   FaceDetectionResult,
   PositivePixelDimension,
+  RawFaceDetectionConfidence,
 } from "./FaceDetection.models.ts";
-import type { FaceDetectionImageRequest, FaceDetectionModelConfig } from "./FaceDetection.models.ts";
 
 const $I = $FaceDetectionId.create("FaceDetection.service");
 const divisor = 32;
@@ -46,19 +47,107 @@ const outputNames = [
   "kps_32",
 ] as const;
 
+const PositiveScale = S.Finite.check(
+  S.isGreaterThan(0, {
+    identifier: $I`PositiveScaleGreaterThanZeroCheck`,
+    title: "Positive Preprocessing Scale",
+    description: "Preprocessing scale must be greater than zero.",
+    message: "Expected preprocessing scale greater than zero",
+  })
+).pipe(
+  $I.annoteSchema("PositiveScale", {
+    description: "Positive image preprocessing scale.",
+  })
+);
+
+const NonNegativeOffset = S.Finite.check(
+  S.isGreaterThanOrEqualTo(0, {
+    identifier: $I`NonNegativeOffsetMinimumCheck`,
+    title: "Non-negative Preprocessing Offset",
+    description: "Preprocessing offsets must be greater than or equal to zero.",
+    message: "Expected preprocessing offset greater than or equal to zero",
+  })
+).pipe(
+  $I.annoteSchema("NonNegativeOffset", {
+    description: "Non-negative image preprocessing offset.",
+  })
+);
+
 class PreprocessedImage extends S.Class<PreprocessedImage>($I`PreprocessedImage`)(
   {
-    height: S.Int,
-    offsetX: S.Finite,
-    offsetY: S.Finite,
-    padHeight: S.Int,
-    padWidth: S.Int,
-    scale: S.Finite,
-    tensorData: S.Uint8Array,
-    width: S.Int,
+    height: PositivePixelDimension.annotateKey({
+      description: "Source image height in pixels.",
+    }),
+    offsetX: NonNegativeOffset.annotateKey({
+      description: "Horizontal padding offset applied during preprocessing.",
+    }),
+    offsetY: NonNegativeOffset.annotateKey({
+      description: "Vertical padding offset applied during preprocessing.",
+    }),
+    padHeight: PositivePixelDimension.annotateKey({
+      description: "Padded tensor height in pixels.",
+    }),
+    padWidth: PositivePixelDimension.annotateKey({
+      description: "Padded tensor width in pixels.",
+    }),
+    scale: PositiveScale.annotateKey({
+      description: "Scale applied from source image coordinates into tensor coordinates.",
+    }),
+    tensorData: S.Uint8Array.annotateKey({
+      description: "Preprocessed BGR tensor bytes.",
+    }),
+    width: PositivePixelDimension.annotateKey({
+      description: "Source image width in pixels.",
+    }),
   },
   $I.annote("PreprocessedImage", {
     description: "Internal BGR image tensor input for YuNet-compatible face detection.",
+  })
+) {}
+
+class RawFaceDetectionPoint extends S.Class<RawFaceDetectionPoint>($I`RawFaceDetectionPoint`)(
+  {
+    x: S.Finite,
+    y: S.Finite,
+  },
+  $I.annote("RawFaceDetectionPoint", {
+    description: "Raw tensor-space point before projection back to source-image bounds.",
+  })
+) {}
+
+class RawFaceDetectionBox extends S.Class<RawFaceDetectionBox>($I`RawFaceDetectionBox`)(
+  {
+    height: S.Finite,
+    width: S.Finite,
+    x: S.Finite,
+    y: S.Finite,
+  },
+  $I.annote("RawFaceDetectionBox", {
+    description: "Raw tensor-space box before projection back to source-image bounds.",
+  })
+) {}
+
+class RawFaceDetectionLandmarks extends S.Class<RawFaceDetectionLandmarks>($I`RawFaceDetectionLandmarks`)(
+  {
+    leftEye: RawFaceDetectionPoint,
+    leftMouth: RawFaceDetectionPoint,
+    nose: RawFaceDetectionPoint,
+    rightEye: RawFaceDetectionPoint,
+    rightMouth: RawFaceDetectionPoint,
+  },
+  $I.annote("RawFaceDetectionLandmarks", {
+    description: "Raw tensor-space landmarks before projection back to source-image bounds.",
+  })
+) {}
+
+class RawFaceDetection extends S.Class<RawFaceDetection>($I`RawFaceDetection`)(
+  {
+    box: RawFaceDetectionBox,
+    confidence: RawFaceDetectionConfidence,
+    landmarks: RawFaceDetectionLandmarks,
+  },
+  $I.annote("RawFaceDetection", {
+    description: "Raw tensor-space face detection before source-image coordinate projection.",
   })
 ) {}
 
@@ -285,7 +374,7 @@ const checkedPixelCount = (
   if (!Number.isSafeInteger(pixels) || pixels > maxPixels) {
     return Effect.fail(
       FaceDetectionError.make({
-        ...O.getSomesStruct({ imagePath: O.fromUndefinedOr(imagePath) }),
+        imagePath: O.fromUndefinedOr(imagePath),
         message: `Face detection ${operation} dimensions exceed the ${maxPixels} pixel safety limit.`,
         operation: "preprocessImage",
       })
@@ -350,7 +439,7 @@ const preprocessImage = Effect.fn("FaceDetection.preprocessImage")(function* (
 
   if (width < 1 || height < 1) {
     return yield* FaceDetectionError.make({
-      imagePath,
+      imagePath: O.some(imagePath),
       message: `Image metadata did not return usable dimensions for "${imagePath}"`,
       operation: "preprocessImage",
     });
@@ -358,7 +447,7 @@ const preprocessImage = Effect.fn("FaceDetection.preprocessImage")(function* (
 
   if (imageBytes > MAX_FACE_DETECTION_IMAGE_BYTES) {
     return yield* FaceDetectionError.make({
-      imagePath,
+      imagePath: O.some(imagePath),
       message: `Image file exceeds the ${MAX_FACE_DETECTION_IMAGE_BYTES} byte face-detection safety limit.`,
       operation: "preprocessImage",
     });
@@ -417,7 +506,7 @@ const preprocessImage = Effect.fn("FaceDetection.preprocessImage")(function* (
 
   if (decoded.info.width < 1 || decoded.info.height < 1 || channels < 3) {
     return yield* FaceDetectionError.make({
-      imagePath,
+      imagePath: O.some(imagePath),
       message: `Image decode did not return usable RGB pixels for "${imagePath}"`,
       operation: "preprocessImage",
     });
@@ -489,14 +578,19 @@ const outputTensor = (
     })
   );
 
-const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
+const confidenceScore = (value: number | undefined): RawFaceDetectionConfidence =>
+  pipe(
+    O.fromUndefinedOr(value),
+    O.flatMap(RawFaceDetectionConfidence.decodeOption),
+    O.getOrElse(() => 0)
+  );
 
-const faceByConfidenceDescending: Order.Order<FaceDetection> = Order.mapInput(
+const faceByConfidenceDescending: Order.Order<RawFaceDetection> = Order.mapInput(
   Order.Number,
-  (face: FaceDetection) => -face.confidence
+  (face: RawFaceDetection) => -face.confidence
 );
 
-const intersectionOverUnion = (left: FaceDetectionBox, right: FaceDetectionBox): number => {
+const intersectionOverUnion = (left: RawFaceDetectionBox, right: RawFaceDetectionBox): number => {
   const leftRight = left.x + left.width;
   const leftBottom = left.y + left.height;
   const rightRight = right.x + right.width;
@@ -514,12 +608,12 @@ const intersectionOverUnion = (left: FaceDetectionBox, right: FaceDetectionBox):
 };
 
 const suppressOverlappingFaces = (
-  faces: ReadonlyArray<FaceDetection>,
+  faces: ReadonlyArray<RawFaceDetection>,
   nmsThreshold: number,
   topK: number
-): ReadonlyArray<FaceDetection> => {
+): ReadonlyArray<RawFaceDetection> => {
   const candidates = pipe(faces, A.sort(faceByConfidenceDescending), A.take(topK));
-  let kept = A.empty<FaceDetection>();
+  let kept = A.empty<RawFaceDetection>();
 
   for (const candidate of candidates) {
     if (A.every(kept, (face) => intersectionOverUnion(candidate.box, face.box) < nmsThreshold)) {
@@ -530,17 +624,17 @@ const suppressOverlappingFaces = (
   return kept;
 };
 
-const point = (x: number, y: number): FaceDetectionPoint => FaceDetectionPoint.make({ x, y });
+const point = (x: number, y: number): RawFaceDetectionPoint => RawFaceDetectionPoint.make({ x, y });
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
-const scalePointToOriginal = (value: FaceDetectionPoint, image: PreprocessedImage): FaceDetectionPoint =>
+const scalePointToOriginal = (value: RawFaceDetectionPoint, image: PreprocessedImage): FaceDetectionPoint =>
   FaceDetectionPoint.make({
     x: clamp((value.x - image.offsetX) / image.scale, 0, image.width),
     y: clamp((value.y - image.offsetY) / image.scale, 0, image.height),
   });
 
-const scaleFaceToOriginal = (face: FaceDetection, image: PreprocessedImage): FaceDetection => {
+const scaleFaceToOriginal = (face: RawFaceDetection, image: PreprocessedImage): FaceDetection => {
   const left = clamp((face.box.x - image.offsetX) / image.scale, 0, image.width);
   const top = clamp((face.box.y - image.offsetY) / image.scale, 0, image.height);
   const right = clamp((face.box.x + face.box.width - image.offsetX) / image.scale, 0, image.width);
@@ -569,7 +663,7 @@ const decodeStrideFaces = Effect.fn("FaceDetection.decodeStrideFaces")(function*
   strideIndex: number,
   image: PreprocessedImage,
   request: FaceDetectionImageRequest
-): Effect.fn.Return<ReadonlyArray<FaceDetection>, FaceDetectionError> {
+): Effect.fn.Return<ReadonlyArray<RawFaceDetection>, FaceDetectionError> {
   const stride = strides[strideIndex];
   const cols = image.padWidth / stride;
   const rows = image.padHeight / stride;
@@ -582,12 +676,12 @@ const decodeStrideFaces = Effect.fn("FaceDetection.decodeStrideFaces")(function*
   const bbox = yield* outputTensor(outputs, bboxName).pipe(Effect.flatMap((tensor) => tensorData(tensor, bboxName)));
   const kpsName = outputNames[strideIndex + strides.length * 3];
   const kps = yield* outputTensor(outputs, kpsName).pipe(Effect.flatMap((tensor) => tensorData(tensor, kpsName)));
-  let faces = A.empty<FaceDetection>();
+  let faces = A.empty<RawFaceDetection>();
 
   for (let row = 0; row < rows; row += 1) {
     for (let col = 0; col < cols; col += 1) {
       const index = row * cols + col;
-      const confidence = Math.sqrt(clamp01(cls[index] ?? 0) * clamp01(obj[index] ?? 0));
+      const confidence = Math.sqrt(confidenceScore(cls[index]) * confidenceScore(obj[index]));
 
       if (confidence < request.minConfidence) {
         continue;
@@ -602,15 +696,15 @@ const decodeStrideFaces = Effect.fn("FaceDetection.decodeStrideFaces")(function*
 
       faces = A.append(
         faces,
-        FaceDetection.make({
-          box: FaceDetectionBox.make({
+        RawFaceDetection.make({
+          box: RawFaceDetectionBox.make({
             height,
             width,
             x: centerX - width / 2,
             y: centerY - height / 2,
           }),
           confidence,
-          landmarks: FaceDetectionLandmarks.make({
+          landmarks: RawFaceDetectionLandmarks.make({
             leftEye: point((kps[keypointOffset + 2] ?? 0) + col, (kps[keypointOffset + 3] ?? 0) + row),
             leftMouth: point((kps[keypointOffset + 8] ?? 0) + col, (kps[keypointOffset + 9] ?? 0) + row),
             nose: point((kps[keypointOffset + 4] ?? 0) + col, (kps[keypointOffset + 5] ?? 0) + row),
@@ -623,13 +717,13 @@ const decodeStrideFaces = Effect.fn("FaceDetection.decodeStrideFaces")(function*
   }
 
   return A.map(faces, (face) => {
-    const scalePoint = (value: FaceDetectionPoint): FaceDetectionPoint =>
-      FaceDetectionPoint.make({ x: value.x * stride, y: value.y * stride });
+    const scalePoint = (value: RawFaceDetectionPoint): RawFaceDetectionPoint =>
+      RawFaceDetectionPoint.make({ x: value.x * stride, y: value.y * stride });
 
-    return FaceDetection.make({
+    return RawFaceDetection.make({
       box: face.box,
       confidence: face.confidence,
-      landmarks: FaceDetectionLandmarks.make({
+      landmarks: RawFaceDetectionLandmarks.make({
         leftEye: scalePoint(face.landmarks.leftEye),
         leftMouth: scalePoint(face.landmarks.leftMouth),
         nose: scalePoint(face.landmarks.nose),
@@ -656,10 +750,10 @@ const postprocess = Effect.fn("FaceDetection.postprocess")(function* (
 
 const makeLoadedDetector = (ort: Ort, session: OrtSession): LoadedFaceDetector => ({
   detect: Effect.fn("LoadedFaceDetector.detect")(function* (request) {
-    const validatedRequest = yield* decodeFaceDetectionImageRequest(request).pipe(
+    const validatedRequest = yield* FaceDetectionImageRequest.decodeEffect(request).pipe(
       Effect.mapError(() =>
         FaceDetectionError.make({
-          imagePath: request.imagePath,
+          imagePath: O.some(request.imagePath),
           message: "Invalid face detection image request.",
           operation: "detect",
         })
@@ -721,7 +815,7 @@ const makeLoadedDetector = (ort: Ort, session: OrtSession): LoadedFaceDetector =
 export const makeFaceDetectionService = (): FaceDetectionServiceShape =>
   FaceDetectionService.of({
     withDetector: Effect.fn("FaceDetectionService.withDetector")(function* (config, use) {
-      const validatedConfig = yield* decodeFaceDetectionModelConfig(config).pipe(
+      const validatedConfig = yield* FaceDetectionModelConfig.decodeEffect(config).pipe(
         Effect.mapError(() =>
           FaceDetectionError.make({
             message: "Invalid face detection model config.",
@@ -791,10 +885,21 @@ export const makeFaceDetectionService = (): FaceDetectionServiceShape =>
  * @category use-cases
  * @since 0.0.0
  */
-export const withDetector = Effect.fn("FaceDetection.withDetector")(function* <A, E, R>(
-  config: FaceDetectionModelConfig,
-  use: (detector: LoadedFaceDetector) => Effect.Effect<A, E, R>
-): Effect.fn.Return<A, E | FaceDetectionError, R | FaceDetectionService> {
-  const service = yield* FaceDetectionService;
-  return yield* service.withDetector(config, use);
-});
+export const withDetector: {
+  <A, E, R>(
+    use: (detector: LoadedFaceDetector) => Effect.Effect<A, E, R>
+  ): (config: FaceDetectionModelConfig) => Effect.Effect<A, E | FaceDetectionError, R | FaceDetectionService>;
+  <A, E, R>(
+    config: FaceDetectionModelConfig,
+    use: (detector: LoadedFaceDetector) => Effect.Effect<A, E, R>
+  ): Effect.Effect<A, E | FaceDetectionError, R | FaceDetectionService>;
+} = dual(
+  2,
+  Effect.fn("FaceDetection.withDetector")(function* <A, E, R>(
+    config: FaceDetectionModelConfig,
+    use: (detector: LoadedFaceDetector) => Effect.Effect<A, E, R>
+  ): Effect.fn.Return<A, E | FaceDetectionError, R | FaceDetectionService> {
+    const service = yield* FaceDetectionService;
+    return yield* service.withDetector(config, use);
+  })
+);

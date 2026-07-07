@@ -39,14 +39,6 @@ export const ALLOWLIST_SNAPSHOT = {
     {
       "rule": "beep-laws/no-native-runtime",
       "file": "packages/drivers/ecfr/scripts/generate.ts",
-      "kind": "native-switch",
-      "reason": "The eCFR OpenAPI generator script maps JSON-schema type literals to Effect Schema expression strings via a native switch during one-shot build-time code generation; not domain logic.",
-      "owner": "@beep/ecfr",
-      "issue": "ECFR-OPENAPI-GENERATOR-NATIVE-SWITCH"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/drivers/ecfr/scripts/generate.ts",
       "kind": "object-method",
       "reason": "The eCFR OpenAPI generator script reads Object.keys/values over parsed JSON-schema definitions for deterministic one-shot code generation before emitting package source.",
       "owner": "@beep/ecfr",

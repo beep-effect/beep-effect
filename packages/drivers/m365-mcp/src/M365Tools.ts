@@ -21,6 +21,7 @@ import {
   M365DriveItemCollection,
   M365DriveItemDownload,
   M365DriveItemVersionCollection,
+  M365ErrorReason,
   M365EventCollection,
   M365GetEventRequest,
   M365GetListItemRequest,
@@ -35,6 +36,7 @@ import {
   M365SiteCollection,
 } from "@beep/m365";
 import { annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool, Toolkit } from "effect/unstable/ai";
 
@@ -46,11 +48,12 @@ const $I = $M365McpId.create("M365Tools");
  * @example
  * ```ts
  * import { M365ToolError } from "@beep/m365-mcp"
+ * import * as O from "effect/Option"
  *
  * const failure = M365ToolError.make({
  *   message: "Microsoft 365 listDrives failed: throttled",
  *   operation: "listDrives",
- *   reason: "throttled",
+ *   reason: O.some("throttled"),
  *   retryable: true,
  *   toolName: "m365_list_drives"
  * })
@@ -64,19 +67,19 @@ const $I = $M365McpId.create("M365Tools");
  */
 export class M365ToolError extends S.Class<M365ToolError>($I`M365ToolError`)(
   {
-    message: S.String.annotateKey({
+    message: S.NonEmptyString.annotateKey({
       description: "Human-readable failure message safe to return to an MCP tool caller.",
     }),
-    operation: S.String.annotateKey({
+    operation: S.NonEmptyString.annotateKey({
       description: "Driver operation that failed.",
     }),
-    reason: S.optionalKey(S.String).annotateKey({
+    reason: S.OptionFromOptionalKey(M365ErrorReason).pipe(SchemaUtils.withNoneDefault).annotateKey({
       description: "Stable failure category or driver error reason.",
     }),
     retryable: S.Boolean.annotateKey({
       description: "Whether retrying the same tool call may reasonably succeed.",
     }),
-    toolName: S.String.annotateKey({
+    toolName: S.NonEmptyString.annotateKey({
       description: "MCP tool that returned the failure.",
     }),
   },

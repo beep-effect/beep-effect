@@ -1,50 +1,6 @@
 [
   {
     "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/sanity/src/Sanity.service.ts",
-    "line": 187,
-    "symbol": "resolveConfig",
-    "smell": "`apiHost: normalizeBaseUrl(input.apiHost ?? \"https://api.sanity.io\")` combines a body default and trailing-slash normalization for a field already modeled in `SanityConfigInput`.",
-    "proposedTarget": "Move both behaviors onto `SanityConfigInput.apiHost`: `S.String.pipe(S.decodeTo(S.String, SchemaTransformation.transform({ decode: normalizeBaseUrl, encode: identity })), SchemaUtils.withKeyDefaults(\"https://api.sanity.io\"))`; local exemplars: `packages/foundation/modeling/schema/src/CommonTextSchemas.ts:36` for `S.decodeTo` normalization and `packages/drivers/uspto/src/Uspto.config.ts:47` for config defaults.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/sanity/src/Sanity.service.ts",
-    "line": 191,
-    "symbol": "resolveConfig",
-    "smell": "`headers: input.headers ?? {}` defaults an optional record in the resolver body.",
-    "proposedTarget": "Change `SanityConfigInput.headers` to `S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty()))` or an equivalent empty record default; driver exemplars include `packages/drivers/xai/src/XAi.config.ts:86` and `packages/drivers/phoenix/src/Phoenix.config.ts:53`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/sanity/src/Sanity.service.ts",
-    "line": 90,
-    "symbol": "SanityQueryRequest.params",
-    "smell": "`params` is `S.optionalKey(S.Record(...))`, then request encoding falls back with `decoded.params ?? {}` at line 248.",
-    "proposedTarget": "Give `params` an empty-record schema default, e.g. `S.Record(S.String, SanityQueryParamValue).pipe(SchemaUtils.withKeyDefaults(R.empty()))`; this mirrors `packages/drivers/xai/src/XAi.config.ts:86` for defaulted records.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/sanity/src/Sanity.service.ts",
-    "line": 116,
-    "symbol": "SanityQueryResponse.ms",
-    "smell": "The decoded response model uses `ms: S.optionalKey(S.Finite)`, exposing absence as `undefined` on the domain response.",
-    "proposedTarget": "Use `ms: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault)` so decoded responses are Option-shaped while encoded Sanity responses may still omit `ms`; see `packages/drivers/pglite/src/Pglite.errors.ts:43`.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-defaults",
     "file": "packages/drivers/sanity/src/Sanity.errors.ts",
     "line": 82,
     "symbol": "SanityError",
@@ -52,7 +8,11 @@
     "proposedTarget": "Model error context with `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` on both `SanityError` and `SanityErrorOptions`; local driver exemplar: `packages/drivers/pglite/src/Pglite.errors.ts:43`.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Changing SanityError.status/cause/url and SanityErrorOptions.status/cause/url to Option-shaped public fields would alter the exported error constructor and consumers that currently read optional number/string fields directly.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",

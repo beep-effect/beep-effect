@@ -13,8 +13,14 @@ import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as HttpClientError from "effect/unstable/http/HttpClientError";
+import { HubSpotUrl } from "./HubSpot.config.ts";
 
 const $I = $HubspotId.create("HubSpot.errors");
+const HubSpotHttpStatus = S.Int.check(S.isGreaterThanOrEqualTo(100), S.isLessThanOrEqualTo(599)).pipe(
+  $I.annoteSchema("HubSpotHttpStatus", {
+    description: "Integer HTTP status code recorded in HubSpot driver errors.",
+  })
+);
 
 /**
  * Technical error reasons emitted by the HubSpot driver.
@@ -80,12 +86,24 @@ export type HubSpotErrorReason = typeof HubSpotErrorReason.Type;
 export class HubSpotError extends TaggedErrorClass<HubSpotError>($I`HubSpotError`)(
   "HubSpotError",
   {
-    cause: S.optionalKey(S.String),
-    email: S.optionalKey(S.String),
-    formGuid: S.optionalKey(S.String),
-    reason: HubSpotErrorReason,
-    status: S.optionalKey(S.Finite),
-    url: S.optionalKey(S.String),
+    cause: S.optionalKey(S.String).annotateKey({
+      description: "Redacted cause label derived from a native or HTTP client error.",
+    }),
+    email: S.optionalKey(S.String).annotateKey({
+      description: "Submitted email text preserved for diagnostic context.",
+    }),
+    formGuid: S.optionalKey(S.NonEmptyString).annotateKey({
+      description: "HubSpot form GUID associated with the failed request.",
+    }),
+    reason: HubSpotErrorReason.annotateKey({
+      description: "Redacted technical error reason.",
+    }),
+    status: S.optionalKey(HubSpotHttpStatus).annotateKey({
+      description: "HTTP response status code associated with the failure.",
+    }),
+    url: S.optionalKey(HubSpotUrl).annotateKey({
+      description: "HubSpot API URL associated with the failed request.",
+    }),
   },
   $I.annote("HubSpotError", {
     description: "Redacted technical failure raised by the HubSpot API driver boundary.",
@@ -170,17 +188,29 @@ export class HubSpotError extends TaggedErrorClass<HubSpotError>($I`HubSpotError
  */
 export class HubSpotErrorOptions extends S.Class<HubSpotErrorOptions>($I`HubSpotErrorOptions`)(
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-    email: S.optionalKey(S.String),
-    formGuid: S.optionalKey(S.String),
-    status: S.optionalKey(S.Finite),
-    url: S.optionalKey(S.String),
+    cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({
+      description: "Original native or third-party defect when one was available.",
+    }),
+    email: S.optionalKey(S.String).annotateKey({
+      description: "Submitted email text preserved for diagnostic context.",
+    }),
+    formGuid: S.optionalKey(S.NonEmptyString).annotateKey({
+      description: "HubSpot form GUID associated with the failure.",
+    }),
+    status: S.optionalKey(HubSpotHttpStatus).annotateKey({
+      description: "HTTP response status code associated with the failure.",
+    }),
+    url: S.optionalKey(HubSpotUrl).annotateKey({
+      description: "HubSpot API URL associated with the failure.",
+    }),
   },
   $I.annote("HubSpotErrorOptions", {
     description: "Options for configuring HubSpotError instances.",
   })
 ) {}
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   if (!P.isObject(value)) {
     return O.none();

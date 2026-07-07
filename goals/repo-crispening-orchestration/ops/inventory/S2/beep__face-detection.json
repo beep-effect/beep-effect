@@ -1,27 +1,5 @@
 [
   {
-    "ruleId": "SFV4-null-return",
-    "file": "packages/drivers/face-detection/src/FaceDetection.errors.ts",
-    "line": 18,
-    "symbol": "causeFromUnknown",
-    "smell": "`causeFromUnknown` returns `unknown | undefined`, and `FaceDetectionError.fromUnknown` passes that undefined into the schema-backed optional `cause` field at line 121; `imagePath`/`modelPath` also stay optional keys in both options and error context (lines 52-54 and 84-87).",
-    "proposedTarget": "Model error-context absence as Option: `cause`, `imagePath`, and `modelPath` should use `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` on `FaceDetectionErrorFromUnknownOptions` and `FaceDetectionError`; `causeFromUnknown` returns `O.Option<unknown>`, and call sites pass Options directly. In-repo exemplar: `packages/foundation/modeling/ontology/src/Ontology.models.ts:152-160`; v4 API verified at `.repos/effect-v4/packages/effect/src/Schema.ts:8648-8669`.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-normalization",
-    "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
-    "line": 492,
-    "symbol": "clamp01",
-    "smell": "`clamp01` normalizes raw ONNX classifier/objectness scores into [0, 1] before constructing `FaceDetection.confidence`, while the package already has a schema for that invariant (`FaceDetectionConfidence`, models.ts:75-101).",
-    "proposedTarget": "Move raw-score normalization into a schema codec such as `RawFaceDetectionConfidence = S.Finite.pipe(S.decodeTo(FaceDetectionConfidence, SchemaTransformation.transform({ decode: clamp01, encode: identity })))`, then decode tensor scores through that boundary. Keep the model-output fallback separate if missing tensor slots must still fail closed to zero. In-package range-schema exemplar: `FaceDetectionConfidence` at models.ts:75-101; `S.decodeTo`/`SchemaTransformation.transform` verified in `.repos/effect-v4` and repo exemplars.",
-    "confidence": 0.6,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
     "ruleId": "SFV4-defaults",
     "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
     "line": 347,

@@ -6,10 +6,10 @@ import {
   M365GetMessageRequest,
   M365ListDrivesRequest,
 } from "@beep/m365";
-import { getSomesStruct } from "@beep/utils/Option";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { Effect, pipe } from "effect";
+import { Effect, pipe, Result } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 // Treat absent, blank, or unresolved `op://` reference values (present when
@@ -45,11 +45,13 @@ pipe(
     onSome: (env) =>
       describe.concurrent("@beep/m365 live integration", () => {
         const LiveLayer = M365.makeLiveLayer(
-          M365ConfigInput.make({
-            clientId: env.clientId,
-            tenantId: env.tenantId,
-            tokenCachePath: env.tokenCachePath,
-          })
+          Result.getOrThrow(
+            S.decodeUnknownResult(M365ConfigInput)({
+              clientId: env.clientId,
+              tenantId: env.tenantId,
+              tokenCachePath: env.tokenCachePath,
+            })
+          )
         );
 
         layer(LiveLayer, { timeout: "60 seconds" })((it) => {
@@ -57,12 +59,12 @@ pipe(
             "lists a document library, downloads a file, and reads a message",
             Effect.fnUntraced(function* () {
               const m365 = yield* M365;
-              const drives = yield* m365.listDrives(M365ListDrivesRequest.make({ siteId: env.siteId }));
+              const drives = yield* m365.listDrives(M365ListDrivesRequest.make({ siteId: O.some(env.siteId) }));
               const download = yield* m365.downloadDriveItemContent(
                 M365DownloadDriveItemContentRequest.make({ driveId: env.driveId, itemId: env.itemId })
               );
               const message = yield* m365.getMessage(
-                M365GetMessageRequest.make({ messageId: env.messageId, ...getSomesStruct({ userId: liveUserId }) })
+                M365GetMessageRequest.make({ messageId: env.messageId, userId: liveUserId })
               );
 
               expect(drives.value.length).toBeGreaterThan(0);

@@ -6,12 +6,12 @@
  */
 
 import colors from "@beep/colors";
-import { A, Str, thunkFalse } from "@beep/utils";
+import { A, Str } from "@beep/utils";
 import { Cause, Console, flow, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
 import { format } from "sql-formatter";
+import { isCause, isObject, readCauseReasons, safeBoolean } from "./internal/PostgresDiagnosticGuards.ts";
 import { PostgresError } from "./Postgres.errors.ts";
 import type { Colors } from "@beep/colors";
 import type { Effect } from "effect";
@@ -138,21 +138,9 @@ const highlightLine = (line: string, palette: Colors): string =>
     Str.replaceWith(/([=<>!]+|::|->|@>|<@|\?\||\?&)/g, palette.cyan)
   );
 
-const safeBoolean = (evaluate: () => boolean): boolean => pipe(Result.try(evaluate), Result.getOrElse(thunkFalse));
-
-const isObject = (value: unknown): value is object => safeBoolean(() => P.isObject(value));
-
 const isDate = (value: unknown): value is Date => safeBoolean(() => value instanceof Date);
 
-const isCause = (value: unknown): value is Cause.Cause<unknown> => safeBoolean(() => Cause.isCause(value));
-
-const isPostgresError = (value: unknown): value is PostgresError => safeBoolean(() => S.is(PostgresError)(value));
-
-const readCauseReasons = (cause: Cause.Cause<unknown>): ReadonlyArray<Cause.Reason<unknown>> =>
-  pipe(
-    Result.try(() => cause.reasons),
-    Result.getOrElse(A.empty<Cause.Reason<unknown>>)
-  );
+const isPostgresError = (value: unknown): value is PostgresError => safeBoolean(() => PostgresError.is(value));
 
 const unprintable = "<unprintable>";
 
@@ -278,8 +266,12 @@ const postgresErrorFromReason = (reason: Cause.Reason<unknown>): O.Option<Postgr
     Result.getOrElse(O.none)
   );
 
-const postgresErrorFromCause = (cause: Cause.Cause<unknown>): O.Option<PostgresError> =>
-  pipe(readCauseReasons(cause), A.map(postgresErrorFromReason), A.getSomes, A.head);
+const postgresErrorFromCause: (cause: Cause.Cause<unknown>) => O.Option<PostgresError> = flow(
+  readCauseReasons,
+  A.map(postgresErrorFromReason),
+  A.getSomes,
+  A.head
+);
 
 const normalizePostgresError = (error: unknown): PostgresError => {
   if (isPostgresError(error)) {

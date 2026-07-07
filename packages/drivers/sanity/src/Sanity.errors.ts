@@ -6,7 +6,7 @@
  */
 
 import { $SanityId } from "@beep/identity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { O, thunkFalse, thunkUndefined } from "@beep/utils";
 import { pipe, Result } from "effect";
 import * as P from "effect/Predicate";
@@ -15,33 +15,68 @@ import * as HttpClientError from "effect/unstable/http/HttpClientError";
 
 const $I = $SanityId.create("Sanity.errors");
 
+const SanityHttpStatus = S.Finite.check(
+  S.makeFilterGroup(
+    [
+      S.isInt({
+        identifier: $I`SanityHttpStatusInteger`,
+        title: "Sanity HTTP status integer",
+        description: "Sanity HTTP status values must be integer status codes.",
+        message: "Sanity HTTP status values must be integers",
+      }),
+      S.isGreaterThanOrEqualTo(100, {
+        identifier: $I`SanityHttpStatusMinimum`,
+        title: "Sanity HTTP status minimum",
+        description: "Sanity HTTP status values start at 100.",
+        message: "Sanity HTTP status values must be at least 100",
+      }),
+      S.isLessThanOrEqualTo(599, {
+        identifier: $I`SanityHttpStatusMaximum`,
+        title: "Sanity HTTP status maximum",
+        description: "Sanity HTTP status values end at 599.",
+        message: "Sanity HTTP status values must be at most 599",
+      }),
+    ],
+    {
+      identifier: $I`SanityHttpStatusChecks`,
+      title: "Sanity HTTP status",
+      description: "Checks for numeric HTTP status codes retained in Sanity driver errors.",
+    }
+  )
+);
+
+const SanityErrorReasonBase = LiteralKit([
+  "config",
+  "request encoding",
+  "response decoding",
+  "response status",
+  "transport",
+]);
+
 /**
  * Technical error reasons emitted by the Sanity driver.
  *
  * @example
  * ```ts
  * import { SanityErrorReason } from "@beep/sanity"
- * import * as S from "effect/Schema"
+ * import * as O from "effect/Option"
  *
- * const isReason = S.is(SanityErrorReason)
- *
- * console.log(isReason("transport")) // true
- * console.log(isReason("unexpected")) // false
+ * console.log(O.isSome(SanityErrorReason.decodeOption("transport"))) // true
+ * console.log(O.isSome(SanityErrorReason.decodeOption("unexpected"))) // false
  * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export const SanityErrorReason = LiteralKit([
-  "config",
-  "request encoding",
-  "response decoding",
-  "response status",
-  "transport",
-]).pipe(
+export const SanityErrorReason = SanityErrorReasonBase.pipe(
   $I.annoteSchema("SanityErrorReason", {
     description: "Redacted technical error reasons emitted by the Sanity API driver.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(SanityErrorReasonBase),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**
@@ -82,10 +117,18 @@ export type SanityErrorReason = typeof SanityErrorReason.Type;
 export class SanityError extends TaggedErrorClass<SanityError>($I`SanityError`)(
   "SanityError",
   {
-    cause: S.optionalKey(S.String),
-    reason: SanityErrorReason,
-    status: S.optionalKey(S.Finite),
-    url: S.optionalKey(S.String),
+    cause: S.optionalKey(S.String).annotateKey({
+      description: "Redacted cause label captured from an unknown transport or decoding failure.",
+    }),
+    reason: SanityErrorReason.annotateKey({
+      description: "Sanity driver failure reason.",
+    }),
+    status: S.optionalKey(SanityHttpStatus).annotateKey({
+      description: "HTTP status code returned by Sanity when available.",
+    }),
+    url: S.optionalKey(S.String).annotateKey({
+      description: "Sanity request URL associated with the failure when available.",
+    }),
   },
   $I.annote("SanityError", {
     description: "Redacted technical failure raised by the Sanity API driver boundary.",
@@ -139,15 +182,23 @@ export class SanityError extends TaggedErrorClass<SanityError>($I`SanityError`)(
  */
 export class SanityErrorOptions extends S.Class<SanityErrorOptions>($I`SanityErrorOptions`)(
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-    status: S.optionalKey(S.Finite),
-    url: S.optionalKey(S.String),
+    cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({
+      description: "Original unknown cause used to derive a redacted diagnostic label.",
+    }),
+    status: S.optionalKey(SanityHttpStatus).annotateKey({
+      description: "HTTP status code returned by Sanity when available.",
+    }),
+    url: S.optionalKey(S.String).annotateKey({
+      description: "Sanity request URL associated with the failure when available.",
+    }),
   },
   $I.annote("SanityErrorOptions", {
     description: "Options for configuring SanityError instances.",
   })
 ) {}
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   if (!P.isObject(value)) {
     return O.none();
@@ -175,6 +226,8 @@ const httpClientCauseLabel = (cause: unknown): O.Option<string> =>
       )
     : O.none();
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const causeFromUnknown = (cause: unknown): O.Option<string> =>
   P.isUndefined(cause)
     ? O.none()

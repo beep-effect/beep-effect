@@ -1,28 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/wink/src/WinkVectorizer.service.ts",
-    "line": 46,
-    "symbol": "BM25VectorizerFactory.norm",
-    "smell": "BM25 normalization literals \"none\" | \"l1\" | \"l2\" are repeated in three local structural types: WinkVectorizer.service.ts:46, WinkCorpus.service.ts:45, and WinkTools.service.ts:86, even though @beep/nlp/Core/Vectorization already exports BM25Norm from a LiteralKit at packages/foundation/modeling/nlp/src/Core/Vectorization.ts:31-56.",
-    "proposedTarget": "Use the existing schema-owned BM25Norm type in each local config surface (readonly norm?: BM25Norm) while keeping the current BM25Norm schema for decoded request models. This mirrors the package's own TransformOperation source-of-truth pattern, where LiteralKit owns the type and applyTransformOperation dispatches with TransformOperation.$match at packages/drivers/wink/src/WinkTools.service.ts:269-300.",
-    "confidence": 0.86,
-    "mechanization": "assisted",
-    "roiRank": 2.6
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/wink/src/WinkTools.service.ts",
-    "line": 193,
-    "symbol": "decodeEntityOutputDetails",
-    "smell": "decodeEntityOutputDetails and decodeEntityOutputSpans narrow wink output with value as ReadonlyArray<unknown> after only checking P.isUndefined(value) (lines 193 and 202). The casts bypass available array predicates and leave non-array non-undefined output outside the type proof.",
-    "proposedTarget": "Replace the boolean Match + cast with an A.isArray/O.liftPredicate guard before A.map, returning the existing empty-array fallback when the wink field is absent or not an array. The file already uses A.isArray for span elements at line 203, so the local no-as narrowing primitive is in scope; this keeps the third-party wink output boundary explicit.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 2.2
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/drivers/wink/src/WinkTools.service.ts",
     "line": 713,
     "symbol": "WinkNlpToolkit mode matchers",
@@ -30,7 +8,11 @@
     "proposedTarget": "Expose the relevant mode/source kits or same-name type aliases from @beep/nlp-processing, then import them here and dispatch with kit.$match / kit Enum values the way this file already does for TransformOperation.$match at line 300. This is judgment-level because the schema owners are in a foundation package; avoid local duplicate kits in @beep/wink.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 1.1
+    "roiRank": 1.1,
+    "exception": {
+      "reason": "Mode literal ownership belongs to @beep/nlp-processing tool parameter schemas consumed by this driver; moving the public literal helpers here would require cross-package contract edits.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

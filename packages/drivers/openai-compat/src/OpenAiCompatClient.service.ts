@@ -6,10 +6,11 @@
  */
 
 import { $OpenaiCompatId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { decodeJsonString } from "@beep/schema/Json";
 import { A, Str } from "@beep/utils";
 import { Context, Effect, flow, Layer, Match, pipe, Stream } from "effect";
-import { dual, identity } from "effect/Function";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as AiError from "effect/unstable/ai/AiError";
@@ -37,10 +38,11 @@ const moduleName = "OpenAiCompatClient";
  * @example
  * ```ts
  * import { Redacted } from "effect"
+ * import * as O from "effect/Option"
  * import { OpenAiCompatClientOptions } from "@beep/openai-compat"
  *
  * const options = OpenAiCompatClientOptions.make({
- *   apiKey: Redacted.make("test-key"),
+ *   apiKey: O.some(Redacted.make("test-key")),
  *   apiUrl: "https://provider.example/v1"
  * })
  *
@@ -52,9 +54,9 @@ const moduleName = "OpenAiCompatClient";
  */
 export class OpenAiCompatClientOptions extends S.Class<OpenAiCompatClientOptions>($I`OpenAiCompatClientOptions`)(
   {
-    apiKey: S.optionalKey(S.String.pipe(S.RedactedFromValue)),
-    apiUrl: S.optionalKey(S.String),
-    headers: S.optionalKey(S.Record(S.String, S.String)),
+    apiKey: S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(SchemaUtils.withNoneDefault),
+    apiUrl: S.String.pipe(SchemaUtils.withKeyDefaults("https://api.openai.com/v1")),
+    headers: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("OpenAiCompatClientOptions", {
     description: "Runtime configuration accepted by the OpenAI-compatible client layer.",
@@ -166,16 +168,28 @@ const logClientFailure =
       reason: error.reason._tag,
     });
 
-const makeHttpClient = (client: HttpClient.HttpClient, options: OpenAiCompatClientOptions): HttpClient.HttpClient =>
-  client.pipe(
+const makeHttpClient = (client: HttpClient.HttpClient, options: OpenAiCompatClientOptions): HttpClient.HttpClient => {
+  const withApiKey: (request: HttpClientRequest.HttpClientRequest) => HttpClientRequest.HttpClientRequest = pipe(
+    options.apiKey,
+    O.match({
+      onNone: () => (request) => request,
+      onSome: (apiKey) => HttpClientRequest.bearerToken(apiKey),
+    })
+  );
+  const withHeaders: (request: HttpClientRequest.HttpClientRequest) => HttpClientRequest.HttpClientRequest = pipe(
+    options.headers,
+    O.match({
+      onNone: () => (request) => request,
+      onSome: (headers) => HttpClientRequest.setHeaders(headers),
+    })
+  );
+
+  return client.pipe(
     HttpClient.mapRequest((request) =>
-      request.pipe(
-        HttpClientRequest.prependUrl(options.apiUrl ?? "https://api.openai.com/v1"),
-        options.apiKey === undefined ? identity : HttpClientRequest.bearerToken(options.apiKey),
-        options.headers === undefined ? identity : HttpClientRequest.setHeaders(options.headers)
-      )
+      request.pipe(HttpClientRequest.prependUrl(options.apiUrl), withApiKey, withHeaders)
     )
   );
+};
 
 const encodeChatCompletionRequest = HttpClientRequest.schemaBodyJson(OpenAiCompatChatCompletionRequest);
 
@@ -252,12 +266,11 @@ const mapSseRetry = (method: string): AiError.AiError =>
     })
   );
 
-const parseSseData = (data: string): Effect.Effect<OpenAiCompatChatCompletionChunk, AiError.AiError> =>
-  pipe(
-    decodeJsonString(data),
-    Effect.flatMap(decodeChatCompletionChunk),
-    Effect.mapError(mapSchemaError("streamChatCompletion"))
-  );
+const parseSseData: (data: string) => Effect.Effect<OpenAiCompatChatCompletionChunk, AiError.AiError> = flow(
+  decodeJsonString,
+  Effect.flatMap(decodeChatCompletionChunk),
+  Effect.mapError(mapSchemaError("streamChatCompletion"))
+);
 
 const makeService = (client: HttpClient.HttpClient, options: OpenAiCompatClientOptions): OpenAiCompatClientShape => {
   const httpClient = makeHttpClient(client, options);
@@ -347,10 +360,11 @@ export class OpenAiCompatClient extends Context.Service<OpenAiCompatClient, Open
    * @example
    * ```ts
    * import { Redacted } from "effect"
+   * import * as O from "effect/Option"
    * import { OpenAiCompatClient, OpenAiCompatClientOptions } from "@beep/openai-compat"
    *
    * const layer = OpenAiCompatClient.makeLayer(
-   *   OpenAiCompatClientOptions.make({ apiKey: Redacted.make("test-key") })
+   *   OpenAiCompatClientOptions.make({ apiKey: O.some(Redacted.make("test-key")) })
    * )
    *
    * console.log(layer)

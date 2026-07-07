@@ -6,6 +6,7 @@
  */
 
 import { $GovinfoId } from "@beep/identity";
+import { SchemaUtils, URLStr } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $GovinfoId.create("Govinfo.config");
@@ -106,9 +107,10 @@ export const GOVINFO_CACHE_TTL = "5 minutes";
  * @example
  * ```ts
  * import { GovinfoConfigInput } from "@beep/govinfo"
+ * import { URLStr } from "@beep/schema"
  *
  * const config = GovinfoConfigInput.make({
- *   apiUrl: "https://api.govinfo.gov"
+ *   apiUrl: URLStr.make("https://api.govinfo.gov")
  * })
  * console.log(config.apiUrl)
  * ```
@@ -118,8 +120,15 @@ export const GOVINFO_CACHE_TTL = "5 minutes";
  */
 export class GovinfoConfigInput extends S.Class<GovinfoConfigInput>($I`GovinfoConfigInput`)(
   {
-    apiKey: S.optionalKey(S.String.pipe(S.RedactedFromValue)),
-    apiUrl: S.optionalKey(S.String),
+    apiKey: S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Optional redacted api.data.gov API key used for keyed GovInfo requests.",
+      })
+    ),
+    apiUrl: URLStr.pipe(SchemaUtils.withKeyDefaults(URLStr.make(GOVINFO_API_URL))).annotateKey({
+      description: "Base URL for GovInfo REST API requests.",
+    }),
   },
   $I.annote("GovinfoConfigInput", {
     description: "Runtime configuration accepted by the GovInfo REST API driver layer.",

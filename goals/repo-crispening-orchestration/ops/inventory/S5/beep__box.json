@@ -1,49 +1,5 @@
 [
   {
-    "ruleId": "SFV4-numeric-domain",
-    "file": "packages/drivers/box/src/Box.errors.ts",
-    "line": 111,
-    "symbol": "BoxErrorOptions.status / BoxError.status",
-    "smell": "SDK HTTP status values are sanitized for non-finite numbers, but the schema still accepts any finite number, including negative and fractional status codes.",
-    "proposedTarget": "Narrow the two status fields to the repo HTTP status schema used by `packages/drivers/box/src/experimental/Box.schemas.ts:249` (`HttpStatus` from `@beep/schema/HttpStatus`), or to an annotated local SDK-status integer if Box can surface non-standard codes.",
-    "confidence": 0.74,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-numeric-domain",
-    "file": "packages/drivers/box/src/Box.streaming.ts",
-    "line": 105,
-    "symbol": "BoxPartAccumulator.fileSize / BoxPartAccumulator.lastIndex / BoxUploadBigFilePayload.fileSize",
-    "smell": "Byte sizes and upload-part indexes are modeled as `S.Finite`; this accepts fractional and negative values even though the reducer and upload session logic treat them as counts/indexes.",
-    "proposedTarget": "Use `NonNegativeInt` from `@beep/schema/Number` for byte sizes, and a local `LastPartIndex = S.Int.check(S.isGreaterThanOrEqualTo(-1))` for the sentinel index. Effect v4 exposes `S.Int` and `S.isGreaterThanOrEqualTo`; `packages/foundation/modeling/schema/src/Number.ts:182` is the in-repo non-negative integer exemplar.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/drivers/box/src/Box.streaming.ts",
-    "line": 407,
-    "symbol": "BoxUploadFilePartByUrlPayload.url / BoxGetZipDownloadContentPayload.downloadUrl",
-    "smell": "Caller-supplied remote URLs decode as plain `S.String`; invalid URLs only fail later in `assertBoxUrlAllowed`, after the payload schema has accepted them.",
-    "proposedTarget": "Introduce an annotated URL-string schema for these fields, reusing `URLStr` or `HttpsUrl` from `packages/foundation/modeling/schema/src/URL.ts:44` and `packages/foundation/modeling/schema/src/URL.ts:103` where the encoded type must remain a string. Keep `assertBoxUrlAllowed` as the trust-boundary SSRF guard.",
-    "confidence": 0.68,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/drivers/box/test/Box.service.test.ts",
-    "line": 154,
-    "symbol": "Box handwritten config, error, and streaming schemas",
-    "smell": "The package has fixture coverage for generated SDK wrapping, streaming paths, and error sanitization, but no schema-derived arbitrary/equivalence laws for the handwritten schemas outside `src/_generated/**`.",
-    "proposedTarget": "Add a focused property test file for `BoxCcgConfig`, `BoxDeveloperTokenConfig`, `BoxError`, `BoxPartAccumulator`, and the handwritten streaming payload schemas using Effect v4 `S.toArbitrary` and `S.toEquivalence` (`.repos/effect-v4/packages/effect/src/Schema.ts:12970` and `:13201`). Skip opaque byte-stream/readable/form-data fields or provide custom arbitraries for them.",
-    "confidence": 0.64,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
     "ruleId": "SFV4-precision-audit",
     "file": "packages/drivers/box/scripts/generate.ts",
     "line": 1072,

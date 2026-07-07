@@ -1,9 +1,30 @@
 import { RateLimitSnapshot } from "@beep/api-transport";
-import { Govinfo, GovinfoConfigInput, Search } from "@beep/govinfo";
+import {
+  CollectionContainer,
+  CollectionSummary,
+  GOVINFO_API_URL,
+  Govinfo,
+  GovinfoConfigInput,
+  GovinfoError,
+  GovinfoErrorOptions,
+  GovinfoErrorReason,
+  GovinfoHttpStatus,
+  GranuleContainer,
+  GranuleMetadata,
+  PackageInfo,
+  Search,
+  SearchBody,
+  SearchResult,
+  Sort,
+  SummaryItem,
+} from "@beep/govinfo";
 import { $GovinfoId } from "@beep/identity";
-import { describe, expect, layer } from "@effect/vitest";
-import { Context, Effect, Layer, pipe, Redacted, Ref } from "effect";
+import { PosInt, URLStr } from "@beep/schema";
+import { describe, expect, it, layer } from "@effect/vitest";
+import { Context, Effect, Equal, Layer, pipe, Redacted, Ref, Result } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
@@ -29,6 +50,90 @@ type GovinfoTestHttpShape = {
 };
 
 class GovinfoTestHttp extends Context.Service<GovinfoTestHttp, GovinfoTestHttpShape>()($TestI`GovinfoTestHttp`) {}
+
+const GovinfoConfigInputArbitrary = S.toArbitrary(GovinfoConfigInput).map((config) =>
+  GovinfoConfigInput.make({ apiUrl: config.apiUrl })
+);
+const GovinfoErrorOptionsArbitrary = S.toArbitrary(GovinfoErrorOptions).map((options) =>
+  GovinfoErrorOptions.make({ status: options.status })
+);
+const GovinfoErrorArbitrary = S.toArbitrary(GovinfoError).map((error) =>
+  GovinfoError.of(error.reason, GovinfoErrorOptions.make({ status: error.status }))
+);
+const SearchFailureArbitrary = S.toArbitrary(Search.Failure).filter((failure) => O.isNone(failure.cause));
+
+const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
+  Result.getOrThrow(S.encodeResult(schema)(value));
+
+const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Encoded"]): Codec["Type"] =>
+  Result.getOrThrow(S.decodeUnknownResult(schema)(value));
+
+const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): void => {
+  const encoded = encode(schema, value);
+  const decoded = decode(schema, encoded);
+  const reencoded = encode(schema, decoded);
+
+  expect(reencoded).toEqual(encoded);
+  expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value)).toBe(true);
+};
+
+const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
+  schema: Codec,
+  arbitrary = S.toArbitrary(schema)
+): void => {
+  fc.assert(
+    fc.property(arbitrary, (value) => {
+      expectRoundTrip(schema, value);
+    }),
+    { numRuns: 25 }
+  );
+};
+
+const searchBodyEncoded = {
+  historical: false,
+  offsetMark: "*",
+  pageSize: 10,
+  query: "collection:(CREC) congress:118",
+  resultLevel: "default",
+  sorts: [{ field: "publishdate", sortOrder: "DESC" }],
+};
+
+const searchResultEncoded = {
+  collectionCode: "CREC",
+  dateIngested: "2024-01-03T00:00:00.000Z",
+  dateIssued: "2024-01-03T00:00:00.000Z",
+  download: { pdfLink: "https://api.govinfo.gov/packages/CREC-2024-01-03/pdf" },
+  governmentAuthor: ["Government Publishing Office"],
+  granuleId: "CREC-2024-01-03-pt1-PgH1",
+  lastModified: "2024-01-04T12:00:00.000Z",
+  packageId: "CREC-2024-01-03",
+  resultLink: "https://api.govinfo.gov/packages/CREC-2024-01-03/summary",
+  title: "Congressional Record, January 3, 2024",
+};
+
+const granuleMetadataEncoded = {
+  granuleClass: "HOUSE",
+  granuleId: "CREC-2024-01-03-pt1-PgH1",
+  granuleLink: "https://api.govinfo.gov/packages/CREC-2024-01-03/granules/CREC-2024-01-03-pt1-PgH1/summary",
+  md5: "d41d8cd98f00b204e9800998ecf8427e",
+  title: "House proceedings",
+};
+
+const packageInfoEncoded = {
+  congress: "118",
+  dateIssued: "2024-01-03T00:00:00.000Z",
+  docClass: "CREC",
+  lastModified: "2024-01-04T12:00:00.000Z",
+  packageLink: "https://api.govinfo.gov/packages/CREC-2024-01-03/summary",
+  title: "Congressional Record, January 3, 2024",
+};
+
+const summaryItemEncoded = {
+  collectionCode: "CREC",
+  collectionName: "Congressional Record",
+  granuleCount: BigInt(1200),
+  packageCount: BigInt(450),
+};
 
 const searchBody = { count: 0, offsetMark: "*", results: [] };
 
@@ -84,21 +189,123 @@ const makeGovinfoUnitLayer = (config = GovinfoConfigInput.make({})) =>
   );
 
 const keyedConfig = GovinfoConfigInput.make({
-  apiKey: Redacted.make("test-key"),
-  apiUrl: "https://api.govinfo.gov",
+  apiKey: O.some(Redacted.make("test-key")),
+  apiUrl: URLStr.make(GOVINFO_API_URL),
 });
 
 const makePayload = () =>
   Search.Payload.make({
     historical: false,
     offsetMark: "*",
-    pageSize: 10,
+    pageSize: PosInt.make(10),
     query: "climate change",
     resultLevel: "default",
     sorts: [],
   });
 
 describe("@beep/govinfo", () => {
+  it("keeps crispened schema encoded shapes stable", () => {
+    expect(encode(GovinfoConfigInput, GovinfoConfigInput.make({}))).toEqual({
+      apiUrl: GOVINFO_API_URL,
+    });
+    expect(O.isNone(GovinfoConfigInput.make({}).apiKey)).toBe(true);
+    expect(encode(GovinfoErrorOptions, GovinfoErrorOptions.make({}))).toEqual({});
+    expect(encode(GovinfoErrorOptions, GovinfoErrorOptions.make({ status: O.some(429) }))).toEqual({
+      status: 429,
+    });
+    expect(
+      encode(GovinfoError, GovinfoError.of("response status", GovinfoErrorOptions.make({ status: O.some(429) })))
+    ).toEqual({
+      _tag: "GovinfoError",
+      reason: "response status",
+      status: 429,
+    });
+    expect(encode(Sort, S.decodeUnknownSync(Sort)({ field: "publishdate", sortOrder: "DESC" }))).toEqual({
+      field: "publishdate",
+      sortOrder: "DESC",
+    });
+    expect(encode(SearchBody, S.decodeUnknownSync(SearchBody)(searchBodyEncoded))).toEqual(searchBodyEncoded);
+    expect(encode(Search.Payload, S.decodeUnknownSync(Search.Payload)(searchBodyEncoded))).toEqual(searchBodyEncoded);
+    expect(encode(SearchResult, S.decodeUnknownSync(SearchResult)(searchResultEncoded))).toEqual(searchResultEncoded);
+    expect(
+      encode(Search.Success, S.decodeUnknownSync(Search.Success)({ count: 1, offsetMark: "next", results: [] }))
+    ).toEqual({ count: 1, offsetMark: "next", results: [] });
+    expect(encode(GranuleMetadata, S.decodeUnknownSync(GranuleMetadata)(granuleMetadataEncoded))).toEqual(
+      granuleMetadataEncoded
+    );
+    expect(encode(PackageInfo, S.decodeUnknownSync(PackageInfo)(packageInfoEncoded))).toEqual(packageInfoEncoded);
+    expect(encode(SummaryItem, S.decodeUnknownSync(SummaryItem)(summaryItemEncoded))).toEqual(summaryItemEncoded);
+    expect(encode(CollectionSummary, S.decodeUnknownSync(CollectionSummary)([summaryItemEncoded]))).toEqual([
+      summaryItemEncoded,
+    ]);
+    expect(
+      encode(
+        GranuleContainer,
+        S.decodeUnknownSync(GranuleContainer)({
+          count: BigInt(1),
+          granules: [granuleMetadataEncoded],
+          message: "",
+          nextPage: "https://api.govinfo.gov/packages/CREC-2024-01-03/granules?offsetMark=next&pageSize=100",
+          offset: 0,
+          pageSize: 100,
+          previousPage: "",
+        })
+      )
+    ).toEqual({
+      count: BigInt(1),
+      granules: [granuleMetadataEncoded],
+      message: "",
+      nextPage: "https://api.govinfo.gov/packages/CREC-2024-01-03/granules?offsetMark=next&pageSize=100",
+      offset: 0,
+      pageSize: 100,
+      previousPage: "",
+    });
+    expect(
+      encode(
+        CollectionContainer,
+        S.decodeUnknownSync(CollectionContainer)({
+          count: 1,
+          message: "",
+          nextPage: "https://api.govinfo.gov/collections/CREC/2024-01-01T00:00:00Z?offsetMark=next&pageSize=10",
+          packages: [packageInfoEncoded],
+          previousPage: "",
+        })
+      )
+    ).toEqual({
+      count: 1,
+      message: "",
+      nextPage: "https://api.govinfo.gov/collections/CREC/2024-01-01T00:00:00Z?offsetMark=next&pageSize=10",
+      packages: [packageInfoEncoded],
+      previousPage: "",
+    });
+  });
+
+  it("round-trips hand-authored schema-derived values through encoded form", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(GovinfoHttpStatus), (status) => {
+        expectRoundTrip(GovinfoHttpStatus, status);
+      }),
+      { numRuns: 25 }
+    );
+
+    assertSchemaRoundTrip(GovinfoConfigInput, GovinfoConfigInputArbitrary);
+    assertSchemaRoundTrip(GovinfoErrorReason);
+    assertSchemaRoundTrip(GovinfoErrorOptions, GovinfoErrorOptionsArbitrary);
+    assertSchemaRoundTrip(GovinfoError, GovinfoErrorArbitrary);
+    assertSchemaRoundTrip(Sort);
+    assertSchemaRoundTrip(SearchBody);
+    assertSchemaRoundTrip(Search.Payload);
+    assertSchemaRoundTrip(Search.Success);
+    assertSchemaRoundTrip(Search.Failure, SearchFailureArbitrary);
+    assertSchemaRoundTrip(SearchResult);
+    assertSchemaRoundTrip(GranuleMetadata);
+    assertSchemaRoundTrip(PackageInfo);
+    assertSchemaRoundTrip(SummaryItem);
+    assertSchemaRoundTrip(CollectionSummary);
+    assertSchemaRoundTrip(GranuleContainer);
+    assertSchemaRoundTrip(CollectionContainer);
+  });
+
   layer(makeGovinfoUnitLayer(keyedConfig))((it) =>
     it.effect(
       "attaches api.data.gov api_key and parses X-RateLimit-* headers offline",

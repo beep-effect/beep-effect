@@ -2,35 +2,17 @@
   {
     "ruleId": "SFV4-defaults",
     "file": "packages/drivers/drizzle/src/EntityTable.models.ts",
-    "line": 339,
-    "symbol": "columnNameForAny",
-    "smell": "`descriptor.columnName ?? EntitySchema.columnNameFor(key, descriptor)` duplicates the descriptor column-name fallback even though `EntitySchema.columnNameFor` already centralizes that default (`EntitySchema.constructors.ts:152-165`).",
-    "proposedTarget": "Collapse the helper to `EntitySchema.columnNameFor(key, descriptor)`. This keeps the existing descriptor default in the schema package helper and removes the redundant `??` branch from the Drizzle projection.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/drizzle/src/Drizzle.errors.ts",
-    "line": 55,
-    "symbol": "makeContext",
-    "smell": "`DrizzleErrorContext` stores `query`/`params` as optional keys (lines 45-46), so the parser and merger use `string | undefined`, `O.getOrUndefined`, `context.query !== undefined`, and `context.query ?? nativeContext.query` before the final `DrizzleError` converts back to Option.",
-    "proposedTarget": "Make the intermediate context Option-first too: `query: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` and `params: S.OptionFromOptionalKey(S.Array(S.Unknown)).pipe(SchemaUtils.withNoneDefault)`. Then `makeContext`, `hasQueryContext`, `contextFromDrizzleError`, and `fromUnknown` can compose Options directly. In-package exemplar: final `DrizzleError` already uses `S.OptionFromOptionalKey` at lines 255-257; add `SchemaUtils.withNoneDefault` per `packages/foundation/modeling/ontology/src/Ontology.models.ts:152-160`.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/drizzle/src/EntityTable.models.ts",
     "line": 388,
     "symbol": "indexHintsForDescriptor",
     "smell": "`O.fromNullishOr(descriptor.indexHints)` followed by `O.getOrElse(A.empty<EntitySchema.IndexHint>)` supplies an empty-index-hints default in the Drizzle projection; the root field is `PersistDescriptorFields.indexHints: S.Array(IndexHint).pipe(S.optionalKey)` in `@beep/schema` (EntitySchema.persist.ts:385).",
     "proposedTarget": "Prefer moving the empty-array default upstream onto the descriptor schema, e.g. `S.Array(IndexHint).pipe(S.optionalKey, SchemaUtils.withEmptyArrayDefaults<IndexHint>())`, then this driver consumes a total `indexHints` array. Cross-package edit belongs to the foundation/schema wave, so Drizzle remediation should coordinate rather than local-patch only.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "The durable fix is to default `PersistDescriptorFields.indexHints` in `@beep/schema`, not to add another local Drizzle fallback. That public-form/default change is outside the single-package writer scope for `@beep/drizzle`.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",

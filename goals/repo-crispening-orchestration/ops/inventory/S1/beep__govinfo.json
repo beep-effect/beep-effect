@@ -13,16 +13,5 @@
       "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:271-276`: interface contains non-schema signals such as function members or runtime handles.",
       "boundary": "GovInfo Context.Service shape"
     }
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/drivers/govinfo/src/Govinfo.service.ts",
-    "line": 83,
-    "symbol": "readStatus",
-    "smell": "Manual unknown-object validation probes `P.isObject(cause)`, casts to `{ status?: unknown }`, and checks `P.isNumber(status)` even though this is a direct schema-fit boundary before constructing `GovinfoErrorOptions`.",
-    "proposedTarget": "Replace the manual reader with a small schema-derived soft decoder such as `const decodeStatusCause = S.decodeUnknownOption(S.Struct({ status: S.Finite }))`, then map the decoded status into `GovinfoErrorOptions.make({ cause, status })`. Effect v4 `S.decodeUnknownOption` is verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1500`; the in-repo status/cause schema exemplar is `packages/foundation/modeling/schema/src/StatusCauseError.ts:62`.",
-    "confidence": 0.68,
-    "mechanization": "assisted",
-    "roiRank": 0.46
   }
 ]

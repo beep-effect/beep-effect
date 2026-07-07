@@ -6,11 +6,97 @@
  */
 
 import { $XaiId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { pipe, Tuple } from "effect";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const $I = $XaiId.create("XAi.models");
+const XAiSseEventIndex = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+  $I.annoteSchema("XAiSseEventIndex", {
+    description: "Zero-based server-sent event index emitted by xAI streaming endpoints.",
+  })
+);
+const XAiWebSocketCloseCode = S.Int.check(S.isBetween({ minimum: 1000, maximum: 4999 })).pipe(
+  $I.annoteSchema("XAiWebSocketCloseCode", {
+    description: "WebSocket close code emitted by xAI realtime and streaming audio sessions.",
+  })
+);
+
+/**
+ * Numeric HTTP status code returned by the xAI driver.
+ *
+ * @example
+ * ```ts
+ * import { XAiHttpStatusCode } from "@beep/xai"
+ * import * as S from "effect/Schema"
+ *
+ * const status = S.decodeUnknownSync(XAiHttpStatusCode)(200)
+ * console.log(status)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const XAiHttpStatusCode = S.Int.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
+  $I.annoteSchema("XAiHttpStatusCode", {
+    description: "Numeric HTTP status code returned by the xAI driver.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Type for {@link XAiHttpStatusCode}.
+ *
+ * @example
+ * ```ts
+ * import type { XAiHttpStatusCode } from "@beep/xai"
+ *
+ * const status: XAiHttpStatusCode = 200
+ * console.log(status)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type XAiHttpStatusCode = typeof XAiHttpStatusCode.Type;
+
+/**
+ * URL query scalar accepted by xAI request options.
+ *
+ * @example
+ * ```ts
+ * import type { XAiQueryScalar } from "@beep/xai"
+ *
+ * const value: XAiQueryScalar = "usage"
+ * console.log(value)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const XAiQueryScalar = S.Union([S.Boolean, S.Null, S.Finite, S.String]).pipe(
+  $I.annoteSchema("XAiQueryScalar", {
+    description: "URL query scalar accepted by the xAI driver.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Type for {@link XAiQueryScalar}.
+ *
+ * @example
+ * ```ts
+ * import type { XAiQueryScalar } from "@beep/xai"
+ *
+ * const value: XAiQueryScalar = 10
+ * console.log(value)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type XAiQueryScalar = typeof XAiQueryScalar.Type;
 
 /**
  * URL query value accepted by xAI request options.
@@ -26,16 +112,11 @@ const $I = $XaiId.create("XAi.models");
  * @category models
  * @since 0.0.0
  */
-export const XAiQueryValue = S.Union([
-  S.Array(S.Union([S.Boolean, S.Null, S.Finite, S.String])),
-  S.Boolean,
-  S.Null,
-  S.Finite,
-  S.String,
-]).pipe(
+export const XAiQueryValue = S.Union([S.Array(XAiQueryScalar), XAiQueryScalar]).pipe(
   $I.annoteSchema("XAiQueryValue", {
     description: "URL query value accepted by the xAI driver.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -53,6 +134,9 @@ export const XAiQueryValue = S.Union([
  * @since 0.0.0
  */
 export type XAiQueryValue = typeof XAiQueryValue.Type;
+
+const emptyStringRecord: Readonly<Record<string, string>> = R.empty();
+const emptyQueryRecord: Readonly<Record<string, XAiQueryValue>> = R.empty();
 
 /**
  * Request options accepted by every xAI endpoint method.
@@ -82,9 +166,9 @@ export class XAiRequestOptions extends S.Class<XAiRequestOptions>($I`XAiRequestO
     bytes: S.optionalKey(S.Uint8Array),
     contentType: S.optionalKey(S.String),
     formData: S.optionalKey(S.instanceOf(FormData)),
-    headers: S.optionalKey(S.Record(S.String, S.String)),
-    path: S.optionalKey(S.Record(S.String, S.String)),
-    query: S.optionalKey(S.Record(S.String, XAiQueryValue)),
+    headers: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(emptyStringRecord)),
+    path: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(emptyStringRecord)),
+    query: S.Record(S.String, XAiQueryValue).pipe(SchemaUtils.withKeyDefaults(emptyQueryRecord)),
   },
   $I.annote("XAiRequestOptions", {
     description: "Request options accepted by every xAI endpoint method.",
@@ -114,9 +198,9 @@ export class XAiJsonResponse extends S.TaggedClass<XAiJsonResponse>($I`XAiJsonRe
   "Json",
   {
     body: S.Unknown,
-    contentType: S.optionalKey(S.String),
+    contentType: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     headers: S.Record(S.String, S.String),
-    status: S.Finite,
+    status: XAiHttpStatusCode,
   },
   $I.annote("XAiJsonResponse", {
     description: "JSON response returned by the xAI driver.",
@@ -145,9 +229,9 @@ export class XAiJsonResponse extends S.TaggedClass<XAiJsonResponse>($I`XAiJsonRe
 export class XAiTextResponse extends S.TaggedClass<XAiTextResponse>($I`XAiTextResponse`)(
   "Text",
   {
-    contentType: S.optionalKey(S.String),
+    contentType: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     headers: S.Record(S.String, S.String),
-    status: S.Finite,
+    status: XAiHttpStatusCode,
     text: S.String,
   },
   $I.annote("XAiTextResponse", {
@@ -178,9 +262,9 @@ export class XAiBinaryResponse extends S.TaggedClass<XAiBinaryResponse>($I`XAiBi
   "Binary",
   {
     bytes: S.Uint8Array,
-    contentType: S.optionalKey(S.String),
+    contentType: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     headers: S.Record(S.String, S.String),
-    status: S.Finite,
+    status: XAiHttpStatusCode,
   },
   $I.annote("XAiBinaryResponse", {
     description: "Binary response returned by the xAI driver.",
@@ -208,9 +292,9 @@ export class XAiBinaryResponse extends S.TaggedClass<XAiBinaryResponse>($I`XAiBi
 export class XAiNoBodyResponse extends S.TaggedClass<XAiNoBodyResponse>($I`XAiNoBodyResponse`)(
   "NoBody",
   {
-    contentType: S.optionalKey(S.String),
+    contentType: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     headers: S.Record(S.String, S.String),
-    status: S.Finite,
+    status: XAiHttpStatusCode,
   },
   $I.annote("XAiNoBodyResponse", {
     description: "Empty response returned by xAI endpoints that have no body.",
@@ -235,7 +319,8 @@ export const XAiResponse = S.Union([XAiBinaryResponse, XAiJsonResponse, XAiNoBod
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("XAiResponse", {
     description: "Response union returned by non-streaming xAI endpoint methods.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -283,31 +368,38 @@ export class XAiServerSentEvent extends S.Class<XAiServerSentEvent>($I`XAiServer
   {
     data: S.optionalKey(S.Unknown),
     done: S.Boolean,
-    index: S.Finite,
+    index: XAiSseEventIndex,
   },
   $I.annote("XAiServerSentEvent", {
     description: "Parsed server-sent event emitted by streaming xAI endpoints.",
   })
 ) {}
 
+const XAiWebSocketEventKindBase = LiteralKit(["close", "error", "message"]);
+
 /**
  * WebSocket event kinds emitted by xAI realtime and streaming audio sessions.
  *
  * @example
  * ```ts
- * import type { XAiWebSocketEventKind } from "@beep/xai"
+ * import { XAiWebSocketEventKind } from "@beep/xai"
  *
- * const kind: XAiWebSocketEventKind = "message"
+ * const kind = XAiWebSocketEventKind.fromUnknown("message")
  * console.log(kind)
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const XAiWebSocketEventKind = LiteralKit(["close", "error", "message"]).pipe(
+export const XAiWebSocketEventKind = XAiWebSocketEventKindBase.pipe(
   $I.annoteSchema("XAiWebSocketEventKind", {
     description: "WebSocket event kinds emitted by xAI realtime and streaming audio sessions.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+    fromUnknown: S.decodeUnknownSync(schema),
+  })),
+  SchemaUtils.withLiteralKitStatics(XAiWebSocketEventKindBase)
 );
 
 /**
@@ -357,7 +449,7 @@ type XAiWebSocketEventMember<T extends XAiWebSocketEventKind> = {
 export const XAiWebSocketEvent = XAiWebSocketEventKind.mapMembers((members) => {
   const fields = <T extends XAiWebSocketEventKind>(literal: S.Literal<T>) => ({
     bytes: S.optionalKey(S.Uint8Array),
-    code: S.optionalKey(S.Finite),
+    code: S.optionalKey(XAiWebSocketCloseCode),
     data: S.optionalKey(S.Unknown),
     isBinary: S.optionalKey(S.Boolean),
     kind: S.tag(literal.literal),
@@ -391,10 +483,11 @@ export const XAiWebSocketEvent = XAiWebSocketEventKind.mapMembers((members) => {
 
   return pipe(members, Tuple.evolve([makeClose, makeError, makeMessage]));
 }).pipe(
+  S.toTaggedUnion("kind"),
   $I.annoteSchema("XAiWebSocketEvent", {
     description: "Event emitted by an xAI WebSocket endpoint session.",
   }),
-  S.toTaggedUnion("kind")
+  SchemaUtils.withCodecStatics
 );
 
 /**

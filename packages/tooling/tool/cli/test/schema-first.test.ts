@@ -381,8 +381,10 @@ describe("G4 foundation family-flip regression fixture", () => {
 
   const foundationFile = "packages/foundation/modeling/schema/src/Fixture.ts";
   const driversFile = "packages/drivers/postgres/src/Fixture.ts";
+  const toolingFile = "packages/tooling/library/repo-utils/src/Fixture.ts";
   const foundationViolation = fnSchemaViolationForFile(foundationFile);
   const driversViolation = fnSchemaViolationForFile(driversFile);
+  const toolingViolation = fnSchemaViolationForFile(toolingFile);
 
   it("resolves the fixture paths to the flipped and still-exempt families", () => {
     expect(schemaCrispeningFamilyForFile(foundationFile)).toEqual(O.some("foundation"));
@@ -418,12 +420,15 @@ describe("G4 foundation family-flip regression fixture", () => {
   });
 
   it("keeps the same ratchet result against the real committed policy document", () => {
-    // Bind the fixture to the on-disk policy: if a future edit reverts the
-    // foundation flip, this assertion fails.
+    // Bind the fixture to the on-disk policy: if a future edit reverts a
+    // family flip, these assertions fail. Flipped so far: foundation, drivers.
     const policy = O.some(S.decodeUnknownSync(SchemaCrispeningPolicyDocument)(parse(committedPolicyText)));
     const isExempt = isSchemaCrispeningPolicyExempt(policy);
 
     expect(isExempt(foundationViolation)).toBe(false);
-    expect(isExempt(driversViolation)).toBe(true);
+    expect(isExempt(driversViolation)).toBe(false);
+    // tooling has not flipped yet — identical violation stays fully exempt.
+    expect(schemaCrispeningFamilyForFile(toolingFile)).toEqual(O.some("tooling"));
+    expect(isExempt(toolingViolation)).toBe(true);
   });
 });

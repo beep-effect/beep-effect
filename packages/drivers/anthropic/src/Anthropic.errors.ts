@@ -38,8 +38,12 @@ const $I = $AnthropicId.create("Anthropic.errors");
 export class RepairError extends TaggedErrorClass<RepairError>($I`RepairError`)(
   "RepairError",
   {
-    message: S.String,
-    operation: S.String,
+    message: S.NonEmptyString.annotateKey({
+      description: "Non-empty diagnostic message describing the repair helper failure.",
+    }),
+    operation: S.NonEmptyString.annotateKey({
+      description: "Repair helper operation that raised the failure.",
+    }),
   },
   $I.annote("RepairError", {
     description: "Technical Anthropic driver failure raised while running repair helper calls.",

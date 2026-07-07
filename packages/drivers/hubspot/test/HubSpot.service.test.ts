@@ -1,14 +1,19 @@
 import {
   HubSpot,
+  HubSpotBaseUrl,
   HubSpotConfigInput,
   HubSpotError,
   HubSpotSubmitFormRequest,
+  HubSpotSubmitFormResponse,
   HubSpotUpsertContactRequest,
+  HubSpotUpsertContactResponse,
 } from "@beep/hubspot";
 import { A } from "@beep/utils";
-import { describe, expect, layer } from "@effect/vitest";
-import { Cause, Context, Effect, Exit, Layer, Redacted, Ref } from "effect";
+import { describe, expect, it, layer } from "@effect/vitest";
+import { Cause, Context, Effect, Exit, Layer, Redacted, Ref, Result } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
@@ -33,6 +38,28 @@ type HubSpotTestHttpShape = {
 class HubSpotTestHttp extends Context.Service<HubSpotTestHttp, HubSpotTestHttpShape>()(
   "@beep/hubspot/test/HubSpot.service.test/HubSpotTestHttp"
 ) {}
+
+const ConfigInputArbitrary = S.toArbitrary(HubSpotConfigInput).filter((config) => config.accessToken === undefined);
+const SubmitFormRequestArbitrary = S.toArbitrary(HubSpotSubmitFormRequest);
+const UpsertContactRequestArbitrary = S.toArbitrary(HubSpotUpsertContactRequest);
+const SubmitFormResponseArbitrary = S.toArbitrary(HubSpotSubmitFormResponse);
+const UpsertContactResponseArbitrary = S.toArbitrary(HubSpotUpsertContactResponse);
+const ErrorArbitrary = S.toArbitrary(HubSpotError);
+
+const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
+  Result.getOrThrow(S.encodeResult(schema)(value));
+
+const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Encoded"]): Codec["Type"] =>
+  Result.getOrThrow(S.decodeUnknownResult(schema)(value));
+
+const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): void => {
+  const encoded = encode(schema, value);
+  const decoded = decode(schema, encoded);
+  const reencoded = encode(schema, decoded);
+
+  expect(reencoded).toEqual(encoded);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
+};
 
 const makeJsonResponse = (body: unknown, status = 200) =>
   Response.json(body, {
@@ -109,6 +136,121 @@ const request = HubSpotSubmitFormRequest.make({
 });
 
 describe("@beep/hubspot", () => {
+  it("keeps encoded HubSpot schema wire shapes byte-identical", () => {
+    const config = HubSpotConfigInput.make({
+      accountId: "12345",
+      crmApiUrl: "https://api.hubapi.com",
+      formsApiUrl: "https://api.hsforms.com",
+      headers: {
+        "x-hubspot-test": "1",
+      },
+    });
+    const submitRequest = HubSpotSubmitFormRequest.make({
+      context: {
+        pageName: "Contact",
+        pageUri: "https://example.com/contact",
+      },
+      fields: [{ name: "email", value: "tom@example.com" }],
+      formGuid: "form-guid",
+      submittedAt: 1_704_067_200_000,
+    });
+    const submitResponse = HubSpotSubmitFormResponse.make({
+      inlineMessage: "Thanks",
+      redirectUri: "https://example.com/thanks",
+    });
+    const upsertRequest = HubSpotUpsertContactRequest.make({
+      email: "tom@example.com",
+      objectWriteTraceId: "trace-id",
+      properties: {
+        email: "tom@example.com",
+        firstname: "Tom",
+      },
+    });
+    const upsertResponse = HubSpotUpsertContactResponse.make({
+      results: [{ id: "contact-id" }],
+      status: "COMPLETE",
+    });
+    const error = HubSpotError.fromReason("response status", {
+      formGuid: "form-guid",
+      status: 401,
+      url: "https://api.hsforms.com/submissions/v3/integration/secure/submit/12345/form-guid",
+    });
+
+    expect(encode(HubSpotConfigInput, config)).toEqual({
+      accountId: "12345",
+      crmApiUrl: "https://api.hubapi.com",
+      formsApiUrl: "https://api.hsforms.com",
+      headers: {
+        "x-hubspot-test": "1",
+      },
+    });
+    expect(encode(HubSpotBaseUrl, decode(HubSpotBaseUrl, "https://api.hubapi.com/"))).toBe("https://api.hubapi.com");
+    expect(encode(HubSpotSubmitFormRequest, submitRequest)).toEqual({
+      context: {
+        pageName: "Contact",
+        pageUri: "https://example.com/contact",
+      },
+      fields: [{ name: "email", value: "tom@example.com" }],
+      formGuid: "form-guid",
+      submittedAt: 1_704_067_200_000,
+    });
+    expect(encode(HubSpotSubmitFormResponse, submitResponse)).toEqual({
+      inlineMessage: "Thanks",
+      redirectUri: "https://example.com/thanks",
+    });
+    expect(encode(HubSpotUpsertContactRequest, upsertRequest)).toEqual({
+      email: "tom@example.com",
+      objectWriteTraceId: "trace-id",
+      properties: {
+        email: "tom@example.com",
+        firstname: "Tom",
+      },
+    });
+    expect(encode(HubSpotUpsertContactResponse, upsertResponse)).toEqual({
+      results: [{ id: "contact-id" }],
+      status: "COMPLETE",
+    });
+    expect(encode(HubSpotError, error)).toEqual({
+      _tag: "HubSpotError",
+      formGuid: "form-guid",
+      reason: "response status",
+      status: 401,
+      url: "https://api.hsforms.com/submissions/v3/integration/secure/submit/12345/form-guid",
+    });
+  });
+
+  it("round-trips schema-derived HubSpot payloads through encoded form", () =>
+    fc.assert(
+      fc.property(
+        ConfigInputArbitrary,
+        SubmitFormRequestArbitrary,
+        UpsertContactRequestArbitrary,
+        SubmitFormResponseArbitrary,
+        UpsertContactResponseArbitrary,
+        ErrorArbitrary,
+        (config, submitRequest, upsertRequest, submitResponse, upsertResponse, error) => {
+          expect(config.crmApiUrl.endsWith("/")).toBe(false);
+          expect(config.formsApiUrl.endsWith("/")).toBe(false);
+          expect(submitRequest.formGuid.length).toBeGreaterThan(0);
+          expect(A.every(submitRequest.fields, (field) => field.name.length > 0)).toBe(true);
+          expect(upsertRequest.email.length).toBeGreaterThan(0);
+          expect(A.every(Object.keys(upsertRequest.properties), (name) => name.length > 0)).toBe(true);
+          if (error.status !== undefined) {
+            expect(error.status).toBeGreaterThanOrEqual(100);
+            expect(error.status).toBeLessThanOrEqual(599);
+          }
+
+          expectRoundTrip(HubSpotConfigInput, config);
+          expectRoundTrip(HubSpotSubmitFormRequest, submitRequest);
+          expectRoundTrip(HubSpotUpsertContactRequest, upsertRequest);
+          expectRoundTrip(HubSpotSubmitFormResponse, submitResponse);
+          expectRoundTrip(HubSpotUpsertContactResponse, upsertResponse);
+          expectRoundTrip(HubSpotError, error);
+        }
+      ),
+      { numRuns: 50 }
+    ));
+
   layer(TestLayer)((it) => {
     it.effect(
       "submits a form through the secure Forms API endpoint",

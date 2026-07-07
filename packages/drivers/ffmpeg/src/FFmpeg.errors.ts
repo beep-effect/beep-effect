@@ -6,13 +6,79 @@
  */
 
 import { $FfmpegId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
-import { P } from "@beep/utils";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { O, P } from "@beep/utils";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $FfmpegId.create("FFmpeg.errors");
+const FFmpegDefect = S.Defect({ includeStack: true });
+const isFFmpegDefect = S.is(FFmpegDefect);
+
+/**
+ * Non-negative integer process exit status.
+ *
+ * @example
+ * ```ts
+ * import { ProcessExitCode } from "@beep/ffmpeg"
+ *
+ * const code = ProcessExitCode.make(1)
+ * console.log(code)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const ProcessExitCode = S.Int.check(
+  S.isGreaterThanOrEqualTo(0, {
+    identifier: $I`ProcessExitCodeMinimumCheck`,
+    title: "Process Exit Code Minimum",
+    description: "Native process exit statuses are non-negative integers.",
+    message: "Expected a non-negative process exit code",
+  })
+).pipe(
+  $I.annoteSchema("ProcessExitCode", {
+    description: "Non-negative integer process exit status.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Non-negative integer process exit status.
+ *
+ * @example
+ * ```ts
+ * import { ProcessExitCode } from "@beep/ffmpeg"
+ * import type { ProcessExitCode as ProcessExitCodeValue } from "@beep/ffmpeg"
+ *
+ * const code: ProcessExitCodeValue = ProcessExitCode.make(1)
+ * console.log(code)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export type ProcessExitCode = typeof ProcessExitCode.Type;
+
+type FFmpegErrorContextInput = {
+  readonly cause?: unknown;
+  readonly command?: string;
+  readonly exitCode?: ProcessExitCode;
+  readonly stderr?: string;
+  readonly stdout?: string;
+};
+
+const causeFromUnknown = (cause: unknown): O.Option<typeof FFmpegDefect.Type> =>
+  P.hasInspectableObjectShape(cause) && isFFmpegDefect(cause) ? O.some(cause) : O.none();
+
+const optionsFromInput = (options: FFmpegErrorContextInput): FFmpegErrorFromUnknownOptions =>
+  FFmpegErrorFromUnknownOptions.make({
+    cause: causeFromUnknown(options.cause),
+    command: O.fromUndefinedOr(options.command),
+    exitCode: O.fromUndefinedOr(options.exitCode),
+    stderr: O.fromUndefinedOr(options.stderr),
+    stdout: O.fromUndefinedOr(options.stdout),
+  });
 
 /**
  * Additional process context captured for an FFmpeg failure.
@@ -20,8 +86,9 @@ const $I = $FfmpegId.create("FFmpeg.errors");
  * @example
  * ```ts
  * import { FFmpegErrorContext } from "@beep/ffmpeg"
+ * import * as O from "effect/Option"
  *
- * const context = FFmpegErrorContext.make({ command: "ffmpeg", exitCode: 1 })
+ * const context = FFmpegErrorContext.make({ command: O.some("ffmpeg"), exitCode: O.some(1) })
  * console.log(context)
  * ```
  *
@@ -30,21 +97,38 @@ const $I = $FfmpegId.create("FFmpeg.errors");
  */
 export class FFmpegErrorContext extends S.Class<FFmpegErrorContext>($I`FFmpegErrorContext`)(
   {
-    command: S.optionalKey(S.String),
-    exitCode: S.optionalKey(S.Finite),
-    stderr: S.optionalKey(S.String),
-    stdout: S.optionalKey(S.String),
+    command: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegErrorContext.command", {
+        description: "Native executable path or command name involved in the failure, when available.",
+      })
+    ),
+    exitCode: S.OptionFromOptionalKey(ProcessExitCode).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegErrorContext.exitCode", {
+        description: "Native process exit status, when the process returned one.",
+      })
+    ),
+    stderr: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegErrorContext.stderr", {
+        description: "Captured standard error text, when available.",
+      })
+    ),
+    stdout: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegErrorContext.stdout", {
+        description: "Captured standard output text, when available.",
+      })
+    ),
   },
   $I.annote("FFmpegErrorContext", {
     description: "Additional process context captured for an FFmpeg failure.",
   })
 ) {}
 
-const causeFromUnknown = (cause: unknown): unknown | undefined =>
-  P.hasInspectableObjectShape(cause) && S.is(S.Defect({ includeStack: true }))(cause) ? cause : undefined;
-
 const existingFfmpegError = (cause: unknown): O.Option<FFmpegError> =>
-  S.is(FFmpegError)(cause) ? O.some(cause) : O.none();
+  FFmpegError.is(cause) ? O.some(cause) : O.none();
 
 /**
  * Options used when normalizing unknown FFmpeg boundary failures.
@@ -52,11 +136,12 @@ const existingFfmpegError = (cause: unknown): O.Option<FFmpegError> =>
  * @example
  * ```ts
  * import { FFmpegErrorFromUnknownOptions } from "@beep/ffmpeg"
+ * import * as O from "effect/Option"
  *
  * const options = FFmpegErrorFromUnknownOptions.make({
- *   command: "ffmpeg",
- *   exitCode: 1,
- *   stderr: "invalid input"
+ *   command: O.some("ffmpeg"),
+ *   exitCode: O.some(1),
+ *   stderr: O.some("invalid input")
  * })
  * console.log(options)
  * ```
@@ -68,11 +153,36 @@ export class FFmpegErrorFromUnknownOptions extends S.Class<FFmpegErrorFromUnknow
   $I`FFmpegErrorFromUnknownOptions`
 )(
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-    command: S.optionalKey(S.String),
-    exitCode: S.optionalKey(S.Finite),
-    stderr: S.optionalKey(S.String),
-    stdout: S.optionalKey(S.String),
+    cause: S.OptionFromOptionalKey(FFmpegDefect).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegErrorFromUnknownOptions.cause", {
+        description: "Inspectable originating defect, when available.",
+      })
+    ),
+    command: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegErrorFromUnknownOptions.command", {
+        description: "Native executable path or command name involved in the failure, when available.",
+      })
+    ),
+    exitCode: S.OptionFromOptionalKey(ProcessExitCode).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegErrorFromUnknownOptions.exitCode", {
+        description: "Native process exit status, when the process returned one.",
+      })
+    ),
+    stderr: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegErrorFromUnknownOptions.stderr", {
+        description: "Captured standard error text, when available.",
+      })
+    ),
+    stdout: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegErrorFromUnknownOptions.stdout", {
+        description: "Captured standard output text, when available.",
+      })
+    ),
   },
   $I.annote("FFmpegErrorFromUnknownOptions", {
     description: "Options used when normalizing unknown FFmpeg boundary failures.",
@@ -96,18 +206,53 @@ export class FFmpegErrorFromUnknownOptions extends S.Class<FFmpegErrorFromUnknow
 export class FFmpegError extends TaggedErrorClass<FFmpegError>($I`FFmpegError`)(
   "FFmpegError",
   {
-    command: S.optionalKey(S.String),
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-    exitCode: S.optionalKey(S.Finite),
-    message: S.String,
-    operation: S.String,
-    stderr: S.optionalKey(S.String),
-    stdout: S.optionalKey(S.String),
+    command: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegError.command", {
+        description: "Native executable path or command name involved in the failure, when available.",
+      })
+    ),
+    cause: S.OptionFromOptionalKey(FFmpegDefect).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegError.cause", {
+        description: "Inspectable originating defect, when available.",
+      })
+    ),
+    exitCode: S.OptionFromOptionalKey(ProcessExitCode).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegError.exitCode", {
+        description: "Native process exit status, when the process returned one.",
+      })
+    ),
+    message: S.String.pipe(
+      $I.annoteKey("FFmpegError.message", {
+        description: "Human-readable FFmpeg driver failure summary.",
+      })
+    ),
+    operation: S.String.pipe(
+      $I.annoteKey("FFmpegError.operation", {
+        description: "Driver operation that emitted the failure.",
+      })
+    ),
+    stderr: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegError.stderr", {
+        description: "Captured standard error text, when available.",
+      })
+    ),
+    stdout: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("FFmpegError.stdout", {
+        description: "Captured standard output text, when available.",
+      })
+    ),
   },
   $I.annote("FFmpegError", {
     description: "Technical FFmpeg driver failure scoped to a driver operation.",
   })
 ) {
+  static readonly is = S.is(FFmpegError);
+
   /**
    * Normalize an unknown process or platform failure into a {@link FFmpegError}.
    *
@@ -123,14 +268,13 @@ export class FFmpegError extends TaggedErrorClass<FFmpegError>($I`FFmpegError`)(
    * @since 0.0.0
    */
   static readonly fromUnknown: {
-    (operation: string, message: string, options: FFmpegErrorFromUnknownOptions): FFmpegError;
-    (message: string, options: FFmpegErrorFromUnknownOptions): (operation: string) => FFmpegError;
-  } = dual(3, (operation: string, message: string, options: FFmpegErrorFromUnknownOptions): FFmpegError => {
-    const { cause, ...context } = options;
-    return O.getOrElse(existingFfmpegError(cause), () =>
+    (operation: string, message: string, options: FFmpegErrorContextInput): FFmpegError;
+    (message: string, options: FFmpegErrorContextInput): (operation: string) => FFmpegError;
+  } = dual(3, (operation: string, message: string, options: FFmpegErrorContextInput): FFmpegError => {
+    const context = optionsFromInput(options);
+    return O.getOrElse(existingFfmpegError(options.cause), () =>
       FFmpegError.make({
         ...context,
-        cause: causeFromUnknown(cause),
         message,
         operation,
       })

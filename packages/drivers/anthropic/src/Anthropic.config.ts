@@ -7,9 +7,11 @@
  */
 
 import { $AnthropicId } from "@beep/identity";
+import { PosInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $AnthropicId.create("Anthropic.config");
+const AnthropicTokenPriceUsd = S.Finite.check(S.isGreaterThanOrEqualTo(0));
 
 /**
  * Environment binding used by {@link AnthropicLive} for the redacted API key.
@@ -66,9 +68,10 @@ export const ANTHROPIC_DEFAULT_MODEL = "claude-opus-4-6" as const;
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ANTHROPIC_DEFAULT_MAX_TOKENS, AnthropicLanguageModelOptions } from "@beep/anthropic"
+ * import { PosInt } from "@beep/schema"
  *
  * const options = AnthropicLanguageModelOptions.make({
- *   maxTokens: ANTHROPIC_DEFAULT_MAX_TOKENS,
+ *   maxTokens: PosInt.make(ANTHROPIC_DEFAULT_MAX_TOKENS),
  * })
  *
  * strictEqual(options.maxTokens, 16_384)
@@ -144,9 +147,15 @@ export const ANTHROPIC_DEFAULT_RETRY_BASE_DELAY_MILLIS = 250 as const;
  */
 export class AnthropicApproximatePrice extends S.Class<AnthropicApproximatePrice>($I`AnthropicApproximatePrice`)(
   {
-    inputPerMillionTokensUsd: S.Finite,
-    model: S.String,
-    outputPerMillionTokensUsd: S.Finite,
+    inputPerMillionTokensUsd: AnthropicTokenPriceUsd.annotateKey({
+      description: "Approximate USD price per million input tokens for this model.",
+    }),
+    model: S.String.annotateKey({
+      description: "Anthropic model identifier associated with the static price row.",
+    }),
+    outputPerMillionTokensUsd: AnthropicTokenPriceUsd.annotateKey({
+      description: "Approximate USD price per million output tokens for this model.",
+    }),
   },
   $I.annote("AnthropicApproximatePrice", {
     description: "Approximate static Anthropic model price used for usage attribution.",
@@ -178,16 +187,17 @@ export const ANTHROPIC_DEFAULT_APPROXIMATE_PRICE = AnthropicApproximatePrice.mak
  * Schema-backed options accepted by Anthropic language-model layer helpers.
  *
  * @remarks
- * Missing fields are normalized by {@link makeAnthropicLanguageModelLayer};
- * this schema models caller input, not the fully materialized provider config.
+ * Missing fields are normalized by schema defaults before callers build the
+ * fully materialized provider config.
  *
  * @example
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { AnthropicLanguageModelOptions } from "@beep/anthropic"
+ * import { PosInt } from "@beep/schema"
  *
  * const options = AnthropicLanguageModelOptions.make({
- *   maxTokens: 1024,
+ *   maxTokens: PosInt.make(1024),
  *   model: "claude-opus-4-6",
  * })
  *
@@ -202,8 +212,12 @@ export class AnthropicLanguageModelOptions extends S.Class<AnthropicLanguageMode
   $I`AnthropicLanguageModelOptions`
 )(
   {
-    maxTokens: S.optionalKey(S.Finite),
-    model: S.optionalKey(S.String),
+    maxTokens: SchemaUtils.withKeyDefaults(PosInt, PosInt.make(ANTHROPIC_DEFAULT_MAX_TOKENS)).annotateKey({
+      description: "Positive maximum output-token budget forwarded to Anthropic as `max_tokens`.",
+    }),
+    model: SchemaUtils.withKeyDefaults(S.String, ANTHROPIC_DEFAULT_MODEL).annotateKey({
+      description: "Anthropic model identifier used by the language-model layer.",
+    }),
   },
   $I.annote("AnthropicLanguageModelOptions", {
     description: "Options accepted by Anthropic language-model layer helpers.",

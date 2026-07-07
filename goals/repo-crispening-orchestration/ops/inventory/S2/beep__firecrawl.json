@@ -1,27 +1,5 @@
 [
   {
-    "ruleId": "SFV4-normalization",
-    "file": "packages/drivers/firecrawl/src/Firecrawl.service.ts",
-    "line": 463,
-    "symbol": "resolveConfig",
-    "smell": "`apiUrl: normalizeBaseUrl(input.apiUrl)` strips trailing slashes after `FirecrawlConfigInput` has already decoded/defaulted the value (`Firecrawl.config.ts:50`), so URL normalization lives in service construction instead of the config schema.",
-    "proposedTarget": "Move the trailing-slash normalization onto the `apiUrl` schema by introducing a `FirecrawlApiUrl` codec on `Firecrawl.config.ts` using `S.decodeTo(..., SchemaTransformation.transform(...))`, then keep `SchemaUtils.withKeyDefaults(FIRECRAWL_API_URL)` on the normalized schema. In-repo exemplar: `packages/foundation/modeling/identity/src/Curie.ts:209` uses `S.decodeTo` + `SchemaTransformation.transformOrFail` for string normalization/conversion, and `.repos/effect-v4/packages/effect/src/Schema.ts:5469` verifies string trim normalization inside `SchemaGetter.transform` examples.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/firecrawl/src/Firecrawl.config.ts",
-    "line": 51,
-    "symbol": "FirecrawlConfigInput",
-    "smell": "`backoffFactor`, `maxRetries`, and `timeoutMs` are `S.optionalKey(S.Finite)` fields, then `resolveConfig` re-models them with `O.fromUndefinedOr` at service lines 464-466. Absence is represented as `undefined` on the decoded config object instead of `Option` in the schema.",
-    "proposedTarget": "Model these config knobs like the package's request payloads: `S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault)` (or the existing explicit `S.withConstructorDefault(Effect.succeed(O.none<number>()))` form) so `ResolvedFirecrawlConfig` consumes `Option` directly. In-package exemplar: `Firecrawl.models.ts:71-81` defines reusable optional Option fields; helper exemplar: `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46` defines `withNoneDefault`. Same-PR consumer sweep required because constructor input changes from `number | undefined` to `Option<number>`.",
-    "confidence": 0.68,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
     "ruleId": "SFV4-null-return",
     "file": "packages/drivers/firecrawl/src/Firecrawl.service.ts",
     "line": 274,

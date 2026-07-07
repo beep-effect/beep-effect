@@ -6,10 +6,10 @@
  */
 
 import { $AcpId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Deferred, Effect, HashMap, HashSet, Inspectable, Match, Queue, Ref, Stream, Tuple } from "effect";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as RpcClient from "effect/unstable/rpc/RpcClient";
@@ -25,11 +25,85 @@ import type * as Stdio from "effect/Stdio";
 import type * as RpcMessage from "effect/unstable/rpc/RpcMessage";
 
 const $I = $AcpId.create("protocol");
-const isAcpError = S.is(AcpError.AcpError);
-const isAcpRequestError = S.is(AcpError.AcpRequestError);
 const ACP_PROTOCOL_QUEUE_CAPACITY = 1_024;
 const ACP_PROTOCOL_DISCONNECT_QUEUE_CAPACITY = 16;
 const ACP_STDIO_CLIENT_ID = 0;
+
+/**
+ * Fallback handler for ACP extension requests.
+ *
+ * @example
+ * ```ts
+ * import type { AcpUnknownExtRequestHandler } from "@beep/acp/protocol"
+ * import { Effect } from "effect"
+ *
+ * const handler: AcpUnknownExtRequestHandler = (method, params) => Effect.succeed({ method, params })
+ * console.log(handler)
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export type AcpUnknownExtRequestHandler = (
+  method: string,
+  params: unknown
+) => Effect.Effect<unknown, AcpError.AcpError>;
+
+/**
+ * Fallback handler for ACP extension notifications.
+ *
+ * @example
+ * ```ts
+ * import type { AcpUnknownExtNotificationHandler } from "@beep/acp/protocol"
+ * import { Effect } from "effect"
+ *
+ * const handler: AcpUnknownExtNotificationHandler = (method) => Effect.sync(() => console.log(method))
+ * console.log(handler)
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export type AcpUnknownExtNotificationHandler = (
+  method: string,
+  params: unknown
+) => Effect.Effect<void, AcpError.AcpError>;
+
+/**
+ * Common ACP extension-handler registration surface shared by agents and clients.
+ *
+ * @example
+ * ```ts
+ * import type { AcpExtensionRegistrars } from "@beep/acp/protocol"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const registerPing = (registrars: AcpExtensionRegistrars) =>
+ *   registrars.handleExtRequest("x/ping", S.Struct({ message: S.String }), ({ message }) =>
+ *     Effect.succeed({ ok: message })
+ *   )
+ *
+ * console.log(registerPing)
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export interface AcpExtensionRegistrars {
+  readonly handleExtNotification: <A, I>(
+    method: string,
+    payload: S.Codec<A, I>,
+    handler: (payload: A) => Effect.Effect<void, AcpError.AcpError>
+  ) => Effect.Effect<void>;
+  readonly handleExtRequest: <A, I>(
+    method: string,
+    payload: S.Codec<A, I>,
+    handler: (payload: A) => Effect.Effect<unknown, AcpError.AcpError>
+  ) => Effect.Effect<void>;
+  readonly handleUnknownExtNotification: (handler: AcpUnknownExtNotificationHandler) => Effect.Effect<void>;
+  readonly handleUnknownExtRequest: (handler: AcpUnknownExtRequestHandler) => Effect.Effect<void>;
+}
+
 type MinimalReadonlySet<T> = Iterable<T> & {
   readonly entries: () => IterableIterator<[T, T]>;
   readonly forEach: (callbackfn: (value: T, value2: T, set: ReadonlySet<T>) => void, thisArg?: unknown) => void;
@@ -71,9 +145,21 @@ const ACP_STDIO_CLIENT_IDS = {
   values: () => singleValueSetIterator(ACP_STDIO_CLIENT_ID),
 } satisfies MinimalReadonlySet<number> as unknown as ReadonlySet<number>;
 
-const AcpProtocolLogDirection = LiteralKit(["incoming", "outgoing"]);
+const AcpProtocolLogDirectionBase = LiteralKit(["incoming", "outgoing"]);
+const AcpProtocolLogDirection = AcpProtocolLogDirectionBase.pipe(
+  $I.annoteSchema("AcpProtocolLogDirection", {
+    description: "Direction of an ACP protocol log event.",
+  }),
+  SchemaUtils.withLiteralKitStatics(AcpProtocolLogDirectionBase)
+);
 type AcpProtocolLogDirection = typeof AcpProtocolLogDirection.Type;
-const AcpProtocolLogStage = LiteralKit(["raw", "decoded", "decode_failed"]);
+const AcpProtocolLogStageBase = LiteralKit(["raw", "decoded", "decode_failed"]);
+const AcpProtocolLogStage = AcpProtocolLogStageBase.pipe(
+  $I.annoteSchema("AcpProtocolLogStage", {
+    description: "Processing stage represented by an ACP protocol log event.",
+  }),
+  SchemaUtils.withLiteralKitStatics(AcpProtocolLogStageBase)
+);
 type AcpProtocolLogStage = typeof AcpProtocolLogStage.Type;
 type AcpProtocolLogEventMember<T extends AcpProtocolLogDirection> = {
   readonly direction: T;
@@ -86,10 +172,9 @@ type AcpProtocolLogEventMember<T extends AcpProtocolLogDirection> = {
  *
  * @example
  * ```ts
- * import * as S from "effect/Schema"
  * import { AcpProtocolLogEvent } from "@beep/acp/protocol"
  *
- * const event = S.decodeUnknownSync(AcpProtocolLogEvent)({
+ * const event = AcpProtocolLogEvent.fromUnknown({
  *   direction: "incoming",
  *   stage: "raw",
  *   payload: "{}"
@@ -105,9 +190,15 @@ export const AcpProtocolLogEvent = AcpProtocolLogDirection.mapMembers(
     (literal: S.Literal<"incoming">) =>
       S.Class<AcpProtocolLogEventMember<"incoming">>($I`AcpProtocolLogIncomingEvent`)(
         {
-          direction: S.tag(literal.literal),
-          payload: S.Unknown,
-          stage: AcpProtocolLogStage,
+          direction: S.tag(literal.literal).annotateKey({
+            description: "Incoming ACP protocol log-event direction.",
+          }),
+          payload: S.Unknown.annotateKey({
+            description: "Raw or decoded ACP protocol payload observed at this stage.",
+          }),
+          stage: AcpProtocolLogStage.annotateKey({
+            description: "Processing stage for the incoming ACP protocol payload.",
+          }),
         },
         $I.annote("AcpProtocolLogIncomingEvent", {
           description: "Structured incoming log event emitted by the ACP protocol adapter.",
@@ -116,9 +207,15 @@ export const AcpProtocolLogEvent = AcpProtocolLogDirection.mapMembers(
     (literal: S.Literal<"outgoing">) =>
       S.Class<AcpProtocolLogEventMember<"outgoing">>($I`AcpProtocolLogOutgoingEvent`)(
         {
-          direction: S.tag(literal.literal),
-          payload: S.Unknown,
-          stage: AcpProtocolLogStage,
+          direction: S.tag(literal.literal).annotateKey({
+            description: "Outgoing ACP protocol log-event direction.",
+          }),
+          payload: S.Unknown.annotateKey({
+            description: "Raw or decoded ACP protocol payload observed at this stage.",
+          }),
+          stage: AcpProtocolLogStage.annotateKey({
+            description: "Processing stage for the outgoing ACP protocol payload.",
+          }),
         },
         $I.annote("AcpProtocolLogOutgoingEvent", {
           description: "Structured outgoing log event emitted by the ACP protocol adapter.",
@@ -129,7 +226,8 @@ export const AcpProtocolLogEvent = AcpProtocolLogDirection.mapMembers(
   $I.annoteSchema("AcpProtocolLogEvent", {
     description: "Structured log event emitted by the ACP protocol adapter.",
   }),
-  S.toTaggedUnion("direction")
+  S.toTaggedUnion("direction"),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -168,8 +266,12 @@ export type AcpProtocolLogEvent = typeof AcpProtocolLogEvent.Type;
  */
 export class AcpProtocolLoggingOptions extends S.Class<AcpProtocolLoggingOptions>($I`AcpProtocolLoggingOptions`)(
   {
-    logIncoming: S.optionalKey(S.Boolean),
-    logOutgoing: S.optionalKey(S.Boolean),
+    logIncoming: S.optionalKey(S.Boolean).annotateKey({
+      description: "Whether incoming ACP protocol payloads should be logged.",
+    }),
+    logOutgoing: S.optionalKey(S.Boolean).annotateKey({
+      description: "Whether outgoing ACP protocol payloads should be logged.",
+    }),
   },
   $I.annote("AcpProtocolLoggingOptions", {
     description: "Schema-backed ACP protocol logging flags.",
@@ -181,10 +283,9 @@ export class AcpProtocolLoggingOptions extends S.Class<AcpProtocolLoggingOptions
  *
  * @example
  * ```ts
- * import * as S from "effect/Schema"
  * import { AcpIncomingNotification } from "@beep/acp/protocol"
  *
- * const notification = S.decodeUnknownSync(AcpIncomingNotification)({
+ * const notification = AcpIncomingNotification.fromUnknown({
  *   _tag: "ExtNotification",
  *   method: "x/custom",
  *   params: { ok: true }
@@ -197,21 +298,34 @@ export class AcpProtocolLoggingOptions extends S.Class<AcpProtocolLoggingOptions
  */
 export const AcpIncomingNotification = S.TaggedUnion({
   SessionUpdate: {
-    method: S.Literal(CLIENT_METHODS.session_update),
-    params: AcpSchema.SessionNotification,
+    method: S.Literal(CLIENT_METHODS.session_update).annotateKey({
+      description: "ACP `session/update` method name.",
+    }),
+    params: AcpSchema.SessionNotification.annotateKey({
+      description: "Decoded ACP session notification payload.",
+    }),
   },
   ElicitationComplete: {
-    method: S.Literal(CLIENT_METHODS.session_elicitation_complete),
-    params: AcpSchema.ElicitationCompleteNotification,
+    method: S.Literal(CLIENT_METHODS.session_elicitation_complete).annotateKey({
+      description: "ACP `session/elicitation/complete` method name.",
+    }),
+    params: AcpSchema.ElicitationCompleteNotification.annotateKey({
+      description: "Decoded ACP elicitation-complete notification payload.",
+    }),
   },
   ExtNotification: {
-    method: S.String,
-    params: S.Unknown,
+    method: S.String.annotateKey({
+      description: "ACP extension notification method name.",
+    }),
+    params: S.Unknown.annotateKey({
+      description: "ACP extension notification payload.",
+    }),
   },
 }).pipe(
   $I.annoteSchema("AcpIncomingNotification", {
     description: "Schema for notifications decoded from the ACP peer stream.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -330,13 +444,12 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
   const extPending = yield* Ref.make(HashMap.empty<string, Deferred.Deferred<unknown, AcpError.AcpError>>());
 
   const logProtocol = Effect.fn($I`logProtocol`)((event: AcpProtocolLogEvent) => {
-    if (event.direction === "incoming" && options.logIncoming !== true) {
-      return Effect.void;
-    }
-    if (event.direction === "outgoing" && options.logOutgoing !== true) {
-      return Effect.void;
-    }
-    return options.logger?.(event) ?? Effect.logDebug("ACP protocol event").pipe(Effect.annotateLogs({ event }));
+    const emit = () =>
+      options.logger?.(event) ?? Effect.logDebug("ACP protocol event").pipe(Effect.annotateLogs({ event }));
+    return AcpProtocolLogEvent.match(event, {
+      incoming: () => (options.logIncoming === true ? emit() : Effect.void),
+      outgoing: () => (options.logOutgoing === true ? emit() : Effect.void),
+    });
   });
 
   const offerOutgoing = Effect.fn($I`offerOutgoing`)(function* (
@@ -352,7 +465,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       try: () => parser.encode(message),
       catch: (cause) =>
         AcpError.AcpProtocolParseError.make({
-          cause,
+          cause: O.some(cause),
           detail: "Failed to encode ACP message",
         }),
     });
@@ -392,6 +505,26 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     resolveExtPending(requestId, (deferred) => Deferred.succeed(deferred, value))
   );
 
+  const handlePendingExit = (requestId: string) =>
+    Match.type<RpcMessage.ExitEncoded<unknown, unknown>>().pipe(
+      Match.tagsExhaustive({
+        Success: (exit) => completeExtPendingSuccess(requestId, exit.value),
+        Failure: (exit) => {
+          const failure = A.findFirst(exit.cause, (entry) => entry._tag === "Fail");
+          if (O.isSome(failure) && S.is(AcpSchema.Error)(failure.value.error)) {
+            return completeExtPendingFailure(
+              requestId,
+              AcpError.AcpRequestError.fromProtocolError(failure.value.error)
+            );
+          }
+          return completeExtPendingFailure(
+            requestId,
+            AcpError.AcpRequestError.internalError("Extension request failed")
+          );
+        },
+      })
+    );
+
   const failAllExtPending = Effect.fn($I`failAllExtPending`)((error: AcpError.AcpError) =>
     Ref.getAndSet(extPending, HashMap.empty()).pipe(
       Effect.flatMap((pending) =>
@@ -423,28 +556,24 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     }).pipe(Effect.asVoid)
   );
 
-  const handleTermination = Effect.fn($I`handleTermination`)(
-    (classification: Effect.Effect<AcpError.AcpError | undefined>) =>
-      Ref.modify(terminationHandled, (handled) => {
-        if (handled) {
-          return [Effect.void, true] as const;
-        }
-        return [
-          Effect.gen(function* () {
-            yield* Queue.offer(disconnects, 0);
-            const error = yield* classification;
-            if (error === undefined) {
-              return;
-            }
-            yield* failAllExtPending(error);
-            yield* emitClientProtocolError(error);
-            if (options.onTermination !== undefined) {
-              yield* options.onTermination(error);
-            }
-          }),
-          true,
-        ] as const;
-      }).pipe(Effect.flatten)
+  const handleTermination = Effect.fn($I`handleTermination`)((classification: Effect.Effect<AcpError.AcpError>) =>
+    Ref.modify(terminationHandled, (handled) => {
+      if (handled) {
+        return [Effect.void, true] as const;
+      }
+      return [
+        Effect.gen(function* () {
+          yield* Queue.offer(disconnects, 0);
+          const error = yield* classification;
+          yield* failAllExtPending(error);
+          yield* emitClientProtocolError(error);
+          if (options.onTermination !== undefined) {
+            yield* options.onTermination(error);
+          }
+        }),
+        true,
+      ] as const;
+    }).pipe(Effect.flatten)
   );
 
   const respondWithSuccess = Effect.fn($I`respondWithSuccess`)((requestId: string, value: unknown) =>
@@ -500,7 +629,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
           ),
           Effect.mapError((cause) =>
             AcpError.AcpProtocolParseError.make({
-              cause,
+              cause: O.some(cause),
               detail: `Invalid ${CLIENT_METHODS.session_update} notification payload`,
             })
           ),
@@ -519,7 +648,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
           ),
           Effect.mapError((cause) =>
             AcpError.AcpProtocolParseError.make({
-              cause,
+              cause: O.some(cause),
               detail: `Invalid ${CLIENT_METHODS.session_elicitation_complete} notification payload`,
             })
           ),
@@ -549,20 +678,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
         if (!HashMap.has(pending, message.requestId)) {
           return Queue.offer(clientQueue, message).pipe(Effect.asVoid);
         }
-        if (message.exit._tag === "Success") {
-          return completeExtPendingSuccess(message.requestId, message.exit.value);
-        }
-        const failure = A.findFirst(message.exit.cause, (entry) => entry._tag === "Fail");
-        if (O.isSome(failure) && isProtocolError(failure.value.error)) {
-          return completeExtPendingFailure(
-            message.requestId,
-            AcpError.AcpRequestError.fromProtocolError(failure.value.error)
-          );
-        }
-        return completeExtPendingFailure(
-          message.requestId,
-          AcpError.AcpRequestError.internalError("Extension request failed")
-        );
+        return handlePendingExit(message.requestId)(message.exit);
       })
     )
   );
@@ -614,7 +730,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
               parser.decode(data) as ReadonlyArray<RpcMessage.FromClientEncoded | RpcMessage.FromServerEncoded>,
             catch: (cause) =>
               AcpError.AcpProtocolParseError.make({
-                cause,
+                cause: O.some(cause),
                 detail: "Failed to decode ACP wire message",
               }),
           })
@@ -630,7 +746,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
           logProtocol({
             direction: "incoming",
             payload: {
-              cause: error.cause,
+              cause: O.getOrUndefined(error.cause),
               detail: error.detail,
             },
             stage: "decode_failed",
@@ -645,10 +761,10 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     ),
     Effect.matchEffect({
       onFailure: (error) => {
-        const normalized: AcpError.AcpError = isAcpError(error)
+        const normalized: AcpError.AcpError = AcpError.AcpError.is(error)
           ? error
           : AcpError.AcpTransportError.make({
-              cause: error,
+              cause: O.some(error),
               detail: Inspectable.toStringUnknown(error, 0),
             });
         return handleTermination(Effect.succeed(normalized));
@@ -658,7 +774,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
           options.terminationError ??
             Effect.succeed(
               AcpError.AcpTransportError.make({
-                cause: "ACP input stream ended",
+                cause: O.some("ACP input stream ended"),
                 detail: "ACP input stream ended",
               })
             )
@@ -760,14 +876,8 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
   } satisfies AcpPatchedProtocol;
 });
 
-function isProtocolError(value: unknown): value is { code: number; message: string; data?: unknown } {
-  return (
-    P.isObject(value) && "code" in value && P.isNumber(value.code) && "message" in value && P.isString(value.message)
-  );
-}
-
 function normalizeToRequestError(error: AcpError.AcpError): AcpError.AcpRequestError {
-  return isAcpRequestError(error) ? error : AcpError.AcpRequestError.internalError(error.message);
+  return AcpError.AcpRequestError.is(error) ? error : AcpError.AcpRequestError.internalError(error.message);
 }
 
 function toRpcClientError(error: AcpError.AcpError): RpcClientError.RpcClientError {

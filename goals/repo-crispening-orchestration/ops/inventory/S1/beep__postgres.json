@@ -47,17 +47,6 @@
   {
     "ruleId": "schema-first-inventory",
     "file": "packages/drivers/postgres/src/PostgresSqlState.models.ts",
-    "line": 846,
-    "symbol": "PgErrorName / PgErrorCode",
-    "smell": "Exported SQLSTATE type aliases are derived from `PostgresErrorCodeByName` instead of from the nearby `LiteralKit` schemas that model the same domains.",
-    "proposedTarget": "Make the LiteralKit schema values the type source: keep `PgErrorCode` at `packages/drivers/postgres/src/PostgresSqlState.models.ts:1461` and `PgErrorName` at `packages/drivers/postgres/src/PostgresSqlState.models.ts:1483`, then derive `export type PgErrorCode = typeof PgErrorCode.Type` and `export type PgErrorName = typeof PgErrorName.Type`. In-repo exemplars: `packages/drivers/m365/src/M365.errors.ts:32`/`:61` and `packages/drivers/govinfo/src/Govinfo.errors.ts:28`/`:54` derive exported literal-domain types from their schema values.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 0.74
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/drivers/postgres/src/PostgresSqlState.models.ts",
     "line": 1503,
     "symbol": "isPgErrorCode",
     "smell": "Exported `const isPgErrorCode = S.is(PgErrorCode)` textually matches the guard-helper-wall smell.",

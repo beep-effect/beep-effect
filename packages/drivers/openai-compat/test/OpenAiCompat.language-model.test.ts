@@ -1,50 +1,106 @@
 import {
   decodeChatCompletionChunk,
   makeFromProvider,
+  OpenAiCompatAssistantDelta,
+  OpenAiCompatAssistantMessage,
+  OpenAiCompatChatCompletionChoice,
+  OpenAiCompatChatCompletionChunk,
+  OpenAiCompatChatCompletionChunkChoice,
   OpenAiCompatChatCompletionRequest,
+  OpenAiCompatChatCompletionResponse,
+  OpenAiCompatChatMessage,
   OpenAiCompatClient,
   OpenAiCompatClientOptions,
+  OpenAiCompatLanguageModelConfig,
+  OpenAiCompatResponseFormat,
+  OpenAiCompatUsage,
+  OpenAiCompatUserChatMessage,
 } from "@beep/openai-compat";
+import { PosInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A } from "@beep/utils";
 import { expect, layer } from "@effect/vitest";
-import { Effect, Layer, pipe, Redacted, Ref, Stream } from "effect";
+import { Effect, Layer, pipe, Redacted, Ref, Result, Stream } from "effect";
+import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import * as AiError from "effect/unstable/ai/AiError";
 import * as Prompt from "effect/unstable/ai/Prompt";
 import * as Tool from "effect/unstable/ai/Tool";
 import * as Toolkit from "effect/unstable/ai/Toolkit";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
-import type { OpenAiCompatChatCompletionChunk, OpenAiCompatChatCompletionResponse } from "@beep/openai-compat";
 import type { TUnsafe } from "@beep/types";
 import type * as HttpClientError from "effect/unstable/http/HttpClientError";
 import type * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
+
+const ClientOptionsArbitrary = S.toArbitrary(OpenAiCompatClientOptions);
+const LanguageModelConfigArbitrary = S.toArbitrary(OpenAiCompatLanguageModelConfig);
+const ChatMessageArbitrary = S.toArbitrary(OpenAiCompatChatMessage);
+const ResponseFormatArbitrary = S.toArbitrary(OpenAiCompatResponseFormat);
+const RequestArbitrary = S.toArbitrary(OpenAiCompatChatCompletionRequest);
+const ResponseArbitrary = S.toArbitrary(OpenAiCompatChatCompletionResponse);
+const ChunkArbitrary = S.toArbitrary(OpenAiCompatChatCompletionChunk);
+
+const encodeClientOptions = S.encodeResult(OpenAiCompatClientOptions);
+const decodeClientOptions = S.decodeUnknownResult(OpenAiCompatClientOptions);
+const encodeLanguageModelConfig = S.encodeResult(OpenAiCompatLanguageModelConfig);
+const decodeLanguageModelConfig = S.decodeUnknownResult(OpenAiCompatLanguageModelConfig);
+const encodeChatMessage = S.encodeResult(OpenAiCompatChatMessage);
+const decodeChatMessage = S.decodeUnknownResult(OpenAiCompatChatMessage);
+const encodeResponseFormat = S.encodeResult(OpenAiCompatResponseFormat);
+const decodeResponseFormat = S.decodeUnknownResult(OpenAiCompatResponseFormat);
+const encodeRequest = S.encodeResult(OpenAiCompatChatCompletionRequest);
+const decodeRequest = S.decodeUnknownResult(OpenAiCompatChatCompletionRequest);
+const encodeResponse = S.encodeResult(OpenAiCompatChatCompletionResponse);
+const decodeResponse = S.decodeUnknownResult(OpenAiCompatChatCompletionResponse);
+const encodeChunk = S.encodeResult(OpenAiCompatChatCompletionChunk);
+const decodeChunk = S.decodeUnknownResult(OpenAiCompatChatCompletionChunk);
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
-const makeResponse = (content: string, finishReason: string | null = "stop"): OpenAiCompatChatCompletionResponse => ({
-  choices: [
-    {
-      finish_reason: O.fromNullishOr(finishReason),
-      index: 0,
-      message: O.some({
-        content: O.some(content),
-        role: "assistant",
-        tool_calls: O.none(),
+const nonNegativeInt = NonNegativeInt.make;
+const userMessage = (content = ""): OpenAiCompatUserChatMessage =>
+  OpenAiCompatUserChatMessage.make({ content, role: "user" });
+
+const assertRoundTrip = <A>(
+  encode: (value: A) => Result.Result<unknown, unknown>,
+  decode: (value: unknown) => Result.Result<A, unknown>,
+  value: A
+): void => {
+  const encoded = Result.getOrThrow(encode(value));
+  expect(Eq.equals(Result.getOrThrow(decode(encoded)), value)).toBe(true);
+};
+
+const makeResponse = (content: string, finishReason: string | null = "stop"): OpenAiCompatChatCompletionResponse =>
+  OpenAiCompatChatCompletionResponse.make({
+    choices: [
+      OpenAiCompatChatCompletionChoice.make({
+        finish_reason: O.fromNullishOr(finishReason),
+        index: nonNegativeInt(0),
+        message: O.some(
+          OpenAiCompatAssistantMessage.make({
+            content: O.some(content),
+            role: "assistant",
+            tool_calls: O.none(),
+          })
+        ),
       }),
-    },
-  ],
-  usage: O.some({
-    completion_tokens: O.some(2),
-    prompt_tokens: O.some(1),
-    prompt_tokens_details: O.none(),
-    total_tokens: O.some(3),
-  }),
-});
+    ],
+    usage: O.some(
+      OpenAiCompatUsage.make({
+        completion_tokens: O.some(nonNegativeInt(2)),
+        prompt_tokens: O.some(nonNegativeInt(1)),
+        prompt_tokens_details: O.none(),
+        total_tokens: O.some(nonNegativeInt(3)),
+      })
+    ),
+  });
 
 type TestRespond = (
   request: HttpClientRequest.HttpClientRequest
@@ -64,11 +120,119 @@ const makeHttpClientLayer = (respond: TestRespond): Layer.Layer<HttpClient.HttpC
   );
 
 const makeOpenAiCompatClientLayer = (respond: TestRespond) =>
-  OpenAiCompatClient.makeLayer(OpenAiCompatClientOptions.make({ apiKey: Redacted.make("test-key") })).pipe(
+  OpenAiCompatClient.makeLayer(OpenAiCompatClientOptions.make({ apiKey: O.some(Redacted.make("test-key")) })).pipe(
     Layer.provide(makeHttpClientLayer(respond))
   );
 
 layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (it) => {
+  it("keeps encoded OpenAI-compatible schema wire shapes byte-identical", () => {
+    const clientOptions = OpenAiCompatClientOptions.make({
+      headers: O.some({ "X-Provider": "test" }),
+    });
+    const languageModelConfig = OpenAiCompatLanguageModelConfig.make({
+      maxTokens: O.some(PosInt.make(128)),
+      parallelToolCalls: O.some(false),
+      seed: O.some(nonNegativeInt(4)),
+      temperature: O.some(0.2),
+      topP: O.some(UnitInterval.make(0.8)),
+      user: O.some("user-1"),
+    });
+    const request = OpenAiCompatChatCompletionRequest.make({
+      max_tokens: PosInt.make(128),
+      messages: [userMessage("Hello")],
+      model: "compat-model",
+      seed: nonNegativeInt(4),
+      temperature: null,
+      top_p: UnitInterval.make(0.8),
+    });
+    const response = makeResponse("ok");
+    const chunk = OpenAiCompatChatCompletionChunk.make({
+      choices: [
+        OpenAiCompatChatCompletionChunkChoice.make({
+          delta: O.some(OpenAiCompatAssistantDelta.make({ content: O.some("hi"), role: "assistant" })),
+          finish_reason: O.some("stop"),
+          index: nonNegativeInt(0),
+        }),
+      ],
+      usage: O.none(),
+    });
+
+    expect(Result.getOrThrow(encodeClientOptions(clientOptions))).toEqual({
+      apiUrl: "https://api.openai.com/v1",
+      headers: { "X-Provider": "test" },
+    });
+    expect(Result.getOrThrow(encodeLanguageModelConfig(languageModelConfig))).toEqual({
+      maxTokens: 128,
+      parallelToolCalls: false,
+      seed: 4,
+      strictJsonSchema: true,
+      temperature: 0.2,
+      topP: 0.8,
+      user: "user-1",
+    });
+    expect(Result.getOrThrow(encodeRequest(request))).toEqual({
+      max_tokens: 128,
+      messages: [{ content: "Hello", role: "user" }],
+      model: "compat-model",
+      seed: 4,
+      temperature: null,
+      top_p: 0.8,
+    });
+    expect(Result.getOrThrow(encodeResponse(response))).toEqual({
+      choices: [
+        {
+          finish_reason: "stop",
+          index: 0,
+          message: {
+            content: "ok",
+            role: "assistant",
+          },
+        },
+      ],
+      usage: {
+        completion_tokens: 2,
+        prompt_tokens: 1,
+        total_tokens: 3,
+      },
+    });
+    expect(Result.getOrThrow(encodeChunk(chunk))).toEqual({
+      choices: [
+        {
+          delta: {
+            content: "hi",
+            role: "assistant",
+          },
+          finish_reason: "stop",
+          index: 0,
+        },
+      ],
+    });
+  });
+
+  it("round-trips schema-derived OpenAI-compatible payloads through encoded form", () =>
+    fc.assert(
+      fc.property(
+        ClientOptionsArbitrary,
+        LanguageModelConfigArbitrary,
+        ChatMessageArbitrary,
+        ResponseFormatArbitrary,
+        RequestArbitrary,
+        ResponseArbitrary,
+        ChunkArbitrary,
+        (clientOptions, config, message, responseFormat, request, response, chunk) => {
+          expect(request.messages.length).toBeGreaterThan(0);
+          assertRoundTrip(encodeClientOptions, decodeClientOptions, clientOptions);
+          assertRoundTrip(encodeLanguageModelConfig, decodeLanguageModelConfig, config);
+          assertRoundTrip(encodeChatMessage, decodeChatMessage, message);
+          assertRoundTrip(encodeResponseFormat, decodeResponseFormat, responseFormat);
+          assertRoundTrip(encodeRequest, decodeRequest, request);
+          assertRoundTrip(encodeResponse, decodeResponse, response);
+          assertRoundTrip(encodeChunk, decodeChunk, chunk);
+        }
+      ),
+      { numRuns: 25 }
+    ));
+
   it.effect(
     "translates Effect prompts into chat completion requests",
     Effect.fnUntraced(function* () {
@@ -107,7 +271,7 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
               choices: [
                 {
                   finish_reason: O.some("tool_calls"),
-                  index: 0,
+                  index: nonNegativeInt(0),
                   message: O.some({
                     content: O.none(),
                     role: "assistant",
@@ -155,7 +319,7 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
           {
             delta: O.some({ content: O.some(content), role: "assistant", tool_calls: O.none() }),
             finish_reason: O.fromNullishOr(finishReason),
-            index: 0,
+            index: nonNegativeInt(0),
           },
         ],
         usage: O.none(),
@@ -201,7 +365,7 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
           {
             delta: O.some({ content: O.some(content), role: "assistant", tool_calls: O.none() }),
             finish_reason: O.none(),
-            index: 0,
+            index: nonNegativeInt(0),
           },
         ],
         usage: O.none(),
@@ -211,7 +375,7 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
           {
             delta: O.some({ content: O.none(), tool_calls: O.none() }),
             finish_reason: O.some("stop"),
-            index: 0,
+            index: nonNegativeInt(0),
           },
         ],
         usage: O.none(),
@@ -219,10 +383,10 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
       const usageChunk: OpenAiCompatChatCompletionChunk = {
         choices: [],
         usage: O.some({
-          completion_tokens: O.some(5),
-          prompt_tokens: O.some(3),
+          completion_tokens: O.some(nonNegativeInt(5)),
+          prompt_tokens: O.some(nonNegativeInt(3)),
           prompt_tokens_details: O.none(),
-          total_tokens: O.some(8),
+          total_tokens: O.some(nonNegativeInt(8)),
         }),
       };
       const languageModel = yield* makeFromProvider({
@@ -266,11 +430,11 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
                   function: {
                     arguments: '{"city"',
                   },
-                  index: 0,
+                  index: nonNegativeInt(0),
                 },
               ],
             },
-            index: 0,
+            index: nonNegativeInt(0),
           },
         ],
       });
@@ -299,7 +463,7 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
           {
             delta: toolCalls,
             finish_reason: O.fromUndefinedOr(finishReason),
-            index: 0,
+            index: nonNegativeInt(0),
           },
         ],
         id: "chatcmpl_test",
@@ -327,7 +491,7 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
                         name: "weather",
                       },
                       id: "call_1",
-                      index: 0,
+                      index: nonNegativeInt(0),
                       type: "function",
                     },
                   ]),
@@ -341,7 +505,7 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
                       function: {
                         arguments: ':"Austin"}',
                       },
-                      index: 0,
+                      index: nonNegativeInt(0),
                     },
                   ]),
                 }),
@@ -477,7 +641,7 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
     "maps JSON body encoding failures to AiError",
     Effect.fnUntraced(function* () {
       const request = OpenAiCompatChatCompletionRequest.make({
-        messages: [],
+        messages: [userMessage()],
         model: "compat-model",
         stream_options: {
           retry_after: 1n,
@@ -502,7 +666,7 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
     "maps non-2xx client responses without exposing response bodies",
     Effect.fnUntraced(function* () {
       const request = OpenAiCompatChatCompletionRequest.make({
-        messages: [],
+        messages: [userMessage()],
         model: "compat-model",
       });
 
@@ -533,7 +697,7 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
     "rejects stream responses whose leading content type is not text/event-stream",
     Effect.fnUntraced(function* () {
       const request = OpenAiCompatChatCompletionRequest.make({
-        messages: [],
+        messages: [userMessage()],
         model: "compat-model",
       });
 
@@ -568,7 +732,7 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
       const jsonBody =
         '{"choices":[{"finish_reason":"stop","index":0,"message":{"content":"ok","role":"assistant","tool_calls":[]}}],"usage":{"completion_tokens":2,"prompt_tokens":1,"total_tokens":3}}';
       const defaultLayer = OpenAiCompatClient.makeLayer(
-        OpenAiCompatClientOptions.make({ apiKey: Redacted.make("test-key") })
+        OpenAiCompatClientOptions.make({ apiKey: O.some(Redacted.make("test-key")) })
       ).pipe(
         Layer.provide(
           makeHttpClientLayer((request) =>
@@ -588,7 +752,7 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
         )
       );
       const request = OpenAiCompatChatCompletionRequest.make({
-        messages: [],
+        messages: [userMessage()],
         model: "compat-model",
       });
 
@@ -608,8 +772,8 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
       const overrideHeaders = yield* Ref.make<ReadonlyArray<Record<string, string>>>([]);
       const overrideLayer = OpenAiCompatClient.makeLayer(
         OpenAiCompatClientOptions.make({
-          apiKey: Redacted.make("test-key"),
-          headers: { Accept: "application/vnd.compat+json" },
+          apiKey: O.some(Redacted.make("test-key")),
+          headers: O.some({ Accept: "application/vnd.compat+json" }),
         })
       ).pipe(
         Layer.provide(
@@ -643,7 +807,7 @@ layer(Layer.empty as Layer.Layer<TUnsafe.Any>)("OpenAiCompat language model", (i
     "maps SSE retry directives to typed AiError",
     Effect.fnUntraced(function* () {
       const request = OpenAiCompatChatCompletionRequest.make({
-        messages: [],
+        messages: [userMessage()],
         model: "compat-model",
       });
 

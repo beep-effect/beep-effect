@@ -1,9 +1,10 @@
 import * as F from "@beep/firecrawl";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { Cause, Effect, Exit, Stream } from "effect";
+import { Cause, Effect, Equal, Exit, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 type FakeWatcherEventName = "document" | "done" | "error" | "snapshot";
 type FakeWatcherListener = (payload: unknown) => void;
@@ -161,6 +162,18 @@ const makeFakeClient = (overrides: Partial<F.FirecrawlSdkClient> = {}): F.Firecr
   return { ...defaults, ...overrides };
 };
 
+const assertRoundTrip = <SchemaT extends S.ConstraintCodec<unknown, unknown, never, never>>(schema: SchemaT): void => {
+  const decode = S.decodeUnknownSync(schema);
+  const encode = S.encodeSync(schema);
+
+  fc.assert(
+    fc.property(S.toArbitrary(schema), (value) => {
+      expect(Equal.equals(decode(encode(value)), value)).toBe(true);
+    }),
+    { numRuns: 25 }
+  );
+};
+
 describe("@beep/firecrawl", () => {
   it.effect(
     "decodes schema defaults into Option values",
@@ -171,6 +184,72 @@ describe("@beep/firecrawl", () => {
       expect(O.isNone(payload.options)).toBe(true);
     })
   );
+
+  it.effect(
+    "keeps config wire shape while normalizing through the schema",
+    Effect.fnUntraced(function* () {
+      const config = yield* S.decodeUnknownEffect(F.FirecrawlConfigInput)({
+        apiKey: "fc-test-key",
+        apiUrl: "https://api.firecrawl.dev/",
+        backoffFactor: 2,
+        maxRetries: 3,
+        timeoutMs: 1_000,
+      });
+      const encoded = yield* S.encodeEffect(F.FirecrawlConfigInput)(config);
+
+      expect(config.apiUrl).toBe("https://api.firecrawl.dev");
+      expect(config.backoffFactor).toEqual(O.some(2));
+      expect(config.maxRetries).toEqual(O.some(3));
+      expect(config.timeoutMs).toEqual(O.some(1_000));
+      expect(encoded).toEqual({
+        apiKey: "fc-test-key",
+        apiUrl: "https://api.firecrawl.dev",
+        backoffFactor: 2,
+        maxRetries: 3,
+        timeoutMs: 1_000,
+      });
+    })
+  );
+
+  it.effect(
+    "keeps error wire shape while tightening numeric diagnostics",
+    Effect.fnUntraced(function* () {
+      const failure = yield* S.decodeUnknownEffect(F.FirecrawlApiFailure)({
+        error: "Unauthorized",
+        status: 429,
+        success: false,
+      });
+      const encoded = yield* S.encodeEffect(F.FirecrawlApiFailure)(failure);
+
+      expect(failure.status).toEqual(O.some(429));
+      expect(encoded).toEqual({
+        error: "Unauthorized",
+        status: 429,
+        success: false,
+      });
+      expect(F.FirecrawlError.fromReason("transport", { status: -1 }).status).toEqual(O.none());
+      expect(O.isSome(F.FirecrawlWatcherEvent.decodeOption({ error: "watcher error", type: "error" }))).toBe(true);
+    })
+  );
+
+  it("round-trips crispened schema invariants through derived arbitraries", () => {
+    assertRoundTrip(F.FirecrawlApiUrl);
+    assertRoundTrip(F.FirecrawlConfigInput);
+    assertRoundTrip(F.FirecrawlMethodName);
+    assertRoundTrip(F.FirecrawlErrorReason);
+    assertRoundTrip(F.FirecrawlCodecErrorReason);
+    assertRoundTrip(F.FirecrawlApiFailure);
+    assertRoundTrip(F.FirecrawlErrorOptions);
+    assertRoundTrip(F.FirecrawlError);
+    assertRoundTrip(F.FirecrawlFormatType);
+    assertRoundTrip(F.FirecrawlScrapeActionType);
+    assertRoundTrip(F.FirecrawlSearchSourceType);
+    assertRoundTrip(F.FirecrawlJobStatus);
+    assertRoundTrip(F.FirecrawlAgentStatus);
+    assertRoundTrip(F.FirecrawlBrowserLanguage);
+    assertRoundTrip(F.FirecrawlWatcherKind);
+    assertRoundTrip(F.FirecrawlWatcherEventType);
+  });
 
   layer(F.Firecrawl.makeLayerFromClient(makeFakeClient()))((it) => {
     it.effect(

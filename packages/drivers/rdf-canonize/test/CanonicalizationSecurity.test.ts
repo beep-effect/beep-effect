@@ -1,7 +1,11 @@
 import { Dataset, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { CanonicalizationServiceLive } from "@beep/rdf-canonize/adapters/canonicalization";
-import { CanonicalizationService, CanonicalizeDatasetRequest } from "@beep/semantic-web/services/canonicalization";
+import {
+  CanonicalDatasetResult,
+  CanonicalizationService,
+  CanonicalizeDatasetRequest,
+} from "@beep/semantic-web/services/canonicalization";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as S from "effect/Schema";
@@ -26,6 +30,17 @@ vi.mock("rdf-canonize", (importOriginal) =>
 
 const decodeUnknownSync = <Schema extends S.ConstraintDecoder<unknown, never>>(schema: Schema) =>
   S.decodeUnknownSync(schema);
+
+const expectEncodedRoundTrip = <Schema extends S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>>(
+  schema: Schema,
+  value: Schema["Type"]
+): void => {
+  const encoded = Effect.runSync(S.encodeEffect(schema)(value));
+  const decoded = Effect.runSync(S.decodeUnknownEffect(schema)(encoded));
+  const reencoded = Effect.runSync(S.encodeEffect(schema)(decoded));
+
+  expect(reencoded).toEqual(encoded);
+};
 
 const dataset = makeDataset([
   makeQuad(
@@ -120,6 +135,44 @@ describe("Canonicalization security hardening", () => {
 
       yield* Effect.promise(() => Promise.resolve(expectSemanticBudgetFailure(timeoutError)));
     }));
+
+  it("canonicalizes lexical requests without changing result encoded shape", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.promise(() =>
+        runCanonicalization(
+          Effect.gen(function* () {
+            const service = yield* CanonicalizationService;
+            return yield* service.canonicalize(
+              decodeUnknownSync(CanonicalizeDatasetRequest)({
+                algorithm: "lexical-sort-v1",
+                dataset: yield* S.encodeEffect(Dataset)(dataset),
+              })
+            );
+          })
+        )
+      );
+
+      expectEncodedRoundTrip(CanonicalDatasetResult, result);
+      expect(result.canonicalText).toContain("<https://example.com/people/alice>");
+    }));
+
+  it("round-trips schema-derived canonical dataset results through encoded form", {
+    timeout: 30000,
+  }, () => {
+    const arbitrary = S.toArbitrary(CanonicalDatasetResult).map((result) =>
+      CanonicalDatasetResult.make({
+        ...result,
+        dataset: makeDataset(result.dataset.quads.slice(0, 3)),
+      })
+    );
+
+    fc.assert(
+      fc.property(arbitrary, (result) => {
+        expectEncodedRoundTrip(CanonicalDatasetResult, result);
+      }),
+      { numRuns: 5 }
+    );
+  });
 
   it("derives canonicalization requests from the source schema and proves an encode/decode round-trip", {
     timeout: 30000,

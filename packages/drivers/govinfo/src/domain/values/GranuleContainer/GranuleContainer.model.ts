@@ -5,8 +5,9 @@
  * @since 0.0.0
  */
 import { $GovinfoId } from "@beep/identity";
-import { Int64 } from "@beep/schema";
+import { NonNegativeInt, PosInt } from "@beep/schema";
 import * as S from "effect/Schema";
+import { NonNegativeInt64 } from "../GovinfoNumeric.ts";
 import { GranuleMetadata } from "../GranuleMetadata/index.ts";
 
 const $I = $GovinfoId.create("domain/values/GranuleContainer/GranuleContainer.model");
@@ -50,7 +51,7 @@ const $I = $GovinfoId.create("domain/values/GranuleContainer/GranuleContainer.mo
 export class GranuleContainer extends S.Class<GranuleContainer>($I`GranuleContainer`)(
   {
     /** Total matching granules reported by GovInfo. */
-    count: Int64.pipe(
+    count: NonNegativeInt64.pipe(
       S.annotateKey({
         description: "Total matching granules reported by GovInfo.",
       })
@@ -75,20 +76,14 @@ export class GranuleContainer extends S.Class<GranuleContainer>($I`GranuleContai
     }),
 
     /** Numeric offset reported by older GovInfo granule list responses. */
-    offset: S.Int.pipe(
-      S.check(S.isInt32()),
-      S.annotateKey({
-        description: "Numeric offset reported by older GovInfo granule list responses.",
-      })
-    ),
+    offset: NonNegativeInt.annotateKey({
+      description: "Numeric offset reported by older GovInfo granule list responses.",
+    }),
 
     /** Number of granules requested for the current page. */
-    pageSize: S.Int.pipe(
-      S.check(S.isInt32()),
-      S.annotateKey({
-        description: "Number of granules requested for the current page.",
-      })
-    ),
+    pageSize: PosInt.annotateKey({
+      description: "Number of granules requested for the current page.",
+    }),
 
     /** URL for the previous page of granule results. */
     previousPage: S.String.annotateKey({

@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/postgres/src/PostgresSqlState.models.ts",
-    "line": 31,
-    "symbol": "PostgresErrorCodeByName / PgErrorCodeValues / PgErrorNameValues",
-    "smell": "The SQLSTATE literal family is maintained in parallel: PostgresErrorCodeByName starts at line 31, PgErrorCodeValues starts at line 300, PgErrorNameValues starts at line 563, pgErrorEntries recovers entries with a double cast at line 878, and PgErrorAliasesByCode / PgErrorCanonicalNameByCode repeat the same source table at lines 896 and 1178. The package already has LiteralKit schemas at lines 1461 and 1483, but the kit inputs are not the single source of truth.",
-    "proposedTarget": "Collapse to one canonical non-empty SQLSTATE entry table and derive the maps, aliases, canonical-name lookup, and LiteralKit inputs from it. In-repo derivation exemplars: CurrencyCode derives a LiteralKit from Struct.keysNonEmpty at packages/foundation/modeling/schema/src/CurrencyCode.ts:43, ContinentCode uses Struct.keysNonEmpty plus MappedLiteralKit when the map is reversible at packages/foundation/modeling/schema/src/ContinentCode.ts:31 and :111. MappedLiteralKit is not the direct fit for SQLSTATE name->code because duplicate codes exist; its duplicate-target guard is verified at packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts:84-103.",
-    "confidence": 0.58,
-    "mechanization": "judgment",
-    "roiRank": 1.74
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/drivers/postgres/src/Postgres.errors.ts",
     "line": 239,
     "symbol": "extractDrizzleQueryContext",

@@ -6,12 +6,12 @@
  */
 
 import { $LibpffId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
+import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { O } from "@beep/utils";
 import * as S from "effect/Schema";
 
 const $I = $LibpffId.create("Libpff.errors");
+const LibpffErrorReasonBase = LiteralKit(["config", "engine-unavailable", "output-limit", "process", "timeout"]);
 
 /**
  * Technical libpff failure reasons.
@@ -26,16 +26,11 @@ const $I = $LibpffId.create("Libpff.errors");
  * @category errors
  * @since 0.0.0
  */
-export const LibpffErrorReason = LiteralKit([
-  "config",
-  "engine-unavailable",
-  "output-limit",
-  "process",
-  "timeout",
-]).pipe(
+export const LibpffErrorReason = LibpffErrorReasonBase.pipe(
   $I.annoteSchema("LibpffErrorReason", {
     description: "Redacted technical error reasons emitted by the libpff driver.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(LibpffErrorReasonBase)
 );
 
 /**
@@ -55,6 +50,35 @@ export const LibpffErrorReason = LiteralKit([
 export type LibpffErrorReason = typeof LibpffErrorReason.Type;
 
 /**
+ * Options used when constructing {@link LibpffError} instances.
+ *
+ * @example
+ * ```ts
+ * import { LibpffErrorOptions } from "@beep/libpff"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const options = LibpffErrorOptions.make({ exitCode: NonNegativeInt.make(2) })
+ * console.log(options.exitCode)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class LibpffErrorOptions extends S.Class<LibpffErrorOptions>($I`LibpffErrorOptions`)(
+  {
+    cause: S.optionalKey(S.String).annotateKey({
+      description: "Sanitized technical cause string when one is safe to retain.",
+    }),
+    exitCode: S.optionalKey(NonNegativeInt).annotateKey({
+      description: "Process exit status associated with the libpff failure when one was available.",
+    }),
+  },
+  $I.annote("LibpffErrorOptions", {
+    description: "Options for configuring LibpffError instances.",
+  })
+) {}
+
+/**
  * Technical failure raised inside the libpff driver boundary.
  *
  * @example
@@ -71,9 +95,21 @@ export type LibpffErrorReason = typeof LibpffErrorReason.Type;
 export class LibpffError extends TaggedErrorClass<LibpffError>($I`LibpffError`)(
   "LibpffError",
   {
-    cause: S.optionalKey(S.String),
-    exitCode: S.optionalKey(NonNegativeInt),
-    reason: LibpffErrorReason,
+    cause: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Sanitized technical cause string when one is safe to retain.",
+      })
+    ),
+    exitCode: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Process exit status associated with the libpff failure when one was available.",
+      })
+    ),
+    reason: LibpffErrorReason.annotateKey({
+      description: "Redacted technical error reason.",
+    }),
   },
   $I.annote("LibpffError", {
     description: "Redacted technical failure raised inside the libpff driver boundary.",
@@ -87,12 +123,12 @@ export class LibpffError extends TaggedErrorClass<LibpffError>($I`LibpffError`)(
    */
   static readonly fromReason = (
     reason: LibpffErrorReason,
-    options: { readonly cause?: string; readonly exitCode?: NonNegativeInt } = {}
+    options: LibpffErrorOptions = LibpffErrorOptions.make({})
   ): LibpffError =>
     LibpffError.make({
+      cause: O.fromUndefinedOr(options.cause),
+      exitCode: O.fromUndefinedOr(options.exitCode),
       reason,
-      ...R.getSomes({ cause: O.fromUndefinedOr(options.cause) }),
-      ...R.getSomes({ exitCode: O.fromUndefinedOr(options.exitCode) }),
     });
 }
 
@@ -110,7 +146,4 @@ export class LibpffError extends TaggedErrorClass<LibpffError>($I`LibpffError`)(
  * @category constructors
  * @since 0.0.0
  */
-export const makeLibpffError = (
-  reason: LibpffErrorReason,
-  options: { readonly cause?: string; readonly exitCode?: NonNegativeInt } = {}
-): LibpffError => LibpffError.fromReason(reason, options);
+export const makeLibpffError = LibpffError.fromReason;

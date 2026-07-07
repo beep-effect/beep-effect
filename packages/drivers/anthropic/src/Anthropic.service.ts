@@ -11,8 +11,6 @@ import { AiError } from "effect/unstable/ai";
 import { FetchHttpClient } from "effect/unstable/http";
 import {
   ANTHROPIC_API_KEY_ENV,
-  ANTHROPIC_DEFAULT_MAX_TOKENS,
-  ANTHROPIC_DEFAULT_MODEL,
   ANTHROPIC_DEFAULT_RETRY_ATTEMPTS,
   ANTHROPIC_DEFAULT_RETRY_BASE_DELAY_MILLIS,
   AnthropicLanguageModelOptions,
@@ -46,26 +44,23 @@ export const AnthropicLive: Layer.Layer<AnthropicClient.AnthropicClient, Config.
     apiKey: Config.redacted(ANTHROPIC_API_KEY_ENV),
   }).pipe(Layer.provide(FetchHttpClient.layer));
 
-const normalizeOptions = (options: AnthropicLanguageModelOptions): Required<AnthropicLanguageModelOptions> => ({
-  maxTokens: options.maxTokens ?? ANTHROPIC_DEFAULT_MAX_TOKENS,
-  model: options.model ?? ANTHROPIC_DEFAULT_MODEL,
-});
-
 /**
  * Build an Anthropic language-model layer from caller options plus package defaults.
  *
  * @remarks
- * The helper normalizes missing `model` and `maxTokens` values before building
- * the Effect AI Anthropic language-model layer.
+ * `AnthropicLanguageModelOptions` owns the default `model` and `maxTokens`
+ * values, so this helper only maps the schema-backed options to the provider
+ * config names.
  *
  * @example
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { AnthropicLanguageModelOptions, makeAnthropicLanguageModelLayer } from "@beep/anthropic"
+ * import { PosInt } from "@beep/schema"
  *
  * const layer = makeAnthropicLanguageModelLayer(
  *   AnthropicLanguageModelOptions.make({
- *     maxTokens: 1024,
+ *     maxTokens: PosInt.make(1024),
  *     model: "claude-opus-4-6",
  *   })
  * )
@@ -78,14 +73,11 @@ const normalizeOptions = (options: AnthropicLanguageModelOptions): Required<Anth
  */
 export const makeAnthropicLanguageModelLayer = (
   options: AnthropicLanguageModelOptions = AnthropicLanguageModelOptions.make({})
-) => {
-  const normalized = normalizeOptions(options);
-
-  return AnthropicLanguageModel.layer({
-    config: { max_tokens: normalized.maxTokens },
-    model: normalized.model,
+) =>
+  AnthropicLanguageModel.layer({
+    config: { max_tokens: options.maxTokens },
+    model: options.model,
   }).pipe(Layer.provide(AnthropicLive));
-};
 
 /**
  * Live language-model layer for the pinned Anthropic model.

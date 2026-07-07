@@ -6,7 +6,7 @@
  */
 
 import { $FirecrawlId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -98,20 +98,7 @@ type FirecrawlSdkAgentWaitRequest = FirecrawlSdkAgentRequest & {
   readonly timeout?: number;
 };
 
-/**
- * Output formats accepted by Firecrawl scrape endpoints.
- *
- * @example
- * ```ts
- * import { FirecrawlFormatType } from "@beep/firecrawl"
- *
- * console.log(FirecrawlFormatType.is.markdown("markdown"))
- * ```
- *
- * @category schemas
- * @since 0.0.0
- */
-export const FirecrawlFormatType = LiteralKit([
+const FirecrawlFormatTypeBase = LiteralKit([
   "markdown",
   "html",
   "rawHtml",
@@ -126,10 +113,26 @@ export const FirecrawlFormatType = LiteralKit([
   "audio",
   "video",
   "pii",
-]).pipe(
+]);
+
+/**
+ * Output formats accepted by Firecrawl scrape endpoints.
+ *
+ * @example
+ * ```ts
+ * import { FirecrawlFormatType } from "@beep/firecrawl"
+ *
+ * console.log(FirecrawlFormatType.is.markdown("markdown"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const FirecrawlFormatType = FirecrawlFormatTypeBase.pipe(
   $I.annoteSchema("FirecrawlFormatType", {
     description: "Output formats accepted by Firecrawl scrape endpoints.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(FirecrawlFormatTypeBase)
 );
 
 /**
@@ -148,6 +151,18 @@ export const FirecrawlFormatType = LiteralKit([
  */
 export type FirecrawlFormatType = typeof FirecrawlFormatType.Type;
 
+const FirecrawlScrapeActionTypeBase = LiteralKit([
+  "wait",
+  "screenshot",
+  "click",
+  "write",
+  "press",
+  "scroll",
+  "scrape",
+  "executeJavascript",
+  "pdf",
+]);
+
 /**
  * Firecrawl scrape-browser action types.
  *
@@ -161,20 +176,11 @@ export type FirecrawlFormatType = typeof FirecrawlFormatType.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlScrapeActionType = LiteralKit([
-  "wait",
-  "screenshot",
-  "click",
-  "write",
-  "press",
-  "scroll",
-  "scrape",
-  "executeJavascript",
-  "pdf",
-]).pipe(
+export const FirecrawlScrapeActionType = FirecrawlScrapeActionTypeBase.pipe(
   $I.annoteSchema("FirecrawlScrapeActionType", {
     description: "Firecrawl scrape-browser action types.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(FirecrawlScrapeActionTypeBase)
 );
 
 /**
@@ -193,6 +199,8 @@ export const FirecrawlScrapeActionType = LiteralKit([
  */
 export type FirecrawlScrapeActionType = typeof FirecrawlScrapeActionType.Type;
 
+const FirecrawlSearchSourceTypeBase = LiteralKit(["web", "news", "images"]);
+
 /**
  * Firecrawl search source types.
  *
@@ -206,10 +214,11 @@ export type FirecrawlScrapeActionType = typeof FirecrawlScrapeActionType.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlSearchSourceType = LiteralKit(["web", "news", "images"]).pipe(
+export const FirecrawlSearchSourceType = FirecrawlSearchSourceTypeBase.pipe(
   $I.annoteSchema("FirecrawlSearchSourceType", {
     description: "Firecrawl search source types.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(FirecrawlSearchSourceTypeBase)
 );
 
 /**
@@ -228,6 +237,8 @@ export const FirecrawlSearchSourceType = LiteralKit(["web", "news", "images"]).p
  */
 export type FirecrawlSearchSourceType = typeof FirecrawlSearchSourceType.Type;
 
+const FirecrawlJobStatusBase = LiteralKit(["scraping", "completed", "failed", "cancelled"]);
+
 /**
  * Firecrawl crawl and batch status values.
  *
@@ -241,10 +252,11 @@ export type FirecrawlSearchSourceType = typeof FirecrawlSearchSourceType.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlJobStatus = LiteralKit(["scraping", "completed", "failed", "cancelled"]).pipe(
+export const FirecrawlJobStatus = FirecrawlJobStatusBase.pipe(
   $I.annoteSchema("FirecrawlJobStatus", {
     description: "Firecrawl crawl and batch status values.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(FirecrawlJobStatusBase)
 );
 
 /**
@@ -263,6 +275,8 @@ export const FirecrawlJobStatus = LiteralKit(["scraping", "completed", "failed",
  */
 export type FirecrawlJobStatus = typeof FirecrawlJobStatus.Type;
 
+const FirecrawlAgentStatusBase = LiteralKit(["processing", "completed", "failed"]);
+
 /**
  * Firecrawl agent status values.
  *
@@ -276,10 +290,11 @@ export type FirecrawlJobStatus = typeof FirecrawlJobStatus.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlAgentStatus = LiteralKit(["processing", "completed", "failed"]).pipe(
+export const FirecrawlAgentStatus = FirecrawlAgentStatusBase.pipe(
   $I.annoteSchema("FirecrawlAgentStatus", {
     description: "Firecrawl agent status values.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(FirecrawlAgentStatusBase)
 );
 
 /**
@@ -298,6 +313,8 @@ export const FirecrawlAgentStatus = LiteralKit(["processing", "completed", "fail
  */
 export type FirecrawlAgentStatus = typeof FirecrawlAgentStatus.Type;
 
+const FirecrawlBrowserLanguageBase = LiteralKit(["python", "node", "bash"]);
+
 /**
  * Firecrawl browser execution languages.
  *
@@ -311,10 +328,11 @@ export type FirecrawlAgentStatus = typeof FirecrawlAgentStatus.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlBrowserLanguage = LiteralKit(["python", "node", "bash"]).pipe(
+export const FirecrawlBrowserLanguage = FirecrawlBrowserLanguageBase.pipe(
   $I.annoteSchema("FirecrawlBrowserLanguage", {
     description: "Firecrawl browser execution languages.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(FirecrawlBrowserLanguageBase)
 );
 
 /**
@@ -333,6 +351,8 @@ export const FirecrawlBrowserLanguage = LiteralKit(["python", "node", "bash"]).p
  */
 export type FirecrawlBrowserLanguage = typeof FirecrawlBrowserLanguage.Type;
 
+const FirecrawlWatcherKindBase = LiteralKit(["crawl", "batch"]);
+
 /**
  * Firecrawl watcher job kinds.
  *
@@ -346,10 +366,11 @@ export type FirecrawlBrowserLanguage = typeof FirecrawlBrowserLanguage.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlWatcherKind = LiteralKit(["crawl", "batch"]).pipe(
+export const FirecrawlWatcherKind = FirecrawlWatcherKindBase.pipe(
   $I.annoteSchema("FirecrawlWatcherKind", {
     description: "Firecrawl watcher job kinds.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(FirecrawlWatcherKindBase)
 );
 
 /**
@@ -368,6 +389,8 @@ export const FirecrawlWatcherKind = LiteralKit(["crawl", "batch"]).pipe(
  */
 export type FirecrawlWatcherKind = typeof FirecrawlWatcherKind.Type;
 
+const FirecrawlWatcherEventTypeBase = LiteralKit(["document", "snapshot", "done", "error"]);
+
 /**
  * Firecrawl watcher event types.
  *
@@ -381,10 +404,11 @@ export type FirecrawlWatcherKind = typeof FirecrawlWatcherKind.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const FirecrawlWatcherEventType = LiteralKit(["document", "snapshot", "done", "error"]).pipe(
+export const FirecrawlWatcherEventType = FirecrawlWatcherEventTypeBase.pipe(
   $I.annoteSchema("FirecrawlWatcherEventType", {
     description: "Firecrawl watcher event types emitted by the SDK watcher.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(FirecrawlWatcherEventTypeBase)
 );
 
 /**
@@ -4638,7 +4662,8 @@ export const FirecrawlWatcherEvent = S.Union([
   S.toTaggedUnion("type"),
   $I.annoteSchema("FirecrawlWatcherEvent", {
     description: "Tagged Firecrawl watcher event union decoded from SDK watcher events.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

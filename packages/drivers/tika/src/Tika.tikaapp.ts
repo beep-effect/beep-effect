@@ -8,9 +8,9 @@
 import { ExtractionResult } from "@beep/file-processing/Extraction";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { $TikaId } from "@beep/identity";
-import { A, Str } from "@beep/utils";
+import { PosInt, SchemaUtils } from "@beep/schema";
+import { A, O } from "@beep/utils";
 import { Effect, Match, Stream } from "effect";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -29,6 +29,43 @@ const defaultForceKillAfterMillis = 10_000;
 const tikaContentKey = "X-TIKA:content";
 
 /**
+ * Trim-normalized text emitted from tika-app JSON content.
+ *
+ * @example
+ * ```ts
+ * import { TikaContentText } from "@beep/tika"
+ *
+ * const text = TikaContentText.fromUnknown("  hello corpus\n")
+ * console.log(text) // "hello corpus"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const TikaContentText = S.Trim.pipe(
+  $I.annoteSchema("TikaContentText", {
+    description: "Trim-normalized text emitted from the Apache Tika JSON content field.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Type for {@link TikaContentText}.
+ *
+ * @example
+ * ```ts
+ * import type { TikaContentText } from "@beep/tika"
+ *
+ * const text: TikaContentText = "hello corpus"
+ * console.log(text)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export type TikaContentText = typeof TikaContentText.Type;
+
+/**
  * Configuration for the tika-app subprocess engine.
  *
  * @example
@@ -44,9 +81,15 @@ const tikaContentKey = "X-TIKA:content";
  */
 export class TikaAppEngineConfig extends S.Class<TikaAppEngineConfig>($I`TikaAppEngineConfig`)(
   {
-    jarPath: S.String,
-    javaPath: S.optionalKey(S.String),
-    timeoutMillis: S.optionalKey(S.Finite),
+    jarPath: S.NonEmptyString.annotateKey({
+      description: "Path to the tika-app JAR file.",
+    }),
+    javaPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults(defaultJavaPath)).annotateKey({
+      description: "Java executable command or path used to run tika-app.",
+    }),
+    timeoutMillis: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(defaultTimeoutMillis))).annotateKey({
+      description: "Per-file tika-app extraction timeout in milliseconds.",
+    }),
   },
   $I.annote("TikaAppEngineConfig", {
     description: "Configuration for the real tika-app subprocess engine: jar path, java binary, and per-file timeout.",
@@ -80,7 +123,7 @@ const operationFailure = (operation: ExtractFileOperation, error: TikaError): Fi
         format: operation.format,
         message: "Tika extraction failed inside the driver boundary.",
         operationId: operation.operationId,
-        ...R.getSomes({ details: O.map(O.fromUndefinedOr(error.cause), (cause) => ({ cause })) }),
+        ...O.getSomesStruct({ details: O.map(error.cause, (cause) => ({ cause })) }),
       })
     )
   );
@@ -146,11 +189,9 @@ export const makeTikaAppFileProcessingEngine = Effect.fn("Tika.makeTikaAppFilePr
   config: TikaAppEngineConfig
 ): Effect.fn.Return<FileProcessingEngineShape, never, ChildProcessSpawner.ChildProcessSpawner> {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  const javaPath = config.javaPath ?? defaultJavaPath;
-  const timeoutMillis = config.timeoutMillis ?? defaultTimeoutMillis;
 
   const runTika = Effect.fn("Tika.tikaapp.run")(function* (sourcePath: string): Effect.fn.Return<string, TikaError> {
-    const command = ChildProcess.make(javaPath, ["-jar", config.jarPath, "-J", "-t", sourcePath], {
+    const command = ChildProcess.make(config.javaPath, ["-jar", config.jarPath, "-J", "-t", sourcePath], {
       forceKillAfter: `${defaultForceKillAfterMillis} millis`,
       stdin: "ignore",
       stderr: "pipe",
@@ -183,15 +224,13 @@ export const makeTikaAppFileProcessingEngine = Effect.fn("Tika.makeTikaAppFilePr
   ): Effect.fn.Return<ExtractionResult, TikaError> {
     const stdout = yield* runTika(operation.source.locator.value).pipe(
       Effect.timeoutOrElse({
-        duration: `${timeoutMillis} millis`,
+        duration: `${config.timeoutMillis} millis`,
         orElse: () => Effect.fail(makeTikaError("timeout")),
       })
     );
     const record = yield* parseTikaJson(stdout);
     const metadata = R.getSomes(R.map(R.remove(record, tikaContentKey), (value) => metadataValueToString(value)));
-    const text = O.fromUndefinedOr(record[tikaContentKey]).pipe(
-      O.flatMap((value) => (P.isString(value) ? O.some(Str.trim(value)) : O.none()))
-    );
+    const text = O.fromUndefinedOr(record[tikaContentKey]).pipe(O.flatMap(TikaContentText.decodeOption));
 
     return ExtractionResult.make({
       engine: TikaFileProcessingEngineDescriptor.name,

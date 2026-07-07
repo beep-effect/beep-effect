@@ -1,8 +1,11 @@
-import { Ecfr, EcfrConfigInput } from "@beep/ecfr";
+import { ECFR_API_URL, Ecfr, EcfrConfigInput, EcfrError, EcfrErrorOptions, EcfrErrorReason } from "@beep/ecfr";
 import { $EcfrId } from "@beep/identity";
-import { describe, expect, layer } from "@effect/vitest";
-import { Context, Effect, Layer, pipe, Ref } from "effect";
-import * as O from "effect/Option";
+import { NonNegativeInt } from "@beep/schema";
+import { O } from "@beep/utils";
+import { describe, expect, it, layer } from "@effect/vitest";
+import { Context, Effect, Layer, pipe, Ref, Result } from "effect";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
@@ -21,6 +24,30 @@ type EcfrTestHttpShape = {
 };
 
 class EcfrTestHttp extends Context.Service<EcfrTestHttp, EcfrTestHttpShape>()($TestI`EcfrTestHttp`) {}
+
+const EcfrConfigInputArbitrary = S.toArbitrary(EcfrConfigInput);
+const EcfrErrorReasonArbitrary = S.toArbitrary(EcfrErrorReason);
+const EcfrErrorOptionsArbitrary = S.toArbitrary(EcfrErrorOptions).map((options) =>
+  EcfrErrorOptions.make({ status: options.status })
+);
+const EcfrErrorArbitrary = S.toArbitrary(EcfrError).map((error) =>
+  EcfrError.of(error.reason, EcfrErrorOptions.make({ status: error.status }))
+);
+
+const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
+  Result.getOrThrow(S.encodeResult(schema)(value));
+
+const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Encoded"]): Codec["Type"] =>
+  Result.getOrThrow(S.decodeUnknownResult(schema)(value));
+
+const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): void => {
+  const encoded = encode(schema, value);
+  const decoded = decode(schema, encoded);
+  const reencoded = encode(schema, decoded);
+
+  expect(reencoded).toEqual(encoded);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
+};
 
 const titlesBody = {
   titles: [
@@ -75,6 +102,44 @@ const makeEcfrUnitLayer = (config = EcfrConfigInput.make({})) =>
   );
 
 describe("@beep/ecfr", () => {
+  it("keeps hand-authored schema encoded shapes stable", () => {
+    expect(encode(EcfrConfigInput, EcfrConfigInput.make({ apiUrl: ECFR_API_URL }))).toEqual({
+      apiUrl: ECFR_API_URL,
+    });
+    expect(encode(EcfrErrorOptions, EcfrErrorOptions.make({}))).toEqual({});
+    expect(encode(EcfrErrorOptions, EcfrErrorOptions.make({ status: O.some(NonNegativeInt.make(503)) }))).toEqual({
+      status: 503,
+    });
+    expect(
+      encode(
+        EcfrError,
+        EcfrError.of("response status", EcfrErrorOptions.make({ status: O.some(NonNegativeInt.make(503)) }))
+      )
+    ).toEqual({
+      _tag: "EcfrError",
+      reason: "response status",
+      status: 503,
+    });
+    expect(EcfrConfigInput.make({}).apiUrl).toBe(ECFR_API_URL);
+  });
+
+  it("round-trips hand-authored schema-derived values through encoded form", () =>
+    fc.assert(
+      fc.property(
+        EcfrConfigInputArbitrary,
+        EcfrErrorReasonArbitrary,
+        EcfrErrorOptionsArbitrary,
+        EcfrErrorArbitrary,
+        (config, reason, options, error) => {
+          expectRoundTrip(EcfrConfigInput, config);
+          expectRoundTrip(EcfrErrorReason, reason);
+          expectRoundTrip(EcfrErrorOptions, options);
+          expectRoundTrip(EcfrError, error);
+        }
+      ),
+      { numRuns: 50 }
+    ));
+
   layer(makeEcfrUnitLayer())((it) =>
     it.effect(
       "decodes a keyless listTitles response offline via mapRequest base-URL prefixing",

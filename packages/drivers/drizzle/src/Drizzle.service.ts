@@ -6,6 +6,7 @@
  */
 
 import { $DrizzleId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { Context, Layer } from "effect";
 import * as S from "effect/Schema";
 import type { Effect } from "effect";
@@ -24,9 +25,8 @@ const $I = $DrizzleId.create("Drizzle.service");
  * ```ts
  * import { deepStrictEqual } from "node:assert"
  * import { DrizzleRows } from "@beep/drizzle"
- * import * as S from "effect/Schema"
  *
- * const rows = S.decodeUnknownSync(DrizzleRows)([{ id: 1 }])
+ * const rows = DrizzleRows.fromUnknown([{ id: 1 }])
  * deepStrictEqual(rows, [{ id: 1 }])
  * ```
  *
@@ -36,7 +36,8 @@ const $I = $DrizzleId.create("Drizzle.service");
 export const DrizzleRows = S.Array(S.Unknown).pipe(
   $I.annoteSchema("DrizzleRows", {
     description: "Rows returned by a product-neutral Drizzle adapter.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

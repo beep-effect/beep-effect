@@ -8,18 +8,11 @@
     "proposedTarget": "Make the descriptor registry the single source: key descriptors by operationId, derive VeniceAIOperationId from the registry keys with the Struct.keysNonEmpty -> LiteralKit pattern used by CurrencyCode at packages/foundation/modeling/schema/src/CurrencyCode.ts:43, and build the non-streaming service record by mapping descriptors to executeOperation before adding streamChatCompletion / streamResponse aliases. Keep the public VeniceAIShape keys stable and prove the descriptor order if tests rely on it.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 1.65
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts",
-    "line": 86,
-    "symbol": "mapVeniceError",
-    "smell": "mapVeniceError branches manually over the VeniceAIErrorReason LiteralKit with raw checks for response/sse decoding, request/multipart/config, and transport at lines 98-104, leaving response status as an implicit fallthrough when status is absent.",
-    "proposedTarget": "After the status-precedence branch, dispatch `error.reason` through VeniceAIErrorReason.$match with explicit handlers for config, multipart encoding, request encoding, response decoding, response status, sse decoding, and transport. LiteralKit.$match is verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:600-607.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 2.16
+    "roiRank": 1.65,
+    "exception": {
+      "reason": "The explicit descriptor list and service-object assembly are the public Venice OpenAPI compatibility surface. Deriving the operation literal family and service shape from a keyed registry would change registry construction and ordering risk outside this single-package remediation.",
+      "boundary": "Venice AI operation registry and Context.Service operation surface"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -30,29 +23,11 @@
     "proposedTarget": "Split the stream event into an explicit tagged union, e.g. S.TaggedUnion({ Done: { done: S.tag(true), index: S.Finite }, Data: { data: S.Unknown, done: S.tag(false), index: S.Finite } }), then consume with the derived match/guards. S.TaggedUnion is verified at .repos/effect-v4/packages/effect/src/Schema.ts:6204; the similar false-state shape was recorded for XAiServerSentEvent in goals/repo-crispening-orchestration/ops/inventory/S3/beep__xai.json.",
     "confidence": 0.58,
     "mechanization": "judgment",
-    "roiRank": 1.16
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-    "line": 1727,
-    "symbol": "extractChatText",
-    "smell": "extractChatText manually rejects non-JSON VeniceAIResponse variants with `response._tag !== \"Json\"` at line 1727 even though VeniceAIResponse is an S.toTaggedUnion(\"_tag\") schema at lines 468-469.",
-    "proposedTarget": "Use VeniceAIResponse.match(response, { Json: ..., Text: ..., Binary: ... }) or VeniceAIResponse.guards.Json(response) with explicit Text/Binary failure handling. Effect v4 S.toTaggedUnion match/guards are verified at .repos/effect-v4/packages/effect/src/Schema.ts:6037-6056 and :6094-6104.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 2.4
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts",
-    "line": 118,
-    "symbol": "createChatCompletion",
-    "smell": "createChatCompletion manually checks `response._tag === \"Json\"` at line 118 before decoding the OpenAI-compatible response, duplicating the VeniceAIResponse tagged-union discriminator.",
-    "proposedTarget": "Dispatch through VeniceAIResponse.match or VeniceAIResponse.guards.Json, making Text and Binary explicit InvalidOutput branches. VeniceAIResponse is exported as a value from VeniceAI.service.ts:468 and its S.toTaggedUnion utilities are verified in Effect v4 Schema.ts:6037-6056.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 2.34
+    "roiRank": 1.16,
+    "exception": {
+      "reason": "A full Done/Data tagged union would change the exported `VeniceAIServerSentEvent` class constructor and public stream event type. This lane made absence explicit with Option and updated package consumers, but the public-form split is deferred.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-getsomes-struct",

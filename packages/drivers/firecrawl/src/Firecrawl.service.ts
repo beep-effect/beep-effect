@@ -12,17 +12,19 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { FirecrawlClient } from "firecrawl";
 import { FIRECRAWL_API_URL, FirecrawlConfigInput } from "./Firecrawl.config.ts";
-import { FirecrawlError } from "./Firecrawl.errors.ts";
+import { FirecrawlCodecErrorReason, FirecrawlError } from "./Firecrawl.errors.ts";
 import * as M from "./Firecrawl.models.ts";
 import type { FirecrawlClientOptions } from "firecrawl";
-import type { FirecrawlMethodName } from "./Firecrawl.errors.ts";
+import type {
+  FirecrawlCodecErrorReason as FirecrawlCodecErrorReasonType,
+  FirecrawlMethodName,
+} from "./Firecrawl.errors.ts";
 
 const $I = $FirecrawlId.create("Firecrawl.service");
 
-type FirecrawlSdkWatcherEventName = "document" | "done" | "error" | "snapshot";
+type FirecrawlSdkWatcherEventName = M.FirecrawlWatcherEventType;
 type FirecrawlSdkWatcherListener = (payload: unknown) => void;
 
 /**
@@ -269,15 +271,13 @@ type ResolvedFirecrawlConfig = {
   readonly timeoutMs: O.Option<number>;
 };
 
-const normalizeBaseUrl = Str.replace(/\/+$/, "");
-
 const optionOrUndefined = <A>(option: O.Option<A>): A | undefined => O.getOrUndefined(option);
 
 const decodeWith = <A>(
   method: FirecrawlMethodName,
   schema: S.ConstraintDecoder<A>,
   value: unknown,
-  reason: "request encoding" | "response decoding"
+  reason: FirecrawlCodecErrorReasonType
 ): Effect.Effect<A, FirecrawlError> =>
   S.decodeUnknownEffect(schema)(value).pipe(
     Effect.mapError((cause) =>
@@ -312,14 +312,16 @@ const runSdkCall = <Payload, Success>(
   payload: Payload,
   invoke: (payload: Payload) => Promise<unknown>
 ): Effect.Effect<Success, FirecrawlError> =>
-  decodeWith(method, payloadSchema, payload, "request encoding").pipe(
+  decodeWith(method, payloadSchema, payload, FirecrawlCodecErrorReason.Enum["request encoding"]).pipe(
     Effect.flatMap((decoded) =>
       Effect.tryPromise({
         catch: (cause) => FirecrawlError.fromUnknown(method, cause),
         try: () => invoke(decoded),
       })
     ),
-    Effect.flatMap((result) => decodeWith(method, successSchema, result, "response decoding")),
+    Effect.flatMap((result) =>
+      decodeWith(method, successSchema, result, FirecrawlCodecErrorReason.Enum["response decoding"])
+    ),
     Effect.tapError(logDriverFailure("firecrawl.driver_failure")),
     Effect.withSpan(`firecrawl.${method}`, {
       attributes: {
@@ -445,8 +447,16 @@ const makeWatcherStream = (
   );
 
 const resolveConfig = Effect.fn("Firecrawl.resolveConfig")(function* (input: FirecrawlConfigInput) {
+  const config = yield* S.encodeEffect(FirecrawlConfigInput)(input).pipe(
+    Effect.flatMap(S.decodeEffect(FirecrawlConfigInput)),
+    Effect.mapError((cause) =>
+      FirecrawlError.fromReason("config", {
+        cause,
+      })
+    )
+  );
   const apiKey = yield* pipe(
-    O.fromUndefinedOr(input.apiKey),
+    O.fromUndefinedOr(config.apiKey),
     O.match({
       onNone: () =>
         Effect.fail(
@@ -460,10 +470,10 @@ const resolveConfig = Effect.fn("Firecrawl.resolveConfig")(function* (input: Fir
 
   return {
     apiKey,
-    apiUrl: normalizeBaseUrl(input.apiUrl),
-    backoffFactor: O.fromUndefinedOr(input.backoffFactor),
-    maxRetries: O.fromUndefinedOr(input.maxRetries),
-    timeoutMs: O.fromUndefinedOr(input.timeoutMs),
+    apiUrl: config.apiUrl,
+    backoffFactor: config.backoffFactor,
+    maxRetries: config.maxRetries,
+    timeoutMs: config.timeoutMs,
   };
 });
 
@@ -813,11 +823,9 @@ export class Firecrawl extends Context.Service<Firecrawl, FirecrawlShape>()($I`F
         FirecrawlConfigInput.make({
           apiKey,
           apiUrl,
-          ...OptionUtils.getSomesStruct({
-            backoffFactor,
-            maxRetries,
-            timeoutMs,
-          }),
+          backoffFactor,
+          maxRetries,
+          timeoutMs,
         })
       );
 

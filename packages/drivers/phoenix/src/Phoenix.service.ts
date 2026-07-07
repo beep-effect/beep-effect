@@ -20,23 +20,25 @@ import { addTraceAnnotation } from "@arizeai/phoenix-client/traces";
 import { $PhoenixId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
 import { P, thunkEmptyStr } from "@beep/utils";
-import { Config, Context, Effect, flow, Layer, Match, pipe, Redacted } from "effect";
+import { Config, Context, Effect, flow, Layer, pipe, Redacted } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { PHOENIX_API_URL, PhoenixConfigInput } from "./Phoenix.config.ts";
 import { PhoenixError } from "./Phoenix.errors.ts";
 import {
+  PhoenixAnnotationTargetKind,
   PhoenixAnnotationWriteResult,
   PhoenixDatasetAppendResult,
   PhoenixDatasetCreateResult,
   PhoenixDatasetExample,
   PhoenixDatasetExamplesResult,
   PhoenixDatasetInfoResult,
+  PhoenixDatasetSelectorKind,
   PhoenixDoctorResult,
   PhoenixExperimentInfoResult,
+  PhoenixPromptModelProvider,
   PhoenixPromptReadResult,
   PhoenixPromptWriteResult,
 } from "./Phoenix.models.ts";
@@ -54,7 +56,6 @@ import type {
   PhoenixDatasetSelector,
   PhoenixExperimentCreateInput,
   PhoenixPromptCreateInput,
-  PhoenixPromptModelProvider,
   PhoenixPromptSelector,
 } from "./Phoenix.models.ts";
 
@@ -124,17 +125,26 @@ export interface PhoenixShape {
   readonly getExperimentInfo: (experimentId: string) => Effect.Effect<PhoenixExperimentInfoResult, PhoenixError>;
   readonly getPrompt: (selector: PhoenixPromptSelector) => Effect.Effect<PhoenixPromptReadResult, PhoenixError>;
 }
-class ResolvedPhoenixConfig extends S.Class<ResolvedPhoenixConfig>($I`ResolvedPhoenixConfig`)({
-  apiKey: S.String.pipe(S.Redacted, S.Option),
-  baseUrl: URLStr,
-  headers: S.Record(S.String, S.String),
-}) {}
-
-const normalizeBaseUrl = flow(Str.replace(/\/+$/, ""), URLStr.make);
+class ResolvedPhoenixConfig extends S.Class<ResolvedPhoenixConfig>($I`ResolvedPhoenixConfig`)(
+  {
+    apiKey: S.String.pipe(S.Redacted, S.Option).annotateKey({
+      description: "Optional Phoenix API key resolved from config or environment.",
+    }),
+    baseUrl: URLStr.annotateKey({
+      description: "Normalized Phoenix API base URL used by the SDK client.",
+    }),
+    headers: S.Record(S.String, S.String).annotateKey({
+      description: "Resolved Phoenix API request headers.",
+    }),
+  },
+  $I.annote("ResolvedPhoenixConfig", {
+    description: "Resolved Phoenix API client configuration.",
+  })
+) {}
 
 const resolveConfig = (config: PhoenixConfigInput): ResolvedPhoenixConfig => ({
-  apiKey: O.fromUndefinedOr(config.apiKey),
-  baseUrl: normalizeBaseUrl(config.baseUrl),
+  apiKey: config.apiKey,
+  baseUrl: URLStr.make(config.baseUrl),
   headers: config.headers,
 });
 
@@ -187,9 +197,10 @@ const datasetSelectorExtras = (
 
 const datasetSelectorToSdk = (selector: PhoenixDatasetSelector): SdkDatasetSelector => {
   const extras = datasetSelectorExtras(selector);
-  return selector.kind === "dataset-id"
-    ? { datasetId: selector.value, ...extras }
-    : { datasetName: selector.value, ...extras };
+  return PhoenixDatasetSelectorKind.$match(selector.kind, {
+    "dataset-id": () => ({ datasetId: selector.value, ...extras }),
+    "dataset-name": () => ({ datasetName: selector.value, ...extras }),
+  });
 };
 
 const datasetSplitsToSdk = (splits: string | readonly string[] | null): string | string[] | null =>
@@ -385,16 +396,15 @@ const promptVersionInputBase = (input: PhoenixPromptCreateInput) => ({
 
 const promptVersionForProvider = (input: PhoenixPromptCreateInput) => {
   const base = promptVersionInputBase(input);
-  return Match.value<PhoenixPromptModelProvider>(input.modelProvider).pipe(
-    Match.when("OPENAI", () => promptVersion({ ...base, modelProvider: "OPENAI" })),
-    Match.when("AZURE_OPENAI", () => promptVersion({ ...base, modelProvider: "AZURE_OPENAI" })),
-    Match.when("GOOGLE", () => promptVersion({ ...base, modelProvider: "GOOGLE" })),
-    Match.when("DEEPSEEK", () => promptVersion({ ...base, modelProvider: "DEEPSEEK" })),
-    Match.when("XAI", () => promptVersion({ ...base, modelProvider: "XAI" })),
-    Match.when("OLLAMA", () => promptVersion({ ...base, modelProvider: "OLLAMA" })),
-    Match.when("AWS", () => promptVersion({ ...base, modelProvider: "AWS" })),
-    Match.exhaustive
-  );
+  return PhoenixPromptModelProvider.$match(input.modelProvider, {
+    AWS: () => promptVersion({ ...base, modelProvider: "AWS" }),
+    AZURE_OPENAI: () => promptVersion({ ...base, modelProvider: "AZURE_OPENAI" }),
+    DEEPSEEK: () => promptVersion({ ...base, modelProvider: "DEEPSEEK" }),
+    GOOGLE: () => promptVersion({ ...base, modelProvider: "GOOGLE" }),
+    OLLAMA: () => promptVersion({ ...base, modelProvider: "OLLAMA" }),
+    OPENAI: () => promptVersion({ ...base, modelProvider: "OPENAI" }),
+    XAI: () => promptVersion({ ...base, modelProvider: "XAI" }),
+  });
 };
 
 const makePhoenixSdk = (config: ResolvedPhoenixConfig): PhoenixSdkShape => {
@@ -402,39 +412,33 @@ const makePhoenixSdk = (config: ResolvedPhoenixConfig): PhoenixSdkShape => {
 
   return {
     addAnnotation: (input) =>
-      Match.value(input.targetKind)
-        .pipe(
-          Match.when("span", () =>
-            addSpanAnnotation({
-              client,
-              spanAnnotation: { ...annotationBase(input), spanId: input.targetId },
-              sync: input.sync,
-            })
-          ),
-          Match.when("session", () =>
-            addSessionAnnotation({
-              client,
-              sessionAnnotation: { ...annotationBase(input), sessionId: input.targetId },
-              sync: input.sync,
-            })
-          ),
-          Match.when("trace", () =>
-            addTraceAnnotation({
-              client,
-              sync: input.sync,
-              traceAnnotation: { ...annotationBase(input), traceId: input.targetId },
-            })
-          ),
-          Match.exhaustive
-        )
-        .then((result) =>
-          PhoenixAnnotationWriteResult.make({
-            annotationId: result?.id ?? null,
-            name: input.name,
-            targetId: input.targetId,
-            targetKind: input.targetKind,
-          })
-        ),
+      PhoenixAnnotationTargetKind.$match(input.targetKind, {
+        session: () =>
+          addSessionAnnotation({
+            client,
+            sessionAnnotation: { ...annotationBase(input), sessionId: input.targetId },
+            sync: input.sync,
+          }),
+        span: () =>
+          addSpanAnnotation({
+            client,
+            spanAnnotation: { ...annotationBase(input), spanId: input.targetId },
+            sync: input.sync,
+          }),
+        trace: () =>
+          addTraceAnnotation({
+            client,
+            sync: input.sync,
+            traceAnnotation: { ...annotationBase(input), traceId: input.targetId },
+          }),
+      }).then((result) =>
+        PhoenixAnnotationWriteResult.make({
+          annotationId: result?.id ?? null,
+          name: input.name,
+          targetId: input.targetId,
+          targetKind: input.targetKind,
+        })
+      ),
     appendDatasetExamples: (input) =>
       appendDatasetExamples({
         client,
@@ -627,16 +631,14 @@ const makeService = (sdk: PhoenixSdkShape): PhoenixShape => ({
 const makePhoenixFromEnvironment = Effect.fn("Phoenix.makePhoenixFromEnvironment")(function* () {
   const apiKey = yield* Config.redacted("PHOENIX_API_KEY").pipe(Config.option);
   const baseUrl = yield* Config.string("PHOENIX_HOST").pipe(Config.withDefault(PHOENIX_API_URL));
-
-  return Phoenix.of(
-    makeService(
-      makePhoenixSdk({
-        apiKey,
-        baseUrl: normalizeBaseUrl(baseUrl),
-        headers: {},
-      })
-    )
+  const config = resolveConfig(
+    PhoenixConfigInput.make({
+      apiKey,
+      baseUrl,
+    })
   );
+
+  return Phoenix.of(makeService(makePhoenixSdk(config)));
 });
 
 /**

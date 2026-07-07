@@ -1,11 +1,14 @@
-import { Drizzle, DrizzleError, DrizzleErrorContext, DrizzleRows } from "@beep/drizzle";
+import { Drizzle, DrizzleError, DrizzleErrorContext, DrizzleOperation, DrizzleRows } from "@beep/drizzle";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as assert from "@effect/vitest/utils";
 import { Effect, Layer, pipe } from "effect";
 import * as Cause from "effect/Cause";
+import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import type { DrizzleClient } from "@beep/drizzle";
 
 const provideScopedLayer =
@@ -22,13 +25,14 @@ const makeClient = (execute: DrizzleClient["execute"]): DrizzleClient => {
   return client;
 };
 
+const DrizzleErrorContextArbitrary = S.toArbitrary(DrizzleErrorContext);
+const DrizzleErrorArbitrary = S.toArbitrary(DrizzleError);
+const DrizzleRowsArbitrary = S.toArbitrary(DrizzleRows);
+
 describe("DrizzleError", () => {
   it("constructs the single public tagged driver error", () => {
     const error = DrizzleError.make({
-      operation: "execute",
-      cause: O.none(),
-      query: O.none(),
-      params: O.none(),
+      operation: DrizzleOperation.Enum.execute,
     });
 
     expect(error).toBeInstanceOf(DrizzleError);
@@ -53,8 +57,8 @@ describe("DrizzleError", () => {
       "execute",
       new Error("driver failed"),
       DrizzleErrorContext.make({
-        query: "select * from users where id = $1",
-        params: [1],
+        query: O.some("select * from users where id = $1"),
+        params: O.some([1]),
       })
     );
 
@@ -68,12 +72,16 @@ describe("DrizzleError", () => {
       operation: "execute",
       cause: O.some(cause),
       query: O.some("select * from accounts where slug = $1"),
-      params: O.some(["alpha"]),
+      params: O.some(["<redacted>"]),
     });
-    const error = DrizzleError.fromUnknown("withTransaction", existing, {
-      query: "select ignored",
-      params: ["ignored"],
-    });
+    const error = DrizzleError.fromUnknown(
+      "withTransaction",
+      existing,
+      DrizzleErrorContext.make({
+        query: O.some("select ignored"),
+        params: O.some(["ignored"]),
+      })
+    );
 
     expect(error).not.toBe(existing);
     expect(error.operation).toBe("execute");
@@ -237,12 +245,16 @@ describe("DrizzleError", () => {
       operation: "execute",
       cause: O.some(cause),
       query: O.some("select * from accounts where slug = $1"),
-      params: O.some(["alpha"]),
+      params: O.some(["<redacted>"]),
     });
-    const error = DrizzleError.fromUnknown("withTransaction", Cause.fail(existing), {
-      query: "select ignored",
-      params: ["ignored"],
-    });
+    const error = DrizzleError.fromUnknown(
+      "withTransaction",
+      Cause.fail(existing),
+      DrizzleErrorContext.make({
+        query: O.some("select ignored"),
+        params: O.some(["ignored"]),
+      })
+    );
 
     expect(error).not.toBe(existing);
     expect(error.operation).toBe("execute");
@@ -272,10 +284,89 @@ describe("DrizzleError", () => {
     expect(O.isNone(error.params)).toBe(true);
   });
 
+  it("keeps context wire shape while decoding to Option fields", () => {
+    const context = DrizzleErrorContext.make({
+      query: O.some("select * from accounts where id = $1"),
+      params: O.some([123]),
+    });
+    const encoded = Result.getOrThrow(S.encodeResult(DrizzleErrorContext)(context));
+    const decoded = Result.getOrThrow(S.decodeUnknownResult(DrizzleErrorContext)(encoded));
+
+    expect(encoded).toEqual({
+      query: "select * from accounts where id = $1",
+      params: [123],
+    });
+    expect(Eq.equals(decoded, context)).toBe(true);
+    expect(Result.getOrThrow(S.encodeResult(DrizzleErrorContext)(DrizzleErrorContext.make({})))).toEqual({});
+  });
+
+  it("keeps normalized error wire shape while enforcing redacted params", () => {
+    const error = DrizzleError.make({
+      operation: "execute",
+      params: O.some(["<redacted>"]),
+    });
+    const encoded = Result.getOrThrow(error.pipe(S.encodeResult(DrizzleError)));
+    const decoded = Result.getOrThrow(S.decodeUnknownResult(DrizzleError)(encoded));
+
+    expect(encoded).toEqual({
+      _tag: "DrizzleError",
+      operation: "execute",
+      params: ["<redacted>"],
+    });
+    expect(decoded.operation).toBe(error.operation);
+    expect(Eq.equals(decoded.params, error.params)).toBe(true);
+    expect(() =>
+      S.decodeUnknownSync(DrizzleError)({
+        _tag: "DrizzleError",
+        operation: "execute",
+        params: ["raw"],
+      })
+    ).toThrow();
+  });
+
   it("decodes product-neutral row arrays from the schema value", () => {
-    const rows = S.decodeUnknownSync(DrizzleRows)([{ id: 1 }]);
+    const rows = DrizzleRows.fromUnknown([{ id: 1 }]);
 
     expect(rows).toEqual([{ id: 1 }]);
+  });
+
+  it("round-trips exported schemas with schema-derived arbitraries", () => {
+    fc.assert(
+      fc.property(DrizzleErrorContextArbitrary, (context) => {
+        const decoded = Result.getOrThrow(
+          S.encodeResult(DrizzleErrorContext)(context).pipe(Result.flatMap(S.decodeUnknownResult(DrizzleErrorContext)))
+        );
+
+        expect(Eq.equals(decoded, context)).toBe(true);
+      }),
+      { numRuns: 50 }
+    );
+
+    fc.assert(
+      fc.property(DrizzleErrorArbitrary, (error) => {
+        const decoded = Result.getOrThrow(
+          error.pipe(S.encodeResult(DrizzleError), Result.flatMap(S.decodeUnknownResult(DrizzleError)))
+        );
+
+        expect(decoded._tag).toBe(error._tag);
+        expect(decoded.operation).toBe(error.operation);
+        expect(O.isSome(decoded.cause)).toBe(O.isSome(error.cause));
+        expect(Eq.equals(decoded.query, error.query)).toBe(true);
+        expect(Eq.equals(decoded.params, error.params)).toBe(true);
+      }),
+      { numRuns: 50 }
+    );
+
+    fc.assert(
+      fc.property(DrizzleRowsArbitrary, (rows) => {
+        const decoded = Result.getOrThrow(
+          S.encodeResult(DrizzleRows)(rows).pipe(Result.flatMap(S.decodeUnknownResult(DrizzleRows)))
+        );
+
+        expect(Eq.equals(decoded, rows)).toBe(true);
+      }),
+      { numRuns: 50 }
+    );
   });
 });
 

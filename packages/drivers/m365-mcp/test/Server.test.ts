@@ -18,8 +18,15 @@ import {
   M365MessageCollection,
   M365SiteCollection,
 } from "@beep/m365";
-import { M365McpServerConfig, M365Toolkit, M365ToolkitHandlersLive, makeServerLayer } from "@beep/m365-mcp";
+import {
+  M365McpServerConfig,
+  M365ToolError,
+  M365Toolkit,
+  M365ToolkitHandlersLive,
+  makeServerLayer,
+} from "@beep/m365-mcp";
 import { assert, describe, it, layer } from "@effect/vitest";
+import { Result } from "effect";
 import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -31,10 +38,12 @@ import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { FastCheck as fc } from "effect/testing";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -52,6 +61,11 @@ const version = GraphDriveItemVersion.make({ id: "version-id", size: O.some(12) 
 const message = GraphMessage.make({ id: MessageId, subject: O.some("Review") });
 const event = GraphEvent.make({ id: EventId, subject: O.some("Planning") });
 const listItem = GraphListItem.make({ id: "list-item-id", fields: O.none() });
+
+const M365ToolErrorArbitrary = S.toArbitrary(M365ToolError);
+const M365McpServerConfigArbitrary = S.toArbitrary(M365McpServerConfig);
+const sameM365ToolError = S.toEquivalence(M365ToolError);
+const sameM365McpServerConfig = S.toEquivalence(M365McpServerConfig);
 
 const createMockM365 = () =>
   M365.of({
@@ -151,6 +165,67 @@ const makeStdioTestLayer = (
   });
 
 describe("M365 MCP server", () => {
+  it("keeps encoded schema wire shapes byte-identical", () => {
+    const failure = M365ToolError.make({
+      message: "Microsoft 365 listDrives failed: throttled",
+      operation: "listDrives",
+      reason: O.some("throttled"),
+      retryable: true,
+      toolName: "m365_list_drives",
+    });
+    const failureWithoutReason = M365ToolError.make({
+      message: "Microsoft 365 getSite failed",
+      operation: "getSite",
+      retryable: false,
+      toolName: "m365_get_site",
+    });
+    const config = M365McpServerConfig.make({
+      name: "beep-m365-test",
+      version: "0.0.0",
+    });
+
+    assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(M365ToolError)(failure)), {
+      message: "Microsoft 365 listDrives failed: throttled",
+      operation: "listDrives",
+      reason: "throttled",
+      retryable: true,
+      toolName: "m365_list_drives",
+    });
+    assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(M365ToolError)(failureWithoutReason)), {
+      message: "Microsoft 365 getSite failed",
+      operation: "getSite",
+      retryable: false,
+      toolName: "m365_get_site",
+    });
+    assert.deepStrictEqual(Result.getOrThrow(S.encodeResult(M365McpServerConfig)(config)), {
+      name: "beep-m365-test",
+      version: "0.0.0",
+    });
+  });
+
+  it("round-trips schema-derived MCP schemas through their encoded shape", () =>
+    fc.assert(
+      fc.property(M365ToolErrorArbitrary, M365McpServerConfigArbitrary, (failure, config) => {
+        assert.isTrue(
+          sameM365ToolError(
+            Result.getOrThrow(
+              S.decodeUnknownResult(M365ToolError)(Result.getOrThrow(S.encodeResult(M365ToolError)(failure)))
+            ),
+            failure
+          )
+        );
+        assert.isTrue(
+          sameM365McpServerConfig(
+            Result.getOrThrow(
+              S.decodeUnknownResult(M365McpServerConfig)(Result.getOrThrow(S.encodeResult(M365McpServerConfig)(config)))
+            ),
+            config
+          )
+        );
+      }),
+      { numRuns: 50 }
+    ));
+
   it("exposes the supported read-only Microsoft 365 tools", () => {
     const toolNames = pipe(Object.keys(M365Toolkit.tools), A.sort(Order.String));
 
@@ -173,7 +248,7 @@ describe("M365 MCP server", () => {
     it.effect("returns driver results through toolkit handlers", () =>
       Effect.gen(function* () {
         const toolkit = yield* M365Toolkit;
-        const stream = yield* toolkit.handle("m365_list_drives", {});
+        const stream = yield* toolkit.handle("m365_get_site", { siteId: SiteId });
         const first = yield* Stream.runHead(stream);
 
         assert.isTrue(O.isSome(first));

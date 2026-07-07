@@ -41,7 +41,7 @@ const toM365ToolError =
     M365ToolError.make({
       message: `Microsoft 365 ${operation} failed: ${error.reason}`,
       operation,
-      reason: error.reason,
+      reason: O.some(error.reason),
       retryable: isRetryableM365Error(error),
       toolName,
     });
