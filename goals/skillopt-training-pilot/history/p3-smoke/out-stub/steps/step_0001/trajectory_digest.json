@@ -1,0 +1,24 @@
+{
+  "step": 1,
+  "action": "reject",
+  "n_total": 1,
+  "n_fail": 1,
+  "failure_patterns": [
+    {
+      "pattern": "rule_missing: Skill has no guidance for exposing an 'executable function contract' derived from a schema input model via the repo's Fn(...)/implementSync(...) pattern; agent only produced the schema class and a plain function, missing the Fn contract wrapper entirely.",
+      "count": 1,
+      "task_ids": [
+        "sfv4-fn-schema-001"
+      ]
+    }
+  ],
+  "score_before": 0.6666666666666666,
+  "score_after": 0.3333333333333333,
+  "rejected_edits": [
+    {
+      "op": "insert_after",
+      "content": "\n- When a task asks for a schema-owned input model plus an \"executable function\n  contract\" (not just a plain helper function), model the contract itself as a\n  schema-derived `Fn(...)` value built from the input/output schemas, and wire\n  the real implementation with `.implementSync(...)` (or the async variant) —\n  do not hand-write a bare function as the sole export when the task names a\n  distinct input schema and a distinct function-contract export.",
+      "target": "- Prefer `MappedLiteralKit` when a protocol/code mapping needs both encoded and\n  decoded literal helper surfaces."
+    }
+  ]
+}

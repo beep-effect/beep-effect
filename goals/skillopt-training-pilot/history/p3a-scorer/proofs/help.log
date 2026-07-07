@@ -1,0 +1,19 @@
+$ bun run packages/tooling/tool/cli/src/bin.ts -- agent-effectiveness evals score --help
+DESCRIPTION
+  Score a SkillOpt eval fixture with completion and repo-law checks
+
+USAGE
+  beep-cli agent-effectiveness evals score [flags]
+
+FLAGS
+  --data-root string    AI metrics data root
+  --dir directory       SkillOpt fixture copy directory to score
+  --json                Emit machine-readable JSON output
+  --record              Record the score as an ai-metrics BenchmarkRun row
+  --task file           SkillOpt task manifest JSON path
+
+GLOBAL FLAGS
+  --help, -h                                                          Show help information
+  --version, -v                                                       Show version information
+  --completions <bash|zsh|fish|sh>                                    Print shell completion script (choices: bash, zsh, fish, sh)
+  --log-level <all|trace|debug|info|warn|warning|error|fatal|none>    Sets the minimum log level (choices: all, trace, debug, info, warn, warning, error, fatal, none)

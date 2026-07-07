@@ -1,0 +1,34 @@
+[
+  {
+    "id": "sfv4-fn-schema-001",
+    "task_path": "goals/skillopt-training-pilot/corpus/tasks/sfv4-fn-schema-001.json"
+  },
+  {
+    "id": "sfv4-fn-schema-002",
+    "task_path": "goals/skillopt-training-pilot/corpus/tasks/sfv4-fn-schema-002.json"
+  },
+  {
+    "id": "sfv4-getsomes-struct-001",
+    "task_path": "goals/skillopt-training-pilot/corpus/tasks/sfv4-getsomes-struct-001.json"
+  },
+  {
+    "id": "sfv4-getsomes-struct-002",
+    "task_path": "goals/skillopt-training-pilot/corpus/tasks/sfv4-getsomes-struct-002.json"
+  },
+  {
+    "id": "sfv4-normalization-001",
+    "task_path": "goals/skillopt-training-pilot/corpus/tasks/sfv4-normalization-001.json"
+  },
+  {
+    "id": "sfv4-normalization-002",
+    "task_path": "goals/skillopt-training-pilot/corpus/tasks/sfv4-normalization-002.json"
+  },
+  {
+    "id": "sfv4-null-return-001",
+    "task_path": "goals/skillopt-training-pilot/corpus/tasks/sfv4-null-return-001.json"
+  },
+  {
+    "id": "sfv4-null-return-002",
+    "task_path": "goals/skillopt-training-pilot/corpus/tasks/sfv4-null-return-002.json"
+  }
+]

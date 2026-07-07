@@ -1,0 +1,14 @@
+Implemented [src/SourceMetadata.ts](/home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-real/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts) with schema-owned contracts:
+
+- `SourceMetadataInput` is now an `S.Class`
+- `SourceMetadata` is now an `S.Class`
+- `MakeSourceMetadata` is a schema transform from input to output
+- `makeSourceMetadata` decodes through that schema contract
+
+Verification passed with:
+
+```sh
+bunx tsc --ignoreConfig --noEmit --strict --moduleResolution bundler --module ESNext --target ES2022 --skipLibCheck src/SourceMetadata.ts
+```
+
+I used `--ignoreConfig` because the copied fixture’s `tsconfig.json` extends a missing `../../../../../tsconfig.base.json` in this scratch location.

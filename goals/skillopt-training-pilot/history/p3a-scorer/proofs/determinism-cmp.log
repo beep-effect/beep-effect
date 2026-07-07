@@ -1,0 +1,2 @@
+cmp -s .proofs-scorer/determinism-a.json .proofs-scorer/determinism-b.json
+exit 0

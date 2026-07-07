@@ -18,6 +18,10 @@
             bun
             nodejs_24
 
+            # Python (SkillOpt training pilot — tools/skillopt uv project)
+            python3
+            uv
+
             # Quality tools
             typos
             gitleaks
