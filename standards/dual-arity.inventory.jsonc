@@ -894,6 +894,30 @@
       "diagnostics": ["third-param-not-object-like"]
     },
     {
+      "file": "packages/law-practice/domain/src/values/Span/Span.model.ts",
+      "qualifiedName": "Span.fromGroupIndex",
+      "kind": "static-function-property",
+      "status": "candidate",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 89,
+      "column": 19,
+      "parameterCount": 3,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Span/Span.model.ts",
+      "qualifiedName": "Span.resolveOriginal",
+      "kind": "static-function-property",
+      "status": "candidate",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 128,
+      "column": 19,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
       "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
       "qualifiedName": "AgentEffectivenessPhoenixSyncInput.new",
       "kind": "static-function-property",
@@ -904,6 +928,30 @@
       "column": 19,
       "parameterCount": 3,
       "diagnostics": ["third-param-not-object-like"]
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScorer.ts",
+      "qualifiedName": "aggregateLawFraction",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/repo-cli",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function. Public 3-parameter helper APIs must use a strict ObjectLike third parameter.",
+      "line": 633,
+      "column": 14,
+      "parameterCount": 3,
+      "diagnostics": ["missing-dual", "third-param-not-object-like"]
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScorer.ts",
+      "qualifiedName": "buildAgentEffectivenessEvalScoreReport",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/repo-cli",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 1017,
+      "column": 14,
+      "parameterCount": 3,
+      "diagnostics": ["missing-dual"]
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",

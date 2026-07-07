@@ -15,7 +15,7 @@ import {
   useComboboxAnchor,
 } from "@beep/ui/components/combobox";
 import { A } from "@beep/utils";
-import { expect, screen, userEvent, waitFor, within } from "storybook/test";
+import { expect, screen, userEvent, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const frameworks: ReadonlyArray<string> = ["Next.js", "SvelteKit", "Nuxt.js", "Remix", "Astro", "SolidStart"];
@@ -131,16 +131,17 @@ export const Filtering: Story = {
       </ComboboxContent>
     </Combobox>
   ),
-  play: async ({ canvasElement }) => {
+  play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const input = canvas.getByRole("combobox", { name: "Framework" });
-    await userEvent.click(input);
-    await userEvent.type(input, "Rem");
-    await waitFor(() => {
-      const option = screen.getByRole("option", { name: "Remix" });
-      expect(option).toBeVisible();
-    });
-    expect(screen.queryByRole("option", { name: "Astro" })).toBeNull();
+    return userEvent
+      .click(input)
+      .then(() => userEvent.type(input, "Rem"))
+      .then(() => screen.findByRole("option", { name: "Remix" }))
+      .then((option) => {
+        expect(option).toBeVisible();
+        expect(screen.queryByRole("option", { name: "Astro" })).toBeNull();
+      });
   },
 };
 

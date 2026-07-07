@@ -14,7 +14,6 @@
  * @since 0.0.0
  */
 
-import { createRequire } from "node:module";
 import { $UtilsId } from "@beep/identity/packages";
 import { Effect, FileSystem, Option, Path, PlatformError, pipe, Stream } from "effect";
 import * as A from "effect/Array";
@@ -22,17 +21,39 @@ import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 
+const $I = $UtilsId.create("FileSystem");
+
+class NodeFileSystemUnavailableError extends S.TaggedErrorClass<NodeFileSystemUnavailableError>(
+  $I`NodeFileSystemUnavailableError`
+)(
+  "NodeFileSystemUnavailableError",
+  {
+    module: S.Literal("node:fs"),
+  },
+  $I.annote("NodeFileSystemUnavailableError", {
+    description: "Thrown when node:fs is unavailable to sync file system helpers.",
+  })
+) {}
+
 /**
- * Synchronous `node:fs` handle. Acquired via `createRequire` (rather than a
- * static `import ... from "node:fs"`) so this layer-free module can call the
- * sync `node:fs` API directly while remaining the sanctioned home for it.
+ * Synchronous `node:fs` handle, resolved lazily via `process.getBuiltinModule`
+ * on first call (never via a static Node import) so browser bundles can import
+ * this module — and the `@beep/utils` barrel — without evaluating Node
+ * builtins. Only invoking a sync wrapper requires a Node-compatible runtime.
  */
-const NFS: typeof import("node:fs") = createRequire(import.meta.url)("node:fs");
+let nfsHandle: typeof import("node:fs") | undefined;
+const NFS = (): typeof import("node:fs") => {
+  if (nfsHandle === undefined) {
+    nfsHandle = globalThis.process?.getBuiltinModule?.("node:fs");
+    if (nfsHandle === undefined) {
+      throw NodeFileSystemUnavailableError.make({ module: "node:fs" });
+    }
+  }
+  return nfsHandle;
+};
 
 type NodeStats = import("node:fs").Stats;
 type NodeDirent = import("node:fs").Dirent;
-
-const $I = $UtilsId.create("FileSystem");
 
 const AppendFileSyncEncoding = S.Literals([
   "ascii",
@@ -255,7 +276,7 @@ export const appendFileSync: {
     options?: AppendFileSyncOptions
   ): Effect.Effect<void, PlatformError.PlatformError> =>
     Effect.try({
-      try: () => NFS.appendFileSync(path, data, options),
+      try: () => NFS().appendFileSync(path, data, options),
       catch: toPlatformError("appendFileSync", path),
     })
 );
@@ -280,7 +301,7 @@ export const appendFileSync: {
  * @category getters
  * @since 0.0.0
  */
-export const existsSync = (path: string): Effect.Effect<boolean> => Effect.sync(() => NFS.existsSync(path));
+export const existsSync = (path: string): Effect.Effect<boolean> => Effect.sync(() => NFS().existsSync(path));
 
 /**
  * Removes the file or directory at `path`, honoring `recursive`/`force`.
@@ -303,7 +324,7 @@ export const existsSync = (path: string): Effect.Effect<boolean> => Effect.sync(
  */
 export const rmSync = (path: string, options?: RmSyncOptions): Effect.Effect<void, PlatformError.PlatformError> =>
   Effect.try({
-    try: () => NFS.rmSync(path, options),
+    try: () => NFS().rmSync(path, options),
     catch: toPlatformError("rmSync", path),
   });
 
@@ -333,7 +354,7 @@ export const renameSync: {
   2,
   (oldPath: string, newPath: string): Effect.Effect<void, PlatformError.PlatformError> =>
     Effect.try({
-      try: () => NFS.renameSync(oldPath, newPath),
+      try: () => NFS().renameSync(oldPath, newPath),
       catch: toPlatformError("renameSync", oldPath),
     })
 );
@@ -372,7 +393,7 @@ export function readdirSync(
 ): Effect.Effect<ReadonlyArray<string | NodeDirent>, PlatformError.PlatformError> {
   return Effect.try({
     try: (): ReadonlyArray<string | NodeDirent> =>
-      options?.withFileTypes === true ? NFS.readdirSync(path, { withFileTypes: true }) : NFS.readdirSync(path),
+      options?.withFileTypes === true ? NFS().readdirSync(path, { withFileTypes: true }) : NFS().readdirSync(path),
     catch: toPlatformError("readdirSync", path),
   });
 }
@@ -401,7 +422,7 @@ export function readdirSync(
  */
 export const statSync = (path: string): Effect.Effect<FileSystem.File.Info, PlatformError.PlatformError> =>
   Effect.try({
-    try: () => toFileInfo(NFS.statSync(path)),
+    try: () => toFileInfo(NFS().statSync(path)),
     catch: toPlatformError("statSync", path),
   });
 

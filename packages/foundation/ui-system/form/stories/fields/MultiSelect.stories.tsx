@@ -35,8 +35,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText("Tags")).toBeInTheDocument();
+    expect(canvas.getByText("Tags")).toBeInTheDocument();
   },
 };

@@ -1,0 +1,31 @@
+{
+  "step": 5,
+  "action": "reject",
+  "n_total": 2,
+  "n_fail": 2,
+  "failure_patterns": [
+    {
+      "pattern": "rule_missing: Skill has no rule pointing agents to search for and reuse repo-specific canonical combinators (e.g. `Fn(...).implementSync(...)` for schema-derived function-argument builders, `SchemaTransformation.<method>(...)` for named normalization) before hand-rolling an equivalent; both agents produced typechecking, schema-shaped code that satisfied the spirit of the task but missed the exact required construction pattern and exported call sites the completion checker greps for.",
+      "count": 1,
+      "task_ids": [
+        "sfv4-normalization-001"
+      ]
+    },
+    {
+      "pattern": "scorer_contract: Both agents verified only via ad-hoc/local tsc invocations and never checked the task's literal required-pattern strings (e.g. exact `Fn(`, `SchemaTransformation.toLowerCase(`, `S.decodeUnknownOption(` call shapes), so completion score was docked despite a plausible, typechecking implementation.",
+      "count": 1,
+      "task_ids": [
+        "sfv4-fn-schema-002"
+      ]
+    }
+  ],
+  "score_before": 0.4714125,
+  "score_after": 0.27835675,
+  "rejected_edits": [
+    {
+      "op": "insert_after",
+      "content": "- Before hand-writing a function-argument/output contract builder (e.g. an\n  exported `BuildXArgs`/`buildXArgs` pair), search the repo for the `Fn(...)`\n  combinator (`Fn(<InputSchema>, <OutputSchema>).implementSync(...)` or its\n  async equivalent) and prefer it over a bespoke typed function — repo law\n  expects schema-derived function contracts, not a plain function merely\n  annotated with schema types.\n- Before hand-writing string/value normalization inline in a transform\n  callback, search for a named `SchemaTransformation.<method>(...)` helper\n  (e.g. `SchemaTransformation.toLowerCase(...)`) and reuse it instead of\n  reimplementing the same behavior ad hoc.\n- When a task names specific exported symbols or helper shapes (a builder,\n  a decode function, a combinator call), grep the target package and\n  `.repos/effect-v4` for that literal construction before implementing, and\n  confirm the finished file actually contains the exact call shape (e.g.\n  `Fn(...)`, `SchemaTransformation.<method>(...)`, `S.decodeUnknownOption(...)`)\n  the task/schema-first lint expects — typechecking alone does not satisfy\n  completion checks that grep for a specific pattern.",
+      "target": "- Use `S.withConstructorDefault(...)`, `S.withDecodingDefault(...)`, and\n  `S.decodeTo(...)` with `SchemaTransformation` for normalization and fallback\n  behavior."
+    }
+  ]
+}

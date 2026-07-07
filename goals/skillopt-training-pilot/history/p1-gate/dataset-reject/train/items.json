@@ -1,0 +1,10 @@
+[
+  {
+    "id": "gate-reject-train",
+    "question": "What is the gamma task token, formatted per the beep spike response convention?",
+    "context": "[DOC] The gamma task token is spike-echo-gamma.",
+    "answers": ["beep: spike-echo-gamma"],
+    "reference_text": "Patchable train failure: the 'beep: ' prefix convention is absent from rollout-visible context, so the baseline fails exact match and the analyst has a clear generalizable answer_format rule to propose. The validation item is deliberately immune to that rule, forcing the gate's reject branch.",
+    "task_type": "gate_reject_probe"
+  }
+]

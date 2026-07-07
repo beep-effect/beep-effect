@@ -39,7 +39,6 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 ## Explorations
 
 ### Active
-
 - [`atlas-synthesis`](./atlas-synthesis/README.md) — grounding/context packet
   (stage `research`): a maximal-fan-out synthesis of current repo state vs.
   goals/vision, centered on a gap map
@@ -168,6 +167,15 @@ The lego pieces already built. Authoritative inventories (link, never copy):
 
 ### Graduated
 
+- [`skillopt-training-pilot`](./skillopt-training-pilot/README.md) — graduated
+  2026-07-06 (same-day compressed ceremony; BRIEF signed off) into
+  [`skillopt-training-pilot`](../goals/skillopt-training-pilot/README.md):
+  train `.claude/skills/schema-first-development` with microsoft/SkillOpt
+  (MIT) against a ≥10-task law-scored eval suite composed from existing
+  bricks (QualityWorkerEval runner, ai-metrics BenchmarkCase, schema-first/
+  tsgo scorers, `beep worktree` throwaways; Phoenix stretch). Loop-runs =
+  success bar; adoption out of scope; revives the superseded
+  phoenix-enrichment experiments/evals slices.
 - [`agent-pipeline-velocity`](./agent-pipeline-velocity/README.md) — graduated
   2026-07-05 (same-day compressed ceremony) into a single goal packet
   [`agent-pipeline-velocity`](../goals/agent-pipeline-velocity/README.md):

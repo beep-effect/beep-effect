@@ -1,0 +1,24 @@
+{
+  "id": "sfv4-getsomes-struct-003",
+  "ruleIds": ["SFV4-getsomes-struct"],
+  "derivedFrom": [
+    "packages/drivers/runpod/src/Runpod.service.ts:580 ruleId SFV4-getsomes-struct @ schema-first.inventory 2026-07-06"
+  ],
+  "prompt": "Refactor goals/skillopt-training-pilot/corpus/fixtures/sfv4-getsomes-struct-003/src/RunpodDiagnostics.ts so diagnostics are built from a schema-owned detail model and optional fields keep their literal keys. Export RunpodDiagnostics and diagnosticsForPod from the entrypoint. Preserve current behavior and keep the fixture typechecking.",
+  "fixture": "goals/skillopt-training-pilot/corpus/fixtures/sfv4-getsomes-struct-003",
+  "entrypoint": "src/RunpodDiagnostics.ts",
+  "completion": {
+    "requiredExports": ["RunpodDiagnostics", "diagnosticsForPod"],
+    "requiredPatterns": [
+      "export\\s+class\\s+RunpodDiagnostics\\s+extends\\s+S\\.Class\\b",
+      "import\\s+\\{\\s*O\\s*\\}\\s+from\\s+\"@beep/utils\"",
+      "O\\.getSomesStruct\\s*\\("
+    ],
+    "forbiddenPatterns": [
+      "R\\.getSomes\\s*\\(",
+      "from\\s+\"effect/Record\"",
+      "export\\s+interface\\s+RunpodDiagnostics\\b"
+    ]
+  },
+  "weights": { "completion": 0.5, "law": 0.5 }
+}

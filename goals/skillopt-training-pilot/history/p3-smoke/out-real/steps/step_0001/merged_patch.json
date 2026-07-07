@@ -1,0 +1,12 @@
+{
+  "reasoning": "The single failed trajectory lost most of its score to two distinct, generalizable gaps rather than fixture-specific details. First, the task asked for an 'executable function contract' alongside a schema-owned input model, and the scorer required the canonical repo pattern `export const <Name> = Fn(...)` plus `<Name>.implementSync(...)` — but the skill's schema guidance stops at data modeling (S.Class/S.Struct, tagged unions, Option handling) and never teaches that executable/function-shaped exports use the Fn contract-and-implement pattern instead of a bespoke schema transform. Adding this as a Fast Rule closes a real rule_missing gap that generalizes to any task asking for a schema-owned 'function contract' or 'executable contract', not just this fixture's naming. Second, the agent treated a standalone tsc invocation as sufficient verification and skipped the repo formatter, so the biome check failed independently of the schema/type work. The skill's 'Verify before finishing' checklist is entirely about schema shape and never mentions formatting/lint parity with the repo's own tooling, which is a rule_missing gap of similar generality (any fixture-edit task will hit this). One combined edit addresses both without hardcoding this task's names.",
+  "edits": [
+    {
+      "op": "insert_after",
+      "target": "- Prefer built-in schema constructors and checks before `S.makeFilter(...)`.",
+      "content": "\n- When a task asks for an executable function contract alongside a schema-owned\n  input model (e.g. \"executable function contract\", \"function contract\",\n  \"implement/execute this against the schema\"), export it as\n  `export const <Name> = Fn(...)` and implement it with\n  `<Name>.implementSync(...)` (or the async/effectful `implement` variant for\n  effectful bodies) instead of writing an ad-hoc schema transform or plain\n  function — check `references/pattern-catalog.md` or local repo examples for\n  the exact `Fn(...)` signature before writing one from memory.\n- Before finishing, run the repo's formatter/linter (e.g. `biome check`) on\n  every edited file, not just a standalone type-check — a passing `tsc`/`tsgo`\n  run does not imply the file matches repo formatting, and formatting\n  violations are scored independently of type and schema-law checks.",
+      "source_type": "failure",
+      "support_count": 1
+    }
+  ]
+}
