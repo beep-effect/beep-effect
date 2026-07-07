@@ -6,19 +6,26 @@
  */
 
 import { $RunpodId } from "@beep/identity";
-import { A, Str } from "@beep/utils";
-import { Config, Context, Effect, flow, Layer, pipe } from "effect";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
+import { Fn, SchemaUtils, URLStr } from "@beep/schema";
+import { A, O, Str } from "@beep/utils";
+import { Config, Context, Effect, flow, Layer, pipe, SchemaIssue } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import { RUNPOD_DOCS_INDEX_URL, RunpodDocsConfigInput } from "./Runpod.config.ts";
+import { RUNPOD_DOCS_INDEX_URL, RunpodConfigUrl, RunpodDocsConfigInput } from "./Runpod.config.ts";
 import { RunpodDocsError } from "./Runpod.errors.ts";
 import type * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
 const $I = $RunpodId.create("RunpodDocs.service");
+const defaultDocsSection = "Docs";
+const RunpodDocsUrl = S.String.check(URLStr.filter).pipe(
+  $I.annoteSchema("RunpodDocsUrl", {
+    description: "Absolute URL parsed from Runpod documentation index links.",
+    toArbitrary: () => (fc) => fc.webUrl(),
+  }),
+  SchemaUtils.withCodecStatics
+);
 
 /**
  * One Markdown documentation link parsed from Runpod's `llms.txt` index.
@@ -40,10 +47,10 @@ const $I = $RunpodId.create("RunpodDocs.service");
  */
 export class RunpodDocsIndexEntry extends S.Class<RunpodDocsIndexEntry>($I`RunpodDocsIndexEntry`)(
   {
-    description: S.optionalKey(S.String),
-    section: S.String,
-    title: S.String,
-    url: S.String,
+    description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
+    section: S.NonEmptyString,
+    title: S.NonEmptyString,
+    url: RunpodDocsUrl,
   },
   $I.annote("RunpodDocsIndexEntry", {
     description: "One Markdown documentation link parsed from Runpod's llms.txt index.",
@@ -55,10 +62,16 @@ export class RunpodDocsIndexEntry extends S.Class<RunpodDocsIndexEntry>($I`Runpo
  *
  * @example
  * ```ts
- * import { RunpodDocsIndex } from "@beep/runpod"
+ * import { RunpodDocsIndex, RunpodDocsIndexEntry } from "@beep/runpod"
+ *
+ * const entry = RunpodDocsIndexEntry.make({
+ *   section: "Pods",
+ *   title: "Create a pod",
+ *   url: "https://docs.runpod.io/pods"
+ * })
  *
  * const index = RunpodDocsIndex.make({
- *   entries: [],
+ *   entries: [entry],
  *   title: "Runpod Documentation"
  * })
  * console.log(index.title)
@@ -69,8 +82,8 @@ export class RunpodDocsIndexEntry extends S.Class<RunpodDocsIndexEntry>($I`Runpo
  */
 export class RunpodDocsIndex extends S.Class<RunpodDocsIndex>($I`RunpodDocsIndex`)(
   {
-    entries: S.Array(RunpodDocsIndexEntry),
-    title: S.String,
+    entries: S.NonEmptyArray(RunpodDocsIndexEntry),
+    title: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("Runpod Documentation")),
   },
   $I.annote("RunpodDocsIndex", {
     description: "Parsed Runpod documentation index from docs.runpod.io/llms.txt.",
@@ -99,22 +112,21 @@ class ResolvedRunpodDocsConfig extends S.Class<ResolvedRunpodDocsConfig>($I`Reso
 
 class DocsParseState extends S.Class<DocsParseState>($I`DocsParseState`)(
   {
-    entries: S.Array(RunpodDocsIndexEntry),
-    section: S.String,
-    title: S.Option(S.String),
+    entries: S.Array(RunpodDocsIndexEntry).pipe(SchemaUtils.withEmptyArrayDefaults<RunpodDocsIndexEntry>()),
+    section: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults(defaultDocsSection)),
+    title: S.Option(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("DocsParseState", {
     description: "Internal parser state for Runpod's llms.txt index.",
   })
 ) {}
 
-const defaultDocsSection = "Docs";
 const normalizeUrl = Str.replace(/\/+$/, "");
 
 const resolveConfig = (config: RunpodDocsConfigInput): ResolvedRunpodDocsConfig =>
   ResolvedRunpodDocsConfig.make({
     headers: config.headers,
-    indexUrl: config.indexUrl,
+    indexUrl: RunpodConfigUrl.fromUnknown(config.indexUrl),
   });
 
 const nonEmptyTrimmed: (value: string) => O.Option<string> = flow(Str.trim, O.liftPredicate(Str.isNonEmpty));
@@ -138,16 +150,22 @@ const parseEntry = (section: string, line: string): O.Option<RunpodDocsIndexEntr
       const afterTitle = Str.slice(titleEnd + 2)(body);
       return pipe(
         Str.indexOf(")")(afterTitle),
-        O.map((urlEnd) => {
+        O.flatMap((urlEnd) => {
           const description = descriptionFrom(Str.slice(urlEnd + 1)(afterTitle));
-          return RunpodDocsIndexEntry.make({
-            section,
-            title: Str.slice(0, titleEnd)(body),
-            url: Str.slice(0, urlEnd)(afterTitle),
-            ...R.getSomes({
-              description,
+          return pipe(
+            O.all({
+              title: nonEmptyTrimmed(Str.slice(0, titleEnd)(body)),
+              url: pipe(nonEmptyTrimmed(Str.slice(0, urlEnd)(afterTitle)), O.filter(RunpodDocsUrl.is)),
             }),
-          });
+            O.map(({ title, url }) =>
+              RunpodDocsIndexEntry.make({
+                description,
+                section,
+                title,
+                url,
+              })
+            )
+          );
         })
       );
     })
@@ -158,17 +176,29 @@ const parseLine = (state: DocsParseState, rawLine: string): DocsParseState => {
   const line = Str.trim(rawLine);
 
   if (pipe(line, Str.startsWith("# "))) {
-    return DocsParseState.make({
-      ...state,
-      title: O.some(Str.trim(Str.slice(2)(line))),
-    });
+    return pipe(
+      nonEmptyTrimmed(Str.slice(2)(line)),
+      O.map((title) =>
+        DocsParseState.make({
+          ...state,
+          title: O.some(title),
+        })
+      ),
+      O.getOrElse(() => state)
+    );
   }
 
   if (pipe(line, Str.startsWith("## "))) {
-    return DocsParseState.make({
-      ...state,
-      section: Str.trim(Str.slice(3)(line)),
-    });
+    return pipe(
+      nonEmptyTrimmed(Str.slice(3)(line)),
+      O.map((section) =>
+        DocsParseState.make({
+          ...state,
+          section,
+        })
+      ),
+      O.getOrElse(() => state)
+    );
   }
 
   return pipe(
@@ -183,6 +213,49 @@ const parseLine = (state: DocsParseState, rawLine: string): DocsParseState => {
     })
   );
 };
+
+/**
+ * Schema contract for parsing Runpod's `llms.txt` Markdown index.
+ *
+ * @example
+ * ```ts
+ * import { RunpodDocsIndexParser } from "@beep/runpod"
+ *
+ * console.log(RunpodDocsIndexParser.inputSchema.ast)
+ * ```
+ *
+ * @category parsing
+ * @since 0.0.0
+ */
+export const RunpodDocsIndexParser = Fn({
+  input: S.String,
+  output: RunpodDocsIndex,
+  error: RunpodDocsError,
+}).pipe(
+  $I.annoteSchema("RunpodDocsIndexParser", {
+    description: "Schema contract for parsing Runpod's llms.txt Markdown index.",
+  })
+);
+
+const parseRunpodDocsIndexContract = RunpodDocsIndexParser.implementEffect(
+  Effect.fn("RunpodDocs.parseRunpodDocsIndexContract")(function* (text) {
+    const state = pipe(A.fromIterable(Str.linesIterator(text)), A.reduce(DocsParseState.make({}), parseLine));
+
+    return yield* A.match(state.entries, {
+      onEmpty: () => Effect.fail(RunpodDocsError.fromReason("parse")),
+      onNonEmpty: (entries) =>
+        Effect.succeed(
+          RunpodDocsIndex.make({
+            entries,
+            ...O.getSomesStruct({ title: state.title }),
+          })
+        ),
+    });
+  })
+);
+
+const mapParserContractError = (cause: RunpodDocsError | SchemaIssue.Issue): RunpodDocsError =>
+  SchemaIssue.isIssue(cause) ? RunpodDocsError.fromReason("parse", { cause }) : cause;
 
 /**
  * Parse Runpod's `llms.txt` Markdown index into a structured schema model.
@@ -205,26 +278,7 @@ const parseLine = (state: DocsParseState, rawLine: string): DocsParseState => {
 export const parseRunpodDocsIndex = Effect.fn("RunpodDocs.parseRunpodDocsIndex")(function* (
   text: string
 ): Effect.fn.Return<RunpodDocsIndex, RunpodDocsError> {
-  const state = pipe(
-    A.fromIterable(Str.linesIterator(text)),
-    A.reduce(
-      DocsParseState.make({
-        entries: A.empty<RunpodDocsIndexEntry>(),
-        section: defaultDocsSection,
-        title: O.none<string>(),
-      }),
-      parseLine
-    )
-  );
-
-  if (A.isReadonlyArrayEmpty(state.entries)) {
-    return yield* RunpodDocsError.fromReason("parse");
-  }
-
-  return RunpodDocsIndex.make({
-    entries: state.entries,
-    title: O.getOrElse(state.title, () => "Runpod Documentation"),
-  });
+  return yield* parseRunpodDocsIndexContract(text).pipe(Effect.mapError(mapParserContractError));
 });
 
 const ensureSuccessStatus = Effect.fnUntraced(function* (

@@ -8,9 +8,10 @@
 import { $AcpId } from "@beep/identity";
 import { A, thunkEffectVoid } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Context, Effect, HashMap, HashSet, Layer, Ref, Stdio } from "effect";
+import { Context, Effect, flow, HashMap, HashSet, Layer, Ref, Stdio } from "effect";
 import * as S from "effect/Schema";
 import * as RpcClient from "effect/unstable/rpc/RpcClient";
+import * as RpcMessage from "effect/unstable/rpc/RpcMessage";
 import * as RpcServer from "effect/unstable/rpc/RpcServer";
 import { AGENT_METHODS, CLIENT_METHODS } from "./_generated/meta.gen.ts";
 import * as AcpSchema from "./_generated/schema.gen.ts";
@@ -18,12 +19,7 @@ import * as AcpError from "./Acp.errors.ts";
 import * as AcpProtocol from "./AcpProtocol.service.ts";
 import * as AcpRpcs from "./AcpRpc.models.ts";
 import * as AcpTerminal from "./AcpTerminal.models.ts";
-import {
-  callRpc,
-  decodeExtNotificationRegistration,
-  decodeExtRequestRegistration,
-  runHandler,
-} from "./internal/shared.ts";
+import { callRpc, makeExtensionRegistrars, runHandler } from "./internal/shared.ts";
 import type * as Scope from "effect/Scope";
 import type * as Stream from "effect/Stream";
 
@@ -61,7 +57,7 @@ export interface AcpAgentOptions extends AcpProtocol.AcpProtocolLoggingOptions {
  * @category services
  * @since 0.0.0
  */
-export interface AcpAgentShape {
+export interface AcpAgentShape extends AcpProtocol.AcpExtensionRegistrars {
   readonly client: {
     /**
      * Requests client permission for an operation.
@@ -145,16 +141,6 @@ export interface AcpAgentShape {
   readonly handleCreateSession: (
     handler: (request: AcpSchema.NewSessionRequest) => Effect.Effect<AcpSchema.NewSessionResponse, AcpError.AcpError>
   ) => Effect.Effect<void>;
-  readonly handleExtNotification: <A, I>(
-    method: string,
-    payload: S.Codec<A, I>,
-    handler: (payload: A) => Effect.Effect<void, AcpError.AcpError>
-  ) => Effect.Effect<void>;
-  readonly handleExtRequest: <A, I>(
-    method: string,
-    payload: S.Codec<A, I>,
-    handler: (payload: A) => Effect.Effect<unknown, AcpError.AcpError>
-  ) => Effect.Effect<void>;
   readonly handleForkSession: (
     handler: (request: AcpSchema.ForkSessionRequest) => Effect.Effect<AcpSchema.ForkSessionResponse, AcpError.AcpError>
   ) => Effect.Effect<void>;
@@ -193,12 +179,6 @@ export interface AcpAgentShape {
     handler: (
       request: AcpSchema.SetSessionModelRequest
     ) => Effect.Effect<AcpSchema.SetSessionModelResponse, AcpError.AcpError>
-  ) => Effect.Effect<void>;
-  readonly handleUnknownExtNotification: (
-    handler: (method: string, params: unknown) => Effect.Effect<void, AcpError.AcpError>
-  ) => Effect.Effect<void>;
-  readonly handleUnknownExtRequest: (
-    handler: (method: string, params: unknown) => Effect.Effect<unknown, AcpError.AcpError>
   ) => Effect.Effect<void>;
   readonly raw: {
     /**
@@ -423,7 +403,7 @@ export const make = Effect.fn($I`AcpAgent_make`)(function* (
 
   let nextRpcRequestId = BigInt(1) << BigInt(32);
   const rpc = yield* RpcClient.make(AcpRpcs.ClientRpcs, {
-    generateRequestId: () => nextRpcRequestId++ as never,
+    generateRequestId: () => RpcMessage.RequestId(nextRpcRequestId++),
   }).pipe(Effect.provideService(RpcClient.Protocol, transport.clientProtocol));
 
   const handleInitialize = Effect.fn($I`AcpAgent_handleInitialize`)(
@@ -504,32 +484,14 @@ export const make = Effect.fn($I`AcpAgent_make`)(function* (
         A.appendInPlace(cancelHandlers, handler);
       })
   );
-  const handleUnknownExtRequest = Effect.fn($I`AcpAgent_handleUnknownExtRequest`)(
-    (handler: (method: string, params: unknown) => Effect.Effect<unknown, AcpError.AcpError>) =>
-      Ref.set(unknownExtRequestHandler, O.some(handler))
-  );
-  const handleUnknownExtNotification = Effect.fn($I`AcpAgent_handleUnknownExtNotification`)(
-    (handler: (method: string, params: unknown) => Effect.Effect<void, AcpError.AcpError>) =>
-      Ref.set(unknownExtNotificationHandler, O.some(handler))
-  );
-  const handleExtRequest = Effect.fn($I`AcpAgent_handleExtRequest`)(function* <A, I>(
-    method: string,
-    payload: S.Codec<A, I>,
-    handler: (payload: A) => Effect.Effect<unknown, AcpError.AcpError>
-  ) {
-    return yield* Ref.update(extRequestHandlers, (handlers) =>
-      HashMap.set(handlers, method, decodeExtRequestRegistration({ handler, method, payload }))
-    );
-  });
-  const handleExtNotification = Effect.fn($I`AcpAgent_handleExtNotification`)(function* <A, I>(
-    method: string,
-    payload: S.Codec<A, I>,
-    handler: (payload: A) => Effect.Effect<void, AcpError.AcpError>
-  ) {
-    return yield* Ref.update(extNotificationHandlers, (handlers) =>
-      HashMap.set(handlers, method, decodeExtNotificationRegistration({ handler, method, payload }))
-    );
-  });
+  const { handleExtNotification, handleExtRequest, handleUnknownExtNotification, handleUnknownExtRequest } =
+    makeExtensionRegistrars({
+      extNotificationHandlers,
+      extRequestHandlers,
+      namePrefix: "AcpAgent",
+      unknownExtNotificationHandler,
+      unknownExtRequestHandler,
+    });
 
   return AcpAgent.of({
     raw: {
@@ -538,10 +500,10 @@ export const make = Effect.fn($I`AcpAgent_make`)(function* (
       notify: transport.notify,
     },
     client: {
-      requestPermission: (payload) => callRpc(rpc[CLIENT_METHODS.session_request_permission](payload)),
-      elicit: (payload) => callRpc(rpc[CLIENT_METHODS.session_elicitation](payload)),
-      readTextFile: (payload) => callRpc(rpc[CLIENT_METHODS.fs_read_text_file](payload)),
-      writeTextFile: (payload) => callRpc(rpc[CLIENT_METHODS.fs_write_text_file](payload)),
+      requestPermission: flow(rpc[CLIENT_METHODS.session_request_permission], callRpc),
+      elicit: flow(rpc[CLIENT_METHODS.session_elicitation], callRpc),
+      readTextFile: flow(rpc[CLIENT_METHODS.fs_read_text_file], callRpc),
+      writeTextFile: flow(rpc[CLIENT_METHODS.fs_write_text_file], callRpc),
       createTerminal: (payload) =>
         callRpc(rpc[CLIENT_METHODS.terminal_create](payload)).pipe(
           Effect.map((response) =>
@@ -575,8 +537,8 @@ export const make = Effect.fn($I`AcpAgent_make`)(function* (
             })
           )
         ),
-      sessionUpdate: (payload) => transport.notify(CLIENT_METHODS.session_update, payload),
-      elicitationComplete: (payload) => transport.notify(CLIENT_METHODS.session_elicitation_complete, payload),
+      sessionUpdate: transport.notify(CLIENT_METHODS.session_update),
+      elicitationComplete: transport.notify(CLIENT_METHODS.session_elicitation_complete),
       extRequest: transport.request,
       extNotification: transport.notify,
     },

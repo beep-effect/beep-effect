@@ -1453,13 +1453,15 @@
           "@beep/identity",
           "@beep/m365",
           "@beep/m365-mcp",
-          "@beep/mcp-kit"
+          "@beep/mcp-kit",
+          "@beep/schema"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/m365",
           "@beep/m365-mcp",
-          "@beep/mcp-kit"
+          "@beep/mcp-kit",
+          "@beep/schema"
         ]
       },
       {
@@ -1516,6 +1518,7 @@
           "@beep/nlp-mcp",
           "@beep/nlp-processing",
           "@beep/schema",
+          "@beep/utils",
           "@beep/wink"
         ],
         "allowTypeOnly": [
@@ -1525,6 +1528,7 @@
           "@beep/nlp-mcp",
           "@beep/nlp-processing",
           "@beep/schema",
+          "@beep/utils",
           "@beep/wink"
         ]
       },
@@ -1597,12 +1601,14 @@
           "@beep/identity",
           "@beep/onepassword-cli",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/onepassword-cli",
           "@beep/schema",
+          "@beep/shared-domain",
           "@beep/utils"
         ]
       },

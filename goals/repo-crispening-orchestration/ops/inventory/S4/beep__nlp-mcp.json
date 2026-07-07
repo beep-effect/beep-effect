@@ -2,61 +2,6 @@
   {
     "ruleId": "SFV4-static-api",
     "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
-    "line": 45,
-    "symbol": "DatasetFormat",
-    "smell": "Public LiteralKit domain for dataset formats carries kit helpers but no colocated codec statics; DatasetMeta and MCP tool outputs expose this value at package boundaries, so callers must derive their own fromUnknown/decodeOption if they need to validate raw tool data.",
-    "proposedTarget": "Introduce `DatasetFormatBase = LiteralKit([\"json\", \"jsonl\", \"lines\", \"text\"])`, then export `DatasetFormat = DatasetFormatBase.pipe($I.annoteSchema(...), SchemaUtils.withCodecStatics, SchemaUtils.withLiteralKitStatics(DatasetFormatBase))` so `fromUnknown`/`decodeOption` are added while LiteralKit helpers are restored. Helpers verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90 and withLiteralKitStatics.ts:37; LiteralKit base-static exemplar: packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts:67.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
-    "line": 81,
-    "symbol": "DatasetSourceType",
-    "smell": "Public LiteralKit domain for dataset provenance source channels has kit statics but no standard schema codec statics, despite being emitted in every DatasetMeta value.",
-    "proposedTarget": "Introduce `DatasetSourceTypeBase = LiteralKit([\"file\", \"url\"])`; pipe annotation through `SchemaUtils.withCodecStatics` and then `SchemaUtils.withLiteralKitStatics(DatasetSourceTypeBase)`.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
-    "line": 157,
-    "symbol": "TextEncoding",
-    "smell": "Public LiteralKit domain for text decoding labels is reused by tool parameter schemas and file helpers, but only exposes kit helpers; raw option validation has no colocated `fromUnknown`/`decodeOption` surface.",
-    "proposedTarget": "Introduce `TextEncodingBase = LiteralKit([\"ascii\", \"latin1\", \"utf-8\"])`; export the annotated schema through `SchemaUtils.withCodecStatics` and `SchemaUtils.withLiteralKitStatics(TextEncodingBase)`.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/nlp-mcp/src/Streaming/Pipeline.ts",
-    "line": 38,
-    "symbol": "PipelineStage",
-    "smell": "Public LiteralKit domain for user-supplied pipeline stages has stage-specific kit helpers but no colocated codec statics for validating raw stage values outside the MCP parameter schema.",
-    "proposedTarget": "Introduce `PipelineStageBase = LiteralKit([...])`; export through `$I.annoteSchema(...)`, `SchemaUtils.withCodecStatics`, and `SchemaUtils.withLiteralKitStatics(PipelineStageBase)`.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
-    "line": 54,
-    "symbol": "LinesOutput/FileInfoOutput/JsonlOutput/DataOutput/PipelineOutput",
-    "smell": "Exported MCP output schemas are rebuilt through `S.Class(...).mapFields(...).pipe($I.annoteSchema(...))`; their own examples reach for `S.decodeUnknownResult(Output)` (for example LinesOutput at line 47 and JsonlOutput at line 183) instead of a colocated decoder static.",
-    "proposedTarget": "For exported output schemas, append `SchemaUtils.withStatics((self) => ({ decodeResult: S.decodeUnknownResult(self), fromUnknown: S.decodeUnknownSync(self), decodeOption: S.decodeUnknownOption(self) }))` after annotation, or extract a local `withOutputCodecStatics` helper. Effect v4 decoder APIs verified at .repos/effect-v4/packages/effect/src/Schema.ts:1564, :1718, and :1500; keep Tool.make parameter schemas out of this helper unless real consumers need their statics.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
     "line": 245,
     "symbol": "decodeJson",
     "smell": "Detector hit: top-level `S.decodeEffect(S.UnknownFromJsonString)` feeding `parseJson` looks like a free-floating decoder wall.",

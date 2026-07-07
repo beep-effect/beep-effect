@@ -1,38 +1,5 @@
 [
   {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/drivers/uspto/src/Uspto.models.ts",
-    "line": 109,
-    "symbol": "normalizeUsptoApplicationNumber",
-    "smell": "Exported parser helper in a schema-modeled file strips separators and then re-tests `applicationNumberPattern`, duplicating the invariant already carried by the `UsptoApplicationNumber` schema at line 32.",
-    "proposedTarget": "Introduce an annotated `UsptoApplicationNumberFromText` boundary codec over `S.String` that strips separators and decodes to `UsptoApplicationNumber`, then expose this helper as a thin `S.decodeUnknownOption(UsptoApplicationNumberFromText)` wrapper or `Fn({ input: S.String, output: S.Option(UsptoApplicationNumber) }).implementSync(...)`. In-repo exemplars: `SemverFromString` at `packages/foundation/modeling/schema/src/Semver.ts:626`, `Formatter` at `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66`, and `HeaderTransformFunction` at `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`. Verified Effect v4 APIs: `S.decodeUnknownOption` (`.repos/effect-v4/packages/effect/src/Schema.ts:1500`), `S.decodeTo` (`:5408`), and `S.Option` (`:8459`).",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 0.58
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/drivers/uspto/src/Uspto.models.ts",
-    "line": 133,
-    "symbol": "normalizeUsptoPatentNumber",
-    "smell": "Exported parser helper in a schema-modeled file uppercases, strips USPTO decorations, and then re-tests `patentNumberPattern`, duplicating the invariant already carried by the `UsptoPatentNumber` schema at line 67.",
-    "proposedTarget": "Introduce an annotated `UsptoPatentNumberFromText` boundary codec over `S.String` that performs the current text normalization and decodes to `UsptoPatentNumber`, then expose this helper through `S.decodeUnknownOption(UsptoPatentNumberFromText)` or `Fn({ input: S.String, output: S.Option(UsptoPatentNumber) }).implementSync(...)`. In-repo exemplars: `SemverFromString` at `packages/foundation/modeling/schema/src/Semver.ts:626`, `Formatter` at `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66`, and `HeaderTransformFunction` at `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`. Verified Effect v4 APIs: `S.decodeUnknownOption` (`.repos/effect-v4/packages/effect/src/Schema.ts:1500`), `S.decodeTo` (`:5408`), and `S.Option` (`:8459`).",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 0.56
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/drivers/uspto/src/Uspto.errors.ts",
-    "line": 89,
-    "symbol": "UsptoError.fromReason / makeUsptoError",
-    "smell": "Exported/static error constructors accept an inline options object (`{ cause?: string; status?: NonNegativeInt }`) that duplicates optional fields on the `UsptoError` tagged schema.",
-    "proposedTarget": "Promote the options bag to `UsptoErrorOptions extends S.Class` beside `UsptoError`, mirroring `GovinfoErrorOptions` at `packages/drivers/govinfo/src/Govinfo.errors.ts:70`; change `fromReason` and `makeUsptoError` to accept `UsptoErrorOptions = UsptoErrorOptions.make({})` while preserving the public fields.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 0.62
-  },
-  {
     "ruleId": "schema-first-inventory",
     "file": "packages/drivers/uspto/src/Uspto.service.ts",
     "line": 41,

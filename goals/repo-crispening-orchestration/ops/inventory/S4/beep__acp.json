@@ -1,83 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/acp/scripts/generate.ts",
-    "line": 521,
-    "symbol": "renderSchemaEntry",
-    "smell": "Generated hand-written schema output is rendered as `${schemaExpression.expression}.pipe($I.annoteSchema(...))` with no codec statics. Consumers compensate with free-floating guards/decoders over generated schemas, e.g. `isAcpProtocolError = S.is(AcpSchema.Error)` in internal/shared.ts:7 and notification payload decoders in AcpProtocol.service.ts:288-289 / AcpAgent.service.ts:273.",
-    "proposedTarget": "Have the generator render `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` and include `import { SchemaUtils } from \"@beep/schema\";` in the generated prelude. This matches the repo pattern in Md.model.ts:1612-1618 and the helper contract at SchemaUtils/withCodecStatics.ts:90-97 (`is`, `fromUnknown`, `decodeOption`).",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/acp/src/Acp.errors.ts",
-    "line": 405,
-    "symbol": "AcpError",
-    "smell": "Exported union const `S.Union([...]).pipe(S.toTaggedUnion(\"_tag\"))` has no `SchemaUtils.withCodecStatics`, so AcpProtocol.service.ts:28 rebuilds the union guard as `const isAcpError = S.is(AcpError.AcpError)` and the JSDoc example at Acp.errors.ts:398 shows the same free-floating guard pattern.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `S.toTaggedUnion(\"_tag\")` so callers use `AcpError.is(...)` / `AcpError.decodeOption(...)`. Exemplar: `Block` in Md.model.ts:1612-1618; helper verified at SchemaUtils/withCodecStatics.ts:90-97.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/acp/src/Acp.errors.ts",
-    "line": 158,
-    "symbol": "AcpRequestError",
-    "smell": "Tagged error class is repeatedly guarded from outside (`S.is(AcpError.AcpRequestError)` in AcpProtocol.service.ts:29 and internal/shared.ts:8) instead of colocating the class guard on the error data.",
-    "proposedTarget": "Add an in-body `static readonly is = S.is(AcpRequestError);` to `AcpRequestError` and replace the module-level guards with `AcpRequestError.is`. This is the sanctioned class pattern used by `Heading.is` in Md.model.ts:873 and documented in SchemaUtils/withCodecStatics.ts:10-12.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
-    "line": 103,
-    "symbol": "AcpProtocolLogEvent",
-    "smell": "Exported tagged-union schema derived from `LiteralKit.mapMembers(...).pipe(..., S.toTaggedUnion(\"direction\"))` has no codec statics; even its example decodes with `S.decodeUnknownSync(AcpProtocolLogEvent)` instead of colocated `AcpProtocolLogEvent.fromUnknown(...)`.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `S.toTaggedUnion(\"direction\")`; keep the private LiteralKit inputs as-is. Exemplar: union `Block` in Md.model.ts:1612-1618; `withCodecStatics` verified at SchemaUtils/withCodecStatics.ts:90-97.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
-    "line": 198,
-    "symbol": "AcpIncomingNotification",
-    "smell": "Exported `S.TaggedUnion` schema keeps the Effect v4 generated `.match` helper but lacks the standard codec statics (`is`, `fromUnknown`, `decodeOption`); its JSDoc example uses `S.decodeUnknownSync(AcpIncomingNotification)` directly.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` so protocol consumers can call `AcpIncomingNotification.is(...)` / `.fromUnknown(...)`. `S.TaggedUnion` and `S.toTaggedUnion` APIs were verified in .repos/effect-v4/packages/effect/src/Schema.ts:6149-6213.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
-    "line": 28,
-    "symbol": "isAcpError",
-    "smell": "Free-floating guard `const isAcpError = S.is(AcpError.AcpError)` duplicates a guard that belongs on the exported `AcpError` union schema.",
-    "proposedTarget": "Delete the wall const and use `AcpError.AcpError.is` after `SchemaUtils.withCodecStatics` lands on Acp.errors.ts:405.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 6
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
-    "line": 29,
-    "symbol": "isAcpRequestError",
-    "smell": "Free-floating guard `const isAcpRequestError = S.is(AcpError.AcpRequestError)` duplicates a guard that belongs on the `AcpRequestError` class.",
-    "proposedTarget": "Delete the wall const and use `AcpError.AcpRequestError.is` after adding the in-body static at Acp.errors.ts:158.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 7
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/drivers/acp/src/internal/shared.ts",
     "line": 7,
     "symbol": "isAcpProtocolError",
@@ -85,18 +8,11 @@
     "proposedTarget": "Delete the wall const and use `AcpSchema.Error.is` after the generator appends `SchemaUtils.withCodecStatics` in renderSchemaEntry.",
     "confidence": 0.75,
     "mechanization": "assisted",
-    "roiRank": 8
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/acp/src/internal/shared.ts",
-    "line": 8,
-    "symbol": "isAcpRequestError",
-    "smell": "Second free-floating `S.is(AcpError.AcpRequestError)` guard for the same class, used only in `runHandler`'s error normalization.",
-    "proposedTarget": "Delete the wall const and use `AcpError.AcpRequestError.is` after adding the class static at Acp.errors.ts:158.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 9
+    "roiRank": 8,
+    "exception": {
+      "reason": "Current AcpSchema.Error is generated source and generated files are not refreshed in this wave; the generator now emits SchemaUtils.withCodecStatics for future output, but the existing local guard must remain until generated schema output is regenerated.",
+      "boundary": "generated ACP schema output, deferred to generator refresh"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -107,7 +23,11 @@
     "proposedTarget": "Replace the hand-rolled dispatch with a typed `dual(2, sendNotificationEffect)` wrapper (or `dual(2, (method, payload) => sendNotificationEffect(method, payload))` if the Effect.fn value needs a body). Effect v4 `dual` arity dispatch verified at .repos/effect-v4/packages/effect/src/Function.ts:102-143; local exemplar `AcpProtocolParseError.new` already uses `dual(2, ...)` at Acp.errors.ts:106-116.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 10
+    "roiRank": 10,
+    "exception": {
+      "reason": "Effect dual curries data-last, while the exported ACP helper intentionally supports method-first currying sendNotification(method)(payload); replacing it with dual(2, ...) inverts method and payload at runtime and changes the public helper contract.",
+      "boundary": "public method-curried ACP protocol helper signature"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -118,40 +38,11 @@
     "proposedTarget": "Replace the hand-rolled dispatch with a typed `dual(2, sendRequestEffect)` wrapper (or a small `dual(2, (method, payload) => sendRequestEffect(method, payload))` body). Effect v4 `dual` verified at Function.ts:102-143.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 11
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/acp/src/AcpAgent.service.ts",
-    "line": 541,
-    "symbol": "client requestPermission/elicit/readTextFile/writeTextFile",
-    "smell": "Four passthrough wrappers `(payload) => callRpc(rpc[CLIENT_METHODS.*](payload))` mirror the client service's existing `flow(rpc[AGENT_METHODS.*], callRpc)` pattern at AcpClient.service.ts:691-702.",
-    "proposedTarget": "Import `flow` from `effect` and rewrite the four wrappers as `flow(rpc[CLIENT_METHODS.session_request_permission], callRpc)` etc. Effect v4 `flow` verified at .repos/effect-v4/packages/effect/src/Function.ts:1162-1282.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 12
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/acp/src/AcpAgent.service.ts",
-    "line": 578,
-    "symbol": "client sessionUpdate/elicitationComplete",
-    "smell": "Two trivial wrappers `(payload) => transport.notify(CLIENT_METHODS.*, payload)` ignore the protocol helper's existing curried form; AcpClient.service.ts:703 already uses the direct partial `transport.notify(AGENT_METHODS.session_cancel)`.",
-    "proposedTarget": "Replace with direct helper refs: `sessionUpdate: transport.notify(CLIENT_METHODS.session_update)` and `elicitationComplete: transport.notify(CLIENT_METHODS.session_elicitation_complete)`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 13
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/acp/scripts/generate.ts",
-    "line": 117,
-    "symbol": "decodeUpstreamSchema/decodeMetaJson/encodeAgentMethods",
-    "smell": "Generator-local S.Class models (`UpstreamJsonSchema`, `MetaJson`) are followed by a top-level decode/encode helper wall for their JSON-string boundary behavior (lines 117-121). The behavior is pure and tied to those data models but lives outside the classes.",
-    "proposedTarget": "Colocate these as in-body statics on `UpstreamJsonSchema` and `MetaJson`, e.g. `static readonly decodeJsonEffect = S.decodeEffect(S.fromJsonString(Self))` and metadata-specific encode statics on `MetaJson`. Class statics are the S4 mechanism for S.Class; see Md.model.ts:873 and SchemaUtils/withCodecStatics.ts:10-12.",
-    "confidence": 0.55,
-    "mechanization": "judgment",
-    "roiRank": 14
+    "roiRank": 11,
+    "exception": {
+      "reason": "Effect dual curries data-last, while the exported ACP helper intentionally supports method-first currying sendRequest(method)(payload); replacing it with dual(2, ...) inverts method and payload at runtime and changes the public helper contract.",
+      "boundary": "public method-curried ACP protocol helper signature"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

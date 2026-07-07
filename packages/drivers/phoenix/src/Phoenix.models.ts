@@ -13,6 +13,18 @@ import * as S from "effect/Schema";
 
 const $I = $PhoenixId.create("Phoenix.models");
 
+const PhoenixPositiveCount = S.Int.check(S.isGreaterThanOrEqualTo(1)).pipe(
+  $I.annoteSchema("PhoenixPositiveCount", {
+    description: "Positive integer count used for Phoenix experiment repetitions.",
+  })
+);
+
+const PhoenixCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+  $I.annoteSchema("PhoenixCount", {
+    description: "Non-negative integer count returned by Phoenix experiment summaries.",
+  })
+);
+
 /**
  * Driver health states returned by {@link Phoenix.doctor}.
  *
@@ -137,7 +149,8 @@ export type PhoenixAnnotatorKind = typeof PhoenixAnnotatorKind.Type;
 export const PhoenixAnnotationValue = S.Union([S.Boolean, S.Finite, S.String]).pipe(
   $I.annoteSchema("PhoenixAnnotationValue", {
     description: "Primitive annotation value accepted by repo-owned Phoenix annotations.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -266,10 +279,18 @@ export type PhoenixPromptModelProvider = typeof PhoenixPromptModelProvider.Type;
  */
 export class PhoenixDoctorResult extends S.Class<PhoenixDoctorResult>($I`PhoenixDoctorResult`)(
   {
-    baseUrl: S.String,
-    message: S.String,
-    status: PhoenixDoctorStatus,
-    version: S.NullOr(S.String),
+    baseUrl: S.String.annotateKey({
+      description: "Phoenix API base URL checked by the doctor operation.",
+    }),
+    message: S.String.annotateKey({
+      description: "Sanitized Phoenix doctor status message.",
+    }),
+    status: PhoenixDoctorStatus.annotateKey({
+      description: "Phoenix doctor health status.",
+    }),
+    version: S.NullOr(S.String).annotateKey({
+      description: "Phoenix server version when it is available.",
+    }),
   },
   $I.annote("PhoenixDoctorResult", {
     description: "Phoenix driver doctor result with sanitized connectivity status.",
@@ -292,10 +313,18 @@ export class PhoenixDoctorResult extends S.Class<PhoenixDoctorResult>($I`Phoenix
  */
 export class PhoenixDatasetSelector extends S.Class<PhoenixDatasetSelector>($I`PhoenixDatasetSelector`)(
   {
-    kind: PhoenixDatasetSelectorKind,
-    splits: S.Array(S.String).pipe(S.optionalKey),
-    value: S.String,
-    versionId: S.optionalKey(S.String),
+    kind: PhoenixDatasetSelectorKind.annotateKey({
+      description: "Dataset selector mode used by the Phoenix SDK.",
+    }),
+    splits: S.Array(S.String).pipe(S.optionalKey).annotateKey({
+      description: "Optional Phoenix dataset split names.",
+    }),
+    value: S.String.annotateKey({
+      description: "Dataset id or dataset name, interpreted according to kind.",
+    }),
+    versionId: S.optionalKey(S.String).annotateKey({
+      description: "Optional Phoenix dataset version identifier.",
+    }),
   },
   $I.annote("PhoenixDatasetSelector", {
     description: "Phoenix dataset selector by dataset id or dataset name.",
@@ -321,15 +350,28 @@ export class PhoenixDatasetSelector extends S.Class<PhoenixDatasetSelector>($I`P
  */
 export class PhoenixDatasetExample extends S.Class<PhoenixDatasetExample>($I`PhoenixDatasetExample`)(
   {
-    id: S.optionalKey(S.String),
-    input: S.Record(S.String, S.Unknown),
-    metadata: S.Record(S.String, S.Unknown).pipe(
-      S.withConstructorDefault(Effect.succeed({})),
-      S.withDecodingDefaultKey(Effect.succeed({}))
-    ),
-    output: S.Record(S.String, S.Unknown).pipe(S.NullOr, S.optionalKey),
-    spanId: S.String.pipe(S.NullOr, S.optionalKey),
-    splits: S.Union([S.String, S.Array(S.String)]).pipe(S.NullOr, S.optionalKey),
+    id: S.optionalKey(S.String).annotateKey({
+      description: "Optional Phoenix dataset example identifier.",
+    }),
+    input: S.Record(S.String, S.Unknown).annotateKey({
+      description: "Phoenix dataset example input payload.",
+    }),
+    metadata: S.Record(S.String, S.Unknown)
+      .pipe(S.withConstructorDefault(Effect.succeed({})), S.withDecodingDefaultKey(Effect.succeed({})))
+      .annotateKey({
+        description: "Phoenix dataset example metadata payload.",
+      }),
+    output: S.Record(S.String, S.Unknown).pipe(S.NullOr, S.optionalKey).annotateKey({
+      description: "Optional nullable Phoenix dataset example output payload.",
+    }),
+    spanId: S.String.pipe(S.NullOr, S.optionalKey).annotateKey({
+      description: "Optional nullable Phoenix span identifier linked to the example.",
+    }),
+    splits: S.Union([S.String, S.Array(S.String)])
+      .pipe(S.NullOr, S.optionalKey)
+      .annotateKey({
+        description: "Optional nullable Phoenix split assignment for the example.",
+      }),
   },
   $I.annote("PhoenixDatasetExample", {
     description: "Phoenix dataset example with sanitized input, output, metadata, and optional span linkage.",
@@ -356,9 +398,15 @@ export class PhoenixDatasetExample extends S.Class<PhoenixDatasetExample>($I`Pho
  */
 export class PhoenixDatasetCreateInput extends S.Class<PhoenixDatasetCreateInput>($I`PhoenixDatasetCreateInput`)(
   {
-    description: S.String,
-    examples: S.Array(PhoenixDatasetExample),
-    name: S.String,
+    description: S.String.annotateKey({
+      description: "Human-readable Phoenix dataset description.",
+    }),
+    examples: S.Array(PhoenixDatasetExample).annotateKey({
+      description: "Examples written into the Phoenix dataset.",
+    }),
+    name: S.String.annotateKey({
+      description: "Phoenix dataset name.",
+    }),
   },
   $I.annote("PhoenixDatasetCreateInput", {
     description: "Input for creating or idempotently replacing a Phoenix dataset.",
@@ -381,7 +429,9 @@ export class PhoenixDatasetCreateInput extends S.Class<PhoenixDatasetCreateInput
  */
 export class PhoenixDatasetCreateResult extends S.Class<PhoenixDatasetCreateResult>($I`PhoenixDatasetCreateResult`)(
   {
-    datasetId: S.String,
+    datasetId: S.String.annotateKey({
+      description: "Phoenix dataset identifier returned after creation.",
+    }),
   },
   $I.annote("PhoenixDatasetCreateResult", {
     description: "Result from creating or replacing a Phoenix dataset.",
@@ -407,8 +457,12 @@ export class PhoenixDatasetCreateResult extends S.Class<PhoenixDatasetCreateResu
  */
 export class PhoenixDatasetAppendInput extends S.Class<PhoenixDatasetAppendInput>($I`PhoenixDatasetAppendInput`)(
   {
-    dataset: PhoenixDatasetSelector,
-    examples: S.Array(PhoenixDatasetExample),
+    dataset: PhoenixDatasetSelector.annotateKey({
+      description: "Phoenix dataset receiving appended examples.",
+    }),
+    examples: S.Array(PhoenixDatasetExample).annotateKey({
+      description: "Examples appended to the Phoenix dataset.",
+    }),
   },
   $I.annote("PhoenixDatasetAppendInput", {
     description: "Input for appending examples to an existing Phoenix dataset.",
@@ -431,8 +485,12 @@ export class PhoenixDatasetAppendInput extends S.Class<PhoenixDatasetAppendInput
  */
 export class PhoenixDatasetAppendResult extends S.Class<PhoenixDatasetAppendResult>($I`PhoenixDatasetAppendResult`)(
   {
-    datasetId: S.String,
-    versionId: S.String,
+    datasetId: S.String.annotateKey({
+      description: "Phoenix dataset identifier receiving appended examples.",
+    }),
+    versionId: S.String.annotateKey({
+      description: "Phoenix dataset version identifier after append.",
+    }),
   },
   $I.annote("PhoenixDatasetAppendResult", {
     description: "Result from appending examples to a Phoenix dataset.",
@@ -455,10 +513,18 @@ export class PhoenixDatasetAppendResult extends S.Class<PhoenixDatasetAppendResu
  */
 export class PhoenixDatasetInfoResult extends S.Class<PhoenixDatasetInfoResult>($I`PhoenixDatasetInfoResult`)(
   {
-    datasetId: S.String,
-    description: S.NullOr(S.String).pipe(SchemaUtils.withKeyDefaults(null)),
-    metadata: S.Record(S.String, S.Unknown).pipe(SchemaUtils.withKeyDefaults(R.empty())),
-    name: S.String,
+    datasetId: S.String.annotateKey({
+      description: "Phoenix dataset identifier.",
+    }),
+    description: S.NullOr(S.String).pipe(SchemaUtils.withKeyDefaults(null)).annotateKey({
+      description: "Nullable Phoenix dataset description.",
+    }),
+    metadata: S.Record(S.String, S.Unknown).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
+      description: "Phoenix dataset metadata payload.",
+    }),
+    name: S.String.annotateKey({
+      description: "Phoenix dataset name.",
+    }),
   },
   $I.annote("PhoenixDatasetInfoResult", {
     description: "Readback summary for a Phoenix dataset.",
@@ -483,8 +549,12 @@ export class PhoenixDatasetExamplesResult extends S.Class<PhoenixDatasetExamples
   $I`PhoenixDatasetExamplesResult`
 )(
   {
-    examples: S.Array(PhoenixDatasetExample),
-    versionId: S.String,
+    examples: S.Array(PhoenixDatasetExample).annotateKey({
+      description: "Phoenix dataset examples returned for the selected version.",
+    }),
+    versionId: S.String.annotateKey({
+      description: "Phoenix dataset version identifier used for the readback.",
+    }),
   },
   $I.annote("PhoenixDatasetExamplesResult", {
     description: "Readback result for Phoenix dataset examples.",
@@ -507,8 +577,12 @@ export class PhoenixDatasetExamplesResult extends S.Class<PhoenixDatasetExamples
  */
 export class PhoenixPromptChatMessage extends S.Class<PhoenixPromptChatMessage>($I`PhoenixPromptChatMessage`)(
   {
-    content: S.String,
-    role: PhoenixPromptChatRole,
+    content: S.String.annotateKey({
+      description: "Prompt chat message content.",
+    }),
+    role: PhoenixPromptChatRole.annotateKey({
+      description: "Prompt chat message role.",
+    }),
   },
   $I.annote("PhoenixPromptChatMessage", {
     description: "Phoenix prompt chat message used by repo-owned prompt templates.",
@@ -536,16 +610,34 @@ export class PhoenixPromptChatMessage extends S.Class<PhoenixPromptChatMessage>(
  */
 export class PhoenixPromptCreateInput extends S.Class<PhoenixPromptCreateInput>($I`PhoenixPromptCreateInput`)(
   {
-    description: S.optionalKey(S.String),
-    metadata: S.Record(S.String, S.Unknown).pipe(SchemaUtils.withKeyDefaults(R.empty())),
-    modelName: S.String,
-    modelProvider: PhoenixPromptModelProvider.pipe(SchemaUtils.withKeyDefaults(PhoenixPromptModelProvider.Enum.OPENAI)),
-    name: S.String,
-    template: S.Array(PhoenixPromptChatMessage),
+    description: S.optionalKey(S.String).annotateKey({
+      description: "Optional Phoenix prompt description.",
+    }),
+    metadata: S.Record(S.String, S.Unknown).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
+      description: "Phoenix prompt metadata payload.",
+    }),
+    modelName: S.String.annotateKey({
+      description: "Provider model name used by the Phoenix prompt version.",
+    }),
+    modelProvider: PhoenixPromptModelProvider.pipe(
+      SchemaUtils.withKeyDefaults(PhoenixPromptModelProvider.Enum.OPENAI)
+    ).annotateKey({
+      description: "Prompt model provider used by the Phoenix SDK prompt helper.",
+    }),
+    name: S.String.annotateKey({
+      description: "Phoenix prompt name.",
+    }),
+    template: S.Array(PhoenixPromptChatMessage).annotateKey({
+      description: "Phoenix prompt chat template messages.",
+    }),
     templateFormat: PhoenixPromptTemplateFormat.pipe(
       SchemaUtils.withKeyDefaults(PhoenixPromptTemplateFormat.Enum.MUSTACHE)
-    ),
-    versionDescription: S.optionalKey(S.String),
+    ).annotateKey({
+      description: "Phoenix prompt template format.",
+    }),
+    versionDescription: S.optionalKey(S.String).annotateKey({
+      description: "Optional Phoenix prompt version description.",
+    }),
   },
   $I.annote("PhoenixPromptCreateInput", {
     description: "Input for creating a repo-owned Phoenix prompt version.",
@@ -568,8 +660,12 @@ export class PhoenixPromptCreateInput extends S.Class<PhoenixPromptCreateInput>(
  */
 export class PhoenixPromptWriteResult extends S.Class<PhoenixPromptWriteResult>($I`PhoenixPromptWriteResult`)(
   {
-    name: S.String,
-    promptVersionId: S.String,
+    name: S.String.annotateKey({
+      description: "Phoenix prompt name.",
+    }),
+    promptVersionId: S.String.annotateKey({
+      description: "Phoenix prompt version identifier.",
+    }),
   },
   $I.annote("PhoenixPromptWriteResult", {
     description: "Result from creating a Phoenix prompt version.",
@@ -592,10 +688,18 @@ export class PhoenixPromptWriteResult extends S.Class<PhoenixPromptWriteResult>(
  */
 export class PhoenixPromptSelector extends S.Class<PhoenixPromptSelector>($I`PhoenixPromptSelector`)(
   {
-    name: S.optionalKey(S.String),
-    promptId: S.optionalKey(S.String),
-    tag: S.optionalKey(S.String),
-    versionId: S.optionalKey(S.String),
+    name: S.optionalKey(S.String).annotateKey({
+      description: "Optional Phoenix prompt name.",
+    }),
+    promptId: S.optionalKey(S.String).annotateKey({
+      description: "Optional Phoenix prompt identifier.",
+    }),
+    tag: S.optionalKey(S.String).annotateKey({
+      description: "Optional Phoenix prompt tag.",
+    }),
+    versionId: S.optionalKey(S.String).annotateKey({
+      description: "Optional Phoenix prompt version identifier.",
+    }),
   },
   $I.annote("PhoenixPromptSelector", {
     description: "Phoenix prompt selector by prompt id, name, version id, or name plus tag.",
@@ -618,8 +722,12 @@ export class PhoenixPromptSelector extends S.Class<PhoenixPromptSelector>($I`Pho
  */
 export class PhoenixPromptReadResult extends S.Class<PhoenixPromptReadResult>($I`PhoenixPromptReadResult`)(
   {
-    exists: S.Boolean,
-    promptVersionId: S.NullOr(S.String),
+    exists: S.Boolean.annotateKey({
+      description: "Whether the Phoenix prompt selector resolved to a prompt.",
+    }),
+    promptVersionId: S.NullOr(S.String).annotateKey({
+      description: "Nullable Phoenix prompt version identifier.",
+    }),
   },
   $I.annote("PhoenixPromptReadResult", {
     description: "Readback result for a Phoenix prompt selector.",
@@ -647,13 +755,27 @@ export class PhoenixExperimentCreateInput extends S.Class<PhoenixExperimentCreat
   $I`PhoenixExperimentCreateInput`
 )(
   {
-    datasetId: S.String,
-    datasetVersionId: S.optionalKey(S.String),
-    experimentDescription: S.optionalKey(S.String),
-    experimentMetadata: S.Record(S.String, S.Unknown).pipe(SchemaUtils.withKeyDefaults(R.empty())),
-    experimentName: S.optionalKey(S.String),
-    repetitions: S.Finite.pipe(SchemaUtils.withKeyDefaults(1)),
-    splits: S.Array(S.String).pipe(S.optionalKey),
+    datasetId: S.String.annotateKey({
+      description: "Phoenix dataset identifier used by the experiment.",
+    }),
+    datasetVersionId: S.optionalKey(S.String).annotateKey({
+      description: "Optional Phoenix dataset version identifier used by the experiment.",
+    }),
+    experimentDescription: S.optionalKey(S.String).annotateKey({
+      description: "Optional Phoenix experiment description.",
+    }),
+    experimentMetadata: S.Record(S.String, S.Unknown).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
+      description: "Phoenix experiment metadata payload.",
+    }),
+    experimentName: S.optionalKey(S.String).annotateKey({
+      description: "Optional Phoenix experiment name.",
+    }),
+    repetitions: PhoenixPositiveCount.pipe(SchemaUtils.withKeyDefaults(1)).annotateKey({
+      description: "Positive integer number of repetitions requested for the experiment.",
+    }),
+    splits: S.Array(S.String).pipe(S.optionalKey).annotateKey({
+      description: "Optional Phoenix dataset splits used by the experiment.",
+    }),
   },
   $I.annote("PhoenixExperimentCreateInput", {
     description: "Input for creating a Phoenix experiment record without running billable model work.",
@@ -685,16 +807,36 @@ export class PhoenixExperimentCreateInput extends S.Class<PhoenixExperimentCreat
  */
 export class PhoenixExperimentInfoResult extends S.Class<PhoenixExperimentInfoResult>($I`PhoenixExperimentInfoResult`)(
   {
-    datasetId: S.String,
-    datasetVersionId: S.String,
-    exampleCount: S.Finite,
-    experimentId: S.String,
-    failedRunCount: S.Finite,
-    metadata: S.Record(S.String, S.Unknown).pipe(SchemaUtils.withKeyDefaults(R.empty())),
-    missingRunCount: S.Finite,
-    projectName: S.NullOr(S.String).pipe(SchemaUtils.withKeyDefaults(null)),
-    repetitions: S.Finite,
-    successfulRunCount: S.Finite,
+    datasetId: S.String.annotateKey({
+      description: "Phoenix dataset identifier used by the experiment.",
+    }),
+    datasetVersionId: S.String.annotateKey({
+      description: "Phoenix dataset version identifier used by the experiment.",
+    }),
+    exampleCount: PhoenixCount.annotateKey({
+      description: "Non-negative count of examples in the experiment.",
+    }),
+    experimentId: S.String.annotateKey({
+      description: "Phoenix experiment identifier.",
+    }),
+    failedRunCount: PhoenixCount.annotateKey({
+      description: "Non-negative count of failed experiment runs.",
+    }),
+    metadata: S.Record(S.String, S.Unknown).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
+      description: "Phoenix experiment metadata payload.",
+    }),
+    missingRunCount: PhoenixCount.annotateKey({
+      description: "Non-negative count of missing experiment runs.",
+    }),
+    projectName: S.NullOr(S.String).pipe(SchemaUtils.withKeyDefaults(null)).annotateKey({
+      description: "Nullable Phoenix project name for the experiment.",
+    }),
+    repetitions: PhoenixPositiveCount.annotateKey({
+      description: "Positive integer repetition count configured for the experiment.",
+    }),
+    successfulRunCount: PhoenixCount.annotateKey({
+      description: "Non-negative count of successful experiment runs.",
+    }),
   },
   $I.annote("PhoenixExperimentInfoResult", {
     description: "Readback summary for a Phoenix experiment record.",
@@ -722,16 +864,36 @@ export class PhoenixExperimentInfoResult extends S.Class<PhoenixExperimentInfoRe
  */
 export class PhoenixAnnotationInput extends S.Class<PhoenixAnnotationInput>($I`PhoenixAnnotationInput`)(
   {
-    annotatorKind: PhoenixAnnotatorKind.pipe(SchemaUtils.withKeyDefaults(PhoenixAnnotatorKind.Enum.CODE)),
-    explanation: S.optionalKey(S.String),
-    identifier: S.optionalKey(S.String),
-    label: S.optionalKey(S.String),
-    metadata: S.Record(S.String, S.Unknown).pipe(SchemaUtils.withKeyDefaults(R.empty())),
-    name: S.String,
-    score: S.optionalKey(S.Finite),
-    sync: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
-    targetId: S.String,
-    targetKind: PhoenixAnnotationTargetKind,
+    annotatorKind: PhoenixAnnotatorKind.pipe(SchemaUtils.withKeyDefaults(PhoenixAnnotatorKind.Enum.CODE)).annotateKey({
+      description: "Phoenix annotator kind for the annotation.",
+    }),
+    explanation: S.optionalKey(S.String).annotateKey({
+      description: "Optional Phoenix annotation explanation.",
+    }),
+    identifier: S.optionalKey(S.String).annotateKey({
+      description: "Optional stable Phoenix annotation identifier.",
+    }),
+    label: S.optionalKey(S.String).annotateKey({
+      description: "Optional Phoenix annotation label value.",
+    }),
+    metadata: S.Record(S.String, S.Unknown).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
+      description: "Phoenix annotation metadata payload.",
+    }),
+    name: S.String.annotateKey({
+      description: "Phoenix annotation name.",
+    }),
+    score: S.optionalKey(S.Finite).annotateKey({
+      description: "Optional finite Phoenix annotation score.",
+    }),
+    sync: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)).annotateKey({
+      description: "Whether the Phoenix SDK should synchronously write the annotation.",
+    }),
+    targetId: S.String.annotateKey({
+      description: "Phoenix span, session, or trace identifier targeted by the annotation.",
+    }),
+    targetKind: PhoenixAnnotationTargetKind.annotateKey({
+      description: "Phoenix annotation target kind.",
+    }),
   },
   $I.annote("PhoenixAnnotationInput", {
     description: "Input for writing one Phoenix span, session, or trace annotation.",
@@ -761,10 +923,18 @@ export class PhoenixAnnotationWriteResult extends S.Class<PhoenixAnnotationWrite
   $I`PhoenixAnnotationWriteResult`
 )(
   {
-    annotationId: S.NullOr(S.String),
-    name: S.String,
-    targetId: S.String,
-    targetKind: PhoenixAnnotationTargetKind,
+    annotationId: S.NullOr(S.String).annotateKey({
+      description: "Nullable Phoenix annotation identifier returned by the SDK.",
+    }),
+    name: S.String.annotateKey({
+      description: "Phoenix annotation name.",
+    }),
+    targetId: S.String.annotateKey({
+      description: "Phoenix span, session, or trace identifier targeted by the annotation.",
+    }),
+    targetKind: PhoenixAnnotationTargetKind.annotateKey({
+      description: "Phoenix annotation target kind.",
+    }),
   },
   $I.annote("PhoenixAnnotationWriteResult", {
     description: "Result from writing one Phoenix annotation.",

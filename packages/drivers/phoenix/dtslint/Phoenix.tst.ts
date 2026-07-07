@@ -6,6 +6,7 @@ import {
   PhoenixDatasetExample,
 } from "@beep/phoenix";
 import { Redacted } from "effect";
+import * as O from "effect/Option";
 import { describe, expect, it } from "tstyche";
 import type {
   PhoenixAnnotationWriteResult,
@@ -22,9 +23,9 @@ declare const sdk: PhoenixSdkShape;
 
 describe("Phoenix", () => {
   it("preserves layer and service method types", () => {
-    expect(Phoenix.makeLayer(PhoenixConfigInput.make({ apiKey: Redacted.make("test-key") }))).type.toBeAssignableTo<
-      Layer.Layer<Phoenix>
-    >();
+    expect(
+      Phoenix.makeLayer(PhoenixConfigInput.make({ apiKey: O.some(Redacted.make("test-key")) }))
+    ).type.toBeAssignableTo<Layer.Layer<Phoenix>>();
     expect(Phoenix.makeLayerWithSdk(sdk)).type.toBeAssignableTo<Layer.Layer<Phoenix>>();
     expect(Phoenix.layer).type.toBeAssignableTo<Layer.Layer<Phoenix, PhoenixError>>();
 

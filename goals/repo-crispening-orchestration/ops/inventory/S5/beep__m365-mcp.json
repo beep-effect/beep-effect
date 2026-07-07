@@ -2,28 +2,6 @@
   {
     "ruleId": "SFV4-arbitrary-tests",
     "file": "packages/drivers/m365-mcp/test/Server.test.ts",
-    "line": 153,
-    "symbol": "M365ToolError/M365McpServerConfig",
-    "smell": "The package exports schema-backed MCP tool error and server-config models, but tests cover toolkit dispatch, stdio IO, and span sanitization only; no S.toArbitrary-derived law covers the package-owned schemas.",
-    "proposedTarget": "Add additive schema laws for M365ToolError and M365McpServerConfig using S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970), following packages/shared/domain/test/Organization.test.ts:13 and :79 or assertSchemaArbitraryDecodesToSelf at packages/tooling/test-kit/test-utils/src/Schema.ts:30-43.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/drivers/m365-mcp/src/M365Tools.ts",
-    "line": 65,
-    "symbol": "M365ToolError",
-    "smell": "M365ToolError fields are annotated, but message/operation/toolName are broad S.String and reason is optional S.String even though the upstream driver exports M365ErrorReason and the tool failure fields should be non-empty.",
-    "proposedTarget": "Use S.NonEmptyString.annotateKey for message, operation, and toolName (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420), and prefer S.optionalKey(M365ErrorReason).annotateKey for reason by importing the upstream domain from packages/drivers/m365/src/M365.errors.ts:32-45.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/drivers/m365-mcp/test/Server.test.ts",
     "line": 100,
     "symbol": "stdio JSON-RPC fixtures",
     "smell": "Detector candidate: MCP stdio tests use static JSON-RPC request strings and mocked Microsoft 365 response fixtures rather than generated data.",

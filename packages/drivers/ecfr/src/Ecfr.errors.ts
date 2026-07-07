@@ -6,11 +6,12 @@
  */
 
 import { $EcfrId } from "@beep/identity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as S from "effect/Schema";
 
 const $I = $EcfrId.create("Ecfr.errors");
+const EcfrErrorReasonBase = LiteralKit(["config", "response decoding", "response status", "transport"]);
 
 /**
  * Technical error reasons emitted by the eCFR REST API driver.
@@ -25,10 +26,15 @@ const $I = $EcfrId.create("Ecfr.errors");
  * @category errors
  * @since 0.0.0
  */
-export const EcfrErrorReason = LiteralKit(["config", "response decoding", "response status", "transport"]).pipe(
+export const EcfrErrorReason = EcfrErrorReasonBase.pipe(
   $I.annoteSchema("EcfrErrorReason", {
     description: "Redacted technical error reasons emitted by the eCFR REST API driver.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(EcfrErrorReasonBase),
+  SchemaUtils.withStatics((schema: typeof EcfrErrorReasonBase) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+    fromUnknown: S.decodeUnknownSync(schema),
+  }))
 );
 
 /**
@@ -53,8 +59,10 @@ export type EcfrErrorReason = typeof EcfrErrorReason.Type;
  * @example
  * ```ts
  * import { EcfrErrorOptions } from "@beep/ecfr"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import * as O from "effect/Option"
  *
- * const options = EcfrErrorOptions.make({ status: 503 })
+ * const options = EcfrErrorOptions.make({ status: O.some(NonNegativeInt.make(503)) })
  * console.log(options.status)
  * ```
  *
@@ -63,8 +71,18 @@ export type EcfrErrorReason = typeof EcfrErrorReason.Type;
  */
 export class EcfrErrorOptions extends S.Class<EcfrErrorOptions>($I`EcfrErrorOptions`)(
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-    status: S.optionalKey(S.Finite),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Original native or third-party defect when one was available.",
+      })
+    ),
+    status: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "HTTP response status code associated with the eCFR failure when one was available.",
+      })
+    ),
   },
   $I.annote("EcfrErrorOptions", {
     description: "Options for configuring EcfrError instances.",
@@ -88,9 +106,21 @@ export class EcfrErrorOptions extends S.Class<EcfrErrorOptions>($I`EcfrErrorOpti
 export class EcfrError extends TaggedErrorClass<EcfrError>($I`EcfrError`)(
   "EcfrError",
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-    reason: EcfrErrorReason,
-    status: S.optionalKey(S.Finite),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Original native or third-party defect when one was available.",
+      })
+    ),
+    reason: EcfrErrorReason.annotateKey({
+      description: "Redacted technical error reason.",
+    }),
+    status: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "HTTP response status code associated with the eCFR failure when one was available.",
+      })
+    ),
   },
   $I.annote("EcfrError", {
     description: "Redacted technical failure raised by the eCFR REST API driver boundary.",
@@ -104,11 +134,9 @@ export class EcfrError extends TaggedErrorClass<EcfrError>($I`EcfrError`)(
    */
   static readonly of = (reason: EcfrErrorReason, options: EcfrErrorOptions = EcfrErrorOptions.make({})): EcfrError =>
     EcfrError.make({
+      cause: options.cause,
       reason,
-      ...O.getSomesStruct({
-        cause: O.fromUndefinedOr(options.cause),
-        status: O.fromUndefinedOr(options.status),
-      }),
+      status: options.status,
     });
 
   /**
@@ -119,9 +147,7 @@ export class EcfrError extends TaggedErrorClass<EcfrError>($I`EcfrError`)(
    */
   static readonly config = (cause?: unknown): EcfrError =>
     EcfrError.make({
+      cause: O.fromUndefinedOr(cause),
       reason: "config",
-      ...O.getSomesStruct({
-        cause: O.fromUndefinedOr(cause),
-      }),
     });
 }

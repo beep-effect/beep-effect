@@ -11,15 +11,27 @@ import {
   XAiConfigInput,
   XAiEndpoint,
   XAiError,
+  XAiErrorOptions,
+  XAiHttpBaseUrl,
+  XAiHttpStatusCode,
+  XAiJsonResponse,
   XAiLanguageModel,
+  XAiNoBodyResponse,
+  XAiQueryScalar,
+  XAiQueryValue,
   XAiRequestOptions,
+  XAiResponse,
+  XAiServerSentEvent,
+  XAiWebSocketBaseUrl,
+  XAiWebSocketEvent,
 } from "@beep/xai";
-import { describe, expect, layer } from "@effect/vitest";
-import { Context, Effect, Layer, pipe, Redacted, Ref, Stream } from "effect";
+import { describe, expect, it, layer } from "@effect/vitest";
+import { Context, Effect, Layer, pipe, Redacted, Ref, Result, Stream } from "effect";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
@@ -56,6 +68,34 @@ class XAiTestHttp extends Context.Service<XAiTestHttp, XAiTestHttpShape>()(
 
 const sortStrings = A.sort(Order.String);
 const encodeJson = encodeJsonString;
+
+const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
+  Result.getOrThrow(S.encodeResult(schema)(value));
+
+const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Encoded"]): Codec["Type"] =>
+  Result.getOrThrow(S.decodeUnknownResult(schema)(value));
+
+const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): void => {
+  const encoded = encode(schema, value);
+  const decoded = decode(schema, encoded);
+
+  expect(encode(schema, decoded)).toEqual(encoded);
+};
+
+const ConfigInputArbitrary = S.toArbitrary(XAiConfigInput);
+const EndpointArbitrary = S.toArbitrary(XAiEndpoint);
+const ErrorOptionsArbitrary = S.toArbitrary(XAiErrorOptions);
+const ErrorArbitrary = S.toArbitrary(XAiError);
+const HttpBaseUrlArbitrary = S.toArbitrary(XAiHttpBaseUrl);
+const HttpStatusCodeArbitrary = S.toArbitrary(XAiHttpStatusCode);
+const LanguageModelOptionsArbitrary = S.toArbitrary(XAiLanguageModel.XAiLanguageModelOptions);
+const ModelNameArbitrary = S.toArbitrary(XAiLanguageModel.XAiModelName);
+const QueryScalarArbitrary = S.toArbitrary(XAiQueryScalar);
+const QueryValueArbitrary = S.toArbitrary(XAiQueryValue);
+const ResponseArbitrary = S.toArbitrary(XAiResponse);
+const ServerSentEventArbitrary = S.toArbitrary(XAiServerSentEvent);
+const WebSocketBaseUrlArbitrary = S.toArbitrary(XAiWebSocketBaseUrl);
+const WebSocketEventArbitrary = S.toArbitrary(XAiWebSocketEvent);
 
 const endpointIds = () => sortStrings(A.map(XAI_ENDPOINTS, (descriptor) => descriptor.id));
 
@@ -143,9 +183,9 @@ const TestHttpClientLayer = Layer.effect(
 const makeXAiUnitLayer = (): Layer.Layer<XAi | XAiTestHttp> =>
   XAi.makeLayer(
     XAiConfigInput.make({
-      apiKey: Redacted.make("api-test-key"),
+      apiKey: O.some(Redacted.make("api-test-key")),
       apiUrl: XAI_API_URL,
-      managementApiKey: Redacted.make("management-test-key"),
+      managementApiKey: O.some(Redacted.make("management-test-key")),
       managementApiUrl: XAI_MANAGEMENT_API_URL,
     })
   ).pipe(Layer.provide(TestHttpClientLayer), Layer.provideMerge(XAiTestHttpLayer));
@@ -153,7 +193,7 @@ const makeXAiUnitLayer = (): Layer.Layer<XAi | XAiTestHttp> =>
 const makeInvalidWebSocketUrlLayer = (): Layer.Layer<XAi | XAiTestHttp> =>
   XAi.makeLayer(
     XAiConfigInput.make({
-      apiKey: Redacted.make("api-test-key"),
+      apiKey: O.some(Redacted.make("api-test-key")),
       websocketUrl: "not a url",
     })
   ).pipe(Layer.provide(TestHttpClientLayer), Layer.provideMerge(XAiTestHttpLayer));
@@ -223,6 +263,167 @@ const requestFor = (descriptor: XAiEndpointDescriptor): XAiRequestOptions => {
 };
 
 describe("@beep/xai", () => {
+  it("keeps encoded xAI schema wire shapes byte-identical", () => {
+    const descriptor = XAI_ENDPOINTS[0];
+    if (descriptor === undefined) {
+      throw new Error("Expected xAI endpoint manifest to contain at least one endpoint.");
+    }
+
+    const decodedConfig = decode(XAiConfigInput, {
+      apiKey: "api-test-key",
+      apiUrl: "https://api.x.ai///",
+      managementApiKey: "management-test-key",
+      managementApiUrl: "https://management-api.x.ai///",
+      websocketUrl: "wss://api.x.ai///",
+    });
+    const request = XAiRequestOptions.make({
+      query: {
+        limit: 10,
+      },
+    });
+    const jsonResponse = XAiJsonResponse.make({
+      body: { ok: true },
+      contentType: O.some("application/json"),
+      headers: {},
+      status: 200,
+    });
+    const noBodyResponse = XAiNoBodyResponse.make({
+      headers: {},
+      status: 204,
+    });
+    const errorOptions = XAiErrorOptions.make({
+      status: O.some(500),
+    });
+    const error = XAiError.fromDescriptor(descriptor, "response status", { status: 429 });
+    const sseEvent = XAiServerSentEvent.make({
+      data: { delta: "hello" },
+      done: false,
+      index: 0,
+    });
+    const websocketEvent = decode(XAiWebSocketEvent, {
+      code: 1000,
+      kind: "close",
+      reason: "done",
+    });
+    const languageModelOptions = XAiLanguageModel.XAiLanguageModelOptions.make({
+      model: "grok-3",
+    });
+
+    expect(decodedConfig.apiUrl).toBe("https://api.x.ai");
+    expect(decodedConfig.managementApiUrl).toBe("https://management-api.x.ai");
+    expect(decodedConfig.websocketUrl).toBe("wss://api.x.ai");
+    expect(encode(XAiConfigInput, decodedConfig)).toEqual({
+      apiKey: "api-test-key",
+      apiUrl: "https://api.x.ai",
+      headers: {},
+      managementApiKey: "management-test-key",
+      managementApiUrl: "https://management-api.x.ai",
+      websocketUrl: "wss://api.x.ai",
+    });
+    expect(encode(XAiRequestOptions, request)).toEqual({
+      headers: {},
+      path: {},
+      query: {
+        limit: 10,
+      },
+    });
+    expect(encode(XAiResponse, jsonResponse)).toEqual({
+      _tag: "Json",
+      body: { ok: true },
+      contentType: "application/json",
+      headers: {},
+      status: 200,
+    });
+    expect(encode(XAiResponse, noBodyResponse)).toEqual({
+      _tag: "NoBody",
+      headers: {},
+      status: 204,
+    });
+    expect(encode(XAiErrorOptions, errorOptions)).toEqual({
+      status: 500,
+    });
+    expect(encode(XAiError, error)).toEqual({
+      _tag: "XAiError",
+      endpoint: descriptor.id,
+      method: descriptor.method,
+      methodName: descriptor.methodName,
+      path: descriptor.path,
+      reason: "response status",
+      status: 429,
+    });
+    expect(encode(XAiServerSentEvent, sseEvent)).toEqual({
+      data: { delta: "hello" },
+      done: false,
+      index: 0,
+    });
+    expect(encode(XAiWebSocketEvent, websocketEvent)).toEqual({
+      code: 1000,
+      kind: "close",
+      reason: "done",
+    });
+    expect(encode(XAiLanguageModel.XAiLanguageModelOptions, languageModelOptions)).toEqual({
+      model: "grok-3",
+    });
+    expect(Result.isFailure(S.decodeUnknownResult(XAiHttpBaseUrl)("not a url"))).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(XAiWebSocketBaseUrl)("https://api.x.ai"))).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(XAiHttpStatusCode)(99))).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(XAiWebSocketEvent)({ code: 999, kind: "close" }))).toBe(true);
+    expect(Result.isFailure(S.decodeUnknownResult(XAiLanguageModel.XAiModelName)(""))).toBe(true);
+  });
+
+  it("round-trips crispened xAI schemas through their encoded form", () => {
+    fc.assert(
+      fc.property(
+        ConfigInputArbitrary,
+        EndpointArbitrary,
+        ErrorOptionsArbitrary,
+        ErrorArbitrary,
+        HttpBaseUrlArbitrary,
+        HttpStatusCodeArbitrary,
+        LanguageModelOptionsArbitrary,
+        ModelNameArbitrary,
+        QueryScalarArbitrary,
+        QueryValueArbitrary,
+        ResponseArbitrary,
+        ServerSentEventArbitrary,
+        WebSocketBaseUrlArbitrary,
+        WebSocketEventArbitrary,
+        (
+          config,
+          endpoint,
+          errorOptions,
+          error,
+          httpBaseUrl,
+          httpStatusCode,
+          languageModelOptions,
+          modelName,
+          queryScalar,
+          queryValue,
+          response,
+          serverSentEvent,
+          websocketBaseUrl,
+          websocketEvent
+        ) => {
+          expectRoundTrip(XAiConfigInput, config);
+          expectRoundTrip(XAiEndpoint, endpoint);
+          expectRoundTrip(XAiErrorOptions, errorOptions);
+          expectRoundTrip(XAiError, error);
+          expectRoundTrip(XAiHttpBaseUrl, httpBaseUrl);
+          expectRoundTrip(XAiHttpStatusCode, httpStatusCode);
+          expectRoundTrip(XAiLanguageModel.XAiLanguageModelOptions, languageModelOptions);
+          expectRoundTrip(XAiLanguageModel.XAiModelName, modelName);
+          expectRoundTrip(XAiQueryScalar, queryScalar);
+          expectRoundTrip(XAiQueryValue, queryValue);
+          expectRoundTrip(XAiResponse, response);
+          expectRoundTrip(XAiServerSentEvent, serverSentEvent);
+          expectRoundTrip(XAiWebSocketBaseUrl, websocketBaseUrl);
+          expectRoundTrip(XAiWebSocketEvent, websocketEvent);
+        }
+      ),
+      { numRuns: 25 }
+    );
+  });
+
   layer(makeXAiUnitLayer())((it) =>
     it.effect(
       "keeps endpoint manifest and service surface aligned",
@@ -346,7 +547,7 @@ describe("@beep/xai", () => {
 
         expect(statusError).toBeInstanceOf(XAiError);
         expect(statusError.reason).toBe("response status");
-        expect(statusError.status).toBe(429);
+        expect(O.getOrUndefined(statusError.status)).toBe(429);
         expect(malformedError.reason).toBe("response decoding");
         expect(multipartError.reason).toBe("multipart encoding");
         expect(sseError.reason).toBe("sse decoding");
@@ -412,13 +613,13 @@ describe("@beep/xai", () => {
         );
 
         expect(transportError.reason).toBe("transport");
-        expect(transportError.cause).toBe("HttpClientError:TransportError");
+        expect(O.getOrUndefined(transportError.cause)).toBe("HttpClientError:TransportError");
         expect(websocketError.reason).toBe("websocket");
-        expect(websocketError.cause).toBe("Error");
+        expect(O.getOrUndefined(websocketError.cause)).toBe("Error");
         expect(hostileProxyError.reason).toBe("websocket");
-        expect(hostileProxyError.cause).toBeUndefined();
+        expect(O.isNone(hostileProxyError.cause)).toBe(true);
         expect(throwingNameError.reason).toBe("websocket");
-        expect(throwingNameError.cause).toBeUndefined();
+        expect(O.isNone(throwingNameError.cause)).toBe(true);
         expect(rendered).not.toContain("Bearer");
         expect(rendered).not.toContain("api-test-key");
         expect(rendered).not.toContain("websocket-secret");

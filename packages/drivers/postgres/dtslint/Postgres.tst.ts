@@ -11,6 +11,7 @@ import {
   PostgresError,
   PostgresErrorContext,
 } from "@beep/postgres";
+import * as O from "effect/Option";
 import { describe, expect, it } from "tstyche";
 import type {
   EffectDrizzlePgConfig,
@@ -22,7 +23,6 @@ import type {
   PostgresDrizzleDatabase,
 } from "@beep/postgres";
 import type { Effect, Layer } from "effect";
-import type * as O from "effect/Option";
 
 declare const client: PostgresClientValue;
 declare const db: PostgresDrizzleDatabase;
@@ -38,14 +38,14 @@ describe("@beep/postgres", () => {
 
   it("exports Postgres errors and formatting helpers", () => {
     expect(
-      PostgresErrorContext.make({ query: "select 1", sqlStateName: "UNIQUE_VIOLATION" })
+      PostgresErrorContext.make({ query: O.some("select 1"), sqlStateName: O.some("UNIQUE_VIOLATION") })
     ).type.toBe<PostgresErrorContext>();
     expect(PostgresError.fromUnknown("query", new Error("boom"))).type.toBe<PostgresError>();
     expect(
       PostgresError.fromUnknown(
         "query",
         new Error("boom"),
-        PostgresErrorContext.make({ query: "select 1", sqlStateName: "UNIQUE_VIOLATION" })
+        PostgresErrorContext.make({ query: O.some("select 1"), sqlStateName: O.some("UNIQUE_VIOLATION") })
       )
     ).type.toBe<PostgresError>();
     expect(formatSql("select 1")).type.toBe<string>();

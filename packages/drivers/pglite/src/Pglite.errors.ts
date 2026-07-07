@@ -6,16 +6,17 @@
  */
 
 import { $PgliteId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { O } from "@beep/utils";
 import * as S from "effect/Schema";
 
 const $I = $PgliteId.create("Pglite.errors");
 
 const decodeDefectOption = S.decodeUnknownOption(S.Defect({ includeStack: true }));
+const decodeMessageOption = S.decodeUnknownOption(S.NonEmptyString);
 
 const getErrorMessage = (value: unknown): O.Option<string> =>
-  value instanceof Error ? O.some(value.message) : O.none();
+  value instanceof Error ? decodeMessageOption(value.message) : O.none();
 
 /**
  * Technical failure raised by the `@beep/pglite` driver boundary.
@@ -39,9 +40,21 @@ const getErrorMessage = (value: unknown): O.Option<string> =>
 export class PgliteError extends TaggedErrorClass<PgliteError>($I`PgliteError`)(
   "PgliteError",
   {
-    operation: S.String,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
-    message: S.OptionFromOptionalKey(S.String),
+    operation: S.NonEmptyString.annotateKey({
+      description: "Driver operation that failed.",
+    }),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Original native or third-party defect when one was available.",
+      })
+    ),
+    message: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Non-empty message extracted from the originating failure.",
+      })
+    ),
   },
   $I.annote("PgliteError", {
     description: "Technical PGlite driver failure scoped to a driver operation.",

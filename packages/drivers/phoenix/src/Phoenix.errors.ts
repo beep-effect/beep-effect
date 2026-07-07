@@ -8,11 +8,10 @@
 import { $PhoenixId } from "@beep/identity";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import { thunkUndefined } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Result } from "effect";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const $I = $PhoenixId.create("Phoenix.errors");
@@ -55,7 +54,6 @@ export const PhoenixOperation = LiteralKit([
  * @since 0.0.0
  */
 export type PhoenixOperation = typeof PhoenixOperation.Type;
-const isPhoenixOperation = S.is(PhoenixOperation);
 
 /**
  * Technical error reasons emitted by the Phoenix driver.
@@ -100,10 +98,25 @@ export type PhoenixErrorReason = typeof PhoenixErrorReason.Type;
  */
 export class PhoenixErrorOptions extends S.Class<PhoenixErrorOptions>($I`PhoenixErrorOptions`)(
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
+    cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({
+      description: "Optional failure cause converted to a redacted diagnostic label.",
+    }),
   },
   $I.annote("PhoenixErrorOptions", {
     description: "Options for configuring PhoenixError instances, including optional redacted cause data.",
+  })
+) {}
+
+class PhoenixErrorOperationOptionsInput extends S.Class<PhoenixErrorOperationOptionsInput>(
+  $I`PhoenixErrorOperationOptionsInput`
+)(
+  {
+    cause: S.optionalKey(S.Unknown).annotateKey({
+      description: "Unknown operation failure cause accepted by PhoenixError.operation.",
+    }),
+  },
+  $I.annote("PhoenixErrorOperationOptionsInput", {
+    description: "Operation error constructor input before redacted cause-label extraction.",
   })
 ) {}
 
@@ -124,9 +137,15 @@ export class PhoenixErrorOptions extends S.Class<PhoenixErrorOptions>($I`Phoenix
 export class PhoenixError extends TaggedErrorClass<PhoenixError>($I`PhoenixError`)(
   "PhoenixError",
   {
-    cause: S.optionalKey(S.String),
-    operation: PhoenixOperation,
-    reason: PhoenixErrorReason,
+    cause: S.optionalKey(S.String).annotateKey({
+      description: "Redacted diagnostic label derived from the original failure cause.",
+    }),
+    operation: PhoenixOperation.annotateKey({
+      description: "Phoenix driver operation that failed.",
+    }),
+    reason: PhoenixErrorReason.annotateKey({
+      description: "Technical failure reason for the Phoenix operation.",
+    }),
   },
   $I.annote("PhoenixError", {
     description: "Redacted technical failure raised by the Phoenix driver boundary.",
@@ -157,22 +176,26 @@ export class PhoenixError extends TaggedErrorClass<PhoenixError>($I`PhoenixError
       options?: PhoenixErrorOptions | { readonly cause?: unknown }
     ): (operation: PhoenixOperation) => PhoenixError;
   } = dual(
-    (args) => args.length >= 2 && isPhoenixOperation(args[0]),
+    (args) => args.length >= 2 && S.is(PhoenixOperation)(args[0]),
     (
       operation: PhoenixOperation,
       reason: PhoenixErrorReason,
       options: PhoenixErrorOptions | { readonly cause?: unknown } = {}
-    ): PhoenixError =>
-      PhoenixError.make({
+    ): PhoenixError => {
+      const operationOptions = PhoenixErrorOperationOptionsInput.make(options);
+      return PhoenixError.make({
         operation,
         reason,
-        ...R.getSomes({
-          cause: causeFromUnknown(options.cause),
+        ...O.getSomesStruct({
+          cause: causeFromUnknown(operationOptions.cause),
         }),
-      })
+      });
+    }
   );
 }
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   if (!P.isObject(value)) {
     return O.none();

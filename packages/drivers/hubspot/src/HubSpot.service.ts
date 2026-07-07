@@ -6,13 +6,14 @@
  */
 
 import { $HubspotId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { O, Str } from "@beep/utils";
 import { Config, Context, Effect, Layer, pipe } from "effect";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import { HubSpotConfigInput } from "./HubSpot.config.ts";
+import { HubSpotAccountId, HubSpotBaseUrl, HubSpotConfigInput, HubSpotUrl } from "./HubSpot.config.ts";
 import { HubSpotError } from "./HubSpot.errors.ts";
 import type { Redacted as RedactedType } from "effect";
 import type * as HttpClientError from "effect/unstable/http/HttpClientError";
@@ -30,9 +31,44 @@ const HubSpotContactEmail = S.NonEmptyString.check(
   S.isPattern(hubSpotEmailPattern, {
     message: "HubSpot contact email must be a valid email address.",
   })
-).pipe(
-  $I.annoteSchema("HubSpotContactEmail", {
-    description: "HubSpot contact email used as the CRM upsert identity.",
+)
+  .annotate({
+    toArbitrary: () => (fc) => fc.constantFrom("tom@example.com", "ada.lovelace@example.org"),
+  })
+  .pipe(
+    $I.annoteSchema("HubSpotContactEmail", {
+      description: "HubSpot contact email used as the CRM upsert identity.",
+    }),
+    SchemaUtils.withCodecStatics
+  );
+const HubSpotFieldName = S.NonEmptyString.pipe(
+  $I.annoteSchema("HubSpotFieldName", {
+    description: "Non-empty HubSpot form or CRM property field name.",
+  })
+);
+const HubSpotFormGuid = S.NonEmptyString.pipe(
+  $I.annoteSchema("HubSpotFormGuid", {
+    description: "Non-empty HubSpot form GUID.",
+  })
+);
+const HubSpotContactId = S.NonEmptyString.pipe(
+  $I.annoteSchema("HubSpotContactId", {
+    description: "Non-empty HubSpot CRM contact identifier.",
+  })
+);
+const HubSpotObjectWriteTraceId = S.NonEmptyString.pipe(
+  $I.annoteSchema("HubSpotObjectWriteTraceId", {
+    description: "Non-empty HubSpot CRM object write trace identifier.",
+  })
+);
+const HubSpotSubmittedAtEpochMillis = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+  $I.annoteSchema("HubSpotSubmittedAtEpochMillis", {
+    description: "Non-negative integer epoch-millisecond HubSpot form submission timestamp.",
+  })
+);
+const HubSpotUpsertStatus = S.NonEmptyString.pipe(
+  $I.annoteSchema("HubSpotUpsertStatus", {
+    description: "Non-empty HubSpot CRM batch upsert status.",
   })
 );
 
@@ -56,8 +92,12 @@ const HubSpotContactEmail = S.NonEmptyString.check(
  */
 export class HubSpotFormField extends S.Class<HubSpotFormField>($I`HubSpotFormField`)(
   {
-    name: S.String,
-    value: S.String,
+    name: HubSpotFieldName.annotateKey({
+      description: "HubSpot form field or CRM property name.",
+    }),
+    value: S.String.annotateKey({
+      description: "HubSpot form field value forwarded unchanged to the API.",
+    }),
   },
   $I.annote("HubSpotFormField", {
     description: "HubSpot form field submission value.",
@@ -84,9 +124,15 @@ export class HubSpotFormField extends S.Class<HubSpotFormField>($I`HubSpotFormFi
  */
 export class HubSpotFormContext extends S.Class<HubSpotFormContext>($I`HubSpotFormContext`)(
   {
-    ipAddress: S.optionalKey(S.String),
-    pageName: S.optionalKey(S.String),
-    pageUri: S.optionalKey(S.String),
+    ipAddress: S.optionalKey(S.String).annotateKey({
+      description: "Optional visitor IP address supplied to HubSpot Forms context.",
+    }),
+    pageName: S.optionalKey(S.NonEmptyString).annotateKey({
+      description: "Optional non-empty page name supplied to HubSpot Forms context.",
+    }),
+    pageUri: S.optionalKey(HubSpotUrl).annotateKey({
+      description: "Optional absolute page URL supplied to HubSpot Forms context.",
+    }),
   },
   $I.annote("HubSpotFormContext", {
     description: "HubSpot form submission context.",
@@ -113,15 +159,25 @@ export class HubSpotFormContext extends S.Class<HubSpotFormContext>($I`HubSpotFo
  */
 export class HubSpotSubmitFormRequest extends S.Class<HubSpotSubmitFormRequest>($I`HubSpotSubmitFormRequest`)(
   {
-    context: S.optionalKey(HubSpotFormContext),
-    fields: S.Array(HubSpotFormField),
-    formGuid: S.String,
-    submittedAt: S.optionalKey(S.Finite),
+    context: S.optionalKey(HubSpotFormContext).annotateKey({
+      description: "Optional HubSpot form submission context.",
+    }),
+    fields: S.Array(HubSpotFormField).annotateKey({
+      description: "HubSpot form fields forwarded in submission order.",
+    }),
+    formGuid: HubSpotFormGuid.annotateKey({
+      description: "HubSpot form GUID receiving the submission.",
+    }),
+    submittedAt: S.optionalKey(HubSpotSubmittedAtEpochMillis).annotateKey({
+      description: "Optional form submission timestamp as epoch milliseconds.",
+    }),
   },
   $I.annote("HubSpotSubmitFormRequest", {
     description: "HubSpot form submission request.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(HubSpotSubmitFormRequest);
+}
 
 /**
  * HubSpot form submission response.
@@ -142,13 +198,19 @@ export class HubSpotSubmitFormRequest extends S.Class<HubSpotSubmitFormRequest>(
  */
 export class HubSpotSubmitFormResponse extends S.Class<HubSpotSubmitFormResponse>($I`HubSpotSubmitFormResponse`)(
   {
-    inlineMessage: S.optionalKey(S.String),
-    redirectUri: S.optionalKey(S.String),
+    inlineMessage: S.optionalKey(S.String).annotateKey({
+      description: "Optional inline message returned by HubSpot after form submission.",
+    }),
+    redirectUri: S.optionalKey(HubSpotUrl).annotateKey({
+      description: "Optional absolute redirect URL returned by HubSpot after form submission.",
+    }),
   },
   $I.annote("HubSpotSubmitFormResponse", {
     description: "HubSpot form submission response.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(HubSpotSubmitFormResponse);
+}
 
 /**
  * HubSpot contact upsert request using email as the stable identifier.
@@ -172,14 +234,22 @@ export class HubSpotSubmitFormResponse extends S.Class<HubSpotSubmitFormResponse
  */
 export class HubSpotUpsertContactRequest extends S.Class<HubSpotUpsertContactRequest>($I`HubSpotUpsertContactRequest`)(
   {
-    email: HubSpotContactEmail,
-    objectWriteTraceId: S.optionalKey(S.String),
-    properties: S.Record(S.String, S.String),
+    email: HubSpotContactEmail.annotateKey({
+      description: "HubSpot contact email used as the upsert identity.",
+    }),
+    objectWriteTraceId: S.optionalKey(HubSpotObjectWriteTraceId).annotateKey({
+      description: "Optional non-empty HubSpot CRM object write trace identifier.",
+    }),
+    properties: S.Record(HubSpotFieldName, S.String).annotateKey({
+      description: "HubSpot CRM contact properties forwarded unchanged to the API.",
+    }),
   },
   $I.annote("HubSpotUpsertContactRequest", {
     description: "HubSpot contact upsert request using email as the stable identifier.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(HubSpotUpsertContactRequest);
+}
 
 /**
  * HubSpot contact upsert result.
@@ -200,7 +270,9 @@ export class HubSpotUpsertContactRequest extends S.Class<HubSpotUpsertContactReq
  */
 export class HubSpotUpsertContactResult extends S.Class<HubSpotUpsertContactResult>($I`HubSpotUpsertContactResult`)(
   {
-    id: S.String,
+    id: HubSpotContactId.annotateKey({
+      description: "HubSpot CRM contact identifier returned by the batch upsert API.",
+    }),
   },
   $I.annote("HubSpotUpsertContactResult", {
     description: "HubSpot contact upsert result.",
@@ -229,13 +301,19 @@ export class HubSpotUpsertContactResponse extends S.Class<HubSpotUpsertContactRe
   $I`HubSpotUpsertContactResponse`
 )(
   {
-    results: S.Array(HubSpotUpsertContactResult),
-    status: S.optionalKey(S.String),
+    results: S.Array(HubSpotUpsertContactResult).annotateKey({
+      description: "HubSpot CRM contact upsert result rows.",
+    }),
+    status: S.optionalKey(HubSpotUpsertStatus).annotateKey({
+      description: "Optional non-empty HubSpot CRM batch upsert status.",
+    }),
   },
   $I.annote("HubSpotUpsertContactResponse", {
     description: "HubSpot contact upsert response.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(HubSpotUpsertContactResponse);
+}
 
 /**
  * Public HubSpot service shape.
@@ -272,20 +350,14 @@ class ResolvedHubSpotConfig extends S.Class<ResolvedHubSpotConfig>($I`ResolvedHu
   {
     accountId: S.String,
     accessToken: S.String.pipe(S.Redacted, S.Option),
-    crmApiUrl: S.String,
-    formsApiUrl: S.String,
+    crmApiUrl: HubSpotBaseUrl,
+    formsApiUrl: HubSpotBaseUrl,
     headers: S.Record(S.String, S.String),
   },
   $I.annote("ResolvedHubSpotConfig", {
     description: "Resolved runtime configuration for the HubSpot service.",
   })
 ) {}
-
-const normalizeBaseUrl = Str.replace(/\/+$/, "");
-const decodeSubmitFormRequest = S.decodeUnknownEffect(HubSpotSubmitFormRequest);
-const decodeSubmitFormResponse = S.decodeUnknownEffect(HubSpotSubmitFormResponse);
-const decodeUpsertContactRequest = S.decodeUnknownEffect(HubSpotUpsertContactRequest);
-const decodeUpsertContactResponse = S.decodeUnknownEffect(HubSpotUpsertContactResponse);
 
 const resolveConfig = Effect.fn("HubSpot.resolveConfig")(function* (
   input: HubSpotConfigInput
@@ -294,16 +366,25 @@ const resolveConfig = Effect.fn("HubSpot.resolveConfig")(function* (
     O.fromNullishOr(input.accountId),
     O.match({
       onNone: HubSpotError.failEffectFromReasonThunk("config"),
-      onSome: Effect.succeed,
+      onSome: (value) =>
+        S.decodeUnknownEffect(HubSpotAccountId)(value).pipe(
+          Effect.mapError((cause) => HubSpotError.fromReason("config", { cause }))
+        ),
     })
+  );
+  const crmApiUrl = yield* S.decodeUnknownEffect(HubSpotBaseUrl)(input.crmApiUrl).pipe(
+    Effect.mapError((cause) => HubSpotError.fromReason("config", { cause }))
+  );
+  const formsApiUrl = yield* S.decodeUnknownEffect(HubSpotBaseUrl)(input.formsApiUrl).pipe(
+    Effect.mapError((cause) => HubSpotError.fromReason("config", { cause }))
   );
 
   return ResolvedHubSpotConfig.make({
     accountId,
     accessToken: O.fromUndefinedOr(input.accessToken),
-    crmApiUrl: normalizeBaseUrl(input.crmApiUrl),
-    formsApiUrl: normalizeBaseUrl(input.formsApiUrl),
-    headers: input.headers ?? {},
+    crmApiUrl,
+    formsApiUrl,
+    headers: input.headers,
   });
 });
 
@@ -331,7 +412,7 @@ const makeRequest = Effect.fn("HubSpot.makeSubmitFormRequest")(function* (
   request: HubSpotSubmitFormRequest
 ) {
   const decoded = yield* pipe(
-    decodeSubmitFormRequest(request),
+    HubSpotSubmitFormRequest.decodeEffect(request),
     Effect.mapError((cause) => HubSpotError.fromReason("request encoding", { cause, formGuid: request.formGuid }))
   );
   const url = submitFormUrl(config, decoded.formGuid);
@@ -354,7 +435,7 @@ const makeUpsertContactRequest = Effect.fn("HubSpot.makeUpsertContactRequest")(f
   request: HubSpotUpsertContactRequest
 ) {
   const decoded = yield* pipe(
-    decodeUpsertContactRequest(request),
+    HubSpotUpsertContactRequest.decodeEffect(request),
     Effect.mapError((cause) => HubSpotError.fromReason("request encoding", { cause, email: request.email }))
   );
   const url = upsertContactUrl(config);
@@ -415,7 +496,7 @@ const decodeResponse = Effect.fnUntraced(
 
     const body = yield* response.json;
 
-    return yield* decodeSubmitFormResponse(body);
+    return yield* HubSpotSubmitFormResponse.decodeEffect(body);
   },
   (effect, formGuid, url) =>
     effect.pipe(Effect.mapError((cause) => HubSpotError.fromReason("response decoding", { cause, formGuid, url })))
@@ -429,7 +510,7 @@ const decodeUpsertContact = Effect.fnUntraced(
   ): Effect.fn.Return<HubSpotUpsertContactResponse, HttpClientError.HttpClientError | S.SchemaError> {
     const body = yield* response.json;
 
-    return yield* decodeUpsertContactResponse(body);
+    return yield* HubSpotUpsertContactResponse.decodeEffect(body);
   },
   (effect, email, url) =>
     effect.pipe(Effect.mapError((cause) => HubSpotError.fromReason("response decoding", { cause, email, url })))

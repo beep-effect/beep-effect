@@ -27,10 +27,10 @@ export const VERSION = "0.0.0" as const;
  *
  * @example
  * ```ts
- * import { OpenAiCompatChatCompletionRequest } from "@beep/openai-compat"
+ * import { OpenAiCompatChatCompletionRequest, OpenAiCompatUserChatMessage } from "@beep/openai-compat"
  *
  * const request = OpenAiCompatChatCompletionRequest.make({
- *   messages: [{ content: "Hello", role: "user" }],
+ *   messages: [OpenAiCompatUserChatMessage.make({ content: "Hello", role: "user" })],
  *   model: "compat-model"
  * })
  * console.log(request)

@@ -1,50 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/duckdb/src/DuckDb.models.ts",
-    "line": 105,
-    "symbol": "DuckDbRow",
-    "smell": "Public row schema const has no colocated codec statics; docs decode it with `S.decodeUnknownSync(DuckDbRow)` instead of a schema-owned helper.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` so `DuckDbRow.is`, `.fromUnknown`, and `.decodeOption` are available. Helper verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/duckdb/src/DuckDb.models.ts",
-    "line": 148,
-    "symbol": "DuckDbRows",
-    "smell": "Public row-array schema has no colocated statics, and DuckDb.service.ts rebuilds an Effect decoder as `const decodeRows = S.decodeUnknownEffect(DuckDbRows)` at line 26.",
-    "proposedTarget": "Attach codec statics plus a schema-owned Effect decoder, e.g. `SchemaUtils.withCodecStatics` and `SchemaUtils.withStatics((schema) => ({ decodeEffect: S.decodeUnknownEffect(schema) }))`, then call `DuckDbRows.decodeEffect(rows)` from the service. `withStatics` verified at packages/foundation/modeling/schema/src/SchemaUtils/withStatics.ts:103 and v4 `S.decodeUnknownEffect` at .repos/effect-v4/packages/effect/src/Schema.ts:1325.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/duckdb/src/DuckDb.service.ts",
-    "line": 26,
-    "symbol": "decodeRows",
-    "smell": "Top-of-file schema-derived decoder `S.decodeUnknownEffect(DuckDbRows)` duplicates behavior that should live on the `DuckDbRows` schema.",
-    "proposedTarget": "Delete this helper after `DuckDbRows.decodeEffect` is attached in DuckDb.models.ts:148; use `DuckDbRows.decodeEffect(rows)` at queryOnConnection line 221.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/duckdb/src/DuckDb.errors.ts",
-    "line": 26,
-    "symbol": "existingDuckDbError",
-    "smell": "Private guard helper wraps `S.is(DuckDbError)` for `DuckDbError.fromUnknown`; this guard belongs on the error class.",
-    "proposedTarget": "Add `static readonly is = S.is(DuckDbError)` inside `DuckDbError` and replace the helper body with `DuckDbError.is(cause) ? O.some(cause) : O.none()`. In-repo class guard precedent: packages/foundation/modeling/md/src/Md.model.ts:873.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/drivers/duckdb/src/DuckDb.service.ts",
     "line": 79,
     "symbol": "DuckDbClient",

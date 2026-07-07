@@ -9,9 +9,8 @@ import { ExtractionResult } from "@beep/file-processing/Extraction";
 import { DetectionResult, FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { classifyFormatFromExtension, FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
 import { A } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Effect, Match } from "effect";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
 import { makeTikaError } from "./Tika.errors.ts";
 import type {
   DetectFileOperation,
@@ -131,7 +130,7 @@ export const makeTikaFileProcessingEngine = (): FileProcessingEngineShape => ({
       format: classifyFormatFromExtension(operation.source.extension),
       operationId: operation.operationId,
       sourceArtifactId: operation.source.id,
-      ...R.getSomes({
+      ...O.getSomesStruct({
         mediaType: O.fromUndefinedOr(operation.source.mediaType),
       }),
     });

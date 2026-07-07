@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $GovinfoId } from "@beep/identity";
+import { PosInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Sort } from "../Sort/index.ts";
 
@@ -47,7 +48,7 @@ export class SearchBody extends S.Class<SearchBody>($I`SearchBody`)(
     offsetMark: S.String.annotateKey({
       description: "Cursor for search pagination; initial requests usually use `*`.",
     }),
-    pageSize: S.Finite.check(S.isInt32()).annotateKey({
+    pageSize: PosInt.annotateKey({
       description: "Number of search results requested for the current page.",
     }),
     query: S.String.annotateKey({

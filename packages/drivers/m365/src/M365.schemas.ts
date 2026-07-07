@@ -9,6 +9,7 @@
  */
 
 import { $M365Id } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema";
 import { O } from "@beep/utils";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -23,6 +24,12 @@ const opt = <Sch extends S.Top>(schema: Sch, description: string) =>
   S.OptionFromOptionalKey(schema)
     .pipe(S.withConstructorDefault(Effect.succeed(O.none())))
     .annotateKey({ description });
+
+const GraphNonNegativeInt = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+  $I.annoteSchema("GraphNonNegativeInt", {
+    description: "Microsoft Graph count or byte-size integer, preserving public number form.",
+  })
+);
 
 /**
  * A Graph `identity` (user/application/device actor with optional id, name, email).
@@ -151,7 +158,7 @@ export class GraphFile extends S.Class<GraphFile>($I`GraphFile`)(
  */
 export class GraphFolder extends S.Class<GraphFolder>($I`GraphFolder`)(
   {
-    childCount: opt(S.Finite, "Number of immediate children."),
+    childCount: opt(GraphNonNegativeInt, "Number of immediate children."),
   },
   $I.annote("GraphFolder", { description: "The Graph folder facet of a driveItem." })
 ) {}
@@ -191,11 +198,11 @@ export class GraphDeleted extends S.Class<GraphDeleted>($I`GraphDeleted`)(
  */
 export class GraphQuota extends S.Class<GraphQuota>($I`GraphQuota`)(
   {
-    deleted: opt(S.Finite, "Bytes consumed by recycled items."),
-    remaining: opt(S.Finite, "Remaining bytes."),
+    deleted: opt(NonNegativeInt, "Bytes consumed by recycled items."),
+    remaining: opt(NonNegativeInt, "Remaining bytes."),
     state: opt(S.String, "Quota state (normal/nearing/critical/exceeded)."),
-    total: opt(S.Finite, "Total bytes."),
-    used: opt(S.Finite, "Used bytes."),
+    total: opt(NonNegativeInt, "Total bytes."),
+    used: opt(NonNegativeInt, "Used bytes."),
   },
   $I.annote("GraphQuota", { description: "A drive storage quota summary." })
 ) {}
@@ -365,7 +372,7 @@ export class GraphContentTypeInfo extends S.Class<GraphContentTypeInfo>($I`Graph
 export const GraphCollection = <Item extends S.Top>(item: Item) =>
   S.Struct({
     "@odata.context": opt(S.String, "OData metadata context URL."),
-    "@odata.count": opt(S.Finite, "Total count when `$count` was requested."),
+    "@odata.count": opt(GraphNonNegativeInt, "Total count when `$count` was requested."),
     "@odata.deltaLink": opt(S.String, "Delta continuation link (end of a delta page)."),
     "@odata.nextLink": opt(S.String, "Pagination continuation link."),
     value: S.Array(item).annotateKey({ description: "The page of decoded resources." }),
@@ -458,7 +465,7 @@ export class GraphDriveItem extends S.Class<GraphDriveItem>($I`GraphDriveItem`)(
     lastModifiedDateTime: opt(S.String, "Last-modified timestamp."),
     name: opt(S.String, "Item name."),
     parentReference: opt(GraphItemReference, "Parent locator."),
-    size: opt(S.Finite, "Item size in bytes."),
+    size: opt(GraphNonNegativeInt, "Item size in bytes."),
     webUrl: opt(S.String, "Browser URL for the item."),
   },
   $I.annote("GraphDriveItem", { description: "A OneDrive/SharePoint driveItem (file or folder)." })
@@ -484,7 +491,7 @@ export class GraphDriveItemVersion extends S.Class<GraphDriveItemVersion>($I`Gra
     "@microsoft.graph.downloadUrl": opt(S.String, "Short-lived preauthenticated version download URL."),
     lastModifiedBy: opt(GraphIdentitySet, "Last-modifying actor set."),
     lastModifiedDateTime: opt(S.String, "Version timestamp."),
-    size: opt(S.Finite, "Version size in bytes."),
+    size: opt(GraphNonNegativeInt, "Version size in bytes."),
   },
   $I.annote("GraphDriveItemVersion", { description: "A driveItem version." })
 ) {}

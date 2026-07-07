@@ -1,61 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/hubspot/src/HubSpot.service.ts",
-    "line": 26,
-    "symbol": "HubSpotContactEmail",
-    "smell": "Refined contact email schema carries a reusable boundary invariant but has no colocated codec statics; guards/decoders for this identity field would need to be rebuilt outside the schema.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` so `HubSpotContactEmail.is`, `.fromUnknown`, and `.decodeOption` live on the schema. Helper verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/hubspot/src/HubSpot.service.ts",
-    "line": 285,
-    "symbol": "decodeSubmitFormRequest",
-    "smell": "Top-of-file schema-derived decoder `S.decodeUnknownEffect(HubSpotSubmitFormRequest)` is separated from the S.Class model it serves and is consumed by `makeRequest` at line 334.",
-    "proposedTarget": "Move the decoder onto `HubSpotSubmitFormRequest` as an in-body `decodeEffect` static, then call `HubSpotSubmitFormRequest.decodeEffect(request)`. In-repo static decode precedent: packages/foundation/modeling/nlp/src/Core/Pattern.ts:582; v4 `S.decodeUnknownEffect` verified at .repos/effect-v4/packages/effect/src/Schema.ts:1325.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/hubspot/src/HubSpot.service.ts",
-    "line": 286,
-    "symbol": "decodeSubmitFormResponse",
-    "smell": "Top-of-file schema-derived decoder `S.decodeUnknownEffect(HubSpotSubmitFormResponse)` duplicates behavior that should live on the response S.Class; `decodeResponse` calls it at line 418.",
-    "proposedTarget": "Move the decoder onto `HubSpotSubmitFormResponse` as an in-body `decodeEffect` static and call that static from `decodeResponse`.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/hubspot/src/HubSpot.service.ts",
-    "line": 287,
-    "symbol": "decodeUpsertContactRequest",
-    "smell": "Top-of-file schema-derived decoder `S.decodeUnknownEffect(HubSpotUpsertContactRequest)` is detached from the request S.Class and is consumed by `makeUpsertContactRequest` at line 357.",
-    "proposedTarget": "Move the decoder onto `HubSpotUpsertContactRequest` as an in-body `decodeEffect` static.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/hubspot/src/HubSpot.service.ts",
-    "line": 288,
-    "symbol": "decodeUpsertContactResponse",
-    "smell": "Top-of-file schema-derived decoder `S.decodeUnknownEffect(HubSpotUpsertContactResponse)` is detached from the response S.Class and is consumed by `decodeUpsertContact` at line 432.",
-    "proposedTarget": "Move the decoder onto `HubSpotUpsertContactResponse` as an in-body `decodeEffect` static.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/drivers/hubspot/src/HubSpot.errors.ts",
     "line": 34,
     "symbol": "HubSpotErrorReason",

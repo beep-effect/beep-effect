@@ -16,17 +16,6 @@
   },
   {
     "ruleId": "schema-first-inventory",
-    "file": "packages/drivers/box/src/Box.service.ts",
-    "line": 101,
-    "symbol": "validateCcgConfig",
-    "smell": "Manual cross-field validation repeats the `BoxCcgConfigShape.check(...)` invariant from `packages/drivers/box/src/Box.config.ts:21` (`enterpriseId` or `userId` must be present).",
-    "proposedTarget": "Replace `validateCcgConfig` with schema-owned validation at the public layer boundary, e.g. import the `BoxCcgConfig` schema value and use `S.decodeUnknownEffect(BoxCcgConfig)(config)` before `makeCcgClient`, mapping the schema issue to `BoxError.fromReason(\"config\", ...)`; the existing regression at `packages/drivers/box/test/Box.service.test.ts:210` already proves the schema rejects the invalid subject shape. Effect v4 `S.decodeUnknownEffect` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`.",
-    "confidence": 0.86,
-    "mechanization": "assisted",
-    "roiRank": 1.55
-  },
-  {
-    "ruleId": "schema-first-inventory",
     "file": "packages/drivers/box/src/Box.streaming.ts",
     "line": 606,
     "symbol": "BoxStreamingOperations",
@@ -54,17 +43,6 @@
       "reason": "Service shapes are explicitly carved out by S1. This alias composes runtime operation ports; request/response payloads are schema-modeled separately and decoded by `decodeWith`.",
       "boundary": "Context.Service shape for the Box driver"
     }
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/drivers/box/src/Box.errors.ts",
-    "line": 174,
-    "symbol": "BoxError.fromReason",
-    "smell": "Exported static constructor in a schema-modeled file accepts `BoxErrorOptionsInput`, a plain object type literal that duplicates the nearby `BoxErrorOptions`/`BoxError` schema fields.",
-    "proposedTarget": "Promote `BoxErrorOptionsInput` to an annotated input schema (for example an `S.Class` like `BoxErrorOptions`, but with the intentional `cause: S.Unknown` input normalization), then have `fromReason` construct/decode that schema before `BoxError.make`. If the constructor later becomes a standalone function, use `Fn({ input, output })` as in `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66` and `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`; `Fn(...).implementSync` verified at `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:403`.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 0.5
   },
   {
     "ruleId": "schema-first-inventory",

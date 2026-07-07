@@ -6,10 +6,12 @@
  */
 
 import { $AiProviderCliId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $AiProviderCliId.create("AiProviderCli.models");
+const AiProviderCliProviderBase = LiteralKit(["claude", "codex"]);
+const AiProviderCliAuthStatusBase = LiteralKit(["authenticated", "not-authenticated"]);
 
 /**
  * Supported local AI provider CLI identifiers.
@@ -31,10 +33,11 @@ const $I = $AiProviderCliId.create("AiProviderCli.models");
  * @category models
  * @since 0.0.0
  */
-export const AiProviderCliProvider = LiteralKit(["claude", "codex"]).pipe(
+export const AiProviderCliProvider = AiProviderCliProviderBase.pipe(
   $I.annoteSchema("AiProviderCliProvider", {
     description: "AI provider CLI names supported by the driver.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(AiProviderCliProviderBase)
 );
 
 /**
@@ -75,10 +78,11 @@ export type AiProviderCliProvider = typeof AiProviderCliProvider.Type;
  * @category models
  * @since 0.0.0
  */
-export const AiProviderCliAuthStatus = LiteralKit(["authenticated", "not-authenticated"]).pipe(
+export const AiProviderCliAuthStatus = AiProviderCliAuthStatusBase.pipe(
   $I.annoteSchema("AiProviderCliAuthStatus", {
     description: "Authentication state inferred from a provider CLI status command.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(AiProviderCliAuthStatusBase)
 );
 
 /**
@@ -97,6 +101,45 @@ export const AiProviderCliAuthStatus = LiteralKit(["authenticated", "not-authent
  * @since 0.0.0
  */
 export type AiProviderCliAuthStatus = typeof AiProviderCliAuthStatus.Type;
+
+/**
+ * Process exit status accepted from provider CLI status commands.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { AiProviderCliExitCode } from "@beep/ai-provider-cli"
+ *
+ * const exitCode = S.decodeUnknownSync(AiProviderCliExitCode)(0)
+ *
+ * console.log(exitCode) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AiProviderCliExitCode = S.Int.check(S.isBetween({ minimum: 0, maximum: 255 })).pipe(
+  $I.annoteSchema("AiProviderCliExitCode", {
+    description: "Integer process exit status in the conventional 0-255 CLI range.",
+  })
+);
+
+/**
+ * Type for a provider CLI process exit status.
+ *
+ * @example
+ * ```ts
+ * import type { AiProviderCliExitCode } from "@beep/ai-provider-cli"
+ *
+ * const exitCode: AiProviderCliExitCode = 0
+ *
+ * console.log(exitCode) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AiProviderCliExitCode = typeof AiProviderCliExitCode.Type;
 
 /**
  * Captured provider CLI status process output.
@@ -124,9 +167,15 @@ export type AiProviderCliAuthStatus = typeof AiProviderCliAuthStatus.Type;
  */
 export class AiProviderCliProcessResult extends S.Class<AiProviderCliProcessResult>($I`AiProviderCliProcessResult`)(
   {
-    exitCode: S.Finite,
-    stderr: S.String,
-    stdout: S.String,
+    exitCode: AiProviderCliExitCode.annotateKey({
+      description: "Provider CLI process exit status.",
+    }),
+    stderr: S.String.annotateKey({
+      description: "Redacted standard error captured from the provider CLI status command.",
+    }),
+    stdout: S.String.annotateKey({
+      description: "Redacted standard output captured from the provider CLI status command.",
+    }),
   },
   $I.annote("AiProviderCliProcessResult", {
     description: "Stdout, stderr, and exit code captured from a provider CLI status command.",
@@ -158,9 +207,15 @@ export class AiProviderCliProcessResult extends S.Class<AiProviderCliProcessResu
  */
 export class AiProviderCliAuthProbe extends S.Class<AiProviderCliAuthProbe>($I`AiProviderCliAuthProbe`)(
   {
-    command: S.String,
-    provider: AiProviderCliProvider,
-    status: AiProviderCliAuthStatus,
+    command: S.NonEmptyString.annotateKey({
+      description: "Executable command used for the provider CLI status probe.",
+    }),
+    provider: AiProviderCliProvider.annotateKey({
+      description: "Provider CLI whose auth status was probed.",
+    }),
+    status: AiProviderCliAuthStatus.annotateKey({
+      description: "Redacted auth state inferred from the provider CLI exit status.",
+    }),
   },
   $I.annote("AiProviderCliAuthProbe", {
     description: "Provider CLI auth probe result without raw account or token output.",

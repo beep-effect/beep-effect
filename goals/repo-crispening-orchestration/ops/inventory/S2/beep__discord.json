@@ -1,49 +1,5 @@
 [
   {
-    "ruleId": "SFV4-normalization",
-    "file": "packages/drivers/discord/src/Discord.service.ts",
-    "line": 30,
-    "symbol": "normalizeBaseUrl",
-    "smell": "Trailing-slash normalization for `DiscordConfigInput.baseUrl` is applied in service construction instead of the config field codec.",
-    "proposedTarget": "Move slash stripping onto `DiscordConfigInput.baseUrl`, keeping the existing `SchemaUtils.withKeyDefaults(DISCORD_API_URL)` from `Discord.models.ts:54`; use a `SchemaTransformation.transform` as in `packages/foundation/modeling/schema/src/CommonTextSchemas.ts:36`.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/discord/src/Discord.service.ts",
-    "line": 34,
-    "symbol": "DiscordRawChannel",
-    "smell": "Raw Discord response schemas use optional keys (`guild_id`, `name`, `timestamp`), and the projection code re-wraps those fields with `O.fromUndefinedOr` at lines 163-182.",
-    "proposedTarget": "Decode optional raw response fields as Option with `S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)`, then pass those Options through directly. Local exemplar: `packages/drivers/pglite/src/Pglite.errors.ts:43`.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/discord/src/Discord.models.ts",
-    "line": 146,
-    "symbol": "DiscordChannelProof",
-    "smell": "Sanitized proof output models keep optional Discord metadata as `S.optionalKey(S.String)`, so domain consumers see `undefined` instead of `Option`.",
-    "proposedTarget": "Use `S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` for `guildId`, `name`, and `timestamp`; this aligns the public proof models with Option-shaped context exemplars like `packages/drivers/pglite/src/Pglite.errors.ts:43`.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/discord/src/Discord.errors.ts",
-    "line": 76,
-    "symbol": "DiscordError",
-    "smell": "Error context (`cause`, `method`, `path`, `status`) is modeled with `S.optionalKey(...)`, exposing absent diagnostics as `undefined`.",
-    "proposedTarget": "Convert optional context fields to `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)`; `packages/drivers/pglite/src/Pglite.errors.ts:43` is the local driver error exemplar.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
     "ruleId": "SFV4-defaults",
     "file": "packages/drivers/discord/src/Discord.service.ts",
     "line": 110,

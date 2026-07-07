@@ -8,18 +8,35 @@ import {
 import { ExtractFileOperation } from "@beep/file-processing/Operation";
 import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { TikaFileProcessingEngine } from "@beep/tika";
+import { TikaError, TikaErrorOptions, TikaErrorReason, TikaFileProcessingEngine } from "@beep/tika";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, Result } from "effect";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const SourceArtifactArbitrary = S.toArbitrary(SourceArtifact);
 const ExtractFileOperationArbitrary = S.toArbitrary(ExtractFileOperation);
+const TikaErrorReasonArbitrary = S.toArbitrary(TikaErrorReason);
+const TikaErrorOptionsArbitrary = S.toArbitrary(TikaErrorOptions);
+const TikaErrorArbitrary = S.toArbitrary(TikaError);
 const encodeSourceArtifact = S.encodeEffect(SourceArtifact);
 const decodeSourceArtifact = S.decodeUnknownEffect(SourceArtifact);
 const encodeExtractFileOperation = S.encodeEffect(ExtractFileOperation);
 const decodeExtractFileOperation = S.decodeUnknownEffect(ExtractFileOperation);
+
+const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
+  Result.getOrThrow(S.encodeResult(schema)(value));
+
+const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Encoded"]): Codec["Type"] =>
+  Result.getOrThrow(S.decodeUnknownResult(schema)(value));
+
+const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): void => {
+  const encoded = encode(schema, value);
+  const decoded = decode(schema, encoded);
+
+  expect(encode(schema, decoded)).toEqual(encoded);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
+};
 
 const fixtureIds = Effect.all({
   artifactId: S.decodeUnknownEffect(ArtifactId)(
@@ -57,17 +74,53 @@ const source = Effect.fn("TikaTest.source")(function* (ids: FixtureIds, extensio
 });
 
 describe("@beep/tika", () => {
+  it("keeps Tika error encoded shapes byte-identical", () => {
+    expect(encode(TikaErrorOptions, TikaErrorOptions.make({}))).toEqual({});
+    expect(encode(TikaErrorOptions, TikaErrorOptions.make({ statusCode: NonNegativeInt.make(503) }))).toEqual({
+      statusCode: 503,
+    });
+    expect(encode(TikaError, TikaError.fromReason("timeout"))).toEqual({
+      _tag: "TikaError",
+      reason: "timeout",
+    });
+    expect(
+      encode(
+        TikaError,
+        TikaError.fromReason(
+          "response-status",
+          TikaErrorOptions.make({ cause: "exit 1", statusCode: NonNegativeInt.make(503) })
+        )
+      )
+    ).toEqual({
+      _tag: "TikaError",
+      cause: "exit 1",
+      reason: "response-status",
+      statusCode: 503,
+    });
+  });
+
   it("round-trips schema-derived extraction operation data through file-processing schemas", () =>
     fc.assert(
-      fc.property(SourceArtifactArbitrary, ExtractFileOperationArbitrary, (sourceArtifact, extractOperation) => {
-        const encodedSourceArtifact = Effect.runSync(encodeSourceArtifact(sourceArtifact));
-        const decodedSourceArtifact = Effect.runSync(decodeSourceArtifact(encodedSourceArtifact));
-        expect(Effect.runSync(encodeSourceArtifact(decodedSourceArtifact))).toEqual(encodedSourceArtifact);
+      fc.property(
+        SourceArtifactArbitrary,
+        ExtractFileOperationArbitrary,
+        TikaErrorReasonArbitrary,
+        TikaErrorOptionsArbitrary,
+        TikaErrorArbitrary,
+        (sourceArtifact, extractOperation, errorReason, errorOptions, error) => {
+          const encodedSourceArtifact = Effect.runSync(encodeSourceArtifact(sourceArtifact));
+          const decodedSourceArtifact = Effect.runSync(decodeSourceArtifact(encodedSourceArtifact));
+          expect(Effect.runSync(encodeSourceArtifact(decodedSourceArtifact))).toEqual(encodedSourceArtifact);
 
-        const encodedExtractOperation = Effect.runSync(encodeExtractFileOperation(extractOperation));
-        const decodedExtractOperation = Effect.runSync(decodeExtractFileOperation(encodedExtractOperation));
-        expect(Effect.runSync(encodeExtractFileOperation(decodedExtractOperation))).toEqual(encodedExtractOperation);
-      }),
+          const encodedExtractOperation = Effect.runSync(encodeExtractFileOperation(extractOperation));
+          const decodedExtractOperation = Effect.runSync(decodeExtractFileOperation(encodedExtractOperation));
+          expect(Effect.runSync(encodeExtractFileOperation(decodedExtractOperation))).toEqual(encodedExtractOperation);
+
+          expectRoundTrip(TikaErrorReason, errorReason);
+          expectRoundTrip(TikaErrorOptions, errorOptions);
+          expectRoundTrip(TikaError, error);
+        }
+      ),
       { numRuns: 25 }
     ));
 

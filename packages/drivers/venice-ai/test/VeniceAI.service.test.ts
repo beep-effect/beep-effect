@@ -1,6 +1,9 @@
 import { $VeniceAiId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
+import { HttpStatus } from "@beep/schema/HttpStatus";
 import { decodeJsonString } from "@beep/schema/Json";
+import { NonNegativeInt } from "@beep/schema/Number";
+import { URLStr } from "@beep/schema/URL";
 import { parseYaml } from "@beep/schema/Yaml";
 import { A, Str, thunkEmptyStr, thunkTrue } from "@beep/utils";
 import {
@@ -9,12 +12,17 @@ import {
   VeniceAI,
   VeniceAIConfigInput,
   VeniceAIError,
+  VeniceAIJsonResponse,
+  VeniceAIOperationDescriptor,
   VeniceAIRequestOptions,
+  VeniceAIResponse,
+  VeniceAIServerSentEvent,
+  VeniceAITextResponse,
   VeniceAiChat,
   VeniceAiLanguageModel,
 } from "@beep/venice-ai";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { Context, Effect, Layer, Match, pipe, Redacted, Ref, Stream } from "effect";
+import { Context, Effect, Equal, Layer, Match, pipe, Redacted, Ref, Stream } from "effect";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
@@ -117,6 +125,35 @@ const decodePromptBody = S.decodeUnknownEffect(PromptBody);
 const encodePromptBody = S.encodeEffect(PromptBody);
 const PromptBodyArbitrary = S.toArbitrary(PromptBody);
 
+const decodeVeniceAIConfigInput = S.decodeUnknownEffect(VeniceAIConfigInput);
+const encodeVeniceAIConfigInput = S.encodeEffect(VeniceAIConfigInput);
+const VeniceAIConfigInputArbitrary = S.toArbitrary(VeniceAIConfigInput);
+const decodeVeniceAIRequestOptions = S.decodeUnknownEffect(VeniceAIRequestOptions);
+const encodeVeniceAIRequestOptions = S.encodeEffect(VeniceAIRequestOptions);
+const VeniceAIRequestOptionsArbitrary = S.toArbitrary(VeniceAIRequestOptions);
+const decodeVeniceAIOperationDescriptor = S.decodeUnknownEffect(VeniceAIOperationDescriptor);
+const encodeVeniceAIOperationDescriptor = S.encodeEffect(VeniceAIOperationDescriptor);
+const VeniceAIOperationDescriptorArbitrary = S.toArbitrary(VeniceAIOperationDescriptor);
+const decodeVeniceAIResponse = S.decodeUnknownEffect(VeniceAIResponse);
+const encodeVeniceAIResponse = S.encodeEffect(VeniceAIResponse);
+const VeniceAIResponseArbitrary = S.toArbitrary(VeniceAIResponse);
+const decodeVeniceAIServerSentEvent = S.decodeUnknownEffect(VeniceAIServerSentEvent);
+const encodeVeniceAIServerSentEvent = S.encodeEffect(VeniceAIServerSentEvent);
+const VeniceAIServerSentEventArbitrary = S.toArbitrary(VeniceAIServerSentEvent);
+const decodeVeniceAIError = S.decodeUnknownEffect(VeniceAIError);
+const encodeVeniceAIError = S.encodeEffect(VeniceAIError);
+const VeniceAIErrorArbitrary = S.toArbitrary(VeniceAIError);
+
+const expectRoundTrip = <A, Encoded>(
+  value: A,
+  encode: (value: A) => Effect.Effect<Encoded, S.SchemaError>,
+  decode: (encoded: Encoded) => Effect.Effect<A, S.SchemaError>
+): void => {
+  const encoded = Effect.runSync(encode(value));
+  const decoded = Effect.runSync(decode(encoded));
+  expect(Equal.equals(decoded, value)).toBe(true);
+};
+
 const sortStrings = A.sort(Order.String);
 const swaggerFile = new URL("../swagger.yaml", import.meta.url);
 
@@ -127,7 +164,7 @@ const readSwagger = Effect.gen(function* () {
     try: () => Bun.file(swaggerFile).text(),
     catch: () =>
       VeniceAIError.make({
-        path: "swagger.yaml",
+        path: O.some("swagger.yaml"),
         reason: "request encoding",
       }),
   });
@@ -244,23 +281,25 @@ const bodyContentTypeFor = (request: HttpClientRequest.HttpClientRequest): strin
 
 const testSetupError = (path: string): VeniceAIError =>
   VeniceAIError.make({
-    path,
+    path: O.some(path),
     reason: "request encoding",
   });
 
-const captureAt = (
-  captures: ReadonlyArray<CapturedRequest>,
-  index: number,
-  label: string
-): Effect.Effect<CapturedRequest, VeniceAIError> =>
+const arrayItemAt = <A>(values: ReadonlyArray<A>, index: number, label: string): Effect.Effect<A, VeniceAIError> =>
   pipe(
-    captures,
+    values,
     A.get(index),
     O.match({
       onNone: () => Effect.fail(testSetupError(label)),
       onSome: Effect.succeed,
     })
   );
+
+const captureAt = (
+  captures: ReadonlyArray<CapturedRequest>,
+  index: number,
+  label: string
+): Effect.Effect<CapturedRequest, VeniceAIError> => arrayItemAt(captures, index, label);
 
 const bodyTextFromCapture = (capture: CapturedRequest, label: string): Effect.Effect<string, VeniceAIError> =>
   pipe(
@@ -325,8 +364,8 @@ const TestHttpClientLayer = Layer.effect(
 
 const makeVeniceAIUnitLayer = (
   config = VeniceAIConfigInput.make({
-    apiKey: Redacted.make("test-key"),
-    baseUrl: VENICE_API_URL,
+    apiKey: O.some(Redacted.make("test-key")),
+    baseUrl: URLStr.make(VENICE_API_URL),
   })
 ) => VeniceAI.makeLayer(config).pipe(Layer.provide(TestHttpClientLayer), Layer.provideMerge(VeniceAITestHttpLayer));
 
@@ -354,25 +393,21 @@ const requestFor = (descriptor: (typeof VENICE_AI_OPERATION_DESCRIPTORS)[number]
   formData.append("file", new File(["hello"], "hello.txt", { type: "text/plain" }));
 
   return VeniceAIRequestOptions.make({
-    ...R.getSomes({
-      body: pipe(descriptor.requestContentTypes, A.contains("application/json"), (hasJson) =>
-        hasJson
-          ? O.some({
-              model: "venice-uncensored-1-2",
-              prompt: "hello",
-            })
-          : O.none()
-      ),
-    }),
-    ...R.getSomes({
-      formData: pipe(descriptor.requestContentTypes, A.contains("multipart/form-data"), (hasMultipart) =>
-        hasMultipart ? O.some(formData) : O.none()
-      ),
-    }),
-    path: pathParamsFor(descriptor.path),
-    query: {
+    body: pipe(descriptor.requestContentTypes, A.contains("application/json"), (hasJson) =>
+      hasJson
+        ? O.some({
+            model: "venice-uncensored-1-2",
+            prompt: "hello",
+          })
+        : O.none()
+    ),
+    formData: pipe(descriptor.requestContentTypes, A.contains("multipart/form-data"), (hasMultipart) =>
+      hasMultipart ? O.some(formData) : O.none()
+    ),
+    path: O.some(pathParamsFor(descriptor.path)),
+    query: O.some({
       limit: 1,
-    },
+    }),
   });
 };
 
@@ -389,6 +424,132 @@ describe("@beep/venice-ai", () => {
         expect(Effect.runSync(encodePromptBody(decodedPromptBody))).toEqual(encodedPromptBody);
       }),
       { numRuns: 25 }
+    ));
+
+  it("keeps crispened production schema encoded shapes stable", () => {
+    expect(Effect.runSync(encodeVeniceAIConfigInput(VeniceAIConfigInput.make({})))).toEqual({
+      baseUrl: VENICE_API_URL,
+      headers: {},
+    });
+    expect(
+      Effect.runSync(
+        encodeVeniceAIConfigInput(
+          VeniceAIConfigInput.make({
+            baseUrl: URLStr.make(`${VENICE_API_URL}///`),
+          })
+        )
+      )
+    ).toEqual({
+      baseUrl: VENICE_API_URL,
+      headers: {},
+    });
+    expect(Effect.runSync(encodeVeniceAIRequestOptions(VeniceAIRequestOptions.make({})))).toEqual({});
+    expect(
+      Effect.runSync(
+        encodeVeniceAIRequestOptions(
+          VeniceAIRequestOptions.make({
+            body: O.some({ model: "venice-uncensored-1-2" }),
+            headers: O.some({ "x-test": "ok" }),
+            path: O.some({ id: "api-key-id" }),
+            query: O.some({ limit: 1 }),
+          })
+        )
+      )
+    ).toEqual({
+      body: { model: "venice-uncensored-1-2" },
+      headers: { "x-test": "ok" },
+      path: { id: "api-key-id" },
+      query: { limit: 1 },
+    });
+    expect(
+      Effect.runSync(
+        encodeVeniceAIResponse(
+          VeniceAIJsonResponse.make({
+            body: { ok: true },
+            contentType: O.some("application/json"),
+            headers: {},
+            status: HttpStatus.make(200),
+          })
+        )
+      )
+    ).toEqual({
+      _tag: "Json",
+      body: { ok: true },
+      contentType: "application/json",
+      headers: {},
+      status: 200,
+    });
+    expect(
+      Effect.runSync(
+        encodeVeniceAIResponse(
+          VeniceAITextResponse.make({
+            contentType: O.none(),
+            headers: {},
+            status: HttpStatus.make(200),
+            text: "ok",
+          })
+        )
+      )
+    ).toEqual({
+      _tag: "Text",
+      headers: {},
+      status: 200,
+      text: "ok",
+    });
+    expect(
+      Effect.runSync(
+        encodeVeniceAIServerSentEvent(
+          VeniceAIServerSentEvent.make({ data: O.some({ delta: "hello" }), done: false, index: NonNegativeInt.make(0) })
+        )
+      )
+    ).toEqual({
+      data: { delta: "hello" },
+      done: false,
+      index: 0,
+    });
+    expect(
+      Effect.runSync(
+        encodeVeniceAIServerSentEvent(VeniceAIServerSentEvent.make({ done: true, index: NonNegativeInt.make(1) }))
+      )
+    ).toEqual({
+      done: true,
+      index: 1,
+    });
+    expect(
+      Effect.runSync(
+        encodeVeniceAIError(
+          VeniceAIError.make({
+            reason: "response status",
+            status: O.some(HttpStatus.make(500)),
+          })
+        )
+      )
+    ).toEqual({
+      _tag: "VeniceAIError",
+      reason: "response status",
+      status: 500,
+    });
+  });
+
+  it("round-trips crispened production schemas with schema-derived arbitraries", () =>
+    fc.assert(
+      fc.property(
+        VeniceAIConfigInputArbitrary,
+        VeniceAIRequestOptionsArbitrary,
+        VeniceAIOperationDescriptorArbitrary,
+        VeniceAIResponseArbitrary,
+        VeniceAIServerSentEventArbitrary,
+        VeniceAIErrorArbitrary,
+        (config, request, descriptor, response, event, error) => {
+          expectRoundTrip(config, encodeVeniceAIConfigInput, decodeVeniceAIConfigInput);
+          expectRoundTrip(request, encodeVeniceAIRequestOptions, decodeVeniceAIRequestOptions);
+          expectRoundTrip(descriptor, encodeVeniceAIOperationDescriptor, decodeVeniceAIOperationDescriptor);
+          expectRoundTrip(response, encodeVeniceAIResponse, decodeVeniceAIResponse);
+          expectRoundTrip(event, encodeVeniceAIServerSentEvent, decodeVeniceAIServerSentEvent);
+          expectRoundTrip(error, encodeVeniceAIError, decodeVeniceAIError);
+        }
+      ),
+      { numRuns: 15 }
     ));
 
   layer(makeVeniceAIUnitLayer())((it) =>
@@ -506,8 +667,8 @@ describe("@beep/venice-ai", () => {
         yield* venice.getCharacterBySlug(
           VeniceAIRequestOptions.make({
             accept: "text/csv",
-            headers: { "x-test": "ok" },
-            path: { slug: "ada lovelace" },
+            headers: O.some({ "x-test": "ok" }),
+            path: O.some({ slug: "ada lovelace" }),
           })
         );
 
@@ -523,41 +684,41 @@ describe("@beep/venice-ai", () => {
         yield* testHttp.reset;
         const missingPathError = yield* venice.getCharacterBySlug().pipe(Effect.flip);
         expect(missingPathError.reason).toBe("request encoding");
-        expect(missingPathError.operation).toBe("getCharacterBySlug");
+        expect(O.getOrUndefined(missingPathError.operation)).toBe("getCharacterBySlug");
 
         yield* testHttp.reset;
-        const invalidQueryRequest = { query: { bad: null } } as unknown as VeniceAIRequestOptions;
+        const invalidQueryRequest = { query: O.some({ bad: null }) } as unknown as VeniceAIRequestOptions;
         const invalidQueryError = yield* venice.listModels(invalidQueryRequest).pipe(Effect.flip);
         const capturesAfterInvalidQuery = yield* testHttp.captures;
         expect(invalidQueryError.reason).toBe("request encoding");
-        expect(invalidQueryError.operation).toBe("listModels");
+        expect(O.getOrUndefined(invalidQueryError.operation)).toBe("listModels");
         expect(capturesAfterInvalidQuery).toHaveLength(0);
 
         yield* testHttp.reset;
         const unsupportedJsonBodyError = yield* venice
-          .listModels(VeniceAIRequestOptions.make({ body: { ignored: true } }))
+          .listModels(VeniceAIRequestOptions.make({ body: O.some({ ignored: true }) }))
           .pipe(Effect.flip);
         const capturesAfterUnsupportedJsonBody = yield* testHttp.captures;
         expect(unsupportedJsonBodyError.reason).toBe("request encoding");
-        expect(unsupportedJsonBodyError.operation).toBe("listModels");
+        expect(O.getOrUndefined(unsupportedJsonBodyError.operation)).toBe("listModels");
         expect(capturesAfterUnsupportedJsonBody).toHaveLength(0);
 
         yield* testHttp.reset;
         const unsupportedMultipartBodyError = yield* venice
-          .listModels(VeniceAIRequestOptions.make({ formData: new FormData() }))
+          .listModels(VeniceAIRequestOptions.make({ formData: O.some(new FormData()) }))
           .pipe(Effect.flip);
         const capturesAfterUnsupportedMultipartBody = yield* testHttp.captures;
         expect(unsupportedMultipartBodyError.reason).toBe("request encoding");
-        expect(unsupportedMultipartBodyError.operation).toBe("listModels");
+        expect(O.getOrUndefined(unsupportedMultipartBodyError.operation)).toBe("listModels");
         expect(capturesAfterUnsupportedMultipartBody).toHaveLength(0);
 
         yield* testHttp.reset;
         yield* venice.webSearch(
           VeniceAIRequestOptions.make({
-            body: {
+            body: O.some({
               model: "venice-uncensored-1-2",
               prompt: "hello",
-            },
+            }),
           })
         );
 
@@ -579,8 +740,8 @@ describe("@beep/venice-ai", () => {
   layer(
     makeVeniceAIUnitLayer(
       VeniceAIConfigInput.make({
-        apiKey: Redacted.make("test-key"),
-        baseUrl: "https://example.test/api/v1///",
+        apiKey: O.some(Redacted.make("test-key")),
+        baseUrl: URLStr.make("https://example.test/api/v1///"),
       })
     )
   )((it) =>
@@ -629,19 +790,19 @@ describe("@beep/venice-ai", () => {
         expect(text._tag).toBe("Text");
         expect(binary._tag).toBe("Binary");
         expect(json.status).toBe(200);
-        expect(json.contentType).toContain("application/json");
+        expect(O.getOrUndefined(json.contentType)).toContain("application/json");
         if (json._tag === "Json") {
           expect(json.body).toEqual({ ok: true });
         }
         if (text._tag === "Text") {
           expect(text.text).toBe("a,b\n1,2");
-          expect(text.contentType).toContain("text/csv");
+          expect(O.getOrUndefined(text.contentType)).toContain("text/csv");
         }
         if (binary._tag !== "Binary") {
           return;
         }
         expect(binary.status).toBe(200);
-        expect(binary.contentType).toContain("image/png");
+        expect(O.getOrUndefined(binary.contentType)).toContain("image/png");
         expect(binary.bytes).toEqual(new Uint8Array([1, 2, 3]));
       })
     )
@@ -743,27 +904,27 @@ describe("@beep/venice-ai", () => {
 
         expect(statusError).toBeInstanceOf(VeniceAIError);
         expect(statusError.reason).toBe("response status");
-        expect(statusError.status).toBe(402);
-        expect(statusError.operation).toBe("topUpX402Balance");
-        expect(statusError.method).toBe("POST");
-        expect(statusError.path).toBe("/x402/top-up");
+        expect(O.getOrUndefined(statusError.status)).toBe(402);
+        expect(O.getOrUndefined(statusError.operation)).toBe("topUpX402Balance");
+        expect(O.getOrUndefined(statusError.method)).toBe("POST");
+        expect(O.getOrUndefined(statusError.path)).toBe("/x402/top-up");
         expect(malformedError.reason).toBe("response decoding");
-        expect(malformedError.cause).toBe("HttpClientError:DecodeError");
+        expect(O.getOrUndefined(malformedError.cause)).toBe("HttpClientError:DecodeError");
         expect(multipartError.reason).toBe("multipart encoding");
         expect(transportError.reason).toBe("transport");
-        expect(transportError.cause).toBe("HttpClientError:TransportError");
+        expect(O.getOrUndefined(transportError.cause)).toBe("HttpClientError:TransportError");
         expect(hostileProxyError.reason).toBe("transport");
-        expect(hostileProxyError.cause).toBeUndefined();
+        expect(O.isNone(hostileProxyError.cause)).toBe(true);
         expect(throwingNameError.reason).toBe("transport");
-        expect(throwingNameError.cause).toBeUndefined();
+        expect(O.isNone(throwingNameError.cause)).toBe(true);
         expect(sseError.reason).toBe("sse decoding");
-        expect(sseError.cause).toBeDefined();
+        expect(O.isSome(sseError.cause)).toBe(true);
         expect(nonSseError.reason).toBe("sse decoding");
-        expect(nonSseError.status).toBe(200);
+        expect(O.getOrUndefined(nonSseError.status)).toBe(200);
         expect(spoofedContentTypeError.reason).toBe("sse decoding");
-        expect(spoofedContentTypeError.status).toBe(200);
+        expect(O.getOrUndefined(spoofedContentTypeError.status)).toBe(200);
         expect(jsonError.reason).toBe("response decoding");
-        expect(jsonError.cause).toBe("HttpClientError:DecodeError");
+        expect(O.getOrUndefined(jsonError.cause)).toBe("HttpClientError:DecodeError");
       })
     )
   );
@@ -824,19 +985,24 @@ describe("@beep/venice-ai", () => {
 
         const chatEventArray = A.fromIterable(chatEvents);
         const responseEventArray = A.fromIterable(responseEvents);
+        const firstChatEvent = yield* arrayItemAt(chatEventArray, 0, "expected first chat SSE event");
+        const secondChatEvent = yield* arrayItemAt(chatEventArray, 1, "expected second chat SSE event");
+        const firstResponseEvent = yield* arrayItemAt(responseEventArray, 0, "expected first response SSE event");
+        const firstCapture = yield* captureAt(captures, 0, "expected chat stream capture");
+        const secondCapture = yield* captureAt(captures, 1, "expected response stream capture");
 
         expect(chatEventArray).toHaveLength(2);
         expect(responseEventArray).toHaveLength(2);
-        expect(chatEventArray[0]?.data).toEqual({ delta: "hello" });
-        expect(chatEventArray[0]?.done).toBe(false);
-        expect(chatEventArray[0]?.index).toBe(0);
-        expect(chatEventArray[1]?.done).toBe(true);
-        expect(chatEventArray[1]?.index).toBe(1);
-        expect(responseEventArray[0]?.data).toEqual({ delta: "hello" });
-        expect(captures[0]?.headers.accept).toBe("text/event-stream");
-        expect(captures[0]?.bodyText).toContain('"stream":true');
-        expect(captures[1]?.headers.accept).toBe("text/event-stream");
-        expect(captures[1]?.bodyText).toContain('"stream":true');
+        expect(O.getOrUndefined(firstChatEvent.data)).toEqual({ delta: "hello" });
+        expect(firstChatEvent.done).toBe(false);
+        expect(firstChatEvent.index).toBe(0);
+        expect(secondChatEvent.done).toBe(true);
+        expect(secondChatEvent.index).toBe(1);
+        expect(O.getOrUndefined(firstResponseEvent.data)).toEqual({ delta: "hello" });
+        expect(firstCapture.headers.accept).toBe("text/event-stream");
+        expect(firstCapture.bodyText).toContain('"stream":true');
+        expect(secondCapture.headers.accept).toBe("text/event-stream");
+        expect(secondCapture.bodyText).toContain('"stream":true');
       })
     )
   );
@@ -871,7 +1037,7 @@ describe("@beep/venice-ai", () => {
         if (O.isNone(first)) {
           return;
         }
-        expect(A.fromIterable(first.value)[0]?.data).toEqual({ delta: "first" });
+        expect(O.getOrUndefined(A.fromIterable(first.value)[0]?.data ?? O.none())).toEqual({ delta: "first" });
       })
     )
   );

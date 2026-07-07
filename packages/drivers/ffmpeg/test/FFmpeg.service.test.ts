@@ -5,17 +5,32 @@ import {
   ExtractFramesRequest,
   FFmpeg,
   FFmpegError,
+  FFmpegErrorContext,
+  FFmpegErrorFromUnknownOptions,
+  FFmpegEvent,
+  FFmpegProgressEvent,
+  FFmpegProgressPercent,
+  FrameCount,
+  FrameIndex,
   formatFrameFileName,
+  PositiveFrameRate,
+  PositiveMilliseconds,
   ProbeVideoRequest,
+  ProcessExitCode,
+  SafeFramePrefix,
+  VideoDimension,
+  VideoProbe,
 } from "@beep/ffmpeg";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
+import { Effect, Equal, FileSystem, Layer, Order, Path, pipe, Sink, Stream } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
-import type { FFmpegEvent } from "@beep/ffmpeg";
+
+type FFmpegEventValue = FFmpegEvent;
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -24,6 +39,18 @@ const provideScopedLayer =
 
 const encoder = new TextEncoder();
 const decodeManifest = S.decodeUnknownSync(S.fromJsonString(ExtractFramesManifest));
+
+const assertRoundTrip = <Schema extends S.Codec<unknown, unknown>>(schema: Schema): void => {
+  const encode = S.encodeSync(schema);
+  const decode = S.decodeUnknownSync(schema);
+
+  fc.assert(
+    fc.property(S.toArbitrary(schema), (value) => {
+      expect(Equal.equals(decode(encode(value)), value)).toBe(true);
+    }),
+    { numRuns: 25 }
+  );
+};
 
 // TODO(effect-native-migration): model schema
 const ffprobeJson = S.encodeUnknownSync(S.UnknownFromJsonString)({
@@ -111,6 +138,98 @@ const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E,
   );
 
 describe("@beep/ffmpeg", () => {
+  it("round-trips schema-modeled public payloads", () => {
+    assertRoundTrip(PositiveFrameRate);
+    assertRoundTrip(PositiveMilliseconds);
+    assertRoundTrip(SafeFramePrefix);
+    assertRoundTrip(FrameIndex);
+    assertRoundTrip(FrameCount);
+    assertRoundTrip(VideoDimension);
+    assertRoundTrip(FFmpegProgressPercent);
+    assertRoundTrip(ProcessExitCode);
+    assertRoundTrip(ProbeVideoRequest);
+    assertRoundTrip(VideoProbe);
+    assertRoundTrip(ExtractFramesRequest);
+    assertRoundTrip(FFmpegProgressEvent);
+    assertRoundTrip(FFmpegEvent);
+    assertRoundTrip(ExtractFramesManifest);
+    assertRoundTrip(FFmpegErrorContext);
+
+    const encodeErrorOptions = S.encodeSync(FFmpegErrorFromUnknownOptions);
+    const decodeErrorOptions = S.decodeUnknownSync(FFmpegErrorFromUnknownOptions);
+    fc.assert(
+      fc.property(
+        S.toArbitrary(FFmpegErrorFromUnknownOptions).filter((options) => O.isNone(options.cause)),
+        (options) => {
+          expect(Equal.equals(decodeErrorOptions(encodeErrorOptions(options)), options)).toBe(true);
+        }
+      ),
+      { numRuns: 25 }
+    );
+  });
+
+  it("keeps Option-modeled optional metadata encoded as omitted keys", () => {
+    expect(
+      S.encodeSync(VideoProbe)(
+        VideoProbe.make({
+          videoPath: "./clip.mp4",
+          durationSeconds: O.some(2),
+          fps: O.some(30),
+          frameCount: O.some(60),
+          height: O.some(1080),
+          width: O.some(1920),
+        })
+      )
+    ).toEqual({
+      videoPath: "./clip.mp4",
+      durationSeconds: 2,
+      fps: 30,
+      frameCount: 60,
+      height: 1080,
+      width: 1920,
+    });
+
+    expect(S.encodeSync(VideoProbe)(VideoProbe.make({ videoPath: "./clip.mp4" }))).toEqual({
+      videoPath: "./clip.mp4",
+    });
+
+    expect(
+      S.encodeSync(FFmpegProgressEvent)(
+        FFmpegProgressEvent.make({
+          frameCount: 1,
+          kind: "progress",
+          outTimeSeconds: O.some(0.5),
+          percent: 50,
+          progress: "continue",
+          speed: O.some("1x"),
+        })
+      )
+    ).toEqual({
+      frameCount: 1,
+      kind: "progress",
+      outTimeSeconds: 0.5,
+      percent: 50,
+      progress: "continue",
+      speed: "1x",
+    });
+
+    expect(
+      S.encodeSync(FFmpegProgressEvent)(
+        FFmpegProgressEvent.make({
+          frameCount: 1,
+          kind: "progress",
+          percent: 50,
+          progress: "continue",
+        })
+      )
+    ).toEqual({
+      frameCount: 1,
+      kind: "progress",
+      percent: 50,
+      progress: "continue",
+    });
+  });
+
   it("formats frame names and command arguments", () => {
     expect(
       formatFrameFileName({
@@ -158,11 +277,36 @@ describe("@beep/ffmpeg", () => {
         const ffmpeg = yield* FFmpeg;
         const probe = yield* ffmpeg.probeVideo(ProbeVideoRequest.make({ videoPath }));
 
-        expect(probe.width).toBe(1920);
-        expect(probe.height).toBe(1080);
-        expect(probe.durationSeconds).toBe(2);
-        expect(probe.fps).toBe(30);
-        expect(probe.frameCount).toBe(60);
+        expect(
+          pipe(
+            probe.width,
+            O.getOrElse(() => 0)
+          )
+        ).toBe(1920);
+        expect(
+          pipe(
+            probe.height,
+            O.getOrElse(() => 0)
+          )
+        ).toBe(1080);
+        expect(
+          pipe(
+            probe.durationSeconds,
+            O.getOrElse(() => 0)
+          )
+        ).toBe(2);
+        expect(
+          pipe(
+            probe.fps,
+            O.getOrElse(() => 0)
+          )
+        ).toBe(30);
+        expect(
+          pipe(
+            probe.frameCount,
+            O.getOrElse(() => 0)
+          )
+        ).toBe(60);
         expect(commands[0]?.command).toBe("ffprobe");
       })
     ).pipe(provideScopedLayer(Layer.mergeAll(NodeServices.layer, makeLayer(commands))));
@@ -172,7 +316,7 @@ describe("@beep/ffmpeg", () => {
     "extracts frames into final names and writes the default manifest",
     Effect.fnUntraced(function* () {
       const commands: Array<ChildProcess.StandardCommand> = [];
-      const events: Array<FFmpegEvent> = [];
+      const events: Array<FFmpegEventValue> = [];
 
       yield* withTempDirectory((tmpDir) =>
         Effect.gen(function* () {

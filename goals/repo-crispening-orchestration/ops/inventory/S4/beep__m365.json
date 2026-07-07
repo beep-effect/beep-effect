@@ -2,39 +2,6 @@
   {
     "ruleId": "SFV4-static-api",
     "file": "packages/drivers/m365/src/M365.service.ts",
-    "line": 697,
-    "symbol": "M365DriveItemDownload",
-    "smell": "Public tagged-union const is built with `S.Union(...).pipe(S.toTaggedUnion(\"_tag\"), $I.annoteSchema(...))` but lacks colocated codec statics for guard/soft decode use.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` so consumers can call `M365DriveItemDownload.is`, `.fromUnknown`, and `.decodeOption`. Union exemplar: `Block` at packages/foundation/modeling/md/src/Md.model.ts:1617; helper verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/m365/src/M365.errors.ts",
-    "line": 195,
-    "symbol": "safeBoolean",
-    "smell": "Passthrough pipe lambda `evaluate => pipe(Result.try(evaluate), Result.getOrElse(() => false))` should be `flow(...)`.",
-    "proposedTarget": "`const safeBoolean: (evaluate: () => boolean) => boolean = flow(Result.try, Result.getOrElse(() => false));` (`flow` already imported; v4 `flow` verified at .repos/effect-v4/packages/effect/src/Function.ts:1162).",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/m365/src/M365.errors.ts",
-    "line": 201,
-    "symbol": "httpClientCauseLabel",
-    "smell": "Passthrough `cause => pipe(O.fromNullishOr(cause), ...)` wrapper can be expressed point-free.",
-    "proposedTarget": "Rewrite as `const httpClientCauseLabel: (cause: unknown) => O.Option<string> = flow(O.fromNullishOr, O.filter((value) => safeBoolean(() => HttpClientError.isHttpClientError(value))), O.flatMap((value) => readProperty(value, \"reason\")), O.flatMap(readString(\"_tag\")), O.map((tag) => `HttpClientError:${tag}`));`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/m365/src/M365.service.ts",
     "line": 755,
     "symbol": "decodeRequest",
     "smell": "Detector hit: generic boundary decoder calls `S.decodeUnknownEffect(schema)` instead of schema-local statics.",

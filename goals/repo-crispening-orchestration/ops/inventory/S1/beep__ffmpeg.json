@@ -47,17 +47,6 @@
   {
     "ruleId": "SFV4-fn-schema",
     "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-    "line": 330,
-    "symbol": "formatFrameFileName",
-    "smell": "Exported utility in a schema-modeled service file accepts an inline object type (`{ index; padding; prefix }`) whose invariants duplicate existing frame-prefix and numeric domains instead of a schema-carried function contract.",
-    "proposedTarget": "Introduce an annotated `FormatFrameFileNameOptions` schema (for example `S.Class` with `index`, `padding`, and `prefix: SafeFramePrefix`) and a `FormatFrameFileName = Fn({ input: FormatFrameFileNameOptions, output: S.String }).pipe($I.annoteSchema(...))`; implement the public helper with `FormatFrameFileName.implementSync(...)`. In-repo exemplars: `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66` and `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`; `Fn(...).implementSync` verified at `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:403`.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 0.8
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
     "line": 350,
     "symbol": "buildFfprobeArgs",
     "smell": "Exported function in a schema-modeled file can look like an SFV4-fn-schema hit.",
@@ -69,17 +58,6 @@
       "reason": "The input contract is already the `ProbeVideoRequest` S.Class; the output is a command-vector projection for the native process port. Fn-wrapping would add invocation-time decode/throw semantics without moving a first-party payload invariant into Schema.",
       "boundary": "native ffprobe argv projection"
     }
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-    "line": 382,
-    "symbol": "buildExtractFramesArgs",
-    "smell": "Exported utility in a schema-modeled service file accepts an inline options object (`fps`, `outputPattern`, `videoPath`) instead of a named schema/Fn contract.",
-    "proposedTarget": "Introduce an annotated `BuildExtractFramesArgsOptions` S.Class for the command input and a `BuildExtractFramesArgs = Fn({ input: BuildExtractFramesArgsOptions, output: S.Array(S.String) }).pipe($I.annoteSchema(...))`, then implement the current helper with `.implementSync(...)`. In-repo exemplars: `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66` and `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`; `Fn(...).implementSync` verified at `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:403`.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 0.65
   },
   {
     "ruleId": "schema-first-inventory",

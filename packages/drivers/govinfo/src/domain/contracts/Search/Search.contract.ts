@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $GovinfoId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { HttpStatus2XX, HttpStatus4XX, HttpStatus5XX } from "@beep/schema/HttpStatus";
 import * as S from "effect/Schema";
 import { HttpApiSchema } from "effect/unstable/httpapi";
@@ -110,7 +110,7 @@ export class Success extends SearchResponse.extend<Success>($I`Success`)(
 export class FailureBadRequest extends TaggedErrorClass<FailureBadRequest>($I`FailureBadRequest`)(
   "FailureBadRequest",
   {
-    cause: S.OptionFromOptionalKey(S.Defect()),
+    cause: S.OptionFromOptionalKey(S.Defect()).pipe(SchemaUtils.withNoneDefault),
     status: S.tag(HttpStatus4XX.From.Enum.BadRequest),
   },
   $I.annote("FailureBadRequest", {
@@ -139,7 +139,7 @@ export class FailureBadRequest extends TaggedErrorClass<FailureBadRequest>($I`Fa
 export class FailureNotFound extends TaggedErrorClass<FailureNotFound>($I`FailureNotFound`)(
   "FailureNotFound",
   {
-    cause: S.OptionFromOptionalKey(S.Defect()),
+    cause: S.OptionFromOptionalKey(S.Defect()).pipe(SchemaUtils.withNoneDefault),
     status: S.tag(HttpStatus4XX.From.Enum.NotFound),
   },
   $I.annote("FailureNotFound", {
@@ -170,7 +170,7 @@ export class FailureInternalServerError extends TaggedErrorClass<FailureInternal
 )(
   "FailureInternalServerError",
   {
-    cause: S.OptionFromOptionalKey(S.Defect()),
+    cause: S.OptionFromOptionalKey(S.Defect()).pipe(SchemaUtils.withNoneDefault),
     status: S.tag(HttpStatus5XX.From.Enum.InternalServerError),
   },
   $I.annote("FailureInternalServerError", {
@@ -184,11 +184,8 @@ export class FailureInternalServerError extends TaggedErrorClass<FailureInternal
  * @example
  * ```ts
  * import { Failure } from "@beep/govinfo/domain/contracts/Search/Search.contract"
- * import * as S from "effect/Schema"
  *
- * const isSearchFailure = S.is(Failure)
- *
- * console.log(isSearchFailure({ _tag: "FailureNotFound", status: 404 }))
+ * console.log(Failure.is({ _tag: "FailureNotFound", status: 404 }))
  * ```
  *
  * @category errors
@@ -202,7 +199,8 @@ export const Failure = S.Union([
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("Failure", {
     description: "Tagged union of typed GovInfo search endpoint failures.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

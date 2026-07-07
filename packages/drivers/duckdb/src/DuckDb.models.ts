@@ -11,6 +11,7 @@
  */
 
 import { make } from "@beep/identity";
+import { JsonObject, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const { $DuckdbId } = make("duckdb");
@@ -40,8 +41,12 @@ const $I = $DuckdbId.create("DuckDb.models");
  */
 export class DuckDbConnectionOptions extends S.Class<DuckDbConnectionOptions>($I`DuckDbConnectionOptions`)(
   {
-    databaseOptions: S.optionalKey(S.Record(S.String, S.String)),
-    databasePath: S.String,
+    databaseOptions: S.optionalKey(S.Record(S.String, S.String)).annotateKey({
+      description: "Native DuckDB database option map passed through when present.",
+    }),
+    databasePath: S.String.annotateKey({
+      description: "DuckDB database path, including ':memory:' for an in-memory database.",
+    }),
   },
   $I.annote("DuckDbConnectionOptions", {
     description: "Connection options for a DuckDB database.",
@@ -74,8 +79,12 @@ export class DuckDbConnectionOptions extends S.Class<DuckDbConnectionOptions>($I
  */
 export class DuckDbParquetExport extends S.Class<DuckDbParquetExport>($I`DuckDbParquetExport`)(
   {
-    filePath: S.String,
-    tableName: S.String,
+    filePath: S.String.annotateKey({
+      description: "Filesystem path where DuckDB writes the Parquet file.",
+    }),
+    tableName: S.NonEmptyString.annotateKey({
+      description: "DuckDB table identifier to export.",
+    }),
   },
   $I.annote("DuckDbParquetExport", {
     description: "Parquet export request for a DuckDB table.",
@@ -93,19 +102,19 @@ export class DuckDbParquetExport extends S.Class<DuckDbParquetExport>($I`DuckDbP
  * @example
  * ```ts
  * import { DuckDbRow } from "@beep/duckdb"
- * import * as S from "effect/Schema"
  *
- * const row = S.decodeUnknownSync(DuckDbRow)({ count: 1, id: "run-1" })
+ * const row = DuckDbRow.fromUnknown({ count: 1, id: "run-1" })
  * console.log(row.id) // "run-1"
  * ```
  *
  * @category schemas
  * @since 0.0.0
  */
-export const DuckDbRow = S.Record(S.String, S.Unknown).pipe(
+export const DuckDbRow = JsonObject.pipe(
   $I.annoteSchema("DuckDbRow", {
     description: "JSON-compatible row returned from DuckDB queries.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -136,9 +145,8 @@ export type DuckDbRow = typeof DuckDbRow.Type;
  * @example
  * ```ts
  * import { DuckDbRows } from "@beep/duckdb"
- * import * as S from "effect/Schema"
  *
- * const rows = S.decodeUnknownSync(DuckDbRows)([{ id: "run-1" }])
+ * const rows = DuckDbRows.fromUnknown([{ id: "run-1" }])
  * console.log(rows.length) // 1
  * ```
  *
@@ -148,7 +156,11 @@ export type DuckDbRow = typeof DuckDbRow.Type;
 export const DuckDbRows = S.Array(DuckDbRow).pipe(
   $I.annoteSchema("DuckDbRows", {
     description: "JSON-compatible rows returned from DuckDB queries.",
-  })
+  }),
+  SchemaUtils.withCodecStatics,
+  SchemaUtils.withStatics((schema) => ({
+    decodeEffect: S.decodeUnknownEffect(schema),
+  }))
 );
 
 /**

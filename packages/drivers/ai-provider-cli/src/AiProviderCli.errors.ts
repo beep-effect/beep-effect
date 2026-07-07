@@ -6,8 +6,9 @@
  */
 
 import { $AiProviderCliId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
+import { AiProviderCliExitCode, AiProviderCliProvider } from "./AiProviderCli.models.ts";
 
 const $I = $AiProviderCliId.create("AiProviderCli.errors");
 
@@ -21,15 +22,16 @@ const $I = $AiProviderCliId.create("AiProviderCli.errors");
  *
  * @example
  * ```ts
+ * import * as O from "effect/Option"
  * import { AiProviderCliError } from "@beep/ai-provider-cli"
  *
  * const error = AiProviderCliError.make({
- *   command: "claude",
- *   exitCode: 127,
+ *   command: O.some("claude"),
+ *   exitCode: O.some(127),
  *   message: "Failed to execute provider CLI status command.",
  *   operation: "checkAuth",
  *   provider: "claude",
- *   stderr: "command not found"
+ *   stderr: O.some("command not found")
  * })
  *
  * console.log(error.operation) // "checkAuth"
@@ -41,13 +43,27 @@ const $I = $AiProviderCliId.create("AiProviderCli.errors");
 export class AiProviderCliError extends TaggedErrorClass<AiProviderCliError>($I`AiProviderCliError`)(
   "AiProviderCliError",
   {
-    command: S.optionalKey(S.String),
-    exitCode: S.optionalKey(S.Finite),
-    message: S.String,
-    operation: S.String,
-    provider: S.String,
-    stderr: S.optionalKey(S.String),
-    stdout: S.optionalKey(S.String),
+    command: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Executable command used for the provider CLI status probe, when available.",
+    }),
+    exitCode: S.OptionFromOptionalKey(AiProviderCliExitCode).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Provider CLI process exit status, when the process returned one.",
+    }),
+    message: S.NonEmptyString.annotateKey({
+      description: "Redacted human-readable failure summary.",
+    }),
+    operation: S.NonEmptyString.annotateKey({
+      description: "Driver operation that emitted the failure.",
+    }),
+    provider: AiProviderCliProvider.annotateKey({
+      description: "Provider CLI whose auth status probe failed.",
+    }),
+    stderr: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Redacted standard error captured from the provider CLI status command, when available.",
+    }),
+    stdout: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Redacted standard output captured from the provider CLI status command, when available.",
+    }),
   },
   $I.annote("AiProviderCliError", {
     description: "Redacted technical failure emitted by Claude or Codex CLI status probes.",

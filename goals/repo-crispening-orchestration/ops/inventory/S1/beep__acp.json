@@ -181,17 +181,6 @@
   },
   {
     "ruleId": "schema-first-inventory",
-    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
-    "line": 763,
-    "symbol": "isProtocolError",
-    "smell": "Hand-rolled validation checks `P.isObject(value)`, `P.isNumber(value.code)`, and `P.isString(value.message)` for an ACP protocol error shape even though the package already has an `AcpSchema.Error` schema and schema-derived guard usage.",
-    "proposedTarget": "Replace the manual guard with a schema-derived guard such as `const isAcpProtocolError = S.is(AcpSchema.Error)` and use it at `packages/drivers/acp/src/AcpProtocol.service.ts:556` before `AcpError.AcpRequestError.fromProtocolError(...)`; then delete `isProtocolError`. In-repo exemplar: `packages/drivers/acp/src/internal/shared.ts:7` defines `S.is(AcpSchema.Error)` and `packages/drivers/acp/src/internal/shared.ts:23` uses it at the RPC boundary. Effect v4 `S.is` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1256`.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 1.7
-  },
-  {
-    "ruleId": "schema-first-inventory",
     "file": "packages/drivers/acp/src/AcpTerminal.models.ts",
     "line": 26,
     "symbol": "AcpTerminal",

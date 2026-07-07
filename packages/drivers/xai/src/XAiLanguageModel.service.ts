@@ -12,6 +12,7 @@ import {
   makeFromProvider,
   OpenAiCompatLanguageModelConfig,
 } from "@beep/openai-compat";
+import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { Effect, Layer, pipe, Stream } from "effect";
 import * as S from "effect/Schema";
@@ -32,13 +33,53 @@ import type { XAiShape } from "./XAi.service.ts";
 const $I = $XaiId.create("XAiLanguageModel.service");
 
 /**
- * Options accepted by the xAI Effect AI language-model adapter.
+ * Non-empty xAI model identifier accepted by the language-model adapter.
+ *
+ * @example
+ * ```ts
+ * import { XAiLanguageModel } from "@beep/xai"
+ * import * as S from "effect/Schema"
+ *
+ * const model = S.decodeUnknownSync(XAiLanguageModel.XAiModelName)("grok-3")
+ * console.log(model)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const XAiModelName = S.NonEmptyString.pipe(
+  $I.annoteSchema("XAiModelName", {
+    description: "Non-empty xAI model identifier accepted by the language-model adapter.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Type for {@link XAiModelName}.
  *
  * @example
  * ```ts
  * import type { XAiLanguageModel } from "@beep/xai"
  *
+ * const model: XAiLanguageModel.XAiModelName = "grok-3"
+ * console.log(model)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type XAiModelName = typeof XAiModelName.Type;
+
+/**
+ * Options accepted by the xAI Effect AI language-model adapter.
+ *
+ * @example
+ * ```ts
+ * import type { XAiLanguageModel } from "@beep/xai"
+ * import * as O from "effect/Option"
+ *
  * const options: XAiLanguageModel.XAiLanguageModelOptions = {
+ *   config: O.none(),
  *   model: "grok-3"
  * }
  *
@@ -50,13 +91,15 @@ const $I = $XaiId.create("XAiLanguageModel.service");
  */
 export class XAiLanguageModelOptions extends S.Class<XAiLanguageModelOptions>($I`XAiLanguageModelOptions`)(
   {
-    config: S.optionalKey(OpenAiCompatLanguageModelConfig),
-    model: S.String,
+    config: S.OptionFromOptionalKey(OpenAiCompatLanguageModelConfig).pipe(SchemaUtils.withNoneDefault),
+    model: XAiModelName,
   },
   $I.annote("XAiLanguageModelOptions", {
     description: "Options accepted by the xAI Effect AI language-model adapter.",
   })
 ) {}
+
+type XAiLanguageModelOptionsInput = ConstructorParameters<typeof XAiLanguageModelOptions>[0];
 
 const moduleName = "XAiLanguageModel.service";
 
@@ -64,8 +107,13 @@ const makeAiError = (method: string, reason: AiError.AiErrorReason): AiError.AiE
   AiError.make({ method, module: moduleName, reason });
 
 const errorDescription = (error: XAiError): string =>
-  `xAI driver failed with ${error.reason}${error.methodName === undefined ? "" : ` during ${error.methodName}`}.`;
+  `xAI driver failed with ${error.reason}${O.match(error.methodName, {
+    onNone: () => "",
+    onSome: (methodName) => ` during ${methodName}`,
+  })}.`;
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const networkTransportError = (error: XAiError): AiError.NetworkError =>
   AiError.NetworkError.make({
     description: errorDescription(error),
@@ -73,8 +121,8 @@ const networkTransportError = (error: XAiError): AiError.NetworkError =>
     request: {
       hash: undefined,
       headers: {},
-      method: error.method ?? "POST",
-      url: error.path ?? "/",
+      method: O.getOrElse(error.method, () => "POST"),
+      url: O.getOrElse(error.path, () => "/"),
       urlParams: [],
     },
   });
@@ -87,14 +135,20 @@ const mapSchemaError =
 const mapXAiError =
   (method: string) =>
   (error: XAiError): AiError.AiError => {
-    if (error.status !== undefined) {
-      return makeAiError(
-        method,
-        AiError.reasonFromHttpStatus({
-          description: errorDescription(error),
-          status: error.status,
-        })
-      );
+    const statusError = pipe(
+      error.status,
+      O.map((status) =>
+        makeAiError(
+          method,
+          AiError.reasonFromHttpStatus({
+            description: errorDescription(error),
+            status,
+          })
+        )
+      )
+    );
+    if (O.isSome(statusError)) {
+      return statusError.value;
     }
     if (error.reason === "response decoding" || error.reason === "sse decoding") {
       return makeAiError(method, AiError.InvalidOutputError.make({ description: errorDescription(error) }));
@@ -149,7 +203,7 @@ const streamChatCompletion = (
 ): Stream.Stream<OpenAiCompatChatCompletionChunk, AiError.AiError> =>
   xai.streamChatCompletion(XAiRequestOptions.make({ body: request })).pipe(
     Stream.mapError(mapXAiError("streamChatCompletion")),
-    Stream.flatMap((event) => (event.done ? Stream.empty : Stream.fromEffect(parseStreamEvent(event)))),
+    Stream.flatMap((event) => (event.done === true ? Stream.empty : Stream.fromEffect(parseStreamEvent(event)))),
     Stream.withSpan("XAiLanguageModel.streamChatCompletion", {
       attributes: {
         operation: "streamChatCompletion",
@@ -184,22 +238,22 @@ const streamChatCompletion = (
  * @category constructors
  * @since 0.0.0
  */
-export const make: (options: XAiLanguageModelOptions) => Effect.Effect<LanguageModel.Service, never, XAi> = Effect.fn(
-  "XAiLanguageModel.make"
-)(function* (options) {
-  const xai = yield* XAi;
-  const optionalConfig = O.getSomesStruct({ config: O.fromUndefinedOr(options.config) });
+export const make: (options: XAiLanguageModelOptionsInput) => Effect.Effect<LanguageModel.Service, never, XAi> =
+  Effect.fn("XAiLanguageModel.make")(function* (input) {
+    const xai = yield* XAi;
+    const options = XAiLanguageModelOptions.make(input);
+    const optionalConfig = O.getSomesStruct({ config: options.config });
 
-  return yield* makeFromProvider({
-    ...optionalConfig,
-    model: options.model,
-    moduleName,
-    provider: {
-      createChatCompletion: (request) => createChatCompletion(xai, request),
-      streamChatCompletion: (request) => streamChatCompletion(xai, request),
-    },
+    return yield* makeFromProvider({
+      ...optionalConfig,
+      model: options.model,
+      moduleName,
+      provider: {
+        createChatCompletion: (request) => createChatCompletion(xai, request),
+        streamChatCompletion: (request) => streamChatCompletion(xai, request),
+      },
+    });
   });
-});
 
 /**
  * Builds an xAI Effect AI language-model layer.
@@ -216,7 +270,7 @@ export const make: (options: XAiLanguageModelOptions) => Effect.Effect<LanguageM
  * @category layers
  * @since 0.0.0
  */
-export const layer = (options: XAiLanguageModelOptions): Layer.Layer<LanguageModel.LanguageModel, never, XAi> =>
+export const layer = (options: XAiLanguageModelOptionsInput): Layer.Layer<LanguageModel.LanguageModel, never, XAi> =>
   Layer.effect(LanguageModel.LanguageModel, make(options));
 
 /**
@@ -235,7 +289,11 @@ export const layer = (options: XAiLanguageModelOptions): Layer.Layer<LanguageMod
  * @since 0.0.0
  */
 export const model = (
-  modelName: string,
+  modelName: XAiModelName,
   config?: OpenAiCompatLanguageModelConfig | undefined
 ): AiModel.Model<"xai", LanguageModel.LanguageModel, XAi> =>
-  AiModel.make("xai", modelName, layer(config === undefined ? { model: modelName } : { config, model: modelName }));
+  AiModel.make(
+    "xai",
+    modelName,
+    layer(config === undefined ? { model: modelName } : { config: O.some(config), model: modelName })
+  );

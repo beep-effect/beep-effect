@@ -73,16 +73,5 @@
       "reason": "Single soft JSON parse at the WebSocket message boundary. The helper delegates to the schema JSON codec and falls back to text when the frame is not JSON; it is not a hand-rolled parser.",
       "boundary": "WebSocket text-frame JSON-or-text boundary"
     }
-  },
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/drivers/xai/src/XAi.service.ts",
-    "line": 640,
-    "symbol": "XAiQueryScalar",
-    "smell": "Local primitive-union type alias plus `decodeQueryScalarOption = S.decodeUnknownOption(S.Union([S.Boolean, S.Null, S.Finite, S.String]))` duplicates the scalar half of the public `XAiQueryValue` schema (`packages/drivers/xai/src/XAi.models.ts:29`).",
-    "proposedTarget": "Promote the scalar concept into `packages/drivers/xai/src/XAi.models.ts` as an annotated `XAiQueryScalar` schema (`S.Union([S.Boolean, S.Null, S.Finite, S.String])`) with `export type XAiQueryScalar = typeof XAiQueryScalar.Type`; define `XAiQueryValue` from `S.Union([S.Array(XAiQueryScalar), XAiQueryScalar])`, then import that schema in `XAi.service.ts` for `S.decodeUnknownOption(XAiQueryScalar)`. Effect v4 `S.decodeUnknownOption` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1500`.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 0.75
   }
 ]

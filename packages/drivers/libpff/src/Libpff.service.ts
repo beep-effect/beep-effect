@@ -10,7 +10,7 @@ import { ArchiveExportResult } from "@beep/file-processing/Extraction";
 import { DetectionResult, FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { FileProcessingEngineDescriptor } from "@beep/file-processing/Strategy";
 import { $LibpffId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Effect, Match } from "effect";
 import * as S from "effect/Schema";
@@ -139,7 +139,9 @@ export class LibpffFileProcessingEngineOptions extends S.Class<LibpffFileProcess
   $I`LibpffFileProcessingEngineOptions`
 )(
   {
-    syntheticExport: S.optionalKey(S.Boolean),
+    syntheticExport: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
+      description: "Enables the proof-only synthetic export path instead of the default unavailable deferral.",
+    }),
   },
   $I.annote("LibpffFileProcessingEngineOptions", {
     description: "Configuration options for the P1 libpff engine scaffold.",
@@ -161,7 +163,7 @@ export class LibpffFileProcessingEngineOptions extends S.Class<LibpffFileProcess
  * @since 0.0.0
  */
 export const makeLibpffFileProcessingEngine = (
-  options: LibpffFileProcessingEngineOptions = {}
+  options: LibpffFileProcessingEngineOptions = LibpffFileProcessingEngineOptions.make({})
 ): FileProcessingEngineShape => ({
   descriptor: LibpffFileProcessingEngineDescriptor,
   detect: Effect.fn("LibpffFileProcessingEngine.detect")(function* (operation: DetectFileOperation) {
@@ -184,7 +186,7 @@ export const makeLibpffFileProcessingEngine = (
       });
     }
 
-    if (options.syntheticExport !== true) {
+    if (!options.syntheticExport) {
       return yield* mapLibpffErrorToOperationError(makeLibpffError("engine-unavailable"), operation);
     }
 

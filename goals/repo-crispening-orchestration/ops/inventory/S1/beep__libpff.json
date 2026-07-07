@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "SFV4-fn-schema",
-    "file": "packages/drivers/libpff/src/Libpff.errors.ts",
-    "line": 88,
-    "symbol": "LibpffError.fromReason / makeLibpffError",
-    "smell": "Exported/static error constructors accept an inline options object (`{ cause?: string; exitCode?: NonNegativeInt }`) that duplicates optional fields on the `LibpffError` tagged schema.",
-    "proposedTarget": "Promote the options bag to `LibpffErrorOptions extends S.Class` beside `LibpffError`, mirroring `GovinfoErrorOptions` at `packages/drivers/govinfo/src/Govinfo.errors.ts:70`; change `fromReason` and `makeLibpffError` to accept `LibpffErrorOptions = LibpffErrorOptions.make({})` while preserving the public fields.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 0.62
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
     "file": "packages/drivers/libpff/src/Libpff.service.ts",
     "line": 163,
     "symbol": "makeLibpffFileProcessingEngine",

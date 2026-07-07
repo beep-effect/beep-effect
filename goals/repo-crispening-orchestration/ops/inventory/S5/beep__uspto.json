@@ -1,49 +1,5 @@
 [
   {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/drivers/uspto/test/Uspto.service.test.ts",
-    "line": 67,
-    "symbol": "Uspto schema family",
-    "smell": "The package exports schema-backed identifiers, config, errors, and projected USPTO DTOs, but the test suite is entirely example/fixture driven; there is no S.toArbitrary-derived encode/decode or invariant law for UsptoApplicationNumber, UsptoPatentNumber, UsptoConfigInput, UsptoApplicationMetadata, UsptoContinuity, UsptoDocumentReference, or UsptoError.",
-    "proposedTarget": "Add additive schema laws importing production schemas from @beep/uspto, following packages/shared/domain/test/Organization.test.ts:13 and :79: derive S.toArbitrary(schema) (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970), encode/decode through the same production schema, and compare with strict equality for branded strings or S.toEquivalence(schema) (verified .repos/effect-v4/packages/effect/src/Schema.ts:13201) for classes. Keep the current USPTO wire-envelope fixtures as compatibility/golden coverage.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/drivers/uspto/src/Uspto.models.ts",
-    "line": 154,
-    "symbol": "UsptoApplicationMetadata/UsptoContinuity/UsptoDocumentReference fields",
-    "smell": "The exported reusable schema classes have whole-schema $I.annote metadata but no per-field annotateKey descriptions; consumers and the annotation catalog cannot recover field intent for application metadata, continuity numbers, document identifiers, download URLs, or dates.",
-    "proposedTarget": "Add annotateKey metadata to each field, following the in-repo driver exemplar packages/drivers/govinfo/src/domain/values/SearchBody/SearchBody.model.ts:42-65 where each S.Class field has a description and the class keeps $I.annote. Preserve the existing declare-namespace-free class layout.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/drivers/uspto/src/Uspto.config.ts",
-    "line": 47,
-    "symbol": "UsptoConfigInput.apiUrl",
-    "smell": "The configurable USPTO API base URL is modeled as broad S.String with a default, even though downstream code treats it as a URL origin and host source.",
-    "proposedTarget": "Tighten the resolved configuration path to the existing URLStr schema (packages/foundation/modeling/schema/src/URL.ts:44-53), as GovInfo does in packages/drivers/govinfo/src/Govinfo.service.ts:62-75. If public input compatibility must remain string-shaped, keep UsptoConfigInput broad and introduce a resolved schema/interface whose apiUrl is URLStr before request construction.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/drivers/uspto/src/Uspto.models.ts",
-    "line": 187,
-    "symbol": "UsptoContinuity.childApplicationNumbers/parentApplicationNumbers",
-    "smell": "Continuity application numbers are exported as unbounded S.Array(S.String) even though the package already defines the normalized eight-digit UsptoApplicationNumber schema and the service projects applicationNumberText fields into these arrays.",
-    "proposedTarget": "Use S.Array(UsptoApplicationNumber) for the continuity arrays when the remediation wave can sweep consumers under §5.4, or use S.Array(S.String.check(S.isPattern(/^\\d{8}$/))) to keep Type = string. S.isPattern is verified at .repos/effect-v4/packages/effect/src/Schema.ts:6521; the package-local branded schema is packages/drivers/uspto/src/Uspto.models.ts:32-44.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
     "ruleId": "SFV4-precision-audit",
     "file": "packages/drivers/uspto/src/Uspto.service.ts",
     "line": 76,

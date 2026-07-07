@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { PosInt } from "@beep/schema";
 import { Duration, Effect, ExecutionPlan, Schedule, Stream } from "effect";
 import * as Str from "effect/String";
 import { AiError, LanguageModel } from "effect/unstable/ai";
@@ -42,9 +43,10 @@ export const ANTHROPIC_REPAIR_MODEL = "claude-haiku-4-5" as const;
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { ANTHROPIC_REPAIR_MAX_TOKENS, AnthropicLanguageModelOptions } from "@beep/anthropic"
+ * import { PosInt } from "@beep/schema"
  *
  * const repairOptions = AnthropicLanguageModelOptions.make({
- *   maxTokens: ANTHROPIC_REPAIR_MAX_TOKENS,
+ *   maxTokens: PosInt.make(ANTHROPIC_REPAIR_MAX_TOKENS),
  * })
  *
  * strictEqual(repairOptions.maxTokens, 4096)
@@ -111,10 +113,11 @@ const toRepairError =
  * ```ts
  * import { strictEqual } from "node:assert"
  * import { AnthropicLanguageModelOptions, makeAnthropicRepairPlan } from "@beep/anthropic"
+ * import { PosInt } from "@beep/schema"
  *
  * const plan = makeAnthropicRepairPlan(
  *   AnthropicLanguageModelOptions.make({
- *     maxTokens: 2048,
+ *     maxTokens: PosInt.make(2048),
  *     model: "claude-haiku-4-5",
  *   })
  * )
@@ -127,7 +130,7 @@ const toRepairError =
  */
 export const makeAnthropicRepairPlan = (
   options: AnthropicLanguageModelOptions = AnthropicLanguageModelOptions.make({
-    maxTokens: ANTHROPIC_REPAIR_MAX_TOKENS,
+    maxTokens: PosInt.make(ANTHROPIC_REPAIR_MAX_TOKENS),
     model: ANTHROPIC_REPAIR_MODEL,
   })
 ) =>

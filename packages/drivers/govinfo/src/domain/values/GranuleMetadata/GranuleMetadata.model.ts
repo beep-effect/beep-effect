@@ -9,6 +9,19 @@ import * as S from "effect/Schema";
 
 const $I = $GovinfoId.create("domain/values/GranuleMetadata/GranuleMetadata.model");
 
+const Md5Hex = S.String.check(
+  S.isPattern(/^[0-9a-f]{32}$/i, {
+    description: "A 32-character hexadecimal MD5 digest.",
+    identifier: $I`Md5HexPatternCheck`,
+    message: "Expected a 32-character hexadecimal MD5 digest",
+    title: "MD5 hex digest",
+  })
+).pipe(
+  $I.annoteSchema("Md5Hex", {
+    description: "A 32-character hexadecimal MD5 digest.",
+  })
+);
+
 /**
  * Metadata row for a GovInfo granule inside a package.
  *
@@ -53,7 +66,7 @@ export class GranuleMetadata extends S.Class<GranuleMetadata>($I`GranuleMetadata
     }),
 
     /** MD5 hash exposed by GovInfo for granule content integrity checks. */
-    md5: S.String.annotateKey({
+    md5: Md5Hex.annotateKey({
       description: "MD5 hash exposed by GovInfo for granule content integrity checks.",
     }),
 

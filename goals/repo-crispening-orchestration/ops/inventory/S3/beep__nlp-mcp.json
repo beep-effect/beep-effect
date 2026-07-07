@@ -1,17 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/nlp-mcp/src/Streaming/Pipeline.ts",
-    "line": 144,
-    "symbol": "stageTransform",
-    "smell": "stageTransform repeats the PipelineStage literal family in Match.type<PipelineStage>() cases for \"lowercase\", \"uppercase\", \"trim\", \"normalizeWhitespace\", and \"removePunctuation\". PipelineStage is already a LiteralKit at line 38, so the runtime dispatch is not derived from the kit.",
-    "proposedTarget": "Replace the Match.type table with PipelineStage.$match({ lowercase: () => Str.toLowerCase, normalizeWhitespace: () => flow(Str.replace(/\\s+/g, \" \"), Str.trim), removePunctuation: () => Str.replace(/[^\\w\\s]/g, \"\"), trim: () => Str.trim, uppercase: () => Str.toUpperCase }). LiteralKit.$match is verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:600-607.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 2.55
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/drivers/nlp-mcp/src/StreamingHandlers.ts",
     "line": 41,
     "symbol": "toStreamToolError",

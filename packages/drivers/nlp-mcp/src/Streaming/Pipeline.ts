@@ -12,39 +12,41 @@
  */
 
 import { $NlpMcpId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
-import { Clock, Effect, flow, Match } from "effect";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Clock, Effect, flow } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { readLines } from "./TextStream.ts";
 
 const $I = $NlpMcpId.create("Streaming/Pipeline");
+const NonNegativeInteger = S.Int.check(S.isGreaterThanOrEqualTo(0));
+const PositiveInteger = S.Int.check(S.isGreaterThan(0));
+
+const PipelineStageBase = LiteralKit(["lowercase", "normalizeWhitespace", "removePunctuation", "trim", "uppercase"]);
 
 /**
  * Identifier of a supported, pure line transform stage.
  *
  * @example
  * ```ts
- * import type { PipelineStage } from "@beep/nlp-mcp/Streaming/Pipeline"
+ * import { PipelineStage } from "@beep/nlp-mcp/Streaming/Pipeline"
  *
- * const stage: PipelineStage = "normalizeWhitespace"
+ * const stage = PipelineStage.fromUnknown("normalizeWhitespace")
  * console.log(stage)
  * ```
  *
+ * @category schemas
  * @since 0.0.0
- * @category models
  */
-export const PipelineStage = LiteralKit([
-  "lowercase",
-  "normalizeWhitespace",
-  "removePunctuation",
-  "trim",
-  "uppercase",
-]).annotate(
-  $I.annote("PipelineStage", {
+export const PipelineStage = PipelineStageBase.pipe(
+  $I.annoteSchema("PipelineStage", {
     description: "Identifier of a supported, pure line transform stage.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**
@@ -117,22 +119,22 @@ export class PipelineError extends S.Class<PipelineError>($I`PipelineError`)(
  */
 export class PipelineResult extends S.Class<PipelineResult>($I`PipelineResult`)(
   {
-    durationMs: S.Finite.annotateKey({
+    durationMs: NonNegativeInteger.annotateKey({
       description: "Wall-clock duration of the run in milliseconds.",
     }),
     errors: S.Array(PipelineError).annotateKey({
       description: "Collected per-item failures.",
     }),
-    failed: S.Finite.annotateKey({
+    failed: NonNegativeInteger.annotateKey({
       description: "Number of items that failed a stage.",
     }),
-    processed: S.Finite.annotateKey({
+    processed: NonNegativeInteger.annotateKey({
       description: "Number of items processed to completion.",
     }),
     results: S.Array(S.Unknown).annotateKey({
       description: "Transformed output values in input order.",
     }),
-    skipped: S.Finite.annotateKey({
+    skipped: NonNegativeInteger.annotateKey({
       description: "Number of items skipped before processing.",
     }),
   },
@@ -141,14 +143,45 @@ export class PipelineResult extends S.Class<PipelineResult>($I`PipelineResult`)(
   })
 ) {}
 
-const stageTransform: (stage: PipelineStage) => (value: string) => string = Match.type<PipelineStage>().pipe(
-  Match.when("lowercase", () => Str.toLowerCase),
-  Match.when("uppercase", () => Str.toUpperCase),
-  Match.when("trim", () => Str.trim),
-  Match.when("normalizeWhitespace", () => flow(Str.replace(/\s+/g, " "), Str.trim)),
-  Match.when("removePunctuation", () => Str.replace(/[^\w\s]/g, "")),
-  Match.exhaustive
-);
+/**
+ * Options for running a line-transform pipeline.
+ *
+ * @example
+ * ```ts
+ * import { PipelineProcessOptions } from "@beep/nlp-mcp/Streaming/Pipeline"
+ *
+ * const options = PipelineProcessOptions.make({ maxLines: 10, skipEmpty: true })
+ * console.log(options.maxLines)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export class PipelineProcessOptions extends S.Class<PipelineProcessOptions>($I`PipelineProcessOptions`)(
+  {
+    maxLines: PositiveInteger.pipe(SchemaUtils.withKeyDefaults(Number.MAX_SAFE_INTEGER)).annotateKey({
+      description: "Maximum number of raw lines to read before processing.",
+    }),
+    skipEmpty: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
+      description: "Drop lines that are empty after trimming before applying stages.",
+    }),
+    stopOnError: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
+      description:
+        "Reserved for future custom stages. The built-in transform stages are total and never fail, so this option currently has no effect.",
+    }),
+  },
+  $I.annote("PipelineProcessOptions", {
+    description: "Options for running a line-transform pipeline.",
+  })
+) {}
+
+const stageTransform: (stage: PipelineStage) => (value: string) => string = PipelineStage.$match({
+  lowercase: () => Str.toLowerCase,
+  normalizeWhitespace: () => flow(Str.replace(/\s+/g, " "), Str.trim),
+  removePunctuation: () => Str.replace(/[^\w\s]/g, ""),
+  trim: () => Str.trim,
+  uppercase: () => Str.toUpperCase,
+});
 
 const applyStages = (stages: ReadonlyArray<PipelineStage>, value: string): string =>
   A.reduce(stages, value, (acc, stage) => stageTransform(stage)(acc));
@@ -179,18 +212,15 @@ const applyStages = (stages: ReadonlyArray<PipelineStage>, value: string): strin
 export const processFile = Effect.fn("Pipeline.processFile")(function* (
   filePath: string,
   stages: ReadonlyArray<PipelineStage>,
-  options: {
-    readonly maxLines?: number | undefined;
-    readonly skipEmpty?: boolean | undefined;
-    readonly stopOnError?: boolean | undefined;
-  } = {}
+  options: (typeof PipelineProcessOptions)["~type.make.in"] = {}
 ) {
+  const processOptions = PipelineProcessOptions.make(options);
   const startedAt = yield* Clock.currentTimeMillis;
 
   // Read raw lines (blanks included) so we can report how many were skipped;
   // `maxLines` still caps how many raw lines are read.
-  const allLines = yield* readLines(filePath, options.maxLines === undefined ? {} : { maxLines: options.maxLines });
-  const lines = options.skipEmpty === true ? A.filter(allLines, (line) => Str.isNonEmpty(Str.trim(line))) : allLines;
+  const allLines = yield* readLines(filePath, { maxLines: processOptions.maxLines });
+  const lines = processOptions.skipEmpty ? A.filter(allLines, (line) => Str.isNonEmpty(Str.trim(line))) : allLines;
   const skipped = A.length(allLines) - A.length(lines);
 
   const results = A.map(lines, (line) => applyStages(stages, line));

@@ -13,31 +13,47 @@
 
 import { $UsptoMcpId } from "@beep/identity/packages";
 import { ApiKeyRequiredFailure, annotateFourHints, readOnlyToolHints } from "@beep/mcp-kit";
-import { LiteralKit, PosInt } from "@beep/schema";
-import { UsptoApplicationMetadata } from "@beep/uspto";
+import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
+import { UsptoApplicationMetadata, UsptoApplicationNumber } from "@beep/uspto";
 import * as S from "effect/Schema";
 import { Tool, Toolkit } from "effect/unstable/ai";
 import { DocumentsProjectionOutput } from "./UsptoDocumentTiers.ts";
 
 const $I = $UsptoMcpId.create("UsptoTools");
+const DEFAULT_DOCUMENT_BUDGET_BYTES = PosInt.make(8000);
 
-/**
- * Redacted technical failure reasons a USPTO MCP tool can surface once the
- * `api_key_required` gate has passed.
- *
- * @category schemas
- * @since 0.0.0
- */
-export const UsptoToolErrorReason = LiteralKit([
+const UsptoToolErrorReasonBase = LiteralKit([
   "not-found",
   "rate-limited",
   "response-decoding",
   "response-status",
   "transport",
-]).pipe(
+]);
+
+/**
+ * Redacted technical failure reasons a USPTO MCP tool can surface once the
+ * `api_key_required` gate has passed.
+ *
+ * @example
+ * ```ts
+ * import { UsptoToolErrorReason } from "@beep/uspto-mcp/UsptoTools"
+ *
+ * console.log(UsptoToolErrorReason.Enum.transport)
+ * // "transport"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const UsptoToolErrorReason = UsptoToolErrorReasonBase.pipe(
   $I.annoteSchema("UsptoToolErrorReason", {
     description: "Redacted technical failure reasons surfaced by a USPTO MCP tool after the credential gate passes.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(UsptoToolErrorReasonBase),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**
@@ -90,13 +106,27 @@ export class UsptoToolError extends S.Class<UsptoToolError>($I`UsptoToolError`)(
  * `api_key_required` envelope (credential absent) or a post-gate
  * {@link UsptoToolError} (driver-level failure).
  *
+ * @example
+ * ```ts
+ * import { UsptoMcpFailure, UsptoToolError } from "@beep/uspto-mcp/UsptoTools"
+ *
+ * const failure = UsptoToolError.make({
+ *   message: "USPTO request failed",
+ *   reason: "transport",
+ *   tool: "uspto_get_documents"
+ * })
+ * console.log(UsptoMcpFailure.is(failure))
+ * // true
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
 export const UsptoMcpFailure = S.Union([ApiKeyRequiredFailure, UsptoToolError]).pipe(
   $I.annoteSchema("UsptoMcpFailure", {
     description: "Union of the api_key_required envelope and post-gate USPTO driver failures.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -148,15 +178,29 @@ export const UsptoSearchApplicationsTool = annotateFourHints(
 /**
  * Parameters for {@link UsptoGetDocumentsTool}.
  *
+ * @example
+ * ```ts
+ * import { PosInt } from "@beep/schema"
+ * import { UsptoApplicationNumber } from "@beep/uspto"
+ * import { UsptoGetDocumentsParams } from "@beep/uspto-mcp/UsptoTools"
+ *
+ * const params = UsptoGetDocumentsParams.make({
+ *   applicationNumber: UsptoApplicationNumber.make("16138242"),
+ *   budgetBytes: PosInt.make(8000)
+ * })
+ * console.log(params.applicationNumber)
+ * // "16138242"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
 export class UsptoGetDocumentsParams extends S.Class<UsptoGetDocumentsParams>($I`UsptoGetDocumentsParams`)(
   {
-    applicationNumber: S.NonEmptyString.annotateKey({
+    applicationNumber: UsptoApplicationNumber.annotateKey({
       description: "Eight-digit USPTO application number to list file-wrapper documents for.",
     }),
-    budgetBytes: S.optionalKey(PosInt).annotateKey({
+    budgetBytes: PosInt.pipe(SchemaUtils.withKeyDefaults(DEFAULT_DOCUMENT_BUDGET_BYTES)).annotateKey({
       description: "Maximum serialized size, in bytes, the reshaped response must fit within. Defaults to 8000.",
     }),
   },

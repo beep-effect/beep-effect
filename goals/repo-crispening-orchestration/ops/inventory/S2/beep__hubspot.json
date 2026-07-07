@@ -1,27 +1,5 @@
 [
   {
-    "ruleId": "SFV4-normalization",
-    "file": "packages/drivers/hubspot/src/HubSpot.service.ts",
-    "line": 284,
-    "symbol": "normalizeBaseUrl",
-    "smell": "`const normalizeBaseUrl = Str.replace(/\\/+$/, \"\")` trims trailing slashes in service code, then `resolveConfig` applies it to `crmApiUrl` and `formsApiUrl` even though both are config schema fields with defaults (HubSpot.config.ts:66-67).",
-    "proposedTarget": "Move URL normalization into a config URL schema transformation, e.g. a `HubSpotBaseUrl` schema built with `S.decodeTo(..., SchemaTransformation.transform(...))`, then use it for `crmApiUrl` and `formsApiUrl`. In-repo transformation exemplars: `packages/foundation/modeling/schema/src/PosixPath.ts:71-73` and `packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyConfig.ts:21-34`.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/hubspot/src/HubSpot.service.ts",
-    "line": 306,
-    "symbol": "resolveConfig",
-    "smell": "`headers: input.headers ?? {}` is a runtime default for `HubSpotConfigInput.headers`, which is currently `S.optionalKey(S.Record(S.String, S.String))` (HubSpot.config.ts:68).",
-    "proposedTarget": "Move the empty headers default to the config schema: `headers: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty()))`, following `packages/drivers/phoenix/src/Phoenix.config.ts:53` and `packages/drivers/runpod/src/Runpod.config.ts:66`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 2
-  },
-  {
     "ruleId": "SFV4-defaults",
     "file": "packages/drivers/hubspot/src/HubSpot.service.ts",
     "line": 293,
@@ -30,7 +8,11 @@
     "proposedTarget": "Make optional config absence schema-native: `accessToken: S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(SchemaUtils.withNoneDefault)`; for `accountId`, either make it required (`S.String`) or model it as `OptionFromOptionalKey(...).pipe(withNoneDefault)` and keep the config-error check over Option. In-repo exemplar: `packages/foundation/modeling/ontology/src/Ontology.models.ts:152-160`.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Changing `HubSpotConfigInput.accountId` and `accessToken` to `OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` changes the exported constructor surface from raw optional values to `Option` values and would require edits in `apps/oip-web/src/contact/ContactSubmission.service.ts` (`HubSpotConfigInput.make({ accountId, accessToken })`). Account id precision and base URL/default absorption were remediated in-package; the Option public-form migration is deferred to a consumer-sweep lane.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -41,7 +23,11 @@
     "proposedTarget": "Use `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` on decoded first-party fields, preserving omitted keys at the HTTP JSON boundary through schema encoding. This removes `undefined` from the decoded request/response surface while keeping HubSpot's wire shape. In-repo exemplar: `packages/foundation/modeling/ontology/src/Ontology.models.ts:152-160`.",
     "confidence": 0.6,
     "mechanization": "assisted",
-    "roiRank": 4
+    "roiRank": 4,
+    "exception": {
+      "reason": "Changing exported request/response optional fields to `Option` values would require edits in `apps/oip-web/src/contact/ContactSubmission.service.ts` for `HubSpotSubmitFormRequest.make({ context, submittedAt })`, `HubSpotUpsertContactRequest.make({ objectWriteTraceId })`, and downstream response/status access. In-package precision, URL, timestamp, non-empty field, and decode-boundary fixes were applied without changing raw optional constructor call sites.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",
@@ -52,7 +38,11 @@
     "proposedTarget": "Make error context fields `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` in both `HubSpotErrorOptions` and `HubSpotError`; `fromReason` can then pass through Options directly. In-package contrast: `ResolvedHubSpotConfig.accessToken` is already modeled as `S.Option` (service.ts:274).",
     "confidence": 0.7,
     "mechanization": "assisted",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Changing `HubSpotError.status` and other exported context fields to `Option` would require `apps/oip-web/src/contact/ContactSubmission.service.ts` to stop reading raw optional `error.status`. It would also change the public `HubSpotError.fromReason(reason, { status: 401 })` options surface, which the wave instructions require preserving. Field annotations, URL precision, and integer HTTP status checks were remediated in-package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",

@@ -7,11 +7,13 @@
 
 import { $VeniceAiId } from "@beep/identity";
 import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { HttpStatus } from "@beep/schema/HttpStatus";
 import { decodeJsonString } from "@beep/schema/Json";
-import { A, Str } from "@beep/utils";
-import { Config, Context, Effect, flow, Layer, pipe, Result, Stream } from "effect";
+import { NonNegativeInt } from "@beep/schema/Number";
+import { URLStr } from "@beep/schema/URL";
+import { A, O, Str } from "@beep/utils";
+import { Config, Context, Effect, flow, Layer, pipe, Result, SchemaGetter, Stream } from "effect";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -53,6 +55,32 @@ export const VENICE_API_URL = "https://api.venice.ai/api/v1";
  * @since 0.0.0
  */
 export const VENICE_CHAT_MODEL = "venice-uncensored-1-2";
+
+const normalizeBaseUrl = Str.replace(/\/+$/, "");
+const makeVeniceAIBaseUrl = flow(normalizeBaseUrl, URLStr.make);
+const defaultVeniceAIBaseUrl = makeVeniceAIBaseUrl(VENICE_API_URL);
+const VeniceAIHttpStatusArbitraryValues = R.values(HttpStatus.From.Enum) as [HttpStatus, ...Array<HttpStatus>];
+const isVeniceAIHttpStatus = (status: number): status is HttpStatus =>
+  pipe(VeniceAIHttpStatusArbitraryValues as ReadonlyArray<number>, A.contains(status));
+const makeHttpStatus: (status: number) => HttpStatus = flow(
+  O.liftPredicate(isVeniceAIHttpStatus),
+  O.getOrElse(() => HttpStatus.From.Enum.InternalServerError)
+);
+const VeniceAIHttpStatus = S.Literals(VeniceAIHttpStatusArbitraryValues).pipe(
+  $I.annoteSchema("VeniceAIHttpStatus", {
+    description: "Numeric HTTP status code accepted by the Venice AI driver.",
+  })
+);
+
+const VeniceAIBaseUrl = URLStr.pipe(
+  S.decode({
+    decode: SchemaGetter.transform(makeVeniceAIBaseUrl),
+    encode: SchemaGetter.transform(makeVeniceAIBaseUrl),
+  }),
+  $I.annoteSchema("VeniceAIBaseUrl", {
+    description: "Normalized Venice AI API base URL without trailing slash separators.",
+  })
+);
 
 /**
  * Supported HTTP methods in the checked-in Venice OpenAPI document.
@@ -241,7 +269,8 @@ export const VeniceAIQueryValue = S.Union([
 ]).pipe(
   $I.annoteSchema("VeniceAIQueryValue", {
     description: "URL query value accepted by the Venice AI driver.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -260,6 +289,34 @@ export const VeniceAIQueryValue = S.Union([
  */
 export type VeniceAIQueryValue = typeof VeniceAIQueryValue.Type;
 
+const VeniceAIEncodedQuery = S.Record(S.String, VeniceAIQueryValue).pipe(
+  $I.annoteSchema("VeniceAIEncodedQuery", {
+    description: "Encoded URL query record accepted by the Venice AI driver.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+type VeniceAIEncodedQuery = typeof VeniceAIEncodedQuery.Type;
+
+const VeniceAIFormData = S.FormData.annotate({
+  toArbitrary: () => (fc) => fc.constant(null).map(() => new FormData()),
+});
+
+const VeniceAIUnknownPayload = S.Unknown.annotate({
+  toArbitrary: () => (fc) =>
+    fc.oneof(
+      fc.boolean(),
+      fc.constant(null),
+      fc.integer(),
+      fc.record({ ok: fc.boolean(), value: fc.string() }, { requiredKeys: [] }),
+      fc.string()
+    ),
+});
+
+const VeniceAIBytes = S.Uint8Array.annotate({
+  toArbitrary: () => (fc) => fc.uint8Array({ maxLength: 16 }),
+});
+
 /**
  * Request options accepted by each Venice API operation method.
  *
@@ -269,10 +326,11 @@ export type VeniceAIQueryValue = typeof VeniceAIQueryValue.Type;
  * @example
  * ```ts
  * import { VeniceAIRequestOptions } from "@beep/venice-ai"
+ * import * as O from "effect/Option"
  *
  * const request = VeniceAIRequestOptions.make({
- *   body: { model: "venice-uncensored-1-2" },
- *   query: { limit: 10 }
+ *   body: O.some({ model: "venice-uncensored-1-2" }),
+ *   query: O.some({ limit: 10 })
  * })
  *
  * console.log(request)
@@ -283,12 +341,29 @@ export type VeniceAIQueryValue = typeof VeniceAIQueryValue.Type;
  */
 export class VeniceAIRequestOptions extends S.Class<VeniceAIRequestOptions>($I`VeniceAIRequestOptions`)(
   {
-    accept: S.optionalKey(S.String),
-    body: S.optionalKey(S.Unknown),
-    formData: S.optionalKey(S.instanceOf(FormData)),
-    headers: S.optionalKey(S.Record(S.String, S.String)),
-    path: S.optionalKey(S.Record(S.String, S.String)),
-    query: S.optionalKey(S.Record(S.String, VeniceAIQueryValue)),
+    accept: S.optionalKey(S.String).annotateKey({
+      description: "Explicit Accept header override; defaults from the operation descriptor when omitted.",
+    }),
+    body: S.OptionFromOptionalKey(VeniceAIUnknownPayload).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional JSON request body for operations that accept application/json." })
+    ),
+    formData: S.OptionFromOptionalKey(VeniceAIFormData).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional multipart body for operations that accept multipart/form-data." })
+    ),
+    headers: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Additional request headers merged after driver base headers." })
+    ),
+    path: S.OptionFromOptionalKey(S.Record(S.String, S.String)).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "OpenAPI path parameter values keyed by parameter name." })
+    ),
+    query: S.OptionFromOptionalKey(VeniceAIEncodedQuery).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "URL query parameters keyed by parameter name." })
+    ),
   },
   $I.annote("VeniceAIRequestOptions", {
     description: "Request options accepted by every Venice API operation method.",
@@ -301,11 +376,13 @@ export class VeniceAIRequestOptions extends S.Class<VeniceAIRequestOptions>($I`V
  * @example
  * ```ts
  * import { Redacted } from "effect"
+ * import * as O from "effect/Option"
+ * import { URLStr } from "@beep/schema/URL"
  * import { VeniceAIConfigInput } from "@beep/venice-ai"
  *
  * const config = VeniceAIConfigInput.make({
- *   apiKey: Redacted.make("test-key"),
- *   baseUrl: "https://api.venice.ai/api/v1"
+ *   apiKey: O.some(Redacted.make("test-key")),
+ *   baseUrl: URLStr.make("https://api.venice.ai/api/v1")
  * })
  *
  * console.log(config)
@@ -316,9 +393,18 @@ export class VeniceAIRequestOptions extends S.Class<VeniceAIRequestOptions>($I`V
  */
 export class VeniceAIConfigInput extends S.Class<VeniceAIConfigInput>($I`VeniceAIConfigInput`)(
   {
-    apiKey: S.optionalKey(S.String.pipe(S.RedactedFromValue)),
-    baseUrl: S.String.pipe(SchemaUtils.withKeyDefaults(VENICE_API_URL)),
-    headers: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())),
+    apiKey: S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional Venice API key; the live layer reads AI_VENICE_API_KEY when omitted." })
+    ),
+    baseUrl: VeniceAIBaseUrl.pipe(
+      SchemaUtils.withKeyDefaults(defaultVeniceAIBaseUrl),
+      S.annotateKey({ description: "Venice API base URL normalized without trailing slash separators." })
+    ),
+    headers: S.Record(S.String, S.String).pipe(
+      SchemaUtils.withKeyDefaults(R.empty()),
+      S.annotateKey({ description: "Base headers applied to every Venice API request." })
+    ),
   },
   $I.annote("VeniceAIConfigInput", {
     description: "Runtime configuration accepted by the Venice AI driver layer.",
@@ -340,18 +426,26 @@ export class VeniceAIConfigInput extends S.Class<VeniceAIConfigInput>($I`VeniceA
  */
 export class VeniceAIOperationDescriptor extends S.Class<VeniceAIOperationDescriptor>($I`VeniceAIOperationDescriptor`)(
   {
-    authenticated: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))),
-    method: VeniceAIHttpMethod,
-    operationId: VeniceAIOperationId,
-    path: S.String,
-    requestContentTypes: S.Array(S.String),
-    responseContentTypes: S.Array(S.String),
-    tag: S.String,
+    authenticated: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))).annotateKey({
+      description: "Whether the operation sends bearer-token authentication.",
+    }),
+    method: VeniceAIHttpMethod.annotateKey({ description: "HTTP method used by the operation." }),
+    operationId: VeniceAIOperationId.annotateKey({ description: "Stable Venice OpenAPI operation id." }),
+    path: S.String.annotateKey({ description: "OpenAPI path template for the operation." }),
+    requestContentTypes: S.Array(S.String).annotateKey({
+      description: "Request content media types declared by the operation.",
+    }),
+    responseContentTypes: S.Array(S.String).annotateKey({
+      description: "Response content media types declared by the operation.",
+    }),
+    tag: S.String.annotateKey({ description: "OpenAPI tag associated with the operation." }),
   },
   $I.annote("VeniceAIOperationDescriptor", {
     description: "OpenAPI operation descriptor used by the Venice AI service.",
   })
-) {}
+) {
+  static readonly is = S.is(VeniceAIOperationDescriptor);
+}
 
 /**
  * JSON response returned by the Venice AI driver.
@@ -375,10 +469,13 @@ export class VeniceAIOperationDescriptor extends S.Class<VeniceAIOperationDescri
 export class VeniceAIJsonResponse extends S.TaggedClass<VeniceAIJsonResponse>($I`VeniceAIJsonResponse`)(
   "Json",
   {
-    body: S.Unknown,
-    contentType: S.optionalKey(S.String),
-    headers: S.Record(S.String, S.String),
-    status: S.Finite,
+    body: VeniceAIUnknownPayload.annotateKey({ description: "Decoded JSON response body." }),
+    contentType: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Response Content-Type header when present." })
+    ),
+    headers: S.Record(S.String, S.String).annotateKey({ description: "Response headers keyed by header name." }),
+    status: VeniceAIHttpStatus.annotateKey({ description: "HTTP response status code." }),
   },
   $I.annote("VeniceAIJsonResponse", {
     description: "JSON response returned by the Venice AI driver.",
@@ -391,9 +488,10 @@ export class VeniceAIJsonResponse extends S.TaggedClass<VeniceAIJsonResponse>($I
  * @example
  * ```ts
  * import { VeniceAITextResponse } from "@beep/venice-ai"
+ * import * as O from "effect/Option"
  *
  * const response = VeniceAITextResponse.make({
- *   contentType: "text/plain",
+ *   contentType: O.some("text/plain"),
  *   headers: {},
  *   status: 200,
  *   text: "ok"
@@ -408,10 +506,13 @@ export class VeniceAIJsonResponse extends S.TaggedClass<VeniceAIJsonResponse>($I
 export class VeniceAITextResponse extends S.TaggedClass<VeniceAITextResponse>($I`VeniceAITextResponse`)(
   "Text",
   {
-    contentType: S.optionalKey(S.String),
-    headers: S.Record(S.String, S.String),
-    status: S.Finite,
-    text: S.String,
+    contentType: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Response Content-Type header when present." })
+    ),
+    headers: S.Record(S.String, S.String).annotateKey({ description: "Response headers keyed by header name." }),
+    status: VeniceAIHttpStatus.annotateKey({ description: "HTTP response status code." }),
+    text: S.String.annotateKey({ description: "Decoded response text." }),
   },
   $I.annote("VeniceAITextResponse", {
     description: "Text response returned by the Venice AI driver.",
@@ -424,10 +525,11 @@ export class VeniceAITextResponse extends S.TaggedClass<VeniceAITextResponse>($I
  * @example
  * ```ts
  * import { VeniceAIBinaryResponse } from "@beep/venice-ai"
+ * import * as O from "effect/Option"
  *
  * const response = VeniceAIBinaryResponse.make({
  *   bytes: new Uint8Array([1, 2, 3]),
- *   contentType: "image/png",
+ *   contentType: O.some("image/png"),
  *   headers: {},
  *   status: 200
  * })
@@ -441,10 +543,13 @@ export class VeniceAITextResponse extends S.TaggedClass<VeniceAITextResponse>($I
 export class VeniceAIBinaryResponse extends S.TaggedClass<VeniceAIBinaryResponse>($I`VeniceAIBinaryResponse`)(
   "Binary",
   {
-    bytes: S.Uint8Array,
-    contentType: S.optionalKey(S.String),
-    headers: S.Record(S.String, S.String),
-    status: S.Finite,
+    bytes: VeniceAIBytes.annotateKey({ description: "Decoded binary response bytes." }),
+    contentType: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Response Content-Type header when present." })
+    ),
+    headers: S.Record(S.String, S.String).annotateKey({ description: "Response headers keyed by header name." }),
+    status: VeniceAIHttpStatus.annotateKey({ description: "HTTP response status code." }),
   },
   $I.annote("VeniceAIBinaryResponse", {
     description: "Binary response returned by the Venice AI driver.",
@@ -469,7 +574,8 @@ export const VeniceAIResponse = S.Union([VeniceAIBinaryResponse, VeniceAIJsonRes
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("VeniceAIResponse", {
     description: "Response union returned by non-streaming Venice AI operation methods.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -493,12 +599,14 @@ export type VeniceAIResponse = typeof VeniceAIResponse.Type;
  *
  * @example
  * ```ts
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * import { VeniceAIServerSentEvent } from "@beep/venice-ai"
+ * import * as O from "effect/Option"
  *
  * const event = VeniceAIServerSentEvent.make({
- *   data: { delta: "hello" },
+ *   data: O.some({ delta: "hello" }),
  *   done: false,
- *   index: 0
+ *   index: NonNegativeInt.make(0)
  * })
  *
  * console.log(event)
@@ -509,30 +617,33 @@ export type VeniceAIResponse = typeof VeniceAIResponse.Type;
  */
 export class VeniceAIServerSentEvent extends S.Class<VeniceAIServerSentEvent>($I`VeniceAIServerSentEvent`)(
   {
-    data: S.optionalKey(S.Unknown),
-    done: S.Boolean,
-    index: S.Finite,
+    data: S.OptionFromOptionalKey(VeniceAIUnknownPayload).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Decoded SSE payload when the event carries data." })
+    ),
+    done: S.Boolean.annotateKey({ description: "Whether this SSE event is the terminal [DONE] marker." }),
+    index: NonNegativeInt.annotateKey({ description: "Zero-based stream event index." }),
   },
   $I.annote("VeniceAIServerSentEvent", {
     description: "Parsed server-sent event emitted by Venice streaming endpoints.",
   })
 ) {}
 
-const isVeniceAIOperationDescriptor = S.is(VeniceAIOperationDescriptor);
-
 /**
  * Technical failure raised by the Venice AI driver boundary.
  *
  * @example
  * ```ts
+ * import { HttpStatus } from "@beep/schema/HttpStatus"
  * import { VeniceAIError } from "@beep/venice-ai"
+ * import * as O from "effect/Option"
  *
  * const error = VeniceAIError.make({
- *   method: "GET",
- *   operation: "listModels",
- *   path: "/models",
+ *   method: O.some("GET"),
+ *   operation: O.some("listModels"),
+ *   path: O.some("/models"),
  *   reason: "response status",
- *   status: 500
+ *   status: O.some(HttpStatus.make(500))
  * })
  *
  * console.log(error)
@@ -544,12 +655,27 @@ const isVeniceAIOperationDescriptor = S.is(VeniceAIOperationDescriptor);
 export class VeniceAIError extends TaggedErrorClass<VeniceAIError>($I`VeniceAIError`)(
   "VeniceAIError",
   {
-    cause: S.optionalKey(S.String),
-    method: S.optionalKey(VeniceAIHttpMethod),
-    operation: S.optionalKey(VeniceAIOperationId),
-    path: S.optionalKey(S.String),
-    reason: VeniceAIErrorReason,
-    status: S.optionalKey(S.Finite),
+    cause: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Sanitized technical cause label when one was available." })
+    ),
+    method: S.OptionFromOptionalKey(VeniceAIHttpMethod).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "HTTP method associated with the failure when known." })
+    ),
+    operation: S.OptionFromOptionalKey(VeniceAIOperationId).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Venice operation associated with the failure when known." })
+    ),
+    path: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Request path associated with the failure when known." })
+    ),
+    reason: VeniceAIErrorReason.annotateKey({ description: "Redacted technical failure reason." }),
+    status: S.OptionFromOptionalKey(VeniceAIHttpStatus).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "HTTP response status code associated with the failure when known." })
+    ),
   },
   $I.annote("VeniceAIError", {
     description: "Redacted technical failure raised by the Venice AI driver boundary.",
@@ -573,31 +699,30 @@ export class VeniceAIError extends TaggedErrorClass<VeniceAIError>($I`VeniceAIEr
     (
       descriptor: VeniceAIOperationDescriptor,
       reason: VeniceAIErrorReason,
-      options?: VeniceAIErrorOptions
+      options?: VeniceAIErrorOptionsInput
     ): VeniceAIError;
     (
       reason: VeniceAIErrorReason,
-      options?: VeniceAIErrorOptions
+      options?: VeniceAIErrorOptionsInput
     ): (descriptor: VeniceAIOperationDescriptor) => VeniceAIError;
   } = dual(
-    (args) => args.length >= 2 && isVeniceAIOperationDescriptor(args[0]),
+    (args) => args.length >= 2 && VeniceAIOperationDescriptor.is(args[0]),
     (
       descriptor: VeniceAIOperationDescriptor,
       reason: VeniceAIErrorReason,
-      options: VeniceAIErrorOptions = {}
-    ): VeniceAIError =>
-      VeniceAIError.make({
-        method: descriptor.method,
-        operation: descriptor.operationId,
-        path: descriptor.path,
+      options: VeniceAIErrorOptionsInput = {}
+    ): VeniceAIError => {
+      const normalizedOptions = normalizeVeniceAIErrorOptions(options);
+
+      return VeniceAIError.make({
+        method: O.some(descriptor.method),
+        operation: O.some(descriptor.operationId),
+        path: O.some(descriptor.path),
         reason,
-        ...R.getSomes({
-          cause: causeFromUnknown(options.cause),
-        }),
-        ...R.getSomes({
-          status: O.fromUndefinedOr(options.status),
-        }),
-      })
+        cause: O.flatMap(normalizedOptions.cause, causeFromUnknown),
+        status: normalizedOptions.status,
+      });
+    }
   );
 
   /**
@@ -617,9 +742,7 @@ export class VeniceAIError extends TaggedErrorClass<VeniceAIError>($I`VeniceAIEr
   static readonly config = (cause?: unknown): VeniceAIError =>
     VeniceAIError.make({
       reason: "config",
-      ...R.getSomes({
-        cause: causeFromUnknown(cause),
-      }),
+      cause: causeFromUnknown(cause),
     });
 }
 
@@ -655,11 +778,35 @@ export const VeniceAiChatError = VeniceAIError;
  */
 export type VeniceAiChatError = VeniceAIError;
 
-type VeniceAIErrorOptions = {
+type VeniceAIErrorOptionsInput = {
   readonly cause?: unknown;
   readonly status?: number;
 };
 
+class VeniceAIErrorOptions extends S.Class<VeniceAIErrorOptions>($I`VeniceAIErrorOptions`)(
+  {
+    cause: S.OptionFromOptionalKey(VeniceAIUnknownPayload).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Original native or third-party cause when one was available." })
+    ),
+    status: S.OptionFromOptionalKey(HttpStatus).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "HTTP response status code associated with the failure when one was available." })
+    ),
+  },
+  $I.annote("VeniceAIErrorOptions", {
+    description: "Normalized options for configuring VeniceAIError instances.",
+  })
+) {}
+
+const normalizeVeniceAIErrorOptions = (options: VeniceAIErrorOptionsInput): VeniceAIErrorOptions =>
+  VeniceAIErrorOptions.make({
+    cause: O.fromUndefinedOr(options.cause),
+    status: pipe(O.fromUndefinedOr(options.status), O.map(makeHttpStatus)),
+  });
+
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   if (!P.isObject(value)) {
     return O.none();
@@ -674,9 +821,16 @@ const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
 };
 
 const readString = (value: unknown, key: PropertyKey): O.Option<string> =>
+  // shared driver boundary idiom; no in-family home; future foundation capability candidate.
+  // fallow-ignore-next-line code-duplication
   O.filter(readProperty(value, key), P.isString);
 
-const safeBoolean = (evaluate: () => boolean): boolean => Result.getOrElse(Result.try(evaluate), () => false);
+const tryBoolean = (evaluate: () => boolean): Result.Result<boolean, unknown> => Result.try(evaluate);
+
+const safeBoolean: (evaluate: () => boolean) => boolean = flow(
+  tryBoolean,
+  Result.getOrElse(() => false)
+);
 
 const httpClientCauseLabel = (cause: unknown): O.Option<string> =>
   safeBoolean(() => HttpClientError.isHttpClientError(cause))
@@ -687,6 +841,8 @@ const httpClientCauseLabel = (cause: unknown): O.Option<string> =>
       )
     : O.none();
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const causeFromUnknown = (cause: unknown): O.Option<string> =>
   P.isUndefined(cause)
     ? O.none()
@@ -722,9 +878,10 @@ class ChatCompletionTextResponse extends S.Class<ChatCompletionTextResponse>($I`
   $I.annote("ChatCompletionTextResponse", {
     description: "Minimal chat completion response shape decoded by the compatibility chat service.",
   })
-) {}
+) {
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(ChatCompletionTextResponse);
+}
 
-const decodeChatCompletionTextResponse = S.decodeUnknownEffect(ChatCompletionTextResponse);
 const decodeSseJson = decodeJsonString;
 
 const createChatCompletionOperation = VeniceAIOperationDescriptor.make({
@@ -1297,25 +1454,33 @@ export type VeniceAIShape = VeniceAINonStreamingShape & {
   readonly streamResponse: VeniceAIStreamMethod;
 };
 
-type ResolvedVeniceAIConfig = {
-  readonly apiKey: O.Option<Redacted.Redacted<string>>;
-  readonly baseUrl: string;
-  readonly headers: Readonly<Record<string, string>>;
-};
+class ResolvedVeniceAIConfig extends S.Class<ResolvedVeniceAIConfig>($I`ResolvedVeniceAIConfig`)(
+  {
+    apiKey: S.Option(S.String.pipe(S.RedactedFromValue)).annotateKey({
+      description: "Resolved Venice API key from explicit configuration or environment.",
+    }),
+    baseUrl: VeniceAIBaseUrl.annotateKey({ description: "Resolved normalized Venice API base URL." }),
+    headers: S.Record(S.String, S.String).annotateKey({ description: "Resolved base request headers." }),
+  },
+  $I.annote("ResolvedVeniceAIConfig", {
+    description: "Resolved runtime configuration for the Venice AI driver.",
+  })
+) {}
 
-type VeniceAIEncodedQuery = Readonly<Record<string, VeniceAIQueryValue>>;
-
-const normalizeBaseUrl = Str.replace(/\/+$/, "");
-
-const resolveConfig = (config: VeniceAIConfigInput, redactedApiKey?: Redacted.Redacted): ResolvedVeniceAIConfig => ({
+const resolveConfig = (
+  config: VeniceAIConfigInput,
+  redactedApiKey?: Redacted.Redacted<string>
+): ResolvedVeniceAIConfig => ({
   apiKey: pipe(
     O.fromUndefinedOr(redactedApiKey),
-    O.orElse(() => O.fromUndefinedOr(config.apiKey))
+    O.orElse(() => config.apiKey)
   ),
-  baseUrl: normalizeBaseUrl(config.baseUrl),
+  baseUrl: makeVeniceAIBaseUrl(config.baseUrl),
   headers: config.headers,
 });
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const isJsonContentType = (contentType: string): boolean => Str.includes("application/json")(contentType);
 
 const isTextContentType = (contentType: string): boolean =>
@@ -1329,15 +1494,13 @@ const responseContentType = (response: HttpClientResponse.HttpClientResponse): O
 
 const diagnosticsFor = (event: string, error: VeniceAIError): Readonly<Record<string, unknown>> => ({
   event,
-  operation: error.operation,
-  path: error.path,
   provider: "venice-ai",
   reason: error.reason,
-  ...R.getSomes({
-    cause: O.fromUndefinedOr(error.cause),
-  }),
-  ...R.getSomes({
-    status: O.fromUndefinedOr(error.status),
+  ...O.getSomesStruct({
+    cause: error.cause,
+    operation: error.operation,
+    path: error.path,
+    status: error.status,
   }),
 });
 
@@ -1356,6 +1519,8 @@ const defaultAcceptHeader = (descriptor: VeniceAIOperationDescriptor): string =>
     O.getOrElse(() => "application/json")
   );
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const applyPathParams = (path: string, params: Readonly<Record<string, string>> = {}): string =>
   pipe(
     params,
@@ -1371,29 +1536,24 @@ const failMissingPathParam = (
 const requestEncodingError = <A>(descriptor: VeniceAIOperationDescriptor): Effect.Effect<A, VeniceAIError> =>
   Effect.fail(VeniceAIError.fromDescriptor(descriptor, "request encoding"));
 
-const isEncodedQueryValue = S.is(VeniceAIQueryValue);
+const normalizeRequestOptions = (request: VeniceAIRequestOptions | undefined): VeniceAIRequestOptions =>
+  request ?? VeniceAIRequestOptions.make({});
 
 const normalizeQuery = (
   descriptor: VeniceAIOperationDescriptor,
-  query: VeniceAIRequestOptions["query"]
-): Effect.Effect<VeniceAIEncodedQuery | undefined, VeniceAIError> => {
-  if (P.isUndefined(query)) {
-    return Effect.sync((): VeniceAIEncodedQuery | undefined => undefined);
-  }
-
-  return pipe(
-    R.toEntries(query),
-    Effect.forEach(([key, value]): Effect.Effect<readonly [string, VeniceAIQueryValue], VeniceAIError> => {
-      if (!isEncodedQueryValue(value)) {
-        return requestEncodingError(descriptor);
-      }
-
-      const entry: readonly [string, VeniceAIQueryValue] = [key, value];
-      return Effect.succeed(entry);
-    }),
-    Effect.map(R.fromEntries)
+  query: VeniceAIRequestOptions["query"] | undefined
+): Effect.Effect<O.Option<VeniceAIEncodedQuery>, VeniceAIError> =>
+  pipe(
+    query ?? O.none(),
+    O.match({
+      onNone: () => Effect.succeed(O.none<VeniceAIEncodedQuery>()),
+      onSome: (value) =>
+        S.decodeUnknownEffect(VeniceAIEncodedQuery)(value).pipe(
+          Effect.map(O.some),
+          Effect.mapError(() => VeniceAIError.fromDescriptor(descriptor, "request encoding"))
+        ),
+    })
   );
-};
 
 const addRequestHeaders = (
   request: HttpClientRequest.HttpClientRequest,
@@ -1405,7 +1565,7 @@ const addRequestHeaders = (
     request,
     HttpClientRequest.accept(options.accept ?? defaultAcceptHeader(descriptor)),
     HttpClientRequest.setHeaders(config.headers),
-    HttpClientRequest.setHeaders(options.headers ?? {})
+    HttpClientRequest.setHeaders(O.getOrElse(options.headers ?? O.none(), () => R.empty<string>()))
   );
 
   return descriptor.authenticated
@@ -1424,9 +1584,12 @@ const addRequestBody = (
   descriptor: VeniceAIOperationDescriptor,
   options: VeniceAIRequestOptions
 ): Effect.Effect<HttpClientRequest.HttpClientRequest, VeniceAIError> => {
-  if (P.isNotUndefined(options.formData)) {
+  const formData = options.formData ?? O.none();
+  const body = options.body ?? O.none();
+
+  if (O.isSome(formData)) {
     return hasRequestContentType(descriptor, "multipart/form-data")
-      ? Effect.succeed(HttpClientRequest.bodyFormData(request, options.formData))
+      ? Effect.succeed(HttpClientRequest.bodyFormData(request, formData.value))
       : requestEncodingError(descriptor);
   }
 
@@ -1437,7 +1600,7 @@ const addRequestBody = (
     return Effect.fail(VeniceAIError.fromDescriptor(descriptor, "multipart encoding"));
   }
 
-  if (P.isUndefined(options.body)) {
+  if (O.isNone(body)) {
     return Effect.succeed(request);
   }
 
@@ -1446,7 +1609,7 @@ const addRequestBody = (
   }
 
   return pipe(
-    HttpClientRequest.bodyJson(request, options.body),
+    HttpClientRequest.bodyJson(request, body.value),
     Effect.mapError((cause) => VeniceAIError.fromDescriptor(descriptor, "request encoding", { cause }))
   );
 };
@@ -1456,12 +1619,15 @@ const buildRequest = Effect.fn("VeniceAI.buildRequest")(function* (
   descriptor: VeniceAIOperationDescriptor,
   options: VeniceAIRequestOptions
 ) {
-  const path = applyPathParams(descriptor.path, options.path);
+  const path = applyPathParams(
+    descriptor.path,
+    O.getOrElse(options.path ?? O.none(), () => R.empty<string>())
+  );
   yield* failMissingPathParam(descriptor, path);
   const query = yield* normalizeQuery(descriptor, options.query);
 
   const request = pipe(
-    HttpClientRequest.make(descriptor.method)(`${config.baseUrl}${path}`, { urlParams: query }),
+    HttpClientRequest.make(descriptor.method)(`${config.baseUrl}${path}`, { urlParams: O.getOrUndefined(query) }),
     (baseRequest) => addRequestHeaders(baseRequest, config, descriptor, options)
   );
 
@@ -1482,12 +1648,12 @@ const executeRaw = Effect.fn("VeniceAI.executeRaw")(function* (
   );
 });
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const responseContext = (response: HttpClientResponse.HttpClientResponse) => ({
+  contentType: responseContentType(response),
   headers: response.headers,
-  status: response.status,
-  ...R.getSomes({
-    contentType: responseContentType(response),
-  }),
+  status: makeHttpStatus(response.status),
 });
 
 const ensureSuccessStatus = (
@@ -1567,10 +1733,9 @@ const executeOperation = (
   config: ResolvedVeniceAIConfig,
   descriptor: VeniceAIOperationDescriptor
 ): VeniceAIMethod => {
-  const operation = Effect.fn(`VeniceAI.${descriptor.operationId}`)(function* (
-    request = VeniceAIRequestOptions.make({})
-  ) {
-    const response = yield* executeRaw(client, config, descriptor, request);
+  const operation = Effect.fn(`VeniceAI.${descriptor.operationId}`)(function* (request?: VeniceAIRequestOptions) {
+    const options = normalizeRequestOptions(request);
+    const response = yield* executeRaw(client, config, descriptor, options);
     return yield* decodeResponse(descriptor, response);
   });
 
@@ -1589,13 +1754,18 @@ const executeOperation = (
 
 const addStreamFlag = (body: unknown): unknown => (P.isObject(body) ? { ...body, stream: true } : { stream: true });
 
-const makeStreamingRequest = (request = VeniceAIRequestOptions.make({})): VeniceAIRequestOptions =>
-  VeniceAIRequestOptions.make({
-    ...request,
-    accept: "text/event-stream",
-    body: addStreamFlag(request.body),
-  });
+const makeStreamingRequest = (request?: VeniceAIRequestOptions): VeniceAIRequestOptions => {
+  const options = normalizeRequestOptions(request);
 
+  return VeniceAIRequestOptions.make({
+    ...options,
+    accept: "text/event-stream",
+    body: O.some(addStreamFlag(O.getOrUndefined(options.body ?? O.none()))),
+  });
+};
+
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const dataLine = (line: string): O.Option<string> =>
   Str.startsWith("data:")(line) ? O.some(Str.trim(Str.slice(5)(line))) : O.none();
 
@@ -1687,10 +1857,12 @@ const parseSseData = (
   index: number
 ): Effect.Effect<VeniceAIServerSentEvent, VeniceAIError> =>
   data === "[DONE]"
-    ? Effect.succeed(VeniceAIServerSentEvent.make({ done: true, index }))
+    ? Effect.succeed(VeniceAIServerSentEvent.make({ done: true, index: NonNegativeInt.make(index) }))
     : pipe(
         decodeSseJson(data),
-        Effect.map((decoded) => VeniceAIServerSentEvent.make({ data: decoded, done: false, index })),
+        Effect.map((decoded) =>
+          VeniceAIServerSentEvent.make({ data: O.some(decoded), done: false, index: NonNegativeInt.make(index) })
+        ),
         Effect.mapError((cause) => VeniceAIError.fromDescriptor(descriptor, "sse decoding", { cause }))
       );
 
@@ -1724,11 +1896,13 @@ const streamOperation =
     );
 
 const extractChatText = Effect.fn("VeniceAI.extractChatText")(function* (response: VeniceAIResponse) {
-  if (response._tag !== "Json") {
-    return yield* VeniceAIError.fromDescriptor(createChatCompletionOperation, "response decoding");
-  }
+  const body = yield* VeniceAIResponse.match(response, {
+    Binary: () => Effect.fail(VeniceAIError.fromDescriptor(createChatCompletionOperation, "response decoding")),
+    Json: (json) => Effect.succeed(json.body),
+    Text: () => Effect.fail(VeniceAIError.fromDescriptor(createChatCompletionOperation, "response decoding")),
+  });
 
-  const decoded = yield* decodeChatCompletionTextResponse(response.body).pipe(
+  const decoded = yield* ChatCompletionTextResponse.decodeUnknownEffect(body).pipe(
     Effect.mapError((cause) =>
       VeniceAIError.fromDescriptor(createChatCompletionOperation, "response decoding", { cause })
     )
@@ -1837,9 +2011,10 @@ export class VeniceAI extends Context.Service<VeniceAI, VeniceAIShape>()($I`Veni
    * @example
    * ```ts
    * import { Redacted } from "effect"
+   * import * as O from "effect/Option"
    * import { VeniceAI, VeniceAIConfigInput } from "@beep/venice-ai"
    *
-   * const layer = VeniceAI.makeLayer(VeniceAIConfigInput.make({ apiKey: Redacted.make("test-key") }))
+   * const layer = VeniceAI.makeLayer(VeniceAIConfigInput.make({ apiKey: O.some(Redacted.make("test-key")) }))
    * console.log(layer)
    * ```
    *
@@ -1929,7 +2104,7 @@ export class VeniceAiChat extends Context.Service<
         chat: Effect.fn("VeniceAiChat.chat")(function* (message: string) {
           const response = yield* venice.createChatCompletion(
             VeniceAIRequestOptions.make({
-              body: {
+              body: O.some({
                 messages: [
                   {
                     content: message,
@@ -1937,7 +2112,7 @@ export class VeniceAiChat extends Context.Service<
                   },
                 ],
                 model: VENICE_CHAT_MODEL,
-              },
+              }),
             })
           );
 

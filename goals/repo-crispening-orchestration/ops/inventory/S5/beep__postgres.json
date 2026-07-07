@@ -2,39 +2,6 @@
   {
     "ruleId": "SFV4-precision-audit",
     "file": "packages/drivers/postgres/src/Postgres.errors.ts",
-    "line": 36,
-    "symbol": "PostgresErrorContext",
-    "smell": "The diagnostic context schema has a class-level $I.annote annotation, but every field is unannotated even though the fields are public error metadata surfaced by the driver.",
-    "proposedTarget": "Add .annotateKey descriptions to each public field, following the local field-annotation pattern in packages/drivers/uspto-mcp/src/UsptoTools.ts:73 and packages/drivers/govinfo/src/domain/values/SummaryItem/SummaryItem.model.ts:41. Effect v4 exposes annotateKey at .repos/effect-v4/packages/effect/src/Schema.ts:185 and :605.",
-    "confidence": 0.88,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/drivers/postgres/src/Postgres.errors.ts",
-    "line": 298,
-    "symbol": "PostgresError",
-    "smell": "The exported tagged error schema has a class-level $I.annote annotation but no field-level annotations for operation, sqlState, sqlStateName, severity, context, cause, and message.",
-    "proposedTarget": "Add .annotateKey descriptions to the TaggedErrorClass field schemas, mirroring annotated error/model fields in packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts:113 and packages/drivers/uspto-mcp/src/UsptoTools.ts:120.",
-    "confidence": 0.86,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/drivers/postgres/test/Postgres.errors.test.ts",
-    "line": 133,
-    "symbol": "PgErrorCode/PgErrorName/PostgresErrorContext/PostgresError schema tests",
-    "smell": "The package has extensive hand-written error normalization and formatting fixtures, but no S.toArbitrary-derived schema law for the public SQL-state and error schemas.",
-    "proposedTarget": "Add additive property tests for PgErrorCode, PgErrorName, PostgresErrorContext, and PostgresError using S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) plus @effect/vitest FastCheck, following the schema-derived round-trip pattern in packages/drivers/venice-ai/test/VeniceAI.service.test.ts:380.",
-    "confidence": 0.68,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/drivers/postgres/src/Postgres.errors.ts",
     "line": 38,
     "symbol": "PostgresErrorContext diagnostic strings and params",
     "smell": "Detector candidate: many fields are broad S.String/S.Unknown/S.Array(S.Unknown) instead of narrower query, identifier, or parameter schemas.",

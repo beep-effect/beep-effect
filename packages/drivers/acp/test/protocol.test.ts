@@ -10,6 +10,7 @@ import * as HashSet from "effect/HashSet";
 import * as Path from "effect/Path";
 import * as Queue from "effect/Queue";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { FastCheck as fc } from "effect/testing";
@@ -41,10 +42,33 @@ const encodeSessionCancelNotification = Schema.encodeEffect(Schema.fromJsonStrin
 const encodeRequestPermissionResponse = Schema.encodeEffect(Schema.fromJsonString(RequestPermissionResponse));
 const SessionCancelNotificationArbitrary = Schema.toArbitrary(SessionCancelNotification);
 const RequestPermissionResponseArbitrary = Schema.toArbitrary(RequestPermissionResponse);
+const AcpProtocolLogEventArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLogEvent);
+const AcpProtocolLoggingOptionsArbitrary = Schema.toArbitrary(AcpProtocol.AcpProtocolLoggingOptions);
+const AcpIncomingNotificationArbitrary = Schema.toArbitrary(AcpProtocol.AcpIncomingNotification);
+const AcpErrorArbitrary = Schema.toArbitrary(AcpError.AcpError);
 const childProcessProtocolTestTimeout = 30_000;
 const mockPeerPath = Effect.map(Effect.service(Path.Path), (path) =>
   path.join(import.meta.dirname, "fixtures/acp-mock-peer.ts")
 );
+
+const encode = <Codec extends Schema.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
+  Result.getOrThrow(Schema.encodeResult(schema)(value));
+
+const decode = <Codec extends Schema.Codec<unknown, unknown>>(schema: Codec, value: Codec["Encoded"]): Codec["Type"] =>
+  Result.getOrThrow(Schema.decodeUnknownResult(schema)(value));
+
+const assertEncodedRoundTrip = <Codec extends Schema.Codec<unknown, unknown>>(
+  schema: Codec,
+  value: Codec["Type"],
+  options: { readonly compareDecoded?: boolean } = {}
+): void => {
+  const encoded = encode(schema, value);
+  const decoded = decode(schema, encoded);
+  if (options.compareDecoded !== false) {
+    assert.isTrue(Schema.toEquivalence(schema)(decoded, value));
+  }
+  assert.deepEqual(encode(schema, decoded), encoded);
+};
 
 const makeHandle = Effect.fn("AcpProtocolTest.makeHandle")(function* (env?: Record<string, string>) {
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
@@ -76,6 +100,95 @@ it("round-trips schema-derived JSON-RPC notifications and responses through JSON
           Effect.runSync(encodeRequestPermissionResponse(decodedPermissionResponse)),
           encodedPermissionResponse
         );
+      }
+    ),
+    { numRuns: 25 }
+  ));
+
+it("keeps handwritten ACP schema encoded shapes byte-identical", () => {
+  assert.deepEqual(
+    encode(AcpError.AcpRequestError, AcpError.AcpRequestError.parseError("Parse error", { issue: "bad" })),
+    {
+      _tag: "AcpRequestError",
+      code: -32700,
+      data: { issue: "bad" },
+      errorMessage: "Parse error",
+    }
+  );
+  assert.deepEqual(encode(AcpError.AcpRequestError, AcpError.AcpRequestError.methodNotFound("x/test")), {
+    _tag: "AcpRequestError",
+    code: -32601,
+    errorMessage: "Method not found: x/test",
+  });
+  assert.deepEqual(encode(AcpError.AcpProcessExitedError, AcpError.AcpProcessExitedError.make({ code: O.some(7) })), {
+    _tag: "AcpProcessExitedError",
+    code: 7,
+  });
+  assert.deepEqual(encode(AcpError.AcpProcessExitedError, AcpError.AcpProcessExitedError.make({})), {
+    _tag: "AcpProcessExitedError",
+  });
+  assert.deepEqual(
+    encode(AcpError.AcpProtocolParseError, AcpError.AcpProtocolParseError.make({ detail: "bad json" })),
+    {
+      _tag: "AcpProtocolParseError",
+      detail: "bad json",
+    }
+  );
+  assert.deepEqual(encode(AcpError.AcpTransportError, AcpError.AcpTransportError.make({ detail: "stream closed" })), {
+    _tag: "AcpTransportError",
+    detail: "stream closed",
+  });
+  assert.deepEqual(encode(AcpProtocol.AcpProtocolLoggingOptions, AcpProtocol.AcpProtocolLoggingOptions.make({})), {});
+  assert.deepEqual(
+    encode(AcpProtocol.AcpProtocolLoggingOptions, AcpProtocol.AcpProtocolLoggingOptions.make({ logIncoming: true })),
+    {
+      logIncoming: true,
+    }
+  );
+  assert.deepEqual(
+    encode(
+      AcpProtocol.AcpProtocolLogEvent,
+      AcpProtocol.AcpProtocolLogEvent.fromUnknown({
+        direction: "incoming",
+        payload: "{}",
+        stage: "raw",
+      })
+    ),
+    {
+      direction: "incoming",
+      payload: "{}",
+      stage: "raw",
+    }
+  );
+  assert.deepEqual(
+    encode(
+      AcpProtocol.AcpIncomingNotification,
+      AcpProtocol.AcpIncomingNotification.fromUnknown({
+        _tag: "ExtNotification",
+        method: "x/custom",
+        params: { ok: true },
+      })
+    ),
+    {
+      _tag: "ExtNotification",
+      method: "x/custom",
+      params: { ok: true },
+    }
+  );
+});
+
+it("round-trips handwritten ACP schemas through encoded form", () =>
+  fc.assert(
+    fc.property(
+      AcpProtocolLogEventArbitrary,
+      AcpProtocolLoggingOptionsArbitrary,
+      AcpIncomingNotificationArbitrary,
+      AcpErrorArbitrary,
+      (event, options, notification, error) => {
+        assertEncodedRoundTrip(AcpProtocol.AcpProtocolLogEvent, event);
+        assertEncodedRoundTrip(AcpProtocol.AcpProtocolLoggingOptions, options);
+        assertEncodedRoundTrip(AcpProtocol.AcpIncomingNotification, notification);
+        assertEncodedRoundTrip(AcpError.AcpError, error, { compareDecoded: false });
       }
     ),
     { numRuns: 25 }
@@ -408,7 +521,7 @@ it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
       const message = yield* Deferred.await(firstMessage);
       const exitError = yield* Deferred.await(termination);
       assert.instanceOf(exitError, AcpError.AcpProcessExitedError);
-      assert.equal((exitError as AcpError.AcpProcessExitedError).code, 7);
+      assert.equal(O.getOrThrow((exitError as AcpError.AcpProcessExitedError).code), 7);
       assert.equal(
         (
           message as {
@@ -429,7 +542,7 @@ it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
       };
       assert.equal(defect._tag, "RpcClientDefect");
       assert.instanceOf(defect.cause, AcpError.AcpProcessExitedError);
-      assert.equal((defect.cause as AcpError.AcpProcessExitedError).code, 7);
+      assert.equal(O.getOrThrow((defect.cause as AcpError.AcpProcessExitedError).code), 7);
     }),
     childProcessProtocolTestTimeout
   );
@@ -486,7 +599,7 @@ it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
       const { stdio, input, output } = yield* makeInMemoryStdio();
       const transport = yield* AcpProtocol.makeAcpPatchedProtocol({
         stdio,
-        terminationError: Effect.succeed(AcpError.AcpProcessExitedError.make({ code: 0 })),
+        terminationError: Effect.succeed(AcpError.AcpProcessExitedError.make({ code: O.some(0) })),
         serverRequestMethods: HashSet.empty(),
       });
 
@@ -501,7 +614,7 @@ it.layer(NodeServices.layer)("effect-acp protocol", (it) => {
         })
       );
       assert.instanceOf(error, AcpError.AcpProcessExitedError);
-      assert.equal(error.code, 0);
+      assert.equal(O.getOrThrow(error.code), 0);
     })
   );
 });

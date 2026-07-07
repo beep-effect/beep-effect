@@ -1,49 +1,5 @@
 [
   {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/box/src/Box.config.ts",
-    "line": 19,
-    "symbol": "BoxCcgConfigShape",
-    "smell": "`enterpriseId` and `userId` are `S.String.pipe(S.optionalKey)` fields, then service code re-models absence with `O.fromUndefinedOr` at Box.service.ts:94-95 and duplicates the schema check with `config.enterpriseId === undefined && config.userId === undefined` at Box.service.ts:102.",
-    "proposedTarget": "Model the decoded config as Option while preserving optional-key wire shape: `enterpriseId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` and the same for `userId`; rewrite the cross-field check to test `O.isSome` and keep the SDK `CcgConfig` construction as the only `Option` -> omitted-key adapter. In-repo exemplars: `packages/drivers/firecrawl/src/Firecrawl.models.ts:71-81` for OptionFromOptionalKey fields and `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46-51` for `withNoneDefault`.",
-    "confidence": 0.68,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/box/src/Box.errors.ts",
-    "line": 104,
-    "symbol": "BoxErrorOptions",
-    "smell": "All diagnostic option fields are `S.optionalKey` fields, while `BoxError.fromReason` immediately converts the input object through `O.fromUndefinedOr` + `R.getSomes` at lines 177-188.",
-    "proposedTarget": "Mirror the nearby driver pattern in `packages/drivers/firecrawl/src/Firecrawl.errors.ts:200-209`: make optional diagnostics `S.OptionFromOptionalKey(...)` fields so absence is represented in the schema model instead of rebuilt by object-spread filtering in the constructor path. Use `SchemaUtils.withNoneDefault` if constructor ergonomics should allow omitted Option fields.",
-    "confidence": 0.76,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/box/src/Box.errors.ts",
-    "line": 146,
-    "symbol": "BoxError",
-    "smell": "`cause`, `code`, `context`, `helpUrl`, `method`, `requestId`, and `status` are optional-key fields on the decoded error object, forcing `fromReason` / `fromUnknown` to shuttle diagnostics through `undefined` and `R.getSomes` instead of assigning `Option` values directly.",
-    "proposedTarget": "Use `S.OptionFromOptionalKey(...)` for the optional diagnostic fields, following `packages/drivers/firecrawl/src/Firecrawl.errors.ts:239-249`; then `fromReason` can assign `cause`, `code`, `context`, `helpUrl`, `method`, `requestId`, and `status` as `Option` values without the `R.getSomes` spreads. Keep `sdkVersion` as a separate defaulted concrete string if diagnostics require it to be always present.",
-    "confidence": 0.76,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/box/src/Box.errors.ts",
-    "line": 190,
-    "symbol": "BoxError.fromReason",
-    "smell": "`sdkVersion: options.sdkVersion ?? BOX_SDK_VERSION` is a constructor-body default for a schema-modeled error field.",
-    "proposedTarget": "Move the concrete SDK-version default onto the `BoxError` schema field, e.g. `sdkVersion: S.String.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(BOX_SDK_VERSION))`, so `fromReason` can omit the field when no override is supplied. In-repo default exemplar: `packages/drivers/xai/src/XAi.config.ts:85-89`; helper definition: `packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:50-69`.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
     "ruleId": "SFV4-null-return",
     "file": "packages/drivers/box/src/Box.streaming.ts",
     "line": 705,

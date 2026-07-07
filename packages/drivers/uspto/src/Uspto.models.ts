@@ -6,8 +6,9 @@
  */
 
 import { $UsptoId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { Str } from "@beep/utils";
-import { flow, pipe } from "effect";
+import { Effect, flow, pipe, SchemaGetter, SchemaIssue } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -40,7 +41,8 @@ export const UsptoApplicationNumber = S.String.check(
   S.brand("UsptoApplicationNumber"),
   $I.annoteSchema("UsptoApplicationNumber", {
     description: "Normalized eight-digit USPTO application number (series code plus serial number).",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -50,6 +52,49 @@ export const UsptoApplicationNumber = S.String.check(
  * @since 0.0.0
  */
 export type UsptoApplicationNumber = typeof UsptoApplicationNumber.Type;
+
+const normalizeApplicationNumberText = (text: string): string => text.replaceAll(/[\s/,.-]/gu, "");
+
+const decodeUsptoApplicationNumberFromText = (
+  value: string
+): Effect.Effect<UsptoApplicationNumber, SchemaIssue.Issue> => {
+  const candidate = normalizeApplicationNumberText(value);
+  return applicationNumberPattern.test(candidate)
+    ? Effect.succeed(UsptoApplicationNumber.make(candidate))
+    : Effect.fail(
+        new SchemaIssue.InvalidValue(O.some(value), {
+          message: "Expected text containing an eight-digit USPTO application number",
+        })
+      );
+};
+
+const encodeUsptoApplicationNumberToText = (value: string): Effect.Effect<string> => Effect.succeed(value);
+
+/**
+ * Boundary codec for free-text USPTO application number input.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { UsptoApplicationNumberFromText } from "@beep/uspto"
+ *
+ * const number = S.decodeUnknownSync(UsptoApplicationNumberFromText)("16/138,242")
+ * console.log(number)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const UsptoApplicationNumberFromText = S.String.pipe(
+  S.decodeTo(UsptoApplicationNumber, {
+    decode: SchemaGetter.transformOrFail(decodeUsptoApplicationNumberFromText),
+    encode: SchemaGetter.transformOrFail(encodeUsptoApplicationNumberToText),
+  }),
+  $I.annoteSchema("UsptoApplicationNumberFromText", {
+    description: "Codec that normalizes free-text USPTO application numbers into the eight-digit domain form.",
+  }),
+  SchemaUtils.withCodecStatics
+);
 
 /**
  * Normalized USPTO patent number with optional kind prefix.
@@ -75,7 +120,8 @@ export const UsptoPatentNumber = S.String.check(
   S.brand("UsptoPatentNumber"),
   $I.annoteSchema("UsptoPatentNumber", {
     description: "Normalized USPTO patent number without commas or kind codes.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -85,6 +131,52 @@ export const UsptoPatentNumber = S.String.check(
  * @since 0.0.0
  */
 export type UsptoPatentNumber = typeof UsptoPatentNumber.Type;
+
+const normalizePatentNumberText: (text: string) => string = flow(
+  Str.toUpperCase,
+  Str.replaceAll(/[\s,]/gu, ""),
+  Str.replace(/^US/u, ""),
+  Str.replace(/[A-Z]\d?$/u, "")
+);
+
+const decodeUsptoPatentNumberFromText = (value: string): Effect.Effect<UsptoPatentNumber, SchemaIssue.Issue> => {
+  const candidate = normalizePatentNumberText(value);
+  return patentNumberPattern.test(candidate)
+    ? Effect.succeed(UsptoPatentNumber.make(candidate))
+    : Effect.fail(
+        new SchemaIssue.InvalidValue(O.some(value), {
+          message: "Expected text containing a normalized USPTO patent number",
+        })
+      );
+};
+
+const encodeUsptoPatentNumberToText = (value: string): Effect.Effect<string> => Effect.succeed(value);
+
+/**
+ * Boundary codec for free-text USPTO patent number input.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { UsptoPatentNumberFromText } from "@beep/uspto"
+ *
+ * const number = S.decodeUnknownSync(UsptoPatentNumberFromText)("US 10,772,255 B2")
+ * console.log(number)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const UsptoPatentNumberFromText = S.String.pipe(
+  S.decodeTo(UsptoPatentNumber, {
+    decode: SchemaGetter.transformOrFail(decodeUsptoPatentNumberFromText),
+    encode: SchemaGetter.transformOrFail(encodeUsptoPatentNumberToText),
+  }),
+  $I.annoteSchema("UsptoPatentNumberFromText", {
+    description: "Codec that normalizes free-text USPTO patent numbers into the domain form.",
+  }),
+  SchemaUtils.withCodecStatics
+);
 
 /**
  * Normalize free-text into a USPTO application number candidate.
@@ -107,8 +199,9 @@ export type UsptoPatentNumber = typeof UsptoPatentNumber.Type;
  * @since 0.0.0
  */
 export const normalizeUsptoApplicationNumber = (text: string): O.Option<string> =>
-  pipe(text.replaceAll(/[\s/,.-]/gu, ""), (candidate) =>
-    applicationNumberPattern.test(candidate) ? O.some(candidate) : O.none()
+  pipe(
+    UsptoApplicationNumberFromText.decodeOption(text),
+    O.map((value): string => value)
   );
 
 /**
@@ -131,11 +224,8 @@ export const normalizeUsptoApplicationNumber = (text: string): O.Option<string> 
  * @since 0.0.0
  */
 export const normalizeUsptoPatentNumber: (text: string) => O.Option<string> = flow(
-  Str.toUpperCase,
-  Str.replaceAll(/[\s,]/gu, ""),
-  Str.replace(/^US/u, ""),
-  Str.replace(/[A-Z]\d?$/u, ""),
-  (candidate) => (patentNumberPattern.test(candidate) ? O.some(candidate) : O.none())
+  UsptoPatentNumberFromText.decodeOption,
+  O.map((value): string => value)
 );
 
 /**
@@ -153,22 +243,76 @@ export const normalizeUsptoPatentNumber: (text: string) => O.Option<string> = fl
  */
 export class UsptoApplicationMetadata extends S.Class<UsptoApplicationMetadata>($I`UsptoApplicationMetadata`)(
   {
-    applicationNumberText: S.NonEmptyString,
-    applicationStatusDescriptionText: S.optionalKey(S.String),
-    applicationTypeLabelName: S.optionalKey(S.String),
-    docketNumber: S.optionalKey(S.String),
-    earliestPublicationNumber: S.optionalKey(S.String),
-    filingDate: S.optionalKey(S.String),
-    firstApplicantName: S.optionalKey(S.String),
-    firstInventorName: S.optionalKey(S.String),
-    grantDate: S.optionalKey(S.String),
-    inventionTitle: S.optionalKey(S.String),
-    patentNumber: S.optionalKey(S.String),
+    applicationNumberText: S.NonEmptyString.annotateKey({
+      description: "USPTO application number associated with the metadata row.",
+    }),
+    applicationStatusDescriptionText: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Human-readable USPTO status for the application when provided.",
+      })
+    ),
+    applicationTypeLabelName: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "USPTO application type label when provided.",
+      })
+    ),
+    docketNumber: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Attorney docket number when published in the wrapper metadata.",
+      })
+    ),
+    earliestPublicationNumber: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Earliest publication number associated with the application.",
+      })
+    ),
+    filingDate: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Application filing date string when published by USPTO.",
+      })
+    ),
+    firstApplicantName: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "First listed applicant name when present in the metadata row.",
+      })
+    ),
+    firstInventorName: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "First listed inventor name when present in the metadata row.",
+      })
+    ),
+    grantDate: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Patent grant date string when the application has issued.",
+      })
+    ),
+    inventionTitle: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Published invention title when included in the wrapper metadata.",
+      })
+    ),
+    patentNumber: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Issued patent number associated with the application when present.",
+      })
+    ),
   },
   $I.annote("UsptoApplicationMetadata", {
     description: "Official USPTO application metadata projected from a patent file wrapper response.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(this);
+}
 
 /**
  * Parent and child continuity application numbers for one application.
@@ -186,13 +330,19 @@ export class UsptoApplicationMetadata extends S.Class<UsptoApplicationMetadata>(
  */
 export class UsptoContinuity extends S.Class<UsptoContinuity>($I`UsptoContinuity`)(
   {
-    childApplicationNumbers: S.Array(S.String),
-    parentApplicationNumbers: S.Array(S.String),
+    childApplicationNumbers: S.Array(UsptoApplicationNumber).annotateKey({
+      description: "Normalized child continuity application numbers.",
+    }),
+    parentApplicationNumbers: S.Array(UsptoApplicationNumber).annotateKey({
+      description: "Normalized parent continuity application numbers.",
+    }),
   },
   $I.annote("UsptoContinuity", {
     description: "Parent and child continuity application numbers anchoring an application to its patent family.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(this);
+}
 
 /**
  * Reference to one document in an application file wrapper.
@@ -209,13 +359,25 @@ export class UsptoContinuity extends S.Class<UsptoContinuity>($I`UsptoContinuity
  */
 export class UsptoDocumentReference extends S.Class<UsptoDocumentReference>($I`UsptoDocumentReference`)(
   {
-    documentCode: S.optionalKey(S.String),
-    documentCodeDescriptionText: S.optionalKey(S.String),
-    documentIdentifier: S.NonEmptyString,
-    downloadUrl: S.optionalKey(S.String),
-    officialDate: S.optionalKey(S.String),
+    documentCode: S.optionalKey(S.String).annotateKey({
+      description: "USPTO document code when supplied for the file-wrapper record.",
+    }),
+    documentCodeDescriptionText: S.optionalKey(S.String).annotateKey({
+      description: "Human-readable document code description when supplied.",
+    }),
+    documentIdentifier: S.NonEmptyString.annotateKey({
+      description: "USPTO file-wrapper document identifier.",
+    }),
+    downloadUrl: S.optionalKey(S.String).annotateKey({
+      description: "Published document download URL when the document can be fetched.",
+    }),
+    officialDate: S.optionalKey(S.String).annotateKey({
+      description: "Official USPTO date string associated with the document record.",
+    }),
   },
   $I.annote("UsptoDocumentReference", {
     description: "Reference to one file-wrapper document, including its download URL when published.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(this);
+}

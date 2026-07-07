@@ -1,8 +1,23 @@
+import { NonNegativeInt } from "@beep/schema";
 import { provideScopedLayer } from "@beep/test-utils";
-import { normalizeUsptoApplicationNumber, normalizeUsptoPatentNumber, Uspto, UsptoConfigInput } from "@beep/uspto";
+import {
+  normalizeUsptoApplicationNumber,
+  normalizeUsptoPatentNumber,
+  Uspto,
+  UsptoApplicationMetadata,
+  UsptoApplicationNumber,
+  UsptoConfigInput,
+  UsptoContinuity,
+  UsptoDocumentReference,
+  UsptoError,
+  UsptoErrorReason,
+  UsptoPatentNumber,
+} from "@beep/uspto";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, Redacted } from "effect";
+import { Effect, Layer, Redacted, Result } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
@@ -63,6 +78,29 @@ const respondWith = (body: string, status = 200, seenUrls?: Array<string>): Laye
 const usptoLayer = (http: Layer.Layer<HttpClient.HttpClient>): Layer.Layer<Uspto> =>
   Uspto.makeLayer(UsptoConfigInput.make({ apiKey: Redacted.make("test-key") })).pipe(Layer.provide(http));
 
+const ApplicationNumberArbitrary = S.toArbitrary(UsptoApplicationNumber);
+const PatentNumberArbitrary = S.toArbitrary(UsptoPatentNumber);
+const ConfigInputArbitrary = S.toArbitrary(UsptoConfigInput);
+const ApplicationMetadataArbitrary = S.toArbitrary(UsptoApplicationMetadata);
+const ContinuityArbitrary = S.toArbitrary(UsptoContinuity);
+const DocumentReferenceArbitrary = S.toArbitrary(UsptoDocumentReference);
+const ErrorReasonArbitrary = S.toArbitrary(UsptoErrorReason);
+const ErrorArbitrary = S.toArbitrary(UsptoError);
+
+const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
+  Result.getOrThrow(S.encodeResult(schema)(value));
+
+const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Encoded"]): Codec["Type"] =>
+  Result.getOrThrow(S.decodeUnknownResult(schema)(value));
+
+const expectEncodedRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): void => {
+  const encoded = encode(schema, value);
+  const decoded = decode(schema, encoded);
+
+  expect(encode(schema, decoded)).toEqual(encoded);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
+};
+
 describe("Uspto service", () => {
   it.effect("resolves application metadata from a file wrapper envelope", () =>
     Effect.gen(function* () {
@@ -71,9 +109,9 @@ describe("Uspto service", () => {
       const metadata = yield* uspto.getApplication("16138242");
 
       expect(metadata.applicationNumberText).toBe("16138242");
-      expect(metadata.inventionTitle).toBe("Adjustable widget assembly");
-      expect(metadata.patentNumber).toBe("10772255");
-      expect(metadata.firstApplicantName).toBe("Precision Widgets LLC");
+      expect(metadata.inventionTitle).toStrictEqual(O.some("Adjustable widget assembly"));
+      expect(metadata.patentNumber).toStrictEqual(O.some("10772255"));
+      expect(metadata.firstApplicantName).toStrictEqual(O.some("Precision Widgets LLC"));
       expect(seenUrls).toHaveLength(0);
     }).pipe(provideScopedLayer(usptoLayer(respondWith(applicationEnvelope))))
   );
@@ -130,7 +168,7 @@ describe("Uspto service", () => {
       const uspto = yield* Uspto;
       const results = yield* uspto.searchApplications('applicationMetaData.patentNumber:"10772255"');
       expect(results).toHaveLength(1);
-      expect(results[0]?.patentNumber).toBe("10772255");
+      expect(results[0]?.patentNumber).toStrictEqual(O.some("10772255"));
     }).pipe(provideScopedLayer(usptoLayer(respondWith(applicationEnvelope))))
   );
 });
@@ -149,4 +187,97 @@ describe("Uspto identifier normalization", () => {
     expect(normalizeUsptoPatentNumber("RE46,604")).toStrictEqual(O.some("RE46604"));
     expect(O.isNone(normalizeUsptoPatentNumber("ABC"))).toBe(true);
   });
+});
+
+describe("Uspto schema parity", () => {
+  it("keeps encoded schema wire shapes byte-identical", () => {
+    const config = Result.getOrThrow(
+      S.decodeUnknownResult(UsptoConfigInput)({ apiKey: "test-key", apiUrl: "https://api.uspto.gov/" })
+    );
+    const metadata = UsptoApplicationMetadata.make({
+      applicationNumberText: "16138242",
+      firstApplicantName: O.some("Precision Widgets LLC"),
+      inventionTitle: O.some("Adjustable widget assembly"),
+      patentNumber: O.some("10772255"),
+    });
+    const continuity = UsptoContinuity.make({
+      childApplicationNumbers: [UsptoApplicationNumber.make("17999999")],
+      parentApplicationNumbers: [UsptoApplicationNumber.make("15111111")],
+    });
+    const document = UsptoDocumentReference.make({
+      documentCode: "SPEC",
+      documentCodeDescriptionText: "Specification",
+      documentIdentifier: "DOC123",
+      downloadUrl: "https://api.uspto.gov/docs/DOC123.pdf",
+      officialDate: "2018-09-21",
+    });
+    const fullError = UsptoError.fromReason("response-status", {
+      cause: "bad status",
+      status: NonNegativeInt.make(429),
+    });
+    const minimalError = UsptoError.fromReason("transport");
+
+    expect(config.apiUrl).toBe("https://api.uspto.gov");
+    expect(encode(UsptoConfigInput, config)).toEqual({
+      apiKey: "test-key",
+      apiUrl: "https://api.uspto.gov",
+    });
+    expect(encode(UsptoApplicationMetadata, metadata)).toEqual({
+      applicationNumberText: "16138242",
+      firstApplicantName: "Precision Widgets LLC",
+      inventionTitle: "Adjustable widget assembly",
+      patentNumber: "10772255",
+    });
+    expect(
+      encode(UsptoApplicationMetadata, UsptoApplicationMetadata.make({ applicationNumberText: "16138242" }))
+    ).toEqual({ applicationNumberText: "16138242" });
+    expect(encode(UsptoContinuity, continuity)).toEqual({
+      childApplicationNumbers: ["17999999"],
+      parentApplicationNumbers: ["15111111"],
+    });
+    expect(encode(UsptoDocumentReference, document)).toEqual({
+      documentCode: "SPEC",
+      documentCodeDescriptionText: "Specification",
+      documentIdentifier: "DOC123",
+      downloadUrl: "https://api.uspto.gov/docs/DOC123.pdf",
+      officialDate: "2018-09-21",
+    });
+    expect(encode(UsptoError, fullError)).toEqual({
+      _tag: "UsptoError",
+      cause: "bad status",
+      reason: "response-status",
+      status: 429,
+    });
+    expect(encode(UsptoError, minimalError)).toEqual({
+      _tag: "UsptoError",
+      reason: "transport",
+    });
+  });
+
+  it("round-trips schema-derived USPTO payloads through encoded form", () =>
+    fc.assert(
+      fc.property(
+        ApplicationNumberArbitrary,
+        PatentNumberArbitrary,
+        ConfigInputArbitrary,
+        ApplicationMetadataArbitrary,
+        ContinuityArbitrary,
+        DocumentReferenceArbitrary,
+        ErrorReasonArbitrary,
+        ErrorArbitrary,
+        (applicationNumber, patentNumber, config, metadata, continuity, document, errorReason, error) => {
+          const normalizedConfig = decode(UsptoConfigInput, encode(UsptoConfigInput, config));
+
+          expectEncodedRoundTrip(UsptoApplicationNumber, applicationNumber);
+          expectEncodedRoundTrip(UsptoPatentNumber, patentNumber);
+          expectEncodedRoundTrip(UsptoConfigInput, normalizedConfig);
+          expectEncodedRoundTrip(UsptoApplicationMetadata, metadata);
+          expectEncodedRoundTrip(UsptoContinuity, continuity);
+          expectEncodedRoundTrip(UsptoDocumentReference, document);
+          expectEncodedRoundTrip(UsptoErrorReason, errorReason);
+          expectEncodedRoundTrip(UsptoError, error);
+        }
+      ),
+      { numRuns: 50 }
+    ));
 });

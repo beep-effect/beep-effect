@@ -1,19 +1,36 @@
 import { ArtifactLocator, SourceArtifact } from "@beep/file-processing/Artifact";
 import { ExtractFileOperation } from "@beep/file-processing/Operation";
 import { decodeTestOperationIdentifiers } from "@beep/file-processing/test";
-import { NonNegativeInt } from "@beep/schema";
+import { NonNegativeInt, PosInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { provideScopedLayer } from "@beep/test-utils";
-import { makeTikaAppFileProcessingEngine, TikaAppEngineConfig } from "@beep/tika";
+import { makeTikaAppFileProcessingEngine, TikaAppEngineConfig, TikaContentText } from "@beep/tika";
 import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path } from "effect";
+import { Effect, FileSystem, Layer, Path, Result } from "effect";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import type { FileFormatFamily } from "@beep/file-processing/Strategy";
 
 const testLayer = NodeChildProcessSpawner.layer.pipe(Layer.provideMerge(NodeServices.layer));
 
 const provideTestLayer = provideScopedLayer(testLayer);
+const TikaAppEngineConfigArbitrary = S.toArbitrary(TikaAppEngineConfig);
+const TikaContentTextArbitrary = S.toArbitrary(TikaContentText);
+
+const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
+  Result.getOrThrow(S.encodeResult(schema)(value));
+
+const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Encoded"]): Codec["Type"] =>
+  Result.getOrThrow(S.decodeUnknownResult(schema)(value));
+
+const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): void => {
+  const encoded = encode(schema, value);
+  const decoded = decode(schema, encoded);
+
+  expect(encode(schema, decoded)).toEqual(encoded);
+  expect(S.toEquivalence(schema)(decoded, value)).toBe(true);
+};
 
 const stubJava = `#!/usr/bin/env bash
 printf '%s' '[{"Content-Type":"application/pdf","dc:title":"Probe Title","X-TIKA:Parsed-By":["org.apache.tika.parser.CompositeParser","org.apache.tika.parser.pdf.PDFParser"],"X-TIKA:content":"\\n\\n  hello corpus world\\n\\n"}]'
@@ -58,6 +75,28 @@ const fixture = Effect.fn(function* (stubScript: string, format: FileFormatFamil
 });
 
 describe("makeTikaAppFileProcessingEngine", () => {
+  it("keeps tika-app schema wire inputs and normalization stable", () => {
+    const config = Result.getOrThrow(S.decodeUnknownResult(TikaAppEngineConfig)({ jarPath: "/opt/tika/tika-app.jar" }));
+
+    expect(config.javaPath).toBe("java");
+    expect(config.timeoutMillis).toBe(PosInt.make(120_000));
+    expect(encode(TikaAppEngineConfig, config)).toEqual({
+      jarPath: "/opt/tika/tika-app.jar",
+      javaPath: "java",
+      timeoutMillis: 120_000,
+    });
+    expect(TikaContentText.fromUnknown("\n  hello corpus world\n\n")).toBe("hello corpus world");
+  });
+
+  it("round-trips schema-derived tika-app schemas through encoded form", () =>
+    fc.assert(
+      fc.property(TikaAppEngineConfigArbitrary, TikaContentTextArbitrary, (config, contentText) => {
+        expectRoundTrip(TikaAppEngineConfig, config);
+        expectRoundTrip(TikaContentText, contentText);
+      }),
+      { numRuns: 25 }
+    ));
+
   it.effect("extracts trimmed text and stringified metadata via tika-app", () =>
     Effect.gen(function* () {
       const { operation, stubPath } = yield* fixture(stubJava, "pdf-text-layer");

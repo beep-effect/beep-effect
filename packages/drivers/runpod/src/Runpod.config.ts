@@ -6,11 +6,40 @@
  */
 
 import { $RunpodId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { SchemaUtils, URLStr } from "@beep/schema";
+import { SchemaGetter } from "effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $RunpodId.create("Runpod.config");
+const normalizeConfigUrl = Str.replace(/\/+$/, "");
+
+/**
+ * Runpod configuration URL normalized without trailing slashes.
+ *
+ * @example
+ * ```ts
+ * import { RunpodConfigUrl } from "@beep/runpod"
+ *
+ * const url = RunpodConfigUrl.fromUnknown("https://rest.runpod.io/v1/")
+ * console.log(url)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const RunpodConfigUrl = S.String.pipe(
+  S.decodeTo(S.String.check(URLStr.filter), {
+    decode: SchemaGetter.transform(normalizeConfigUrl),
+    encode: SchemaGetter.transform(normalizeConfigUrl),
+  }),
+  $I.annoteSchema("RunpodConfigUrl", {
+    description: "Validated Runpod configuration URL with trailing slash separators removed.",
+    toArbitrary: () => (fc) => fc.webUrl().map(normalizeConfigUrl),
+  }),
+  SchemaUtils.withCodecStatics
+);
 
 /**
  * Default Runpod REST API v1 base URL.
@@ -62,7 +91,7 @@ export const RUNPOD_DOCS_INDEX_URL = "https://docs.runpod.io/llms.txt";
 export class RunpodConfigInput extends S.Class<RunpodConfigInput>($I`RunpodConfigInput`)(
   {
     apiKey: S.optionalKey(S.String.pipe(S.RedactedFromValue)),
-    apiUrl: S.String.pipe(SchemaUtils.withKeyDefaults(RUNPOD_API_URL)),
+    apiUrl: RunpodConfigUrl.pipe(SchemaUtils.withKeyDefaults(RUNPOD_API_URL)),
     headers: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())),
   },
   $I.annote("RunpodConfigInput", {
@@ -89,7 +118,7 @@ export class RunpodConfigInput extends S.Class<RunpodConfigInput>($I`RunpodConfi
 export class RunpodDocsConfigInput extends S.Class<RunpodDocsConfigInput>($I`RunpodDocsConfigInput`)(
   {
     headers: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())),
-    indexUrl: S.String.pipe(SchemaUtils.withKeyDefaults(RUNPOD_DOCS_INDEX_URL)),
+    indexUrl: RunpodConfigUrl.pipe(SchemaUtils.withKeyDefaults(RUNPOD_DOCS_INDEX_URL)),
   },
   $I.annote("RunpodDocsConfigInput", {
     description: "Runtime configuration accepted by the Runpod documentation index driver layer.",

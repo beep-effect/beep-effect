@@ -6,18 +6,33 @@
  */
 
 import { $XaiId } from "@beep/identity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { pipe, Result } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as HttpClientError from "effect/unstable/http/HttpClientError";
+import { XAiHttpStatusCode } from "./XAi.models.ts";
 import { XAiEndpoint, XAiEndpointId, XAiEndpointMethodName, XAiHttpMethod } from "./XAiEndpoints.models.ts";
 import type { XAiEndpointDescriptor } from "./XAiEndpoints.models.ts";
 
 const $I = $XaiId.create("XAi.errors");
+const XAiErrorReasonBase = LiteralKit([
+  "config",
+  "multipart encoding",
+  "request encoding",
+  "response decoding",
+  "response status",
+  "sse decoding",
+  "transport",
+  "websocket",
+]);
+
+type XAiErrorOptionsInput = {
+  readonly cause?: unknown;
+  readonly status?: number;
+};
 
 /**
  * Technical error reasons emitted by the xAI driver.
@@ -33,19 +48,15 @@ const $I = $XaiId.create("XAi.errors");
  * @category errors
  * @since 0.0.0
  */
-export const XAiErrorReason = LiteralKit([
-  "config",
-  "multipart encoding",
-  "request encoding",
-  "response decoding",
-  "response status",
-  "sse decoding",
-  "transport",
-  "websocket",
-]).pipe(
+export const XAiErrorReason = XAiErrorReasonBase.pipe(
   $I.annoteSchema("XAiErrorReason", {
     description: "Redacted technical error reasons emitted by the xAI driver.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+    fromUnknown: S.decodeUnknownSync(schema),
+  })),
+  SchemaUtils.withLiteralKitStatics(XAiErrorReasonBase)
 );
 
 /**
@@ -64,8 +75,6 @@ export const XAiErrorReason = LiteralKit([
  */
 export type XAiErrorReason = typeof XAiErrorReason.Type;
 
-const isXAiEndpointDescriptor = S.is(XAiEndpoint);
-
 /**
  * Technical failure raised by the xAI driver boundary.
  *
@@ -83,13 +92,13 @@ const isXAiEndpointDescriptor = S.is(XAiEndpoint);
 export class XAiError extends TaggedErrorClass<XAiError>($I`XAiError`)(
   "XAiError",
   {
-    cause: S.optionalKey(S.String),
-    endpoint: S.optionalKey(XAiEndpointId),
-    method: S.optionalKey(XAiHttpMethod),
-    methodName: S.optionalKey(XAiEndpointMethodName),
-    path: S.optionalKey(S.String),
+    cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    endpoint: S.OptionFromOptionalKey(XAiEndpointId).pipe(SchemaUtils.withNoneDefault),
+    method: S.OptionFromOptionalKey(XAiHttpMethod).pipe(SchemaUtils.withNoneDefault),
+    methodName: S.OptionFromOptionalKey(XAiEndpointMethodName).pipe(SchemaUtils.withNoneDefault),
+    path: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     reason: XAiErrorReason,
-    status: S.optionalKey(S.Finite),
+    status: S.OptionFromOptionalKey(XAiHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("XAiError", {
     description: "Redacted technical failure raised by the xAI driver boundary.",
@@ -110,23 +119,19 @@ export class XAiError extends TaggedErrorClass<XAiError>($I`XAiError`)(
    * @since 0.0.0
    */
   static readonly fromDescriptor: {
-    (descriptor: XAiEndpointDescriptor, reason: XAiErrorReason, options?: XAiErrorOptions): XAiError;
-    (reason: XAiErrorReason, options?: XAiErrorOptions): (descriptor: XAiEndpointDescriptor) => XAiError;
+    (descriptor: XAiEndpointDescriptor, reason: XAiErrorReason, options?: XAiErrorOptionsInput): XAiError;
+    (reason: XAiErrorReason, options?: XAiErrorOptionsInput): (descriptor: XAiEndpointDescriptor) => XAiError;
   } = dual(
-    (args) => args.length >= 2 && isXAiEndpointDescriptor(args[0]),
-    (descriptor: XAiEndpointDescriptor, reason: XAiErrorReason, options: XAiErrorOptions = {}): XAiError =>
+    (args) => args.length >= 2 && XAiEndpoint.is(args[0]),
+    (descriptor: XAiEndpointDescriptor, reason: XAiErrorReason, options: XAiErrorOptionsInput = {}): XAiError =>
       XAiError.make({
-        endpoint: descriptor.id,
-        method: descriptor.method,
-        methodName: descriptor.methodName,
-        path: descriptor.path,
+        endpoint: O.some(descriptor.id),
+        method: O.some(descriptor.method),
+        methodName: O.some(descriptor.methodName),
+        path: O.some(descriptor.path),
         reason,
-        ...R.getSomes({
-          cause: causeFromUnknown(options.cause),
-        }),
-        ...R.getSomes({
-          status: O.fromUndefinedOr(options.status),
-        }),
+        cause: causeFromUnknown(options.cause),
+        status: O.fromUndefinedOr(options.status),
       })
   );
 
@@ -146,13 +151,13 @@ export class XAiError extends TaggedErrorClass<XAiError>($I`XAiError`)(
    */
   static readonly config = (cause?: unknown): XAiError =>
     XAiError.make({
+      cause: causeFromUnknown(cause),
       reason: "config",
-      ...R.getSomes({
-        cause: causeFromUnknown(cause),
-      }),
     });
 }
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   if (!P.isObject(value)) {
     return O.none();
@@ -180,6 +185,8 @@ const httpClientCauseLabel = (cause: unknown): O.Option<string> =>
       )
     : O.none();
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const causeFromUnknown = (cause: unknown): O.Option<string> =>
   P.isUndefined(cause)
     ? O.none()
@@ -196,8 +203,9 @@ const causeFromUnknown = (cause: unknown): O.Option<string> =>
  * @example
  * ```ts
  * import { XAiErrorOptions } from "@beep/xai"
+ * import * as O from "effect/Option"
  *
- * const options = XAiErrorOptions.make({ status: 500 })
+ * const options = XAiErrorOptions.make({ status: O.some(500) })
  * console.log(options)
  * ```
  *
@@ -206,8 +214,8 @@ const causeFromUnknown = (cause: unknown): O.Option<string> =>
  */
 export class XAiErrorOptions extends S.Class<XAiErrorOptions>($I`XAiErrorOptions`)(
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-    status: S.optionalKey(S.Finite),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
+    status: S.OptionFromOptionalKey(XAiHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("XAiErrorOptions", {
     description: "Options for configuring XAiError instances, including optional redacted cause and status fields.",

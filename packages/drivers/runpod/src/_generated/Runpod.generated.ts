@@ -8,7 +8,7 @@
  */
 
 import { $RunpodId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { pipe } from "effect";
 import * as S from "effect/Schema";
 import type { Effect } from "effect";
@@ -28,11 +28,13 @@ const $I = $RunpodId.create("Runpod.generated");
  * @category schemas
  * @since 0.1.0
  */
+
 export const Pods = S.suspend(() => Pod).pipe(
   S.Array,
   $I.annoteSchema("Pods", {
     description: "Pods schema generated from the Runpod OpenAPI document.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -68,7 +70,7 @@ export class Pod extends S.Class<Pod>($I`Pod`)(
     adjustedCostPerHr: S.Finite.pipe(S.optionalKey),
     aiApiId: S.String.pipe(S.optionalKey),
     consumerUserId: S.String.pipe(S.optionalKey),
-    containerDiskInGb: S.Finite.pipe(S.optionalKey),
+    containerDiskInGb: S.Int.pipe(S.optionalKey),
     containerRegistryAuthId: S.String.pipe(S.optionalKey),
     costPerHr: S.Finite.pipe(S.optionalKey),
     cpuFlavorId: S.String.pipe(S.optionalKey),
@@ -79,7 +81,7 @@ export class Pod extends S.Class<Pod>($I`Pod`)(
     env: S.Record(S.String, S.Unknown).pipe(S.optionalKey),
     gpu: S.Struct({
       id: S.String.pipe(S.optionalKey),
-      count: S.Finite.pipe(S.optionalKey),
+      count: S.Int.pipe(S.optionalKey),
       displayName: S.String.pipe(S.optionalKey),
       securePrice: S.Finite.pipe(S.optionalKey),
       communityPrice: S.Finite.pipe(S.optionalKey),
@@ -97,11 +99,11 @@ export class Pod extends S.Class<Pod>($I`Pod`)(
     lastStatusChange: S.String.pipe(S.optionalKey),
     locked: S.Boolean.pipe(S.optionalKey),
     machine: S.Struct({
-      minPodGpuCount: S.Finite.pipe(S.optionalKey),
+      minPodGpuCount: S.Int.pipe(S.optionalKey),
       gpuTypeId: S.String.pipe(S.optionalKey),
       gpuType: S.Struct({
         id: S.String.pipe(S.optionalKey),
-        count: S.Finite.pipe(S.optionalKey),
+        count: S.Int.pipe(S.optionalKey),
         displayName: S.String.pipe(S.optionalKey),
         securePrice: S.Finite.pipe(S.optionalKey),
         communityPrice: S.Finite.pipe(S.optionalKey),
@@ -112,7 +114,7 @@ export class Pod extends S.Class<Pod>($I`Pod`)(
         communitySpotPrice: S.Finite.pipe(S.optionalKey),
         secureSpotPrice: S.Finite.pipe(S.optionalKey),
       }).pipe(S.optionalKey),
-      cpuCount: S.Finite.pipe(S.optionalKey),
+      cpuCount: S.Int.pipe(S.optionalKey),
       cpuTypeId: S.String.pipe(S.optionalKey),
       cpuType: S.Struct({
         id: S.String.pipe(S.optionalKey),
@@ -123,9 +125,9 @@ export class Pod extends S.Class<Pod>($I`Pod`)(
       }).pipe(S.optionalKey),
       location: S.String.pipe(S.optionalKey),
       dataCenterId: S.String.pipe(S.optionalKey),
-      diskThroughputMBps: S.Finite.pipe(S.optionalKey),
-      maxDownloadSpeedMbps: S.Finite.pipe(S.optionalKey),
-      maxUploadSpeedMbps: S.Finite.pipe(S.optionalKey),
+      diskThroughputMBps: S.Int.pipe(S.optionalKey),
+      maxDownloadSpeedMbps: S.Int.pipe(S.optionalKey),
+      maxUploadSpeedMbps: S.Int.pipe(S.optionalKey),
       supportPublicIp: S.Boolean.pipe(S.optionalKey),
       secureCloud: S.Boolean.pipe(S.optionalKey),
       maintenanceStart: S.String.pipe(S.optionalKey),
@@ -134,7 +136,7 @@ export class Pod extends S.Class<Pod>($I`Pod`)(
       note: S.String.pipe(S.optionalKey),
       costPerHr: S.Finite.pipe(S.optionalKey),
       currentPricePerGpu: S.Finite.pipe(S.optionalKey),
-      gpuAvailable: S.Finite.pipe(S.optionalKey),
+      gpuAvailable: S.Int.pipe(S.optionalKey),
       gpuDisplayName: S.String.pipe(S.optionalKey),
     }).pipe(S.optionalKey),
     machineId: S.String.pipe(S.optionalKey),
@@ -143,18 +145,18 @@ export class Pod extends S.Class<Pod>($I`Pod`)(
     networkVolume: S.Struct({
       id: S.String.pipe(S.optionalKey),
       name: S.String.pipe(S.optionalKey),
-      size: S.Finite.pipe(S.optionalKey),
+      size: S.Int.pipe(S.optionalKey),
       dataCenterId: S.String.pipe(S.optionalKey),
     }).pipe(S.optionalKey),
     portMappings: S.Record(S.String, S.Unknown).pipe(S.NullOr, S.optionalKey),
     ports: S.String.pipe(S.Array, S.optionalKey),
     publicIp: S.String.pipe(S.NullOr, S.optionalKey),
     savingsPlans: S.suspend(() => SavingsPlan).pipe(S.Array, S.optionalKey),
-    slsVersion: S.Finite.pipe(S.optionalKey),
+    slsVersion: S.Int.pipe(S.optionalKey),
     templateId: S.String.pipe(S.optionalKey),
     vcpuCount: S.Finite.pipe(S.optionalKey),
     volumeEncrypted: S.Boolean.pipe(S.optionalKey),
-    volumeInGb: S.Finite.pipe(S.optionalKey),
+    volumeInGb: S.Int.pipe(S.optionalKey),
     volumeMountPath: S.String.pipe(S.optionalKey),
   },
   $I.annote("Pod", {
@@ -200,7 +202,7 @@ export class PodUpdateInPlaceInput extends S.Class<PodUpdateInPlaceInput>($I`Pod
  */
 export class PodUpdateInput extends S.Class<PodUpdateInput>($I`PodUpdateInput`)(
   {
-    containerDiskInGb: S.Finite.pipe(S.NullOr, S.optionalKey),
+    containerDiskInGb: S.Int.pipe(S.NullOr, S.optionalKey),
     containerRegistryAuthId: S.String.pipe(S.optionalKey),
     dockerEntrypoint: S.String.pipe(S.Array, S.optionalKey),
     dockerStartCmd: S.String.pipe(S.Array, S.optionalKey),
@@ -210,7 +212,7 @@ export class PodUpdateInput extends S.Class<PodUpdateInput>($I`PodUpdateInput`)(
     locked: S.Boolean.pipe(S.optionalKey),
     name: S.String.pipe(S.optionalKey),
     ports: S.String.pipe(S.Array, S.optionalKey),
-    volumeInGb: S.Finite.pipe(S.NullOr, S.optionalKey),
+    volumeInGb: S.Int.pipe(S.NullOr, S.optionalKey),
     volumeMountPath: S.String.pipe(S.optionalKey),
   },
   $I.annote("PodUpdateInput", {
@@ -236,7 +238,7 @@ export class PodCreateInput extends S.Class<PodCreateInput>($I`PodCreateInput`)(
     allowedCudaVersions: S.String.pipe(S.Array, S.optionalKey),
     cloudType: LiteralKit(["SECURE", "COMMUNITY"]).pipe(S.optionalKey),
     computeType: LiteralKit(["GPU", "CPU"]).pipe(S.optionalKey),
-    containerDiskInGb: S.Finite.pipe(S.NullOr, S.optionalKey),
+    containerDiskInGb: S.Int.pipe(S.NullOr, S.optionalKey),
     containerRegistryAuthId: S.String.pipe(S.optionalKey),
     countryCodes: S.String.pipe(S.Array, S.optionalKey),
     cpuFlavorIds: S.String.pipe(S.Array, S.optionalKey),
@@ -247,7 +249,7 @@ export class PodCreateInput extends S.Class<PodCreateInput>($I`PodCreateInput`)(
     dockerStartCmd: S.String.pipe(S.Array, S.optionalKey),
     env: S.Record(S.String, S.Unknown).pipe(S.optionalKey),
     globalNetworking: S.Boolean.pipe(S.optionalKey),
-    gpuCount: S.Finite.pipe(S.optionalKey),
+    gpuCount: S.Int.pipe(S.optionalKey),
     gpuTypeIds: S.String.pipe(S.Array, S.optionalKey),
     gpuTypePriority: S.String.pipe(S.optionalKey),
     imageName: S.String.pipe(S.optionalKey),
@@ -255,16 +257,16 @@ export class PodCreateInput extends S.Class<PodCreateInput>($I`PodCreateInput`)(
     locked: S.Boolean.pipe(S.optionalKey),
     minDiskBandwidthMBps: S.Finite.pipe(S.optionalKey),
     minDownloadMbps: S.Finite.pipe(S.optionalKey),
-    minRAMPerGPU: S.Finite.pipe(S.optionalKey),
+    minRAMPerGPU: S.Int.pipe(S.optionalKey),
     minUploadMbps: S.Finite.pipe(S.optionalKey),
-    minVCPUPerGPU: S.Finite.pipe(S.optionalKey),
+    minVCPUPerGPU: S.Int.pipe(S.optionalKey),
     name: S.String.pipe(S.optionalKey),
     networkVolumeId: S.String.pipe(S.optionalKey),
     ports: S.String.pipe(S.Array, S.optionalKey),
     supportPublicIp: S.Boolean.pipe(S.optionalKey),
     templateId: S.String.pipe(S.optionalKey),
-    vcpuCount: S.Finite.pipe(S.optionalKey),
-    volumeInGb: S.Finite.pipe(S.NullOr, S.optionalKey),
+    vcpuCount: S.Int.pipe(S.optionalKey),
+    volumeInGb: S.Int.pipe(S.NullOr, S.optionalKey),
     volumeMountPath: S.String.pipe(S.optionalKey),
   },
   $I.annote("PodCreateInput", {
@@ -285,17 +287,19 @@ export class PodCreateInput extends S.Class<PodCreateInput>($I`PodCreateInput`)(
  * @category schemas
  * @since 0.1.0
  */
+
 export const NetworkVolumes = pipe(
   S.Struct({
     id: S.String.pipe(S.optionalKey),
     name: S.String.pipe(S.optionalKey),
-    size: S.Finite.pipe(S.optionalKey),
+    size: S.Int.pipe(S.optionalKey),
     dataCenterId: S.String.pipe(S.optionalKey),
   }),
   S.Array,
   $I.annoteSchema("NetworkVolumes", {
     description: "NetworkVolumes schema generated from the Runpod OpenAPI document.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -331,7 +335,7 @@ export class NetworkVolume extends S.Class<NetworkVolume>($I`NetworkVolume`)(
     dataCenterId: S.String.pipe(S.optionalKey),
     id: S.String.pipe(S.optionalKey),
     name: S.String.pipe(S.optionalKey),
-    size: S.Finite.pipe(S.optionalKey),
+    size: S.Int.pipe(S.optionalKey),
   },
   $I.annote("NetworkVolume", {
     description: "NetworkVolume model returned by the Runpod REST API.",
@@ -355,7 +359,7 @@ export class NetworkVolumeCreateInput extends S.Class<NetworkVolumeCreateInput>(
   {
     dataCenterId: S.String,
     name: S.String,
-    size: S.Finite,
+    size: S.Int,
   },
   $I.annote("NetworkVolumeCreateInput", {
     description: "NetworkVolumeCreateInput model returned by the Runpod REST API.",
@@ -378,7 +382,7 @@ export class NetworkVolumeCreateInput extends S.Class<NetworkVolumeCreateInput>(
 export class NetworkVolumeUpdateInput extends S.Class<NetworkVolumeUpdateInput>($I`NetworkVolumeUpdateInput`)(
   {
     name: S.String.pipe(S.optionalKey),
-    size: S.Finite.pipe(S.optionalKey),
+    size: S.Int.pipe(S.optionalKey),
   },
   $I.annote("NetworkVolumeUpdateInput", {
     description: "NetworkVolumeUpdateInput model returned by the Runpod REST API.",
@@ -398,11 +402,13 @@ export class NetworkVolumeUpdateInput extends S.Class<NetworkVolumeUpdateInput>(
  * @category schemas
  * @since 0.1.0
  */
+
 export const Templates = S.suspend(() => Template).pipe(
   S.Array,
   $I.annoteSchema("Templates", {
     description: "Templates schema generated from the Runpod OpenAPI document.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -436,7 +442,7 @@ export type Templates = typeof Templates.Type;
 export class Template extends S.Class<Template>($I`Template`)(
   {
     category: S.String.pipe(S.optionalKey),
-    containerDiskInGb: S.Finite.pipe(S.optionalKey),
+    containerDiskInGb: S.Int.pipe(S.optionalKey),
     containerRegistryAuthId: S.String.pipe(S.optionalKey),
     dockerEntrypoint: S.String.pipe(S.Array, S.optionalKey),
     dockerStartCmd: S.String.pipe(S.Array, S.optionalKey),
@@ -450,8 +456,8 @@ export class Template extends S.Class<Template>($I`Template`)(
     name: S.String.pipe(S.optionalKey),
     ports: S.String.pipe(S.Array, S.optionalKey),
     readme: S.String.pipe(S.optionalKey),
-    runtimeInMin: S.Finite.pipe(S.optionalKey),
-    volumeInGb: S.Finite.pipe(S.optionalKey),
+    runtimeInMin: S.Int.pipe(S.optionalKey),
+    volumeInGb: S.Int.pipe(S.optionalKey),
     volumeMountPath: S.String.pipe(S.optionalKey),
   },
   $I.annote("Template", {
@@ -475,7 +481,7 @@ export class Template extends S.Class<Template>($I`Template`)(
 export class TemplateCreateInput extends S.Class<TemplateCreateInput>($I`TemplateCreateInput`)(
   {
     category: LiteralKit(["NVIDIA", "AMD", "CPU"]).pipe(S.optionalKey),
-    containerDiskInGb: S.Finite.pipe(S.optionalKey),
+    containerDiskInGb: S.Int.pipe(S.optionalKey),
     containerRegistryAuthId: S.String.pipe(S.optionalKey),
     dockerEntrypoint: S.String.pipe(S.Array, S.optionalKey),
     dockerStartCmd: S.String.pipe(S.Array, S.optionalKey),
@@ -486,7 +492,7 @@ export class TemplateCreateInput extends S.Class<TemplateCreateInput>($I`Templat
     name: S.String,
     ports: S.String.pipe(S.Array, S.optionalKey),
     readme: S.String.pipe(S.optionalKey),
-    volumeInGb: S.Finite.pipe(S.optionalKey),
+    volumeInGb: S.Int.pipe(S.optionalKey),
     volumeMountPath: S.String.pipe(S.optionalKey),
   },
   $I.annote("TemplateCreateInput", {
@@ -512,7 +518,7 @@ export class TemplateUpdateInPlaceInput extends S.Class<TemplateUpdateInPlaceInp
     isPublic: S.Boolean.pipe(S.optionalKey),
     name: S.String.pipe(S.optionalKey),
     readme: S.String.pipe(S.optionalKey),
-    volumeInGb: S.Finite.pipe(S.optionalKey),
+    volumeInGb: S.Int.pipe(S.optionalKey),
     volumeMountPath: S.String.pipe(S.optionalKey),
   },
   $I.annote("TemplateUpdateInPlaceInput", {
@@ -535,7 +541,7 @@ export class TemplateUpdateInPlaceInput extends S.Class<TemplateUpdateInPlaceInp
  */
 export class TemplateUpdateInput extends S.Class<TemplateUpdateInput>($I`TemplateUpdateInput`)(
   {
-    containerDiskInGb: S.Finite.pipe(S.optionalKey),
+    containerDiskInGb: S.Int.pipe(S.optionalKey),
     containerRegistryAuthId: S.String.pipe(S.optionalKey),
     dockerEntrypoint: S.String.pipe(S.Array, S.optionalKey),
     dockerStartCmd: S.String.pipe(S.Array, S.optionalKey),
@@ -545,7 +551,7 @@ export class TemplateUpdateInput extends S.Class<TemplateUpdateInput>($I`Templat
     name: S.String.pipe(S.optionalKey),
     ports: S.String.pipe(S.Array, S.optionalKey),
     readme: S.String.pipe(S.optionalKey),
-    volumeInGb: S.Finite.pipe(S.optionalKey),
+    volumeInGb: S.Int.pipe(S.optionalKey),
     volumeMountPath: S.String.pipe(S.optionalKey),
   },
   $I.annote("TemplateUpdateInput", {
@@ -566,11 +572,13 @@ export class TemplateUpdateInput extends S.Class<TemplateUpdateInput>($I`Templat
  * @category schemas
  * @since 0.1.0
  */
+
 export const Endpoints = S.suspend(() => Endpoint).pipe(
   S.Array,
   $I.annoteSchema("Endpoints", {
     description: "Endpoints schema generated from the Runpod OpenAPI document.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -608,25 +616,25 @@ export class Endpoint extends S.Class<Endpoint>($I`Endpoint`)(
     createdAt: S.String.pipe(S.optionalKey),
     dataCenterIds: S.String.pipe(S.Array, S.optionalKey),
     env: S.Record(S.String, S.Unknown).pipe(S.optionalKey),
-    executionTimeoutMs: S.Finite.pipe(S.optionalKey),
-    gpuCount: S.Finite.pipe(S.optionalKey),
+    executionTimeoutMs: S.Int.pipe(S.optionalKey),
+    gpuCount: S.Int.pipe(S.optionalKey),
     gpuTypeIds: S.String.pipe(S.Array, S.optionalKey),
     id: S.String.pipe(S.optionalKey),
-    idleTimeout: S.Finite.pipe(S.optionalKey),
+    idleTimeout: S.Int.pipe(S.optionalKey),
     instanceIds: S.String.pipe(S.Array, S.optionalKey),
     minCudaVersion: S.String.pipe(S.optionalKey),
     name: S.String.pipe(S.optionalKey),
     networkVolumeId: S.String.pipe(S.optionalKey),
     networkVolumeIds: S.String.pipe(S.Array, S.optionalKey),
     scalerType: LiteralKit(["QUEUE_DELAY", "REQUEST_COUNT"]).pipe(S.optionalKey),
-    scalerValue: S.Finite.pipe(S.optionalKey),
+    scalerValue: S.Int.pipe(S.optionalKey),
     template: S.suspend(() => Template).pipe(S.optionalKey),
     templateId: S.String.pipe(S.optionalKey),
     userId: S.String.pipe(S.optionalKey),
-    version: S.Finite.pipe(S.optionalKey),
+    version: S.Int.pipe(S.optionalKey),
     workers: S.suspend(() => Pod).pipe(S.Array, S.optionalKey),
-    workersMax: S.Finite.pipe(S.optionalKey),
-    workersMin: S.Finite.pipe(S.optionalKey),
+    workersMax: S.Int.pipe(S.optionalKey),
+    workersMin: S.Int.pipe(S.optionalKey),
   },
   $I.annote("Endpoint", {
     description: "Endpoint model returned by the Runpod REST API.",
@@ -648,14 +656,14 @@ export class Endpoint extends S.Class<Endpoint>($I`Endpoint`)(
  */
 export class EndpointUpdateInPlaceInput extends S.Class<EndpointUpdateInPlaceInput>($I`EndpointUpdateInPlaceInput`)(
   {
-    executionTimeoutMs: S.Finite.pipe(S.optionalKey),
+    executionTimeoutMs: S.Int.pipe(S.optionalKey),
     flashboot: S.Boolean.pipe(S.optionalKey),
-    idleTimeout: S.Finite.pipe(S.optionalKey),
+    idleTimeout: S.Int.pipe(S.optionalKey),
     name: S.String.pipe(S.optionalKey),
     scalerType: LiteralKit(["QUEUE_DELAY", "REQUEST_COUNT"]).pipe(S.optionalKey),
-    scalerValue: S.Finite.pipe(S.optionalKey),
-    workersMax: S.Finite.pipe(S.optionalKey),
-    workersMin: S.Finite.pipe(S.optionalKey),
+    scalerValue: S.Int.pipe(S.optionalKey),
+    workersMax: S.Int.pipe(S.optionalKey),
+    workersMin: S.Int.pipe(S.optionalKey),
   },
   $I.annote("EndpointUpdateInPlaceInput", {
     description: "EndpointUpdateInPlaceInput model returned by the Runpod REST API.",
@@ -680,21 +688,21 @@ export class EndpointUpdateInput extends S.Class<EndpointUpdateInput>($I`Endpoin
     allowedCudaVersions: S.String.pipe(S.Array, S.optionalKey),
     cpuFlavorIds: S.String.pipe(S.Array, S.optionalKey),
     dataCenterIds: S.String.pipe(S.Array, S.optionalKey),
-    executionTimeoutMs: S.Finite.pipe(S.optionalKey),
+    executionTimeoutMs: S.Int.pipe(S.optionalKey),
     flashboot: S.Boolean.pipe(S.optionalKey),
-    gpuCount: S.Finite.pipe(S.optionalKey),
+    gpuCount: S.Int.pipe(S.optionalKey),
     gpuTypeIds: S.String.pipe(S.Array, S.optionalKey),
-    idleTimeout: S.Finite.pipe(S.optionalKey),
+    idleTimeout: S.Int.pipe(S.optionalKey),
     minCudaVersion: S.String.pipe(S.optionalKey),
     name: S.String.pipe(S.optionalKey),
     networkVolumeId: S.String.pipe(S.optionalKey),
     networkVolumeIds: S.String.pipe(S.Array, S.optionalKey),
     scalerType: LiteralKit(["QUEUE_DELAY", "REQUEST_COUNT"]).pipe(S.optionalKey),
-    scalerValue: S.Finite.pipe(S.optionalKey),
+    scalerValue: S.Int.pipe(S.optionalKey),
     templateId: S.String.pipe(S.optionalKey),
-    vcpuCount: S.Finite.pipe(S.optionalKey),
-    workersMax: S.Finite.pipe(S.optionalKey),
-    workersMin: S.Finite.pipe(S.optionalKey),
+    vcpuCount: S.Int.pipe(S.optionalKey),
+    workersMax: S.Int.pipe(S.optionalKey),
+    workersMin: S.Int.pipe(S.optionalKey),
   },
   $I.annote("EndpointUpdateInput", {
     description: "EndpointUpdateInput model returned by the Runpod REST API.",
@@ -720,21 +728,21 @@ export class EndpointCreateInput extends S.Class<EndpointCreateInput>($I`Endpoin
     computeType: LiteralKit(["GPU", "CPU"]).pipe(S.optionalKey),
     cpuFlavorIds: S.String.pipe(S.Array, S.optionalKey),
     dataCenterIds: S.String.pipe(S.Array, S.optionalKey),
-    executionTimeoutMs: S.Finite.pipe(S.optionalKey),
+    executionTimeoutMs: S.Int.pipe(S.optionalKey),
     flashboot: S.Boolean.pipe(S.optionalKey),
-    gpuCount: S.Finite.pipe(S.optionalKey),
+    gpuCount: S.Int.pipe(S.optionalKey),
     gpuTypeIds: S.String.pipe(S.Array, S.optionalKey),
-    idleTimeout: S.Finite.pipe(S.optionalKey),
+    idleTimeout: S.Int.pipe(S.optionalKey),
     minCudaVersion: S.String.pipe(S.optionalKey),
     name: S.String.pipe(S.optionalKey),
     networkVolumeId: S.String.pipe(S.optionalKey),
     networkVolumeIds: S.String.pipe(S.Array, S.optionalKey),
     scalerType: LiteralKit(["QUEUE_DELAY", "REQUEST_COUNT"]).pipe(S.optionalKey),
-    scalerValue: S.Finite.pipe(S.optionalKey),
+    scalerValue: S.Int.pipe(S.optionalKey),
     templateId: S.String,
-    vcpuCount: S.Finite.pipe(S.optionalKey),
-    workersMax: S.Finite.pipe(S.optionalKey),
-    workersMin: S.Finite.pipe(S.optionalKey),
+    vcpuCount: S.Int.pipe(S.optionalKey),
+    workersMax: S.Int.pipe(S.optionalKey),
+    workersMin: S.Int.pipe(S.optionalKey),
   },
   $I.annote("EndpointCreateInput", {
     description: "EndpointCreateInput model returned by the Runpod REST API.",
@@ -754,10 +762,12 @@ export class EndpointCreateInput extends S.Class<EndpointCreateInput>($I`Endpoin
  * @category schemas
  * @since 0.1.0
  */
+
 export const User = S.String.pipe(
   $I.annoteSchema("User", {
     description: "User schema generated from the Runpod OpenAPI document.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -818,7 +828,7 @@ export class SavingsPlan extends S.Class<SavingsPlan>($I`SavingsPlan`)(
 export class Machine extends S.Class<Machine>($I`Machine`)(
   {
     costPerHr: S.Finite.pipe(S.optionalKey),
-    cpuCount: S.Finite.pipe(S.optionalKey),
+    cpuCount: S.Int.pipe(S.optionalKey),
     cpuType: S.Struct({
       id: S.String.pipe(S.optionalKey),
       displayName: S.String.pipe(S.optionalKey),
@@ -829,12 +839,12 @@ export class Machine extends S.Class<Machine>($I`Machine`)(
     cpuTypeId: S.String.pipe(S.optionalKey),
     currentPricePerGpu: S.Finite.pipe(S.optionalKey),
     dataCenterId: S.String.pipe(S.optionalKey),
-    diskThroughputMBps: S.Finite.pipe(S.optionalKey),
-    gpuAvailable: S.Finite.pipe(S.optionalKey),
+    diskThroughputMBps: S.Int.pipe(S.optionalKey),
+    gpuAvailable: S.Int.pipe(S.optionalKey),
     gpuDisplayName: S.String.pipe(S.optionalKey),
     gpuType: S.Struct({
       id: S.String.pipe(S.optionalKey),
-      count: S.Finite.pipe(S.optionalKey),
+      count: S.Int.pipe(S.optionalKey),
       displayName: S.String.pipe(S.optionalKey),
       securePrice: S.Finite.pipe(S.optionalKey),
       communityPrice: S.Finite.pipe(S.optionalKey),
@@ -850,9 +860,9 @@ export class Machine extends S.Class<Machine>($I`Machine`)(
     maintenanceEnd: S.String.pipe(S.optionalKey),
     maintenanceNote: S.String.pipe(S.optionalKey),
     maintenanceStart: S.String.pipe(S.optionalKey),
-    maxDownloadSpeedMbps: S.Finite.pipe(S.optionalKey),
-    maxUploadSpeedMbps: S.Finite.pipe(S.optionalKey),
-    minPodGpuCount: S.Finite.pipe(S.optionalKey),
+    maxDownloadSpeedMbps: S.Int.pipe(S.optionalKey),
+    maxUploadSpeedMbps: S.Int.pipe(S.optionalKey),
+    minPodGpuCount: S.Int.pipe(S.optionalKey),
     note: S.String.pipe(S.optionalKey),
     secureCloud: S.Boolean.pipe(S.optionalKey),
     supportPublicIp: S.Boolean.pipe(S.optionalKey),
@@ -919,10 +929,12 @@ export class UnauthorizedError extends S.Class<UnauthorizedError>($I`Unauthorize
  * @category schemas
  * @since 0.1.0
  */
+
 export const CudaVersions = S.String.pipe(
   $I.annoteSchema("CudaVersions", {
     description: "CudaVersions schema generated from the Runpod OpenAPI document.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -953,10 +965,12 @@ export type CudaVersions = typeof CudaVersions.Type;
  * @category schemas
  * @since 0.1.0
  */
+
 export const GPUTypeId = S.String.pipe(
   $I.annoteSchema("GPUTypeId", {
     description: "GPUTypeId schema generated from the Runpod OpenAPI document.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -1010,11 +1024,13 @@ export class ContainerRegistryAuth extends S.Class<ContainerRegistryAuth>($I`Con
  * @category schemas
  * @since 0.1.0
  */
+
 export const ContainerRegistryAuths = S.suspend(() => ContainerRegistryAuth).pipe(
   S.Array,
   $I.annoteSchema("ContainerRegistryAuths", {
     description: "ContainerRegistryAuths schema generated from the Runpod OpenAPI document.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -1074,12 +1090,12 @@ export class ContainerRegistryAuthCreateInput extends S.Class<ContainerRegistryA
 export class BillingRecord extends S.Class<BillingRecord>($I`BillingRecord`)(
   {
     amount: S.Finite.pipe(S.optionalKey),
-    diskSpaceBilledGb: S.Finite.pipe(S.optionalKey),
+    diskSpaceBilledGb: S.Int.pipe(S.optionalKey),
     endpointId: S.String.pipe(S.optionalKey),
     gpuTypeId: S.String.pipe(S.optionalKey),
     podId: S.String.pipe(S.optionalKey),
     time: S.String.pipe(S.optionalKey),
-    timeBilledMs: S.Finite.pipe(S.optionalKey),
+    timeBilledMs: S.Int.pipe(S.optionalKey),
   },
   $I.annote("BillingRecord", {
     description: "BillingRecord model returned by the Runpod REST API.",
@@ -1099,20 +1115,22 @@ export class BillingRecord extends S.Class<BillingRecord>($I`BillingRecord`)(
  * @category schemas
  * @since 0.1.0
  */
+
 export const BillingRecords = pipe(
   S.Struct({
     amount: S.Finite.pipe(S.optionalKey),
-    diskSpaceBilledGb: S.Finite.pipe(S.optionalKey),
+    diskSpaceBilledGb: S.Int.pipe(S.optionalKey),
     endpointId: S.String.pipe(S.optionalKey),
     gpuTypeId: S.String.pipe(S.optionalKey),
     podId: S.String.pipe(S.optionalKey),
     time: S.String.pipe(S.optionalKey),
-    timeBilledMs: S.Finite.pipe(S.optionalKey),
+    timeBilledMs: S.Int.pipe(S.optionalKey),
   }),
   S.Array,
   $I.annoteSchema("BillingRecords", {
     description: "BillingRecords schema generated from the Runpod OpenAPI document.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -1146,9 +1164,9 @@ export type BillingRecords = typeof BillingRecords.Type;
 export class NetworkVolumeBillingRecord extends S.Class<NetworkVolumeBillingRecord>($I`NetworkVolumeBillingRecord`)(
   {
     amount: S.Finite.pipe(S.optionalKey),
-    diskSpaceBilledGb: S.Finite.pipe(S.optionalKey),
+    diskSpaceBilledGb: S.Int.pipe(S.optionalKey),
     highPerformanceStorageAmount: S.Finite.pipe(S.optionalKey),
-    highPerformanceStorageDiskSpaceBilledGb: S.Finite.pipe(S.optionalKey),
+    highPerformanceStorageDiskSpaceBilledGb: S.Int.pipe(S.optionalKey),
     time: S.String.pipe(S.optionalKey),
   },
   $I.annote("NetworkVolumeBillingRecord", {
@@ -1169,18 +1187,20 @@ export class NetworkVolumeBillingRecord extends S.Class<NetworkVolumeBillingReco
  * @category schemas
  * @since 0.1.0
  */
+
 export const NetworkVolumeBillingRecords = pipe(
   S.Struct({
     amount: S.Finite.pipe(S.optionalKey),
-    diskSpaceBilledGb: S.Finite.pipe(S.optionalKey),
+    diskSpaceBilledGb: S.Int.pipe(S.optionalKey),
     highPerformanceStorageAmount: S.Finite.pipe(S.optionalKey),
-    highPerformanceStorageDiskSpaceBilledGb: S.Finite.pipe(S.optionalKey),
+    highPerformanceStorageDiskSpaceBilledGb: S.Int.pipe(S.optionalKey),
     time: S.String.pipe(S.optionalKey),
   }),
   S.Array,
   $I.annoteSchema("NetworkVolumeBillingRecords", {
     description: "NetworkVolumeBillingRecords schema generated from the Runpod OpenAPI document.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -1541,10 +1561,12 @@ export const RUNPOD_MIN_CUDA_VERSION_VALUES = [
  * @category schemas
  * @since 0.1.0
  */
+
 export const GetOpenAPIStatus200Response = S.Record(S.String, S.Unknown).pipe(
   $I.annoteSchema("GetOpenAPIStatus200Response", {
     description: "GetOpenAPIStatus200Response schema generated from the Runpod OpenAPI document.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -1575,10 +1597,12 @@ export type GetOpenAPIStatus200Response = typeof GetOpenAPIStatus200Response.Typ
  * @category schemas
  * @since 0.1.0
  */
+
 export const GetDocsStatus200TextResponse = S.String.pipe(
   $I.annoteSchema("GetDocsStatus200TextResponse", {
     description: "GetDocsStatus200TextResponse schema generated from the Runpod OpenAPI document.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -2467,6 +2491,7 @@ export class NetworkVolumeBillingRequest extends S.Class<NetworkVolumeBillingReq
   })
 ) {}
 
+const RunpodHttpMethodBase = LiteralKit(["GET", "POST", "PATCH", "DELETE"]);
 /**
  * Supported Runpod HTTP methods.
  *
@@ -2478,9 +2503,18 @@ export class NetworkVolumeBillingRequest extends S.Class<NetworkVolumeBillingReq
  * ```
  *
  * @category schemas
- * @since 0.1.0
+ * @since 0.0.0
  */
-export const RunpodHttpMethod = LiteralKit(["GET", "POST", "PATCH", "DELETE"]);
+export const RunpodHttpMethod = RunpodHttpMethodBase.pipe(
+  $I.annoteSchema("RunpodHttpMethod", {
+    description: "Supported Runpod HTTP methods.",
+  }),
+  SchemaUtils.withLiteralKitStatics(RunpodHttpMethodBase),
+  SchemaUtils.withStatics((schema) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+    fromUnknown: S.decodeUnknownSync(schema),
+  }))
+);
 
 /**
  * Supported Runpod HTTP method.
@@ -2497,20 +2531,7 @@ export const RunpodHttpMethod = LiteralKit(["GET", "POST", "PATCH", "DELETE"]);
  */
 export type RunpodHttpMethod = typeof RunpodHttpMethod.Type;
 
-/**
- * Operation ids exposed by Runpod REST API v1.
- *
- * @example
- * ```ts
- * import { RunpodOperationId } from "@beep/runpod"
- *
- * console.log(RunpodOperationId.ast)
- * ```
- *
- * @category schemas
- * @since 0.1.0
- */
-export const RunpodOperationId = LiteralKit([
+const RunpodOperationIdBase = LiteralKit([
   "GetOpenAPI",
   "GetDocs",
   "ListPods",
@@ -2545,6 +2566,29 @@ export const RunpodOperationId = LiteralKit([
   "EndpointBilling",
   "NetworkVolumeBilling",
 ]);
+/**
+ * Operation ids exposed by Runpod REST API v1.
+ *
+ * @example
+ * ```ts
+ * import { RunpodOperationId } from "@beep/runpod"
+ *
+ * console.log(RunpodOperationId.ast)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RunpodOperationId = RunpodOperationIdBase.pipe(
+  $I.annoteSchema("RunpodOperationId", {
+    description: "Operation ids exposed by Runpod REST API v1.",
+  }),
+  SchemaUtils.withLiteralKitStatics(RunpodOperationIdBase),
+  SchemaUtils.withStatics((schema) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+    fromUnknown: S.decodeUnknownSync(schema),
+  }))
+);
 
 /**
  * Operation id exposed by Runpod REST API v1.
@@ -2561,6 +2605,7 @@ export const RunpodOperationId = LiteralKit([
  */
 export type RunpodOperationId = typeof RunpodOperationId.Type;
 
+const RunpodRequestBodyKindBase = LiteralKit(["json", "none"]);
 /**
  * Request body encoding used by a Runpod operation.
  *
@@ -2572,9 +2617,18 @@ export type RunpodOperationId = typeof RunpodOperationId.Type;
  * ```
  *
  * @category schemas
- * @since 0.1.0
+ * @since 0.0.0
  */
-export const RunpodRequestBodyKind = LiteralKit(["json", "none"]);
+export const RunpodRequestBodyKind = RunpodRequestBodyKindBase.pipe(
+  $I.annoteSchema("RunpodRequestBodyKind", {
+    description: "Request body encoding used by a Runpod operation.",
+  }),
+  SchemaUtils.withLiteralKitStatics(RunpodRequestBodyKindBase),
+  SchemaUtils.withStatics((schema) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+    fromUnknown: S.decodeUnknownSync(schema),
+  }))
+);
 
 /**
  * Request body encoding used by a Runpod operation.
@@ -2591,6 +2645,7 @@ export const RunpodRequestBodyKind = LiteralKit(["json", "none"]);
  */
 export type RunpodRequestBodyKind = typeof RunpodRequestBodyKind.Type;
 
+const RunpodResponseBodyKindBase = LiteralKit(["json", "none", "text"]);
 /**
  * Response body decoding used by a Runpod operation.
  *
@@ -2602,9 +2657,18 @@ export type RunpodRequestBodyKind = typeof RunpodRequestBodyKind.Type;
  * ```
  *
  * @category schemas
- * @since 0.1.0
+ * @since 0.0.0
  */
-export const RunpodResponseBodyKind = LiteralKit(["json", "none", "text"]);
+export const RunpodResponseBodyKind = RunpodResponseBodyKindBase.pipe(
+  $I.annoteSchema("RunpodResponseBodyKind", {
+    description: "Response body decoding used by a Runpod operation.",
+  }),
+  SchemaUtils.withLiteralKitStatics(RunpodResponseBodyKindBase),
+  SchemaUtils.withStatics((schema) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+    fromUnknown: S.decodeUnknownSync(schema),
+  }))
+);
 
 /**
  * Response body decoding used by a Runpod operation.
@@ -2651,7 +2715,9 @@ export class RunpodOperationDescriptor extends S.Class<RunpodOperationDescriptor
   $I.annote("RunpodOperationDescriptor", {
     description: "Static metadata for one Runpod REST operation.",
   })
-) {}
+) {
+  static readonly is = S.is(RunpodOperationDescriptor);
+}
 
 /**
  * Descriptor for GetOpenAPI.

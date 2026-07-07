@@ -2,11 +2,24 @@ import { Buffer } from "node:buffer";
 import { Readable } from "node:stream";
 import { text as readableText } from "node:stream/consumers";
 import * as B from "@beep/box";
+import { HttpsUrl, NonNegativeInt } from "@beep/schema";
 import { describe, expect, it, layer } from "@effect/vitest";
-import { Cause, ConfigProvider, Effect, Layer as EffectLayer, Exit, Fiber, Redacted, Stream } from "effect";
+import {
+  Cause,
+  ConfigProvider,
+  Effect,
+  Layer as EffectLayer,
+  Equal,
+  Exit,
+  Fiber,
+  Redacted,
+  Result,
+  Stream,
+} from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 type FakeUploadRequestBody = {
   readonly attributes: {
@@ -151,6 +164,51 @@ const byteAbortProbe: {
   pending: undefined,
 };
 
+const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
+  Result.getOrThrow(S.encodeResult(schema)(value));
+
+const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Encoded"]): Codec["Type"] =>
+  Result.getOrThrow(S.decodeUnknownResult(schema)(value));
+
+const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): void => {
+  const encoded = encode(schema, value);
+  const decoded = decode(schema, encoded);
+  const reencoded = encode(schema, decoded);
+
+  expect(reencoded).toEqual(encoded);
+  expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value)).toBe(true);
+};
+
+const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec): void => {
+  fc.assert(
+    fc.property(S.toArbitrary(schema), (value) => {
+      expectRoundTrip(schema, value);
+    }),
+    { numRuns: 25 }
+  );
+};
+
+const assertSchemaRoundTripWithArbitrary = <Codec extends S.Codec<unknown, unknown>>(
+  schema: Codec,
+  arbitrary: fc.Arbitrary<Codec["Type"]>
+): void => {
+  fc.assert(
+    fc.property(arbitrary, (value) => {
+      expectRoundTrip(schema, value);
+    }),
+    { numRuns: 25 }
+  );
+};
+
+const UploadBigFilePayloadArbitrary = S.toArbitrary(NonNegativeInt).map((fileSize) =>
+  B.BoxUploadBigFilePayload.make({
+    file: new Uint8Array([1, 2, 3]),
+    fileName: "large-document.txt",
+    fileSize,
+    parentFolderId: "0",
+  })
+);
+
 describe("@beep/box", () => {
   it.effect(
     "accepts future Box enum values generated as open unions",
@@ -161,14 +219,42 @@ describe("@beep/box", () => {
     })
   );
 
-  it("drops non-finite SDK status codes from sanitized errors", () => {
+  it("round-trips handwritten schema values without encoded-shape drift", () => {
+    assertSchemaRoundTrip(B.BoxCcgConfig);
+    assertSchemaRoundTrip(B.BoxErrorOptions);
+    assertSchemaRoundTrip(B.BoxError);
+    assertSchemaRoundTrip(B.BoxPartAccumulator);
+    assertSchemaRoundTripWithArbitrary(B.BoxUploadBigFilePayload, UploadBigFilePayloadArbitrary);
+
+    const zipPayload = B.BoxGetZipDownloadContentPayload.make({
+      downloadUrl: HttpsUrl.make("https://example.com/content"),
+    });
+
+    expectRoundTrip(B.BoxGetZipDownloadContentPayload, zipPayload);
+    expect(
+      O.isNone(
+        S.decodeUnknownOption(B.BoxGetZipDownloadContentPayload)({
+          downloadUrl: "http://example.com/content",
+        })
+      )
+    ).toBe(true);
+  });
+
+  it("drops invalid SDK status codes from sanitized errors", () => {
     const error = B.BoxError.fromUnknown("users.getUserMe", {
       responseInfo: {
         statusCode: Number.NaN,
       },
     });
 
-    expect(error.status).toBeUndefined();
+    const outOfRange = B.BoxError.fromUnknown("users.getUserMe", {
+      responseInfo: {
+        statusCode: 99,
+      },
+    });
+
+    expect(error.status).toEqual(O.none());
+    expect(outOfRange.status).toEqual(O.none());
     expect(error.sdkVersion).toBe("10.11.1");
   });
 
@@ -176,7 +262,7 @@ describe("@beep/box", () => {
     const error = B.BoxError.fromUnknown("users.getUserMe", "Bearer secret-token");
 
     expect(error.reason).toBe("sdk thrown");
-    expect(error.cause).toBe("String");
+    expect(error.cause).toEqual(O.some("String"));
   });
 
   it.effect(
@@ -269,7 +355,7 @@ describe("@beep/box", () => {
             if (O.isSome(error)) {
               expect(error.value).toBeInstanceOf(B.BoxError);
               expect(error.value.reason).toBe("stream");
-              expect(error.value.method).toBe("downloads.downloadFile");
+              expect(error.value.method).toEqual(O.some("downloads.downloadFile"));
             }
           }
         })
@@ -351,12 +437,12 @@ describe("@beep/box", () => {
           if (O.isSome(error)) {
             expect(error.value).toBeInstanceOf(B.BoxError);
             expect(error.value.reason).toBe("response status");
-            expect(error.value.method).toBe("users.getUserMe");
-            expect(error.value.status).toBe(429);
-            expect(error.value.code).toBe("rate_limit");
-            expect(error.value.requestId).toBe("request-id");
+            expect(error.value.method).toEqual(O.some("users.getUserMe"));
+            expect(error.value.status).toEqual(O.some(429));
+            expect(error.value.code).toEqual(O.some("rate_limit"));
+            expect(error.value.requestId).toEqual(O.some("request-id"));
             expect(error.value.sdkVersion).toBe("10.11.1");
-            expect(error.value.cause).toBe("Unknown");
+            expect(error.value.cause).toEqual(O.some("Unknown"));
           }
         }
       })
@@ -549,7 +635,7 @@ describe("@beep/box", () => {
           if (O.isSome(error)) {
             expect(error.value).toBeInstanceOf(B.BoxError);
             expect(error.value.reason).toBe("response decoding");
-            expect(error.value.method).toBe("events.getEventStream");
+            expect(error.value.method).toEqual(O.some("events.getEventStream"));
           }
         }
       })

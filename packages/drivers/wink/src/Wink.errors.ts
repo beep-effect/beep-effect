@@ -6,7 +6,7 @@
  */
 
 import { $WinkId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { Inspectable } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -178,13 +178,11 @@ export class WinkEntityError extends TaggedErrorClass<WinkEntityError>($I`WinkEn
  *
  * @example
  * ```ts
- * import * as S from "effect/Schema"
  * import { WinkEngineError, WinkError } from "@beep/wink"
  *
- * const isWinkError = S.is(WinkError)
  * const error = WinkEngineError.fromCause(new Error("missing model"), "initialize")
  *
- * console.log(isWinkError(error))
+ * console.log(WinkError.is(error))
  * ```
  *
  * @category errors
@@ -194,7 +192,8 @@ export const WinkError = S.Union([WinkEngineError, WinkEntityError, WinkTokeniza
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("WinkError", {
     description: "Union of wink runtime errors.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

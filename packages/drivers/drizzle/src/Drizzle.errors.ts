@@ -6,7 +6,7 @@
  */
 
 import { $DrizzleId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { A, O, P, Str } from "@beep/utils";
 import { Cause, flow, pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -14,6 +14,53 @@ import * as S from "effect/Schema";
 
 const $I = $DrizzleId.create("Drizzle.errors");
 const REDACTED_SQL_PARAMETER = "<redacted>";
+
+const RedactedSqlParameter = S.Literal(REDACTED_SQL_PARAMETER).pipe(
+  $I.annoteSchema("RedactedSqlParameter", {
+    description: "SQL parameter redaction marker emitted by Drizzle error normalization.",
+  })
+);
+
+const RedactedSqlParams = S.Array(RedactedSqlParameter).pipe(
+  $I.annoteSchema("RedactedSqlParams", {
+    description: "Redacted SQL parameter values emitted by Drizzle error normalization.",
+  })
+);
+
+/**
+ * Driver operation names surfaced in {@link DrizzleError} diagnostics.
+ *
+ * @example
+ * ```ts
+ * import { DrizzleOperation } from "@beep/drizzle"
+ *
+ * console.log(DrizzleOperation.Enum.execute)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const DrizzleOperation = LiteralKit(["decodeRows", "execute", "withTransaction"]).pipe(
+  $I.annoteSchema("DrizzleOperation", {
+    description: "Drizzle driver operation names used in technical error diagnostics.",
+  })
+);
+
+/**
+ * Runtime type for {@link DrizzleOperation}.
+ *
+ * @example
+ * ```ts
+ * import type { DrizzleOperation } from "@beep/drizzle"
+ *
+ * const operation: DrizzleOperation = "execute"
+ * console.log(operation)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export type DrizzleOperation = typeof DrizzleOperation.Type;
 
 /**
  * Optional SQL text and parameter context captured while normalizing Drizzle failures.
@@ -27,14 +74,15 @@ const REDACTED_SQL_PARAMETER = "<redacted>";
  * ```ts
  * import { deepStrictEqual, strictEqual } from "node:assert"
  * import { DrizzleErrorContext } from "@beep/drizzle"
+ * import * as O from "effect/Option"
  *
  * const context = DrizzleErrorContext.make({
- *   query: "select * from accounts where id = $1",
- *   params: [123]
+ *   query: O.some("select * from accounts where id = $1"),
+ *   params: O.some([123])
  * })
  *
- * strictEqual(context.query, "select * from accounts where id = $1")
- * deepStrictEqual(context.params, [123])
+ * strictEqual(O.getOrThrow(context.query), "select * from accounts where id = $1")
+ * deepStrictEqual(O.getOrThrow(context.params), [123])
  * ```
  *
  * @category errors
@@ -42,18 +90,22 @@ const REDACTED_SQL_PARAMETER = "<redacted>";
  */
 export class DrizzleErrorContext extends S.Class<DrizzleErrorContext>($I`DrizzleErrorContext`)(
   {
-    params: S.optionalKey(S.Unknown.pipe(S.Array)),
-    query: S.optionalKey(S.String),
+    params: S.OptionFromOptionalKey(S.Unknown.pipe(S.Array)).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Raw SQL parameter values captured before normalized errors redact them.",
+    }),
+    query: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "SQL statement text captured from an explicit or native Drizzle error context.",
+    }),
   },
   $I.annote("DrizzleErrorContext", {
     description: "Optional query context captured while normalizing Drizzle driver failures.",
   })
 ) {}
 
-const emptyContext = (): DrizzleErrorContext => ({});
+const emptyContext = (): DrizzleErrorContext => DrizzleErrorContext.make({});
 
 const makeContext = (query: string | undefined, params: ReadonlyArray<unknown> | undefined): DrizzleErrorContext =>
-  O.getSomesStruct({
+  DrizzleErrorContext.make({
     query: O.fromUndefinedOr(query),
     params: O.map(
       O.fromUndefinedOr(params),
@@ -61,6 +113,8 @@ const makeContext = (query: string | undefined, params: ReadonlyArray<unknown> |
     ),
   });
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   if (!P.isObject(value)) {
     return O.none();
@@ -84,8 +138,6 @@ const readCause = (value: unknown): O.Option<unknown> => readProperty(value, "ca
 const safeBoolean = (evaluate: () => boolean): boolean => Result.getOrElse(Result.try(evaluate), () => false);
 
 const isCause = (value: unknown): value is Cause.Cause<unknown> => safeBoolean(() => Cause.isCause(value));
-
-const isExistingDrizzleError = (value: unknown): value is DrizzleError => safeBoolean(() => S.is(DrizzleError)(value));
 
 const readCauseReasons = (cause: Cause.Cause<unknown>): ReadonlyArray<Cause.Reason<unknown>> =>
   Result.getOrElse(
@@ -117,7 +169,7 @@ const parseDrizzleMessage = (cause: unknown): DrizzleErrorContext => {
   );
 };
 
-const hasQueryContext = (context: DrizzleErrorContext): boolean => context.query !== undefined;
+const hasQueryContext = (context: DrizzleErrorContext): boolean => O.isSome(context.query);
 
 const hasSeenReference = (seen: ReadonlyArray<object>, value: object): boolean =>
   A.some(seen, (seenValue) => seenValue === value);
@@ -126,7 +178,7 @@ const contextFromDrizzleError = (error: DrizzleError): DrizzleErrorContext =>
   makeContext(O.getOrUndefined(error.query), O.getOrUndefined(error.params));
 
 const existingDrizzleError = (value: unknown): O.Option<DrizzleError> =>
-  isExistingDrizzleError(value) ? O.some(value) : O.none();
+  DrizzleError.is(value) ? O.some(value) : O.none();
 
 const reasonPayload = (reason: Cause.Reason<unknown>): O.Option<unknown> => {
   if (safeBoolean(() => Cause.isFailReason(reason))) {
@@ -207,7 +259,7 @@ const extractNativeQueryContext = (cause: unknown, seen: ReadonlyArray<object> =
   }
 
   const messageContext = parseDrizzleMessage(cause);
-  if (messageContext.query !== undefined) {
+  if (O.isSome(messageContext.query)) {
     return messageContext;
   }
 
@@ -230,11 +282,11 @@ const extractNativeQueryContext = (cause: unknown, seen: ReadonlyArray<object> =
  * @example
  * ```ts
  * import { strictEqual } from "node:assert"
- * import { DrizzleError } from "@beep/drizzle"
+ * import { DrizzleError, DrizzleOperation } from "@beep/drizzle"
  * import * as O from "effect/Option"
  *
  * const error = DrizzleError.make({
- *   operation: "execute",
+ *   operation: DrizzleOperation.Enum.execute,
  *   cause: O.none(),
  *   query: O.none(),
  *   params: O.none()
@@ -251,15 +303,27 @@ const extractNativeQueryContext = (cause: unknown, seen: ReadonlyArray<object> =
 export class DrizzleError extends TaggedErrorClass<DrizzleError>($I`DrizzleError`)(
   "DrizzleError",
   {
-    operation: S.String,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
-    query: S.OptionFromOptionalKey(S.String),
-    params: S.Unknown.pipe(S.Array, S.OptionFromOptionalKey),
+    operation: DrizzleOperation.annotateKey({
+      description: "Driver operation being normalized.",
+    }),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Inspectable defect retained as the normalized technical cause.",
+      }),
+    query: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional SQL statement text retained for diagnostics.",
+    }),
+    params: S.OptionFromOptionalKey(RedactedSqlParams).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional SQL parameter values after redaction.",
+    }),
   },
   $I.annote("DrizzleError", {
     description: "Technical Drizzle driver failure scoped to a driver operation.",
   })
 ) {
+  static readonly is = (value: unknown): value is DrizzleError => safeBoolean(() => S.is(DrizzleError)(value));
+
   /**
    * Normalize an unknown driver failure into a {@link DrizzleError}.
    *
@@ -272,13 +336,16 @@ export class DrizzleError extends TaggedErrorClass<DrizzleError>($I`DrizzleError
    * @example
    * ```ts
    * import { deepStrictEqual, strictEqual } from "node:assert"
-   * import { DrizzleError } from "@beep/drizzle"
+   * import { DrizzleError, DrizzleErrorContext } from "@beep/drizzle"
    * import * as O from "effect/Option"
    *
    * const error = DrizzleError.fromUnknown(
    *   "execute",
    *   new Error("driver failed"),
-   *   { query: "select * from accounts where id = $1", params: [123] }
+   *   DrizzleErrorContext.make({
+   *     query: O.some("select * from accounts where id = $1"),
+   *     params: O.some([123])
+   *   })
    * )
    *
    * strictEqual(O.getOrThrow(error.query), "select * from accounts where id = $1")
@@ -288,15 +355,19 @@ export class DrizzleError extends TaggedErrorClass<DrizzleError>($I`DrizzleError
    * @category errors
    * @since 0.0.0
    */
-  static readonly fromUnknown = (operation: string, cause?: unknown, context: DrizzleErrorContext = {}): DrizzleError =>
+  static readonly fromUnknown = (
+    operation: DrizzleOperation,
+    cause?: unknown,
+    context: DrizzleErrorContext = DrizzleErrorContext.make({})
+  ): DrizzleError =>
     O.getOrElse(O.map(existingDrizzleErrorFromUnknown(cause), redactedExistingDrizzleError), () => {
       const nativeContext = extractNativeQueryContext(cause);
       return DrizzleError.make({
         operation,
         cause: optionFromSafeDefect(cause),
-        query: O.fromUndefinedOr(context.query ?? nativeContext.query),
+        query: O.orElse(context.query, () => nativeContext.query),
         params: O.map(
-          O.fromUndefinedOr(context.params ?? nativeContext.params),
+          O.orElse(context.params, () => nativeContext.params),
           A.map(() => REDACTED_SQL_PARAMETER)
         ),
       });

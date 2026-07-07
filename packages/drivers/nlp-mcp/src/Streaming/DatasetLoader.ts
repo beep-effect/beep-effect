@@ -14,38 +14,45 @@
  */
 
 import { $NlpMcpId } from "@beep/identity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { Clock, Duration, Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
-import { readLines, readTextFile } from "./TextStream.ts";
-import type { TextEncoding } from "./TextStream.ts";
+import { readLines, readTextFile, TextEncoding } from "./TextStream.ts";
 
 const $I = $NlpMcpId.create("Streaming/DatasetLoader");
+const DEFAULT_TIMEOUT_MS = 30_000;
+const NonNegativeInteger = S.Int.check(S.isGreaterThanOrEqualTo(0));
+const PositiveInteger = S.Int.check(S.isGreaterThan(0));
+
+const DatasetFormatBase = LiteralKit(["json", "jsonl", "lines", "text"]);
 
 /**
  * Dataset formats supported by the file and URL loaders.
  *
  * @example
  * ```ts
- * import type { DatasetFormat } from "@beep/nlp-mcp/Streaming/DatasetLoader"
+ * import { DatasetFormat } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
- * const format: DatasetFormat = "jsonl"
+ * const format = DatasetFormat.fromUnknown("jsonl")
  * console.log(format)
  * ```
  *
+ * @category schemas
  * @since 0.0.0
- * @category models
  */
-export const DatasetFormat = LiteralKit(["json", "jsonl", "lines", "text"]).annotate(
-  $I.annote("DatasetFormat", {
+export const DatasetFormat = DatasetFormatBase.pipe(
+  $I.annoteSchema("DatasetFormat", {
     description: "Dataset formats supported by the file and URL loaders.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**
@@ -64,24 +71,30 @@ export const DatasetFormat = LiteralKit(["json", "jsonl", "lines", "text"]).anno
  */
 export type DatasetFormat = typeof DatasetFormat.Type;
 
+const DatasetSourceTypeBase = LiteralKit(["file", "url"]);
+
 /**
  * Provenance source channels supported by dataset loaders.
  *
  * @example
  * ```ts
- * import type { DatasetSourceType } from "@beep/nlp-mcp/Streaming/DatasetLoader"
+ * import { DatasetSourceType } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  *
- * const sourceType: DatasetSourceType = "file"
+ * const sourceType = DatasetSourceType.fromUnknown("file")
  * console.log(sourceType)
  * ```
  *
+ * @category schemas
  * @since 0.0.0
- * @category models
  */
-export const DatasetSourceType = LiteralKit(["file", "url"]).annotate(
-  $I.annote("DatasetSourceType", {
+export const DatasetSourceType = DatasetSourceTypeBase.pipe(
+  $I.annoteSchema("DatasetSourceType", {
     description: "Provenance source channels supported by dataset loaders.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**
@@ -126,7 +139,7 @@ export class DatasetMeta extends S.Class<DatasetMeta>($I`DatasetMeta`)(
       description: 'Detected dataset format (`"text"`, `"lines"`, `"jsonl"`, or `"json"`).',
     }),
     /** Unix epoch milliseconds when the dataset was loaded. */
-    loadedAt: S.Finite.annotateKey({
+    loadedAt: NonNegativeInteger.annotateKey({
       description: "Unix epoch milliseconds when the dataset was loaded.",
     }),
     /** Resolved location (file path or URL) the dataset was loaded from. */
@@ -134,7 +147,7 @@ export class DatasetMeta extends S.Class<DatasetMeta>($I`DatasetMeta`)(
       description: "Resolved location (file path or URL) the dataset was loaded from.",
     }),
     /** Content size in bytes when known. */
-    sizeBytes: S.optionalKey(S.Finite).annotateKey({
+    sizeBytes: S.OptionFromOptionalKey(NonNegativeInteger).pipe(SchemaUtils.withNoneDefault).annotateKey({
       description: "Content size in bytes when known.",
     }),
     /** Source channel: `"file"` or `"url"`. */
@@ -152,13 +165,13 @@ export class DatasetMeta extends S.Class<DatasetMeta>($I`DatasetMeta`)(
  *
  * @example
  * ```ts
- * import { DatasetResult } from "@beep/nlp-mcp/Streaming/DatasetLoader"
+ * import { DatasetMeta, DatasetResult } from "@beep/nlp-mcp/Streaming/DatasetLoader"
  * import * as S from "effect/Schema"
  *
  * const TextDataset = DatasetResult(S.String)
  * const result = TextDataset.make({
  *   data: "hello",
- *   meta: { format: "text", loadedAt: 0, location: "/tmp/data.txt", sourceType: "file" }
+ *   meta: DatasetMeta.make({ format: "text", loadedAt: 0, location: "/tmp/data.txt", sourceType: "file" })
  * })
  * console.log(result.data)
  * ```
@@ -185,15 +198,128 @@ export const DatasetResult = <Data extends S.Top>(data: Data) =>
   );
 
 /**
+ * Options for loading a dataset as raw text.
+ *
+ * @example
+ * ```ts
+ * import { DatasetLoadTextOptions } from "@beep/nlp-mcp/Streaming/DatasetLoader"
+ *
+ * const options = DatasetLoadTextOptions.make({ encoding: "utf-8" })
+ * console.log(options.timeout)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export class DatasetLoadTextOptions extends S.Class<DatasetLoadTextOptions>($I`DatasetLoadTextOptions`)(
+  {
+    encoding: TextEncoding.pipe(SchemaUtils.withKeyDefaults("utf-8")).annotateKey({
+      description: 'Text decoding label applied to local file bytes (default: "utf-8").',
+    }),
+    timeout: PositiveInteger.pipe(SchemaUtils.withKeyDefaults(DEFAULT_TIMEOUT_MS)).annotateKey({
+      description: "Remote URL load timeout in milliseconds.",
+    }),
+  },
+  $I.annote("DatasetLoadTextOptions", {
+    description: "Options for loading a dataset as raw text.",
+  })
+) {}
+
+/**
+ * Options for loading a dataset as text lines.
+ *
+ * @example
+ * ```ts
+ * import { DatasetLoadLinesOptions } from "@beep/nlp-mcp/Streaming/DatasetLoader"
+ *
+ * const options = DatasetLoadLinesOptions.make({ skipEmpty: true, trim: true })
+ * console.log(options.timeout)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export class DatasetLoadLinesOptions extends S.Class<DatasetLoadLinesOptions>($I`DatasetLoadLinesOptions`)(
+  {
+    skipEmpty: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
+      description: "Drop empty lines after optional trimming.",
+    }),
+    timeout: PositiveInteger.pipe(SchemaUtils.withKeyDefaults(DEFAULT_TIMEOUT_MS)).annotateKey({
+      description: "Remote URL load timeout in milliseconds.",
+    }),
+    trim: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
+      description: "Trim surrounding whitespace from loaded lines.",
+    }),
+  },
+  $I.annote("DatasetLoadLinesOptions", {
+    description: "Options for loading a dataset as text lines.",
+  })
+) {}
+
+/**
+ * Options for loading a dataset as JSONL records.
+ *
+ * @example
+ * ```ts
+ * import { DatasetLoadJsonlOptions } from "@beep/nlp-mcp/Streaming/DatasetLoader"
+ *
+ * const options = DatasetLoadJsonlOptions.make({ skipInvalid: true })
+ * console.log(options.timeout)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export class DatasetLoadJsonlOptions extends S.Class<DatasetLoadJsonlOptions>($I`DatasetLoadJsonlOptions`)(
+  {
+    skipInvalid: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
+      description: "Drop malformed JSONL records instead of failing the load.",
+    }),
+    timeout: PositiveInteger.pipe(SchemaUtils.withKeyDefaults(DEFAULT_TIMEOUT_MS)).annotateKey({
+      description: "Remote URL load timeout in milliseconds.",
+    }),
+  },
+  $I.annote("DatasetLoadJsonlOptions", {
+    description: "Options for loading a dataset as JSONL records.",
+  })
+) {}
+
+/**
+ * Options for loading a dataset as a single JSON document.
+ *
+ * @example
+ * ```ts
+ * import { DatasetLoadJsonOptions } from "@beep/nlp-mcp/Streaming/DatasetLoader"
+ *
+ * const options = DatasetLoadJsonOptions.make({})
+ * console.log(options.timeout)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export class DatasetLoadJsonOptions extends S.Class<DatasetLoadJsonOptions>($I`DatasetLoadJsonOptions`)(
+  {
+    timeout: PositiveInteger.pipe(SchemaUtils.withKeyDefaults(DEFAULT_TIMEOUT_MS)).annotateKey({
+      description: "Remote URL load timeout in milliseconds.",
+    }),
+  },
+  $I.annote("DatasetLoadJsonOptions", {
+    description: "Options for loading a dataset as a single JSON document.",
+  })
+) {}
+
+/**
  * Type for {@link DatasetResult}.
  *
  * @example
  * ```ts
  * import type { DatasetResult } from "@beep/nlp-mcp/Streaming/DatasetLoader"
+ * import * as O from "effect/Option"
  *
  * const result: DatasetResult<string> = {
  *   data: "hello",
- *   meta: { format: "text", loadedAt: 0, location: "/tmp/data.txt", sourceType: "file" }
+ *   meta: { format: "text", loadedAt: 0, location: "/tmp/data.txt", sizeBytes: O.none(), sourceType: "file" }
  * }
  * console.log(result.data)
  * ```
@@ -220,9 +346,11 @@ export type DatasetResult<A> = S.Schema.Type<ReturnType<typeof DatasetResult<S.S
 export class DatasetLoadError extends TaggedErrorClass<DatasetLoadError>($I`DatasetLoadError`)(
   "DatasetLoadError",
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })).annotateKey({
-      description: "Underlying platform, HTTP, timeout, or schema failure when available.",
-    }),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Underlying platform, HTTP, timeout, or schema failure when available.",
+      }),
     message: S.String.annotateKey({
       description: "Safe diagnostic message for the dataset load failure.",
     }),
@@ -239,8 +367,6 @@ const TextDatasetResult = DatasetResult(S.String);
 const LinesDatasetResult = DatasetResult(S.String.pipe(S.Array));
 const JsonDatasetResult = DatasetResult(S.Unknown);
 const JsonlDatasetResult = DatasetResult(S.Unknown.pipe(S.Array));
-
-const DEFAULT_TIMEOUT_MS = 30_000;
 
 const decodeJson = S.decodeEffect(S.UnknownFromJsonString);
 
@@ -353,7 +479,7 @@ const fetchText = (
         Effect.timeout(Duration.millis(timeoutMs)),
         Effect.mapError((cause) =>
           DatasetLoadError.make({
-            cause,
+            cause: O.some(cause),
             location,
             message: String(cause),
           })
@@ -366,7 +492,7 @@ const parseJson = (value: string, location: string): Effect.Effect<unknown, Data
   decodeJson(value).pipe(
     Effect.mapError((cause) =>
       DatasetLoadError.make({
-        cause,
+        cause: O.some(cause),
         location,
         message: String(cause),
       })
@@ -392,33 +518,31 @@ const parseJson = (value: string, location: string): Effect.Effect<unknown, Data
  */
 export const loadText = Effect.fn("DatasetLoader.loadText")(function* (
   location: string,
-  options: {
-    readonly encoding?: TextEncoding | undefined;
-    readonly timeout?: number | undefined;
-  } = {}
+  options: (typeof DatasetLoadTextOptions)["~type.make.in"] = {}
 ) {
+  const loadOptions = DatasetLoadTextOptions.make(options);
   const loadedAt = yield* Clock.currentTimeMillis;
   if (isUrl(location)) {
-    const data = yield* fetchText(location, options.timeout ?? DEFAULT_TIMEOUT_MS);
+    const data = yield* fetchText(location, loadOptions.timeout);
     return TextDatasetResult.make({
       data,
       meta: DatasetMeta.make({
         format: "text",
         loadedAt,
         location,
-        sizeBytes: byteLength(data),
+        sizeBytes: O.some(byteLength(data)),
         sourceType: "url",
       }),
     });
   }
-  const data = yield* readTextFile(location, options.encoding ?? "utf-8");
+  const data = yield* readTextFile(location, loadOptions.encoding);
   return TextDatasetResult.make({
     data,
     meta: DatasetMeta.make({
       format: "text",
       loadedAt,
       location,
-      sizeBytes: byteLength(data),
+      sizeBytes: O.some(byteLength(data)),
       sourceType: "file",
     }),
   });
@@ -443,21 +567,18 @@ export const loadText = Effect.fn("DatasetLoader.loadText")(function* (
  */
 export const loadLines = Effect.fn("DatasetLoader.loadLines")(function* (
   location: string,
-  options: {
-    readonly skipEmpty?: boolean | undefined;
-    readonly timeout?: number | undefined;
-    readonly trim?: boolean | undefined;
-  } = {}
+  options: (typeof DatasetLoadLinesOptions)["~type.make.in"] = {}
 ) {
+  const loadOptions = DatasetLoadLinesOptions.make(options);
   const loadedAt = yield* Clock.currentTimeMillis;
   if (isUrl(location)) {
-    const text = yield* fetchText(location, options.timeout ?? DEFAULT_TIMEOUT_MS);
+    const text = yield* fetchText(location, loadOptions.timeout);
     // Split on CRLF or LF so remote datasets decode identically to local files
     // (where `Stream.splitLines` already strips the trailing `\r`).
     const data = pipe(
       Str.split(/\r?\n/)(text),
-      A.map((line) => (options.trim === true ? Str.trim(line) : line)),
-      A.filter((line) => options.skipEmpty !== true || Str.isNonEmpty(line))
+      A.map((line) => (loadOptions.trim ? Str.trim(line) : line)),
+      A.filter((line) => !loadOptions.skipEmpty || Str.isNonEmpty(line))
     );
     return LinesDatasetResult.make({
       data,
@@ -465,15 +586,12 @@ export const loadLines = Effect.fn("DatasetLoader.loadLines")(function* (
         format: "lines",
         loadedAt,
         location,
-        sizeBytes: byteLength(text),
+        sizeBytes: O.some(byteLength(text)),
         sourceType: "url",
       }),
     });
   }
-  const data = yield* readLines(
-    location,
-    R.getSomes({ skipEmpty: O.fromUndefinedOr(options.skipEmpty), trim: O.fromUndefinedOr(options.trim) })
-  );
+  const data = yield* readLines(location, { skipEmpty: loadOptions.skipEmpty, trim: loadOptions.trim });
   // Read the raw text once more so file sources report `sizeBytes` like URL
   // sources do, keeping the provenance record consistent across channels.
   const rawText = yield* readTextFile(location, "utf-8");
@@ -483,7 +601,7 @@ export const loadLines = Effect.fn("DatasetLoader.loadLines")(function* (
       format: "lines",
       loadedAt,
       location,
-      sizeBytes: byteLength(rawText),
+      sizeBytes: O.some(byteLength(rawText)),
       sourceType: "file",
     }),
   });
@@ -512,23 +630,21 @@ export const loadLines = Effect.fn("DatasetLoader.loadLines")(function* (
  */
 export const loadJsonl = Effect.fn("DatasetLoader.loadJsonl")(function* (
   location: string,
-  options: {
-    readonly skipInvalid?: boolean | undefined;
-    readonly timeout?: number | undefined;
-  } = {}
+  options: (typeof DatasetLoadJsonlOptions)["~type.make.in"] = {}
 ) {
+  const loadOptions = DatasetLoadJsonlOptions.make(options);
   const loadedAt = yield* Clock.currentTimeMillis;
-  const skipInvalid = options.skipInvalid ?? false;
   const sourceType: DatasetSourceType = isUrl(location) ? "url" : "file";
   const text =
-    sourceType === "url"
-      ? yield* fetchText(location, options.timeout ?? DEFAULT_TIMEOUT_MS)
-      : yield* readTextFile(location, "utf-8");
+    sourceType === "url" ? yield* fetchText(location, loadOptions.timeout) : yield* readTextFile(location, "utf-8");
 
   const lines = pipe(Str.split(/\r?\n/)(text), A.map(Str.trim), A.filter(Str.isNonEmpty));
   const records = yield* Effect.forEach(
     lines,
-    (line) => (skipInvalid ? Effect.option(parseJson(line, location)) : Effect.map(parseJson(line, location), O.some)),
+    (line) =>
+      loadOptions.skipInvalid
+        ? Effect.option(parseJson(line, location))
+        : Effect.map(parseJson(line, location), O.some),
     { concurrency: 1 }
   ).pipe(Effect.map(A.getSomes));
 
@@ -538,7 +654,7 @@ export const loadJsonl = Effect.fn("DatasetLoader.loadJsonl")(function* (
       format: "jsonl",
       loadedAt,
       location,
-      sizeBytes: byteLength(text),
+      sizeBytes: O.some(byteLength(text)),
       sourceType,
     }),
   });
@@ -563,7 +679,7 @@ export const loadJsonl = Effect.fn("DatasetLoader.loadJsonl")(function* (
  */
 export const loadJson = Effect.fn("DatasetLoader.loadJson")(function* (
   location: string,
-  options: { readonly timeout?: number | undefined } = {}
+  options: (typeof DatasetLoadJsonOptions)["~type.make.in"] = {}
 ) {
   const result = yield* loadText(location, options);
   const data = yield* parseJson(result.data, location);
@@ -573,7 +689,7 @@ export const loadJson = Effect.fn("DatasetLoader.loadJson")(function* (
       format: "json",
       loadedAt: result.meta.loadedAt,
       location: result.meta.location,
-      ...R.getSomes({ sizeBytes: O.fromUndefinedOr(result.meta.sizeBytes) }),
+      sizeBytes: result.meta.sizeBytes,
       sourceType: result.meta.sourceType,
     }),
   });

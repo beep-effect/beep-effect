@@ -10,19 +10,14 @@ import { A, thunkEffectVoid } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Context, Effect, flow, HashMap, HashSet, Layer, Match, Ref } from "effect";
 import * as RpcClient from "effect/unstable/rpc/RpcClient";
+import * as RpcMessage from "effect/unstable/rpc/RpcMessage";
 import * as RpcServer from "effect/unstable/rpc/RpcServer";
 import { AGENT_METHODS, CLIENT_METHODS } from "./_generated/meta.gen.ts";
 import * as AcpError from "./Acp.errors.ts";
 import * as AcpProtocol from "./AcpProtocol.service.ts";
 import * as AcpRpcs from "./AcpRpc.models.ts";
-import {
-  callRpc,
-  decodeExtNotificationRegistration,
-  decodeExtRequestRegistration,
-  runHandler,
-} from "./internal/shared.ts";
+import { callRpc, makeExtensionRegistrars, runHandler } from "./internal/shared.ts";
 import { makeChildStdio, makeTerminationError } from "./internal/stdio.ts";
-import type * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
 import type * as Stdio from "effect/Stdio";
 import type * as Stream from "effect/Stream";
@@ -32,6 +27,23 @@ import type { AcpPatchedProtocol } from "./AcpProtocol.service.ts";
 
 const $I = $AcpId.create("client");
 const ACP_CLIENT_PENDING_NOTIFICATION_CAPACITY = 256;
+
+/**
+ * Builds the typed ACP process-exit error used by child-process transports.
+ *
+ * @example
+ * ```ts
+ * import { makeTerminationError } from "@beep/acp/client"
+ * import type { ChildProcessSpawner } from "effect/unstable/process"
+ *
+ * const toTerminationError = (handle: ChildProcessSpawner.ChildProcessHandle) => makeTerminationError(handle)
+ * console.log(toTerminationError)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export { makeTerminationError } from "./internal/stdio.ts";
 
 /**
  * Options for constructing an ACP client service.
@@ -71,7 +83,7 @@ type AcpClientRaw = {
  * @category services
  * @since 0.0.0
  */
-export interface AcpClientShape {
+export interface AcpClientShape extends AcpProtocol.AcpExtensionRegistrars {
   readonly agent: {
     /**
      * Initializes the ACP session and negotiates capabilities.
@@ -183,24 +195,6 @@ export interface AcpClientShape {
     handler: (notification: AcpSchema.ElicitationCompleteNotification) => Effect.Effect<void, AcpError.AcpError>
   ) => Effect.Effect<void>;
   /**
-   * Registers a typed extension notification handler.
-   * @see https://agentclientprotocol.com/protocol/extensibility
-   */
-  readonly handleExtNotification: <A, I>(
-    method: string,
-    payload: S.Codec<A, I>,
-    handler: (payload: A) => Effect.Effect<void, AcpError.AcpError>
-  ) => Effect.Effect<void>;
-  /**
-   * Registers a typed extension request handler.
-   * @see https://agentclientprotocol.com/protocol/extensibility
-   */
-  readonly handleExtRequest: <A, I>(
-    method: string,
-    payload: S.Codec<A, I>,
-    handler: (payload: A) => Effect.Effect<unknown, AcpError.AcpError>
-  ) => Effect.Effect<void>;
-  /**
    * Registers a handler for `fs/read_text_file`.
    * @see https://agentclientprotocol.com/protocol/schema#fs/read_text_file
    */
@@ -260,20 +254,6 @@ export interface AcpClientShape {
     handler: (
       request: AcpSchema.WaitForTerminalExitRequest
     ) => Effect.Effect<AcpSchema.WaitForTerminalExitResponse, AcpError.AcpError>
-  ) => Effect.Effect<void>;
-  /**
-   * Registers a fallback extension notification handler.
-   * @see https://agentclientprotocol.com/protocol/extensibility
-   */
-  readonly handleUnknownExtNotification: (
-    handler: (method: string, params: unknown) => Effect.Effect<void, AcpError.AcpError>
-  ) => Effect.Effect<void>;
-  /**
-   * Registers a fallback extension request handler.
-   * @see https://agentclientprotocol.com/protocol/extensibility
-   */
-  readonly handleUnknownExtRequest: (
-    handler: (method: string, params: unknown) => Effect.Effect<unknown, AcpError.AcpError>
   ) => Effect.Effect<void>;
   /**
    * Registers a handler for `fs/write_text_file`.
@@ -566,7 +546,7 @@ export const make = Effect.fn($I`AcpClient_make`)(function* (
 
   let nextRpcRequestId = BigInt(1) << BigInt(32);
   const rpc = yield* RpcClient.make(AcpRpcs.AgentRpcs, {
-    generateRequestId: () => nextRpcRequestId++ as never,
+    generateRequestId: () => RpcMessage.RequestId(nextRpcRequestId++),
   }).pipe(Effect.provideService(RpcClient.Protocol, transport.clientProtocol));
 
   const handleRequestPermission = Effect.fn($I`AcpClient_handleRequestPermission`)(
@@ -638,48 +618,14 @@ export const make = Effect.fn($I`AcpClient_make`)(function* (
       notificationHandlers.elicitationComplete
     );
   });
-  const handleUnknownExtRequest = Effect.fn($I`AcpClient_handleUnknownExtRequest`)(
-    (handler: (method: string, params: unknown) => Effect.Effect<unknown, AcpError.AcpError>) =>
-      Ref.set(unknownExtRequestHandler, O.some(handler))
-  );
-  const handleUnknownExtNotification = Effect.fn($I`AcpClient_handleUnknownExtNotification`)(
-    (handler: (method: string, params: unknown) => Effect.Effect<void, AcpError.AcpError>) =>
-      Ref.set(unknownExtNotificationHandler, O.some(handler))
-  );
-  const handleExtRequest = Effect.fn($I`AcpClient_handleExtRequest`)(function* <A, I>(
-    method: string,
-    payload: S.Codec<A, I>,
-    handler: (payload: A) => Effect.Effect<unknown, AcpError.AcpError>
-  ) {
-    return yield* Ref.update(extRequestHandlers, (handlers) =>
-      HashMap.set(
-        handlers,
-        method,
-        decodeExtRequestRegistration({
-          handler,
-          method,
-          payload,
-        })
-      )
-    );
-  });
-  const handleExtNotification = Effect.fn($I`AcpClient_handleExtNotification`)(function* <A, I>(
-    method: string,
-    payload: S.Codec<A, I>,
-    handler: (payload: A) => Effect.Effect<void, AcpError.AcpError>
-  ) {
-    return yield* Ref.update(extNotificationHandlers, (handlers) =>
-      HashMap.set(
-        handlers,
-        method,
-        decodeExtNotificationRegistration({
-          handler,
-          method,
-          payload,
-        })
-      )
-    );
-  });
+  const { handleExtNotification, handleExtRequest, handleUnknownExtNotification, handleUnknownExtRequest } =
+    makeExtensionRegistrars({
+      extNotificationHandlers,
+      extRequestHandlers,
+      namePrefix: "AcpClient",
+      unknownExtNotificationHandler,
+      unknownExtRequestHandler,
+    });
 
   return AcpClient.of({
     raw: {

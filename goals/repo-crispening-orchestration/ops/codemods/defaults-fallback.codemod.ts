@@ -289,7 +289,7 @@ if (import.meta.main) {
           }
         )
       ),
-      Effect.tapErrorCause((cause) => Console.error(cause)),
+      Effect.tapCause((cause) => Console.error(cause)),
       Effect.provide(MainLayer)
     )
   ).catch(() => {

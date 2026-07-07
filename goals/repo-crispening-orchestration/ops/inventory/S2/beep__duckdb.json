@@ -1,27 +1,5 @@
 [
   {
-    "ruleId": "SFV4-null-return",
-    "file": "packages/drivers/duckdb/src/DuckDb.errors.ts",
-    "line": 22,
-    "symbol": "causeFromUnknown",
-    "smell": "`causeFromUnknown` returns `unknown | undefined`, and `DuckDbError.fromUnknown` converts it back with `O.fromUndefinedOr` before spreading optional error fields into `DuckDbError.make`.",
-    "proposedTarget": "Make the error option/error fields Option-first: `cause`, `databasePath`, and `statement` use `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` on `DuckDbErrorFromUnknownOptions` and `DuckDbError`; `causeFromUnknown` returns `O.Option<unknown>`. In-repo exemplar: `packages/foundation/modeling/ontology/src/Ontology.models.ts:152-160`; v4 API verified at `.repos/effect-v4/packages/effect/src/Schema.ts:8648-8669`.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/duckdb/src/DuckDb.errors.ts",
-    "line": 146,
-    "symbol": "DuckDbError.fromUnknown",
-    "smell": "`message: options.message ?? \"DuckDB operation failed.\"` keeps the normalizer's default message in function body while `DuckDbErrorFromUnknownOptions.message` is an optional schema key (line 59).",
-    "proposedTarget": "Move the default to `DuckDbErrorFromUnknownOptions`: `message: S.String.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(\"DuckDB operation failed.\"))`, then `fromUnknown` can pass `options.message` without a nullish fallback. In-repo exemplar: `packages/drivers/phoenix/src/Phoenix.config.ts:52-53` and `packages/drivers/face-detection/src/FaceDetection.models.ts:268-270`.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
     "ruleId": "SFV4-defaults",
     "file": "packages/drivers/duckdb/src/DuckDb.service.ts",
     "line": 96,

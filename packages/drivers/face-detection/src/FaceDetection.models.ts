@@ -7,6 +7,7 @@
 
 import { $FaceDetectionId } from "@beep/identity/packages";
 import { SchemaUtils } from "@beep/schema";
+import { identity, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $FaceDetectionId.create("FaceDetection.models");
@@ -36,7 +37,8 @@ export const PositivePixelDimension = S.Int.check(
 ).pipe(
   $I.annoteSchema("PositivePixelDimension", {
     description: "A positive integer pixel dimension.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -97,7 +99,8 @@ export const FaceDetectionConfidence = S.Finite.check(
 ).pipe(
   $I.annoteSchema("FaceDetectionConfidence", {
     description: "Normalized face detection confidence between zero and one.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -117,6 +120,52 @@ export const FaceDetectionConfidence = S.Finite.check(
  * @since 0.0.0
  */
 export type FaceDetectionConfidence = typeof FaceDetectionConfidence.Type;
+
+/**
+ * Raw model confidence score normalized into the public confidence domain.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { RawFaceDetectionConfidence } from "@beep/face-detection/FaceDetection.models"
+ *
+ * const confidence = Effect.runSync(S.decodeUnknownEffect(RawFaceDetectionConfidence)(1.25))
+ * console.log(confidence)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RawFaceDetectionConfidence = S.Finite.pipe(
+  S.decodeTo(
+    FaceDetectionConfidence,
+    SchemaTransformation.transform({
+      decode: (value) => Math.min(1, Math.max(0, value)),
+      encode: identity,
+    })
+  ),
+  $I.annoteSchema("RawFaceDetectionConfidence", {
+    description: "Finite raw ONNX confidence score normalized into the zero-to-one confidence domain.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime TypeScript type produced by the {@link RawFaceDetectionConfidence} schema.
+ *
+ * @example
+ * ```ts
+ * import type { RawFaceDetectionConfidence } from "@beep/face-detection/FaceDetection.models"
+ *
+ * const confidence: RawFaceDetectionConfidence = 1
+ * console.log(confidence)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RawFaceDetectionConfidence = typeof RawFaceDetectionConfidence.Type;
 
 /**
  * Percentage threshold accepted by face-detection triage.
@@ -158,7 +207,8 @@ export const FaceDetectionPercentage = S.Finite.check(
 ).pipe(
   $I.annoteSchema("FaceDetectionPercentage", {
     description: "Percentage value between zero and 100.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -204,7 +254,8 @@ export const FaceDetectionTopK = S.Int.check(
 ).pipe(
   $I.annoteSchema("FaceDetectionTopK", {
     description: "Positive maximum number of face detections kept after non-maximum suppression.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -226,6 +277,51 @@ export const FaceDetectionTopK = S.Int.check(
 export type FaceDetectionTopK = typeof FaceDetectionTopK.Type;
 
 /**
+ * Non-negative image coordinate or dimension.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { NonNegativeImageCoordinate } from "@beep/face-detection/FaceDetection.models"
+ *
+ * const x = S.decodeUnknownSync(NonNegativeImageCoordinate)(12.5)
+ * console.log(x)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const NonNegativeImageCoordinate = S.Finite.check(
+  S.isGreaterThanOrEqualTo(0, {
+    identifier: $I`NonNegativeImageCoordinateMinimumCheck`,
+    title: "Non-negative Image Coordinate",
+    description: "Image coordinates and box dimensions must be greater than or equal to zero.",
+    message: "Expected a non-negative image coordinate",
+  })
+).pipe(
+  $I.annoteSchema("NonNegativeImageCoordinate", {
+    description: "Finite image coordinate or dimension greater than or equal to zero.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime TypeScript type produced by the {@link NonNegativeImageCoordinate} schema.
+ *
+ * @example
+ * ```ts
+ * import type { NonNegativeImageCoordinate } from "@beep/face-detection/FaceDetection.models"
+ *
+ * const x: NonNegativeImageCoordinate = 0
+ * console.log(x)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type NonNegativeImageCoordinate = typeof NonNegativeImageCoordinate.Type;
+
+/**
  * Request to load a YuNet-compatible ONNX face detector.
  *
  * @example
@@ -241,12 +337,16 @@ export type FaceDetectionTopK = typeof FaceDetectionTopK.Type;
  */
 export class FaceDetectionModelConfig extends S.Class<FaceDetectionModelConfig>($I`FaceDetectionModelConfig`)(
   {
-    modelPath: S.String,
+    modelPath: S.String.annotateKey({
+      description: "Filesystem path to the YuNet-compatible ONNX model.",
+    }),
   },
   $I.annote("FaceDetectionModelConfig", {
     description: "Request to load a YuNet-compatible ONNX face detector.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(FaceDetectionModelConfig);
+}
 
 /**
  * Request to detect faces in one image with a loaded detector.
@@ -264,15 +364,25 @@ export class FaceDetectionModelConfig extends S.Class<FaceDetectionModelConfig>(
  */
 export class FaceDetectionImageRequest extends S.Class<FaceDetectionImageRequest>($I`FaceDetectionImageRequest`)(
   {
-    imagePath: S.String,
-    minConfidence: FaceDetectionConfidence.pipe(SchemaUtils.withKeyDefaults(0.75)),
-    nmsThreshold: FaceDetectionConfidence.pipe(SchemaUtils.withKeyDefaults(0.3)),
-    topK: FaceDetectionTopK.pipe(SchemaUtils.withKeyDefaults(5000)),
+    imagePath: S.String.annotateKey({
+      description: "Filesystem path to the source image.",
+    }),
+    minConfidence: FaceDetectionConfidence.pipe(SchemaUtils.withKeyDefaults(0.75)).annotateKey({
+      description: "Minimum normalized confidence required for a face candidate.",
+    }),
+    nmsThreshold: FaceDetectionConfidence.pipe(SchemaUtils.withKeyDefaults(0.3)).annotateKey({
+      description: "Intersection-over-union threshold used for non-maximum suppression.",
+    }),
+    topK: FaceDetectionTopK.pipe(SchemaUtils.withKeyDefaults(5000)).annotateKey({
+      description: "Maximum number of candidate faces retained before suppression.",
+    }),
   },
   $I.annote("FaceDetectionImageRequest", {
     description: "Request to detect faces in one image with a loaded YuNet-compatible detector.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(FaceDetectionImageRequest);
+}
 
 /**
  * Two-dimensional point emitted by a face detector.
@@ -290,8 +400,12 @@ export class FaceDetectionImageRequest extends S.Class<FaceDetectionImageRequest
  */
 export class FaceDetectionPoint extends S.Class<FaceDetectionPoint>($I`FaceDetectionPoint`)(
   {
-    x: S.Finite,
-    y: S.Finite,
+    x: NonNegativeImageCoordinate.annotateKey({
+      description: "Horizontal image coordinate.",
+    }),
+    y: NonNegativeImageCoordinate.annotateKey({
+      description: "Vertical image coordinate.",
+    }),
   },
   $I.annote("FaceDetectionPoint", {
     description: "Two-dimensional image point emitted by a face detector.",
@@ -314,10 +428,18 @@ export class FaceDetectionPoint extends S.Class<FaceDetectionPoint>($I`FaceDetec
  */
 export class FaceDetectionBox extends S.Class<FaceDetectionBox>($I`FaceDetectionBox`)(
   {
-    height: S.Finite,
-    width: S.Finite,
-    x: S.Finite,
-    y: S.Finite,
+    height: NonNegativeImageCoordinate.annotateKey({
+      description: "Detected face box height.",
+    }),
+    width: NonNegativeImageCoordinate.annotateKey({
+      description: "Detected face box width.",
+    }),
+    x: NonNegativeImageCoordinate.annotateKey({
+      description: "Left image coordinate for the detected face box.",
+    }),
+    y: NonNegativeImageCoordinate.annotateKey({
+      description: "Top image coordinate for the detected face box.",
+    }),
   },
   $I.annote("FaceDetectionBox", {
     description: "Face bounding box using top-left x/y coordinates plus width and height.",
@@ -346,11 +468,21 @@ export class FaceDetectionBox extends S.Class<FaceDetectionBox>($I`FaceDetection
  */
 export class FaceDetectionLandmarks extends S.Class<FaceDetectionLandmarks>($I`FaceDetectionLandmarks`)(
   {
-    leftEye: FaceDetectionPoint,
-    leftMouth: FaceDetectionPoint,
-    nose: FaceDetectionPoint,
-    rightEye: FaceDetectionPoint,
-    rightMouth: FaceDetectionPoint,
+    leftEye: FaceDetectionPoint.annotateKey({
+      description: "Left eye landmark point.",
+    }),
+    leftMouth: FaceDetectionPoint.annotateKey({
+      description: "Left mouth-corner landmark point.",
+    }),
+    nose: FaceDetectionPoint.annotateKey({
+      description: "Nose landmark point.",
+    }),
+    rightEye: FaceDetectionPoint.annotateKey({
+      description: "Right eye landmark point.",
+    }),
+    rightMouth: FaceDetectionPoint.annotateKey({
+      description: "Right mouth-corner landmark point.",
+    }),
   },
   $I.annote("FaceDetectionLandmarks", {
     description: "Five face landmarks emitted by a YuNet-compatible detector.",
@@ -383,9 +515,15 @@ export class FaceDetectionLandmarks extends S.Class<FaceDetectionLandmarks>($I`F
  */
 export class FaceDetection extends S.Class<FaceDetection>($I`FaceDetection`)(
   {
-    box: FaceDetectionBox,
-    confidence: FaceDetectionConfidence,
-    landmarks: FaceDetectionLandmarks,
+    box: FaceDetectionBox.annotateKey({
+      description: "Detected face bounding box in source-image coordinates.",
+    }),
+    confidence: FaceDetectionConfidence.annotateKey({
+      description: "Normalized confidence score for the detected face.",
+    }),
+    landmarks: FaceDetectionLandmarks.annotateKey({
+      description: "Five facial landmarks in source-image coordinates.",
+    }),
   },
   $I.annote("FaceDetection", {
     description: "One detected face with confidence, bounding box, and landmarks.",
@@ -413,10 +551,18 @@ export class FaceDetection extends S.Class<FaceDetection>($I`FaceDetection`)(
  */
 export class FaceDetectionResult extends S.Class<FaceDetectionResult>($I`FaceDetectionResult`)(
   {
-    faces: S.Array(FaceDetection),
-    height: PositivePixelDimension,
-    imagePath: S.String,
-    width: PositivePixelDimension,
+    faces: S.Array(FaceDetection).annotateKey({
+      description: "Detected faces in descending confidence order after suppression.",
+    }),
+    height: PositivePixelDimension.annotateKey({
+      description: "Source image height in pixels.",
+    }),
+    imagePath: S.String.annotateKey({
+      description: "Filesystem path to the processed source image.",
+    }),
+    width: PositivePixelDimension.annotateKey({
+      description: "Source image width in pixels.",
+    }),
   },
   $I.annote("FaceDetectionResult", {
     description: "Face detection result for one image.",
@@ -440,7 +586,7 @@ export class FaceDetectionResult extends S.Class<FaceDetectionResult>($I`FaceDet
  * @category codecs
  * @since 0.0.0
  */
-export const decodeFaceDetectionModelConfig = S.decodeUnknownEffect(FaceDetectionModelConfig);
+export const decodeFaceDetectionModelConfig = FaceDetectionModelConfig.decodeEffect;
 
 /**
  * Decode an image request from unknown input.
@@ -464,4 +610,4 @@ export const decodeFaceDetectionModelConfig = S.decodeUnknownEffect(FaceDetectio
  * @category codecs
  * @since 0.0.0
  */
-export const decodeFaceDetectionImageRequest = S.decodeUnknownEffect(FaceDetectionImageRequest);
+export const decodeFaceDetectionImageRequest = FaceDetectionImageRequest.decodeEffect;

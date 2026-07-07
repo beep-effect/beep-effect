@@ -6,6 +6,7 @@
  */
 
 import { $BoxId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $BoxId.create("experimental/domain/values/SerializedData/SerializedData.model");
@@ -82,7 +83,8 @@ export const SerializedData = S.Union([
   $I.annoteSchema("SerializedData", {
     description:
       "Recursive value schema for serializable Box payload fragments: primitives, lists, and string-keyed maps.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -156,7 +158,8 @@ export declare namespace SerializedDataList {
 export const SerializedDataList = S.Array(S.suspend((): S.Codec<SerializedData.Encoded> => SerializedData)).pipe(
   $I.annoteSchema("SerializedDataList", {
     description: "Value schema for arrays of serializable Box payload fragments.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -236,7 +239,8 @@ export const SerializedDataMap = S.Record(
 ).pipe(
   $I.annoteSchema("SerializedDataMap", {
     description: "Value schema for string-keyed maps of serializable Box payload fragments.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

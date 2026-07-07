@@ -8,14 +8,18 @@ import {
   migrate,
   NativePgClient,
   PgErrorCanonicalNameByCode,
+  PgErrorCode,
+  PgErrorName,
   PostgresClient,
   PostgresError,
   PostgresErrorContext,
 } from "@beep/postgres";
 import { A } from "@beep/utils";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Cause, Effect, Layer } from "effect";
+import { Cause, Effect, Equal, Layer, Result } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import type { PostgresClientValue, PostgresDrizzleDatabase } from "@beep/postgres";
 
@@ -85,6 +89,33 @@ const makeCauseWithHostileReason = (): Cause.Cause<unknown> => {
   });
 };
 
+const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
+  Result.getOrThrow(S.encodeResult(schema)(value));
+
+const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Encoded"]): Codec["Type"] =>
+  Result.getOrThrow(S.decodeUnknownResult(schema)(value));
+
+const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): void => {
+  const encoded = encode(schema, value);
+  const decoded = decode(schema, encoded);
+  const reencoded = encode(schema, decoded);
+
+  expect(reencoded).toEqual(encoded);
+  expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value)).toBe(true);
+};
+
+const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
+  schema: Codec,
+  arbitrary = S.toArbitrary(schema)
+): void => {
+  fc.assert(
+    fc.property(arbitrary, (value) => {
+      expectRoundTrip(schema, value);
+    }),
+    { numRuns: 25 }
+  );
+};
+
 describe("PostgresError", () => {
   it("extracts SQLSTATE diagnostics from pg-like failures", () => {
     const cause = {
@@ -95,14 +126,10 @@ describe("PostgresError", () => {
       severity: "ERROR",
       table: "users",
     };
-    const error = PostgresError.fromUnknown(
-      "query",
-      cause,
-      PostgresErrorContext.make({
-        query: "select * from users where email = $1",
-        params: ["a@example.com"],
-      })
-    );
+    const error = PostgresError.fromUnknown("query", cause, {
+      query: "select * from users where email = $1",
+      params: ["a@example.com"],
+    });
 
     expect(error._tag).toBe("PostgresError");
     expect(error.operation).toBe("query");
@@ -132,12 +159,70 @@ describe("PostgresError", () => {
 
   it("constructs schema-owned diagnostic context", () => {
     const context = PostgresErrorContext.make({
+      query: O.some("select 1"),
+      sqlStateName: O.some("UNIQUE_VIOLATION"),
+    });
+
+    expect(O.getOrThrow(context.query)).toBe("select 1");
+    expect(O.getOrThrow(context.sqlStateName)).toBe("UNIQUE_VIOLATION");
+  });
+
+  it("keeps diagnostic context and error encoded shapes at the raw optional boundary", () => {
+    const context = PostgresErrorContext.make({
+      query: O.some("select 1"),
+      sqlStateName: O.some("UNIQUE_VIOLATION"),
+    });
+    const emptyContext = PostgresErrorContext.make({});
+    const error = PostgresError.make({
+      operation: "query",
+      sqlState: O.some("23505"),
+      sqlStateName: O.some("UNIQUE_VIOLATION"),
+    });
+    const minimalError = PostgresError.make({ operation: "query" });
+
+    expect(encode(PostgresErrorContext, context)).toEqual({
       query: "select 1",
       sqlStateName: "UNIQUE_VIOLATION",
     });
+    expect(encode(PostgresErrorContext, emptyContext)).toEqual({});
+    expect(encode(PostgresError, error)).toEqual({
+      _tag: "PostgresError",
+      operation: "query",
+      sqlState: "23505",
+      sqlStateName: "UNIQUE_VIOLATION",
+    });
+    expect(encode(PostgresError, minimalError)).toEqual({
+      _tag: "PostgresError",
+      operation: "query",
+    });
+  });
 
-    expect(context.query).toBe("select 1");
-    expect(context.sqlStateName).toBe("UNIQUE_VIOLATION");
+  it("round-trips schema-derived SQLSTATE and Postgres error values", () => {
+    const postgresErrorArbitrary = S.toArbitrary(PostgresError).map((error) =>
+      PostgresError.make({
+        operation: error.operation,
+        cause: O.none(),
+        message: error.message,
+        sqlState: error.sqlState,
+        sqlStateName: error.sqlStateName,
+        severity: error.severity,
+        detail: error.detail,
+        hint: error.hint,
+        where: error.where,
+        schemaName: error.schemaName,
+        tableName: error.tableName,
+        columnName: error.columnName,
+        constraintName: error.constraintName,
+        query: error.query,
+        params: O.none(),
+        sourceLocation: error.sourceLocation,
+      })
+    );
+
+    assertSchemaRoundTrip(PgErrorCode);
+    assertSchemaRoundTrip(PgErrorName);
+    assertSchemaRoundTrip(PostgresErrorContext);
+    assertSchemaRoundTrip(PostgresError, postgresErrorArbitrary);
   });
 
   it("keeps fallback Drizzle message params opaque when they contain commas", () => {

@@ -64,6 +64,7 @@
     "@beep/mcp-kit": "workspace:^",
     "@beep/nlp-processing": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/utils": "workspace:^",
     "@beep/wink": "workspace:^",
     "@effect/platform-node": "catalog:",
     "effect": "catalog:"

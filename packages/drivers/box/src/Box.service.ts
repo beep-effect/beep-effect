@@ -6,10 +6,9 @@
  */
 
 import { $BoxId } from "@beep/identity";
+import * as O from "@beep/utils/Option";
 import { BoxCcgAuth, BoxClient, BoxDeveloperTokenAuth, CcgConfig } from "box-node-sdk";
 import { Context, Effect, Layer, Redacted } from "effect";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
 import { makeGeneratedOperations } from "./_generated/Box.operations.gen.ts";
 import { BoxConfig, BoxConfigLayer } from "./Box.config.ts";
 import { BoxError } from "./Box.errors.ts";
@@ -90,22 +89,13 @@ const makeCcgClient = (config: BoxCcgConfig): BoxClient =>
       config: new CcgConfig({
         clientId: config.clientId,
         clientSecret: Redacted.value(config.clientSecret),
-        ...R.getSomes({
-          enterpriseId: O.fromUndefinedOr(config.enterpriseId),
-          userId: O.fromUndefinedOr(config.userId),
+        ...O.getSomesStruct({
+          enterpriseId: config.enterpriseId,
+          userId: config.userId,
         }),
       }),
     }),
   });
-
-const validateCcgConfig = (config: BoxCcgConfig): Effect.Effect<BoxCcgConfig, BoxError> =>
-  config.enterpriseId === undefined && config.userId === undefined
-    ? Effect.fail(
-        BoxError.fromReason("config", {
-          cause: "Missing enterpriseId or userId for Box CCG auth",
-        })
-      )
-    : Effect.succeed(config);
 
 /**
  * Effect service for the Box Node SDK.
@@ -148,11 +138,12 @@ export class Box extends Context.Service<Box, BoxShape>()($I`Box`) {
    * ```ts
    * import { Box, BoxCcgConfig } from "@beep/box"
    * import { Redacted } from "effect"
+   * import * as O from "effect/Option"
    *
    * const layer = Box.makeCcgLayer(BoxCcgConfig.make({
    *   clientId: "client-id",
    *   clientSecret: Redacted.make("client-secret"),
-   *   enterpriseId: "enterprise-id"
+   *   enterpriseId: O.some("enterprise-id")
    * }))
    * console.log(layer)
    * ```
@@ -161,10 +152,7 @@ export class Box extends Context.Service<Box, BoxShape>()($I`Box`) {
    * @since 0.0.0
    */
   static readonly makeCcgLayer = (config: BoxCcgConfig): Layer.Layer<Box, BoxError> =>
-    Layer.effect(
-      Box,
-      validateCcgConfig(config).pipe(Effect.map((validConfig) => Box.of(makeService(makeCcgClient(validConfig)))))
-    );
+    Layer.succeed(Box, Box.of(makeService(makeCcgClient(config))));
 
   /**
    * Build a Box layer from a pre-authenticated SDK client.

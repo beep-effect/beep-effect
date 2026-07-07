@@ -1,7 +1,10 @@
 import {
   Phoenix,
   PhoenixAnnotationInput,
+  PhoenixAnnotationValue,
   PhoenixAnnotationWriteResult,
+  PhoenixConfigInput,
+  PhoenixDatasetAppendInput,
   PhoenixDatasetAppendResult,
   PhoenixDatasetCreateInput,
   PhoenixDatasetCreateResult,
@@ -11,6 +14,7 @@ import {
   PhoenixDatasetSelector,
   PhoenixDoctorResult,
   PhoenixError,
+  PhoenixErrorOptions,
   PhoenixExperimentCreateInput,
   PhoenixExperimentInfoResult,
   PhoenixPromptChatMessage,
@@ -20,9 +24,49 @@ import {
   PhoenixPromptWriteResult,
 } from "@beep/phoenix";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, pipe } from "effect";
+import { Effect, Layer, pipe, Result } from "effect";
 import * as A from "effect/Array";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import type { PhoenixSdkShape } from "@beep/phoenix";
+
+const expectEncodedRoundTrip = <Schema extends S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>>(
+  schema: Schema,
+  value: Schema["Type"]
+): void => {
+  const encoded = Result.getOrThrow(S.encodeUnknownResult(schema)(value));
+  const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
+  const reencoded = Result.getOrThrow(S.encodeUnknownResult(schema)(decoded));
+
+  expect(reencoded).toEqual(encoded);
+};
+
+const publicSchemaRoundTripCases: ReadonlyArray<
+  readonly [string, S.Top & S.ConstraintDecoder<unknown> & S.ConstraintEncoder<unknown>]
+> = [
+  ["PhoenixAnnotationInput", PhoenixAnnotationInput],
+  ["PhoenixAnnotationValue", PhoenixAnnotationValue],
+  ["PhoenixAnnotationWriteResult", PhoenixAnnotationWriteResult],
+  ["PhoenixConfigInput", PhoenixConfigInput],
+  ["PhoenixDatasetAppendInput", PhoenixDatasetAppendInput],
+  ["PhoenixDatasetAppendResult", PhoenixDatasetAppendResult],
+  ["PhoenixDatasetCreateInput", PhoenixDatasetCreateInput],
+  ["PhoenixDatasetCreateResult", PhoenixDatasetCreateResult],
+  ["PhoenixDatasetExample", PhoenixDatasetExample],
+  ["PhoenixDatasetExamplesResult", PhoenixDatasetExamplesResult],
+  ["PhoenixDatasetInfoResult", PhoenixDatasetInfoResult],
+  ["PhoenixDatasetSelector", PhoenixDatasetSelector],
+  ["PhoenixDoctorResult", PhoenixDoctorResult],
+  ["PhoenixError", PhoenixError],
+  ["PhoenixErrorOptions", PhoenixErrorOptions],
+  ["PhoenixExperimentCreateInput", PhoenixExperimentCreateInput],
+  ["PhoenixExperimentInfoResult", PhoenixExperimentInfoResult],
+  ["PhoenixPromptChatMessage", PhoenixPromptChatMessage],
+  ["PhoenixPromptCreateInput", PhoenixPromptCreateInput],
+  ["PhoenixPromptReadResult", PhoenixPromptReadResult],
+  ["PhoenixPromptSelector", PhoenixPromptSelector],
+  ["PhoenixPromptWriteResult", PhoenixPromptWriteResult],
+];
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
@@ -114,6 +158,29 @@ const failingSdk: PhoenixSdkShape = {
 };
 
 describe("@beep/phoenix", () => {
+  it("keeps Phoenix config encoded shape stable while normalizing base URLs", () => {
+    const decode = S.decodeUnknownResult(PhoenixConfigInput);
+    const encode = S.encodeUnknownResult(PhoenixConfigInput);
+    const decoded = Result.getOrThrow(decode({ baseUrl: "https://phoenix.test///" }));
+
+    expect(decoded.baseUrl).toBe("https://phoenix.test");
+    expect(Result.getOrThrow(encode(decoded))).toEqual({
+      baseUrl: "https://phoenix.test",
+      headers: {},
+    });
+  });
+
+  it("round-trips schema-derived Phoenix values through their encoded shapes", { timeout: 30000 }, () => {
+    for (const [, schema] of publicSchemaRoundTripCases) {
+      fc.assert(
+        fc.property(S.toArbitrary(schema), (value) => {
+          expectEncodedRoundTrip(schema, value);
+        }),
+        { numRuns: 5 }
+      );
+    }
+  });
+
   it.effect(
     "delegates dataset, prompt, and doctor operations through the Effect service",
     Effect.fnUntraced(

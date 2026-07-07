@@ -75,17 +75,6 @@
     }
   },
   {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/drivers/firecrawl/src/Firecrawl.errors.ts",
-    "line": 269,
-    "symbol": "FirecrawlError.fromReason",
-    "smell": "Exported static constructor in a schema-modeled file accepts `FirecrawlErrorOptionsInput`, a plain object type literal that duplicates the nearby `FirecrawlErrorOptions`/`FirecrawlError` schema fields.",
-    "proposedTarget": "Promote `FirecrawlErrorOptionsInput` to an annotated input schema (for example an `S.Class` like `FirecrawlConfigInput` at `packages/drivers/firecrawl/src/Firecrawl.config.ts:47`), then have `fromReason` construct/decode that schema before `FirecrawlError.make`. If the constructor is split into a standalone function later, use `Fn({ input, output })` as in `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66` and `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 0.5
-  },
-  {
     "ruleId": "schema-first-inventory",
     "file": "packages/drivers/firecrawl/src/Firecrawl.service.ts",
     "line": 276,

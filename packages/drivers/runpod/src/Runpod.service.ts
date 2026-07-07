@@ -6,10 +6,10 @@
  */
 
 import { $RunpodId } from "@beep/identity";
-import { A, Str } from "@beep/utils";
-import { Config, Context, Effect, Layer, Match, pipe, Result } from "effect";
+import { SchemaUtils } from "@beep/schema";
+import { A, O, Str } from "@beep/utils";
+import { Config, Context, Effect, Layer, Match, pipe, Result, SchemaGetter } from "effect";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -17,12 +17,22 @@ import { FetchHttpClient } from "effect/unstable/http";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as G from "./_generated/Runpod.generated.ts";
-import { RUNPOD_API_URL, RunpodConfigInput } from "./Runpod.config.ts";
-import { RunpodError } from "./Runpod.errors.ts";
+import { RUNPOD_API_URL, RunpodConfigInput, RunpodConfigUrl } from "./Runpod.config.ts";
+import { RunpodError, RunpodHttpStatusCode } from "./Runpod.errors.ts";
 import type { Redacted } from "effect";
 import type * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
 
 const $I = $RunpodId.create("Runpod.service");
+const normalizeRawPath = (path: string): string => (Str.startsWith("/")(path) ? path : `/${path}`);
+const RunpodRawPath = S.String.pipe(
+  S.decodeTo(S.String, {
+    decode: SchemaGetter.transform(normalizeRawPath),
+    encode: SchemaGetter.transform(normalizeRawPath),
+  }),
+  $I.annoteSchema("RunpodRawPath", {
+    description: "Raw Runpod request path normalized with a leading slash.",
+  })
+);
 
 /**
  * Scalar query values accepted by Runpod request models and raw requests.
@@ -59,8 +69,7 @@ export const RunpodQueryScalar = S.Union([S.Boolean, S.Finite, S.String]).pipe(
  */
 export type RunpodQueryScalar = typeof RunpodQueryScalar.Type;
 
-const RunpodQueryScalarArray = S.Array(RunpodQueryScalar);
-const isRunpodQueryScalarArray = S.is(RunpodQueryScalarArray);
+const RunpodQueryScalarArray = S.Array(RunpodQueryScalar).pipe(SchemaUtils.withCodecStatics);
 
 /**
  * Query value accepted by the raw Runpod request escape hatch.
@@ -78,7 +87,8 @@ const isRunpodQueryScalarArray = S.is(RunpodQueryScalarArray);
 export const RunpodQueryValue = S.Union([RunpodQueryScalar, RunpodQueryScalarArray]).pipe(
   $I.annoteSchema("RunpodQueryValue", {
     description: "Query value accepted by the raw Runpod request escape hatch.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -116,12 +126,12 @@ export type RunpodQueryValue = typeof RunpodQueryValue.Type;
  */
 export class RunpodRawRequest extends S.Class<RunpodRawRequest>($I`RunpodRawRequest`)(
   {
-    authenticated: S.optionalKey(S.Boolean),
-    body: S.optionalKey(S.Unknown),
-    headers: S.optionalKey(S.Record(S.String, S.String)),
+    authenticated: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
+    body: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault),
+    headers: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty())),
     method: G.RunpodHttpMethod,
-    path: S.String,
-    query: S.optionalKey(S.Record(S.String, RunpodQueryValue)),
+    path: RunpodRawPath,
+    query: S.Record(S.String, RunpodQueryValue).pipe(SchemaUtils.withKeyDefaults(R.empty())),
   },
   $I.annote("RunpodRawRequest", {
     description: "Raw Runpod HTTP request escape hatch for endpoints ahead of the checked-in OpenAPI document.",
@@ -150,7 +160,7 @@ export class RunpodRawResponse extends S.Class<RunpodRawResponse>($I`RunpodRawRe
   {
     body: S.optionalKey(S.Unknown),
     headers: S.Record(S.String, S.String),
-    status: S.Finite,
+    status: RunpodHttpStatusCode,
     text: S.optionalKey(S.String),
   },
   $I.annote("RunpodRawResponse", {
@@ -215,17 +225,12 @@ interface VoidOperationSpec<Request> {
   readonly request: S.ConstraintDecoder<Request>;
 }
 
-const normalizeBaseUrl = Str.replace(/\/+$/, "");
-
 const resolveConfig = (config: RunpodConfigInput): ResolvedRunpodConfig =>
   ResolvedRunpodConfig.make({
     apiKey: O.fromUndefinedOr(config.apiKey),
-    apiUrl: normalizeBaseUrl(config.apiUrl),
+    apiUrl: RunpodConfigUrl.fromUnknown(config.apiUrl),
     headers: config.headers,
   });
-
-const decodeQueryValueOption = S.decodeUnknownOption(RunpodQueryValue);
-const isRunpodError = S.is(RunpodError);
 
 const queryScalarToString = (value: RunpodQueryScalar): string =>
   Match.type<RunpodQueryScalar>().pipe(
@@ -236,7 +241,7 @@ const queryScalarToString = (value: RunpodQueryScalar): string =>
   )(value);
 
 const queryValueToStrings = (value: RunpodQueryValue): ReadonlyArray<string> => {
-  if (isRunpodQueryScalarArray(value)) {
+  if (RunpodQueryScalarArray.is(value)) {
     return pipe(value, A.map(queryScalarToString));
   }
 
@@ -318,7 +323,7 @@ const queryEntry: {
   (request: unknown, key: string): O.Option<readonly [string, string | ReadonlyArray<string>]> =>
     pipe(
       readProperty(request, key),
-      O.flatMap(decodeQueryValueOption),
+      O.flatMap(RunpodQueryValue.decodeOption),
       O.map(queryValueToStrings),
       O.filter(A.isReadonlyArrayNonEmpty),
       O.map((values) => [key, A.length(values) === 1 ? values[0] : values] as const)
@@ -557,7 +562,7 @@ const operationSpan =
   (descriptor: G.RunpodOperationDescriptor) =>
   <A, E>(effect: Effect.Effect<A, E>): Effect.Effect<A, E> =>
     effect.pipe(
-      Effect.tapError((error) => (isRunpodError(error) ? logDriverFailure("operation")(error) : Effect.void)),
+      Effect.tapError((error) => (RunpodError.is(error) ? logDriverFailure("operation")(error) : Effect.void)),
       Effect.withSpan("Runpod.operation", {
         attributes: {
           method: descriptor.method,
@@ -571,17 +576,15 @@ const operationSpan =
 
 const diagnosticsFor = (event: string, error: RunpodError): Readonly<Record<string, unknown>> => ({
   event,
-  method: error.method,
-  methodName: error.methodName,
-  operationId: error.operationId,
-  path: error.path,
   provider: "runpod",
   reason: error.reason,
-  ...R.getSomes({
-    cause: O.fromUndefinedOr(error.cause),
-  }),
-  ...R.getSomes({
-    status: O.fromUndefinedOr(error.status),
+  ...O.getSomesStruct({
+    cause: error.cause,
+    method: error.method,
+    methodName: error.methodName,
+    operationId: error.operationId,
+    path: error.path,
+    status: error.status,
   }),
 });
 
@@ -596,7 +599,7 @@ const logStatusFailure = Effect.fnUntraced(function* (error: RunpodError): Effec
 
 const rawUrlParams = (request: RunpodRawRequest): RunpodUrlParams =>
   pipe(
-    request.query ?? {},
+    request.query,
     R.toEntries,
     A.map(
       ([key, value]) =>
@@ -605,14 +608,12 @@ const rawUrlParams = (request: RunpodRawRequest): RunpodUrlParams =>
     R.fromEntries
   );
 
-const normalizeRawPath = (path: string): string => (Str.startsWith("/")(path) ? path : `/${path}`);
-
 const addRawBody = Effect.fnUntraced(function* (
   request: HttpClientRequest.HttpClientRequest,
   rawRequest: RunpodRawRequest
 ): Effect.fn.Return<HttpClientRequest.HttpClientRequest, RunpodError> {
   return yield* pipe(
-    readProperty(rawRequest, "body"),
+    rawRequest.body,
     O.match({
       onNone: () => Effect.succeed(request),
       onSome: (body) =>
@@ -635,7 +636,7 @@ const rawToken = Effect.fnUntraced(function* (
   config: ResolvedRunpodConfig,
   request: RunpodRawRequest
 ): Effect.fn.Return<O.Option<Redacted.Redacted>, RunpodError> {
-  if (request.authenticated === false) {
+  if (!request.authenticated) {
     return O.none();
   }
 
@@ -711,13 +712,12 @@ const executeRawRequest = Effect.fn("Runpod.raw")(function* (
     )
   );
   const token = yield* rawToken(config, decodedRequest);
-  const path = normalizeRawPath(decodedRequest.path);
   const requestWithHeaders = pipe(
-    HttpClientRequest.make(decodedRequest.method)(`${config.apiUrl}${path}`, {
+    HttpClientRequest.make(decodedRequest.method)(`${config.apiUrl}${decodedRequest.path}`, {
       urlParams: rawUrlParams(decodedRequest),
     }),
     HttpClientRequest.setHeaders(config.headers),
-    HttpClientRequest.setHeaders(decodedRequest.headers ?? {}),
+    HttpClientRequest.setHeaders(decodedRequest.headers),
     (request) =>
       pipe(
         token,
@@ -837,11 +837,12 @@ const makeRunpodFromEnvironment = Effect.fn("Runpod.makeRunpodFromEnvironment")(
   const apiUrl = yield* Config.string("RUNPOD_API_URL").pipe(Config.withDefault(RUNPOD_API_URL));
 
   return yield* makeRunpodFromConfig(
-    ResolvedRunpodConfig.make({
-      apiKey,
-      apiUrl: normalizeBaseUrl(apiUrl),
-      headers: {},
-    })
+    resolveConfig(
+      RunpodConfigInput.make({
+        apiUrl,
+        ...O.getSomesStruct({ apiKey }),
+      })
+    )
   );
 });
 

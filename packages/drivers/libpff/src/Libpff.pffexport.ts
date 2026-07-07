@@ -9,7 +9,7 @@ import { ArtifactReference, deriveArtifactId } from "@beep/file-processing/Artif
 import { ArchiveExportResult } from "@beep/file-processing/Extraction";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { $LibpffId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { A, O, Str } from "@beep/utils";
 import { Effect, FileSystem, Match, Order, Path, Stream } from "effect";
@@ -26,6 +26,8 @@ const $I = $LibpffId.create("Libpff.pffexport");
 
 const defaultPffexportPath = "pffexport";
 const defaultForceKillAfterMillis = 10_000;
+const PffexportModeBase = LiteralKit(["all", "items", "recovered"]);
+const PffexportFormatBase = LiteralKit(["all", "html", "rtf", "text"]);
 
 /**
  * pffexport item export mode.
@@ -39,10 +41,11 @@ const defaultForceKillAfterMillis = 10_000;
  * @category schemas
  * @since 0.0.0
  */
-export const PffexportMode = LiteralKit(["all", "items", "recovered"]).pipe(
+export const PffexportMode = PffexportModeBase.pipe(
   $I.annoteSchema("PffexportMode", {
     description: "pffexport -m export mode: regular items, recovered (deleted) items, or both.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(PffexportModeBase)
 );
 
 /**
@@ -65,10 +68,11 @@ export type PffexportMode = typeof PffexportMode.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const PffexportFormat = LiteralKit(["all", "html", "rtf", "text"]).pipe(
+export const PffexportFormat = PffexportFormatBase.pipe(
   $I.annoteSchema("PffexportFormat", {
     description: "pffexport -f preferred message body export format.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(PffexportFormatBase)
 );
 
 /**
@@ -95,11 +99,24 @@ export type PffexportFormat = typeof PffexportFormat.Type;
  */
 export class PffexportEngineConfig extends S.Class<PffexportEngineConfig>($I`PffexportEngineConfig`)(
   {
-    exportFormat: S.optionalKey(PffexportFormat),
-    exportMode: S.optionalKey(PffexportMode),
-    exportRoot: S.String,
-    pffexportPath: S.optionalKey(S.String),
-    timeoutMillis: S.optionalKey(S.Finite),
+    exportFormat: PffexportFormat.pipe(SchemaUtils.withKeyDefaults("text")).annotateKey({
+      description: "pffexport message body format passed to the `-f` flag.",
+    }),
+    exportMode: PffexportMode.pipe(SchemaUtils.withKeyDefaults("items")).annotateKey({
+      description: "pffexport item selection mode passed to the `-m` flag.",
+    }),
+    exportRoot: S.String.annotateKey({
+      description: "Host filesystem directory where pffexport materializes archive children.",
+    }),
+    pffexportPath: S.String.pipe(SchemaUtils.withKeyDefaults(defaultPffexportPath)).annotateKey({
+      description: "Executable path or command name used to spawn pffexport.",
+    }),
+    timeoutMillis: S.OptionFromOptionalKey(PosInt).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Positive per-archive subprocess timeout in milliseconds when configured.",
+      })
+    ),
   },
   $I.annote("PffexportEngineConfig", {
     description:
@@ -135,7 +152,7 @@ const operationFailure = (operation: ExportArchiveOperation, error: LibpffError)
         message: "pffexport failed while exporting the archive.",
         operationId: operation.operationId,
         ...O.getSomesStruct({
-          details: O.map(O.fromUndefinedOr(error.exitCode), (exitCode) => ({ exitCode: `${exitCode}` })),
+          details: O.map(error.exitCode, (exitCode) => ({ exitCode: `${exitCode}` })),
         }),
       })
     )
@@ -188,9 +205,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const pffexportPath = config.pffexportPath ?? defaultPffexportPath;
-  const exportMode = config.exportMode ?? "items";
-  const exportFormat = config.exportFormat ?? "text";
+  const { exportFormat, exportMode, pffexportPath } = config;
 
   const walkFiles = Effect.fn("Libpff.pffexport.walkFiles")(function* (
     root: string,
@@ -266,14 +281,16 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       .pipe(Effect.mapError(() => makeLibpffError("config", { cause: "export root could not be created" })));
 
     const run = runPffexport(sourcePath, targetBase);
-    yield* config.timeoutMillis === undefined
-      ? run
-      : run.pipe(
+    yield* O.match(config.timeoutMillis, {
+      onNone: () => run,
+      onSome: (timeoutMillis) =>
+        run.pipe(
           Effect.timeoutOrElse({
-            duration: `${config.timeoutMillis} millis`,
+            duration: `${timeoutMillis} millis`,
             orElse: () => Effect.fail(makeLibpffError("timeout")),
           })
-        );
+        ),
+    });
 
     const exportedExists = yield* fs
       .exists(exportedRoot)

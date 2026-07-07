@@ -6,9 +6,11 @@
  */
 
 import { $AiProviderCliId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
 import { thunkEmptyStr } from "@beep/utils";
 import { Context, Effect, Layer, Stream } from "effect";
 import * as A from "effect/Array";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { AiProviderCliError } from "./AiProviderCli.errors.ts";
@@ -16,6 +18,8 @@ import { AiProviderCliAuthProbe, AiProviderCliProcessResult, AiProviderCliProvid
 
 const $I = $AiProviderCliId.create("AiProviderCli.service");
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
   stream.pipe(
     Stream.decodeText(),
@@ -76,8 +80,12 @@ interface AiProviderCliShape {
  */
 class AiProviderCliPaths extends S.Class<AiProviderCliPaths>($I`AiProviderCliPaths`)(
   {
-    claudePath: S.optionalKey(S.String),
-    codexPath: S.optionalKey(S.String),
+    claudePath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("claude")).annotateKey({
+      description: "Executable command or path for Claude CLI auth probes.",
+    }),
+    codexPath: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("codex")).annotateKey({
+      description: "Executable command or path for Codex CLI auth probes.",
+    }),
   },
   $I.annote("AiProviderCliPaths", {
     description: "Configuration for the AI provider CLI executable paths",
@@ -89,8 +97,8 @@ const commandFor = (
   provider: AiProviderCliProvider
 ): readonly [string, ReadonlyArray<string>] =>
   AiProviderCliProvider.$match(provider, {
-    claude: () => [paths.claudePath ?? "claude", ["auth", "status"]] as const,
-    codex: () => [paths.codexPath ?? "codex", ["login", "status"]] as const,
+    claude: () => [paths.claudePath, ["auth", "status"]] as const,
+    codex: () => [paths.codexPath, ["login", "status"]] as const,
   });
 
 const runNative = (
@@ -118,11 +126,11 @@ const runNative = (
   ).pipe(
     Effect.mapError(() =>
       AiProviderCliError.make({
-        command: commandPath,
+        command: O.some(commandPath),
         message: "Failed to execute provider CLI status command.",
         operation: "checkAuth",
         provider,
-        stderr: "unknown",
+        stderr: O.some("unknown"),
       })
     )
   );
@@ -204,14 +212,15 @@ export class AiProviderCli extends Context.Service<AiProviderCli, AiProviderCliS
    * @since 0.0.0
    */
   static readonly makeLayer = (
-    paths: AiProviderCliPaths = {}
+    paths: (typeof AiProviderCliPaths)["~type.make.in"] = {}
   ): Layer.Layer<AiProviderCli, never, ChildProcessSpawner.ChildProcessSpawner> =>
     Layer.effect(
       AiProviderCli,
       Effect.gen(function* () {
         const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+        const providerPaths = AiProviderCliPaths.make(paths);
         return AiProviderCli.of(
-          makeService(paths, (provider, command, args) => runNative(spawner, command, args, provider))
+          makeService(providerPaths, (provider, command, args) => runNative(spawner, command, args, provider))
         );
       })
     );
@@ -246,6 +255,7 @@ export class AiProviderCli extends Context.Service<AiProviderCli, AiProviderCliS
    */
   static readonly makeLayerFromRunner = (
     runner: AiProviderCliRunner,
-    paths: AiProviderCliPaths = {}
-  ): Layer.Layer<AiProviderCli> => Layer.succeed(AiProviderCli, AiProviderCli.of(makeService(paths, runner)));
+    paths: (typeof AiProviderCliPaths)["~type.make.in"] = {}
+  ): Layer.Layer<AiProviderCli> =>
+    Layer.succeed(AiProviderCli, AiProviderCli.of(makeService(AiProviderCliPaths.make(paths), runner)));
 }

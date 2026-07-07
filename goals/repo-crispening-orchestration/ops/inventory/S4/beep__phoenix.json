@@ -1,28 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/phoenix/src/Phoenix.errors.ts",
-    "line": 58,
-    "symbol": "isPhoenixOperation",
-    "smell": "Free-floating guard `const isPhoenixOperation = S.is(PhoenixOperation)` duplicates the LiteralKit-derived `.is` static; `PhoenixError.operation` only needs it for the `dual` discriminator at line 160.",
-    "proposedTarget": "Delete the helper and use `PhoenixOperation.is(args[0])` in the `dual` predicate. This is valid in this checkout because `$I.annoteSchema` preserves source statics via `preserveSchemaStatics` at packages/foundation/modeling/identity/src/Id.ts:70 and line 1386.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/drivers/phoenix/src/Phoenix.models.ts",
-    "line": 137,
-    "symbol": "PhoenixAnnotationValue",
-    "smell": "Public union const `S.Union([S.Boolean, S.Finite, S.String]).pipe($I.annoteSchema(...))` has no colocated codec statics, so future guards/decoders for annotation values would have to be rebuilt as free helpers.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)`, matching the union precedent in packages/foundation/modeling/md/src/Md.model.ts:608 and line 1612. The helper attaches `is`, `fromUnknown`, and `decodeOption` at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/drivers/phoenix/src/Phoenix.models.ts",
     "line": 29,
     "symbol": "Phoenix LiteralKit domains",

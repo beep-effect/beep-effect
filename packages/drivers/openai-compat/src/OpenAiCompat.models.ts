@@ -6,22 +6,93 @@
  */
 
 import { $OpenaiCompatId } from "@beep/identity";
-import { LiteralKit, OptionFromOptionalNullishKey } from "@beep/schema";
-import { Effect, Tuple } from "effect";
-import * as O from "effect/Option";
+import { LiteralKit, OptionFromOptionalNullishKey, SchemaUtils } from "@beep/schema";
+import { PosInt } from "@beep/schema/Int";
+import { NonNegativeInt } from "@beep/schema/Number";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { Tuple } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $OpenaiCompatId.create("OpenAiCompat.models");
 
-const OptionalNullableString = OptionFromOptionalNullishKey(S.String).pipe(
-  S.withConstructorDefault(Effect.succeed(O.none<string>()))
+const OptionalNullableString = OptionFromOptionalNullishKey(S.String).pipe(SchemaUtils.withNoneDefault);
+const OptionalNonNegativeInt = S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault);
+const OptionalUnknownRecord = S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(SchemaUtils.withNoneDefault);
+/**
+ * OpenAI-compatible sampling temperature.
+ *
+ * @example
+ * ```ts
+ * import { OpenAiCompatTemperature } from "@beep/openai-compat"
+ *
+ * const temperature = OpenAiCompatTemperature.make(0.7)
+ *
+ * console.log(temperature)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OpenAiCompatTemperature = S.Finite.check(S.isBetween({ minimum: 0, maximum: 2 })).pipe(
+  $I.annoteSchema("OpenAiCompatTemperature", {
+    description: "OpenAI-compatible sampling temperature in the inclusive range 0 through 2.",
+  })
 );
-const OptionalNumber = S.OptionFromOptionalKey(S.Finite).pipe(
-  S.withConstructorDefault(Effect.succeed(O.none<number>()))
+
+/**
+ * OpenAI-compatible sampling temperature.
+ *
+ * @example
+ * ```ts
+ * import type { OpenAiCompatTemperature } from "@beep/openai-compat"
+ *
+ * const temperature: OpenAiCompatTemperature = 0.7
+ *
+ * console.log(temperature)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OpenAiCompatTemperature = typeof OpenAiCompatTemperature.Type;
+
+/**
+ * OpenAI-compatible frequency or presence penalty.
+ *
+ * @example
+ * ```ts
+ * import { OpenAiCompatPenalty } from "@beep/openai-compat"
+ *
+ * const penalty = OpenAiCompatPenalty.make(0)
+ *
+ * console.log(penalty)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const OpenAiCompatPenalty = S.Finite.check(S.isBetween({ minimum: -2, maximum: 2 })).pipe(
+  $I.annoteSchema("OpenAiCompatPenalty", {
+    description: "OpenAI-compatible frequency or presence penalty in the inclusive range -2 through 2.",
+  })
 );
-const OptionalUnknownRecord = S.OptionFromOptionalKey(S.Record(S.String, S.Unknown)).pipe(
-  S.withConstructorDefault(Effect.succeed(O.none<Readonly<Record<string, unknown>>>()))
-);
+
+/**
+ * OpenAI-compatible frequency or presence penalty.
+ *
+ * @example
+ * ```ts
+ * import type { OpenAiCompatPenalty } from "@beep/openai-compat"
+ *
+ * const penalty: OpenAiCompatPenalty = 0
+ *
+ * console.log(penalty)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OpenAiCompatPenalty = typeof OpenAiCompatPenalty.Type;
 
 /**
  * Chat roles accepted by OpenAI-compatible chat completion endpoints.
@@ -127,8 +198,8 @@ export class OpenAiCompatToolCallFunction extends S.Class<OpenAiCompatToolCallFu
   $I`OpenAiCompatToolCallFunction`
 )(
   {
-    arguments: S.String,
-    name: S.String,
+    arguments: S.String.annotateKey({ description: "JSON-encoded argument payload supplied to the tool call." }),
+    name: S.String.annotateKey({ description: "Provider-facing function name for the tool call." }),
   },
   $I.annote("OpenAiCompatToolCallFunction", {
     description: "Function payload inside an OpenAI-compatible tool call.",
@@ -156,10 +227,14 @@ export class OpenAiCompatToolCallFunction extends S.Class<OpenAiCompatToolCallFu
  */
 export class OpenAiCompatToolCall extends S.Class<OpenAiCompatToolCall>($I`OpenAiCompatToolCall`)(
   {
-    function: OpenAiCompatToolCallFunction,
-    id: S.String,
-    index: S.optionalKey(S.Finite),
-    type: S.tag("function"),
+    function: OpenAiCompatToolCallFunction.annotateKey({
+      description: "Function payload attached to the OpenAI-compatible tool call.",
+    }),
+    id: S.String.annotateKey({ description: "Provider-generated tool-call identifier." }),
+    index: S.optionalKey(NonNegativeInt).annotateKey({
+      description: "Zero-based tool-call index when a provider includes one.",
+    }),
+    type: S.tag("function").annotateKey({ description: "OpenAI-compatible tool-call discriminator." }),
   },
   $I.annote("OpenAiCompatToolCall", {
     description: "Tool call payload emitted by OpenAI-compatible chat completion endpoints.",
@@ -187,8 +262,12 @@ export class OpenAiCompatToolCallFunctionDelta extends S.Class<OpenAiCompatToolC
   $I`OpenAiCompatToolCallFunctionDelta`
 )(
   {
-    arguments: S.optionalKey(S.String),
-    name: S.optionalKey(S.String),
+    arguments: S.optionalKey(S.String).annotateKey({
+      description: "Partial JSON-encoded argument delta for a streaming tool call.",
+    }),
+    name: S.optionalKey(S.String).annotateKey({
+      description: "Provider-facing function name when present in the stream delta.",
+    }),
   },
   $I.annote("OpenAiCompatToolCallFunctionDelta", {
     description: "Incremental function payload inside an OpenAI-compatible streaming tool-call delta.",
@@ -200,11 +279,12 @@ export class OpenAiCompatToolCallFunctionDelta extends S.Class<OpenAiCompatToolC
  *
  * @example
  * ```ts
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * import { OpenAiCompatToolCallDelta } from "@beep/openai-compat"
  *
  * const delta = OpenAiCompatToolCallDelta.make({
  *   function: { arguments: "{\"city\"" },
- *   index: 0
+ *   index: NonNegativeInt.make(0)
  * })
  *
  * console.log(delta)
@@ -215,10 +295,16 @@ export class OpenAiCompatToolCallFunctionDelta extends S.Class<OpenAiCompatToolC
  */
 export class OpenAiCompatToolCallDelta extends S.Class<OpenAiCompatToolCallDelta>($I`OpenAiCompatToolCallDelta`)(
   {
-    function: S.optionalKey(OpenAiCompatToolCallFunctionDelta),
-    id: S.optionalKey(S.String),
-    index: S.optionalKey(S.Finite),
-    type: S.optionalKey(S.Literal("function")),
+    function: S.optionalKey(OpenAiCompatToolCallFunctionDelta).annotateKey({
+      description: "Incremental function payload for the streaming tool-call delta.",
+    }),
+    id: S.optionalKey(S.String).annotateKey({ description: "Tool-call identifier when supplied by the stream." }),
+    index: S.optionalKey(NonNegativeInt).annotateKey({
+      description: "Zero-based streaming tool-call index.",
+    }),
+    type: S.optionalKey(S.Literal("function")).annotateKey({
+      description: "Streaming tool-call discriminator when supplied by the provider.",
+    }),
   },
   $I.annote("OpenAiCompatToolCallDelta", {
     description: "Incremental tool-call payload emitted by OpenAI-compatible chat completion streams.",
@@ -247,10 +333,16 @@ export class OpenAiCompatFunctionToolDefinition extends S.Class<OpenAiCompatFunc
   $I`OpenAiCompatFunctionToolDefinition`
 )(
   {
-    description: S.String.pipe(S.NullOr, S.optionalKey),
-    name: S.String,
-    parameters: S.Record(S.String, S.Unknown),
-    strict: S.optionalKey(S.Boolean),
+    description: S.String.pipe(S.NullOr, S.optionalKey).annotateKey({
+      description: "Optional provider-visible tool description.",
+    }),
+    name: S.String.annotateKey({ description: "Provider-visible function name." }),
+    parameters: S.Record(S.String, S.Unknown).annotateKey({
+      description: "JSON Schema parameter object forwarded to the provider.",
+    }),
+    strict: S.optionalKey(S.Boolean).annotateKey({
+      description: "Whether the provider should enforce the supplied JSON Schema strictly.",
+    }),
   },
   $I.annote("OpenAiCompatFunctionToolDefinition", {
     description: "Function details sent to OpenAI-compatible chat completion endpoints.",
@@ -277,8 +369,10 @@ export class OpenAiCompatFunctionToolDefinition extends S.Class<OpenAiCompatFunc
  */
 export class OpenAiCompatFunctionTool extends S.Class<OpenAiCompatFunctionTool>($I`OpenAiCompatFunctionTool`)(
   {
-    function: OpenAiCompatFunctionToolDefinition,
-    type: S.tag("function"),
+    function: OpenAiCompatFunctionToolDefinition.annotateKey({
+      description: "Function definition sent to the chat completion provider.",
+    }),
+    type: S.tag("function").annotateKey({ description: "OpenAI-compatible function-tool discriminator." }),
   },
   $I.annote("OpenAiCompatFunctionTool", {
     description: "Function declaration sent to OpenAI-compatible chat completion endpoints.",
@@ -313,9 +407,11 @@ export class OpenAiCompatSystemChatMessage extends S.Class<OpenAiCompatSystemCha
   $I`OpenAiCompatSystemChatMessage`
 )(
   {
-    content: OpenAiCompatChatContent.pipe(S.NullOr, S.optionalKey),
-    name: S.optionalKey(S.String),
-    role: S.tag("system"),
+    content: OpenAiCompatChatContent.pipe(S.NullOr, S.optionalKey).annotateKey({
+      description: "System message content sent to the provider.",
+    }),
+    name: S.optionalKey(S.String).annotateKey({ description: "Optional participant name for the system message." }),
+    role: S.tag("system").annotateKey({ description: "System chat role discriminator." }),
   },
   $I.annote("OpenAiCompatSystemChatMessage", {
     description: "System chat message accepted by OpenAI-compatible chat completion endpoints.",
@@ -342,9 +438,11 @@ export class OpenAiCompatSystemChatMessage extends S.Class<OpenAiCompatSystemCha
  */
 export class OpenAiCompatUserChatMessage extends S.Class<OpenAiCompatUserChatMessage>($I`OpenAiCompatUserChatMessage`)(
   {
-    content: OpenAiCompatChatContent.pipe(S.NullOr, S.optionalKey),
-    name: S.optionalKey(S.String),
-    role: S.tag("user"),
+    content: OpenAiCompatChatContent.pipe(S.NullOr, S.optionalKey).annotateKey({
+      description: "User message content sent to the provider.",
+    }),
+    name: S.optionalKey(S.String).annotateKey({ description: "Optional participant name for the user message." }),
+    role: S.tag("user").annotateKey({ description: "User chat role discriminator." }),
   },
   $I.annote("OpenAiCompatUserChatMessage", {
     description: "User chat message accepted by OpenAI-compatible chat completion endpoints.",
@@ -373,10 +471,16 @@ export class OpenAiCompatAssistantChatMessage extends S.Class<OpenAiCompatAssist
   $I`OpenAiCompatAssistantChatMessage`
 )(
   {
-    content: OpenAiCompatChatContent.pipe(S.NullOr, S.optionalKey),
-    name: S.optionalKey(S.String),
-    role: S.tag("assistant"),
-    tool_calls: OpenAiCompatToolCall.pipe(S.Array, S.optionalKey),
+    content: OpenAiCompatChatContent.pipe(S.NullOr, S.optionalKey).annotateKey({
+      description: "Assistant message content sent to the provider.",
+    }),
+    name: S.optionalKey(S.String).annotateKey({
+      description: "Optional participant name for the assistant message.",
+    }),
+    role: S.tag("assistant").annotateKey({ description: "Assistant chat role discriminator." }),
+    tool_calls: OpenAiCompatToolCall.pipe(S.Array, S.optionalKey).annotateKey({
+      description: "Tool calls requested by the assistant message.",
+    }),
   },
   $I.annote("OpenAiCompatAssistantChatMessage", {
     description: "Assistant chat message accepted by OpenAI-compatible chat completion endpoints.",
@@ -404,10 +508,14 @@ export class OpenAiCompatAssistantChatMessage extends S.Class<OpenAiCompatAssist
  */
 export class OpenAiCompatToolChatMessage extends S.Class<OpenAiCompatToolChatMessage>($I`OpenAiCompatToolChatMessage`)(
   {
-    content: OpenAiCompatChatContent.pipe(S.NullOr, S.optionalKey),
-    name: S.optionalKey(S.String),
-    role: S.tag("tool"),
-    tool_call_id: S.optionalKey(S.String),
+    content: OpenAiCompatChatContent.pipe(S.NullOr, S.optionalKey).annotateKey({
+      description: "Tool result content sent back to the provider.",
+    }),
+    name: S.optionalKey(S.String).annotateKey({ description: "Optional provider-facing tool name." }),
+    role: S.tag("tool").annotateKey({ description: "Tool chat role discriminator." }),
+    tool_call_id: S.optionalKey(S.String).annotateKey({
+      description: "Identifier of the tool call this message answers.",
+    }),
   },
   $I.annote("OpenAiCompatToolChatMessage", {
     description: "Tool chat message accepted by OpenAI-compatible chat completion endpoints.",
@@ -443,7 +551,8 @@ export const OpenAiCompatChatMessage = OpenAiCompatChatRole.mapMembers(
   $I.annoteSchema("OpenAiCompatChatMessage", {
     description: "Role-discriminated chat message accepted by OpenAI-compatible chat completion endpoints.",
   }),
-  S.toTaggedUnion("role")
+  S.toTaggedUnion("role"),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -489,10 +598,16 @@ export class OpenAiCompatJsonSchemaDefinition extends S.Class<OpenAiCompatJsonSc
   $I`OpenAiCompatJsonSchemaDefinition`
 )(
   {
-    description: S.optionalKey(S.String),
-    name: S.String,
-    schema: S.Record(S.String, S.Unknown),
-    strict: S.optionalKey(S.Boolean),
+    description: S.optionalKey(S.String).annotateKey({
+      description: "Optional description of the structured response schema.",
+    }),
+    name: S.String.annotateKey({ description: "Structured response schema name." }),
+    schema: S.Record(S.String, S.Unknown).annotateKey({
+      description: "JSON Schema object used for structured provider output.",
+    }),
+    strict: S.optionalKey(S.Boolean).annotateKey({
+      description: "Whether the provider should strictly enforce the structured output schema.",
+    }),
   },
   $I.annote("OpenAiCompatJsonSchemaDefinition", {
     description: "JSON schema response-format details for chat completion requests.",
@@ -521,8 +636,10 @@ export class OpenAiCompatJsonSchemaResponseFormat extends S.Class<OpenAiCompatJs
   $I`OpenAiCompatJsonSchemaResponseFormat`
 )(
   {
-    json_schema: OpenAiCompatJsonSchemaDefinition,
-    type: S.tag("json_schema"),
+    json_schema: OpenAiCompatJsonSchemaDefinition.annotateKey({
+      description: "JSON Schema response-format payload.",
+    }),
+    type: S.tag("json_schema").annotateKey({ description: "JSON Schema response-format discriminator." }),
   },
   $I.annote("OpenAiCompatJsonSchemaResponseFormat", {
     description: "Structured response format configuration for chat completion requests.",
@@ -586,7 +703,7 @@ export class OpenAiCompatTextResponseFormat extends S.Class<OpenAiCompatTextResp
   $I`OpenAiCompatTextResponseFormat`
 )(
   {
-    type: S.tag("text"),
+    type: S.tag("text").annotateKey({ description: "Text response-format discriminator." }),
   },
   $I.annote("OpenAiCompatTextResponseFormat", {
     description: "Text response format configuration.",
@@ -612,7 +729,7 @@ export class OpenAiCompatJsonObjectResponseFormat extends S.Class<OpenAiCompatJs
   $I`OpenAiCompatJsonObjectResponseFormat`
 )(
   {
-    type: S.tag("json_object"),
+    type: S.tag("json_object").annotateKey({ description: "JSON object response-format discriminator." }),
   },
   $I.annote("OpenAiCompatJsonObjectResponseFormat", {
     description: "JSON object response format configuration.",
@@ -644,7 +761,8 @@ export const OpenAiCompatResponseFormat = OpenAiCompatResponseFormatKind.mapMemb
   $I.annoteSchema("OpenAiCompatResponseFormat", {
     description: "Response format configuration accepted by OpenAI-compatible chat completion requests.",
   }),
-  S.toTaggedUnion("type")
+  S.toTaggedUnion("type"),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -669,10 +787,10 @@ export type OpenAiCompatResponseFormat = typeof OpenAiCompatResponseFormat.Type;
  *
  * @example
  * ```ts
- * import { OpenAiCompatChatCompletionRequest } from "@beep/openai-compat"
+ * import { OpenAiCompatChatCompletionRequest, OpenAiCompatUserChatMessage } from "@beep/openai-compat"
  *
  * const request = OpenAiCompatChatCompletionRequest.make({
- *   messages: [{ content: "Hello", role: "user" }],
+ *   messages: [OpenAiCompatUserChatMessage.make({ content: "Hello", role: "user" })],
  *   model: "gpt-compatible"
  * })
  *
@@ -686,22 +804,50 @@ export class OpenAiCompatChatCompletionRequest extends S.Class<OpenAiCompatChatC
   $I`OpenAiCompatChatCompletionRequest`
 )(
   {
-    frequency_penalty: S.Finite.pipe(S.optionalKey),
-    max_completion_tokens: S.Finite.pipe(S.optionalKey),
-    max_tokens: S.Finite.pipe(S.optionalKey),
-    messages: S.Array(OpenAiCompatChatMessage),
-    model: S.String,
-    parallel_tool_calls: S.Boolean.pipe(S.optionalKey),
-    presence_penalty: S.Finite.pipe(S.optionalKey),
-    response_format: S.optionalKey(OpenAiCompatResponseFormat),
-    seed: S.Finite.pipe(S.optionalKey),
-    stream: S.Boolean.pipe(S.optionalKey),
-    stream_options: S.optionalKey(S.Record(S.String, S.Unknown)),
-    temperature: S.Finite.pipe(S.NullOr, S.optionalKey),
-    tool_choice: S.optionalKey(S.Unknown),
-    tools: OpenAiCompatFunctionTool.pipe(S.Array, S.optionalKey),
-    top_p: S.Finite.pipe(S.NullOr, S.optionalKey),
-    user: S.optionalKey(S.String),
+    frequency_penalty: OpenAiCompatPenalty.pipe(S.optionalKey).annotateKey({
+      description: "Penalty applied to repeated tokens, from -2 through 2.",
+    }),
+    max_completion_tokens: PosInt.pipe(S.optionalKey).annotateKey({
+      description: "Positive maximum number of completion tokens.",
+    }),
+    max_tokens: PosInt.pipe(S.optionalKey).annotateKey({
+      description: "Positive maximum number of tokens accepted by legacy providers.",
+    }),
+    messages: S.NonEmptyArray(OpenAiCompatChatMessage).annotateKey({
+      description: "Non-empty chat message list sent to the provider.",
+    }),
+    model: S.NonEmptyString.annotateKey({ description: "Provider model identifier." }),
+    parallel_tool_calls: S.Boolean.pipe(S.optionalKey).annotateKey({
+      description: "Whether provider-side parallel tool calls are allowed.",
+    }),
+    presence_penalty: OpenAiCompatPenalty.pipe(S.optionalKey).annotateKey({
+      description: "Penalty applied to already-present tokens, from -2 through 2.",
+    }),
+    response_format: S.optionalKey(OpenAiCompatResponseFormat).annotateKey({
+      description: "Optional response-format controls for provider output.",
+    }),
+    seed: S.optionalKey(NonNegativeInt).annotateKey({
+      description: "Non-negative deterministic sampling seed.",
+    }),
+    stream: S.Boolean.pipe(S.optionalKey).annotateKey({
+      description: "Whether the request asks the provider for a stream.",
+    }),
+    stream_options: S.optionalKey(S.Record(S.String, S.Unknown)).annotateKey({
+      description: "Provider stream options forwarded with streaming requests.",
+    }),
+    temperature: OpenAiCompatTemperature.pipe(S.NullOr, S.optionalKey).annotateKey({
+      description: "Sampling temperature or null when explicitly forwarded to the provider.",
+    }),
+    tool_choice: S.optionalKey(S.Unknown).annotateKey({
+      description: "Provider-specific tool-choice directive.",
+    }),
+    tools: OpenAiCompatFunctionTool.pipe(S.Array, S.optionalKey).annotateKey({
+      description: "Function tools made available to the provider.",
+    }),
+    top_p: UnitInterval.pipe(S.NullOr, S.optionalKey).annotateKey({
+      description: "Nucleus sampling value or null when explicitly forwarded to the provider.",
+    }),
+    user: S.optionalKey(S.String).annotateKey({ description: "Optional provider-visible end-user identifier." }),
   },
   $I.annote("OpenAiCompatChatCompletionRequest", {
     description: "Chat completion request sent to OpenAI-compatible providers.",
@@ -731,13 +877,15 @@ export class OpenAiCompatAssistantMessage extends S.Class<OpenAiCompatAssistantM
   $I`OpenAiCompatAssistantMessage`
 )(
   {
-    content: OptionalNullableString,
-    role: S.optionalKey(S.Literal("assistant")),
-    tool_calls: OpenAiCompatToolCall.pipe(
-      S.Array,
-      S.OptionFromOptionalKey,
-      S.withConstructorDefault(Effect.succeed(O.none<ReadonlyArray<OpenAiCompatToolCall>>()))
-    ),
+    content: OptionalNullableString.annotateKey({
+      description: "Assistant message content returned by the provider.",
+    }),
+    role: S.optionalKey(S.Literal("assistant")).annotateKey({
+      description: "Optional assistant role marker returned by the provider.",
+    }),
+    tool_calls: OpenAiCompatToolCall.pipe(S.Array, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault).annotateKey({
+      description: "Tool calls returned with the assistant message.",
+    }),
   },
   $I.annote("OpenAiCompatAssistantMessage", {
     description: "Assistant message returned by OpenAI-compatible chat completion endpoints.",
@@ -765,13 +913,17 @@ export class OpenAiCompatAssistantMessage extends S.Class<OpenAiCompatAssistantM
  */
 export class OpenAiCompatAssistantDelta extends S.Class<OpenAiCompatAssistantDelta>($I`OpenAiCompatAssistantDelta`)(
   {
-    content: OptionalNullableString,
-    role: S.optionalKey(S.Literal("assistant")),
+    content: OptionalNullableString.annotateKey({
+      description: "Incremental assistant content returned by a stream chunk.",
+    }),
+    role: S.optionalKey(S.Literal("assistant")).annotateKey({
+      description: "Optional assistant role marker returned by the stream.",
+    }),
     tool_calls: OpenAiCompatToolCallDelta.pipe(
       S.Array,
       S.OptionFromOptionalKey,
-      S.withConstructorDefault(Effect.succeed(O.none<ReadonlyArray<OpenAiCompatToolCallDelta>>()))
-    ),
+      SchemaUtils.withNoneDefault
+    ).annotateKey({ description: "Incremental tool-call deltas returned by the stream." }),
   },
   $I.annote("OpenAiCompatAssistantDelta", {
     description: "Delta message returned by OpenAI-compatible chat completion streams.",
@@ -784,12 +936,13 @@ export class OpenAiCompatAssistantDelta extends S.Class<OpenAiCompatAssistantDel
  * @example
  * ```ts
  * import * as O from "effect/Option"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * import { OpenAiCompatUsage } from "@beep/openai-compat"
  *
  * const usage = OpenAiCompatUsage.make({
- *   completion_tokens: O.some(2),
- *   prompt_tokens: O.some(1),
- *   total_tokens: O.some(3)
+ *   completion_tokens: O.some(NonNegativeInt.make(2)),
+ *   prompt_tokens: O.some(NonNegativeInt.make(1)),
+ *   total_tokens: O.some(NonNegativeInt.make(3))
  * })
  *
  * console.log(usage)
@@ -800,10 +953,18 @@ export class OpenAiCompatAssistantDelta extends S.Class<OpenAiCompatAssistantDel
  */
 export class OpenAiCompatUsage extends S.Class<OpenAiCompatUsage>($I`OpenAiCompatUsage`)(
   {
-    completion_tokens: OptionalNumber,
-    prompt_tokens: OptionalNumber,
-    prompt_tokens_details: OptionalUnknownRecord,
-    total_tokens: OptionalNumber,
+    completion_tokens: OptionalNonNegativeInt.annotateKey({
+      description: "Non-negative number of completion tokens reported by the provider.",
+    }),
+    prompt_tokens: OptionalNonNegativeInt.annotateKey({
+      description: "Non-negative number of prompt tokens reported by the provider.",
+    }),
+    prompt_tokens_details: OptionalUnknownRecord.annotateKey({
+      description: "Provider-specific prompt token detail payload.",
+    }),
+    total_tokens: OptionalNonNegativeInt.annotateKey({
+      description: "Non-negative total token count reported by the provider.",
+    }),
   },
   $I.annote("OpenAiCompatUsage", {
     description: "Token usage returned by OpenAI-compatible chat completion endpoints.",
@@ -816,11 +977,12 @@ export class OpenAiCompatUsage extends S.Class<OpenAiCompatUsage>($I`OpenAiCompa
  * @example
  * ```ts
  * import * as O from "effect/Option"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * import { OpenAiCompatAssistantMessage, OpenAiCompatChatCompletionChoice } from "@beep/openai-compat"
  *
  * const choice = OpenAiCompatChatCompletionChoice.make({
  *   finish_reason: O.some("stop"),
- *   index: 0,
+ *   index: NonNegativeInt.make(0),
  *   message: O.some(OpenAiCompatAssistantMessage.make({ content: O.some("Hello"), role: "assistant" }))
  * })
  *
@@ -834,11 +996,15 @@ export class OpenAiCompatChatCompletionChoice extends S.Class<OpenAiCompatChatCo
   $I`OpenAiCompatChatCompletionChoice`
 )(
   {
-    finish_reason: OptionalNullableString,
-    index: S.optionalKey(S.Finite),
-    message: S.OptionFromOptionalKey(OpenAiCompatAssistantMessage).pipe(
-      S.withConstructorDefault(Effect.succeed(O.none<OpenAiCompatAssistantMessage>()))
-    ),
+    finish_reason: OptionalNullableString.annotateKey({
+      description: "Provider finish reason for this chat completion choice.",
+    }),
+    index: S.optionalKey(NonNegativeInt).annotateKey({
+      description: "Zero-based chat completion choice index.",
+    }),
+    message: S.OptionFromOptionalKey(OpenAiCompatAssistantMessage)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Assistant message payload for this choice." }),
   },
   $I.annote("OpenAiCompatChatCompletionChoice", {
     description: "Chat completion choice returned by OpenAI-compatible endpoints.",
@@ -851,6 +1017,7 @@ export class OpenAiCompatChatCompletionChoice extends S.Class<OpenAiCompatChatCo
  * @example
  * ```ts
  * import * as O from "effect/Option"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * import {
  *   OpenAiCompatAssistantMessage,
  *   OpenAiCompatChatCompletionChoice,
@@ -861,7 +1028,7 @@ export class OpenAiCompatChatCompletionChoice extends S.Class<OpenAiCompatChatCo
  *   choices: [
  *     OpenAiCompatChatCompletionChoice.make({
  *       finish_reason: O.some("stop"),
- *       index: 0,
+ *       index: NonNegativeInt.make(0),
  *       message: O.some(OpenAiCompatAssistantMessage.make({ content: O.some("Hello") }))
  *     })
  *   ]
@@ -877,17 +1044,21 @@ export class OpenAiCompatChatCompletionResponse extends S.Class<OpenAiCompatChat
   $I`OpenAiCompatChatCompletionResponse`
 )(
   {
-    choices: S.Array(OpenAiCompatChatCompletionChoice),
-    id: S.optionalKey(S.String),
-    model: S.optionalKey(S.String),
-    usage: S.OptionFromOptionalKey(OpenAiCompatUsage).pipe(
-      S.withConstructorDefault(Effect.succeed(O.none<OpenAiCompatUsage>()))
-    ),
+    choices: S.Array(OpenAiCompatChatCompletionChoice).annotateKey({
+      description: "Chat completion choices returned by the provider.",
+    }),
+    id: S.optionalKey(S.String).annotateKey({ description: "Provider response identifier." }),
+    model: S.optionalKey(S.String).annotateKey({ description: "Provider model identifier for the response." }),
+    usage: S.OptionFromOptionalKey(OpenAiCompatUsage)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Optional token usage returned by the provider." }),
   },
   $I.annote("OpenAiCompatChatCompletionResponse", {
     description: "Chat completion response returned by OpenAI-compatible endpoints.",
   })
-) {}
+) {
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(OpenAiCompatChatCompletionResponse);
+}
 
 /**
  * Stream chunk choice returned by OpenAI-compatible endpoints.
@@ -895,11 +1066,12 @@ export class OpenAiCompatChatCompletionResponse extends S.Class<OpenAiCompatChat
  * @example
  * ```ts
  * import * as O from "effect/Option"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * import { OpenAiCompatAssistantDelta, OpenAiCompatChatCompletionChunkChoice } from "@beep/openai-compat"
  *
  * const choice = OpenAiCompatChatCompletionChunkChoice.make({
  *   delta: O.some(OpenAiCompatAssistantDelta.make({ content: O.some("Hi ") })),
- *   index: 0
+ *   index: NonNegativeInt.make(0)
  * })
  *
  * console.log(choice)
@@ -912,11 +1084,15 @@ export class OpenAiCompatChatCompletionChunkChoice extends S.Class<OpenAiCompatC
   $I`OpenAiCompatChatCompletionChunkChoice`
 )(
   {
-    delta: S.OptionFromOptionalKey(OpenAiCompatAssistantDelta).pipe(
-      S.withConstructorDefault(Effect.succeed(O.none<OpenAiCompatAssistantDelta>()))
-    ),
-    finish_reason: OptionalNullableString,
-    index: S.optionalKey(S.Finite),
+    delta: S.OptionFromOptionalKey(OpenAiCompatAssistantDelta)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Assistant delta payload for this stream choice." }),
+    finish_reason: OptionalNullableString.annotateKey({
+      description: "Provider finish reason carried by this stream choice.",
+    }),
+    index: S.optionalKey(NonNegativeInt).annotateKey({
+      description: "Zero-based stream choice index.",
+    }),
   },
   $I.annote("OpenAiCompatChatCompletionChunkChoice", {
     description: "Stream chunk choice returned by OpenAI-compatible endpoints.",
@@ -929,6 +1105,7 @@ export class OpenAiCompatChatCompletionChunkChoice extends S.Class<OpenAiCompatC
  * @example
  * ```ts
  * import * as O from "effect/Option"
+ * import { NonNegativeInt } from "@beep/schema/Number"
  * import {
  *   OpenAiCompatAssistantDelta,
  *   OpenAiCompatChatCompletionChunk,
@@ -939,7 +1116,7 @@ export class OpenAiCompatChatCompletionChunkChoice extends S.Class<OpenAiCompatC
  *   choices: [
  *     OpenAiCompatChatCompletionChunkChoice.make({
  *       delta: O.some(OpenAiCompatAssistantDelta.make({ content: O.some("Hi ") })),
- *       index: 0
+ *       index: NonNegativeInt.make(0)
  *     })
  *   ]
  * })
@@ -954,17 +1131,21 @@ export class OpenAiCompatChatCompletionChunk extends S.Class<OpenAiCompatChatCom
   $I`OpenAiCompatChatCompletionChunk`
 )(
   {
-    choices: S.Array(OpenAiCompatChatCompletionChunkChoice),
-    id: S.optionalKey(S.String),
-    model: S.optionalKey(S.String),
-    usage: S.OptionFromOptionalKey(OpenAiCompatUsage).pipe(
-      S.withConstructorDefault(Effect.succeed(O.none<OpenAiCompatUsage>()))
-    ),
+    choices: S.Array(OpenAiCompatChatCompletionChunkChoice).annotateKey({
+      description: "Streaming chat completion choices returned by the provider.",
+    }),
+    id: S.optionalKey(S.String).annotateKey({ description: "Provider stream chunk identifier." }),
+    model: S.optionalKey(S.String).annotateKey({ description: "Provider model identifier for the chunk." }),
+    usage: S.OptionFromOptionalKey(OpenAiCompatUsage)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Optional token usage returned by a stream chunk." }),
   },
   $I.annote("OpenAiCompatChatCompletionChunk", {
     description: "Stream chunk returned by OpenAI-compatible chat completion endpoints.",
   })
-) {}
+) {
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(OpenAiCompatChatCompletionChunk);
+}
 
 /**
  * Decodes an unknown value into an OpenAI-compatible chat completion response.
@@ -982,7 +1163,7 @@ export class OpenAiCompatChatCompletionChunk extends S.Class<OpenAiCompatChatCom
  * @category codecs
  * @since 0.0.0
  */
-export const decodeChatCompletionResponse = S.decodeUnknownEffect(OpenAiCompatChatCompletionResponse);
+export const decodeChatCompletionResponse = OpenAiCompatChatCompletionResponse.decodeUnknownEffect;
 
 /**
  * Decodes an unknown value into an OpenAI-compatible chat completion stream chunk.
@@ -1000,4 +1181,4 @@ export const decodeChatCompletionResponse = S.decodeUnknownEffect(OpenAiCompatCh
  * @category codecs
  * @since 0.0.0
  */
-export const decodeChatCompletionChunk = S.decodeUnknownEffect(OpenAiCompatChatCompletionChunk);
+export const decodeChatCompletionChunk = OpenAiCompatChatCompletionChunk.decodeUnknownEffect;

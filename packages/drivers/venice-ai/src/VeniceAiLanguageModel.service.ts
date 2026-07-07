@@ -7,23 +7,20 @@
 
 import { $VeniceAiId } from "@beep/identity";
 import {
-  decodeChatCompletionChunk,
-  decodeChatCompletionResponse,
   makeFromProvider,
+  OpenAiCompatChatCompletionChunk,
+  OpenAiCompatChatCompletionResponse,
   OpenAiCompatLanguageModelConfig,
 } from "@beep/openai-compat";
+import { SchemaUtils } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { Effect, Layer, pipe, Stream } from "effect";
+import { Effect, Layer, pipe, Result, Stream } from "effect";
 import * as S from "effect/Schema";
 import * as AiError from "effect/unstable/ai/AiError";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import * as AiModel from "effect/unstable/ai/Model";
-import { VeniceAI, VeniceAIRequestOptions } from "./VeniceAI.service.ts";
-import type {
-  OpenAiCompatChatCompletionChunk,
-  OpenAiCompatChatCompletionRequest,
-  OpenAiCompatChatCompletionResponse,
-} from "@beep/openai-compat";
+import { VeniceAI, VeniceAIErrorReason, VeniceAIRequestOptions, VeniceAIResponse } from "./VeniceAI.service.ts";
+import type { OpenAiCompatChatCompletionRequest } from "@beep/openai-compat";
 import type { VeniceAIError, VeniceAIServerSentEvent, VeniceAIShape } from "./VeniceAI.service.ts";
 
 const $I = $VeniceAiId.create("VeniceAiLanguageModel.service");
@@ -33,11 +30,12 @@ const $I = $VeniceAiId.create("VeniceAiLanguageModel.service");
  *
  * @example
  * ```ts
- * import type { VeniceAiLanguageModel } from "@beep/venice-ai"
+ * import { VeniceAiLanguageModel } from "@beep/venice-ai"
+ * import * as S from "effect/Schema"
  *
- * const options: VeniceAiLanguageModel.VeniceAiLanguageModelOptions = {
- *   model: "llama-3.3-70b"
- * }
+ * const options = VeniceAiLanguageModel.VeniceAiLanguageModelOptions.make({
+ *   model: S.NonEmptyString.make("llama-3.3-70b")
+ * })
  *
  * console.log(options)
  * ```
@@ -49,13 +47,27 @@ export class VeniceAiLanguageModelOptions extends S.Class<VeniceAiLanguageModelO
   $I`VeniceAiLanguageModelOptions`
 )(
   {
-    config: S.optionalKey(OpenAiCompatLanguageModelConfig),
-    model: S.String,
+    config: S.OptionFromOptionalKey(OpenAiCompatLanguageModelConfig).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional OpenAI-compatible adapter configuration." })
+    ),
+    model: S.NonEmptyString.annotateKey({ description: "Venice model id forwarded to chat-completion requests." }),
   },
   $I.annote("VeniceAiLanguageModelOptions", {
     description: "Options accepted by the Venice Effect AI language-model adapter.",
   })
 ) {}
+
+type VeniceAiLanguageModelOptionsInput = {
+  readonly config?: OpenAiCompatLanguageModelConfig | undefined;
+  readonly model: string;
+};
+
+const normalizeLanguageModelOptions = (options: VeniceAiLanguageModelOptionsInput): VeniceAiLanguageModelOptions =>
+  VeniceAiLanguageModelOptions.make({
+    config: O.fromUndefinedOr(options.config),
+    model: S.NonEmptyString.make(options.model),
+  });
 
 const moduleName = "VeniceAiLanguageModel.service";
 
@@ -63,8 +75,16 @@ const makeAiError = (method: string, reason: AiError.AiErrorReason): AiError.AiE
   AiError.make({ method, module: moduleName, reason });
 
 const errorDescription = (error: VeniceAIError): string =>
-  `Venice AI driver failed with ${error.reason}${error.operation === undefined ? "" : ` during ${error.operation}`}.`;
+  `Venice AI driver failed with ${error.reason}${pipe(
+    error.operation,
+    O.match({
+      onNone: () => "",
+      onSome: (operation) => ` during ${operation}`,
+    })
+  )}.`;
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const networkTransportError = (error: VeniceAIError): AiError.NetworkError =>
   AiError.NetworkError.make({
     description: errorDescription(error),
@@ -72,8 +92,8 @@ const networkTransportError = (error: VeniceAIError): AiError.NetworkError =>
     request: {
       hash: undefined,
       headers: {},
-      method: error.method ?? "POST",
-      url: error.path ?? "/",
+      method: O.getOrElse(error.method, () => "POST"),
+      url: O.getOrElse(error.path, () => "/"),
       urlParams: [],
     },
   });
@@ -83,28 +103,71 @@ const mapSchemaError =
   (cause: S.SchemaError): AiError.AiError =>
     makeAiError(method, AiError.InvalidOutputError.fromSchemaError(cause));
 
+const decodeChatCompletionResponseResult = S.decodeUnknownResult(OpenAiCompatChatCompletionResponse);
+const decodeChatCompletionChunkResult = S.decodeUnknownResult(OpenAiCompatChatCompletionChunk);
+
+const decodeChatCompletionResponseEffect = (
+  input: unknown
+): Effect.Effect<OpenAiCompatChatCompletionResponse, AiError.AiError> =>
+  Effect.fromResult(
+    pipe(decodeChatCompletionResponseResult(input), Result.mapError(mapSchemaError("createChatCompletion")))
+  );
+
+const decodeChatCompletionChunkEffect = (
+  input: unknown
+): Effect.Effect<OpenAiCompatChatCompletionChunk, AiError.AiError> =>
+  Effect.fromResult(
+    pipe(decodeChatCompletionChunkResult(input), Result.mapError(mapSchemaError("streamChatCompletion")))
+  );
+
+const invalidJsonResponse = (method: string): Effect.Effect<never, AiError.AiError> =>
+  Effect.fail(
+    makeAiError(
+      method,
+      AiError.InvalidOutputError.make({ description: "Venice chat completion did not return a JSON response." })
+    )
+  );
+
+const decodeCreateChatCompletionResponse = (
+  response: VeniceAIResponse
+): Effect.Effect<OpenAiCompatChatCompletionResponse, AiError.AiError> => {
+  const result: Effect.Effect<OpenAiCompatChatCompletionResponse, AiError.AiError> = VeniceAIResponse.match(response, {
+    Binary: () => invalidJsonResponse("createChatCompletion"),
+    Json: (json) => decodeChatCompletionResponseEffect(json.body),
+    Text: () => invalidJsonResponse("createChatCompletion"),
+  });
+
+  return result;
+};
+
 const mapVeniceError =
   (method: string) =>
   (error: VeniceAIError): AiError.AiError => {
-    if (error.status !== undefined) {
-      return makeAiError(
-        method,
-        AiError.reasonFromHttpStatus({
-          description: errorDescription(error),
-          status: error.status,
-        })
-      );
-    }
-    if (error.reason === "response decoding" || error.reason === "sse decoding") {
-      return makeAiError(method, AiError.InvalidOutputError.make({ description: errorDescription(error) }));
-    }
-    if (error.reason === "request encoding" || error.reason === "multipart encoding" || error.reason === "config") {
-      return makeAiError(method, AiError.InvalidRequestError.make({ description: errorDescription(error) }));
-    }
-    if (error.reason === "transport") {
-      return makeAiError(method, networkTransportError(error));
-    }
-    return makeAiError(method, AiError.UnknownError.make({ description: errorDescription(error) }));
+    const description = errorDescription(error);
+
+    return pipe(
+      error.status,
+      O.match({
+        onNone: () =>
+          VeniceAIErrorReason.$match(error.reason, {
+            config: () => makeAiError(method, AiError.InvalidRequestError.make({ description })),
+            "multipart encoding": () => makeAiError(method, AiError.InvalidRequestError.make({ description })),
+            "request encoding": () => makeAiError(method, AiError.InvalidRequestError.make({ description })),
+            "response decoding": () => makeAiError(method, AiError.InvalidOutputError.make({ description })),
+            "response status": () => makeAiError(method, AiError.UnknownError.make({ description })),
+            "sse decoding": () => makeAiError(method, AiError.InvalidOutputError.make({ description })),
+            transport: () => makeAiError(method, networkTransportError(error)),
+          }),
+        onSome: (status) =>
+          makeAiError(
+            method,
+            AiError.reasonFromHttpStatus({
+              description,
+              status,
+            })
+          ),
+      })
+    );
   };
 
 const createChatCompletion = (
@@ -112,18 +175,9 @@ const createChatCompletion = (
   request: OpenAiCompatChatCompletionRequest
 ): Effect.Effect<OpenAiCompatChatCompletionResponse, AiError.AiError> =>
   pipe(
-    venice.createChatCompletion(VeniceAIRequestOptions.make({ body: request })),
+    venice.createChatCompletion(VeniceAIRequestOptions.make({ body: O.some(request) })),
     Effect.mapError(mapVeniceError("createChatCompletion")),
-    Effect.flatMap((response) =>
-      response._tag === "Json"
-        ? pipe(response.body, decodeChatCompletionResponse, Effect.mapError(mapSchemaError("createChatCompletion")))
-        : Effect.fail(
-            makeAiError(
-              "createChatCompletion",
-              AiError.InvalidOutputError.make({ description: "Venice chat completion did not return a JSON response." })
-            )
-          )
-    ),
+    Effect.flatMap(decodeCreateChatCompletionResponse),
     Effect.withSpan("VeniceAiLanguageModel.createChatCompletion", {
       attributes: {
         operation: "createChatCompletion",
@@ -135,13 +189,25 @@ const createChatCompletion = (
 const parseStreamEvent = (
   event: VeniceAIServerSentEvent
 ): Effect.Effect<OpenAiCompatChatCompletionChunk, AiError.AiError> =>
-  pipe(decodeChatCompletionChunk(event.data), Effect.mapError(mapSchemaError("streamChatCompletion")));
+  pipe(
+    event.data,
+    O.match({
+      onNone: () =>
+        Effect.fail(
+          makeAiError(
+            "streamChatCompletion",
+            AiError.InvalidOutputError.make({ description: "Venice stream event did not carry a data payload." })
+          )
+        ),
+      onSome: decodeChatCompletionChunkEffect,
+    })
+  );
 
 const streamChatCompletion = (
   venice: VeniceAIShape,
   request: OpenAiCompatChatCompletionRequest
 ): Stream.Stream<OpenAiCompatChatCompletionChunk, AiError.AiError> =>
-  venice.streamChatCompletion(VeniceAIRequestOptions.make({ body: request })).pipe(
+  venice.streamChatCompletion(VeniceAIRequestOptions.make({ body: O.some(request) })).pipe(
     Stream.mapError(mapVeniceError("streamChatCompletion")),
     Stream.flatMap((event) => (event.done ? Stream.empty : Stream.fromEffect(parseStreamEvent(event)))),
     Stream.withSpan("VeniceAiLanguageModel.streamChatCompletion", {
@@ -167,19 +233,21 @@ const streamChatCompletion = (
  * @category constructors
  * @since 0.0.0
  */
-export const make: (options: VeniceAiLanguageModelOptions) => Effect.Effect<LanguageModel.Service, never, VeniceAI> =
-  Effect.fn("VeniceAiLanguageModel.make")(function* (options) {
-    const venice = yield* VeniceAI;
-    return yield* makeFromProvider({
-      ...O.getSomesStruct({ config: O.fromUndefinedOr(options.config) }),
-      model: options.model,
-      moduleName,
-      provider: {
-        createChatCompletion: (request) => createChatCompletion(venice, request),
-        streamChatCompletion: (request) => streamChatCompletion(venice, request),
-      },
-    });
+export const make: (
+  options: VeniceAiLanguageModelOptionsInput
+) => Effect.Effect<LanguageModel.Service, never, VeniceAI> = Effect.fn("VeniceAiLanguageModel.make")(function* (input) {
+  const options = normalizeLanguageModelOptions(input);
+  const venice = yield* VeniceAI;
+  return yield* makeFromProvider({
+    ...O.getSomesStruct({ config: options.config }),
+    model: options.model,
+    moduleName,
+    provider: {
+      createChatCompletion: (request) => createChatCompletion(venice, request),
+      streamChatCompletion: (request) => streamChatCompletion(venice, request),
+    },
   });
+});
 
 /**
  * Builds a Venice Effect AI language-model layer.
@@ -197,7 +265,7 @@ export const make: (options: VeniceAiLanguageModelOptions) => Effect.Effect<Lang
  * @since 0.0.0
  */
 export const layer = (
-  options: VeniceAiLanguageModelOptions
+  options: VeniceAiLanguageModelOptionsInput
 ): Layer.Layer<LanguageModel.LanguageModel, never, VeniceAI> =>
   Layer.effect(LanguageModel.LanguageModel, make(options));
 

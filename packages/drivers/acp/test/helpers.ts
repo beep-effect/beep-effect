@@ -1,4 +1,4 @@
-import { Errors as AcpError } from "@beep/acp";
+import { Client as AcpClient } from "@beep/acp";
 import * as Effect from "effect/Effect";
 import * as Queue from "effect/Queue";
 import * as S from "effect/Schema";
@@ -70,14 +70,4 @@ export const makeInMemoryStdio = Effect.fn("makeInMemoryStdio")(function* () {
   };
 });
 
-export const makeTerminationError = (
-  handle: ChildProcessSpawner.ChildProcessHandle
-): Effect.Effect<AcpError.AcpError> =>
-  Effect.match(handle.exitCode, {
-    onFailure: (cause) =>
-      AcpError.AcpTransportError.make({
-        detail: "Failed to determine ACP process exit status",
-        cause,
-      }),
-    onSuccess: (code) => AcpError.AcpProcessExitedError.make({ code }),
-  });
+export const makeTerminationError = AcpClient.makeTerminationError;

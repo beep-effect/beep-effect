@@ -5,11 +5,10 @@
  * @packageDocumentation
  */
 
-import { createRequire } from "node:module";
 import { $WinkId } from "@beep/identity";
 import { Document, DocumentId } from "@beep/nlp/Core/Document";
-import { BM25Config, BM25Norm, DefaultBM25Config, DocumentVector } from "@beep/nlp/Core/Vectorization";
-import { NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { BM25Config, BM25Norm, DefaultBM25Config, DocumentVector, PositiveNumber } from "@beep/nlp/Core/Vectorization";
+import { NonNegativeInt, PosInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { A, thunk0, thunkEffectVoid } from "@beep/utils";
 import { Chunk, Clock, Context, Effect, HashMap, HashSet, Layer, pipe, Ref } from "effect";
@@ -18,39 +17,21 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { loadBM25Vectorizer, normalizeTokenText } from "./internal/bm25.ts";
 import { ascendingNumber, ascendingString, descendingNumber } from "./internal/order.ts";
 import { WinkEngine } from "./Wink.service.ts";
 import { observeWinkWorkflow, textLengthAttribute } from "./WinkObservability.ts";
 import { WinkSimilarity } from "./WinkSimilarity.service.ts";
-import type { Token } from "@beep/nlp/Core/Token";
+import type { BM25VectorizerInstance } from "./internal/bm25.ts";
 
 const $I = $WinkId.create("Wink/WinkCorpusManager");
-const require = createRequire(import.meta.url);
-
-type BM25Accessor<T> = (...args: ReadonlyArray<never>) => T;
-
-type BM25VectorizerInstance = {
-  readonly doc: (index: number) => {
-    readonly out: <T>(accessor: BM25Accessor<T>) => T;
-  };
-  readonly learn: (tokens: Array<string>) => void;
-  readonly out: <T>(accessor: BM25Accessor<T>) => T;
-  readonly vectorOf: (tokens: Array<string>) => Array<number>;
-};
-
-type BM25VectorizerFactory = (config?: {
-  readonly b?: number;
-  readonly k?: number;
-  readonly k1?: number;
-  readonly norm?: "none" | "l1" | "l2";
-}) => BM25VectorizerInstance;
 
 class CreateCorpusBM25Config extends S.Class<CreateCorpusBM25Config>($I`CreateCorpusBM25Config`)(
   {
-    b: S.Finite.pipe(S.UndefinedOr, S.optionalKey),
-    k: S.Finite.pipe(S.UndefinedOr, S.optionalKey),
-    k1: S.Finite.pipe(S.UndefinedOr, S.optionalKey),
-    norm: BM25Norm.pipe(S.UndefinedOr, S.optionalKey),
+    b: UnitInterval.pipe(SchemaUtils.withKeyDefaults(DefaultBM25Config.b)),
+    k: PositiveNumber.pipe(SchemaUtils.withKeyDefaults(DefaultBM25Config.k)),
+    k1: PositiveNumber.pipe(SchemaUtils.withKeyDefaults(DefaultBM25Config.k1)),
+    norm: BM25Norm.pipe(SchemaUtils.withKeyDefaults(DefaultBM25Config.norm)),
   },
   $I.annote("CreateCorpusBM25Config", {
     description: "Optional BM25 hyperparameter overrides used when creating a managed corpus.",
@@ -59,7 +40,7 @@ class CreateCorpusBM25Config extends S.Class<CreateCorpusBM25Config>($I`CreateCo
 
 class CreateCorpusParams extends S.Class<CreateCorpusParams>($I`CreateCorpusParams`)(
   {
-    bm25Config: CreateCorpusBM25Config.pipe(S.UndefinedOr, S.optionalKey),
+    bm25Config: CreateCorpusBM25Config.pipe(SchemaUtils.withKeyDefaults(CreateCorpusBM25Config.make({}))),
     corpusId: S.String.pipe(S.UndefinedOr, S.optionalKey),
   },
   $I.annote("CreateCorpusParams", {
@@ -70,7 +51,7 @@ class CreateCorpusParams extends S.Class<CreateCorpusParams>($I`CreateCorpusPara
 class LearnCorpusParams extends S.Class<LearnCorpusParams>($I`LearnCorpusParams`)(
   {
     corpusId: S.String,
-    dedupeById: S.Boolean.pipe(S.UndefinedOr, S.optionalKey),
+    dedupeById: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
     documents: S.Array(Document),
   },
   $I.annote("LearnCorpusParams", {
@@ -81,9 +62,9 @@ class LearnCorpusParams extends S.Class<LearnCorpusParams>($I`LearnCorpusParams`
 class QueryCorpusParams extends S.Class<QueryCorpusParams>($I`QueryCorpusParams`)(
   {
     corpusId: S.String,
-    includeText: S.Boolean.pipe(S.UndefinedOr, S.optionalKey),
+    includeText: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     query: S.String,
-    topN: S.Finite.pipe(S.UndefinedOr, S.optionalKey),
+    topN: S.optionalKey(PosInt),
   },
   $I.annote("QueryCorpusParams", {
     description: "Parameters for querying a managed Wink BM25 corpus session.",
@@ -93,9 +74,9 @@ class QueryCorpusParams extends S.Class<QueryCorpusParams>($I`QueryCorpusParams`
 class CorpusStatsParams extends S.Class<CorpusStatsParams>($I`CorpusStatsParams`)(
   {
     corpusId: S.String,
-    includeIdf: S.Boolean.pipe(S.UndefinedOr, S.optionalKey),
-    includeMatrix: S.Boolean.pipe(S.UndefinedOr, S.optionalKey),
-    topIdfTerms: S.Finite.pipe(S.UndefinedOr, S.optionalKey),
+    includeIdf: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    includeMatrix: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
+    topIdfTerms: S.optionalKey(PosInt),
   },
   $I.annote("CorpusStatsParams", {
     description: "Parameters for retrieving corpus statistics with Wink.",
@@ -106,9 +87,9 @@ class CorpusSummary extends S.Class<CorpusSummary>($I`CorpusSummary`)(
   {
     config: BM25Config,
     corpusId: S.String,
-    createdAtMs: S.Finite,
-    documentCount: S.Finite,
-    vocabularySize: S.Finite,
+    createdAtMs: NonNegativeInt,
+    documentCount: NonNegativeInt,
+    vocabularySize: NonNegativeInt,
   },
   $I.annote("CorpusSummary", {
     description: "Summary of a corpus learned with Wink.",
@@ -132,8 +113,8 @@ class LearnCorpusResult extends S.Class<LearnCorpusResult>($I`LearnCorpusResult`
 class RankedCorpusDocument extends S.Class<RankedCorpusDocument>($I`RankedCorpusDocument`)(
   {
     id: S.String,
-    index: S.Finite,
-    score: S.Finite,
+    index: NonNegativeInt,
+    score: UnitInterval,
     text: S.optionalKey(S.String),
   },
   $I.annote("RankedCorpusDocument", {
@@ -147,8 +128,8 @@ class QueryCorpusResult extends S.Class<QueryCorpusResult>($I`QueryCorpusResult`
     method: S.Literal("vector.cosine"),
     query: S.String,
     ranked: S.Array(RankedCorpusDocument),
-    returned: S.Finite,
-    totalDocuments: S.Finite,
+    returned: NonNegativeInt,
+    totalDocuments: NonNegativeInt,
   },
   $I.annote("QueryCorpusResult", {
     description: "Ranked corpus query results and result-count metadata.",
@@ -167,8 +148,8 @@ class CorpusIdfValue extends S.Class<CorpusIdfValue>($I`CorpusIdfValue`)(
 
 class CorpusMatrixShape extends S.Class<CorpusMatrixShape>($I`CorpusMatrixShape`)(
   {
-    cols: S.Finite,
-    rows: S.Finite,
+    cols: NonNegativeInt,
+    rows: NonNegativeInt,
   },
   $I.annote("CorpusMatrixShape", {
     description: "Shape metadata for a corpus document-term matrix.",
@@ -183,8 +164,8 @@ class CorpusStatsResult extends S.Class<CorpusStatsResult>($I`CorpusStatsResult`
     idfValues: S.Array(CorpusIdfValue),
     matrixShape: CorpusMatrixShape,
     terms: S.Array(S.String),
-    totalDocuments: S.Finite,
-    vocabularySize: S.Finite,
+    totalDocuments: NonNegativeInt,
+    vocabularySize: NonNegativeInt,
   },
   $I.annote("CorpusStatsResult", {
     description: "Detailed statistics for a managed Wink BM25 corpus session.",
@@ -208,18 +189,23 @@ type CorpusSessionState = {
   readonly vocabulary: HashSet.HashSet<string>;
 };
 
+type CreateCorpusParamsInput = Exclude<(typeof CreateCorpusParams)["~type.make.in"], void>;
+type LearnCorpusParamsInput = Exclude<(typeof LearnCorpusParams)["~type.make.in"], void>;
+type QueryCorpusParamsInput = Exclude<(typeof QueryCorpusParams)["~type.make.in"], void>;
+type CorpusStatsParamsInput = Exclude<(typeof CorpusStatsParams)["~type.make.in"], void>;
+
 type WinkCorpusManagerShape = {
-  readonly createCorpus: (request?: CreateCorpusParams | undefined) => Effect.Effect<CorpusSummary, CorpusManagerError>;
+  readonly createCorpus: (
+    request?: CreateCorpusParamsInput | undefined
+  ) => Effect.Effect<CorpusSummary, CorpusManagerError>;
   readonly deleteCorpus: (corpusId: string) => Effect.Effect<boolean>;
-  readonly getStats: (request: CorpusStatsParams) => Effect.Effect<CorpusStatsResult, CorpusManagerError>;
-  readonly learnDocuments: (request: LearnCorpusParams) => Effect.Effect<LearnCorpusResult, CorpusManagerError>;
-  readonly query: (request: QueryCorpusParams) => Effect.Effect<QueryCorpusResult, CorpusManagerError>;
+  readonly getStats: (request: CorpusStatsParamsInput) => Effect.Effect<CorpusStatsResult, CorpusManagerError>;
+  readonly learnDocuments: (request: LearnCorpusParamsInput) => Effect.Effect<LearnCorpusResult, CorpusManagerError>;
+  readonly query: (request: QueryCorpusParamsInput) => Effect.Effect<QueryCorpusResult, CorpusManagerError>;
 };
 
 type CorpusInsertResult = readonly [boolean, HashMap.HashMap<string, CorpusSessionState>];
 type WinkEngineService = typeof WinkEngine.Service;
-
-const loadBM25Vectorizer = (): BM25VectorizerFactory => require("wink-nlp/utilities/bm25-vectorizer");
 
 const sanitizeLimit = (value: number | undefined, fallback: number): number =>
   pipe(
@@ -231,13 +217,28 @@ const sanitizeLimit = (value: number | undefined, fallback: number): number =>
     })
   );
 
-const normalizeTokenText = (token: Token): string =>
-  O.match(token.normal, {
-    onNone: () => token.text,
-    onSome: (normal) => normal ?? token.text,
-  });
-
 const toCorpusIdOption = (corpusId: string | undefined): O.Option<string> => O.fromNullishOr(corpusId);
+
+const WinkStringArray = S.Array(S.String).pipe(
+  $I.annoteSchema("WinkStringArray", {
+    description: "Array of strings returned by wink vectorizer accessors.",
+  })
+);
+const WinkNumberArray = S.Array(S.Finite).pipe(
+  $I.annoteSchema("WinkNumberArray", {
+    description: "Array of finite numeric values returned by wink vectorizer accessors.",
+  })
+);
+const TermScorePair = S.Tuple([S.String, S.Finite]).pipe(
+  $I.annoteSchema("TermScorePair", {
+    description: "Term and finite score pair returned by wink vectorizer accessors.",
+  })
+);
+const TermScorePairs = S.Array(TermScorePair).pipe(
+  $I.annoteSchema("TermScorePairs", {
+    description: "Array of term and score pairs returned by wink vectorizer accessors.",
+  })
+);
 
 const makeCorpusSessionState = (corpusId: string, config: BM25Config, nowMs: number): CorpusSessionState => ({
   compiled: O.none(),
@@ -254,40 +255,32 @@ const decodeStringArray = (
   value: unknown,
   context: string,
   corpusId: string
-): Effect.Effect<ReadonlyArray<string>, CorpusManagerError> => {
-  if (A.isArray(value) && A.every(value, P.isString)) {
-    return Effect.succeed(value);
-  }
-
-  return Effect.fail(CorpusManagerError.fromMessage(`Invalid ${context}: expected string[]`, corpusId));
-};
+): Effect.Effect<ReadonlyArray<string>, CorpusManagerError> =>
+  O.match(S.decodeUnknownOption(WinkStringArray)(value), {
+    onNone: () => Effect.fail(CorpusManagerError.fromMessage(`Invalid ${context}: expected string[]`, corpusId)),
+    onSome: Effect.succeed,
+  });
 
 const decodeNumberArray = (
   value: unknown,
   context: string,
   corpusId: string
-): Effect.Effect<ReadonlyArray<number>, CorpusManagerError> => {
-  if (A.isArray(value) && A.every(value, (entry): entry is number => P.isNumber(entry) && Number.isFinite(entry))) {
-    return Effect.succeed(value);
-  }
-
-  return Effect.fail(CorpusManagerError.fromMessage(`Invalid ${context}: expected number[]`, corpusId));
-};
-
-const isTermScorePair = (value: unknown): value is readonly [string, number] =>
-  A.isArray(value) && value.length >= 2 && P.isString(value[0]) && P.isNumber(value[1]) && Number.isFinite(value[1]);
+): Effect.Effect<ReadonlyArray<number>, CorpusManagerError> =>
+  O.match(S.decodeUnknownOption(WinkNumberArray)(value), {
+    onNone: () => Effect.fail(CorpusManagerError.fromMessage(`Invalid ${context}: expected number[]`, corpusId)),
+    onSome: Effect.succeed,
+  });
 
 const decodeTermScorePairs = (
   value: unknown,
   context: string,
   corpusId: string
-): Effect.Effect<ReadonlyArray<readonly [string, number]>, CorpusManagerError> => {
-  if (A.isArray(value) && A.every(value, isTermScorePair)) {
-    return Effect.succeed(value);
-  }
-
-  return Effect.fail(CorpusManagerError.fromMessage(`Invalid ${context}: expected [string, number][]`, corpusId));
-};
+): Effect.Effect<ReadonlyArray<readonly [string, number]>, CorpusManagerError> =>
+  O.match(S.decodeUnknownOption(TermScorePairs)(value), {
+    onNone: () =>
+      Effect.fail(CorpusManagerError.fromMessage(`Invalid ${context}: expected [string, number][]`, corpusId)),
+    onSome: Effect.succeed,
+  });
 
 const readNormalizedTokensFromWink = Effect.fn("Wink.WinkCorpusManager.readNormalizedTokensFromWink")(function* (
   engine: WinkEngineService,
@@ -341,7 +334,7 @@ const removeCorpusSession = (
 export class CorpusManagerError extends TaggedErrorClass<CorpusManagerError>($I`CorpusManagerError`)(
   "CorpusManagerError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault),
     corpusId: S.OptionFromOptionalKey(S.String),
     message: S.String,
   },
@@ -364,7 +357,7 @@ export class CorpusManagerError extends TaggedErrorClass<CorpusManagerError>($I`
     3,
     (cause: unknown, message: string, options: { readonly corpusId?: string | undefined }): CorpusManagerError =>
       CorpusManagerError.make({
-        cause,
+        cause: O.some(cause),
         corpusId: toCorpusIdOption(options.corpusId),
         message,
       })
@@ -379,7 +372,6 @@ export class CorpusManagerError extends TaggedErrorClass<CorpusManagerError>($I`
    */
   static fromMessage(message: string, corpusId?: string): CorpusManagerError {
     return CorpusManagerError.make({
-      cause: undefined,
       corpusId: toCorpusIdOption(corpusId),
       message,
     });
@@ -517,8 +509,9 @@ const makeWinkCorpusManager = Effect.gen(function* () {
     });
 
   return WinkCorpusManager.of({
-    createCorpus: Effect.fn("Wink.WinkCorpusManager.createCorpus")(function* (request?: CreateCorpusParams) {
-      const requestedId = request?.corpusId;
+    createCorpus: Effect.fn("Wink.WinkCorpusManager.createCorpus")(function* (request?: CreateCorpusParamsInput) {
+      const params = CreateCorpusParams.make(request ?? {});
+      const requestedId = params.corpusId;
       const corpusId = requestedId ?? (yield* makeGeneratedId);
       yield* Effect.annotateCurrentSpan({
         corpus_id: corpusId,
@@ -527,10 +520,10 @@ const makeWinkCorpusManager = Effect.gen(function* () {
       });
       const nowMs = yield* Clock.currentTimeMillis;
       const config = BM25Config.make({
-        b: UnitInterval.make(request?.bm25Config?.b ?? DefaultBM25Config.b),
-        k: request?.bm25Config?.k ?? DefaultBM25Config.k,
-        k1: request?.bm25Config?.k1 ?? DefaultBM25Config.k1,
-        norm: request?.bm25Config?.norm ?? DefaultBM25Config.norm,
+        b: params.bm25Config.b,
+        k: params.bm25Config.k,
+        k1: params.bm25Config.k1,
+        norm: params.bm25Config.norm,
       });
       const inserted = yield* Ref.modify(
         sessionsRef,
@@ -549,9 +542,9 @@ const makeWinkCorpusManager = Effect.gen(function* () {
       return {
         config,
         corpusId,
-        createdAtMs: nowMs,
-        documentCount: 0,
-        vocabularySize: 0,
+        createdAtMs: NonNegativeInt.make(nowMs),
+        documentCount: NonNegativeInt.make(0),
+        vocabularySize: NonNegativeInt.make(0),
       };
     }, observeCorpus("create")),
 
@@ -560,50 +553,51 @@ const makeWinkCorpusManager = Effect.gen(function* () {
       return yield* Ref.modify(sessionsRef, (sessions) => removeCorpusSession(sessions, corpusId));
     }, observeCorpus("delete")),
 
-    getStats: Effect.fn("Wink.WinkCorpusManager.getStats")(function* (request: CorpusStatsParams) {
+    getStats: Effect.fn("Wink.WinkCorpusManager.getStats")(function* (request: CorpusStatsParamsInput) {
+      const params = CorpusStatsParams.make(request);
       yield* Effect.annotateCurrentSpan({
-        corpus_id: request.corpusId,
-        include_idf: `${request.includeIdf ?? false}`,
-        include_matrix: `${request.includeMatrix ?? false}`,
-        top_idf_terms: `${request.topIdfTerms ?? "default"}`,
+        corpus_id: params.corpusId,
+        include_idf: `${params.includeIdf}`,
+        include_matrix: `${params.includeMatrix}`,
+        top_idf_terms: `${params.topIdfTerms ?? "default"}`,
       });
-      const state = yield* getState(request.corpusId);
+      const state = yield* getState(params.corpusId);
       const { compiled, state: compiledState } = yield* ensureCompiled(state);
 
       if (compiledState.documents.length === 0) {
         return {
           averageDocumentLength: 0,
-          corpusId: request.corpusId,
+          corpusId: params.corpusId,
           documentTermMatrix: [],
           idfValues: [],
-          matrixShape: { cols: 0, rows: 0 },
+          matrixShape: { cols: NonNegativeInt.make(0), rows: NonNegativeInt.make(0) },
           terms: [],
-          totalDocuments: 0,
-          vocabularySize: 0,
+          totalDocuments: NonNegativeInt.make(0),
+          vocabularySize: NonNegativeInt.make(0),
         };
       }
 
       const its = yield* engine.its.pipe(
-        Effect.mapError(CorpusManagerError.fromCause("Failed to access wink helpers", { corpusId: request.corpusId }))
+        Effect.mapError(CorpusManagerError.fromCause("Failed to access wink helpers", { corpusId: params.corpusId }))
       );
 
-      const idfValues = yield* Bool.match(request.includeIdf ?? false, {
+      const idfValues = yield* Bool.match(params.includeIdf, {
         onFalse: () => Effect.succeed(A.empty()),
         onTrue: Effect.fn("Wink.WinkCorpusManager.getStats.idfValues")(function* () {
           const raw = yield* Effect.try({
             try: () => compiled.vectorizer.out(its.idf),
             catch: CorpusManagerError.fromCause("Failed to compute corpus idf values", {
-              corpusId: request.corpusId,
+              corpusId: params.corpusId,
             }),
           });
-          const decoded = yield* decodeTermScorePairs(raw, "corpus idf output", request.corpusId);
+          const decoded = yield* decodeTermScorePairs(raw, "corpus idf output", params.corpusId);
           return pipe(
             decoded,
             A.sortBy(
               descendingNumber(([, idf]) => idf),
               ascendingString(([term]) => term)
             ),
-            A.take(sanitizeLimit(request.topIdfTerms, A.length(decoded))),
+            A.take(sanitizeLimit(params.topIdfTerms, A.length(decoded))),
             A.map(([term, idf]) => ({
               idf,
               term,
@@ -612,20 +606,20 @@ const makeWinkCorpusManager = Effect.gen(function* () {
         }),
       });
 
-      const documentTermMatrix = yield* Bool.match(request.includeMatrix ?? false, {
+      const documentTermMatrix = yield* Bool.match(params.includeMatrix, {
         onFalse: () => Effect.succeed(A.empty()),
         onTrue: Effect.fn("Wink.WinkCorpusManager.getStats.documentTermMatrix")(function* () {
           const raw = yield* Effect.try({
             try: () => compiled.vectorizer.out(its.docTermMatrix),
-            catch: CorpusManagerError.fromCause("Failed to compute corpus matrix", { corpusId: request.corpusId }),
+            catch: CorpusManagerError.fromCause("Failed to compute corpus matrix", { corpusId: params.corpusId }),
           });
 
           if (!A.isArray(raw)) {
-            return yield* CorpusManagerError.fromMessage("Invalid document-term matrix output", request.corpusId);
+            return yield* CorpusManagerError.fromMessage("Invalid document-term matrix output", params.corpusId);
           }
 
           return yield* Effect.forEach(raw, (row) =>
-            decodeNumberArray(row, "document-term matrix row", request.corpusId)
+            decodeNumberArray(row, "document-term matrix row", params.corpusId)
           );
         }),
       });
@@ -635,30 +629,31 @@ const makeWinkCorpusManager = Effect.gen(function* () {
           onFalse: () => compiledState.totalTokenCount / compiledState.documents.length,
           onTrue: thunk0,
         }),
-        corpusId: request.corpusId,
+        corpusId: params.corpusId,
         documentTermMatrix,
         idfValues,
         matrixShape: {
-          cols: compiled.terms.length,
-          rows: Bool.match(request.includeMatrix ?? false, {
-            onFalse: () => compiledState.documents.length,
-            onTrue: () => documentTermMatrix.length,
+          cols: NonNegativeInt.make(compiled.terms.length),
+          rows: Bool.match(params.includeMatrix, {
+            onFalse: () => NonNegativeInt.make(compiledState.documents.length),
+            onTrue: () => NonNegativeInt.make(documentTermMatrix.length),
           }),
         },
         terms: compiled.terms,
-        totalDocuments: compiledState.documents.length,
-        vocabularySize: HashSet.size(compiledState.vocabulary),
+        totalDocuments: NonNegativeInt.make(compiledState.documents.length),
+        vocabularySize: NonNegativeInt.make(HashSet.size(compiledState.vocabulary)),
       };
     }, observeCorpus("stats")),
 
-    learnDocuments: Effect.fn("Wink.WinkCorpusManager.learnDocuments")(function* (request: LearnCorpusParams) {
+    learnDocuments: Effect.fn("Wink.WinkCorpusManager.learnDocuments")(function* (request: LearnCorpusParamsInput) {
+      const params = LearnCorpusParams.make(request);
       yield* Effect.annotateCurrentSpan({
-        corpus_id: request.corpusId,
-        dedupe_by_id: `${request.dedupeById ?? true}`,
-        document_count: request.documents.length,
+        corpus_id: params.corpusId,
+        dedupe_by_id: `${params.dedupeById}`,
+        document_count: params.documents.length,
       });
-      const state = yield* getState(request.corpusId);
-      const dedupeById = request.dedupeById ?? true;
+      const state = yield* getState(params.corpusId);
+      const dedupeById = params.dedupeById;
       let existingIds = HashSet.fromIterable(
         pipe(
           state.documents,
@@ -670,13 +665,13 @@ const makeWinkCorpusManager = Effect.gen(function* () {
       let skippedCount = 0;
       let totalTokenCount = state.totalTokenCount;
 
-      for (const document of request.documents) {
+      for (const document of params.documents) {
         if (dedupeById && HashSet.has(existingIds, document.id)) {
           skippedCount += 1;
           continue;
         }
 
-        const tokens = yield* readNormalizedTokens(document, request.corpusId);
+        const tokens = yield* readNormalizedTokens(document, params.corpusId);
         for (const token of tokens) {
           vocabulary = HashSet.add(vocabulary, token);
         }
@@ -697,7 +692,7 @@ const makeWinkCorpusManager = Effect.gen(function* () {
       yield* setState(updatedState);
 
       return {
-        corpusId: request.corpusId,
+        corpusId: params.corpusId,
         learnedCount: NonNegativeInt.make(learnedDocuments.length),
         reindexRequired: true,
         skippedCount: NonNegativeInt.make(skippedCount),
@@ -706,43 +701,44 @@ const makeWinkCorpusManager = Effect.gen(function* () {
       };
     }, observeCorpus("learn_documents")),
 
-    query: Effect.fn("Wink.WinkCorpusManager.query")(function* (request: QueryCorpusParams) {
+    query: Effect.fn("Wink.WinkCorpusManager.query")(function* (request: QueryCorpusParamsInput) {
+      const params = QueryCorpusParams.make(request);
       yield* Effect.annotateCurrentSpan({
-        corpus_id: request.corpusId,
-        include_text: `${request.includeText ?? false}`,
-        top_n: `${request.topN ?? "default"}`,
-        ...textLengthAttribute("query", request.query),
+        corpus_id: params.corpusId,
+        include_text: `${params.includeText}`,
+        top_n: `${params.topN ?? "default"}`,
+        ...textLengthAttribute("query", params.query),
       });
-      const state = yield* getState(request.corpusId);
+      const state = yield* getState(params.corpusId);
       const { compiled, state: compiledState } = yield* ensureCompiled(state);
 
       if (compiledState.documents.length === 0) {
         return {
-          corpusId: request.corpusId,
+          corpusId: params.corpusId,
           method: "vector.cosine" as const,
-          query: request.query,
+          query: params.query,
           ranked: [],
-          returned: 0,
-          totalDocuments: 0,
+          returned: NonNegativeInt.make(0),
+          totalDocuments: NonNegativeInt.make(0),
         };
       }
 
       const its = yield* engine.its.pipe(
-        Effect.mapError(CorpusManagerError.fromCause("Failed to access wink helpers", { corpusId: request.corpusId }))
+        Effect.mapError(CorpusManagerError.fromCause("Failed to access wink helpers", { corpusId: params.corpusId }))
       );
       const queryDoc = yield* engine
-        .getWinkDoc(request.query)
+        .getWinkDoc(params.query)
         .pipe(
-          Effect.mapError(CorpusManagerError.fromCause("Failed to tokenize query text", { corpusId: request.corpusId }))
+          Effect.mapError(CorpusManagerError.fromCause("Failed to tokenize query text", { corpusId: params.corpusId }))
         );
       const queryTokens = yield* decodeStringArray(
         queryDoc.tokens().out(its.normal),
         "query token output",
-        request.corpusId
+        params.corpusId
       );
       const nowMs = yield* Clock.currentTimeMillis;
       const queryVector = DocumentVector.make({
-        documentId: DocumentId.make(`${request.corpusId}-query-${nowMs}`),
+        documentId: DocumentId.make(`${params.corpusId}-query-${nowMs}`),
         terms: compiled.terms,
         vector: compiled.vectorizer.vectorOf(A.fromIterable(queryTokens)),
       });
@@ -758,22 +754,22 @@ const makeWinkCorpusManager = Effect.gen(function* () {
           const score = yield* similarity.vectorCosine(queryVector, candidateVector).pipe(
             Effect.mapError(
               CorpusManagerError.fromCause("Failed to compute query similarity", {
-                corpusId: request.corpusId,
+                corpusId: params.corpusId,
               })
             )
           );
 
-          return yield* Bool.match(request.includeText ?? false, {
+          return yield* Bool.match(params.includeText, {
             onFalse: () =>
               Effect.succeed({
                 id: document.id,
-                index,
+                index: NonNegativeInt.make(index),
                 score: score.score,
               }),
             onTrue: () =>
               Effect.succeed({
                 id: document.id,
-                index,
+                index: NonNegativeInt.make(index),
                 score: score.score,
                 text: document.text,
               }),
@@ -787,16 +783,16 @@ const makeWinkCorpusManager = Effect.gen(function* () {
           descendingNumber((entry) => entry.score),
           ascendingNumber((entry) => entry.index)
         ),
-        A.take(sanitizeLimit(request.topN, A.length(scored)))
+        A.take(sanitizeLimit(params.topN, A.length(scored)))
       );
 
       return {
-        corpusId: request.corpusId,
+        corpusId: params.corpusId,
         method: "vector.cosine" as const,
-        query: request.query,
+        query: params.query,
         ranked,
-        returned: A.length(ranked),
-        totalDocuments: A.length(compiledState.documents),
+        returned: NonNegativeInt.make(A.length(ranked)),
+        totalDocuments: NonNegativeInt.make(A.length(compiledState.documents)),
       };
     }, observeCorpus("query")),
   });

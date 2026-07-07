@@ -12,10 +12,10 @@ import { DocumentTermSet, TverskyParams } from "@beep/nlp/Core/Similarity";
 import { BagOfWords } from "@beep/nlp/Core/Vectorization";
 import { Tokenization } from "@beep/nlp-processing/Core";
 import { NlpToolkit } from "@beep/nlp-processing/Tools/NlpToolkit";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str, thunk0, thunkEmptyReadonlyArray, thunkEmptyStr, thunkFalse } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Chunk, Clock, Effect, flow, Inspectable, identity, Layer, Match, Order, pipe } from "effect";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -30,6 +30,7 @@ import { SimilarityError, WinkSimilarity } from "./WinkSimilarity.service.ts";
 import { WinkUtils, WinkUtilsError } from "./WinkUtils.service.ts";
 import { VectorizerError, WinkVectorizer } from "./WinkVectorizer.service.ts";
 import type { Token } from "@beep/nlp/Core/Token";
+import type { BM25Norm } from "@beep/nlp/Core/Vectorization";
 import type { AiToolError } from "@beep/nlp-processing/Tools";
 import type { Tool } from "effect/unstable/ai";
 
@@ -83,7 +84,7 @@ const buildCreateCorpusParameters = (params: {
     readonly b?: number;
     readonly k?: number;
     readonly k1?: number;
-    readonly norm?: "none" | "l1" | "l2";
+    readonly norm?: BM25Norm;
   };
   readonly corpusId?: string;
 }) =>
@@ -186,25 +187,39 @@ class EntityOutputDetail extends S.Class<EntityOutputDetail>($I`EntityOutputDeta
   })
 ) {}
 
+const EntityOutputDetailUnknowns = S.Array(S.Unknown).pipe(
+  $I.annoteSchema("EntityOutputDetailUnknowns", {
+    description: "Raw wink entity detail array before loose detail-object normalization.",
+  })
+);
+const EntityOutputSpan = S.Array(S.Finite).pipe(
+  $I.annoteSchema("EntityOutputSpan", {
+    description: "Finite numeric span returned by wink entity output records.",
+  })
+);
+const EntityOutputSpanUnknowns = S.Array(S.Unknown).pipe(
+  $I.annoteSchema("EntityOutputSpanUnknowns", {
+    description: "Raw wink entity span array before loose span normalization.",
+  })
+);
+
 const decodeEntityOutputDetails = (value: unknown): ReadonlyArray<EntityOutputDetail> =>
-  Match.type<boolean>().pipe(
-    Match.when(true, thunkEmptyReadonlyArray<EntityOutputDetail>()),
-    Match.when(false, () =>
-      A.map(value as ReadonlyArray<unknown>, (detail) => (P.isObject(detail) ? detail : R.empty()))
-    ),
-    Match.exhaustive
-  )(P.isUndefined(value));
+  pipe(
+    S.decodeUnknownOption(EntityOutputDetailUnknowns)(value),
+    O.map(A.map((detail) => EntityOutputDetail.make(P.isObject(detail) ? detail : R.empty()))),
+    O.getOrElse(thunkEmptyReadonlyArray<EntityOutputDetail>())
+  );
 
 const decodeEntityOutputSpans = (value: unknown): ReadonlyArray<ReadonlyArray<number>> =>
-  Match.type<boolean>().pipe(
-    Match.when(true, thunkEmptyReadonlyArray<ReadonlyArray<number>>()),
-    Match.when(false, () =>
-      A.map(value as ReadonlyArray<unknown>, (span) =>
-        A.isArray(span) && A.every(span, P.isNumber) ? span : A.empty()
+  pipe(
+    S.decodeUnknownOption(EntityOutputSpanUnknowns)(value),
+    O.map(
+      A.map((span) =>
+        pipe(S.decodeUnknownOption(EntityOutputSpan)(span), O.getOrElse(thunkEmptyReadonlyArray<number>()))
       )
     ),
-    Match.exhaustive
-  )(P.isUndefined(value));
+    O.getOrElse(thunkEmptyReadonlyArray<ReadonlyArray<number>>())
+  );
 
 const resolveTokenIndex = (
   rawSpan: ReadonlyArray<number> | undefined,
@@ -266,7 +281,7 @@ const mapEntityOutput = (
     value: renderEntityValue(detail.value),
   }));
 
-const TransformOperation = LiteralKit([
+const TransformOperationKit = LiteralKit([
   "lowercase",
   "uppercase",
   "trim",
@@ -276,10 +291,12 @@ const TransformOperation = LiteralKit([
   "removeSpecialChars",
   "retainAlphaNums",
   "removeElisions",
-]).pipe(
+]);
+const TransformOperation = TransformOperationKit.pipe(
   $I.annoteSchema("TransformOperation", {
     description: "Valid transformation operations for text manipulation",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(TransformOperationKit)
 );
 
 type TransformOperation = typeof TransformOperation.Type;
@@ -315,7 +332,13 @@ const WinkNlpToolkitLiveError = S.Union([
   VectorizerError,
   WinkEngineError,
   WinkUtilsError,
-]).pipe(S.toTaggedUnion("_tag"));
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("WinkNlpToolkitLiveError", {
+    description: "Union of errors raised by the live wink NLP toolkit layer.",
+  }),
+  SchemaUtils.withCodecStatics
+);
 type WinkNlpToolkitLiveError = typeof WinkNlpToolkitLiveError.Type;
 
 /**
@@ -673,8 +696,8 @@ export const WinkNlpToolkitLive: Layer.Layer<
           );
           return yield* corpusManager.learnDocuments({
             corpusId,
-            dedupeById,
             documents: resolvedDocuments,
+            ...O.getSomesStruct({ dedupeById: O.fromUndefinedOr(dedupeById) }),
           });
         },
         observeTool("LearnCorpus", "corpus.learn")
@@ -700,7 +723,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
               entities,
               A.map((entity) =>
                 CustomEntityExample.make({
-                  mark: P.isUndefined(entity.mark) ? O.none() : O.some(entity.mark),
+                  mark: O.fromUndefinedOr(entity.mark),
                   name: entity.name,
                   patterns: entity.patterns,
                 })

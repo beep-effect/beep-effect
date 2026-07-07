@@ -6,10 +6,12 @@
  */
 
 import { $OnepasswordCliId } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema";
+import { OnePasswordReference } from "@beep/shared-domain/values/OnePasswordReference";
 import { thunkEmptyStr } from "@beep/utils";
 import { Context, Effect, Layer, Redacted, Stream } from "effect";
 import * as A from "effect/Array";
-import * as Str from "effect/String";
+import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
 import { OnePasswordCliError } from "./OnePasswordCli.errors.ts";
 import {
@@ -19,7 +21,11 @@ import {
 } from "./OnePasswordCli.models.ts";
 
 const $I = $OnepasswordCliId.create("OnePasswordCli.service");
+const decodeOnePasswordCliAccount = S.decodeUnknownEffect(OnePasswordCliAccount);
+const decodeOnePasswordReference = S.decodeUnknownEffect(OnePasswordReference);
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
   stream.pipe(
     Stream.decodeText(),
@@ -92,13 +98,11 @@ const failExit = (
   message: string
 ): Effect.Effect<never, OnePasswordCliError> =>
   Effect.fail(
-    OnePasswordCliError.make({
+    OnePasswordCliError.fromUnknown(operation, message, {
       command,
       exitCode: result.exitCode,
-      message,
-      operation,
-      stderr: Str.trim(result.stderr),
-      stdout: Str.trim(result.stdout),
+      stderr: result.stderr,
+      stdout: result.stdout,
     })
   );
 
@@ -109,10 +113,17 @@ const makeService = (commandPath: string, runner: OnePasswordCliRunner): OnePass
       return yield* failExit("whoami", commandPath, result, "1Password CLI is not signed in.");
     }
 
-    return OnePasswordCliAccount.make({
-      account: Str.trim(result.stdout),
+    return yield* decodeOnePasswordCliAccount({
+      account: result.stdout,
       signedIn: true,
-    });
+    }).pipe(
+      Effect.mapError((cause) =>
+        OnePasswordCliError.fromUnknown("whoami", "Failed to decode 1Password CLI account status.", {
+          cause,
+          command: commandPath,
+        })
+      )
+    );
   }).pipe(Effect.withSpan("OnePasswordCli.whoami"));
 
   const read = Effect.fn("OnePasswordCli.read")(function* (reference: string) {
@@ -125,10 +136,18 @@ const makeService = (commandPath: string, runner: OnePasswordCliRunner): OnePass
   });
 
   const probeReference = Effect.fn("OnePasswordCli.probeReference")(function* (reference: string) {
-    const value = yield* read(reference);
+    const typedReference = yield* decodeOnePasswordReference(reference).pipe(
+      Effect.mapError((cause) =>
+        OnePasswordCliError.fromUnknown("probeReference", "Invalid 1Password secret reference.", {
+          cause,
+          command: commandPath,
+        })
+      )
+    );
+    const value = yield* read(typedReference);
     return OnePasswordReferenceProbe.make({
-      byteLength: new TextEncoder().encode(Redacted.value(value)).byteLength,
-      reference,
+      byteLength: NonNegativeInt.make(new TextEncoder().encode(Redacted.value(value)).byteLength),
+      reference: typedReference,
       status: "resolved",
     });
   });

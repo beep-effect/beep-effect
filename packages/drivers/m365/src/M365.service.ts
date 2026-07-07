@@ -11,8 +11,9 @@
  */
 
 import { $M365Id } from "@beep/identity";
+import { PosInt, SchemaUtils } from "@beep/schema";
 import { getSomesStruct } from "@beep/utils/Option";
-import { Config, Context, Duration, Effect, flow, Layer, pipe } from "effect";
+import { Config, Context, Duration, Effect, flow, Layer, pipe, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -52,6 +53,19 @@ const QueryParam = S.Tuple([S.String, S.Option(QueryValue)]).pipe(
   })
 );
 type QueryParam = typeof QueryParam.Type;
+
+const decodeScopesCsv = flow(Str.split(","), A.map(Str.trim), A.filter(Str.isNonEmpty));
+const encodeScopesCsv = (scopes: ReadonlyArray<string>): string => A.join(scopes, ",");
+
+const M365ScopesFromCsv = S.String.pipe(
+  S.decodeTo(S.Array(S.NonEmptyString), {
+    decode: SchemaGetter.transform(decodeScopesCsv),
+    encode: SchemaGetter.transform(encodeScopesCsv),
+  }),
+  $I.annoteSchema("M365ScopesFromCsv", {
+    description: "Comma-delimited M365 scope environment value decoded to non-empty scope entries.",
+  })
+);
 
 // The service runtime's token provider and HTTP client are in-process handles,
 // never decoded from external input; structural `S.declare`s carry them through
@@ -342,8 +356,9 @@ export type M365EventCollection = typeof M365EventCollection.Type;
  * @example
  * ```ts
  * import { M365ListDrivesRequest } from "@beep/m365"
+ * import * as O from "effect/Option"
  *
- * const request = M365ListDrivesRequest.make({ siteId: "contoso,site,web" })
+ * const request = M365ListDrivesRequest.make({ siteId: O.some("contoso,site,web") })
  * console.log(request.siteId)
  * ```
  *
@@ -352,7 +367,7 @@ export type M365EventCollection = typeof M365EventCollection.Type;
  */
 export class M365ListDrivesRequest extends S.Class<M365ListDrivesRequest>($I`M365ListDrivesRequest`)(
   {
-    siteId: S.optionalKey(GraphPathSegment).annotateKey({
+    siteId: S.OptionFromOptionalKey(GraphPathSegment).pipe(SchemaUtils.withNoneDefault).annotateKey({
       description: "Optional SharePoint composite site id; omitted to list the signed-in user's drives.",
     }),
   },
@@ -377,7 +392,7 @@ export class M365ListDrivesRequest extends S.Class<M365ListDrivesRequest>($I`M36
  */
 export class M365ListSitesRequest extends S.Class<M365ListSitesRequest>($I`M365ListSitesRequest`)(
   {
-    search: S.optionalKey(S.String).annotateKey({
+    search: S.String.pipe(SchemaUtils.withKeyDefaults(ALL_SITES_SEARCH)).annotateKey({
       description: "Optional search text; defaults to `*` because Graph v1.0 site listing is search-based.",
     }),
   },
@@ -425,7 +440,7 @@ export class M365GetSiteRequest extends S.Class<M365GetSiteRequest>($I`M365GetSi
  */
 export class M365DeltaDriveItemsRequest extends S.Class<M365DeltaDriveItemsRequest>($I`M365DeltaDriveItemsRequest`)(
   {
-    deltaLink: S.optionalKey(S.String).annotateKey({
+    deltaLink: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
       description: "Optional Graph-provided delta continuation URL; must target the configured Graph v1.0 origin.",
     }),
     driveId: GraphPathSegment.annotateKey({
@@ -519,9 +534,11 @@ export class M365ListDriveItemVersionsRequest extends S.Class<M365ListDriveItemV
  *
  * @example
  * ```ts
+ * import { PosInt } from "@beep/schema"
  * import { M365ListMessagesRequest } from "@beep/m365"
+ * import * as O from "effect/Option"
  *
- * const request = M365ListMessagesRequest.make({ top: 10 })
+ * const request = M365ListMessagesRequest.make({ top: O.some(PosInt.make(10)) })
  * console.log(request.top)
  * ```
  *
@@ -530,9 +547,13 @@ export class M365ListDriveItemVersionsRequest extends S.Class<M365ListDriveItemV
  */
 export class M365ListMessagesRequest extends S.Class<M365ListMessagesRequest>($I`M365ListMessagesRequest`)(
   {
-    filter: S.optionalKey(S.String).annotateKey({ description: "Optional Graph OData `$filter` query value." }),
-    top: S.optionalKey(S.Int).annotateKey({ description: "Optional Graph `$top` page size." }),
-    userId: S.optionalKey(GraphPathSegment).annotateKey({
+    filter: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Optional Graph OData `$filter` query value." }),
+    top: S.OptionFromOptionalKey(PosInt)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Optional Graph `$top` page size." }),
+    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(SchemaUtils.withNoneDefault).annotateKey({
       description: "Optional user id/mailbox; omitted to read the signed-in user's messages.",
     }),
   },
@@ -558,7 +579,7 @@ export class M365ListMessagesRequest extends S.Class<M365ListMessagesRequest>($I
 export class M365GetMessageRequest extends S.Class<M365GetMessageRequest>($I`M365GetMessageRequest`)(
   {
     messageId: GraphPathSegment.annotateKey({ description: "Graph message id." }),
-    userId: S.optionalKey(GraphPathSegment).annotateKey({
+    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(SchemaUtils.withNoneDefault).annotateKey({
       description: "Optional user id/mailbox; omitted to read the signed-in user's message.",
     }),
   },
@@ -572,9 +593,11 @@ export class M365GetMessageRequest extends S.Class<M365GetMessageRequest>($I`M36
  *
  * @example
  * ```ts
+ * import { PosInt } from "@beep/schema"
  * import { M365ListEventsRequest } from "@beep/m365"
+ * import * as O from "effect/Option"
  *
- * const request = M365ListEventsRequest.make({ top: 10 })
+ * const request = M365ListEventsRequest.make({ top: O.some(PosInt.make(10)) })
  * console.log(request.top)
  * ```
  *
@@ -583,8 +606,10 @@ export class M365GetMessageRequest extends S.Class<M365GetMessageRequest>($I`M36
  */
 export class M365ListEventsRequest extends S.Class<M365ListEventsRequest>($I`M365ListEventsRequest`)(
   {
-    top: S.optionalKey(S.Int).annotateKey({ description: "Optional Graph `$top` page size." }),
-    userId: S.optionalKey(GraphPathSegment).annotateKey({
+    top: S.OptionFromOptionalKey(PosInt)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Optional Graph `$top` page size." }),
+    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(SchemaUtils.withNoneDefault).annotateKey({
       description: "Optional user id/mailbox; omitted to read the signed-in user's calendar events.",
     }),
   },
@@ -610,7 +635,7 @@ export class M365ListEventsRequest extends S.Class<M365ListEventsRequest>($I`M36
 export class M365GetEventRequest extends S.Class<M365GetEventRequest>($I`M365GetEventRequest`)(
   {
     eventId: GraphPathSegment.annotateKey({ description: "Graph event id." }),
-    userId: S.optionalKey(GraphPathSegment).annotateKey({
+    userId: S.OptionFromOptionalKey(GraphPathSegment).pipe(SchemaUtils.withNoneDefault).annotateKey({
       description: "Optional user id/mailbox; omitted to read the signed-in user's calendar event.",
     }),
   },
@@ -698,7 +723,8 @@ export const M365DriveItemDownload = S.Union([M365DownloadedContent, M365Skipped
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("M365DriveItemDownload", {
     description: "Download result for a drive item, including protected/encrypted skips.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -752,14 +778,16 @@ export type M365Shape = {
 
 // Decode a request schema at the M365 boundary, translating any decode failure into the
 // uniform "request encoding" M365Error for the given resource (was 11 identical consts + pipes).
-const decodeRequest =
-  <Sch extends S.Top>(schema: Sch, resource: string) =>
-  (rawRequest: unknown): Effect.Effect<Sch["Type"], M365Error, Sch["DecodingServices"]> =>
-    S.decodeUnknownEffect(schema)(rawRequest).pipe(
-      Effect.mapError((cause) => M365Error.fromReason("request encoding", { cause, resource }))
-    );
+const decodeRequest = <Sch extends S.Top>(schema: Sch, resource: string) => {
+  const isDecodedRequest = S.is(schema);
 
-const splitScopes = flow(Str.split(","), A.map(Str.trim), A.filter(Str.isNonEmpty));
+  return (rawRequest: unknown): Effect.Effect<Sch["Type"], M365Error, Sch["DecodingServices"]> =>
+    isDecodedRequest(rawRequest)
+      ? Effect.succeed(rawRequest)
+      : S.decodeUnknownEffect(schema)(rawRequest).pipe(
+          Effect.mapError((cause) => M365Error.fromReason("request encoding", { cause, resource }))
+        );
+};
 
 const queryString = (params: ReadonlyArray<QueryParam>): string => {
   const pairs = pipe(
@@ -948,7 +976,7 @@ const isTrustedDeltaLink = (config: ResolvedM365Config, link: string): Effect.Ef
 
 const deltaUrl = (config: ResolvedM365Config, request: M365DeltaDriveItemsRequest): Effect.Effect<string, M365Error> =>
   pipe(
-    O.fromUndefinedOr(request.deltaLink),
+    request.deltaLink,
     O.match({
       onNone: () => Effect.succeed(graphUrl(config, `/drives/${request.driveId}/root/delta`)),
       onSome: (link) =>
@@ -966,9 +994,9 @@ const deltaUrl = (config: ResolvedM365Config, request: M365DeltaDriveItemsReques
     })
   );
 
-const mailboxPath = (userId: string | undefined, suffix: string): string =>
+const mailboxPath = (userId: O.Option<string>, suffix: string): string =>
   pipe(
-    O.fromUndefinedOr(userId),
+    userId,
     O.match({
       onNone: () => `/me/${suffix}`,
       onSome: (id) => `/users/${id}/${suffix}`,
@@ -984,8 +1012,19 @@ const loadEnvConfig = Effect.fn("M365.loadEnvConfig")(function* () {
   const redirectUri = yield* Config.string("M365_REDIRECT_URI").pipe(Config.option);
   const scopesText = yield* Config.string("M365_SCOPES").pipe(Config.option);
   const tokenCachePath = yield* Config.string("M365_TOKEN_CACHE_PATH").pipe(Config.option);
+  const scopes = yield* pipe(
+    scopesText,
+    O.match({
+      onNone: () => Effect.succeed(O.none<ReadonlyArray<string>>()),
+      onSome: (value) =>
+        S.decodeUnknownEffect(M365ScopesFromCsv)(value).pipe(
+          Effect.map(O.some),
+          Effect.mapError((cause) => M365Error.fromReason("config", { cause }))
+        ),
+    })
+  );
 
-  return M365ConfigInput.make({
+  return yield* S.decodeUnknownEffect(M365ConfigInput)({
     clientId,
     tenantId,
     ...getSomesStruct({
@@ -993,10 +1032,10 @@ const loadEnvConfig = Effect.fn("M365.loadEnvConfig")(function* () {
       graphBaseUrl,
       maxRetries,
       redirectUri,
-      scopes: O.map(scopesText, splitScopes),
+      scopes,
       tokenCachePath,
     }),
-  });
+  }).pipe(Effect.mapError((cause) => M365Error.fromReason("config", { cause })));
 });
 
 const makeService = (runtime: M365Runtime): M365Shape => ({
@@ -1055,7 +1094,7 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
   listDrives: Effect.fn("M365.listDrives")(function* (rawRequest) {
     const request = yield* decodeRequest(M365ListDrivesRequest, "drives")(rawRequest);
     const path = pipe(
-      O.fromUndefinedOr(request.siteId),
+      request.siteId,
       O.match({
         onNone: () => "/me/drives",
         onSome: (siteId) => `/sites/${siteId}/drives`,
@@ -1066,27 +1105,24 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
   }),
   listEvents: Effect.fn("M365.listEvents")(function* (rawRequest) {
     const request = yield* decodeRequest(M365ListEventsRequest, "events")(rawRequest);
-    const url = graphUrl(runtime.config, mailboxPath(request.userId, "events"), [
-      ["$top", O.fromUndefinedOr(request.top)],
-    ]);
+    const url = graphUrl(runtime.config, mailboxPath(request.userId, "events"), [["$top", request.top]]);
     const collection = yield* executeJson(runtime, url, M365EventCollection, "events");
     return yield* annotateCollectionCount(collection);
   }),
   listMessages: Effect.fn("M365.listMessages")(function* (rawRequest) {
     const request = yield* decodeRequest(M365ListMessagesRequest, "messages")(rawRequest);
     const url = graphUrl(runtime.config, mailboxPath(request.userId, "messages"), [
-      ["$filter", O.fromUndefinedOr(request.filter)],
-      ["$top", O.fromUndefinedOr(request.top)],
+      ["$filter", request.filter],
+      ["$top", request.top],
     ]);
     const collection = yield* executeJson(runtime, url, M365MessageCollection, "messages");
     return yield* annotateCollectionCount(collection);
   }),
   listSites: Effect.fn("M365.listSites")(function* (rawRequest) {
     const request = yield* decodeRequest(M365ListSitesRequest, "sites")(rawRequest);
-    const search = request.search ?? ALL_SITES_SEARCH;
     const collection = yield* executeJson(
       runtime,
-      graphUrl(runtime.config, "/sites", [["search", O.some(search)]]),
+      graphUrl(runtime.config, "/sites", [["search", O.some(request.search)]]),
       M365SiteCollection,
       "sites"
     );

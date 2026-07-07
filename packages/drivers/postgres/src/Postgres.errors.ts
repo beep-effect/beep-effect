@@ -6,10 +6,11 @@
  */
 
 import { $PostgresId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
-import { A, O, P, Str, thunkFalse } from "@beep/utils";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { A, O, P, Str } from "@beep/utils";
 import { Cause, pipe, Result } from "effect";
 import * as S from "effect/Schema";
+import { isCause, isObject, readCauseReasons, safeBoolean } from "./internal/PostgresDiagnosticGuards.ts";
 import { getPgErrorName, PgErrorName } from "./PostgresSqlState.models.ts";
 
 const $I = $PostgresId.create("Postgres.errors");
@@ -21,10 +22,11 @@ const REDACTED_SQL_PARAMETER = "<redacted>";
  * @example
  * ```ts
  * import { PostgresErrorContext } from "@beep/postgres"
+ * import * as O from "effect/Option"
  *
  * const context = PostgresErrorContext.make({
- *   query: "select 1",
- *   sqlStateName: "UNIQUE_VIOLATION"
+ *   query: O.some("select 1"),
+ *   sqlStateName: O.some("UNIQUE_VIOLATION")
  * })
  *
  * console.log(context)
@@ -35,25 +37,93 @@ const REDACTED_SQL_PARAMETER = "<redacted>";
  */
 export class PostgresErrorContext extends S.Class<PostgresErrorContext>($I`PostgresErrorContext`)(
   {
-    columnName: S.optionalKey(S.String),
-    constraintName: S.optionalKey(S.String),
-    detail: S.optionalKey(S.String),
-    hint: S.optionalKey(S.String),
-    message: S.optionalKey(S.String),
-    params: S.optionalKey(S.Unknown.pipe(S.Array)),
-    query: S.optionalKey(S.String),
-    schemaName: S.optionalKey(S.String),
-    severity: S.optionalKey(S.String),
-    sourceLocation: S.optionalKey(S.String),
-    sqlState: S.optionalKey(S.String),
-    sqlStateName: S.optionalKey(PgErrorName),
-    tableName: S.optionalKey(S.String),
-    where: S.optionalKey(S.String),
+    columnName: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Column name reported by Postgres diagnostics." }),
+    constraintName: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Constraint name reported by Postgres diagnostics." }),
+    detail: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Detailed diagnostic text reported by Postgres." }),
+    hint: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Hint text reported by Postgres." }),
+    message: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Primary diagnostic message reported by Postgres or an adjacent driver." }),
+    params: S.OptionFromOptionalKey(S.Unknown.pipe(S.Array))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Opaque query parameters captured for redacted diagnostics." }),
+    query: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "SQL statement associated with the normalized failure." }),
+    schemaName: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Schema name reported by Postgres diagnostics." }),
+    severity: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Severity reported by Postgres diagnostics." }),
+    sourceLocation: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Best-effort source file and position associated with the failure." }),
+    sqlState: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Five-character SQLSTATE code reported by Postgres." }),
+    sqlStateName: S.OptionFromOptionalKey(PgErrorName)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Canonical SQLSTATE name derived from the SQLSTATE code." }),
+    tableName: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Table name reported by Postgres diagnostics." }),
+    where: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Contextual where-clause or stack detail reported by Postgres." }),
   },
   $I.annote("PostgresErrorContext", {
     description: "Optional diagnostic context captured while normalizing Postgres-adjacent failures.",
   })
-) {}
+) {
+  static readonly is = S.is(PostgresErrorContext);
+}
+
+type PostgresErrorContextInput = {
+  readonly columnName?: string;
+  readonly constraintName?: string;
+  readonly detail?: string;
+  readonly hint?: string;
+  readonly message?: string;
+  readonly params?: ReadonlyArray<unknown>;
+  readonly query?: string;
+  readonly schemaName?: string;
+  readonly severity?: string;
+  readonly sourceLocation?: string;
+  readonly sqlState?: string;
+  readonly sqlStateName?: PgErrorName;
+  readonly tableName?: string;
+  readonly where?: string;
+};
+type PostgresErrorContextLike = PostgresErrorContext | PostgresErrorContextInput;
+
+const normalizePostgresErrorContext = (context: PostgresErrorContextLike): PostgresErrorContext =>
+  PostgresErrorContext.is(context)
+    ? context
+    : PostgresErrorContext.make({
+        columnName: O.fromUndefinedOr(context.columnName),
+        constraintName: O.fromUndefinedOr(context.constraintName),
+        detail: O.fromUndefinedOr(context.detail),
+        hint: O.fromUndefinedOr(context.hint),
+        message: O.fromUndefinedOr(context.message),
+        params: O.fromUndefinedOr(context.params),
+        query: O.fromUndefinedOr(context.query),
+        schemaName: O.fromUndefinedOr(context.schemaName),
+        severity: O.fromUndefinedOr(context.severity),
+        sourceLocation: O.fromUndefinedOr(context.sourceLocation),
+        sqlState: O.fromUndefinedOr(context.sqlState),
+        sqlStateName: O.fromUndefinedOr(context.sqlStateName),
+        tableName: O.fromUndefinedOr(context.tableName),
+        where: O.fromUndefinedOr(context.where),
+      });
 
 const readProperty = <A>(value: object, key: string, guard: (candidate: unknown) => candidate is A): O.Option<A> =>
   pipe(
@@ -63,26 +133,14 @@ const readProperty = <A>(value: object, key: string, guard: (candidate: unknown)
     O.filter(guard)
   );
 
-const safeBoolean = (evaluate: () => boolean): boolean => pipe(Result.try(evaluate), Result.getOrElse(thunkFalse));
-
-const isObject = (value: unknown): value is object => safeBoolean(() => P.isObject(value));
-
 const isError = (value: unknown): value is Error => safeBoolean(() => value instanceof Error);
 
-const isCause = (value: unknown): value is Cause.Cause<unknown> => safeBoolean(() => Cause.isCause(value));
-
-const isPostgresError = (value: unknown): value is PostgresError => safeBoolean(() => S.is(PostgresError)(value));
+const isPostgresError = (value: unknown): value is PostgresError => safeBoolean(() => PostgresError.is(value));
 
 const hasSeen = (seen: ReadonlyArray<object>, value: object): boolean =>
   pipe(
     seen,
     A.some((seenValue) => Object.is(seenValue, value))
-  );
-
-const readCauseReasons = (cause: Cause.Cause<unknown>): ReadonlyArray<Cause.Reason<unknown>> =>
-  pipe(
-    Result.try(() => cause.reasons),
-    Result.getOrElse(A.empty<Cause.Reason<unknown>>)
   );
 
 const readString = (value: unknown, key: string): O.Option<string> =>
@@ -184,7 +242,7 @@ const extractPgLikeError = (value: unknown, seen: ReadonlyArray<object> = []): O
 const makeQueryContext = (
   query: string | undefined,
   params: ReadonlyArray<unknown> | undefined
-): Pick<PostgresErrorContext, "params" | "query"> =>
+): Pick<PostgresErrorContextInput, "params" | "query"> =>
   O.getSomesStruct({
     query: O.fromUndefinedOr(query),
     params: O.map(
@@ -193,7 +251,7 @@ const makeQueryContext = (
     ),
   });
 
-const parseDrizzleMessage = (value: unknown): PostgresErrorContext => {
+const parseDrizzleMessage = (value: unknown): PostgresErrorContextInput => {
   const message = O.getOrUndefined(getErrorMessage(value));
   const match = pipe(
     message,
@@ -216,7 +274,7 @@ const parseDrizzleMessage = (value: unknown): PostgresErrorContext => {
 const extractDrizzleQueryContext = (
   value: unknown,
   seen: ReadonlyArray<object> = []
-): Pick<PostgresErrorContext, "params" | "query"> => {
+): Pick<PostgresErrorContextInput, "params" | "query"> => {
   if (!isObject(value) || hasSeen(seen, value)) {
     return parseDrizzleMessage(value);
   }
@@ -298,27 +356,59 @@ const optionFromSafeDefect = (value: unknown): O.Option<unknown> =>
 export class PostgresError extends TaggedErrorClass<PostgresError>($I`PostgresError`)(
   "PostgresError",
   {
-    operation: S.String,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
-    message: S.OptionFromOptionalKey(S.String),
-    sqlState: S.OptionFromOptionalKey(S.String),
-    sqlStateName: S.OptionFromOptionalKey(S.String),
-    severity: S.OptionFromOptionalKey(S.String),
-    detail: S.OptionFromOptionalKey(S.String),
-    hint: S.OptionFromOptionalKey(S.String),
-    where: S.OptionFromOptionalKey(S.String),
-    schemaName: S.OptionFromOptionalKey(S.String),
-    tableName: S.OptionFromOptionalKey(S.String),
-    columnName: S.OptionFromOptionalKey(S.String),
-    constraintName: S.OptionFromOptionalKey(S.String),
-    query: S.OptionFromOptionalKey(S.String),
-    params: S.OptionFromOptionalKey(S.Unknown.pipe(S.Array)),
-    sourceLocation: S.OptionFromOptionalKey(S.String),
+    operation: S.String.annotateKey({ description: "Driver operation being performed when the failure occurred." }),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true }))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Schema-safe defect captured from the original failure when available." }),
+    message: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Primary diagnostic message reported by Postgres or an adjacent driver." }),
+    sqlState: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Five-character SQLSTATE code reported by Postgres." }),
+    sqlStateName: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Canonical SQLSTATE name derived from the SQLSTATE code." }),
+    severity: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Severity reported by Postgres diagnostics." }),
+    detail: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Detailed diagnostic text reported by Postgres." }),
+    hint: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Hint text reported by Postgres." }),
+    where: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Contextual where-clause or stack detail reported by Postgres." }),
+    schemaName: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Schema name reported by Postgres diagnostics." }),
+    tableName: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Table name reported by Postgres diagnostics." }),
+    columnName: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Column name reported by Postgres diagnostics." }),
+    constraintName: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Constraint name reported by Postgres diagnostics." }),
+    query: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "SQL statement associated with the normalized failure." }),
+    params: S.OptionFromOptionalKey(S.Unknown.pipe(S.Array))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Opaque query parameters captured for redacted diagnostics." }),
+    sourceLocation: S.OptionFromOptionalKey(S.String)
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({ description: "Best-effort source file and position associated with the failure." }),
   },
   $I.annote("PostgresError", {
     description: "Technical Postgres driver failure scoped to a driver operation.",
   })
 ) {
+  static readonly is = S.is(PostgresError);
+
   /**
    * Normalize an unknown Postgres-adjacent failure into a {@link PostgresError}.
    *
@@ -336,41 +426,39 @@ export class PostgresError extends TaggedErrorClass<PostgresError>($I`PostgresEr
   static readonly fromUnknown = (
     operation: string,
     cause?: unknown,
-    context: PostgresErrorContext = {}
+    context: PostgresErrorContextLike = {}
   ): PostgresError => {
     const existingError = O.getOrUndefined(extractPostgresError(cause));
     if (existingError !== undefined) {
       return existingError;
     }
 
+    const diagnosticContext = normalizePostgresErrorContext(context);
     const pgError = O.getOrUndefined(extractPgLikeError(cause));
-    const drizzleContext = extractDrizzleQueryContext(cause);
-    const sqlState = context.sqlState ?? O.getOrUndefined(readString(pgError, "code"));
-    const sqlStateName =
-      context.sqlStateName ?? (sqlState === undefined ? undefined : O.getOrUndefined(getPgErrorName(sqlState)));
+    const drizzleContext = normalizePostgresErrorContext(extractDrizzleQueryContext(cause));
+    const sqlState = O.orElse(diagnosticContext.sqlState, () => readString(pgError, "code"));
+    const sqlStateName = O.orElse(diagnosticContext.sqlStateName, () => O.flatMap(sqlState, getPgErrorName));
 
     return PostgresError.make({
       operation,
       cause: optionFromSafeDefect(cause),
-      message: optionFrom(
-        context.message ?? O.getOrUndefined(getErrorMessage(pgError)) ?? O.getOrUndefined(getErrorMessage(cause))
-      ),
-      sqlState: optionFrom(sqlState),
-      sqlStateName: optionFrom(sqlStateName),
-      severity: optionFrom(context.severity ?? O.getOrUndefined(readString(pgError, "severity"))),
-      detail: optionFrom(context.detail ?? O.getOrUndefined(readString(pgError, "detail"))),
-      hint: optionFrom(context.hint ?? O.getOrUndefined(readString(pgError, "hint"))),
-      where: optionFrom(context.where ?? O.getOrUndefined(readString(pgError, "where"))),
-      schemaName: optionFrom(context.schemaName ?? O.getOrUndefined(readString(pgError, "schema"))),
-      tableName: optionFrom(context.tableName ?? O.getOrUndefined(readString(pgError, "table"))),
-      columnName: optionFrom(context.columnName ?? O.getOrUndefined(readString(pgError, "column"))),
-      constraintName: optionFrom(context.constraintName ?? O.getOrUndefined(readString(pgError, "constraint"))),
-      query: optionFrom(context.query ?? drizzleContext.query),
+      message: O.firstSomeOf([diagnosticContext.message, getErrorMessage(pgError), getErrorMessage(cause)]),
+      sqlState,
+      sqlStateName,
+      severity: O.orElse(diagnosticContext.severity, () => readString(pgError, "severity")),
+      detail: O.orElse(diagnosticContext.detail, () => readString(pgError, "detail")),
+      hint: O.orElse(diagnosticContext.hint, () => readString(pgError, "hint")),
+      where: O.orElse(diagnosticContext.where, () => readString(pgError, "where")),
+      schemaName: O.orElse(diagnosticContext.schemaName, () => readString(pgError, "schema")),
+      tableName: O.orElse(diagnosticContext.tableName, () => readString(pgError, "table")),
+      columnName: O.orElse(diagnosticContext.columnName, () => readString(pgError, "column")),
+      constraintName: O.orElse(diagnosticContext.constraintName, () => readString(pgError, "constraint")),
+      query: O.orElse(diagnosticContext.query, () => drizzleContext.query),
       params: O.map(
-        optionFrom(context.params ?? drizzleContext.params),
+        O.orElse(diagnosticContext.params, () => drizzleContext.params),
         A.map(() => REDACTED_SQL_PARAMETER)
       ),
-      sourceLocation: optionFrom(context.sourceLocation ?? O.getOrUndefined(extractSourceLocation(cause))),
+      sourceLocation: O.orElse(diagnosticContext.sourceLocation, () => extractSourceLocation(cause)),
     });
   };
 }

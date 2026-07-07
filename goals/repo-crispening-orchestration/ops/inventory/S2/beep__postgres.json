@@ -1,16 +1,5 @@
 [
   {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/postgres/src/Postgres.errors.ts",
-    "line": 38,
-    "symbol": "PostgresErrorContext",
-    "smell": "`PostgresErrorContext` models every optional diagnostic as `S.optionalKey(...)` (lines 38-51), then the normalizer repeatedly re-wraps `undefined` through `optionFrom(...)`, `O.fromUndefinedOr(...)`, and `??` merges in `makeQueryContext`, `parseDrizzleMessage`, and `PostgresError.fromUnknown` (notably lines 185-194 and 348-373).",
-    "proposedTarget": "Model the diagnostic context fields as Option at the schema boundary: `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` for strings/arrays, then merge context and extracted values with Option combinators instead of `??`/`optionFrom`. Nearby partial exemplar: `PostgresError` already uses `S.OptionFromOptionalKey(...)` for the final error fields at lines 302-316; full constructor-default exemplars: `packages/drivers/firecrawl/src/Firecrawl.models.ts:71-81` and `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46-51`.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
     "ruleId": "SFV4-normalization",
     "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
     "line": 132,

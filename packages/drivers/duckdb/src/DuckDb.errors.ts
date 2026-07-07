@@ -11,19 +11,71 @@
  */
 
 import { make } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { O, P } from "@beep/utils";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const { $DuckdbId } = make("duckdb");
 const $I = $DuckdbId.create("DuckDb.errors");
+const DuckDbDefect = S.Defect({ includeStack: true });
 
-const causeFromUnknown = (cause: unknown): unknown | undefined =>
-  P.hasInspectableObjectShape(cause) && S.is(S.Defect({ includeStack: true }))(cause) ? cause : undefined;
+type DuckDbErrorContextInput = {
+  readonly cause?: unknown;
+  readonly databasePath?: string;
+  readonly message?: string;
+  readonly statement?: string;
+};
 
-const existingDuckDbError = (cause: unknown): O.Option<DuckDbError> =>
-  S.is(DuckDbError)(cause) ? O.some(cause) : O.none();
+const isDuckDbDefect = S.is(DuckDbDefect);
+
+const causeFromUnknown = (cause: unknown): O.Option<unknown> =>
+  P.hasInspectableObjectShape(cause) && isDuckDbDefect(cause) ? O.some(cause) : O.none();
+
+const errorOptionsFromInput = (options: DuckDbErrorContextInput): DuckDbErrorFromUnknownOptions =>
+  DuckDbErrorFromUnknownOptions.make({
+    cause: causeFromUnknown(options.cause),
+    databasePath: O.fromUndefinedOr(options.databasePath),
+    ...O.getSomesStruct({
+      message: O.fromUndefinedOr(options.message),
+    }),
+    statement: O.fromUndefinedOr(options.statement),
+  });
+
+/**
+ * Driver operation names surfaced in {@link DuckDbError} diagnostics.
+ *
+ * @example
+ * ```ts
+ * import { DuckDbOperation } from "@beep/duckdb"
+ *
+ * console.log(DuckDbOperation.Enum.query)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const DuckDbOperation = LiteralKit(["copyTableToParquet", "query", "run", "runMany", "withTransaction"]).pipe(
+  $I.annoteSchema("DuckDbOperation", {
+    description: "DuckDB driver operation names used in technical error diagnostics.",
+  })
+);
+
+/**
+ * Runtime TypeScript type represented by {@link DuckDbOperation}.
+ *
+ * @example
+ * ```ts
+ * import type { DuckDbOperation } from "@beep/duckdb"
+ *
+ * const operation: DuckDbOperation = "query"
+ * console.log(operation)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export type DuckDbOperation = typeof DuckDbOperation.Type;
 
 /**
  * Diagnostic context captured while normalizing an unknown DuckDB failure.
@@ -36,15 +88,15 @@ const existingDuckDbError = (cause: unknown): O.Option<DuckDbError> =>
  *
  * @example
  * ```ts
- * import { DuckDbError, DuckDbErrorFromUnknownOptions } from "@beep/duckdb"
+ * import { DuckDbErrorFromUnknownOptions } from "@beep/duckdb"
+ * import * as O from "effect/Option"
  *
  * const options = DuckDbErrorFromUnknownOptions.make({
- *   databasePath: "metrics.duckdb",
- *   statement: "select * from missing_table"
+ *   databasePath: O.some("metrics.duckdb"),
+ *   statement: O.some("select * from missing_table")
  * })
  *
- * const error = DuckDbError.fromUnknown("query", new Error("no table"), options)
- * console.log(error.statement) // "select * from missing_table"
+ * console.log(O.getOrUndefined(options.statement)) // "select * from missing_table"
  * ```
  *
  * @category errors
@@ -54,10 +106,18 @@ export class DuckDbErrorFromUnknownOptions extends S.Class<DuckDbErrorFromUnknow
   $I`DuckDbErrorFromUnknownOptions`
 )(
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-    databasePath: S.optionalKey(S.String),
-    message: S.optionalKey(S.String),
-    statement: S.optionalKey(S.String),
+    cause: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Inspectable originating defect, when available.",
+    }),
+    databasePath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "DuckDB database path active when the failure occurred.",
+    }),
+    message: S.String.pipe(SchemaUtils.withKeyDefaults("DuckDB operation failed.")).annotateKey({
+      description: "Human-readable failure summary.",
+    }),
+    statement: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "SQL statement active when the failure occurred.",
+    }),
   },
   $I.annote("DuckDbErrorFromUnknownOptions", {
     description: "Options used when normalizing unknown DuckDB boundary failures.",
@@ -96,16 +156,28 @@ export class DuckDbErrorFromUnknownOptions extends S.Class<DuckDbErrorFromUnknow
 export class DuckDbError extends TaggedErrorClass<DuckDbError>($I`DuckDbError`)(
   "DuckDbError",
   {
-    cause: S.optionalKey(S.Defect({ includeStack: true })),
-    databasePath: S.optionalKey(S.String),
-    message: S.String,
-    operation: S.String,
-    statement: S.optionalKey(S.String),
+    cause: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Inspectable originating defect, when available.",
+    }),
+    databasePath: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "DuckDB database path active when the failure occurred.",
+    }),
+    message: S.String.annotateKey({
+      description: "Human-readable failure summary.",
+    }),
+    operation: DuckDbOperation.annotateKey({
+      description: "DuckDB driver operation that failed.",
+    }),
+    statement: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "SQL statement active when the failure occurred.",
+    }),
   },
   $I.annote("DuckDbError", {
     description: "Technical DuckDB driver failure scoped to a driver operation.",
   })
 ) {
+  static readonly is = S.is(DuckDbError);
+
   /**
    * Normalize an unknown native DuckDB failure into a tagged driver error.
    *
@@ -131,21 +203,21 @@ export class DuckDbError extends TaggedErrorClass<DuckDbError>($I`DuckDbError`)(
    * @since 0.0.0
    */
   static readonly fromUnknown: {
-    (operation: string, cause: unknown, options?: DuckDbErrorFromUnknownOptions): DuckDbError;
-    (cause: unknown, options?: DuckDbErrorFromUnknownOptions): (operation: string) => DuckDbError;
+    (operation: DuckDbOperation, cause: unknown, options?: DuckDbErrorContextInput): DuckDbError;
+    (cause: unknown, options?: DuckDbErrorContextInput): (operation: DuckDbOperation) => DuckDbError;
   } = dual(
     (args) => args.length >= 2 && P.isString(args[0]),
-    (operation: string, cause: unknown, options: DuckDbErrorFromUnknownOptions = {}): DuckDbError =>
-      O.getOrElse(existingDuckDbError(cause), () =>
+    (operation: DuckDbOperation, cause: unknown, options: DuckDbErrorContextInput = {}): DuckDbError => {
+      const context = errorOptionsFromInput({ ...options, cause: options.cause ?? cause });
+      return O.getOrElse(O.liftPredicate(cause, DuckDbError.is), () =>
         DuckDbError.make({
-          ...O.getSomesStruct({
-            cause: O.fromUndefinedOr(causeFromUnknown(cause)),
-            databasePath: O.fromUndefinedOr(options.databasePath),
-            statement: O.fromUndefinedOr(options.statement),
-          }),
-          message: options.message ?? "DuckDB operation failed.",
+          cause: context.cause,
+          databasePath: context.databasePath,
+          message: context.message,
           operation,
+          statement: context.statement,
         })
-      )
+      );
+    }
   );
 }

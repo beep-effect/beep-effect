@@ -6,7 +6,7 @@
  */
 
 import { $RunpodId } from "@beep/identity";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { O } from "@beep/utils";
 import { pipe, Result } from "effect";
 import { dual } from "effect/Function";
@@ -16,6 +16,50 @@ import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import { RunpodHttpMethod, RunpodOperationDescriptor, RunpodOperationId } from "./_generated/Runpod.generated.ts";
 
 const $I = $RunpodId.create("Runpod.errors");
+const RunpodErrorReasonBase = LiteralKit([
+  "config",
+  "request encoding",
+  "response decoding",
+  "response status",
+  "transport",
+]);
+const RunpodDocsErrorReasonBase = LiteralKit(["config", "parse", "response decoding", "response status", "transport"]);
+
+/**
+ * Numeric HTTP status code emitted by Runpod driver boundaries.
+ *
+ * @example
+ * ```ts
+ * import { RunpodHttpStatusCode } from "@beep/runpod"
+ *
+ * console.log(RunpodHttpStatusCode.is(200))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const RunpodHttpStatusCode = S.Int.check(S.isBetween({ minimum: 100, maximum: 599 })).pipe(
+  $I.annoteSchema("RunpodHttpStatusCode", {
+    description: "Numeric HTTP status code emitted by Runpod driver boundaries.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Type for {@link RunpodHttpStatusCode}.
+ *
+ * @example
+ * ```ts
+ * import type { RunpodHttpStatusCode } from "@beep/runpod"
+ *
+ * const status: RunpodHttpStatusCode = 200
+ * console.log(status)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RunpodHttpStatusCode = typeof RunpodHttpStatusCode.Type;
 
 /**
  * Technical error reasons emitted by the Runpod REST API driver.
@@ -30,16 +74,15 @@ const $I = $RunpodId.create("Runpod.errors");
  * @category errors
  * @since 0.1.0
  */
-export const RunpodErrorReason = LiteralKit([
-  "config",
-  "request encoding",
-  "response decoding",
-  "response status",
-  "transport",
-]).pipe(
+export const RunpodErrorReason = RunpodErrorReasonBase.pipe(
   $I.annoteSchema("RunpodErrorReason", {
     description: "Redacted technical error reasons emitted by the Runpod REST API driver.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(RunpodErrorReasonBase),
+  SchemaUtils.withStatics((schema) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+    fromUnknown: S.decodeUnknownSync(schema),
+  }))
 );
 
 /**
@@ -71,16 +114,15 @@ export type RunpodErrorReason = typeof RunpodErrorReason.Type;
  * @category errors
  * @since 0.1.0
  */
-export const RunpodDocsErrorReason = LiteralKit([
-  "config",
-  "parse",
-  "response decoding",
-  "response status",
-  "transport",
-]).pipe(
+export const RunpodDocsErrorReason = RunpodDocsErrorReasonBase.pipe(
   $I.annoteSchema("RunpodDocsErrorReason", {
     description: "Redacted technical error reasons emitted by the Runpod documentation driver.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(RunpodDocsErrorReasonBase),
+  SchemaUtils.withStatics((schema) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+    fromUnknown: S.decodeUnknownSync(schema),
+  }))
 );
 
 /**
@@ -99,8 +141,6 @@ export const RunpodDocsErrorReason = LiteralKit([
  */
 export type RunpodDocsErrorReason = typeof RunpodDocsErrorReason.Type;
 
-const isRunpodOperationDescriptor = S.is(RunpodOperationDescriptor);
-
 /**
  * Technical failure raised by the Runpod REST API driver boundary.
  *
@@ -118,18 +158,20 @@ const isRunpodOperationDescriptor = S.is(RunpodOperationDescriptor);
 export class RunpodError extends TaggedErrorClass<RunpodError>($I`RunpodError`)(
   "RunpodError",
   {
-    cause: S.optionalKey(S.String),
-    method: S.optionalKey(RunpodHttpMethod),
-    methodName: S.optionalKey(S.String),
-    operationId: S.optionalKey(RunpodOperationId),
-    path: S.optionalKey(S.String),
+    cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    method: S.OptionFromOptionalKey(RunpodHttpMethod).pipe(SchemaUtils.withNoneDefault),
+    methodName: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    operationId: S.OptionFromOptionalKey(RunpodOperationId).pipe(SchemaUtils.withNoneDefault),
+    path: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     reason: RunpodErrorReason,
-    status: S.optionalKey(S.Finite),
+    status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("RunpodError", {
     description: "Redacted technical failure raised by the Runpod REST API driver boundary.",
   })
 ) {
+  static readonly is = S.is(RunpodError);
+
   /**
    * Create a driver error scoped to a documented Runpod operation.
    *
@@ -140,18 +182,16 @@ export class RunpodError extends TaggedErrorClass<RunpodError>($I`RunpodError`)(
     (descriptor: RunpodOperationDescriptor, reason: RunpodErrorReason, options?: RunpodErrorOptions): RunpodError;
     (reason: RunpodErrorReason, options?: RunpodErrorOptions): (descriptor: RunpodOperationDescriptor) => RunpodError;
   } = dual(
-    (args) => args.length >= 2 && isRunpodOperationDescriptor(args[0]),
+    (args) => args.length >= 2 && RunpodOperationDescriptor.is(args[0]),
     (descriptor: RunpodOperationDescriptor, reason: RunpodErrorReason, options: RunpodErrorOptions = {}) =>
       RunpodError.make({
-        method: descriptor.method,
-        methodName: descriptor.methodName,
-        operationId: descriptor.operationId,
-        path: descriptor.path,
+        method: O.some(descriptor.method),
+        methodName: O.some(descriptor.methodName),
+        operationId: O.some(descriptor.operationId),
+        path: O.some(descriptor.path),
         reason,
-        ...O.getSomesStruct({
-          cause: causeFromUnknown(options.cause),
-          status: O.fromUndefinedOr(options.status),
-        }),
+        cause: causeFromUnknown(options.cause),
+        status: O.fromUndefinedOr(options.status),
       })
   );
 
@@ -163,10 +203,8 @@ export class RunpodError extends TaggedErrorClass<RunpodError>($I`RunpodError`)(
    */
   static readonly config = (cause?: unknown): RunpodError =>
     RunpodError.make({
+      cause: causeFromUnknown(cause),
       reason: "config",
-      ...O.getSomesStruct({
-        cause: causeFromUnknown(cause),
-      }),
     });
 
   /**
@@ -177,13 +215,11 @@ export class RunpodError extends TaggedErrorClass<RunpodError>($I`RunpodError`)(
    */
   static readonly raw = (options: RunpodRawErrorOptions): RunpodError =>
     RunpodError.make({
-      method: options.method,
-      path: options.path,
+      method: O.some(options.method),
+      path: O.some(options.path),
       reason: options.reason,
-      ...O.getSomesStruct({
-        cause: causeFromUnknown(options.cause),
-        status: O.fromUndefinedOr(options.status),
-      }),
+      cause: causeFromUnknown(options.cause),
+      status: O.fromUndefinedOr(options.status),
     });
 }
 
@@ -204,10 +240,10 @@ export class RunpodError extends TaggedErrorClass<RunpodError>($I`RunpodError`)(
 export class RunpodDocsError extends TaggedErrorClass<RunpodDocsError>($I`RunpodDocsError`)(
   "RunpodDocsError",
   {
-    cause: S.optionalKey(S.String),
+    cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     reason: RunpodDocsErrorReason,
-    status: S.optionalKey(S.Finite),
-    url: S.optionalKey(S.String),
+    status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(SchemaUtils.withNoneDefault),
+    url: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("RunpodDocsError", {
     description: "Redacted technical failure raised by the Runpod documentation index boundary.",
@@ -219,21 +255,13 @@ export class RunpodDocsError extends TaggedErrorClass<RunpodDocsError>($I`Runpod
    * @category constructors
    * @since 0.1.0
    */
-  static readonly fromReason = (
-    reason: RunpodDocsErrorReason,
-    options: RunpodDocsErrorOptions = {}
-  ): RunpodDocsError => {
-    const optionalFields = O.getSomesStruct({
+  static readonly fromReason = (reason: RunpodDocsErrorReason, options: RunpodDocsErrorOptions = {}): RunpodDocsError =>
+    RunpodDocsError.make({
       cause: causeFromUnknown(options.cause),
+      reason,
       status: O.fromUndefinedOr(options.status),
       url: O.fromUndefinedOr(options.url),
     });
-
-    return RunpodDocsError.make({
-      reason,
-      ...optionalFields,
-    });
-  };
 }
 
 /**
@@ -253,7 +281,7 @@ export class RunpodDocsError extends TaggedErrorClass<RunpodDocsError>($I`Runpod
 export class RunpodErrorOptions extends S.Class<RunpodErrorOptions>($I`RunpodErrorOptions`)(
   {
     cause: S.optionalKey(S.Defect({ includeStack: true })),
-    status: S.optionalKey(S.Finite),
+    status: S.optionalKey(RunpodHttpStatusCode),
   },
   $I.annote("RunpodErrorOptions", {
     description: "Options for configuring RunpodError instances.",
@@ -284,7 +312,7 @@ export class RunpodRawErrorOptions extends S.Class<RunpodRawErrorOptions>($I`Run
     method: RunpodHttpMethod,
     path: S.String,
     reason: RunpodErrorReason,
-    status: S.optionalKey(S.Finite),
+    status: S.optionalKey(RunpodHttpStatusCode),
   },
   $I.annote("RunpodRawErrorOptions", {
     description: "Options for configuring RunpodError instances for raw requests.",
@@ -310,7 +338,7 @@ export class RunpodRawErrorOptions extends S.Class<RunpodRawErrorOptions>($I`Run
 export class RunpodDocsErrorOptions extends S.Class<RunpodDocsErrorOptions>($I`RunpodDocsErrorOptions`)(
   {
     cause: S.optionalKey(S.Defect({ includeStack: true })),
-    status: S.optionalKey(S.Finite),
+    status: S.optionalKey(RunpodHttpStatusCode),
     url: S.optionalKey(S.String),
   },
   $I.annote("RunpodDocsErrorOptions", {
@@ -318,6 +346,8 @@ export class RunpodDocsErrorOptions extends S.Class<RunpodDocsErrorOptions>($I`R
   })
 ) {}
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   if (!P.isObject(value)) {
     return O.none();

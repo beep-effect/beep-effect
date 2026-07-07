@@ -2,28 +2,6 @@
   {
     "ruleId": "SFV4-defaults",
     "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
-    "line": 62,
-    "symbol": "resolveConfig",
-    "smell": "`EcfrConfigInput.apiUrl` is `S.optionalKey(S.String)` and `resolveConfig` defaults it with `input.apiUrl ?? ECFR_API_URL`.",
-    "proposedTarget": "Move the default onto the config schema: `apiUrl: S.String.pipe(SchemaUtils.withKeyDefaults(ECFR_API_URL))`, matching `packages/drivers/uspto/src/Uspto.config.ts:47` and `packages/drivers/discord/src/Discord.models.ts:54`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/ecfr/src/Ecfr.errors.ts",
-    "line": 64,
-    "symbol": "EcfrErrorOptions",
-    "smell": "`EcfrErrorOptions` and `EcfrError` carry optional `cause`/`status` fields as `S.optionalKey(...)`, then constructors rebuild absent values with `O.fromUndefinedOr` + `O.getSomesStruct`.",
-    "proposedTarget": "Use `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` for optional error context on both classes; local exemplar: `packages/drivers/pglite/src/Pglite.errors.ts:43`.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/ecfr/src/Ecfr.service.ts",
     "line": 108,
     "symbol": "makeFromEnvironment",
     "smell": "`Config.string(\"ECFR_API_URL\").pipe(Config.withDefault(ECFR_API_URL))` is a defaulting detector hit.",

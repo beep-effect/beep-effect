@@ -6,9 +6,9 @@
  */
 
 import { $M365Id } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils, URLStr } from "@beep/schema";
 import { O } from "@beep/utils";
-import { HashSet, pipe } from "effect";
+import { HashSet, pipe, SchemaGetter } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -136,6 +136,19 @@ const reservedWriteScopes = HashSet.make(...M365_RESERVED_WRITE_SCOPES);
 const requestsNoWriteScope = (scopes: ReadonlyArray<string>): boolean =>
   A.every(scopes, (scope) => !HashSet.has(reservedWriteScopes, scope));
 
+const normalizeBaseUrl = Str.replace(/\/+$/, "");
+const makeNormalizedUrl = (value: string): URLStr => URLStr.make(normalizeBaseUrl(value));
+
+const M365ConfigUrl = S.String.pipe(
+  S.decodeTo(URLStr, {
+    decode: SchemaGetter.transform(normalizeBaseUrl),
+    encode: SchemaGetter.transform(normalizeBaseUrl),
+  }),
+  $I.annoteSchema("M365ConfigUrl", {
+    description: "Normalized Microsoft 365 configuration URL with trailing slash separators removed.",
+  })
+);
+
 /**
  * Runtime configuration accepted by the Microsoft 365 driver layers.
  *
@@ -167,28 +180,30 @@ const requestsNoWriteScope = (scopes: ReadonlyArray<string>): boolean =>
  */
 export class M365ConfigInput extends S.Class<M365ConfigInput>($I`M365ConfigInput`)(
   {
-    tenantId: S.String.annotateKey({
+    tenantId: S.NonEmptyString.annotateKey({
       description: "Entra tenant id (a GUID, `common`, `organizations`, or `consumers`).",
     }),
-    clientId: S.String.annotateKey({
+    clientId: S.NonEmptyString.annotateKey({
       description: "Entra application (public client) id used for the delegated PKCE flow.",
     }),
-    authority: S.optionalKey(S.String).annotateKey({
-      description: "Full authority URL; defaults to `${DEFAULT_AUTHORITY_HOST}/${tenantId}` when omitted.",
+    authority: S.OptionFromOptionalKey(M365ConfigUrl).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Full normalized authority URL; defaults to `${DEFAULT_AUTHORITY_HOST}/${tenantId}` when omitted.",
     }),
-    clientSecret: S.optionalKey(S.String.pipe(S.RedactedFromValue)).annotateKey({
-      description: "Reserved confidential-client secret; redacted and unused by the v1 public-client flow.",
-    }),
-    graphBaseUrl: S.String.pipe(SchemaUtils.withKeyDefaults(GRAPH_API_BASE_URL)).annotateKey({
+    clientSecret: S.OptionFromOptionalKey(S.NonEmptyString.pipe(S.RedactedFromValue))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Reserved confidential-client secret; redacted and unused by the v1 public-client flow.",
+      }),
+    graphBaseUrl: M365ConfigUrl.pipe(SchemaUtils.withKeyDefaults(makeNormalizedUrl(GRAPH_API_BASE_URL))).annotateKey({
       description: "Graph base URL override; defaults to the pinned v1.0 endpoint.",
     }),
-    maxRetries: S.Int.pipe(SchemaUtils.withKeyDefaults(DEFAULT_MAX_RETRIES)).annotateKey({
+    maxRetries: NonNegativeInt.pipe(SchemaUtils.withKeyDefaults(NonNegativeInt.make(DEFAULT_MAX_RETRIES))).annotateKey({
       description: "Throttle-retry budget honored on 429/503; defaults to DEFAULT_MAX_RETRIES.",
     }),
-    redirectUri: S.String.pipe(SchemaUtils.withKeyDefaults(DEFAULT_REDIRECT_URI)).annotateKey({
+    redirectUri: M365ConfigUrl.pipe(SchemaUtils.withKeyDefaults(makeNormalizedUrl(DEFAULT_REDIRECT_URI))).annotateKey({
       description: "Loopback redirect URI base for the interactive authorizer; defaults to http://localhost.",
     }),
-    scopes: S.Array(S.String)
+    scopes: S.Array(S.NonEmptyString)
       .check(
         S.makeFilter(requestsNoWriteScope, {
           identifier: $I`M365ReadOnlyScopes`,
@@ -201,7 +216,7 @@ export class M365ConfigInput extends S.Class<M365ConfigInput>($I`M365ConfigInput
       .annotateKey({
         description: "Requested delegated scopes; defaults to M365_READ_SCOPES. Reserved write scopes are rejected.",
       }),
-    tokenCachePath: S.optionalKey(S.String).annotateKey({
+    tokenCachePath: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
       description: "Filesystem path for the encrypted MSAL token cache; in-memory cache when omitted.",
     }),
   },
@@ -230,17 +245,17 @@ export class M365ConfigInput extends S.Class<M365ConfigInput>($I`M365ConfigInput
  */
 export class ResolvedM365Config extends S.Class<ResolvedM365Config>($I`ResolvedM365Config`)(
   {
-    tenantId: S.String.annotateKey({ description: "Resolved Entra tenant id." }),
-    clientId: S.String.annotateKey({ description: "Resolved Entra public-client application id." }),
-    authority: S.String.annotateKey({ description: "Resolved authority URL." }),
-    scopes: S.Array(S.String).annotateKey({ description: "Resolved delegated read scopes." }),
-    redirectUri: S.String.annotateKey({ description: "Resolved loopback redirect URI base." }),
-    graphBaseUrl: S.String.annotateKey({ description: "Resolved Graph base URL (normalized, no trailing slash)." }),
-    maxRetries: S.Int.annotateKey({ description: "Resolved throttle-retry budget." }),
-    tokenCachePath: S.Option(S.String).annotateKey({
+    tenantId: S.NonEmptyString.annotateKey({ description: "Resolved Entra tenant id." }),
+    clientId: S.NonEmptyString.annotateKey({ description: "Resolved Entra public-client application id." }),
+    authority: URLStr.annotateKey({ description: "Resolved normalized authority URL." }),
+    scopes: S.Array(S.NonEmptyString).annotateKey({ description: "Resolved delegated read scopes." }),
+    redirectUri: URLStr.annotateKey({ description: "Resolved normalized loopback redirect URI base." }),
+    graphBaseUrl: URLStr.annotateKey({ description: "Resolved Graph base URL (normalized, no trailing slash)." }),
+    maxRetries: NonNegativeInt.annotateKey({ description: "Resolved throttle-retry budget." }),
+    tokenCachePath: S.Option(S.NonEmptyString).annotateKey({
       description: "Resolved encrypted token-cache path, if persistence is configured.",
     }),
-    clientSecret: S.String.pipe(S.Redacted, S.Option).annotateKey({
+    clientSecret: S.NonEmptyString.pipe(S.Redacted, S.Option).annotateKey({
       description: "Resolved reserved confidential-client secret, if supplied.",
     }),
   },
@@ -248,8 +263,6 @@ export class ResolvedM365Config extends S.Class<ResolvedM365Config>($I`ResolvedM
     description: "Resolved Microsoft 365 driver configuration with defaults applied.",
   })
 ) {}
-
-const normalizeBaseUrl = Str.replace(/\/+$/, "");
 
 /**
  * Apply defaults to {@link M365ConfigInput}, producing a {@link ResolvedM365Config}.
@@ -273,14 +286,13 @@ export const resolveM365Config = (input: M365ConfigInput): ResolvedM365Config =>
     tenantId: input.tenantId,
     clientId: input.clientId,
     authority: pipe(
-      O.fromUndefinedOr(input.authority),
-      O.map(normalizeBaseUrl),
-      O.getOrElse(() => `${DEFAULT_AUTHORITY_HOST}/${input.tenantId}`)
+      input.authority,
+      O.getOrElse(() => makeNormalizedUrl(`${DEFAULT_AUTHORITY_HOST}/${input.tenantId}`))
     ),
     scopes: input.scopes,
-    redirectUri: normalizeBaseUrl(input.redirectUri),
-    graphBaseUrl: normalizeBaseUrl(input.graphBaseUrl),
+    redirectUri: input.redirectUri,
+    graphBaseUrl: input.graphBaseUrl,
     maxRetries: input.maxRetries,
-    tokenCachePath: O.fromUndefinedOr(input.tokenCachePath),
-    clientSecret: O.fromUndefinedOr(input.clientSecret),
+    tokenCachePath: input.tokenCachePath,
+    clientSecret: input.clientSecret,
   });

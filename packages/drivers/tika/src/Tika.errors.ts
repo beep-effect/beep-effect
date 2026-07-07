@@ -6,12 +6,19 @@
  */
 
 import { $TikaId } from "@beep/identity";
-import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
+import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { O } from "@beep/utils";
 import * as S from "effect/Schema";
 
 const $I = $TikaId.create("Tika.errors");
+const TikaErrorReasonBase = LiteralKit([
+  "config",
+  "engine-unavailable",
+  "response-decoding",
+  "response-status",
+  "timeout",
+  "transport",
+]);
 
 /**
  * Technical Tika failure reasons.
@@ -26,17 +33,11 @@ const $I = $TikaId.create("Tika.errors");
  * @category errors
  * @since 0.0.0
  */
-export const TikaErrorReason = LiteralKit([
-  "config",
-  "engine-unavailable",
-  "response-decoding",
-  "response-status",
-  "timeout",
-  "transport",
-]).pipe(
+export const TikaErrorReason = TikaErrorReasonBase.pipe(
   $I.annoteSchema("TikaErrorReason", {
     description: "Redacted technical error reasons emitted by the Tika driver.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(TikaErrorReasonBase)
 );
 
 /**
@@ -56,6 +57,35 @@ export const TikaErrorReason = LiteralKit([
 export type TikaErrorReason = typeof TikaErrorReason.Type;
 
 /**
+ * Options used when constructing {@link TikaError} instances.
+ *
+ * @example
+ * ```ts
+ * import { TikaErrorOptions } from "@beep/tika"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const options = TikaErrorOptions.make({ statusCode: NonNegativeInt.make(503) })
+ * console.log(options.statusCode)
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class TikaErrorOptions extends S.Class<TikaErrorOptions>($I`TikaErrorOptions`)(
+  {
+    cause: S.optionalKey(S.String).annotateKey({
+      description: "Sanitized technical cause string when one is safe to retain.",
+    }),
+    statusCode: S.optionalKey(NonNegativeInt).annotateKey({
+      description: "HTTP or process status code associated with the Tika failure when one was available.",
+    }),
+  },
+  $I.annote("TikaErrorOptions", {
+    description: "Options for configuring TikaError instances.",
+  })
+) {}
+
+/**
  * Technical failure raised inside the Tika driver boundary.
  *
  * @example
@@ -72,9 +102,21 @@ export type TikaErrorReason = typeof TikaErrorReason.Type;
 export class TikaError extends TaggedErrorClass<TikaError>($I`TikaError`)(
   "TikaError",
   {
-    cause: S.optionalKey(S.String),
-    reason: TikaErrorReason,
-    statusCode: S.optionalKey(NonNegativeInt),
+    cause: S.OptionFromOptionalKey(S.String).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Sanitized technical cause string when one is safe to retain.",
+      })
+    ),
+    reason: TikaErrorReason.annotateKey({
+      description: "Redacted technical error reason.",
+    }),
+    statusCode: S.OptionFromOptionalKey(NonNegativeInt).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "HTTP or process status code associated with the Tika failure when one was available.",
+      })
+    ),
   },
   $I.annote("TikaError", {
     description: "Redacted technical failure raised inside the Tika driver boundary.",
@@ -88,12 +130,12 @@ export class TikaError extends TaggedErrorClass<TikaError>($I`TikaError`)(
    */
   static readonly fromReason = (
     reason: TikaErrorReason,
-    options: { readonly cause?: string; readonly statusCode?: NonNegativeInt } = {}
+    options: TikaErrorOptions = TikaErrorOptions.make({})
   ): TikaError =>
     TikaError.make({
+      cause: O.fromUndefinedOr(options.cause),
       reason,
-      ...R.getSomes({ cause: O.fromUndefinedOr(options.cause) }),
-      ...R.getSomes({ statusCode: O.fromUndefinedOr(options.statusCode) }),
+      statusCode: O.fromUndefinedOr(options.statusCode),
     });
 }
 
@@ -111,7 +153,4 @@ export class TikaError extends TaggedErrorClass<TikaError>($I`TikaError`)(
  * @category constructors
  * @since 0.0.0
  */
-export const makeTikaError = (
-  reason: TikaErrorReason,
-  options: { readonly cause?: string; readonly statusCode?: NonNegativeInt } = {}
-): TikaError => TikaError.fromReason(reason, options);
+export const makeTikaError = TikaError.fromReason;

@@ -6,10 +6,10 @@
  */
 
 import { $SanityId } from "@beep/identity";
-import { Str } from "@beep/utils";
-import { Config, Context, Effect, Layer, pipe, Redacted } from "effect";
+import { SchemaUtils, URLStr } from "@beep/schema";
+import * as O from "@beep/utils/Option";
+import { Config, Context, Effect, Layer, pipe } from "effect";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { FetchHttpClient } from "effect/unstable/http";
@@ -29,12 +29,9 @@ const $I = $SanityId.create("Sanity.service");
  * @example
  * ```ts
  * import { SanityQueryParamValue } from "@beep/sanity"
- * import * as S from "effect/Schema"
  *
- * const isQueryParamValue = S.is(SanityQueryParamValue)
- *
- * console.log(isQueryParamValue("home")) // true
- * console.log(isQueryParamValue({ slug: "home" })) // false
+ * console.log(SanityQueryParamValue.is("home")) // true
+ * console.log(SanityQueryParamValue.is({ slug: "home" })) // false
  * ```
  *
  * @category models
@@ -43,7 +40,8 @@ const $I = $SanityId.create("Sanity.service");
 export const SanityQueryParamValue = S.Union([S.Boolean, S.Finite, S.String]).pipe(
   $I.annoteSchema("SanityQueryParamValue", {
     description: "Scalar JSON value accepted in Sanity query params.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -79,7 +77,7 @@ export type SanityQueryParamValue = typeof SanityQueryParamValue.Type;
  *   query: "*[_type == 'page' && slug.current == $slug][0]"
  * })
  *
- * console.log(request.params?.slug) // "home"
+ * console.log(request.params.slug) // "home"
  * ```
  *
  * @category models
@@ -87,13 +85,19 @@ export type SanityQueryParamValue = typeof SanityQueryParamValue.Type;
  */
 export class SanityQueryRequest extends S.Class<SanityQueryRequest>($I`SanityQueryRequest`)(
   {
-    params: S.optionalKey(S.Record(S.String, SanityQueryParamValue)),
-    query: S.String,
+    params: S.Record(S.String, SanityQueryParamValue).pipe(SchemaUtils.withKeyDefaults(R.empty())).annotateKey({
+      description: "GROQ query variables serialized as scalar JSON values.",
+    }),
+    query: S.String.annotateKey({
+      description: "GROQ query text submitted to the Sanity content API.",
+    }),
   },
   $I.annote("SanityQueryRequest", {
     description: "Sanity GROQ query request.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(SanityQueryRequest);
+}
 
 /**
  * Sanity query response.
@@ -101,13 +105,14 @@ export class SanityQueryRequest extends S.Class<SanityQueryRequest>($I`SanityQue
  * @example
  * ```ts
  * import { SanityQueryResponse } from "@beep/sanity"
+ * import * as O from "effect/Option"
  *
  * const response = SanityQueryResponse.make({
- *   ms: 7,
+ *   ms: O.some(7),
  *   result: { title: "Home" }
  * })
  *
- * console.log(response.ms) // 7
+ * console.log(O.getOrThrow(response.ms)) // 7
  * ```
  *
  * @category models
@@ -115,13 +120,21 @@ export class SanityQueryRequest extends S.Class<SanityQueryRequest>($I`SanityQue
  */
 export class SanityQueryResponse extends S.Class<SanityQueryResponse>($I`SanityQueryResponse`)(
   {
-    ms: S.optionalKey(S.Finite),
-    result: S.Unknown,
+    ms: S.OptionFromOptionalKey(S.Finite.check(S.isGreaterThanOrEqualTo(0)))
+      .pipe(SchemaUtils.withNoneDefault)
+      .annotateKey({
+        description: "Optional Sanity query latency in non-negative milliseconds.",
+      }),
+    result: S.Unknown.annotateKey({
+      description: "Raw Sanity query result payload selected by the caller's GROQ projection.",
+    }),
   },
   $I.annote("SanityQueryResponse", {
     description: "Sanity query response containing the raw result payload.",
   })
-) {}
+) {
+  static readonly decodeEffect = S.decodeUnknownEffect(SanityQueryResponse);
+}
 
 /**
  * Public Sanity service shape.
@@ -135,7 +148,7 @@ export class SanityQueryResponse extends S.Class<SanityQueryResponse>($I`SanityQ
  *   fetch: () => Effect.succeed(SanityQueryResponse.make({ result: [] }))
  * }
  *
- * const program = service.fetch({ query: "*[]" })
+ * const program = service.fetch({ params: {}, query: "*[]" })
  *
  * console.log(Effect.runSync(program).result) // []
  * ```
@@ -149,7 +162,7 @@ export type SanityShape = {
 
 class ResolvedSanityConfig extends S.Class<ResolvedSanityConfig>($I`ResolvedSanityConfig`)(
   {
-    apiHost: S.String,
+    apiHost: URLStr,
     apiToken: S.String.pipe(S.Redacted, S.Option),
     apiVersion: S.String,
     dataset: S.String,
@@ -161,34 +174,43 @@ class ResolvedSanityConfig extends S.Class<ResolvedSanityConfig>($I`ResolvedSani
   })
 ) {}
 
-const normalizeBaseUrl = Str.replace(/\/+$/, "");
-const decodeQueryRequest = S.decodeUnknownEffect(SanityQueryRequest);
-const decodeQueryResponse = S.decodeUnknownEffect(SanityQueryResponse);
+const encodeConfigInput = S.encodeEffect(SanityConfigInput);
+const decodeConfigInput = S.decodeUnknownEffect(SanityConfigInput);
+const decodeApiHost = S.decodeUnknownEffect(URLStr);
 
 const resolveConfig = Effect.fn("Sanity.resolveConfig")(function* (
   input: SanityConfigInput
 ): Effect.fn.Return<ResolvedSanityConfig, SanityError> {
+  const config = yield* pipe(
+    encodeConfigInput(input),
+    Effect.flatMap(decodeConfigInput),
+    Effect.mapError((cause) => SanityError.fromReason("config", { cause }))
+  );
   const projectId = yield* pipe(
-    O.fromNullishOr(input.projectId),
+    O.fromNullishOr(config.projectId),
     O.match({
       onNone: () => Effect.fail(SanityError.fromReason("config")),
       onSome: Effect.succeed,
     })
   );
   const dataset = yield* pipe(
-    O.fromNullishOr(input.dataset),
+    O.fromNullishOr(config.dataset),
     O.match({
       onNone: () => Effect.fail(SanityError.fromReason("config")),
       onSome: Effect.succeed,
     })
   );
+  const apiHost = yield* pipe(
+    decodeApiHost(config.apiHost),
+    Effect.mapError((cause) => SanityError.fromReason("config", { cause }))
+  );
 
   return ResolvedSanityConfig.make({
-    apiHost: normalizeBaseUrl(input.apiHost ?? "https://api.sanity.io"),
-    apiToken: O.fromUndefinedOr(input.apiToken),
-    apiVersion: input.apiVersion,
+    apiHost,
+    apiToken: O.fromUndefinedOr(config.apiToken),
+    apiVersion: config.apiVersion,
     dataset,
-    headers: input.headers ?? {},
+    headers: config.headers,
     projectId,
   });
 });
@@ -234,7 +256,7 @@ const makeRequest = Effect.fn("Sanity.makeRequest")(function* (
   request: SanityQueryRequest
 ) {
   const decoded = yield* pipe(
-    decodeQueryRequest(request),
+    SanityQueryRequest.decodeEffect(request),
     Effect.mapError((cause) => SanityError.fromReason("request encoding", { cause }))
   );
   const url = queryUrl(config);
@@ -245,7 +267,7 @@ const makeRequest = Effect.fn("Sanity.makeRequest")(function* (
     (base) =>
       HttpClientRequest.bodyJson(base, {
         query: decoded.query,
-        params: decoded.params ?? {},
+        params: decoded.params,
       }),
     Effect.mapError((cause) =>
       SanityError.fromReason("request encoding", {
@@ -277,7 +299,7 @@ const decodeResponse = Effect.fnUntraced(
   ): Effect.fn.Return<SanityQueryResponse, HttpClientError.HttpClientError | S.SchemaError> {
     const body = yield* response.json;
 
-    return yield* decodeQueryResponse(body);
+    return yield* SanityQueryResponse.decodeEffect(body);
   },
   (effect, url) =>
     effect.pipe(
@@ -393,10 +415,10 @@ export class Sanity extends Context.Service<Sanity, SanityShape>()($I`Sanity`) {
       const client = yield* HttpClient.HttpClient;
       const resolved = yield* resolveConfig(
         SanityConfigInput.make(
-          R.getSomes({
+          O.getSomesStruct({
             apiHost,
             projectId,
-            apiToken: apiToken.pipe(O.map(Redacted.value)),
+            apiToken,
             apiVersion,
             dataset,
           })

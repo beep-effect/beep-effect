@@ -1,5 +1,14 @@
-import { layer, make, model, OpenAiCompatClient, OpenAiCompatClientOptions } from "@beep/openai-compat";
+import {
+  layer,
+  make,
+  model,
+  OpenAiCompatClient,
+  OpenAiCompatClientOptions,
+  OpenAiCompatLanguageModelConfig,
+} from "@beep/openai-compat";
+import { PosInt } from "@beep/schema/Int";
 import { Redacted } from "effect";
+import * as O from "effect/Option";
 import { describe, expect, it } from "tstyche";
 import type {
   OpenAiCompatAssistantMessage,
@@ -8,11 +17,9 @@ import type {
   OpenAiCompatChatCompletionRequest,
   OpenAiCompatChatCompletionResponse,
   OpenAiCompatClientShape,
-  OpenAiCompatLanguageModelConfig,
   OpenAiCompatUsage,
 } from "@beep/openai-compat";
 import type { Effect, Layer, Stream } from "effect";
-import type * as O from "effect/Option";
 import type * as AiError from "effect/unstable/ai/AiError";
 import type * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import type * as AiModel from "effect/unstable/ai/Model";
@@ -32,15 +39,15 @@ describe("OpenAiCompat", () => {
       Stream.Stream<OpenAiCompatChatCompletionChunk, AiError.AiError>
     >();
     expect(
-      OpenAiCompatClient.makeLayer(OpenAiCompatClientOptions.make({ apiKey: Redacted.make("test-key") }))
+      OpenAiCompatClient.makeLayer(OpenAiCompatClientOptions.make({ apiKey: O.some(Redacted.make("test-key")) }))
     ).type.toBe<Layer.Layer<OpenAiCompatClient, never, HttpClient.HttpClient>>();
   });
 
   it("preserves language model factory surfaces", () => {
-    const config: OpenAiCompatLanguageModelConfig = {
-      maxTokens: 128,
-      temperature: 0.1,
-    };
+    const config = OpenAiCompatLanguageModelConfig.make({
+      maxTokens: O.some(PosInt.make(128)),
+      temperature: O.some(0.1),
+    });
 
     expect(make({ config, model: "compat-model" })).type.toBeAssignableTo<
       Effect.Effect<LanguageModel.Service, never, OpenAiCompatClient>

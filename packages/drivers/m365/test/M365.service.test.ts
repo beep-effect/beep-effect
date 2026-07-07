@@ -3,8 +3,10 @@ import {
   GraphDriveItem,
   GraphDriveItemVersion,
   GraphEvent,
+  GraphFolder,
   GraphListItem,
   GraphMessage,
+  GraphQuota,
   GraphSite,
   M365,
   M365Auth,
@@ -25,12 +27,15 @@ import {
   M365ListSitesRequest,
   M365SkippedEncryptedItem,
 } from "@beep/m365";
-import { describe, expect, layer } from "@effect/vitest";
-import { Cause, Context, Duration, Effect, Exit, Fiber, Layer, pipe, Redacted, Ref } from "effect";
+import { NonNegativeInt, PosInt } from "@beep/schema";
+import { HttpStatus } from "@beep/schema/HttpStatus";
+import { describe, expect, it, layer } from "@effect/vitest";
+import { Cause, Context, Duration, Effect, Exit, Fiber, Layer, pipe, Redacted, Ref, Result } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { TestClock } from "effect/testing";
+import { FastCheck as fc, TestClock } from "effect/testing";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/unstable/http/HttpClientResponse";
@@ -63,6 +68,26 @@ const DRIVE_ID = "b!drive";
 const ITEM_ID = "01ABC";
 const DOWNLOAD_URL = "https://download.example.test/memo.docx";
 const METADATA_URL = `${GRAPH_BASE_URL}/drives/${DRIVE_ID}/items/${ITEM_ID}?$select=id%2Cname%2Csize%2Cfile%2Cfolder%2C%40microsoft.graph.downloadUrl`;
+const M365ConfigInputArbitrary = S.toArbitrary(M365ConfigInput);
+const M365ErrorArbitrary = S.toArbitrary(M365Error);
+const GraphDriveItemArbitrary = S.toArbitrary(GraphDriveItem);
+const M365ListMessagesRequestArbitrary = S.toArbitrary(M365ListMessagesRequest);
+const M365DriveItemDownloadArbitrary = S.toArbitrary(M365DriveItemDownload);
+const sameM365Error = S.toEquivalence(M365Error);
+const sameGraphDriveItem = S.toEquivalence(GraphDriveItem);
+const sameM365ListMessagesRequest = S.toEquivalence(M365ListMessagesRequest);
+const sameM365DriveItemDownload = S.toEquivalence(M365DriveItemDownload);
+
+const expectEncodedRoundTripStable = <Sch extends S.ConstraintCodec<unknown, unknown, never, never>>(
+  schema: Sch,
+  value: Sch["Type"]
+): Sch["Type"] => {
+  const encoded = Result.getOrThrow(S.encodeResult(schema)(value));
+  const decoded = Result.getOrThrow(S.decodeUnknownResult(schema)(encoded));
+
+  expect(Result.getOrThrow(S.encodeResult(schema)(decoded))).toStrictEqual(encoded);
+  return decoded;
+};
 
 const requestUrl = (request: HttpClientRequest.HttpClientRequest): string =>
   HttpClientRequest.toUrl(request).pipe(
@@ -136,7 +161,7 @@ const TestHttpClientLayer = Layer.effect(
 const testConfig = (maxRetries = 0): M365ConfigInput =>
   M365ConfigInput.make({
     clientId: "client-id",
-    maxRetries,
+    maxRetries: NonNegativeInt.make(maxRetries),
     tenantId: "common",
   });
 
@@ -239,6 +264,122 @@ const routeFixture = (request: HttpClientRequest.HttpClientRequest): Effect.Effe
 };
 
 describe("@beep/m365 service", () => {
+  it("keeps encoded schema wire shapes byte-identical", () => {
+    const config = Result.getOrThrow(
+      S.decodeUnknownResult(M365ConfigInput)({
+        authority: "https://login.microsoftonline.com/common",
+        clientId: "client-id",
+        graphBaseUrl: GRAPH_BASE_URL,
+        maxRetries: 3,
+        redirectUri: "http://localhost",
+        scopes: ["User.Read", "Files.Read.All"],
+        tenantId: "common",
+        tokenCachePath: ".cache/m365.json",
+      })
+    );
+    const drive = Result.getOrThrow(
+      S.decodeUnknownResult(GraphDrive)({
+        id: DRIVE_ID,
+        quota: {
+          remaining: 12,
+          total: 24,
+          used: 12,
+        },
+      })
+    );
+    const folder = Result.getOrThrow(S.decodeUnknownResult(GraphFolder)({ childCount: 2 }));
+    const item = Result.getOrThrow(
+      S.decodeUnknownResult(GraphDriveItem)({
+        folder: { childCount: 2 },
+        id: ITEM_ID,
+        size: 3,
+      })
+    );
+    const messagesRequest = Result.getOrThrow(
+      S.decodeUnknownResult(M365ListMessagesRequest)({
+        filter: "receivedDateTime ge 2026-01-01",
+        top: 2,
+        userId: "user-id",
+      })
+    );
+    const sitesRequest = Result.getOrThrow(S.decodeUnknownResult(M365ListSitesRequest)({}));
+    const error = M365Error.fromReason("throttled", {
+      resource: "drives",
+      retryAfterSeconds: 12,
+      status: 429,
+      url: `${GRAPH_BASE_URL}/me/drives`,
+    });
+
+    expect(Result.getOrThrow(S.encodeResult(M365ConfigInput)(config))).toStrictEqual({
+      authority: "https://login.microsoftonline.com/common",
+      clientId: "client-id",
+      graphBaseUrl: GRAPH_BASE_URL,
+      maxRetries: 3,
+      redirectUri: "http://localhost",
+      scopes: ["User.Read", "Files.Read.All"],
+      tenantId: "common",
+      tokenCachePath: ".cache/m365.json",
+    });
+    expect(Result.getOrThrow(S.encodeResult(GraphDrive)(drive))).toStrictEqual({
+      id: DRIVE_ID,
+      quota: {
+        remaining: 12,
+        total: 24,
+        used: 12,
+      },
+    });
+    expect(Result.getOrThrow(S.encodeResult(GraphQuota)(pipe(drive.quota, O.getOrThrow)))).toStrictEqual({
+      remaining: 12,
+      total: 24,
+      used: 12,
+    });
+    expect(Result.getOrThrow(S.encodeResult(GraphFolder)(folder))).toStrictEqual({ childCount: 2 });
+    expect(Result.getOrThrow(S.encodeResult(GraphDriveItem)(item))).toStrictEqual({
+      folder: { childCount: 2 },
+      id: ITEM_ID,
+      size: 3,
+    });
+    expect(Result.getOrThrow(S.encodeResult(M365ListMessagesRequest)(messagesRequest))).toStrictEqual({
+      filter: "receivedDateTime ge 2026-01-01",
+      top: 2,
+      userId: "user-id",
+    });
+    expect(Result.getOrThrow(S.encodeResult(M365ListSitesRequest)(sitesRequest))).toStrictEqual({
+      search: "*",
+    });
+    expect(Result.getOrThrow(S.encodeResult(M365Error)(error))).toStrictEqual({
+      _tag: "M365Error",
+      reason: "throttled",
+      resource: "drives",
+      retryAfterSeconds: 12,
+      status: 429,
+      url: `${GRAPH_BASE_URL}/me/drives`,
+    });
+  });
+
+  it("round-trips schema-derived m365 models through their encoded shape", () =>
+    fc.assert(
+      fc.property(
+        M365ConfigInputArbitrary,
+        M365ErrorArbitrary,
+        GraphDriveItemArbitrary,
+        M365ListMessagesRequestArbitrary,
+        M365DriveItemDownloadArbitrary,
+        (config, error, item, request, download) => {
+          expectEncodedRoundTripStable(M365ConfigInput, config);
+          expect(sameM365Error(expectEncodedRoundTripStable(M365Error, error), error)).toBe(true);
+          expect(sameGraphDriveItem(expectEncodedRoundTripStable(GraphDriveItem, item), item)).toBe(true);
+          expect(
+            sameM365ListMessagesRequest(expectEncodedRoundTripStable(M365ListMessagesRequest, request), request)
+          ).toBe(true);
+          expect(
+            sameM365DriveItemDownload(expectEncodedRoundTripStable(M365DriveItemDownload, download), download)
+          ).toBe(true);
+        }
+      ),
+      { numRuns: 50 }
+    ));
+
   layer(makeTestLayer())((it) => {
     it.effect(
       "decodes Graph fixtures for each read verb and sends bearer auth to Graph",
@@ -247,7 +388,7 @@ describe("@beep/m365 service", () => {
         yield* testHttp.respondWith(routeFixture);
         const m365 = yield* M365;
 
-        const drives = yield* m365.listDrives(M365ListDrivesRequest.make({ siteId: SITE_ID }));
+        const drives = yield* m365.listDrives(M365ListDrivesRequest.make({ siteId: O.some(SITE_ID) }));
         const sites = yield* m365.listSites(M365ListSitesRequest.make({ search: "legal docs" }));
         const site = yield* m365.getSite(M365GetSiteRequest.make({ siteId: SITE_ID }));
         const delta = yield* m365.deltaDriveItems(M365DeltaDriveItemsRequest.make({ driveId: DRIVE_ID }));
@@ -258,11 +399,18 @@ describe("@beep/m365 service", () => {
           M365ListDriveItemVersionsRequest.make({ driveId: DRIVE_ID, itemId: ITEM_ID })
         );
         const messages = yield* m365.listMessages(
-          M365ListMessagesRequest.make({ filter: "receivedDateTime ge 2026-01-01", top: 2 })
+          M365ListMessagesRequest.make({
+            filter: O.some("receivedDateTime ge 2026-01-01"),
+            top: O.some(PosInt.make(2)),
+          })
         );
         const message = yield* m365.getMessage(M365GetMessageRequest.make({ messageId: "message-id" }));
-        const events = yield* m365.listEvents(M365ListEventsRequest.make({ top: 3, userId: "user-id" }));
-        const event = yield* m365.getEvent(M365GetEventRequest.make({ eventId: "event-id", userId: "user-id" }));
+        const events = yield* m365.listEvents(
+          M365ListEventsRequest.make({ top: O.some(PosInt.make(3)), userId: O.some("user-id") })
+        );
+        const event = yield* m365.getEvent(
+          M365GetEventRequest.make({ eventId: "event-id", userId: O.some("user-id") })
+        );
 
         expect(drives.value[0]).toBeInstanceOf(GraphDrive);
         expect(sites.value[0]).toBeInstanceOf(GraphSite);
@@ -290,7 +438,7 @@ describe("@beep/m365 service", () => {
       Effect.fnUntraced(function* () {
         const m365 = yield* M365;
         const testHttp = yield* M365TestHttp;
-        const exit = yield* Effect.exit(m365.listDrives(M365ListDrivesRequest.make({ siteId: SITE_ID })));
+        const exit = yield* Effect.exit(m365.listDrives(M365ListDrivesRequest.make({ siteId: O.some(SITE_ID) })));
         const captures = yield* testHttp.captures;
 
         expect(captures).toHaveLength(0);
@@ -329,7 +477,7 @@ describe("@beep/m365 service", () => {
           })
         );
         const exit = yield* Effect.exit(
-          m365.deltaDriveItems(M365DeltaDriveItemsRequest.make({ deltaLink, driveId: DRIVE_ID }))
+          m365.deltaDriveItems(M365DeltaDriveItemsRequest.make({ deltaLink: O.some(deltaLink), driveId: DRIVE_ID }))
         );
         const captures = yield* testHttp.captures;
 
@@ -355,7 +503,7 @@ describe("@beep/m365 service", () => {
         const requests: ReadonlyArray<Effect.Effect<unknown, M365Error>> = pipe(
           ["../../me", "%2E%2E"],
           A.flatMap((injectedSegment) => [
-            m365.listDrives({ siteId: injectedSegment } as M365ListDrivesRequest),
+            m365.listDrives({ siteId: injectedSegment } as unknown as M365ListDrivesRequest),
             m365.getSite({ siteId: injectedSegment } as M365GetSiteRequest),
             m365.deltaDriveItems({ driveId: injectedSegment } as M365DeltaDriveItemsRequest),
             m365.downloadDriveItemContent({
@@ -381,12 +529,15 @@ describe("@beep/m365 service", () => {
               driveId: DRIVE_ID,
               itemId: injectedSegment,
             } as M365ListDriveItemVersionsRequest),
-            m365.listMessages({ userId: injectedSegment } as M365ListMessagesRequest),
+            m365.listMessages({ userId: injectedSegment } as unknown as M365ListMessagesRequest),
             m365.getMessage({ messageId: injectedSegment } as M365GetMessageRequest),
-            m365.getMessage({ messageId: "message-id", userId: injectedSegment } as M365GetMessageRequest),
-            m365.listEvents({ userId: injectedSegment } as M365ListEventsRequest),
+            m365.getMessage({
+              messageId: "message-id",
+              userId: injectedSegment,
+            } as unknown as M365GetMessageRequest),
+            m365.listEvents({ userId: injectedSegment } as unknown as M365ListEventsRequest),
             m365.getEvent({ eventId: injectedSegment } as M365GetEventRequest),
-            m365.getEvent({ eventId: "event-id", userId: injectedSegment } as M365GetEventRequest),
+            m365.getEvent({ eventId: "event-id", userId: injectedSegment } as unknown as M365GetEventRequest),
           ])
         );
 
@@ -507,8 +658,8 @@ describe("@beep/m365 service", () => {
           expect(O.isSome(error)).toBe(true);
           if (O.isSome(error)) {
             expect(error.value.reason).toBe("throttled");
-            expect(error.value.retryAfterSeconds).toStrictEqual(O.some(12));
-            expect(error.value.status).toStrictEqual(O.some(429));
+            expect(error.value.retryAfterSeconds).toStrictEqual(O.some(NonNegativeInt.make(12)));
+            expect(error.value.status).toStrictEqual(O.some(HttpStatus.make(429)));
           }
         }
       })

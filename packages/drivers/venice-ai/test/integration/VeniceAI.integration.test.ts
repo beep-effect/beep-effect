@@ -1,3 +1,4 @@
+import { URLStr } from "@beep/schema/URL";
 import { Str } from "@beep/utils";
 import { VENICE_API_URL, VeniceAI, VeniceAIConfigInput } from "@beep/venice-ai";
 import { describe, expect, it, layer } from "@effect/vitest";
@@ -16,8 +17,8 @@ const apiKey = pipe(
 const makeLiveLayer = (key: string) =>
   VeniceAI.makeLayer(
     VeniceAIConfigInput.make({
-      apiKey: Redacted.make(key),
-      baseUrl: VENICE_API_URL,
+      apiKey: O.some(Redacted.make(key)),
+      baseUrl: URLStr.make(VENICE_API_URL),
     })
   ).pipe(Layer.provide(FetchHttpClient.layer));
 

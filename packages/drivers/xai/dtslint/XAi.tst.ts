@@ -1,5 +1,6 @@
 import { XAi, XAiConfigInput, XAiLanguageModel } from "@beep/xai";
 import { Redacted } from "effect";
+import * as O from "effect/Option";
 import { describe, expect, it } from "tstyche";
 import type { XAiError } from "@beep/xai";
 import type { Effect, Layer } from "effect";
@@ -9,7 +10,7 @@ import type * as HttpClient from "effect/unstable/http/HttpClient";
 
 describe("XAi", () => {
   it("preserves layer types", () => {
-    expect(XAi.makeLayer(XAiConfigInput.make({ apiKey: Redacted.make("test-key") }))).type.toBeAssignableTo<
+    expect(XAi.makeLayer(XAiConfigInput.make({ apiKey: O.some(Redacted.make("test-key")) }))).type.toBeAssignableTo<
       Layer.Layer<XAi, never, HttpClient.HttpClient>
     >();
     expect(XAi.layer).type.toBeAssignableTo<Layer.Layer<XAi, XAiError>>();

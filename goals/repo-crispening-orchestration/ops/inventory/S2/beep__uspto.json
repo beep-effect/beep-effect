@@ -1,38 +1,5 @@
 [
   {
-    "ruleId": "SFV4-normalization",
-    "file": "packages/drivers/uspto/src/Uspto.models.ts",
-    "line": 109,
-    "symbol": "normalizeUsptoApplicationNumber",
-    "smell": "Free-text USPTO application-number normalization (`replaceAll(/[\\s/,.-]/gu, \"\")` plus pattern check) lives in an exported helper next to the `UsptoApplicationNumber` schema instead of being a decode-side codec.",
-    "proposedTarget": "Add a schema codec such as `UsptoApplicationNumberFromText = S.String.pipe(S.decodeTo(UsptoApplicationNumber, SchemaTransformation.transformOrFail(...)))`; local exemplars: `packages/foundation/modeling/schema/src/CommonTextSchemas.ts:36` uses `S.decodeTo` + `SchemaTransformation.transform`, and `packages/foundation/modeling/identity/src/Curie.ts:211` uses `SchemaTransformation.transformOrFail` for string-to-domain decoding.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-normalization",
-    "file": "packages/drivers/uspto/src/Uspto.models.ts",
-    "line": 133,
-    "symbol": "normalizeUsptoPatentNumber",
-    "smell": "Patent-number cleanup (`Str.toUpperCase`, stripping `US`, commas, spaces, and kind suffixes) is encoded as a helper pipeline rather than as the decoding path for the patent-number schema.",
-    "proposedTarget": "Move the free-text input form into a codec like `UsptoPatentNumberFromText` using `S.decodeTo(UsptoPatentNumber, SchemaTransformation.transformOrFail(...))`; this mirrors schema-owned text normalization in `packages/foundation/modeling/schema/src/internal/email.ts:36` and `packages/foundation/modeling/schema/src/CommonTextSchemas.ts:81`.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/uspto/src/Uspto.models.ts",
-    "line": 154,
-    "symbol": "UsptoApplicationMetadata",
-    "smell": "The projected domain metadata model has many `S.optionalKey(S.String)` fields, so decoded values carry `undefined` instead of `Option`.",
-    "proposedTarget": "Change optional metadata fields to `S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)`; in-repo exemplars: `packages/drivers/pglite/src/Pglite.errors.ts:43` uses `S.OptionFromOptionalKey`, and `packages/foundation/modeling/lexical/src/Lexical.model.ts:687` pairs Option fields with `SchemaUtils.withNoneDefault`.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
     "ruleId": "SFV4-defaults",
     "file": "packages/drivers/uspto/src/Uspto.models.ts",
     "line": 210,
@@ -41,51 +8,11 @@
     "proposedTarget": "Use `S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` for the optional document fields; this should also simplify `packages/drivers/uspto/src/Uspto.service.ts:186` where `R.getSomes` rebuilds optional properties.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/uspto/src/Uspto.service.ts",
-    "line": 88,
-    "symbol": "MetadataEnvelope.patentFileWrapperDataBag",
-    "smell": "Private decoded envelope arrays are modeled as optional keys, then every consumer falls back with `?? []` (`getApplication` at line 305 and `searchApplications` at line 337).",
-    "proposedTarget": "Give the envelope array fields empty-array decode/constructor defaults with `S.Array(...).pipe(SchemaUtils.withEmptyArrayDefaults<...>())`; verified helper definition is `packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:114`, with live usage in `packages/tooling/tool/cli/src/commands/CreatePackage/ConfigUpdater.ts:101`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/uspto/src/Uspto.service.ts",
-    "line": 97,
-    "symbol": "ContinuityEnvelopeWrapper",
-    "smell": "`childContinuityBag` and `parentContinuityBag` are optional array keys, then `getContinuity` falls back to `[]` at lines 318-319.",
-    "proposedTarget": "Move the empty-array default onto both wrapper fields with `SchemaUtils.withEmptyArrayDefaults`, as in `packages/foundation/modeling/nlp/src/Ontology/Kind.ts:398` and `packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts:766`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 6
-  },
-  {
-    "ruleId": "SFV4-normalization",
-    "file": "packages/drivers/uspto/src/Uspto.service.ts",
-    "line": 203,
-    "symbol": "normalizeBaseUrl",
-    "smell": "Trailing-slash normalization for `apiUrl` runs in service config resolution instead of traveling with `UsptoConfigInput.apiUrl`.",
-    "proposedTarget": "Absorb the slash normalization into the config field codec, for example `apiUrl: S.String.pipe(S.decode(SchemaTransformation.transform({ decode: stripTrailingSlash, encode: identity })), SchemaUtils.withKeyDefaults(USPTO_API_URL))`; see `packages/foundation/modeling/schema/src/CommonTextSchemas.ts:36` for schema-owned string normalization.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 7
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/uspto/src/Uspto.errors.ts",
-    "line": 72,
-    "symbol": "UsptoError",
-    "smell": "Error context fields `cause` and `status` are `S.optionalKey(...)`, and `fromReason` manually omits absent values with `O.fromUndefinedOr` + `R.getSomes`.",
-    "proposedTarget": "Model absent error context as Option: `cause: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` and `status: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault)`, following the Option-shaped driver error exemplar in `packages/drivers/pglite/src/Pglite.errors.ts:43`.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 8
+    "roiRank": 4,
+    "exception": {
+      "reason": "Changing UsptoDocumentReference optional fields to Option would require updating @beep/uspto-mcp document projection consumers that read those fields directly. Field annotations and decoder colocation were fixed in-package; the public Type change is deferred.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-defaults",

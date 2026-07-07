@@ -1,94 +1,6 @@
 [
   {
     "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/wink/src/WinkCorpus.service.ts",
-    "line": 48,
-    "symbol": "CreateCorpusBM25Config",
-    "smell": "`CreateCorpusBM25Config` encodes each BM25 override as `S.Finite.pipe(S.UndefinedOr, S.optionalKey)` / `BM25Norm.pipe(S.UndefinedOr, S.optionalKey)`, then `createCorpus` re-applies `DefaultBM25Config` with `request?.bm25Config?.b ?? ...` through `norm ?? ...` at lines 530-533.",
-    "proposedTarget": "Carry BM25 defaults on the schema: use `UnitInterval`/`S.Finite`/`BM25Norm` with `SchemaUtils.withKeyDefaults(DefaultBM25Config.<field>)`, and default the optional `bm25Config` object at the `CreateCorpusParams` boundary if preserving omitted-object construction. In-repo exemplar: `packages/drivers/runpod/src/Runpod.config.ts:66` uses `SchemaUtils.withKeyDefaults(R.empty())`; helper exemplar: `packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:50` defines `withKeyDefaults`.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/wink/src/WinkCorpus.service.ts",
-    "line": 73,
-    "symbol": "LearnCorpusParams",
-    "smell": "`dedupeById` is `S.Boolean.pipe(S.UndefinedOr, S.optionalKey)` and is defaulted repeatedly with `request.dedupeById ?? true` at lines 657/661.",
-    "proposedTarget": "Make `dedupeById` a schema default: `S.Boolean.pipe(SchemaUtils.withKeyDefaults(true))`; the service can read `request.dedupeById` directly. In-package adjacent exemplar: `WinkObservability.ts:112` has the same optional-boolean shape and should move to a bool default; repo exemplar: `packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts:274-283` uses `SchemaUtils.withKeyDefaults` for boolean flags.",
-    "confidence": 0.86,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/wink/src/WinkCorpus.service.ts",
-    "line": 81,
-    "symbol": "QueryCorpusParams",
-    "smell": "`includeText` and `topN` are optional/undefined fields; `query` replays `request.includeText ?? false` at lines 712/766 and passes `request.topN` through `sanitizeLimit` at line 790.",
-    "proposedTarget": "Move the stable boolean default to `includeText: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false))`. Split `topN`: model the lower-bound/range with a positive-int schema if available, while keeping the dynamic upper-bound fallback (`A.length(scored)`) in the query algorithm. Exemplar for bool defaults: `packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts:274`; dynamic upper-bound clamp should remain explicit.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/wink/src/WinkCorpus.service.ts",
-    "line": 93,
-    "symbol": "CorpusStatsParams",
-    "smell": "`includeIdf` and `includeMatrix` are optional/undefined booleans and are defaulted with `?? false` in telemetry and branching at lines 566-567, 590, 615, and 643; `topIdfTerms` is also optional and fed to the dynamic clamp at line 606.",
-    "proposedTarget": "Default the booleans on the schema with `SchemaUtils.withKeyDefaults(false)`. Treat `topIdfTerms` like `topN`: move positive/range validation into the schema, but leave the dynamic upper-bound fallback (`A.length(decoded)`) in code. Exemplar: `packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts:274-283` for include* defaults.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/wink/src/WinkObservability.ts",
-    "line": 81,
-    "symbol": "WinkWorkflowObservationOptions",
-    "smell": "`attributes` / `metricAttributes` are optional record fields and `retryable` is an optional boolean; `mergeAttributes` defaults records with `(left ?? {})` / `(right ?? {})` at lines 52-53, while tool error paths default `retryable ?? false` at lines 231/247.",
-    "proposedTarget": "Use schema defaults: `attributes` and `metricAttributes` with `SchemaUtils.withKeyDefaults(R.empty())`, and `retryable: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false))`; then `mergeAttributes` accepts concrete records and `makeWinkToolError` / log annotations read `options.retryable` directly. In-package parallel: `packages/drivers/runpod/src/Runpod.config.ts:66` and `packages/drivers/phoenix/src/Phoenix.config.ts:53` default header records with `withKeyDefaults(R.empty())`.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/wink/src/WinkCorpus.service.ts",
-    "line": 344,
-    "symbol": "CorpusManagerError",
-    "smell": "`cause` is a required `S.Defect({ includeStack: true })`, but `fromMessage` creates no-cause errors by passing literal `cause: undefined` at line 382.",
-    "proposedTarget": "Model absence as Option: `cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault)` (or split no-cause vs caused tagged errors if distinct behavior is desired). In-repo exemplar: `packages/drivers/drizzle/src/Drizzle.errors.ts:255` and `packages/drivers/firecrawl/src/Firecrawl.errors.ts:242` model optional causes with `S.OptionFromOptionalKey`.",
-    "confidence": 0.88,
-    "mechanization": "assisted",
-    "roiRank": 6
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/wink/src/WinkVectorizer.service.ts",
-    "line": 178,
-    "symbol": "VectorizerError",
-    "smell": "`cause` is a required `S.Defect({ includeStack: true })`, but `fromMessage` constructs no-cause errors with `cause: undefined` at line 220.",
-    "proposedTarget": "Same target as `CorpusManagerError`: make `cause` an `OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault)` or split the constructor/error variant. Exemplar: `packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Errors.ts:202` models `cause` as `S.OptionFromOptionalKey(S.Defect({ includeStack: true }))`.",
-    "confidence": 0.88,
-    "mechanization": "assisted",
-    "roiRank": 7
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/wink/src/Wink.models.ts",
-    "line": 112,
-    "symbol": "CustomEntityExample",
-    "smell": "`mark` is `S.OptionFromOptionalKey(MarkRange)` without a constructor none default, so `LearnCustomEntities` has to pass `mark: P.isUndefined(entity.mark) ? O.none() : O.some(entity.mark)` at `WinkTools.service.ts:703`.",
-    "proposedTarget": "Add `SchemaUtils.withNoneDefault` to `mark`, then construct `CustomEntityExample` without an explicit `O.none()` when the upstream tool parameter omits a mark. Exemplar: `packages/foundation/modeling/schema/test/SchemaUtils.test.ts:123` covers `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)`.",
-    "confidence": 0.84,
-    "mechanization": "assisted",
-    "roiRank": 8
-  },
-  {
-    "ruleId": "SFV4-defaults",
     "file": "packages/drivers/wink/src/WinkTools.service.ts",
     "line": 633,
     "symbol": "WinkNlpToolkitLive",
@@ -96,7 +8,11 @@
     "proposedTarget": "Root cause is mostly upstream: move stable defaults onto the `@beep/nlp-processing` tool parameter schemas (e.g. `Tools/PhoneticMatch.ts:29-32`, `Tools/NGrams.ts:29-40`, `Tools/LearnCustomEntities.ts:50-53`, `Tools/QueryCorpus.ts:21-27`) using `SchemaUtils.withKeyDefaults`; then this driver consumes already-defaulted params. Keep dynamic defaults such as `topN ?? result.uniqueNGrams` in handler logic.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 9
+    "roiRank": 9,
+    "exception": {
+      "reason": "Stable defaults for these agent-facing tool parameters are owned by @beep/nlp-processing tool schemas; changing them in the driver would leave duplicated public contracts. Dynamic result-size defaults remain handler behavior.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-normalization",
@@ -107,7 +23,11 @@
     "proposedTarget": "Split the invariant: use a positive-int schema for the lower bound and integer normalization, but keep the dynamic upper-bound clamp against the current result size in service code. If clamp-on-decode is wanted for fixed bounds, use a schema transformation; Effect v4 verification: `.repos/effect-v4/packages/effect/src/SchemaTransformation.ts:334` defines `SchemaTransformation.transform`.",
     "confidence": 0.58,
     "mechanization": "judgment",
-    "roiRank": 10
+    "roiRank": 10,
+    "exception": {
+      "reason": "The remaining clamp depends on live result sizes such as scored documents, decoded IDF terms, and generated n-gram counts; only the static positive-integer lower-bound moved into schemas.",
+      "boundary": "dynamic runtime limit clamp"
+    }
   },
   {
     "ruleId": "SFV4-normalization",

@@ -9,7 +9,7 @@ import { Buffer } from "node:buffer";
 import * as dns from "node:dns";
 import { Readable } from "node:stream";
 import { $BoxId } from "@beep/identity";
-import { assertAllowedRemoteUrl, BlockedHostError } from "@beep/schema";
+import { assertAllowedRemoteUrl, BlockedHostError, HttpsUrl, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Cause, Effect, Exit, Queue, Result, Stream } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -42,6 +42,20 @@ const BoxByteInputValue = S.Union([
 ]).pipe(
   $I.annoteSchema("BoxByteInput", {
     description: "Byte input accepted by Box upload adapters.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+const LastPartIndex = S.Int.check(
+  S.isGreaterThanOrEqualTo(-1, {
+    identifier: $I`LastPartIndexMinimumCheck`,
+    title: "Last part index minimum",
+    description: "Chunked upload part indexes use -1 as the pre-upload sentinel and non-negative values thereafter.",
+    message: "Expected an upload part index greater than or equal to -1",
+  })
+).pipe(
+  $I.annoteSchema("LastPartIndex", {
+    description: "Chunked upload part index, with -1 representing the pre-upload sentinel.",
   })
 );
 
@@ -85,10 +99,11 @@ export type BoxByteStream = Stream.Stream<Uint8Array, BoxError, never>;
  * @example
  * ```ts
  * import { BoxPartAccumulator } from "@beep/box"
+ * import { NonNegativeInt } from "@beep/schema"
  *
  * const accumulator = BoxPartAccumulator.make({
  *   fileHash: "sha1-empty",
- *   fileSize: 0,
+ *   fileSize: NonNegativeInt.make(0),
  *   lastIndex: -1,
  *   parts: [],
  *   uploadPartUrl: "https://upload.box.com/session"
@@ -102,8 +117,8 @@ export type BoxByteStream = Stream.Stream<Uint8Array, BoxError, never>;
 export class BoxPartAccumulator extends S.Class<BoxPartAccumulator>($I`BoxPartAccumulator`)(
   {
     fileHash: S.Unknown,
-    fileSize: S.Finite,
-    lastIndex: S.Finite,
+    fileSize: NonNegativeInt,
+    lastIndex: LastPartIndex,
     parts: M.UploadPart.pipe(S.Array),
     uploadPartUrl: S.String,
   },
@@ -381,6 +396,7 @@ export class BoxUploadWithPreflightCheckPayload extends S.Class<BoxUploadWithPre
  *
  * @example
  * ```ts
+ * import { HttpsUrl } from "@beep/schema"
  * import type { BoxUploadFilePartByUrlPayload } from "@beep/box"
  *
  * const payload = {
@@ -389,7 +405,7 @@ export class BoxUploadWithPreflightCheckPayload extends S.Class<BoxUploadWithPre
  *     digest: "sha=abc123"
  *   },
  *   requestBody: new Uint8Array([104, 105]),
- *   url: "https://upload.box.com/api/2.0/files/upload_sessions/abc/parts"
+ *   url: HttpsUrl.make("https://upload.box.com/api/2.0/files/upload_sessions/abc/parts")
  * } satisfies BoxUploadFilePartByUrlPayload
  * console.log(new URL(payload.url).hostname)
  * ```
@@ -404,7 +420,7 @@ export class BoxUploadFilePartByUrlPayload extends S.Class<BoxUploadFilePartByUr
     headersInput: M.UploadFilePartByUrlHeadersInput,
     optionalsInput: M.UploadFilePartByUrlOptionalsInput.pipe(S.optionalKey),
     requestBody: BoxByteInputValue,
-    url: S.String,
+    url: HttpsUrl,
   },
   $I.annote("BoxUploadFilePartByUrlPayload", {
     description: "Payload for chunkedUploads.uploadFilePartByUrl.",
@@ -450,12 +466,13 @@ export class BoxUploadFilePartPayload extends S.Class<BoxUploadFilePartPayload>(
  * @example
  * ```ts
  * import { BoxPartAccumulator } from "@beep/box"
+ * import { NonNegativeInt } from "@beep/schema"
  * import type { BoxChunkedUploadReducerPayload } from "@beep/box"
  *
  * const payload = {
  *   acc: BoxPartAccumulator.make({
  *     fileHash: "sha1-empty",
- *     fileSize: 2,
+ *     fileSize: NonNegativeInt.make(2),
  *     lastIndex: -1,
  *     parts: [],
  *     uploadPartUrl: "https://upload.box.com/session"
@@ -485,12 +502,13 @@ export class BoxChunkedUploadReducerPayload extends S.Class<BoxChunkedUploadRedu
  *
  * @example
  * ```ts
+ * import { NonNegativeInt } from "@beep/schema"
  * import type { BoxUploadBigFilePayload } from "@beep/box"
  *
  * const payload = {
  *   file: new Uint8Array([104, 105]),
  *   fileName: "large-document.txt",
- *   fileSize: 2,
+ *   fileSize: NonNegativeInt.make(2),
  *   parentFolderId: "0"
  * } satisfies BoxUploadBigFilePayload
  * console.log(`${payload.fileName}:${payload.fileSize}`)
@@ -503,7 +521,7 @@ export class BoxUploadBigFilePayload extends S.Class<BoxUploadBigFilePayload>($I
   {
     file: BoxByteInputValue,
     fileName: S.String,
-    fileSize: S.Finite,
+    fileSize: NonNegativeInt,
     parentFolderId: S.String,
   },
   $I.annote("BoxUploadBigFilePayload", {
@@ -540,9 +558,10 @@ export class BoxGetEventStreamPayload extends S.Class<BoxGetEventStreamPayload>(
  *
  * @example
  * ```ts
+ * import { HttpsUrl } from "@beep/schema"
  * import type { BoxGetZipDownloadContentPayload } from "@beep/box"
  *
- * const payload: BoxGetZipDownloadContentPayload = { downloadUrl: "https://example.com/content" }
+ * const payload: BoxGetZipDownloadContentPayload = { downloadUrl: HttpsUrl.make("https://example.com/content") }
  * console.log(payload.downloadUrl)
  * ```
  *
@@ -553,7 +572,7 @@ export class BoxGetZipDownloadContentPayload extends S.Class<BoxGetZipDownloadCo
   $I`BoxGetZipDownloadContentPayload`
 )(
   {
-    downloadUrl: S.String,
+    downloadUrl: HttpsUrl,
     optionalsInput: M.GetZipDownloadContentOptionalsInput.pipe(S.optionalKey),
   },
   $I.annote("BoxGetZipDownloadContentPayload", {
@@ -763,28 +782,25 @@ const assertBoxUrlAllowed = (method: BoxMethodName, url: string): Effect.Effect<
   );
 
 const byteInputToReadable = (method: BoxMethodName, value: unknown): Effect.Effect<Readable, BoxError> => {
+  if (!BoxByteInputValue.is(value)) {
+    return Effect.fail(
+      BoxError.fromReason("stream", {
+        cause: "Expected Uint8Array, Node Readable, or Effect Stream byte input",
+        method,
+      })
+    );
+  }
   if (value instanceof Uint8Array) {
     return Effect.succeed(Readable.from([Buffer.from(value)]));
   }
   if (value instanceof Readable) {
     return Effect.succeed(value);
   }
-  if (isBoxByteEffectStream(value)) {
-    return Effect.succeed(Readable.from(Stream.toAsyncIterable(value)));
-  }
-  return Effect.fail(
-    BoxError.fromReason("stream", {
-      cause: "Expected Uint8Array, Node Readable, or Effect Stream byte input",
-      method,
-    })
-  );
+  return Effect.succeed(Readable.from(Stream.toAsyncIterable(value)));
 };
 
 const isAsyncIterable = (value: unknown): value is AsyncIterable<unknown> =>
   P.isObject(value) && P.isFunction(Reflect.get(value, Symbol.asyncIterator));
-
-const isBoxByteEffectStream = (value: unknown): value is Stream.Stream<Uint8Array, BoxError, never> =>
-  Stream.isStream(value);
 
 const destroyReadable = (value: unknown): void => {
   if (value instanceof Readable && !value.destroyed) {

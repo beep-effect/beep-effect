@@ -27,9 +27,10 @@ import {
   projectFieldTier,
   toColumnarEnvelope,
 } from "@beep/mcp-kit";
-import { LiteralKit, NonNegativeInt } from "@beep/schema";
+import { Fn, LiteralKit, NonNegativeInt, PosInt, SchemaUtils, URLStr } from "@beep/schema";
+import { UsptoDocumentReference } from "@beep/uspto";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import type { UsptoDocumentReference } from "@beep/uspto";
 
 const $I = $UsptoMcpId.create("UsptoDocumentTiers");
 
@@ -51,18 +52,38 @@ const $I = $UsptoMcpId.create("UsptoDocumentTiers");
  * @since 0.0.0
  */
 export const usptoDocumentFieldTiers = defineFieldTiers({
-  minimal: S.Struct({ documentIdentifier: S.String }),
+  minimal: S.Struct({
+    documentIdentifier: UsptoDocumentReference.fields.documentIdentifier.annotateKey({
+      description: "Non-empty USPTO file-wrapper document identifier.",
+    }),
+  }),
   balanced: S.Struct({
-    documentCode: S.String,
-    documentIdentifier: S.String,
-    officialDate: S.String,
+    documentCode: S.String.annotateKey({
+      description: "USPTO document code naming the file-wrapper document type.",
+    }),
+    documentIdentifier: UsptoDocumentReference.fields.documentIdentifier.annotateKey({
+      description: "Non-empty USPTO file-wrapper document identifier.",
+    }),
+    officialDate: S.String.annotateKey({
+      description: "Official USPTO date string associated with the file-wrapper document.",
+    }),
   }),
   complete: S.Struct({
-    documentCode: S.String,
-    documentCodeDescriptionText: S.String,
-    documentIdentifier: S.String,
-    downloadUrl: S.String,
-    officialDate: S.String,
+    documentCode: S.String.annotateKey({
+      description: "USPTO document code naming the file-wrapper document type.",
+    }),
+    documentCodeDescriptionText: S.String.annotateKey({
+      description: "Human-readable USPTO document code description.",
+    }),
+    documentIdentifier: UsptoDocumentReference.fields.documentIdentifier.annotateKey({
+      description: "Non-empty USPTO file-wrapper document identifier.",
+    }),
+    downloadUrl: URLStr.annotateKey({
+      description: "Published USPTO document download URL.",
+    }),
+    officialDate: S.String.annotateKey({
+      description: "Official USPTO date string associated with the file-wrapper document.",
+    }),
   }),
 });
 
@@ -114,7 +135,8 @@ export const DocumentsProjectionOutput = DocumentsProjectionOutputBase.annotate(
   $I.annoteSchema("DocumentsProjectionOutput", {
     description:
       "Outcome of projecting a documentBag-shaped document array within a size budget: inline tier-projected columnar envelope, or a fetchable handle when even the minimal tier is oversized.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -124,6 +146,103 @@ export const DocumentsProjectionOutput = DocumentsProjectionOutputBase.annotate(
  * @since 0.0.0
  */
 export type DocumentsProjectionOutput = typeof DocumentsProjectionOutput.Type;
+
+/**
+ * Callback that mints a fetchable handle when even the minimal document tier
+ * exceeds the caller's size budget.
+ *
+ * @example
+ * ```ts
+ * import { FetchableHandle } from "@beep/mcp-kit"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { MintFetchableHandle } from "@beep/uspto-mcp/UsptoDocumentTiers"
+ *
+ * const mint = MintFetchableHandle.implementSync((oversized) =>
+ *   FetchableHandle.make({
+ *     handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
+ *     expiresAt: "2026-07-01T01:00:00.000Z",
+ *     sizeBytes: NonNegativeInt.make(oversized.sizeBytes),
+ *     tier: "minimal"
+ *   })
+ * )
+ * console.log(mint)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const MintFetchableHandle = Fn({
+  input: OversizedFieldProjection,
+  output: FetchableHandle,
+}).pipe(
+  $I.annoteSchema("MintFetchableHandle", {
+    description: "Callback that mints a fetchable handle for an oversized minimal document projection.",
+  })
+);
+
+/**
+ * Type for {@link MintFetchableHandle}.
+ *
+ * @example
+ * ```ts
+ * import type { MintFetchableHandle } from "@beep/uspto-mcp/UsptoDocumentTiers"
+ *
+ * const mint = ((oversized) => ({
+ *   handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
+ *   expiresAt: "2026-07-01T01:00:00.000Z",
+ *   sizeBytes: oversized.sizeBytes,
+ *   tier: "minimal"
+ * })) satisfies MintFetchableHandle
+ * console.log(mint)
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type MintFetchableHandle = typeof MintFetchableHandle.Type;
+
+/**
+ * Options for {@link projectDocumentsWithinBudget}.
+ *
+ * @example
+ * ```ts
+ * import { FetchableHandle } from "@beep/mcp-kit"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
+ * import { MintFetchableHandle, ProjectDocumentsWithinBudgetOptions } from "@beep/uspto-mcp/UsptoDocumentTiers"
+ *
+ * const options = ProjectDocumentsWithinBudgetOptions.make({
+ *   budgetBytes: PosInt.make(10_000),
+ *   mintFetchableHandle: MintFetchableHandle.implementSync((oversized) =>
+ *     FetchableHandle.make({
+ *       handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
+ *       expiresAt: "2026-07-01T01:00:00.000Z",
+ *       sizeBytes: NonNegativeInt.make(oversized.sizeBytes),
+ *       tier: "minimal"
+ *     })
+ *   )
+ * })
+ * console.log(options.budgetBytes)
+ * // 10000
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ProjectDocumentsWithinBudgetOptions extends S.Class<ProjectDocumentsWithinBudgetOptions>(
+  $I`ProjectDocumentsWithinBudgetOptions`
+)(
+  {
+    budgetBytes: PosInt.annotateKey({
+      description: "Maximum serialized size, in bytes, the reshaped response must fit within.",
+    }),
+    mintFetchableHandle: MintFetchableHandle.annotateKey({
+      description: "Callback that mints a fetchable handle when the minimal tier is still oversized.",
+    }),
+  },
+  $I.annote("ProjectDocumentsWithinBudgetOptions", {
+    description: "Budget and fetchable-handle minting callback for USPTO document projection.",
+  })
+) {}
 
 /**
  * Projects an array of USPTO document references to the most complete field
@@ -139,12 +258,12 @@ export type DocumentsProjectionOutput = typeof DocumentsProjectionOutput.Type;
  * ```ts
  * import { UsptoDocumentReference } from "@beep/uspto"
  * import { FetchableHandle } from "@beep/mcp-kit"
- * import { NonNegativeInt } from "@beep/schema"
+ * import { NonNegativeInt, PosInt } from "@beep/schema"
  * import { projectDocumentsWithinBudget } from "@beep/uspto-mcp/UsptoDocumentTiers"
  *
  * const documents = [UsptoDocumentReference.make({ documentIdentifier: "DOC-1" })]
  * const projection = projectDocumentsWithinBudget(documents, {
- *   budgetBytes: 10_000,
+ *   budgetBytes: PosInt.make(10_000),
  *   mintFetchableHandle: (oversized) =>
  *     FetchableHandle.make({
  *       handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
@@ -160,13 +279,15 @@ export type DocumentsProjectionOutput = typeof DocumentsProjectionOutput.Type;
  * @category combinators
  * @since 0.0.0
  */
-export const projectDocumentsWithinBudget = (
-  documents: ReadonlyArray<UsptoDocumentReference>,
-  options: {
-    readonly budgetBytes: number;
-    readonly mintFetchableHandle: (oversized: OversizedFieldProjection) => FetchableHandle;
-  }
-): DocumentsProjectionOutput => {
+export const projectDocumentsWithinBudget: {
+  (
+    options: ProjectDocumentsWithinBudgetOptions
+  ): (documents: ReadonlyArray<UsptoDocumentReference>) => DocumentsProjectionOutput;
+  (
+    documents: ReadonlyArray<UsptoDocumentReference>,
+    options: ProjectDocumentsWithinBudgetOptions
+  ): DocumentsProjectionOutput;
+} = dual(2, (documents: ReadonlyArray<UsptoDocumentReference>, options: ProjectDocumentsWithinBudgetOptions) => {
   const rows = documents.map(documentToRecord);
 
   for (const tier of TIER_ORDER) {
@@ -184,4 +305,4 @@ export const projectDocumentsWithinBudget = (
     sizeBytes: NonNegativeInt.make(estimateJsonSize(minimalEnvelope)),
   });
   return DocumentsProjectionOutput.make({ _tag: "Fetchable", handle: options.mintFetchableHandle(oversized) });
-};
+});

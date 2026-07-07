@@ -2,50 +2,6 @@
   {
     "ruleId": "SFV4-defaults",
     "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-    "line": 222,
-    "symbol": "defaultConfig",
-    "smell": "`input?.ffmpegPath ?? \"ffmpeg\"`, `input?.ffprobePath ?? \"ffprobe\"`, and `input?.forceKillAfterMillis ?? 2000` are fixed constructor defaults in service code while `FFmpegConfigInput` already owns those fields as optional schema keys (FFmpeg.models.ts:208-210).",
-    "proposedTarget": "Move the defaults onto `FFmpegConfigInput`: `ffmpegPath: S.String.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(\"ffmpeg\"))`, `ffprobePath: ...`, and `forceKillAfterMillis: PositiveMilliseconds.pipe(S.optionalKey, SchemaUtils.withKeyDefaults(2000))`; then collapse `defaultConfig` to schema construction/decoding. In-repo exemplars: `packages/drivers/phoenix/src/Phoenix.config.ts:52-53` and `packages/drivers/face-detection/src/FaceDetection.models.ts:268-270`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-null-return",
-    "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-    "line": 260,
-    "symbol": "optionToOptional",
-    "smell": "`optionToOptional` returns `A | undefined`, and `maybe` spreads omitted fields so parsed ffprobe/progress absence can be stuffed back into domain models with `S.optionalKey` fields (`VideoProbe` at FFmpeg.models.ts:286-290 and `FFmpegProgressEvent` at FFmpeg.models.ts:548/551).",
-    "proposedTarget": "Model decoded/domain absence as `Option`: `VideoProbe.durationSeconds/fps/frameCount/height/width` and `FFmpegProgressEvent.outTimeSeconds/speed` should use `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)`. That lets `probeFromOutput` and `parseProgressEvent` pass Options directly and delete `optionToOptional`/`maybe`. In-repo exemplar: `packages/foundation/modeling/ontology/src/Ontology.models.ts:152-160`; v4 API verified at `.repos/effect-v4/packages/effect/src/Schema.ts:8648-8669`.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-normalization",
-    "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
-    "line": 437,
-    "symbol": "parseProgressEvent",
-    "smell": "`Math.min(100, Math.max(0, (frameCount.value / expected) * 100))` clamps progress into the percent range in the parser body, while `FFmpegProgressEvent.percent` is a bare `S.Finite` field (FFmpeg.models.ts:549).",
-    "proposedTarget": "Carry the 0..100 invariant on the field: use the shared `Percentage` schema (`packages/foundation/modeling/schema/src/Percentage.ts:32-33`) or a local `FFmpegProgressPercent` schema, and put the clamp behind a decode-side `S.decodeTo(..., SchemaTransformation.transform(...))` if clamp-on-construction is required. Otherwise use a range check and keep only the raw progress calculation in the body.",
-    "confidence": 0.65,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-null-return",
-    "file": "packages/drivers/ffmpeg/src/FFmpeg.errors.ts",
-    "line": 43,
-    "symbol": "causeFromUnknown",
-    "smell": "`causeFromUnknown` returns `unknown | undefined` and `FFmpegError.fromUnknown` passes that undefined into the schema-backed `FFmpegError.cause` optional key at line 133.",
-    "proposedTarget": "Model error cause absence as `Option`: `cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault)` on `FFmpegErrorFromUnknownOptions` and `FFmpegError`; make `causeFromUnknown` return `O.Option<unknown>` and construct via Option. In-repo exemplar: `packages/foundation/modeling/ontology/src/Ontology.models.ts:152-160`; nearby package precedent from the exemplar inventory is `ToolExport.ts` cause modeling.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
     "line": 115,
     "symbol": "FFmpegShape.extractFrames",
     "smell": "`onEvent?: FFmpegEventSink | undefined` is a detector hit for optional/undefined service input.",

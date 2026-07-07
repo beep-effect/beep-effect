@@ -10,16 +10,23 @@ import {
   RunpodConfigInput,
   RunpodDocs,
   RunpodDocsConfigInput,
+  RunpodDocsError,
+  RunpodDocsErrorOptions,
+  RunpodDocsIndex,
+  RunpodDocsIndexEntry,
   RunpodError,
+  RunpodErrorOptions,
   RunpodRawRequest,
+  RunpodRawResponse,
 } from "@beep/runpod";
 import { decodeJsonString } from "@beep/schema/Json";
 import { A, Str } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
-import { Context, Effect, Layer, pipe, Redacted, Ref } from "effect";
+import { Context, Effect, Equal, Layer, pipe, Redacted, Ref, Result } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
@@ -58,6 +65,73 @@ class CapturedCreatePodBody extends S.Class<CapturedCreatePodBody>($TestI`Captur
 ) {}
 
 const decodeCapturedCreatePodBody = S.decodeUnknownEffect(CapturedCreatePodBody);
+const normalizeRawPathForTest = (path: string): string => (Str.startsWith("/")(path) ? path : `/${path}`);
+
+const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): Codec["Encoded"] =>
+  Result.getOrThrow(S.encodeResult(schema)(value));
+
+const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Encoded"]): Codec["Type"] =>
+  Result.getOrThrow(S.decodeUnknownResult(schema)(value));
+
+const expectRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Type"]): void => {
+  const encoded = encode(schema, value);
+  const decoded = decode(schema, encoded);
+  const reencoded = encode(schema, decoded);
+
+  expect(reencoded).toEqual(encoded);
+  expect(Equal.equals(decoded, value) || S.toEquivalence(schema)(decoded, value)).toBe(true);
+};
+
+const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
+  schema: Codec,
+  arbitrary = S.toArbitrary(schema)
+): void => {
+  fc.assert(
+    fc.property(arbitrary, (value) => {
+      expectRoundTrip(schema, value);
+    }),
+    { numRuns: 25 }
+  );
+};
+
+const RunpodRawRequestArbitrary = S.toArbitrary(RunpodRawRequest).map((request) =>
+  RunpodRawRequest.make({
+    ...request,
+    path: normalizeRawPathForTest(request.path),
+  })
+);
+
+const RunpodErrorOptionsArbitrary = S.toArbitrary(RunpodErrorOptions).map((options) =>
+  RunpodErrorOptions.make(options.status === undefined ? {} : { status: options.status })
+);
+
+const RunpodErrorArbitrary = S.toArbitrary(RunpodError).map((error) =>
+  RunpodError.make({
+    cause: O.none(),
+    method: error.method,
+    methodName: error.methodName,
+    operationId: error.operationId,
+    path: error.path,
+    reason: error.reason,
+    status: error.status,
+  })
+);
+
+const RunpodDocsErrorOptionsArbitrary = S.toArbitrary(RunpodDocsErrorOptions).map((options) =>
+  RunpodDocsErrorOptions.make({
+    ...(options.status === undefined ? {} : { status: options.status }),
+    ...(options.url === undefined ? {} : { url: options.url }),
+  })
+);
+
+const RunpodDocsErrorArbitrary = S.toArbitrary(RunpodDocsError).map((error) =>
+  RunpodDocsError.make({
+    cause: O.none(),
+    reason: error.reason,
+    status: error.status,
+    url: error.url,
+  })
+);
 
 const makeJsonResponse = (body: unknown, status = 200) =>
   Response.json(body, {
@@ -85,7 +159,7 @@ const bodyContentTypeFor = (request: HttpClientRequest.HttpClientRequest): strin
 
 const testError = (path: string): RunpodError =>
   RunpodError.make({
-    path,
+    path: O.some(path),
     reason: "request encoding",
   });
 
@@ -296,10 +370,10 @@ describe("@beep/runpod", () => {
         const transportError = yield* runpod.listPods().pipe(Effect.flip);
 
         expect(statusError.reason).toBe("response status");
-        expect(statusError.status).toBe(500);
-        expect(statusError.operationId).toBe("ListPods");
+        expect(statusError.status).toEqual(O.some(500));
+        expect(statusError.operationId).toEqual(O.some("ListPods"));
         expect(transportError.reason).toBe("transport");
-        expect(transportError.cause).toBe("HttpClientError:TransportError");
+        expect(transportError.cause).toEqual(O.some("HttpClientError:TransportError"));
       })
     )
   );
@@ -344,7 +418,7 @@ describe("@beep/runpod", () => {
         expect(parsed.title).toBe("Runpod Documentation");
         expect(parsed.entries).toHaveLength(2);
         expect(parsed.entries[0]?.title).toBe("Pods");
-        expect(parsed.entries[0]?.description).toBe("Manage GPU pods");
+        expect(parsed.entries[0]?.description).toEqual(O.some("Manage GPU pods"));
 
         const testHttp = yield* RunpodTestHttp;
         yield* testHttp.reset;
@@ -370,5 +444,28 @@ describe("@beep/runpod", () => {
         expect(capture.url).toBe("https://docs.example.test/llms.txt");
       })
     )
+  );
+
+  layer(makeRunpodUnitLayer())((it) =>
+    it("round-trips schema-derived config, error, raw, and docs models", () => {
+      fc.assert(
+        fc.property(S.toArbitrary(RunpodConfigInput), (value) => {
+          expectRoundTrip(RunpodConfigInput, value);
+        }),
+        { numRuns: 25 }
+      );
+      assertSchemaRoundTrip(RunpodDocsConfigInput);
+      expect(encode(RunpodRawRequest, RunpodRawRequest.make({ method: "GET", path: "future" }))).toMatchObject({
+        path: "/future",
+      });
+      assertSchemaRoundTrip(RunpodRawRequest, RunpodRawRequestArbitrary);
+      assertSchemaRoundTrip(RunpodRawResponse);
+      assertSchemaRoundTrip(RunpodErrorOptions, RunpodErrorOptionsArbitrary);
+      assertSchemaRoundTrip(RunpodError, RunpodErrorArbitrary);
+      assertSchemaRoundTrip(RunpodDocsErrorOptions, RunpodDocsErrorOptionsArbitrary);
+      assertSchemaRoundTrip(RunpodDocsError, RunpodDocsErrorArbitrary);
+      assertSchemaRoundTrip(RunpodDocsIndexEntry);
+      assertSchemaRoundTrip(RunpodDocsIndex);
+    })
   );
 });

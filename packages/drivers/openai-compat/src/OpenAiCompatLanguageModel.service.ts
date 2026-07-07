@@ -6,10 +6,14 @@
  */
 
 import { $OpenaiCompatId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
+import { PosInt } from "@beep/schema/Int";
 import { decodeJsonString, encodeJsonString } from "@beep/schema/Json";
-import { A, Str, thunkTrue } from "@beep/utils";
+import { NonNegativeInt } from "@beep/schema/Number";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, flow, Layer, pipe, Stream, Tuple } from "effect";
+import { Effect, flow, Layer, Match, pipe, Stream, Tuple } from "effect";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -23,9 +27,11 @@ import {
   OpenAiCompatAssistantChatMessage,
   OpenAiCompatChatCompletionChunk,
   OpenAiCompatChatCompletionRequest,
+  OpenAiCompatFinishReason,
   OpenAiCompatFunctionTool,
   OpenAiCompatJsonSchemaResponseFormat,
   OpenAiCompatSystemChatMessage,
+  OpenAiCompatTemperature,
   OpenAiCompatToolCall,
   OpenAiCompatToolCallFunction,
   OpenAiCompatToolChatMessage,
@@ -42,19 +48,44 @@ import type {
 import type { OpenAiCompatClientShape } from "./OpenAiCompatClient.service.ts";
 
 const $I = $OpenaiCompatId.create("OpenAiCompatLanguageModel.service");
-const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
+const UnknownRecord = S.Record(S.String, S.Unknown).pipe(SchemaUtils.withCodecStatics);
+const OptionalPosInt = S.OptionFromOptionalKey(PosInt).pipe(SchemaUtils.withNoneDefault);
+const OptionalNonNegativeInt = S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault);
+const OptionalBoolean = S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault);
+const OptionalString = S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault);
+const OptionalNullableTemperature = OpenAiCompatTemperature.pipe(
+  S.NullOr,
+  S.OptionFromOptionalKey,
+  SchemaUtils.withNoneDefault
+);
+const OptionalNullableUnitInterval = UnitInterval.pipe(S.NullOr, S.OptionFromOptionalKey, SchemaUtils.withNoneDefault);
+const decodeFinishReasonOption = S.decodeUnknownOption(OpenAiCompatFinishReason);
+const knownFinishReasonToResponse = (reason: OpenAiCompatFinishReason): Response.FinishReason =>
+  OpenAiCompatFinishReason.$match(reason, {
+    content_filter: () => "content-filter" as const,
+    function_call: () => "tool-calls" as const,
+    length: () => "length" as const,
+    stop: () => "stop" as const,
+    tool_calls: () => "tool-calls" as const,
+  });
+const decodeKnownFinishReasonOption: (reason: string) => O.Option<Response.FinishReason> = flow(
+  decodeFinishReasonOption,
+  O.map(knownFinishReasonToResponse)
+);
 
 /**
  * Request-time tuning options shared by OpenAI-compatible language-model adapters.
  *
  * @example
  * ```ts
- * import type { OpenAiCompatLanguageModelConfig } from "@beep/openai-compat"
+ * import * as O from "effect/Option"
+ * import { PosInt } from "@beep/schema/Int"
+ * import { OpenAiCompatLanguageModelConfig } from "@beep/openai-compat"
  *
- * const config: OpenAiCompatLanguageModelConfig = {
- *   maxTokens: 512,
- *   temperature: 0.2
- * }
+ * const config = OpenAiCompatLanguageModelConfig.make({
+ *   maxTokens: O.some(PosInt.make(512)),
+ *   temperature: O.some(0.2)
+ * })
  *
  * console.log(config)
  * ```
@@ -66,14 +97,24 @@ export class OpenAiCompatLanguageModelConfig extends S.Class<OpenAiCompatLanguag
   $I`OpenAiCompatLanguageModelConfig`
 )(
   {
-    maxCompletionTokens: S.optionalKey(S.Finite),
-    maxTokens: S.optionalKey(S.Finite),
-    parallelToolCalls: S.optionalKey(S.Boolean),
-    seed: S.optionalKey(S.Finite),
-    strictJsonSchema: S.optionalKey(S.Boolean),
-    temperature: S.Finite.pipe(S.NullOr, S.optionalKey),
-    topP: S.Finite.pipe(S.NullOr, S.optionalKey),
-    user: S.optionalKey(S.String),
+    maxCompletionTokens: OptionalPosInt.annotateKey({
+      description: "Optional positive maximum completion-token count.",
+    }),
+    maxTokens: OptionalPosInt.annotateKey({ description: "Optional positive legacy maximum token count." }),
+    parallelToolCalls: OptionalBoolean.annotateKey({
+      description: "Optional parallel tool-call preference for provider requests.",
+    }),
+    seed: OptionalNonNegativeInt.annotateKey({ description: "Optional non-negative deterministic sampling seed." }),
+    strictJsonSchema: SchemaUtils.BoolKeyDefaultTrue.annotateKey({
+      description: "Whether generated JSON schemas should be marked strict by default.",
+    }),
+    temperature: OptionalNullableTemperature.annotateKey({
+      description: "Optional sampling temperature, preserving explicit null for provider wire compatibility.",
+    }),
+    topP: OptionalNullableUnitInterval.annotateKey({
+      description: "Optional nucleus sampling value, preserving explicit null for provider wire compatibility.",
+    }),
+    user: OptionalString.annotateKey({ description: "Optional provider-visible end-user identifier." }),
   },
   $I.annote("OpenAiCompatLanguageModelConfig", {
     description: "Request-time tuning options shared by OpenAI-compatible language-model adapters.",
@@ -163,23 +204,34 @@ export class OpenAiCompatLanguageModelClientOptions extends S.Class<OpenAiCompat
 
 class ActiveToolCall extends S.Class<ActiveToolCall>($I`ActiveToolCall`)(
   {
-    arguments: S.String,
-    id: S.String,
-    name: S.String,
+    arguments: S.String.annotateKey({ description: "Buffered JSON argument text for the active stream tool call." }),
+    id: S.String.annotateKey({ description: "Stable tool-call identifier reconstructed from stream deltas." }),
+    name: S.String.annotateKey({ description: "Tool name reconstructed from stream deltas." }),
   },
   $I.annote("ActiveToolCall", {
     description: "A tool call that is currently active.",
   })
 ) {}
 
-class StreamState extends S.Class<StreamState>($I`StreamState`)({
-  activeToolCalls: S.Record(S.String, ActiveToolCall),
-  finishReason: S.Option(S.String),
-  finished: S.Boolean,
-  textEnded: S.Boolean,
-  textStarted: S.Boolean,
-  usage: OpenAiCompatChatCompletionChunk.fields.usage,
-}) {
+class StreamState extends S.Class<StreamState>($I`StreamState`)(
+  {
+    activeToolCalls: S.Record(S.String, ActiveToolCall).annotateKey({
+      description: "Active streaming tool calls keyed by provider tool-call index.",
+    }),
+    finishReason: S.Option(S.String).annotateKey({
+      description: "Latest finish reason seen while reconstructing the stream.",
+    }),
+    finished: S.Boolean.annotateKey({ description: "Whether a finish part has already been emitted." }),
+    textEnded: S.Boolean.annotateKey({ description: "Whether the current text span has ended." }),
+    textStarted: S.Boolean.annotateKey({ description: "Whether the current text span has started." }),
+    usage: OpenAiCompatChatCompletionChunk.fields.usage.annotateKey({
+      description: "Latest token usage observed in stream chunks.",
+    }),
+  },
+  $I.annote("StreamState", {
+    description: "Mutable stream reconstruction state for OpenAI-compatible streaming chunks.",
+  })
+) {
   static readonly initial = (): StreamState => ({
     activeToolCalls: {},
     finishReason: O.none(),
@@ -210,30 +262,19 @@ const mapSchemaError =
   (cause: S.SchemaError): AiError.AiError =>
     makeAiError(moduleName, method, AiError.InvalidOutputError.fromSchemaError(cause));
 
-const jsonObjectOrEmpty = (value: unknown): Readonly<Record<string, unknown>> =>
-  pipe(decodeUnknownRecordOption(value), O.getOrElse(R.empty<string, unknown>));
+const jsonObjectOrEmpty: (value: unknown) => Readonly<Record<string, unknown>> = flow(
+  UnknownRecord.decodeOption,
+  O.getOrElse(R.empty<string, unknown>)
+);
 
 const nonEmptyStringOption = O.liftPredicate(Str.isNonEmpty);
 const isImageMediaType = flow(Str.toLowerCase, Str.startsWith("image/"));
 
 const toFinishReason: (reason: O.Option<string>) => Response.FinishReason = flow(
+  O.map(decodeKnownFinishReasonOption),
   O.match({
-    onNone: () => "unknown",
-    onSome: (value) => {
-      if (value === "stop") {
-        return "stop";
-      }
-      if (value === "length") {
-        return "length";
-      }
-      if (value === "tool_calls" || value === "function_call") {
-        return "tool-calls";
-      }
-      if (value === "content_filter") {
-        return "content-filter";
-      }
-      return "other";
-    },
+    onNone: (): Response.FinishReason => "unknown",
+    onSome: O.getOrElse((): Response.FinishReason => "other"),
   })
 );
 
@@ -408,48 +449,50 @@ const prepareMessage = (
   moduleName: string,
   toolNameMapper: Tool.NameMapper<ReadonlyArray<Tool.Any>>,
   message: Prompt.Message
-): Effect.Effect<ReadonlyArray<OpenAiCompatChatMessage>, AiError.AiError> => {
-  if (message.role === "system") {
-    return Effect.succeed(
-      A.of(
-        OpenAiCompatSystemChatMessage.make({
-          content: message.content,
-          role: "system",
-        })
-      )
-    );
-  }
-  if (message.role === "user") {
-    return pipe(
-      message.content,
-      Effect.forEach((part) => userContentPart(moduleName, part)),
-      Effect.map((content) => [
-        OpenAiCompatUserChatMessage.make({
-          content,
-          role: "user",
-        }),
-      ])
-    );
-  }
-  if (message.role === "assistant") {
-    return pipe(
-      assistantToolCalls(moduleName, toolNameMapper, message.content),
-      Effect.map((toolCalls) => [
-        OpenAiCompatAssistantChatMessage.make({
-          content: pipe(assistantTextContent(message.content), O.getOrNull),
-          role: "assistant",
-          ...R.getSomes({
-            tool_calls: A.isReadonlyArrayNonEmpty(toolCalls) ? O.some(toolCalls) : O.none(),
-          }),
-        }),
-      ])
-    );
-  }
-  return pipe(
-    message.content,
-    Effect.forEach((part) => toolResultMessage(moduleName, toolNameMapper, part))
-  );
-};
+): Effect.Effect<ReadonlyArray<OpenAiCompatChatMessage>, AiError.AiError> =>
+  pipe(
+    Match.type<Prompt.Message>(),
+    Match.discriminatorsExhaustive("role")({
+      assistant: (message) =>
+        pipe(
+          assistantToolCalls(moduleName, toolNameMapper, message.content),
+          Effect.map((toolCalls) => [
+            OpenAiCompatAssistantChatMessage.make({
+              content: pipe(assistantTextContent(message.content), O.getOrNull),
+              role: "assistant",
+              ...O.getSomesStruct({
+                tool_calls: O.filter(O.some(toolCalls), A.isReadonlyArrayNonEmpty),
+              }),
+            }),
+          ])
+        ),
+      system: (message) =>
+        Effect.succeed(
+          A.of(
+            OpenAiCompatSystemChatMessage.make({
+              content: message.content,
+              role: "system",
+            })
+          )
+        ),
+      tool: (message) =>
+        pipe(
+          message.content,
+          Effect.forEach((part) => toolResultMessage(moduleName, toolNameMapper, part))
+        ),
+      user: (message) =>
+        pipe(
+          message.content,
+          Effect.forEach((part) => userContentPart(moduleName, part)),
+          Effect.map((content) => [
+            OpenAiCompatUserChatMessage.make({
+              content,
+              role: "user",
+            }),
+          ])
+        ),
+    })
+  )(message);
 
 const prepareMessages = (
   moduleName: string,
@@ -500,8 +543,7 @@ const prepareTool = (
           strict: pipe(
             Tool.getStrictMode(tool),
             O.fromUndefinedOr,
-            O.orElse(() => O.fromUndefinedOr(config.strictJsonSchema)),
-            O.getOrElse(thunkTrue)
+            O.getOrElse(() => config.strictJsonSchema)
           ),
         },
         type: "function",
@@ -555,32 +597,35 @@ const prepareResponseFormat = (
   moduleName: string,
   config: OpenAiCompatLanguageModelConfig,
   responseFormat: LanguageModel.ProviderOptions["responseFormat"]
-): Effect.Effect<O.Option<OpenAiCompatResponseFormat>, AiError.AiError> => {
-  if (responseFormat.type === "text") {
-    return Effect.succeed(O.none());
-  }
-  return Effect.try({
-    catch: (error) =>
-      makeUnsupportedSchema(
-        moduleName,
-        "prepareResponseFormat",
-        schemaConversionDescription("Unable to convert structured response schema to JSON Schema.", error)
-      ),
-    try: () =>
-      O.some(
-        OpenAiCompatJsonSchemaResponseFormat.make({
-          json_schema: {
-            name: responseFormat.objectName,
-            schema: jsonObjectOrEmpty(
-              Tool.getJsonSchemaFromSchema(responseFormat.schema, { transformer: toCodecOpenAI })
+): Effect.Effect<O.Option<OpenAiCompatResponseFormat>, AiError.AiError> =>
+  pipe(
+    Match.type<LanguageModel.ProviderOptions["responseFormat"]>(),
+    Match.discriminatorsExhaustive("type")({
+      json: (responseFormat) =>
+        Effect.try({
+          catch: (error) =>
+            makeUnsupportedSchema(
+              moduleName,
+              "prepareResponseFormat",
+              schemaConversionDescription("Unable to convert structured response schema to JSON Schema.", error)
             ),
-            strict: pipe(O.fromUndefinedOr(config.strictJsonSchema), O.getOrElse(thunkTrue)),
-          },
-          type: "json_schema",
-        })
-      ),
-  });
-};
+          try: () =>
+            O.some(
+              OpenAiCompatJsonSchemaResponseFormat.make({
+                json_schema: {
+                  name: responseFormat.objectName,
+                  schema: jsonObjectOrEmpty(
+                    Tool.getJsonSchemaFromSchema(responseFormat.schema, { transformer: toCodecOpenAI })
+                  ),
+                  strict: config.strictJsonSchema,
+                },
+                type: "json_schema",
+              })
+            ),
+        }),
+      text: () => Effect.succeed(O.none()),
+    })
+  )(responseFormat);
 
 const makeRequest = Effect.fn("OpenAiCompatLanguageModel.makeRequest")(function* (
   moduleName: string,
@@ -596,19 +641,21 @@ const makeRequest = Effect.fn("OpenAiCompatLanguageModel.makeRequest")(function*
   return OpenAiCompatChatCompletionRequest.make({
     messages,
     model,
-    ...R.getSomes({
-      max_completion_tokens: O.fromUndefinedOr(config.maxCompletionTokens),
-      max_tokens: O.fromUndefinedOr(config.maxTokens),
-      parallel_tool_calls: O.fromUndefinedOr(config.parallelToolCalls),
+    ...O.getSomesStruct({
+      max_completion_tokens: config.maxCompletionTokens,
+      max_tokens: config.maxTokens,
+      parallel_tool_calls: config.parallelToolCalls,
       response_format: responseFormat,
-      seed: O.fromUndefinedOr(config.seed),
-      stream: stream ? O.some(true) : O.none(),
-      stream_options: stream ? O.some({ include_usage: true }) : O.none(),
-      temperature: O.fromUndefinedOr(config.temperature),
+      seed: config.seed,
+      stream: stream ? O.some(true) : O.none<boolean>(),
+      stream_options: stream
+        ? O.some<Readonly<Record<string, unknown>>>({ include_usage: true })
+        : O.none<Readonly<Record<string, unknown>>>(),
+      temperature: config.temperature,
       tool_choice: prepareToolChoice(toolNameMapper, options.toolChoice),
       tools,
-      top_p: O.fromUndefinedOr(config.topP),
-      user: O.fromUndefinedOr(config.user),
+      top_p: config.topP,
+      user: config.user,
     }),
   });
 });

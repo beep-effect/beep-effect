@@ -1,38 +1,5 @@
 [
   {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/drivers/libpff/test/Libpff.service.test.ts",
-    "line": 19,
-    "symbol": "Libpff-owned schema family",
-    "smell": "The suite derives S.toArbitrary laws for shared @beep/file-processing schemas, but the package-owned schemas (PffexportMode, PffexportFormat, PffexportEngineConfig, LibpffFileProcessingEngineOptions, LibpffErrorReason, LibpffError) have no schema-derived round-trip/property law.",
-    "proposedTarget": "Add additive laws for the libpff-owned schemas next to the existing property test: derive S.toArbitrary(PffexportEngineConfig), S.toArbitrary(LibpffFileProcessingEngineOptions), and S.toArbitrary(LibpffError) (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970), encode/decode through the production schemas, and follow the style already present at packages/drivers/libpff/test/Libpff.service.test.ts:73-86 plus the shared-domain exemplar packages/shared/domain/test/Organization.test.ts:13 and :79.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
-    "line": 96,
-    "symbol": "PffexportEngineConfig fields",
-    "smell": "The exported subprocess configuration schema has whole-schema $I.annote metadata but no annotateKey descriptions for exportFormat, exportMode, exportRoot, pffexportPath, or timeoutMillis.",
-    "proposedTarget": "Add field-level annotateKey descriptions following packages/drivers/govinfo/src/domain/values/SearchBody/SearchBody.model.ts:42-65; keep PffexportMode/PffexportFormat as the existing annotated LiteralKit domains.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/drivers/libpff/src/Libpff.service.ts",
-    "line": 138,
-    "symbol": "LibpffFileProcessingEngineOptions.syntheticExport",
-    "smell": "The exported options schema has whole-schema $I.annote metadata but its syntheticExport field lacks annotateKey metadata, so the annotation catalog cannot distinguish the proof-only synthetic export switch from production engine behavior.",
-    "proposedTarget": "Annotate syntheticExport with a field description, using the same S.Boolean.annotateKey style shown in packages/drivers/govinfo/src/domain/values/SearchBody/SearchBody.model.ts:44-46.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
     "ruleId": "SFV4-precision-audit",
     "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
     "line": 100,
@@ -41,29 +8,11 @@
     "proposedTarget": "Tighten exportRoot and pffexportPath to at least S.NonEmptyString (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420) with annotateKey descriptions; if the remediation wants path semantics, evaluate a path schema but do not force PosixPath because pffexportPath/exportRoot are host filesystem paths.",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-numeric-domain",
-    "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
-    "line": 102,
-    "symbol": "PffexportEngineConfig.timeoutMillis",
-    "smell": "timeoutMillis is modeled as optional S.Finite, allowing negative, fractional, and zero duration values even though the field is interpolated as a millisecond timeout string.",
-    "proposedTarget": "Use the existing positive-integer domain PosInt from @beep/schema/Int (packages/foundation/modeling/schema/src/Int.ts:77-88) or S.Int.check(S.isGreaterThan(0)); S.Int is verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and S.isGreaterThan at :7286.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/drivers/libpff/src/Libpff.errors.ts",
-    "line": 71,
-    "symbol": "LibpffError fields",
-    "smell": "The exported TaggedErrorClass schema has whole-schema $I.annote metadata but no annotateKey descriptions for cause, exitCode, or reason.",
-    "proposedTarget": "Add annotateKey metadata to the error fields, matching the driver DTO style in packages/drivers/govinfo/src/domain/values/SearchBody/SearchBody.model.ts:42-65 and preserving the existing TaggedErrorClass layout.",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 3
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening these public config fields to S.NonEmptyString changes PffexportEngineConfig's public Type/make input and requires a consumer sweep outside packages/drivers/libpff, including packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts. Field annotations and defaults were fixed locally; the public-form tightening is deferred.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-arbitrary-tests",

@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 import { $GovinfoId } from "@beep/identity";
-import { Int64 } from "@beep/schema";
 import * as S from "effect/Schema";
+import { NonNegativeInt64 } from "../GovinfoNumeric.ts";
 
 const $I = $GovinfoId.create("domain/values/SummaryItem/SummaryItem.model");
 
@@ -48,12 +48,12 @@ export class SummaryItem extends S.Class<SummaryItem>($I`SummaryItem`)(
     }),
 
     /** Number of granules reported for the collection. */
-    granuleCount: Int64.annotateKey({
+    granuleCount: NonNegativeInt64.annotateKey({
       description: "Number of granules reported for the collection.",
     }),
 
     /** Number of packages reported for the collection. */
-    packageCount: Int64.pipe(
+    packageCount: NonNegativeInt64.pipe(
       S.annotateKey({
         description: "Number of packages reported for the collection.",
       })

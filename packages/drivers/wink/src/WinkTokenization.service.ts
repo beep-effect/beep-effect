@@ -40,11 +40,12 @@ const observeTokenizer = (operation: string) =>
  *
  * @example
  * ```ts
+ * import { SentenceIndex } from "@beep/nlp/Core/Sentence"
  * import { SentenceSpanFailure } from "@beep/wink"
  *
  * const failure = SentenceSpanFailure.make({
  *   reason: "Unable to derive a stable sentence token span.",
- *   sentenceIndex: 0,
+ *   sentenceIndex: SentenceIndex.make(0),
  *   sentenceText: "Hello world."
  * })
  *
@@ -58,7 +59,7 @@ export class SentenceSpanFailure extends S.TaggedClass<SentenceSpanFailure>($I`S
   "SentenceSpanFailure",
   {
     reason: S.String,
-    sentenceIndex: S.Finite,
+    sentenceIndex: SentenceIndex,
     sentenceText: S.String,
   },
   $I.annote("SentenceSpanFailure", {
@@ -206,12 +207,13 @@ const collectSentences = (
     const resolvedSpan = resolveSentenceSpan(sentence, its, nextTokenStart, tokenArray.length);
 
     if (O.isNone(resolvedSpan)) {
-      failure = O.some({
-        _tag: "SentenceSpanFailure",
-        reason: "Unable to derive a stable sentence token span.",
-        sentenceIndex: index,
-        sentenceText: sentence.out(),
-      });
+      failure = O.some(
+        SentenceSpanFailure.make({
+          reason: "Unable to derive a stable sentence token span.",
+          sentenceIndex: SentenceIndex.make(index),
+          sentenceText: sentence.out(),
+        })
+      );
       return;
     }
 
@@ -223,7 +225,7 @@ const collectSentences = (
       failure = O.some(
         SentenceSpanFailure.make({
           reason: "Resolved sentence span produced no tokens.",
-          sentenceIndex: index,
+          sentenceIndex: SentenceIndex.make(index),
           sentenceText: sentence.out(),
         })
       );

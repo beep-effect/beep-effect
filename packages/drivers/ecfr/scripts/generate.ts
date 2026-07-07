@@ -16,6 +16,8 @@
  * `biome check --write` over the output for deterministic formatting).
  */
 
+import { Match } from "effect";
+
 const packageRoot = new URL("../", import.meta.url);
 const specPath = new URL("openapi.json", packageRoot);
 const outPath = new URL("src/_generated/Ecfr.generated.ts", packageRoot);
@@ -47,18 +49,13 @@ const refName = (ref: string): string => ref.slice(ref.lastIndexOf("/") + 1);
 
 const schemaExpr = (schema: JsonSchema): string => {
   if (schema.$ref !== undefined) return refName(schema.$ref);
-  switch (schema.type) {
-    case "integer":
-      return "S.Int";
-    case "number":
-      return "S.Finite";
-    case "boolean":
-      return "S.Boolean";
-    case "array":
-      return `S.Array(${schemaExpr(schema.items ?? { type: "string" })})`;
-    default:
-      return "S.String";
-  }
+  return Match.value(schema.type).pipe(
+    Match.when("integer", () => "S.Int"),
+    Match.when("number", () => "S.Finite"),
+    Match.when("boolean", () => "S.Boolean"),
+    Match.when("array", () => `S.Array(${schemaExpr(schema.items ?? { type: "string" })})`),
+    Match.orElse(() => "S.String")
+  );
 };
 
 const refsOf = (schema: JsonSchema): ReadonlyArray<string> => {
@@ -113,7 +110,7 @@ ${props}
   $I.annote(${JSON.stringify(name)}, {
     description: ${JSON.stringify(description)},
   })
-) {}`;
+) { static readonly is = S.is(${name}); }`;
 };
 
 const operationsOf = (

@@ -1,7 +1,7 @@
 import { Effect } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { BoxError } from "../Box.errors.ts";
-import { BOX_SDK_VERSION } from "./Box.constants.ts";
 import type { BoxMethodName } from "../_generated/Box.models.gen.ts";
 
 /**
@@ -33,11 +33,11 @@ export const decodeWith = <A>(
  */
 export const diagnosticsFor = (event: string, error: BoxError): Readonly<Record<string, unknown>> => ({
   event,
-  method: error.method,
+  method: O.getOrUndefined(error.method),
   provider: "box",
   reason: error.reason,
-  sdkVersion: error.sdkVersion ?? BOX_SDK_VERSION,
-  status: error.status,
+  sdkVersion: error.sdkVersion,
+  status: O.getOrUndefined(error.status),
 });
 
 /**

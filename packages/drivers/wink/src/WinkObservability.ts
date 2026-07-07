@@ -8,11 +8,13 @@
 import { $WinkId } from "@beep/identity";
 import { AiToolError } from "@beep/nlp-processing/Tools";
 import { observeWorkflow, summarizeCause } from "@beep/observability";
+import { SchemaUtils } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Effect, Inspectable, Metric } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import type { Cause } from "effect";
 
@@ -28,6 +30,7 @@ const packageAttributes = {
   driver: "wink",
   package: "@beep/wink",
 } as const;
+const emptyStringRecord = R.empty<string, string>();
 
 const stringProperty = (value: unknown, key: string): O.Option<string> => {
   if (!P.isObject(value) || !P.hasProperty(value, key)) {
@@ -44,13 +47,10 @@ const errorMessage = (error: unknown): string =>
 const errorReason = (error: unknown): O.Option<string> =>
   stringProperty(error, "_tag").pipe(O.orElse(() => stringProperty(error, "name")));
 
-const mergeAttributes = (
-  left: Record<string, string> | undefined,
-  right: Record<string, string> | undefined
-): Record<string, string> => ({
+const mergeAttributes = (left: Record<string, string>, right: Record<string, string>): Record<string, string> => ({
   ...packageAttributes,
-  ...(left ?? {}),
-  ...(right ?? {}),
+  ...left,
+  ...right,
 });
 
 /**
@@ -78,8 +78,8 @@ export class WinkWorkflowObservationOptions extends S.Class<WinkWorkflowObservat
   $I`WinkWorkflowObservationOptions`
 )(
   {
-    attributes: S.optionalKey(S.Record(S.String, S.String)),
-    metricAttributes: S.optionalKey(S.Record(S.String, S.String)),
+    attributes: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(emptyStringRecord)),
+    metricAttributes: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(emptyStringRecord)),
     name: S.String,
   },
   $I.annote("WinkWorkflowObservationOptions", {
@@ -107,15 +107,18 @@ export class WinkWorkflowObservationOptions extends S.Class<WinkWorkflowObservat
  */
 export class WinkToolObservationOptions extends S.Class<WinkToolObservationOptions>($I`WinkToolObservationOptions`)(
   {
-    attributes: S.optionalKey(S.Record(S.String, S.String)),
+    attributes: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(emptyStringRecord)),
     operation: S.String,
-    retryable: S.optionalKey(S.Boolean),
+    retryable: S.Boolean.pipe(SchemaUtils.withKeyDefaults(false)),
     toolName: S.String,
   },
   $I.annote("WinkToolObservationOptions", {
     description: "Options used to observe a wink-backed AI tool handler.",
   })
 ) {}
+
+type WinkWorkflowObservationOptionsInput = Exclude<(typeof WinkWorkflowObservationOptions)["~type.make.in"], void>;
+type WinkToolObservationOptionsInput = Exclude<(typeof WinkToolObservationOptions)["~type.make.in"], void>;
 
 /**
  * Build a span-safe text length annotation without recording raw text.
@@ -180,16 +183,17 @@ export const withWinkAttributes: {
  * @since 0.0.0
  */
 export const observeWinkWorkflow: {
-  <A, E, R>(effect: Effect.Effect<A, E, R>, options: WinkWorkflowObservationOptions): Effect.Effect<A, E, R>;
-  (options: WinkWorkflowObservationOptions): <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
+  <A, E, R>(effect: Effect.Effect<A, E, R>, options: WinkWorkflowObservationOptionsInput): Effect.Effect<A, E, R>;
+  (options: WinkWorkflowObservationOptionsInput): <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
 } = dual(
   2,
-  <A, E, R>(effect: Effect.Effect<A, E, R>, options: WinkWorkflowObservationOptions): Effect.Effect<A, E, R> => {
-    const spanAttributes = mergeAttributes(options.attributes, {
-      workflow_name: options.name,
+  <A, E, R>(effect: Effect.Effect<A, E, R>, options: WinkWorkflowObservationOptionsInput): Effect.Effect<A, E, R> => {
+    const resolvedOptions = WinkWorkflowObservationOptions.make(options);
+    const spanAttributes = mergeAttributes(resolvedOptions.attributes, {
+      workflow_name: resolvedOptions.name,
     });
-    const metricAttributes = mergeAttributes(options.metricAttributes, {
-      workflow_name: options.name,
+    const metricAttributes = mergeAttributes(resolvedOptions.metricAttributes, {
+      workflow_name: resolvedOptions.name,
     });
 
     return observeWorkflow(Effect.annotateCurrentSpan(spanAttributes).pipe(Effect.andThen(effect)), {
@@ -198,11 +202,30 @@ export const observeWinkWorkflow: {
       duration: winkWorkflowDuration,
       failed: winkWorkflowFailed,
       interrupted: winkWorkflowInterrupted,
-      name: `wink.${options.name}`,
+      name: `wink.${resolvedOptions.name}`,
       started: winkWorkflowStarted,
-    }).pipe(Effect.withSpan(`Wink.${options.name}`));
+    }).pipe(Effect.withSpan(`Wink.${resolvedOptions.name}`));
   }
 );
+
+const isWinkToolObservationOptionsInput = (value: unknown): value is WinkToolObservationOptionsInput =>
+  P.isObject(value) && P.hasProperty(value, "operation") && P.hasProperty(value, "toolName");
+
+const makeWinkToolErrorInternal = (
+  optionsInput: WinkToolObservationOptionsInput,
+  error: unknown
+): typeof AiToolError.Type => {
+  const options = WinkToolObservationOptions.make(optionsInput);
+  const reason = errorReason(error);
+
+  return AiToolError.make({
+    message: errorMessage(error),
+    operation: options.operation,
+    ...(O.isSome(reason) ? { reason: reason.value } : {}),
+    retryable: options.retryable,
+    toolName: options.toolName,
+  });
+};
 
 /**
  * Convert an expected wink driver failure into an AI tool error payload.
@@ -222,16 +245,16 @@ export const observeWinkWorkflow: {
  * @category observability
  * @since 0.0.0
  */
-export const makeWinkToolError = (options: WinkToolObservationOptions, error: unknown): typeof AiToolError.Type => {
-  const reason = errorReason(error);
-  return AiToolError.make({
-    message: errorMessage(error),
-    operation: options.operation,
-    ...(O.isSome(reason) ? { reason: reason.value } : {}),
-    retryable: options.retryable ?? false,
-    toolName: options.toolName,
-  });
-};
+export const makeWinkToolError: {
+  (options: WinkToolObservationOptionsInput): (error: unknown) => typeof AiToolError.Type;
+  (options: WinkToolObservationOptionsInput, error: unknown): typeof AiToolError.Type;
+} = dual(
+  (args) => args.length === 2 && isWinkToolObservationOptionsInput(args[0]),
+  (first: WinkToolObservationOptionsInput | unknown, second: WinkToolObservationOptionsInput | unknown) =>
+    isWinkToolObservationOptionsInput(first)
+      ? makeWinkToolErrorInternal(first, second)
+      : makeWinkToolErrorInternal(second as WinkToolObservationOptionsInput, first)
+);
 
 const logWinkToolFailure =
   (options: WinkToolObservationOptions) =>
@@ -244,7 +267,7 @@ const logWinkToolFailure =
         errorFingerprint: summary.fingerprint.value,
         errorMessage: summary.primaryMessage,
         operation: options.operation,
-        retryable: `${options.retryable ?? false}`,
+        retryable: `${options.retryable}`,
         toolName: options.toolName,
       })
     );
@@ -271,21 +294,23 @@ const logWinkToolFailure =
 export const mapWinkToolError: {
   <A, E, R>(
     effect: Effect.Effect<A, E, R>,
-    options: WinkToolObservationOptions
+    options: WinkToolObservationOptionsInput
   ): Effect.Effect<A, typeof AiToolError.Type, R>;
   (
-    options: WinkToolObservationOptions
+    options: WinkToolObservationOptionsInput
   ): <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, typeof AiToolError.Type, R>;
 } = dual(
   2,
   <A, E, R>(
     effect: Effect.Effect<A, E, R>,
-    options: WinkToolObservationOptions
-  ): Effect.Effect<A, typeof AiToolError.Type, R> =>
-    effect.pipe(
-      Effect.tapCause(logWinkToolFailure(options)),
-      Effect.mapError((error) => makeWinkToolError(options, error))
-    )
+    options: WinkToolObservationOptionsInput
+  ): Effect.Effect<A, typeof AiToolError.Type, R> => {
+    const resolvedOptions = WinkToolObservationOptions.make(options);
+    return effect.pipe(
+      Effect.tapCause(logWinkToolFailure(resolvedOptions)),
+      Effect.mapError(makeWinkToolError(options))
+    );
+  }
 );
 
 /**
@@ -310,29 +335,31 @@ export const mapWinkToolError: {
 export const observeWinkTool: {
   <A, E, R>(
     effect: Effect.Effect<A, E, R>,
-    options: WinkToolObservationOptions
+    options: WinkToolObservationOptionsInput
   ): Effect.Effect<A, typeof AiToolError.Type, R>;
   (
-    options: WinkToolObservationOptions
+    options: WinkToolObservationOptionsInput
   ): <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, typeof AiToolError.Type, R>;
 } = dual(
   2,
   <A, E, R>(
     effect: Effect.Effect<A, E, R>,
-    options: WinkToolObservationOptions
-  ): Effect.Effect<A, typeof AiToolError.Type, R> =>
-    effect.pipe(
+    options: WinkToolObservationOptionsInput
+  ): Effect.Effect<A, typeof AiToolError.Type, R> => {
+    const resolvedOptions = WinkToolObservationOptions.make(options);
+    return effect.pipe(
       observeWinkWorkflow({
-        attributes: mergeAttributes(options.attributes, {
-          operation: options.operation,
-          tool_name: options.toolName,
+        attributes: mergeAttributes(resolvedOptions.attributes, {
+          operation: resolvedOptions.operation,
+          tool_name: resolvedOptions.toolName,
         }),
         metricAttributes: {
-          operation: options.operation,
-          tool_name: options.toolName,
+          operation: resolvedOptions.operation,
+          tool_name: resolvedOptions.toolName,
         },
-        name: `tool.${options.toolName}`,
+        name: `tool.${resolvedOptions.toolName}`,
       }),
-      mapWinkToolError(options)
-    )
+      mapWinkToolError(resolvedOptions)
+    );
+  }
 );

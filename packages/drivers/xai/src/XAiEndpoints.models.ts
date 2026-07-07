@@ -6,7 +6,7 @@
  */
 
 import { $XaiId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $XaiId.create("XAiEndpoints.models");
@@ -28,6 +28,7 @@ const $I = $XaiId.create("XAiEndpoints.models");
 export const XAI_ENDPOINT_COUNT = 86;
 
 const XAiHttpMethodValues = ["DELETE", "GET", "PATCH", "POST", "PUT"] as const;
+const XAiHttpMethodBase = LiteralKit(XAiHttpMethodValues);
 
 /**
  * HTTP method literals used by xAI REST endpoints.
@@ -43,10 +44,15 @@ const XAiHttpMethodValues = ["DELETE", "GET", "PATCH", "POST", "PUT"] as const;
  * @category schemas
  * @since 0.0.0
  */
-export const XAiHttpMethod = LiteralKit(XAiHttpMethodValues).pipe(
+export const XAiHttpMethod = XAiHttpMethodBase.pipe(
   $I.annoteSchema("XAiHttpMethod", {
     description: "HTTP method literals used by xAI REST endpoints.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  })),
+  SchemaUtils.withLiteralKitStatics(XAiHttpMethodBase)
 );
 
 /**
@@ -66,6 +72,7 @@ export const XAiHttpMethod = LiteralKit(XAiHttpMethodValues).pipe(
 export type XAiHttpMethod = typeof XAiHttpMethod.Type;
 
 const XAiAuthKindValues = ["api-key", "management-key"] as const;
+const XAiAuthKindBase = LiteralKit(XAiAuthKindValues);
 
 /**
  * Authentication channel required by an xAI endpoint.
@@ -81,10 +88,15 @@ const XAiAuthKindValues = ["api-key", "management-key"] as const;
  * @category schemas
  * @since 0.0.0
  */
-export const XAiAuthKind = LiteralKit(XAiAuthKindValues).pipe(
+export const XAiAuthKind = XAiAuthKindBase.pipe(
   $I.annoteSchema("XAiAuthKind", {
     description: "Authentication channel required by an xAI endpoint.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  })),
+  SchemaUtils.withLiteralKitStatics(XAiAuthKindBase)
 );
 
 /**
@@ -104,6 +116,7 @@ export const XAiAuthKind = LiteralKit(XAiAuthKindValues).pipe(
 export type XAiAuthKind = typeof XAiAuthKind.Type;
 
 const XAiEndpointBaseValues = ["api", "management", "websocket"] as const;
+const XAiEndpointBaseBase = LiteralKit(XAiEndpointBaseValues);
 
 /**
  * xAI base URL family used by an endpoint.
@@ -119,10 +132,15 @@ const XAiEndpointBaseValues = ["api", "management", "websocket"] as const;
  * @category schemas
  * @since 0.0.0
  */
-export const XAiEndpointBase = LiteralKit(XAiEndpointBaseValues).pipe(
+export const XAiEndpointBase = XAiEndpointBaseBase.pipe(
   $I.annoteSchema("XAiEndpointBase", {
     description: "xAI base URL family used by an endpoint.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  })),
+  SchemaUtils.withLiteralKitStatics(XAiEndpointBaseBase)
 );
 
 /**
@@ -142,6 +160,7 @@ export const XAiEndpointBase = LiteralKit(XAiEndpointBaseValues).pipe(
 export type XAiEndpointBase = typeof XAiEndpointBase.Type;
 
 const XAiRequestBodyKindValues = ["binary", "json", "multipart", "none", "websocket"] as const;
+const XAiRequestBodyKindBase = LiteralKit(XAiRequestBodyKindValues);
 
 /**
  * Request body encoding used by an xAI endpoint.
@@ -157,10 +176,15 @@ const XAiRequestBodyKindValues = ["binary", "json", "multipart", "none", "websoc
  * @category schemas
  * @since 0.0.0
  */
-export const XAiRequestBodyKind = LiteralKit(XAiRequestBodyKindValues).pipe(
+export const XAiRequestBodyKind = XAiRequestBodyKindBase.pipe(
   $I.annoteSchema("XAiRequestBodyKind", {
     description: "Request body encoding used by an xAI endpoint.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  })),
+  SchemaUtils.withLiteralKitStatics(XAiRequestBodyKindBase)
 );
 
 /**
@@ -180,6 +204,7 @@ export const XAiRequestBodyKind = LiteralKit(XAiRequestBodyKindValues).pipe(
 export type XAiRequestBodyKind = typeof XAiRequestBodyKind.Type;
 
 const XAiResponseBodyKindValues = ["binary", "json", "none", "sse", "websocket"] as const;
+const XAiResponseBodyKindBase = LiteralKit(XAiResponseBodyKindValues);
 
 /**
  * Response body encoding returned by an xAI endpoint.
@@ -195,10 +220,15 @@ const XAiResponseBodyKindValues = ["binary", "json", "none", "sse", "websocket"]
  * @category schemas
  * @since 0.0.0
  */
-export const XAiResponseBodyKind = LiteralKit(XAiResponseBodyKindValues).pipe(
+export const XAiResponseBodyKind = XAiResponseBodyKindBase.pipe(
   $I.annoteSchema("XAiResponseBodyKind", {
     description: "Response body encoding returned by an xAI endpoint.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  })),
+  SchemaUtils.withLiteralKitStatics(XAiResponseBodyKindBase)
 );
 
 /**
@@ -218,6 +248,7 @@ export const XAiResponseBodyKind = LiteralKit(XAiResponseBodyKindValues).pipe(
 export type XAiResponseBodyKind = typeof XAiResponseBodyKind.Type;
 
 const XAiEndpointStatusValues = ["active", "deprecated", "documented-unknown"] as const;
+const XAiEndpointStatusBase = LiteralKit(XAiEndpointStatusValues);
 
 /**
  * Documentation status for an xAI endpoint.
@@ -233,10 +264,15 @@ const XAiEndpointStatusValues = ["active", "deprecated", "documented-unknown"] a
  * @category schemas
  * @since 0.0.0
  */
-export const XAiEndpointStatus = LiteralKit(XAiEndpointStatusValues).pipe(
+export const XAiEndpointStatus = XAiEndpointStatusBase.pipe(
   $I.annoteSchema("XAiEndpointStatus", {
     description: "Documentation status for an xAI endpoint.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  })),
+  SchemaUtils.withLiteralKitStatics(XAiEndpointStatusBase)
 );
 
 /**
@@ -343,6 +379,7 @@ const XAiEndpointMethodNameValues = [
   "uploadFileChunks",
   "validateManagementKey",
 ] as const;
+const XAiEndpointMethodNameBase = LiteralKit(XAiEndpointMethodNameValues);
 
 /**
  * Public `XAi` service method names that correspond to documented endpoints.
@@ -358,10 +395,15 @@ const XAiEndpointMethodNameValues = [
  * @category schemas
  * @since 0.0.0
  */
-export const XAiEndpointMethodName = LiteralKit(XAiEndpointMethodNameValues).pipe(
+export const XAiEndpointMethodName = XAiEndpointMethodNameBase.pipe(
   $I.annoteSchema("XAiEndpointMethodName", {
     description: "Public XAi service method names that correspond to documented endpoints.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  })),
+  SchemaUtils.withLiteralKitStatics(XAiEndpointMethodNameBase)
 );
 
 /**
@@ -483,6 +525,7 @@ const XAiEndpointIdValues = [
   "management.billing.queryUsage",
   "management.audit.listEvents",
 ] as const;
+const XAiEndpointIdBase = LiteralKit(XAiEndpointIdValues);
 
 /**
  * Stable endpoint identifiers in the checked-in xAI manifest.
@@ -498,10 +541,15 @@ const XAiEndpointIdValues = [
  * @category schemas
  * @since 0.0.0
  */
-export const XAiEndpointId = LiteralKit(XAiEndpointIdValues).pipe(
+export const XAiEndpointId = XAiEndpointIdBase.pipe(
   $I.annoteSchema("XAiEndpointId", {
     description: "Stable endpoint identifiers in the checked-in xAI manifest.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  })),
+  SchemaUtils.withLiteralKitStatics(XAiEndpointIdBase)
 );
 
 /**
@@ -550,7 +598,9 @@ export class XAiEndpoint extends S.Class<XAiEndpoint>($I`XAiEndpoint`)(
   $I.annote("XAiEndpoint", {
     description: "Schema for endpoint descriptors stored in the checked-in xAI manifest.",
   })
-) {}
+) {
+  static readonly is = S.is(XAiEndpoint);
+}
 
 /**
  * Metadata for one documented xAI endpoint.

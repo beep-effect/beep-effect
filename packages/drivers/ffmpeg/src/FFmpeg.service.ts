@@ -7,46 +7,53 @@
 
 import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $FfmpegId } from "@beep/identity/packages";
-import { A, Str, thunkEmptyStr } from "@beep/utils";
+import { Fn, SchemaUtils } from "@beep/schema";
+import { A, O, Str, thunkEmptyStr } from "@beep/utils";
 import { Context, Effect, FileSystem, Layer, Number as N, Order, Path, pipe, Ref, Stream } from "effect";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
-import { FFmpegError } from "./FFmpeg.errors.ts";
+import { FFmpegError, ProcessExitCode } from "./FFmpeg.errors.ts";
 import {
-  decodeExtractFramesRequest,
-  decodeProbeVideoRequest,
   ExtractedFrame,
   ExtractFramesManifest,
   ExtractFramesManifestOptions,
   ExtractFramesManifestSummary,
   ExtractFramesRequest,
   ExtractFramesResult,
-  encodeExtractFramesManifest,
   FFmpegCompletedEvent,
   FFmpegConfig,
+  FFmpegConfigInput,
   FFmpegProgressEvent,
+  FFmpegProgressPercent,
   FFmpegStartedEvent,
+  FrameCount,
+  FrameFilenamePadding,
+  FrameIndex,
+  NonNegativeSeconds,
+  PositiveFrameRate,
   ProbeVideoRequest,
+  SafeFramePrefix,
+  VideoDimension,
   VideoProbe,
 } from "./FFmpeg.models.ts";
 import type * as PlatformError from "effect/PlatformError";
-import type { FFmpegConfigInput, FFmpegEvent } from "./FFmpeg.models.ts";
+import type { FFmpegEvent } from "./FFmpeg.models.ts";
 
 const $I = $FfmpegId.create("FFmpeg.service");
 const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
 const NumberOrString = S.Union([S.Finite, S.String]);
+type FFmpegConfigInputOptions = (typeof FFmpegConfigInput)["~type.make.in"];
 
 class FfprobeStream extends S.Class<FfprobeStream>($I`FfprobeStream`)(
   {
-    avg_frame_rate: S.optionalKey(NumberOrString),
-    duration: S.optionalKey(NumberOrString),
-    height: S.optionalKey(S.Finite),
-    nb_frames: S.optionalKey(NumberOrString),
-    r_frame_rate: S.optionalKey(NumberOrString),
-    width: S.optionalKey(S.Finite),
+    avg_frame_rate: S.OptionFromOptionalKey(NumberOrString).pipe(SchemaUtils.withNoneDefault),
+    duration: S.OptionFromOptionalKey(NumberOrString).pipe(SchemaUtils.withNoneDefault),
+    height: S.OptionFromOptionalKey(VideoDimension).pipe(SchemaUtils.withNoneDefault),
+    nb_frames: S.OptionFromOptionalKey(NumberOrString).pipe(SchemaUtils.withNoneDefault),
+    r_frame_rate: S.OptionFromOptionalKey(NumberOrString).pipe(SchemaUtils.withNoneDefault),
+    width: S.OptionFromOptionalKey(VideoDimension).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("FfprobeStream", {
     description: "Internal ffprobe stream payload.",
@@ -55,7 +62,7 @@ class FfprobeStream extends S.Class<FfprobeStream>($I`FfprobeStream`)(
 
 class FfprobeFormat extends S.Class<FfprobeFormat>($I`FfprobeFormat`)(
   {
-    duration: S.optionalKey(NumberOrString),
+    duration: S.OptionFromOptionalKey(NumberOrString).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("FfprobeFormat", {
     description: "Internal ffprobe format payload.",
@@ -64,15 +71,15 @@ class FfprobeFormat extends S.Class<FfprobeFormat>($I`FfprobeFormat`)(
 
 class FfprobeOutput extends S.Class<FfprobeOutput>($I`FfprobeOutput`)(
   {
-    format: S.optionalKey(FfprobeFormat),
+    format: S.OptionFromOptionalKey(FfprobeFormat).pipe(SchemaUtils.withNoneDefault),
     streams: S.Array(FfprobeStream),
   },
   $I.annote("FfprobeOutput", {
     description: "Internal ffprobe JSON payload.",
   })
-) {}
-
-const decodeFfprobeOutput = S.decodeUnknownEffect(S.fromJsonString(FfprobeOutput));
+) {
+  static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(FfprobeOutput));
+}
 
 /**
  * Effectful sink for structured FFmpeg events.
@@ -119,7 +126,7 @@ export interface FFmpegShape {
 
 class ProcessResult extends S.Class<ProcessResult>($I`ProcessResult`)(
   {
-    exitCode: S.Finite,
+    exitCode: ProcessExitCode,
     stderr: S.String,
     stdout: S.String,
   },
@@ -130,12 +137,12 @@ class ProcessResult extends S.Class<ProcessResult>($I`ProcessResult`)(
 
 class ExtractContext extends S.Class<ExtractContext>($I`ExtractContext`)(
   {
-    expectedFrameCount: S.Finite,
+    expectedFrameCount: FrameCount,
     fpsText: S.String,
     manifestPath: S.String,
     outDir: S.String,
-    padding: S.Finite,
-    prefix: S.String,
+    padding: FrameFilenamePadding,
+    prefix: SafeFramePrefix,
     probe: VideoProbe,
     request: ExtractFramesRequest,
     videoPath: S.String,
@@ -147,7 +154,7 @@ class ExtractContext extends S.Class<ExtractContext>($I`ExtractContext`)(
 
 class TempFrame extends S.Class<TempFrame>($I`TempFrame`)(
   {
-    index: S.Finite,
+    index: FrameIndex,
     path: S.String,
   },
   $I.annote("TempFrame", {
@@ -178,7 +185,7 @@ class TempFrame extends S.Class<TempFrame>($I`TempFrame`)(
 export class PlannedFrameCommit extends S.Class<PlannedFrameCommit>($I`PlannedFrameCommit`)(
   {
     fileName: S.String,
-    index: S.Finite,
+    index: FrameIndex,
     relativePath: S.String,
     sourcePath: S.String,
     targetPath: S.String,
@@ -217,13 +224,11 @@ export class ProgressState extends S.Class<ProgressState>($I`ProgressState`)(
   })
 ) {}
 
-const defaultConfig = (input?: FFmpegConfigInput | undefined): FFmpegConfig =>
-  FFmpegConfig.make({
-    ffmpegPath: input?.ffmpegPath ?? "ffmpeg",
-    ffprobePath: input?.ffprobePath ?? "ffprobe",
-    forceKillAfterMillis: input?.forceKillAfterMillis ?? 2000,
-  });
+const defaultConfig = (input?: FFmpegConfigInputOptions | undefined): FFmpegConfig =>
+  FFmpegConfig.make(FFmpegConfigInput.make(input ?? {}));
 
+// shared driver boundary idiom; no in-family home; future foundation capability candidate.
+// fallow-ignore-next-line code-duplication
 const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
   stream.pipe(
     Stream.decodeText(),
@@ -257,61 +262,120 @@ const rationalToNumber = (value: unknown): O.Option<number> => {
   );
 };
 
-const optionToOptional = <A>(option: O.Option<A>): A | undefined => O.getOrUndefined(option);
+const parseNonNegativeSeconds = (value: unknown): O.Option<NonNegativeSeconds> =>
+  pipe(parseNumber(value), O.flatMap(NonNegativeSeconds.decodeOption));
 
-const maybe = <K extends string, V>(key: K, value: V | undefined): Partial<Record<K, V>> =>
-  value === undefined ? {} : ({ [key]: value } as Record<K, V>);
+const parsePositiveFrameRate = (value: unknown): O.Option<PositiveFrameRate> =>
+  pipe(rationalToNumber(value), O.flatMap(PositiveFrameRate.decodeOption));
+
+const parseFrameCount = (value: unknown): O.Option<FrameCount> =>
+  pipe(parseNumber(value), O.flatMap(FrameCount.decodeOption));
 
 const probeFromOutput = (videoPath: string, output: FfprobeOutput): VideoProbe => {
   const stream = A.get(output.streams, 0);
-  const formatDuration = pipe(O.fromUndefinedOr(output.format?.duration), O.flatMap(parseNumber));
+  const formatDuration = pipe(
+    output.format,
+    O.flatMap((format) => format.duration),
+    O.flatMap(parseNonNegativeSeconds)
+  );
   const width = pipe(
     stream,
-    O.flatMap((value) => parseNumber(value.width)),
-    optionToOptional
+    O.flatMap((value) => value.width)
   );
   const height = pipe(
     stream,
-    O.flatMap((value) => parseNumber(value.height)),
-    optionToOptional
+    O.flatMap((value) => value.height)
   );
   const streamDuration = pipe(
     stream,
-    O.flatMap((value) => parseNumber(value.duration))
+    O.flatMap((value) => value.duration),
+    O.flatMap(parseNonNegativeSeconds)
   );
-  const durationSeconds = pipe(
-    O.orElse(streamDuration, () => formatDuration),
-    optionToOptional
-  );
+  const durationSeconds = O.orElse(streamDuration, () => formatDuration);
   const fps = pipe(
     stream,
-    O.flatMap((value) => rationalToNumber(value.avg_frame_rate ?? value.r_frame_rate)),
-    optionToOptional
+    O.flatMap((value) => O.orElse(value.avg_frame_rate, () => value.r_frame_rate)),
+    O.flatMap(parsePositiveFrameRate)
   );
   const frameCount = pipe(
     stream,
-    O.flatMap((value) => parseNumber(value.nb_frames)),
-    optionToOptional
+    O.flatMap((value) => value.nb_frames),
+    O.flatMap(parseFrameCount)
   );
 
   return VideoProbe.make({
     videoPath,
-    ...maybe("durationSeconds", durationSeconds),
-    ...maybe("fps", fps),
-    ...maybe("frameCount", frameCount),
-    ...maybe("height", height),
-    ...maybe("width", width),
+    durationSeconds,
+    fps,
+    frameCount,
+    height,
+    width,
   });
 };
 
 const expectedFrameCount = (probe: VideoProbe, fps: number): number =>
-  Math.max(0, Math.ceil((probe.durationSeconds ?? 0) * fps));
+  Math.max(
+    0,
+    Math.ceil(
+      pipe(
+        probe.durationSeconds,
+        O.getOrElse(() => 0)
+      ) * fps
+    )
+  );
 
 const digitCount = (value: number): number => `${Math.max(0, Math.trunc(value))}`.length;
 
-const paddingForCount = (count: number): number => Math.max(5, digitCount(Math.max(0, count - 1)));
+const paddingForCount = (count: number): FrameFilenamePadding =>
+  FrameFilenamePadding.make(Math.max(5, digitCount(Math.max(0, count - 1))));
 
 const formatFps = (fps: number): string => `${fps}`;
+
+/**
+ * Options for formatting one generated PNG frame filename.
+ *
+ * @example
+ * ```ts
+ * import { FormatFrameFileNameOptions } from "@beep/ffmpeg"
+ *
+ * const options = FormatFrameFileNameOptions.make({ index: 0, padding: 5, prefix: "clip_frame" })
+ * console.log(options)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FormatFrameFileNameOptions extends S.Class<FormatFrameFileNameOptions>($I`FormatFrameFileNameOptions`)(
+  {
+    index: FrameIndex.pipe(
+      $I.annoteKey("FormatFrameFileNameOptions.index", {
+        description: "Zero-based frame index to render into the filename.",
+      })
+    ),
+    padding: FrameFilenamePadding.pipe(
+      $I.annoteKey("FormatFrameFileNameOptions.padding", {
+        description: "Minimum width used when zero-padding the frame index.",
+      })
+    ),
+    prefix: SafeFramePrefix.pipe(
+      $I.annoteKey("FormatFrameFileNameOptions.prefix", {
+        description: "Safe filename prefix placed before the padded frame index.",
+      })
+    ),
+  },
+  $I.annote("FormatFrameFileNameOptions", {
+    description: "Options for formatting one generated PNG frame filename.",
+  })
+) {}
+
+const FormatFrameFileName = Fn({
+  input: FormatFrameFileNameOptions,
+  output: S.String,
+}).pipe(
+  $I.annoteSchema("FormatFrameFileName", {
+    description: "Schema-backed formatter for generated PNG frame filenames.",
+  })
+);
 
 /**
  * Format a generated PNG frame filename.
@@ -327,11 +391,9 @@ const formatFps = (fps: number): string => `${fps}`;
  * @category utilities
  * @since 0.0.0
  */
-export const formatFrameFileName = (options: {
-  readonly index: number;
-  readonly padding: number;
-  readonly prefix: string;
-}): string => `${options.prefix}_${pipe(`${options.index}`, Str.padStart(options.padding, "0"))}.png`;
+export const formatFrameFileName: (options: FormatFrameFileNameOptions) => string = FormatFrameFileName.implementSync(
+  (options) => `${options.prefix}_${pipe(`${options.index}`, Str.padStart(options.padding, "0"))}.png`
+);
 
 /**
  * Build ffprobe arguments for the video-probe operation.
@@ -362,6 +424,58 @@ export const buildFfprobeArgs = (request: ProbeVideoRequest): ReadonlyArray<stri
 ];
 
 /**
+ * Options for building native ffmpeg frame extraction arguments.
+ *
+ * @example
+ * ```ts
+ * import { BuildExtractFramesArgsOptions } from "@beep/ffmpeg"
+ *
+ * const options = BuildExtractFramesArgsOptions.make({
+ *   fps: "1",
+ *   outputPattern: "./frames/frame_%05d.png",
+ *   videoPath: "./clip.mp4"
+ * })
+ * console.log(options)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class BuildExtractFramesArgsOptions extends S.Class<BuildExtractFramesArgsOptions>(
+  $I`BuildExtractFramesArgsOptions`
+)(
+  {
+    fps: S.String.pipe(
+      $I.annoteKey("BuildExtractFramesArgsOptions.fps", {
+        description: "Frame-rate text passed to ffmpeg's fps video filter.",
+      })
+    ),
+    outputPattern: S.String.pipe(
+      $I.annoteKey("BuildExtractFramesArgsOptions.outputPattern", {
+        description: "ffmpeg image2 output pattern for generated PNG frames.",
+      })
+    ),
+    videoPath: S.String.pipe(
+      $I.annoteKey("BuildExtractFramesArgsOptions.videoPath", {
+        description: "Input video path passed to the native ffmpeg command.",
+      })
+    ),
+  },
+  $I.annote("BuildExtractFramesArgsOptions", {
+    description: "Options for building native ffmpeg frame extraction arguments.",
+  })
+) {}
+
+const BuildExtractFramesArgs = Fn({
+  input: BuildExtractFramesArgsOptions,
+  output: S.Array(S.String),
+}).pipe(
+  $I.annoteSchema("BuildExtractFramesArgs", {
+    description: "Schema-backed builder for native ffmpeg frame extraction arguments.",
+  })
+);
+
+/**
  * Build ffmpeg arguments for extracting PNG frames.
  *
  * @example
@@ -379,27 +493,24 @@ export const buildFfprobeArgs = (request: ProbeVideoRequest): ReadonlyArray<stri
  * @category utilities
  * @since 0.0.0
  */
-export const buildExtractFramesArgs = (options: {
-  readonly fps: string;
-  readonly outputPattern: string;
-  readonly videoPath: string;
-}): ReadonlyArray<string> => [
-  "-hide_banner",
-  "-nostdin",
-  "-y",
-  "-i",
-  options.videoPath,
-  "-vf",
-  `fps=${options.fps}`,
-  "-start_number",
-  "0",
-  "-progress",
-  "pipe:1",
-  "-nostats",
-  "-f",
-  "image2",
-  options.outputPattern,
-];
+export const buildExtractFramesArgs: (options: BuildExtractFramesArgsOptions) => ReadonlyArray<string> =
+  BuildExtractFramesArgs.implementSync((options) => [
+    "-hide_banner",
+    "-nostdin",
+    "-y",
+    "-i",
+    options.videoPath,
+    "-vf",
+    `fps=${options.fps}`,
+    "-start_number",
+    "0",
+    "-progress",
+    "pipe:1",
+    "-nostats",
+    "-f",
+    "image2",
+    options.outputPattern,
+  ]);
 
 const runProcess = (
   spawner: ChildProcessSpawner.ChildProcessSpawner["Service"],
@@ -423,7 +534,7 @@ const parseProgressEvent = (
   expected: number,
   progress: string
 ): O.Option<FFmpegProgressEvent> => {
-  const frameCount = pipe(O.fromUndefinedOr(block.frame), O.flatMap(parseNumber));
+  const frameCount = pipe(O.fromUndefinedOr(block.frame), O.flatMap(parseFrameCount));
   if (O.isNone(frameCount)) {
     return O.none();
   }
@@ -432,18 +543,20 @@ const parseProgressEvent = (
     O.fromUndefinedOr(block.out_time_ms ?? block.out_time_us),
     O.flatMap(parseNumber),
     O.map((value) => value / 1_000_000),
-    optionToOptional
+    O.flatMap(NonNegativeSeconds.decodeOption)
   );
-  const percent = expected <= 0 ? 0 : Math.min(100, Math.max(0, (frameCount.value / expected) * 100));
+  const percent = FFmpegProgressPercent.make(
+    expected <= 0 ? 0 : Math.min(100, Math.max(0, (frameCount.value / expected) * 100))
+  );
 
   return O.some(
     FFmpegProgressEvent.make({
       frameCount: frameCount.value,
       kind: "progress",
+      outTimeSeconds,
       percent,
       progress,
-      ...maybe("outTimeSeconds", outTimeSeconds),
-      ...maybe("speed", block.speed),
+      speed: O.fromUndefinedOr(block.speed),
     })
   );
 };
@@ -637,9 +750,10 @@ const makeExtractContext = Effect.fn("FFmpeg.makeExtractContext")(function* (
   const outDir = path.resolve(request.outDir);
   const sourceExtension = path.extname(videoPath);
   const sourceStem = path.basename(videoPath, sourceExtension) || "video";
+  const defaultPrefix = SafeFramePrefix.fromUnknown(`${sourceStem}_frame`);
   const prefix = pipe(
     request.prefix,
-    O.getOrElse(() => `${sourceStem}_frame`)
+    O.getOrElse(() => defaultPrefix)
   );
   const manifestPath = pipe(
     request.manifestPath,
@@ -652,7 +766,7 @@ const makeExtractContext = Effect.fn("FFmpeg.makeExtractContext")(function* (
   const padding = paddingForCount(count);
   const fpsText = formatFps(request.fps);
 
-  return {
+  return ExtractContext.make({
     expectedFrameCount: count,
     fpsText,
     manifestPath,
@@ -662,7 +776,7 @@ const makeExtractContext = Effect.fn("FFmpeg.makeExtractContext")(function* (
     probe,
     request,
     videoPath,
-  };
+  });
 });
 
 const readTempFrames = Effect.fn("FFmpeg.readTempFrames")(function* (
@@ -687,16 +801,16 @@ const readTempFrames = Effect.fn("FFmpeg.readTempFrames")(function* (
     }
 
     const digits = Str.slice(tempPrefix.length, -4)(name);
-    const index = pipe(
-      N.parse(digits),
-      O.filter((value) => Number.isInteger(value) && value >= 0)
-    );
+    const index = pipe(N.parse(digits), O.flatMap(FrameIndex.decodeOption));
 
     if (O.isSome(index)) {
-      frames = A.append(frames, {
-        index: index.value,
-        path: path.join(tempDir, name),
-      });
+      frames = A.append(
+        frames,
+        TempFrame.make({
+          index: index.value,
+          path: path.join(tempDir, name),
+        })
+      );
     }
   }
 
@@ -737,7 +851,7 @@ const renderManifest = Effect.fn("FFmpeg.renderManifest")(function* (
   manifestPath: string,
   manifest: ExtractFramesManifest
 ) {
-  const encoded = yield* encodeExtractFramesManifest(manifest).pipe(
+  const encoded = yield* ExtractFramesManifest.encodeEffect(manifest).pipe(
     Effect.mapError((cause) =>
       FFmpegError.fromUnknown("extractFrames", `Failed to encode extract-frames manifest: "${manifestPath}"`, { cause })
     )
@@ -768,13 +882,16 @@ const commitFrames = Effect.fn("FFmpeg.commitFrames")(function* (
     const position = A.length(planned);
     const fileName = formatFrameFileName({ index: position, padding: finalPadding, prefix: context.prefix });
     const targetPath = path.join(context.outDir, fileName);
-    planned = A.append(planned, {
-      fileName,
-      index: position,
-      relativePath: path.relative(context.outDir, targetPath),
-      sourcePath: tempFrame.path,
-      targetPath,
-    });
+    planned = A.append(
+      planned,
+      PlannedFrameCommit.make({
+        fileName,
+        index: position,
+        relativePath: path.relative(context.outDir, targetPath),
+        sourcePath: tempFrame.path,
+        targetPath,
+      })
+    );
   }
 
   for (const frame of planned) {
@@ -827,14 +944,14 @@ const commitFrames = Effect.fn("FFmpeg.commitFrames")(function* (
   return committed;
 });
 
-const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConfigInput | undefined) {
+const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConfigInputOptions | undefined) {
   const config = defaultConfig(configInput);
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
 
   const probeVideo = Effect.fn("FFmpeg.probeVideo")(function* (rawRequest: ProbeVideoRequest) {
-    const request = yield* decodeProbeVideoRequest(rawRequest).pipe(
+    const request = yield* ProbeVideoRequest.decodeEffect(rawRequest).pipe(
       Effect.mapError((cause) => FFmpegError.fromUnknown("probeVideo", "Invalid probe video request.", { cause }))
     );
     const videoPath = path.resolve(request.videoPath);
@@ -855,16 +972,16 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
 
     if (result.exitCode !== 0) {
       return yield* FFmpegError.make({
-        command: config.ffprobePath,
-        exitCode: result.exitCode,
+        command: O.some(config.ffprobePath),
+        exitCode: O.some(result.exitCode),
         message: `ffprobe could not read video metadata for "${videoPath}".`,
         operation: "probeVideo",
-        stderr: Str.trim(result.stderr),
-        stdout: Str.trim(result.stdout),
+        stderr: O.some(Str.trim(result.stderr)),
+        stdout: O.some(Str.trim(result.stdout)),
       });
     }
 
-    const output = yield* decodeFfprobeOutput(result.stdout).pipe(
+    const output = yield* FfprobeOutput.decodeJsonEffect(result.stdout).pipe(
       Effect.mapError((cause) =>
         FFmpegError.fromUnknown("probeVideo", `Failed to decode ffprobe JSON for "${videoPath}".`, {
           cause,
@@ -880,7 +997,7 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
     rawRequest: ExtractFramesRequest,
     onEvent?: FFmpegEventSink | undefined
   ) {
-    const request = yield* decodeExtractFramesRequest(rawRequest).pipe(
+    const request = yield* ExtractFramesRequest.decodeEffect(rawRequest).pipe(
       Effect.mapError((cause) => FFmpegError.fromUnknown("extractFrames", "Invalid extract-frames request.", { cause }))
     );
     const videoPath = path.resolve(request.videoPath);
@@ -964,12 +1081,12 @@ const makeService = Effect.fn("FFmpeg.make")(function* (configInput?: FFmpegConf
         const result = yield* runExtractProcess(spawner, command, context.expectedFrameCount, onEvent);
         if (result.exitCode !== 0) {
           return yield* FFmpegError.make({
-            command: config.ffmpegPath,
-            exitCode: result.exitCode,
+            command: O.some(config.ffmpegPath),
+            exitCode: O.some(result.exitCode),
             message: `ffmpeg could not extract frames for "${context.videoPath}".`,
             operation: "extractFrames",
-            stderr: Str.trim(result.stderr),
-            stdout: Str.trim(result.stdout),
+            stderr: O.some(Str.trim(result.stderr)),
+            stdout: O.some(Str.trim(result.stdout)),
           });
         }
 
@@ -1033,7 +1150,7 @@ export class FFmpeg extends Context.Service<FFmpeg, FFmpegShape>()($I`FFmpeg`) {
    * @since 0.0.0
    */
   static readonly makeLayer = (
-    config?: FFmpegConfigInput | undefined
+    config?: FFmpegConfigInputOptions | undefined
   ): Layer.Layer<FFmpeg, never, ChildProcessSpawner.ChildProcessSpawner | FileSystem.FileSystem | Path.Path> =>
     Layer.effect(FFmpeg, Effect.map(makeService(config), FFmpeg.of));
 }
