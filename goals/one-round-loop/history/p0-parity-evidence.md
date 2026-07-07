@@ -63,9 +63,35 @@ build` in the local battery).
 Fixture table: `../research/local-verdict-parity-fixtures.md`.
 Fixture branch: `goals/one-round-loop-p0-parity-fixtures` (never merged).
 
-- `beep ci local` run (fixture branch): _pending_
-- Draft PR + check.yml run: _pending_
-- Per-row verdict comparison: _pending_
+- Draft PR: [#322](https://github.com/beep-effect/beep-effect/pull/322)
+  (never merged; branch built via `beep worktree new` — bootstrap incl.
+  bun install 7.3s, an S3 data point).
+
+**Round 1** (fixtures commit f12bd3cf96 + bad-message commit
+a9a5f2c147): `beep ci local --affected` from the worktree — **15/19
+lanes FAIL exactly as seeded** (commitlint, repo-sanity, lint-policy,
+lint, check, codegen, knip, secrets, build, test-unit,
+test-integration, coverage, desktop-ipc, fallow, nix). Four injections
+MISSED their gate (all fixture-design errors, each itself a documented
+gate-semantics finding):
+
+1. `jsdoc-ratchet` PASS — adding an *undocumented* export does not
+   reduce documented totals; the ratchet guards documented-count
+   regression. Amended: strip the JSDoc from an existing documented
+   export (`internal/cli/Printer.ts` `printLines`).
+2. `sast` PASS — semgrep's eval rule deliberately ignores
+   literal-argument `eval("...")`. Amended: dynamic argument
+   (`eval(globalThis.process.argv.join(" "))`).
+3. `security` PASS — removing one `[[IgnoredVulns]]` block did not
+   surface a finding (the ignore appears stale against the current
+   lockfile — itself a finding worth an ignore-hygiene sweep). Amended:
+   removed ALL ignore blocks.
+4. `docgen` PASS — the broken `@example` sat on a non-barrel internal
+   module, outside the compiled docs surface. Amended: seeded a broken
+   example on a barrel-exported symbol (`Ci.errors.ts`).
+
+**Round 2** (amendments commit 736e054e3f): local battery re-run +
+draft-PR CI verdicts: _pending_.
 
 ## 3. Lane inventory single-sourcing (matrix row 3)
 
