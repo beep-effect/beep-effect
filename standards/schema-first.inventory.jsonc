@@ -1,7 +1,11 @@
 {
   "version": 1,
   "generatedOn": "2026-07-07",
-  "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
+  "scope": [
+    "apps/**/*.{ts,tsx}",
+    "packages/**/*.{ts,tsx}",
+    "infra/**/*.ts"
+  ],
   "entries": [
     {
       "file": "apps/oip-web/src/components/HeroVideo.tsx",
@@ -2106,6 +2110,14 @@
       "line": 51,
       "owner": "@beep/law-practice-server",
       "reason": "Synthetic golden fixture helper decodes branded file-processing IDs and PosixPath values for one deterministic office-action source artifact; property coverage belongs in the file-processing package schemas."
+    },
+    {
+      "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts",
+      "symbol": "LawEntities",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Declaration-merged structural companion for the LawEntities S.Class: the explicit Self interface breaks a TS7056 inferred-type explosion, and merged declarations must share export-ness with the exported class, which IS the annotated schema."
     },
     {
       "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.ports.ts",

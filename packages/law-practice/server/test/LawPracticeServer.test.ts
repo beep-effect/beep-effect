@@ -8,6 +8,7 @@ import { DocumentId } from "@beep/nlp/Core";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Stream } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import {
@@ -133,7 +134,7 @@ describe("@beep/law-practice-server", () => {
     (it) => {
       it.effect("review rejects unaligned distinction text before admission", () =>
         expectReviewExtractionError("required-extraction-unaligned", (error) => {
-          expect(error.alignmentStatus).toBe("unaligned");
+          expect(error.alignmentStatus).toEqual(O.some("unaligned"));
         })
       );
     }
