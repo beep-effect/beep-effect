@@ -83,7 +83,7 @@ const writeSchemaCatalogFixture = Effect.fn("SchemaCatalogTest.writeFixture")(fu
         '  $I.annote("PrivateModel", { description: "Module-local helper schema." })',
         ") {}",
         "",
-        "const PrivateStatus = LiteralKit([\"a\", \"b\"]);",
+        'const PrivateStatus = LiteralKit(["a", "b"]);',
         "",
         "export const usePrivates = (): ReadonlyArray<unknown> => [PrivateModel, PrivateStatus];",
         "",

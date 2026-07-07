@@ -11,6 +11,7 @@ import { resolveWorkspaceDirs } from "@beep/repo-utils/Workspaces";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
 import { Console, DateTime, Effect, FileSystem, flow, HashMap, Order, Path, pipe, SchemaGetter } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -576,13 +577,14 @@ const writeInventoryDocument = Effect.fn("writeInventoryDocument")(function* (do
 export const makeSchemaFirstOwnerResolver = Effect.fn("makeSchemaFirstOwnerResolver")(function* (
   root?: undefined | string
 ) {
-  const workspaces = yield* resolveWorkspaceDirs(root ?? process.cwd());
+  const base = root ?? process.cwd();
+  const workspaces = yield* resolveWorkspaceDirs(base);
   const workspaceEntries = pipe(
     HashMap.toEntries(workspaces),
     A.map(([packageName, absolutePath]) => [packageName, toPosixPath(absolutePath)] as const),
     A.sort(byWorkspacePathLengthDescending)
   );
-  const cwd = toPosixPath(process.cwd());
+  const cwd = toPosixPath(base);
 
   return (absoluteFilePath: string): string => {
     const normalized = toPosixPath(absoluteFilePath);
@@ -1417,12 +1419,17 @@ const isSchemaCodecCallExpression = (callExpression: import("ts-morph").CallExpr
  * import { literalMemberEquals } from "@beep/repo-cli/commands/Lint"
  *
  * console.log(literalMemberEquals(["is", "make"], "is")) // true
+ * console.log(literalMemberEquals("is")(["is", "make"])) // true
  * ```
  * @category utilities
  * @since 0.0.0
  */
-export const literalMemberEquals = <const T extends string>(members: readonly T[], candidate: string): boolean =>
-  A.some(members, (member) => Str.Equivalence(member, candidate));
+export const literalMemberEquals: {
+  <const T extends string>(members: readonly T[], candidate: string): boolean;
+  (candidate: string): <const T extends string>(members: readonly T[]) => boolean;
+} = dual(2, <const T extends string>(members: readonly T[], candidate: string): boolean =>
+  A.some(members, (member) => Str.Equivalence(member, candidate))
+);
 
 const isSchemaArbitraryCallExpression = (callExpression: import("ts-morph").CallExpression): boolean => {
   const expression = callExpression.getExpression();
