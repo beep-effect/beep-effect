@@ -476,7 +476,16 @@ describe("SqlTest", () => {
   nodeRuntimeEffectIt(
     "validates selected PGLite layer configs before provisioning",
     Effect.fnUntraced(function* () {
-      const externalExit = yield* Effect.exit(Effect.scoped(Layer.build(makePgliteSqlTestLayer({ mode: "external" }))));
+      const externalExit = yield* Effect.exit(
+        Effect.scoped(
+          Layer.build(
+            makePgliteSqlTestLayer({
+              external: { connectionUri: "not a postgres url" },
+              mode: "external",
+            })
+          )
+        )
+      );
       const testcontainersExit = yield* Effect.exit(
         Effect.scoped(
           Layer.build(
