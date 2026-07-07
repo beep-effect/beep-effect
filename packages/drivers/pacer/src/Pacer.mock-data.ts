@@ -347,9 +347,14 @@ export const PACER_MOCK_DOWNLOAD_CASES = 2;
  * @since 0.0.0
  */
 export const reportInfoBody: {
-  (reportId: number, status: "WAITING" | "RUNNING" | "COMPLETED" | "FAILED"): Effect.Effect<unknown, S.SchemaError>;
-  (status: "WAITING" | "RUNNING" | "COMPLETED" | "FAILED"): (reportId: number) => Effect.Effect<unknown, S.SchemaError>;
-} = dual(2, (reportId: number, status: "WAITING" | "RUNNING" | "COMPLETED" | "FAILED") =>
+  (
+    reportId: number | string,
+    status: "WAITING" | "RUNNING" | "COMPLETED" | "FAILED"
+  ): Effect.Effect<unknown, S.SchemaError>;
+  (
+    status: "WAITING" | "RUNNING" | "COMPLETED" | "FAILED"
+  ): (reportId: number | string) => Effect.Effect<unknown, S.SchemaError>;
+} = dual(2, (reportId: number | string, status: "WAITING" | "RUNNING" | "COMPLETED" | "FAILED") =>
   S.encodeUnknownEffect(ReportInfoType)(
     ReportInfoType.make({
       reportId,

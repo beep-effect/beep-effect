@@ -274,12 +274,61 @@ describe("PACER end-to-end (mock transport)", () => {
     )
   );
 
-  it.layer(mockLayer({ deleteReport: "failed" }))("batch cleanup failure", (it) =>
+  const cleanupFailureDeletedReportIds = Ref.makeUnsafe<ReadonlyArray<number>>([]);
+  it.layer(mockLayer({ deleteReport: "failed", deletedReportIds: cleanupFailureDeletedReportIds }))(
+    "batch cleanup failure",
+    (it) =>
+      it.effect(
+        "downloadCases returns successful results when best-effort delete cleanup fails",
+        Effect.fnUntraced(function* () {
+          const pcl = yield* Pacer.PclClient;
+          const downloaded = yield* pcl.downloadCases(Pacer.CourtCaseSearchDto.make({}));
+          expect(downloaded.length).toBe(Pacer.PACER_MOCK_DOWNLOAD_CASES);
+          expect(yield* Ref.get(cleanupFailureDeletedReportIds)).toEqual([Pacer.DEFAULT_REPORT_ID]);
+        })
+      )
+  );
+
+  const invalidReportDeletedSegments = Ref.makeUnsafe<ReadonlyArray<string>>([]);
+  it.layer(mockLayer({ reportId: "abc", deletedReportPathSegments: invalidReportDeletedSegments }))(
+    "invalid report id cleanup",
+    (it) =>
+      it.effect(
+        "downloadCases still attempts delete cleanup when the server returns an invalid report id",
+        Effect.fnUntraced(function* () {
+          const pcl = yield* Pacer.PclClient;
+          const error = yield* Effect.flip(pcl.downloadCases(Pacer.CourtCaseSearchDto.make({})));
+          expect(error._tag).toBe("PacerPclError");
+          expect(error.reason).toBe("server-error");
+          expect(error.cause).toBe("invalid reportId from server");
+          expect(yield* Ref.get(invalidReportDeletedSegments)).toEqual(["abc"]);
+        })
+      )
+  );
+
+  const invalidNumberReportDeletedSegments = Ref.makeUnsafe<ReadonlyArray<string>>([]);
+  it.layer(mockLayer({ reportId: 3.14, deletedReportPathSegments: invalidNumberReportDeletedSegments }))(
+    "fractional report id cleanup",
+    (it) =>
+      it.effect(
+        "downloadCases attempts delete cleanup for fractional server report ids before failing validation",
+        Effect.fnUntraced(function* () {
+          const pcl = yield* Pacer.PclClient;
+          const error = yield* Effect.flip(pcl.downloadCases(Pacer.CourtCaseSearchDto.make({})));
+          expect(error._tag).toBe("PacerPclError");
+          expect(error.reason).toBe("server-error");
+          expect(error.cause).toBe("invalid reportId from server");
+          expect(yield* Ref.get(invalidNumberReportDeletedSegments)).toEqual(["3.14"]);
+        })
+      )
+  );
+
+  it.layer(mockLayer({ deleteReport: "failed" }))("direct batch cleanup failure", (it) =>
     it.effect(
-      "downloadCases surfaces delete failures after a successful download",
+      "deleteCaseReport surfaces delete failures when called directly",
       Effect.fnUntraced(function* () {
         const pcl = yield* Pacer.PclClient;
-        const error = yield* Effect.flip(pcl.downloadCases(Pacer.CourtCaseSearchDto.make({})));
+        const error = yield* Effect.flip(pcl.deleteCaseReport(Pacer.DEFAULT_REPORT_ID));
         expect(error._tag).toBe("PacerPclError");
         expect(error.reason).toBe("server-error");
         expect(error.status).toBe(500);

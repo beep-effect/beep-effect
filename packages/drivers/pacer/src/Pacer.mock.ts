@@ -296,8 +296,10 @@ export class PacerMockOptions extends S.Class<PacerMockOptions>($I`PacerMockOpti
 
 interface PacerMockRuntimeOptions {
   readonly deletedReportIds?: Ref.Ref<ReadonlyArray<number>>;
+  readonly deletedReportPathSegments?: Ref.Ref<ReadonlyArray<string>>;
   readonly logoutCount?: Ref.Ref<number>;
   readonly logoutTokens?: Ref.Ref<ReadonlyArray<string>>;
+  readonly reportId?: number | string;
   readonly requestHeaders?: Ref.Ref<ReadonlyArray<Readonly<Record<string, string>>>>;
   readonly requireClientCode?: boolean;
   readonly rotateNextGenCso?: string;
@@ -350,8 +352,17 @@ const recordLogoutToken = (options: PacerMockOptionsInput, request: MockRequest)
     })
   );
 
+const lastPathSegment = (path: string): O.Option<string> =>
+  pipe(Str.split("/")(path), A.filter(Str.isNonEmpty), A.last);
+
 const decodedLastPathInt = (path: string): O.Option<number> =>
-  pipe(Str.split("/")(path), A.filter(Str.isNonEmpty), A.last, O.flatMap(MockIntFromString.decodeOption));
+  pipe(lastPathSegment(path), O.flatMap(MockIntFromString.decodeOption));
+
+const selectedReportId = (options: PacerMockOptionsInput): number | string =>
+  pipe(
+    O.fromUndefinedOr(options.reportId),
+    O.getOrElse(() => DEFAULT_REPORT_ID)
+  );
 
 const selectedPage = (pageCount: number, rawPage: string | null): number =>
   pipe(
@@ -399,26 +410,44 @@ const mockLogoutResponse = (
 };
 
 const mockDownloadStatusResponse = (
+  options: PacerMockOptionsInput,
   resolved: PacerMockOptions,
   request: MockRequest,
   path: string
 ): Effect.Effect<HttpClientResponse.HttpClientResponse> => {
   const id = pipe(
     decodedLastPathInt(path),
-    O.getOrElse(() => DEFAULT_REPORT_ID)
+    O.getOrElse(() => selectedReportId(options))
   );
   const status = resolved.batch === "failed" ? "FAILED" : "COMPLETED";
   return responseFromEncodedBody(request, 200, reportInfoBody(id, status));
 };
 
 const recordDeletedReport = (options: PacerMockOptionsInput, path: string): Effect.Effect<void> =>
-  pipe(
-    decodedLastPathInt(path),
-    O.match({
-      onNone: () => Effect.void,
-      onSome: (reportId) =>
-        options.deletedReportIds === undefined ? Effect.void : Ref.update(options.deletedReportIds, A.append(reportId)),
-    })
+  Effect.all(
+    [
+      pipe(
+        lastPathSegment(path),
+        O.match({
+          onNone: () => Effect.void,
+          onSome: (segment) =>
+            options.deletedReportPathSegments === undefined
+              ? Effect.void
+              : Ref.update(options.deletedReportPathSegments, A.append(segment)),
+        })
+      ),
+      pipe(
+        decodedLastPathInt(path),
+        O.match({
+          onNone: () => Effect.void,
+          onSome: (reportId) =>
+            options.deletedReportIds === undefined
+              ? Effect.void
+              : Ref.update(options.deletedReportIds, A.append(reportId)),
+        })
+      ),
+    ],
+    { discard: true }
   );
 
 const mockDeleteReportResponse = (
@@ -464,13 +493,13 @@ const mockPclResponse = (context: PacerMockRouteContext): Effect.Effect<HttpClie
   const { options, partyBody, request, resolved, url } = context;
   const path = url.pathname;
   if (Str.includes("/cases/download/status/")(path)) {
-    return mockDownloadStatusResponse(resolved, request, path);
+    return mockDownloadStatusResponse(options, resolved, request, path);
   }
   if (Str.includes("/cases/download/")(path)) {
     return responseFromEncodedBody(request, 200, downloadResultsBody);
   }
   if (Str.endsWith("/cases/download")(path)) {
-    return responseFromEncodedBody(request, 200, reportInfoBody(DEFAULT_REPORT_ID, "RUNNING"));
+    return responseFromEncodedBody(request, 200, reportInfoBody(selectedReportId(options), "RUNNING"));
   }
   if (Str.includes("/cases/reports/")(path)) {
     return mockDeleteReportResponse(options, resolved, request, path);

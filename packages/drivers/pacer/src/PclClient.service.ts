@@ -41,6 +41,8 @@ import type {
 
 const $I = $PacerId.create("pacer/pcl/PclClient.service");
 
+type ReportIdValue = ReportInfoType["reportId"];
+
 const ReportId = S.Union([S.Int, S.FiniteFromString.pipe(S.check(S.isInt()))]).pipe(
   $I.annoteSchema("PacerReportId", {
     description: "PCL batch report id accepted as a number or numeric string.",
@@ -220,7 +222,7 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
         const caseDownloadResults = (reportId: number) =>
           callPcl(client.pcl.caseDownloadResults({ params: { reportId } }));
 
-        const deleteCaseReport = (reportId: number): Effect.Effect<void, PacerPclError> =>
+        const deleteCaseReportByValue = (reportId: ReportIdValue): Effect.Effect<void, PacerPclError> =>
           callPcl(
             injected.execute(
               HttpClientRequest.make("DELETE")(`${cfg.pclBaseUrl}/pcl-public-api/rest/cases/reports/${reportId}`)
@@ -232,6 +234,9 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
                 : Effect.fail(PacerPclError.fromStatus(response.status))
             )
           );
+
+        const deleteCaseReport = (reportId: number): Effect.Effect<void, PacerPclError> =>
+          deleteCaseReportByValue(reportId);
 
         const pollUntilComplete = (reportId: number): Effect.Effect<ReportInfoType, PacerPclError> =>
           caseDownloadStatus(reportId).pipe(
@@ -246,38 +251,35 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
             )
           );
 
-        const cleanupReport = (reportId: number): Effect.Effect<void, PacerPclError> =>
-          deleteCaseReport(reportId).pipe(
+        const cleanupReport = (reportId: ReportIdValue): Effect.Effect<void, PacerPclError> =>
+          deleteCaseReportByValue(reportId).pipe(
             Effect.tapError((error) => Effect.logWarning(`Pacer PCL report cleanup failed: ${error.reason}`))
           );
 
         const withReportCleanup = Effect.fnUntraced(function* <A>(
-          reportId: number,
+          reportId: ReportIdValue,
           effect: Effect.Effect<A, PacerPclError>
         ) {
           const result = yield* Effect.result(effect);
-          const cleanup = yield* Effect.result(cleanupReport(reportId));
-          if (Result.isFailure(result)) {
-            return yield* result.failure;
-          }
-          if (Result.isFailure(cleanup)) {
-            return yield* cleanup.failure;
-          }
-          return result.success;
+          yield* cleanupReport(reportId).pipe(Effect.ignore);
+          return yield* Result.match(result, {
+            onFailure: (error) => Effect.fail(error),
+            onSuccess: Effect.succeed,
+          });
         });
 
         const downloadCases: PclClientShape["downloadCases"] = Effect.fnUntraced(function* (
           payload: CourtCaseSearchDto
         ) {
           const started = yield* startCaseDownload(payload);
-          const reportId = yield* O.match(ReportId.decodeOption(started.reportId), {
-            onNone: () =>
-              Effect.fail(PacerPclError.fromReason("server-error", { cause: "invalid reportId from server" })),
-            onSome: Effect.succeed,
-          });
           return yield* withReportCleanup(
-            reportId,
+            started.reportId,
             Effect.gen(function* () {
+              const reportId = yield* O.match(ReportId.decodeOption(started.reportId), {
+                onNone: () =>
+                  Effect.fail(PacerPclError.fromReason("server-error", { cause: "invalid reportId from server" })),
+                onSome: Effect.succeed,
+              });
               const completed = yield* pollUntilComplete(reportId);
               if (O.contains(completed.status, ReportStatus.Enum.FAILED)) {
                 return yield* PacerPclError.fromReason("server-error", { cause: "report failed" });
