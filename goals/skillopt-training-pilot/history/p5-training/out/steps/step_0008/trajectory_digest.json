@@ -1,0 +1,31 @@
+{
+  "step": 8,
+  "action": "reject",
+  "n_total": 2,
+  "n_fail": 2,
+  "failure_patterns": [
+    {
+      "pattern": "scorer_contract: Agents typechecked and shipped semantically-equivalent refactors but never consulted the Task Manifest JSON's exact required/forbidden regex patterns, so literal pattern greps (e.g. required `S.Class` construction, required `O.Option`/`O.some`/`O.none` shapes, forbidden bare `type` alias) missed even though the schema-first intent was satisfied.",
+      "count": 1,
+      "task_ids": [
+        "sfv4-null-return-001"
+      ]
+    },
+    {
+      "pattern": "rule_ignored: Skill's own step-5 checklist ('No exported pure-data interface or type literal remains') was not applied during a narrowly-worded refactor task, leaving `export type BoxErrorDetails = {...}` in place instead of converting to `S.Class`.",
+      "count": 1,
+      "task_ids": [
+        "sfv4-getsomes-struct-002"
+      ]
+    }
+  ],
+  "score_before": 0.4714125,
+  "score_after": 0.328704,
+  "rejected_edits": [
+    {
+      "op": "insert_after",
+      "content": "\n- Read the Task Manifest JSON referenced in the task prompt (`## Task Manifest`) before writing code, and re-read it before finishing. It contains the deterministic scorer's exact required/forbidden regex patterns for the entrypoint file (e.g. a required class/call construction, or a forbidden bare `type`/`interface` alias) — these are literal grep checks, not stylistic suggestions, and a narrowly-worded task description does not waive a standing repo law the manifest still enforces. A typechecking, idiomatic-looking refactor that satisfies the schema-first *intent* but misses one exact required/forbidden pattern still scores as incomplete. Confirm every required pattern is present and every forbidden pattern is absent in the final entrypoint file before finishing, including the exact aliasing/casing the manifest expects for any repo-canonical module (e.g. short vs. spelled-out namespace imports).",
+      "target": "5. Verify before finishing."
+    }
+  ]
+}
