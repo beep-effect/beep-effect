@@ -104,3 +104,10 @@
 
     [mcp_servers.webstorm.headers]
       IJ_MCP_SERVER_PROJECT_PATH = "<REPO_ROOT>"
+
+  [mcp_servers.firecrawl]
+    command = "op"
+    args = ["run", "--", "npx", "-y", "firecrawl-mcp"]
+
+    [mcp_servers.firecrawl.env]
+      FIRECRAWL_API_KEY = "op://BEEP_SECRETS/BEEP_SECRETS/AI_FIRECRAWL_API_KEY"

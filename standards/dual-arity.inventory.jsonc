@@ -15,7 +15,7 @@
       "status": "candidate",
       "owner": "@beep/oip-web",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 201,
+      "line": 200,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -27,7 +27,7 @@
       "status": "candidate",
       "owner": "@beep/oip-web",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 258,
+      "line": 257,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -39,7 +39,7 @@
       "status": "candidate",
       "owner": "@beep/oip-web",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 257,
+      "line": 256,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -100,7 +100,7 @@
       "status": "candidate",
       "owner": "@beep/professional-desktop",
       "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
-      "line": 143,
+      "line": 130,
       "column": 19,
       "parameterCount": 2,
       "diagnostics": ["missing-dual"]
@@ -1357,7 +1357,7 @@
       "owner": "@beep/repo-cli",
       "reason": "Schema-first advisory-entry AST detector: parameters are a ts-morph node plus the repo-relative file and owner package resolved per source file inside scanSchemaFirstInventory's scan loop, always invoked data-first; there is no pipeable data subject, so a data-first/data-last dual is meaningless. Exported solely so fixture tests can exercise the detector directly (rco-001..004, goals/repo-crispening-orchestration).",
       "issue": "REPO-CLI-SFV4-FN-SCHEMA-DETECTOR",
-      "line": 1046,
+      "line": 1118,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual", "third-param-not-object-like"]
@@ -1370,7 +1370,7 @@
       "owner": "@beep/repo-cli",
       "reason": "Schema-first advisory-entry AST detector: parameters are a ts-morph node plus the repo-relative file and owner package resolved per source file inside scanSchemaFirstInventory's scan loop, always invoked data-first; there is no pipeable data subject, so a data-first/data-last dual is meaningless. Exported solely so fixture tests can exercise the detector directly (rco-001..004, goals/repo-crispening-orchestration).",
       "issue": "REPO-CLI-SFV4-GETSOMES-STRUCT-DETECTOR",
-      "line": 1210,
+      "line": 1282,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual", "third-param-not-object-like"]
@@ -1383,7 +1383,7 @@
       "owner": "@beep/repo-cli",
       "reason": "Schema-first advisory-entry AST detector: parameters are a ts-morph node plus the repo-relative file and owner package resolved per source file inside scanSchemaFirstInventory's scan loop, always invoked data-first; there is no pipeable data subject, so a data-first/data-last dual is meaningless. Exported solely so fixture tests can exercise the detector directly (rco-001..004, goals/repo-crispening-orchestration).",
       "issue": "REPO-CLI-SFV4-NORMALIZATION-DETECTOR",
-      "line": 1154,
+      "line": 1226,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual", "third-param-not-object-like"]
@@ -1396,7 +1396,7 @@
       "owner": "@beep/repo-cli",
       "reason": "Schema-first advisory-entry AST detector: parameters are a ts-morph node plus the repo-relative file and owner package resolved per source file inside scanSchemaFirstInventory's scan loop, always invoked data-first; there is no pipeable data subject, so a data-first/data-last dual is meaningless. Exported solely so fixture tests can exercise the detector directly (rco-001..004, goals/repo-crispening-orchestration).",
       "issue": "REPO-CLI-SFV4-NULL-RETURN-DETECTOR",
-      "line": 1097,
+      "line": 1169,
       "column": 14,
       "parameterCount": 3,
       "diagnostics": ["missing-dual", "third-param-not-object-like"]
