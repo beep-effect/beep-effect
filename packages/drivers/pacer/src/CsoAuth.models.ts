@@ -11,11 +11,11 @@
  * @since 0.0.0
  */
 
-import { $ScratchpadId } from "@beep/identity";
+import { $PacerId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
-const $I = $ScratchpadId.create("pacer/auth/CsoAuth.models");
+const $I = $PacerId.create("pacer/auth/CsoAuth.models");
 
 /**
  * `cso-auth` login request body.
@@ -23,6 +23,15 @@ const $I = $ScratchpadId.create("pacer/auth/CsoAuth.models");
  * `clientCode` is optional billing/matter attribution; `otpCode` is required
  * only when the account is MFA-enrolled; `redactFlag` (`"1"`) is required only
  * for registered filers.
+ *
+ * @example
+ * ```ts
+ * import { CsoAuthRequest } from "@beep/pacer"
+ * import * as O from "effect/Option"
+ *
+ * const request = CsoAuthRequest.make({ loginId: "qa-user", password: "secret", clientCode: O.none(), otpCode: O.none(), redactFlag: O.none() })
+ * console.log(request.loginId)
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -47,6 +56,15 @@ export class CsoAuthRequest extends S.Class<CsoAuthRequest>($I`CsoAuthRequest`)(
  * failure; `errorDescription` is `""` on clean success, otherwise a warning or
  * error message.
  *
+ * @example
+ * ```ts
+ * import { CsoAuthResponse } from "@beep/pacer"
+ * import * as O from "effect/Option"
+ *
+ * const response = CsoAuthResponse.make({ nextGenCSO: "token", loginResult: "0", errorDescription: O.none() })
+ * console.log(response.loginResult)
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -64,6 +82,14 @@ export class CsoAuthResponse extends S.Class<CsoAuthResponse>($I`CsoAuthResponse
 /**
  * `cso-logout` request body — the token to invalidate.
  *
+ * @example
+ * ```ts
+ * import { CsoLogoutRequest } from "@beep/pacer"
+ *
+ * const request = CsoLogoutRequest.make({ nextGenCSO: "token" })
+ * console.log(request.nextGenCSO)
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -78,6 +104,15 @@ export class CsoLogoutRequest extends S.Class<CsoLogoutRequest>($I`CsoLogoutRequ
 
 /**
  * `cso-logout` response body.
+ *
+ * @example
+ * ```ts
+ * import { CsoLogoutResponse } from "@beep/pacer"
+ * import * as O from "effect/Option"
+ *
+ * const response = CsoLogoutResponse.make({ loginResult: O.some("0"), errorDescription: O.none(), nextGenCSO: O.none() })
+ * console.log(response.loginResult)
+ * ```
  *
  * @category schemas
  * @since 0.0.0

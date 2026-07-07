@@ -170,10 +170,13 @@ export const make: {
  * ```ts
  * import * as P from "effect/Predicate"
  * import * as S from "effect/Schema"
- * import type { Instance } from "@beep/schema/Thunk"
+ * import { make, type Instance } from "@beep/schema/Thunk"
  *
  * type StringThunk = Instance<typeof S.String>
- * const schema: StringThunk = S.declare((u: unknown): u is () => string => P.isFunction(u))
+ * const schema: StringThunk = make(
+ *   (u: unknown): u is () => string => P.isFunction(u) && P.isString(u()),
+ *   S.String
+ * )
  * console.log(schema)
  * ```
  *

@@ -67,12 +67,12 @@ export const UploadFieldDemo = (props: { readonly kind: "upload" | "uploadBox" }
   );
 };
 
-export const assertCountryLabel = async (canvasElement: HTMLElement) => {
+export const assertCountryLabel = (canvasElement: HTMLElement) => {
   const canvas = within(canvasElement);
-  await expect(canvas.getByText("Country")).toBeInTheDocument();
+  expect(canvas.getByText("Country")).toBeInTheDocument();
 };
 
-export const assertUploadedPreview = async (params: {
+export const assertUploadedPreview = (params: {
   readonly canvasElement: HTMLElement;
   readonly fileName: string;
   readonly svg: string;
@@ -80,9 +80,11 @@ export const assertUploadedPreview = async (params: {
   const { canvasElement, fileName, svg } = params;
   const canvas = within(canvasElement);
   const input = canvasElement.querySelector<HTMLInputElement>('input[type="file"]');
-  await expect(input).not.toBeNull();
-  if (input !== null) {
-    await userEvent.upload(input, new File([svg], fileName, { type: "image/svg+xml" }));
+  expect(input).not.toBeNull();
+  if (input === null) {
+    return;
   }
-  await expect(canvas.getByAltText(fileName)).toBeInTheDocument();
+  return userEvent.upload(input, new File([svg], fileName, { type: "image/svg+xml" })).then(() => {
+    expect(canvas.getByAltText(fileName)).toBeInTheDocument();
+  });
 };

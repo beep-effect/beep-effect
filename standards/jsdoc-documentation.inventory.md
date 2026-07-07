@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-07T02:07:03.732Z
+Generated: 2026-07-07T02:31:04.697Z
 
 ## Scope
 
@@ -11,20 +11,20 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 104 |
-| cleanPackages | 18 |
+| cleanPackages | 17 |
 | packagesWithoutPublicSrcSurface | 3 |
-| packagesNeedingRemediation | 79 |
-| publicModules | 1585 |
-| publicExports | 14148 |
+| packagesNeedingRemediation | 80 |
+| publicModules | 1597 |
+| publicExports | 14236 |
 | openModules | 129 |
-| openExports | 2212 |
-| missingExportExamples | 2003 |
+| openExports | 2222 |
+| missingExportExamples | 2014 |
 | missingExportCategories | 91 |
 | missingExportSince | 91 |
 | forbiddenTagFindings | 2 |
 | malformedConditionalTagFindings | 0 |
 | exampleImportFindings | 24 |
-| unsafeExampleFindings | 73 |
+| unsafeExampleFindings | 72 |
 | schemaAnnotationFindings | 141 |
 | rootPolicyOpen | 0 |
 
@@ -52,7 +52,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 9 | `@beep/rdf-canonize` | `packages/drivers/rdf-canonize` | needs-remediation | 2 | 2 | 0 | 1 |
 | 10 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | needs-remediation | 3 | 7 | 0 | 1 |
 | 11 | `@beep/root` | `.` | no-public-src-surface | 0 | 0 | 0 | 0 |
-| 12 | `@beep/pacer` | `packages/drivers/pacer` | clean | 1 | 1 | 0 | 0 |
+| 12 | `@beep/pacer` | `packages/drivers/pacer` | needs-remediation | 13 | 89 | 0 | 11 |
 | 13 | `@beep/workspace-tables` | `packages/workspace/tables` | needs-remediation | 16 | 34 | 0 | 1 |
 | 14 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | needs-remediation | 8 | 57 | 0 | 11 |
 | 15 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 2 | 3 | 0 | 1 |
@@ -117,7 +117,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 74 | `@beep/infra` | `infra` | clean | 4 | 31 | 0 | 0 |
 | 75 | `@beep/runpod` | `packages/drivers/runpod` | needs-remediation | 6 | 174 | 0 | 10 |
 | 76 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 635 | 2 | 75 |
-| 77 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 241 | 1566 | 0 | 641 |
+| 77 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 241 | 1566 | 0 | 640 |
 | 78 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 2 | 3 | 0 | 1 |
 | 79 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 17 | 208 | 0 | 8 |
 | 80 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | needs-remediation | 4 | 12 | 0 | 5 |
@@ -177,6 +177,23 @@ Path: `packages/architecture-lab/ui`
 
 Export findings:
 - `src/aggregates/WorkItem/WorkItem.view-model.ts:75` `WorkItemVisibleAction` (type) - 1 unsafe example violation(s)
+
+### @beep/pacer
+
+Path: `packages/drivers/pacer`
+
+Export findings:
+- `src/index.ts:19` `export * from "./CsoAuth.models.ts";` (re-export) - missing @example
+- `src/index.ts:26` `export * from "./Pacer.config.ts";` (re-export) - missing @example
+- `src/index.ts:33` `export * from "./Pacer.errors.ts";` (re-export) - missing @example
+- `src/index.ts:40` `export * from "./Pacer.layer.ts";` (re-export) - missing @example
+- `src/index.ts:47` `export * from "./Pacer.mock.ts";` (re-export) - missing @example
+- `src/index.ts:54` `export * from "./Pacer.mock-data.ts";` (re-export) - missing @example
+- `src/index.ts:61` `export * from "./Pacer.tokens.ts";` (re-export) - missing @example
+- `src/index.ts:68` `export * from "./PacerAuth.service.ts";` (re-export) - missing @example
+- `src/index.ts:75` `export * from "./Pcl.api.ts";` (re-export) - missing @example
+- `src/index.ts:82` `export * from "./Pcl.models.ts";` (re-export) - missing @example
+- `src/index.ts:89` `export * from "./PclClient.service.ts";` (re-export) - missing @example
 
 ### @beep/workspace-tables
 
@@ -2430,7 +2447,6 @@ Export findings:
 - `src/Slug.ts:96` `Slug` (type) - missing @example
 - `src/StatusCauseTaggedErrorClass/index.ts:12` `export * from "./StatusCauseTaggedErrorClass.errors.ts";` (re-export) - missing @example
 - `src/TaggedErrorClass/index.ts:12` `export * from "./TaggedErrorClass.errors.ts";` (re-export) - missing @example
-- `src/Thunk.ts:183` `Instance` (type) - 1 unsafe example violation(s)
 - `src/Timestamp/Timestamp.schema.ts:130` `ToIsoStr` (const) - 1 schema annotation/type-alias gap(s)
 - `src/Timestamp/Timestamp.schema.ts:176` `ToIsoStr` (namespace) - 1 unsafe example violation(s)
 - `src/Timestamp/index.ts:12` `export * from "./Timestamp.schema.ts";` (re-export) - missing @example

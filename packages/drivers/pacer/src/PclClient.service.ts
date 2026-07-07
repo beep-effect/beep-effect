@@ -1,5 +1,5 @@
 /**
- * Typed PCL client derived from the {@link ./Pcl.api.ts} HttpApi definition via
+ * Typed PCL client derived from the `Pcl.api.ts` HttpApi definition via
  * `HttpApiClient.make`, plus a pagination stream over `/cases/find`.
  *
  * The derived client is base-URL-prefixed and, on every request, has the
@@ -13,18 +13,23 @@
  * @since 0.0.0
  */
 
-import { $ScratchpadId } from "@beep/identity";
-import { Context, Effect, Layer, pipe, Redacted, Ref, Stream } from "effect";
+import { $PacerId } from "@beep/identity";
+import { SchemaUtils } from "@beep/schema";
+import { Context, Duration, Effect, Layer, pipe, Redacted, Ref, Result, Schedule, Stream, Tuple } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as HttpClient from "effect/unstable/http/HttpClient";
+import * as HttpClientError from "effect/unstable/http/HttpClientError";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
 import { HttpApiClient } from "effect/unstable/httpapi";
-import { PacerSession } from "../auth/PacerAuth.service.ts";
-import { PacerPclError } from "../Pacer.errors.ts";
-import { NextGenCsoToken, ReportStatus } from "../Pacer.tokens.ts";
+import { PacerPclError } from "./Pacer.errors.ts";
+import { pacerCauseMessage } from "./Pacer.http.ts";
+import { NextGenCsoToken, ReportStatus } from "./Pacer.tokens.ts";
+import { PacerSession } from "./PacerAuth.service.ts";
 import { PclHttpApi } from "./Pcl.api.ts";
-import type { PacerConfig } from "../Pacer.config.ts";
+import type { PacerConfig } from "./Pacer.config.ts";
 import type {
   CaseReportList,
   CaseResult,
@@ -34,38 +39,69 @@ import type {
   ReportInfoType,
 } from "./Pcl.models.ts";
 
-const $I = $ScratchpadId.create("pacer/pcl/PclClient.service");
+const $I = $PacerId.create("pacer/pcl/PclClient.service");
+
+type ReportIdValue = ReportInfoType["reportId"];
+
+const ReportId = S.Union([S.Int, S.FiniteFromString.pipe(S.check(S.isInt()))]).pipe(
+  $I.annoteSchema("PacerReportId", {
+    description: "PCL batch report id accepted as a number or numeric string.",
+  }),
+  SchemaUtils.withCodecStatics
+);
 
 /** Max status polls before a batch download is treated as timed out (~10s at 200ms). */
 const POLL_MAX_ATTEMPTS = 50;
 
+const POLL_SCHEDULE = Schedule.spaced(Duration.millis(200)).pipe(Schedule.take(POLL_MAX_ATTEMPTS));
+
 /** Per-request timeout so a hung PACER endpoint can never block the program forever. */
-const REQUEST_TIMEOUT = "30 seconds";
+const REQUEST_TIMEOUT = Duration.seconds(30);
 
 /** Hard cap on pagination, guarding against a server that never sets `pageInfo.last`. */
 const PAGINATION_MAX_PAGES = 1000;
 
-const extractStatus = (error: unknown): number | undefined =>
-  P.hasProperty(error, "response") && P.hasProperty(error.response, "status") && P.isNumber(error.response.status)
-    ? error.response.status
-    : undefined;
+const extractResponseStatus = (value: unknown): O.Option<number> =>
+  P.hasProperty(value, "response") && P.hasProperty(value.response, "status") && P.isNumber(value.response.status)
+    ? O.some(value.response.status)
+    : O.none();
 
-const errorTag = (error: unknown): string | undefined =>
-  P.hasProperty(error, "_tag") && P.isString(error._tag) ? error._tag : undefined;
+const extractStatus = (error: unknown): O.Option<number> =>
+  HttpClientError.isHttpClientError(error)
+    ? pipe(
+        extractResponseStatus(error.reason),
+        O.orElse(() => extractResponseStatus(error))
+      )
+    : extractResponseStatus(error);
+
+const isTaggedDecodeFailure = P.or(
+  P.isTagged("SchemaError"),
+  P.or(P.isTagged("DecodeError"), P.isTagged("EmptyBodyError"))
+);
+
+const isDecodeFailure = (error: unknown): boolean =>
+  isTaggedDecodeFailure(error) ||
+  (HttpClientError.isHttpClientError(error) &&
+    (error.reason._tag === "DecodeError" || error.reason._tag === "EmptyBodyError"));
 
 const isTerminalReportStatus = (status: ReportStatus): boolean =>
   status === ReportStatus.Enum.COMPLETED || status === ReportStatus.Enum.FAILED;
 
 const mapPclFailure = (error: unknown): PacerPclError => {
+  if (S.is(PacerPclError)(error)) {
+    return error;
+  }
   const status = extractStatus(error);
-  if (status !== undefined) {
-    return PacerPclError.fromStatus(status);
+  if (O.exists(status, (value) => value < 200 || value >= 300)) {
+    return PacerPclError.fromStatus(O.getOrThrow(status));
   }
-  const tag = errorTag(error);
-  if (tag === "SchemaError" || tag === "DecodeError" || tag === "EmptyBodyError") {
-    return PacerPclError.fromReason("response-decoding", { cause: String(error) });
+  if (isDecodeFailure(error)) {
+    return PacerPclError.fromReason("response-decoding", { cause: pacerCauseMessage(error) });
   }
-  return PacerPclError.fromReason("transport", { cause: String(error) });
+  return O.match(status, {
+    onNone: () => PacerPclError.fromReason("transport", { cause: pacerCauseMessage(error) }),
+    onSome: PacerPclError.fromStatus,
+  });
 };
 
 /** Apply the shared per-request timeout and map any failure to a typed PacerPclError. */
@@ -81,11 +117,9 @@ const makeInjectingClient = (
     HttpClient.mapRequestEffect((request) =>
       Ref.get(tokenRef).pipe(
         Effect.map((token) => {
-          const withToken = HttpClientRequest.setHeader(
-            request,
-            "X-NEXT-GEN-CSO",
-            Redacted.value(token)
-          ).pipe(HttpClientRequest.accept("application/json"));
+          const withToken = HttpClientRequest.setHeader(request, "X-NEXT-GEN-CSO", Redacted.value(token)).pipe(
+            HttpClientRequest.accept("application/json")
+          );
           return O.match(cfg.clientCode, {
             onNone: () => withToken,
             onSome: (code) => HttpClientRequest.setHeader(withToken, "X-CLIENT-CODE", code),
@@ -97,7 +131,7 @@ const makeInjectingClient = (
       effect.pipe(
         Effect.tap((response) => {
           const fresh = response.headers["x-next-gen-cso"];
-          return P.isString(fresh) && fresh.length > 0
+          return P.isString(fresh) && Str.isNonEmpty(fresh)
             ? Ref.set(tokenRef, Redacted.make(NextGenCsoToken.make(fresh)))
             : Effect.void;
         })
@@ -105,36 +139,35 @@ const makeInjectingClient = (
     )
   );
 
-/**
- * Runtime shape exposed by {@link PclClient}.
- *
- * @category services
- * @since 0.0.0
- */
-export interface PclClientShape {
-  /** Fetch a single page of `/cases/find` (0-based page). */
-  readonly findCasesPage: (
-    payload: CourtCaseSearchDto,
-    page: number
-  ) => Effect.Effect<CaseReportList, PacerPclError>;
-  /** Fetch a page of `/parties/find` (0-based page, defaults to 0). */
-  readonly findParties: (payload: PartySearchDto, page?: number) => Effect.Effect<PartyReportList, PacerPclError>;
-  /** Stream every `/cases/find` result across pages until `pageInfo.last`. */
-  readonly streamCases: (payload: CourtCaseSearchDto) => Stream.Stream<CaseResult, PacerPclError>;
-  /** Start an asynchronous batch case download; returns the report job metadata. */
-  readonly startCaseDownload: (payload: CourtCaseSearchDto) => Effect.Effect<ReportInfoType, PacerPclError>;
-  /** Poll the status of a batch case download job. */
-  readonly caseDownloadStatus: (reportId: number) => Effect.Effect<ReportInfoType, PacerPclError>;
+interface PclClientShape {
   /** Download the full result set of a completed batch case job. */
   readonly caseDownloadResults: (reportId: number) => Effect.Effect<CaseReportList, PacerPclError>;
+  /** Poll the status of a batch case download job. */
+  readonly caseDownloadStatus: (reportId: number) => Effect.Effect<ReportInfoType, PacerPclError>;
   /** Delete a stored batch report job (PACER caps stored jobs, so this is mandatory). */
   readonly deleteCaseReport: (reportId: number) => Effect.Effect<void, PacerPclError>;
   /** Full batch lifecycle: start → poll until COMPLETED → download → always delete. */
   readonly downloadCases: (payload: CourtCaseSearchDto) => Effect.Effect<ReadonlyArray<CaseResult>, PacerPclError>;
+  /** Fetch a single page of `/cases/find` (0-based page). */
+  readonly findCasesPage: (payload: CourtCaseSearchDto, page: number) => Effect.Effect<CaseReportList, PacerPclError>;
+  /** Fetch a page of `/parties/find` (0-based page, defaults to 0). */
+  readonly findParties: (payload: PartySearchDto, page?: number) => Effect.Effect<PartyReportList, PacerPclError>;
+  /** Start an asynchronous batch case download; returns the report job metadata. */
+  readonly startCaseDownload: (payload: CourtCaseSearchDto) => Effect.Effect<ReportInfoType, PacerPclError>;
+  /** Stream every `/cases/find` result across pages until `pageInfo.last`. */
+  readonly streamCases: (payload: CourtCaseSearchDto) => Stream.Stream<CaseResult, PacerPclError>;
 }
 
 /**
  * Typed PCL client service derived from {@link PclHttpApi}.
+ *
+ * @example
+ * ```ts
+ * import { makePacerLayer, makePacerMockHttpClient, mockPacerConfig } from "@beep/pacer"
+ *
+ * const layers = makePacerLayer(mockPacerConfig(), makePacerMockHttpClient())
+ * console.log(Boolean(layers.pcl))
+ * ```
  *
  * @category services
  * @since 0.0.0
@@ -146,9 +179,7 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
    * @category layers
    * @since 0.0.0
    */
-  static readonly makeLayer = (
-    cfg: PacerConfig
-  ): Layer.Layer<PclClient, never, HttpClient.HttpClient | PacerSession> =>
+  static readonly makeLayer = (cfg: PacerConfig): Layer.Layer<PclClient, never, HttpClient.HttpClient | PacerSession> =>
     Layer.effect(
       PclClient,
       Effect.gen(function* () {
@@ -178,13 +209,12 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
                       O.flatMap((pageInfo) => pageInfo.last),
                       O.exists((last) => !last)
                     );
-                    return [content, hasMore ? O.some(page + 1) : O.none<number>()] as const;
+                    return Tuple.make(content, hasMore ? O.some(page + 1) : O.none<number>());
                   })
                 )
           );
 
-        const startCaseDownload = (payload: CourtCaseSearchDto) =>
-          callPcl(client.pcl.startCaseDownload({ payload }));
+        const startCaseDownload = (payload: CourtCaseSearchDto) => callPcl(client.pcl.startCaseDownload({ payload }));
 
         const caseDownloadStatus = (reportId: number) =>
           callPcl(client.pcl.caseDownloadStatus({ params: { reportId } }));
@@ -192,7 +222,7 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
         const caseDownloadResults = (reportId: number) =>
           callPcl(client.pcl.caseDownloadResults({ params: { reportId } }));
 
-        const deleteCaseReport = (reportId: number): Effect.Effect<void, PacerPclError> =>
+        const deleteCaseReportByValue = (reportId: ReportIdValue): Effect.Effect<void, PacerPclError> =>
           callPcl(
             injected.execute(
               HttpClientRequest.make("DELETE")(`${cfg.pclBaseUrl}/pcl-public-api/rest/cases/reports/${reportId}`)
@@ -205,39 +235,60 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
             )
           );
 
-        const pollUntilComplete = (
-          reportId: number,
-          attemptsLeft: number
-        ): Effect.Effect<ReportInfoType, PacerPclError> =>
+        const deleteCaseReport = (reportId: number): Effect.Effect<void, PacerPclError> =>
+          deleteCaseReportByValue(reportId);
+
+        const pollUntilComplete = (reportId: number): Effect.Effect<ReportInfoType, PacerPclError> =>
           caseDownloadStatus(reportId).pipe(
+            Effect.repeat({
+              schedule: POLL_SCHEDULE,
+              until: (info) => O.exists(info.status, isTerminalReportStatus),
+            }),
             Effect.flatMap((info) =>
               O.exists(info.status, isTerminalReportStatus)
                 ? Effect.succeed(info)
-                : attemptsLeft <= 0
-                  ? Effect.fail(PacerPclError.fromReason("server-error", { cause: "report polling timed out" }))
-                  : Effect.sleep("200 millis").pipe(Effect.flatMap(() => pollUntilComplete(reportId, attemptsLeft - 1)))
+                : Effect.fail(PacerPclError.fromReason("server-error", { cause: "report polling timed out" }))
             )
           );
 
-        const downloadCases = (payload: CourtCaseSearchDto): Effect.Effect<ReadonlyArray<CaseResult>, PacerPclError> =>
-          Effect.gen(function* () {
-            const started = yield* startCaseDownload(payload);
-            const reportId = typeof started.reportId === "number" ? started.reportId : Number(started.reportId);
-            if (!Number.isInteger(reportId)) {
-              return yield* PacerPclError.fromReason("server-error", {
-                cause: `invalid reportId from server: ${String(started.reportId)}`,
+        const cleanupReport = (reportId: ReportIdValue): Effect.Effect<void, PacerPclError> =>
+          deleteCaseReportByValue(reportId).pipe(
+            Effect.tapError((error) => Effect.logWarning(`Pacer PCL report cleanup failed: ${error.reason}`))
+          );
+
+        const withReportCleanup = Effect.fnUntraced(function* <A>(
+          reportId: ReportIdValue,
+          effect: Effect.Effect<A, PacerPclError>
+        ) {
+          const result = yield* Effect.result(effect);
+          yield* cleanupReport(reportId).pipe(Effect.ignore);
+          return yield* Result.match(result, {
+            onFailure: (error) => Effect.fail(error),
+            onSuccess: Effect.succeed,
+          });
+        });
+
+        const downloadCases: PclClientShape["downloadCases"] = Effect.fnUntraced(function* (
+          payload: CourtCaseSearchDto
+        ) {
+          const started = yield* startCaseDownload(payload);
+          return yield* withReportCleanup(
+            started.reportId,
+            Effect.gen(function* () {
+              const reportId = yield* O.match(ReportId.decodeOption(started.reportId), {
+                onNone: () =>
+                  Effect.fail(PacerPclError.fromReason("server-error", { cause: "invalid reportId from server" })),
+                onSome: Effect.succeed,
               });
-            }
-            // Always delete the stored report, even if polling/download fails.
-            return yield* Effect.gen(function* () {
-              const completed = yield* pollUntilComplete(reportId, POLL_MAX_ATTEMPTS);
+              const completed = yield* pollUntilComplete(reportId);
               if (O.contains(completed.status, ReportStatus.Enum.FAILED)) {
                 return yield* PacerPclError.fromReason("server-error", { cause: "report failed" });
               }
               const report = yield* caseDownloadResults(reportId);
               return O.getOrElse(report.content, () => []);
-            }).pipe(Effect.ensuring(deleteCaseReport(reportId).pipe(Effect.ignore)));
-          });
+            })
+          );
+        });
 
         return PclClient.of({
           findCasesPage,

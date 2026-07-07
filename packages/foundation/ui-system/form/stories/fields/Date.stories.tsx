@@ -6,7 +6,7 @@ import { expect, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const ScheduleSchema = S.Struct({
-  startDate: S.NullOr(S.toType(DateTimeUtcFromValid)),
+  startDate: DateTimeUtcFromValid.pipe(S.toType, S.NullOr),
 });
 
 const defaultStartDate = DateTime.makeUnsafe("2024-02-03T00:00:00.000Z");
@@ -43,8 +43,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByLabelText("Start date")).toBeInTheDocument();
+    expect(canvas.getByLabelText("Start date")).toBeInTheDocument();
   },
 };

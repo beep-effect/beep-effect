@@ -52,10 +52,11 @@ type Story = StoryObj<typeof meta>;
  * Typing into the bound text field updates its value through TanStack's field state.
  */
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const name = canvas.getByLabelText("Name");
-    await userEvent.type(name, "Grace Hopper");
-    await expect(name).toHaveValue("Grace Hopper");
+    return userEvent.type(name, "Grace Hopper").then(() => {
+      expect(name).toHaveValue("Grace Hopper");
+    });
   },
 };

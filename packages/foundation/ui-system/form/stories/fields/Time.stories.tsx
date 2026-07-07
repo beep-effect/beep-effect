@@ -6,7 +6,7 @@ import { expect, within } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 
 const ReminderSchema = S.Struct({
-  reminderTime: S.NullOr(S.toType(DateTimeUtcFromValid)),
+  reminderTime: DateTimeUtcFromValid.pipe(S.toType, S.NullOr),
 });
 
 const defaultReminderTime = DateTime.makeUnsafe("2024-02-03T14:15:00.000Z");
@@ -43,8 +43,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByLabelText("Reminder time")).toBeInTheDocument();
+    expect(canvas.getByLabelText("Reminder time")).toBeInTheDocument();
   },
 };

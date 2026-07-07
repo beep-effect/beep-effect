@@ -33,11 +33,14 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const input = canvas.getByLabelText("Accent color");
-    await userEvent.clear(input);
-    await userEvent.type(input, "#3bf");
-    await expect(input).toHaveValue("#33bbff");
+    return userEvent
+      .clear(input)
+      .then(() => userEvent.type(input, "#3bf"))
+      .then(() => {
+        expect(input).toHaveValue("#33bbff");
+      });
   },
 };

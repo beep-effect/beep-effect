@@ -30,10 +30,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const option = canvas.getByLabelText("5 of 5");
-    await userEvent.click(option);
-    await expect(option).toHaveAttribute("data-checked");
+    return userEvent.click(option).then(() => {
+      expect(option).toHaveAttribute("data-checked");
+    });
   },
 };
