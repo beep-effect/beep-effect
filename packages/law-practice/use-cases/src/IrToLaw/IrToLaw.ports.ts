@@ -26,6 +26,64 @@ import type { IrToLawExtractionError } from "./IrToLaw.errors.ts";
 const $I = $LawPracticeUseCasesId.create("IrToLaw/IrToLaw.ports");
 
 /**
+ * Structural field contract for {@link LawEntities}.
+ *
+ * @example
+ * ```ts
+ * import type { LawEntities } from "@beep/law-practice-use-cases/IrToLaw"
+ *
+ * const key: keyof LawEntities = "claim"
+ * console.log(key)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface LawEntities {
+  readonly claim: Claim;
+  readonly distinction: Distinction;
+  readonly officeAction: OfficeAction;
+  readonly priorArtReference: PriorArtReference;
+  readonly rejection: Rejection;
+}
+
+type AnnotatedField<Schema extends S.Top> = S.Schema<Schema["Type"]>;
+
+type LawEntitiesFields = {
+  readonly claim: AnnotatedField<typeof Claim>;
+  readonly distinction: AnnotatedField<typeof Distinction>;
+  readonly officeAction: AnnotatedField<typeof OfficeAction>;
+  readonly priorArtReference: AnnotatedField<typeof PriorArtReference>;
+  readonly rejection: AnnotatedField<typeof Rejection>;
+};
+
+const LawEntitiesBase: S.Class<LawEntities, S.Struct<LawEntitiesFields>, {}> = S.Class<LawEntities>(
+  $I`LawEntities`
+)<LawEntitiesFields>(
+  {
+    claim: Claim.annotateKey({
+      description: "Patent claim resolved from the grounded claim extraction.",
+    }),
+    distinction: Distinction.annotateKey({
+      description: "Applicant distinction resolved from the grounded distinction extraction.",
+    }),
+    officeAction: OfficeAction.annotateKey({
+      description: "Office-action entity resolved from the source document extraction.",
+    }),
+    priorArtReference: PriorArtReference.annotateKey({
+      description: "Prior-art reference cited by the rejection extraction.",
+    }),
+    rejection: Rejection.annotateKey({
+      description: "Section 102 rejection linking the claim and prior-art reference.",
+    }),
+  },
+  $I.annote("LawEntities", {
+    description:
+      "The bundle of law-practice domain entities produced by mapping one office\naction's grounded extractions. Each field is the concrete entity the generic\nextraction output resolves into.",
+  })
+);
+
+/**
  * The bundle of law-practice domain entities produced by mapping one office
  * action's grounded extractions. Each field is the concrete entity the generic
  * extraction output resolves into.
@@ -48,29 +106,7 @@ const $I = $LawPracticeUseCasesId.create("IrToLaw/IrToLaw.ports");
  * @category models
  * @since 0.0.0
  */
-export class LawEntities extends S.Class<LawEntities>($I`LawEntities`)(
-  {
-    claim: Claim.annotateKey({
-      description: "Patent claim resolved from the grounded claim extraction.",
-    }),
-    distinction: Distinction.annotateKey({
-      description: "Applicant distinction resolved from the grounded distinction extraction.",
-    }),
-    officeAction: OfficeAction.annotateKey({
-      description: "Office-action entity resolved from the source document extraction.",
-    }),
-    priorArtReference: PriorArtReference.annotateKey({
-      description: "Prior-art reference cited by the rejection extraction.",
-    }),
-    rejection: Rejection.annotateKey({
-      description: "Section 102 rejection linking the claim and prior-art reference.",
-    }),
-  },
-  $I.annote("LawEntities", {
-    description:
-      "The bundle of law-practice domain entities produced by mapping one office\naction's grounded extractions. Each field is the concrete entity the generic\nextraction output resolves into.",
-  })
-) {}
+export class LawEntities extends LawEntitiesBase {}
 
 /**
  * Service shape for the IR-to-law mapping: take the span-bearing grounded

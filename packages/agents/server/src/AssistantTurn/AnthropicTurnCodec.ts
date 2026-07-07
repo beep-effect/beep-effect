@@ -46,7 +46,7 @@ const $I = $AgentsServerId.create("AssistantTurn/AnthropicTurnCodec");
  * ```ts
  * import { MermaidDiagramType } from "@beep/agents-server/AnthropicTurnCodec"
  *
- * console.log(MermaidDiagramType.is("graph")) // true
+ * console.log(MermaidDiagramType.is.graph("graph")) // true
  * ```
  *
  * @category codecs
