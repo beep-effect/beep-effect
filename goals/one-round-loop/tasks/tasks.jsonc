@@ -18,7 +18,7 @@
       "id": "orl-002",
       "rank": 2,
       "phase": "P0",
-      "status": "pending",
+      "status": "in_progress",
       "blockedBy": ["orl-001"],
       "title": "beep ci local — faithful local battery",
       "detail": "Runs all locally-runnable lanes from the same definitions: github-checks pre-push coverage PLUS the delta (Coverage Regression, Codegen Drift, Commitlint, Desktop IPC). --lanes selection, --fast preset (skip coverage/test-integration/nix), --affected. dependency-review documented as CI-only. Local verdict parity fixture proof (Verification Matrix row 2)."

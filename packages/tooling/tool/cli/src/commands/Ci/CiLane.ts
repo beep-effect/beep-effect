@@ -816,9 +816,7 @@ const runCiFallowLane = Effect.fn("CiLane.runCiFallowLane")(function* (
       const reportPath = path.join(repoRoot, fallowReportPath(lane));
       const content = yield* fs.readFileString(reportPath).pipe(Effect.orElseSucceed(() => ""));
       if (Str.isEmpty(content)) {
-        return yield* Effect.fail(
-          CiCommandError.make({ message: `Missing or empty Fallow envelope: ${fallowReportPath(lane)}` })
-        );
+        return yield* CiCommandError.make({ message: `Missing or empty Fallow envelope: ${fallowReportPath(lane)}` });
       }
     }),
     { discard: true }
@@ -834,9 +832,7 @@ const runCiFallowLane = Effect.fn("CiLane.runCiFallowLane")(function* (
     O.getOrElse(() => 0)
   );
   if (blockingStatus !== 0) {
-    return yield* Effect.fail(
-      CiCommandError.make({ message: `Fallow blocking lane(s) failed with status ${blockingStatus}.` })
-    );
+    return yield* CiCommandError.make({ message: `Fallow blocking lane(s) failed with status ${blockingStatus}.` });
   }
 });
 
@@ -1027,11 +1023,9 @@ const parseCiLocalLaneSelection = Effect.fn("CiLane.parseCiLocalLaneSelection")(
       const entries = pipe(Str.split(rawLanes, ","), A.map(Str.trim), A.filter(Str.isNonEmpty));
       const invalid = A.filter(entries, (entry) => !isCiLaneId(entry));
       if (A.isReadonlyArrayNonEmpty(invalid)) {
-        return yield* Effect.fail(
-          CiCommandError.make({
-            message: `Unknown lane id(s): ${A.join(invalid, ", ")}. Valid ids: ${A.join(CI_LANE_ID_VALUES, ", ")}.`,
-          })
-        );
+        return yield* CiCommandError.make({
+          message: `Unknown lane id(s): ${A.join(invalid, ", ")}. Valid ids: ${A.join(CI_LANE_ID_VALUES, ", ")}.`,
+        });
       }
 
       return A.filter(entries, isCiLaneId);
