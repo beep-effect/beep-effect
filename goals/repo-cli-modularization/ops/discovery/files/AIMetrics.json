@@ -1,0 +1,267 @@
+[
+  {
+    "file": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts",
+    "summary": "Implements the entire `ai-metrics` CLI suite (42 Command.make nodes across ingest, sources, config, privacy, install, forwarder, otlp, label, benchmark, report, mirror, retention, archive) in one file: ~45 flag definitions, ~25 per-program option schema classes, config/secret resolution, time-window parsing, DuckDB/OTLP layer orchestration, ssh/rsync process execution, and all text/JSON rendering, delegating domain logic to @beep/repo-ai-metrics.",
+    "concerns": [
+      {
+        "name": "Flag definitions",
+        "description": "~45 module-level Flag constants including near-duplicates with divergent defaults (maxFilesFlag 200 vs timerMaxFilesFlag 5, maxSnapshotExportsFlag 0 vs forwarderRunMaxSnapshotExportsFlag 5, parquetExportModeFlag snapshot vs timerParquetExportModeFlag none, and the deliberately inert forwarderRunRetentionEnforceCompatFlag).",
+        "keySymbols": [
+          "inputFlag",
+          "targetFlag",
+          "mirrorTargetFlag",
+          "hashSaltSecretRefFlag",
+          "rawArchiveKeySecretRefFlag",
+          "parquetExportModeFlag"
+        ],
+        "locEstimate": 200
+      },
+      {
+        "name": "Error union + program runner + JSON codecs",
+        "description": "Cross-cutting wiring: the 13-member tagged error union, the asVoid program adapter, and shared JSON encode helpers used by every subcommand.",
+        "keySymbols": [
+          "AiMetricsProgramError",
+          "runAiMetricsProgram",
+          "encodeJson",
+          "encodeCommandJson",
+          "encodeInstallSpecCommandJson",
+          "decodeMirrorManifestJson"
+        ],
+        "locEstimate": 60
+      },
+      {
+        "name": "ConfigProvider/env and secret-ref resolution guards",
+        "description": "Effect ConfigProvider reads (HOME, BEEP_AI_METRICS_HASH_SALT, BEEP_AI_METRICS_RAW_ARCHIVE_KEY[_SECRET_REF]) plus target-conditional require* guards with their S.Class option schemas.",
+        "keySymbols": [
+          "readOptionalConfigString",
+          "readOptionalRedactedConfigString",
+          "resolveHomeDir",
+          "resolveRepoRoot",
+          "resolveHashSalt",
+          "resolveRawArchiveKey"
+        ],
+        "locEstimate": 230
+      },
+      {
+        "name": "Time-window and retention-selector parsing (pure domain)",
+        "description": "ISO-or-epoch-millis parsing, 7-day default windows, retention selector construction and bounded/ordered window predicates, plus parseChecks CSV splitting.",
+        "keySymbols": [
+          "parseEpochMillisOption",
+          "parseSinceEpochMillis",
+          "parseOptionalEpochMillis",
+          "parseWindow",
+          "parseRetentionSelector",
+          "hasBoundedRetentionMutationWindow"
+        ],
+        "locEstimate": 130
+      },
+      {
+        "name": "Install workflow programs + renderers",
+        "description": "Install input/spec/plan/doctor/apply/compose program logic, OTLP endpoint derivation, ServerObservabilityConfig construction, and their text renderers.",
+        "keySymbols": [
+          "makeCommandInstallInput",
+          "makeCommandInstallSpec",
+          "defaultServiceEndpoint",
+          "serverObservabilityConfigFor",
+          "makeInstallPreviewProgram",
+          "makeInstallPlanProgram"
+        ],
+        "locEstimate": 390
+      },
+      {
+        "name": "Ingest/sources/privacy/config-snapshot programs + FS walking",
+        "description": "Transcript file reading, recursive .jsonl directory walk, source discovery, config snapshot, and privacy-check programs with inline rendering.",
+        "keySymbols": [
+          "readInputFile",
+          "collectJsonlInputFiles",
+          "readPrivacyInput",
+          "makeIngestProgram",
+          "makeSourcesDiscoverProgram",
+          "makeConfigSnapshotProgram"
+        ],
+        "locEstimate": 255
+      },
+      {
+        "name": "Forwarder + OTLP orchestration",
+        "description": "Forwarder run with scoped DuckDb layer builds, optional OTLP export via layerNodeSdkServerTraces with Exit-based failure recovery, systemd timer plan rendering that re-embeds a CLI command line, and standalone OTLP export.",
+        "keySymbols": [
+          "makeForwarderRunProgram",
+          "makeForwarderTimerProgram",
+          "makeOtlpExportProgram",
+          "exportForwarderDerivedOtlp",
+          "forwarderOtlpExported",
+          "forwarderOtlpExportFailed"
+        ],
+        "locEstimate": 480
+      },
+      {
+        "name": "Benchmark/label/report DuckDB programs",
+        "description": "Six near-identical programs that build an install spec, open a scoped DuckDb node layer, call one @beep/repo-ai-metrics operation, and render JSON-or-text.",
+        "keySymbols": [
+          "makeBenchmarkRunProgram",
+          "makeBenchmarkCompareProgram",
+          "makeBenchmarkCaseAddProgram",
+          "makeBenchmarkCaseListProgram",
+          "makeLabelQueueProgram",
+          "makeLabelAddProgram"
+        ],
+        "locEstimate": 385
+      },
+      {
+        "name": "P7 mirror workflow: process exec + manifest validation",
+        "description": "Bun.spawnSync-based ssh/rsync execution with captured output, confirm-token gating, and sanitized-bundle contract validation (allowed file list, manifest schema/privacy/table checks, parquet inventory diff).",
+        "keySymbols": [
+          "CapturedCommandResult",
+          "runCapturedCommand",
+          "commandText",
+          "resolveMirrorBundleDir",
+          "readMirrorManifest",
+          "requireSafeMirrorManifest"
+        ],
+        "locEstimate": 350
+      },
+      {
+        "name": "Retention + archive decrypt-drill programs",
+        "description": "Retention list/delete/compact/enforce/restore-drill with confirm-token dry-run semantics, plus an archive drill embedding raw SQL against ai_metrics_raw_archive_objects and envelope decrypt/hash verification.",
+        "keySymbols": [
+          "confirmRetentionMutation",
+          "makeRetentionListProgram",
+          "makeRetentionMutationProgram",
+          "makeRetentionEnforceProgram",
+          "makeRetentionRestoreDrillProgram",
+          "makeArchiveDrillProgram"
+        ],
+        "locEstimate": 280
+      },
+      {
+        "name": "Command-tree wiring",
+        "description": "42 Command.make declarations (13 group hubs printing usage lines + 29 leaf commands) that destructure flags and delegate 1:1 to make*Program, ending in the exported aiMetricsCommand root.",
+        "keySymbols": [
+          "installCommand",
+          "forwarderRunCommand",
+          "forwarderTimerCommand",
+          "benchmarkCommand",
+          "labelCommand",
+          "mirrorCommand"
+        ],
+        "locEstimate": 975
+      },
+      {
+        "name": "Per-program option schema classes",
+        "description": "~20 S.Class option bags (Make*ProgramOptions) interleaved with their programs; LOC already counted inside the program concerns above, but they are a distinct schema-first modeling responsibility that should move with (or alongside) their programs.",
+        "keySymbols": [
+          "MakeForwarderRunProgramOptions",
+          "MakeInstallDoctorProgramOptions",
+          "MakeLabelAddProgramOptions",
+          "ParseWindowOptions",
+          "ParseRetentionSelectorOptions",
+          "RequireHashSaltForTargetOptions"
+        ],
+        "locEstimate": 0
+      }
+    ],
+    "proposedSplit": [
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.command.ts",
+        "role": "command",
+        "contents": "Keep only the ~45 Flag definitions, the 42 Command.make declarations, and the exported aiMetricsCommand root; each leaf handler calls runAiMetricsProgram(make*Program(...)) imported from internal modules. Shrinks to roughly 1150-1250 LOC.",
+        "targetFile2": null
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.schemas.ts",
+        "role": "schemas",
+        "contents": "Cross-cutting data schemas: ParseWindowOptions, ParseRetentionSelectorOptions, RequireHashSalt*/RequireRawArchiveKey*Options, CapturedCommandResult, AiMetricsArchiveDrillRow, plus shared constants (localCollectorDataRoot, p7Mirror*/p7Retention* tokens, defaultP7Mirror* values) so internal modules never import each other for constants."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.errors.ts",
+        "role": "errors",
+        "contents": "Absorb AiMetricsProgramError (the 13-member S.Union toTaggedUnion) and runAiMetricsProgram next to the existing AiMetricsCommandError/AiMetricsStatusExit, since the union is the command error boundary."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.config.ts",
+        "role": "config",
+        "contents": "ConfigProvider-backed resolution: readOptionalConfigString/readOptionalRedactedConfigString, resolveHomeDir, resolveRepoRoot, resolveHashSalt(SecretRef), resolveRawArchiveKey(SecretRef), and the requireHashSalt*/requireRawArchiveKey*ForTarget guards. This earns the reserved config role because it is exactly runtime/config-provider backed settings."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Window.ts",
+        "role": "internal",
+        "contents": "Pure time-window/selector logic: parseEpochMillisOption, parseSinceEpochMillis, parseOptionalEpochMillis, parseWindow, parseRetentionSelector, hasRetentionWindow/hasBoundedRetentionMutationWindow/hasOrderedRetentionMutationWindow, parseChecks."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Install.ts",
+        "role": "internal",
+        "contents": "makeCommandInstallInput/Spec, p6aCollectorDataRoot, defaultServiceEndpoint, serverObservabilityConfigFor, the five install programs (preview/plan/doctor/apply/compose) with their Options classes, and renderInstallSpec/renderInstallPlan/renderInstallDoctor."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Ingest.ts",
+        "role": "internal",
+        "contents": "readInputFile, collectJsonlInputFiles, readPrivacyInput, and the ingest, sources-discover, config-snapshot, and privacy-check programs with their Options classes."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Forwarder.ts",
+        "role": "internal",
+        "contents": "Forwarder run/timer and OTLP export programs plus helpers: forwarderRunResultWithOtlpExport, forwarderRunCommandToJson, forwarderOtlpExported/Failed, exportForwarderDerivedOtlp, makeForwarderRunProgram, makeForwarderTimerProgram, makeOtlpExportProgram."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Scorecard.ts",
+        "role": "internal",
+        "contents": "DuckDB-backed benchmark case add/list, benchmark run/compare, label queue/add, and weekly report programs; extract the repeated scoped Layer.build(DuckDb.makeNodeLayer(...)) provide pattern into one local withDuckDb helper (or the shared one below)."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Mirror.ts",
+        "role": "internal",
+        "contents": "runCapturedCommand, commandText, resolveMirrorBundleDir, readMirrorManifest, requireSafeMirrorManifest, isAllowedMirrorBundleFile, listMirrorBundleFiles, validateLocalMirrorBundle, and the mirror build/sync/status programs."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Retention.ts",
+        "role": "internal",
+        "contents": "confirmRetentionMutation and the retention list/delete-compact/enforce/restore-drill programs plus makeArchiveDrillProgram with its inline SQL and AiMetricsArchiveDrillRow decode."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/internal/duckdb/WithDuckDb.ts",
+        "role": "shared",
+        "contents": "Package-internal helper `withDuckDb(databasePath)(effect)` wrapping Effect.scoped(Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({databasePath})))) + Effect.provide \u2014 the pattern is repeated ~9 times in this file and verbatim in Research, Corpus, and AgentEffectiveness."
+      }
+    ],
+    "sharedCandidates": [
+      {
+        "helper": "withDuckDb scoped-layer runner",
+        "description": "The Effect.scoped(Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({databasePath})))).pipe(Effect.flatMap(ctx => eff.pipe(Effect.provide(ctx)))) idiom appears ~9 times here and verbatim in Research/internal/Catalog.ts:72, Corpus/Corpus.service.ts:369, AgentEffectiveness/internal/EvalScorer.ts:1185.",
+        "alsoUsefulFor": ["Research", "Corpus", "AgentEffectiveness"]
+      },
+      {
+        "helper": "runCapturedCommand + CapturedCommandResult",
+        "description": "Bun.spawnSync wrapper capturing stdout/stderr/exitCode into a schema class with typed failure; Graphiti/internal/ProxyServices.ts:662 and bin-main.ts hand-roll the same spawnSync capture.",
+        "alsoUsefulFor": ["Graphiti", "Worktree", "Ci", "Yeet"]
+      },
+      {
+        "helper": "parseEpochMillisOption / parseWindow / parseOptionalEpochMillis",
+        "description": "Generic ISO-timestamp-or-epoch-millis flag parsing with default 7-day windows; nothing AI-metrics-specific except error messages, useful to any command taking --since/--until.",
+        "alsoUsefulFor": ["AgentEffectiveness", "Corpus", "Research"]
+      },
+      {
+        "helper": "readOptionalConfigString / readOptionalRedactedConfigString",
+        "description": "ConfigProvider-based optional env reads returning Option (plain and Redacted); a generic pattern any command reading env-backed settings needs.",
+        "alsoUsefulFor": ["Graphiti", "Codex", "Yeet", "Docgen"]
+      },
+      {
+        "helper": "resolveHomeDir / resolveRepoRoot",
+        "description": "HOME-with-flag-override and cwd-with-flag-override path resolution; completely command-agnostic.",
+        "alsoUsefulFor": ["Files", "Worktree", "Docgen", "Corpus"]
+      },
+      {
+        "helper": "recursive FS walk (collectJsonlInputFiles / listMirrorBundleFiles)",
+        "description": "Two hand-rolled recursive FileSystem walks in this one file (one filtering .jsonl, one collecting relative paths); a shared walkFiles(root, predicate) in src/internal would delete both.",
+        "alsoUsefulFor": ["Files", "Corpus", "Docs"]
+      }
+    ],
+    "risks": [
+      "Public facade/test surface: index.ts does `export * from ./AIMetrics.command.js` and test/ai-metrics-command.test.ts (1796 lines) imports aiMetricsCommand via @beep/repo-cli/commands/AIMetrics; the split must keep aiMetricsCommand exported from the facade and must NOT re-export internal/ role files (topology says deep role files are private).",
+      "$I identity churn: every S.Class/error uses $RepoCliId.create(\"commands/AIMetrics/AIMetrics.command\") in its identifier; moving classes to new files changes their $I module path, which feeds the tracked deterministic P3 schema catalog (commit 5783560) \u2014 catalog regeneration and any ID/annotation-sensitive checks must be rerun.",
+      "Same-named flags with different defaults are a swap hazard: max-snapshot-exports (0 vs 5), max-files (200 vs 5), max-file-bytes (optional vs 8388608), parquet-mode (snapshot vs none), and retention-enforce (real flag on timer vs deliberate no-op compat flag on forwarder run); wiring the wrong constant silently changes behavior and the compat flag removal would break already-installed systemd timer units.",
+      "makeForwarderTimerProgram renders a literal CLI invocation (bin path packages/tooling/tool/cli/src/bin.ts plus flag names like --max-snapshot-exports/--parquet-mode) into systemd units; refactors must not rename flags or alter argument ordering or previously rendered/installed units diverge from what run accepts.",
+      "Import-cycle risk: localCollectorDataRoot, p7MirrorConfirmToken, p7RetentionConfirmToken, p7MirrorSchemaVersion are shared by install, forwarder, mirror, and retention clusters \u2014 hoist constants into AIMetrics.schemas.ts first or the internal modules will import each other; keep dependency direction internal/* -> (schemas|errors|config), command.ts -> internal/*.",
+      "Docgen/crispening gates are blocking for the tooling family: each new file needs its own $RepoCliId.create module id, @packageDocumentation/@since/@example JSDoc on exports, and `bun run beep yeet verify` (turbo check has a known phantom-fail cache race after out-of-band builds) plus docgen:local must pass."
+    ]
+  }
+]

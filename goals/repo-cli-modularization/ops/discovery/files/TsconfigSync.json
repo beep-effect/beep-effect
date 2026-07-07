@@ -1,0 +1,201 @@
+[
+  {
+    "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
+    "summary": "Implements the `tsconfig-sync` CLI command that synchronizes root tsconfig references/aliases, tstyche.json, syncpack.config.ts sources, per-package tsconfig references, and package docgen.json files across the workspace. One 1784-line file currently holds the schemas, workspace-descriptor discovery, jsonc/file IO plumbing, six planner functions, orchestration (`syncTsconfigAtRoot`), console rendering, and the Command tree.",
+    "concerns": [
+      {
+        "name": "Command data schemas and derived guards",
+        "description": "Brands (CanonicalAliasKey, BeepScopedPackageName, RootDepIndexKey), LiteralKit mode/section kits, the tagged unions TsconfigSyncRunOptions / TsconfigSyncChange / PlannedFileChange / TsconfigSyncResult (15 S.Class case classes), WorkspaceDescriptor, TsconfigWithReferences/TsconfigWithPaths/TsconfigReferenceEntry/TsconfigCompilerOptionsPaths, plus derived S.is guards, equivalences, and Order instances (lines 88-131, 172-697).",
+        "keySymbols": [
+          "TsconfigSyncMode",
+          "TsconfigSyncRunOptions",
+          "TsconfigSyncSection",
+          "TsconfigSyncChange",
+          "PlannedFileChange",
+          "TsconfigSyncResult"
+        ],
+        "locEstimate": 550
+      },
+      {
+        "name": "JSONC/JSON parsing and file IO plumbing",
+        "description": "DomainError-wrapped fs read/write, jsonc parse/format/modify helpers, JSON render, root package.json reader, and posix-path normalizers (lines 73-79, 699-790).",
+        "keySymbols": [
+          "parseJsonc",
+          "parseJsonObject",
+          "renderJson",
+          "readFileString",
+          "writeFileString",
+          "applyJsoncModification"
+        ],
+        "locEstimate": 110
+      },
+      {
+        "name": "Workspace discovery and alias-target computation",
+        "description": "Builds WorkspaceDescriptor per package (resolveWorkspaceDirs + collectTsConfigPaths + package.json decode + exports-derived alias targets), dependency adjacency maps, subpath/source-only alias target derivation, and canonical alias entry expansion (lines 132-170, 791-813, 921-1045, 1099-1166, 1280-1299).",
+        "keySymbols": [
+          "buildWorkspaceDescriptors",
+          "buildAdjacency",
+          "buildSubsetAdjacency",
+          "canonicalAliasEntriesForWorkspace",
+          "buildPackageSubpathAliasTargets",
+          "buildSourceOnlySubpathAliasTargets"
+        ],
+        "locEstimate": 230
+      },
+      {
+        "name": "Tstyche and syncpack canonical-content domain logic",
+        "description": "Pure text/domain logic computing canonical tstyche testFileMatch globs from workspace patterns and regex-based read/replace of the syncpack.config.ts source array (lines 815-919).",
+        "keySymbols": [
+          "buildCanonicalTstycheTestFileMatch",
+          "workspacePatternCoversPath",
+          "isManagedTstycheWorkspace",
+          "readSyncpackSources",
+          "replaceSyncpackSources",
+          "buildCanonicalSyncpackSources"
+        ],
+        "locEstimate": 110
+      },
+      {
+        "name": "Per-target sync planners",
+        "description": "Six Effect planner functions producing Option/array of PlannedFileChange for root references, root aliases, root tstyche, root syncpack, package references (with topo-sort + existing-ref canonicalization), and package docgen, plus filter resolution and change sorting/mapping (lines 1047-1097, 1168-1278, 1301-1563).",
+        "keySymbols": [
+          "planRootReferenceSync",
+          "planRootAliasSync",
+          "planRootTstycheSync",
+          "planRootSyncpackSync",
+          "planPackageReferenceSync",
+          "planPackageDocgenSync"
+        ],
+        "locEstimate": 470
+      },
+      {
+        "name": "Run orchestration (public API)",
+        "description": "syncTsconfigAtRoot dual-arity Effect.fn: builds descriptors + dep index, detects cycles, runs all planners, writes in sync mode, raises TsconfigSyncDriftError in check mode, and constructs the TsconfigSyncResult union. Consumed by CreatePackage/Handler.ts and tests (lines 1595-1707).",
+        "keySymbols": ["syncTsconfigAtRoot", "TsconfigSyncError"],
+        "locEstimate": 115
+      },
+      {
+        "name": "Console rendering",
+        "description": "renderChanges prints mode-matched drift/apply summaries; summaryCounts formats add/remove/reorder counts; verbose per-package Console.log lives inline in planPackageReferenceSync (lines 1047-1061, 1565-1593, 1478-1485).",
+        "keySymbols": ["renderChanges", "summaryCounts"],
+        "locEstimate": 45
+      },
+      {
+        "name": "Command tree and flag-to-mode wiring",
+        "description": "tsconfigSyncCommand flag definitions, predicate-tuple resolveMode (check/dry-run/write precedence), and catchTags error-to-exit-code adaptation via failWithReportedExit (lines 199-203, 1709-1784).",
+        "keySymbols": [
+          "tsconfigSyncCommand",
+          "resolveMode",
+          "isCheckModeFlags",
+          "isDryRunModeFlags",
+          "isWriteModeFlags",
+          "failWithReportedExit"
+        ],
+        "locEstimate": 90
+      },
+      {
+        "name": "Re-export shim of repo-utils alias helpers",
+        "description": "Re-exports buildCanonicalAliasTargets and resolveRootExportTarget from @beep/repo-utils/schemas/TsconfigAliasTargets through this command file (lines 50-65), leaking library symbols through the command facade.",
+        "keySymbols": ["buildCanonicalAliasTargets", "resolveRootExportTarget"],
+        "locEstimate": 16
+      }
+    ],
+    "proposedSplit": [
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+        "role": "schemas",
+        "contents": "All brands, LiteralKit mode/section kits, the four tagged unions with their 15 case classes, WorkspaceDescriptor, Tsconfig* shape classes, JsonObject/StringArray, and derived guards/equivalences/Order instances. New $I module path 'commands/TsconfigSync/TsconfigSync.schemas'."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/TsconfigSync/internal/Jsonc.ts",
+        "role": "internal",
+        "contents": "FORMATTING_OPTIONS, parseJsonc, parseJsonObject, renderJson, applyJsoncModification, readFileString, writeFileString, readRootPackageJson, relativeFromRoot, normalizeRelativeRef, uniqueSorted, arraysEqual, referenceEntries. Candidate for later promotion to src/internal/cli/Jsonc.ts (see sharedCandidates)."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/TsconfigSync/internal/Workspace.ts",
+        "role": "internal",
+        "contents": "buildWorkspaceDescriptors, buildAdjacency, buildSubsetAdjacency, dependencyNamesFromWorkspaceDeps, chooseOwnerTsconfig, workspaceContainsPath, workspacePatternsFromPackageJson, alias-target derivation (buildPackageSubpathAliasTargets, buildSourceOnlySubpathAliasTargets, source-only test-kit alias tables, canonicalAliasEntriesForWorkspace, pathValuesEqual, packageSubpathAlias, sourceAliasTarget)."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/TsconfigSync/internal/RootConfigs.ts",
+        "role": "internal",
+        "contents": "Tstyche canonical testFileMatch logic (buildCanonicalTstycheTestFileMatch, workspacePatternCoversPath, isManagedTstycheWorkspace, readTstycheTestFileMatch/Tsconfig, pathSegments, readStringArray) and syncpack source-array regex read/render/replace (readSyncpackSources, replaceSyncpackSources, buildCanonicalSyncpackSources)."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.plan.ts",
+        "role": "plan",
+        "contents": "The six planner Effect.fns (planRootReferenceSync, planRootAliasSync, planRootTstycheSync, planRootSyncpackSync, planPackageReferenceSync, planPackageDocgenSync) plus resolveTargetWorkspacesForPackageSync, canonicalizeExistingRefTarget, compareReferencePathsInOrder, sortChanges, toReportedChange."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.render.ts",
+        "role": "render",
+        "contents": "renderChanges and summaryCounts; also home the verbose per-package log line currently inlined in planPackageReferenceSync if it is extracted as a render helper."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.service.ts",
+        "role": "service",
+        "contents": "syncTsconfigAtRoot (the dual-arity orchestrator) and the TsconfigSyncError type alias; this is the programmatic API used by CreatePackage/Handler.ts and tests. Optionally formalize as a Context.Service contract + default layer later \u2014 keep the exported function signature identical in this split."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
+        "role": "command",
+        "contents": "Slimmed to tsconfigSyncCommand, resolveMode, the mode-flag predicate tuples, and the catchTags -> failWithReportedExit adaptation (~130 LOC). Drop the inline re-export shim of repo-utils alias helpers (move it to index.ts if the facade must keep exporting them)."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/TsconfigSync/index.ts",
+        "role": "command",
+        "contents": "Curated facade re-exporting: tsconfigSyncCommand, syncTsconfigAtRoot, all public schemas (TsconfigSyncMode/RunOptions/Section/Change, PlannedFileChange, TsconfigSyncResult, WorkspaceDescriptor, TsconfigWithReferences, TsconfigWithPaths), the errors module, and the buildCanonicalAliasTargets/resolveRootExportTarget re-exports; internal/ files stay private."
+      }
+    ],
+    "sharedCandidates": [
+      {
+        "helper": "applyJsoncModification + FORMATTING_OPTIONS",
+        "description": "jsonc.modify + applyEdits wrapper with the repo's 2-space formatting options. Verbatim duplicates exist at CreatePackage/Handler.ts:511/660, CreatePackage/ConfigUpdater.ts:132/263, and VersionSync/internal/updaters/PackageJsonUpdater.ts:20 uses the same inline pattern.",
+        "alsoUsefulFor": ["CreatePackage", "VersionSync", "Quality"]
+      },
+      {
+        "helper": "parseJsonc (decodeJsoncTextAs + DomainError file-path wrap)",
+        "description": "Schema-typed JSONC decode with per-file DomainError context; generic over any schema. Same pattern re-implemented wherever tsconfig/biome jsonc files are parsed.",
+        "alsoUsefulFor": ["CreatePackage", "VersionSync", "Lint"]
+      },
+      {
+        "helper": "readFileString / writeFileString (DomainError-wrapped)",
+        "description": "Thin FileSystem wrappers mapping failures to DomainError with file path context; overlaps @beep/repo-utils FsUtils (FsUtils.ts:218-244 already wraps read/write). Should defer to FsUtils rather than a new shared module.",
+        "alsoUsefulFor": ["all command groups"]
+      },
+      {
+        "helper": "workspacePatternsFromPackageJson",
+        "description": "Normalizes package.json `workspaces` (array or {packages}) into a string array. Belongs next to resolveWorkspaceDirs in @beep/repo-utils/Workspaces rather than command-local code.",
+        "alsoUsefulFor": ["CreatePackage", "VersionSync", "Quality", "Lint"]
+      },
+      {
+        "helper": "summaryCounts",
+        "description": "Formats add/remove/reorder diff counts between two string arrays; generic drift-summary rendering usable by any check/sync-style command.",
+        "alsoUsefulFor": ["VersionSync", "Lint", "SyncDataToTs"]
+      },
+      {
+        "helper": "uniqueSorted / arraysEqual / readStringArray",
+        "description": "Tiny generic collection helpers (HashSet-dedupe+sort, string-array equivalence, safe unknown->string[] read); @beep/utils-grade if not already present there.",
+        "alsoUsefulFor": ["all command groups"]
+      },
+      {
+        "helper": "renderJson (encode + jsonc.format + trailing newline)",
+        "description": "Canonical JSON file rendering; overlaps src/internal/cli/Json.ts (CliJsonError/encodeJson) \u2014 reconcile with that module instead of duplicating.",
+        "alsoUsefulFor": ["Docgen", "VersionSync", "Lint"]
+      },
+      {
+        "helper": "repoCliSourceOnlyTestKitAliases / schemaSourceOnlyTestKitAliases tables",
+        "description": "Hardcoded per-package test-kit alias data is configuration, not logic; if it grows beyond two packages it should become data-driven (package.json field or repo-utils schema) rather than a command-local table.",
+        "alsoUsefulFor": ["CreatePackage"]
+      }
+    ],
+    "risks": [
+      "Public facade breakage: test/tsconfig-sync.test.ts imports { syncTsconfigAtRoot, tsconfigSyncCommand } from @beep/repo-cli/commands/TsconfigSync and CreatePackage/Handler.ts:35 imports syncTsconfigAtRoot from ../TsconfigSync/index.js; index.ts currently does `export *` from the command file, so every currently-exported symbol (including WorkspaceDescriptor, PlannedFileChange, TsconfigWithReferences/Paths, and the re-exported buildCanonicalAliasTargets/resolveRootExportTarget) must be re-exported explicitly from the new facade or downstream imports break.",
+      "$I identity drift: schemas moving to TsconfigSync.schemas.ts change their $RepoCliId module path from 'commands/TsconfigSync/TsconfigSync.command'; standards/schema-catalog.generated.jsonc and standards/jsdoc-documentation.inventory.{md,jsonc} are tracked files that embed the old path and must be regenerated or the deterministic-catalog gate fails.",
+      "Lint REQUIRED_TAGGED_UNIONS gate (Lint.command.ts:66-73, scan at :338): it regex-scans tooling files for `const TsconfigSyncRunOptions/TsconfigSyncChange/PlannedFileChange/TsconfigSyncResult =` and requires mapMembers + Tuple.evolve + .pipe(S.toTaggedUnion(...)) within a 1400-char snippet of the declaration \u2014 the union declarations must move intact (case classes declared nearby) and keep that exact shape.",
+      "Behavioral ordering: planner execution order (root refs -> aliases -> tstyche -> syncpack -> package refs -> docgen), sortChanges (file-then-section Order), and the dual(2, ...) data-first/data-last signature of syncTsconfigAtRoot are asserted by test/tsconfig-sync.test.ts (13+ call sites incl. drift-tag assertions) and used by CreatePackage/Handler.ts:1234 \u2014 preserve all three exactly.",
+      "Type-signature drift: syncTsconfigAtRoot's declared R channel (FileSystem | Path | FsUtils | ChildProcessSpawner, the latter two inherited from repo-utils fns) and the TsconfigSyncError union are load-bearing for Handler.ts layer provision; re-deriving them after the split could silently widen/narrow and surface as distant type errors under the turbo check cascade.",
+      "Docgen/JSDoc ratchet: every symbol exported from the new role files needs compliant @example/@category/@since JSDoc (jsdoc ratchet is blocking for the tooling family), and @example imports must go through the facade path @beep/repo-cli/commands/TsconfigSync, not deep role files."
+    ]
+  }
+]

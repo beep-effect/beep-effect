@@ -1,0 +1,256 @@
+[
+  {
+    "group": "AgentEffectiveness",
+    "compliance": "non-compliant",
+    "fileCount": 3,
+    "totalLoc": 1995,
+    "violations": [
+      "internal/EvalScorer.ts (1294 LOC) \u2014 monolith mixing schema classes (SkillOptTaskManifest, score/violation models), the tagged error (AgentEffectivenessEvalScorerError), subprocess execution, scoring math, and JSON codecs in one vaguely-scoped internal file; exceeds the 1000-LOC violation threshold",
+      "AgentEffectiveness.command.ts (687 LOC) \u2014 rendering leaks into the command file (renderDoctorReport, renderAnnotationPlan, renderDatasetBundle, etc.) plus inline schema classes (MakeDoctorProgramOptions, MakePhoenixSyncProgramOptions) and layer-provisioning helpers",
+      "Missing AgentEffectiveness.schemas.ts \u2014 command data schemas are split between the command file and internal/EvalScorer.ts",
+      "Missing AgentEffectiveness.errors.ts \u2014 the boundary error lives inside internal/EvalScorer.ts",
+      "Missing AgentEffectiveness.service.ts \u2014 no Context.Service contract; behavior is free functions",
+      "index.ts only re-exports the command file; public schemas/errors defined in internal/ have no curated facade path"
+    ],
+    "recommendation": "Split into AgentEffectiveness.command.ts (flags + Command tree only), AgentEffectiveness.schemas.ts (task manifest, violation, score-report models from EvalScorer), AgentEffectiveness.errors.ts (AgentEffectivenessEvalScorerError renamed to the group boundary error), AgentEffectiveness.service.ts (Context.Service wrapping the doctor/annotation/dataset/eval programs + default live layer), and AgentEffectiveness.render.ts (the render* helpers). Keep only genuinely private scoring internals in internal/, with intention-revealing names, and curate index.ts to export command, schemas, errors, service."
+  },
+  {
+    "group": "AIMetrics",
+    "compliance": "non-compliant",
+    "fileCount": 3,
+    "totalLoc": 3924,
+    "violations": [
+      "AIMetrics.command.ts (3839 LOC) \u2014 extreme monolith far beyond the 1000-LOC threshold, mixing dozens of flags, the full Command tree, inline schema classes (AiMetricsArchiveDrillRow), JSON codecs, mirror/retention config constants, DuckDb access, SSH/mirror orchestration, and ~79 Console.log render sites",
+      "Missing AIMetrics.schemas.ts \u2014 command data schemas and decoders are inline in the command file",
+      "Missing AIMetrics.service.ts \u2014 no Context.Service contract; all collector/mirror/retention behavior is embedded directly in command handlers",
+      "Rendering concern (79 Console.log call sites, table/summary formatting) has no AIMetrics.render.ts despite clearly earning one",
+      "Runtime settings (localCollectorDataRoot, defaultP7MirrorRemoteRoot, SSH host, confirm tokens) are hardcoded constants in the command file instead of an AIMetrics.config.ts config-provider module"
+    ],
+    "recommendation": "Decompose into AIMetrics.command.ts (flags + Command tree delegating to a service), AIMetrics.schemas.ts (row/manifest/install-spec codecs), AIMetrics.service.ts (Context.Service for collector, mirror, retention, and drill operations with a default live layer over DuckDb), AIMetrics.render.ts (all console/table output), and AIMetrics.config.ts (data roots, mirror remote/SSH settings, confirm tokens). Keep AIMetrics.errors.ts and expand index.ts to the curated facade."
+  },
+  {
+    "group": "Architecture",
+    "compliance": "partial",
+    "fileCount": 5,
+    "totalLoc": 3502,
+    "violations": [
+      "OperationPlan.ts (2764 LOC) \u2014 the group's schema role under a non-canonical name; should be Architecture.schemas.ts (or a split), and at 2764 LOC it exceeds the 1000-LOC threshold even as a mostly single-concern schema catalog (mixes literal kits, operation models, plan builders, and check-result models)",
+      "OperationPlanExecution.ts \u2014 execution behavior in a bespoke-named file instead of an Architecture.service.ts Context.Service contract + live layer",
+      "Missing Architecture.errors.ts \u2014 command boundary reuses DomainError decoded ad hoc in Architecture.command.ts (decodeStage/decodeDomainKind/decodeRole)",
+      "Missing Architecture.schemas.ts by canonical name",
+      "index.ts re-exports deep role files (OperationPlan.js, OperationPlanExecution.js) wholesale rather than a curated facade",
+      "Rendering/reporting helpers (printPlanJson, reportCheckResult, reportApplyResult) live inside Architecture.command.ts"
+    ],
+    "recommendation": "Rename/split OperationPlan.ts into Architecture.schemas.ts (literal kits + operation/plan/check models) and keep plan-construction as an earned Architecture.plan.ts; move OperationPlanExecution.ts + OperationPlanPackageJson.ts behind an Architecture.service.ts Context.Service with a default live layer. Add Architecture.errors.ts for the boundary tagged error and a small Architecture.render.ts for JSON/report output; curate index.ts to command + schemas + errors + service only."
+  },
+  {
+    "group": "Ci",
+    "compliance": "partial",
+    "fileCount": 3,
+    "totalLoc": 390,
+    "violations": [
+      "Ci.command.ts (321 LOC) \u2014 inline schema classes (TurboSummary, TurboSummaryTask*, SummaryCandidate, LongestTask) belong in Ci.schemas.ts per topology once schemas exist",
+      "Rendering (renderTurboSummary, formatDuration, markdown summary assembly) lives inside Ci.command.ts instead of an earned Ci.render.ts or the service",
+      "No Ci.service.ts \u2014 summary resolution/append behavior is free Effect.fn helpers in the command file (minor at this size)",
+      "Native-helper drift: taskDuration/taskCacheStatus use ?? chains rather than Option/match helpers (code-law, minor)"
+    ],
+    "recommendation": "Extract the TurboSummary schema family into Ci.schemas.ts and the markdown rendering into Ci.render.ts, leaving Ci.command.ts as flags + Command tree + orchestration. A Ci.service.ts is optional at current scale; keep Ci.errors.ts and index.ts as-is with the new modules added to the facade."
+  },
+  {
+    "group": "Codegen",
+    "compliance": "partial",
+    "fileCount": 2,
+    "totalLoc": 343,
+    "violations": [
+      "Codegen.command.ts (329 LOC) \u2014 has substantive inline schemas (TypeScriptSourceFileName, JSImportPath, TypeScriptSourceToJSImportPath transformation, literal schemas) so it no longer qualifies for the flat single-file-leaf exemption; needs Codegen.schemas.ts",
+      "Missing Codegen.errors.ts \u2014 no command-boundary tagged error; failures surface as raw effects",
+      "Barrel-generation behavior (discoverModules, buildBarrelContent) plus Console.log rendering are colocated with flags and the Command tree in one file"
+    ],
+    "recommendation": "Promote the inline file-name/import-path schemas into Codegen.schemas.ts and add a Codegen.errors.ts boundary error; keep Codegen.command.ts as flags + Command tree with discovery/render logic either in the command (small) or a thin Codegen.service.ts if it grows. Update index.ts to export the new role files."
+  },
+  {
+    "group": "Codex",
+    "compliance": "compliant",
+    "fileCount": 3,
+    "totalLoc": 181,
+    "violations": [],
+    "recommendation": "Matches the small-group topology: Codex.command.ts (94 LOC), Codex.errors.ts, and a curated index.ts, with no schemas, service, or renderers to warrant more role files. No changes needed; add Codex.schemas.ts/Codex.service.ts only if subcommands or data models appear."
+  },
+  {
+    "group": "Corpus",
+    "compliance": "partial",
+    "fileCount": 6,
+    "totalLoc": 5523,
+    "violations": [
+      "Corpus.service.ts (3150 LOC) \u2014 well over the 1000-LOC threshold and mixed-concern: Context.Service contract + implementation + raw SQL string literals/DDL (createSourceFilesTable, duplicate-set views), inline row schemas (SourceTotalsRow, DuplicateTotalsRow, CatalogManifest), and ~24 Console.log rendering sites inside service implementations",
+      "Rendering leaks into the service layer (catalog/report output via Console.log in catalogCorpusImpl et al.) \u2014 earns a Corpus.render.ts",
+      "Inline schema classes and decoders in Corpus.service.ts duplicate the schemas role that Corpus.schemas.ts already owns",
+      "Corpus.schemas.ts (1574 LOC, 37 schema classes) \u2014 oversized single file; suspect under the >500-LOC heuristic even as one concern",
+      "index.ts re-exports Corpus.recyclebin.ts deep role helpers; topology says deep role files stay private behind the facade"
+    ],
+    "recommendation": "Keep the existing role skeleton (command/schemas/errors/service/index) but shrink Corpus.service.ts: move SQL statements and row codecs into a private internal SQL module or into Corpus.schemas.ts, extract console output into Corpus.render.ts, and leave the service as contract + live layer + orchestration. Consider splitting Corpus.schemas.ts by subdomain (catalog, restoration, recycle-bin) and stop re-exporting Corpus.recyclebin.ts from index.ts (treat it as a private earned media/parse role)."
+  },
+  {
+    "group": "Image",
+    "compliance": "compliant",
+    "fileCount": 7,
+    "totalLoc": 1105,
+    "violations": [],
+    "recommendation": "Already matches the canonical topology: Image.command.ts (138), Image.schemas.ts (273), Image.errors.ts (56), Image.service.ts (334), earned Image.render.ts (201) and Image.progress.ts (68), plus index.ts facade. No file is oversized and concerns are cleanly separated. Use as the reference implementation for the other groups."
+  },
+  {
+    "group": "Purge",
+    "compliance": "compliant",
+    "fileCount": 2,
+    "totalLoc": 272,
+    "violations": [
+      "Purge.command.ts:127 \u2014 PurgeSummary S.Class defined inline; the flat-leaf exemption formally requires 'no schemas', so this is borderline (minor at 258 LOC total)"
+    ],
+    "recommendation": "Keep as a flat single-file leaf command with the index.ts facade. If the group ever grows a second subcommand or more schemas, extract PurgeSummary into Purge.schemas.ts; no action needed today."
+  },
+  {
+    "group": "Research",
+    "compliance": "partial",
+    "fileCount": 15,
+    "totalLoc": 4250,
+    "violations": [
+      "Research.service.ts (1385 LOC, >1000 violation) \u2014 mixes Context.Service contract + live layer with per-subcommand program logic (capture/cognify/daily/status), Console rendering (lines 249, 486, 615, 680, 735-769, 892-1063), and inline row schemas (SeenUrlRow:351, PendingCardRow:686, DigestCardRow:805) that belong in Research.schemas.ts",
+      "index.ts re-exports the full service module (export * from Research.service.js), exposing implementation internals rather than a curated facade"
+    ],
+    "recommendation": "Keep the role quartet and the well-named internal/ modules (Vault, NotionPull, CogneeClient, etc.). Split Research.service.ts: contract + ResearchCommandServiceLive stay in the service file, move Console output into an earned Research.render.ts, move the three inline row schemas into Research.schemas.ts, and push per-subcommand program bodies into internal/ modules. Narrow index.ts to curated named exports."
+  },
+  {
+    "group": "Laws",
+    "compliance": "partial",
+    "fileCount": 10,
+    "totalLoc": 4838,
+    "violations": [
+      "Missing Laws.schemas.ts \u2014 option/summary S.Class schemas are defined inline in Laws.command.ts and inside each rule module",
+      "Missing Laws.service.ts \u2014 no Context.Service contract; rule runners are invoked directly from the command tree",
+      "DualArity.ts (1504 LOC, >1000 violation) \u2014 single file mixes schema classes, ts-morph AST traversal, inventory IO, and Console rendering",
+      "TerseEffect.ts (796) and NoNativeRuntime.ts (688) \u2014 oversized mixed-concern rule modules (schemas + analysis + reporting each)",
+      "Six rule modules (DualArity, TerseEffect, NoNativeRuntime, EffectFn, AllowlistCheck, EffectImports) plus SchemaDiagnostics.ts sit bare at the group root with non-role names instead of internal/",
+      "Laws.command.ts (480) contains inline S.Class option schemas and Console rendering (34 render call sites) alongside the Command tree"
+    ],
+    "recommendation": "Keep Laws.command.ts as flags + Command tree only; add Laws.schemas.ts (options/summaries), Laws.errors.ts (exists), and a Laws.service.ts exposing runDualArity/runTerseEffect/etc. behind one contract with a default live layer. Move the seven rule modules under internal/, splitting DualArity.ts into schema/analysis/render pieces. Add an earned Laws.render.ts for the shared report formatting now duplicated across rules."
+  },
+  {
+    "group": "Lint",
+    "compliance": "partial",
+    "fileCount": 8,
+    "totalLoc": 4790,
+    "violations": [
+      "SchemaFirst.ts (2169 LOC, >1000 violation) \u2014 monolith combining inventory schemas, ts-morph analysis, ratchet IO, Command definition, and reporting in one file",
+      "SchemaCatalog.ts (740) \u2014 defines and exports a full command (lintSchemaCatalogCommand) plus generation utilities from a deep non-role file, re-exported through index.ts (deep role files should be private; commands belong in Lint.command.ts)",
+      "Missing Lint.schemas.ts \u2014 inventory/options schemas live inline in SchemaFirst.ts, SchemaCatalog.ts, SchemaTopology.ts",
+      "Missing Lint.service.ts \u2014 no service contract; lint runners wired directly",
+      "Rule modules (SchemaFirst, SchemaCatalog, SchemaTopology 494, PackageTestImports 327, ReflectionArtifact 310) sit bare at group root instead of internal/",
+      "Lint.command.ts (586) is oversized for a pure flags+tree file and hosts subcommand program logic"
+    ],
+    "recommendation": "Consolidate all Command.make definitions (including lintSchemaCatalogCommand) into Lint.command.ts; extract shared schemas into Lint.schemas.ts and expose rule runners through a Lint.service.ts contract. Move the five rule modules under internal/ and split SchemaFirst.ts into at least analysis, ratchet-state, and render units. Curate index.ts to the command + errors only."
+  },
+  {
+    "group": "Quality",
+    "compliance": "non-compliant",
+    "fileCount": 15,
+    "totalLoc": 13099,
+    "violations": [
+      "Quality.command.ts (2901 LOC, >1000 violation) \u2014 ~20 Command.make definitions plus program logic, profile detection schemas (QualityHardwareProfile, QualityProfileConfig, QualityProfileDetection), and 48 rendering call sites in one file",
+      "FallowQuality.command.ts (2347 LOC, >1000 violation) \u2014 second monolith command file with 6 subcommands and embedded program/rendering logic",
+      "Tasks.ts (1802 LOC, >1000 violation) \u2014 vague non-role name at group root aggregating task orchestration, schemas, and execution",
+      "internal/JSDocDocumentationInventory.ts (1030 LOC, >1000 violation)",
+      "Missing Quality.schemas.ts and Quality.service.ts \u2014 schemas scattered inline and in internal/FallowEnvelope.schema.ts (non-canonical naming); no service contract for the task runners",
+      "Sprawling internal/ (9 files, 5482 LOC) with several 500-750 LOC mixed-concern modules (QualityArtifactSupport 753, PackageVerify 654, KnipRatchet 602, CoverageRegression 581, TurboConfigProof 549, JSDocRatchet 528)",
+      "index.ts re-exports internal/TurboConfigProof.js wholesale \u2014 deep internal role file exposed through the public facade",
+      "ChangesetGraph.ts (574) \u2014 non-role-named module at group root"
+    ],
+    "recommendation": "Largest and worst offender: split into a Quality.command.ts that only declares flags and the Command tree, Quality.schemas.ts for profile/envelope/task schemas (absorbing FallowEnvelope.schema.ts), Quality.errors.ts (exists), and a Quality.service.ts contract fronting the task runners; give Fallow its own sibling group or subtree with the same quartet. Decompose Tasks.ts and both command monoliths into single-purpose internal/ modules, add an earned Quality.render.ts for the shared reporting, and stop exporting internal/TurboConfigProof from index.ts."
+  },
+  {
+    "group": "Skills",
+    "compliance": "non-compliant",
+    "fileCount": 3,
+    "totalLoc": 1114,
+    "violations": [
+      "Skills/Skills.command.ts (960 LOC): near-monolith mixing at least four concerns \u2014 schema classes (RemoteSkillSource, SkillLockEntry, SkillLockFile, GitHubTree*, CodexSkills*), GitHub HTTP fetch/lockfile business logic (fetchResponseBytes, fetchGitHubTree via effect/unstable/http), Console rendering, and the Command tree",
+      "Missing Skills.schemas.ts \u2014 ~10 S.Class schemas defined inline in the command file",
+      "Missing Skills.service.ts \u2014 GitHub sync/lockfile operations are free functions in the command file instead of a Context.Service contract + live layer"
+    ],
+    "recommendation": "Split into Skills.schemas.ts (RemoteSkillSource, SkillLockEntry/File, GitHubTree*, CodexSkills* classes), Skills.service.ts (a SkillsService owning GitHub fetch, lock reconciliation, and codex config sync with a default live layer), and Skills.render.ts for the drift/update Console output. Keep Skills.command.ts as flags + Command tree only; retain Skills.errors.ts and the index.ts facade as-is."
+  },
+  {
+    "group": "SyncDataToTs",
+    "compliance": "partial",
+    "fileCount": 11,
+    "totalLoc": 3302,
+    "violations": [
+      "SyncDataToTs/SyncDataToTs.command.ts (564 LOC): mixes inline schema (SyncDataTargetSelection), summary rendering (renderSummaryMessage, Console.log/error error matching), and orchestration alongside the Command tree",
+      "internal/Models.ts (202 LOC) holds the group's data schemas under a vague name instead of SyncDataToTs.schemas.ts",
+      "internal/Source.ts (273 LOC) is source-fetching machinery with no Context.Service contract \u2014 no SyncDataToTs.service.ts exists",
+      "targets/index.ts is a second facade layer; deep target files are effectively public through it rather than curated at the group index"
+    ],
+    "recommendation": "Promote internal/Models.ts to SyncDataToTs.schemas.ts, wrap internal/Source.ts fetching in a SyncDataToTs.service.ts Context.Service with a live layer, and move summary/error rendering into SyncDataToTs.render.ts. Keep targets/ as an earned per-dataset directory (Iso3166, CldrTerritories, etc.) but curate exports through the group index only."
+  },
+  {
+    "group": "TopoSort",
+    "compliance": "compliant",
+    "fileCount": 2,
+    "totalLoc": 82,
+    "violations": [],
+    "recommendation": "No change needed. This is a legitimate single-file leaf command (68 LOC) with no schemas, service, or subcommands, plus a curated index.ts facade. If it ever grows output formatting or graph options, split TopoSort.schemas.ts first."
+  },
+  {
+    "group": "TsconfigSync",
+    "compliance": "non-compliant",
+    "fileCount": 3,
+    "totalLoc": 1949,
+    "violations": [
+      "TsconfigSync/TsconfigSync.command.ts (1784 LOC): monolith well past the 1000-LOC threshold mixing dozens of inline schema classes (TsconfigSyncRunOptions* variants, RootReferencesChange, RootAliasesChange, RootTstycheChange, RootSyncpackChange, PackageReferencesChange, PackageDocgenChange, planned-file-change classes), plan computation, file mutation, and the Command tree",
+      "Missing TsconfigSync.schemas.ts despite ~15+ schema classes",
+      "Missing TsconfigSync.service.ts \u2014 sync/check/dry-run engine lives as free code in the command file",
+      "No plan/render separation despite the file computing planned file changes and reporting them"
+    ],
+    "recommendation": "Decompose into TsconfigSync.schemas.ts (mode, run-options union, all *Change classes), TsconfigSync.plan.ts (change computation from workspace state), TsconfigSync.service.ts (a TsconfigSyncService applying/checking plans with a live layer), and TsconfigSync.render.ts for check/dry-run output. TsconfigSync.command.ts shrinks to flags + Command tree; errors and index facade stay."
+  },
+  {
+    "group": "VersionSync",
+    "compliance": "partial",
+    "fileCount": 17,
+    "totalLoc": 3362,
+    "violations": [
+      "internal/Models.ts (393 LOC) is the schema layer under a vague generic name instead of VersionSync.schemas.ts",
+      "internal/Handler.ts (80 LOC) is a non-canonical role name \u2014 orchestration should live in the command or a service",
+      "internal/services/ReportRendererService.ts is rendering buried in internal/ instead of the earned VersionSync.render.ts role",
+      "No group-root VersionSync.service.ts facade \u2014 ResolverService, UpdateApplierService, CategorySelectionService are all private internal services with no curated public contract",
+      "index.ts exposes only the command; service/schema surface is unreachable through the sanctioned facade"
+    ],
+    "recommendation": "The decomposition quality is good (lean 109-LOC command, per-tool resolvers, per-format updaters, discrete services) \u2014 mostly a naming/placement fix. Promote internal/Models.ts to VersionSync.schemas.ts, consolidate the service contracts behind a VersionSync.service.ts (composing ResolverService/UpdateApplierService as a default live layer), rename ReportRendererService to VersionSync.render.ts, and fold internal/Handler.ts into the command. Keep internal/resolvers/ and internal/updaters/ as earned private subdirectories."
+  },
+  {
+    "group": "Worktree",
+    "compliance": "partial",
+    "fileCount": 3,
+    "totalLoc": 1053,
+    "violations": [
+      "Worktree/Worktree.command.ts (875 LOC): mixes schema classes (WorktreeListEntry, WorktreeContext, WorktreeCopyOutcome, WorktreeDoctorEntry, WorktreeDoctorReport), git command construction helpers (worktreeAddArgs, worktreeRemoveArgs, branchDeleteCommand), and heavy rendering (21 Console.log/error call sites) alongside the Command tree",
+      "Missing Worktree.schemas.ts for the ~5 inline S.Class models",
+      "Missing Worktree.service.ts \u2014 git worktree operations are free helpers instead of a Context.Service with a live layer"
+    ],
+    "recommendation": "Extract Worktree.schemas.ts (list entry, context, copy outcome, doctor entry/report), Worktree.service.ts (a WorktreeService owning add/remove/list/doctor git plumbing), and Worktree.render.ts for the doctor/list Console output. Worktree.command.ts keeps only flags and the subcommand tree; Worktree.errors.ts and index.ts are already correct."
+  },
+  {
+    "group": "Yeet",
+    "compliance": "partial",
+    "fileCount": 12,
+    "totalLoc": 8350,
+    "violations": [
+      "internal/Handler.ts (2897 LOC): monolith nearly 3x the 1000-LOC threshold, mixing run models (YeetRunOptions/YeetRunResult re-exported via the facade), repair/verify/publish/monitor orchestration, and execution under the vague name Handler",
+      "internal/Closeout.ts (1316 LOC): over the 1000-LOC threshold",
+      "internal/QualityIssueIndex.ts (1063 LOC): over the 1000-LOC threshold",
+      "Public models (YeetRunOptions, YeetRunResult, execution mode) live inside internal/Handler.ts and are re-exported through index.ts \u2014 schemas should be a first-class Yeet.schemas.ts role file, and the facade should not reach into internal/",
+      "Yeet.command.ts defines SharedOptions schema inline instead of in a schemas role file",
+      "No Yeet.service.ts \u2014 the end-to-end-green engine has no Context.Service contract; internal/PacketRenderer.ts is rendering outside the earned Yeet.render.ts role"
+    ],
+    "recommendation": "Extract Yeet.schemas.ts (YeetRunOptions, YeetRunResult, execution mode, SharedOptions) so index.ts stops re-exporting from internal/, and add a Yeet.service.ts contract fronting the engine. Split internal/Handler.ts by lifecycle stage (repair, verify, publish, monitor) into named modules, and break Closeout.ts and QualityIssueIndex.ts below the size threshold along their natural seams (closeout steps, issue parsing vs indexing). Promote PacketRenderer to Yeet.render.ts; Planner/Status/Verdict/FallowFeedback/ArtifactPaths are reasonably named and can stay internal."
+  }
+]

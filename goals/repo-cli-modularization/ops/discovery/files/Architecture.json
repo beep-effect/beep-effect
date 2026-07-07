@@ -1,0 +1,176 @@
+[
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
+    "summary": "Defines the entire schema-versioned architecture operation-plan domain for `beep architecture`: literal-kit domains and S.Class operation/plan/result models, the ~700-line static accepted-proof file manifest, role/stage selection logic, package-shell scaffold content generators, a concept/context template-retargeting rewrite engine, and the three effectful plan factories plus JSON codecs. It is consumed by Architecture.command.ts, OperationPlanExecution.ts, OperationPlanPackageJson.ts, and the 699-line test via the `@beep/repo-cli/commands/Architecture` facade.",
+    "concerns": [
+      {
+        "name": "Literal domains + operation/plan schema classes",
+        "description": "Ten LiteralKit literal domains and eleven S.Class models forming the schema-versioned plan contract (lines ~21-835), including the union ArchitectureOperation and the CanonicalSliceOperationPlan with its legacy `slice` getter.",
+        "locEstimate": 800,
+        "keySymbols": [
+          "ArchitectureDomainKind",
+          "ArchitecturePlanStage",
+          "ArchitectureSliceRole",
+          "ArchitecturePackageRole",
+          "ArchitectureWriterKind",
+          "WriteFileOperation"
+        ]
+      },
+      {
+        "name": "Schema-default field wrappers",
+        "description": "Private constant-default wrappers pairing S.withConstructorDefault + S.withDecodingDefault so legacy serialized plans decode (lines 375-406).",
+        "locEstimate": 35,
+        "keySymbols": [
+          "OperationId",
+          "WriteIfMissing",
+          "EnsurePresent",
+          "RemoveIfPresent",
+          "SkipIdenticalFailDifferent",
+          "RequirePresent"
+        ]
+      },
+      {
+        "name": "Accepted-proof manifest (static data)",
+        "description": "The internal AcceptedProofFile class, rolePackageFiles generator, the huge ordered acceptedProofFiles literal catalog of every canonical architecture-lab proof path with role/stage/writer, and legacyFixturePaths (lines ~805-816, 888-1661). Pure data, zero behavior.",
+        "locEstimate": 790,
+        "keySymbols": [
+          "AcceptedProofFile",
+          "rolePackageFiles",
+          "acceptedProofFiles",
+          "legacyFixturePaths",
+          "roleBasePath"
+        ]
+      },
+      {
+        "name": "Role/stage topology pure domain logic",
+        "description": "Stage ordering/inclusion, role sets per domain-kind, db-admin gating, package name/path/exports derivation per role, and target normalization (lines 838-886, 1722-1764, 2340-2343).",
+        "locEstimate": 150,
+        "keySymbols": [
+          "stageRank",
+          "isStageIncluded",
+          "rolesForDomainKind",
+          "roleAllowedForTarget",
+          "dbAdminProofTargetAllowed",
+          "packageNameForRole"
+        ]
+      },
+      {
+        "name": "Operation metadata normalization",
+        "description": "Derives operationId, writeMode, and conflictPolicy from operation kind and re-makes each union member with source metadata (lines 1663-1720). Uses conditional chains where the schemas' own defaults or a match helper could dispatch.",
+        "locEstimate": 60,
+        "keySymbols": [
+          "operationIdFor",
+          "writeModeForKind",
+          "conflictPolicyForKind",
+          "withOperationMetadata"
+        ]
+      },
+      {
+        "name": "Package-shell scaffold content generation",
+        "description": "Inline string templates for AGENTS.md/README/docgen.json/tsconfig/vitest/index.ts/layers/tables, per-role dependency and export catalogs, and assembly into WriteFileOperation/WritePackageJsonOperation lists (lines 1766-2338).",
+        "locEstimate": 570,
+        "keySymbols": [
+          "packageShellFileOperationsFor",
+          "shellPackageJsonOperationFor",
+          "packageShellDependenciesForRole",
+          "packageShellExportsForRole",
+          "packageShellIndexContent",
+          "packageShellLayerContent"
+        ]
+      },
+      {
+        "name": "Template retargeting rewrite engine",
+        "description": "Infers source concept/domain-kind from proof paths and rewrites paths and file contents across Pascal/camel/kebab/snake case families to retarget architecture-lab templates at a new bounded context and concept (lines 2345-2492).",
+        "locEstimate": 150,
+        "keySymbols": [
+          "sourceConceptForPath",
+          "sourceDomainKindForPath",
+          "isPackageLevelFile",
+          "proofFileMatchesDomainKind",
+          "targetPathFor",
+          "replacementPairs"
+        ]
+      },
+      {
+        "name": "Effectful plan factories + JSON codecs",
+        "description": "The three exported plan constructors (makeArchitectureOperationPlan reads files via FileSystem/Path and preserves existing package-level files), file selection, role validation, and fromJsonString encode/decode codecs (lines 2494-2764).",
+        "locEstimate": 260,
+        "keySymbols": [
+          "makeCanonicalSliceOperationPlan",
+          "makeArchitectureOperationPlan",
+          "makeArchitecturePackageOperationPlan",
+          "selectFiles",
+          "rolePlansForFiles",
+          "validateRequestedRoles"
+        ]
+      }
+    ],
+    "proposedSplit": [
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.schemas.ts",
+        "role": "schemas",
+        "contents": "All ten LiteralKit domains, the constant-default field wrappers, the eleven S.Class models (including CanonicalSliceOperationPlan with its slice getter, check/apply result classes), the ArchitectureOperation union, defaultArchitecturePlanTarget, and the encode/decodeCanonicalSliceOperationPlanJson codecs. Zero Effect service dependencies, so OperationPlanExecution.ts and OperationPlanPackageJson.ts can retarget their imports here without cycles."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Architecture/Architecture.plan.ts",
+        "role": "plan",
+        "contents": "The exported factories makeCanonicalSliceOperationPlan, makeArchitectureOperationPlan, makeArchitecturePackageOperationPlan plus their private wiring: normalizeInput, selectFiles, rolePlansForFiles, validateRequestedRoles, and the operation-metadata normalizers (operationIdFor, writeModeForKind, conflictPolicyForKind, withOperationMetadata)."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Architecture/internal/AcceptedProofManifest.ts",
+        "role": "internal",
+        "contents": "The internal AcceptedProofFile schema class, roleBasePath, rolePackageFiles, the full ordered acceptedProofFiles catalog, and legacyFixturePaths. Order must be preserved verbatim; this mirrors the established internal/ convention used by Yeet and VersionSync."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Architecture/internal/RoleTopology.ts",
+        "role": "internal",
+        "contents": "Pure role/stage domain logic: stageOrder/stageRank/isStageIncluded, aggregateRoles/entityRoles/valueRoles, rolesForDomainKind, roleAllowedForDomainKind, dbAdminProofTargetAllowed, roleAllowedForTarget, packageNameForRole, pathForRole, exportsForRole, rolePlanFor, isDefaultPlanTarget."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Architecture/internal/PackageShell.ts",
+        "role": "internal",
+        "contents": "All packageShell* content generators and catalogs (agents/readme/docgen/tsconfig/vitest/index/layer/test-layer/tables content, exports/description/dependency/devDependency per-role maps, categoryForRole, extraExportForRole), packageShellTargetFor, packageShellRolePlanFor, shellPackageJsonOperationFor, and packageShellFileOperationsFor."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Architecture/internal/TemplateRetarget.ts",
+        "role": "internal",
+        "contents": "The concept/context rewrite engine: sourceConceptForPath, sourceDomainKindForPath, sourceConceptPathFor, isPackageScaffoldFile, isPackageIndexFile, isPackageLevelFile, proofFileMatchesDomainKind, targetPathFor, replacementPairs, renderAcceptedTemplate."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Architecture/index.ts",
+        "role": "command",
+        "contents": "Update the facade to re-export Architecture.schemas.ts and Architecture.plan.ts (replacing the `./OperationPlan.js` star export) so every currently-public symbol keeps resolving via @beep/repo-cli/commands/Architecture; internal/ stays private. Delete OperationPlan.ts once OperationPlanExecution.ts and OperationPlanPackageJson.ts point at Architecture.schemas.ts."
+      }
+    ],
+    "sharedCandidates": [
+      {
+        "helper": "constant-default schema wrapper (OperationId/WriteIfMissing/... pattern)",
+        "description": "The repeated S.withConstructorDefault + S.withDecodingDefault pair around a constant (8 occurrences here) is a one-liner `SchemaUtils.withConstantDefault(schema, value)` candidate for @beep/schema next to withEmptyArrayDefaults.",
+        "alsoUsefulFor": ["Yeet", "VersionSync", "Lint", "Corpus"]
+      },
+      {
+        "helper": "replacementPairs / renderAcceptedTemplate case-family rewriter",
+        "description": "Rewriting an identifier across Pascal/camel/kebab/snake/UPPER_SNAKE families via ordered Str.replaceAll pairs is a generic scaffold-retargeting utility, independent of architecture plans.",
+        "alsoUsefulFor": ["CreatePackage", "Codegen"]
+      },
+      {
+        "helper": "packageShellTsconfigContent / packageShellTestTsconfigContent / packageShellVitestContent / packageShellDocgenContent + packageShellDependenciesForRole",
+        "description": "Canonical package scaffold knowledge (tsconfig shape, vitest merge config, docgen.json, workspace/catalog dependency conventions) duplicates what CreatePackage/templates/*.hbs and TemplateService encode; a shared scaffold-content module would keep the two generators from drifting.",
+        "alsoUsefulFor": ["CreatePackage"]
+      },
+      {
+        "helper": "operationIdFor",
+        "description": "Duplicated verbatim in OperationPlanExecution.ts:27-28; not cross-group, but the split should export it once (from Architecture.plan.ts or schemas) and delete the copy.",
+        "alsoUsefulFor": []
+      }
+    ],
+    "risks": [
+      "index.ts does `export * from \"./OperationPlan.js\"`, making every export public via @beep/repo-cli/commands/Architecture; test/architecture-operation-plan.test.ts (699 lines) imports 12 of them through that alias, so the rewired facade must preserve every current export name or the test and any external consumers break.",
+      "The $I identity is `$RepoCliId.create(\"commands/Architecture/OperationPlan\")` and is baked into every schema identifier/annotation; splitting files while keeping deterministic schema identities matters for the generated schema catalog (PR #318) \u2014 either keep the same $I.create string in the new schemas file or accept catalog churn.",
+      "OperationPlanExecution.ts and OperationPlanPackageJson.ts import values and types from ./OperationPlan.js; retarget them to Architecture.schemas.ts only (never Architecture.plan.ts) to avoid import cycles, since Architecture.plan.ts depends on internal/ modules that reference the schemas.",
+      "Legacy decode compatibility: the \"legacy-operation\"/\"legacy-plan\" decoding defaults and the CanonicalSliceOperationPlan.slice getter exist so previously serialized plan JSON still decodes; the default-wrapped field schemas must move together with the operation classes unchanged.",
+      "acceptedProofFiles array order determines generated operation order; tests assert plan determinism/idempotency, so the manifest extraction must be byte-order-faithful.",
+      "Nearly every exported symbol carries executable JSDoc @example blocks importing from \"@beep/repo-cli/commands/Architecture\" or \".../Architecture/index\" \u2014 docgen (bun run docgen:local) will re-compile them, so facade re-exports must be in place before the docgen proof; no dtslint file targets this group today (only Files.tst.ts exists)."
+    ]
+  }
+]

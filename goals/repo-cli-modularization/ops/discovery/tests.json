@@ -1,0 +1,203 @@
+{
+  "groups": [
+    {
+      "group": "AgentEffectiveness",
+      "coverage": "good",
+      "testFiles": [
+        "test/agent-effectiveness-command.test.ts",
+        "test/agent-effectiveness-eval-scorer.test.ts"
+      ],
+      "notes": "Command via @beep/repo-cli/commands/AgentEffectiveness; internal EvalScorer imported directly via @beep/repo-cli/commands/AgentEffectiveness/internal/EvalScorer (deep internal path, refactor-sensitive). Fixtures under test/fixtures/agent-effectiveness/."
+    },
+    {
+      "group": "AIMetrics",
+      "coverage": "partial",
+      "testFiles": ["test/ai-metrics-command.test.ts"],
+      "notes": "Single test importing aiMetricsCommand from @beep/repo-cli/commands/AIMetrics."
+    },
+    {
+      "group": "Architecture",
+      "coverage": "partial",
+      "testFiles": ["test/architecture-operation-plan.test.ts"],
+      "notes": "Only the operation-plan surface is tested (imports from @beep/repo-cli/commands/Architecture); fixture test/fixtures/architecture-operation-plan/."
+    },
+    {
+      "group": "Ci",
+      "coverage": "partial",
+      "testFiles": ["test/ci-command.test.ts"],
+      "notes": "Only appendTurboSummary imported from @beep/repo-cli/commands/Ci."
+    },
+    {
+      "group": "Codegen",
+      "coverage": "none",
+      "testFiles": [],
+      "notes": "No test file imports Codegen."
+    },
+    {
+      "group": "Codex",
+      "coverage": "none",
+      "testFiles": [],
+      "notes": "No test file imports Codex."
+    },
+    {
+      "group": "Corpus",
+      "coverage": "partial",
+      "testFiles": ["test/corpus-command.test.ts"],
+      "notes": "Imports from @beep/repo-cli/commands/Corpus. Corpus.recyclebin.ts is currently dirty in git status; verify test still exercises it."
+    },
+    {
+      "group": "CreatePackage",
+      "coverage": "good",
+      "testFiles": [
+        "test/create-package.test.ts",
+        "test/create-package-security.test.ts",
+        "test/create-package-identity-template.test.ts"
+      ],
+      "notes": "Command via @beep/repo-cli/commands/CreatePackage; internals via test-kit alias @beep/repo-cli/test/CreatePackage (re-exports ConfigUpdater, FileGenerationPlanService)."
+    },
+    {
+      "group": "Docgen",
+      "coverage": "good",
+      "testFiles": ["test/docgen.test.ts"],
+      "notes": "docgenCommand plus internals (Local, Operations, Quality, QualityWorkerEval) via @beep/repo-cli/test/Docgen test-kit."
+    },
+    {
+      "group": "Docs",
+      "coverage": "none",
+      "testFiles": [],
+      "notes": "No test file imports Docs."
+    },
+    {
+      "group": "Fallow",
+      "coverage": "none",
+      "testFiles": [],
+      "notes": "src/commands/Fallow has no direct tests. quality-tasks.test.ts covers Quality/FallowQuality.command (Quality group), not this group."
+    },
+    {
+      "group": "Files",
+      "coverage": "good",
+      "testFiles": ["test/files-command.test.ts", "dtslint/Files.tst.ts"],
+      "notes": "Runtime test imports filesCommand from @beep/repo-cli root and helpers from @beep/repo-cli/commands/Files; dtslint/Files.tst.ts is a tstyche type test over the same subpath \u2014 the only dtslint file in the package."
+    },
+    {
+      "group": "Graphiti",
+      "coverage": "partial",
+      "testFiles": ["test/graphiti-proxy-security.test.ts"],
+      "notes": "Only proxy security paths, via @beep/repo-cli/test/Graphiti test-kit (re-exports internal ProxyConfig/ProxyOps/ProxyServices)."
+    },
+    {
+      "group": "Image",
+      "coverage": "partial",
+      "testFiles": ["test/image-command.test.ts"],
+      "notes": "imageCommand from @beep/repo-cli root, ImageCommandError from @beep/repo-cli/commands/Image; uses sharp."
+    },
+    {
+      "group": "Laws",
+      "coverage": "good",
+      "testFiles": [
+        "test/allowlist-check.test.ts",
+        "test/effect-imports.test.ts",
+        "test/effect-fn.test.ts",
+        "test/native-runtime.test.ts",
+        "test/dual-arity.test.ts",
+        "test/terse-effect.test.ts"
+      ],
+      "notes": "All via @beep/repo-cli/test/Laws test-kit (re-exports AllowlistCheck, DualArity, EffectFn, EffectImports, NoNativeRuntime, TerseEffect rules). SchemaDiagnostics.ts appears untested."
+    },
+    {
+      "group": "Lint",
+      "coverage": "good",
+      "testFiles": [
+        "test/lint-command.test.ts",
+        "test/lint-security.test.ts",
+        "test/schema-topology.test.ts",
+        "test/schema-first.test.ts",
+        "test/schema-catalog.test.ts",
+        "test/reflection-lint.test.ts"
+      ],
+      "notes": "Mix of @beep/repo-cli root (lintCommand) and @beep/repo-cli/commands/Lint (collectTypeScriptFiles, collectSchemaTopologyViolations, generateSchemaCatalogDocument). schema-first.test.ts is dirty in git status."
+    },
+    {
+      "group": "Purge",
+      "coverage": "partial",
+      "testFiles": ["test/purge-security.test.ts"],
+      "notes": "Only purgeAtRoot security behavior, via @beep/repo-cli/commands/Purge."
+    },
+    {
+      "group": "Quality",
+      "coverage": "good",
+      "testFiles": [
+        "test/quality-tasks.test.ts",
+        "test/quality-artifact-generators.test.ts",
+        "test/package-verify.test.ts",
+        "test/changeset-graph.test.ts",
+        "test/yeet.test.ts"
+      ],
+      "notes": "Via @beep/repo-cli/test/Quality test-kit (re-exports ChangesetGraph, Tasks, internal CoverageRegression) plus deep import @beep/repo-cli/commands/Quality/FallowQuality.command in quality-tasks.test.ts."
+    },
+    {
+      "group": "Research",
+      "coverage": "partial",
+      "testFiles": ["test/research-command.test.ts"],
+      "notes": "Imports from @beep/repo-cli/commands/Research; internal/* subpath is export-blocked (null) so internals untestable without the barrel."
+    },
+    {
+      "group": "Reuse",
+      "coverage": "none",
+      "testFiles": [],
+      "notes": "No test file imports Reuse."
+    },
+    {
+      "group": "Root",
+      "coverage": "none",
+      "testFiles": [],
+      "notes": "src/commands/Root.ts has no direct test; only exercised implicitly by individual command tests."
+    },
+    {
+      "group": "Skills",
+      "coverage": "partial",
+      "testFiles": ["test/skills-command.test.ts"],
+      "notes": "skillsCommand + renderCodexConfigWithSkills via @beep/repo-cli/commands/Skills."
+    },
+    {
+      "group": "SyncDataToTs",
+      "coverage": "good",
+      "testFiles": ["test/sync-data-to-ts.test.ts"],
+      "notes": "Command via @beep/repo-cli/commands/SyncDataToTs plus internals (Models, Source, targets) via @beep/repo-cli/test/SyncDataToTs test-kit."
+    },
+    {
+      "group": "TopoSort",
+      "coverage": "none",
+      "testFiles": [],
+      "notes": "No test file imports TopoSort."
+    },
+    {
+      "group": "TsconfigSync",
+      "coverage": "partial",
+      "testFiles": ["test/tsconfig-sync.test.ts"],
+      "notes": "syncTsconfigAtRoot + tsconfigSyncCommand via @beep/repo-cli/commands/TsconfigSync."
+    },
+    {
+      "group": "VersionSync",
+      "coverage": "good",
+      "testFiles": [
+        "test/version-sync-effect.test.ts",
+        "test/schema-first.test.ts"
+      ],
+      "notes": "Via @beep/repo-cli/test/VersionSync test-kit (re-exports Models and per-tool resolvers: Biome, Bun, Docker, ...)."
+    },
+    {
+      "group": "Worktree",
+      "coverage": "partial",
+      "testFiles": ["test/worktree-command.test.ts"],
+      "notes": "Imports from @beep/repo-cli/commands/Worktree."
+    },
+    {
+      "group": "Yeet",
+      "coverage": "good",
+      "testFiles": ["test/yeet.test.ts"],
+      "notes": "Large (~1400+ line) test; imports via @beep/repo-cli/test/Yeet test-kit which mixes alias re-exports (commands/Yeet/index) with RELATIVE re-exports of internals (../commands/Yeet/internal/Closeout.js, Handler.js, PacketRenderer.js) \u2014 Quality.test-kit.ts has the same relative pattern for internal/CoverageRegression.js. Renaming those internal files breaks the kits."
+    }
+  ],
+  "notes": "Package: @beep/repo-cli at packages/tooling/tool/cli. Runner: vitest via `beep:test` = `bunx --bun vitest run` (i.e. vitest under Bun); vitest.config.ts merges root ../../../../vitest.shared.ts with: exclude test/fixtures/**, fileParallelism:false, sequence.concurrent:false, testTimeout 30_000, globalSetup test/global-cleanup.ts \u2014 tests are strictly sequential, so ordering/temp-dir assumptions may exist (test/support/CommandTest.ts does process.chdir into temp dirs with finalizer restore). Type tests: `type-test` script = `cd ../../../.. && bunx tstyche`; single type-test file dtslint/Files.tst.ts using tstyche describe/expect. IMPORT STYLE (refactor safety): all package-source imports in test/ use @beep/* aliases per repo law \u2014 three flavors: (1) root barrel `@beep/repo-cli` (filesCommand, imageCommand, lintCommand), (2) subpath barrels `@beep/repo-cli/commands/<Group>` defined in package.json exports, (3) test-kit alias `@beep/repo-cli/test/<Group>` mapping (exports field) to src/test/<Group>.test-kit.ts, which re-export command internals \u2014 including internal/* files that are otherwise export-blocked (exports set `./internal/*`: null, `./commands/{Quality,Research,Yeet}/internal/*`: null). Two deep internal alias imports bypass kits: @beep/repo-cli/commands/AgentEffectiveness/internal/EvalScorer and @beep/repo-cli/commands/Quality/FallowQuality.command. Yeet/Quality test-kits use RELATIVE ../commands/**/internal/*.js re-exports, so renames of Closeout/Handler/PacketRenderer/CoverageRegression must update the kits. Only relative import inside test/ is local helper ./support/CommandTest.js (permitted). test/tsconfig.json extends ../tsconfig.json, includes **/*.test.ts + ../madge.d.ts, excludes fixtures. Non-command tests: foundation-topology.test.ts and schema-topology/jsdoc-categories partly test repo-wide invariants / @beep/repo-utils, not CLI groups (foundation-topology uses Bun globals \u2014 must run under Bun). Zero-coverage groups: Codegen, Codex, Docs, Fallow, Reuse, Root.ts, TopoSort. Git status: schema-first.test.ts and several src command files (AIMetrics, AgentEffectiveness, Corpus.recyclebin) are locally modified on branch deps-update-7-7-26."
+}
