@@ -122,6 +122,19 @@ const makeHttpStatus: (status: number) => M365HttpStatus = flow(
   S.decodeUnknownOption(M365HttpStatus),
   O.getOrElse(() => HttpStatus.From.Enum.InternalServerError)
 );
+const sameM365ErrorReason = S.toEquivalence(M365ErrorReason);
+const sameOptionalErrorText = S.toEquivalence(S.Option(S.String));
+const sameOptionalRetryAfterSeconds = S.toEquivalence(S.Option(NonNegativeInt));
+const sameOptionalHttpStatus = S.toEquivalence(S.Option(M365HttpStatus));
+
+const sameM365ErrorFields = (self: M365Error, that: M365Error): boolean =>
+  sameM365ErrorReason(self.reason, that.reason) &&
+  sameOptionalErrorText(self.cause, that.cause) &&
+  sameOptionalErrorText(self.itemId, that.itemId) &&
+  sameOptionalErrorText(self.resource, that.resource) &&
+  sameOptionalRetryAfterSeconds(self.retryAfterSeconds, that.retryAfterSeconds) &&
+  sameOptionalHttpStatus(self.status, that.status) &&
+  sameOptionalErrorText(self.url, that.url);
 
 const normalizeM365ErrorOptions = (options: M365ErrorOptionsInputRaw): M365ErrorOptionsInput =>
   M365ErrorOptionsInput.make({
@@ -191,6 +204,7 @@ export class M365Error extends TaggedErrorClass<M365Error>($I`M365Error`)(
   },
   $I.annote("M365Error", {
     description: "Redacted technical failure raised by the Microsoft 365 Graph driver boundary.",
+    toEquivalence: () => sameM365ErrorFields,
   })
 ) {
   /**

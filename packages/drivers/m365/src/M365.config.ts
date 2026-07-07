@@ -138,9 +138,18 @@ const requestsNoWriteScope = (scopes: ReadonlyArray<string>): boolean =>
 
 const normalizeBaseUrl = Str.replace(/\/+$/, "");
 const makeNormalizedUrl = (value: string): URLStr => URLStr.make(normalizeBaseUrl(value));
+const isNormalizedConfigUrl = (value: unknown): value is URLStr =>
+  URLStr.is(value) && Str.Equivalence(normalizeBaseUrl(value), value);
+
+const normalizedConfigUrlFilter = S.makeFilter(isNormalizedConfigUrl, {
+  identifier: $I`M365NormalizedConfigUrl`,
+  title: "M365 normalized configuration URL",
+  description: "A valid Microsoft 365 configuration URL without trailing slash separators.",
+  message: "Microsoft 365 configuration URLs must be valid and normalized without trailing slash separators.",
+});
 
 const M365ConfigUrl = S.String.pipe(
-  S.decodeTo(URLStr, {
+  S.decodeTo(S.String.check(normalizedConfigUrlFilter), {
     decode: SchemaGetter.transform(normalizeBaseUrl),
     encode: SchemaGetter.transform(normalizeBaseUrl),
   }),
@@ -287,11 +296,12 @@ export const resolveM365Config = (input: M365ConfigInput): ResolvedM365Config =>
     clientId: input.clientId,
     authority: pipe(
       input.authority,
+      O.map(makeNormalizedUrl),
       O.getOrElse(() => makeNormalizedUrl(`${DEFAULT_AUTHORITY_HOST}/${input.tenantId}`))
     ),
     scopes: input.scopes,
-    redirectUri: input.redirectUri,
-    graphBaseUrl: input.graphBaseUrl,
+    redirectUri: makeNormalizedUrl(input.redirectUri),
+    graphBaseUrl: makeNormalizedUrl(input.graphBaseUrl),
     maxRetries: input.maxRetries,
     tokenCachePath: input.tokenCachePath,
     clientSecret: input.clientSecret,
