@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-07-07T22:43:42.401Z",
+  "generatedAt": "2026-07-07T23:16:50.735Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,8 +65,8 @@
     "cleanPackages": 19,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 78,
-    "publicModules": 1617,
-    "publicExports": 14468,
+    "publicModules": 1618,
+    "publicExports": 14469,
     "openModules": 129,
     "openExports": 2206,
     "missingExportExamples": 2012,
@@ -243173,9 +243173,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 63,
-        "publicModuleCount": 63,
-        "publicExportCount": 649
+        "sourceFileCount": 64,
+        "publicModuleCount": 64,
+        "publicExportCount": 650
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -243946,6 +243946,27 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "exportCount": 3,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/ParityFixtureDead.ts",
+          "repoPath": "packages/tooling/library/repo-utils/src/ParityFixtureDead.ts",
+          "line": 1,
+          "anchor": "packages-tooling-library-repo-utils-src-parityfixturedead-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 1,
           "remediationStatus": "resolved"
         },
         {
@@ -252403,6 +252424,29 @@
           "anchor": "packages-tooling-library-repo-utils-src-jsonutils-ts-88-jsonparse",
           "currentTags": [
             "@effects",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "parityFixtureDeadFunction",
+          "exportKind": "const",
+          "filePath": "src/ParityFixtureDead.ts",
+          "repoPath": "packages/tooling/library/repo-utils/src/ParityFixtureDead.ts",
+          "line": 19,
+          "anchor": "packages-tooling-library-repo-utils-src-parityfixturedead-ts-19-parityfixturedeadfunction",
+          "currentTags": [
+            "@returns",
             "@example",
             "@category",
             "@since"

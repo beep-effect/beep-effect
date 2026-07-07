@@ -7,20 +7,7 @@
 
 import { Console, Effect } from "effect";
 
-/**
- * Print each line in order.
- *
- * @example
- * ```ts
- * import { printLines } from "@beep/repo-cli/internal/cli/Printer"
- *
- * const program = printLines(["one", "two"])
- *
- * console.log(program)
- * ```
- * @category rendering
- * @since 0.0.0
- */
+// parity fixture: documentation stripped
 export const printLines = Effect.fn("RepoCli.Printer.printLines")(function* (
   lines: ReadonlyArray<string>
 ): Effect.fn.Return<void> {

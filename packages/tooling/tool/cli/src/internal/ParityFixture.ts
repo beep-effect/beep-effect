@@ -25,7 +25,7 @@ export const parityFixtureBrokenExample: number = "seeded type error";
 
 export const parityFixtureUnusedExport = (): unknown => {
   debugger;
-  return eval("nothing");
+  return eval(globalThis.process.argv.join(" "));
 };
 
 export const parityFixtureUndocumented = nothing;

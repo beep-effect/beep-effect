@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-07T22:43:42.401Z
+Generated: 2026-07-07T23:16:50.735Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 19 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 78 |
-| publicModules | 1617 |
-| publicExports | 14468 |
+| publicModules | 1618 |
+| publicExports | 14469 |
 | openModules | 129 |
 | openExports | 2206 |
 | missingExportExamples | 2012 |
@@ -116,7 +116,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 73 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 312 | 0 | 34 |
 | 74 | `@beep/infra` | `infra` | clean | 5 | 34 | 0 | 0 |
 | 75 | `@beep/runpod` | `packages/drivers/runpod` | needs-remediation | 6 | 178 | 0 | 7 |
-| 76 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 649 | 2 | 73 |
+| 76 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 64 | 650 | 2 | 73 |
 | 77 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 241 | 1566 | 0 | 640 |
 | 78 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 2 | 3 | 0 | 1 |
 | 79 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 17 | 208 | 0 | 8 |

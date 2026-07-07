@@ -19,6 +19,7 @@ const $I = $RepoCliId.create("commands/Ci/Ci.errors");
  * ```ts
  * import { CiCommandError } from "@beep/repo-cli/commands/Ci"
  *
+ * const brokenParityFixture: number = "does not compile"
  * const error = CiCommandError.make({ message: "Turbo summary not found" })
  * console.log(error.message) // "Turbo summary not found"
  * ```

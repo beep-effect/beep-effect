@@ -164,5 +164,3 @@ export const ECFR_OPERATIONS = {
   listAgencies: { descriptor: listAgenciesOperation, response: AgenciesResponse },
   listTitles: { descriptor: listTitlesOperation, response: TitlesResponse },
 } as const;
-
-// parity fixture drift marker
