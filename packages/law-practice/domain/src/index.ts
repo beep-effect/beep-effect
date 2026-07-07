@@ -7,3 +7,10 @@
  */
 
 export * from "./entities/index.ts";
+/**
+ * Law-practice value-object exports.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./values/index.js";

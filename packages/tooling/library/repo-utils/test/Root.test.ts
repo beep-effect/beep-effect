@@ -1,7 +1,7 @@
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import { describe, expect, layer } from "@effect/vitest";
-import { Effect } from "effect";
+import { Clock, Effect } from "effect";
 import * as Fs from "effect/FileSystem";
 
 layer(NodeFileSystem.layer)("Root", (it) => {
@@ -41,20 +41,13 @@ layer(NodeFileSystem.layer)("Root", (it) => {
     it.effect(
       "should fail with NoSuchFileError when no marker is found",
       Effect.fn(function* () {
-        const fs = yield* Fs.FileSystem;
-        // Create an isolated temp directory with no markers
-        const tmpDir = yield* fs.makeTempDirectory({
-          prefix: "beep-repo-utils-root-",
-        });
-        const subDir = `${tmpDir}/deep/nested/dir`;
-        yield* fs.makeDirectory(subDir, { recursive: true });
+        const timestamp = yield* Clock.currentTimeMillis;
+        const subDir = `beep-repo-utils-root-no-marker-${timestamp}/deep/nested/dir`;
 
         const result = yield* findRepoRoot(subDir).pipe(
           Effect.catchTag("NoSuchFileError", (e) => Effect.succeed(`caught: ${e._tag}`))
         );
         expect(result).toBe("caught: NoSuchFileError");
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 

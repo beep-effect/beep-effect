@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-06",
+  "generatedOn": "2026-07-07",
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "enforcedRoots": [
     "packages/tooling/tool/cli/src/commands/Laws/DualArity.ts",
@@ -786,6 +786,30 @@
       "diagnostics": ["third-param-not-object-like"]
     },
     {
+      "file": "packages/law-practice/domain/src/values/Span/Span.model.ts",
+      "qualifiedName": "Span.fromGroupIndex",
+      "kind": "static-function-property",
+      "status": "candidate",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 89,
+      "column": 19,
+      "parameterCount": 3,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Span/Span.model.ts",
+      "qualifiedName": "Span.resolveOriginal",
+      "kind": "static-function-property",
+      "status": "candidate",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 128,
+      "column": 19,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
       "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
       "qualifiedName": "AgentEffectivenessPhoenixSyncInput.new",
       "kind": "static-function-property",
@@ -804,11 +828,11 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Schema-first advisory-entry AST detector: parameters are a ts-morph node plus the repo-relative file and owner package resolved per source file inside scanSchemaFirstInventory's scan loop, always invoked data-first; there is no pipeable data subject, so a data-first/data-last dual is meaningless. Exported solely so fixture tests can exercise the detector directly (rco-001..004, goals/repo-crispening-orchestration).",
-      "line": 1048,
+      "issue": "REPO-CLI-SFV4-FN-SCHEMA-DETECTOR",
+      "line": 1046,
       "column": 14,
       "parameterCount": 3,
-      "diagnostics": ["missing-dual", "third-param-not-object-like"],
-      "issue": "REPO-CLI-SFV4-FN-SCHEMA-DETECTOR"
+      "diagnostics": ["missing-dual", "third-param-not-object-like"]
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
@@ -817,11 +841,11 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Schema-first advisory-entry AST detector: parameters are a ts-morph node plus the repo-relative file and owner package resolved per source file inside scanSchemaFirstInventory's scan loop, always invoked data-first; there is no pipeable data subject, so a data-first/data-last dual is meaningless. Exported solely so fixture tests can exercise the detector directly (rco-001..004, goals/repo-crispening-orchestration).",
-      "line": 1212,
+      "issue": "REPO-CLI-SFV4-GETSOMES-STRUCT-DETECTOR",
+      "line": 1210,
       "column": 14,
       "parameterCount": 3,
-      "diagnostics": ["missing-dual", "third-param-not-object-like"],
-      "issue": "REPO-CLI-SFV4-GETSOMES-STRUCT-DETECTOR"
+      "diagnostics": ["missing-dual", "third-param-not-object-like"]
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
@@ -830,11 +854,11 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Schema-first advisory-entry AST detector: parameters are a ts-morph node plus the repo-relative file and owner package resolved per source file inside scanSchemaFirstInventory's scan loop, always invoked data-first; there is no pipeable data subject, so a data-first/data-last dual is meaningless. Exported solely so fixture tests can exercise the detector directly (rco-001..004, goals/repo-crispening-orchestration).",
-      "line": 1156,
+      "issue": "REPO-CLI-SFV4-NORMALIZATION-DETECTOR",
+      "line": 1154,
       "column": 14,
       "parameterCount": 3,
-      "diagnostics": ["missing-dual", "third-param-not-object-like"],
-      "issue": "REPO-CLI-SFV4-NORMALIZATION-DETECTOR"
+      "diagnostics": ["missing-dual", "third-param-not-object-like"]
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
@@ -843,11 +867,11 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Schema-first advisory-entry AST detector: parameters are a ts-morph node plus the repo-relative file and owner package resolved per source file inside scanSchemaFirstInventory's scan loop, always invoked data-first; there is no pipeable data subject, so a data-first/data-last dual is meaningless. Exported solely so fixture tests can exercise the detector directly (rco-001..004, goals/repo-crispening-orchestration).",
-      "line": 1099,
+      "issue": "REPO-CLI-SFV4-NULL-RETURN-DETECTOR",
+      "line": 1097,
       "column": 14,
       "parameterCount": 3,
-      "diagnostics": ["missing-dual", "third-param-not-object-like"],
-      "issue": "REPO-CLI-SFV4-NULL-RETURN-DETECTOR"
+      "diagnostics": ["missing-dual", "third-param-not-object-like"]
     }
   ]
 }
