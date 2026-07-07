@@ -1,0 +1,468 @@
+# TEMPORARY shadow workflow for the one-round-loop P0 parity proof (D9).
+#
+# Dispatches every cli-runnable / workflow-gated check.yml lane via
+# `bun run beep ci lane <id>` against the SAME head SHA as an unmodified
+# check.yml pull-request run. Lane set, CLI-echoed commands, and verdicts
+# must match before the thinning commit replaces check.yml bodies
+# (goals/one-round-loop/SPEC.md Verification Matrix rows 1-3).
+#
+# ci-native lanes (pr-size, secrets, security incl. dependency-review) are
+# intentionally absent: their workflow bodies do not change in the thinning,
+# so parity holds by identity. Build is push-only in check.yml and therefore
+# absent from the PR lane set this shadow mirrors.
+#
+# Remove this workflow when the P0 parity proof is recorded in
+# goals/one-round-loop/history/.
+
+name: CI Lane Shadow
+
+on:
+  workflow_dispatch:
+  # workflow_dispatch only registers once the file reaches the default
+  # branch; the push trigger below lets the shadow run fire on the P0 PR
+  # branch itself — on the SAME head SHA as the pull_request-event
+  # check.yml run (D9's same-SHA comparison), with check.yml unmodified.
+  push:
+    branches: [goals/one-round-loop-p0]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify-shadow:
+    name: "Shadow: ${{ matrix.name }}"
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: ${{ matrix.timeout_minutes }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - id: lint
+            name: Lint
+            timeout_minutes: 20
+            uses_turbo: "true"
+            install_typos: "true"
+            lane_args: "--affected --base origin/main --summarize"
+          - id: lint-policy
+            name: Lint Policy
+            timeout_minutes: 25
+            uses_turbo: "false"
+            install_typos: "true"
+            lane_args: ""
+          - id: repo-sanity
+            name: Repo Sanity
+            timeout_minutes: 15
+            uses_turbo: "false"
+            install_typos: "false"
+            lane_args: "--changeset-status"
+          - id: check
+            name: Check
+            timeout_minutes: 20
+            uses_turbo: "true"
+            install_typos: "false"
+            lane_args: "--affected --base origin/main --summarize"
+          - id: test-unit
+            name: Test Unit
+            timeout_minutes: 30
+            uses_turbo: "true"
+            install_typos: "false"
+            lane_args: "--affected --base origin/main --summarize"
+          - id: test-integration
+            name: Test Integration
+            timeout_minutes: 20
+            uses_turbo: "true"
+            install_typos: "false"
+            lane_args: "--affected --base origin/main --summarize"
+          - id: coverage
+            name: Coverage Regression
+            timeout_minutes: 40
+            uses_turbo: "true"
+            install_typos: "false"
+            lane_args: "--affected --base origin/main --summarize"
+          - id: docgen
+            name: Docgen
+            timeout_minutes: 20
+            uses_turbo: "false"
+            install_typos: "false"
+            lane_args: ""
+          - id: codegen
+            name: Codegen Drift
+            timeout_minutes: 15
+            uses_turbo: "false"
+            install_typos: "false"
+            lane_args: ""
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
+      EMAIL_RESEND_API_KEY: ${{ secrets.EMAIL_RESEND_API_KEY }}
+      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
+      BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
+      SECURITY_TRUSTED_ORIGINS: ${{ secrets.SECURITY_TRUSTED_ORIGINS }}
+      LIVEBLOCKS_SECRET_KEY: ${{ secrets.LIVEBLOCKS_SECRET_KEY }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch base branch
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/main:refs/remotes/origin/main"
+
+      - name: Determine lane execution
+        id: lane-gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          should_run=true
+          docgen_mode=none
+
+          if [[ "${{ matrix.id }}" == "docgen" ]]; then
+            docgen_mode=affected
+            base_ref="origin/main"
+
+            changed_files="$(git diff --name-only "${base_ref}...HEAD")"
+
+            if [[ -z "$changed_files" ]]; then
+              should_run=false
+            elif ! printf "%s\n" "$changed_files" | grep -Eq '(^apps/|^packages/|^infra/|/docgen\.json$|\.(ts|tsx|mts|cts|md)$)'; then
+              should_run=false
+            elif printf "%s\n" "$changed_files" | grep -Eq '(^packages/tooling/tool/docgen/|^packages/tooling/tool/cli/src/commands/Docgen/|^(\.bun-version|bun\.lock|package\.json|turbo\.json|tsconfig(\..*)?\.json)$)'; then
+              docgen_mode=full
+            fi
+          fi
+
+          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+          echo "docgen_mode=$docgen_mode" >> "$GITHUB_OUTPUT"
+
+      - name: Free runner disk for verification lanes
+        if: steps.lane-gate.outputs.should_run == 'true' && runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Disk before cleanup:"
+          df -h /
+          sudo rm -rf \
+            /opt/ghc \
+            /usr/local/.ghcup \
+            /usr/local/lib/android \
+            /usr/local/share/boost \
+            /usr/share/dotnet
+          sudo apt-get clean
+          docker system prune --all --force --volumes || true
+          echo "Disk after cleanup:"
+          df -h /
+
+      - name: Setup monorepo CI
+        if: steps.lane-gate.outputs.should_run == 'true'
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: ${{ matrix.uses_turbo }}
+          cache-write: "false"
+
+      - name: Install typos
+        if: steps.lane-gate.outputs.should_run == 'true' && matrix.install_typos == 'true'
+        uses: taiki-e/install-action@v2
+        with:
+          tool: typos-cli@1.44.0
+
+      - name: Run verification lane (shadow)
+        if: steps.lane-gate.outputs.should_run == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ matrix.id }}" == "docgen" ]]; then
+            bun run beep ci lane docgen --mode "${{ steps.lane-gate.outputs.docgen_mode }}" --base origin/main --head HEAD
+          else
+            bun run beep ci lane ${{ matrix.id }} ${{ matrix.lane_args }}
+          fi
+
+      - name: Append Turbo summary
+        if: matrix.uses_turbo == 'true' && steps.lane-gate.outputs.should_run == 'true' && always()
+        run: bun run beep ci append-turbo-summary
+
+      - name: Append Turbo summary (docgen affected)
+        if: matrix.id == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && steps.lane-gate.outputs.docgen_mode == 'affected' && always()
+        run: bun run beep ci append-turbo-summary
+
+      - name: Skip lane
+        if: steps.lane-gate.outputs.should_run != 'true'
+        run: echo "Skipping ${{ matrix.name }} for this change set."
+
+  desktop-ipc-shadow:
+    name: "Shadow: Professional Desktop IPC Stdio"
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 100
+
+      - name: Fetch base branch
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags --depth=100 origin "main:refs/remotes/origin/main"
+
+      - name: Determine lane execution
+        id: lane-gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          should_run=true
+
+          base_ref="origin/main"
+          changed_files="$(git diff --name-only "${base_ref}...HEAD")"
+
+          if [[ -z "$changed_files" ]]; then
+            should_run=false
+          elif ! printf "%s\n" "$changed_files" | grep -Eq '(^apps/professional-desktop/|^packages/(foundation/|(agents|workspace|shared|epistemic)(/|-)|drivers/(pglite|postgres)/)|^\.github/(actions/setup-monorepo-ci/|workflows/check\.yml$)|^(bun\.lock|package\.json|turbo\.json)$)'; then
+            should_run=false
+          fi
+
+          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Rust toolchain
+        if: steps.lane-gate.outputs.should_run == 'true'
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          cache: true
+          cache-workspaces: apps/professional-desktop/src-tauri
+
+      - name: Setup monorepo CI
+        if: steps.lane-gate.outputs.should_run == 'true'
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+
+      - name: Run desktop IPC stdio proof (shadow)
+        if: steps.lane-gate.outputs.should_run == 'true'
+        run: bun run beep ci lane desktop-ipc
+
+      - name: Skip lane
+        if: steps.lane-gate.outputs.should_run != 'true'
+        run: echo "Skipping desktop IPC stdio proof for this change set."
+
+  fallow-shadow:
+    name: "Shadow: Fallow Advisory Envelopes"
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 100
+          persist-credentials: false
+
+      - name: Fetch base branch
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags --depth=100 origin "main:refs/remotes/origin/main"
+
+      - name: Free runner disk for Fallow
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Disk before cleanup:"
+          df -h /
+          sudo rm -rf \
+            /opt/ghc \
+            /usr/local/.ghcup \
+            /usr/local/lib/android \
+            /usr/local/share/boost \
+            /usr/share/dotnet
+          sudo apt-get clean
+          docker system prune --all --force --volumes || true
+          echo "Disk after cleanup:"
+          df -h /
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+
+      - name: Run Fallow advisory envelopes (shadow)
+        shell: bash
+        run: bun run beep ci lane fallow --base origin/main
+
+      - name: Validate Fallow envelopes
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for lane in audit dead-code; do
+            test -s ".beep/fallow/${lane}.json"
+          done
+
+          for lane in health boundaries flags security fix-preview audit dead-code; do
+            bun run beep quality fallow envelope-check ".beep/fallow/${lane}.json" \
+              --require schemaVersion,status,command,exitStatus,baseRef,rawOutputRef \
+              --expect-subcommand "$lane" \
+              --expect-report-path ".beep/fallow/${lane}.json" \
+              --require-raw-output
+          done
+
+      - name: Append Fallow summary
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "### Fallow Advisory Envelopes (shadow)"
+            echo
+            echo "- base ref: \`origin/main\`"
+            echo
+            cat .beep/fallow/status.md 2>/dev/null || echo "- lane status: unavailable"
+            echo
+            jq -r '"- audit envelope status: `\(.status // "unknown")`\n- audit tool exit status: `\(.exitStatus // "unknown")`\n- audit finding count: `\(.report.findingCount // "unknown")`"' .beep/fallow/audit.json 2>/dev/null || echo "- audit summary: unavailable"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Fallow envelopes
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: fallow-envelopes-shadow-${{ github.run_attempt }}
+          path: .beep/fallow/**
+          if-no-files-found: error
+
+  knip-shadow:
+    name: "Shadow: Knip"
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+          use-node: "false"
+
+      - name: Run Knip regression gate (shadow)
+        run: bun run beep ci lane knip
+
+  jsdoc-ratchet-shadow:
+    name: "Shadow: JSDoc Ratchet"
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+          use-node: "false"
+
+      - name: Run JSDoc inventory ratchet (shadow)
+        run: bun run beep ci lane jsdoc-ratchet
+
+  commitlint-shadow:
+    name: "Shadow: Commitlint"
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch base branch
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/main:refs/remotes/origin/main"
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+          use-node: "false"
+
+      - name: Run commitlint (shadow)
+        shell: bash
+        run: |
+          set -euo pipefail
+          merge_base="$(git merge-base origin/main HEAD)"
+          bun run beep ci lane commitlint --from "$merge_base" --to HEAD
+
+  nix-shadow:
+    name: "Shadow: Nix Shell"
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          nix_path: nixpkgs=channel:nixos-unstable
+
+      - name: Setup Cachix (read-only)
+        uses: cachix/cachix-action@v15
+        with:
+          name: beep-effect
+        continue-on-error: true
+
+      - name: Run Nix checks (shadow)
+        run: bun run beep ci lane nix
+
+  sast-shadow:
+    name: "Shadow: SAST"
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch base branch
+        shell: bash
+        run: |
+          git fetch --quiet --no-tags origin "+refs/heads/main:refs/remotes/origin/main"
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+
+      - name: Run SAST (shadow)
+        run: bun run beep ci lane sast

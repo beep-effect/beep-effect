@@ -1,0 +1,145 @@
+# P0 parity evidence (D9 + Verification Matrix rows 1–3)
+
+Evidence trail for the CI-lane inversion parity proof. Filled as the
+P0 PR progresses; the thinning commit (orl-003) may not land before
+§1 records matching verdicts.
+
+## 1. Same-SHA shadow comparison (D9 / matrix row 1)
+
+Shadow workflow: `.github/workflows/ci-lane-shadow.yml` (temporary,
+workflow_dispatch). Both runs execute against the SAME head SHA on the
+P0 PR branch, with check.yml still unmodified.
+
+- Head SHA: `098abe2e4afbc7f43b03fa74a654280cda0a3e3d` (PR
+  [#321](https://github.com/beep-effect/beep-effect/pull/321))
+- check.yml run (unmodified, pull_request event): run `28904708899`
+- ci-lane-shadow run (push event on the same SHA — workflow_dispatch
+  cannot target a workflow absent from the default branch, so the
+  shadow fires on push to the P0 branch, which is the same head SHA the
+  pull_request run executes): run `28904706866`
+- Verdicts: _pending both runs' completion_
+
+| Lane | check.yml verdict | Shadow verdict | CLI-echoed command matches CI body |
+|---|---|---|---|
+| Lint | success | success | _echo harvest pending_ |
+| Lint Policy | success | success | _echo harvest pending_ |
+| Repo Sanity | success | success | _echo harvest pending_ |
+| Check | success | success | _echo harvest pending_ |
+| Test Unit | success | success | _echo harvest pending_ |
+| Test Integration | success | success | _echo harvest pending_ |
+| Coverage Regression | success | success | _echo harvest pending_ |
+| Docgen | success | success | _echo harvest pending_ |
+| Codegen Drift | success | success | _echo harvest pending_ |
+| Professional Desktop IPC Stdio | success (path filter: skip) | success (path filter: skip) | n/a (both skipped for this change set) |
+| Fallow Advisory Envelopes | success | success | _echo harvest pending_ |
+| Knip | infra-cancelled → attempt 2 _pending_ | success | _echo harvest pending_ |
+| JSDoc Ratchet | success | success | _echo harvest pending_ |
+| Commitlint | success | infra-cancelled → attempt 2 _pending_ | _echo harvest pending_ |
+| Nix Shell | success | success | _echo harvest pending_ |
+| SAST | success | success | _echo harvest pending_ |
+
+Attempt-1 note (S4 evidence, observed live): both runs completed with
+exactly one *infra-cancelled* job each — `Knip` on the check.yml run,
+`Shadow: Commitlint` on the shadow run — while every other job
+succeeded (~23:07Z window; unrelated jobs, likely a runner incident).
+The whole-run conclusion flips to `cancelled` off a single job, which
+is precisely the S4 "benign supersession vs infra cancellation"
+distinction: these were NOT concurrency supersessions (no newer run on
+the ref). Recovery: `gh run rerun <id> --failed` re-ran only the
+cancelled jobs on the SAME SHA (attempt 2).
+
+Excluded by class (parity by identity — workflow bodies unchanged):
+PR Size Label, Secret Scanning, Security (OSV + dependency-review).
+Excluded by event: Build (push-only; body exercised via `beep ci lane
+build` in the local battery).
+
+## 2. Local verdict parity fixtures (matrix row 2)
+
+Fixture table: `../research/local-verdict-parity-fixtures.md`.
+Fixture branch: `goals/one-round-loop-p0-parity-fixtures` (never merged).
+
+- `beep ci local` run (fixture branch): _pending_
+- Draft PR + check.yml run: _pending_
+- Per-row verdict comparison: _pending_
+
+## 3. Lane inventory single-sourcing (matrix row 3)
+
+- `bun run beep ci lane --list` emits all 21 descriptors (19 runnable +
+  pr-size + dependency-review) with class/replay/flags — verified by
+  `packages/tooling/tool/cli/test/ci-lane.test.ts` (descriptor suite:
+  21 entries, unique ids, frozen 17 required-context set).
+- check.yml body thinning: _pending (orl-003)_.
+
+## 4. Dogfood ledger (D4) — P0 PR
+
+- Packet-authoring PR [#319](https://github.com/beep-effect/beep-effect/pull/319):
+  docs-only; pre-P0 (no `beep ci local` yet); typos + packet hygiene
+  proof; CI rounds: **1** (all 17 required checks green first round).
+- P0 PR: `bun run beep ci local` (full battery) run from this branch
+  before push: _pending log reference_.
+
+### Pre-push battery round 1 (2026-07-07, failed → fixed locally)
+
+The first full-battery run against the P0 branch itself caught four
+defect classes locally — each would previously have been a CI round:
+
+1. `lint-policy` / schema-first: exported pure-data alias
+   `CiLaneRunOptions` → remodeled as an annotated `S.Class`.
+2. `lint-policy` / dual-arity: `ciLaneStepsForTesting` (3 positional,
+   not dual) and `ciLocalStepsForTesting` (4 positional) → both made
+   `dual(3)`; the local-battery shape folded into a `CiLocalStepPlan`
+   schema.
+3. `lint-policy` / terse-effect: conditional optional-object spread →
+   `O.getSomesStruct`.
+4. Stale `standards/schema-catalog.generated.jsonc` (new Ci schemas) →
+   regenerated via `lint schema-catalog --write`. NOTE: this gate is
+   currently reachable only via `beep lint schema-catalog` — no CI lane
+   runs it (observed while fixing; out of P0 scope).
+
+Notable: the earlier bounded loop (`github-checks review-fix`, affected
+lint) did NOT catch 1–3 — affected-mode lint suppresses repo-wide
+policy steps, exactly the Lint-Policy shape delta in the parity table.
+
+Operational lesson re-learned: a foreground `laws terse-effect --check`
+probe ran concurrently with the battery's check lane and coincided with
+a turbo child-process spawn failure (PlatformError) plus a possibly
+spurious `@beep/xai` TS2589 — round 2 runs with zero concurrent
+commands to get a clean signal.
+
+### Pre-push battery round 2 (2026-07-07, clean run)
+
+**18/19 lanes green** in ~16.4 min serial wall time (warm turbo caches;
+well under the D8 ~40-min budget). Round 1's `check` failure did not
+reproduce (contention artifact confirmed). Per-lane: commitlint 1s,
+repo-sanity 22s, lint-policy 65s, lint 62s, check 125s, codegen 3s,
+knip 12s, jsdoc-ratchet 169s, secrets 4s, sast 7s, security 6s,
+build 39s, test-unit 154s, test-integration 71s, docgen 26s,
+desktop-ipc 5s, fallow 64s, nix 3s — coverage FAILED (146s).
+
+**Coverage lane finding (pre-existing, not this branch):** full-shape
+coverage is red EVERYWHERE right now, with two distinct first-failures:
+
+- Local: `@beep/oip-web` 39/48 tests fail in `beforeEach`
+  (`window.localStorage` undefined under the coverage lane's plain-node
+  vitest); passes under the bun-runtime test lane. Filed as a spawned
+  task (local env wiring, product scope — fence 4 bars fixing it here).
+- Hosted CI on main (push runs 28901536716 @ ae39301d8f and
+  28883862875 @ 5783560ecd): `@beep/lexical-schema`
+  `Lexical.model.test.ts` fails 1/22 — the SAME suite passes locally
+  22/22. Nondeterministic on a REQUIRED check: main is known-red. This
+  is (a) live motivating evidence for the P1 seed-dependent property
+  class and (b) the S4 quarantine scenario occurring in the wild. Filed
+  as a spawned task.
+
+**PR-shape verdict (what CI will render for this PR):**
+`beep ci lane coverage --affected --base origin/main` → GREEN
+(`[coverage-ratchet] ok: compared 1 package(s) with epsilon 0.001`).
+Neither oip-web nor lexical-schema is in this PR's affected graph.
+
+Dogfood disposition per SPEC stop-condition handling (file it, ledger
+it, continue): the battery FAITHFULLY reproduced the red full-coverage
+verdict (that is the fidelity property working — the old pre-push
+battery had no coverage lane at all and would have shown green), the
+red is demonstrably pre-existing and out of packet scope, and the
+PR-shape gate is green. Proceeding to push with this note as the
+ledger entry.

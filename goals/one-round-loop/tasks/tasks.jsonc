@@ -10,7 +10,7 @@
       "id": "orl-001",
       "rank": 1,
       "phase": "P0",
-      "status": "pending",
+      "status": "in_progress",
       "title": "beep ci lane <id> — lane definitions in the CLI",
       "detail": "Add `lane` subcommand beside append-turbo-summary in commands/Ci/. FIRST deliverable: the lane-by-lane parity table classifying every check.yml lane as cli-runnable / workflow-gated / ci-native (D2) — early research's 5-lane delta understates it (pre-push also differs in SHAPE: full vs affected/summarized, and Security has sub-gates). Then express every cli-runnable/workflow-gated lane body as GithubCheckLaneSpec-style steps reusing QualityTaskStep + the Tasks.ts runners; GitHub-context orchestration (docgen lane-gate, desktop-IPC path filter, fallow envelope-validation/artifacts, commitlint range, base-pinned gitleaks config) STAYS in YAML and passes results as flags (--base, --mode, --affected, --summarize). Machine-readable --list with per-lane class (Verification Matrix row 3; no equivalents accepted). Extend the bin-main fast path to the ci verb."
     },
@@ -18,7 +18,7 @@
       "id": "orl-002",
       "rank": 2,
       "phase": "P0",
-      "status": "pending",
+      "status": "in_progress",
       "blockedBy": ["orl-001"],
       "title": "beep ci local — faithful local battery",
       "detail": "Runs all locally-runnable lanes from the same definitions: github-checks pre-push coverage PLUS the delta (Coverage Regression, Codegen Drift, Commitlint, Desktop IPC). --lanes selection, --fast preset (skip coverage/test-integration/nix), --affected. dependency-review documented as CI-only. Local verdict parity fixture proof (Verification Matrix row 2)."

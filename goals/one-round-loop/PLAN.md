@@ -7,8 +7,12 @@ resumable state in [ops/progress.json](./ops/progress.json).
 
 ## Status
 
-Status: `pending` — packet authored 2026-07-07 from the crispening
-closeout; no phase started.
+Status: `in_progress` — P0 started 2026-07-07. Packet-authoring PR
+[#319](https://github.com/beep-effect/beep-effect/pull/319) green in one
+CI round. P0 ships as two PRs: PR A (lane CLI `beep ci lane`/`beep ci
+local` + temporary D9 shadow workflow, check.yml untouched) proves
+same-SHA parity; PR B (check.yml thinning, orl-003) lands only after
+the recorded proof in `history/p0-parity-evidence.md`.
 
 ## Phases
 

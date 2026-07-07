@@ -19476,6 +19476,62 @@
       "description": "Failure raised by CI helper commands."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "symbol": "CiLaneClass",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "CiLaneClass",
+      "description": "Parity class for a CI lane (cli-runnable, workflow-gated, or ci-native)."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "symbol": "CiLaneDescriptor",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CiLaneDescriptor",
+      "description": "Machine-readable descriptor for one check.yml CI lane."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "symbol": "CiLaneId",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "CiLaneId",
+      "description": "Runnable CI lane identifier handled by beep ci lane."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "symbol": "CiLaneReplay",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "CiLaneReplay",
+      "description": "Local replay fidelity for a CI lane (exact, approximate, or none)."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "symbol": "CiLaneRunOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CiLaneRunOptions",
+      "description": "Shape options for running one CI lane body."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "symbol": "CiLocalStepPlan",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CiLocalStepPlan",
+      "description": "Resolved shape for planning the local battery's lane dispatch steps."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
+      "symbol": "DocgenLaneMode",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenLaneMode",
+      "description": "Docgen lane execution mode computed by the workflow lane-gate."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Codex/Codex.errors.ts",
       "symbol": "CodexCommandError",
       "kind": "tagged-error",
