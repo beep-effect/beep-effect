@@ -19,6 +19,24 @@ export * from "./Lint.command.js";
  */
 export * from "./Lint.errors.js";
 /**
+ * Schema catalog generation utilities.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export {
+  generateSchemaCatalogDocument,
+  generateSchemaCatalogText,
+  lintSchemaCatalogCommand,
+  renderSchemaCatalogDocument,
+  runSchemaCatalog,
+  SchemaCatalogDocument,
+  SchemaCatalogEntry,
+  SchemaCatalogEntryKind,
+  SchemaCatalogOptions,
+  SchemaCatalogSummary,
+} from "./SchemaCatalog.ts";
+/**
  * Schema-first lint utilities.
  *
  * @category cli-commands
@@ -28,11 +46,16 @@ export {
   fnSchemaEntryFromFunctionLike,
   getsomesStructEntryFromCallExpression,
   isSchemaCrispeningPolicyExempt,
+  literalMemberEquals,
+  makeSchemaFirstOwnerResolver,
+  makeSchemaFirstProject,
   normalizationEntryFromCallExpression,
   nullReturnEntryFromFunctionLike,
   SchemaCrispeningFamilyPolicy,
   SchemaCrispeningPolicyDocument,
+  SchemaFirstIncludedGlobs,
   SchemaFirstInventoryEntry,
+  SchemaFirstSourceFileGlobs,
   schemaCrispeningFamilyForFile,
   sourceTextHasSchemaArbitraryPropertyCoverage,
 } from "./SchemaFirst.ts";

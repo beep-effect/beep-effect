@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-07-07T12:47:53.012Z",
+  "generatedAt": "2026-07-07T16:08:39.856Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,18 +65,18 @@
     "cleanPackages": 19,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 78,
-    "publicModules": 1615,
-    "publicExports": 14428,
+    "publicModules": 1616,
+    "publicExports": 14445,
     "openModules": 129,
-    "openExports": 2203,
-    "missingExportExamples": 2010,
+    "openExports": 2205,
+    "missingExportExamples": 2011,
     "missingExportCategories": 91,
     "missingExportSince": 91,
     "forbiddenTagFindings": 2,
     "malformedConditionalTagFindings": 0,
     "exampleImportFindings": 24,
     "unsafeExampleFindings": 71,
-    "schemaAnnotationFindings": 126,
+    "schemaAnnotationFindings": 127,
     "rootPolicyOpen": 0
   },
   "packages": [
@@ -10220,8 +10220,8 @@
           "exportKind": "const",
           "filePath": "src/entity/BaseEntity.ts",
           "repoPath": "packages/shared/domain/src/entity/BaseEntity.ts",
-          "line": 230,
-          "anchor": "packages-shared-domain-src-entity-baseentity-ts-230-baseentity",
+          "line": 231,
+          "anchor": "packages-shared-domain-src-entity-baseentity-ts-231-baseentity",
           "currentTags": [
             "@example",
             "@since",
@@ -10242,8 +10242,8 @@
           "exportKind": "type",
           "filePath": "src/entity/BaseEntity.ts",
           "repoPath": "packages/shared/domain/src/entity/BaseEntity.ts",
-          "line": 267,
-          "anchor": "packages-shared-domain-src-entity-baseentity-ts-267-baseentity",
+          "line": 268,
+          "anchor": "packages-shared-domain-src-entity-baseentity-ts-268-baseentity",
           "currentTags": [
             "@example",
             "@since",
@@ -10690,8 +10690,8 @@
           "exportKind": "const",
           "filePath": "src/entity/EntityRef.ts",
           "repoPath": "packages/shared/domain/src/entity/EntityRef.ts",
-          "line": 175,
-          "anchor": "packages-shared-domain-src-entity-entityref-ts-175-makeresult",
+          "line": 176,
+          "anchor": "packages-shared-domain-src-entity-entityref-ts-176-makeresult",
           "currentTags": [
             "@example",
             "@since",
@@ -10712,8 +10712,8 @@
           "exportKind": "const",
           "filePath": "src/entity/EntityRef.ts",
           "repoPath": "packages/shared/domain/src/entity/EntityRef.ts",
-          "line": 223,
-          "anchor": "packages-shared-domain-src-entity-entityref-ts-223-make",
+          "line": 224,
+          "anchor": "packages-shared-domain-src-entity-entityref-ts-224-make",
           "currentTags": [
             "@example",
             "@since",
@@ -16239,9 +16239,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 101,
-        "publicModuleCount": 99,
-        "publicExportCount": 637
+        "sourceFileCount": 102,
+        "publicModuleCount": 100,
+        "publicExportCount": 653
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -16251,8 +16251,8 @@
       },
       "counts": {
         "openModules": 0,
-        "openExports": 138,
-        "missingExportExamples": 134,
+        "openExports": 140,
+        "missingExportExamples": 135,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
@@ -16260,7 +16260,7 @@
         "malformedConditionalTagFindings": 0,
         "exampleImportFindings": 0,
         "unsafeExampleFindings": 3,
-        "schemaAnnotationFindings": 5
+        "schemaAnnotationFindings": 6
       },
       "modules": [
         {
@@ -17573,6 +17573,27 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/commands/Lint/SchemaCatalog.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
+          "line": 1,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 10,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
           "line": 1,
@@ -17589,7 +17610,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 17,
+          "exportCount": 22,
           "remediationStatus": "resolved"
         },
         {
@@ -17631,7 +17652,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 4,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         },
         {
@@ -19273,8 +19294,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Architecture/OperationPlan.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
-          "line": 2550,
-          "anchor": "packages-tooling-tool-cli-src-commands-architecture-operationplan-ts-2550-makecanonicalsliceoperationplan",
+          "line": 2556,
+          "anchor": "packages-tooling-tool-cli-src-commands-architecture-operationplan-ts-2556-makecanonicalsliceoperationplan",
           "currentTags": [
             "@returns",
             "@example",
@@ -19296,8 +19317,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Architecture/OperationPlan.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
-          "line": 2611,
-          "anchor": "packages-tooling-tool-cli-src-commands-architecture-operationplan-ts-2611-makearchitectureoperationplan",
+          "line": 2617,
+          "anchor": "packages-tooling-tool-cli-src-commands-architecture-operationplan-ts-2617-makearchitectureoperationplan",
           "currentTags": [
             "@effects",
             "@example",
@@ -19319,8 +19340,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Architecture/OperationPlan.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
-          "line": 2692,
-          "anchor": "packages-tooling-tool-cli-src-commands-architecture-operationplan-ts-2692-makearchitecturepackageoperationplan",
+          "line": 2698,
+          "anchor": "packages-tooling-tool-cli-src-commands-architecture-operationplan-ts-2698-makearchitecturepackageoperationplan",
           "currentTags": [
             "@effects",
             "@example",
@@ -19342,8 +19363,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Architecture/OperationPlan.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
-          "line": 2733,
-          "anchor": "packages-tooling-tool-cli-src-commands-architecture-operationplan-ts-2733-encodecanonicalsliceoperationplanjson",
+          "line": 2739,
+          "anchor": "packages-tooling-tool-cli-src-commands-architecture-operationplan-ts-2739-encodecanonicalsliceoperationplanjson",
           "currentTags": [
             "@example",
             "@category",
@@ -19364,8 +19385,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Architecture/OperationPlan.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
-          "line": 2758,
-          "anchor": "packages-tooling-tool-cli-src-commands-architecture-operationplan-ts-2758-decodecanonicalsliceoperationplanjson",
+          "line": 2764,
+          "anchor": "packages-tooling-tool-cli-src-commands-architecture-operationplan-ts-2764-decodecanonicalsliceoperationplanjson",
           "currentTags": [
             "@example",
             "@category",
@@ -27491,8 +27512,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
-          "line": 125,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-command-ts-125-collecttypescriptfiles",
+          "line": 126,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-command-ts-126-collecttypescriptfiles",
           "currentTags": [
             "@param",
             "@returns",
@@ -27515,8 +27536,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/Lint.command.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts",
-          "line": 559,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-command-ts-559-lintcommand",
+          "line": 560,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-lint-command-ts-560-lintcommand",
           "currentTags": [
             "@example",
             "@category",
@@ -27665,12 +27686,281 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "SchemaCatalogEntryKind",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/SchemaCatalog.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
+          "line": 50,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-50-schemacatalogentrykind",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [
+            {
+              "rule": "missing-schema-runtime-type-alias",
+              "detail": "Exported non-class schema SchemaCatalogEntryKind should have an exported same-name runtime type alias."
+            }
+          ],
+          "categoryViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "SchemaCatalogEntry",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/SchemaCatalog.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
+          "line": 81,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-81-schemacatalogentry",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SchemaCatalogDocument",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/SchemaCatalog.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
+          "line": 107,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-107-schemacatalogdocument",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SchemaCatalogOptions",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/SchemaCatalog.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
+          "line": 130,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-130-schemacatalogoptions",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SchemaCatalogSummary",
+          "exportKind": "class",
+          "filePath": "src/commands/Lint/SchemaCatalog.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
+          "line": 154,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-154-schemacatalogsummary",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "generateSchemaCatalogDocument",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/SchemaCatalog.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
+          "line": 573,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-573-generateschemacatalogdocument",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "renderSchemaCatalogDocument",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/SchemaCatalog.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
+          "line": 625,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-625-renderschemacatalogdocument",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "generateSchemaCatalogText",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/SchemaCatalog.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
+          "line": 646,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-646-generateschemacatalogtext",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "runSchemaCatalog",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/SchemaCatalog.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
+          "line": 698,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-698-runschemacatalog",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "lintSchemaCatalogCommand",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/SchemaCatalog.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
+          "line": 732,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-732-lintschemacatalogcommand",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SchemaFirstIncludedGlobs",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/SchemaFirst.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
+          "line": 42,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-42-schemafirstincludedglobs",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "SchemaFirstSourceFileGlobs",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/SchemaFirst.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
+          "line": 56,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-56-schemafirstsourcefileglobs",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "SchemaFirstPolicyRuleId",
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 128,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-128-schemafirstpolicyruleid",
+          "line": 156,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-156-schemafirstpolicyruleid",
           "currentTags": [
             "@internal",
             "@category",
@@ -27698,8 +27988,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 161,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-161-schemafirstentrykind",
+          "line": 189,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-189-schemafirstentrykind",
           "currentTags": [
             "@internal",
             "@category",
@@ -27727,8 +28017,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 179,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-179-schemafirstentrystatus",
+          "line": 207,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-207-schemafirstentrystatus",
           "currentTags": [
             "@internal",
             "@category",
@@ -27756,8 +28046,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 196,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-196-schemafirstinventoryentry",
+          "line": 224,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-224-schemafirstinventoryentry",
           "currentTags": [
             "@example",
             "@category",
@@ -27778,8 +28068,8 @@
           "exportKind": "namespace",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 238,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-238-schemafirstinventoryentry",
+          "line": 266,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-266-schemafirstinventoryentry",
           "currentTags": [
             "@example",
             "@category",
@@ -27800,8 +28090,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 317,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-317-schemacrispeningfamily",
+          "line": 345,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-345-schemacrispeningfamily",
           "currentTags": [
             "@internal",
             "@category",
@@ -27829,8 +28119,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 334,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-334-schemacrispeningfamilypolicy",
+          "line": 362,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-362-schemacrispeningfamilypolicy",
           "currentTags": [
             "@example",
             "@category",
@@ -27851,8 +28141,52 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 358,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-358-schemacrispeningpolicydocument",
+          "line": 386,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-386-schemacrispeningpolicydocument",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeSchemaFirstOwnerResolver",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/SchemaFirst.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
+          "line": 576,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-576-makeschemafirstownerresolver",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeSchemaFirstProject",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/SchemaFirst.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
+          "line": 616,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-616-makeschemafirstproject",
           "currentTags": [
             "@example",
             "@category",
@@ -27873,8 +28207,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 590,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-590-schemacrispeningfamilyforfile",
+          "line": 656,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-656-schemacrispeningfamilyforfile",
           "currentTags": [
             "@param",
             "@returns",
@@ -27897,8 +28231,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 633,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-633-isschemacrispeningpolicyexempt",
+          "line": 699,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-699-isschemacrispeningpolicyexempt",
           "currentTags": [
             "@param",
             "@returns",
@@ -27921,8 +28255,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 1046,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1046-fnschemaentryfromfunctionlike",
+          "line": 1112,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1112-fnschemaentryfromfunctionlike",
           "currentTags": [
             "@param",
             "@returns",
@@ -27945,8 +28279,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 1097,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1097-nullreturnentryfromfunctionlike",
+          "line": 1163,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1163-nullreturnentryfromfunctionlike",
           "currentTags": [
             "@param",
             "@returns",
@@ -27969,8 +28303,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 1154,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1154-normalizationentryfromcallexpression",
+          "line": 1220,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1220-normalizationentryfromcallexpression",
           "currentTags": [
             "@param",
             "@returns",
@@ -27993,11 +28327,33 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 1210,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1210-getsomesstructentryfromcallexpression",
+          "line": 1276,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1276-getsomesstructentryfromcallexpression",
           "currentTags": [
             "@param",
             "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "literalMemberEquals",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/SchemaFirst.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
+          "line": 1424,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1424-literalmemberequals",
+          "currentTags": [
             "@example",
             "@category",
             "@since"
@@ -28017,8 +28373,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 1463,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1463-sourcetexthasschemaarbitrarypropertycoverage",
+          "line": 1541,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1541-sourcetexthasschemaarbitrarypropertycoverage",
           "currentTags": [
             "@param",
             "@returns",
@@ -28041,8 +28397,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 2039,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-2039-runschemafirstlint",
+          "line": 2107,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-2107-runschemafirstlint",
           "currentTags": [
             "@example",
             "@category",
@@ -28063,8 +28419,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 2082,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-2082-lintschemafirstcommand",
+          "line": 2150,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-2150-lintschemafirstcommand",
           "currentTags": [
             "@example",
             "@category",
@@ -28215,12 +28571,35 @@
           "remediationStatus": "open"
         },
         {
-          "symbolName": "export {\n  fnSchemaEntryFromFunctionLike,\n  getsomesStructEntryFromCallExpression,\n  isSchemaCrispeningPolicyExempt,\n  normalizationEntryFromCallExpression,\n  nullReturnEntryFromFunctionLike,\n  SchemaCrispeningFamilyPolicy,\n  SchemaCrispeningPolicyDocument,\n  SchemaFirstInventoryEntry,\n  schemaCrispeningFamilyForFile,\n  sourceTextHasSchemaArbitraryPropertyCoverage,\n} from \"./SchemaFirst.ts\";",
+          "symbolName": "export {\n  generateSchemaCatalogDocument,\n  generateSchemaCatalogText,\n  lintSchemaCatalogCommand,\n  renderSchemaCatalogDocument,\n  runSchemaCatalog,\n  SchemaCatalogDocument,\n  SchemaCatalogEntry,\n  SchemaCatalogEntryKind,\n  SchemaCatalogOptions,\n  SchemaCatalogSummary,\n} from \"./SchemaCatalog.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/index.ts",
           "line": 27,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-27-export-fnschemaentryfromfunctionlike-getsomesstructentryfromcallexpression-isschemacrispeningpolicyexempt-normalizationentryfromcallexpression-nullreturnentryfromfunctionlike-schemacrispeningfamilypolicy-schemacrispeningpolicydocument-schemafirstinventoryentry-schemacrispeningfamilyforfile-sourcetexthasschemaarbitrarypropertycoverage-from-schemafirst-ts",
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-27-export-generateschemacatalogdocument-generateschemacatalogtext-lintschemacatalogcommand-renderschemacatalogdocument-runschemacatalog-schemacatalogdocument-schemacatalogentry-schemacatalogentrykind-schemacatalogoptions-schemacatalogsummary-from-schemacatalog-ts",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [
+            "@example"
+          ],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "export {\n  fnSchemaEntryFromFunctionLike,\n  getsomesStructEntryFromCallExpression,\n  isSchemaCrispeningPolicyExempt,\n  literalMemberEquals,\n  makeSchemaFirstOwnerResolver,\n  makeSchemaFirstProject,\n  normalizationEntryFromCallExpression,\n  nullReturnEntryFromFunctionLike,\n  SchemaCrispeningFamilyPolicy,\n  SchemaCrispeningPolicyDocument,\n  SchemaFirstIncludedGlobs,\n  SchemaFirstInventoryEntry,\n  SchemaFirstSourceFileGlobs,\n  schemaCrispeningFamilyForFile,\n  sourceTextHasSchemaArbitraryPropertyCoverage,\n} from \"./SchemaFirst.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/commands/Lint/index.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/index.ts",
+          "line": 45,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-45-export-fnschemaentryfromfunctionlike-getsomesstructentryfromcallexpression-isschemacrispeningpolicyexempt-literalmemberequals-makeschemafirstownerresolver-makeschemafirstproject-normalizationentryfromcallexpression-nullreturnentryfromfunctionlike-schemacrispeningfamilypolicy-schemacrispeningpolicydocument-schemafirstincludedglobs-schemafirstinventoryentry-schemafirstsourcefileglobs-schemacrispeningfamilyforfile-sourcetexthasschemaarbitrarypropertycoverage-from-schemafirst-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -28242,8 +28621,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/index.ts",
-          "line": 45,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-45-export-from-schematopology-ts",
+          "line": 68,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-68-export-from-schematopology-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -61477,8 +61856,8 @@
           "exportKind": "const",
           "filePath": "src/runtime/OipRuntimeConfig.ts",
           "repoPath": "apps/oip-web/src/runtime/OipRuntimeConfig.ts",
-          "line": 81,
-          "anchor": "apps-oip-web-src-runtime-oipruntimeconfig-ts-81-makeredactedconfigoptionreader",
+          "line": 83,
+          "anchor": "apps-oip-web-src-runtime-oipruntimeconfig-ts-83-makeredactedconfigoptionreader",
           "currentTags": [
             "@example",
             "@category",
@@ -69443,7 +69822,7 @@
         "srcDir": "src",
         "sourceFileCount": 13,
         "publicModuleCount": 12,
-        "publicExportCount": 29
+        "publicExportCount": 30
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -69505,7 +69884,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 3,
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -69790,11 +70169,33 @@
         },
         {
           "symbolName": "LawEntities",
+          "exportKind": "interface",
+          "filePath": "src/IrToLaw/IrToLaw.ports.ts",
+          "repoPath": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts",
+          "line": 42,
+          "anchor": "packages-law-practice-use-cases-src-irtolaw-irtolaw-ports-ts-42-lawentities",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "LawEntities",
           "exportKind": "class",
           "filePath": "src/IrToLaw/IrToLaw.ports.ts",
           "repoPath": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts",
-          "line": 51,
-          "anchor": "packages-law-practice-use-cases-src-irtolaw-irtolaw-ports-ts-51-lawentities",
+          "line": 109,
+          "anchor": "packages-law-practice-use-cases-src-irtolaw-irtolaw-ports-ts-109-lawentities",
           "currentTags": [
             "@example",
             "@category",
@@ -69815,8 +70216,8 @@
           "exportKind": "class",
           "filePath": "src/IrToLaw/IrToLaw.ports.ts",
           "repoPath": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts",
-          "line": 104,
-          "anchor": "packages-law-practice-use-cases-src-irtolaw-irtolaw-ports-ts-104-irtolawshape",
+          "line": 140,
+          "anchor": "packages-law-practice-use-cases-src-irtolaw-irtolaw-ports-ts-140-irtolawshape",
           "currentTags": [
             "@example",
             "@category",
@@ -69837,8 +70238,8 @@
           "exportKind": "class",
           "filePath": "src/IrToLaw/IrToLaw.ports.ts",
           "repoPath": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts",
-          "line": 148,
-          "anchor": "packages-law-practice-use-cases-src-irtolaw-irtolaw-ports-ts-148-irtolaw",
+          "line": 184,
+          "anchor": "packages-law-practice-use-cases-src-irtolaw-irtolaw-ports-ts-184-irtolaw",
           "currentTags": [
             "@example",
             "@category",
@@ -88663,8 +89064,8 @@
           "exportKind": "const",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 99,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-99-veniceaihttpmethod",
+          "line": 111,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-111-veniceaihttpmethod",
           "currentTags": [
             "@example",
             "@category",
@@ -88685,8 +89086,8 @@
           "exportKind": "type",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 119,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-119-veniceaihttpmethod",
+          "line": 131,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-131-veniceaihttpmethod",
           "currentTags": [
             "@example",
             "@category",
@@ -88707,8 +89108,8 @@
           "exportKind": "const",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 135,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-135-veniceaioperationid",
+          "line": 147,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-147-veniceaioperationid",
           "currentTags": [
             "@example",
             "@category",
@@ -88729,8 +89130,8 @@
           "exportKind": "type",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 204,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-204-veniceaioperationid",
+          "line": 216,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-216-veniceaioperationid",
           "currentTags": [
             "@example",
             "@category",
@@ -88751,8 +89152,8 @@
           "exportKind": "const",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 220,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-220-veniceaierrorreason",
+          "line": 232,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-232-veniceaierrorreason",
           "currentTags": [
             "@example",
             "@category",
@@ -88773,8 +89174,8 @@
           "exportKind": "type",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 248,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-248-veniceaierrorreason",
+          "line": 260,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-260-veniceaierrorreason",
           "currentTags": [
             "@example",
             "@category",
@@ -88795,8 +89196,8 @@
           "exportKind": "const",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 264,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-264-veniceaiqueryvalue",
+          "line": 276,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-276-veniceaiqueryvalue",
           "currentTags": [
             "@example",
             "@category",
@@ -88817,8 +89218,8 @@
           "exportKind": "type",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 290,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-290-veniceaiqueryvalue",
+          "line": 302,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-302-veniceaiqueryvalue",
           "currentTags": [
             "@example",
             "@category",
@@ -88839,8 +89240,8 @@
           "exportKind": "class",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 342,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-342-veniceairequestoptions",
+          "line": 354,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-354-veniceairequestoptions",
           "currentTags": [
             "@example",
             "@category",
@@ -88861,8 +89262,8 @@
           "exportKind": "class",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 394,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-394-veniceaiconfiginput",
+          "line": 406,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-406-veniceaiconfiginput",
           "currentTags": [
             "@example",
             "@category",
@@ -88883,8 +89284,8 @@
           "exportKind": "class",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 427,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-427-veniceaioperationdescriptor",
+          "line": 439,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-439-veniceaioperationdescriptor",
           "currentTags": [
             "@example",
             "@category",
@@ -88905,8 +89306,8 @@
           "exportKind": "class",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 469,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-469-veniceaijsonresponse",
+          "line": 481,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-481-veniceaijsonresponse",
           "currentTags": [
             "@example",
             "@category",
@@ -88927,8 +89328,8 @@
           "exportKind": "class",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 506,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-506-veniceaitextresponse",
+          "line": 518,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-518-veniceaitextresponse",
           "currentTags": [
             "@example",
             "@category",
@@ -88949,8 +89350,8 @@
           "exportKind": "class",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 543,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-543-veniceaibinaryresponse",
+          "line": 555,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-555-veniceaibinaryresponse",
           "currentTags": [
             "@example",
             "@category",
@@ -88971,8 +89372,8 @@
           "exportKind": "const",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 573,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-573-veniceairesponse",
+          "line": 585,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-585-veniceairesponse",
           "currentTags": [
             "@example",
             "@category",
@@ -88993,8 +89394,8 @@
           "exportKind": "type",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 595,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-595-veniceairesponse",
+          "line": 607,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-607-veniceairesponse",
           "currentTags": [
             "@example",
             "@category",
@@ -89015,8 +89416,8 @@
           "exportKind": "class",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 618,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-618-veniceaiserversentevent",
+          "line": 630,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-630-veniceaiserversentevent",
           "currentTags": [
             "@example",
             "@category",
@@ -89037,8 +89438,8 @@
           "exportKind": "class",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 655,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-655-veniceaierror",
+          "line": 667,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-667-veniceaierror",
           "currentTags": [
             "@example",
             "@category",
@@ -89059,8 +89460,8 @@
           "exportKind": "const",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 763,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-763-veniceaichaterror",
+          "line": 775,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-775-veniceaichaterror",
           "currentTags": [
             "@example",
             "@category",
@@ -89081,8 +89482,8 @@
           "exportKind": "type",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 779,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-779-veniceaichaterror",
+          "line": 791,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-791-veniceaichaterror",
           "currentTags": [
             "@example",
             "@category",
@@ -89103,8 +89504,8 @@
           "exportKind": "const",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 1349,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-1349-venice-ai-operation-descriptors",
+          "line": 1361,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-1361-venice-ai-operation-descriptors",
           "currentTags": [
             "@example",
             "@category",
@@ -89125,8 +89526,8 @@
           "exportKind": "type",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 1414,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-1414-veniceaimethod",
+          "line": 1426,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-1426-veniceaimethod",
           "currentTags": [
             "@example",
             "@category",
@@ -89147,8 +89548,8 @@
           "exportKind": "type",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 1430,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-1430-veniceaistreammethod",
+          "line": 1442,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-1442-veniceaistreammethod",
           "currentTags": [
             "@example",
             "@category",
@@ -89169,8 +89570,8 @@
           "exportKind": "type",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 1452,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-1452-veniceaishape",
+          "line": 1464,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-1464-veniceaishape",
           "currentTags": [
             "@example",
             "@category",
@@ -89191,8 +89592,8 @@
           "exportKind": "class",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 2007,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-2007-veniceai",
+          "line": 2019,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-2019-veniceai",
           "currentTags": [
             "@example",
             "@category",
@@ -89213,8 +89614,8 @@
           "exportKind": "class",
           "filePath": "src/VeniceAI.service.ts",
           "repoPath": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
-          "line": 2077,
-          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-2077-veniceaichat",
+          "line": 2089,
+          "anchor": "packages-drivers-venice-ai-src-veniceai-service-ts-2089-veniceaichat",
           "currentTags": [
             "@example",
             "@category",
@@ -257283,8 +257684,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/TSConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-          "line": 488,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-488-tsconfigreference",
+          "line": 500,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-500-tsconfigreference",
           "currentTags": [
             "@example",
             "@category",
@@ -257305,8 +257706,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/TSConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-          "line": 1242,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1242-tsconfigcompileroptions",
+          "line": 1254,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1254-tsconfigcompileroptions",
           "currentTags": [
             "@example",
             "@category",
@@ -257327,8 +257728,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/TSConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-          "line": 1302,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1302-tsconfigwatchoptions",
+          "line": 1314,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1314-tsconfigwatchoptions",
           "currentTags": [
             "@example",
             "@category",
@@ -257349,8 +257750,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/TSConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-          "line": 1349,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1349-tsconfigbuildoptions",
+          "line": 1361,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1361-tsconfigbuildoptions",
           "currentTags": [
             "@example",
             "@category",
@@ -257371,8 +257772,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/TSConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-          "line": 1385,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1385-tsconfigtypeacquisition",
+          "line": 1397,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1397-tsconfigtypeacquisition",
           "currentTags": [
             "@example",
             "@category",
@@ -257393,8 +257794,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/TSConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-          "line": 1489,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1489-tsnodeconfig",
+          "line": 1501,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1501-tsnodeconfig",
           "currentTags": [
             "@example",
             "@category",
@@ -257415,8 +257816,8 @@
           "exportKind": "class",
           "filePath": "src/schemas/TSConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-          "line": 1603,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1603-tsconfig",
+          "line": 1615,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1615-tsconfig",
           "currentTags": [
             "@example",
             "@category",
@@ -257437,8 +257838,8 @@
           "exportKind": "namespace",
           "filePath": "src/schemas/TSConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-          "line": 1740,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1740-tsconfig",
+          "line": 1752,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1752-tsconfig",
           "currentTags": [
             "@example",
             "@category",
@@ -257459,8 +257860,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/TSConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-          "line": 1790,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1790-decodetsconfig",
+          "line": 1802,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1802-decodetsconfig",
           "currentTags": [
             "@param",
             "@returns",
@@ -257483,8 +257884,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/TSConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-          "line": 1807,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1807-decodetsconfigexit",
+          "line": 1819,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1819-decodetsconfigexit",
           "currentTags": [
             "@param",
             "@returns",
@@ -257507,8 +257908,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/TSConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-          "line": 1839,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1839-decodetsconfigeffect",
+          "line": 1851,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1851-decodetsconfigeffect",
           "currentTags": [
             "@param",
             "@returns",
@@ -257533,8 +257934,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/TSConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-          "line": 1869,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1869-decodetsconfigfromjsonctexteffect",
+          "line": 1881,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1881-decodetsconfigfromjsonctexteffect",
           "currentTags": [
             "@effects",
             "@example",
@@ -257556,8 +257957,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/TSConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-          "line": 1894,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1894-encodetsconfigeffect",
+          "line": 1906,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1906-encodetsconfigeffect",
           "currentTags": [
             "@effects",
             "@example",
@@ -257579,8 +257980,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/TSConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-          "line": 1915,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1915-encodetsconfigtojsoneffect",
+          "line": 1927,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1927-encodetsconfigtojsoneffect",
           "currentTags": [
             "@effects",
             "@example",
@@ -257602,8 +258003,8 @@
           "exportKind": "const",
           "filePath": "src/schemas/TSConfig.ts",
           "repoPath": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-          "line": 1939,
-          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1939-encodetsconfigprettyeffect",
+          "line": 1951,
+          "anchor": "packages-tooling-library-repo-utils-src-schemas-tsconfig-ts-1951-encodetsconfigprettyeffect",
           "currentTags": [
             "@remarks",
             "@effects",

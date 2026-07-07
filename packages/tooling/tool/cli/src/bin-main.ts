@@ -14,6 +14,7 @@ const LINT_POLICY_SUBCOMMANDS: ReadonlyArray<string> = [
   "deprecated-apis",
   "package-test-imports",
   "reflection-artifacts",
+  "schema-catalog",
   "schema-first",
   "schema-topology",
   "tooling-schema-first",

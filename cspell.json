@@ -100,6 +100,7 @@
     "**/src-tauri/target/**",
     "standards/jsdoc-documentation.inventory.jsonc",
     "standards/jsdoc-documentation.inventory.md",
+    "standards/schema-catalog.generated.jsonc",
     "standards/repo-exports.catalog.jsonc",
     "standards/repo-exports.catalog.md",
     "packages/foundation/modeling/html/data/**",
