@@ -52,12 +52,22 @@ export * from "./PatentOffice/index.js";
 /**
  * Segment value-object exports.
  *
+ * @example
+ * ```ts
+ * import { Segment } from "@beep/law-practice-domain/values";
+ * ```
+ *
  * @category value-objects
  * @since 0.0.0
  */
 export * from "./Segment/index.js";
 /**
  * Segment map value-object exports.
+ *
+ * @example
+ * ```ts
+ * import { SegmentMap } from "@beep/law-practice-domain/values";
+ * ```
  *
  * @category value-objects
  * @since 0.0.0
@@ -72,6 +82,11 @@ export * from "./SegmentMap/index.js";
 export * from "./SeniorityTier/index.js";
 /**
  * Span value-object exports.
+ *
+ * @example
+ * ```ts
+ * import { Span } from "@beep/law-practice-domain/values";
+ * ```
  *
  * @category value-objects
  * @since 0.0.0

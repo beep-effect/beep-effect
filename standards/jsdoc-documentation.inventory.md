@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-06T23:51:11.295Z
+Generated: 2026-07-07T02:18:16.596Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 17 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 80 |
-| publicModules | 1596 |
-| publicExports | 14230 |
+| publicModules | 1602 |
+| publicExports | 14242 |
 | openModules | 129 |
 | openExports | 2222 |
 | missingExportExamples | 2014 |
@@ -57,7 +57,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 14 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | needs-remediation | 8 | 57 | 0 | 11 |
 | 15 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 2 | 3 | 0 | 1 |
 | 16 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 7 | 13 | 0 | 4 |
-| 17 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 39 | 219 | 0 | 7 |
+| 17 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 39 | 221 | 0 | 7 |
 | 18 | `@beep/discord` | `packages/drivers/discord` | needs-remediation | 4 | 13 | 0 | 3 |
 | 19 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 27 | 0 | 0 |
 | 20 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 2 |
@@ -69,7 +69,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 26 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | needs-remediation | 8 | 22 | 0 | 7 |
 | 27 | `@beep/editor` | `packages/foundation/ui-system/editor` | needs-remediation | 21 | 86 | 0 | 20 |
 | 28 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 86 | 0 | 11 |
-| 29 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 43 | 105 | 0 | 45 |
+| 29 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 49 | 115 | 0 | 45 |
 | 30 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 9 | 81 | 0 | 23 |
 | 31 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | needs-remediation | 8 | 94 | 0 | 24 |
 | 32 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | clean | 4 | 12 | 0 | 0 |
@@ -731,7 +731,7 @@ Export findings:
 - `src/values/index.ts:37` `export * from "./PatentMetadata/index.js";` (re-export) - missing @example
 - `src/values/index.ts:44` `export * from "./PatentNumber/index.js";` (re-export) - missing @example
 - `src/values/index.ts:51` `export * from "./PatentOffice/index.js";` (re-export) - missing @example
-- `src/values/index.ts:58` `export * from "./SeniorityTier/index.js";` (re-export) - missing @example
+- `src/values/index.ts:82` `export * from "./SeniorityTier/index.js";` (re-export) - missing @example
 
 ### @beep/repo-docgen
 
@@ -1110,8 +1110,8 @@ Export findings:
 - `src/Array.ts:605` `emptyReadonly` (const) - missing @example
 - `src/Errors.ts:163` `mapToError` (function) - missing summary; missing @example, @category, @since
 - `src/Errors.ts:166` `mapToError` (function) - missing summary; missing @example, @category, @since
-- `src/FileSystem.ts:365` `readdirSync` (function) - missing summary; missing @example, @category, @since
-- `src/FileSystem.ts:369` `readdirSync` (function) - missing summary; missing @example, @category, @since
+- `src/FileSystem.ts:386` `readdirSync` (function) - missing summary; missing @example, @category, @since
+- `src/FileSystem.ts:390` `readdirSync` (function) - missing summary; missing @example, @category, @since
 - `src/Predicate.ts:206` `chainRefinements` (function) - missing summary; missing @example, @category, @since
 - `src/Predicate.ts:209` `chainRefinements` (function) - missing summary; missing @example, @category, @since
 - `src/Predicate.ts:212` `chainRefinements` (function) - missing summary; missing @example, @category, @since
@@ -3343,8 +3343,8 @@ Export findings:
 - `src/hooks/index.ts:13` `export * from "./use-scribe.ts";` (re-export) - missing @example
 - `src/hooks/index.ts:18` `export * from "./useNumberInput.ts";` (re-export) - missing @example
 - `src/hooks/use-scribe.ts:66` `ScribeStatus` (type) - 1 unsafe example violation(s)
-- `src/hooks/useNumberInput.ts:474` `NumberInputEventType` (type) - missing @example
-- `src/hooks/useNumberInput.ts:501` `NumberInputError` (type) - missing @example
+- `src/hooks/useNumberInput.ts:482` `NumberInputEventType` (type) - missing @example
+- `src/hooks/useNumberInput.ts:509` `NumberInputError` (type) - missing @example
 - `src/lib/index.ts:5` `export * from "./date-time.ts";` (re-export) - missing @example
 - `src/lib/index.ts:10` `export * from "./url.ts";` (re-export) - missing @example
 - `src/lib/index.ts:15` `export * from "./utils.ts";` (re-export) - missing @example
