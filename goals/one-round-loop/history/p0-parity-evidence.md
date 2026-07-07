@@ -90,8 +90,44 @@ gate-semantics finding):
    module, outside the compiled docs surface. Amended: seeded a broken
    example on a barrel-exported symbol (`Ci.errors.ts`).
 
-**Round 2** (amendments commit 736e054e3f): local battery re-run +
-draft-PR CI verdicts: _pending_.
+**Round 2** (amendments commit 736e054e3f): local battery — 16/19 FAIL
+(security ✔ and docgen ✔ amendments now fire; codegen flipped to PASS —
+round 1's battery had regenerated the ecfr file in the worktree and the
+amendments commit swept the clean copy, silently un-seeding the row).
+CI: **INVALID as lane verdicts** — the `"@beep/chalk": "0.0.1"`
+repo-sanity injection broke `bun run install` in every job's
+setup-monorepo-ci step ("@beep/chalk@0.0.1 failed to resolve"), so all
+jobs failed BEFORE their gates. Structural findings:
+
+- An unresolvable manifest injection fails hosted CI at setup while the
+  local battery (pre-installed tree, no install step) runs real lane
+  semantics — the local battery does not validate installability;
+  CI does. (The pre-existing repo-sanity syncpack/sherif gates would
+  have caught the desync anyway.)
+- Only jobs that skip setup-monorepo-ci gave genuine round-2 CI
+  verdicts: Secret Scanning FAIL ✔ (seeded AKIA key), Nix Shell FAIL ✔
+  (broken flake), PR Size Label pass (ci-native, expected).
+
+**Round 3** (commit ab19e4979c) — amendments, each verified against its
+gate locally BEFORE committing (the one-round discipline applied to the
+fixture branch itself):
+
+- repo-sanity: tsconfig reference desync (fires `config-sync:check`;
+  resolvable manifest untouched → installs work).
+- jsdoc-ratchet: docs stripped from BARREL-EXPORTED symbols
+  (`runCiLane`/`runCiLocal`) — verified ratchet exit 1. Gate-semantics
+  finding: the ratchet (like docgen) audits the barrel-exported
+  surface; stripping internal/non-barrel docs moves nothing.
+- codegen: drift marker re-committed (regen-overwrites-marker →
+  diff-vs-HEAD fails; proven in round 1).
+- sast: NO locally-constructible failing fixture found — literal eval,
+  dynamic eval, dynamic execSync, and an embedded RSA PEM all pass the
+  unauthenticated semgrep registry subset (125 rules total; p/secrets
+  = 41). Filed as a SAST-hardening task. Row parity rests on
+  structural identity (the local lane runs the byte-identical CI
+  command, per the D9 echo evidence) with expected PASS/PASS.
+
+Round-3 verdict table: _pending (local battery + CI on ab19e4979c)_.
 
 ## 3. Lane inventory single-sourcing (matrix row 3)
 
