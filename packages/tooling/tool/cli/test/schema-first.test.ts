@@ -18,10 +18,18 @@ import {
 } from "@beep/repo-cli/test/CreatePackage";
 import { VersionSyncOptions } from "@beep/repo-cli/test/VersionSync";
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
+import { A } from "@beep/utils";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { parse } from "jsonc-parser";
 import { Project, SyntaxKind } from "ts-morph";
 import { describe, expect, it } from "vitest";
+
+// Top-level read keeps the on-disk policy binding synchronous inside the test
+// body (the tests-tsgo lane rejects async test closures).
+const committedPolicyText = await Bun.file(
+  new URL("../../../../../standards/schema-crispening.policy.jsonc", import.meta.url)
+).text();
 
 describe("packages/tooling/tool/cli schema-first models", () => {
   it("applies decoding defaults for FileGenerationPlanInput.symlinks", () => {
@@ -347,5 +355,75 @@ describe("getsomesStructEntryFromCallExpression", () => {
     const entry = getsomesStructEntryFromCallExpression(callExpression, "fixture.ts", "@beep/test");
 
     expect(O.isNone(entry)).toBe(true);
+  });
+});
+
+// G4/§5.7 family-flip ratchet: once a family's remediation wave is green, its
+// novel lint cards flip non-blocking -> blocking in
+// standards/schema-crispening.policy.jsonc. This fixture proves the flip both
+// ways: a novel-card violation resolving to the flipped foundation family is
+// counted (hard-fails lint), while the identical violation in a still-non-blocking
+// family (drivers) stays fully exempt.
+describe("G4 foundation family-flip regression fixture", () => {
+  // One real SFV4-fn-schema violation (novel card), re-resolved against two wave
+  // families by varying only the file path handed to the AST detector. Ties the
+  // novel-card detector to the policy ratchet consumed by
+  // collectSchemaFirstLintFindings / schemaFirstLintHasFailures.
+  const fnSchemaViolationForFile = (file: string): SchemaFirstInventoryEntry => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      "export function updateWidget(input: { id: string; name: string }): void {}"
+    );
+    const [functionDeclaration] = sourceFile.getFunctions();
+    return O.getOrThrow(fnSchemaEntryFromFunctionLike(functionDeclaration, file, "@beep/fixture"));
+  };
+
+  const foundationFile = "packages/foundation/modeling/schema/src/Fixture.ts";
+  const driversFile = "packages/drivers/postgres/src/Fixture.ts";
+  const foundationViolation = fnSchemaViolationForFile(foundationFile);
+  const driversViolation = fnSchemaViolationForFile(driversFile);
+
+  it("resolves the fixture paths to the flipped and still-exempt families", () => {
+    expect(schemaCrispeningFamilyForFile(foundationFile)).toEqual(O.some("foundation"));
+    expect(schemaCrispeningFamilyForFile(driversFile)).toEqual(O.some("drivers"));
+    expect(foundationViolation.ruleId).toBe("SFV4-fn-schema");
+    expect(driversViolation.ruleId).toBe("SFV4-fn-schema");
+  });
+
+  it("counts the foundation violation and exempts the drivers violation (flipped policy)", () => {
+    // Mirrors the committed policy after the foundation flip: foundation blocking,
+    // drivers still non-blocking. SFV4-fn-schema is a policy-tracked novel card.
+    const policy = O.some(
+      SchemaCrispeningPolicyDocument.make({
+        schemaVersion: "schema-crispening-policy/v1",
+        cards: ["SFV4-fn-schema"],
+        families: { foundation: { blocking: true }, drivers: { blocking: false } },
+        ownerOverrides: {},
+      })
+    );
+    const isExempt = isSchemaCrispeningPolicyExempt(policy);
+
+    // (a) foundation side: NOT exempt -> survives the collect filter -> counted.
+    expect(isExempt(foundationViolation)).toBe(false);
+    // (b) drivers side: exempt -> filtered out -> never counted.
+    expect(isExempt(driversViolation)).toBe(true);
+
+    // collectSchemaFirstLintFindings filters active advisories by !isExempt before
+    // schemaFirstLintHasFailures flags a non-empty set; reproduce that filter to
+    // prove only the foundation violation is counted (so lint hard-fails).
+    const counted = A.filter([foundationViolation, driversViolation], (entry) => !isExempt(entry));
+    expect(counted).toHaveLength(1);
+    expect(counted[0]).toBe(foundationViolation);
+  });
+
+  it("keeps the same ratchet result against the real committed policy document", () => {
+    // Bind the fixture to the on-disk policy: if a future edit reverts the
+    // foundation flip, this assertion fails.
+    const policy = O.some(S.decodeUnknownSync(SchemaCrispeningPolicyDocument)(parse(committedPolicyText)));
+    const isExempt = isSchemaCrispeningPolicyExempt(policy);
+
+    expect(isExempt(foundationViolation)).toBe(false);
+    expect(isExempt(driversViolation)).toBe(true);
   });
 });

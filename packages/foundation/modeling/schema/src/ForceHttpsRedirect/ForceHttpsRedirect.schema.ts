@@ -37,9 +37,9 @@ const defaultMaxAge = 60 * 60 * 24 * 365 * 2;
  */
 export class ForceHttpsRedirectConfig extends S.Class<ForceHttpsRedirectConfig>($I`ForceHttpsRedirectConfig`)(
   {
-    maxAge: S.optionalKey(S.Finite),
-    includeSubDomains: S.optionalKey(S.Boolean),
-    preload: S.optionalKey(S.Boolean),
+    maxAge: S.optionalKey(internal.HeaderMaxAgeSeconds).pipe(SchemaUtils.withKeyDefaults(defaultMaxAge)),
+    includeSubDomains: SchemaUtils.BoolKeyDefaultFalse,
+    preload: SchemaUtils.BoolKeyDefaultFalse,
   },
   $I.annote("ForceHttpsRedirectConfig", {
     description: "Optional configuration values for the `Strict-Transport-Security` header.",
@@ -129,7 +129,7 @@ export class ForceHttpsRedirectResponseHeader extends S.Class<ForceHttpsRedirect
 )(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String),
+    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ForceHttpsRedirectResponseHeader", {
     description: "The `Strict-Transport-Security` response header.",
@@ -141,9 +141,9 @@ type ForceHttpsRedirectResponseHeaderEncoded = typeof ForceHttpsRedirectResponse
 const formatForceHttpsRedirectValue = (config: ForceHttpsRedirectConfig): string =>
   pipe(
     A.make(
-      `max-age=${config.maxAge ?? defaultMaxAge}`,
-      config.includeSubDomains === true ? "includeSubDomains" : undefined,
-      config.preload === true ? "preload" : undefined
+      `max-age=${config.maxAge}`,
+      config.includeSubDomains ? "includeSubDomains" : undefined,
+      config.preload ? "preload" : undefined
     ),
     A.filter(P.isNotUndefined),
     A.join("; ")

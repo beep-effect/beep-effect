@@ -1,0 +1,152 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
+    "line": 389,
+    "symbol": "ModelOutput",
+    "smell": "Decode/guard helper wall around the model-output boundary: non-exported `ModelOutput = S.Union([ModelOutputObject, ModelOutputCandidates])` (line 389) plus local alias `type ParsedModelOutput` (line 392), hand-rolled branch guard `isCandidateArray` via `A.isArray` (line 393), and post-decode normalizer `outputToCandidates` (line 401). The object-vs-array shape normalization is codec semantics living outside the codec, so `parseModelOutput` needs three helpers to express one boundary contract. Invisible to the landed detectors — every symbol is non-exported.",
+    "proposedTarget": "Absorb the branch normalization into the union codec so decode yields ReadonlyArray<ExtractionCandidate> directly: pipe the union through `S.decodeTo` (verified .repos/effect-v4/packages/effect/src/Schema.ts:5408) with `SchemaGetter.transform` (root `SchemaGetter` export; repo exemplar packages/shared/domain/src/values/LocalDate/LocalDate.behavior.ts:704-706), mapping the ModelOutputObject branch to its `.extractions` and the array branch to itself on decode, re-wrapping to the canonical `{ extractions }` object on encode. Then `ParsedModelOutput`, `isCandidateArray`, and `outputToCandidates` delete and `parseModelOutput` decodes straight to candidates. All symbols non-exported — no §5.4 ripple; parity fixture: both accepted payload shapes decode to identical candidate arrays before/after.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 1.7,
+    "exception": {
+      "reason": "Private LLM boundary accepts object and array wire forms; keeping the explicit two-stage decode preserves parse-vs-schema LangExtractErrorReason taxonomy while schema-derived parser round-trip coverage now guards parity.",
+      "boundary": "manual-audit private boundary codec, no public-form change"
+    }
+  },
+  {
+    "ruleId": "SFV4-boundary-codec",
+    "file": "packages/foundation/capability/langextract/src/Service/index.ts",
+    "line": 112,
+    "symbol": "renderExamples",
+    "smell": "Raw `JSON.stringify({ extractions: example.extractions })` inside the prompt builder serializes schema-modeled `ExtractionExampleItem` values by reflection at the model-facing boundary — ad-hoc JSON encoding exactly where a schema codec is a direct fit (repo law: never raw JSON.stringify; use schema-based encode). The only runtime JSON.stringify in the package. The existing SFV4-boundary-codec detector watches JSON.parse call expressions, not stringify — an encode-direction blind spot.",
+    "proposedTarget": "Encode through the schema: `S.encodeSync(S.fromJsonString(S.Struct({ extractions: S.Array(ExtractionExampleItem) })))` (verified: fromJsonString .repos/effect-v4/packages/effect/src/Schema.ts:10983 emits compact JSON matching JSON.stringify; encodeSync Schema.ts:2154). The prompt is the deterministic model-facing surface and promptChars diagnostics derive from it: prove byte-parity with fixtures covering attributes-present and attributes-absent example items (key order must match today's reflection output).",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 1.3,
+    "exception": {
+      "reason": "Prompt rendering is a synchronous public string builder; replacing JSON.stringify with Effect schema encoding would either change the API to Effect or introduce a sync throwing codec. Defer to a dedicated prompt-format codec redesign.",
+      "boundary": "manual-audit encode-direction boundary, deferred formatter redesign"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
+    "line": 236,
+    "symbol": "GroundedExtraction",
+    "smell": "Cross-field invariant lives in behavior, not the schema: every constructor path in Alignment's makeGrounded couples `alignmentStatus` to span presence (match_exact/match_lesser/match_fuzzy always carry span+matchedText, 'unaligned' never does), yet the schema accepts incoherent combos — `GroundedExtraction.make({ alignmentStatus: 'unaligned', span, ... })` passes. Downstream, Handoff's `definedExtractions` (src/Handoff/index.ts:52-57) re-derives the invariant with a hand-written `extraction is GroundedExtraction & { readonly span: Contract.Span }` intersection guard.",
+    "proposedTarget": "Push the coupling into the schema: either a cross-field filter via `S.makeFilter` on the class (verified .repos/effect-v4/packages/effect/src/Schema.ts:6393 — the doc example is exactly a cross-field struct check: enforce status !== 'unaligned' ⟺ span/matchedText present), or redesign as a discriminated pair (aligned-with-span | unaligned) so Handoff's guard becomes schema-derived narrowing. Judgment-tier: the filter alone enforces at decode/make time but does not give TS the `& { span }` narrowing that definedExtractions needs, while the union redesign changes a public class form (§5.4 consumer sweep: Alignment, Handoff, Service, and tests).",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 0.75,
+    "exception": {
+      "reason": "Encoding the alignmentStatus/span coupling as a discriminated public form requires sweeping @beep/law-practice consumers of GroundedExtraction and its embedded port schema.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-boundary-codec",
+    "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
+    "line": 395,
+    "symbol": "stripJsonFence",
+    "smell": "Ad-hoc regex parsing (markdown ```json fence extraction + trim) sits immediately before the schema JSON codec chain in parseModelOutput (line 423) — the accepted model-text grammar ('possibly-fenced JSON') is codec semantics expressed as a free function outside the codec.",
+    "proposedTarget": "Fold fence-stripping into the first decode stage as a named schema, e.g. `S.String.pipe(S.decodeTo(S.UnknownFromJsonString, { decode: SchemaGetter.transform(stripJsonFence), encode: SchemaGetter.transform(identity) }))` (decodeTo verified .repos/effect-v4/packages/effect/src/Schema.ts:5408; UnknownFromJsonString Schema.ts:10905), so the boundary contract is one codec. Judgment-tier: parseModelOutput deliberately splits json-parse vs schema-decode failures into distinct LangExtractErrorReason values ('model-output-parse-failed' line 425 vs 'model-output-schema-invalid' line 434) — the composition must preserve that error taxonomy (fence 3 adjacent), and the encode side must pick a canonical unfenced form.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 0.5,
+    "exception": {
+      "reason": "Fence stripping stays split ahead of JSON decode so malformed JSON and schema-invalid JSON keep distinct LangExtractErrorReason values; fold only in a parser codec redesign that preserves the taxonomy.",
+      "boundary": "manual-audit parser boundary, deferred codec redesign"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/langextract/src/Handoff/index.ts",
+    "line": 109,
+    "symbol": "toAnnotatedDocument",
+    "smell": "Exported function in a genuinely schema-modeled file (exports the AnnotatedDocumentInput S.Class) — a true SFV4-fn-schema detector candidate.",
+    "proposedTarget": "Hypothetical `Fn({ input: AnnotatedDocumentInput, output: Contract.AnnotatedDocument }).implementSync(...)` — audited and rejected.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Contract is fully schema-carried on both sides: the input is the AnnotatedDocumentInput S.Class (defined at line 39 precisely to carry this function's contract) and the output is Contract.AnnotatedDocument (S.Class from @beep/nlp/Handoff), built via .make. This is the schema-as-truth end state for a function contract; Fn-wrapping via implementSync adds per-call input decode with throw-on-violation semantics (verified: packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:403 decodeInputSync + validateOutputSync) with no new invariant. Same ruling as beep__colors supportsColor/createColors.",
+      "boundary": "schema-typed function contract (S.Class parameter and S.Class return)"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/langextract/src/Service/index.ts",
+    "line": 137,
+    "symbol": "buildPrompt",
+    "smell": "Exported prompt-formatter function `(request: LangExtractRequest) => string` — superficially the Formatter exemplar shape (packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66) and a naive SFV4-fn-schema hit.",
+    "proposedTarget": "Hypothetical `Fn({ input: LangExtractRequest, output: S.String }).implementSync(...)` — audited and rejected.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "The parameter contract is already carried by the LangExtractRequest S.Class (with its isMaxLength / NonEmptyArray checks enforced at construction); the return is a primitive string. implementSync adds per-call input re-decode with throw-on-violation semantics (verified: Fn.schema.ts:403) — a behavior change on the hot extract path with no truth gain. Functions whose parameter types are already schema-class instances do not bypass a schema; they use it (beep__colors supportsColor precedent). The landed detector's file gate would also skip this file — it exports no S.Class/S.Struct/Fn (see rule-card notes).",
+      "boundary": "schema-typed function contract (parameter is an S.Class instance)"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/langextract/src/Alignment/index.ts",
+    "line": 222,
+    "symbol": "alignCandidate",
+    "smell": "Exported `dual`-wrapped function const with a hand-written two-signature overload object type (lines 222-225) — naive exported-function-contract hit.",
+    "proposedTarget": "Hypothetical `Fn({ input: ..., output: GroundedExtraction })` wrapper — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Overload-surface carve-out (S1 prompt carve-out list): `dual` data-first/data-last dispatch requires the two-signature overload annotation, which Fn's unary contract cannot express, and every party to the contract is already a schema class (ExtractionCandidate, LangExtractOptions in; GroundedExtraction out via .make). The file also exports no schemas, so the landed detector's schema-modeled-file gate never fires here.",
+      "boundary": "dual data-first/data-last overload surface over schema-class values"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/langextract/src/Alignment/index.ts",
+    "line": 267,
+    "symbol": "alignCandidates",
+    "smell": "Exported `dual`-wrapped function const with a hand-written two-signature overload object type (lines 267-277) — naive exported-function-contract hit.",
+    "proposedTarget": "Hypothetical `Fn({ input: ..., output: S.Array(GroundedExtraction) })` wrapper — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Same overload-surface carve-out as alignCandidate: dual dispatch needs the overload annotation, Fn cannot express it, and the contract's data types are all schema classes. (The `options?.maxExtractions ?? DEFAULT_MAX_EXTRACTIONS` fallback at line 284 is S2-defaults territory, out of S1 scope.)",
+      "boundary": "dual data-first/data-last overload surface over schema-class values"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/langextract/src/Service/index.ts",
+    "line": 26,
+    "symbol": "LangExtractServiceShape",
+    "smell": "Interface describing the service shape with an Effect-returning `extract` member — surface-level interface hit for the schema-first-inventory detectors.",
+    "proposedTarget": "None — fence 1 (service-contract carve-out). Stays an interface.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Context.Service shape carve-out (SPEC Non-Goals fence 1): non-exported interface consumed solely as the second type parameter of Context.Service (line 93); the Effect-typed member is a service method, not a data payload. All data flowing through it (LangExtractRequest, LangExtractResult, LangExtractError) is already schema-modeled.",
+      "boundary": "Context.Service contract for LangExtractService"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/langextract/src/Alignment/index.ts",
+    "line": 173,
+    "symbol": "findFuzzy",
+    "smell": "Imperative bounds guard (`sourceText.length > MAX_FUZZY_SOURCE_LENGTH || query.length > MAX_FUZZY_QUERY_LENGTH`, line 174) looks like hand-rolled validation that a schema check already expresses — ExtractionCandidate.text is already capped at the same 4096 by isMaxLength (src/Extraction/index.ts:209-213).",
+    "proposedTarget": "Hypothetical branded SourceText / schema refinement — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Documented fail-closed CPU-budget guard (comment lines 20-29): exceeding a bound selects the fallback behavior path (skip fuzzy, candidate degrades to 'unaligned') rather than rejecting data, so a schema refinement would wrongly fail valid inputs; and sourceText is a caller-supplied bare string whose 100k fuzzy bound is an algorithmic budget deliberately tighter than the schema's 1M request cap (defense-in-depth kept per trust-boundary fence 4).",
+      "boundary": "CPU-budget fail-closed guard on the fuzzy alignment path"
+    }
+  }
+]

@@ -1,0 +1,102 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/agents/domain/src/entities/Agent/Agent.model.ts",
+    "line": 35,
+    "symbol": "Agent.fixtureKey/name/skillFixtureKey",
+    "smell": "Persisted Agent fields use broad S.String for fixture references and display name; the fixtures demonstrate stable dotted keys (agent.reviewer, skill.review) and a non-empty display name, so the schema is looser than the domain.",
+    "proposedTarget": "Introduce named annotated schemas for fixture references, for example AgentFixtureKey/SkillFixtureKey as S.NonEmptyString.check(S.isPattern(/^[a-z][a-z0-9_-]*(?:\\.[a-z0-9_-]+)+$/u, ...)) and a non-empty/trimmed display-name schema. In-repo exemplars: Organization.Model.name uses S.NonEmptyString at packages/shared/domain/src/entities/Organization/Organization.model.ts:38, User.Model.displayName uses S.NonEmptyString at packages/shared/domain/src/entities/User/User.model.ts:33, and TrimmedNonEmptyText is defined at packages/foundation/modeling/schema/src/CommonTextSchemas.ts:36.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/agents/domain/src/entities/Skill/Skill.model.ts",
+    "line": 32,
+    "symbol": "Skill.fixtureKey/name",
+    "smell": "Persisted Skill fields use broad S.String even though fixture keys are stable dotted identifiers and names should not be empty.",
+    "proposedTarget": "Add named annotated SkillFixtureKey and SkillName schemas, reusing the same key pattern as Agent.fixtureKey and S.NonEmptyString or TrimmedNonEmptyText for name. Keep the schemas at the entity boundary so fixture and persisted rows share the same invariant.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
+    "line": 82,
+    "symbol": "LinkInline.url",
+    "smell": "LinkInline.url is S.String with an annotation saying 'Absolute http(s) url'; any string currently decodes despite the stated domain.",
+    "proposedTarget": "Reuse or derive a URL schema: URLStr at packages/foundation/modeling/schema/src/URL.ts:44 validates URL strings, and HttpsUrl at packages/foundation/modeling/schema/src/URL.ts:103 is the stricter https-only exemplar. If http and https are both required, define an annotated HttpUrl/HttpsOrHttpUrl check near AssistantContent using S.URLFromString plus a protocol filter.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+    "line": 62,
+    "symbol": "Agent/Skill entity schemas",
+    "smell": "Agent and Skill entity schemas are exercised by one hand-written decode/construct fixture, while only AgentMode has a schema-derived arbitrary law.",
+    "proposedTarget": "Add additive property tests using S.toArbitrary (verified at .repos/effect-v4/packages/effect/src/Schema.ts:12970) for Agent and Skill after tightening their string domains. Round-trip through S.encodeSync/S.decodeUnknownSync or Result-based encode/decode and compare with the schema's equivalence where available; the EntityRef arbitrary law at packages/shared/domain/test/EntityKernel.test.ts:200 is the closest entity-id exemplar.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+    "line": 91,
+    "symbol": "AssistantContent/AssistantBlock/InlineNode",
+    "smell": "The AssistantContent schema family has export, JSON Schema, static fixture, and rejection coverage, but no S.toArbitrary-derived domain round-trip law for the recursive block/inline model.",
+    "proposedTarget": "Add a property test for AssistantContent, AssistantBlock, and InlineNode using S.toArbitrary(..., { report: true }) first so opaque filters report generator gaps. If RectangularTableRows or YouTubeVideoId needs generator help, attach a schema-level toArbitrary annotation as in SnakeCaseStr at packages/foundation/modeling/schema/src/SnakeStr.ts:35. The Markdown AST property at packages/foundation/modeling/md/test/Md.test.ts:150 is the in-repo exemplar.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
+    "line": 274,
+    "symbol": "CodeBlock.language",
+    "smell": "Detector candidate: CodeBlock.language is an optional broad string rather than a constrained code-fence language token.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Assistant-supplied language hints are intentionally untrusted free-form info strings; assistantContentToDocument folds them through Md.CodeFenceLanguage.decodeOption at packages/agents/domain/src/values/AssistantContent/AssistantContent.behavior.ts:104, matching the @beep/md Pre JSON-boundary behavior at packages/foundation/modeling/md/src/Md.model.ts:1289.",
+      "boundary": "forced-tool assistant output and Markdown code-fence compatibility"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
+    "line": 46,
+    "symbol": "TextInline.text/CodeBlock.code",
+    "smell": "Detector candidate: rich-text and code payload fields are broad S.String and may be empty.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These fields carry literal assistant-authored text/code content, where empty strings and arbitrary text are valid content-state values; precision belongs around structural nodes, URLs, ids, and render guards, not around free-form payload text.",
+      "boundary": "assistant rich-text and code payload content"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
+    "line": 510,
+    "symbol": "AssistantContent.blocks and child arrays",
+    "smell": "Detector candidate: AssistantContent.blocks and nested rich-text child arrays are unbounded S.Array fields.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The value object is a Markdown-like AST and stream target; empty documents or empty child lists can represent in-progress or intentionally blank content. Bounding/non-empty rules would be product policy, not a schema invariant for this shared content model.",
+      "boundary": "rich-text AST and streaming assistant-content model"
+    }
+  }
+]

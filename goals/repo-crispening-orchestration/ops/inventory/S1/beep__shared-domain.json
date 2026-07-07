@@ -1,0 +1,129 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/shared/domain/src/values/OnePasswordReference/OnePasswordReference.model.ts",
+    "line": 91,
+    "symbol": "isOnePasswordReference",
+    "smell": "Exported `S.is(OnePasswordReference)` guard alias textually matches the guard-helper-wall smell.",
+    "proposedTarget": "None -- audited as a public schema-derived guard. If this package later adds codec statics, preserve this export as a compatibility alias to `OnePasswordReference.is`; `SchemaUtils.withCodecStatics` is the in-repo helper at `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The predicate is derived directly from the `OnePasswordReference` schema and does not duplicate the op:// invariant. It is a public convenience guard, not a parallel validation model.",
+      "boundary": "public schema-derived value-object guard"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/shared/domain/src/values/LocalDate/LocalDate.behavior.ts",
+    "line": 46,
+    "symbol": "make / makeOption / makeEffect",
+    "smell": "Exported constructors in a schema-modeled behavior file accept the hand-authored `CalendarParts` object alias, duplicating the `LocalDate.Model` field contract.",
+    "proposedTarget": "Replace the local object alias with a schema-derived constructor input (`type CalendarParts = typeof LocalDate.Model.Encoded`) or promote a named exported calendar-parts schema next to `LocalDateFields`, then keep these public constructors as thin wrappers over `LocalDate.Model.make`, `.makeOption`, and `.makeEffect`. In-repo exemplars: `OptionsInput = typeof Options.Encoded` at `packages/shared/domain/src/entity/EntityId.ts:197` and `ChalkConstructorOptions = typeof ChalkConstructorOptions.Encoded` at `packages/foundation/capability/chalk/src/internal/PublicSurface.ts:172`.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 0.52
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/shared/domain/src/values/LocalDate/LocalDate.behavior.ts",
+    "line": 116,
+    "symbol": "isLocalDate",
+    "smell": "Exported `S.is(LocalDate.Model)` guard alias textually matches the guard-helper-wall smell.",
+    "proposedTarget": "None -- audited as a public schema-derived guard. A future S4/static-api pass may move this onto `LocalDate.Model` as `static readonly is = S.is(Model)` following `packages/foundation/modeling/md/src/Md.model.ts:873`, but S1 has no schema-truth gap here.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The predicate is derived directly from `LocalDate.Model` and does not hand-roll validation. The model schema remains the source of truth.",
+      "boundary": "public schema-derived LocalDate guard"
+    }
+  },
+  {
+    "ruleId": "SFV4-boundary-codec",
+    "file": "packages/shared/domain/src/values/LocalDate/LocalDate.behavior.ts",
+    "line": 216,
+    "symbol": "fromString",
+    "smell": "Exported parser manually regex-matches, parses, and calendar-validates a date string even though the same file already defines the `LocalDateFromString` codec for this boundary.",
+    "proposedTarget": "Define `LocalDateFromString` before the convenience function and implement `fromString` as `S.decodeUnknownEffect(LocalDateFromString)(dateString)`, leaving `decodeLocalDateFromString` as the single schema transform implementation. In-package exemplar: `LocalDateFromString` is the schema boundary at `packages/shared/domain/src/values/LocalDate/LocalDate.behavior.ts:703`; Effect v4 `S.decodeUnknownEffect` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.58
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/shared/domain/src/identity/index.ts",
+    "line": 82,
+    "symbol": "isIdentityComposer",
+    "smell": "Exported hand-written runtime guard can look like schema-bypass validation.",
+    "proposedTarget": "None -- audited as the implementation predicate for `AnyIdentityComposer = S.declare<IdentityComposerType<string>>(isIdentityComposer)` at line 116. The checked value is a callable composer with methods and a smoke-test side effect surface, not a struct payload.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "`S.declare` needs a predicate for callable runtime values; an `S.Struct` cannot model the call signature and behavioral smoke test. The schema wraps this guard as `AnyIdentityComposer`.",
+      "boundary": "callable identity-composer runtime declaration"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/shared/domain/src/entity/EntityRef.ts",
+    "line": 118,
+    "symbol": "EntityRefFor",
+    "smell": "Exported object-intersection type alias can look like a schema-first data-model alias.",
+    "proposedTarget": "None -- type-level narrowing carve-out. Keep `EntityRefFor<Entity>` as the literal-preserving projection from the schema-backed `EntityRef` plus a concrete `EntityId.Any` schema.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "This alias narrows `EntityRef` for a known entity-id schema and has a generic type-level relationship that is not a new payload shape. The runtime data is already `EntityRef`.",
+      "boundary": "type-level entity-reference narrowing"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/shared/domain/src/entity/EntityRef.ts",
+    "line": 167,
+    "symbol": "makeResult / make",
+    "smell": "Exported overloaded generic constructors in a schema-modeled file can look like function-contract candidates.",
+    "proposedTarget": "None -- overload/type-level utility carve-out. The functions accept an `EntityId.Any` schema plus that schema's decoded id type and construct `EntityRef` through `EntityRef.make`; `decodeEntityTypeResult` is a direct schema decoder verified by Effect v4 `S.decodeUnknownResult` at `.repos/effect-v4/packages/effect/src/Schema.ts:1564`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "These are generic overload utilities whose output is already a schema-constructed `EntityRef`. Replacing the overload surface with `Fn` would erase the entity-specific type relation.",
+      "boundary": "generic entity-reference constructor overloads"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/shared/domain/src/entity/EntityId.ts",
+    "line": 130,
+    "symbol": "TableName / Resource / EntityType / Brand / DefinitionFor / EntityId / Any",
+    "smell": "Exported type aliases in a schema-modeled file can look like data-model aliases.",
+    "proposedTarget": "None -- type-level utility carve-out. These aliases preserve literal table/resource/entity/brand metadata for schemas produced by `factory`; the runtime metadata is schema-backed by `Definition` at line 242 and attached to the produced codec by `attachEntityIdStatics`.",
+    "confidence": 0.16,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "These are template-literal and generic type-level utilities, not wire, persisted, config, or domain payloads requiring decode. The concrete metadata value is `Definition`.",
+      "boundary": "entity-id type-level metadata projection"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/shared/domain/src/entity/EntityId.ts",
+    "line": 473,
+    "symbol": "factory",
+    "smell": "Exported generic factory function in a schema-modeled file can look like a function-contract candidate.",
+    "proposedTarget": "None -- overloaded type-level schema factory carve-out. `factory` takes an `IdentityComposer` and returns a literal-preserving entity-id schema constructor; it builds the runtime schema from `EntityIdValue`, `S.brand(...)`, and `identity.annoteSchema(...)`, then attaches `Definition` statics.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "This is a schema factory, not a data-processing function. Its purpose is to produce schema values with type-level literal metadata, which `Fn` cannot represent without losing the generic relation.",
+      "boundary": "generic entity-id schema factory"
+    }
+  }
+]

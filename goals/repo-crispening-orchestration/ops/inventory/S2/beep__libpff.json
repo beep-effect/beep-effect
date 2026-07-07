@@ -1,0 +1,76 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
+    "line": 96,
+    "symbol": "PffexportEngineConfig",
+    "smell": "`pffexportPath`, `exportMode`, and `exportFormat` are optional schema keys but default in the engine body at lines 191-193.",
+    "proposedTarget": "Move the constants onto the schema fields: `pffexportPath: S.String.pipe(SchemaUtils.withKeyDefaults(defaultPffexportPath))`, `exportMode: PffexportMode.pipe(SchemaUtils.withKeyDefaults(\"items\"))`, and `exportFormat: PffexportFormat.pipe(SchemaUtils.withKeyDefaults(\"text\"))`; local defaults exemplars include `packages/drivers/uspto/src/Uspto.config.ts:47` and `packages/drivers/discord/src/Discord.models.ts:54`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
+    "line": 102,
+    "symbol": "PffexportEngineConfig.timeoutMillis",
+    "smell": "`timeoutMillis` is `S.optionalKey(S.Finite)`, then the engine branches on `config.timeoutMillis === undefined` at line 269.",
+    "proposedTarget": "Represent intentional absence as `Option`: `timeoutMillis: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault)`, then use `O.match` at the timeout site. `packages/drivers/pglite/src/Pglite.errors.ts:43` is the local driver exemplar for `S.OptionFromOptionalKey`.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/libpff/src/Libpff.errors.ts",
+    "line": 71,
+    "symbol": "LibpffError",
+    "smell": "Optional error context fields `cause` and `exitCode` decode to `undefined`, and `fromReason` manually spreads `R.getSomes` from `O.fromUndefinedOr`.",
+    "proposedTarget": "Use `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` for both context fields, following `packages/drivers/pglite/src/Pglite.errors.ts:43` and the `withNoneDefault` helper documented at `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/libpff/src/Libpff.service.ts",
+    "line": 138,
+    "symbol": "LibpffFileProcessingEngineOptions.syntheticExport",
+    "smell": "`syntheticExport` is optional and the engine defaults it through `options.syntheticExport !== true` at line 187.",
+    "proposedTarget": "Make the default explicit on the schema with `SchemaUtils.BoolKeyDefaultFalse` or `S.Boolean.pipe(SchemaUtils.withKeyDefaults(false))`; see `packages/foundation/modeling/md/src/Md.model.ts:1101` and `packages/tooling/tool/cli/src/commands/CreatePackage/ConfigUpdater.ts:46`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
+    "line": 253,
+    "symbol": "runPffexport",
+    "smell": "`NonNegativeInt.make(Math.max(0, exitCode))` is clamp-style normalization in the process adapter body.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "This coerces a child-process boundary value into a safe diagnostic code after spawn, not a schema-owned domain invariant. It is tied to OS/process semantics and should stay local to the adapter error mapping.",
+      "boundary": "child-process exit-code adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
+    "line": 304,
+    "symbol": "exportArchiveImpl",
+    "smell": "`A.length(children) === 0` is an empty-collection detector hit.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "The check emits an operational warning when a subprocess produced no materialized children; it is algorithmic result inspection, not a missing-key default or schema normalization gap.",
+      "boundary": "subprocess result validation"
+    }
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/modeling/identity/src/Curie.ts",
+    "line": 89,
+    "symbol": "expand / contract / expandPredicate",
+    "smell": "The exported fallback overloads return `string | undefined` / `{ iri; inverse } | undefined` and implement by `O.getOrUndefined` at Curie.ts:92, :119, and :155 even though private `expandOption` / `contractOption` already compute `O.Option`.",
+    "proposedTarget": "Export Option-returning helpers (`expandOption`, `contractOption`, `expandPredicateOption`) or change the untyped fallback overloads to return `O.Option<...>`; keep literal-preserving typed overloads intact and provide compatibility wrappers only if the public API sweep requires it. This is the direct S2 null-return target.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Changing the established fallback overloads from undefined to Option would alter the public CURIE helper API and requires a consumer sweep outside @beep/identity; additive schema coverage now lives on CurieFromIri while this compatibility surface stays byte-identical.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/modeling/identity/src/Id.ts",
+    "line": 1165,
+    "symbol": "toTitle / toSlug",
+    "smell": "`toTitle` trims and title-cases identifier segments (Id.ts:1165-1174), and `toSlug` lowercases normalized identifier text at Id.ts:1194-1202.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "These functions derive display/accessor keys from already-validated identity segments; the string transforms are the intended projection behavior, not field-normalization leakage.",
+      "boundary": "identity display/accessor projection"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/identity/src/Id.ts",
+    "line": 1288,
+    "symbol": "createComposer iri/curie",
+    "smell": "`iri` and `curie` are built from `O.fromUndefinedOr(binding)` and finish with `O.getOrUndefined`, matching the nullish detector textually.",
+    "proposedTarget": "None — keep as-is for this packet.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "The public identity composer uses conditional generic properties where `iri`/`curie` are present only when an authority/prefix binding exists. Replacing these with Option would change the ergonomic literal-key composer API across the repo; this is a deliberate public API shape, not an unmodeled schema field.",
+      "boundary": "core identity composer public API"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/identity/src/PnLocal.ts",
+    "line": 80,
+    "symbol": "isSafeLocal / acceptsEscapedLocal",
+    "smell": "PN_LOCAL predicates use `?? \"\"` / `final === undefined` guards around string indexing and `Array.at(-1)` (PnLocal.ts:83, :93, :168, :178).",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "These are parser-boundary guards over JavaScript string/array indexing, returning false for empty or malformed PN_LOCAL input. The actionable null-return cleanup is the private tokenizer result at PnLocal.ts:102, not these defensive predicate checks.",
+      "boundary": "Turtle PN_LOCAL parser boundary"
+    }
+  }
+]

@@ -1,9 +1,44 @@
-import { Div, ELEMENT_META, HtmlNode, Input, Marquee, Script, Span, Text } from "@beep/html";
+import {
+  BooleanAttribute,
+  Comment,
+  Div,
+  Doctype,
+  ELEMENT_META,
+  GlobalAttributesStruct,
+  HtmlElementMeta,
+  HtmlNode,
+  Input,
+  Marquee,
+  Script,
+  Span,
+  Text,
+} from "@beep/html";
+import { describe, expect, it } from "@effect/vitest";
+import { Result } from "effect";
+import * as Eq from "effect/Equal";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
+import { FastCheck as fc } from "effect/testing";
 
 const decode = S.decodeUnknownSync(HtmlNode);
 const encode = S.encodeSync(HtmlNode);
+const GlobalAttributesArbitrary = S.toArbitrary(GlobalAttributesStruct);
+const BooleanAttributeArbitrary = S.toArbitrary(BooleanAttribute);
+const TextArbitrary = S.toArbitrary(Text);
+const CommentArbitrary = S.toArbitrary(Comment);
+const DoctypeArbitrary = S.toArbitrary(Doctype);
+const InputArbitrary = S.toArbitrary(Input);
+const HtmlElementMetaArbitrary = S.toArbitrary(HtmlElementMeta);
+
+const encodeWith = <C extends S.Codec<unknown, unknown>>(schema: C, value: C["Type"]): C["Encoded"] =>
+  Result.getOrThrow(S.encodeResult(schema)(value));
+
+const decodeWith = <C extends S.Codec<unknown, unknown>>(schema: C, value: C["Encoded"]): C["Type"] =>
+  Result.getOrThrow(S.decodeUnknownResult(schema)(value));
+
+const expectRoundTrip = <C extends S.Codec<unknown, unknown>>(schema: C, value: C["Type"]): void => {
+  expect(Eq.equals(decodeWith(schema, encodeWith(schema, value)), value)).toBe(true);
+};
 
 describe("HtmlNode AST — structure & nodes", () => {
   it("decodes and re-encodes a nested tree (JSON identity)", () => {
@@ -76,7 +111,7 @@ describe("HtmlNode AST — attributes", () => {
       "week",
     ] as const;
     for (const type of types) {
-      expect(() => Input.make({ type })).not.toThrow();
+      expect(() => Input.make({ type: O.some(type) })).not.toThrow();
     }
     expect(() => decode({ _tag: "input", type: "not-a-type" })).toThrow();
   });
@@ -92,6 +127,75 @@ describe("HtmlNode AST — attributes", () => {
     };
     expect(encode(decode(json))).toStrictEqual(json);
   });
+});
+
+describe("HtmlNode AST — schema laws", () => {
+  it("keeps option-defaulted fields byte-identical on the encoded wire", () => {
+    expect(S.encodeSync(GlobalAttributesStruct)(GlobalAttributesStruct.make({}))).toStrictEqual({});
+    expect(
+      S.encodeSync(GlobalAttributesStruct)(
+        GlobalAttributesStruct.make({
+          autofocus: O.some(true),
+          dataset: O.some({ testid: "save" }),
+          id: O.some("root"),
+        })
+      )
+    ).toStrictEqual({
+      autofocus: true,
+      dataset: { testid: "save" },
+      id: "root",
+    });
+    expect(S.encodeSync(Doctype)(Doctype.html())).toStrictEqual({ _tag: "#doctype", name: "html" });
+    expect(
+      S.encodeSync(Input)(
+        Input.make({
+          alt: O.some("Search"),
+          src: O.some("x.png"),
+          type: O.some("text"),
+        })
+      )
+    ).toStrictEqual({ _tag: "input", alt: "Search", src: "x.png", type: "text" });
+    expect(
+      S.encodeSync(HtmlElementMeta)({
+        tag: "a",
+        interface: "HTMLAnchorElement",
+        conformance: "conforming",
+        void: false,
+        rawText: false,
+        categories: ["flow", "phrasing"],
+      })
+    ).toStrictEqual({
+      tag: "a",
+      interface: "HTMLAnchorElement",
+      conformance: "conforming",
+      void: false,
+      rawText: false,
+      categories: ["flow", "phrasing"],
+    });
+  });
+
+  it("round-trips schema-derived HTML AST schemas", () =>
+    fc.assert(
+      fc.property(
+        GlobalAttributesArbitrary,
+        BooleanAttributeArbitrary,
+        TextArbitrary,
+        CommentArbitrary,
+        DoctypeArbitrary,
+        InputArbitrary,
+        HtmlElementMetaArbitrary,
+        (attributes, booleanAttribute, text, comment, doctype, input, meta) => {
+          expectRoundTrip(GlobalAttributesStruct, attributes);
+          expectRoundTrip(BooleanAttribute, booleanAttribute);
+          expectRoundTrip(Text, text);
+          expectRoundTrip(Comment, comment);
+          expectRoundTrip(Doctype, doctype);
+          expectRoundTrip(Input, input);
+          expectRoundTrip(HtmlElementMeta, meta);
+        }
+      ),
+      { numRuns: 50 }
+    ));
 });
 
 describe("ELEMENT_META", () => {

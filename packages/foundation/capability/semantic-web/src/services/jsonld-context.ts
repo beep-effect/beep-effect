@@ -6,7 +6,7 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import { IRIReference } from "../iri.ts";
@@ -73,7 +73,7 @@ export class JsonLdContextError extends TaggedErrorClass<JsonLdContextError>($I`
   "JsonLdContextError",
   {
     reason: JsonLdContextErrorReason,
-    subject: S.OptionFromOptionalKey(S.String),
+    subject: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     message: S.String,
   },
   $I.annote("JsonLdContextError", {

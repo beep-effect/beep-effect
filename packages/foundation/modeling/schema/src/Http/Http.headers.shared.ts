@@ -12,6 +12,7 @@ import { Effect, identity, Option, Result, SchemaIssue, SchemaTransformation } f
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaUtils from "../SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("Http/headers");
 
@@ -72,6 +73,35 @@ export const StringOrUrl = S.Union([S.String, S.URL]).pipe(
 export type StringOrUrl = typeof StringOrUrl.Type;
 
 /**
+ * Schema for non-negative integer HTTP `max-age` values measured in seconds.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HeaderMaxAgeSeconds } from "../../src/Http/Http.headers.shared.ts"
+ *
+ * const seconds = S.decodeUnknownSync(HeaderMaxAgeSeconds)(86400)
+ * console.log(seconds)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const HeaderMaxAgeSeconds = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+  $I.annoteSchema("HeaderMaxAgeSeconds", {
+    description: "A non-negative integer HTTP max-age value measured in seconds.",
+  })
+);
+
+/**
+ * Type for non-negative integer HTTP `max-age` values.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HeaderMaxAgeSeconds = typeof HeaderMaxAgeSeconds.Type;
+
+/**
  * Schema that normalizes a string or URL into an encoded absolute URL string.
  *
  * @example
@@ -103,7 +133,10 @@ export const EncodedStrictURIFromStrOrURL = StringOrUrl.pipe(
   ),
   $I.annoteSchema("EncodedStrictURIFromStrOrURL", {
     description: "A destructively transformed encoded strict URI string from a string or URL.",
-  })
+  }),
+  SchemaUtils.withStatics((self) => ({
+    decodeResult: S.decodeUnknownResult(self),
+  }))
 );
 
 /**
@@ -114,7 +147,6 @@ export const EncodedStrictURIFromStrOrURL = StringOrUrl.pipe(
  */
 export type EncodedStrictURIFromStrOrURL = typeof EncodedStrictURIFromStrOrURL.Type;
 
-const decodeStrictURI = S.decodeUnknownResult(EncodedStrictURIFromStrOrURL);
 const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
   cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
 
@@ -132,7 +164,7 @@ const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.Sc
  * @since 0.0.0
  */
 export const encodeStrictURI = (value: StringOrUrl): EncodedStrictURIFromStrOrURL =>
-  Result.getOrThrowWith(decodeStrictURI(value), schemaIssueToError);
+  Result.getOrThrowWith(EncodedStrictURIFromStrOrURL.decodeResult(value), schemaIssueToError);
 
 /**
  * Wraps a single value in an array while preserving arrays.
@@ -168,7 +200,7 @@ export const wrapArray = <T>(value: T | ReadonlyArray<T>): readonly T[] =>
 export class ResponseHeader extends S.Class<ResponseHeader>($I`ResponseHeader`)(
   {
     name: S.String,
-    value: S.OptionFromOptionalKey(S.String),
+    value: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ResponseHeader", {
     description: "A response header.",

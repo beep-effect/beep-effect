@@ -20,6 +20,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Clock, Context, Effect, HashMap, Layer, Ref } from "effect";
 import { dual } from "effect/Function";
@@ -122,12 +123,13 @@ export interface StoredResult {
  *
  * @example
  * ```ts
+ * import { NonNegativeInt } from "@beep/schema"
  * import { CacheStats } from "@beep/nlp-processing/Graph/GraphOperations/ResultStore"
  * import * as O from "effect/Option"
  *
  * const emptyStats = CacheStats.make({
- *   size: 0,
- *   totalHits: 0,
+ *   size: NonNegativeInt.make(0),
+ *   totalHits: NonNegativeInt.make(0),
  *   oldestEntry: O.none(),
  *   newestEntry: O.none()
  * })
@@ -142,8 +144,8 @@ export class CacheStats extends S.Class<CacheStats>($I`CacheStats`)(
   {
     newestEntry: S.Option(S.Finite),
     oldestEntry: S.Option(S.Finite),
-    size: S.Finite,
-    totalHits: S.Finite,
+    size: NonNegativeInt,
+    totalHits: NonNegativeInt,
   },
   $I.annote("CacheStats", {
     description: "Statistics about the cache.",
@@ -253,7 +255,7 @@ const makeResultStore = Effect.gen(function* () {
       const map = yield* Ref.get(storeRef);
       const entries = A.fromIterable(HashMap.values(map));
       const timestamps = A.map(entries, (e) => e.timestamp);
-      return {
+      return CacheStats.make({
         newestEntry: A.match(timestamps, {
           onEmpty: O.none<number>,
           onNonEmpty: (ts) => O.some(Math.max(...ts)),
@@ -262,9 +264,9 @@ const makeResultStore = Effect.gen(function* () {
           onEmpty: O.none<number>,
           onNonEmpty: (ts) => O.some(Math.min(...ts)),
         }),
-        size: HashMap.size(map),
-        totalHits: A.reduce(entries, 0, (sum, e) => sum + e.hits),
-      };
+        size: NonNegativeInt.make(HashMap.size(map)),
+        totalHits: NonNegativeInt.make(A.reduce(entries, 0, (sum, e) => sum + e.hits)),
+      });
     }),
 
     store: dual(

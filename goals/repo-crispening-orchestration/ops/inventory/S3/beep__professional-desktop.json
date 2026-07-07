@@ -1,0 +1,28 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "apps/professional-desktop/src/chat/ChatOrchestrator.ts",
+    "line": 121,
+    "symbol": "projectTimelineToHistory",
+    "smell": "Chat history projection hand-branches on TimelineItem.kind and then item.role at lines 127-132. TimelineItem is already a schema-derived tagged union in packages/workspace/use-cases/src/aggregates/Thread/ThreadTimeline.ts:103-104, and MessageRole is a LiteralKit with guards/match helpers at packages/workspace/domain/src/entities/Message/Message.model.ts:30. The current nested ternary also treats every non-assistant message role as a UserTurnHistoryItem, so system/agent/tool roles are not exhaustively accounted for.",
+    "proposedTarget": "Dispatch item shape through Thread.TimelineItem.match (available because S.toTaggedUnion adds match/guards at .repos/effect-v4/packages/effect/src/Schema.ts:6094-6104), then use MessageRole.$match or a chat-specific user/assistant schema to make non-user/non-assistant roles explicit instead of falling through. Keep the output wire contract as UserTurnHistoryItem/AssistantTurnHistoryItem; only the local projection branch should change.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 3.1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "apps/professional-desktop/src/chat/ui/Thread.tsx",
+    "line": 46,
+    "symbol": "TimelineItemRow",
+    "smell": "React rendering branches on TimelineItem.kind at line 47 and nearby turn UI helpers repeat kind/role predicates at lines 50-53, 71, and 84. A broad S3 detector can see the same TimelineItem tagged union used by the domain projection.",
+    "proposedTarget": "None -- keep as UI render branching.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is a React component surface that renders two visual cases, not domain or wire-payload logic. The prompt carves out UI/framework-facing surfaces; the domain projection finding is recorded separately in ChatOrchestrator.",
+      "boundary": "React timeline rendering in the professional desktop chat UI"
+    }
+  }
+]

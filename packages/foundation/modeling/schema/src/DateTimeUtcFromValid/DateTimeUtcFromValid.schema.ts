@@ -71,7 +71,14 @@ interface InputKindStatics<TKind extends DateTimeInputKind, TSchema extends S.To
     {
       readonly value: TSchema;
     }
-  >;
+  > & {
+    readonly is: (input: unknown) => input is S.TaggedStruct<
+      TKind,
+      {
+        readonly value: TSchema;
+      }
+    >["Type"];
+  };
 }
 
 const makeInputKindStatics: {
@@ -90,7 +97,11 @@ const makeInputKindStatics: {
   ): InputKindStatics<TKind, TSchema> => {
     const Tagged = S.TaggedStruct(kind, {
       value: self,
-    });
+    }).pipe(
+      SchemaUtils.withStatics((schema) => ({
+        is: S.is(schema),
+      }))
+    );
 
     return {
       Tagged,
@@ -446,18 +457,14 @@ export const DateTimeInput = S.Union([
  */
 export type DateTimeInput = typeof DateTimeInput.Type;
 
-const isTaggedDateTimeInputString = S.is(DateTimeInputString.Tagged);
-const isTaggedDateTimeInputNumber = S.is(DateTimeInputNumber.Tagged);
-const isTaggedDateTimeInputDate = S.is(DateTimeInputDate.Tagged);
-
 const toDateTimeInput = (input: DateTimeInput): DateTime.DateTime.Input => {
-  if (isTaggedDateTimeInputString(input)) {
+  if (DateTimeInputString.Tagged.is(input)) {
     return input.value;
   }
-  if (isTaggedDateTimeInputNumber(input)) {
+  if (DateTimeInputNumber.Tagged.is(input)) {
     return input.value;
   }
-  if (isTaggedDateTimeInputDate(input)) {
+  if (DateTimeInputDate.Tagged.is(input)) {
     return input.value;
   }
   return input;

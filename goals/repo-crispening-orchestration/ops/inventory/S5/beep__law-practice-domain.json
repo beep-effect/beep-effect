@@ -1,0 +1,83 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/law-practice/domain/src/entities/LegalClient/LegalClient.model.ts",
+    "line": 52,
+    "symbol": "law-practice fixture/reference keys",
+    "smell": "Persisted fixture and cross-entity reference fields are broad `S.String` across LegalClient, LegalContact, Matter, PatentAsset, OfficeAction, Claim, PriorArtReference, Rejection, and Distinction, while all examples use stable non-empty fixture identifiers.",
+    "proposedTarget": "Introduce named annotated key schemas such as `LawPracticeFixtureKey`, `ClaimFixtureKey`, `OfficeActionFixtureKey`, and `PriorArtFixtureKey`, backed at minimum by `S.NonEmptyString` (verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:8420) and optionally by a shared fixture-key `S.isPattern` (verified at :6521); use them for persisted entity keys and RejectionGround reference arrays.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/law-practice/domain/src/entities/LegalClient/LegalClient.model.ts",
+    "line": 51,
+    "symbol": "law-practice text fields",
+    "smell": "User-facing legal text and identifiers (`displayName`, `title`, `text`, `applicationNumber`, `documentNumber`, `DistinctionDetail.limitation`, and `RejectionGround.combinationRationale`) are broad `S.String`, allowing empty values despite the domain examples and prose requiring meaningful content.",
+    "proposedTarget": "Use named annotated text schemas: `TrimmedNonEmptyText` from packages/foundation/modeling/schema/src/CommonTextSchemas.ts:36-44 for display/title/prose, `UsptoApplicationNumber` / normalization from packages/drivers/uspto/src/Uspto.models.ts:32-44 and :109-112 for application numbers when normalized, and a law-practice `PriorArtDocumentNumber` pattern or `S.NonEmptyString` for cited document numbers. Effect v4 `S.NonEmptyString` is verified at .repos/effect-v4/packages/effect/src/Schema.ts:8420.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/law-practice/domain/src/entities/Rejection/Rejection.values.ts",
+    "line": 14,
+    "symbol": "RejectionStatute / DistinctionKind",
+    "smell": "Internal LiteralKit values feeding exported tagged unions (`RejectionStatute`, `DistinctionKind`) have no package identity annotations of their own.",
+    "proposedTarget": "Annotate both kits before `toTaggedUnion`, e.g. `LiteralKit([...]).annotate($I.annote(\"RejectionStatute\", { description: ... }))`; the repo's LiteralKit keeps `toTaggedUnion` as an attached static at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:761-802, and the statics-preserving `.annotate($I.annote(...))` style is used in packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:27-35.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/law-practice/domain/src/entities/Claim/Claim.model.ts",
+    "line": 56,
+    "symbol": "Claim.claimNumber",
+    "smell": "`Claim.claimNumber` uses `NonNegativeInt`, so claim 0 decodes even though patent claim numbering is 1-based in the examples and domain prose.",
+    "proposedTarget": "Introduce a named `ClaimNumber` schema using `S.Int.check(S.isGreaterThan(0))` (or `S.isGreaterThanOrEqualTo(1)`) plus `$I.annoteSchema`, then use it for `claimNumber`; positive-integer exemplars exist at packages/tooling/test-kit/test-utils/src/SqlTest.ts:76-87 and packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts:558-563. Effect v4 `S.Int` is verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and `S.isGreaterThan` at :7286.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/law-practice/domain/src/entities/LegalClient/LegalClient.model.ts",
+    "line": 51,
+    "symbol": "law-practice domain schema fields",
+    "smell": "Exported entity and value schemas carry whole-schema `$I.annote` / `$I.annoteSchema` metadata, but public fields across the slice have no field-level `annotateKey` descriptions, so the annotation catalog cannot recover payload semantics.",
+    "proposedTarget": "Add behavior-neutral `.annotateKey({ description })` to public fields while preserving current runtime shapes; follow packages/agents/server/src/AssistantTurn/BlockRepair.ts:62-64 and packages/drivers/uspto-mcp/src/UsptoTools.ts:73-79. Effect v4 `annotateKey` is verified at .repos/effect-v4/packages/effect/src/Schema.ts:185 and :605.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+    "line": 34,
+    "symbol": "law-practice domain schema laws",
+    "smell": "The package decodes representative rows with hand-written fixtures, but no `S.toArbitrary`-derived law covers exported statuses, tagged value objects, or entity schemas.",
+    "proposedTarget": "Add additive schema-law tests using `assertSchemaArbitraryDecodesToSelf` from @beep/test-utils (packages/tooling/test-kit/test-utils/src/Schema.ts:30-43) for `LegalClientStatus`, `LegalContactRole`, `MatterType`, `PatentAssetStatus`, `RejectionGround`, `DistinctionDetail`, and the exported entity classes. `S.toArbitrary` is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:12970.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/law-practice/domain/test/LawPracticeDomain.test.ts",
+    "line": 34,
+    "symbol": "law-practice domain decode fixtures",
+    "smell": "Detector candidate: domain tests use fixed legal-client, matter, office-action, claim, prior-art, rejection, and distinction fixtures.",
+    "proposedTarget": "None - keep these static behavior fixtures; schema-derived laws are additive.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These fixtures prove BaseEntity identity wiring, persisted descriptor choices, legal tagged-union payload examples, and source-anchor construction; generated samples cannot replace those domain regression assertions.",
+      "boundary": "law-practice domain identity and legal fixture regression tests"
+    }
+  }
+]

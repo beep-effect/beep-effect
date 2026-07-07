@@ -6,6 +6,7 @@
  */
 
 import { $ChalkId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type { ColorSupportLevel } from "./ChalkSchema.ts";
@@ -53,7 +54,8 @@ const ColorSupportLevelInputChecks = S.makeFilterGroup(
 export const ColorSupportLevelInput = S.Int.check(ColorSupportLevelInputChecks).pipe(
   $I.annoteSchema("ColorSupportLevelInput", {
     description: "A numeric Chalk color support level accepted by constructor and setter boundaries.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 class ChalkConstructorOptionsModel extends S.Class<ChalkConstructorOptionsModel>($I`ChalkConstructorOptions`)(

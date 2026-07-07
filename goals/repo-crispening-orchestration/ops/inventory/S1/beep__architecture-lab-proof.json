@@ -1,0 +1,32 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "apps/architecture-lab-proof/src/index.ts",
+    "line": 19,
+    "symbol": "decodeWorkItemId",
+    "smell": "Named `S.decodeUnknownEffect(DomainWorkItem.WorkItemId)` decoder at the package entry point.",
+    "proposedTarget": "Inline `S.decodeUnknownEffect(DomainWorkItem.WorkItemId)(\"architecture-lab-proof-1\")` at the single use site - audited and rejected as not actionable.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Single local decoder for a proof-harness literal id. The id schema remains the source of truth; inlining would only move the same schema call to line 66.",
+      "boundary": "proof harness literal -> WorkItemId"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "apps/architecture-lab-proof/src/index.ts",
+    "line": 60,
+    "symbol": "runArchitectureLabProof",
+    "smell": "Exported `Effect.Effect<ArchitectureLabProofResult, WorkItemActionError, WorkItemServer>` value in a schema-modeled file.",
+    "proposedTarget": "Hypothetical `EffectSchema<ArchitectureLabProofResult, WorkItemActionError, WorkItemServer>()` wrapper - audited and rejected.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "This is an executable proof workflow requiring `WorkItemServer`, not a data field or wire payload. The success value is already the `ArchitectureLabProofResult` S.Class and the workflow constructs it via `.make`.",
+      "boundary": "app proof workflow Effect"
+    }
+  }
+]

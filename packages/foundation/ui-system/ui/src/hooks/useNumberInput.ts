@@ -1,10 +1,9 @@
 import { $UiId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
-import { A, Str } from "@beep/utils";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { A, O, Str } from "@beep/utils";
 import { useAtom, useAtomInitialValues, useAtomSet, useAtomSubscribe, useAtomValue } from "@effect/atom-react";
-import { flow, Match, pipe, Tuple } from "effect";
+import { Effect, flow, Match, pipe, SchemaIssue, SchemaTransformation, Tuple } from "effect";
 import { constVoid, dual, identity } from "effect/Function";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
@@ -14,7 +13,7 @@ import type React from "react";
 
 const $I = $UiId.create("hooks/useNumberInput");
 
-const NumberInputEventKey = LiteralKit([
+const NumberInputEventKeyBase = LiteralKit([
   "ArrowDown",
   "ArrowUp",
   "ArrowLeft",
@@ -33,10 +32,12 @@ const NumberInputEventKey = LiteralKit([
   "Escape",
   " ",
   "Shift",
-]).pipe(
+]);
+const NumberInputEventKey = NumberInputEventKeyBase.pipe(
   $I.annoteSchema("NumberInputEventKey", {
     description: "Normalized keyboard event keys recognized by the number input hook.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(NumberInputEventKeyBase)
 );
 
 const numberInputTextPatternSource = "(-|\\+)?(0|[1-9]\\d*)?(\\.)?(\\d+)?";
@@ -87,13 +88,56 @@ const NumberInputText = S.String.check(
 ).pipe(
   $I.annoteSchema("NumberInputText", {
     description: "Editable text accepted by the number input during typing.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+const isCoarseStepModifier = P.Tuple([P.isTruthy, P.isUnknown]);
+const isFineStepModifier = P.Tuple([P.isUnknown, P.isTruthy]);
+
+const decodeNumberInputFiniteText = (value: string): Effect.Effect<number, SchemaIssue.Issue> =>
+  pipe(
+    Str.trim(value),
+    O.liftPredicate(Str.isNonEmpty),
+    O.map(Number),
+    O.match({
+      onNone: () =>
+        Effect.fail(
+          new SchemaIssue.InvalidValue(O.some(value), {
+            message: "Number input text must contain a parseable finite number.",
+          })
+        ),
+      onSome: Effect.succeed,
+    })
+  );
+
+const encodeNumberInputFiniteText = (value: number): Effect.Effect<string> => Effect.succeed(value.toString());
+
+const NumberInputFiniteFromText = S.String.pipe(
+  S.decodeTo(
+    S.Finite,
+    SchemaTransformation.transformOrFail({
+      decode: decodeNumberInputFiniteText,
+      encode: encodeNumberInputFiniteText,
+    })
+  ),
+  $I.annoteSchema("NumberInputFiniteFromText", {
+    description: "Boundary parser from editable number input text to a finite number.",
   })
 );
 
-const isNumberInputText = S.is(NumberInputText);
-const isNumberInputEventKey = S.is(NumberInputEventKey);
-const isCoarseStepModifier = P.Tuple([P.isTruthy, P.isUnknown]);
-const isFineStepModifier = P.Tuple([P.isUnknown, P.isTruthy]);
+const PositiveFiniteStep = S.Finite.check(
+  S.isGreaterThan(0, {
+    identifier: $I`PositiveFiniteStepCheck`,
+    title: "Positive Finite Step",
+    description: "Step values must be finite numbers greater than zero.",
+    message: "Number input step must be greater than zero.",
+  })
+).pipe(
+  $I.annoteSchema("PositiveFiniteStep", {
+    description: "Positive step size for number input spinner changes.",
+  })
+);
 
 const NonNegativePrecision = S.Finite.check(S.isInt(), S.isGreaterThanOrEqualTo(0)).pipe(
   $I.annoteSchema("NonNegativePrecision", {
@@ -106,11 +150,11 @@ const normalizeEventKey = (event: KeyboardLikeEvent): O.Option<NumberInputEventK
     event.keyCode >= 37 && event.keyCode <= 40 && !pipe(event.key, Str.startsWith("Arrow"))
       ? `Arrow${event.key}`
       : event.key,
-    O.liftPredicate(isNumberInputEventKey)
+    O.liftPredicate(S.is(NumberInputEventKey))
   );
 
-const isValidNumberValue = (value: number): boolean => !Number.isNaN(value);
 const isVoidHandler = (value: unknown): value is () => void => P.isFunction(value);
+const toNumberOrUndefined = flow(S.decodeUnknownOption(NumberInputFiniteFromText), O.getOrUndefined);
 
 const getMaxTouchPoints = (): number => {
   const runtimeNavigator = globalThis.navigator;
@@ -229,10 +273,28 @@ export const maxSafeInteger = Number.MAX_SAFE_INTEGER ?? 9007199254740991;
  */
 export class BoundaryParams extends S.Class<BoundaryParams>($I`BoundaryParams`)(
   {
-    defaultValue: S.optionalKey(S.Finite),
-    value: S.optionalKey(S.Finite),
-    min: S.optionalKey(S.Finite),
-    max: S.optionalKey(S.Finite),
+    defaultValue: S.optionalKey(S.Finite).pipe(
+      $I.annoteKey("BoundaryParams.defaultValue", {
+        description: "Initial uncontrolled value for the number input.",
+      })
+    ),
+    value: S.optionalKey(S.Finite).pipe(
+      $I.annoteKey("BoundaryParams.value", {
+        description: "Controlled numeric value for the number input.",
+      })
+    ),
+    min: S.Finite.pipe(
+      SchemaUtils.withKeyDefaults(minSafeInteger),
+      $I.annoteKey("BoundaryParams.min", {
+        description: "Minimum value allowed by the number input.",
+      })
+    ),
+    max: S.Finite.pipe(
+      SchemaUtils.withKeyDefaults(maxSafeInteger),
+      $I.annoteKey("BoundaryParams.max", {
+        description: "Maximum value allowed by the number input.",
+      })
+    ),
   },
   $I.annote("BoundaryParams", {
     description: "Optional numeric boundary settings accepted by number input hooks.",
@@ -255,28 +317,42 @@ export class BoundaryParams extends S.Class<BoundaryParams>($I`BoundaryParams`)(
  */
 export class SpinParams extends S.Class<SpinParams>($I`SpinParams`)(
   {
-    precision: S.optionalKey(NonNegativePrecision),
-    step: S.optionalKey(S.Finite),
+    precision: NonNegativePrecision.pipe(
+      SchemaUtils.withKeyDefaults(0),
+      $I.annoteKey("SpinParams.precision", {
+        description: "Decimal precision used while formatting spinner results.",
+      })
+    ),
+    step: PositiveFiniteStep.pipe(
+      SchemaUtils.withKeyDefaults(1),
+      $I.annoteKey("SpinParams.step", {
+        description: "Positive increment or decrement amount for spinner changes.",
+      })
+    ),
   },
   $I.annote("SpinParams", {
     description: "Precision and step overrides accepted by number input increment and decrement actions.",
   })
 ) {}
 
+type BoundaryParamsInput = Exclude<(typeof BoundaryParams)["~type.make.in"], void>;
+type SpinParamsInput = Exclude<(typeof SpinParams)["~type.make.in"], void>;
+
 /**
  * Convert editable number-input text into a number when the text is parseable.
  *
- * Empty strings and invalid numeric strings normalize to `undefined`.
+ * Empty strings and invalid numeric strings normalize to `Option.none()`.
  *
  * @example
  * ```typescript
+ * import * as O from "effect/Option"
  * import { toNumber } from "@beep/ui/hooks/useNumberInput"
  *
- * const parsed = toNumber("12.5")
+ * const parsed = O.getOrUndefined(toNumber("12.5"))
  * const missing = toNumber("")
  *
  * console.log(parsed) // 12.5
- * console.log(missing) // undefined
+ * console.log(O.isNone(missing)) // true
  * ```
  *
  * @category utilities
@@ -284,14 +360,7 @@ export class SpinParams extends S.Class<SpinParams>($I`SpinParams`)(
  * @returns The parsed numeric value when available.
  * @since 0.0.0
  */
-export const toNumber = (value: string | undefined): number | undefined =>
-  pipe(
-    O.fromUndefinedOr(value),
-    O.filter((current) => Str.isNonEmpty(Str.trim(current))),
-    O.map(Number),
-    O.filter(isValidNumberValue),
-    O.getOrUndefined
-  );
+export const toNumber = S.decodeUnknownOption(NumberInputFiniteFromText);
 
 /**
  * Format an optional numeric value using a fixed decimal precision.
@@ -436,10 +505,11 @@ export type NumberInputError = typeof NumberInputError.Type;
  *
  * @example
  * ```ts
+ * import * as O from "effect/Option"
  * import { NumberInputChangeMetadata, NumberInputEventType } from "@beep/ui/hooks/useNumberInput"
  *
  * const metadata = NumberInputChangeMetadata.make({
- *   error: null,
+ *   error: O.none(),
  *   eventType: NumberInputEventType.Enum.change,
  *   valueText: "5"
  * })
@@ -452,18 +522,31 @@ export type NumberInputError = typeof NumberInputError.Type;
  */
 export class NumberInputChangeMetadata extends S.Class<NumberInputChangeMetadata>($I`NumberInputChangeMetadata`)(
   {
-    error: S.NullOr(NumberInputError),
-    eventType: S.optionalKey(NumberInputEventType),
-    valueText: S.optionalKey(S.String),
+    error: S.OptionFromNullOr(NumberInputError).pipe(
+      SchemaUtils.withNoneDefault,
+      $I.annoteKey("NumberInputChangeMetadata.error", {
+        description: "Range-validation error when the current value is outside the configured bounds.",
+      })
+    ),
+    eventType: S.optionalKey(NumberInputEventType).pipe(
+      $I.annoteKey("NumberInputChangeMetadata.eventType", {
+        description: "Interaction that produced the change callback.",
+      })
+    ),
+    valueText: S.optionalKey(NumberInputText).pipe(
+      $I.annoteKey("NumberInputChangeMetadata.valueText", {
+        description: "Editable text after formatting or parser normalization.",
+      })
+    ),
   },
   $I.annote("NumberInputChangeMetadata", {
     description: "Context describing the latest number input change callback.",
   })
 ) {}
 
-const getError = (value: number | undefined, min: number, max: number): NumberInputError | null => {
+const getError = (value: number | undefined, min: number, max: number): O.Option<NumberInputError> => {
   if (!P.isNumber(value)) {
-    return null;
+    return O.none();
   }
 
   return pipe(
@@ -471,13 +554,13 @@ const getError = (value: number | undefined, min: number, max: number): NumberIn
     Match.type<number>().pipe(
       Match.when(
         (current) => current < min,
-        () => NumberInputError.Enum["below-min"]
+        () => O.some(NumberInputError.Enum["below-min"])
       ),
       Match.when(
         (current) => current > max,
-        () => NumberInputError.Enum["exceed-max"]
+        () => O.some(NumberInputError.Enum["exceed-max"])
       ),
-      Match.orElse(() => null)
+      Match.orElse(O.none<NumberInputError>)
     )
   );
 };
@@ -496,8 +579,8 @@ const getError = (value: number | undefined, min: number, max: number): NumberIn
  * @category models
  * @since 0.0.0
  */
-export type UseNumberInputOptions = BoundaryParams &
-  SpinParams & {
+export type UseNumberInputOptions = BoundaryParamsInput &
+  SpinParamsInput & {
     /**
      * If true, the input's value will change based on mouse wheel.
      */
@@ -527,6 +610,32 @@ export type UseNumberInputOptions = BoundaryParams &
     readonly onChange?: ((value: number | undefined, metadata: NumberInputChangeMetadata) => void) | undefined;
   };
 
+const makeBoundaryParams = (options: BoundaryParamsInput): BoundaryParams =>
+  BoundaryParams.make(
+    O.getSomesStruct({
+      defaultValue: O.fromUndefinedOr(options.defaultValue),
+      value: O.fromUndefinedOr(options.value),
+      min: O.fromUndefinedOr(options.min),
+      max: O.fromUndefinedOr(options.max),
+    })
+  );
+
+const isPositiveFiniteStep = S.is(PositiveFiniteStep);
+
+const makeSpinParams = (options: SpinParamsInput): SpinParams =>
+  SpinParams.make(
+    O.getSomesStruct({
+      precision: O.fromUndefinedOr(options.precision),
+      step: pipe(O.fromUndefinedOr(options.step), O.filter(isPositiveFiniteStep)),
+    })
+  );
+
+// `step: 0` (or any non-positive/non-finite step) historically meant "spinning
+// is a no-op". The branded SpinParams cannot carry that state, so the hooks
+// collapse the effective step to 0 whenever the caller provided such a step.
+const effectiveStep = (provided: number | undefined, params: SpinParams): number =>
+  provided !== undefined && !isPositiveFiniteStep(provided) ? 0 : params.step;
+
 /**
  * Low-level hook that manages string and numeric boundary state for a number input.
  *
@@ -555,34 +664,41 @@ export type UseNumberInputOptions = BoundaryParams &
 export const useNumberBoundary = (options: UseNumberInputOptions = {}, scope?: string | undefined) => {
   const generatedScope = useId();
   const boundaryScope = scope ?? generatedScope;
-  const {
-    min = minSafeInteger,
-    max = maxSafeInteger,
-    defaultValue,
-    value,
-    precision = 0,
-    step = 1,
-    keepWithinRange = true,
-    formatter = identity,
-    parser = identity,
-  } = options;
+  const boundaryParams = makeBoundaryParams(options);
+  const spinParams = makeSpinParams(options);
+  const { defaultValue, value, keepWithinRange = true, formatter = identity, parser = identity } = options;
+  const { min, max } = boundaryParams;
+  const { precision } = spinParams;
+  const step = effectiveStep(options.step, spinParams);
 
   const interfaceValueAtom = numberBoundaryInterfaceValueAtom(boundaryScope);
   const [storedInterfaceValue, setInterfaceValueState] = useAtom(interfaceValueAtom);
 
   useAtomInitialValues([[interfaceValueAtom, formatter(numberToString(defaultValue, precision))]]);
 
-  const storedNumberValue = pipe(storedInterfaceValue, parser, toNumber);
+  const storedNumberValue = pipe(storedInterfaceValue, parser, toNumberOrUndefined);
   const interfaceValue =
     defaultValue === undefined && value !== storedNumberValue
       ? formatter(numberToString(value, precision))
       : storedInterfaceValue;
-  const numberValue = pipe(interfaceValue, parser, toNumber);
+  const numberValue = pipe(interfaceValue, parser, toNumberOrUndefined);
 
-  const change = (multiplier = 1, params: SpinParams = {}) =>
+  const change = (multiplier = 1, params: SpinParamsInput = {}) =>
     setInterfaceValueState((current) => {
-      const result = (pipe(current, parser, toNumber) ?? 0) + multiplier * (params.step ?? step);
-      const digits = params.precision ?? precision;
+      const requestedStep = params.step ?? step;
+      const currentSpinParams = makeSpinParams({
+        precision: params.precision ?? precision,
+        step: requestedStep,
+      });
+      const result =
+        pipe(
+          current,
+          parser,
+          toNumber,
+          O.getOrElse(() => 0)
+        ) +
+        multiplier * effectiveStep(requestedStep, currentSpinParams);
+      const digits = currentSpinParams.precision;
 
       if (keepWithinRange) {
         if (result > max) {
@@ -597,8 +713,8 @@ export const useNumberBoundary = (options: UseNumberInputOptions = {}, scope?: s
       return formatter(result.toFixed(digits));
     });
 
-  const increment = (params: SpinParams = {}) => change(1, params);
-  const decrement = (params: SpinParams = {}) => change(-1, params);
+  const increment = (params: SpinParamsInput = {}) => change(1, params);
+  const decrement = (params: SpinParamsInput = {}) => change(-1, params);
 
   return {
     interfaceValueAtom,
@@ -632,11 +748,9 @@ export const useNumberBoundary = (options: UseNumberInputOptions = {}, scope?: s
 export const useNumberInput = (options: UseNumberInputOptions = {}) => {
   const scope = useId();
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const boundaryParams = makeBoundaryParams(options);
+  const spinParams = makeSpinParams(options);
   const {
-    min = minSafeInteger,
-    max = maxSafeInteger,
-    step = 1,
-    precision = 0,
     focusInputOnChange = true,
     keepWithinRange = true,
     clampValueOnBlur = true,
@@ -645,6 +759,9 @@ export const useNumberInput = (options: UseNumberInputOptions = {}) => {
     formatter = identity,
     onChange,
   } = options;
+  const { min, max } = boundaryParams;
+  const { precision } = spinParams;
+  const step = effectiveStep(options.step, spinParams);
 
   const { interfaceValueAtom, interfaceValue, setInterfaceValue, numberValue, increment, decrement } =
     useNumberBoundary(options, scope);
@@ -655,7 +772,7 @@ export const useNumberInput = (options: UseNumberInputOptions = {}) => {
   useAtomInitialValues([[numberInputTempInterfaceValueAtom(scope), interfaceValue]]);
 
   useAtomSubscribe(interfaceValueAtom, (nextInterfaceValue) => {
-    const nextNumberValue = pipe(nextInterfaceValue, parser, toNumber);
+    const nextNumberValue = pipe(nextInterfaceValue, parser, toNumberOrUndefined);
     onChange?.(nextNumberValue, {
       valueText: nextInterfaceValue,
       error: getError(nextNumberValue, min, max),
@@ -725,7 +842,7 @@ export const useNumberInput = (options: UseNumberInputOptions = {}) => {
 
     const result = parser(event.target.value);
 
-    if (isNumberInputText(result)) {
+    if (NumberInputText.is(result)) {
       setInterfaceValue(result);
     }
   };
@@ -753,7 +870,7 @@ export const useNumberInput = (options: UseNumberInputOptions = {}) => {
         }
       }
 
-      const resolvedValue = toNumber(result);
+      const resolvedValue = toNumberOrUndefined(result);
 
       setInterfaceValue(result);
       onChange?.(resolvedValue, {
@@ -764,7 +881,7 @@ export const useNumberInput = (options: UseNumberInputOptions = {}) => {
     } else {
       onChange?.(undefined, {
         valueText: "",
-        error: null,
+        error: O.none(),
         eventType: NumberInputEventType.Enum.blur,
       });
     }

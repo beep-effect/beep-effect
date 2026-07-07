@@ -1,14 +1,12 @@
 import { $UiId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema";
 import { useAtomMount, useAtomSet } from "@effect/atom-react";
-import { Result } from "effect";
+import { Match } from "effect";
 import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
 import { useId } from "react";
 
 const $I = $UiId.create("hooks/useSpinner");
-const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
-  cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
 
 class SpinnerSchedule extends S.Class<SpinnerSchedule>($I`SpinnerSchedule`)(
   {
@@ -18,12 +16,13 @@ class SpinnerSchedule extends S.Class<SpinnerSchedule>($I`SpinnerSchedule`)(
   $I.annote("SpinnerSchedule", {
     description: "Timing configuration used while a spinner button is held down.",
   })
-) {}
+) {
+  static readonly is = S.is(SpinnerSchedule);
+  static readonly fromUnknown = S.decodeUnknownSync(SpinnerSchedule);
+  static readonly decodeOption = S.decodeUnknownOption(SpinnerSchedule);
+}
 
-const decodeSpinnerSchedule = (input: unknown) =>
-  Result.getOrThrowWith(S.decodeUnknownResult(SpinnerSchedule)(input), schemaIssueToError);
-
-const spinnerSchedule = decodeSpinnerSchedule({
+const spinnerSchedule = SpinnerSchedule.fromUnknown({
   continuousChangeInterval: 50,
   continuousChangeDelay: 300,
 });
@@ -67,32 +66,36 @@ const spinnerCommandAtom = Atom.family((scope: string) =>
       const stateAtom = spinnerStateAtom(scope);
       const state = ctx.get(stateAtom);
 
-      if (command._tag === "stop") {
-        clearSpinnerTimers(state);
-        ctx.set(stateAtom, emptySpinnerState);
-        return;
-      }
+      Match.type<SpinnerCommand>().pipe(
+        Match.tagsExhaustive({
+          stop: () => {
+            clearSpinnerTimers(state);
+            ctx.set(stateAtom, emptySpinnerState);
+          },
+          start: ({ run }) => {
+            clearSpinnerTimers(state);
 
-      clearSpinnerTimers(state);
+            if (state.runOnce) {
+              run();
+            }
 
-      if (state.runOnce) {
-        command.run();
-      }
+            const timeout = window.setTimeout(() => {
+              const interval = window.setInterval(run, spinnerSchedule.continuousChangeInterval);
+              ctx.set(stateAtom, {
+                interval,
+                runOnce: false,
+                timeout: undefined,
+              });
+            }, spinnerSchedule.continuousChangeDelay);
 
-      const timeout = window.setTimeout(() => {
-        const interval = window.setInterval(command.run, spinnerSchedule.continuousChangeInterval);
-        ctx.set(stateAtom, {
-          interval,
-          runOnce: false,
-          timeout: undefined,
-        });
-      }, spinnerSchedule.continuousChangeDelay);
-
-      ctx.set(stateAtom, {
-        interval: undefined,
-        runOnce: state.runOnce,
-        timeout,
-      });
+            ctx.set(stateAtom, {
+              interval: undefined,
+              runOnce: state.runOnce,
+              timeout,
+            });
+          },
+        })
+      )(command);
     }
   )
 );

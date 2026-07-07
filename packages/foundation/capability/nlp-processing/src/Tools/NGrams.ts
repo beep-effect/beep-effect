@@ -6,7 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import { AiNGram, AiToolError } from "./_schemas.ts";
@@ -50,9 +50,9 @@ class NGramsSuccess extends S.Class<NGramsSuccess>($I`NGramsSuccess`)(
   {
     mode: NGramMode,
     ngrams: S.Array(AiNGram),
-    size: S.Finite,
-    totalNGrams: S.Finite,
-    uniqueNGrams: S.Finite,
+    size: PosInt,
+    totalNGrams: NonNegativeInt,
+    uniqueNGrams: NonNegativeInt,
   },
   $I.annote("NGramsSuccess", {
     description: "Extracted n-gram entries and summary counts for the selected mode.",

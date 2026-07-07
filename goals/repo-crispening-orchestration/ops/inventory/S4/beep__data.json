@@ -1,0 +1,92 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/primitive/data/src/internal/data/mime-types/index.ts",
+    "line": 182,
+    "symbol": "hasTypeForExtension",
+    "smell": "False-positive audit for non-dual-helper detector: private 2-arg type predicate `hasTypeForExtension(extension, types)` is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "This is a private TypeScript refinement used to narrow `extension is FileExtension` inside `lookupNormalizedExtension`; converting it to `dual` would add no public pipeability and risks weakening the refinement readability.",
+      "boundary": "Private MIME lookup refinement, not a public 2-3 arg helper."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/primitive/data/src/internal/data/mime-types/index.ts",
+    "line": 186,
+    "symbol": "lookupNormalizedExtension",
+    "smell": "False-positive audit for passthrough-pipe detector: private helper contains `return pipe(extension, ...)`, but first snapshots the lazily populated `getTypes()` table and threads that local table through a refinement.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "The pipeline is coupled to a per-call lazy lookup-table snapshot and an inline `extension is FileExtension` refinement; hoisting to `flow` would hide the cache boundary rather than reduce a trivial wrapper.",
+      "boundary": "Private MIME lookup helper with local cache/refinement state."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/primitive/data/src/internal/data/mime-types/index.ts",
+    "line": 280,
+    "symbol": "preferenceOf",
+    "smell": "False-positive audit for passthrough-pipe detector: private helper returns `pipe(preference, A.findFirstIndex(...), O.getOrElse(...))`, but the piped value is the fixed source-preference table, not the function argument.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "This is a small private table lookup over a closed preference array; `flow` would have to capture `source` anyway and would not improve call-site pipeability.",
+      "boundary": "Private MIME source-preference lookup, not a passthrough argument pipeline."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/primitive/data/src/internal/data/mime-types/index.ts",
+    "line": 288,
+    "symbol": "shouldKeepByPreference",
+    "smell": "False-positive audit for non-dual-helper detector: private 2-arg predicate `shouldKeepByPreference(currentType, mimeSource)` is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "The helper is private to the MIME map-population algorithm and has no receiver-like `self` parameter or public call surface; dual arity would only add ceremony.",
+      "boundary": "Private MIME source-preference predicate, not a public 2-3 arg helper."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/primitive/data/src/internal/data/mime-types/index.ts",
+    "line": 298,
+    "symbol": "shouldKeepCurrentMapping",
+    "smell": "False-positive audit for non-dual-helper detector: private 3-arg predicate `shouldKeepCurrentMapping(extension, mimeSource, types)` is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "This is an internal decision helper for mutating the extension-to-type cache; parameters are algorithm inputs, not a public data-first API.",
+      "boundary": "Private MIME cache-population predicate, not a public 2-3 arg helper."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/primitive/data/src/internal/data/mime-types/index.ts",
+    "line": 341,
+    "symbol": "populateMaps",
+    "smell": "False-positive audit for non-dual-helper detector: private 2-arg cache initializer `populateMaps(extensions, types)` is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "Both parameters are mutable output caches populated together under the `inittedMaps` guard; a dual receiver shape would imply a reusable public transformation that this side-effectful initializer is not.",
+      "boundary": "Private lazy-cache initializer, not a public 2-3 arg helper."
+    }
+  }
+]

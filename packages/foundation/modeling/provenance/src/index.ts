@@ -7,14 +7,6 @@
  */
 
 /**
- * Package version.
- *
- * @category configuration
- * @since 0.0.0
- */
-export const VERSION = "0.0.0" as const;
-
-/**
  * TextAnchor: char-offset anchor into a source document plus the quoted span.
  *
  * @category models

@@ -1,0 +1,54 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/architecture-lab/domain/src/values/WorkPriority/WorkPriority.behavior.ts",
+    "line": 54,
+    "symbol": "rank",
+    "smell": "rank dispatches the WorkPriority LiteralKit values through a hand-built Match.type<WorkPriority>() chain even though WorkPrioritySchema is the kit source at WorkPriority.model.ts:32 and already owns an exhaustive $match helper.",
+    "proposedTarget": "Replace the Match.type/Match.when pipeline with WorkPrioritySchema.$match({ low: () => 0, normal: () => 1, high: () => 2 }) so the ranking table is tied to the LiteralKit-owned literal family. Verified target API: LiteralKit.$match overloads at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:600-607.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 2.7
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/architecture-lab/domain/src/aggregates/WorkItem/WorkItem.model.ts",
+    "line": 131,
+    "symbol": "WorkItem lifecycle transitions",
+    "smell": "WorkItem transition behavior repeats manual branches over the WorkItemStatus LiteralKit field: requireMutable checks archived at line 132, assign admits open/assigned at lines 173-178, complete handles completed plus open/assigned at lines 220-228, and reopen requires completed at lines 272-273. The lifecycle status family is the kit at WorkItem.values.ts:130, but transition exhaustiveness is spread across if-chains.",
+    "proposedTarget": "Centralize the transition policy behind the WorkItemStatus kit: use WorkItemStatus.$match for status-specific transition decisions, or if the later remediation accepts a public-form change, derive a WorkItem status tagged union with WorkItemStatus.toTaggedUnion(\"status\") and ship the required same-PR consumer sweep. In-repo target examples: LiteralKit.toTaggedUnion at packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.persist.ts:176 and LiteralKit.$match at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:600-607.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 2.7
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/architecture-lab/domain/src/aggregates/WorkItem/WorkItem.errors.ts",
+    "line": 194,
+    "symbol": "WorkItemDomainError",
+    "smell": "S.Union([WorkItemAlreadyArchived, WorkItemInvalidTransition, WorkItemAssigneeRequired]) is a tagged-error union that a broad undiscriminated-union detector can see.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The SPEC fence forbids merging distinct domain error tags. These TaggedErrorClass variants are the public domain failure vocabulary and callers intentionally preserve/branch on their tags.",
+      "boundary": "WorkItem aggregate domain error boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+    "line": 49,
+    "symbol": "WorkItem aggregate failure assertion",
+    "smell": "expect(exit._tag).toBe(\"Failure\") is a detector hit for direct _tag inspection.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is a test assertion over Effect.exit's library-owned Exit shape, not production dispatch over a repo schema or literal family. It asserts the failed effect boundary only.",
+      "boundary": "test-only Effect.Exit assertion in the WorkItem aggregate spec"
+    }
+  }
+]

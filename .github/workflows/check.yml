@@ -81,6 +81,11 @@ jobs:
             timeout_minutes: 20
             uses_turbo: "true"
             install_typos: "false"
+          - id: coverage
+            name: Coverage Regression
+            timeout_minutes: 40
+            uses_turbo: "true"
+            install_typos: "false"
           - id: docgen
             name: Docgen
             timeout_minutes: 20
@@ -218,6 +223,9 @@ jobs:
               ;;
             test-integration)
               bun run test -- --integration "${turbo_args[@]}"
+              ;;
+            coverage)
+              bun run coverage -- "${turbo_args[@]}"
               ;;
             docgen)
               if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
@@ -508,6 +516,65 @@ jobs:
           path: .beep/fallow/**
           if-no-files-found: error
 
+  knip:
+    name: Knip
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+          use-node: "false"
+
+      - name: Run Knip regression gate
+        run: bun run beep quality knip
+
+  jsdoc-ratchet:
+    name: JSDoc Ratchet
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+          use-node: "false"
+
+      - name: Run JSDoc inventory ratchet
+        shell: bash
+        run: |
+          set -euo pipefail
+          SECONDS=0
+          bun run beep quality jsdoc-inventory
+          inventory_seconds="$SECONDS"
+          bun run beep quality jsdoc-ratchet
+          total_seconds="$SECONDS"
+          {
+            echo "### JSDoc Ratchet"
+            echo
+            echo "- inventory command: \`bun run beep quality jsdoc-inventory\`"
+            echo "- inventory wall time: \`${inventory_seconds}s\`"
+            echo "- command: \`bun run beep quality jsdoc-ratchet\`"
+            echo "- total wall time: \`${total_seconds}s\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
   build:
     name: Build
     if: github.event_name == 'push'
@@ -542,6 +609,63 @@ jobs:
       - name: Append Turbo summary
         if: always()
         run: bun run beep ci append-turbo-summary
+
+  commitlint:
+    name: Commitlint
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine commit range
+        id: range
+        shell: bash
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+
+          mode=range
+          from_ref=""
+          to_ref="HEAD"
+
+          if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
+            from_ref="${PR_BASE_SHA:?missing pull request base sha}"
+            git rev-parse --verify "${from_ref}^{commit}" >/dev/null 2>&1 || git fetch --quiet --no-tags --depth=1 origin "$from_ref"
+          elif [[ -n "${BEFORE_SHA:-}" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then
+            from_ref="$BEFORE_SHA"
+            to_ref="${GITHUB_SHA:-HEAD}"
+            git rev-parse --verify "${from_ref}^{commit}" >/dev/null 2>&1 || git fetch --quiet --no-tags --depth=1 origin "$from_ref"
+            git rev-parse --verify "${to_ref}^{commit}" >/dev/null 2>&1 || git fetch --quiet --no-tags --depth=1 origin "$to_ref"
+          else
+            mode=last
+          fi
+
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "from_ref=$from_ref" >> "$GITHUB_OUTPUT"
+          echo "to_ref=$to_ref" >> "$GITHUB_OUTPUT"
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+        with:
+          cache-turbo: "false"
+          cache-write: "false"
+          use-node: "false"
+
+      - name: Run commitlint
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ steps.range.outputs.mode }}" == "range" ]]; then
+            bunx commitlint --from "${{ steps.range.outputs.from_ref }}" --to "${{ steps.range.outputs.to_ref }}" --verbose
+          else
+            bunx commitlint --last --verbose
+          fi
 
   secrets:
     name: Secret Scanning

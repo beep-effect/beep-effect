@@ -7,7 +7,7 @@
 
 import { $NlpProcessingId } from "@beep/identity";
 import { MarkRange } from "@beep/nlp/Core/Pattern";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
 import { AiToolError } from "./_schemas.ts";
@@ -63,9 +63,9 @@ class LearnCustomEntitiesSuccess extends S.Class<LearnCustomEntitiesSuccess>($I`
   {
     entityNames: S.Array(S.String),
     groupName: S.String,
-    learnedEntityCount: S.Finite,
+    learnedEntityCount: NonNegativeInt,
     mode: LearnCustomEntitiesMode,
-    totalEntityCount: S.Finite,
+    totalEntityCount: NonNegativeInt,
   },
   $I.annote("LearnCustomEntitiesSuccess", {
     description: "Learning result summary for custom entity definitions.",

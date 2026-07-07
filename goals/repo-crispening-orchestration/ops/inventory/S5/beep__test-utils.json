@@ -1,0 +1,91 @@
+[
+  {
+    "ruleId": "SFV4-equivalence",
+    "file": "packages/tooling/test-kit/test-utils/src/Schema.ts",
+    "line": 40,
+    "symbol": "assertSchemaArbitraryDecodesToSelf",
+    "smell": "The schema property-test helper compares decoded arbitrary values with node:util isDeepStrictEqual even though the helper already receives the schema and can derive the comparison from schema semantics.",
+    "proposedTarget": "Replace isDeepStrictEqual with const equivalent = S.toEquivalence(schema) and assert isValue(value) && equivalent(decode(value), value). This removes native structural equality from a schema-modeled helper and follows the repo's S.toEquivalence pattern (for example packages/tooling/policy-pack/repo-configs/src/internal/eslint/EffectLawsAllowlistSchemas.ts:115); S.toEquivalence is verified in v4 at .repos/effect-v4/packages/effect/src/Schema.ts:13201.",
+    "confidence": 0.88,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+    "line": 219,
+    "symbol": "PgExternalTestDriverConfig.connectionUri",
+    "smell": "External PostgreSQL connection URI is modeled as broad S.String, with the postgres/postgresql protocol invariant enforced later in parsePgExternalConnectionUri instead of carried by the schema.",
+    "proposedTarget": "Introduce PgExternalConnectionUri = S.NonEmptyString.check(S.isPattern(/^postgres(?:ql)?:\\/\\//, { identifier: $I`PgExternalConnectionUriProtocol`, ... })).pipe($I.annoteSchema(...)) and use it for PgExternalTestDriverConfig.connectionUri and TestDatabaseInfoShape.connectionUri where appropriate. S.isPattern is verified in v4 at .repos/effect-v4/packages/effect/src/Schema.ts:6521; Posix/path-style schema exemplars live at packages/foundation/modeling/schema/src/PosixPath.ts:31.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+    "line": 126,
+    "symbol": "SQL harness public schema fields",
+    "smell": "Public SQL harness schemas carry class-level $I.annote annotations, but their reusable fields (connectionUri, databasePath, schema, tempDir, database, username, connectTimeoutMs, maxConnections, etc.) have no annotateKey descriptions; only the standalone numeric/prefix schema building blocks describe their own invariants.",
+    "proposedTarget": "Add field-level annotateKey metadata to TestDatabaseInfoShape, PgliteTestcontainersTestDriverConfig, PgExternalTestDriverConfig, and SqlTestHarnessError fields, reusing existing field descriptions from JSDoc/examples and the standalone PgliteTcpPort/PgExternalSchemaPrefix annotations. Effect v4 annotateKey is verified at .repos/effect-v4/packages/effect/src/Schema.ts:605.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/tooling/test-kit/test-utils/test/SqlTest.test.ts",
+    "line": 187,
+    "symbol": "SQL harness schema laws",
+    "smell": "SQL harness runtime schemas have representative fixture tests and invalid-port checks, but no S.toArbitrary-derived law coverage for TestDatabaseInfoShape, PgliteTestcontainersTestDriverConfig, PgExternalTestDriverConfig, or SqlTestHarnessError.",
+    "proposedTarget": "Use the package's own assertSchemaArbitraryDecodesToSelf helper to add additive property tests for the exported SQL harness schemas; for PgExternalTestDriverConfig, pair with the proposed PgExternalConnectionUri schema so generated values satisfy the same URI invariant. S.toArbitrary is verified in v4 at .repos/effect-v4/packages/effect/src/Schema.ts:12970.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+    "line": 126,
+    "symbol": "TestDatabaseInfoShape runtime metadata",
+    "smell": "Detector candidate: runtime metadata fields use broad optional strings for container ids, hostnames, database names, usernames, temp directories, and database paths.",
+    "proposedTarget": "None as a broad compatibility finding; specific URI/path refinements can be introduced incrementally where the producer is known.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The shape is an aggregate metadata view over SQLite, in-process PGLite, Docker/Testcontainers, and externally managed PostgreSQL drivers; many fields originate from external runtimes and differ by driver, so one narrow domain would incorrectly reject legitimate driver metadata.",
+      "boundary": "multi-driver SQL test runtime metadata boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/tooling/test-kit/test-utils/test/SqlTest.test.ts",
+    "line": 65,
+    "symbol": "SQL integration behavior fixtures",
+    "smell": "Detector candidate: SQL harness tests use fixed table names, rows, hook failures, temp-directory checks, and driver-specific fixture values.",
+    "proposedTarget": "None — keep these behavior fixtures; schema-derived arbitrary laws are additive and recorded separately for the schema models.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These tests prove database lifecycle behavior, hook ordering, resource cleanup, and driver integration contracts; arbitrary model values cannot replace SQL execution fixtures.",
+      "boundary": "SQL integration behavior and regression fixtures"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/tooling/test-kit/test-utils/test/Schema.test.ts",
+    "line": 11,
+    "symbol": "ExamplePayload",
+    "smell": "Detector candidate: test-local S.Class fixture uses a string identifier and no $I.annote metadata.",
+    "proposedTarget": "None — keep the minimal fixture.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is a private test-only schema used solely to prove assertSchemaArbitraryDecodesToSelf supports object-valued class schemas; adding identity annotations would not improve the production schema catalog.",
+      "boundary": "test-local schema helper fixture"
+    }
+  }
+]

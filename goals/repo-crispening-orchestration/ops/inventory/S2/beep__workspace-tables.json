@@ -1,0 +1,17 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/workspace/tables/test/WorkspaceTables.test.ts",
+    "line": 129,
+    "symbol": "Workspace Turn round-trip fixture",
+    "smell": "`parentTurnId: turnInsert.parentTurnId ?? null` bridges Drizzle `$inferInsert` optional-null typing to the selected-row converter shape.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "The test is making a concrete selected-row shape from an insert row whose nullable column is optional in Drizzle typing; SQL absence must encode as `null` at the table boundary.",
+      "boundary": "SQL row test fixture / Drizzle insert-to-select bridge"
+    }
+  }
+]

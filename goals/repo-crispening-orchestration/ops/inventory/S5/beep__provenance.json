@@ -1,0 +1,17 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/provenance/src/TextAnchor.ts",
+    "line": 90,
+    "symbol": "isWellOrdered",
+    "smell": "The core anchor invariant (startChar <= endChar, half-open range well-orderedness) lives as a free exported predicate that \"producers should assert when constructing anchors\" instead of a schema check on TextAnchor — the file's own docstring (lines 74-78) marks schema-level enforcement as a tracked follow-up. A malformed anchor decodes and constructs cleanly today.",
+    "proposedTarget": "Absorb as a cross-field struct check: S.check on the class/struct with S.makeFilter((a) => a.startChar <= a.endChar, { identifier: $I`TextAnchorWellOrderedCheck`, ... }) — S.check verified .repos/effect-v4/packages/effect/src/Schema.ts:4964, S.makeFilter (object-level filter, cross-field capable per its own doc examples) at 6355-6397; in-repo filter idiom exemplars at packages/foundation/modeling/schema/src/URL.ts:23 and UnitInterval.ts. CAUTION: TextAnchorFields (line 37) is exported for spreading into richer consumer structs, and a check attached to the TextAnchor class does not travel with the spread — either export a checked TextAnchorStruct alongside the raw fields or document that spread consumers must re-apply the check (§5.4 consumer sweep: rg shows the epistemic EvidenceSpan-style consumers). Keep isWellOrdered exported for the plain-object call sites or re-derive it from the schema.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Remediation audit (P2 @beep/provenance): declined schema-level TextAnchor well-orderedness absorption in this package wave. A class/struct check would change the public validation boundary and would not propagate to the exported TextAnchorFields spread consumer in packages/epistemic/domain/src/values/EvidenceSpan/EvidenceSpan.model.ts without an out-of-package edit. Local remediation added S.toArbitrary parity coverage, key annotations, and class-side predicate colocation; the cross-field schema check is intentionally deferred.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  }
+]

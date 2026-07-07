@@ -87,9 +87,15 @@ const AppendFileSyncEncoding = S.Literals([
  */
 export class AppendFileSyncOptions extends S.Class<AppendFileSyncOptions>($I`AppendFileSyncOptions`)(
   {
-    encoding: S.optionalKey(AppendFileSyncEncoding),
-    flag: S.optionalKey(S.String),
-    mode: S.optionalKey(S.Finite),
+    encoding: S.optionalKey(AppendFileSyncEncoding).annotateKey({
+      description: "Text encoding forwarded to node:fs appendFileSync.",
+    }),
+    flag: S.optionalKey(S.String).annotateKey({
+      description: "File-system flag forwarded to node:fs appendFileSync.",
+    }),
+    mode: S.optionalKey(S.Int.check(S.isGreaterThanOrEqualTo(0))).annotateKey({
+      description: "Non-negative integer file mode forwarded to node:fs appendFileSync.",
+    }),
   },
   $I.annote("AppendFileSyncOptions", {
     description: "Options accepted by appendFileSync.",
@@ -113,8 +119,12 @@ export class AppendFileSyncOptions extends S.Class<AppendFileSyncOptions>($I`App
  */
 export class RmSyncOptions extends S.Class<RmSyncOptions>($I`RmSyncOptions`)(
   {
-    force: S.optionalKey(S.Boolean),
-    recursive: S.optionalKey(S.Boolean),
+    force: S.optionalKey(S.Boolean).annotateKey({
+      description: "Whether missing paths should be ignored by node:fs rmSync.",
+    }),
+    recursive: S.optionalKey(S.Boolean).annotateKey({
+      description: "Whether directories should be removed recursively by node:fs rmSync.",
+    }),
   },
   $I.annote("RmSyncOptions", {
     description: "Options accepted by rmSync.",
@@ -138,7 +148,9 @@ export class RmSyncOptions extends S.Class<RmSyncOptions>($I`RmSyncOptions`)(
  */
 export class ReaddirSyncOptions extends S.Class<ReaddirSyncOptions>($I`ReaddirSyncOptions`)(
   {
-    withFileTypes: S.optionalKey(S.Boolean),
+    withFileTypes: S.optionalKey(S.Boolean).annotateKey({
+      description: "Whether readdirSync should return node:fs Dirent entries instead of names.",
+    }),
   },
   $I.annote("ReaddirSyncOptions", {
     description: "Options accepted by readdirSync.",
@@ -221,7 +233,7 @@ const toFileInfo = (stats: NodeStats): FileSystem.File.Info => ({
   uid: Option.fromNullishOr(stats.uid),
   gid: Option.fromNullishOr(stats.gid),
   size: FileSystem.Size(stats.size),
-  blksize: stats.blksize !== undefined ? Option.some(FileSystem.Size(stats.blksize)) : Option.none(),
+  blksize: pipe(Option.fromUndefinedOr(stats.blksize), Option.map(FileSystem.Size)),
   blocks: Option.fromNullishOr(stats.blocks),
 });
 

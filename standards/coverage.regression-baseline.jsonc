@@ -1,0 +1,677 @@
+// Coverage regression baseline. Do not edit by hand.
+// Regenerate with: bun run coverage:baseline:write
+// Epsilon: 0.001 percentage points; only smaller floating-point noise is ignored.
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-06T10:22:24.705Z",
+  "git_sha": "2d7399b99f9ffa9aac876f5703d63737a63ef31e",
+  "command": "bun run coverage:baseline:write",
+  "epsilon": 0.001,
+  "packages": {
+    "@beep/acp": {
+      "path": "packages/drivers/acp",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/agents-client": {
+      "path": "packages/agents/client",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/agents-domain": {
+      "path": "packages/agents/domain",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/agents-server": {
+      "path": "packages/agents/server",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/agents-use-cases": {
+      "path": "packages/agents/use-cases",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/ai-provider-cli": {
+      "path": "packages/drivers/ai-provider-cli",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/ai-sync": {
+      "path": "packages/tooling/library/ai-sync",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/anthropic": {
+      "path": "packages/drivers/anthropic",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/api-transport": {
+      "path": "packages/foundation/capability/api-transport",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/architecture-lab-client": {
+      "path": "packages/architecture-lab/client",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/architecture-lab-config": {
+      "path": "packages/architecture-lab/config",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/architecture-lab-domain": {
+      "path": "packages/architecture-lab/domain",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/architecture-lab-proof": {
+      "path": "apps/architecture-lab-proof",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/architecture-lab-server": {
+      "path": "packages/architecture-lab/server",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/architecture-lab-tables": {
+      "path": "packages/architecture-lab/tables",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/architecture-lab-ui": {
+      "path": "packages/architecture-lab/ui",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/architecture-lab-use-cases": {
+      "path": "packages/architecture-lab/use-cases",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/box": {
+      "path": "packages/drivers/box",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/chalk": {
+      "path": "packages/foundation/capability/chalk",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/colors": {
+      "path": "packages/foundation/capability/colors",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/courtlistener": {
+      "path": "packages/drivers/courtlistener",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/data": {
+      "path": "packages/foundation/primitive/data",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/db-admin": {
+      "path": "packages/_internal/db-admin",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/discord": {
+      "path": "packages/drivers/discord",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/dol": {
+      "path": "packages/drivers/dol",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/drizzle": {
+      "path": "packages/drivers/drizzle",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/duckdb": {
+      "path": "packages/drivers/duckdb",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/ecfr": {
+      "path": "packages/drivers/ecfr",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/editor": {
+      "path": "packages/foundation/ui-system/editor",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/epistemic-domain": {
+      "path": "packages/epistemic/domain",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/epistemic-server": {
+      "path": "packages/epistemic/server",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/epistemic-tables": {
+      "path": "packages/epistemic/tables",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/epistemic-use-cases": {
+      "path": "packages/epistemic/use-cases",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/face-detection": {
+      "path": "packages/drivers/face-detection",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/federal-register": {
+      "path": "packages/drivers/federal-register",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/ffmpeg": {
+      "path": "packages/drivers/ffmpeg",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/file-processing": {
+      "path": "packages/foundation/capability/file-processing",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/firecrawl": {
+      "path": "packages/drivers/firecrawl",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/form": {
+      "path": "packages/foundation/ui-system/form",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/govinfo": {
+      "path": "packages/drivers/govinfo",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/html": {
+      "path": "packages/foundation/modeling/html",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/hubspot": {
+      "path": "packages/drivers/hubspot",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/identity": {
+      "path": "packages/foundation/modeling/identity",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/langextract": {
+      "path": "packages/foundation/capability/langextract",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/law-practice-domain": {
+      "path": "packages/law-practice/domain",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/law-practice-server": {
+      "path": "packages/law-practice/server",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/law-practice-use-cases": {
+      "path": "packages/law-practice/use-cases",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/lexical-schema": {
+      "path": "packages/foundation/modeling/lexical",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/libpff": {
+      "path": "packages/drivers/libpff",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/lint-rules": {
+      "path": "packages/tooling/policy-pack/lint-rules",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/m365": {
+      "path": "packages/drivers/m365",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/m365-mcp": {
+      "path": "packages/drivers/m365-mcp",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/mcp-kit": {
+      "path": "packages/foundation/capability/mcp-kit",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/md": {
+      "path": "packages/foundation/modeling/md",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/nlp": {
+      "path": "packages/foundation/modeling/nlp",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/nlp-mcp": {
+      "path": "packages/drivers/nlp-mcp",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/nlp-processing": {
+      "path": "packages/foundation/capability/nlp-processing",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/observability": {
+      "path": "packages/foundation/capability/observability",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/oip-web": {
+      "path": "apps/oip-web",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/onepassword-cli": {
+      "path": "packages/drivers/onepassword-cli",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/ontology": {
+      "path": "packages/foundation/modeling/ontology",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/openai-compat": {
+      "path": "packages/drivers/openai-compat",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/pandoc-ast": {
+      "path": "packages/foundation/modeling/pandoc-ast",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/pglite": {
+      "path": "packages/drivers/pglite",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/phoenix": {
+      "path": "packages/drivers/phoenix",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/postgres": {
+      "path": "packages/drivers/postgres",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/professional-desktop": {
+      "path": "apps/professional-desktop",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/provenance": {
+      "path": "packages/foundation/modeling/provenance",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/rdf": {
+      "path": "packages/foundation/modeling/rdf",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/rdf-canonize": {
+      "path": "packages/drivers/rdf-canonize",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/repo-ai-metrics": {
+      "path": "packages/tooling/library/ai-metrics",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/repo-cli": {
+      "path": "packages/tooling/tool/cli",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/repo-configs": {
+      "path": "packages/tooling/policy-pack/repo-configs",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/repo-docgen": {
+      "path": "packages/tooling/tool/docgen",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/repo-utils": {
+      "path": "packages/tooling/library/repo-utils",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/runpod": {
+      "path": "packages/drivers/runpod",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/sanity": {
+      "path": "packages/drivers/sanity",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/schema": {
+      "path": "packages/foundation/modeling/schema",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/semantic-web": {
+      "path": "packages/foundation/capability/semantic-web",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/shared-domain": {
+      "path": "packages/shared/domain",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/shared-tables": {
+      "path": "packages/shared/tables",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/test-utils": {
+      "path": "packages/tooling/test-kit/test-utils",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/tika": {
+      "path": "packages/drivers/tika",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/types": {
+      "path": "packages/foundation/primitive/types",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/ui": {
+      "path": "packages/foundation/ui-system/ui",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/uspto": {
+      "path": "packages/drivers/uspto",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/uspto-mcp": {
+      "path": "packages/drivers/uspto-mcp",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/utils": {
+      "path": "packages/foundation/modeling/utils",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/venice-ai": {
+      "path": "packages/drivers/venice-ai",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/wink": {
+      "path": "packages/drivers/wink",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/workspace-domain": {
+      "path": "packages/workspace/domain",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/workspace-server": {
+      "path": "packages/workspace/server",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/workspace-tables": {
+      "path": "packages/workspace/tables",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/workspace-use-cases": {
+      "path": "packages/workspace/use-cases",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    },
+    "@beep/xai": {
+      "path": "packages/drivers/xai",
+      "lines": 0,
+      "statements": 0,
+      "branches": 0,
+      "functions": 0
+    }
+  }
+}

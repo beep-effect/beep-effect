@@ -1,0 +1,28 @@
+[
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/architecture-lab/tables/test/WorkItemTable.test.ts",
+    "line": 13,
+    "symbol": "WorkItem/Worker table projection laws",
+    "smell": "Table projection helpers are covered only by fixed row/column examples; no S.toArbitrary-derived law proves toWorkItemInsert/fromWorkItemRow and toWorkerInsert/fromWorkerRow over the production domain schemas.",
+    "proposedTarget": "Add additive property tests deriving values from S.toArbitrary(DomainWorkItem.WorkItem) and S.toArbitrary(DomainWorker.Worker), then assert table projection round-trips with S.toEquivalence on the production domain schemas where row timestamps are ignored or supplied. S.toArbitrary and S.toEquivalence are verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:12970 and :13201; the nearby repository integration property already derives architecture-lab domain arbitraries at packages/architecture-lab/server/test/integration/WorkItemDrizzleRepository.pglite.test.ts:31-34.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/architecture-lab/tables/test/WorkItemTable.test.ts",
+    "line": 13,
+    "symbol": "table shape fixtures",
+    "smell": "Detector candidate: table tests use fixed table names, column names, ids, titles, and row assertions.",
+    "proposedTarget": "None — keep these fixed table-shape fixtures; the schema-derived projection law recorded separately would be additive coverage.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These tests pin Drizzle table names, primary-key flags, column names, and SQL-null projection behavior; generated domain values cannot replace those persistence contract checks.",
+      "boundary": "architecture-lab Drizzle table contract fixtures"
+    }
+  }
+]

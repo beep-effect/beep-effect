@@ -1,5 +1,6 @@
 "use client";
 
+import { $UiId } from "@beep/identity";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@beep/ui/components/tooltip";
 import { Str } from "@beep/utils";
 import { useAtomMount, useAtomSet, useAtomValue } from "@effect/atom-react";
@@ -7,19 +8,27 @@ import { ArrowSquareOutIcon, InfoIcon } from "@phosphor-icons/react";
 import { Effect, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { Atom } from "effect/unstable/reactivity";
 import { useId } from "react";
 import { cn, sanitizeAnchorHref } from "../lib/index.ts";
 import type { ReactNode } from "react";
 
-interface UrlMetadata {
-  readonly description: null | string;
-  readonly favicon: null | string;
-  readonly title: null | string;
-  readonly url: string;
-  readonly websiteImage: null | string;
-  readonly websiteName: null | string;
-}
+const $I = $UiId.create("components/link-preview");
+
+class UrlMetadata extends S.Class<UrlMetadata>($I`UrlMetadata`)(
+  {
+    description: S.NullOr(S.String),
+    favicon: S.NullOr(S.String),
+    title: S.NullOr(S.String),
+    url: S.String,
+    websiteImage: S.NullOr(S.String),
+    websiteName: S.NullOr(S.String),
+  },
+  $I.annote("UrlMetadata", {
+    description: "Network-derived metadata rendered by a link preview.",
+  })
+) {}
 
 interface LinkPreviewProps {
   readonly children: ReactNode;
@@ -151,7 +160,7 @@ const linkPreviewFetchAtom = Atom.family((key: string) =>
 
         get.set(stateAtom, {
           ...get.once(stateAtom),
-          fetchedMetadata: {
+          fetchedMetadata: UrlMetadata.make({
             title: extractMetaTag(html, "og:title") ?? extractMetaTag(html, "twitter:title") ?? titleMatch?.[1] ?? null,
             description:
               extractMetaTag(html, "og:description") ??
@@ -163,7 +172,7 @@ const linkPreviewFetchAtom = Atom.family((key: string) =>
               extractMetaTag(html, "icon") ?? extractMetaTag(html, "shortcut icon") ?? `${parsed.origin}/favicon.ico`,
             websiteName: extractMetaTag(html, "og:site_name") ?? parsed.hostname,
             url: href,
-          },
+          }),
           isLoading: false,
         });
       });
@@ -247,14 +256,14 @@ const getFallbackMetadata = (href: string): UrlMetadata => {
     // fallback keeps href as-is
   }
 
-  return {
+  return UrlMetadata.make({
     title: null,
     description: null,
     favicon: `${Str.replace(/\/$/, "")(origin)}/favicon.ico`,
     websiteName: toHostname(href),
     websiteImage: null,
     url: href,
-  };
+  });
 };
 
 /**

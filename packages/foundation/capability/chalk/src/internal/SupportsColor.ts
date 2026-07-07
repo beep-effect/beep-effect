@@ -9,9 +9,9 @@ import os from "node:os";
 import process from "node:process";
 import tty from "node:tty";
 import { $ChalkId } from "@beep/identity/packages";
-import { A, Str } from "@beep/utils";
+import { SchemaUtils } from "@beep/schema";
+import { A, O, Str } from "@beep/utils";
 import { flow, Match, pipe } from "effect";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ColorSupport, ColorSupportLevel } from "./ChalkSchema.ts";
@@ -26,7 +26,13 @@ class StreamLikeModel extends S.Class<StreamLikeModel>($I`StreamLike`)(
   $I.annote("StreamLike", {
     description: "Minimal output stream metadata used by Chalk color support detection.",
   })
-) {}
+) {
+  static readonly decodeOption = S.decodeUnknownOption(StreamLikeModel);
+  static readonly normalize = flow(
+    StreamLikeModel.decodeOption,
+    O.getOrElse(() => StreamLikeModel.make({}))
+  );
+}
 
 type StreamLike = typeof StreamLikeModel.Encoded;
 
@@ -37,21 +43,33 @@ class SupportsColorOptionsModel extends S.Class<SupportsColorOptionsModel>($I`Su
   $I.annote("SupportsColorOptions", {
     description: "Options that tune Chalk color support detection.",
   })
-) {}
+) {
+  static readonly decodeOption = S.decodeUnknownOption(SupportsColorOptionsModel);
+  static readonly normalize = flow(
+    SupportsColorOptionsModel.decodeOption,
+    O.getOrElse(() => SupportsColorOptionsModel.make({}))
+  );
+}
 
 type SupportsColorOptions = typeof SupportsColorOptionsModel.Encoded;
 
 class RuntimeProcessLikeModel extends S.Class<RuntimeProcessLikeModel>($I`RuntimeProcessLike`)(
   {
-    argv: S.String.pipe(S.Array, S.optionalKey),
-    env: S.Record(S.String, S.UndefinedOr(S.String)).pipe(S.optionalKey),
+    argv: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()),
+    env: S.Record(S.String, S.UndefinedOr(S.String)).pipe(SchemaUtils.withKeyDefaults({})),
     osRelease: S.optionalKey(S.String),
     platform: S.optionalKey(S.String),
   },
   $I.annote("RuntimeProcessLike", {
     description: "Minimal process metadata used by Chalk color support detection.",
   })
-) {}
+) {
+  static readonly decodeOption = S.decodeUnknownOption(RuntimeProcessLikeModel);
+  static readonly normalize = flow(
+    RuntimeProcessLikeModel.decodeOption,
+    O.getOrElse(() => RuntimeProcessLikeModel.make({}))
+  );
+}
 
 type RuntimeProcessLike = typeof RuntimeProcessLikeModel.Encoded;
 
@@ -93,25 +111,44 @@ type ColorLevelHeuristic = (input: ColorHeuristicInput) => O.Option<ColorSupport
 
 class WindowsReleaseModel extends S.Class<WindowsReleaseModel>($I`WindowsRelease`)(
   {
-    build: S.Finite,
-    major: S.Finite,
+    build: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    major: S.Int.check(S.isGreaterThanOrEqualTo(0)),
   },
   $I.annote("WindowsRelease", {
     description: "Parsed Windows release metadata used to infer terminal color support.",
   })
-) {}
+) {
+  static readonly fromOsRelease: (osRelease: O.Option<string>) => WindowsRelease = flow(
+    O.getOrElse(() => "0.0.0"),
+    Str.split("."),
+    ([major = "0", , build = "0"]) =>
+      WindowsReleaseModel.make({
+        build: parseIntegerSegment(build),
+        major: parseIntegerSegment(major),
+      })
+  );
+}
 
 type WindowsRelease = typeof WindowsReleaseModel.Encoded;
 
 class TermProgramInfoModel extends S.Class<TermProgramInfoModel>($I`TermProgramInfo`)(
   {
-    majorVersion: S.Finite,
+    majorVersion: S.Int.check(S.isGreaterThanOrEqualTo(0)),
     program: S.String,
   },
   $I.annote("TermProgramInfo", {
     description: "Terminal program metadata used to infer color support.",
   })
-) {}
+) {
+  static readonly fromEnvironment = (
+    program: string,
+    env: Readonly<Record<string, string | undefined>>
+  ): TermProgramInfo =>
+    TermProgramInfoModel.make({
+      majorVersion: parseIntegerSegment(firstVersionSegment(env.TERM_PROGRAM_VERSION)),
+      program,
+    });
+}
 
 type TermProgramInfo = typeof TermProgramInfoModel.Encoded;
 
@@ -129,29 +166,11 @@ const basicColorCiEnvironmentKeys = ["TRAVIS", "APPVEYOR", "GITLAB_CI", "BUILDKI
 
 const trueColorTerminals: ReadonlyArray<string> = ["xterm-kitty", "xterm-ghostty", "wezterm"];
 
-const decodeStreamLike = S.decodeUnknownOption(StreamLikeModel);
+const normalizeStreamLike = StreamLikeModel.normalize;
 
-const decodeSupportsColorOptions = S.decodeUnknownOption(SupportsColorOptionsModel);
+const normalizeSupportsColorOptions = SupportsColorOptionsModel.normalize;
 
-const decodeRuntimeProcessLike = S.decodeUnknownOption(RuntimeProcessLikeModel);
-
-const normalizeStreamLike = (stream: StreamLike): StreamLikeModel =>
-  pipe(
-    decodeStreamLike(stream),
-    O.getOrElse(() => StreamLikeModel.make({}))
-  );
-
-const normalizeSupportsColorOptions = (options: SupportsColorOptions): SupportsColorOptionsModel =>
-  pipe(
-    decodeSupportsColorOptions(options),
-    O.getOrElse(() => SupportsColorOptionsModel.make({}))
-  );
-
-const normalizeRuntimeProcessLike = (runtimeProcessLike: RuntimeProcessLike): RuntimeProcessLikeModel =>
-  pipe(
-    decodeRuntimeProcessLike(runtimeProcessLike),
-    O.getOrElse(() => RuntimeProcessLikeModel.make({}))
-  );
+const normalizeRuntimeProcessLike = RuntimeProcessLikeModel.normalize;
 
 const level0: ColorSupportLevelType = 0;
 
@@ -181,6 +200,11 @@ const normalizeParsedForceColorLevel: (level: number) => ColorSupportLevel = Mat
 );
 
 const forceColorIntegerPattern = /^-?\d+$/;
+
+const parseIntegerSegment = (segment: string): number => {
+  const parsed = Number.parseInt(segment, 10);
+  return Number.isNaN(parsed) ? 0 : parsed;
+};
 
 const literalForceColorLevel: (value: string) => O.Option<ColorSupportLevel> = Match.type<string>().pipe(
   Match.when("true", () => O.some(level1)),
@@ -238,8 +262,9 @@ const isAnsi256Terminal = matchesPattern(/-256(color)?$/i);
 
 const isBasicColorTerminal = matchesPattern(/^screen|^xterm|^vt100|^vt220|^rxvt|color|ansi|cygwin|linux/i);
 
-const hasTrueColorTerminalName = (term: string | undefined): boolean =>
-  pipe(trueColorTerminals, A.contains(term ?? ""));
+const hasTrueColorTerminalName: (term: O.Option<string>) => boolean = O.exists((name) =>
+  A.contains(trueColorTerminals, name)
+);
 
 const readCurrentRuntimeProcessLike = (): RuntimeProcessLike => ({
   argv: process.argv,
@@ -338,14 +363,8 @@ const detectNonTtyColorLevel: ColorLevelHeuristic = ({ forceColor, isTTY }) =>
 const detectDumbTerminalColorLevel: ColorLevelHeuristic = ({ env, minimumLevel }) =>
   colorLevelWhen(minimumLevel)(env.TERM === "dumb");
 
-const parseWindowsRelease = (osRelease: string | undefined): WindowsRelease => {
-  const [major = "0", , build = "0"] = pipe(osRelease ?? "0.0.0", Str.split("."));
-
-  return {
-    build: Number.parseInt(build, 10),
-    major: Number.parseInt(major, 10),
-  };
-};
+const parseWindowsRelease = (osRelease: string | undefined): WindowsRelease =>
+  WindowsReleaseModel.fromOsRelease(O.fromUndefinedOr(osRelease));
 
 const selectWindowsBuildColorLevel: (build: number) => ColorSupportLevel = Match.type<number>().pipe(
   Match.when(
@@ -394,7 +413,7 @@ const detectTeamCityColorLevel: ColorLevelHeuristic = ({ env }) =>
   pipe(env.TEAMCITY_VERSION, O.fromNullishOr, O.map(selectTeamCityColorLevel));
 
 const isTrueColorTerminal = (env: Readonly<Record<string, string | undefined>>): boolean =>
-  env.COLORTERM === "truecolor" || hasTrueColorTerminalName(env.TERM);
+  env.COLORTERM === "truecolor" || hasTrueColorTerminalName(O.fromNullishOr(env.TERM));
 
 const detectTrueColorTerminalLevel: ColorLevelHeuristic = ({ env }) => colorLevelWhen(level3)(isTrueColorTerminal(env));
 
@@ -405,11 +424,6 @@ const firstVersionSegment = (version: string | undefined): string =>
     A.head,
     O.getOrElse(() => "0")
   );
-
-const toTermProgramInfo = (program: string, env: Readonly<Record<string, string | undefined>>): TermProgramInfo => ({
-  majorVersion: Number.parseInt(firstVersionSegment(env.TERM_PROGRAM_VERSION), 10),
-  program,
-});
 
 const selectITermColorLevel: (version: number) => ColorSupportLevel = Match.type<number>().pipe(
   Match.when(
@@ -435,21 +449,18 @@ const detectTermProgramColorLevel: ColorLevelHeuristic = ({ env }) =>
   pipe(
     env.TERM_PROGRAM,
     O.fromNullishOr,
-    O.map((program) => selectTermProgramColorLevel(toTermProgramInfo(program, env)))
+    O.map((program) => selectTermProgramColorLevel(TermProgramInfoModel.fromEnvironment(program, env)))
   );
 
-const detectTerminalPatternColorLevel: ColorLevelHeuristic = ({ env }) => {
-  const term = env.TERM ?? "";
-
-  return pipe(
+const detectTerminalPatternColorLevel: ColorLevelHeuristic = ({ env }) =>
+  pipe(
     [
-      pipe(term, O.liftPredicate(isAnsi256Terminal), O.as(level2)),
-      pipe(term, O.liftPredicate(isBasicColorTerminal), O.as(level1)),
+      pipe(env.TERM, O.fromNullishOr, O.filter(isAnsi256Terminal), O.as(level2)),
+      pipe(env.TERM, O.fromNullishOr, O.filter(isBasicColorTerminal), O.as(level1)),
       pipe(env.COLORTERM, O.fromNullishOr, O.as(level1)),
     ],
     O.firstSomeOf
   );
-};
 
 const makeSupportsColorDecisionInput = (
   argv: SupportsColorDecisionInput["argv"],
@@ -461,10 +472,12 @@ const makeSupportsColorDecisionInput = (
 ): SupportsColorDecisionInput => ({
   argv,
   env,
-  ...(P.isNotUndefined(isTTY) ? { isTTY } : {}),
-  ...(P.isNotUndefined(osRelease) ? { osRelease } : {}),
-  ...(P.isNotUndefined(platform) ? { platform } : {}),
-  ...(P.isNotUndefined(sniffFlags) ? { sniffFlags } : {}),
+  ...O.getSomesStruct({
+    isTTY: O.fromUndefinedOr(isTTY),
+    osRelease: O.fromUndefinedOr(osRelease),
+    platform: O.fromUndefinedOr(platform),
+    sniffFlags: O.fromUndefinedOr(sniffFlags),
+  }),
 });
 
 const supportsColorLevel = ({
@@ -532,8 +545,8 @@ export const createSupportsColor = (
   return translateLevel(
     supportsColorLevel(
       makeSupportsColorDecisionInput(
-        normalizedRuntimeProcessLike.argv ?? [],
-        normalizedRuntimeProcessLike.env ?? {},
+        normalizedRuntimeProcessLike.argv,
+        normalizedRuntimeProcessLike.env,
         normalizedStream.isTTY,
         normalizedRuntimeProcessLike.osRelease,
         normalizedRuntimeProcessLike.platform,

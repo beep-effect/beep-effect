@@ -1,0 +1,91 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/docgen/src/ProofManifest.ts",
+    "line": 262,
+    "symbol": "decodeDocgenProofManifest",
+    "smell": "Top-of-file decode-wall entry `S.decodeUnknownEffect(S.fromJsonString(DocgenProofManifest))`; the only runtime consumer at ProofManifest.ts:501 decodes proof-manifest JSON through the free helper instead of behavior colocated on the manifest class.",
+    "proposedTarget": "Move the JSON decoder onto `DocgenProofManifest` at ProofManifest.ts:210 as an in-body static such as `static readonly decodeJsonEffect = S.decodeUnknownEffect(S.fromJsonString(DocgenProofManifest))`, then call `DocgenProofManifest.decodeJsonEffect(content)`. In-body class static precedent: packages/foundation/modeling/rdf/src/Rdf.ts:394.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/docgen/src/Printer.ts",
+    "line": 34,
+    "symbol": "Printable",
+    "smell": "Public union const is built with `S.Union(...).pipe(S.toTaggedUnion(\"_tag\"), $I.annoteSchema(...))` but has no colocated codec statics. Consumers currently only pattern-match, but this is exactly the branded/union-const surface S4 targets for `withCodecStatics`.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` so callers can use `Printable.is`, `Printable.decodeOption`, and `Printable.fromUnknown`; `withCodecStatics` is verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90 and `S.toTaggedUnion` at .repos/effect-v4/packages/effect/src/Schema.ts:6094.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/docgen/src/Printer.ts",
+    "line": 68,
+    "symbol": "replaceJSDocLinks",
+    "smell": "Trivial one-step pipe wrapper: `function replaceJSDocLinks(text) { return pipe(text, Str.replaceWith(...)) }`. The input is passed directly through one helper, so the wrapper can be point-free.",
+    "proposedTarget": "Use the helper directly: `const replaceJSDocLinks: (text: string) => string = Str.replaceWith(/\\{@link\\s+([^\\s}]+)(?:\\s+([^}]+))?}/g, replacer)`. `Str.replaceWith` is already dual/data-last at packages/foundation/modeling/utils/src/Str.ts:661.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/docgen/src/Printer.ts",
+    "line": 79,
+    "symbol": "removeFenceMetadata",
+    "smell": "Trivial one-step pipe wrapper: `function removeFenceMetadata(markdown) { return pipe(markdown, Str.replaceWith(...)) }`. This is another direct helper-ref candidate.",
+    "proposedTarget": "Use the helper directly: `const removeFenceMetadata: (markdown: string) => string = Str.replaceWith(/^(\\`{3,})([^\\n]*)/gm, replacer)`. Same `Str.replaceWith` dual helper verified at packages/foundation/modeling/utils/src/Str.ts:661.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/docgen/src/ProofManifest.ts",
+    "line": 263,
+    "symbol": "encodeUnknownJson",
+    "smell": "Detector hit: top-of-file `S.encodeUnknownSync(S.UnknownFromJsonString)` helper looks like an encode-wall entry.",
+    "proposedTarget": "None - leave as a schema-agnostic canonical JSON helper.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "The helper intentionally encodes arbitrary unknown JSON for manifest file text and SHA-256 fingerprint inputs (`jsonText`/`sha256Json` at ProofManifest.ts:278-280); there is no single domain schema to colocate it onto.",
+      "boundary": "Generic JSON hashing/serialization boundary, not duplicate behavior for a schema-modeled const or class."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/docgen/src/Configuration.ts",
+    "line": 305,
+    "symbol": "readJsoncFile",
+    "smell": "Detector hit: generic `S.decodeUnknownEffect(schema)(parsed)` inside a shared JSONC loader looks like decode behavior separated from data.",
+    "proposedTarget": "None - leave the generic schema-parameterized loader as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "`readJsoncFile` receives the schema as a parameter and also owns file IO, JSONC parsing, and DocgenError mapping; it is not a duplicate decoder for one colocatable schema.",
+      "boundary": "Generic configuration-file boundary; attaching this to `ConfigurationSchema` or `PackageJsonSchema` would duplicate the shared loader and widen behavior beyond one data object."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/tool/docgen/src/CLI.ts",
+    "line": 21,
+    "symbol": "decodeCompilerOptions",
+    "smell": "Detector hit: CLI-level `S.decodeUnknownEffect(S.fromJsonString(S.toEncoded(TSConfigCompilerOptions)))` resembles a top-of-file decode wall.",
+    "proposedTarget": "None - leave the CLI flag decoder at the text boundary.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "The schema source is external (`TSConfigCompilerOptions` from `@beep/repo-utils`) and the helper decodes a CLI string flag while wrapping failures in `DocgenError`; colocating it would require changing a different package's schema surface or exporting a docgen-only wrapper solely for one CLI flag.",
+      "boundary": "External-schema CLI boundary, not a duplicate first-party model/static helper."
+    }
+  }
+]

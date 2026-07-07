@@ -147,14 +147,6 @@ export const ALLOWLIST_SNAPSHOT = {
       "reason": "The HTML AST generator script reads plain JSON-compatible records (vendored webref/WHATWG data and global-attribute keys) via Object methods at the code-generation boundary.",
       "owner": "@beep/html",
       "issue": "HTML-GENERATOR-OBJECT-METHOD"
-    },
-    {
-      "rule": "beep-laws/no-native-runtime",
-      "file": "packages/foundation/modeling/html/scripts/generate.ts",
-      "kind": "native-error",
-      "reason": "The HTML AST generator script throws a native Error as a defensive guard when SchemaRepresentation output deviates from the expected shape during one-shot code generation.",
-      "owner": "@beep/html",
-      "issue": "HTML-GENERATOR-NATIVE-ERROR-GUARD"
     }
   ],
   "diagnostics": []

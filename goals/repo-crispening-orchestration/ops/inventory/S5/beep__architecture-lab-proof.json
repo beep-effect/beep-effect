@@ -1,0 +1,28 @@
+[
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "apps/architecture-lab-proof/src/index.ts",
+    "line": 34,
+    "symbol": "ArchitectureLabProofResult",
+    "smell": "The package exports the annotated `ArchitectureLabProofResult` schema class but its test suite only exercises the composed app layer with fixed assertions; no S.toArbitrary-derived round-trip/property law covers the app-level result schema.",
+    "proposedTarget": "Add an additive schema law in apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts using `assertSchemaArbitraryDecodesToSelf(ArchitectureLabProofResult)` from @beep/test-utils (definition packages/tooling/test-kit/test-utils/src/Schema.ts:30-42), or explicit `S.toArbitrary(ArchitectureLabProofResult)` if the composed imported schemas need custom assertions. `S.toArbitrary` was verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:12970; nearby architecture-lab tests already use `S.toArbitrary` for WorkItem domain schemas at packages/architecture-lab/server/test/integration/WorkItemDrizzleRepository.pglite.test.ts:31-34.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "apps/architecture-lab-proof/test/ArchitectureLabProof.test.ts",
+    "line": 12,
+    "symbol": "architecture lab composed-layer proof",
+    "smell": "Detector candidate: the package test uses static assertions for the app-level proof result (`created.status` and `summary.visibleActions`).",
+    "proposedTarget": "None — keep these fixed assertions as the app contract proof; the schema-derived law recorded separately would be additive coverage.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This package is explicitly an app-level contract harness; fixed assertions prove the composed server/use-case/UI projection wiring and should not be replaced by generated schema samples.",
+      "boundary": "architecture-lab app contract and dtslint proof harness"
+    }
+  }
+]

@@ -1,5 +1,9 @@
-import { CoreVocab, mergeVocab } from "@beep/identity";
+import { CoreVocab, mergeVocab, VocabRegistry } from "@beep/identity";
 import { describe, expect, it } from "@effect/vitest";
+import * as Equal from "effect/Equal";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { expectTypeOf } from "vitest";
 import type { Curie, Expand, Predicate } from "@beep/identity";
 
@@ -58,5 +62,19 @@ describe("CoreVocab runtime invariants", () => {
 
       expect(duplicates, prefix).toEqual([]);
     }
+  });
+
+  it("round-trips generated vocabulary registries through their encoded shape", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(VocabRegistry), (registry) => {
+        const decoded = O.flatMap(S.encodeOption(VocabRegistry)(registry), S.decodeUnknownOption(VocabRegistry));
+
+        expect(O.exists(decoded, (value) => Equal.equals(value, registry))).toBe(true);
+      })
+    );
+  });
+
+  it("accepts CoreVocab through the runtime registry schema", () => {
+    expect(O.isSome(S.decodeUnknownOption(VocabRegistry)(CoreVocab))).toBe(true);
   });
 });

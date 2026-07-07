@@ -1,0 +1,17 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/primitive/types/src/TUtils.types.ts",
+    "line": 27,
+    "symbol": "UnionToIntersection (+ Simplify, TUnsafe.Any, TString.NonEmpty, TString.Chars, TArray.Elem)",
+    "smell": "Six exported `type` aliases across TUtils.types.ts:27/52, TUnsafe.types.ts:26, TString.types.ts:30/51, TArray.types.ts:29 — naive exported-type-alias detector hits, audited and rejected wholesale.",
+    "proposedTarget": "None — audited; not schema candidates.",
+    "confidence": 0.05,
+    "mechanization": "judgment",
+    "roiRank": 0.01,
+    "exception": {
+      "reason": "The entire package is compile-time-only: every export is a generic conditional/mapped/infer type (`UnionToIntersection`, `Simplify`, `NonEmpty<T>`, `Chars<S>`, `Elem<T>`, `Any`), the barrel uses `export type * as ...`, and no runtime value exists anywhere in src/. These are type-level utilities — the explicit S1 carve-out (fence 1 family); none describes a wire/persisted/config/domain payload, and none is expressible as a schema even in principle.",
+      "boundary": "type-level utility package (compile-time-only exports)"
+    }
+  }
+]

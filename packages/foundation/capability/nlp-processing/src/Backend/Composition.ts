@@ -17,8 +17,10 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { PosInt, SchemaUtils } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Cache, Duration, Effect } from "effect";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Obs from "../internal/observability.ts";
 import { NLPBackend } from "./NLPBackend.ts";
@@ -120,7 +122,10 @@ const cachedGet = <A, E, R>(
  * @category combinators
  * @since 0.0.0
  */
-export const withFallback = (primary: NLPBackendShape, secondary: NLPBackendShape): NLPBackendShape => {
+export const withFallback: {
+  (primary: NLPBackendShape, secondary: NLPBackendShape): NLPBackendShape;
+  (secondary: NLPBackendShape): (primary: NLPBackendShape) => NLPBackendShape;
+} = dual(2, (primary: NLPBackendShape, secondary: NLPBackendShape): NLPBackendShape => {
   const capabilities: BackendCapabilities = {
     constituencyParsing: primary.capabilities.constituencyParsing || secondary.capabilities.constituencyParsing,
     coreferenceResolution: primary.capabilities.coreferenceResolution || secondary.capabilities.coreferenceResolution,
@@ -188,7 +193,7 @@ export const withFallback = (primary: NLPBackendShape, secondary: NLPBackendShap
       );
     }),
   });
-};
+});
 
 /**
  * Cache settings for memoized backend composition.
@@ -196,9 +201,10 @@ export const withFallback = (primary: NLPBackendShape, secondary: NLPBackendShap
  * @example
  * ```ts
  * import { Duration } from "effect"
+ * import { PosInt } from "@beep/schema"
  * import type { CachingOptions } from "@beep/nlp-processing/Backend/Composition"
  *
- * const options: CachingOptions = { capacity: 64, timeToLive: Duration.minutes(5) }
+ * const options: CachingOptions = { capacity: PosInt.make(64), timeToLive: Duration.minutes(5) }
  * console.log(options.capacity) // 64
  * ```
  *
@@ -207,8 +213,8 @@ export const withFallback = (primary: NLPBackendShape, secondary: NLPBackendShap
  */
 export class CachingOptions extends S.Class<CachingOptions>($I`CachingOptions`)(
   {
-    capacity: S.optionalKey(S.Finite),
-    timeToLive: S.optionalKey(S.Duration),
+    capacity: SchemaUtils.withKeyDefaults(PosInt, PosInt.make(1024)),
+    timeToLive: SchemaUtils.withKeyDefaults(S.Duration, Duration.minutes(10)),
   },
   $I.annote("CachingOptions", {
     description: "Cache settings for memoized backend composition.",
@@ -226,6 +232,7 @@ export class CachingOptions extends S.Class<CachingOptions>($I`CachingOptions`)(
  * @example
  * ```ts
  * import { Effect } from "effect"
+ * import { PosInt } from "@beep/schema"
  * import { withCaching } from "@beep/nlp-processing/Backend/Composition"
  * import type { NLPBackendShape } from "@beep/nlp-processing/Backend/NLPBackend"
  *
@@ -250,7 +257,9 @@ export class CachingOptions extends S.Class<CachingOptions>($I`CachingOptions`)(
  *   parseDependencies: () => Effect.succeed([]),
  *   extractRelations: () => Effect.succeed([])
  * }
- * const program = Effect.flatMap(withCaching(backend, { capacity: 16 }), (cached) => cached.tokenize("typed effects"))
+ * const program = Effect.flatMap(withCaching(backend, { capacity: PosInt.make(16) }), (cached) =>
+ *   cached.tokenize("typed effects")
+ * )
  * Effect.runPromise(program).then(console.log) // ["typed", "effects"]
  * ```
  *
@@ -263,10 +272,9 @@ export class CachingOptions extends S.Class<CachingOptions>($I`CachingOptions`)(
  */
 export const withCaching = Effect.fn("withCaching")(function* (
   backend: NLPBackendShape,
-  options?: CachingOptions
+  options: (typeof CachingOptions)["~type.make.in"] = {}
 ): Effect.fn.Return<NLPBackendShape> {
-  const capacity = options?.capacity ?? 1024;
-  const timeToLive = options?.timeToLive ?? Duration.minutes(10);
+  const { capacity, timeToLive } = CachingOptions.make(options);
   const tokenizeCache = yield* Cache.make({ capacity, lookup: backend.tokenize, timeToLive });
   const sentencizeCache = yield* Cache.make({ capacity, lookup: backend.sentencize, timeToLive });
   const posTagCache = yield* Cache.make({ capacity, lookup: backend.posTag, timeToLive });
@@ -338,13 +346,17 @@ export const withCaching = Effect.fn("withCaching")(function* (
  *   parseDependencies: () => Effect.succeed([]),
  *   extractRelations: () => Effect.succeed([])
  * }
- * console.log(O.map(selectByCapability("tokenization", [backend]), (selected) => selected.name))
+ * console.log(O.map(selectByCapability([backend], "tokenization"), (selected) => selected.name))
  * ```
  *
  * @category combinators
  * @since 0.0.0
  */
-export const selectByCapability = (
-  capability: keyof BackendCapabilities,
-  backends: ReadonlyArray<NLPBackendShape>
-): O.Option<NLPBackendShape> => A.findFirst(backends, (backend) => backend.capabilities[capability]);
+export const selectByCapability: {
+  (backends: ReadonlyArray<NLPBackendShape>, capability: keyof BackendCapabilities): O.Option<NLPBackendShape>;
+  (capability: keyof BackendCapabilities): (backends: ReadonlyArray<NLPBackendShape>) => O.Option<NLPBackendShape>;
+} = dual(
+  2,
+  (backends: ReadonlyArray<NLPBackendShape>, capability: keyof BackendCapabilities): O.Option<NLPBackendShape> =>
+    A.findFirst(backends, (backend) => backend.capabilities[capability])
+);

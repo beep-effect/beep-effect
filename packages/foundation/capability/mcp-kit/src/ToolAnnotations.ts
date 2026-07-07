@@ -12,6 +12,7 @@
  */
 
 import { $McpKitId } from "@beep/identity/packages";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as AiTool from "effect/unstable/ai/Tool";
 
@@ -55,7 +56,21 @@ export class FourHintAnnotations extends S.Class<FourHintAnnotations>($I`FourHin
   $I.annote("FourHintAnnotations", {
     description: "The four MCP tool-behavior hints as a single record.",
   })
-) {}
+) {
+  static readonly readOnly: FourHintAnnotations = FourHintAnnotations.make({
+    readOnly: true,
+    destructive: false,
+    idempotent: true,
+    openWorld: true,
+  });
+
+  static readonly destructiveWrite: FourHintAnnotations = FourHintAnnotations.make({
+    readOnly: false,
+    destructive: true,
+    idempotent: false,
+    openWorld: true,
+  });
+}
 
 /**
  * Applies all four MCP tool-behavior hints to a tool in one call.
@@ -73,15 +88,21 @@ export class FourHintAnnotations extends S.Class<FourHintAnnotations>($I`FourHin
  * @category combinators
  * @since 0.0.0
  */
-export const annotateFourHints = <T extends AiTool.Any>(tool: T, hints: FourHintAnnotations): T =>
-  // `Tool#annotate` returns the widened `Tool<Name, Config, Requirements>`
-  // shape rather than the caller's specific `T`; the annotation chain does
-  // not change `Name`/`Config`/`Requirements`, so re-narrowing here is sound.
-  tool
-    .annotate(AiTool.Readonly, hints.readOnly)
-    .annotate(AiTool.Destructive, hints.destructive)
-    .annotate(AiTool.Idempotent, hints.idempotent)
-    .annotate(AiTool.OpenWorld, hints.openWorld) as T;
+export const annotateFourHints: {
+  (hints: FourHintAnnotations): <T extends AiTool.Any>(tool: T) => T;
+  <T extends AiTool.Any>(tool: T, hints: FourHintAnnotations): T;
+} = dual(
+  2,
+  <T extends AiTool.Any>(tool: T, hints: FourHintAnnotations): T =>
+    // `Tool#annotate` returns the widened `Tool<Name, Config, Requirements>`
+    // shape rather than the caller's specific `T`; the annotation chain does
+    // not change `Name`/`Config`/`Requirements`, so re-narrowing here is sound.
+    tool
+      .annotate(AiTool.Readonly, hints.readOnly)
+      .annotate(AiTool.Destructive, hints.destructive)
+      .annotate(AiTool.Idempotent, hints.idempotent)
+      .annotate(AiTool.OpenWorld, hints.openWorld) as T
+);
 
 /**
  * Hints for a safe, read-only, idempotent tool that may reach external data
@@ -99,12 +120,7 @@ export const annotateFourHints = <T extends AiTool.Any>(tool: T, hints: FourHint
  * @category constants
  * @since 0.0.0
  */
-export const readOnlyToolHints: FourHintAnnotations = FourHintAnnotations.make({
-  readOnly: true,
-  destructive: false,
-  idempotent: true,
-  openWorld: true,
-});
+export const readOnlyToolHints: FourHintAnnotations = FourHintAnnotations.readOnly;
 
 /**
  * Hints for a destructive, non-idempotent write tool that may reach external
@@ -121,9 +137,4 @@ export const readOnlyToolHints: FourHintAnnotations = FourHintAnnotations.make({
  * @category constants
  * @since 0.0.0
  */
-export const destructiveWriteToolHints: FourHintAnnotations = FourHintAnnotations.make({
-  readOnly: false,
-  destructive: true,
-  idempotent: false,
-  openWorld: true,
-});
+export const destructiveWriteToolHints: FourHintAnnotations = FourHintAnnotations.destructiveWrite;

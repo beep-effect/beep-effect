@@ -1,0 +1,77 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
+    "line": 21,
+    "symbol": "decodeBlankNodeResult / isPrefixLabel / PrefixMapKeyChecks",
+    "smell": "Local schema-derived decode and guard helpers textually match a decode-helper-wall or detached-guard smell (`S.decodeUnknownResult(S.NonEmptyString)` and `S.is(PrefixLabel)`).",
+    "proposedTarget": "None - audited. These are small internal helpers feeding schema construction and validation: `decodeBlankNodeResult` is used by the `makeBlankNode` constructor, and `isPrefixLabel` powers the `PrefixMapKeyChecks` filter because `S.Record(S.String, IRI)` cannot preserve the branded key type by itself.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Both helpers are schema-derived and remain adjacent to the schemas they support. They do not duplicate validation logic outside a schema; they make schema-owned validation reusable at one construction/key-check boundary.",
+      "boundary": "single-use schema-derived helper / record-key filter"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
+    "line": 867,
+    "symbol": "makeNamedNode / makeBlankNode / makeLiteral / makeQuad / makeDataset",
+    "smell": "Public constructor-style functions in a schema-modeled RDF file accept primitive or schema-typed inputs and return schema classes, so a naive `SFV4-fn-schema` pass flags them as exported function contracts.",
+    "proposedTarget": "Hypothetical `Fn` wrappers were audited and rejected. Keep these as constructor conveniences over the RDF schemas: `makeNamedNode` and `makeLiteral` decode through `NamedNode` / `Literal`; `makeBlankNode`, `makeQuad`, and `makeDataset` build `BlankNode`, `Quad`, and `Dataset` schema instances. `MakeLiteralOptions` and `MakeQuadOptions` are already `S.Class` schemas.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "The durable values are schema classes and the helpers preserve public RDF/JS builder ergonomics, including overloads and data-first/data-last dual forms. Wrapping them in `Fn` would add decode-on-call behavior and collapse overload semantics without moving a new invariant into a schema.",
+      "boundary": "schema-class constructor helper / overload surface"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
+    "line": 1106,
+    "symbol": "serializeTerm / serializeQuad / sortDatasetQuads / areDatasetsEquivalent",
+    "smell": "Exported utility functions in a schema-modeled RDF file return primitive strings, arrays, or booleans, so they can be mistaken for function contracts that need `Fn` schemas.",
+    "proposedTarget": "None - audited. These helpers operate over already schema-typed `Term`, `Quad`, and `Dataset` values and implement deterministic lexical serialization, ordering, and comparison. The string escaping code is transport/security logic, not a replacement for a domain schema.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Parameters are schema-owned RDF values and returns are derived lexical/comparison results. `Fn` wrapping would validate already-typed inputs per call and would not turn serialization semantics into a durable data model.",
+      "boundary": "serialization and comparison helpers over schema values"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/modeling/rdf/src/Uri.ts",
+    "line": 362,
+    "symbol": "normalizeUriReference / resolveUriReference / areUrisEquivalent",
+    "smell": "URI normalization utilities in a schema-modeled package intentionally accept `URIReference | string` / `AbsoluteURI | string` and return primitive strings or booleans, so they textually match an exported function-contract smell.",
+    "proposedTarget": "Hypothetical `Fn({ input, output })` wrappers were audited and rejected. Keep the helpers as normalization/comparison functions over raw or branded URI text; validation remains in the schemas `URIReference`, `RelativeURIReference`, `AbsoluteURI`, and `URI` in the same file.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "These helpers deliberately work before, after, or outside schema decoding because URI resolution/comparison often starts from raw text. Forcing an `Fn` schema would change accepted inputs and failure behavior instead of relocating a missing domain invariant.",
+      "boundary": "raw-text normalization and comparison utility"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
+    "line": 347,
+    "symbol": "makeSemanticSchemaMetadata / annotateSemanticSchema / getSemanticSchemaMetadata",
+    "smell": "Schema metadata helpers are exported functions in a file that declares schema classes; `annotateSemanticSchema` also has overloads and `getSemanticSchemaMetadata` returns `undefined` for missing AST annotations.",
+    "proposedTarget": "None - audited. `makeSemanticSchemaMetadata` already decodes `SemanticSchemaMetadata` with `SemanticSchemaMetadata.decodeUnknownResult`; `annotateSemanticSchema` attaches the validated payload to an Effect schema; `getSemanticSchemaMetadata` is AST introspection and uses optional annotation access.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "This is schema annotation infrastructure, not a data payload or adapter boundary. Schema validation is already at the metadata construction boundary, and AST metadata reads must preserve absent-annotation behavior.",
+      "boundary": "schema metadata annotation and AST introspection helper"
+    }
+  }
+]

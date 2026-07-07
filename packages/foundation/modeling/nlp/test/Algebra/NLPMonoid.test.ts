@@ -12,10 +12,12 @@
 
 import * as NLP from "@beep/nlp/Algebra/NLPMonoid";
 import { describe, expect, it } from "@effect/vitest";
+import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { BagOfWords } from "@beep/nlp/Algebra/NLPMonoid";
 
@@ -112,19 +114,57 @@ describe("Document Monoids", () => {
       sentenceCount: fc.integer({ min: 0, max: 100 }),
       charCount: fc.integer({ min: 0, max: 10000 }),
     });
-    const statsEquals = (a: NLP.DocumentStatistics, b: NLP.DocumentStatistics): boolean =>
-      a.wordCount === b.wordCount && a.sentenceCount === b.sentenceCount && a.charCount === b.charCount;
+    const statsEquals = S.toEquivalence(NLP.DocumentStatistics);
     testMonoidLaws("DocumentStats", NLP.DocumentStats, statsArbitrary, statsEquals);
+
+    it("round-trips schema-derived document statistics values", () => {
+      fc.assert(
+        fc.property(S.toArbitrary(NLP.DocumentStatistics), (stats) => {
+          const encoded = Effect.runSync(S.encodeEffect(NLP.DocumentStatistics)(stats));
+          const decoded = Effect.runSync(S.decodeUnknownEffect(NLP.DocumentStatistics)(encoded));
+
+          expect(statsEquals(decoded, stats)).toBe(true);
+        })
+      );
+    });
   });
 });
 
 // Linguistic monoids
 describe("Linguistic Monoids", () => {
+  it("round-trips schema-derived dependency edges", () => {
+    const edgeEquals = S.toEquivalence(NLP.DependencyEdge);
+
+    fc.assert(
+      fc.property(S.toArbitrary(NLP.DependencyEdge), (edge) => {
+        const encoded = Effect.runSync(S.encodeEffect(NLP.DependencyEdge)(edge));
+        const decoded = Effect.runSync(S.decodeUnknownEffect(NLP.DependencyEdge)(encoded));
+
+        expect(edgeEquals(decoded, edge)).toBe(true);
+      })
+    );
+  });
+
   describe("AnnotationMap", () => {
     const annotationArbitrary: fc.Arbitrary<MutableHashMap.MutableHashMap<number, string>> = fc
       .array(fc.tuple(fc.integer(), fc.string()))
       .map(MutableHashMap.fromIterable);
     testMonoidLaws("AnnotationMap", NLP.AnnotationMap<number, string>(), annotationArbitrary, mutableHashMapEquals);
+  });
+});
+
+describe("TextAnalysis", () => {
+  it("round-trips schema-derived text analysis values", () => {
+    const analysisEquals = S.toEquivalence(NLP.TextAnalysis);
+
+    fc.assert(
+      fc.property(S.toArbitrary(NLP.TextAnalysis), (analysis) => {
+        const encoded = Effect.runSync(S.encodeEffect(NLP.TextAnalysis)(analysis));
+        const decoded = Effect.runSync(S.decodeUnknownEffect(NLP.TextAnalysis)(encoded));
+
+        expect(analysisEquals(decoded, analysis)).toBe(true);
+      })
+    );
   });
 });
 

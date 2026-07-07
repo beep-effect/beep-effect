@@ -1,0 +1,13 @@
+[
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
+    "line": 262,
+    "symbol": "maybe",
+    "smell": "Generic optional-property helper maybe(key, value) uses a computed-property cast ({ [key]: value } as Record<K, V>) and is then spread into fixed constructor payloads at lines 299-303 and 445-446. The progress-event payload is a heterogeneous optional struct (outTimeSeconds: number, speed: string), so the helper hides the sibling shape of the R.getSomes struct-spread smell instead of preserving per-key types directly.",
+    "proposedTarget": "Replace the spread groups with O.getSomesStruct({ durationSeconds: O.fromUndefinedOr(durationSeconds), fps: O.fromUndefinedOr(fps), frameCount: O.fromUndefinedOr(frameCount), height: O.fromUndefinedOr(height), width: O.fromUndefinedOr(width) }) and O.getSomesStruct({ outTimeSeconds: O.fromUndefinedOr(outTimeSeconds), speed: O.fromUndefinedOr(block.speed) }), then delete maybe. O.getSomesStruct is verified at packages/foundation/modeling/utils/src/Option.ts:102 and O.fromUndefinedOr at .repos/effect-v4/packages/effect/src/Option.ts:860; in-repo exemplars are packages/drivers/acp/src/AcpClient.service.ts:490 and packages/drivers/firecrawl/src/Firecrawl.service.ts:394.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 1.4
+  }
+]

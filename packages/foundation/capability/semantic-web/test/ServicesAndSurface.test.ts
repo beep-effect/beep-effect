@@ -9,7 +9,12 @@ import {
   CanonicalizeDatasetRequest,
   FingerprintDatasetRequest,
 } from "@beep/semantic-web/services/canonicalization";
-import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
+import {
+  ShaclNodeShape,
+  ShaclPropertyShape,
+  ShaclValidationRequest,
+  ShaclValidationService,
+} from "@beep/semantic-web/services/shacl-validation";
 import {
   SparqlQueryRequest,
   SparqlQueryService,
@@ -49,6 +54,13 @@ const CanonicalizeDatasetRequestArbitrary = S.toArbitrary(CanonicalizeDatasetReq
     workLimit: request.workLimit,
   })
 );
+const FingerprintDatasetRequestArbitrary = S.toArbitrary(FingerprintDatasetRequest).map((request) =>
+  FingerprintDatasetRequest.make({
+    algorithm: request.algorithm,
+    dataset: boundDataset(request.dataset),
+    workLimit: request.workLimit,
+  })
+);
 
 const runCanonicalization = <A, E>(effect: Effect.Effect<A, E, CanonicalizationService>) =>
   Effect.runPromise(effect.pipe(provideScopedLayer(CanonicalizationServiceLive), Effect.orDie));
@@ -74,27 +86,94 @@ describe("Services and Surface", () => {
     { timeout: 30000 },
     () =>
       fc.assert(
-        fc.property(DatasetArbitrary, CanonicalizeDatasetRequestArbitrary, (generatedDataset, canonicalizeRequest) => {
-          const encodedDataset = Effect.runSync(S.encodeEffect(Dataset)(generatedDataset));
-          const decodedDataset = Effect.runSync(S.decodeUnknownEffect(Dataset)(encodedDataset));
-          const reencodedDataset = Effect.runSync(S.encodeEffect(Dataset)(decodedDataset));
+        fc.property(
+          DatasetArbitrary,
+          CanonicalizeDatasetRequestArbitrary,
+          FingerprintDatasetRequestArbitrary,
+          (generatedDataset, canonicalizeRequest, fingerprintRequest) => {
+            const encodedDataset = Effect.runSync(S.encodeEffect(Dataset)(generatedDataset));
+            const decodedDataset = Effect.runSync(S.decodeUnknownEffect(Dataset)(encodedDataset));
+            const reencodedDataset = Effect.runSync(S.encodeEffect(Dataset)(decodedDataset));
 
-          const encodedCanonicalizeRequest = Effect.runSync(
-            S.encodeEffect(CanonicalizeDatasetRequest)(canonicalizeRequest)
-          );
-          const decodedCanonicalizeRequest = Effect.runSync(
-            S.decodeUnknownEffect(CanonicalizeDatasetRequest)(encodedCanonicalizeRequest)
-          );
-          const reencodedCanonicalizeRequest = Effect.runSync(
-            S.encodeEffect(CanonicalizeDatasetRequest)(decodedCanonicalizeRequest)
-          );
+            const encodedCanonicalizeRequest = Effect.runSync(
+              S.encodeEffect(CanonicalizeDatasetRequest)(canonicalizeRequest)
+            );
+            const decodedCanonicalizeRequest = Effect.runSync(
+              S.decodeUnknownEffect(CanonicalizeDatasetRequest)(encodedCanonicalizeRequest)
+            );
+            const reencodedCanonicalizeRequest = Effect.runSync(
+              S.encodeEffect(CanonicalizeDatasetRequest)(decodedCanonicalizeRequest)
+            );
 
-          expect(reencodedDataset).toEqual(encodedDataset);
-          expect(reencodedCanonicalizeRequest).toEqual(encodedCanonicalizeRequest);
-        }),
+            const encodedFingerprintRequest = Effect.runSync(
+              S.encodeEffect(FingerprintDatasetRequest)(fingerprintRequest)
+            );
+            const decodedFingerprintRequest = Effect.runSync(
+              S.decodeUnknownEffect(FingerprintDatasetRequest)(encodedFingerprintRequest)
+            );
+            const reencodedFingerprintRequest = Effect.runSync(
+              S.encodeEffect(FingerprintDatasetRequest)(decodedFingerprintRequest)
+            );
+
+            expect(reencodedDataset).toEqual(encodedDataset);
+            expect(reencodedCanonicalizeRequest).toEqual(encodedCanonicalizeRequest);
+            expect(reencodedFingerprintRequest).toEqual(encodedFingerprintRequest);
+          }
+        ),
         { numRuns: 5 }
       )
   );
+
+  it("keeps optional service control fields absent in encoded wire shapes when omitted", () => {
+    const emptyDataset = decodeUnknownSync(Dataset)({ quads: [] });
+    const namedNode = makeNamedNode("https://schema.org/name");
+
+    const encodedCanonicalizeRequest = S.encodeSync(CanonicalizeDatasetRequest)(
+      CanonicalizeDatasetRequest.make({
+        algorithm: "rdfc-1.0",
+        dataset: emptyDataset,
+      })
+    );
+    const encodedFingerprintRequest = S.encodeSync(FingerprintDatasetRequest)(
+      FingerprintDatasetRequest.make({
+        algorithm: "rdfc-1.0",
+        dataset: emptyDataset,
+      })
+    );
+    const encodedPropertyShape = S.encodeSync(ShaclPropertyShape)(
+      ShaclPropertyShape.make({
+        path: namedNode,
+      })
+    );
+    const encodedNodeShape = S.encodeSync(ShaclNodeShape)(
+      ShaclNodeShape.make({
+        properties: [],
+      })
+    );
+    const encodedValidationRequest = S.encodeSync(ShaclValidationRequest)(
+      ShaclValidationRequest.make({
+        dataset: emptyDataset,
+        shapes: [],
+      })
+    );
+    const encodedSparqlRequest = S.encodeSync(SparqlQueryRequest)(
+      SparqlQueryRequest.make({
+        dataset: emptyDataset,
+        profile: "ask",
+        query: "ASK { ?s ?p ?o }",
+      })
+    );
+
+    expect(encodedCanonicalizeRequest).not.toHaveProperty("workLimit");
+    expect(encodedFingerprintRequest).not.toHaveProperty("workLimit");
+    expect(encodedPropertyShape).not.toHaveProperty("minCount");
+    expect(encodedPropertyShape).not.toHaveProperty("maxCount");
+    expect(encodedPropertyShape).not.toHaveProperty("datatype");
+    expect(encodedNodeShape).not.toHaveProperty("id");
+    expect(encodedNodeShape).not.toHaveProperty("targetClass");
+    expect(encodedValidationRequest).not.toHaveProperty("maxResults");
+    expect(encodedSparqlRequest).not.toHaveProperty("timeoutMs");
+  });
 
   it("canonicalizes and fingerprints datasets deterministically", () =>
     Effect.gen(function* () {

@@ -1,0 +1,32 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/architecture-lab/client/src/aggregates/WorkItem/WorkItem.client.ts",
+    "line": 77,
+    "symbol": "WorkItemClientTransport / WorkItemClientShape",
+    "smell": "Exported interfaces with Effect-returning methods match the schema-first-inventory detector surface.",
+    "proposedTarget": "None - fence 1 transport/service port carve-out. The command/query inputs and `WorkItemActionError` error channel are imported schema-modeled contracts from `@beep/architecture-lab-use-cases/public`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "These interfaces describe a client transport capability and its Context.Service facade. Schema-ifying them would wrap behavior/runtime effects rather than first-party payloads.",
+      "boundary": "WorkItem client transport/service port"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/architecture-lab/client/src/aggregates/WorkItem/WorkItem.client.ts",
+    "line": 252,
+    "symbol": "makeWorkItemClient",
+    "smell": "Exported factory in a client contract file can look like an SFV4-fn-schema function-contract hit.",
+    "proposedTarget": "Hypothetical `Fn({ input: WorkItemClientTransportSchema, output: WorkItemClientShapeSchema })` - audited and rejected.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "The factory forwards a transport port into an identical service facade. Inputs and outputs are behavior-bearing service surfaces whose method payloads are already schema-modeled commands, queries, entities, and errors.",
+      "boundary": "client facade over injected transport port"
+    }
+  }
+]

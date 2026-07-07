@@ -100,6 +100,7 @@ export type JsonRecord = typeof JsonRecord.Type;
 export class PackageJson extends S.Class<PackageJson>($I`PackageJson`)(
   {
     name: S.String,
+    scripts: S.optionalKey(S.Record(S.String, S.String)),
     workspaces: S.optionalKey(S.Unknown),
     exports: S.optionalKey(S.Unknown),
   },
@@ -736,3 +737,18 @@ export const declarationKind = (node: Node): string => {
   }
   return node.getKindName();
 };
+
+/**
+ * Fold a byte stream into its decoded text.
+ *
+ * @param stream - Byte stream to decode and concatenate.
+ * @returns Effect yielding the accumulated text.
+ * @category streams
+ * @since 0.0.0
+ */
+// fallow-ignore-next-line code-duplication
+export const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
+  stream.pipe(
+    Stream.decodeText(),
+    Stream.runFold(thunkEmptyStr, (acc, chunk) => `${acc}${chunk}`)
+  );

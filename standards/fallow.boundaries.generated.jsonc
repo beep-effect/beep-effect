@@ -384,6 +384,12 @@
         ]
       },
       {
+        "name": "@beep/pacer",
+        "patterns": [
+          "packages/drivers/pacer/src/**"
+        ]
+      },
+      {
         "name": "@beep/pandoc-ast",
         "patterns": [
           "packages/foundation/modeling/pandoc-ast/src/**"
@@ -1207,11 +1213,13 @@
         "from": "@beep/form",
         "allow": [
           "@beep/form",
+          "@beep/identity",
           "@beep/schema",
           "@beep/ui"
         ],
         "allowTypeOnly": [
           "@beep/form",
+          "@beep/identity",
           "@beep/schema",
           "@beep/ui"
         ]
@@ -1297,13 +1305,15 @@
           "@beep/identity",
           "@beep/langextract",
           "@beep/nlp",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/langextract",
           "@beep/nlp",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/utils"
         ]
       },
       {
@@ -1621,6 +1631,15 @@
         ]
       },
       {
+        "from": "@beep/pacer",
+        "allow": [
+          "@beep/pacer"
+        ],
+        "allowTypeOnly": [
+          "@beep/pacer"
+        ]
+      },
+      {
         "from": "@beep/pandoc-ast",
         "allow": [
           "@beep/identity",
@@ -1808,6 +1827,7 @@
           "@beep/face-detection",
           "@beep/ffmpeg",
           "@beep/file-processing",
+          "@beep/firecrawl",
           "@beep/identity",
           "@beep/libpff",
           "@beep/md",
@@ -1832,6 +1852,7 @@
           "@beep/face-detection",
           "@beep/ffmpeg",
           "@beep/file-processing",
+          "@beep/firecrawl",
           "@beep/identity",
           "@beep/libpff",
           "@beep/md",

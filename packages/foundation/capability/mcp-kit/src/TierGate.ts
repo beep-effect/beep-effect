@@ -22,8 +22,10 @@
  */
 
 import { $McpKitId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
-import { Context, DateTime, Effect } from "effect";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { Context, Data, DateTime, Effect } from "effect";
+import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as McpSchema from "effect/unstable/ai/McpSchema";
 import * as AiTool from "effect/unstable/ai/Tool";
@@ -39,6 +41,15 @@ const TierGateOutcomeTag = LiteralKit(["approved", "refused"]);
  * {@link TierGateVerdict}'s own tag so a persisted audit record is
  * self-describing independent of the verdict it was extracted from.
  *
+ * @example
+ * ```ts
+ * import { TierGateOutcome } from "@beep/mcp-kit"
+ *
+ * const outcome = TierGateOutcome.Enum.approved
+ * console.log(TierGateOutcome.is.approved(outcome))
+ * // true
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -50,6 +61,16 @@ export const TierGateOutcome = TierGateOutcomeTag.pipe(
 
 /**
  * Runtime type for {@link TierGateOutcome}.
+ *
+ * @example
+ * ```ts
+ * import { TierGateOutcome } from "@beep/mcp-kit"
+ * import type { TierGateOutcome as TierGateOutcomeType } from "@beep/mcp-kit"
+ *
+ * const outcome: TierGateOutcomeType = TierGateOutcome.Enum.refused
+ * console.log(outcome)
+ * // "refused"
+ * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -97,9 +118,12 @@ export class TierGateAuditRecord extends S.Class<TierGateAuditRecord>($I`TierGat
     destructive: S.Boolean.annotateKey({
       description: "Whether the tool is annotated as destructive.",
     }),
-    toolCallId: S.OptionFromNullOr(S.String).annotateKey({
-      description: "Caller-supplied tool call identifier, when available.",
-    }),
+    toolCallId: S.OptionFromNullOr(S.NonEmptyString).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({
+        description: "Caller-supplied tool call identifier, when available.",
+      })
+    ),
     occurredAt: S.NonEmptyString.annotateKey({
       description: "ISO-8601 timestamp at which the outcome was decided.",
     }),
@@ -107,9 +131,9 @@ export class TierGateAuditRecord extends S.Class<TierGateAuditRecord>($I`TierGat
   $I.annote("TierGateAuditRecord", {
     description: "Sanitized audit record written for every gated tools/call dispatch, approved or refused.",
   })
-) {}
-
-const TierGateVerdictTag = LiteralKit(["approved", "refused"]);
+) {
+  static readonly is = S.is(TierGateAuditRecord);
+}
 
 /**
  * Typed verdict returned by the tier gate, discriminated on `verdict`. Both
@@ -139,13 +163,14 @@ const TierGateVerdictTag = LiteralKit(["approved", "refused"]);
  * @category schemas
  * @since 0.0.0
  */
-export const TierGateVerdict = TierGateVerdictTag.toTaggedUnion("verdict")({
+export const TierGateVerdict = TierGateOutcomeTag.toTaggedUnion("verdict")({
   approved: { audit: TierGateAuditRecord },
   refused: { audit: TierGateAuditRecord },
 }).pipe(
   $I.annoteSchema("TierGateVerdict", {
     description: "Typed approved/refused verdict returned by the tier gate; both cases carry an audit record.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -283,7 +308,7 @@ export class TierGate extends Context.Service<TierGate, TierGateShape>()($I`Tier
  */
 export class TierGatePolicy extends S.Class<TierGatePolicy>($I`TierGatePolicy`)(
   {
-    approvedTools: S.Array(S.String).annotateKey({
+    approvedTools: S.Array(S.NonEmptyString).annotateKey({
       description: "Tool names explicitly approved to dispatch regardless of their destructive annotation.",
     }),
   },
@@ -302,7 +327,7 @@ const isDestructive = (tool: AiTool.Any): boolean =>
   Context.getOrElse(tool.annotations, AiTool.Destructive, () => true);
 
 const isPolicyApproved = (policy: TierGatePolicy, tool: AiTool.Any): boolean =>
-  !isDestructive(tool) || policy.approvedTools.includes(tool.name);
+  !isDestructive(tool) || A.contains(policy.approvedTools, tool.name);
 
 const auditReason = (approved: boolean, destructive: boolean): string => {
   if (!approved) {
@@ -369,9 +394,22 @@ export const fromApprovedToolsPolicy = (policy: TierGatePolicy): TierGateShape =
  * @category models
  * @since 0.0.0
  */
-export type TierGateDispatchResult<A> =
-  | { readonly _tag: "Dispatched"; readonly value: A; readonly audit: TierGateAuditRecord }
-  | { readonly _tag: "Refused"; readonly audit: TierGateAuditRecord };
+export type TierGateDispatchResult<A> = Data.TaggedEnum<{
+  readonly Dispatched: { readonly value: A; readonly audit: TierGateAuditRecord };
+  readonly Refused: { readonly audit: TierGateAuditRecord };
+}>;
+
+interface TierGateDispatchResultDefinition extends Data.TaggedEnum.WithGenerics<1> {
+  readonly taggedEnum: TierGateDispatchResult<this["A"]>;
+}
+
+/**
+ * Tagged-enum constructors and matchers for {@link TierGateDispatchResult}.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const TierGateDispatchResult = Data.taggedEnum<TierGateDispatchResultDefinition>();
 
 /**
  * Wraps a `tools/call` dispatch effect with the tier gate. Evaluates the
@@ -410,11 +448,10 @@ export const dispatchWithTierGate = Effect.fn("dispatchWithTierGate")(function* 
 ) {
   const gate = yield* TierGate;
   const verdict = yield* gate.evaluate(request);
-  if (verdict.verdict === "approved") {
-    const value = yield* onApproved;
-    return { _tag: "Dispatched", value, audit: verdict.audit } as const;
-  }
-  return { _tag: "Refused", audit: verdict.audit } as const;
+  return yield* TierGateVerdict.match(verdict, {
+    approved: ({ audit }) => Effect.map(onApproved, (value) => TierGateDispatchResult.Dispatched({ value, audit })),
+    refused: ({ audit }) => Effect.succeed(TierGateDispatchResult.Refused({ audit })),
+  });
 });
 
 /**
@@ -438,10 +475,13 @@ export const dispatchWithTierGate = Effect.fn("dispatchWithTierGate")(function* 
  * @category combinators
  * @since 0.0.0
  */
-export const withEnabledWhenApprovedTool = <T extends AiTool.Any>(tool: T, policy: TierGatePolicy): T => {
+export const withEnabledWhenApprovedTool: {
+  (policy: TierGatePolicy): <T extends AiTool.Any>(tool: T) => T;
+  <T extends AiTool.Any>(tool: T, policy: TierGatePolicy): T;
+} = dual(2, <T extends AiTool.Any>(tool: T, policy: TierGatePolicy): T => {
   const predicate: P.Predicate<unknown> = () => isPolicyApproved(policy, tool);
   // `Tool#annotate` returns the widened `Tool<Name, Config, Requirements>`
   // shape rather than the caller's specific `T`; the annotation itself does
   // not change `Name`/`Config`/`Requirements`, so re-narrowing here is sound.
-  return tool.annotate(McpSchema.EnabledWhen, predicate as never) as T;
-};
+  return tool.annotate(McpSchema.EnabledWhen, predicate) as T;
+});

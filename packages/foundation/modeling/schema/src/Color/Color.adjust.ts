@@ -7,6 +7,7 @@
 
 import { Number as Num, Result, SchemaGetter } from "effect";
 import * as S from "effect/Schema";
+import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { HexColor, hexToRgbValue, NormalizeHexColor } from "./Color.hex.ts";
 import { $I, schemaIssueToError } from "./Color.shared.ts";
 import { hexToOklchValue, oklchToHexValue } from "./Color.transforms.ts";
@@ -67,7 +68,7 @@ const withAlphaValue = ({ color, alpha }: WithAlphaInput): RgbaColorString => {
   const { r, g, b } = hexToRgbValue(color);
 
   return Result.getOrThrowWith(
-    S.decodeUnknownResult(RgbaColorString)(
+    RgbaColorString.decodeResult(
       `rgba(${Math.round(r * 255)}, ${Math.round(g * 255)}, ${Math.round(b * 255)}, ${alpha})`
     ),
     schemaIssueToError
@@ -92,7 +93,10 @@ export const RgbaColorString = S.String.check(RgbaColorStringChecks).pipe(
   S.brand("RgbaColorString"),
   $I.annoteSchema("RgbaColorString", {
     description: "A CSS rgba color string in the form rgba(r, g, b, a).",
-  })
+  }),
+  SchemaUtils.withStatics((self) => ({
+    decodeResult: S.decodeUnknownResult(self),
+  }))
 );
 
 /**
@@ -117,10 +121,20 @@ export type RgbaColorString = typeof RgbaColorString.Type;
  * @since 0.0.0
  * @category validation
  */
-export const ColorAmount = S.Finite.pipe(
+export const ColorAmount = S.Finite.check(
+  S.isBetween(
+    { minimum: 0, maximum: 1 },
+    {
+      identifier: $I`ColorAmountRangeCheck`,
+      title: "Color Amount Range",
+      description: "A normalized color transformation amount from 0 through 1.",
+      message: "Color amounts must be between 0 and 1",
+    }
+  )
+).pipe(
   S.brand("ColorAmount"),
   $I.annoteSchema("ColorAmount", {
-    description: "A finite numeric amount used by color transformation helpers.",
+    description: "A normalized finite amount from 0 through 1 used by color transformation helpers.",
   })
 );
 

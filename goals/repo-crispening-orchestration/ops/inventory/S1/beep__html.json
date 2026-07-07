@@ -1,0 +1,32 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/html/src/Html.nodes.ts",
+    "line": 48,
+    "symbol": "Text / Comment / Doctype Type/Encoded namespaces",
+    "smell": "Hand-authored leaf-node schema file declares exported companion namespace `Type` / `Encoded` interfaces beside `S.TaggedClass` definitions; a naive schema-first inventory pass sees exported data interfaces in a schema-modeled file.",
+    "proposedTarget": "Do not replace these with separate schemas. Keep the companion type projections for the leaf node classes; comparable audited companion-namespace precedent exists in `packages/foundation/modeling/md/src/Md.model.ts:90` and `packages/foundation/modeling/pandoc-ast/src/Pandoc.model.ts:384`.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The runtime truth is already the colocated `S.TaggedClass` for each leaf node. The namespace members provide public `Text.Type` / `Text.Encoded`-style projections for generated union composition and consumers; replacing them with another schema would add no invariant and risks a public type-form change.",
+      "boundary": "schema companion namespace / public type projection"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/html/test/Html.test.ts",
+    "line": 5,
+    "symbol": "decode / encode",
+    "smell": "Top-of-test `const decode = S.decodeUnknownSync(HtmlNode)` / `const encode = S.encodeSync(HtmlNode)` textually matches the decode-helper-wall smell.",
+    "proposedTarget": "None — audited. These are local test helpers for HtmlNode round-trip assertions; the actionable boundary-codec issue in this package is the generator `readJson` contract.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "Test-only helpers invoke the schema directly and are not exported, reused by source, or hiding hand-rolled validation. They keep assertions concise while preserving HtmlNode as the source of truth.",
+      "boundary": "test helper / fixture-local schema codec"
+    }
+  }
+]

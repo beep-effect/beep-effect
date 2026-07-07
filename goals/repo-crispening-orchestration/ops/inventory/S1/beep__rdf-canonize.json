@@ -1,0 +1,17 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/rdf-canonize/src/rdf-canonize.d.ts",
+    "line": 1,
+    "symbol": "declare module \"rdf-canonize\" Canonize* types",
+    "smell": "Ambient module declaration defines object type aliases (`CanonizeNamedNode`, `CanonizeBlankNode`, `CanonizeLiteral`, `CanonizeQuad`, etc.) that can look like schema-first-inventory data-shape hits.",
+    "proposedTarget": "None -- keep these as ambient third-party typings for the untyped `rdf-canonize` package. First-party RDF term schemas live in `@beep/rdf`; this file only describes the upstream adapter's expected structural types.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Third-party boundary typings are not first-party domain payloads. Schema-ifying this declaration would not add runtime validation and would blur the adapter seam; canonicalization.ts converts between these upstream structural terms and the schema-backed `@beep/rdf` terms.",
+      "boundary": "ambient typings for upstream rdf-canonize adapter"
+    }
+  }
+]

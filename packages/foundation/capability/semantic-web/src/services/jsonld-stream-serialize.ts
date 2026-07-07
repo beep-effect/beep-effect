@@ -6,7 +6,7 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import { JsonLdContext } from "../jsonld.ts";
@@ -58,8 +58,8 @@ export class JsonLdStreamSerializeRequest extends S.Class<JsonLdStreamSerializeR
 )(
   {
     dataset: Dataset,
-    context: S.OptionFromOptionalKey(JsonLdContext),
-    maxChunkCharacters: S.OptionFromOptionalKey(NonNegativeInt),
+    context: S.OptionFromOptionalKey(JsonLdContext).pipe(SchemaUtils.withNoneDefault),
+    maxChunkCharacters: S.OptionFromOptionalKey(PosInt).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("JsonLdStreamSerializeRequest", {
     description: "Streaming serialize request.",

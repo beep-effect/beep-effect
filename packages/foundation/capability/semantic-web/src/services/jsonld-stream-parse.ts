@@ -6,7 +6,7 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import { Dataset } from "../rdf.ts";
@@ -209,7 +209,7 @@ export type JsonLdStreamParseInput = typeof JsonLdStreamParseInput.Type;
 export class JsonLdStreamParseRequest extends S.Class<JsonLdStreamParseRequest>($I`JsonLdStreamParseRequest`)(
   {
     input: JsonLdStreamParseInput,
-    loaderPolicy: S.OptionFromOptionalKey(JsonLdDocumentLoaderPolicy),
+    loaderPolicy: S.OptionFromOptionalKey(JsonLdDocumentLoaderPolicy).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("JsonLdStreamParseRequest", {
     description: "Streaming parse request.",

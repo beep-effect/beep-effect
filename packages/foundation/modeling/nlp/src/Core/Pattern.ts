@@ -190,7 +190,8 @@ export const POSPatternOption = S.NonEmptyArray(S.Union([UniversalPOSTag, EmptyP
   .pipe(
     $I.annoteSchema("POSPatternOption", {
       description: "One or more POS tag alternatives for a pattern position.",
-    })
+    }),
+    SchemaUtils.withCodecStatics
   );
 
 /**
@@ -227,7 +228,8 @@ export const EntityPatternOption = S.NonEmptyArray(S.Union([NamedEntityType, Emp
   .pipe(
     $I.annoteSchema("EntityPatternOption", {
       description: "One or more entity-type alternatives for a pattern position.",
-    })
+    }),
+    SchemaUtils.withCodecStatics
   );
 
 /**
@@ -269,7 +271,8 @@ export const LiteralPatternOption = S.NonEmptyArray(S.Union([S.NonEmptyString, E
   .pipe(
     $I.annoteSchema("LiteralPatternOption", {
       description: "One or more literal-text alternatives for a pattern position.",
-    })
+    }),
+    SchemaUtils.withCodecStatics
   );
 
 /**
@@ -376,7 +379,8 @@ export class LiteralPatternElement extends S.TaggedClass<LiteralPatternElement>(
 export const PatternElement = S.Union([POSPatternElement, EntityPatternElement, LiteralPatternElement]).pipe(
   $I.annoteSchema("PatternElement", {
     description: "Tagged union of supported NLP pattern element variants.",
-  })
+  }),
+  S.toTaggedUnion("_tag")
 );
 
 /**
@@ -412,7 +416,8 @@ export const PatternId = S.NonEmptyString.pipe(
   S.brand("PatternId"),
   $I.annoteSchema("PatternId", {
     description: "Stable identifier for a reusable NLP pattern.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -501,7 +506,7 @@ export class Pattern extends S.TaggedClass<Pattern>($I`Pattern`)(
   {
     elements: S.Chunk(PatternElement),
     id: PatternId,
-    mark: S.OptionFromOptionalKey(MarkRange),
+    mark: S.OptionFromOptionalKey(MarkRange).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Pattern", {
     description: "Ordered sequence of NLP pattern elements with optional marked span.",

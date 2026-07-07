@@ -1,0 +1,47 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
+    "line": 166,
+    "symbol": "endpointErrorSchemas",
+    "smell": "endpointErrorSchemas manually iterates endpoint.middlewares and casts each middleware as unknown as HttpApiMiddleware.AnyService to read service.error. Effect v4 already centralizes this exact middleware-key cast and de-duplication in HttpApiEndpoint.getErrorSchemas.",
+    "proposedTarget": "Import HttpApiEndpoint as a value from effect/unstable/httpapi and replace endpointErrorSchemas with HttpApiEndpoint.getErrorSchemas(endpoint). The sibling endpointSuccessSchemas helper can likewise use HttpApiEndpoint.getSuccessSchemas(endpoint). Effect v4 exports the namespace from .repos/effect-v4/packages/effect/src/unstable/httpapi/index.ts:25 and defines getErrorSchemas/getSuccessSchemas at .repos/effect-v4/packages/effect/src/unstable/httpapi/HttpApiEndpoint.ts:227-241.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3.6,
+    "exception": {
+      "reason": "The proposed Effect v4 HttpApiEndpoint.getErrorSchemas/getSuccessSchemas helpers exist in .repos/effect-v4 but are absent from the installed effect package used by package check, so replacing the compatibility helper does not compile in this checkout.",
+      "boundary": "Effect API availability, deferred to dependency-aligned sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/observability/src/Logging.ts",
+    "line": 257,
+    "symbol": "levelColor",
+    "smell": "Match.value(level) handles Trace/Debug/Info/Warn/Error/Fatal and falls through with Match.orElse for the remaining LogLevel literals, so a literal-domain exhaustiveness detector would flag it.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The handled cases are LogSeverity values, while the full LogLevel kit also includes policy selectors All and None (packages/foundation/modeling/schema/src/Logs.ts:31-62). Mapping non-severity selectors to the dim fallback is intentional pretty-render behavior, not missing variant handling.",
+      "boundary": "pretty console rendering of @beep/schema LogLevel selectors"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/observability/src/experimental/server/DevToolsRelay.ts",
+    "line": 139,
+    "symbol": "DevToolsRelayService.ingest",
+    "smell": "Match.value(request).pipe(Match.tags({ Span, SpanEvent }), Match.orElse(...)) is a partial tag match over DevToolsSchema.Request.WithoutPing, so a loose no-manual-tag detector would ask for tagsExhaustive.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "DevToolsSchema.Request.WithoutPing is currently Span | SpanEvent | MetricsSnapshot (verified in .repos/effect-v4/packages/effect/src/unstable/devtools/DevToolsSchema.ts:484-514). The code intentionally handles span-bearing requests separately and lets the remaining MetricsSnapshot update the metrics slot; the RelayState annotation keeps future request tags from silently fitting that field.",
+      "boundary": "experimental devtools relay state ingestion"
+    }
+  }
+]

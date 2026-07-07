@@ -1,0 +1,133 @@
+[
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/tooling/policy-pack/lint-rules/src/index.ts",
+    "line": 100,
+    "symbol": "RuleMetadata",
+    "smell": "`replaces: string | null` and `scope: string | null` model absence in the repo-owned rule registry with literal `null`; `RULES` then stores `null` at lines 135, 142, 144, 149, and 151.",
+    "proposedTarget": "Use `O.Option<string>` for `replaces` and `scope` (values `O.some(...)` / `O.none()`), or introduce a tiny `RuleMetadata` schema with `S.OptionFromNullOr(S.String)` if the registry is decoded from JSON later. In-package exemplar: rule utilities such as `getPropertyName` at `src/rules/utils.ts:190` and `classifyImportSpecifier` at `src/rules/utils.ts:314` already return `Option` rather than nullish sentinels.",
+    "confidence": 0.92,
+    "mechanization": "codemod",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
+    "line": 48,
+    "symbol": "MaybeNode",
+    "smell": "`MaybeNode = AstNode | null | undefined` is a nullish union that appears throughout rule helpers.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 2,
+    "exception": {
+      "reason": "This mirrors the external oxlint ESTree typed AST, where child slots may be nullable or absent. The package converts these slots to `Option` immediately at helper boundaries (`asAstNode`, `unwrapExpression`, `getPropertyName`).",
+      "boundary": "external oxlint ESTree AST slot contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
+    "line": 172,
+    "symbol": "carriedSlot",
+    "smell": "`carriedSlot` returns `undefined` when an AST node has no usable `name` or literal `value` slot.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "The private helper lifts raw external AST slots into `unknown`; the public helper immediately wraps/filter it through `Option` in `getPropertyName` at line 190. The nullish value does not escape the AST adapter boundary.",
+      "boundary": "private AST slot adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/tooling/policy-pack/lint-rules/src/rules/namespace-node-imports.ts",
+    "line": 21,
+    "symbol": "segmentAlias",
+    "smell": "`O.getOrElse(..., () => Str.pascalCase(segment))` performs case normalization in rule logic.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "This is the product behavior of the lint rule: derive the canonical namespace alias for a Node.js module segment when no explicit alias is configured. It is not schema-field normalization.",
+      "boundary": "lint rule alias derivation behavior"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
+    "line": 330,
+    "symbol": "normalizePath",
+    "smell": "`path.replaceAll('\\\\', '/')` normalizes OS path separators inside lint-rule utilities.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "The value is an oxlint context filename/cwd boundary used for path comparisons inside rules. No package schema currently owns lint context paths, and the helper is deliberately local to rule matching.",
+      "boundary": "lint runtime path-context adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/policy-pack/lint-rules/src/rules/no-inline-schema-compile.ts",
+    "line": 51,
+    "symbol": "isStaticSchemaReference",
+    "smell": "`firstChar !== undefined && firstChar.toUpperCase() === firstChar` guards a missing first character while checking whether an identifier looks like a static schema reference.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "This is a local AST/name heuristic inside a lint rule, not a schema-modeled value. It does not establish a persisted or reusable domain default.",
+      "boundary": "lint rule heuristic over identifier text"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/policy-pack/lint-rules/src/rules/no-global-process-runtime.ts",
+    "line": 77,
+    "symbol": "currentScope",
+    "smell": "`scopeStack[scopeStack.length - 1] ?? { shadowed: false }` defaults an internal lexical-scope frame.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "This is defensive state-machine fallback for a lint visitor stack. It is not a data model default and cannot be moved into a schema without inventing a schema for mutable visitor state.",
+      "boundary": "lint visitor mutable state"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/policy-pack/lint-rules/test/harness.ts",
+    "line": 101,
+    "symbol": "runRule",
+    "smell": "`report.diagnostics ?? []`, `d.message ?? ''`, `d.severity ?? ''`, and source-location `?? -1` normalize a lenient Biome JSON report in the test harness.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "This is local test harness parsing of a third-party CLI JSON report; the schema is intentionally lenient so noisy or partial subprocess output becomes an assertion-friendly empty/placeholder report.",
+      "boundary": "test harness over Biome CLI JSON report"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/policy-pack/lint-rules/test/oxlint-harness.ts",
+    "line": 144,
+    "symbol": "runOxlintRule",
+    "smell": "`report.diagnostics ?? []` and `diagnostic.labels?.[0]?.span?.line ?? -1` normalize a lenient oxlint JSON report in the test harness.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "Same carve-out as the Biome harness: this is test-only decoding of a third-party CLI report, not package domain data.",
+      "boundary": "test harness over oxlint CLI JSON report"
+    }
+  }
+]

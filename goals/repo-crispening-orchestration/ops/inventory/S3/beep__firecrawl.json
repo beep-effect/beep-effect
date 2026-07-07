@@ -1,0 +1,54 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.service.ts",
+    "line": 25,
+    "symbol": "FirecrawlSdkWatcherEventName",
+    "smell": "Watcher event literals \"document\" | \"done\" | \"error\" | \"snapshot\" are hand-repeated in a service-local union even though Firecrawl.models.ts already owns the same event domain as FirecrawlWatcherEventType = LiteralKit([\"document\", \"snapshot\", \"done\", \"error\"]) at line 384 and derives the FirecrawlWatcherEvent tagged union at lines 4632-4638.",
+    "proposedTarget": "Collapse the service-local union to the schema-owned domain, e.g. type FirecrawlSdkWatcherEventName = M.FirecrawlWatcherEventType, and keep the event constructors tied to FirecrawlWatcherEventType / FirecrawlWatcherEvent. Verified LiteralKit exposes Options/Enum/is/$match/toTaggedUnion helpers at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:647-667, and Effect v4 S.toTaggedUnion exposes schema-derived match/guards/cases at .repos/effect-v4/packages/effect/src/Schema.ts:6060-6102.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 2.5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.service.ts",
+    "line": 280,
+    "symbol": "decodeWith.reason",
+    "smell": "decodeWith narrows its reason parameter with an inline literal union \"request encoding\" | \"response decoding\" even though FirecrawlErrorReason already owns those literals in its LiteralKit at Firecrawl.errors.ts:108-119; the subset is a parallel literal family at the codec boundary.",
+    "proposedTarget": "Derive a named subset from FirecrawlErrorReason, for example FirecrawlCodecErrorReason = LiteralKit(FirecrawlErrorReason.pickOptions([\"request encoding\", \"response decoding\"])) beside FirecrawlErrorReason and use its Type/Enum values in decodeWith call sites. The in-repo subset pattern is HttpMethod_.pickOptions -> LiteralKit(...) in packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts:28-30; pickOptions is part of the LiteralKit API at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:647-662.",
+    "confidence": 0.66,
+    "mechanization": "assisted",
+    "roiRank": 1.8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.models.ts",
+    "line": 87,
+    "symbol": "FirecrawlSdkAgentRequest.model",
+    "smell": "A broad literal-union detector sees model?: \"spark-1-mini\" | \"spark-1-pro\" inside the private FirecrawlSdkAgentRequest mirror type.",
+    "proposedTarget": "None -- keep as-is for this S3 pass.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is a private compatibility mirror for the third-party SDK request accepted by typedUnknown<FirecrawlSdkAgentRequest>, not an internal variant family or duplicated local literal domain. Promoting the opaque SDK request into a first-party schema is an S1 boundary-modeling decision, not an S3 discrimination/exhaustiveness finding.",
+      "boundary": "Firecrawl SDK compatibility request mirror feeding FirecrawlAgentRequest typedUnknown"
+    }
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/drivers/firecrawl/src/Firecrawl.errors.ts",
+    "line": 302,
+    "symbol": "FirecrawlError.fromUnknown.statusOptionalSpread",
+    "smell": "A loose R.getSomes detector sees ...R.getSomes({ status: statusFromUnknown(cause) }) in the FirecrawlError.fromUnknown options object.",
+    "proposedTarget": "None -- keep as-is for this S3 pass.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The SFV4-getsomes-struct card is only actionable for heterogeneous Option structs where O.getSomesStruct preserves per-key value types. This site has one optional status key, so it is neither a homogeneous dynamic dictionary nor a heterogeneous struct; changing it would be consistency cleanup, not an S3 finding. O.getSomesStruct is verified at packages/foundation/modeling/utils/src/Option.ts:102, and R.getSomes is the homogeneous Record helper at .repos/effect-v4/packages/effect/src/Record.ts:824.",
+      "boundary": "single-key optional status payload in FirecrawlError.fromUnknown; D5-gated heterogeneous-struct sweep"
+    }
+  }
+]

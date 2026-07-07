@@ -1,0 +1,212 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/ui-system/form/src/core/FormOptions.ts",
+    "line": 105,
+    "symbol": "makeFormOptions",
+    "smell": "`params.validateOn ?? \"submit\"` and `params.async ?? false` default generic builder options before routing to TanStack validators.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Adapter-option defaults for a generic TanStack form builder, not a modeled domain payload. The validated form data still comes from the caller's Effect schema; these options only choose which TanStack validator slot to populate.",
+      "boundary": "TanStack React Form options adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/ui-system/form/src/core/FormOptions.ts",
+    "line": 143,
+    "symbol": "formOptionsWithDefaults",
+    "smell": "`defaultValues: params.defaultValues ?? getEncodedDefaultFormValues(params.schema)` - `??` fallback in a defaults builder.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 2,
+    "exception": {
+      "reason": "This is the schema-first default bridge itself: when callers omit TanStack defaultValues, the helper derives them from the schema constructor defaults and encodes them to the form field shape. It enforces S2 rather than violating it.",
+      "boundary": "schema-default extraction bridge to TanStack defaultValues"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/ui-system/form/src/core/Path.ts",
+    "line": 127,
+    "symbol": "PathValidationResult",
+    "smell": "`export type PathValidationResult<Data> = PathErrorMap<Data> | null` - nullish result type in core form path helpers.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Form validation adapter shape: `null` is the no-error result used by form validator integrations. This is an external UI/form contract, not persisted domain data.",
+      "boundary": "TanStack/validator no-error result boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/ui-system/form/src/core/Path.ts",
+    "line": 169,
+    "symbol": "schemaPathToFieldPath",
+    "smell": "`path === undefined` / empty path / missing first segment all return `\"\"` while converting schema issue paths into form field paths.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "The empty string is the established root-error key in `PathErrorMap` (line 106) and the correct field-path representation for root schema issues. This is path formatting, not a schema default.",
+      "boundary": "form path formatter and root-error key contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/ui-system/form/src/core/Path.ts",
+    "line": 280,
+    "symbol": "getNestedValue",
+    "smell": "`return undefined` for blocked/missing path segments while reading a dot/bracket path.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "Low-level path reader mirrors JavaScript property lookup and protects prototype-sensitive segments; callers that need a typed absence wrapper can wrap this primitive. It is not a domain helper returning nullish instead of Option.",
+      "boundary": "low-level form path lookup primitive + prototype-pollution guard"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/ui-system/form/src/core/Errors.ts",
+    "line": 60,
+    "symbol": "toFieldErrors",
+    "smell": "`errors === undefined ? A.empty() : A.flatMap(errors, toEntries)` - undefined-to-empty default while normalizing TanStack field errors.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "Adapter normalization over TanStack `field.state.meta.errors`, whose absence/heterogeneous contents are controlled by the form library. The output is a render-ready list, not schema-modeled domain data.",
+      "boundary": "TanStack field meta errors to UI FieldError adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/ui-system/form/src/internal/FieldShell.tsx",
+    "line": 40,
+    "symbol": "FieldShellProps",
+    "smell": "Shared field chrome props use React optional fields (`description?`, `label?`, `orientation?`) and render `null` for absent label/description.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "Component prop interfaces facing React are an explicit S2 boundary carve-out for this batch. These optional props model ergonomic UI composition, not first-party domain absence.",
+      "boundary": "React component props/interface boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/ui-system/form/src/internal/FieldBinding.tsx",
+    "line": 284,
+    "symbol": "bindNamedValueControl",
+    "smell": "`\"aria-invalid\": hasErrors || undefined` (same pattern across FieldShell and fields) - boolean-to-undefined DOM attribute adapter.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "React DOM attributes commonly use `undefined` to omit an attribute. This is accessibility attribute rendering, not a schema default or domain nullish field.",
+      "boundary": "React DOM attribute omission contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/ui-system/form/src/internal/FieldBinding.tsx",
+    "line": 430,
+    "symbol": "toDateTimePickerValue",
+    "smell": "`DateTime.DateTime | null` value channel and `return null` for absent/undecodable picker values.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "Date/time picker components use `null` as their empty value. The helper is the UI adapter from unknown form state to the picker contract; schema validation remains outside the picker component.",
+      "boundary": "MUI/date-time picker nullable value contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/ui-system/form/src/fields/SliderField.tsx",
+    "line": 86,
+    "symbol": "SliderField",
+    "smell": "`O.getOrElse(A.head(A.ensure(value)), () => field.state.value)` - empty slider-value array falls back to the current form value.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "UI primitive adapter: the slider emits an array even though the schema-bound form value is a single number. Empty array means no new slider thumb value, so preserving the current field value is correct adapter behavior.",
+      "boundary": "base-ui slider array value adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/ui-system/form/src/fields/ToggleGroupField.tsx",
+    "line": 94,
+    "symbol": "ToggleGroupField",
+    "smell": "`field.state.value.length === 0 ? [] : [field.state.value]` and `O.getOrElse(A.head(value), () => \"\")` translate between a string field and ToggleGroup's array value contract.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 11,
+    "exception": {
+      "reason": "UI primitive adapter: the single-select ToggleGroup uses an array/no-selection shape, while the bound form value is a string. The empty string is the adapter's no-selection value; the actual form schema can still refine allowed strings.",
+      "boundary": "base-ui toggle-group array/no-selection adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/ui-system/form/src/fields/ToggleField.tsx",
+    "line": 37,
+    "symbol": "toggleContent",
+    "smell": "`children ?? label` and `children === undefined ? undefined : label` choose button content and external label for the React toggle field.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 12,
+    "exception": {
+      "reason": "Presentation fallback between React children and label prop. This is render composition, not a modeled value default.",
+      "boundary": "React presentation fallback"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/ui-system/form/src/components/SubmitButton.tsx",
+    "line": 86,
+    "symbol": "SubmitButton",
+    "smell": "`{children ?? \"Submit\"}` - default visible button label.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 13,
+    "exception": {
+      "reason": "React presentation default for an optional child label. It is not a schema-field default and changing it to schema modeling would only make component use noisier.",
+      "boundary": "React component presentation default"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/ui-system/form/test/FormOptions.test.ts",
+    "line": 16,
+    "symbol": "formOptionsWithDefaults derives defaults from the schema",
+    "smell": "Tests and Storybook stories contain many `Default` exports and explicit `withKeyDefaults` / `S.withConstructorDefault` fixtures.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.05,
+    "mechanization": "judgment",
+    "roiRank": 14,
+    "exception": {
+      "reason": "Test/story fixtures intentionally exercise schema-default behavior and UI default stories. They are evidence for the core helpers, not actionable S2 debt.",
+      "boundary": "test/Storybook fixture defaults"
+    }
+  }
+]

@@ -112,7 +112,7 @@ const parameterNamesForTool = (tool: NlpTool): ReadonlyArray<string> => {
 export class ExportedToolError extends TaggedErrorClass<ExportedToolError>($I`ExportedToolError`)(
   "ExportedToolError",
   {
-    cause: S.Defect({ includeStack: true }),
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })),
     message: S.String,
     toolName: S.String,
   },
@@ -135,7 +135,7 @@ export class ExportedToolError extends TaggedErrorClass<ExportedToolError>($I`Ex
     3,
     (cause: unknown, toolName: string, options: { readonly message: string }): ExportedToolError =>
       ExportedToolError.make({
-        cause,
+        cause: O.fromUndefinedOr(cause),
         message: options.message,
         toolName,
       })

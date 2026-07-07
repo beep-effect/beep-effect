@@ -6,7 +6,7 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import { Dataset, NamedNode } from "../rdf.ts";
@@ -74,9 +74,9 @@ export const ShaclSeverity = LiteralKit(["info", "warning", "violation"]).pipe(
 export class ShaclPropertyShape extends S.Class<ShaclPropertyShape>($I`ShaclPropertyShape`)(
   {
     path: NamedNode,
-    minCount: S.OptionFromOptionalKey(NonNegativeInt),
-    maxCount: S.OptionFromOptionalKey(NonNegativeInt),
-    datatype: S.OptionFromOptionalKey(NamedNode),
+    minCount: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
+    maxCount: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
+    datatype: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ShaclPropertyShape", {
     description: "SHACL property shape used by the bounded service contract.",
@@ -113,8 +113,8 @@ export class ShaclPropertyShape extends S.Class<ShaclPropertyShape>($I`ShaclProp
  */
 export class ShaclNodeShape extends S.Class<ShaclNodeShape>($I`ShaclNodeShape`)(
   {
-    id: S.OptionFromOptionalKey(NamedNode),
-    targetClass: S.OptionFromOptionalKey(NamedNode),
+    id: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
+    targetClass: S.OptionFromOptionalKey(NamedNode).pipe(SchemaUtils.withNoneDefault),
     properties: S.Array(ShaclPropertyShape),
   },
   $I.annote("ShaclNodeShape", {
@@ -184,7 +184,7 @@ export class ShaclValidationRequest extends S.Class<ShaclValidationRequest>($I`S
   {
     dataset: Dataset,
     shapes: S.Array(ShaclNodeShape),
-    maxResults: S.OptionFromOptionalKey(NonNegativeInt),
+    maxResults: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ShaclValidationRequest", {
     description: "SHACL validation request.",
@@ -227,6 +227,29 @@ export class ShaclValidationResult extends S.Class<ShaclValidationResult>($I`Sha
 ) {}
 
 /**
+ * SHACL validation error reason.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import * as S from "effect/Schema"
+ * import { ShaclValidationErrorReason } from "@beep/semantic-web/services/shacl-validation"
+ *
+ * const reason = S.decodeUnknownSync(ShaclValidationErrorReason)("invalidShape")
+ * strictEqual(reason, "invalidShape")
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ShaclValidationErrorReason = LiteralKit(["invalidShape", "engineFailure"]).pipe(
+  $I.annoteSchema("ShaclValidationErrorReason", {
+    description: "SHACL validation error reason.",
+    semanticSchemaMetadata: serviceContractMetadata("ShaclValidationErrorReason", "SHACL validation error reason."),
+  })
+);
+
+/**
  * Typed SHACL validation error.
  *
  * @example
@@ -247,7 +270,7 @@ export class ShaclValidationResult extends S.Class<ShaclValidationResult>($I`Sha
 export class ShaclValidationError extends TaggedErrorClass<ShaclValidationError>($I`ShaclValidationError`)(
   "ShaclValidationError",
   {
-    reason: LiteralKit(["invalidShape", "engineFailure"]),
+    reason: ShaclValidationErrorReason,
     message: S.String,
   },
   $I.annote("ShaclValidationError", {

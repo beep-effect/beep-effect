@@ -1,0 +1,24 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/architecture-lab/server/src/aggregates/WorkItem/WorkItem.http.ts",
+    "line": 118,
+    "symbol": "toWorkItemHttpError",
+    "smell": "toWorkItemHttpError maps WorkItemActionError to HTTP status through S.is guard branches and a fallback serviceUnavailableBody. WorkItemActionError is a finite public tagged-error union, so this loses exhaustiveness and can silently classify a future action error as 503.",
+    "proposedTarget": "Replace the guard chain with Match.tagsExhaustive over WorkItemActionError: WorkItemNotFound -> 404, WorkItemConflict -> 409, WorkItemActionRejected -> 422, WorkItemActionFailed -> 503 redacted body. Preserve the distinct public error tags; only the dispatch mechanism changes. Verified Effect v4 target API: Match.tagsExhaustive at .repos/effect-v4/packages/effect/src/Match.ts:1095-1106; in-repo usage exemplar: packages/drivers/m365-mcp/src/M365Handlers.ts:66.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3.4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/architecture-lab/server/test/WorkItemServer.test.ts",
+    "line": 36,
+    "symbol": "WorkItemActionFailed response body",
+    "smell": "const body = response.body as WorkItemUseCases.WorkItemActionFailed uses a non-const cast to narrow an S.Unknown HTTP response body even though the WorkItemActionFailed schema is available.",
+    "proposedTarget": "Decode or guard the unknown body through the schema, e.g. const body = S.decodeUnknownSync(WorkItemUseCases.WorkItemActionFailed)(response.body), before asserting _tag and reason. Verified Effect v4 target API: S.decodeUnknownSync at .repos/effect-v4/packages/effect/src/Schema.ts:1718; in-package schema source: WorkItemActionFailed at packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.errors.ts:145.",
+    "confidence": 0.93,
+    "mechanization": "codemod",
+    "roiRank": 2.8
+  }
+]

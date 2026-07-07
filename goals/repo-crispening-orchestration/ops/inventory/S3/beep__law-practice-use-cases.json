@@ -1,0 +1,50 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts",
+    "line": 50,
+    "symbol": "officeActionExtractionTargets",
+    "smell": "Office-action extraction labels are a parallel literal family: targets list \"office_action\"/\"claim\"/\"rejection_reference\"/\"distinction\" at lines 50-70, spike candidates repeat the same labels at OfficeActionReview.candidates.ts:28-32, and IrToLaw.service.ts:128-132 repeats the labels again for requiredExtraction calls.",
+    "proposedTarget": "Introduce one OfficeActionExtractionLabel LiteralKit([\"office_action\", \"claim\", \"rejection_reference\", \"distinction\"]) and derive target construction, spike candidates, and requiredExtraction label arguments from .Enum/.Options. LiteralKit helpers were verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:657-666 and 793-801; inline arrays do not need as const because LiteralKit uses const type parameters at lines 743-751.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3.2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.service.ts",
+    "line": 75,
+    "symbol": "requiredExtraction",
+    "smell": "Hand-rolled literal guard extraction.alignmentStatus === \"unaligned\" appears in requiredExtraction (line 75) and again in anchorOf (line 99), even though AlignmentStatus is a LiteralKit with generated .is guards.",
+    "proposedTarget": "Import AlignmentStatus from @beep/langextract/Extraction and use AlignmentStatus.is.unaligned(extraction.alignmentStatus); audit the second guard in anchorOf because requiredExtraction already rejects unaligned extractions before anchorOf reads span. AlignmentStatus LiteralKit was verified at packages/foundation/capability/langextract/src/Extraction/index.ts:126, and LiteralKit.is helpers at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:657-666.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 2.3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts",
+    "line": 111,
+    "symbol": "sourceTextFrom",
+    "smell": "Manual discriminator branch if (result.resultKind !== \"extracted\") over ProcessFileResult. ProcessFileResult is an S.Union of extracted/archive-exported/skipped variants piped through S.toTaggedUnion(\"resultKind\"), so generated match/guards already exist.",
+    "proposedTarget": "Import the ProcessFileResult value (not only the type) and dispatch with ProcessFileResult.match(result, { extracted: ..., \"archive-exported\": ..., skipped: ... }) so adding a process result kind requires an explicit handler. The tagged union was verified at packages/foundation/capability/file-processing/src/Extraction/index.ts:369-375; S.toTaggedUnion match/guards at .repos/effect-v4/packages/effect/src/Schema.ts:6030-6097.",
+    "confidence": 0.84,
+    "mechanization": "assisted",
+    "roiRank": 2.9
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.ports.ts",
+    "line": 103,
+    "symbol": "OfficeActionReviewError",
+    "smell": "S.Union([FileProcessingOperationError, LangExtractError, IrToLawExtractionError]) is an error-tag union that a broad undiscriminated-union detector could flag.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Fence 3 / no error-tag merging: these are distinct boundary errors from file-processing, langextract, and IR-to-law that callers can catch or report separately. Collapsing them into one new tag would weaken the port error surface.",
+      "boundary": "OfficeActionReview service port error channel"
+    }
+  }
+]

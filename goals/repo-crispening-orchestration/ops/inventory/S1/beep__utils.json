@@ -1,0 +1,137 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/utils/src/Glob.ts",
+    "line": 189,
+    "symbol": "Glob",
+    "smell": "Exported `interface Glob { glob: (...) => Effect<...> }` — naive interface-detector hit, audited and rejected.",
+    "proposedTarget": "None — audited; service contract.",
+    "confidence": 0.05,
+    "mechanization": "judgment",
+    "roiRank": 0.01,
+    "exception": {
+      "reason": "This is the `Context.Service` shape for the Glob capability (tag defined directly below at line 206, `Context.Service(\"@effect/utils/Glob\")`). Service contracts stay interfaces — fence 1. The data flowing through it IS schema-modeled (`Pattern` schema line ~57, `GlobOptions` S.Class line 73, `GlobError` TaggedErrorClass line 138).",
+      "boundary": "Context.Service contract (fence 1)"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/utils/src/DrainableWorker.ts",
+    "line": 30,
+    "symbol": "DrainableWorker",
+    "smell": "Exported `interface DrainableWorker<A>` with Effect-typed members — naive interface-detector hit, audited and rejected.",
+    "proposedTarget": "None — audited; port interface.",
+    "confidence": 0.05,
+    "mechanization": "judgment",
+    "roiRank": 0.01,
+    "exception": {
+      "reason": "Generic port interface describing a scoped worker capability (`drain`/`enqueue` Effect-typed operations), constructed by `makeDrainableWorker`. Behavioral service shapes with generic parameters are the fence-1 carve-out, not data payloads.",
+      "boundary": "port interface / service contract (fence 1)"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/utils/src/Glob.ts",
+    "line": 210,
+    "symbol": "BunGlobScanRoot (+ BunGlobInstance, BunGlobConstructor, NodeGlobEntry, NodeDirent, PatternMatcher)",
+    "smell": "Cluster of non-exported struct/function type aliases mirroring Bun and node:fs runtime APIs — naive type-alias hits, audited and rejected.",
+    "proposedTarget": "None — audited; third-party boundary adapters.",
+    "confidence": 0.05,
+    "mechanization": "judgment",
+    "roiRank": 0.01,
+    "exception": {
+      "reason": "Internal structural shims over untyped third-party runtime surfaces (the optional global `Bun.Glob` constructor and `node:fs` Dirent walking). They exist to type a feature-detection boundary, are never decoded/persisted, and schema-ifying a foreign class instance shape would validate nothing the runtime does not already guarantee.",
+      "boundary": "third-party boundary adapter types (Bun / node:fs)"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/utils/src/Struct.ts",
+    "line": 443,
+    "symbol": "StringKeyEntry (+ StringKeyEntries, ReverseableStruct, ReverseStruct, DeepPartial)",
+    "smell": "Five exported generic type aliases (lines 443, 464, 648, 671, 771) — naive type-alias hits, audited and rejected.",
+    "proposedTarget": "None — audited; type-level utilities.",
+    "confidence": 0.05,
+    "mechanization": "judgment",
+    "roiRank": 0.01,
+    "exception": {
+      "reason": "All five are generic mapped/conditional type-level utilities supporting the Struct combinators (`reverse`, entries helpers, deep-partial paths) — the explicit S1 carve-out. None describes a concrete payload; the module's actual runtime path-lookup contract IS schema-backed (`PathLookup` at line 102 aliases the `PathLookupSchema.Type` from internal/StructPath.ts:71, and the empty-struct invariant throws the schema-modeled `EmptyStructError` TaggedErrorClass at line 41 guarded by `S.is(NonEmptyStringKeys)`).",
+      "boundary": "type-level utilities (generic mapped/conditional types)"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/utils/src/Errors.ts",
+    "line": 44,
+    "symbol": "ErrorMapper",
+    "smell": "Exported `type ErrorMapper<Error, Args, Input>` alias containing function signatures — naive function-alias hit, audited and rejected.",
+    "proposedTarget": "None — audited; overload surface.",
+    "confidence": 0.05,
+    "mechanization": "judgment",
+    "roiRank": 0.01,
+    "exception": {
+      "reason": "A dual-arity overload surface (data-first + data-last call signatures over generic Effect channels) for the `mapError`/`mapCauseError` builder family. Overload surfaces and generic type-level utilities are the explicit S1 carve-out; an `Fn` schema cannot express polymorphic type parameters or dual arity.",
+      "boundary": "overload surface / dual-arity combinator type"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/utils/src/Path.ts",
+    "line": 60,
+    "symbol": "Parsed",
+    "smell": "Exported `type Parsed = PlatformPath.Path.Parsed` alias — naive type-alias hit, audited and rejected.",
+    "proposedTarget": "None — audited; platform type re-export.",
+    "confidence": 0.05,
+    "mechanization": "judgment",
+    "roiRank": 0.01,
+    "exception": {
+      "reason": "Pure re-export of the `@effect/platform` path-parse result type so consumers avoid a direct platform import. Owning package controls the shape; duplicating it as a local schema would fork truth away from the platform contract.",
+      "boundary": "platform boundary type re-export"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/utils/src/Number.ts",
+    "line": 41,
+    "symbol": "isPositive (+ isInteger)",
+    "smell": "Exported hand-written numeric type guards (lines 41, 83) that a schema check family (`S.Int`, `S.isGreaterThanOrEqualTo`) also expresses — audited and rejected.",
+    "proposedTarget": "None — audited; foundational predicates in the shared helper substrate.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 0.02,
+    "exception": {
+      "reason": "@beep/utils IS the pure-helper substrate the schema layer itself builds on; these `unknown → number` guards compose `effect/Number` combinators and serve predicate positions (filters, Match.when) where constructing a schema parser per call would add cost without adding truth. No domain invariant lives here — domain fields needing these constraints already use branded schemas (NonNegativeInt, PosInt in @beep/schema). (Incidental, out of S1 scope: `isPositive` actually checks `>= 0` — non-negative — a naming/behavior mismatch worth an independent look.)",
+      "boundary": "pure helper substrate (foundational predicates below the schema layer)"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/modeling/utils/src/Struct.ts",
+    "line": 223,
+    "symbol": "dotGet/mapPath/mapPathLazy path-option overloads",
+    "smell": "Exported dual path helpers carry inline option structs such as `{ readonly path: P }` through overload signatures in a schema-modeled utility module.",
+    "proposedTarget": "None - audited; overload/type-level path utility surface.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 0.02,
+    "exception": {
+      "reason": "These overloads preserve generic path inference over `type-fest` `Paths`/`Get` and the schema-backed internal `PathInput`/`PathLookup` helper (`internal/StructPath.ts:31` and `:71`). `Fn` schemas cannot express the dual arity and generic path-index return narrowing; the actual runtime path input is normalized through the local schema-backed path helper.",
+      "boundary": "overload surface / type-level path utility"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/modeling/utils/src/FileSystem.ts",
+    "line": 352,
+    "symbol": "readdirSync",
+    "smell": "Node adapter overload uses an inline literal options object (`{ readonly withFileTypes: true }`) beside the schema-modeled `ReaddirSyncOptions` class.",
+    "proposedTarget": "None - audited; Node `fs.readdirSync` overload compatibility.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 0.02,
+    "exception": {
+      "reason": "The inline overload mirrors Node's return-type refinement for `withFileTypes: true` (`ReadonlyArray<NodeDirent>`). The general options payload remains schema-modeled by `ReaddirSyncOptions`; replacing the overload with an `Fn` schema would lose the third-party API compatibility and literal return narrowing without adding validation.",
+      "boundary": "third-party adapter overload (node:fs)"
+    }
+  }
+]

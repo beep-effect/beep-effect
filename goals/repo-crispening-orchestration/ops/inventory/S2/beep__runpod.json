@@ -1,0 +1,224 @@
+[
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 223,
+    "symbol": "resolveConfig",
+    "smell": "`apiUrl: normalizeBaseUrl(config.apiUrl)` strips trailing slashes after `RunpodConfigInput` has already supplied the default (`Runpod.config.ts:65`); the live environment path repeats the same service-body normalization at line 842.",
+    "proposedTarget": "Introduce a `RunpodApiUrl` string codec in `Runpod.config.ts` that normalizes trailing slashes with `S.decode(... SchemaGetter.transform(...))` or `S.decodeTo(..., SchemaTransformation.transform(...))`, then apply `SchemaUtils.withKeyDefaults(RUNPOD_API_URL)` to that schema. In-repo exemplar: `packages/foundation/modeling/identity/src/Curie.ts:209` uses `S.decodeTo` + `SchemaTransformation.transformOrFail`; Effect v4 verification: `.repos/effect-v4/packages/effect/src/Schema.ts:5467` shows same-type string normalization through `SchemaGetter.transform`.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 119,
+    "symbol": "RunpodRawRequest",
+    "smell": "`RunpodRawRequest` models `authenticated`, `body`, `headers`, and `query` as `S.optionalKey(...)`, then raw request assembly replays defaults with `request.query ?? {}` (line 599), `decodedRequest.headers ?? {}` (line 720), and `request.authenticated === false` (line 638).",
+    "proposedTarget": "Push raw-request absence into the schema: `authenticated: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true))`, `headers` / `query` with `SchemaUtils.withKeyDefaults(R.empty())`, and `body: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault)`. In-package exemplar: `Runpod.config.ts:66` uses `SchemaUtils.withKeyDefaults(R.empty())` for headers; Option/default helper exemplar: `packages/foundation/modeling/schema/test/SchemaUtils.test.ts:123` covers `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)`. Same-PR consumer sweep required because raw request constructor input changes.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 608,
+    "symbol": "normalizeRawPath",
+    "smell": "`normalizeRawPath` prepends `/` in the raw request builder while `RunpodRawRequest.path` is a plain `S.String` (line 123); path normalization is not carried by the request schema.",
+    "proposedTarget": "Introduce a `RunpodRawPath` codec for the `path` field that normalizes missing leading slash during decode, then build the URL directly from `decodedRequest.path`. Use the same verified string-normalization pattern as `.repos/effect-v4/packages/effect/src/Schema.ts:5467` (`SchemaGetter.transform`) or `SchemaTransformation.transform` verified at `.repos/effect-v4/packages/effect/src/SchemaTransformation.ts:334`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/runpod/src/Runpod.config.ts",
+    "line": 64,
+    "symbol": "RunpodConfigInput",
+    "smell": "`apiKey` is decoded as `S.optionalKey(...)`, then immediately re-modeled as `Option` in `ResolvedRunpodConfig.make({ apiKey: O.fromUndefinedOr(config.apiKey), ... })` at service line 222.",
+    "proposedTarget": "Decode the key as `apiKey: S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(SchemaUtils.withNoneDefault)` so `ResolvedRunpodConfig` receives `Option` directly. In-repo exemplar: `packages/drivers/firecrawl/src/Firecrawl.models.ts:71` uses `S.OptionFromOptionalKey` with a none constructor default; Effect v4 verification: `.repos/effect-v4/packages/effect/src/Schema.ts:8668` defines `OptionFromOptionalKey`.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/runpod/src/Runpod.errors.ts",
+    "line": 121,
+    "symbol": "RunpodError",
+    "smell": "Driver error diagnostics (`cause`, `method`, `methodName`, `operationId`, `path`, `status`) are `S.optionalKey(...)`, so `diagnosticsFor` has to rebuild Option values with `O.fromUndefinedOr(error.cause)` / `O.fromUndefinedOr(error.status)` at service lines 580-585.",
+    "proposedTarget": "Model optional error diagnostics as `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` and update constructors/diagnostics to consume `Option` directly. Same-family exemplar: `packages/drivers/firecrawl/src/Firecrawl.errors.ts:242-249` models driver error diagnostics with `S.OptionFromOptionalKey`; helper exemplar: `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46` defines `withNoneDefault`.",
+    "confidence": 0.76,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/runpod/src/Runpod.errors.ts",
+    "line": 207,
+    "symbol": "RunpodDocsError",
+    "smell": "`RunpodDocsError` uses `S.optionalKey(...)` for `cause`, `status`, and `url`; `fromReason` then builds an `optionalFields` object with `O.getSomesStruct({ cause: ..., status: O.fromUndefinedOr(...), url: O.fromUndefinedOr(...) })` at lines 226-230.",
+    "proposedTarget": "Use `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` for the optional diagnostic fields and pass Options through from `fromReason`. Exemplar: `packages/drivers/firecrawl/src/Firecrawl.errors.ts:202-208` for Option-modeled error options; verified API: `.repos/effect-v4/packages/effect/src/Schema.ts:8658-8663` documents missing-key-to-None semantics.",
+    "confidence": 0.76,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/runpod/src/RunpodDocs.service.ts",
+    "line": 43,
+    "symbol": "RunpodDocsIndexEntry",
+    "smell": "`description` is `S.optionalKey(S.String)`, while `parseEntry` carries description as `O.Option<string>` and then drops back to object omission with `...R.getSomes({ description })` at lines 142-149.",
+    "proposedTarget": "Make `description` an Option field: `S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)`, then pass `description` directly to `RunpodDocsIndexEntry.make`. In-repo exemplar: `packages/foundation/modeling/schema/test/SchemaUtils.test.ts:123` for `OptionFromOptionalKey` + `withNoneDefault`; same-family exemplar: `packages/drivers/firecrawl/src/Firecrawl.errors.ts:242` for optional diagnostics as Option.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/runpod/src/RunpodDocs.service.ts",
+    "line": 226,
+    "symbol": "parseRunpodDocsIndex",
+    "smell": "`title: O.getOrElse(state.title, () => \"Runpod Documentation\")` is an output-model default applied after parsing rather than on the `RunpodDocsIndex.title` schema.",
+    "proposedTarget": "Move the title fallback to `RunpodDocsIndex.title`, e.g. `S.String.pipe(SchemaUtils.withKeyDefaults(\"Runpod Documentation\"))`, so the parser can omit the key when no `#` heading was found. In-package exemplar: `Runpod.config.ts:65` / `Runpod.config.ts:92` use `SchemaUtils.withKeyDefaults` for missing-key decode and constructor defaults.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/runpod/src/RunpodDocs.service.ts",
+    "line": 100,
+    "symbol": "DocsParseState",
+    "smell": "`DocsParseState` requires `entries`, `section`, and `title`, so `parseRunpodDocsIndex` manually seeds `entries: A.empty()`, `section: defaultDocsSection`, and `title: O.none()` at lines 211-214.",
+    "proposedTarget": "Put parser-state defaults on the schema: `entries: S.Array(RunpodDocsIndexEntry).pipe(SchemaUtils.withEmptyArrayDefaults())`, `section: S.String.pipe(SchemaUtils.withKeyDefaults(defaultDocsSection))`, and `title: S.Option(S.String).pipe(SchemaUtils.withNoneDefault)`, then initialize with `DocsParseState.make({})`. Exemplar: `packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:136` defines empty-array defaults; `withNoneDefault` is verified at `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46`.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 9
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/drivers/runpod/src/RunpodDocs.service.ts",
+    "line": 158,
+    "symbol": "parseLine",
+    "smell": "Markdown-to-model normalization is spread through parser helpers: `Str.trim(rawLine)`, heading trim at lines 163/170, and `descriptionFrom` trim at lines 120-126 all happen in function bodies before constructing `RunpodDocsIndexEntry` / `RunpodDocsIndex`.",
+    "proposedTarget": "Consider introducing a `RunpodDocsIndexFromMarkdown` transformation schema that decodes raw markdown text to `RunpodDocsIndex` and carries the line/heading/description trim invariants. In-repo exemplar: `packages/foundation/modeling/identity/src/Curie.ts:209` uses `S.decodeTo` + `SchemaTransformation.transformOrFail`; Effect v4 docs verify same-type trim via `SchemaGetter.transform` at `.repos/effect-v4/packages/effect/src/Schema.ts:5467`. Keep parser logic explicit if maintainers decide markdown parsing is algorithmic rather than a schema boundary.",
+    "confidence": 0.58,
+    "mechanization": "judgment",
+    "roiRank": 10
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/runpod/scripts/generate.ts",
+    "line": 191,
+    "symbol": "OpenApiDocument",
+    "smell": "The decoded OpenAPI subset leaves common collections optional, forcing repeated body defaults: `document.components?.schemas ?? {}` (line 191), `pathItem.parameters ?? []` / `operation.parameters ?? []` (line 230), `operation.responses ?? {}` (line 234), `schema.required ?? []` (lines 458/921), and `schema.properties ?? {}` (line 459).",
+    "proposedTarget": "Move empty collection defaults onto the OpenAPI subset schemas with `SchemaUtils.withKeyDefaults(R.empty())` for records and `SchemaUtils.withEmptyArrayDefaults()` for arrays. In-package exemplar: `Runpod.config.ts:66` uses `withKeyDefaults(R.empty())`; helper exemplar: `packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:136` defines `withEmptyArrayDefaults`.",
+    "confidence": 0.66,
+    "mechanization": "assisted",
+    "roiRank": 11
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/drivers/runpod/scripts/generate.ts",
+    "line": 962,
+    "symbol": "refNameFromSchema",
+    "smell": "`refNameFromSchema` returns `string | undefined` and uses `return undefined` when `$ref` is absent, forcing callers to branch on undefined at lines 362/892.",
+    "proposedTarget": "Return `O.Option<string>` from `refNameFromSchema` and update callers to use `O.match` / `O.map` rather than undefined checks. This is a straight codemod-local helper change; `O.Option` is already imported in this script.",
+    "confidence": 0.92,
+    "mechanization": "codemod",
+    "roiRank": 12
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 530,
+    "symbol": "optionalJsonOperation",
+    "smell": "`request ?? defaultRequest()` (and the text twin at line 542) defaults an absent whole request object for generated operations with no required request fields.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 13,
+    "exception": {
+      "reason": "This is a whole-argument adapter default for generated no-required-request service methods, not a field default that can move onto a request schema without changing the generated public service shape.",
+      "boundary": "generated service-method ergonomics over checked-in OpenAPI operation specs"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/runpod/src/Runpod.service.ts",
+    "line": 655,
+    "symbol": "rawResponseBody",
+    "smell": "`const contentType = response.headers[\"content-type\"] ?? \"\"` defaults a missing HTTP response header before content negotiation.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 14,
+    "exception": {
+      "reason": "HTTP header lookup is a transport boundary over a third-party response object; the fallback selects a non-json decoding branch, not a schema-field default.",
+      "boundary": "HTTP client response header boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/drivers/runpod/src/RunpodDocs.service.ts",
+    "line": 261,
+    "symbol": "fetchIndex",
+    "smell": "`url: normalizeUrl(config.indexUrl)` strips trailing slashes only for span attributes.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 15,
+    "exception": {
+      "reason": "This normalization is presentation/observability-only metadata on a span; it does not feed the request URL or decoded domain model.",
+      "boundary": "observability attribute formatting"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/runpod/scripts/generate.ts",
+    "line": 274,
+    "symbol": "disambiguateMethodName",
+    "smell": "`O.getOrElse(() => 0)` defaults a missing method-count accumulator entry.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 16,
+    "exception": {
+      "reason": "Algorithmic counter initialization inside the code generator; there is no decoded schema field or boundary model whose default would carry this lookup-miss value.",
+      "boundary": "generator accumulator lookup"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/runpod/scripts/generate.ts",
+    "line": 348,
+    "symbol": "chooseResponse",
+    "smell": "Nested `O.getOrElse` fallbacks pick a response status from preferred 2xx codes, the first available response, or finally literal `\"200\"`.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 17,
+    "exception": {
+      "reason": "This is generator policy for incomplete or oddly-shaped OpenAPI response maps, not a data-model default. It intentionally differs from schema construction semantics.",
+      "boundary": "OpenAPI generator response-selection policy"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/drivers/runpod/test/Runpod.service.test.ts",
+    "line": 80,
+    "symbol": "bodyTextFor",
+    "smell": "`bodyTextFor` and `bodyContentTypeFor` return `string | undefined` for test capture assertions; `CapturedRequest` stores those values as `string | undefined` at lines 31-32.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 18,
+    "exception": {
+      "reason": "Test-only fixture/capture helpers mirror the underlying HTTP request body shape and are immediately converted with `O.fromUndefinedOr` where assertions need Option semantics.",
+      "boundary": "test fixture helper"
+    }
+  }
+]

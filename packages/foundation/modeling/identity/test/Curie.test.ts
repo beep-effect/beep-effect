@@ -1,6 +1,8 @@
 import { CoreVocab, CurieFromIri, contract, expand, expandPredicate } from "@beep/identity";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as Equal from "effect/Equal";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import { expectTypeOf } from "vitest";
@@ -55,6 +57,16 @@ describe("CURIE codec", () => {
       expect(yield* encodeIri("http://www.w3.org/2004/02/skos/core#prefLabel")).toBe("skos:prefLabel");
     })
   );
+
+  it("round-trips generated CoreVocab IRIs through the schema codec", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(CurieFromIri), (iri) => {
+        const decoded = O.flatMap(S.encodeOption(CurieFromIri)(iri), S.decodeUnknownOption(CurieFromIri));
+
+        expect(O.exists(decoded, (value) => Equal.equals(value, iri))).toBe(true);
+      })
+    );
+  });
 
   it.effect("fails schema decoding for unknown prefixes and known-prefix unknown terms", () =>
     Effect.gen(function* () {

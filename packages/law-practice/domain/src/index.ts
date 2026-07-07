@@ -8,9 +8,9 @@
 
 export * from "./entities/index.ts";
 /**
- * Law-practice value-object exports.
+ * Law-practice value-object export surface.
  *
  * @category value-objects
  * @since 0.0.0
  */
-export * from "./values/index.js";
+export * from "./values/index.ts";

@@ -10,11 +10,10 @@ import {
   ExtractedProcessFileResult,
   SkippedProcessFileResult,
 } from "@beep/file-processing/Extraction";
+import { FileFormatFamily as FileFormatFamilySchema } from "@beep/file-processing/Strategy";
 import { $FileProcessingId } from "@beep/identity";
-import { A } from "@beep/utils";
+import { A, O } from "@beep/utils";
 import { Context, Effect, Layer, pipe } from "effect";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
 import { FileProcessingOperationError as OperationError } from "../Operation/index.ts";
 import type {
   ArchiveExportResult,
@@ -37,7 +36,6 @@ import type {
   FileProcessingEngineDescriptor,
 } from "@beep/file-processing/Strategy";
 import type * as Crypto from "effect/Crypto";
-import type { FileProcessingOperationErrorReason } from "../Operation/index.ts";
 
 const $I = $FileProcessingId.create("Service");
 
@@ -118,23 +116,6 @@ export class FileProcessingService extends Context.Service<FileProcessingService
   $I`FileProcessingService`
 ) {}
 
-const operationError = (reason: FileProcessingOperationErrorReason, message: string): FileProcessingOperationError =>
-  OperationError.fromReason(reason, { message });
-
-const matchesEnginePreference = (
-  operationEngine: FileProcessingEngineDescriptor["engine"],
-  preferredEngine: FileProcessingEngineDescriptor["engine"]
-): boolean => preferredEngine === "auto" || operationEngine === preferredEngine;
-
-const engineSupportsCapability = (engine: FileProcessingEngineShape, capability: FileProcessingCapability): boolean =>
-  A.contains(engine.descriptor.capabilities, capability);
-
-const engineSupportsFormat = (engine: FileProcessingEngineShape, format: FileFormatFamily): boolean =>
-  A.contains(engine.descriptor.supportedFormats, format);
-
-const processCapabilityForFormat = (format: FileFormatFamily): FileProcessingCapability =>
-  format === "image-metadata" ? "extract-metadata" : "extract-text";
-
 const selectEngine = (
   engines: ReadonlyArray<FileProcessingEngineShape>,
   preferredEngine: FileProcessingEngineDescriptor["engine"],
@@ -145,17 +126,16 @@ const selectEngine = (
     engines,
     A.findFirst(
       (engine) =>
-        matchesEnginePreference(engine.descriptor.engine, preferredEngine) &&
-        (capability === undefined || engineSupportsCapability(engine, capability)) &&
-        (format === undefined || engineSupportsFormat(engine, format))
+        engine.descriptor.matchesPreference(preferredEngine) &&
+        (capability === undefined || engine.descriptor.supportsCapability(capability)) &&
+        (format === undefined || engine.descriptor.supportsFormat(format))
     ),
     O.match({
       onNone: () =>
         Effect.fail(
-          operationError(
-            "engine-unavailable",
-            `No file-processing engine is available for preference "${preferredEngine}".`
-          )
+          OperationError.fromReason("engine-unavailable", {
+            message: `No file-processing engine is available for preference "${preferredEngine}".`,
+          })
         ),
       onSome: Effect.succeed,
     })
@@ -168,8 +148,7 @@ const detectWithAvailableEngine = Effect.fn("FileProcessingService.detectWithAva
   const candidates = A.filter(
     engines,
     (engine) =>
-      matchesEnginePreference(engine.descriptor.engine, operation.preference.engine) &&
-      engineSupportsCapability(engine, "detect")
+      engine.descriptor.matchesPreference(operation.preference.engine) && engine.descriptor.supportsCapability("detect")
   );
   let lastDetected = O.none<readonly [FileProcessingEngineShape, DetectionResult]>();
 
@@ -192,10 +171,9 @@ const detectWithAvailableEngine = Effect.fn("FileProcessingService.detectWithAva
     return lastDetected.value;
   }
 
-  return yield* operationError(
-    "engine-unavailable",
-    `No file-processing detection engine is available for preference "${operation.preference.engine}".`
-  );
+  return yield* OperationError.fromReason("engine-unavailable", {
+    message: `No file-processing detection engine is available for preference "${operation.preference.engine}".`,
+  });
 });
 
 /**
@@ -299,7 +277,7 @@ export const makeFileProcessingServiceLayer = (
                 operationKind: "export-archive",
                 preference: operation.preference,
                 source: operation.source,
-                ...R.getSomes({
+                ...O.getSomesStruct({
                   maxMaterializedBytes: O.fromUndefinedOr(operation.maxMaterializedBytes),
                 }),
               })
@@ -319,7 +297,7 @@ export const makeFileProcessingServiceLayer = (
           const extractionEngine = yield* selectEngine(
             engines,
             operation.preference.engine,
-            processCapabilityForFormat(detected.format),
+            FileFormatFamilySchema.processCapability(detected.format),
             detected.format
           );
           const extraction = yield* extractionEngine.extract({
@@ -328,7 +306,7 @@ export const makeFileProcessingServiceLayer = (
             operationKind: "extract",
             preference: operation.preference,
             source: operation.source,
-            ...R.getSomes({
+            ...O.getSomesStruct({
               maxMaterializedBytes: O.fromUndefinedOr(operation.maxMaterializedBytes),
             }),
           });

@@ -10,6 +10,7 @@ import {
   prefixLines,
   renderFencedCode,
   renderInlineCode,
+  sanitizeUrlDestination,
 } from "@beep/md/Md.escape";
 import { Block, CodeFenceLanguage, Document, Inline, Pre, Table, TableCell, TableRow, Text } from "@beep/md/Md.model";
 import {
@@ -626,5 +627,31 @@ ${Md.h3("Inside")}
     expect(renderFencedCode("```", "ts")).toBe("````ts\n```\n````");
     expect(isStringArray(["a", "b"])).toBe(true);
     expect(isStringArray(["a", 1])).toBe(false);
+  });
+
+  // §5.3 crispen parity: the escape schemas now carry their guards via
+  // SchemaUtils.withCodecStatics instead of free-floating `S.is(...)` walls.
+  // These S.toArbitrary laws pin that the colocated `.is` static agrees with
+  // the schema it derives from, so the absorption cannot silently drift.
+  it("colocated escape-schema guards agree with their schemas", () => {
+    // Mirrors the module-private StringArray schema in Md.escape.ts.
+    const StringArraySchema = S.Array(S.String);
+    const stringArrayArbitrary = S.toArbitrary(StringArraySchema);
+    fc.assert(
+      fc.property(stringArrayArbitrary, (values) => {
+        expect(isStringArray(values)).toBe(true);
+      })
+    );
+
+    // Any destination normalizing to an active unsafe protocol is neutralized
+    // to "#" by the colocated UnsafeUrlProtocolDestination.is guard.
+    const unsafeDestinationArbitrary = fc
+      .tuple(fc.constantFrom("javascript:", "vbscript:", "data:"), fc.string())
+      .map(([protocol, rest]) => `${protocol}${rest}`);
+    fc.assert(
+      fc.property(unsafeDestinationArbitrary, (destination) => {
+        expect(sanitizeUrlDestination(destination)).toBe("#");
+      })
+    );
   });
 });

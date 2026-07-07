@@ -1,0 +1,77 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/nlp-processing/src/Backend/Composition.ts",
+    "line": 264,
+    "symbol": "withCaching",
+    "smell": "Public 2-arg combinator with an optional options parameter, not dual; arity-based dual(2) would misroute the 1-arg data-first call withCaching(backend).",
+    "proposedTarget": "Predicate-based dual, dispatching on whether args[0] is a backend (has capabilities/name), mirroring the in-repo precedent GraphExecutor execute (Executor.ts:394-395 uses isEffectGraph); judgment on whether the pipeability win justifies the dispatch complexity.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 13,
+    "exception": {
+      "reason": "withCaching is an Effect.fn backend-first wrapper with optional options; adding curried optional dual forms would create ambiguous arity and public API churn.",
+      "boundary": "public effectful combinator compatibility"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
+    "line": 90,
+    "symbol": "isTextNode/isPOSNode/isEntityNode/isLemmaNode/isDependencyNode/isRelationNode",
+    "smell": "Top-of-file wall of six exported S.is(X) guards for node schemas owned by @beep/nlp (packages/foundation/modeling/nlp/src/Graph/Schema.ts); TextNode there has toTaggedUnion utils but no top-level .is, and the five node classes have no in-body static is, so the guards accumulated here instead of on the data.",
+    "proposedTarget": "Cross-package colocation: attach withCodecStatics (or at least .is) to the TextNode union const and in-body static readonly is = S.is(Self)-style guards to POSNode/EntityNode/LemmaNode/DependencyNode/RelationNode in @beep/nlp, then narrow these exports to deprecated aliases; requires @beep/nlp's package-writer wave plus a same-PR sweep here — keep judgment (the local guards also deliberately narrow the input to AnnotatedNode).",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 14,
+    "exception": {
+      "reason": "Per-type refinement statics belong on the upstream @beep/nlp node schemas; this package now exposes the AnnotatedNode runtime union and keeps public guard aliases for compatibility.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/TextGraph.ts",
+    "line": 90,
+    "symbol": "makeTextNode",
+    "smell": "Identical private effectful TextNode constructor (Clock timestamp + getSomesStruct optional operation) duplicated verbatim in TextGraph.ts:90 and AnnotatedTextGraph.ts:233 — constructor behavior separated from its data and copy-pasted across consumers.",
+    "proposedTarget": "Single colocated constructor: either a SchemaUtils.withStatics fromText/create on the TextNode union const in @beep/nlp (cross-package, aligns with the guard-wall finding) or, minimally, one shared internal helper module in this package; judgment because the canonical home is in the other package.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 15,
+    "exception": {
+      "reason": "Canonical TextNode constructor/default statics belong with the upstream @beep/nlp TextNode model; local replacement would require cross-package edits.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/nlp-processing/src/Tools/_schemas.ts",
+    "line": 17,
+    "symbol": "describe",
+    "smell": "Module-private 2-3-arg annotation helper that is not dual (flagged by the non-dual-helper detector).",
+    "proposedTarget": "None — the dual rule targets public 2-3-arg helpers; this is a file-local annotateKey combinator used data-first only.",
+    "confidence": 0.4,
+    "mechanization": "judgment",
+    "roiRank": 16,
+    "exception": {
+      "reason": "Not public API: module-private helper inside Tools/_schemas.ts, used data-first at every call site; dual arity adds dispatch cost with no pipeability consumer.",
+      "boundary": "S4 rule card scopes the dual smell to public 2-3-arg helpers."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/TextGraph.ts",
+    "line": 523,
+    "symbol": "dfs, bfs",
+    "smell": "Public 2-arg (optional start) walker wrappers over effect/Graph that are not dual (bfs at line 541 is identical in shape).",
+    "proposedTarget": "None — fence 6 bars dual/flow refactor proposals on effect/Graph usage in this packet; optional-arg arity also makes dual(2) unsafe without predicate dispatch.",
+    "confidence": 0.4,
+    "mechanization": "judgment",
+    "roiRank": 17,
+    "exception": {
+      "reason": "Thin wrappers over Graph.dfs/Graph.bfs option objects; the Graph domain is explicitly fenced to the effect-native-migration packet, and the optional start parameter breaks arity-based dual.",
+      "boundary": "Fence 6 (no dual/flow refactors on Graph/MutableHash* usage)."
+    }
+  }
+]

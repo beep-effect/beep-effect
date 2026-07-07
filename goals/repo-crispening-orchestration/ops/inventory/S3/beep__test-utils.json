@@ -1,0 +1,13 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+    "line": 276,
+    "symbol": "PgliteSqlTestLayerMode",
+    "smell": "Public PGLite layer mode is a bare literal union (\"auto\" | \"external\" | \"testcontainers\" | \"in-process\") while the same file already models adjacent finite domains with LiteralKit (SqlTestHarnessPhase at line 33, TestDatabaseDriver at line 39, PgExternalIsolationMode at line 51). The mode literals are then hand-branched with equality guards in shouldUseExternalPgliteLayer/shouldUseTestcontainersPgliteLayer at lines 1229-1233 and the makePgliteSqlTestLayer decision chain at lines 1345-1353.",
+    "proposedTarget": "Introduce const PgliteSqlTestLayerMode = LiteralKit([\"auto\", \"external\", \"testcontainers\", \"in-process\"]).pipe($I.annoteSchema(...)); export type PgliteSqlTestLayerMode = typeof PgliteSqlTestLayerMode.Type; and route mode checks through the kit's derived guards or $match. In-repo exemplars are SqlTestHarnessPhase/TestDatabaseDriver in this file; verified LiteralKit helper surface at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:645 and const type parameters at line 743.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 2.2
+  }
+]

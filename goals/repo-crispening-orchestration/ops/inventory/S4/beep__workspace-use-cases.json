@@ -1,0 +1,24 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/workspace/use-cases/src/aggregates/Thread/Thread.errors.ts",
+    "line": 128,
+    "symbol": "ThreadStoreError",
+    "smell": "Tagged-union const built from `S.Union([ThreadStoreNotFound, ThreadStoreConflict, ThreadStoreUnavailable]).pipe(S.toTaggedUnion(\"_tag\"), $I.annoteSchema(...))` has no `withCodecStatics`; the schema's own doc comment (line 113-123) has to reach for the raw `[\"_tag\"]` union type instead of a colocated `.is`/`.decodeOption` for callers needing to validate a raw ThreadStore failure payload.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the pipe: `.pipe(S.toTaggedUnion(\"_tag\"), $I.annoteSchema(\"ThreadStoreError\", {...}), SchemaUtils.withCodecStatics)`, matching the verified repo pattern `S.Union([...]).pipe(S.toTaggedUnion(\"_tag\"), $I.annoteSchema(...), SchemaUtils.withCodecStatics)` at packages/foundation/modeling/md/src/Md.model.ts:606-613.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/workspace/use-cases/src/aggregates/Thread/ThreadTimeline.ts",
+    "line": 103,
+    "symbol": "TimelineItem",
+    "smell": "Tagged-union const built from `S.Union([TimelineMessageItem, TimelineToolCallItem]).pipe(S.toTaggedUnion(\"kind\"), $I.annoteSchema(...))` has no `withCodecStatics` attached, so consumers projecting raw timeline payloads (e.g. `ThreadStore.repo.ts`'s in-memory/drizzle timeline builders in `@beep/workspace-server`) have no colocated `.is`/`.decodeOption`/`.fromUnknown` to validate an item against the whole `kind` union.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the pipe: `.pipe(S.toTaggedUnion(\"kind\"), $I.annoteSchema(\"TimelineItem\", {...}), SchemaUtils.withCodecStatics)`, matching the verified repo pattern at packages/foundation/modeling/md/src/Md.model.ts:606-613.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 4
+  }
+]

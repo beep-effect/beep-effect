@@ -73,7 +73,7 @@ const makeDocumentError = (
   JsonLdDocumentError.make({
     reason,
     message,
-    subject: subject === undefined ? O.none() : O.some(subject),
+    subject: O.fromNullishOr(subject),
   });
 
 type ContextOption = O.Option<JsonLdContext>;

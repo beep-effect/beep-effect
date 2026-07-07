@@ -1,0 +1,107 @@
+[
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+    "line": 188,
+    "symbol": "registerSanitizedToolkit",
+    "smell": "Manual heterogeneous Option-struct spread: ...Context.getOption(annotations, AiTool.Title).pipe(O.map((title) => ({ title })), O.getOrUndefined) builds an optional single-key struct by hand -- the manual-spread sibling of the R.getSomes struct-spread smell (chalk precedent). No R.getSomes call exists anywhere in this package; this is the only Option-struct-spread instance. The shape mirrors upstream McpServer.ts:698-701 but is not type-forced.",
+    "proposedTarget": "...O.getSomesStruct({ title: Context.getOption(annotations, AiTool.Title) }) using O.getSomesStruct (verified packages/foundation/modeling/utils/src/Option.ts:102). Held at judgment per D5 until the Law 20/47 amendment merges, per the S3 rule card.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 0.7,
+    "exception": {
+      "reason": "Remediation audit (@beep/mcp-kit): declined for this wave. The codemod could not apply because this site has no live R.getSomes call; the code mirrors upstream McpServer registration and only spreads one optional title field. Rewriting to O.getSomesStruct would add a new @beep/utils direct dependency to @beep/mcp-kit solely for this mirror-only optional struct. The Law 20/47 amendment is merged, but this non-codemod dependency/ripple decision is deferred.",
+      "boundary": "upstream McpServer mirror plus new direct dependency; deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+    "line": 174,
+    "symbol": "registerSanitizedToolkit",
+    "smell": "yield* toolkit as unknown as Effect.Effect<Toolkit.WithHandler<Tools>, never, Exclude<AiTool.HandlersFor<Tools>, McpServerClient>> -- a repo-banned double cast on the yielded toolkit.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Faithful mirror of upstream registerToolkit's own cast: effect-v4 McpServer.ts:684-688 does `yield* (toolkit as any as Effect.Effect<Toolkit.WithHandler<Tools>, never, Exclude<Tool.HandlersFor<Tools>, McpServerClient>>)`. Toolkit's Effect-yieldable typing is an upstream type-system limit no Effect narrowing primitive can express, and this module exists only because upstream offers no dispatch-wrapping seam (it must mirror the registration loop verbatim). The mcp-kit cast is the same shape with `unknown` instead of `any`.",
+      "boundary": "upstream effect/unstable/ai McpServer.registerToolkit mirror -- type-system limit at the Toolkit yield"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+    "line": 223,
+    "symbol": "registerSanitizedToolkit",
+    "smell": "Trailing `as Effect.Effect<CallToolResult, never, McpServerClient>` on the handle closure's pipe -- a repo-banned as cast coercing the dispatch pipeline to addTool's expected handle type.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Upstream ends the identical pipe with `as any` (effect-v4 McpServer.ts:711-738: registry.addTool handle returns `... Effect.tapCause(Effect.log)) as any`); dispatch is looked up by tool name at runtime with payload: any, so no narrower cast-free typing exists at this boundary. The mcp-kit mirror's cast is strictly more precise than upstream's `as any`, and the in-source comment documents the contextual-typing constraint.",
+      "boundary": "upstream McpServer.addTool handle contract mirror -- type-system limit at name-keyed dynamic dispatch"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/ToolAnnotations.ts",
+    "line": 84,
+    "symbol": "annotateFourHints",
+    "smell": "tool.annotate(...).annotate(...).annotate(...).annotate(...) as T re-narrows the annotation chain's result back to the caller's T -- a repo-banned as cast. The same re-narrow appears as the trailing `as T` at TierGate.ts:446 (withEnabledWhenApprovedTool).",
+    "proposedTarget": "None -- keep as-is at both sites.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Upstream Tool#annotate returns the widened Tool<Name, Config, Requirements>, not the caller's T (verified .repos/effect-v4/packages/effect/src/unstable/ai/Tool.ts:341: annotate<I, S>(tag, value): Tool<Name, Config, Requirements>), so preserving the caller's specific tool type through a generic <T extends AiTool.Any>(tool: T) => T combinator requires the re-narrow; annotations do not change Name/Config/Requirements, so it is sound, and both sites carry comments documenting exactly this. No Effect narrowing primitive (P.*, S.is, Match) can express generic-identity preservation across an upstream-widening method.",
+      "boundary": "type-system limit at the upstream Tool#annotate return type (ToolAnnotations.ts:84 and TierGate.ts:446)"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/src/SourceAuth.ts",
+    "line": 102,
+    "symbol": "SourceAuthRegistration",
+    "smell": "Literal-union schema fields that a naive 'literal-union property => tagged union' (Appendix A) detector would flag: SourceAuthRegistration.gate (SourceAuth.ts:102, SourceAuthGate none|soft|hard), TierGateAuditRecord.outcome (TierGate.ts:91, approved|refused), FetchableHandle.tier (FieldTier.ts:399, minimal|balanced|complete).",
+    "proposedTarget": "None -- keep all three as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "In each case the would-be variants are structurally identical -- no field of the record changes shape with the literal value -- so converting the enum field into a tagged union trades one policy/label enum for duplicated member shapes with zero exhaustiveness gain on the data model; the LiteralKit source already derives is/$match for any dispatch need. These are enum-as-data fields, not variant discriminators. Not REQUIRED_TAGGED_UNIONS families (packages/tooling/tool/cli/src/commands/Lint/Lint.command.ts:65).",
+      "boundary": "enum-valued schema fields with structurally uniform records (SourceAuth.ts:102, TierGate.ts:91, FieldTier.ts:399)"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/mcp-kit/test/ToolkitComposition.test.ts",
+    "line": 56,
+    "symbol": "composeGatedLayers fixture tests",
+    "smell": "Test-side manual _tag branching over Result: assert.strictEqual(result._tag, \"Failure\"/\"Success\") at ToolkitComposition.test.ts:56 and :65, plus if (result._tag === \"Success\") narrowing at :66, where derived guards Result.isSuccess/Result.isFailure exist (verified .repos/effect-v4/packages/effect/src/Result.ts:592, :625).",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Idiomatic @effect/vitest fixture-proof narrowing: assert.strictEqual on the _tag yields a precise failure diagnostic (expected vs actual tag) that a boolean guard assertion loses, and the subsequent === comparison narrows without any as cast. A two-assertion test has no exhaustiveness requirement, so guard/matcher conversion adds nothing. (The result._tag branches in TierGate.test.ts and FieldTier.test.ts are downstream of the hand-rolled TierGateDispatchResult and FieldProjectionOutcome unions and are covered by those actionable findings' blast radius, not ledgered here.)",
+      "boundary": "test-only assertion-first narrowing over effect Result in packages/foundation/capability/mcp-kit/test"
+    }
+  },
+  {
+    "ruleId": "literal-kit-const-assertion",
+    "file": "packages/foundation/capability/mcp-kit/src/index.ts",
+    "line": 89,
+    "symbol": "VERSION",
+    "smell": "`\"0.0.0\" as const` -- const assertion surfaced by the no-as detector pass over the package entrypoint.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Ordinary scalar as const is the explicitly allowed repo carve-out; the assertion is not applied to a LiteralKit([...]) inline array, so the redundancy the literal-kit-const-assertion card targets is absent (same verdict as the api-transport VERSION precedent). The as-const object literals at TierGate.ts:415/:417 and SourceAuth.ts:190/:196/:199 are likewise allowed as-const forms; they are addressed by the hand-rolled-union findings (whose Data.taggedEnum constructors make them disappear), not as cast violations.",
+      "boundary": "packages/foundation/capability/mcp-kit/src/index.ts -- package entrypoint VERSION constant"
+    }
+  }
+]

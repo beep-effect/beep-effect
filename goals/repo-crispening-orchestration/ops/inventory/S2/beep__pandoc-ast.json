@@ -1,0 +1,107 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
+    "line": 291,
+    "symbol": "captionFromLegacyWire",
+    "smell": "`shortCaptionWire === null ? Effect.succeed([]) : decodeInlines(shortCaptionWire)` - null-check in a body over a wire tuple member that stays `array | null` instead of `S.OptionFromNullOr`.",
+    "proposedTarget": "None this wave - the in-code crispen comment (Pandoc.codec.ts:288-290) already scopes it: `decodeTablePayloadWire` re-feeds this decoded tuple back through `captionFromWire`, so Option-ifying the wire schema breaks the re-decode. Absorb into `S.OptionFromNullOr` once the double-decode is removed.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "Deliberate, documented deferral: the legacy Pandoc table wire re-decodes the same tuple twice, so the null must survive the intermediate representation; also sits on the wire-codec side where absence-as-null is the exchange format's own shape.",
+      "boundary": "Pandoc JSON wire codec (legacy TableCaption double-decode, in-code crispen deferral note)"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
+    "line": 308,
+    "symbol": "captionFromWireOrEmpty",
+    "smell": "`captionFromWire(input).pipe(Effect.orElseSucceed(() => []))` - decode-failure-to-empty fallback helper (detector hit for `*OrEmpty` defaulting).",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "Boundary-codec leniency by design: Pandoc emits several historical caption wire shapes (TableCaption wrapper, [short, long] tuple, bare block list); an unrecognized legacy shape degrades to an empty caption rather than failing the whole document decode. This is a wire-tolerance policy at the 3rd-party exchange boundary, not a schema-field default.",
+      "boundary": "3rd-party Pandoc JSON wire format (legacy caption variants)"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
+    "line": 645,
+    "symbol": "pandocBlockToMd",
+    "smell": "`mdText(caption.length === 0 ? \"[table]\" : caption)` - empty-string check with a placeholder fallback inside the table projection arm.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "The \"[table]\" placeholder is the documented lossy-projection payload; the sibling `issue` records the table as outside the v1 Md-core profile, but a caption-less table must still project to visible text. Presentation of a lossy mapping, not an under-modeled schema invariant.",
+      "boundary": "lossy Pandoc-to-Md projection payload (compatibility-profile feature)"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
+    "line": 847,
+    "symbol": "mdBlockToPandoc",
+    "smell": "`Str.make({ text: text.length === 0 ? \"[table]\" : text })` - same placeholder fallback in the reverse (Md-to-Pandoc) table projection arm.",
+    "proposedTarget": "None - keep as-is (same carve-out as Pandoc.mapping.ts:645).",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "Same lossy-projection payload carve-out as the pandoc-to-md arm at line 645.",
+      "boundary": "lossy Md-to-Pandoc projection payload (compatibility-profile feature)"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.report.ts",
+    "line": 161,
+    "symbol": "jsonPointerFromPath",
+    "smell": "`path.length === 0 ? \"\" : ...` - empty-array check with an empty-string result in a body (detector hit for emptiness branching).",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "RFC 6901 mandates that the JSON Pointer for the whole document is the empty string; the branch encodes the spec, not a leaked default. Spec-fidelity here is a correctness guard.",
+      "boundary": "RFC 6901 JSON Pointer spec contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.report.ts",
+    "line": 251,
+    "symbol": "profileFromIssues",
+    "smell": "`issues.length === 0 ? \"supported\" : \"gap\"` - emptiness check selecting a literal (detector hit for `.length === 0` branching).",
+    "proposedTarget": "None - keep as-is (at most a style swap to `A.isEmpty`/`A.match`, which is outside S2 scope).",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "Pure derivation of a summary classification from report data - the emptiness of `issues` is the definition of `supported`, not an absence/default that a schema codec should carry.",
+      "boundary": "derived report summary (classification function, not a field default)"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+    "line": 56,
+    "symbol": "expectUl",
+    "smell": "Test assertion helpers accept `Md.Block | undefined` / `PandocBlock | undefined`, and fixture assertions use `?.children ?? []` to inspect optional test data.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "Test-only assertion helpers intentionally accept possibly-missing array elements from fixtures so failed shape checks produce direct expectation failures. This is not domain code and not a schema-field absence model.",
+      "boundary": "test/fixture assertion helpers"
+    }
+  }
+]

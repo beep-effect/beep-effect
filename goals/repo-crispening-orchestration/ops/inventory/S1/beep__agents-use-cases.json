@@ -1,0 +1,107 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.kernel.ts",
+    "line": 40,
+    "symbol": "AgentTurnKernelShape",
+    "smell": "Exported interface with a function member carrying schema-modeled request/stream types.",
+    "proposedTarget": "Hypothetical `Fn` or `S.Struct` model for `streamTurn` is rejected; keep `AgentTurnKernelShape` as the shape passed to `Context.Service<AgentTurnKernel, AgentTurnKernelShape>()` at line 73.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Fence 1 service-contract carve-out: this is the Context.Service port shape for assistant-turn generation. Its data payloads already use schema-derived `TurnHistoryItem` and `IndexedBlock` contracts; schema-ifying the service interface would cross the service boundary carve-out.",
+      "boundary": "Context.Service shape / assistant-turn generation port"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.service.ts",
+    "line": 28,
+    "symbol": "ProfessionalRuntimeSdk",
+    "smell": "Exported interface with Effect-returning SDK methods over schema-modeled commands, queries, and results.",
+    "proposedTarget": "Hypothetical `S.Struct`/`Fn` replacement for the SDK object is rejected; keep the `ProfessionalRuntimeSdk` port interface consumed by `makeInMemoryProfessionalRuntimeSdk`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Fence 1 service-contract carve-out: this is a public SDK facade/port interface. Each method already accepts and returns schema-modeled payloads (`GetContextPacket`, `SdkContextPacket`, `ProposeCandidateOutputSet`, `CandidateOutputSet`) through an Effect error channel.",
+      "boundary": "SDK facade service contract"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.fixture.ts",
+    "line": 20,
+    "symbol": "decodeBlock",
+    "smell": "Top-of-file `const decodeBlock = S.decodeUnknownSync(AssistantBlock)` textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Inline `S.decodeUnknownSync(AssistantBlock)(...)` at each fixture literal — audited and rejected as not actionable.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Fixture literals are being constructed through the `AssistantBlock` schema, not around it. The local alias avoids repeating the same decoder for a fixed deterministic fixture and does not create an ad-hoc validation wall.",
+      "boundary": "deterministic fixture construction through schema"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.fixture.ts",
+    "line": 49,
+    "symbol": "fixtureBlocksFor",
+    "smell": "Exported fixture function whose parameter and return are schema-derived aliases.",
+    "proposedTarget": "Hypothetical `Fn({ input: S.Array(TurnHistoryItem), output: S.Array(AssistantBlock) }).implementSync(...)` wrapper is rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The function is a deterministic test/proof helper; its input and output contracts are already schema-derived (`TurnHistoryItem` and `AssistantBlock`). Wrapping it in `Fn.implementSync` would add invocation-time decode/throw behavior without moving an inline payload shape into a schema.",
+      "boundary": "fixture helper with schema-derived input/output"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.fixtures.ts",
+    "line": 103,
+    "symbol": "decodeOutputSet",
+    "smell": "Top-of-file `const decodeOutputSet = S.decodeUnknownSync(CandidateOutputSet)` textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Inline `S.decodeUnknownSync(CandidateOutputSet)(...)` at each large fixture literal — audited and rejected as not actionable.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The helper is used only to build two deterministic `CandidateOutputSet` fixture payloads through the schema. It is schema-as-truth evidence, not a parallel decoder wall or exported boundary API.",
+      "boundary": "deterministic fixture construction through schema"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.fixtures.ts",
+    "line": 745,
+    "symbol": "runRuntimeFixture",
+    "smell": "Exported Effect workflow in a schema-modeled fixture file.",
+    "proposedTarget": "Hypothetical `Fn({ input: RuntimeFixtureInput, output: CandidateOutputSet }).implement(...)` wrapper is rejected; keep `Effect.fn(\"RuntimeFixture.run\")` with schema-typed input and output.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The input is an `S.Class` (`RuntimeFixtureInput`) and the success value is `CandidateOutputSet`, constructed through its schema. `Effect.fn` supplies the workflow wrapper and typed error mapping; an `Fn` wrapper would not absorb an inline object contract.",
+      "boundary": "schema-typed Effect workflow"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.fixture-service.ts",
+    "line": 245,
+    "symbol": "makeInMemoryProfessionalRuntimeSdk",
+    "smell": "Exported factory function returning a service/SDK object whose methods are Effect workflows.",
+    "proposedTarget": "Hypothetical `Fn({ input: S.Array(RuntimeFixtureInput), output: ProfessionalRuntimeSdk })` wrapper is rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This is an adapter factory for the `ProfessionalRuntimeSdk` port. The factory input is schema-typed fixture data, and the returned object's method contracts are the fence-1 SDK interface; wrapping the factory in `Fn` would not create a better data model.",
+      "boundary": "adapter factory returning service contract"
+    }
+  }
+]

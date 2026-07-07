@@ -399,21 +399,21 @@ const categoryViolations = (commentText: string): ReadonlyArray<DocumentationIss
   );
 
 const textLooksLikeSchemaExport = (name: string, node: Node): boolean => {
-  const text = getDocNode(node).getText();
   if (Str.startsWith("$")(name)) {
     return false;
   }
   if (Node.isClassDeclaration(node)) {
+    const text = getDocNode(node).getText();
     return /\b(?:S\.Class|Model\.Class|TaggedErrorClass)\b/.test(text);
   }
   if (!Node.isVariableDeclaration(node)) {
     return false;
   }
 
-  const initializer = node.getInitializer()?.getText() ?? "";
+  const initializer = node.getInitializer()?.getText().trim() ?? "";
   return (
-    /\b(?:LiteralKit|TaggedErrorClass|DomainModel\.make|Table\.make)\s*\(/.test(initializer) ||
-    /\bS\.(?:String|Number|Boolean|BigInt|Symbol|Object|Unknown|Any|Never|Void|Null|Undefined|Date|Array|Record|Struct|Union|Literal|TemplateLiteral|Tuple|Class|Enums|OptionFrom|NullOr|TaggedStruct|TaggedError)\b/.test(
+    /^(?:LiteralKit|TaggedErrorClass|DomainModel\.make|Table\.make)\s*\(/.test(initializer) ||
+    /^S\.(?:String|Number|Boolean|BigInt|Symbol|Object|Unknown|Any|Never|Void|Null|Undefined|Date|Array|Record|Struct|Union|Literal|TemplateLiteral|Tuple|Class|Enums|OptionFrom|NullOr|TaggedStruct|TaggedError)(?:\s*(?:[({[;,]|$)|\.pipe\s*\()/.test(
       initializer
     )
   );

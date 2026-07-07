@@ -21,7 +21,7 @@
  */
 
 import { $SchemaId } from "@beep/identity/packages";
-import { flow, pipe } from "effect";
+import { flow, HashSet, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -31,11 +31,12 @@ import { HasNullByte, UsesPosixSeparator, UsesWindowsSeparator } from "./FilePat
 
 const $I = $SchemaId.create("FileName");
 
-const isHasNullByte = S.is(HasNullByte);
-const isFileExtension = S.is(FileExtension);
+const fileExtensionSet = HashSet.fromIterable(FileExtension.Options);
+const isHasNullByte = HasNullByte.is;
+const isFileExtension = (value: string): value is FileExtension => HashSet.has(fileExtensionSet, value);
 const isNonEmptyString = S.is(S.NonEmptyString);
-const isUsesPosixSeparator = S.is(UsesPosixSeparator);
-const isUsesWindowsSeparator = S.is(UsesWindowsSeparator);
+const isUsesPosixSeparator = UsesPosixSeparator.is;
+const isUsesWindowsSeparator = UsesWindowsSeparator.is;
 
 const fileNameLastDotIndex = (value: string): number =>
   pipe(

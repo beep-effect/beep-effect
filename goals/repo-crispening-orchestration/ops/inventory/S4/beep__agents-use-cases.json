@@ -1,0 +1,54 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.contracts.ts",
+    "line": 649,
+    "symbol": "CandidateOutputSet",
+    "smell": "S.Class with no in-body decode static; the free-floating `const decodeOutputSet = S.decodeUnknownSync(CandidateOutputSet)` at ProfessionalRuntime.fixtures.ts:103 is a top-of-file decode-wall entry duplicated at two trusted-boundary call sites (fixtures.ts:127, fixtures.ts:408) instead of a colocated static.",
+    "proposedTarget": "Add in-body `static readonly fromUnknown = S.decodeUnknownSync(this)` to CandidateOutputSet (S.Class loses withCodecStatics identity when piped, so in-body statics are the sanctioned form per SchemaUtils/withCodecStatics.ts:10-12); replace `decodeOutputSet(...)` call sites in ProfessionalRuntime.fixtures.ts with `CandidateOutputSet.fromUnknown(...)` and delete the module-level const.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.fixture.ts",
+    "line": 20,
+    "symbol": "decodeBlock",
+    "smell": "Top-of-file decode-wall entry `const decodeBlock = S.decodeUnknownSync(AssistantBlock)` reused at four trusted-boundary call sites in fixtureBlocksFor (lines 54, 60, 65, 69, 77) instead of a colocated decoder on the schema.",
+    "proposedTarget": "AssistantBlock (defined in @beep/agents-domain/values/AssistantContent/AssistantContent.model.ts:456 as `S.Union([...]).pipe(S.toTaggedUnion(\"type\"), $I.annoteSchema(...))`) has no withCodecStatics; append `SchemaUtils.withCodecStatics` to that pipe upstream so this consumer can call `AssistantBlock.fromUnknown(...)` directly and delete the local decodeBlock const. Cross-package fix: statics land on @beep/agents-domain, consumer sweep lands here in the same PR per SPEC fence 9.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/agents/use-cases/src/processes/ProfessionalRuntime/ProfessionalRuntime.service.ts",
+    "line": 28,
+    "symbol": "ProfessionalRuntimeSdk",
+    "smell": "Detector hit: exported interface with function-shaped members — superficially 'behavior separated from its data'.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "This is the SDK facade service-shape interface (getContextPacket / proposeCandidateOutputSet); service shapes and port interfaces stay interfaces per the packet's non-goals.",
+      "boundary": "SPEC fence 1 — service-contract carve-out."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.kernel.ts",
+    "line": 22,
+    "symbol": "AgentTurnKernelShape",
+    "smell": "Detector hit: exported interface with a stream-returning method — superficially 'behavior separated from its data'.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "This is the port both the fixture and future Anthropic implementation satisfy (streamTurn); service shapes and port interfaces stay interfaces per the packet's non-goals.",
+      "boundary": "SPEC fence 1 — service-contract carve-out."
+    }
+  }
+]

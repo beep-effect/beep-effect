@@ -1,0 +1,62 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/file-processing/src/Artifact/index.ts",
+    "line": 254,
+    "symbol": "ArtifactLocator",
+    "smell": "Literal-union field `kind: ArtifactLocatorKind` (\"file\" | \"synthetic\" | \"memory\") on a plain S.Class instead of a tagged union; downstream drivers hand-branch on it (`operation.source.locator.kind !== \"file\"` at packages/drivers/libpff/src/Libpff.pffexport.ts:331 and packages/drivers/tika/src/Tika.tikaapp.ts:220) without derived guards.",
+    "proposedTarget": "If locator variants ever diverge in payload, rebuild as LiteralKit -> member S.Classes -> S.Union([...]).pipe(S.toTaggedUnion(\"kind\")) so drivers branch via derived .guards/.isAnyOf. Today all variants carry the identical `value: PosixPath` payload, so the win is derived guards only; this is a public-form change requiring the same-PR consumer sweep across drivers (SPEC 5.4).",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 1.5,
+    "exception": {
+      "reason": "All locator variants currently share the same payload, so a tagged-union rebuild would only add guards while changing the public class form and requiring driver branch sweeps.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "literal-kit-const-assertion",
+    "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+    "line": 428,
+    "symbol": "classifyFormatFromExtension",
+    "smell": "Fourteen `as const` assertions on Match handler return literals (lines 428-441), e.g. `Match.when(\"doc\", () => \"doc\" as const)`; audited as a no-as candidate.",
+    "proposedTarget": "None required — keep as-is. Optional crispening outside the S3 card set: reference FileFormatFamily.Enum members instead of `\"doc\" as const` string repeats to tie handler outputs to the kit.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "`as const` is repo-allowed everywhere except when applied to a LiteralKit inline array; these assertions sit on Match handler returns, not a LiteralKit argument, and the dispatch already uses the sanctioned Match.type/Match.when/Match.whenOr/Match.orElse primitives over a raw `string | undefined` input that no kit-derived matcher covers.",
+      "boundary": "no-as carve-out (as const allowed in general code); literal-kit-const-assertion applies only to LiteralKit([...]) inline arrays"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/file-processing/src/Service/index.ts",
+    "line": 276,
+    "symbol": "makeFileProcessingServiceLayer.process",
+    "smell": "Single binary literal comparison `detected.format === \"pst\"` over a LiteralKit-backed enum field (siblings: `preferredEngine === \"auto\"` at line 127, `format === \"image-metadata\"` ternary at line 136); audited as an if-over-discriminator candidate.",
+    "proposedTarget": "None required — keep as-is. An exhaustive FileFormatFamily.$match over 14 members to special-case one format would add cyclomatic ceremony without an invariant gain.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "`format`/`engine` are enum-valued data attributes carried by many record schemas (coverage keys, JSONL rows), not variant discriminators; each audited site is a single binary guard, not a switch/if-chain, and no derived matcher exists that would make one-format special-casing tersest.",
+      "boundary": "S3 smell is switch/if-CHAINS over _tag-like discriminators where derived match/guards exist; single binary guards over enum data fields are out of scope"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/file-processing/src/test.ts",
+    "line": 170,
+    "symbol": "TestFileProcessingEngine.extract",
+    "smell": "Ad-hoc literal-subset membership guard `A.contains([\"docm\", \"xls\", \"xlsx\", \"unknown\"], operation.format)` over FileFormatFamily members; audited as a duplicate-literal-family candidate.",
+    "proposedTarget": "None required — keep as-is. Deriving a dedicated deferral-subset LiteralKit for a synthetic test engine's one-off list would be helper bloat.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "One-off deferral list local to the synthetic test fixture engine; it duplicates no other guard or array in the package and encodes intentional test-only behavior, so collapsing it into a kit adds indirection without an invariant.",
+      "boundary": "test fixture engine (src/test.ts) — duplicate-literal-family card targets parallel arrays/enums/guards repeated across production surfaces"
+    }
+  }
+]

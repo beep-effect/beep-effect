@@ -1,0 +1,152 @@
+[
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/ui-system/editor/src/youtube-node.tsx",
+    "line": 78,
+    "symbol": "YouTubeNode.importDOM",
+    "smell": "`static override importDOM(): DOMConversionMap | null` and the iframe converter returns `null` for non-youtube iframes.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Lexical's node import API is null-returning by contract: `null` means no DOM conversion applies. Returning Option would not match the override signature.",
+      "boundary": "3rd-party Lexical DOMConversionMap API"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/ui-system/editor/src/youtube-node.tsx",
+    "line": 133,
+    "symbol": "YouTubeNode.decorate",
+    "smell": "`const embedBlockTheme = config.theme.embedBlock ?? {}; base: embedBlockTheme.base ?? \"\"; focus: embedBlockTheme.focus ?? \"\"` - theme fallback defaults in a render method.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "Lexical supplies `EditorConfig.theme` as a partial theme object; the local node must adapt absent theme slots into the `BlockWithAlignableContents` className contract. This is a 3rd-party render adapter, not schema-modeled data.",
+      "boundary": "3rd-party Lexical EditorConfig theme adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/ui-system/editor/src/artifact-ref-node.tsx",
+    "line": 55,
+    "symbol": "ArtifactRefNode",
+    "smell": "`__label: string | undefined`, `getLabel(): string | undefined`, and `{this.__label ?? this.__artifactId}` - nullish field and display fallback inside a Lexical DecoratorNode class.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "This class is the live Lexical node/runtime representation. Its import/export methods already use `O.getSomesStruct` around the serialized optional label (lines 77 and 86), and the schema-owned version in `@beep/lexical-schema` models label as Option. The remaining undefined is Lexical node state plus React display fallback.",
+      "boundary": "3rd-party Lexical DecoratorNode runtime state + React render fallback"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/ui-system/editor/src/composer.tsx",
+    "line": 50,
+    "symbol": "EditorComposerProps",
+    "smell": "React-facing component props use optional keys (`className?`, `initialState?`, `onSerializedChange?`, `placeholder?`) and the component falls back with `placeholder ?? ...` / `className ?? ...` at render time.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "Component prop interfaces facing React are an explicit S2 boundary carve-out for this batch. These are ergonomic optional props, not first-party domain fields that should be schema-modeled.",
+      "boundary": "React component props/interface boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/ui-system/editor/src/chat/typeahead.tsx",
+    "line": 65,
+    "symbol": "filterSlashItems",
+    "smell": "`const q = query.trim().toLowerCase(); if (q === \"\") return items;` plus lowercasing labels/hints/keywords in `slashItemMatchesQuery` (lines 60-62).",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "Transient UI search matching: the normalized query is not persisted or decoded into a domain model; it is render-time filtering for slash-command suggestions.",
+      "boundary": "interactive typeahead search/filter UI"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/ui-system/editor/src/chat/typeahead.tsx",
+    "line": 103,
+    "symbol": "TypeaheadMenuList",
+    "smell": "`if (anchorElementRef.current === null || A.isReadonlyArrayEmpty(options)) { return null; }` - React component returns null when the portal should not render.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "React components may return `null` to render nothing; this is also anchored to a DOM ref that is nullable by React's RefObject contract.",
+      "boundary": "React render contract + nullable DOM ref"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+    "line": 335,
+    "symbol": "ComposerBody",
+    "smell": "`onSend ?? (() => undefined)` and `onAttach ?? (() => undefined)` seed optional callbacks with no-op functions.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "Optional React callbacks are mounted into per-editor atoms that expect callable slots. The no-op functions keep the event pipeline total without forcing every consumer to pass callbacks.",
+      "boundary": "React optional callback adapter into Atom runtime"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+    "line": 489,
+    "symbol": "ChatComposer",
+    "smell": "`const resolved = ComposerFeatures.make(features ?? {})` - `?? {}` detector hit before constructing feature defaults.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "This is the correct schema-default handoff: `ComposerFeatures` owns the constructor defaults with `S.withConstructorDefault` (chat/config.ts:86-96), and the React prop is optional so omitted props can trigger those schema defaults.",
+      "boundary": "React optional prop boundary feeding an already schema-defaulted config class"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/ui-system/editor/src/chat/atoms.ts",
+    "line": 519,
+    "symbol": "sendCommandBindingAtom",
+    "smell": "`$getRoot().getTextContent().trim().length > 0` - trim/empty check in the send command body.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 11,
+    "exception": {
+      "reason": "Interaction guard: empty or whitespace-only editor content should not dispatch a chat turn. This is transient command behavior over live editor state, not field normalization for a schema.",
+      "boundary": "interactive editor command guard"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/ui-system/editor/stories/chat-composer.stories.tsx",
+    "line": 14,
+    "symbol": "sampleMentionSource",
+    "smell": "`m.label.toLowerCase().includes(query.toLowerCase())` inside a Storybook sample mention source.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.05,
+    "mechanization": "judgment",
+    "roiRank": 12,
+    "exception": {
+      "reason": "Storybook fixture/demo search logic. The false-positive pass should keep stories and fixtures out of actionable S2 remediation unless they exercise an actual package API bug.",
+      "boundary": "Storybook fixture/demo"
+    }
+  }
+]

@@ -1,0 +1,77 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/md/src/Md.model.ts",
+    "line": 463,
+    "symbol": "A.href/Img.src",
+    "smell": "Detector candidate: Markdown link and image destinations are broad S.String fields on exported AST nodes.",
+    "proposedTarget": "None - keep the destination fields broad and sanitize at render time.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Markdown destinations are not just absolute URLs: they include relative paths, fragments, mailto-like destinations, and intentionally invalid user input that the renderer must neutralize. The trust-boundary code already routes href/src through escapeMarkdownDestination and escapeHtmlUrlAttribute (Md.render.ts:322-323 and :379-380), and Md.escape.ts documents this as the XSS/injection boundary.",
+      "boundary": "Markdown/HTML destination escaping boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/md/src/Md.model.ts",
+    "line": 166,
+    "symbol": "RawMarkdown.value/RawHtml.value",
+    "smell": "Detector candidate: trusted raw Markdown and trusted raw HTML payload nodes preserve broad S.String values.",
+    "proposedTarget": "None - keep raw payload fields broad.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These nodes are explicitly trusted raw-content escape hatches, and the built-in HTML renderer still escapes rawHtml by default (Md.render.ts:239-241 and :707-708). Adding a narrower Markdown/HTML grammar schema would either be incomplete or would change the package's explicit custom-adapter boundary.",
+      "boundary": "trusted raw Markdown/HTML content boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/md/src/Md.model.ts",
+    "line": 1413,
+    "symbol": "TableRow.children/Table.children",
+    "smell": "Detector candidate: table rows and table blocks use unbounded S.Array fields and allow empty rows/tables.",
+    "proposedTarget": "None - keep table collections array-shaped and permissive.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The renderer intentionally handles empty-table and uneven-row inputs: renderMarkdownTable returns an empty string for zero columns (Md.render.ts:186-190), pads uneven rows (Md.render.ts:175-180), and the test suite pins rendering later rows when the first row has no cells (test/Md.test.ts:374-388). Tightening to S.NonEmptyArray would be a public-form change to accepted AST/constructor inputs.",
+      "boundary": "permissive Markdown table AST and renderer compatibility"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/md/src/Md.render.ts",
+    "line": 55,
+    "symbol": "RenderError.adapter/message",
+    "smell": "Detector candidate: RenderError.adapter and RenderError.message are broad S.String fields.",
+    "proposedTarget": "None - keep diagnostic strings broad.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Render adapters are an open extension boundary with custom names, and RenderError.message is producer-controlled diagnostic text assembled from arbitrary thrown causes (Md.render.ts:287-299). Narrowing these fields risks replacing the original adapter failure with a validation failure.",
+      "boundary": "custom render-adapter diagnostic boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/modeling/md/test/Md.test.ts",
+    "line": 73,
+    "symbol": "Markdown/HTML rendering golden fixtures",
+    "smell": "Detector candidate: the package contains many hand-written expected Markdown/HTML/plain-text strings in addition to schema-derived property tests.",
+    "proposedTarget": "None - keep golden render fixtures; the additive S.toArbitrary law already exists for Inline, Block, and Document at test/Md.test.ts:45-47 and exercises generated AST renderability at test/Md.test.ts:150-170.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These fixtures assert exact renderer output, escaping behavior, and regression cases. The S5 carve-out allows golden/static compatibility fixtures; schema-derived round-trip coverage is complementary here, not a replacement.",
+      "boundary": "Markdown/HTML/plain-text renderer golden fixtures"
+    }
+  }
+]

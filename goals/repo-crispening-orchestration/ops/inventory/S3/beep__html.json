@@ -1,0 +1,17 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
+    "line": 287,
+    "symbol": "AriaAttributes",
+    "smell": "AriaAttributes and EventHandlerAttributes rebuild literal-keyed schema records through Struct.fromEntries(A.map(...)) and then recover the key-exhaustive mapped type with outer casts at lines 287 and 374. The package already uses named literal tuples for ariaAttributeNames/eventHandlerNames, so the casts are compensating for widened tuple entries rather than preserving discrimination at the construction point.",
+    "proposedTarget": "Return readonly literal entries from the A.map callbacks (for example (n) => [n, Str] as const) so @beep/utils Struct.fromEntries carries the key union directly. Verified in-repo helper: packages/foundation/modeling/utils/src/Struct.ts:579-604 documents and types Struct.fromEntries as preserving per-key value types; keeping the named tuples preserves the current public key sets without touching generated Html.model.ts.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2.25,
+    "exception": {
+      "reason": "Reviewed assisted target was not type-correct here: `A.map` over the const name tuples still produces a tuple keyed by the full key union, so `Struct.fromEntries` resolves individual extracted keys to `never`. The explicit mapped-type cast is the boundary that preserves the public exhaustive ARIA/event schema field map.",
+      "boundary": "TypeScript tuple-union inference for generated literal-key field maps"
+    }
+  }
+]

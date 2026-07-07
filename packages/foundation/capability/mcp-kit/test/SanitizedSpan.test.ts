@@ -57,7 +57,7 @@ describe("withSanitizedToolSpan", () => {
           return yield* Stream.runLast(stream);
         });
 
-        yield* withSanitizedToolSpan("mcp.tool.call", dispatch).pipe(Effect.withTracer(tracer));
+        yield* dispatch.pipe(withSanitizedToolSpan("mcp.tool.call"), Effect.withTracer(tracer));
 
         const parameterAttribute = captured.find((entry) => entry.key === "parameters");
         assert.isUndefined(parameterAttribute);
@@ -72,7 +72,7 @@ describe("withSanitizedToolSpan", () => {
     Effect.gen(function* () {
       const { captured, tracer } = makeRecordingTracer();
 
-      yield* withSanitizedToolSpan("mcp.tool.call", Effect.annotateCurrentSpan("outcome", "ok")).pipe(
+      yield* withSanitizedToolSpan(Effect.annotateCurrentSpan("outcome", "ok"), "mcp.tool.call").pipe(
         Effect.withTracer(tracer)
       );
 

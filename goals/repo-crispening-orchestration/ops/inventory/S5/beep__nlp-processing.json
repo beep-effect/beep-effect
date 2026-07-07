@@ -1,0 +1,47 @@
+[
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
+    "line": 90,
+    "symbol": "ExecutionStrategy.concurrency/batchSize",
+    "smell": "Detector candidate: ExecutionStrategy.Parallel.concurrency and Batch.batchSize are S.Finite rather than positive bounded integers.",
+    "proposedTarget": "None - keep the documented clamp contract unless the public execution-strategy semantics are deliberately changed.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The module deliberately accepts any finite requested concurrency and documents executor-side clamping to [1, MAX_PARALLEL_CONCURRENCY] with fractional flooring and non-positive fallback (Types.ts:40-48 and :69-75). Replacing this with S.Int/S.isBetween would change which public inputs decode.",
+      "boundary": "public execution-strategy request model with defensive executor clamp"
+    }
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Errors.ts",
+    "line": 74,
+    "symbol": "TimeoutError.timeoutMs",
+    "smell": "Detector candidate: timeoutMs is S.Finite for a millisecond timeout diagnostic that is naturally non-negative.",
+    "proposedTarget": "None - keep as-is unless this error becomes an external decoded input contract.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Producer-controlled diagnostic field: TimeoutError is constructed by the executor from its own Duration-derived timeout path, not decoded from untrusted input. Bounding it would validate no external caller data.",
+      "boundary": "in-process graph executor timeout diagnostic"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
+    "line": 505,
+    "symbol": "ValidationResult.errors/warnings",
+    "smell": "Detector candidate: errors and warnings are unbounded S.Array(S.String) fields on an exported schema class.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Producer-controlled diagnostics assembled by in-package validation logic through ValidationResult.valid/invalid/withWarnings (Types.ts:513-533). Bounds would risk truncating legitimate diagnostics and would not strengthen a trust boundary.",
+      "boundary": "in-process graph-operation validation diagnostics"
+    }
+  }
+]

@@ -14,6 +14,12 @@ import * as S from "effect/Schema";
 
 const $I = $ChalkId.create("Domain");
 
+const NonNegativeInteger = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+  $I.annoteSchema("NonNegativeInteger", {
+    description: "A non-negative integer used for string index positions.",
+  })
+);
+
 const indexOfOrNotFound = (text: string, substring: string): number =>
   pipe(
     text,
@@ -107,7 +113,7 @@ export const stringReplaceAll: {
  */
 class StringEncaseCrlfOptionsModel extends S.Class<StringEncaseCrlfOptionsModel>($I`StringEncaseCrlfOptions`)(
   {
-    index: S.Finite,
+    index: NonNegativeInteger,
     postfix: S.String,
   },
   $I.annote("StringEncaseCrlfOptions", {

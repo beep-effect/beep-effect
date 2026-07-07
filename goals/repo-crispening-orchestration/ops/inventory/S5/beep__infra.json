@@ -1,0 +1,139 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "infra/src/OipWeb.ts",
+    "line": 80,
+    "symbol": "VercelAuthenticationDeploymentType",
+    "smell": "OIP's reusable Vercel authentication LiteralKit is unannotated, while the sibling Storybook LiteralKit for the same provider enum carries $I.annoteSchema metadata.",
+    "proposedTarget": "Mirror infra/src/Storybook.ts:60-70: const VercelAuthenticationDeploymentType = LiteralKit([...]).pipe($I.annoteSchema(\"OipWebVercelAuthenticationDeploymentType\", { description: \"Vercel deployment authentication modes accepted by the OIP web project.\" })).",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "infra/src/AIMetrics.ts",
+    "line": 233,
+    "symbol": "AIMetricsPulumiConfigValues.defaultTool/target",
+    "smell": "AIMetricsPulumiConfigValues decodes defaultTool and target as broad S.String even though the module imports the production AiMetricsTool and AiMetricsDeployTarget LiteralKits and immediately re-decodes those strings in toolFromPulumiConfig/targetFromPulumiConfig.",
+    "proposedTarget": "Use the existing production schemas directly in the raw Pulumi config schema: defaultTool: AiMetricsTool and target: AiMetricsDeployTarget, matching StorybookPulumiConfigValues.vercelAuthenticationDeploymentType at infra/src/Storybook.ts:129. The production kits are annotated at packages/tooling/library/ai-metrics/src/models.ts:26-30 and :57-61.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "infra/src/AIMetrics.ts",
+    "line": 239,
+    "symbol": "AIMetricsPulumiConfigValues.phoenixTailnetHttpsPort / AIMetricsRemoteDeploymentConfig.phoenixTailnetHttpsPort",
+    "smell": "Phoenix Tailnet HTTPS port is modeled as bare S.Int in both the raw Pulumi config schema and the resolved remote deployment schema; the real TCP/HTTPS port domain is 1-65535.",
+    "proposedTarget": "Introduce a local TailnetHttpsPort schema and reuse it at infra/src/AIMetrics.ts:239 and :294: const TailnetHttpsPort = S.Int.check(S.isBetween({ minimum: 1, maximum: 65535 })). S.Int and S.isBetween were verified in .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7401; branded numeric exemplars exist in packages/foundation/modeling/schema/src/Number.ts:182-200.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "infra/src/AIMetrics.ts",
+    "line": 268,
+    "symbol": "AIMetricsRemoteSshConfig.agentSocketPath / AIMetricsRemoteDeploymentConfig.remote*Root",
+    "smell": "Remote SSH agent socket and remote root paths are broad S.String values despite being POSIX path-like deployment inputs.",
+    "proposedTarget": "Use the existing @beep/schema path primitives: NativePathToPosixPath or PosixPath for agentSocketPath, remoteConfigRoot, and remoteMirrorRoot, preserving defaults via SchemaUtils.withKeyDefaults. PosixPath is the in-repo branded exemplar at packages/foundation/modeling/schema/src/PosixPath.ts:31-36 and NativePathToPosixPath at :70-81.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "infra/src/OipWeb.ts",
+    "line": 228,
+    "symbol": "OipDnsConfig DNS and Cloudflare fields",
+    "smell": "DNS record names, Cloudflare zone ids/import ids, and Vercel DNS targets are broad S.String fields even though the infrastructure model uses stable domain/IP/import-id shapes.",
+    "proposedTarget": "Extract local schemas such as DnsName = S.NonEmptyString.check(S.isPattern(...)), CloudflareImportId = S.NonEmptyString.check(S.isPattern(/^[^/]+\\/.+$/u)), and VercelApexTarget = S.NonEmptyString.check(S.isPattern(/^\\d{1,3}(?:\\.\\d{1,3}){3}$/u)); use them for OipDnsConfig and OipWebPulumiConfigValues. S.NonEmptyString and S.isPattern were verified in .repos/effect-v4/packages/effect/src/Schema.ts:8420 and :6521.",
+    "confidence": 0.66,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "infra/src/Storybook.ts",
+    "line": 120,
+    "symbol": "infra Pulumi config schema fields",
+    "smell": "The exported infra S.Class schemas have class-level $I.annote metadata, but their reusable Pulumi/provider fields have no annotateKey descriptions or missing-key messages anywhere in infra/src.",
+    "proposedTarget": "Add field-level annotateKey to the public config fields as they are crispened, starting with user-provided Pulumi keys and cloud-provider identifiers. Follow the local field annotation pattern in packages/tooling/library/repo-utils/src/JSDoc/models/ASTSignal.model.ts:34-52.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "infra/test/Storybook.test.ts",
+    "line": 7,
+    "symbol": "infra config schema laws",
+    "smell": "Infra schema coverage is static default/override fixture testing only; no S.toArbitrary-derived round-trip/property laws cover the exported config schemas with defaults and precision checks.",
+    "proposedTarget": "Add additive property tests using S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970) for pure config schemas such as StorybookVercelProjectConfig, OipDnsConfig/OipPulumiStateBackendConfig, and AIMetricsRemoteDeploymentConfig; assert decode/encode round-trip with Equal.equals or S.toEquivalence (verified :13201), importing production schemas from @beep/infra.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "infra/src/Storybook.ts",
+    "line": 166,
+    "symbol": "StorybookVercelProjectConfig provider command/repository fields",
+    "smell": "Detector candidate: buildCommand, installCommand, repository, rootDirectory, projectName, and teamId are broad strings.",
+    "proposedTarget": "None - leave provider command/repository fields broad except where a separately modeled internal path/domain schema is introduced.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These fields are passed through to the Vercel provider and intentionally preserve provider-compatible strings such as arbitrary shell commands, GitHub repo slugs, and team ids; over-narrowing would risk changing the provider surface.",
+      "boundary": "Vercel Pulumi provider project configuration boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "infra/src/OipWeb.ts",
+    "line": 304,
+    "symbol": "OipWebRuntimeSecrets",
+    "smell": "Detector candidate: runtime secrets are typed as broad pulumi.Input<string> values rather than schema-branded secret references.",
+    "proposedTarget": "None - keep Pulumi secret inputs as provider-native Input<string> values.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The values are Pulumi secret config outputs, not raw secret-reference strings decoded by the package; preserving pulumi.Input<string> maintains secret propagation and avoids exposing or revalidating secret material.",
+      "boundary": "Pulumi secret configuration boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "infra/test/OipWeb.test.ts",
+    "line": 12,
+    "symbol": "infra default/override fixtures",
+    "smell": "Detector candidate: infra tests use hand-written default and override fixtures for Storybook, OIP web, and AI metrics.",
+    "proposedTarget": "None - keep the fixtures; the S.toArbitrary schema-law record is additive coverage, not a replacement.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These tests pin exact Pulumi defaulting, provider override, and secret-reference mapping behavior; static fixtures are legitimate regression tests per the S5 carve-out.",
+      "boundary": "Pulumi stack default/override regression fixtures"
+    }
+  },
+  {
+    "ruleId": "SFV4-equivalence",
+    "file": "infra/src/AIMetrics.ts",
+    "line": 396,
+    "symbol": "AIMetricsDeployTarget literal branches",
+    "smell": "Detector candidate: branch logic compares resolvedTarget/spec.target to AiMetricsDeployTarget enum literals with ===.",
+    "proposedTarget": "None - keep direct literal checks; S.toEquivalence is for schema-modeled value equality and was verified at .repos/effect-v4/packages/effect/src/Schema.ts:13201, but this is ordinary control-flow over a LiteralKit discriminator.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The equality checks select deployment behavior for a closed LiteralKit value; replacing them with schema equivalence would add noise without improving precision.",
+      "boundary": "LiteralKit control-flow branch"
+    }
+  }
+]

@@ -1,0 +1,152 @@
+[
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/file-processing/src/Strategy/index.ts",
+    "line": 425,
+    "symbol": "classifyFormatFromExtension",
+    "smell": "Exported canonical extension-to-format classifier carries its contract as a bare function type `(extension: string | undefined) => FileFormatFamily` rather than a schema, and the pure literal extension->family mapping lives as behavior in a Match chain instead of schema-owned data. Input accepts unvalidated `string | undefined` even though the call sites pass schema-typed extensions (SourceArtifact.extension).",
+    "proposedTarget": "Model the contract as `Fn({ input: S.UndefinedOr(S.String), output: FileFormatFamily }).implementSync(...)` (Fn verified at packages/foundation/modeling/schema/src/Fn/Fn.schema.ts; S.UndefinedOr verified at .repos/effect-v4/packages/effect/src/Schema.ts:4867), or collapse the mapping into a declarative extension table colocated with FileFormatFamily with an \"unknown\" fallback. Counter-pressure: repo law prefers Match helpers over conditional chains, and the many-to-one mapping does not fit MappedLiteralKit's reversible code map; consumers are Tika driver, Files CLI service, and the test engine.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "The many-to-one extension classifier is now colocated as FileFormatFamily.fromExtension for S4; Fn wrapping the retained public alias would only change invalid JavaScript input behavior without moving additional schema truth.",
+      "boundary": "manual fn-schema judgment; public compatibility alias retained"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/file-processing/src/Service/index.ts",
+    "line": 215,
+    "symbol": "collectSourceOutcomeRecords",
+    "smell": "Exported fold's parameter and return contracts are anonymous inline struct types (`{ failure: Option<FileProcessingFailureRecord>; sourceRecord: SourceProcessingRecord }` -> `{ failureRecords; sourceRecords }`) describing a domain payload that plainly warrants a named schema; the outcome-pair shape is re-declared structurally at CLI call sites (Corpus.service.ts, Files.service.ts).",
+    "proposedTarget": "Name the outcome pair as a schema, e.g. `SourceProcessingOutcome` S.Class with `failure: S.OptionFromOptionalKey(FileProcessingFailureRecord)` (S.OptionFromOptionalKey verified at .repos/effect-v4/packages/effect/src/Schema.ts:8668), and type the fold via it; at minimum export a schema-derived named type instead of the inline literals. Note: this file exports a Context.Service rather than an S.Class, so the current SFV4-fn-schema detector precondition (schema-modeled file) would not fire here.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 2.2,
+    "exception": {
+      "reason": "The fold combines already schema-modeled SourceProcessingRecord/FileProcessingFailureRecord values plus an Option; schema-ifying this service combinator would duplicate CLI-local outcome structs instead of modeling a boundary.",
+      "boundary": "manual audit non-detector; service combinator over schema-modeled records"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/file-processing/src/Service/index.ts",
+    "line": 60,
+    "symbol": "FileProcessingEngineShape",
+    "smell": "Exported type alias of a struct type with Effect-returning function members (candidate hit for the exported-type-alias detector).",
+    "proposedTarget": "None - keep as a type alias. Port interface implemented by driver engines (tika/libpff/test); function members and the Crypto.Crypto requirement are non-schema signals.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Port interface implemented by concrete driver engines; contains Effect-returning function members. Already ledgered as an exception in standards/schema-first.inventory.jsonc:579-585.",
+      "boundary": "fence 1 - service-contract/port-interface carve-out"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/file-processing/src/Service/index.ts",
+    "line": 85,
+    "symbol": "FileProcessingServiceShape",
+    "smell": "Exported type alias of a struct type with Effect-returning function members, used as the Context.Service shape for FileProcessingService (candidate hit for the exported-type-alias detector).",
+    "proposedTarget": "None - keep as a type alias. Context.Service shape; crispening does not schema-ify service contracts.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Context.Service shape consumed by `Context.Service<FileProcessingService, FileProcessingServiceShape>()`. Already ledgered as an exception in standards/schema-first.inventory.jsonc:587-593.",
+      "boundary": "fence 1 - service-contract/Context.Service-shape carve-out"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/file-processing/src/Artifact/index.ts",
+    "line": 199,
+    "symbol": "deriveArtifactId",
+    "smell": "Exported Effect-returning function in a schema-modeled file taking `ReadonlyArray<string>` (candidate hit for the fn-schema detector).",
+    "proposedTarget": "None - keep as Effect.fn constructor. Effectful derivation requiring the Crypto.Crypto service; output is already decoded through S.decodeUnknownEffect(ArtifactId) so the return contract is schema-carried, and the primitive parts input does not duplicate any schema.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Effectful colocated constructor with a service requirement (Crypto.Crypto); return value is schema-branded via decode, input is primitive id parts joined before hashing. Fn schema would add no truth.",
+      "boundary": "effectful service-dependent constructor - fn-schema escape hatch"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
+    "line": 113,
+    "symbol": "PathSafetyError.escapesRoot / rootNotResolvable / candidateNotResolvable",
+    "smell": "Static constructors take inline plain-object option types (candidate hits for the fn-schema detector).",
+    "proposedTarget": "None - keep. Unlike fromReason, these statics transform their inputs (compute the message, wrap cause/resolved into O.some/O.none, fix the reason literal); the per-reason option shapes are projections, not 1:1 duplications of the schema fields. This is the crispen-sanctioned colocated-smart-constructor pattern.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Colocated smart constructors that add behavior (message construction, Option wrapping, reason fixing) rather than re-declaring the schema contract.",
+      "boundary": "colocated schema statics - crispen doctrine, fn-schema escape hatch"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
+    "line": 203,
+    "symbol": "isPathWithinRoot",
+    "smell": "Exported dual predicate over plain strings in a schema-modeled file; hand-rolled containment check that superficially looks like validation a refinement could express.",
+    "proposedTarget": "None - keep explicit. Path-traversal containment guard; branding/refinement-izing resolved paths through S1 would restructure a trust boundary.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Trust-boundary guard: path-traversal containment must stay an explicit, property-tested predicate; schema-ification is out of S1 scope.",
+      "boundary": "fence 4 - no trust-boundary weakening"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
+    "line": 246,
+    "symbol": "validateResolvedPath",
+    "smell": "Exported validation function taking a plain `{ root, candidate }` object and returning Result instead of a schema decode (candidate hit for the fn-schema detector).",
+    "proposedTarget": "None - keep explicit. Pure fail-closed guard over already-canonicalized paths; converting to a schema codec would obscure the security-relevant control flow.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Trust-boundary guard companion to resolvePathWithinRoot; fail-closed Result validation stays explicit per fence 4.",
+      "boundary": "fence 4 - no trust-boundary weakening"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/file-processing/src/PathSafety/index.ts",
+    "line": 296,
+    "symbol": "resolvePathWithinRoot",
+    "smell": "Exported Effect guard taking a plain `{ root, candidate }` object (candidate hit for the fn-schema detector).",
+    "proposedTarget": "None - keep explicit. Filesystem-consulting canonicalization guard (FileSystem.realPath + deepest-existing-ancestor walk); requires FileSystem | Path services and is the package's central symlink/traversal defense.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Effectful trust-boundary guard with service requirements; escaping/sanitization/traversal guards stay explicit and property-tested.",
+      "boundary": "fence 4 - no trust-boundary weakening"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/file-processing/src/test.ts",
+    "line": 75,
+    "symbol": "decodeTestOperationIdentifiers",
+    "smell": "Exported fixture helper returning an anonymous `{ artifactId, digest, operationId }` struct (candidate hit for the fn-schema detector).",
+    "proposedTarget": "None - keep. Test/fixture helper on the `test` subpath entry; all three fields are already schema-decoded branded ids, the anonymous trio is fixture plumbing.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Synthetic fixture helper shared by driver tests; returns schema-decoded branded identifiers, so the contract truth already lives in ArtifactId/ContentDigest/OperationId.",
+      "boundary": "test/fixture-helper escape hatch (rule-card escape list)"
+    }
+  }
+]

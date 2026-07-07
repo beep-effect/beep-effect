@@ -11,6 +11,7 @@ import * as JsonLdStreamSerializeServiceModule from "@beep/semantic-web/services
 import * as ShaclValidationServiceModule from "@beep/semantic-web/services/shacl-validation";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const decodeUnknownSync = <Schema extends S.ConstraintDecoder<unknown, never>>(schema: Schema) =>
@@ -101,8 +102,11 @@ describe("Interop and Metadata", () => {
 
       for (const [name, schema] of schemaEntries) {
         const metadata = getSemanticSchemaMetadata(schema);
-        expect(metadata, `${moduleAudit.name}.${name}`).toBeDefined();
-        expect(metadata?.canonicalName, `${moduleAudit.name}.${name}`).toBe(name);
+        expect(O.isSome(metadata), `${moduleAudit.name}.${name}`).toBe(true);
+        expect(
+          O.map(metadata, (m) => m.canonicalName),
+          `${moduleAudit.name}.${name}`
+        ).toEqual(O.some(name));
       }
     }
   });

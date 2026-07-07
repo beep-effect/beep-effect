@@ -1,0 +1,61 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
+    "line": 42,
+    "symbol": "PffexportMode",
+    "smell": "LiteralKit statics are lost after `.pipe($I.annoteSchema(...))`; the exported pffexport mode vocabulary no longer carries kit helpers or codec statics on the schema value.",
+    "proposedTarget": "Capture the kit in a base const, then apply `$I.annoteSchema(...)`, `SchemaUtils.withLiteralKitStatics(base)`, and `SchemaUtils.withCodecStatics`; helpers verified at packages/foundation/modeling/schema/src/SchemaUtils/withLiteralKitStatics.ts:37 and withCodecStatics.ts:90.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/libpff/src/Libpff.pffexport.ts",
+    "line": 68,
+    "symbol": "PffexportFormat",
+    "smell": "LiteralKit statics are lost after `.pipe($I.annoteSchema(...))`; consumers cannot use `PffexportFormat.Options`/`.is`/`.$match` or schema-owned codec statics.",
+    "proposedTarget": "Use the same base-const plus `SchemaUtils.withLiteralKitStatics(base)` and `SchemaUtils.withCodecStatics` pattern as `PffexportMode`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/libpff/src/Libpff.errors.ts",
+    "line": 29,
+    "symbol": "LibpffErrorReason",
+    "smell": "LiteralKit reason vocabulary is annotated without reattaching kit/static codec helpers, so reason guards and matches would need to be rebuilt away from the schema.",
+    "proposedTarget": "Capture the LiteralKit base and reattach `withLiteralKitStatics(base)` plus `withCodecStatics` after annotation, matching the S4 LiteralKit exemplar style.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/libpff/src/Libpff.errors.ts",
+    "line": 88,
+    "symbol": "LibpffError.fromReason",
+    "smell": "Detector hit: public two-argument static constructor is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "The second argument is optional with a default (`options = {}`). Arity-based `dual(2, ...)` would turn the valid `fromReason(reason)` call into data-last partial application instead of constructing an error.",
+      "boundary": "Public error-constructor API with optional trailing args; dual dispatch is incompatible."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/libpff/src/Libpff.errors.ts",
+    "line": 113,
+    "symbol": "makeLibpffError",
+    "smell": "Free exported constructor wrapper delegates directly to `LibpffError.fromReason`, duplicating behavior already colocated on the error class.",
+    "proposedTarget": "Replace with a direct helper reference (`export const makeLibpffError = LibpffError.fromReason`) or remove in a public-form consumer sweep.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 5
+  }
+]

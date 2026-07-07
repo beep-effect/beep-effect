@@ -102,7 +102,7 @@ export type NoSniffOption = typeof NoSniffOption.Type;
 export class NoSniffResponseHeader extends S.Class<NoSniffResponseHeader>($I`NoSniffResponseHeader`)(
   {
     name: S.tag(headerName),
-    value: S.OptionFromUndefinedOr(S.String),
+    value: S.OptionFromUndefinedOr(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("NoSniffResponseHeader", {
     description: "The `X-Content-Type-Options` response header.",

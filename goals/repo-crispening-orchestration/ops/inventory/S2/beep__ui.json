@@ -1,0 +1,77 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/ui-system/ui/src/components/country-select.tsx",
+    "line": 326,
+    "symbol": "CountryOption",
+    "smell": "`CountryOption.callingCode` is required as `S.String`, but construction from `countries-list` fills missing phone metadata with an empty string via `O.getOrElse(() => \"\")`. That encodes absence as a string sentinel inside a schema-modeled option record.",
+    "proposedTarget": "Represent missing phone prefix data as Option, for example `callingCode: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)`, or introduce a named `CountryOptionFromCountriesList` transform that maps an absent/empty phone array to `O.none()` before constructing `CountryOption`. Renderers can then project `O.none` to an empty label only at the combobox display boundary. Verified APIs: `.repos/effect-v4/packages/effect/src/Schema.ts:8668` for `S.OptionFromOptionalKey` and `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46` for `SchemaUtils.withNoneDefault`.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 6,
+    "exception": {
+      "reason": "CountryOption is exported display/search data derived from the third-party countries-list dataset; S5 already settled this as a permissive UI boundary. Changing callingCode to Option would alter the public countryOptions/CountryOptionContent shape and ripple through JSX display consumers outside the intended schema-default absorption.",
+      "boundary": "third-party countries-list display/search data; public UI option shape"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/ui-system/ui/src/lib/url.ts",
+    "line": 82,
+    "symbol": "normalizeHrefProtocolCandidate",
+    "smell": "The detector sees explicit `Str.trim` / `Str.toLowerCase` protocol normalization before URL safety checks.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "This is a trust-boundary URL sanitizer. The SPEC carves out URL/security input hardening from schema-crispening rewrites, and the normalization is part of the guard that blocks unsafe protocols.",
+      "boundary": "security sanitizer / DOM href boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/ui-system/ui/src/components/effect-date-time-picker.tsx",
+    "line": 379,
+    "symbol": "AdapterEffectDateTime.parse",
+    "smell": "The detector sees `DateTime.DateTime | null` and null returns for empty or invalid date input.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 11,
+    "exception": {
+      "reason": "The method implements the MUI X date adapter contract, where `null` represents empty or invalid date parsing. Replacing it with Option would break the adapter surface instead of crispening an owned domain model.",
+      "boundary": "third-party MUI X adapter contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/ui-system/ui/src/components/chart.tsx",
+    "line": 173,
+    "symbol": "ChartStyle",
+    "smell": "The detector sees a component-level `return null` when no chart color configuration needs a generated style tag.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 12,
+    "exception": {
+      "reason": "This is the React render-null convention for omitting a subtree, not absence in schema-modeled data. The chart CSS selector sanitizer in the same file is also a trust-boundary concern.",
+      "boundary": "React JSX rendering boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/ui-system/ui/src/hooks/use-scribe.ts",
+    "line": 247,
+    "symbol": "useScribe",
+    "smell": "The detector sees hook-level defaults such as `currentOptions.modelId ?? defaultModelId` and SDK option compaction that removes undefined microphone constraints.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 13,
+    "exception": {
+      "reason": "These defaults adapt React hook options into the ElevenLabs SDK call shape. The values are not persisted domain records, and preserving SDK optional-object semantics is more important than moving them into local schemas.",
+      "boundary": "third-party SDK adapter / React hook options"
+    }
+  }
+]

@@ -6,10 +6,27 @@
  */
 
 import { $ChalkId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
+import type { LiteralKit as LiteralKitSchema } from "@beep/schema";
+import type { SchemaAST } from "effect";
 
 const $I = $ChalkId.create("Domain");
+
+type LiteralValues = readonly [SchemaAST.LiteralValue, ...Array<SchemaAST.LiteralValue>];
+
+const withLiteralKitHelpers =
+  <const L extends LiteralValues>(kit: LiteralKitSchema<L>) =>
+  <const Schema extends object>(schema: Schema) =>
+    SchemaUtils.withStatics(schema, () => ({
+      $match: kit.$match,
+      Enum: kit.Enum,
+      omitOptions: kit.omitOptions,
+      Options: kit.Options,
+      pickOptions: kit.pickOptions,
+      thunk: kit.thunk,
+      toTaggedUnion: kit.toTaggedUnion,
+    }));
 
 /**
  * Supported numeric color support levels.
@@ -140,6 +157,46 @@ export const backgroundColorNameValues = [
 export const colorNameValues = [...foregroundColorNameValues, ...backgroundColorNameValues] as const;
 
 /**
+ * Supported Chalk style names.
+ *
+ * @example
+ * ```ts
+ * import { styleNameValues } from "@beep/chalk/internal/ChalkSchema"
+ *
+ * const firstStyle = styleNameValues[0]
+ * console.log(firstStyle)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const styleNameValues = [...modifierNameValues, ...colorNameValues] as const;
+
+/**
+ * ANSI color model names used by dynamic Chalk builders.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const colorModelNameValues = ["rgb", "hex", "ansi256"] as const;
+
+/**
+ * ANSI render levels used by terminal capability detection.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const ansiRenderLevelValues = ["ansi", "ansi256", "ansi16m"] as const;
+
+/**
+ * ANSI style channels for foreground and background color tables.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const styleChannelValues = ["color", "bgColor"] as const;
+
+/**
  * Supported Chalk color support levels.
  *
  * @example
@@ -154,11 +211,15 @@ export const colorNameValues = [...foregroundColorNameValues, ...backgroundColor
  * @category models
  * @since 0.0.0
  */
-export const ColorSupportLevel = LiteralKit(colorSupportLevelValues).pipe(
+const ColorSupportLevelKit = LiteralKit(colorSupportLevelValues);
+
+export const ColorSupportLevel = S.Literals(colorSupportLevelValues).pipe(
   $I.annoteSchema("ColorSupportLevel", {
     description:
       "Supported terminal color support levels: 0 disables colors, 1 enables ANSI colors, 2 enables ANSI256, and 3 enables truecolor.",
-  })
+  }),
+  withLiteralKitHelpers(ColorSupportLevelKit),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -221,7 +282,8 @@ export class ColorSupport extends S.Class<ColorSupport>($I`ColorSupport`)(
 export const ColorInfo = S.Union([ColorSupport, S.Literal(false)]).pipe(
   $I.annoteSchema("ColorInfo", {
     description: "Detected terminal color support information, or `false` when color output is disabled.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -278,10 +340,14 @@ export class ChalkOptions extends S.Class<ChalkOptions>($I`ChalkOptions`)(
  * @category models
  * @since 0.0.0
  */
-export const ModifierName = LiteralKit(modifierNameValues).pipe(
+const ModifierNameKit = LiteralKit(modifierNameValues);
+
+export const ModifierName = S.Literals(modifierNameValues).pipe(
   $I.annoteSchema("ModifierName", {
     description: "Supported Chalk modifier names.",
-  })
+  }),
+  withLiteralKitHelpers(ModifierNameKit),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -315,10 +381,14 @@ export type ModifierName = typeof ModifierName.Type;
  * @category models
  * @since 0.0.0
  */
-export const ForegroundColorName = LiteralKit(foregroundColorNameValues).pipe(
+const ForegroundColorNameKit = LiteralKit(foregroundColorNameValues);
+
+export const ForegroundColorName = S.Literals(foregroundColorNameValues).pipe(
   $I.annoteSchema("ForegroundColorName", {
     description: "Supported Chalk foreground color names.",
-  })
+  }),
+  withLiteralKitHelpers(ForegroundColorNameKit),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -352,10 +422,14 @@ export type ForegroundColorName = typeof ForegroundColorName.Type;
  * @category models
  * @since 0.0.0
  */
-export const BackgroundColorName = LiteralKit(backgroundColorNameValues).pipe(
+const BackgroundColorNameKit = LiteralKit(backgroundColorNameValues);
+
+export const BackgroundColorName = S.Literals(backgroundColorNameValues).pipe(
   $I.annoteSchema("BackgroundColorName", {
     description: "Supported Chalk background color names.",
-  })
+  }),
+  withLiteralKitHelpers(BackgroundColorNameKit),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -389,10 +463,14 @@ export type BackgroundColorName = typeof BackgroundColorName.Type;
  * @category models
  * @since 0.0.0
  */
-export const ColorName = LiteralKit(colorNameValues).pipe(
+const ColorNameKit = LiteralKit(colorNameValues);
+
+export const ColorName = S.Literals(colorNameValues).pipe(
   $I.annoteSchema("ColorName", {
     description: "Supported Chalk foreground and background color names.",
-  })
+  }),
+  withLiteralKitHelpers(ColorNameKit),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -410,3 +488,99 @@ export const ColorName = LiteralKit(colorNameValues).pipe(
  * @since 0.0.0
  */
 export type ColorName = typeof ColorName.Type;
+
+/**
+ * Schema for all supported Chalk style names.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+const StyleNameKit = LiteralKit(styleNameValues);
+
+export const StyleName = S.Literals(styleNameValues).pipe(
+  $I.annoteSchema("StyleName", {
+    description: "Supported Chalk modifier, foreground color, and background color style names.",
+  }),
+  withLiteralKitHelpers(StyleNameKit),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime type for {@link StyleName}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type StyleName = typeof StyleName.Type;
+
+/**
+ * Color model names accepted by dynamic color builders.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+const ColorModelNameKit = LiteralKit(colorModelNameValues);
+
+export const ColorModelName = S.Literals(colorModelNameValues).pipe(
+  $I.annoteSchema("ColorModelName", {
+    description: "ANSI color model names accepted by Chalk dynamic color builders.",
+  }),
+  withLiteralKitHelpers(ColorModelNameKit),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime type for {@link ColorModelName}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ColorModelName = typeof ColorModelName.Type;
+
+/**
+ * ANSI render levels selected from color-support detection.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+const AnsiRenderLevelKit = LiteralKit(ansiRenderLevelValues);
+
+export const AnsiRenderLevel = S.Literals(ansiRenderLevelValues).pipe(
+  $I.annoteSchema("AnsiRenderLevel", {
+    description: "ANSI rendering level used by Chalk color model builders.",
+  }),
+  withLiteralKitHelpers(AnsiRenderLevelKit),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime type for {@link AnsiRenderLevel}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AnsiRenderLevel = typeof AnsiRenderLevel.Type;
+
+/**
+ * Foreground/background style channel selector.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+const StyleChannelKit = LiteralKit(styleChannelValues);
+
+export const StyleChannel = S.Literals(styleChannelValues).pipe(
+  $I.annoteSchema("StyleChannel", {
+    description: "Foreground or background ANSI style channel.",
+  }),
+  withLiteralKitHelpers(StyleChannelKit),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime type for {@link StyleChannel}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type StyleChannel = typeof StyleChannel.Type;

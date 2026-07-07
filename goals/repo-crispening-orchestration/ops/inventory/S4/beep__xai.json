@@ -1,0 +1,253 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAiEndpoints.models.ts",
+    "line": 46,
+    "symbol": "XAiHttpMethod",
+    "smell": "Annotated LiteralKit has the endpoint method literal helpers but no standard codec statics (`fromUnknown`/`decodeOption`); adding codec statics must preserve the existing structured LiteralKit `.is` helpers.",
+    "proposedTarget": "Introduce `XAiHttpMethodBase = LiteralKit(XAiHttpMethodValues)`, then export `XAiHttpMethod = XAiHttpMethodBase.pipe($I.annoteSchema(...), SchemaUtils.withCodecStatics, SchemaUtils.withLiteralKitStatics(XAiHttpMethodBase))`. `withCodecStatics` is verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90; the final LiteralKit reattach preserves kit `.is` helpers.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAiEndpoints.models.ts",
+    "line": 84,
+    "symbol": "XAiAuthKind",
+    "smell": "Annotated LiteralKit for endpoint auth kinds lacks `fromUnknown`/`decodeOption` codec statics.",
+    "proposedTarget": "Introduce `XAiAuthKindBase = LiteralKit(XAiAuthKindValues)` and pipe annotation through `SchemaUtils.withCodecStatics` then `SchemaUtils.withLiteralKitStatics(XAiAuthKindBase)`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAiEndpoints.models.ts",
+    "line": 122,
+    "symbol": "XAiEndpointBase",
+    "smell": "Annotated LiteralKit for endpoint base URL families lacks codec statics.",
+    "proposedTarget": "Introduce `XAiEndpointBaseBase = LiteralKit(XAiEndpointBaseValues)` and pipe annotation through `SchemaUtils.withCodecStatics` then `SchemaUtils.withLiteralKitStatics(XAiEndpointBaseBase)`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAiEndpoints.models.ts",
+    "line": 160,
+    "symbol": "XAiRequestBodyKind",
+    "smell": "Annotated LiteralKit for request body kinds lacks `fromUnknown`/`decodeOption`.",
+    "proposedTarget": "Introduce `XAiRequestBodyKindBase = LiteralKit(XAiRequestBodyKindValues)` and re-export through annotation, `SchemaUtils.withCodecStatics`, and `SchemaUtils.withLiteralKitStatics(XAiRequestBodyKindBase)`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAiEndpoints.models.ts",
+    "line": 198,
+    "symbol": "XAiResponseBodyKind",
+    "smell": "Annotated LiteralKit for response body kinds lacks codec statics.",
+    "proposedTarget": "Introduce `XAiResponseBodyKindBase = LiteralKit(XAiResponseBodyKindValues)` and pipe through annotation, `SchemaUtils.withCodecStatics`, then `SchemaUtils.withLiteralKitStatics(XAiResponseBodyKindBase)`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAiEndpoints.models.ts",
+    "line": 236,
+    "symbol": "XAiEndpointStatus",
+    "smell": "Annotated LiteralKit for endpoint status values lacks codec statics.",
+    "proposedTarget": "Introduce `XAiEndpointStatusBase = LiteralKit(XAiEndpointStatusValues)` and add `SchemaUtils.withCodecStatics` plus `SchemaUtils.withLiteralKitStatics(XAiEndpointStatusBase)` after annotation.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAiEndpoints.models.ts",
+    "line": 361,
+    "symbol": "XAiEndpointMethodName",
+    "smell": "Large annotated LiteralKit for public service method names lacks `fromUnknown`/`decodeOption`, so callers do not get the standard schema-derived codec statics on this public method-name domain.",
+    "proposedTarget": "Introduce `XAiEndpointMethodNameBase = LiteralKit(XAiEndpointMethodNameValues)` and pipe through annotation, `SchemaUtils.withCodecStatics`, then `SchemaUtils.withLiteralKitStatics(XAiEndpointMethodNameBase)`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAiEndpoints.models.ts",
+    "line": 501,
+    "symbol": "XAiEndpointId",
+    "smell": "Large annotated LiteralKit for stable endpoint identifiers lacks codec statics.",
+    "proposedTarget": "Introduce `XAiEndpointIdBase = LiteralKit(XAiEndpointIdValues)` and pipe through annotation, `SchemaUtils.withCodecStatics`, then `SchemaUtils.withLiteralKitStatics(XAiEndpointIdBase)`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAi.errors.ts",
+    "line": 36,
+    "symbol": "XAiErrorReason",
+    "smell": "Annotated LiteralKit for error reasons lacks codec statics; the error schema uses the domain but consumers cannot call `XAiErrorReason.fromUnknown(...)` / `.decodeOption(...)`.",
+    "proposedTarget": "Introduce `XAiErrorReasonBase = LiteralKit([...])`, then export `XAiErrorReason = XAiErrorReasonBase.pipe($I.annoteSchema(...), SchemaUtils.withCodecStatics, SchemaUtils.withLiteralKitStatics(XAiErrorReasonBase))`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 9
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAi.models.ts",
+    "line": 307,
+    "symbol": "XAiWebSocketEventKind",
+    "smell": "Annotated LiteralKit for WebSocket event kinds is used to derive `XAiWebSocketEvent` but lacks codec statics on the event-kind domain.",
+    "proposedTarget": "Introduce `XAiWebSocketEventKindBase = LiteralKit([\"close\", \"error\", \"message\"])`; export through annotation, `SchemaUtils.withCodecStatics`, and `SchemaUtils.withLiteralKitStatics(XAiWebSocketEventKindBase)` so `.mapMembers`/kit helpers remain available and `fromUnknown`/`decodeOption` are added.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 10
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAi.models.ts",
+    "line": 29,
+    "symbol": "XAiQueryValue",
+    "smell": "Union const for query values is annotation-final with no codec statics; XAi.service.ts:651 rebuilds a scalar subset soft decoder as `S.decodeUnknownOption(S.Union([S.Boolean, S.Null, S.Finite, S.String]))`.",
+    "proposedTarget": "Extract `XAiQueryScalar = S.Union([S.Boolean, S.Null, S.Finite, S.String]).pipe(SchemaUtils.withCodecStatics)`, define `XAiQueryValue` from `S.Array(XAiQueryScalar)` plus `XAiQueryScalar`, and append `SchemaUtils.withCodecStatics` after the `XAiQueryValue` annotation.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 11
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAi.service.ts",
+    "line": 651,
+    "symbol": "decodeQueryScalarOption",
+    "smell": "Free-floating soft decoder duplicates the query scalar schema fragment instead of using a colocated `decodeOption` static.",
+    "proposedTarget": "Delete the wall const and call `XAiQueryScalar.decodeOption` after the scalar schema is extracted beside `XAiQueryValue` in XAi.models.ts.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 12
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAi.models.ts",
+    "line": 234,
+    "symbol": "XAiResponse",
+    "smell": "Exported response union is derived with `S.toTaggedUnion(\"_tag\")` and annotated, but lacks standard codec statics even though downstream code treats it as the central response data surface.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` so `XAiResponse.is` / `.fromUnknown` / `.decodeOption` are colocated. Effect v4 `S.toTaggedUnion` was verified at .repos/effect-v4/packages/effect/src/Schema.ts:6094.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 13
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAi.models.ts",
+    "line": 357,
+    "symbol": "XAiWebSocketEvent",
+    "smell": "Exported WebSocket event tagged union is derived from `XAiWebSocketEventKind.mapMembers(...).pipe(..., S.toTaggedUnion(\"kind\"))` but lacks codec statics.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `S.toTaggedUnion(\"kind\")` so WebSocket event parsing/consumers can use `XAiWebSocketEvent.is` / `.fromUnknown` / `.decodeOption`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 14
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAiEndpoints.models.ts",
+    "line": 538,
+    "symbol": "XAiEndpoint",
+    "smell": "Exported S.Class lacks an in-body `static readonly is`; XAi.errors.ts:67 compensates with `const isXAiEndpointDescriptor = S.is(XAiEndpoint)` for dual dispatch.",
+    "proposedTarget": "Add `static readonly is = S.is(XAiEndpoint);` inside the class body and use `XAiEndpoint.is` from the error constructor. Class-static exemplar: packages/foundation/modeling/md/src/Md.model.ts:873.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 15
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAi.errors.ts",
+    "line": 67,
+    "symbol": "isXAiEndpointDescriptor",
+    "smell": "Free-floating guard `S.is(XAiEndpoint)` duplicates a guard that belongs on the exported endpoint descriptor class.",
+    "proposedTarget": "Delete the wall const and use `XAiEndpoint.is(args[0])` after adding the in-body class static at XAiEndpoints.models.ts:538.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 16
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAi.service.ts",
+    "line": 535,
+    "symbol": "decodeJsonOption",
+    "smell": "Detector hit: top-level `S.decodeUnknownOption(S.UnknownFromJsonString)` helper parses WebSocket text payloads outside a named schema const.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 17,
+    "exception": {
+      "reason": "This is a soft JSON probe for WebSocket message text: parse success becomes structured data, parse failure deliberately falls back to the original string at line 681. A schema static would not encode that fallback behavior.",
+      "boundary": "Trust-boundary parsing with intentional text fallback; do not weaken or hide fallback semantics."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAi.service.ts",
+    "line": 99,
+    "symbol": "XAiEndpointMethod",
+    "smell": "Detector hit: exported function type models endpoint behavior away from schema-modeled data.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 18,
+    "exception": {
+      "reason": "This is a service method port type for HTTP-backed xAI endpoints. It has no runtime schema value to receive statics, and dualizing it would change the driver service surface rather than colocate data behavior.",
+      "boundary": "SPEC fence 1 - service-contract/interface carve-out."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAi.service.ts",
+    "line": 133,
+    "symbol": "XAiWebSocketSession",
+    "smell": "Detector hit: exported interface groups WebSocket session behavior (`close`, `sendBytes`, `sendJson`, `sendText`) apart from schema-modeled data.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 19,
+    "exception": {
+      "reason": "This is a live resource/session port over a WebSocket connection, not a serializable domain model. Schema-ifying or moving these methods onto data would change the service boundary.",
+      "boundary": "SPEC fence 1 - service-contract/interface carve-out."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAi.service.ts",
+    "line": 193,
+    "symbol": "XAiShape",
+    "smell": "Detector hit: public service-shape type exposes every endpoint method away from schema-modeled data.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 20,
+    "exception": {
+      "reason": "This is the Context.Service shape for the xAI driver. It is a service contract over Effectful HTTP/WebSocket methods, not schema-modeled data.",
+      "boundary": "SPEC fence 1 - service-contract/interface carve-out."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/xai/src/XAiLanguageModel.service.ts",
+    "line": 237,
+    "symbol": "model",
+    "smell": "Detector hit: exported two-argument helper is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 21,
+    "exception": {
+      "reason": "The second argument is optional adapter configuration. Arity-based `dual(2, ...)` would turn the valid `model(modelName)` call into partial application instead of constructing an AiModel value.",
+      "boundary": "Public constructor API with optional trailing config; dual dispatch is incompatible."
+    }
+  }
+]

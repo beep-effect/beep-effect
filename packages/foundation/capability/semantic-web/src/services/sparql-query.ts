@@ -6,7 +6,7 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { Context, Effect, Layer } from "effect";
 import * as S from "effect/Schema";
 import { Dataset, Term } from "../rdf.ts";
@@ -72,7 +72,7 @@ export class SparqlQueryRequest extends S.Class<SparqlQueryRequest>($I`SparqlQue
     query: S.NonEmptyString,
     profile: SparqlQueryProfile,
     dataset: Dataset,
-    timeoutMs: S.OptionFromOptionalKey(NonNegativeInt),
+    timeoutMs: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("SparqlQueryRequest", {
     description: "SPARQL query request.",
@@ -202,6 +202,29 @@ export const SparqlQueryResult = S.Union([SparqlSelectResult, SparqlAskResult, S
 export type SparqlQueryResult = typeof SparqlQueryResult.Type;
 
 /**
+ * SPARQL query error reason.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import * as S from "effect/Schema"
+ * import { SparqlQueryErrorReason } from "@beep/semantic-web/services/sparql-query"
+ *
+ * const reason = S.decodeUnknownSync(SparqlQueryErrorReason)("unsupportedProfile")
+ * strictEqual(reason, "unsupportedProfile")
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SparqlQueryErrorReason = LiteralKit(["unsupportedProfile", "unimplemented"]).pipe(
+  $I.annoteSchema("SparqlQueryErrorReason", {
+    description: "SPARQL query error reason.",
+    semanticSchemaMetadata: serviceContractMetadata("SparqlQueryErrorReason", "SPARQL query error reason."),
+  })
+);
+
+/**
  * Typed SPARQL query error.
  *
  * @example
@@ -222,7 +245,7 @@ export type SparqlQueryResult = typeof SparqlQueryResult.Type;
 export class SparqlQueryError extends TaggedErrorClass<SparqlQueryError>($I`SparqlQueryError`)(
   "SparqlQueryError",
   {
-    reason: LiteralKit(["unsupportedProfile", "unimplemented"]),
+    reason: SparqlQueryErrorReason,
     message: S.String,
   },
   $I.annote("SparqlQueryError", {

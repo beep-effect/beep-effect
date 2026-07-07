@@ -1,15 +1,45 @@
 import * as Md from "@beep/md/Md.model";
 import { decodePandocJson, decodePandocJsonString } from "@beep/pandoc-ast/Pandoc.codec";
 import { documentToPandoc, pandocToDocument } from "@beep/pandoc-ast/Pandoc.mapping";
+import * as Pandoc from "@beep/pandoc-ast/Pandoc.model";
+import {
+  JsonPath,
+  JsonPathSegment,
+  jsonPointerFromPath,
+  PandocCompatibilityReport,
+  PandocMappingIssue,
+  profileFromIssues,
+} from "@beep/pandoc-ast/Pandoc.report";
 import { A } from "@beep/utils";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import type * as Pandoc from "@beep/pandoc-ast/Pandoc.model";
+import { FastCheck as fc } from "effect/testing";
 
-const fixture = (name: string): Effect.Effect<string> =>
-  Effect.promise(() => Bun.file(new URL(`./fixtures/${name}`, import.meta.url)).text());
+const JsonPathArbitrary = S.toArbitrary(JsonPath);
+const JsonPathSegmentArbitrary = S.toArbitrary(JsonPathSegment);
+const MdDocumentArbitrary = S.toArbitrary(Md.Document);
+const PandocDocumentArbitrary = S.toArbitrary(Pandoc.PandocDocument);
+const provideScopedLayer =
+  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
+    layer.pipe(
+      Layer.build,
+      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
+      Effect.scoped
+    );
+const provideBunFileSystem = provideScopedLayer(BunFileSystem.layer);
+
+const fixture = Effect.fn("PandocMappingTest.fixture")((name: string) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    return yield* fs.readFileString(new URL(`./fixtures/${name}`, import.meta.url).pathname);
+  }).pipe(provideBunFileSystem)
+);
 const text = (value: string): Md.Text => Md.Text.make({ value });
 const inlineListPandocJson = () => ({
   "pandoc-api-version": [1, 23, 1],
@@ -113,6 +143,16 @@ const expectParagraphText = (block: Md.Block | undefined, value: string): void =
   expect(block.children[0].value).toBe(value);
 };
 
+const expectReportInvariants = (report: PandocCompatibilityReport.Type): void => {
+  expect(report.profile).toBe(PandocCompatibilityReport.profileFromIssues(report.issues));
+  expect(report.profile).toBe(profileFromIssues(report.issues));
+
+  for (const issue of report.issues) {
+    expect(issue.pointer).toBe(JsonPath.toPointer(issue.path));
+    expect(issue.pointer).toBe(jsonPointerFromPath(issue.path));
+  }
+};
+
 describe("Pandoc.mapping", () => {
   it("maps md-core Pandoc JSON to @beep/md with a supported report", () =>
     Effect.runPromise(
@@ -178,6 +218,43 @@ describe("Pandoc.mapping", () => {
           expect.arrayContaining(["rawMarkdown", "TaskList"])
         );
       })
+    ));
+
+  it("derives JSON pointer and default severity behavior from report schemas", () =>
+    fc.assert(
+      fc.property(JsonPathArbitrary, (path) => {
+        const issue = PandocMappingIssue.fromPath({
+          construct: "Generated",
+          direction: "pandoc-to-md",
+          message: "Generated issue.",
+          path,
+        });
+
+        expect(issue.pointer).toBe(JsonPath.toPointer(path));
+        expect(issue.pointer).toBe(jsonPointerFromPath(path));
+        expect(issue.severity).toBe("unsupported");
+      }),
+      { numRuns: 50 }
+    ));
+
+  it("generates only non-negative numeric JSON path segments", () =>
+    fc.assert(
+      fc.property(JsonPathSegmentArbitrary, (segment) => {
+        if (typeof segment === "number") {
+          expect(Number.isInteger(segment)).toBe(true);
+          expect(segment).toBeGreaterThanOrEqual(0);
+        }
+      }),
+      { numRuns: 50 }
+    ));
+
+  it("preserves mapping report invariants for schema-derived documents", () =>
+    fc.assert(
+      fc.property(PandocDocumentArbitrary, MdDocumentArbitrary, (pandoc, document) => {
+        expectReportInvariants(Effect.runSync(pandocToDocument(pandoc)).report);
+        expectReportInvariants(Effect.runSync(documentToPandoc(document)).report);
+      }),
+      { numRuns: 25 }
     ));
 
   it("degrades @beep/md tables and YouTube embeds to Pandoc with recorded lossiness", () =>

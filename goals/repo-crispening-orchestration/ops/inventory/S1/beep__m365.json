@@ -1,0 +1,103 @@
+[
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/m365/src/M365.errors.ts",
+    "line": 128,
+    "symbol": "M365Error.fromReason",
+    "smell": "Exported static constructor in a schema-modeled file accepts `M365ErrorOptionsInput`, a plain object type literal that duplicates nearby `M365Error` option fields.",
+    "proposedTarget": "Promote `M365ErrorOptionsInput` at `packages/drivers/m365/src/M365.errors.ts:63` to an annotated input schema, e.g. `M365ErrorOptionsInput extends S.Class` with `cause: S.optionalKey(S.Unknown)` plus the optional string/finite fields, then normalize from that schema before `M365Error.make`. In-repo exemplars: `packages/drivers/govinfo/src/Govinfo.errors.ts:70` models `GovinfoErrorOptions` as an `S.Class`, and `packages/drivers/box/src/Box.errors.ts` has the same S1 target recorded in `goals/repo-crispening-orchestration/ops/inventory/S1/beep__box.json`.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 0.52
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/m365/src/M365.auth.ts",
+    "line": 142,
+    "symbol": "M365InteractiveAuthorizer",
+    "smell": "Exported function type alias in a schema-modeled auth module matches the S1 function-contract smell.",
+    "proposedTarget": "None while excepted. Keep the callback as a host-owned port; the request payload already lives in `M365AuthorizationRequest` at `packages/drivers/m365/src/M365.auth.ts:90`, and the runtime carries the function through `InteractiveAuthorizerFromSelf` at `packages/drivers/m365/src/M365.auth.ts:52`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This is a host callback for browser opening/redirect capture. Function-valued port surfaces are explicit S1 carve-outs; only the authorization request data is schema-owned.",
+      "boundary": "host-owned interactive OAuth authorizer callback"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/m365/src/M365.auth.ts",
+    "line": 276,
+    "symbol": "M365AuthShape",
+    "smell": "Exported type literal with an Effect-valued member matches the schema-first-inventory surface.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. This is the `Context.Service` shape consumed by `M365Auth` at `packages/drivers/m365/src/M365.auth.ts:295`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:297-303`: type alias contains non-schema signals such as function members or runtime handles.",
+      "boundary": "delegated Microsoft Graph token-provider service shape"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/m365/src/M365.schemas.ts",
+    "line": 365,
+    "symbol": "GraphCollection",
+    "smell": "Exported generic `S.Struct` factory with OData keys matches the object-struct schema-first-inventory detector.",
+    "proposedTarget": "None while excepted. Keep the generic boundary envelope factory and its OData literal keys; concrete collection schemas such as `M365DriveCollection` at `packages/drivers/m365/src/M365.service.ts:137` add package-specific annotations.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:305-310`: S.Struct with non-identifier keys stays tracked as an exception.",
+      "boundary": "Microsoft Graph OData collection envelope with @odata keys"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/m365/src/M365.service.ts",
+    "line": 107,
+    "symbol": "isGraphPathSegment",
+    "smell": "Named predicate feeds `S.makeFilter` and can look like hand-rolled path validation beside the `GraphPathSegment` schema.",
+    "proposedTarget": "None while excepted. The predicate is already inside `GraphPathSegment` at `packages/drivers/m365/src/M365.service.ts:110`; Effect v4 `S.makeFilter` is the intended reusable-check hook, and repo law requires named reusable checks to carry identifier/title/description, which this filter does at lines 112-115.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "This is not a free-standing guard wall; it is the implementation predicate for a named schema check that protects URL path interpolation. Fence 4 says not to weaken trust-boundary guards.",
+      "boundary": "Microsoft Graph path segment schema refinement"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/m365/src/M365.service.ts",
+    "line": 735,
+    "symbol": "M365Shape",
+    "smell": "Exported service shape is a type literal with many Effect-returning methods.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. Each method request/response payload is schema-modeled separately (`M365ListDrivesRequest` at line 353, `M365DriveCollection` at line 137, etc.), and the shape is consumed by `M365 extends Context.Service` at line 1111.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:313-318`: type alias contains non-schema signals such as function members or runtime handles.",
+      "boundary": "Microsoft Graph driver Context.Service shape"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/m365/src/M365.service.ts",
+    "line": 755,
+    "symbol": "decodeRequest",
+    "smell": "Local `decodeRequest` wraps `S.decodeUnknownEffect(schema)(rawRequest)` and textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Inline each `S.decodeUnknownEffect(RequestSchema)(rawRequest)` call -- audited and rejected. Effect v4 `S.decodeUnknownEffect` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The helper centralizes the Graph request boundary error mapping (`request encoding` plus resource label) after the request schemas have already become the source of truth. It replaced repeated per-method decode pipes rather than bypassing schemas.",
+      "boundary": "Microsoft Graph service request decode boundary"
+    }
+  }
+]

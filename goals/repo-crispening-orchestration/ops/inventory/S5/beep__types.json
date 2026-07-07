@@ -1,0 +1,62 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/primitive/types/src/TUnsafe.types.ts",
+    "line": 26,
+    "symbol": "TUnsafe.Any",
+    "smell": "Detector candidate: exported alias intentionally exposes the broad `any` type.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This package is type-level only, and TUnsafe.Any is the documented central escape hatch so unsafe usage remains visible and auditable. There is no runtime schema or domain field to brand.",
+      "boundary": "@beep/types type-level unsafe alias"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/primitive/types/src/TString.types.ts",
+    "line": 30,
+    "symbol": "TString.NonEmpty/Chars",
+    "smell": "Detector candidate: exported helpers operate over broad `string` type parameters rather than branded runtime string schemas.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These are compile-time conditional/template-literal utilities for string literal types; runtime precision belongs in effect/Schema packages such as @beep/schema, not in @beep/types.",
+      "boundary": "@beep/types type-level string utility package"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/primitive/types/src/TArray.types.ts",
+    "line": 29,
+    "symbol": "TArray.Elem",
+    "smell": "Detector candidate: generic array helper accepts any readonly array/tuple shape.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Elem is a type-level extractor over caller-owned tuple/array types. Adding runtime collection bounds or element brands is outside this package's role.",
+      "boundary": "@beep/types type-level array utility"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/primitive/types/src/TUtils.types.ts",
+    "line": 27,
+    "symbol": "TUtils.UnionToIntersection/Simplify",
+    "smell": "Detector candidate: exported helpers accept arbitrary generic structural types.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These are compile-time type-shaping helpers with no runtime value, schema, equality, or test-data generation surface. S5 runtime precision rules do not apply.",
+      "boundary": "@beep/types type-level utility package"
+    }
+  }
+]

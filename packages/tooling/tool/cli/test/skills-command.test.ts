@@ -1,7 +1,6 @@
 import { renderCodexConfigWithSkills, skillsCommand } from "@beep/repo-cli/commands/Skills";
 import { A } from "@beep/utils";
-import { BunCrypto } from "@effect/platform-bun";
-import { NodeServices } from "@effect/platform-node";
+import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Command } from "effect/unstable/cli";
@@ -9,7 +8,7 @@ import { HttpClient, HttpClientError, HttpClientResponse } from "effect/unstable
 import { describe, expect, it } from "vitest";
 
 const runSkillsCommand = Command.runWith(skillsCommand, { version: "0.0.0" });
-const CommandTestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer, BunCrypto.layer);
+const CommandTestLayer = Layer.mergeAll(NodeServices.layer, TestConsole.layer, NodeCrypto.layer);
 
 const provideScopedLayer =
   <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>

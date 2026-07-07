@@ -1,5 +1,6 @@
 import {
   ARTIFACT_URI_PREFIX,
+  ArtifactUri,
   blockToLexical,
   documentToEditorState,
   editorStateToDocument,
@@ -14,6 +15,7 @@ import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const StateArbitrary = S.toArbitrary(SerializedEditorState);
+const ArtifactUriArbitrary = S.toArbitrary(ArtifactUri);
 const DocumentArbitrary = S.toArbitrary(MdModel.Document);
 
 const mdText = (value: string) => MdModel.Text.make({ value });
@@ -95,6 +97,16 @@ describe("Lexical.codec", () => {
 
     const document = MdModel.Document.make({ children: [labeled, unlabeled] });
     expect(roundTrip(document)).toEqual(document);
+  });
+
+  it("round-trips schema-derived artifact URIs without grammar drift", () => {
+    fc.assert(
+      fc.property(ArtifactUriArbitrary, (uri) => {
+        expect(ArtifactUri.is(uri)).toBe(true);
+        expect(S.decodeUnknownSync(ArtifactUri)(S.encodeSync(ArtifactUri)(uri))).toBe(uri);
+      }),
+      { numRuns: 50 }
+    );
   });
 
   it("keeps malformed artifact:// links as normal Markdown links", () => {

@@ -1,0 +1,106 @@
+[
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+    "line": 25,
+    "symbol": "DrizzleError / DrizzleErrorContext / DrizzleRows",
+    "smell": "The package has schema-backed error/context/row values and extensive hand-written error normalization fixtures, but no S.toArbitrary-derived round-trip/property law for the exported schemas.",
+    "proposedTarget": "Add additive property tests for DrizzleErrorContext and DrizzleError, plus a simple DrizzleRows decode/encode law if feasible, following packages/shared/domain/test/Organization.test.ts:13 and :79. Use S.toArbitrary (verified at .repos/effect-v4/packages/effect/src/Schema.ts:12970) with FastCheck as fc from effect/testing and keep hostile/proxy fixtures as separate regression coverage.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/drizzle/src/Drizzle.errors.ts",
+    "line": 43,
+    "symbol": "DrizzleErrorContext / DrizzleError fields",
+    "smell": "The exported Drizzle error schemas have whole-schema $I.annote annotations, but their fields do not carry annotateKey metadata for operation, query, params, or cause.",
+    "proposedTarget": "Add field-level .annotateKey({ description: ... }) metadata while preserving existing class-level annotations; annotateKey is verified at .repos/effect-v4/packages/effect/src/Schema.ts:185 and :605, with in-repo exemplars at packages/agents/server/src/AssistantTurn/BlockRepair.ts:62-64 and packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts:46-51.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/drizzle/src/Drizzle.errors.ts",
+    "line": 254,
+    "symbol": "DrizzleError.operation",
+    "smell": "Normalized driver error operation is modeled as broad S.String even though this package emits a finite operation family such as execute and withTransaction, with row-decoding adapters adding named operations such as decodeRows.",
+    "proposedTarget": "Introduce an annotated LiteralKit-backed DrizzleOperation schema (or S.Literal/S.Literals if local only) and use it on DrizzleError.operation and DrizzleError.fromUnknown's operation parameter; PhoenixOperation at packages/drivers/phoenix/src/Phoenix.errors.ts:33-49 is the in-repo driver exemplar, and S.Literal is verified at .repos/effect-v4/packages/effect/src/Schema.ts:2607.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/drizzle/src/Drizzle.errors.ts",
+    "line": 257,
+    "symbol": "DrizzleError.params",
+    "smell": "The public normalized DrizzleError.params field is S.Array(S.Unknown) even though fromUnknown/redactedExistingDrizzleError always replace every parameter value with the constant redaction marker before returning an error.",
+    "proposedTarget": "Keep DrizzleErrorContext.params broad for raw SQL input, but narrow DrizzleError.params to an OptionFromOptionalKey over RedactedSqlParams = S.Array(S.Literal(REDACTED_SQL_PARAMETER)) or an annotated RedactedSqlParameter literal schema. This preserves encoded shape while making the post-redaction invariant schema-owned.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/drizzle/src/Drizzle.service.ts",
+    "line": 36,
+    "symbol": "DrizzleRows",
+    "smell": "Detector candidate: product-neutral row arrays are S.Array(S.Unknown).",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The package explicitly validates only the row-array boundary and documents that product repositories must decode row objects with their own schemas after execution (Drizzle.service.ts:19-21). Narrowing rows here would violate the product-neutral SQL adapter boundary.",
+      "boundary": "product-neutral SQL row boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/drivers/drizzle/src/Drizzle.errors.ts",
+    "line": 45,
+    "symbol": "DrizzleErrorContext.params",
+    "smell": "Detector candidate: raw SQL parameter context accepts S.Array(S.Unknown).",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This context captures raw adapter-supplied SQL parameters before redaction, and SQL drivers legitimately accept heterogeneous parameter values; the durable invariant belongs on DrizzleError.params after redaction, recorded as an actionable finding above.",
+      "boundary": "raw SQL parameter capture boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-equivalence",
+    "file": "packages/drivers/drizzle/src/EntityTable.models.ts",
+    "line": 465,
+    "symbol": "hasAttachedTableMetadata",
+    "smell": "Detector candidate: hand-written === equality checks compare attached table metadata.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is an intentional object-identity proof that the exact definition and entity schema references were attached to the Drizzle table object; S.toEquivalence would be the wrong semantics for metadata identity.",
+      "boundary": "Drizzle table metadata attachment identity check"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/drivers/drizzle/test/Drizzle.errors.test.ts",
+    "line": 25,
+    "symbol": "Drizzle error and SQL adapter fixtures",
+    "smell": "Detector candidate: error normalization, hostile proxy/cause traversal, row decoding, and PgLite transaction coverage are all hand-written fixtures.",
+    "proposedTarget": "None — keep as is; schema-derived laws are additive coverage recorded separately.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These fixtures test regression/compatibility behavior for hostile causes, raw SQL query extraction, redaction, and transaction semantics; the S5 carve-out permits static fixtures for those cases.",
+      "boundary": "Drizzle error-normalization and SQL integration regression fixtures"
+    }
+  }
+]

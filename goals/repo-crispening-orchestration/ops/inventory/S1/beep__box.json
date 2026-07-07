@@ -1,0 +1,129 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/box/src/Box.config.ts",
+    "line": 16,
+    "symbol": "BoxCcgConfigShape",
+    "smell": "Local `S.Struct` field block matches the object-struct schema-first-inventory surface.",
+    "proposedTarget": "None while excepted. Keep `BoxCcgConfigShape` as the checked field block feeding `BoxCcgConfig` (`packages/drivers/box/src/Box.config.ts:73`); the cross-field subject invariant already lives in the schema at lines 21-28.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:167-172`: internal `S.Struct` field block feeds an `S.Class` constructor and stays tied to the class model. This is not a separate free-floating data model.",
+      "boundary": "schema field-block for `BoxCcgConfig`"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/box/src/Box.service.ts",
+    "line": 101,
+    "symbol": "validateCcgConfig",
+    "smell": "Manual cross-field validation repeats the `BoxCcgConfigShape.check(...)` invariant from `packages/drivers/box/src/Box.config.ts:21` (`enterpriseId` or `userId` must be present).",
+    "proposedTarget": "Replace `validateCcgConfig` with schema-owned validation at the public layer boundary, e.g. import the `BoxCcgConfig` schema value and use `S.decodeUnknownEffect(BoxCcgConfig)(config)` before `makeCcgClient`, mapping the schema issue to `BoxError.fromReason(\"config\", ...)`; the existing regression at `packages/drivers/box/test/Box.service.test.ts:210` already proves the schema rejects the invalid subject shape. Effect v4 `S.decodeUnknownEffect` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 1.55
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/box/src/Box.streaming.ts",
+    "line": 606,
+    "symbol": "BoxStreamingOperations",
+    "smell": "Exported type literal with Effect-returning and Stream-returning function members matches the schema-first-inventory detector surface.",
+    "proposedTarget": "None while excepted. Keep the payloads as `S.Class` schemas (`BoxCreateUserAvatarPayload`, `BoxUploadBigFilePayload`, etc.) and keep this grouped operation map as the hand-written streaming service port.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:175-180`: type alias contains non-schema signals such as function members or runtime handles. The contract is a service/port surface, not a decoded payload.",
+      "boundary": "Box streaming operation service port"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/box/src/Box.service.ts",
+    "line": 38,
+    "symbol": "BoxShape",
+    "smell": "Public service shape aliases generated and hand-written operation maps for `Context.Service<Box, BoxShape>()`; a broad schema-first audit can surface it as an exported type contract.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. `BoxShape` is consumed by the `Context.Service` declaration at `packages/drivers/box/src/Box.service.ts:125`; Effect v4 class-style `Context.Service<Self, Shape>()(\"Id\")` verified at `.repos/effect-v4/packages/effect/src/Context.ts:163` and `.repos/effect-v4/packages/effect/src/Context.ts:200`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Service shapes are explicitly carved out by S1. This alias composes runtime operation ports; request/response payloads are schema-modeled separately and decoded by `decodeWith`.",
+      "boundary": "Context.Service shape for the Box driver"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/box/src/Box.errors.ts",
+    "line": 174,
+    "symbol": "BoxError.fromReason",
+    "smell": "Exported static constructor in a schema-modeled file accepts `BoxErrorOptionsInput`, a plain object type literal that duplicates the nearby `BoxErrorOptions`/`BoxError` schema fields.",
+    "proposedTarget": "Promote `BoxErrorOptionsInput` to an annotated input schema (for example an `S.Class` like `BoxErrorOptions`, but with the intentional `cause: S.Unknown` input normalization), then have `fromReason` construct/decode that schema before `BoxError.make`. If the constructor later becomes a standalone function, use `Fn({ input, output })` as in `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66` and `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`; `Fn(...).implementSync` verified at `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:403`.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 0.5
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/box/src/internal/Box.runtime.ts",
+    "line": 13,
+    "symbol": "decodeWith",
+    "smell": "Exported internal decode helper wraps `S.decodeUnknownEffect(schema)(value)`, which textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Inline each `S.decodeUnknownEffect(schema)(value)` call -- audited and rejected. Effect v4 `S.decodeUnknownEffect` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.06,
+    "exception": {
+      "reason": "`decodeWith` is the single Box request/response boundary codec and maps schema failures into `BoxError` with the Box method and reason. The schema remains the source of truth; the helper centralizes boundary error labeling.",
+      "boundary": "Box SDK request/response boundary codec"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/box/scripts/generate.ts",
+    "line": 116,
+    "symbol": "GenerationState",
+    "smell": "Plain interface in a schema-modeled generator file can look like a schema-first-inventory hit.",
+    "proposedTarget": "None -- keep the existing `crispen:` comment and the plain interface.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 0.02,
+    "exception": {
+      "reason": "The interface is mutable traversal state over `MutableHashSet` collections, not a decodable payload. S1 fence 6 says not to schema-ify `MutableHash*`, and the script already documents the carve-out in-place.",
+      "boundary": "SDK generator traversal state"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/box/src/experimental/Box.schemas.ts",
+    "line": 31,
+    "symbol": "SerializedData / SerializedDataList / SerializedDataMap Encoded namespaces",
+    "smell": "Exported companion namespace type aliases mirror recursive schema encoded forms and can look like free-floating data aliases.",
+    "proposedTarget": "Do not replace these with separate schemas. They are the encoded companion types used by `S.suspend` at `packages/drivers/box/src/experimental/Box.schemas.ts:69` and `packages/drivers/box/src/experimental/Box.schemas.ts:183`; Effect v4 `S.suspend` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:4943`.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The runtime truth is already the recursive `SerializedData`/`SerializedDataList`/`SerializedDataMap` schema graph. The namespace members provide load-bearing encoded type projections around that graph.",
+      "boundary": "S.suspend recursive schema companion namespace"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/box/src/experimental/domain/values/SerializedData/SerializedData.model.ts",
+    "line": 30,
+    "symbol": "SerializedData / SerializedDataList / SerializedDataMap Encoded namespaces",
+    "smell": "Exported companion namespace type aliases mirror recursive schema encoded forms and can look like free-floating data aliases.",
+    "proposedTarget": "Do not replace these with separate schemas. They are the encoded companion types used by `S.suspend` at `packages/drivers/box/src/experimental/domain/values/SerializedData/SerializedData.model.ts:156` and `packages/drivers/box/src/experimental/domain/values/SerializedData/SerializedData.model.ts:235`; Effect v4 `S.suspend` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:4943`.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The runtime truth is already the recursive `SerializedData`/`SerializedDataList`/`SerializedDataMap` schema graph. The namespace members provide load-bearing encoded type projections around that graph.",
+      "boundary": "S.suspend recursive schema companion namespace"
+    }
+  }
+]

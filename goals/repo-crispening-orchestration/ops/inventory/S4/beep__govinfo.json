@@ -1,0 +1,39 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/govinfo/src/domain/values/Sort/Sort.model.ts",
+    "line": 218,
+    "symbol": "Sort",
+    "smell": "Public `sortOrder` tagged union is built with `S.Union(...).pipe(S.toTaggedUnion(\"sortOrder\"), $I.annoteSchema(...))` but lacks colocated codec statics.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` so examples and consumers can use `Sort.fromUnknown` / `Sort.decodeOption` instead of recreating `S.decodeUnknown*` at call sites. Union exemplar: `Block` at packages/foundation/modeling/md/src/Md.model.ts:1617.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/govinfo/src/domain/contracts/Search/Search.contract.ts",
+    "line": 197,
+    "symbol": "Failure",
+    "smell": "Public tagged-union failure schema lacks codec statics; its own JSDoc example rebuilds the guard as `const isSearchFailure = S.is(Failure)` at line 189.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` so examples and consumers can call `Failure.is(...)`, `Failure.fromUnknown(...)`, and `Failure.decodeOption(...)`. `withCodecStatics` is verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90 and v4 `S.is` at .repos/effect-v4/packages/effect/src/Schema.ts:1256.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/govinfo/src/Govinfo.errors.ts",
+    "line": 111,
+    "symbol": "GovinfoError.of",
+    "smell": "Detector hit: public 2-arg static constructor is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "`GovinfoError.of(reason, options = GovinfoErrorOptions.make({}))` intentionally supports a one-argument constructor. `dual(2, ...)` would reinterpret that public call form as data-last.",
+      "boundary": "Optional-trailing-argument error constructor; preserving current public form outranks pipeability."
+    }
+  }
+]

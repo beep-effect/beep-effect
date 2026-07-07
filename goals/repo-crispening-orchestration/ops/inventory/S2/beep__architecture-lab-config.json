@@ -1,0 +1,35 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/architecture-lab/config/src/aggregates/WorkItem/WorkItem.config.ts",
+    "line": 35,
+    "symbol": "WorkItemPublicConfig",
+    "smell": "`assignmentEnabled` and `reopenCompletedEnabled` are bare `S.Boolean` fields while `defaultWorkItemPublicConfig` supplies `true` values at lines 119-122 and the config reader repeats those defaults through `Config.withDefault`.",
+    "proposedTarget": "Move the boolean defaults onto the schema with `SchemaUtils.BoolKeyDefaultTrue` (verified packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:229-250), then collapse `defaultWorkItemPublicConfig` to `WorkItemPublicConfig.make({})`. `Config.withDefault(defaultWorkItemPublicConfig.*)` can remain the Effect Config boundary consumer; `Config.withDefault` itself is not the smell.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/architecture-lab/config/src/aggregates/WorkItem/WorkItem.config.ts",
+    "line": 65,
+    "symbol": "WorkItemServerConfig",
+    "smell": "`repositoryName` and `migrationSchemaName` are bare `S.String` fields while `defaultWorkItemServerConfig` supplies the actual defaults at lines 137-140 and the config reader repeats them through `Config.withDefault`.",
+    "proposedTarget": "Move the string defaults onto the schema with `S.String.pipe(SchemaUtils.withKeyDefaults(\"architecture-lab-work-items\"))` and `S.String.pipe(SchemaUtils.withKeyDefaults(\"architecture_lab\"))` (verified packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:50-66; exemplar packages/agents/server/src/AssistantTurn/ScanState.ts:33-37), then collapse `defaultWorkItemServerConfig` to `WorkItemServerConfig.make({})`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/architecture-lab/config/src/aggregates/WorkItem/WorkItem.config.ts",
+    "line": 94,
+    "symbol": "WorkItemSecretConfig.connectionName",
+    "smell": "`connectionName: S.String` is bare while `defaultWorkItemSecretConfig` supplies `\"architecture-lab-proof\"` at lines 155-157 and the config reader repeats it through `Config.withDefault`.",
+    "proposedTarget": "Move the default onto the schema with `S.String.pipe(SchemaUtils.withKeyDefaults(\"architecture-lab-proof\"))` (verified packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:50-66; exemplar packages/agents/server/src/AssistantTurn/ScanState.ts:33-37), then collapse `defaultWorkItemSecretConfig` to `WorkItemSecretConfig.make({})`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3
+  }
+]

@@ -1,0 +1,77 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/observability/src/CoreConfig.ts",
+    "line": 14,
+    "symbol": "ObservabilityCoreConfigFields",
+    "smell": "serviceName, serviceVersion, and environment are broad S.String in the shared config field block that feeds ObservabilityCoreConfig, and the same three fields are mirrored in ServerObservabilityConfig (server/Config.ts:40-42) and WebObservabilityConfig (web/Config.ts:36-38). Empty service identity values silently produce unhelpful telemetry resources because toOtlpResource/toWebResource copy them directly.",
+    "proposedTarget": "Use S.NonEmptyString for serviceName/serviceVersion/environment (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420) and add per-field annotateKey descriptions. Sweep CoreConfig.ts, server/Config.ts, and web/Config.ts together so the config shapes stay compatible. Include prometheusPrefix (server/Config.ts:49) in the same NonEmptyString pass.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening shared service identity config fields would alter exported config Type surfaces with out-of-package tooling consumers; this package wave cannot make or verify those consumer edits.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/observability/src/server/Config.ts",
+    "line": 44,
+    "symbol": "ServerObservabilityConfig.otlpBaseUrl/devtoolsUrl",
+    "smell": "otlpBaseUrl and devtoolsUrl are broad S.String even though both are URL-shaped operator config fields. Malformed values pass decode and fail later in OTLP or DevTools client wiring.",
+    "proposedTarget": "Use URLStr from @beep/schema for both fields (verified packages/foundation/modeling/schema/src/URL.ts:44; it validates NonEmptyTrimmedStr through new URL()). URLStr is already the repo's URL-shaped config schema, e.g. drivers/govinfo/src/Govinfo.service.ts:17/65 and drivers/ecfr/src/Ecfr.service.ts:17/55.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2,
+    "exception": {
+      "reason": "URL-branding exported server config fields would alter the public config Type surface consumed by tooling outside this package; deferred to a scoped consumer sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
+    "line": 247,
+    "symbol": "RedactedCause.message/detail",
+    "smell": "Detector candidate: RedactedCause.message and detail are broad S.String / OptionFromOptionalKey(S.String) even though their annotateKey descriptions promise bounded, sanitized content.",
+    "proposedTarget": "None - keep the schema broad and prove the dynamic law at the producer.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The bound is parameterized by the RedactCauseOptions instance used for the call, so a static S.isMaxLength check would either over-constrain callers with higher limits or under-constrain the default. Fence 4 also applies: sanitization/truncation guards stay explicit and property-tested.",
+      "boundary": "redactCauseSummary producer path with options-parameterized truncation"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/observability/src/web/Config.ts",
+    "line": 40,
+    "symbol": "resourceAttributes/otlpResourceAttributes",
+    "smell": "Detector candidate: WebObservabilityConfig.resourceAttributes and ServerObservabilityConfig.otlpResourceAttributes are unbounded S.Record(S.String, S.String) fields on exported config schemas.",
+    "proposedTarget": "None - keep the open-ended OTLP resource metadata shape. If this ever becomes untrusted input, S.Record(...).check(S.isMaxProperties(n)) is available (S.isMaxProperties verified .repos/effect-v4/packages/effect/src/Schema.ts:8250).",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These values are operator-supplied deployment metadata constructed in first-party app wiring. OTLP resource attributes are intentionally open-ended key/value metadata, and bounding them would not validate attacker-controlled data in the current package.",
+      "boundary": "in-process observability deployment config"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/observability/src/experimental/server/OtlpPacketLab.ts",
+    "line": 124,
+    "symbol": "OtlpPacket.contentType/preview",
+    "smell": "Detector candidate: OtlpPacket.contentType and preview are broad S.String fields on an exported experimental schema.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.8,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The fields are producer snapshots of captured OTLP HttpBody metadata. preview is dynamically truncated by previewFromBody (lines 171-183), and contentType mirrors the upstream payload content type or a fixed fallback. A static schema would not express the producer-specific truncation rule without over-constraining diagnostic payloads.",
+      "boundary": "experimental in-process OTLP packet capture diagnostics"
+    }
+  }
+]

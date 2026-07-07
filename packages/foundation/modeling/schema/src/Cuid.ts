@@ -5,11 +5,16 @@
  * @packageDocumentation
  */
 
+import { $SchemaId } from "@beep/identity/packages";
 import { Str } from "@beep/utils";
 import { DateTimes } from "@beep/utils/DateTime";
 import { Context, Crypto, Effect, Layer } from "effect";
 import * as S from "effect/Schema";
+import * as SchemaUtils from "./SchemaUtils/index.ts";
+import type { Brand } from "effect";
 import type * as PlatformError from "effect/PlatformError";
+
+const $I = $SchemaId.create("Cuid");
 
 /**
  * Produces a SHA-512 digest for the provided byte array.
@@ -56,7 +61,16 @@ const INITIAL_COUNT_MAX = 476782367;
  * @category constructors
  * @since 0.0.0
  */
-export const Cuid = S.String.pipe(S.check(S.isPattern(/^[a-z][0-9a-z]+$/)), S.brand("@typed/id/CUID"));
+export const Cuid = S.String.pipe(
+  S.check(S.isPattern(/^[a-z][0-9a-z]+$/)),
+  S.brand("@typed/id/CUID"),
+  $I.annoteSchema("Cuid", {
+    description: "Canonical CUID string beginning with a lowercase letter followed by lowercase base36 text.",
+    toArbitrary: () => (fc) =>
+      fc.stringMatching(/^[a-z][0-9a-z]+$/).map((value) => value as Brand.Branded<string, "@typed/id/CUID">),
+  }),
+  SchemaUtils.withCodecStatics
+);
 
 /**
  * Type for {@link Cuid}.
@@ -89,7 +103,7 @@ export type Cuid = typeof Cuid.Type;
  * @category predicates
  * @since 0.0.0
  */
-export const isCuid: (value: string) => value is Cuid = S.is(Cuid);
+export const isCuid: (value: string) => value is Cuid = Cuid.is;
 
 // Types
 /**
@@ -97,21 +111,26 @@ export const isCuid: (value: string) => value is Cuid = S.is(Cuid);
  *
  * @example
  * ```ts
- * import type { CuidSeed } from "@beep/schema/Cuid"
+ * import { CuidSeed } from "@beep/schema/Cuid"
  *
- * const seed: CuidSeed = { timestamp: 1, counter: 0, random: new Uint8Array([1]), fingerprint: "node" }
+ * const seed = CuidSeed.make({ timestamp: 1, counter: 0, random: new Uint8Array([1]), fingerprint: "node" })
  * console.log(seed.counter)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type CuidSeed = {
-  readonly timestamp: number;
-  readonly counter: number;
-  readonly random: Uint8Array;
-  readonly fingerprint: string;
-};
+export class CuidSeed extends S.Class<CuidSeed>($I`CuidSeed`)(
+  {
+    timestamp: S.Finite,
+    counter: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    random: S.Uint8Array,
+    fingerprint: S.String,
+  },
+  $I.annote("CuidSeed", {
+    description: "Seed data used to produce a deterministic CUID value.",
+  })
+) {}
 
 /**
  * Service that produces deterministic CUID seeds.
@@ -149,12 +168,12 @@ export class CuidState extends Context.Service<CuidState>()("@beep/schema/Cuid/C
     const nextSeed = Effect.gen(function* () {
       const timestamp = yield* now;
       const random = yield* crypto.randomBytes(32);
-      return {
+      return CuidSeed.make({
         timestamp,
         counter: counter++,
         random,
         fingerprint,
-      } satisfies CuidSeed;
+      });
     });
 
     return yield* Effect.succeed(nextSeed);

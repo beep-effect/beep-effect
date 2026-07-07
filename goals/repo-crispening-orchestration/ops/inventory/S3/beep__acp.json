@@ -1,0 +1,121 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 332,
+    "symbol": "logProtocol",
+    "smell": "logProtocol manually branches on AcpProtocolLogEvent.direction at lines 333 and 336 even though AcpProtocolLogEvent is built with LiteralKit.mapMembers and S.toTaggedUnion(\"direction\") at lines 103-133, so the direction cases already have schema-derived match/guards/cases.",
+    "proposedTarget": "Dispatch with AcpProtocolLogEvent.match(event, { incoming: ..., outgoing: ... }) and keep the shared logger fallback in the two cases or a local helper. Verified S.toTaggedUnion exposes match/guards/cases in effect v4 (.repos/effect-v4/packages/effect/src/Schema.ts:6037-6056, 6094-6104); in-package exemplars are AcpIncomingNotification.match in packages/drivers/acp/src/AcpAgent.service.ts:342 and Match.tagsExhaustive in packages/drivers/acp/src/AcpClient.service.ts:451-475.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 2.5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 552,
+    "symbol": "handleExitEncoded",
+    "smell": "handleExitEncoded manually branches on the Effect RPC encoded exit discriminator with if (message.exit._tag === \"Success\") and then falls through to failure handling, so the two-case ExitEncoded union is not exhaustively represented at the branch site.",
+    "proposedTarget": "Use Match.type<RpcMessage.ExitEncoded<unknown, unknown>>().pipe(Match.tagsExhaustive({ Success: ..., Failure: ... })) or a small local matcher for message.exit, following the existing routeDecodedMessage Match.tagsExhaustive table at packages/drivers/acp/src/AcpProtocol.service.ts:577-600. Verified ExitEncoded has exactly Success and Failure cases at .repos/effect-v4/packages/effect/src/unstable/rpc/RpcMessage.ts:257-274 and Match.tagsExhaustive is exported at .repos/effect-v4/packages/effect/src/Match.ts:1095.",
+    "confidence": 0.76,
+    "mechanization": "assisted",
+    "roiRank": 2.0
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/acp/src/AcpClient.service.ts",
+    "line": 569,
+    "symbol": "AcpClient.make.generateRequestId",
+    "smell": "generateRequestId brands the monotonically increasing bigint with nextRpcRequestId++ as never, a no-as detector hit where the Effect RPC RequestId constructor exists.",
+    "proposedTarget": "Import the RpcMessage value namespace and return RpcMessage.RequestId(nextRpcRequestId++). The constructor is verified at .repos/effect-v4/packages/effect/src/unstable/rpc/RpcMessage.ts:43-52, and RpcClient.make expects generateRequestId?: () => RequestId at .repos/effect-v4/packages/effect/src/unstable/rpc/RpcClient.ts:230 and 254.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3.0
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/acp/src/AcpAgent.service.ts",
+    "line": 426,
+    "symbol": "AcpAgent.make.generateRequestId",
+    "smell": "generateRequestId repeats the client-side bigint branding cast nextRpcRequestId++ as never, a no-as detector hit where the Effect RPC RequestId constructor exists.",
+    "proposedTarget": "Import the RpcMessage value namespace and return RpcMessage.RequestId(nextRpcRequestId++), matching the same target as AcpClient.make.generateRequestId. The constructor is verified at .repos/effect-v4/packages/effect/src/unstable/rpc/RpcMessage.ts:43-52, and RpcClient.make expects generateRequestId?: () => RequestId at .repos/effect-v4/packages/effect/src/unstable/rpc/RpcClient.ts:230 and 254.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3.0
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/drivers/acp/src/Acp.errors.ts",
+    "line": 194,
+    "symbol": "AcpRequestError.dataOptionalSpreads",
+    "smell": "A loose detector sees eight inline R.getSomes object-spreads at lines 194, 218, 242, 287, 311, 335, 359, and 383, but each literal has only the optional data key.",
+    "proposedTarget": "None -- keep as-is for this S3 pass.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The SFV4-getsomes-struct card is only actionable for heterogeneous Option structs where O.getSomesStruct preserves per-key value types. These ACP sites are single-key optional data payload spreads, not homogeneous dynamic dictionaries but also not heterogeneous structs; changing them would be a consistency cleanup, not an S3 finding.",
+      "boundary": "AcpRequestError and AcpSchema.Error optional data payload constructors; D5-gated heterogeneous-struct sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 491,
+    "symbol": "handleRequestEncoded",
+    "smell": "A broad discriminator detector sees the message.tag if-chain for CLIENT_METHODS.session_update and CLIENT_METHODS.session_elicitation_complete at lines 491 and 510.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "message.tag is the open JSON-RPC method string on an Effect RpcMessage.RequestEncoded, and this branch constructs the AcpIncomingNotification tagged union before schema-derived AcpIncomingNotification.match can apply. The generated CLIENT_METHODS metadata is outside this S3 scan surface, and extension notifications must remain open-ended.",
+      "boundary": "ACP wire decode/router boundary from open JSON-RPC method strings into AcpIncomingNotification"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/acp/src/AcpAgent.service.ts",
+    "line": 346,
+    "symbol": "AcpAgent.onNotification.ExtNotification",
+    "smell": "A broad discriminator detector sees value.method === AGENT_METHODS.session_cancel inside the ExtNotification arm of AcpIncomingNotification.match.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The outer AcpIncomingNotification variant is already handled with the schema-derived .match at line 342. Inside ExtNotification, value.method is intentionally an open extension method string, and session/cancel is one well-known extension routed before falling back to registered extension handlers.",
+      "boundary": "open ACP extension notification method router inside the ExtNotification case"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 72,
+    "symbol": "ACP_STDIO_CLIENT_IDS",
+    "smell": "satisfies MinimalReadonlySet<number> as unknown as ReadonlySet<number> is a no-as detector hit around a hand-built singleton ReadonlySet facade.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "RpcServer.Protocol requires clientIds: Effect<ReadonlySet<number>> (.repos/effect-v4/packages/effect/src/unstable/rpc/RpcServer.ts:843). This package deliberately supplies a minimal singleton facade instead of widening the crispening wave into a native Set migration, which SPEC fence 7 assigns to effect-native-migration.",
+      "boundary": "Effect RPC server protocol interop plus native-collection migration fence"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+    "line": 614,
+    "symbol": "makeAcpPatchedProtocol.parser.decode",
+    "smell": "parser.decode(data) as ReadonlyArray<RpcMessage.FromClientEncoded | RpcMessage.FromServerEncoded> is a no-as detector hit at the ndjson RPC parser boundary.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "RpcSerialization.makeUnsafe returns an unparameterized Parser (.repos/effect-v4/packages/effect/src/unstable/rpc/RpcSerialization.ts:32-36), and Effect's own RPC implementations cast parser.decode(data) to the expected encoded-message array at .repos/effect-v4/packages/effect/src/unstable/rpc/RpcServer.ts:1048 and 1258. The cast is wrapped in Effect.try and normalized to AcpProtocolParseError, so no local schema/matcher primitive can narrow it more honestly here.",
+      "boundary": "Effect RPC ndjson parser interop / trust-boundary parse normalization"
+    }
+  }
+]

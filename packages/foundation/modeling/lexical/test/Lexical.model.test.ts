@@ -4,16 +4,19 @@ import {
   hasTextFormat,
   LexicalNode,
   nodeToPlainText,
+  SafeUrl,
   SerializedEditorState,
   TextFormatBits,
   TextFormatMask,
 } from "@beep/lexical-schema";
+import { sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
 import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const NodeArbitrary = S.toArbitrary(LexicalNode);
+const SafeUrlArbitrary = S.toArbitrary(SafeUrl);
 const StateArbitrary = S.toArbitrary(SerializedEditorState);
 
 const element = {
@@ -186,6 +189,7 @@ describe("Lexical.model", () => {
   it("decodes the fixture editor state and captures nullish wire values as Options", () => {
     const state = S.decodeUnknownSync(SerializedEditorState)(fixture);
 
+    expect(O.isSome(SerializedEditorState.decodeOption(fixture))).toBe(true);
     expect(state.root.direction).toEqual(O.none());
     expect(state.root.textFormat).toEqual(O.none());
     expect(state.root.children.map((node) => node.type)).toEqual([
@@ -234,8 +238,25 @@ describe("Lexical.model", () => {
   it("round-trips schema-derived arbitrary nodes and states through encode/decode", () => {
     fc.assert(
       fc.property(NodeArbitrary, StateArbitrary, (node, state) => {
-        expect(S.decodeUnknownSync(LexicalNode)(S.encodeSync(LexicalNode)(node))).toEqual(node);
+        expect(LexicalNode.fromUnknown(S.encodeSync(LexicalNode)(node))).toEqual(node);
         expect(S.decodeUnknownSync(SerializedEditorState)(S.encodeSync(SerializedEditorState)(state))).toEqual(state);
+        expect(SerializedEditorState.decodeOption(S.encodeSync(SerializedEditorState)(state))).toEqual(O.some(state));
+      }),
+      { numRuns: 50 }
+    );
+  });
+
+  it("sanitizes link URLs at the schema boundary and keeps safe URLs fixed", () => {
+    expect(S.decodeUnknownSync(SafeUrl)("javascript:alert(1)")).toBe("#");
+    expect(S.decodeUnknownSync(SafeUrl)("file:///tmp/beep.txt")).toBe("#");
+    expect(S.decodeUnknownSync(SafeUrl)("https://example.com/docs")).toBe("https://example.com/docs");
+    expect(S.decodeUnknownSync(SafeUrl)("docs/page")).toBe("docs/page");
+    expect(S.encodeSync(SafeUrl)(S.decodeUnknownSync(SafeUrl)("data:text/html,<script>x</script>"))).toBe("#");
+
+    fc.assert(
+      fc.property(SafeUrlArbitrary, (url) => {
+        expect(sanitizeUrl(url)).toBe(url);
+        expect(S.decodeUnknownSync(SafeUrl)(S.encodeSync(SafeUrl)(url))).toBe(url);
       }),
       { numRuns: 50 }
     );

@@ -1,0 +1,28 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/law-practice/server/test/LawPracticeServer.test.ts",
+    "line": 95,
+    "symbol": "IrToLaw grounds exactly one distinction to its source anchor",
+    "smell": "Test-only manual discriminator branch if (law.distinction.detail.kind === \"missing_limitation\") over DistinctionDetail. DistinctionDetail is produced by DistinctionKind.toTaggedUnion(\"kind\"), so generated guards/match exist.",
+    "proposedTarget": "Import DistinctionDetail from @beep/law-practice-domain and use DistinctionDetail.guards.missing_limitation(law.distinction.detail) or DistinctionDetail.match for narrowing. DistinctionDetail.toTaggedUnion was verified at packages/law-practice/domain/src/entities/Distinction/Distinction.values.ts:37; S.toTaggedUnion guards/match at .repos/effect-v4/packages/effect/src/Schema.ts:6030-6097.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/law-practice/server/test/LawPracticeServer.test.ts",
+    "line": 35,
+    "symbol": "makeLanguageModelLayer",
+    "smell": "Test LanguageModel double uses three `as never` return casts and an outer `as LanguageModel.Service` cast to satisfy the unstable AI service shape.",
+    "proposedTarget": "None -- keep as-is unless a shared typed LanguageModel test-double helper is introduced.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Test-only unstable-provider boundary: the fake implements only generateText for this integration path while the unused methods die/empty. The casts are not discriminator narrowing and no S3 schema match/guard primitive expresses a partial unstable LanguageModel.Service test double.",
+      "boundary": "law-practice server integration-test AI provider double"
+    }
+  }
+]

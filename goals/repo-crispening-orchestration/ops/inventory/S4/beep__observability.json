@@ -1,0 +1,107 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/observability/src/CauseRedaction.ts",
+    "line": 46,
+    "symbol": "decodeNonNegativeInt",
+    "smell": "Package-local decode-wall helper wraps `S.decodeUnknownResult(NonNegativeInt)` and `Result.getOrThrowWith` even though this is trusted-boundary `fromUnknown` behavior; the same helper shape is repeated across observability modules.",
+    "proposedTarget": "Promote `NonNegativeInt` in `@beep/schema` to carry codec statics at packages/foundation/modeling/schema/src/Number.ts:196 via `SchemaUtils.withCodecStatics` (verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90 and Effect v4 `S.decodeUnknownSync` at .repos/effect-v4/packages/effect/src/Schema.ts:1718), then replace this helper with `NonNegativeInt.fromUnknown(input)`.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Requires adding codec statics to shared @beep/schema NonNegativeInt outside this package; deferred so this single-package writer does not edit another package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/observability/src/PhaseProfiler.ts",
+    "line": 35,
+    "symbol": "decodeNonNegativeInt",
+    "smell": "Top-of-file decode-wall helper duplicates the same `NonNegativeInt` trusted decode used in CauseRedaction.ts:46.",
+    "proposedTarget": "After `NonNegativeInt` carries `withCodecStatics`, replace the helper and call sites with `NonNegativeInt.fromUnknown(durationMs)`.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 2,
+    "exception": {
+      "reason": "Requires adding codec statics to shared @beep/schema NonNegativeInt outside this package; deferred so this single-package writer does not edit another package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/observability/src/CauseDiagnostics.ts",
+    "line": 35,
+    "symbol": "decodeNonNegativeInt",
+    "smell": "Top-of-file decode-wall helper duplicates `NonNegativeInt` trusted decode, then feeds count fields that are already colocated on schema-modeled diagnostics.",
+    "proposedTarget": "After `NonNegativeInt` carries `withCodecStatics`, replace the helper and all count conversions with `NonNegativeInt.fromUnknown(...)`.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Requires adding codec statics to shared @beep/schema NonNegativeInt outside this package; deferred so this single-package writer does not edit another package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/observability/src/experimental/server/OtlpPacketLab.ts",
+    "line": 19,
+    "symbol": "decodeNonNegativeInt",
+    "smell": "Experimental server source repeats the package-local `NonNegativeInt` decode-wall helper for packet timestamps and sizes.",
+    "proposedTarget": "After `NonNegativeInt` carries `withCodecStatics`, replace with `NonNegativeInt.fromUnknown(clock.currentTimeMillisUnsafe())` / `NonNegativeInt.fromUnknown(sizeFromBody(body))`.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 5,
+    "exception": {
+      "reason": "Requires adding codec statics to shared @beep/schema NonNegativeInt outside this package; deferred so this single-package writer does not edit another package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/observability/src/experimental/server/DevToolsRelay.ts",
+    "line": 20,
+    "symbol": "decodeNonNegativeInt",
+    "smell": "Experimental relay repeats the same free-floating `NonNegativeInt` trusted decoder for snapshot counters.",
+    "proposedTarget": "After `NonNegativeInt` carries `withCodecStatics`, replace the helper with `NonNegativeInt.fromUnknown(...)` at the four snapshot fields.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 6,
+    "exception": {
+      "reason": "Requires adding codec statics to shared @beep/schema NonNegativeInt outside this package; deferred so this single-package writer does not edit another package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
+    "line": 192,
+    "symbol": "makeHttpApiMetrics",
+    "smell": "Detector candidate: exported two-argument helper `(prefix, descriptionPrefix = ...)` is not dualized.",
+    "proposedTarget": "No S4 action; this is a constructor-style factory with no schema/model/self receiver to pipe.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Constructor factory, not a data-first/data-last helper; dual would not improve colocation or pipeability.",
+      "boundary": "public 2-arg helper false-positive audit"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
+    "line": 325,
+    "symbol": "httpApiFailureStatus",
+    "smell": "Detector candidate: dynamic guard `S.is(schema)(error)` appears inside endpoint error-schema matching.",
+    "proposedTarget": "No S4 action; the schema is discovered at runtime from `endpointErrorSchemas(endpoint)` and cannot be replaced with one colocated static on a known model.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Dynamic per-endpoint schema guard; no single branded/union/class schema owns the behavior.",
+      "boundary": "dynamic HTTP API boundary"
+    }
+  }
+]

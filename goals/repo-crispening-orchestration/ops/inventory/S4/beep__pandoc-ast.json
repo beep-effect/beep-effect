@@ -1,0 +1,32 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts",
+    "line": 187,
+    "symbol": "decodeConstructor ... decodeListNumberDelimiter (19-const decode hoist block)",
+    "smell": "Nineteen hoisted `S.decodeUnknownEffect(...)` / `S.encodeEffect(...)` consts at lines 187-205 look like the canonical top-of-file decode wall.",
+    "proposedTarget": "None — legitimate carve-out. All are module-private hoisted-once effectful codecs inside the package's dedicated wire-codec module, directly above their consumers; most target unexported file-local wire tuples (AttrWire, TargetWire, ...PayloadWire, lines 166-185) that have no other call sites anywhere. CodecStatics offers no Effect-returning decoder ({is, fromUnknown, decodeOption} only, withCodecStatics.ts:50-63), so no schema static can absorb them, and attaching per-schema `decodeEffect` statics to 14 private single-consumer wire consts adds surface without deleting any noise.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0.3,
+    "exception": {
+      "reason": "Hoisted-once effectful decoders, module-private and colocated with both their schemas and their single consumers in the codec module whose entire purpose is wire conversion; identical in kind to the accepted file-processing Artifact hoist exception, only larger. The effectful form is outside CodecStatics, so withCodecStatics cannot replace them.",
+      "boundary": "packages/foundation/modeling/pandoc-ast/src/Pandoc.codec.ts (wire-codec module). Revisit only if a decodeEffect-bearing statics combinator lands in SchemaUtils and the wire consts gain external consumers."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts",
+    "line": 100,
+    "symbol": "mdInlineText / pandocInlineText / pandocBlockText / mdBlockText",
+    "smell": "Pure Match.tagsExhaustive text-degradation folds over Md.Inline/Md.Block and PandocInline/PandocBlock data live in the mapping module, superficially matching 'pure fns detached from their schema' (the Pandoc folds' schemas live in Pandoc.model.ts, the Md folds' schemas in another package).",
+    "proposedTarget": "None — legitimate carve-out. These encode this projection's loss semantics (notes/math degrade to text, tables render as '[table]' captions, YouTube embeds become watch URLs), not general data behavior: @beep/md exports no plainText/inlineText fold (rg over packages/foundation/modeling/md/src is empty), so nothing is duplicated, and colocating mapping-specific degradation policy onto the Md or Pandoc models would smear compatibility policy into the data packages (and cross into @beep/md's wave, fence 8). All four are module-private.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0.3,
+    "exception": {
+      "reason": "Projection-specific degradation policy, module-private, with no schema-derived or in-repo equivalent to reuse; colocation on the data classes would relocate mapping policy into model packages and violate the touch-scoped wave fence for @beep/md.",
+      "boundary": "packages/foundation/modeling/pandoc-ast/src/Pandoc.mapping.ts. Revisit if @beep/md grows a canonical plain-text fold these could delegate to."
+    }
+  }
+]

@@ -1,0 +1,15 @@
+import * as O from "@beep/utils/Option";
+import * as R from "effect/Record";
+
+// POSITIVE: heterogeneous Option-struct literal -> must become O.getSomesStruct
+export const makeError = (options: { readonly cause?: string; readonly status?: number } = {}) => ({
+  reason: "boom",
+  ...O.getSomesStruct({
+    cause: O.fromUndefinedOr(options.cause),
+    status: O.fromUndefinedOr(options.status),
+  }),
+});
+
+// NEGATIVE: homogeneous dictionary (identifier arg, not an inline struct) -> untouched
+export const compactDict = (dict: Readonly<Record<string, O.Option<number>>>): Record<string, number> =>
+  R.getSomes(dict);

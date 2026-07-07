@@ -151,6 +151,14 @@ describe("compose + traverse + aggregate", () => {
   );
 
   it.effect(
+    "compose supports pipe-friendly data-last usage",
+    Effect.fnUntraced(function* () {
+      const pipeline = pipe(len, Composable.compose(inc));
+      expect(yield* pipeline.run("hello")).toBe(6);
+    })
+  );
+
+  it.effect(
     "traverse maps an operation over an array of inputs",
     Effect.fnUntraced(function* () {
       const lengths = yield* Composable.traverse(len)(["a", "bb", "ccc"]);

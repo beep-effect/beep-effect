@@ -25,6 +25,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { NonNegativeInt } from "@beep/schema";
 import { A, dual, P } from "@beep/utils";
 import { Clock, Context, Duration, Effect, Layer, Match, Number as N, Result } from "effect";
 import * as O from "effect/Option";
@@ -84,11 +85,11 @@ export interface GraphExecutorShape {
     <A, B, R, E>(
       graph: EffectGraph<A>,
       operation: GraphOperation<A, B, R, E>,
-      options?: Partial<Types.ExecutionOptions>
+      options?: (typeof Types.ExecutionOptions)["~type.make.in"]
     ): Effect.Effect<Types.OperationResult<unknown, unknown>, ExecutionError, R | ResultStore.ResultStore>;
     <A, B, R, E>(
       operation: GraphOperation<A, B, R, E>,
-      options?: Partial<Types.ExecutionOptions>
+      options?: (typeof Types.ExecutionOptions)["~type.make.in"]
     ): (
       graph: EffectGraph<A>
     ) => Effect.Effect<Types.OperationResult<unknown, unknown>, ExecutionError, R | ResultStore.ResultStore>;
@@ -170,7 +171,7 @@ const applyWithTimeout = <A, B, R, E>(
         orElse: () =>
           Effect.fail(
             TimeoutError.make({
-              nodeId: `${leafNode.id}`,
+              nodeId: leafNode.id,
               operationName: operation.name,
               timeoutMs: Duration.toMillis(duration),
             })
@@ -304,14 +305,14 @@ const foldApplications: {
   3,
   (applications: ReadonlyArray<Application>, nodesProcessed: number, durationMs: number): ExecutionFold => ({
     errors: A.flatMap(applications, (r) => r.errors),
-    metrics: {
-      cacheHits: A.length(A.filter(applications, (r) => r.fromCache)),
-      cacheMisses: A.length(A.filter(applications, (r) => !r.fromCache)),
+    metrics: Types.ExecutionMetrics.make({
+      cacheHits: NonNegativeInt.make(A.length(A.filter(applications, (r) => r.fromCache))),
+      cacheMisses: NonNegativeInt.make(A.length(A.filter(applications, (r) => !r.fromCache))),
       duration: Duration.millis(durationMs),
-      nodesCreated: A.reduce(applications, 0, (sum, r) => sum + A.length(r.newNodes)),
-      nodesProcessed,
-      tokensConsumed: 0,
-    },
+      nodesCreated: NonNegativeInt.make(A.reduce(applications, 0, (sum, r) => sum + A.length(r.newNodes))),
+      nodesProcessed: NonNegativeInt.make(nodesProcessed),
+      tokensConsumed: NonNegativeInt.make(0),
+    }),
     newNodes: A.flatMap(applications, (r) => r.newNodes),
   })
 );
@@ -396,9 +397,9 @@ const execute: GraphExecutorShape["execute"] = dual(
   Effect.fn("GraphExecutor.execute")(function* <A, B, R, E>(
     graph: EffectGraph<A>,
     operation: GraphOperation<A, B, R, E>,
-    options: Partial<Types.ExecutionOptions> = {}
+    options: (typeof Types.ExecutionOptions)["~type.make.in"] = {}
   ) {
-    const opts: Types.ExecutionOptions = { ...Types.ExecutionOptions.default(), ...options };
+    const opts = Types.ExecutionOptions.make(options);
     const executionId = yield* Types.generateExecutionId;
     const leafNodes = getLeafNodes(graph);
     const attributes = {

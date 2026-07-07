@@ -1,0 +1,32 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/semantic-web/src/services/sparql-query.ts",
+    "line": 101,
+    "symbol": "SparqlSelectResult.rows",
+    "smell": "Detector candidate: SELECT rows are S.Array(S.Record(S.String, Term)), an open string-keyed record.",
+    "proposedTarget": "None - keep the open record.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "SPARQL SELECT bindings are keyed by query variable names chosen by the caller; tightening the record keys would either reject valid query results or require a schema family parameterized by the query text.",
+      "boundary": "external SPARQL result binding map"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/semantic-web/src/services/shacl-validation.ts",
+    "line": 152,
+    "symbol": "ShaclValidationViolation.focusNode",
+    "smell": "Detector candidate: focusNode is broad S.String even though violations are produced from RDF dataset subjects.",
+    "proposedTarget": "None - keep the serialized report string unless a shared SerializedTerm schema is introduced.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The bounded SHACL adapter stores focus nodes as serializeTerm(quad.subject) output (adapters/shacl-engine.ts:73 and :82), which can include serialized named-node and blank-node report forms rather than raw JSON-LD identifiers. Narrowing to IRIReference or JsonLdNodeIdentifier would change report output compatibility.",
+      "boundary": "SHACL validation report diagnostic field"
+    }
+  }
+]

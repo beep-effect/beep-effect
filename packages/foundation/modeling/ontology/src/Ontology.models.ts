@@ -13,6 +13,27 @@ import * as S from "effect/Schema";
 
 const $I = $OntologyId.create("Ontology.models");
 
+const decodeUrlStringOption = S.decodeUnknownOption(S.URLFromString);
+
+const HttpUrlFormatCheck = S.makeFilter<string>((value) => O.isSome(decodeUrlStringOption(value)), {
+  identifier: $I`HttpUrlFormatCheck`,
+  title: "HTTP URL Format",
+  description: "HTTP URL values must be valid absolute URL strings.",
+  message: "HTTP URL must be a valid URL string.",
+  arbitrary: {
+    candidate: {
+      weight: 32,
+      make: (fc) => fc.webUrl(),
+    },
+  },
+});
+
+const FolioIriToken = S.NonEmptyString.pipe(
+  $I.annoteSchema("FolioIriToken", {
+    description: "Non-empty FOLIO ontology IRI token.",
+  })
+);
+
 /**
  * Source type of the loaded FOLIO ontology.
  *
@@ -62,6 +83,7 @@ export type SourceType = typeof SourceType.Type;
  * @since 0.0.0
  */
 export const HttpUrl = S.String.check(
+  HttpUrlFormatCheck,
   S.isMinLength(1, {
     identifier: $I`HttpUrlMinLengthCheck`,
     title: "HTTP URL Min Length",
@@ -269,7 +291,7 @@ export class HealthResponse extends S.Class<HealthResponse>($I`HealthResponse`)(
  */
 export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
   {
-    iri: S.String.annotateKey({
+    iri: FolioIriToken.annotateKey({
       title: "Iri",
       identifier: "https://www.w3.org/2002/07/owl#Class",
     }),
@@ -281,7 +303,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
         identifier: "https://www.w3.org/2000/01/rdf-schema#label",
       })
     ),
-    sub_class_of: S.String.pipe(
+    sub_class_of: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
@@ -290,7 +312,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
         identifier: "https://www.w3.org/2000/01/rdf-schema#subClassOf",
       })
     ),
-    parent_class_of: S.String.pipe(
+    parent_class_of: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
@@ -307,7 +329,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
         identifier: "https://www.w3.org/2000/01/rdf-schema#isDefinedBy",
       })
     ),
-    see_also: S.String.pipe(
+    see_also: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
@@ -470,7 +492,7 @@ export class OWLClass extends S.Class<OWLClass>($I`OWLClass`)(
  */
 export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectProperty`)(
   {
-    iri: S.String.annotateKey({
+    iri: FolioIriToken.annotateKey({
       title: "Iri",
       identifier: "https://www.w3.org/2002/07/owl#ObjectProperty",
     }),
@@ -482,7 +504,7 @@ export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectPr
         identifier: "https://www.w3.org/2000/01/rdf-schema#label",
       })
     ),
-    sub_property_of: S.String.pipe(
+    sub_property_of: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
@@ -491,7 +513,7 @@ export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectPr
         identifier: "https://www.w3.org/2000/01/rdf-schema#subPropertyOf",
       })
     ),
-    domain: S.String.pipe(
+    domain: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
@@ -500,7 +522,7 @@ export class OWLObjectProperty extends S.Class<OWLObjectProperty>($I`OWLObjectPr
         identifier: "https://www.w3.org/2000/01/rdf-schema#domain",
       })
     ),
-    range: S.String.pipe(
+    range: FolioIriToken.pipe(
       S.Array,
       S.OptionFromOptionalKey,
       SchemaUtils.withNoneDefault,
@@ -650,16 +672,9 @@ export class OWLObjectPropertyList extends S.Class<OWLObjectPropertyList>($I`OWL
  * @category schemas
  * @since 0.0.0
  */
-export const OWLSearchScore = S.Union([
-  S.Int.annotateKey({
-    title: "Integer",
-  }),
-  S.Finite.annotateKey({
-    title: "Number",
-  }),
-]).pipe(
+export const OWLSearchScore = S.Finite.pipe(
   $I.annoteSchema("OWLSearchScore", {
-    description: "Integer or number relevance score returned with an OWL class search result.",
+    description: "Finite relevance score returned with an OWL class search result.",
   })
 );
 

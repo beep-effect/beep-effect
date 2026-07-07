@@ -1328,9 +1328,32 @@
       "@beep/mcp-kit/*": ["./packages/foundation/capability/mcp-kit/src/*"],
       "@beep/uspto-mcp": ["./packages/drivers/uspto-mcp/src/index.ts"],
       "@beep/uspto-mcp/*": ["./packages/drivers/uspto-mcp/src/*"],
+      "@beep/repo-cli/commands/Research": [
+        "./packages/tooling/tool/cli/src/commands/Research/index.ts"
+      ],
       "@beep/repo-cli/commands/Worktree": [
         "./packages/tooling/tool/cli/src/commands/Worktree/index.ts"
-      ]
+      ],
+      "@beep/law-practice-domain/values": [
+        "./packages/law-practice/domain/src/values/index.ts"
+      ],
+      "@beep/law-practice-domain/values/ApplicationNumber": [
+        "./packages/law-practice/domain/src/values/ApplicationNumber/index.ts"
+      ],
+      "@beep/law-practice-domain/values/KindCode": [
+        "./packages/law-practice/domain/src/values/KindCode/index.ts"
+      ],
+      "@beep/law-practice-domain/values/OfficeCode": [
+        "./packages/law-practice/domain/src/values/OfficeCode/index.ts"
+      ],
+      "@beep/law-practice-domain/values/PatentDocumentTriplet": [
+        "./packages/law-practice/domain/src/values/PatentDocumentTriplet/index.ts"
+      ],
+      "@beep/law-practice-domain/values/PatentNumber": [
+        "./packages/law-practice/domain/src/values/PatentNumber/index.ts"
+      ],
+      "@beep/pacer": ["./packages/drivers/pacer/src/index.ts"],
+      "@beep/pacer/*": ["./packages/drivers/pacer/src/*"]
     }
   }
 }

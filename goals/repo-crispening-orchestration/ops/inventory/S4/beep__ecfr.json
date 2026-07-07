@@ -1,0 +1,39 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ecfr/scripts/generate.ts",
+    "line": 109,
+    "symbol": "renderModel",
+    "smell": "The generator emits every eCFR `S.Class` model with an empty body (`) {}`), so generated classes lose the sanctioned in-body class static guard. The generated output is excluded from scanning; the first-party generator is the correct source target.",
+    "proposedTarget": "Render `) { static readonly is = S.is(${name}); }` for generated model classes, following class-static exemplars at packages/foundation/modeling/md/src/Md.model.ts:873 and packages/foundation/modeling/lexical/src/Lexical.model.ts:1282; `S.is` is verified at .repos/effect-v4/packages/effect/src/Schema.ts:1256.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ecfr/src/Ecfr.errors.ts",
+    "line": 28,
+    "symbol": "EcfrErrorReason",
+    "smell": "LiteralKit reason vocabulary is annotated without reattaching kit/static codec helpers, so guards, matches, and soft decode behavior are not colocated on the schema value.",
+    "proposedTarget": "Capture the LiteralKit base and reattach `SchemaUtils.withLiteralKitStatics(base)` plus `SchemaUtils.withCodecStatics` after annotation.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ecfr/src/Ecfr.errors.ts",
+    "line": 105,
+    "symbol": "EcfrError.of",
+    "smell": "Detector hit: public two-argument static constructor is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "The second argument is optional with a default (`options = EcfrErrorOptions.make({})`). Arity-based `dual(2, ...)` would turn the valid `EcfrError.of(reason)` call into data-last partial application instead of constructing an error.",
+      "boundary": "Public error-constructor API with optional trailing args; dual dispatch is incompatible."
+    }
+  }
+]

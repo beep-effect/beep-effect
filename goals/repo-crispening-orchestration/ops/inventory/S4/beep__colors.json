@@ -1,0 +1,32 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/colors/src/Colors.ts",
+    "line": 96,
+    "symbol": "stringIdentity",
+    "smell": "The plain String-coercion fallback formatter is hand-rolled per entrypoint (`const stringIdentity: FormatterType = String` here; duplicate `const identity: FormatterType = String` at Colors.browser.ts:18) instead of living with the Formatter schema it implements — behavior separated from its data, duplicated across the Node and browser entrypoints.",
+    "proposedTarget": "Colocate the fallback with the schema in src/internal/ColorsSchema.ts: either attach it via SchemaUtils.withStatics on the Formatter const (pipeable, packages/foundation/modeling/schema/src/SchemaUtils/withStatics.ts) e.g. `Formatter.plain`, or export a shared `plainFormatter: Formatter = String` from the internal module; both entrypoints then reference the single definition. Marginal value (two one-line consts) — remediation agent may decline as churn.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 1.2,
+    "exception": {
+      "reason": "The remaining Node/browser String formatter constants are two local one-line entrypoint adapters for the documented picocolors-compatible coercion contract; exporting a shared internal formatter would add surface without deleting meaningful behavior.",
+      "boundary": "entrypoint-local formatter adapter / public picocolors parity"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/colors/src/internal/ColorsSchema.ts",
+    "line": 29,
+    "symbol": "FormatterInput",
+    "smell": "Union const `S.Union([S.String, S.Finite]).pipe(S.UndefinedOr, ...)` without SchemaUtils.withCodecStatics — literal match for the S4 'branded/union consts missing withCodecStatics' smell.",
+    "proposedTarget": "No action. If it ever gains codec/guard call sites, append `SchemaUtils.withCodecStatics` to the existing .pipe chain (bound `S.Top & S.ConstraintDecoder<unknown>` is satisfied).",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0.5,
+    "exception": {
+      "reason": "Internal-only schema (not re-exported from Colors.ts, Colors.browser.ts, or the package barrel) with zero decode/guard/fromUnknown call sites anywhere in the package or repo; it exists solely as the input leg of the Fn Formatter signature. Attaching withCodecStatics would add speculative surface with no free-helper wall to delete — the crispen doctrine says stop at the first rung that removes noise, and there is no noise here.",
+      "boundary": "packages/foundation/capability/colors/src/internal/ColorsSchema.ts (internal schema module of @beep/colors)"
+    }
+  }
+]

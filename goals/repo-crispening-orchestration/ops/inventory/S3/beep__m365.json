@@ -1,0 +1,47 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/m365/src/M365.service.ts",
+    "line": 42,
+    "symbol": "QueryValue",
+    "smell": "False-positive-audited undiscriminated-union candidate: QueryValue is S.Union([S.Finite, S.String]) for Microsoft Graph query parameter values.",
+    "proposedTarget": "None -- keep as-is. This is a wire-boundary scalar codec for URL query serialization, not package-owned variant state that would gain from tags.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Tagging query scalar values would change the request/query shape sent to Microsoft Graph and add no exhaustiveness benefit.",
+      "boundary": "Microsoft Graph query-string encoding boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/m365/src/M365.service.ts",
+    "line": 842,
+    "symbol": "executeWithRetry",
+    "smell": "False-positive-audited reason check: executeWithRetry checks the single retryable error reason with `error.reason === \"throttled\" && remaining > 0`.",
+    "proposedTarget": "None -- keep as-is for S3. This is a single-case retry policy guard, not exhaustive dispatch over M365ErrorReason; distinct error reasons stay distinct per the error-tag fence.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Only the throttled reason has retry semantics, and new M365ErrorReason values should continue to fail without changing this branch.",
+      "boundary": "M365 HTTP retry policy"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/m365/src/M365.errors.ts",
+    "line": 201,
+    "symbol": "causeFromUnknown",
+    "smell": "False-positive-audited `_tag` reads: httpClientCauseLabel reads HttpClientError.reason._tag at lines 201-207 and causeLabelReaders includes readString(\"_tag\") at lines 212-215.",
+    "proposedTarget": "None -- keep as-is. These reads sanitize unknown external causes into string labels; there is no package-owned tagged union to match.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Unknown error causes cross an external Effect HTTP/MSAL boundary and are reduced to labels without branching into behavior.",
+      "boundary": "M365 error-cause sanitization"
+    }
+  }
+]

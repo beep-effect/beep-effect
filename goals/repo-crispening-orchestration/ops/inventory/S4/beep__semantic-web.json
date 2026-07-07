@@ -1,0 +1,137 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
+    "line": 350,
+    "symbol": "isEntityRecord",
+    "smell": "Core PROV record guards are detached from their schema classes: lines 350-353 define `S.is(Entity)`, `S.is(Activity)`, `S.is(Agent)`, and `S.is(SoftwareAgent)` locally for summary counting.",
+    "proposedTarget": "Add in-body `static readonly is = S.is(Self)` on the owning `@beep/rdf/Prov` classes (Entity at packages/foundation/modeling/rdf/src/Prov.ts:262, Activity at :308, Agent at :349, SoftwareAgent at :388), then replace these helpers with `Entity.is`, `Activity.is`, `Agent.is`, and `SoftwareAgent.is`; S.Class static exemplar: packages/foundation/modeling/md/src/Md.model.ts:873.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 1,
+    "exception": {
+      "reason": "The proposed class statics belong on @beep/rdf PROV classes outside @beep/semantic-web. Fence 8 forbids this package writer from editing that package; defer the guard-colocation sweep to the family-close pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
+    "line": 355,
+    "symbol": "extensionTierRecordGuards",
+    "smell": "Extension-tier PROV guard array rebuilds twelve class guards with `S.is(...)` instead of using colocated class statics.",
+    "proposedTarget": "After the owning `@beep/rdf/Prov` extension classes carry `static readonly is`, replace the array entries with direct refs (`Plan.is`, `Collection.is`, `Person.is`, `Organization.is`, `Attribution.is`, `Delegation.is`, `Derivation.is`, `PrimarySource.is`, `Quotation.is`, `Revision.is`, `Start.is`, `End.is`).",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 2,
+    "exception": {
+      "reason": "The proposed extension-tier guard statics belong on @beep/rdf PROV classes outside @beep/semantic-web. Fence 8 forbids this package writer from editing that package; defer the guard-colocation sweep to the family-close pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/semantic-web/src/adapters/jsonld-document.ts",
+    "line": 46,
+    "symbol": "isReferenceValue",
+    "smell": "Free-floating guard `const isReferenceValue = S.is(JsonLdReferenceValue)` is used throughout JSON-LD document normalization instead of living on the `JsonLdReferenceValue` class.",
+    "proposedTarget": "Add `static readonly is = S.is(JsonLdReferenceValue)` on the owning class at packages/foundation/modeling/rdf/src/JsonLd.ts:276 and replace this helper with `JsonLdReferenceValue.is`.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 3,
+    "exception": {
+      "reason": "The proposed guard static belongs on @beep/rdf JsonLdReferenceValue outside @beep/semantic-web. Fence 8 forbids this package writer from editing that package; defer the guard-colocation sweep to the family-close pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/semantic-web/src/adapters/jsonld-stream-parse.ts",
+    "line": 26,
+    "symbol": "decodeNonNegativeInt",
+    "smell": "Detector candidate: local helper decodes `NonNegativeInt` with `S.decodeUnknownEffect`.",
+    "proposedTarget": "No S4 action in this package; the helper maps schema failures into `JsonLdStreamParseError` with a service-specific reason/message, which is a typed boundary rather than a duplicate trusted decoder.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Service-specific tagged error mapping preserves the adapter error contract.",
+      "boundary": "typed service boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/semantic-web/src/adapters/jsonld-stream-serialize.ts",
+    "line": 25,
+    "symbol": "decodeNonNegativeInt",
+    "smell": "Detector candidate: local helper decodes `NonNegativeInt` with `S.decodeUnknownEffect`.",
+    "proposedTarget": "No S4 action in this package; the helper maps schema failures into `JsonLdStreamSerializeError`, preserving the stream-serialize adapter contract.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Service-specific tagged error mapping preserves the adapter error contract.",
+      "boundary": "typed service boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
+    "line": 388,
+    "symbol": "decodeNonNegativeInt",
+    "smell": "Detector candidate: service helper decodes `NonNegativeInt` with `S.decodeUnknownEffect`.",
+    "proposedTarget": "No S4 action in this package; the helper maps schema failures into `ProvenanceServiceError` with `reason: \"projectionLimit\"` and a label-specific message.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Service-specific tagged error mapping preserves the provenance service error contract.",
+      "boundary": "typed service boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/semantic-web/src/adapters/jsonld-document.ts",
+    "line": 91,
+    "symbol": "decodeIriReference",
+    "smell": "Detector candidate: JSON-LD document adapter has a cluster of fixed-schema decoders (`IRIReference`, `JsonLdNodeIdentifier`, `NamedNode`, `BlankNode`, `Literal`) at lines 91-142.",
+    "proposedTarget": "No S4 action in this package; each helper attaches JSON-LD document error reason/subject context to schema failures. Colocating trusted `fromUnknown` statics would lose the adapter's typed error boundary.",
+    "confidence": 0.88,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Decode helpers enrich failures with adapter-specific error reason and subject.",
+      "boundary": "typed JSON-LD document boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/semantic-web/src/adapters/jsonld-context.ts",
+    "line": 42,
+    "symbol": "decodeIriReference",
+    "smell": "Detector candidate: JSON-LD context adapter decodes `IRIReference` and `S.NonEmptyString` through local helpers.",
+    "proposedTarget": "No S4 action in this package; these helpers preserve `JsonLdContextError` reasons and subject fields at the context-service boundary.",
+    "confidence": 0.88,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Decode helpers enrich schema failures with context-service error reason and subject.",
+      "boundary": "typed JSON-LD context boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
+    "line": 283,
+    "symbol": "ProvenanceServiceShape",
+    "smell": "Detector carve-out: exported service contract interface has method signatures but no schema data to receive statics.",
+    "proposedTarget": "No S4 action; service-shape interfaces are explicitly out of scope for statics/withCodecStatics proposals.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Service-contract interface carve-out.",
+      "boundary": "service contract"
+    }
+  }
+]

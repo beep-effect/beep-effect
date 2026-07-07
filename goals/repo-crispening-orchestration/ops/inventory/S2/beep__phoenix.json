@@ -1,0 +1,128 @@
+[
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
+    "line": 133,
+    "symbol": "normalizeBaseUrl",
+    "smell": "`flow(Str.replace(/\\/+$/, \"\"), URLStr.make)` strips trailing slashes in service code even though `PhoenixConfigInput.baseUrl` is a schema-owned config field (Phoenix.config.ts:52) and `ResolvedPhoenixConfig.baseUrl` is `URLStr` (Phoenix.service.ts:129).",
+    "proposedTarget": "Move the trailing-slash normalization into a config/base-url transformation schema, e.g. `PhoenixBaseUrl = S.String.pipe(S.decodeTo(URLStr, SchemaTransformation.transform({ decode: Str.replace(/\\/+$/, \"\"), encode: String })))`, then use it on `PhoenixConfigInput.baseUrl` and the environment path at line 635. In-repo transformation exemplars: `packages/foundation/modeling/schema/src/PosixPath.ts:71-73` and `packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyConfig.ts:21-34`.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
+    "line": 136,
+    "symbol": "resolveConfig",
+    "smell": "`apiKey: O.fromUndefinedOr(config.apiKey)` converts an optional schema key into `Option` in service code; the config schema owns absence but does not model it as `Option` (Phoenix.config.ts:51).",
+    "proposedTarget": "Change `PhoenixConfigInput.apiKey` to `S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(SchemaUtils.withNoneDefault)` and let `resolveConfig` pass the Option through. In-repo exemplar: `packages/foundation/modeling/ontology/src/Ontology.models.ts:152-160`; v4 API verified at `.repos/effect-v4/packages/effect/src/Schema.ts:8648-8669`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
+    "line": 167,
+    "symbol": "optionalVersionId",
+    "smell": "A repeated optional-to-partial helper wall (`optionalVersionId`, `optionalSplits`, `optionalExperiment*`, `optionalPrompt*`, `optionalLabel`, `optionalScore`, etc.) exists only because first-party input models use `S.optionalKey` fields and the SDK adapter rehydrates each one with `O.fromUndefinedOr(...).pipe(O.map(...), O.getOrElse(R.empty))`.",
+    "proposedTarget": "Convert first-party optional input fields to `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` on `PhoenixDatasetSelector` (models.ts:296/298), `PhoenixPromptCreateInput` (539/548), `PhoenixPromptSelector` (595-598), `PhoenixExperimentCreateInput` (651/652/654/656), and `PhoenixAnnotationInput` (726-731). The SDK adapter can still omit None at the 3rd-party boundary with a small Option-to-partial encoder. Exemplar: `packages/foundation/modeling/ontology/src/Ontology.models.ts:152-160`.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/phoenix/src/Phoenix.models.ts",
+    "line": 330,
+    "symbol": "PhoenixDatasetExample",
+    "smell": "`output`, `spanId`, and `splits` are optional nullable fields (`S.NullOr(...).pipe(S.optionalKey)`), forcing `datasetSplitsToSdk` to return `null` and the service helpers to shuttle `undefined | null` through adapter code.",
+    "proposedTarget": "Use an Option codec that preserves the SDK wire form: `OptionFromOptionalNullishKey(S.Record(...), { onNoneEncoding: null }).pipe(SchemaUtils.withNoneDefault)` for `output`, and the same pattern for `spanId`/`splits`. Repo helper verified at `packages/foundation/modeling/schema/src/Options.ts:86-91`; Effect v4 `S.OptionFromOptionalNullOr` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:8706-8736`.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
+    "line": 432,
+    "symbol": "makePhoenixSdk",
+    "smell": "SDK readback normalization uses `result?.id ?? null`, `example.metadata ?? {}`, `example.output ?? null`, `example.spanId ?? null`, `example.splits ?? null`, `result.description ?? null`, and `result.metadata ?? {}` before constructing schema-backed result models.",
+    "proposedTarget": "Move readback absence into result/example codecs: nullable outputs become `OptionFromOptionalNullishKey(...).pipe(SchemaUtils.withNoneDefault)` where the decoded API should be Option, and record defaults use existing `SchemaUtils.withKeyDefaults(R.empty())` by omitting missing keys instead of supplying `?? {}`. Existing in-package defaults at `PhoenixDatasetInfoResult.metadata` (models.ts:460) and `PhoenixExperimentInfoResult.metadata` (models.ts:693) show the target style.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
+    "line": 255,
+    "symbol": "promptSelectorToSdk",
+    "smell": "`O.getOrElse(name, thunkEmptyStr)` injects an empty-string selector name when `tag` is present without `name`; the selector invariant is enforced by service logic rather than the `PhoenixPromptSelector` schema.",
+    "proposedTarget": "Promote selector shape into the data: make `PhoenixPromptSelector` a tagged/derived union or add a schema check that either requires `promptId`, `versionId`, `name`, or `name + tag`; then the SDK adapter has no empty-string fallback. This crosses into S3 discrimination, so confidence is judgment-level for S2.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
+    "line": 146,
+    "symbol": "resolvedHeaders",
+    "smell": "`O.getOrElse(R.empty<string, string>)` terminates an Option pipeline while merging an optional Authorization header.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "Already Option-first adapter composition; the empty record is the neutral element for object spread over headers, not a schema-field default.",
+      "boundary": "HTTP adapter header merge"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
+    "line": 195,
+    "symbol": "datasetSplitsToSdk",
+    "smell": "`datasetSplitsToSdk` accepts and returns `null` as part of the SDK payload shape.",
+    "proposedTarget": "None at the SDK encoder boundary - keep the outbound SDK shape nullable.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "3rd-party Phoenix SDK payloads use `null` to represent no split assignment. The decoded first-party domain should move to Option in the `PhoenixDatasetExample` finding, but this boundary encoder still has to emit the SDK's nullable shape.",
+      "boundary": "3rd-party Phoenix SDK dataset example payload"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
+    "line": 275,
+    "symbol": "experimentInfoResult",
+    "smell": "`readonly projectName: string | null` mirrors the Phoenix SDK experiment readback shape.",
+    "proposedTarget": "None at this local adapter input boundary.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "This structural type describes data returned by the Phoenix SDK before first-party normalization; the first-party result model is covered separately by the readback null/default finding.",
+      "boundary": "3rd-party Phoenix SDK readback adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/phoenix/test/Phoenix.service.test.ts",
+    "line": 54,
+    "symbol": "FakePhoenixSdk.createExperiment",
+    "smell": "`datasetVersionId: input.datasetVersionId ?? \"latest\"` is a test double default.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "Test fixture behavior for a fake SDK response; not first-party domain normalization or a schema-field default.",
+      "boundary": "test fixture"
+    }
+  }
+]

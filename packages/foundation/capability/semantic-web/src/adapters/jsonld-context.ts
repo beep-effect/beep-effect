@@ -36,7 +36,7 @@ const makeContextError = (
   JsonLdContextError.make({
     reason,
     message,
-    subject: subject === undefined ? O.none() : O.some(subject),
+    subject: O.fromNullishOr(subject),
   });
 
 const decodeIriReference = (

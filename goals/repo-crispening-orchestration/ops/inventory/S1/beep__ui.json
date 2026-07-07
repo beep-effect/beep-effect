@@ -1,0 +1,137 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+    "line": 499,
+    "symbol": "UseNumberInputOptions",
+    "smell": "Exported hook options type extends schema-backed `BoundaryParams` and `SpinParams` with an inline object of booleans and callbacks, which looks like a schema-first inventory hit.",
+    "proposedTarget": "Hypothetical `S.Class` for the full hook options object; audited and rejected for this S1 pass.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "`BoundaryParams` and `SpinParams` already carry the durable numeric data as `S.Class` models; the remaining fields are React hook behavior toggles and callback ports (`formatter`, `parser`, `onChange`) whose accepted functions are component/hook boundary contracts. S2 may later move defaults, but S1 should not schema-ify this full JSX-facing hook options bag.",
+      "boundary": "React hook options and callback port"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+    "line": 93,
+    "symbol": "isNumberInputText (+ isNumberInputEventKey)",
+    "smell": "Top-of-file `S.is(...)` guard aliases textually match the S1 guard-helper-wall smell.",
+    "proposedTarget": "Hypothetical inlining or helper-static colocation; audited and rejected as not actionable for this package inventory.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Both predicates are local, schema-derived, and single-use (`normalizeEventKey` and `handleChange`). The invariants are already carried by `NumberInputEventKey` (`LiteralKit`) and `NumberInputText` (`S.String.check(S.isPattern(...))`); inlining `S.is(...)` would be a terseness cleanup with no schema-as-truth gain.",
+      "boundary": "local schema-derived guards inside a React input hook"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/ui-system/ui/src/hooks/useSpinner.ts",
+    "line": 23,
+    "symbol": "decodeSpinnerSchedule",
+    "smell": "Top-of-file decode helper over `SpinnerSchedule` textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Hypothetical inline `S.decodeUnknownResult(SpinnerSchedule)` at the single construction site; audited and rejected.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "The helper decodes one hard-coded spinner timing object immediately below its definition, and the truth is already the private `SpinnerSchedule` S.Class. It is not exported, not reused as a parallel validation wall, and does not hide a schema-worthy payload.",
+      "boundary": "single-use local decode for static React timing configuration"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/ui-system/ui/src/lib/react-invariant.ts",
+    "line": 79,
+    "symbol": "requireReactContext",
+    "smell": "Exported function in a schema-modeled file has overloads and generic parameters, which can look like an `SFV4-fn-schema` hit.",
+    "proposedTarget": "Hypothetical `Fn` wrapper around `requireReactContext`; audited and rejected.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "This is a generic React context invariant helper and overload surface. Its only durable input payload is already schema-modeled as `ReactContextInvariantOptions`, and failures are already modeled with `ReactContextInvariantError`; wrapping the generic React context value in `Fn` would not preserve the generic `Value` relationship or JSX hook ergonomics.",
+      "boundary": "generic React context utility / overload surface"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/ui-system/ui/src/components/editor/editor-ui/content-editable.tsx",
+    "line": 58,
+    "symbol": "ContentEditable",
+    "smell": "Exported component function lives in a schema-modeled file and takes a schema class as props, so a naive `SFV4-fn-schema` detector can flag the component contract.",
+    "proposedTarget": "Hypothetical `Fn({ input: Props, output: ... })` wrapper; audited and rejected.",
+    "confidence": 0.16,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "This is a React component boundary. The prop payload is already modeled by the local `Props` S.Class, while React itself expects a callable component returning JSX; an `Fn` wrapper would add invocation semantics that do not belong on JSX component exports.",
+      "boundary": "React component props / JSX component callable"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/ui-system/ui/src/components/notification-card.tsx",
+    "line": 175,
+    "symbol": "NotificationCardProps",
+    "smell": "Component prop interface includes notification display data, actions, and callbacks in a schema-modeled file, which can look like an exported data-payload interface.",
+    "proposedTarget": "Hypothetical `S.Class` for all notification-card props; audited and rejected for S1.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The schema-relevant finite domains and action payload are already modeled with `NotificationStatus`, `ActionType`, `ActionStyle`, and `NotificationAction`. The remaining interface is a JSX prop surface with `className`, loading UI state, and callback ports (`onAction`, `onMarkAsRead`), explicitly covered by the React carve-out.",
+      "boundary": "React component props / callback ports"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/ui-system/ui/src/components/upload.tsx",
+    "line": 78,
+    "symbol": "UploadBoxProps (+ UploadBoxRenderProps, UploadProps, UploadAvatarProps)",
+    "smell": "Upload component prop interfaces sit in a file that also defines the `UploadImagePreview` S.Class, so broad schema-first inventory scans can flag them as data payloads.",
+    "proposedTarget": "Hypothetical `S.Class` props models for the upload primitives; audited and rejected.",
+    "confidence": 0.14,
+    "mechanization": "judgment",
+    "roiRank": 0.02,
+    "exception": {
+      "reason": "These props are a React/dropzone adapter surface: they extend DOM props, expose `ReactNode` render callbacks, carry `File` arrays from browser APIs, and forward selected `react-dropzone` options. The durable local data (`UploadImagePreview`) is already schema-modeled; the rest belongs to the third-party/UI boundary.",
+      "boundary": "React component props / react-dropzone adapter"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",
+    "line": 30,
+    "symbol": "GraphNode (+ GraphLink)",
+    "smell": "Exported graph node/link interfaces describe render data and may look like schema-worthy payload models.",
+    "proposedTarget": "Hypothetical `S.Class`/`S.Struct` graph data models; audited and rejected for S1.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "These interfaces extend D3 simulation datum/link surfaces, which D3 mutates with runtime layout coordinates and accepts node-reference unions. They are public JSX component data props tied to a third-party renderer, not Effect `Graph` models and not stable wire/persisted payloads for this wave.",
+      "boundary": "D3 simulation adapter / React component props"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/ui-system/ui/src/hooks/use-scribe.ts",
+    "line": 66,
+    "symbol": "ScribeStatus (+ UseScribeOptions, UseScribeResult)",
+    "smell": "Scribe hook status/options/result types include finite states, callbacks, and SDK message payloads without local schemas.",
+    "proposedTarget": "Hypothetical `LiteralKit`/`S.Class` wrappers for the hook state and options; audited and rejected for this S1 pass.",
+    "confidence": 0.18,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "This file is a React adapter over `@elevenlabs/client`; event payloads and errors are typed by the SDK, while the local options/result shapes are hook/callback contracts that include `Promise`-returning connection functions and React state. A schema wrapper here would duplicate third-party contracts rather than move a first-party invariant into schema truth.",
+      "boundary": "third-party realtime SDK adapter / React hook result"
+    }
+  }
+]

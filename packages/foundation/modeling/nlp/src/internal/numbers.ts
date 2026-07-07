@@ -6,7 +6,7 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { isPositive } from "@beep/schema";
+import { isPositive, SchemaUtils } from "@beep/schema";
 
 export { UnitInterval } from "@beep/schema/UnitInterval";
 
@@ -35,7 +35,8 @@ export const PositiveNumber = S.Finite.check(
 ).pipe(
   $I.annoteSchema("PositiveNumber", {
     description: "A numeric value greater than 0.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

@@ -11,6 +11,7 @@
 import { $SchemaId } from "@beep/identity";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("Percentage");
 
@@ -36,7 +37,8 @@ export const Percentage = S.Finite.check(
   $I.annoteSchema("Percentage", {
     description:
       "Schema for a valid percentage value.\nMust be a number between 0 and 100 (inclusive).\nSupports decimal values.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -70,7 +72,7 @@ export type Percentage = typeof Percentage.Type;
  * @since 0.0.0
  * @category validation
  */
-export const isPercentage = S.is(Percentage);
+export const isPercentage = Percentage.is;
 
 /**
  * Percentage constant for 0%.

@@ -1,0 +1,189 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/shared/domain/src/entity/EntityId.ts",
+    "line": 39,
+    "symbol": "EntityIdValue",
+    "smell": "Branded const `PosInt.check(...).pipe(S.brand(\"EntityIdValue\"), $I.annoteSchema(...))` has no `withCodecStatics`; this is the base schema every slice's `EntityId.factory(...)` output composes from (via `EntityIdValue.pipe(S.brand(definition.brand), ...)` at line 488), so its missing statics ripple into every generated entity id.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the pipe: `.pipe(S.brand(\"EntityIdValue\"), $I.annoteSchema(\"EntityIdValue\", {...}), SchemaUtils.withCodecStatics)`, matching the verified repo pattern `S.NonEmptyString.pipe(withCodecStatics)` documented at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:32.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/shared/domain/src/entity/Principal.ts",
+    "line": 219,
+    "symbol": "Principal",
+    "smell": "Tagged-union const built from `S.Union([UserPrincipal, ServiceAccountPrincipal, AgentPrincipal, ConnectorAccountPrincipal, SystemPrincipal]).pipe($I.annoteSchema(...), S.toTaggedUnion(\"kind\"))` has no `withCodecStatics`. `Principal` is the actor-reference type on every `BaseEntity` audit field (`createdByPrincipal`/`updatedByPrincipal`, packages/shared/domain/src/entity/BaseEntity.ts:73,79), so this is one of the highest-centrality unions in the shared kernel to be missing a colocated `.is`/`.decodeOption`.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the pipe: `.pipe($I.annoteSchema(\"Principal\", {...}), S.toTaggedUnion(\"kind\"), SchemaUtils.withCodecStatics)`, matching the verified repo pattern at packages/foundation/modeling/md/src/Md.model.ts:606-613.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/shared/domain/src/values/LocalDate/LocalDate.behavior.ts",
+    "line": 116,
+    "symbol": "isLocalDate",
+    "smell": "Free-floating guard const `export const isLocalDate = S.is(LocalDate.Model)` built from the `LocalDate.Model` class (packages/shared/domain/src/values/LocalDate/LocalDate.model.ts:67) — exactly the guard-wall pattern S4 targets for `S.Class`, since the class has no in-body `static readonly is`.",
+    "proposedTarget": "Add `static readonly is = S.is(Self)` in-body on `Model` (LocalDate.model.ts:67-onwards, mirroring the class's existing in-body `toISOString`/`toString`/`[Eq.symbol]`/`[Hash.symbol]` methods), then replace this file's `isLocalDate` with a re-export of `LocalDate.Model.is`.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/shared/domain/src/entities/Organization/Organization.values.ts",
+    "line": 34,
+    "symbol": "LicenseTier",
+    "smell": "LiteralKit const `LiteralKit([\"solo\", \"team\", \"enterprise\"]).pipe($I.annoteSchema(...))` has no `withLiteralKitStatics`/`withCodecStatics` attached; the file's own doc comment (line 26) can only reach the kit's per-member `.is.enterprise` guard, not a whole-schema `.decodeOption`/`.fromUnknown`.",
+    "proposedTarget": "Capture the kit in a base const and compose both statics, mirroring packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts:30-35.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/shared/domain/src/values/Rule/Rule.model.ts",
+    "line": 29,
+    "symbol": "Effect",
+    "smell": "LiteralKit const `LiteralKit([\"allow\", \"deny\", \"ask\"]).pipe($I.annoteSchema(...))` has no `withLiteralKitStatics`/`withCodecStatics` attached.",
+    "proposedTarget": "Capture the kit in a base const and compose both statics, mirroring packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts:30-35.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/shared/domain/src/values/Rule/Rule.model.ts",
+    "line": 205,
+    "symbol": "Rule",
+    "smell": "Tagged-union const built from `S.Union([Allow, Deny, Ask]).pipe(S.toTaggedUnion(\"effect\"), $I.annoteSchema(...))` has no `withCodecStatics` attached.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the pipe, matching the verified repo pattern at packages/foundation/modeling/md/src/Md.model.ts:606-613.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/shared/domain/src/entity/SourceKind.ts",
+    "line": 26,
+    "symbol": "SourceKind",
+    "smell": "LiteralKit const `LiteralKit([\"User\", \"Agent\", \"Admin\", \"Application\", \"System\", \"Sync\", \"Connector\"]).pipe($I.annoteSchema(...))` has no `withLiteralKitStatics`/`withCodecStatics` attached. `SourceKind` backs every `BaseEntity.source` audit field, so it shares `Principal`'s centrality.",
+    "proposedTarget": "Capture the kit in a base const and compose both statics, mirroring packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts:30-35.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/shared/domain/src/entity/Principal.ts",
+    "line": 28,
+    "symbol": "SystemComponent",
+    "smell": "LiteralKit const `LiteralKit([\"Runtime\", \"Sync\", \"Migration\", \"Policy\", \"Generator\"]).pipe($I.annoteSchema(...))` has no `withLiteralKitStatics`/`withCodecStatics` attached.",
+    "proposedTarget": "Capture the kit in a base const and compose both statics, mirroring packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts:30-35.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/shared/domain/src/values/ClaimLifecycle/ClaimLifecycle.model.ts",
+    "line": 38,
+    "symbol": "ClaimLifecycle",
+    "smell": "LiteralKit const `LiteralKit([\"candidate\", \"shape_valid\", \"consistency_checked\", \"admitted\"]).pipe($I.annoteSchema(...))` has no `withLiteralKitStatics`/`withCodecStatics` attached; the file's own doc comment (line 31) reaches only the kit's per-member `.is.shape_valid` guard.",
+    "proposedTarget": "Capture the kit in a base const and compose both statics, mirroring packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts:30-35.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 9
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/shared/domain/src/entities/Membership/Membership.values.ts",
+    "line": 26,
+    "symbol": "Role",
+    "smell": "LiteralKit const `LiteralKit([\"owner\", \"member\"]).pipe($I.annoteSchema(...))` has no `withLiteralKitStatics`/`withCodecStatics` attached.",
+    "proposedTarget": "Capture the kit in a base const and compose both statics, mirroring packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts:30-35.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 10
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/shared/domain/src/entities/Membership/Membership.values.ts",
+    "line": 61,
+    "symbol": "Status",
+    "smell": "LiteralKit const `LiteralKit([\"active\"]).pipe($I.annoteSchema(...))` has no `withLiteralKitStatics`/`withCodecStatics` attached.",
+    "proposedTarget": "Capture the kit in a base const and compose both statics, mirroring packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts:30-35.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 12
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/shared/domain/src/values/OnePasswordReference/OnePasswordReference.model.ts",
+    "line": 47,
+    "symbol": "OnePasswordReference",
+    "smell": "Branded const `S.String.check(OnePasswordReferenceChecks).pipe(S.brand(\"OnePasswordReference\"), $I.annoteSchema(...))` has no `withCodecStatics`; the file compensates with a free-floating module-level `export const isOnePasswordReference = S.is(OnePasswordReference)` at line 91 — the exact duplicate-guard-wall this rule targets.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the pipe, then replace the separate `isOnePasswordReference` export with `OnePasswordReference.is` (or a thin re-export) so callers use `OnePasswordReference.is`/`.decodeOption`/`.fromUnknown` directly.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 11
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/shared/domain/src/entity/primitives.ts",
+    "line": 73,
+    "symbol": "Ed25519Signature",
+    "smell": "Branded const `S.NonEmptyString.pipe(S.brand(\"Ed25519Signature\"), $I.annoteSchema(...))` has no `withCodecStatics`.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the pipe, matching `S.NonEmptyString.pipe(withCodecStatics)` at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:32.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 13
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/shared/domain/src/entity/primitives.ts",
+    "line": 115,
+    "symbol": "EncryptionKeyId",
+    "smell": "Branded const `S.NonEmptyString.pipe(S.brand(\"EncryptionKeyId\"), $I.annoteSchema(...))` has no `withCodecStatics`.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the pipe, matching `S.NonEmptyString.pipe(withCodecStatics)` at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:32.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 14
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/shared/domain/src/entity/primitives.ts",
+    "line": 157,
+    "symbol": "HybridLogicalClock",
+    "smell": "Branded const `S.NonEmptyString.pipe(S.brand(\"HybridLogicalClock\"), $I.annoteSchema(...))` has no `withCodecStatics`.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the pipe, matching `S.NonEmptyString.pipe(withCodecStatics)` at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:32.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 15
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/shared/domain/src/entity/primitives.ts",
+    "line": 199,
+    "symbol": "VectorClock",
+    "smell": "Branded const `S.Record(S.String, NonNegativeInt).pipe(S.brand(\"VectorClock\"), $I.annoteSchema(...))` has no `withCodecStatics`.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the pipe, matching `S.NonEmptyString.pipe(withCodecStatics)` at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:32.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 16
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/shared/domain/src/identity/index.ts",
+    "line": 116,
+    "symbol": "AnyIdentityComposer",
+    "smell": "Opaque `S.declare<IdentityComposerType<string>>(isIdentityComposer).pipe($I.annoteSchema(...))` schema has no `withCodecStatics`; the file's own doc comment (line 108) has to reach for the free `S.is(AnyIdentityComposer)` call instead of a colocated `.is`.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the pipe: `.pipe($I.annoteSchema(\"AnyIdentityComposer\", {...}), SchemaUtils.withCodecStatics)`; `withCodecStatics` accepts any `S.Top & S.ConstraintDecoder<unknown>` value, not only branded/union consts, so it applies to `S.declare`-based schemas equally (packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90).",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 17
+  }
+]

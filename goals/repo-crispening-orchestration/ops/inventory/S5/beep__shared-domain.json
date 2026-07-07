@@ -1,0 +1,98 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/shared/domain/src/entity/primitives.ts",
+    "line": 73,
+    "symbol": "Ed25519Signature / EncryptionKeyId / HybridLogicalClock / VectorClock",
+    "smell": "Shared entity primitives are semantic strings but only enforce non-empty text or broad record keys: Ed25519Signature documents base64url text, EncryptionKeyId and HybridLogicalClock are stable tokens, and VectorClock uses S.Record(S.String, NonNegativeInt) for replica/device ids.",
+    "proposedTarget": "Add named checks with S.isPattern (verified .repos/effect-v4/packages/effect/src/Schema.ts:6521): a base64url signature pattern/length policy for Ed25519Signature, a stable key-id token grammar for EncryptionKeyId, an HLC token grammar if one is settled, and S.Record(S.NonEmptyString, NonNegativeInt) or a ReplicaId schema for VectorClock keys. Keep each schema annotated with $I.annoteSchema.",
+    "confidence": 0.64,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/shared/domain/src/values/Rule/Rule.model.ts",
+    "line": 90,
+    "symbol": "Rule.Base.action/resource and ClaimLifecycleTransition.reason",
+    "smell": "Shared rule action/resource fields and claim lifecycle transition reasons are broad S.String even though examples use meaningful non-empty permission/resource tokens and explanatory reason text.",
+    "proposedTarget": "Introduce annotated schemas such as RuleAction = S.NonEmptyString or a token-pattern check, RuleResource = S.NonEmptyString/S.isPattern for dotted resources, and ClaimLifecycleTransitionReason = S.NonEmptyString. S.NonEmptyString is verified at .repos/effect-v4/packages/effect/src/Schema.ts:8420; S.isPattern is verified at :6521.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/shared/domain/src/entity/EntityId.ts",
+    "line": 105,
+    "symbol": "EntityId.Options / EntityId.Definition metadata strings",
+    "smell": "Entity-id metadata overrides and materialized definitions use broad S.String for brand, entityType, resource, tableName, slice, name, and description, while the module already documents exact grammars via TableName, Resource, EntityType, and Brand template types.",
+    "proposedTarget": "Promote the metadata grammars into named annotated runtime schemas: EntityIdSlice/Name tokens, TableName = S.NonEmptyString.check(S.isPattern(/^[a-z][a-z0-9_]*$/u)), Resource = S.NonEmptyString.check(S.isPattern(/^[a-z][a-z0-9_-]*(?:\\.[a-z0-9_-]+)+$/u)), EntityType/Brand PascalCase checks, and S.NonEmptyString for description. These can be reused in Options and Definition without changing the literal-preserving type aliases.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/shared/domain/src/entity/Principal.ts",
+    "line": 70,
+    "symbol": "shared-domain schema fields",
+    "smell": "Shared-domain reusable schemas carry whole-schema `$I.annote` / `$I.annoteSchema` metadata, but many public fields lack `annotateKey` descriptions: Principal variants, EntityId Options/Definition, EntityRef, BaseEntity fields, Rule fields, and ClaimLifecycleTransition fields.",
+    "proposedTarget": "Add behavior-neutral `.annotateKey({ description })` or `$I.annoteKey(...)` metadata to shared-kernel fields while preserving shapes; follow packages/agents/server/src/AssistantTurn/BlockRepair.ts:62-64. Effect v4 `annotateKey` is verified at .repos/effect-v4/packages/effect/src/Schema.ts:185 and :605.",
+    "confidence": 0.76,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-equivalence",
+    "file": "packages/shared/domain/src/values/LocalDate/LocalDate.model.ts",
+    "line": 136,
+    "symbol": "LocalDate equality",
+    "smell": "LocalDate implements equality twice by manually comparing year/month/day with `===` even though the Model schema already carries exactly those fields.",
+    "proposedTarget": "Define a schema-derived equivalence such as `const LocalDateEquivalence = S.toEquivalence(Model)` (verified .repos/effect-v4/packages/effect/src/Schema.ts:13201) after the class is declared, use it in the exported `equals` helper, and consider using it inside the Equal symbol implementation after the S.is(Model) guard. The existing Order tuple can remain for chronological ordering.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/shared/domain/test/EntityKernel.test.ts",
+    "line": 175,
+    "symbol": "shared-domain schema law gaps",
+    "smell": "Shared-domain has S.toArbitrary laws for Organization settings/tiers, LocalDate, identity ids, and one EntityRef path, but exported schema families such as entity primitives, Principal, SourceKind, Rule/Ruleset, ClaimLifecycle/ClaimLifecycleTransition, OnePasswordReference, User, and Membership rely on fixed decode fixtures only.",
+    "proposedTarget": "Add additive schema-law tests using assertSchemaArbitraryDecodesToSelf from @beep/test-utils (packages/tooling/test-kit/test-utils/src/Schema.ts:30-43) for the exported schemas after any generator-hostile pattern checks receive suitable toArbitrary annotations. S.toArbitrary is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:12970.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/shared/domain/src/values/Rule/Rule.model.ts",
+    "line": 250,
+    "symbol": "Ruleset",
+    "smell": "Detector candidate: Ruleset is an unbounded S.Array(Rule).",
+    "proposedTarget": "None - keep an empty Ruleset valid unless a caller-specific policy requires at least one rule.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "A shared-kernel ruleset may be empty to represent no explicit rules, with authorization/default behavior supplied by the consuming policy layer; forcing non-empty here would encode caller policy into the shared value object.",
+      "boundary": "shared policy ruleset value boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/shared/domain/test/EntityKernel.test.ts",
+    "line": 130,
+    "symbol": "shared-domain metadata and behavior fixtures",
+    "smell": "Detector candidate: shared-domain tests use fixed BaseEntity metadata, organization rows, primitive strings, principals, user/membership rows, LocalDate examples, and 1Password references.",
+    "proposedTarget": "None - keep these deterministic fixtures; the schema-derived laws above are additive coverage.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These fixtures pin public metadata, persistence descriptors, SQL-null-to-Option behavior, LocalDate calendar edge cases, 1Password reference rejection examples, and barrel wiring. Generated schema samples cannot replace those compatibility/regression assertions.",
+      "boundary": "shared-domain metadata, behavior, and compatibility fixtures"
+    }
+  }
+]

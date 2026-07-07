@@ -10,8 +10,9 @@ import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { DocumentId } from "@beep/nlp/Core";
 import { Contract } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema";
+import { O } from "@beep/utils";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
-import type { UnitInterval } from "@beep/nlp/Handoff";
 
 const $I = $LangExtractId.create("Handoff");
 
@@ -52,7 +53,8 @@ export class AnnotatedDocumentInput extends S.Class<AnnotatedDocumentInput>($I`A
 const definedExtractions = (
   extractions: ReadonlyArray<GroundedExtraction>
 ): ReadonlyArray<GroundedExtraction & { readonly span: Contract.Span }> =>
-  extractions.filter(
+  A.filter(
+    extractions,
     (extraction): extraction is GroundedExtraction & { readonly span: Contract.Span } => extraction.span !== undefined
   );
 
@@ -62,28 +64,15 @@ const makeEntity = (
   mentionId: Contract.MentionId,
   index: number,
   documentId: DocumentId
-): Contract.Entity => {
-  const input: {
-    canonicalName: string;
-    confidence?: UnitInterval;
-    id: Contract.EntityId;
-    mentions: ReadonlyArray<Contract.MentionId>;
-    provenance: Contract.Provenance;
-    type: string;
-  } = {
+): Contract.Entity =>
+  Contract.Entity.make({
     canonicalName: extraction.text,
     id: Contract.EntityId.make(`${documentId}:entity:${index}`),
     mentions: [mentionId],
     provenance,
     type: extraction.label,
-  };
-
-  if (extraction.confidence !== undefined) {
-    input.confidence = extraction.confidence;
-  }
-
-  return Contract.Entity.make(input);
-};
+    ...O.getSomesStruct({ confidence: O.fromUndefinedOr(extraction.confidence) }),
+  });
 
 /**
  * Convert grounded extractions into the generic NLP handoff envelope.
@@ -125,27 +114,14 @@ export const toAnnotatedDocument = (input: AnnotatedDocumentInput): Contract.Ann
     }),
   ];
 
-  const mentions = aligned.map((extraction, index) =>
-    Contract.Mention.make({
-      chunkId,
-      id: Contract.MentionId.make(`${input.documentId}:mention:${index}`),
-      provenance,
-      span: extraction.span,
-      text: extraction.matchedText ?? extraction.text,
-    })
-  );
+  const entities = A.map(aligned, (extraction, index) => {
+    const mentionId = Contract.MentionId.make(`${input.documentId}:mention:${index}`);
+    return makeEntity(extraction, provenance, mentionId, index, input.documentId);
+  });
 
   return Contract.AnnotatedDocument.make({
     chunks,
-    entities: aligned.map((extraction, index) =>
-      makeEntity(
-        extraction,
-        provenance,
-        mentions[index]?.id ?? Contract.MentionId.make(`${input.documentId}:mention:${index}`),
-        index,
-        input.documentId
-      )
-    ),
+    entities,
     provenance,
     relations: [],
     version: "nlp-ir/1.0",

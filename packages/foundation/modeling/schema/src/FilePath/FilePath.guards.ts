@@ -7,6 +7,7 @@
 import { Str } from "@beep/utils";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { $I, usesUnsupportedWindowsNamespacePrefix } from "./FilePath.shared.ts";
 
 /**
@@ -37,7 +38,8 @@ export const HasNullByte = S.String.check(
   S.brand("HasNullByte"),
   $I.annoteSchema("HasNullByte", {
     description: "A string that contains an embedded NUL byte.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -75,7 +77,8 @@ export const SupportedWindowsNamespace = S.NonEmptyString.check(
   S.brand("SupportedWindowsNamespace"),
   $I.annoteSchema("SupportedWindowsNamespace", {
     description: "A non-empty path string that does not use unsupported Windows namespace prefixes.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -112,7 +115,8 @@ export const UsesPosixSeparator = S.String.check(
   S.brand("UsesPosixSeparator"),
   $I.annoteSchema("UsesPosixSeparator", {
     description: "A string that contains the POSIX path separator /.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -149,7 +153,8 @@ export const UsesWindowsSeparator = S.String.check(
   S.brand("UsesWindowsSeparator"),
   $I.annoteSchema("UsesWindowsSeparator", {
     description: "A string that contains the Windows path separator \\.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -186,7 +191,8 @@ export const EndsWithSeparator = S.String.check(
   S.brand("EndsWithSeparator"),
   $I.annoteSchema("EndsWithSeparator", {
     description: "A string that ends with either the POSIX or Windows path separator.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

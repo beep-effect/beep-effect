@@ -1,0 +1,212 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
+    "line": 43,
+    "symbol": "ChunkId/MentionId/EntityId/RelationId",
+    "smell": "Stable public handoff identifiers are branded S.String values, so empty string decodes as a valid ChunkId, MentionId, EntityId, or RelationId. Nearby core identifiers already use S.NonEmptyString.",
+    "proposedTarget": "Change the four identifier schemas to S.NonEmptyString.pipe(S.brand(...), $I.annoteSchema(...)). Effect v4 S.NonEmptyString is verified at .repos/effect-v4/packages/effect/src/Schema.ts:8420; in-package exemplars are DocumentId at packages/foundation/modeling/nlp/src/Core/Document.ts:44 and PatternId at packages/foundation/modeling/nlp/src/Core/Pattern.ts:411.",
+    "confidence": 0.88,
+    "mechanization": "assisted",
+    "roiRank": 4,
+    "exception": {
+      "reason": "Tightening handoff identifiers to non-empty IDs changes public handoff decode semantics used outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
+    "line": 229,
+    "symbol": "Provenance.timestamp",
+    "smell": "Provenance.timestamp is documented as epoch milliseconds at Contract.ts:211 but modeled as bare S.Finite, which accepts negative and fractional numbers.",
+    "proposedTarget": "Use S.Int.check(S.isGreaterThanOrEqualTo(0)) or the existing @beep/schema NonNegativeInt if the branded type is acceptable. S.Int and S.isGreaterThanOrEqualTo are verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7314; NonNegativeInt is defined at packages/foundation/modeling/schema/src/Number.ts:182. Extend the current confidence rejection test block at packages/foundation/modeling/nlp/test/Handoff/Contract.test.ts:119 with timestamp rejection cases.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Timestamp domain tightening changes the public handoff wire/decoded contract used outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
+    "line": 331,
+    "symbol": "Entity.canonicalName/mentions",
+    "smell": "Entity is documented as a canonical thing referred to by one or more mentions, but canonicalName is S.String and mentions is S.Array(MentionId), allowing an empty name and zero mentions.",
+    "proposedTarget": "Use canonicalName: S.NonEmptyString and mentions: S.NonEmptyArray(MentionId). S.NonEmptyArray is verified at .repos/effect-v4/packages/effect/src/Schema.ts:4533; array annotation style is shown at packages/foundation/modeling/schema/src/ArrayOf.ts:115. The existing AnnotatedDocument arbitrary proof at packages/foundation/modeling/nlp/test/Handoff/Contract.test.ts:15 should remain green if the generator can satisfy the non-empty mention invariant.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Non-empty entity names/mentions are handoff contract semantics with external consumers.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+    "line": 253,
+    "symbol": "NLPAnalysis.wordCount",
+    "smell": "NLPAnalysis.wordCount is modeled as S.Finite even though word counts are non-negative integers.",
+    "proposedTarget": "Change wordCount to S.Int.check(S.isGreaterThanOrEqualTo(0)). The graph package already has S.toArbitrary coverage for NLPAnalysis at packages/foundation/modeling/nlp/test/Graph/Schema.test.ts:23 and round-trips generated values at :53.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Word-count domain tightening changes public Graph schema semantics used outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+    "line": 312,
+    "symbol": "EntityNode.confidence/RelationNode.confidence",
+    "smell": "Graph confidence fields are optional S.Finite values, while the same package uses UnitInterval for handoff confidence and the shared schema package defines UnitInterval for probabilities/confidences.",
+    "proposedTarget": "Use S.optionalKey(UnitInterval) for EntityNode.confidence and RelationNode.confidence. The in-repo UnitInterval schema is packages/foundation/modeling/schema/src/UnitInterval.ts:32; Handoff confidence uses it at packages/foundation/modeling/nlp/src/Handoff/Contract.ts:226.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Graph confidence clamp/domain semantics require coordinated external Graph consumer updates.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+    "line": 313,
+    "symbol": "EntityNode.span/RelationNode subject-object spans",
+    "smell": "Graph span structs use inline S.Struct({ start: S.Finite, end: S.Finite }), accepting negative offsets, fractional offsets, and end values before start.",
+    "proposedTarget": "Reuse or mirror the handoff Span model: NonNegativeInt fields plus a start <= end check and custom toArbitrary annotation. The proven local exemplar is packages/foundation/modeling/nlp/src/Handoff/Contract.ts:151 through :198.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 4,
+    "exception": {
+      "reason": "Graph span domain tightening changes public annotation node semantics used outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+    "line": 280,
+    "symbol": "POSNode.position/LemmaNode.position/DependencyNode positions",
+    "smell": "Token positions and dependency distance are bare S.Finite values in POSNode, LemmaNode, and DependencyNode, so negative and fractional token indexes decode.",
+    "proposedTarget": "Use the existing TokenIndex schema for token positions where zero-based token indexes are intended, and S.Int.check(S.isGreaterThanOrEqualTo(0)) for DependencyNode.distance. TokenIndex is defined at packages/foundation/modeling/nlp/src/Core/Token.ts:84.",
+    "confidence": 0.82,
+    "mechanization": "assisted",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Graph position domain tightening changes public graph node constructors used outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+    "line": 86,
+    "symbol": "TextGraph timestamp fields",
+    "smell": "TextNode and annotation node timestamps are bare S.Finite values while the package describes them as creation timestamps supplied by a Clock-backed graph producer.",
+    "proposedTarget": "Introduce or reuse a TimestampMillis schema such as S.Int.check(S.isGreaterThanOrEqualTo(0)) and apply it to textNodeFields.timestamp plus POSNode, EntityNode, LemmaNode, DependencyNode, and RelationNode timestamp fields. Graph tests already create timestamp: 0 fixtures at packages/foundation/modeling/nlp/test/Graph/Schema.test.ts:32 and property-test generated graph payloads at :53.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2,
+    "exception": {
+      "reason": "Graph timestamp domain tightening changes public graph schemas used outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/modeling/nlp/src/Algebra/NLPMonoid.ts",
+    "line": 370,
+    "symbol": "NamedEntity.startPos/endPos",
+    "smell": "NamedEntity start/end positions are S.Finite values, allowing negative offsets, fractional offsets, and end positions before start.",
+    "proposedTarget": "Model these positions like the existing handoff Span: NonNegativeInt fields plus a start <= end check and toArbitrary annotation if S.toArbitrary coverage is added. The local span exemplar is packages/foundation/modeling/nlp/src/Handoff/Contract.ts:151 through :198.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3,
+    "exception": {
+      "reason": "NamedEntity span invariants require a checked span model/custom arbitrary sweep rather than a local scalar swap.",
+      "boundary": "named-entity span model boundary, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/nlp/src/Core/Token.ts",
+    "line": 207,
+    "symbol": "Token",
+    "smell": "Token.text and tags are broad strings, and Token start/end are only independently non-negative; the schema does not reject empty token text, empty tag strings, or end before start.",
+    "proposedTarget": "Use S.NonEmptyString for text and S.Array(S.NonEmptyString) for tags, and add a Token.check enforcing start <= end. If the check affects S.toArbitrary coverage, annotate a custom arbitrary like the Span arbitrary at packages/foundation/modeling/nlp/src/Handoff/Contract.ts:185.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Token text/tag and start/end precision tightening changes the exported Core token model consumed outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/modeling/nlp/src/Core/Vectorization.ts",
+    "line": 172,
+    "symbol": "BagOfWords/TermFrequency",
+    "smell": "Term-frequency fields are modeled as S.Finite and term keys/values as broad strings. Negative, fractional, and empty-string term frequencies can decode even though examples and monoid tests treat them as term counts.",
+    "proposedTarget": "Use a named Term schema such as S.NonEmptyString for term labels and S.Int.check(S.isGreaterThanOrEqualTo(0)) for BagOfWords values and TermFrequency.frequency. BagOfWords examples use integer counts at packages/foundation/modeling/nlp/src/Core/Vectorization.ts:159 and NLPMonoid tests generate non-negative integer counts at packages/foundation/modeling/nlp/test/Algebra/NLPMonoid.test.ts:74.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Vectorization map values are a public weighted-term model; integer count tightening conflicts with fractional term-frequency/TF-IDF use.",
+      "boundary": "vectorization weighted-term boundary, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/nlp/src/Handoff/Contract.ts",
+    "line": 336,
+    "symbol": "Entity.type/Relation.type",
+    "smell": "Entity.type and Relation.type are broad strings and can look like missing LiteralKit domains.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The handoff contract explicitly describes these fields as generic downstream-mapped discriminants at Contract.ts:307 and Contract.ts:344. Closing the vocabulary here would make the product-neutral handoff IR product-specific.",
+      "boundary": "Product-neutral NLP handoff discriminant boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+    "line": 87,
+    "symbol": "metadata/parameters extension bags",
+    "smell": "Graph metadata fields and similarity parameters use S.Record(S.String, S.Unknown), which is intentionally open and can look like an unbounded record smell.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These fields are producer/model extension bags for graph, ontology, and similarity metadata. The package cannot know the key/value vocabulary without binding to a downstream NLP backend.",
+      "boundary": "NLP producer metadata and model-parameter extension bags"
+    }
+  },
+  {
+    "ruleId": "SFV4-equivalence",
+    "file": "packages/foundation/modeling/nlp/src/Algebra/Monoid.ts",
+    "line": 707,
+    "symbol": "generic Monoid law equality callbacks",
+    "smell": "Generic monoid law helpers default to a === b equality callback and tests pass custom equality callbacks for arrays/functions.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The algebra law harness is schema-agnostic and has no Schema<A> parameter, so S.toEquivalence cannot be derived at this layer. Schema-derived equality is appropriate at concrete schema-modeled call sites such as DocumentStatistics.",
+      "boundary": "Generic algebra law harness"
+    }
+  }
+]

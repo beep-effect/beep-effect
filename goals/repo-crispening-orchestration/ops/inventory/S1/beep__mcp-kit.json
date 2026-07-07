@@ -1,0 +1,227 @@
+[
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 234,
+    "symbol": "ProjectWithinBudgetOptions.mintFetchableHandle",
+    "smell": "Function-typed interface member `(oversized: OversizedFieldProjection) => FetchableHandle` whose input AND output are S.Class schemas exported by the same file — a function contract not carried by a schema, and the identical function type is re-declared by hand in the consumer (packages/drivers/uspto-mcp/src/UsptoDocumentTiers.ts:148). Invisible to the landed SFV4-fn-schema detector, which only harvests exported FunctionDeclarations/ArrowFunctions (SchemaFirst.ts:1001-1011), never FunctionTypeNode members of exported interfaces.",
+    "proposedTarget": "Declare `export const MintFetchableHandle = Fn({ input: OversizedFieldProjection, output: FetchableHandle }).pipe($I.annoteSchema(...))` (Fn verified at packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:637 unary overload; .Type is FnType<Input[\"Type\"], Output[\"Type\"]> = (input: OversizedFieldProjection) => FetchableHandle per Fn.schema.ts:130-136) + `type MintFetchableHandle = typeof MintFetchableHandle.Type`, then reference it in ProjectWithinBudgetOptions and in uspto-mcp's duplicated options bag. Exemplar: colors Formatter (packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66). Type-only change — existing consumer lambdas remain assignable; consumers may optionally adopt .implementSync for runtime-validated minters. The uspto-mcp type-reference update crosses the foundation→drivers family boundary, so schedule it with the drivers wave or leave the duplicated literal in place until then (fence 8).",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 1.9,
+    "exception": {
+      "reason": "Remediation audit (@beep/mcp-kit): declined for this wave. The warranted Fn schema/type-reference cleanup crosses into @beep/uspto-mcp, which redeclares the same mintFetchableHandle function type in its own options bag. Per SPEC §5.4 and the orchestrator ripple override, this public-form/type-reference sweep is deferred to the family-close consumer pass rather than edited by the single @beep/mcp-kit writer.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-boundary-codec",
+    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+    "line": 103,
+    "symbol": "TierGateAuditRecord.occurredAt",
+    "smell": "ISO-8601 timestamp invariant lives only in prose (annotateKey description: 'ISO-8601 timestamp at which the outcome was decided') on a bare S.NonEmptyString field, with serialization hand-rolled at the construction site (`occurredAt: DateTime.formatIso(now)`, TierGate.ts:353) — ad-hoc serialization where a schema codec is a direct fit. Not JSON.parse, so the existing SFV4-boundary-codec detector cannot see it.",
+    "proposedTarget": "S.DateTimeUtcFromString (verified .repos/effect-v4/packages/effect/src/Schema.ts:12024: decodes an ISO string to DateTime.Utc, encodes DateTime.Utc back to a UTC ISO-8601 string), letting fromApprovedToolsPolicy pass `now` directly and the codec own ISO formatting. Judgment-tier trade-off: the class doc deliberately promises 'a plain JSON-serializable record so it can be stored directly in the UsageRecord.metadata jsonb column' — moving to DateTime.Utc in Type requires consumers to S.encode before persisting (doctrinally correct encode-at-boundary, but a stated-contract change). Type-stable alternative: keep the string field but make the invariant executable with an ISO-8601 refinement/check so wire shape and Type are untouched. §5.3 parity: DateTime.formatIso vs DateTimeUtcFromString encode output must be proven byte-identical with fixtures before the codec form lands.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 0.9,
+    "exception": {
+      "reason": "Remediation audit (@beep/mcp-kit): declined. TierGateAuditRecord is intentionally a plain JSON-serializable audit record for a jsonb metadata sink; the proposed S.DateTimeUtcFromString form would change the public decoded Type from string to DateTime.Utc and require consumer persistence encode discipline. The package-local safe absorption for this wave was toolCallId absence/non-empty handling plus round-trip parity; timestamp typing needs a dedicated public-form sweep.",
+      "boundary": "public audit-record Type/wire boundary; DateTime public-form change deferred"
+    }
+  },
+  {
+    "ruleId": "SFV4-boundary-codec",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 393,
+    "symbol": "FetchableHandle.expiresAt",
+    "smell": "Same ISO-8601-in-prose smell as TierGateAuditRecord.occurredAt: 'ISO-8601 timestamp after which the handle is no longer fetchable' carried only by an annotateKey description on S.NonEmptyString; the TTL expiry semantics (a DateTime, not a string) live off-schema, with the consumer hand-formatting via DateTime at mint time (packages/drivers/uspto-mcp/src/UsptoHandlers.ts:59-70).",
+    "proposedTarget": "S.DateTimeUtcFromString (Schema.ts:12024) so the codec owns ISO formatting and Type carries DateTime.Utc TTL semantics. Higher ripple than occurredAt: FetchableHandle.make call sites exist in @beep/uspto-mcp (UsptoHandlers.ts:67-70, UsptoDocumentTiers.ts JSDoc/impl) — a public-form change crossing the foundation→drivers family boundary, so per §5.4/fence 8 either schedule with the drivers wave or use the Type-stable ISO refinement alternative in the foundation wave.",
+    "confidence": 0.45,
+    "mechanization": "judgment",
+    "roiRank": 0.7,
+    "exception": {
+      "reason": "Remediation audit (@beep/mcp-kit): declined for this wave. The proposed DateTime codec keeps the encoded wire string but changes the public decoded Type; @beep/uspto-mcp currently mints FetchableHandle values with string expiresAt fields. Per SPEC §5.4 and the orchestrator ripple override, the typed-time consumer sweep is deferred.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/mcp-kit/src/SourceAuth.ts",
+    "line": 155,
+    "symbol": "SourceAuthDecision",
+    "smell": "Exported tagged-union type alias (Mount/Vanish) — surface-level match for the tagged-union-should-be-schema smell (invisible to lint via the SchemaFirst.ts:1622 UnionType skip), audited and rejected as not actionable.",
+    "proposedTarget": "None while excepted. A hypothetical S.TaggedUnion({ Mount: { credential: S.Option(S.Redacted(S.String)) }, Vanish: {} }) is representable (S.Option verified Schema.ts:8492, S.Redacted Schema.ts:8910) but was rejected.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "In-process composition-time decision whose Mount payload is a live Redacted.Redacted<string> secret handle freshly resolved from Config.redacted — never decoded from or encoded to any wire. Schema-ifying would mint an encode path for a secret credential (SPEC fence 4, no trust-boundary weakening) with zero decode boundary in sight; sole consumer (ToolkitComposition.composeGatedLayers) branches on _tag exactly once.",
+      "boundary": "Composition-time mount/vanish decision carrying a Config-resolved Redacted credential; consumed only inside composeGatedLayers."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 75,
+    "symbol": "FieldTierSet",
+    "smell": "Exported interface — surface-level schema-first-inventory match, audited and rejected: its three members are S.Struct schema VALUES generic over S.Struct.Fields.",
+    "proposedTarget": "None — type-level utility carve-out. A container of schemas cannot itself be a data schema; the tiers it names are already schemas.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Type-level utility / schema-container shape (prompt carve-out: 'type-level utilities'): generic interface whose members are S.Struct<Fields> schema values anchoring the three-tier constraint; schema-as-truth is already satisfied by the tier schemas it carries.",
+      "boundary": "Generic schema-container contract for defineFieldTiers/projectFieldTier."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+    "line": 186,
+    "symbol": "ToolCallRequest",
+    "smell": "Exported interface describing the gate's dispatch request — surface-level match, audited and rejected: `tool` is a live effect/unstable/ai Tool runtime handle (AiTool.Any with annotations Context), not data.",
+    "proposedTarget": "None — runtime-handle/port carve-out (fence 1); matches detectInterfaceReason's non-schema-signals screen.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Port-interface carve-out: carries a 3rd-party runtime handle (AiTool.Any, whose annotations are a Context/ServiceMap) that has no schema representation; the schema-representable projection of this request (tool name, toolCallId, outcome) is already captured by the TierGateAuditRecord S.Class.",
+      "boundary": "effect/unstable/ai Tool dispatch seam consumed by TierGateShape.evaluate and dispatchWithTierGate."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+    "line": 224,
+    "symbol": "TierGateShape",
+    "smell": "Exported interface with a single Effect-returning function member `evaluate` — surface-level match, audited and rejected: this is the Context.Service shape for the TierGate tag (TierGate.ts:265).",
+    "proposedTarget": "None — SPEC fence 1 (service-contract carve-out). Stays an interface.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Service-contract carve-out (SPEC Non-Goals fence 1): Context.Service shape with an Effect-returning method; crispening does not schema-ify service contracts. The data both directions of evaluate carry (TierGateVerdict, TierGateAuditRecord) is already schema-modeled in the same file.",
+      "boundary": "Context.Service shape for the TierGate service tag."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+    "line": 372,
+    "symbol": "TierGateDispatchResult",
+    "smell": "Exported generic tagged-union type alias (Dispatched/Refused) — surface-level match (invisible to lint via the UnionType skip), audited and rejected: generic over the wrapped effect's success type A.",
+    "proposedTarget": "None — generic type-level utility carve-out. Contrast FieldProjectionOutcome (concrete, fully schema-representable, flagged actionable): here `value: A` is the arbitrary success of a caller-supplied Effect with no schema available or warranted.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Type-level utility carve-out: parametrically generic result wrapper over an arbitrary wrapped-effect success type; the kit cannot demand a schema for A without ceasing to be a generic dispatch wrapper. The auditable payload (audit: TierGateAuditRecord) is already an S.Class on both variants.",
+      "boundary": "Generic return contract of dispatchWithTierGate over caller-supplied Effect<A, E, R>."
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/mcp-kit/src/ToolkitComposition.ts",
+    "line": 34,
+    "symbol": "GatedLayer",
+    "smell": "Exported interface pairing a SourceAuthRegistration with a Layer — surface-level match, audited and rejected: `layer` is a Layer.Layer runtime handle.",
+    "proposedTarget": "None — runtime-handle/port carve-out (fence 1). The data half of the pair (registration) is already the SourceAuthRegistration S.Class.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Port-interface carve-out: carries a Layer.Layer<ROut, E, RIn> runtime handle, a non-schema signal per detectInterfaceReason's screen; the schema-representable member is already schema-first (SourceAuthRegistration).",
+      "boundary": "Composition-time pairing consumed by composeGatedLayers; file exports no schemas (not schema-modeled)."
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/mcp-kit/src/ApiKeyRequired.ts",
+    "line": 102,
+    "symbol": "apiKeyRequiredFailure",
+    "smell": "The only export in this package the landed SFV4-fn-schema detector actually fires on: non-generic exported arrow function with an inline parameter TypeLiteral ({ tool, registration }) in an S.Class-modeled file (matches fnSchemaEntryFromFunctionLike, SchemaFirst.ts:1046-1076). Audited and rejected.",
+    "proposedTarget": "Hypothetical Fn({ input: S.Struct({ tool: S.NonEmptyString, registration: SourceAuthRegistration }), output: ApiKeyRequiredFailure }).implementSync(...) — rejected.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.1,
+    "exception": {
+      "reason": "Constructor-derivation helper whose body is a single validating ApiKeyRequiredFailure.make (Bottom.make, Schema.ts:~205-211) on the same-file S.Class: params are already schema-carried (registration IS the SourceAuthRegistration S.Class; tool is validated as S.NonEmptyString by make), and the helper's whole value is deriving envVar from the registration and pinning the error tag. Fn-wrapping adds decode-throwing invocation semantics (Fn.schema.ts decodeInputSync -> Result.getOrThrowWith) with no truth gain — same audit outcome as colors createColors.",
+      "boundary": "Schema-typed constructor helper (return is an S.Class instance built via .make); consumed by @beep/uspto-mcp UsptoHandlers.ts:45."
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 108,
+    "symbol": "defineFieldTiers",
+    "smell": "Exported constructor-style function in a schema-modeled file — naive SFV4-fn-schema surface hit (the landed detector skips it: generic, SchemaFirst.ts:1051). Audited and rejected.",
+    "proposedTarget": "None — generic identity constructor anchoring the FieldTierSet type constraint; returns its schema-container argument unchanged.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Generic-utility escape hatch (prompt carve-out list: 'generic utilities'): a documented identity constructor over three S.Struct schema values; there is no data contract to move into a schema — its arguments ARE schemas.",
+      "boundary": "Type-level anchoring constructor for FieldTierSet."
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 134,
+    "symbol": "stripNulls",
+    "smell": "Exported Record<string, unknown> -> Record<string, unknown> utility in a schema-modeled file — naive surface hit (representative of the dynamic-record projection family: stripNulls, projectFieldTier:165, and projectWithinBudget's value parameter:285, all rejected on the same grounds). Audited and rejected for S1; noting the S2 overlap: null/undefined-stripping is normalization living outside a codec, which is SFV4-normalization's lane if S2 judges the payloads codec-fit.",
+    "proposedTarget": "None for S1 — the payloads are arbitrary tool-result records with no fixed schema (any tier of any FieldTierSet); UnknownRecord already names the type-level contract conceptually, and Fn-wrapping adds decode-throw semantics with no truth gain.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Dynamic-payload utility escape hatch: operates uniformly over records whose shape is intentionally open (the projector must accept any conceptual payload projected through any consumer-supplied FieldTierSet); there is no available or plainly warranted schema for the value parameter beyond the unconstraining UnknownRecord.",
+      "boundary": "Generic JSON-size-reduction plumbing between consumer-owned tier schemas and the MCP tool-result envelope."
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 186,
+    "symbol": "estimateJsonSize",
+    "smell": "Exported unknown -> number helper using raw JSON.stringify in a schema-modeled file — naive surface hit. Audited and rejected for S1: stringify-as-size-proxy, not parsing; no schema-fit decode boundary exists (input is deliberately unknown).",
+    "proposedTarget": "None for S1. (The raw JSON.stringify itself is native-runtime-law territory owned by goals/effect-native-migration per fence 7, not an S1 boundary-codec finding — SFV4-boundary-codec targets JSON.parse near schema-fit boundaries.)",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Size-estimation proxy over arbitrary values: no decode happens, no schema is bypassed, and the number it returns is a budget heuristic rather than a domain payload. Fn({ input: S.Unknown, output: NonNegativeInt }) would validate nothing the type system does not already guarantee.",
+      "boundary": "Token/size-budget heuristic used by projectWithinBudget and @beep/uspto-mcp."
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 357,
+    "symbol": "toColumnarEnvelope",
+    "smell": "Exported constructor-style function in a schema-modeled file — naive surface hit. Audited and rejected: returns a schema-constructed ColumnarEnvelope.make(...) instance.",
+    "proposedTarget": "None — the return contract IS the ColumnarEnvelope S.Class; input is the same open dynamic-record family as stripNulls.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Schema-typed function contract (colors createColors precedent): the output is built via the validating ColumnarEnvelope.make constructor, so the invariant already lives on the schema; the row input is intentionally open (any projected record shape).",
+      "boundary": "Columnar reshaping constructor whose return is an S.Class instance built via .make; consumed by @beep/uspto-mcp UsptoDocumentTiers."
+    }
+  },
+  {
+    "ruleId": "SFV4-boundary-codec",
+    "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+    "line": 219,
+    "symbol": "registerSanitizedToolkit",
+    "smell": "Raw JSON.stringify(result.encodedResult) into CallToolResult content text — textual boundary-codec surface hit. Audited and rejected: this line byte-for-byte mirrors upstream McpServer.registerToolkit's CallToolResult mapping (effect/unstable/ai/McpServer.ts:717-734), which sanitizedToolkit must replicate because upstream offers no dispatch-wrapping seam.",
+    "proposedTarget": "None while the upstream mirror is required. If effect/unstable/ai ever grows a dispatch-wrapping hook, this whole hand-mirrored registration loop (including the stringify) should be deleted in favor of wrapping upstream registration.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "3rd-party boundary-adapter escape hatch: `encodedResult` is already the schema-ENCODED output of the toolkit's own success schema (encoding happens upstream in Toolkit dispatch), so no validation is bypassed — the stringify only mirrors the wire envelope upstream produces for content[].text parity. Diverging from upstream's exact mapping would be a behavior change in a module whose contract is 'same registration semantics, only the span wrapping differs'.",
+      "boundary": "Hand-mirrored McpServer.registerToolkit loop (upstream effect/unstable/ai offers no dispatch-wrapping seam; mirror verified against McpServer.ts:711-758)."
+    }
+  }
+]

@@ -1,0 +1,17 @@
+[
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/law-practice/server/test/LawPracticeServer.test.ts",
+    "line": 20,
+    "symbol": "law-practice server integration fixtures",
+    "smell": "Detector candidate: the server integration tests use fixed model-output JSON, a synthetic office-action text, and exact source-anchor/lifecycle assertions.",
+    "proposedTarget": "None - keep these static integration fixtures.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The server package defines Layer wiring only and no local reusable schemas; these fixtures prove provider-layer composition, deterministic extraction alignment, source re-slicing, typed failure routing, and claim lifecycle behavior.",
+      "boundary": "law-practice server integration and layer wiring fixtures"
+    }
+  }
+]

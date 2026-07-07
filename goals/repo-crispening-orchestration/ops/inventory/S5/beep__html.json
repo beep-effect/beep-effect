@@ -1,0 +1,92 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
+    "line": 187,
+    "symbol": "StandardGlobalAttributes.id/lang/nonce token fields",
+    "smell": "Several standard global attributes with known narrower domains remain broad optional strings: id, lang, nonce, itemref, itemtype, class, part, and slot. The same file already uses LiteralKit or numeric schemas where the WHATWG/webref value set is finite.",
+    "proposedTarget": "Introduce named HTML value schemas for the reusable narrow domains, for example HtmlId as S.NonEmptyString with a whitespace check, HtmlLanguageTag using a local/shared language-tag schema, and token-list helpers for class/part/itemref. S.NonEmptyString is verified in .repos/effect-v4/packages/effect/src/Schema.ts:8420; packages/foundation/modeling/rdf/src/Rdf.ts:329 is an in-repo language-tag exemplar.",
+    "confidence": 0.62,
+    "mechanization": "assisted",
+    "roiRank": 2,
+    "exception": {
+      "reason": "The candidate fields are WHATWG HTML global-attribute wire values, but the proposed narrow domains are not one reusable invariant: `lang` needs an HTML/BCP47 decision distinct from RDF LanguageTag, `class`/`part`/`itemref` are space-token lists, and `nonce` has deployment-specific generation semantics. Applying ad-hoc brands here would tighten public element types without a complete HTML value-domain model.",
+      "boundary": "WHATWG HTML global attribute value-domain design"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
+    "line": 173,
+    "symbol": "StandardGlobalAttributes free-form wire attributes",
+    "smell": "Broad string attributes such as style, title, exportparts, headingreset, is, itemid, popovertarget, and raw text-ish globals can look like missed schema precision in an S5 sweep.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.8,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These attributes are serialized HTML global-attribute wire values or extension hooks whose precise language is CSS, custom-element state, DOM IDs, or page-specific text rather than a closed package-local domain.",
+      "boundary": "WHATWG HTML global attribute wire surface"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
+    "line": 218,
+    "symbol": "DatasetAttribute.dataset",
+    "smell": "dataset is modeled as S.Record(S.String, S.String), which is intentionally broad and can be mistaken for an unbounded map smell.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The file documents data-* as an open-ended HTMLElement.dataset mirror at Html.attributes.ts:14 and Html.attributes.ts:211. Enumerating keys would be product-specific.",
+      "boundary": "Open-ended data-* / HTMLElement.dataset attribute bag"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
+    "line": 285,
+    "symbol": "AriaAttributes",
+    "smell": "role and aria-* values are optional strings. Some individual ARIA attributes have constrained vocabularies, but the package currently models the universal serialized ARIA attribute surface.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.78,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The boundary here is the WAI-ARIA content-attribute wire surface. Fully typing each aria-* value requires an ARIA-specific vocabulary/modeling effort outside S5 reuse-only discovery.",
+      "boundary": "ARIA content attribute surface"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
+    "line": 374,
+    "symbol": "EventHandlerAttributes",
+    "smell": "All on* event-handler attributes are optional strings, which can look like overly broad primitive modeling.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "HTML event-handler content attributes are arbitrary JavaScript source text on the wire. Validation and sanitization belong at renderer/trust boundaries, not in this AST schema.",
+      "boundary": "HTML event-handler attribute wire surface"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/modeling/html/test/Html.test.ts",
+    "line": 98,
+    "symbol": "ELEMENT_META snapshot fixtures",
+    "smell": "ELEMENT_META coverage is snapshot/golden style rather than property-based.",
+    "proposedTarget": "None - keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The count and conformance tests are deliberate golden guards for the version-pinned WHATWG/webref dataset. A schema-derived property law would be additive, not a replacement for this drift guard.",
+      "boundary": "Pinned webref metadata drift guard"
+    }
+  }
+]
