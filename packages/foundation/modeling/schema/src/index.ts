@@ -270,6 +270,11 @@ export * from "./PascalStr.ts";
  * @since 0.0.0
  * @category validation
  */
+export * from "./Port.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
 export * from "./PosixPath.ts";
 /**
  * @since 0.0.0

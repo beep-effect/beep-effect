@@ -41,20 +41,15 @@ layer(NodeFileSystem.layer)("Root", (it) => {
     it.effect(
       "should fail with NoSuchFileError when no marker is found",
       Effect.fn(function* () {
-        const fs = yield* Fs.FileSystem;
-        // Create an isolated temp directory with no markers
-        const tmpDir = yield* fs.makeTempDirectory({
-          prefix: "beep-repo-utils-root-",
+        const markerFreeFileSystem = Fs.makeNoop({
+          exists: () => Effect.succeed(false),
         });
-        const subDir = `${tmpDir}/deep/nested/dir`;
-        yield* fs.makeDirectory(subDir, { recursive: true });
 
-        const result = yield* findRepoRoot(subDir).pipe(
+        const result = yield* findRepoRoot("/marker-free/deep/nested/dir").pipe(
+          Effect.provideService(Fs.FileSystem, markerFreeFileSystem),
           Effect.catchTag("NoSuchFileError", (e) => Effect.succeed(`caught: ${e._tag}`))
         );
         expect(result).toBe("caught: NoSuchFileError");
-
-        yield* fs.remove(tmpDir, { recursive: true });
       })
     );
 
