@@ -573,8 +573,10 @@ const writeInventoryDocument = Effect.fn("writeInventoryDocument")(function* (do
  * @category utilities
  * @since 0.0.0
  */
-export const makeSchemaFirstOwnerResolver = Effect.fn("makeSchemaFirstOwnerResolver")(function* () {
-  const workspaces = yield* resolveWorkspaceDirs(process.cwd());
+export const makeSchemaFirstOwnerResolver = Effect.fn("makeSchemaFirstOwnerResolver")(function* (
+  root?: undefined | string
+) {
+  const workspaces = yield* resolveWorkspaceDirs(root ?? process.cwd());
   const workspaceEntries = pipe(
     HashMap.toEntries(workspaces),
     A.map(([packageName, absolutePath]) => [packageName, toPosixPath(absolutePath)] as const),
@@ -1407,7 +1409,19 @@ const isSchemaCodecCallExpression = (callExpression: import("ts-morph").CallExpr
   );
 };
 
-const literalMemberEquals = <const T extends string>(members: readonly T[], candidate: string): boolean =>
+/**
+ * True when the candidate equals one of the literal member names.
+ *
+ * @example
+ * ```ts
+ * import { literalMemberEquals } from "@beep/repo-cli/commands/Lint"
+ *
+ * console.log(literalMemberEquals(["is", "make"], "is")) // true
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+export const literalMemberEquals = <const T extends string>(members: readonly T[], candidate: string): boolean =>
   A.some(members, (member) => Str.Equivalence(member, candidate));
 
 const isSchemaArbitraryCallExpression = (callExpression: import("ts-morph").CallExpression): boolean => {

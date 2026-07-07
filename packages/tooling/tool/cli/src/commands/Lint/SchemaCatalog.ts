@@ -6,6 +6,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { FsUtils } from "@beep/repo-utils/FsUtils";
+import { findRepoRoot } from "@beep/repo-utils/Root";
 import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
@@ -13,7 +15,10 @@ import { Console, Effect, FileSystem, Order, Path, pipe, SchemaGetter } from "ef
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
-import { Node, SyntaxKind } from "ts-morph";
+import { Node, Project, SyntaxKind } from "ts-morph";
+import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
+import { optionalProp } from "../../internal/cli/OptionRecord.js";
+import { literalMemberEquals, makeSchemaFirstOwnerResolver, SchemaFirstIncludedGlobs } from "./SchemaFirst.ts";
 import type {
   CallExpression,
   ClassDeclaration,
@@ -23,9 +28,6 @@ import type {
   SourceFile,
   VariableDeclaration,
 } from "ts-morph";
-import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { optionalProp } from "../../internal/cli/OptionRecord.js";
-import { makeSchemaFirstOwnerResolver, makeSchemaFirstProject } from "./SchemaFirst.ts";
 
 const $I = $RepoCliId.create("commands/Lint/SchemaCatalog");
 const SCHEMA_CATALOG_PATH = "standards/schema-catalog.generated.jsonc";
@@ -175,9 +177,6 @@ const byEntryPathAndSymbolAscending: Order.Order<SchemaCatalogEntry> = Order.map
 const sortCatalogEntries: (entries: ReadonlyArray<SchemaCatalogEntry>) => ReadonlyArray<SchemaCatalogEntry> =
   A.sort(byEntryPathAndSymbolAscending);
 
-const literalMemberEquals = <const T extends string>(members: readonly T[], candidate: string): boolean =>
-  A.some(members, (member) => Str.Equivalence(member, candidate));
-
 const literalTextFromNode = (node: Node | undefined): O.Option<string> => {
   if (node === undefined) {
     return O.none();
@@ -266,86 +265,81 @@ const expressionStartsWithSchemaPrimitive = (node: Node): boolean => {
   return isSchemaPrimitivePropertyAccess(callTarget.getExpression());
 };
 
+const SCHEMA_CONST_MEMBER_NAMES = [
+  "Array",
+  "Boolean",
+  "Finite",
+  "Int",
+  "Literal",
+  "Null",
+  "Number",
+  "NumberFromString",
+  "OptionFromNullOr",
+  "OptionFromNullishOr",
+  "OptionFromOptional",
+  "OptionFromOptionalKey",
+  "Record",
+  "String",
+  "TemplateLiteral",
+  "Tuple",
+  "Undefined",
+  "Unknown",
+  "UnknownFromJsonString",
+] as const;
+
+const SCHEMA_TRANSFORMATION_MEMBER_NAMES = [
+  "transform",
+  "transformOrFail",
+  "transformOptional",
+  "fromJsonString",
+] as const;
+
+type SchemaKindRule = {
+  readonly kind: typeof SchemaCatalogEntryKind.Type;
+  readonly matches: (calls: ReadonlyArray<CallExpression>, node: Node) => boolean;
+};
+
+// Ordered classification rules: the first matching rule wins, so the more
+// specific declaration shapes stay ahead of the broad schema-const fallback.
+const SCHEMA_KIND_RULES: ReadonlyArray<SchemaKindRule> = [
+  {
+    kind: "tagged-error",
+    matches: (calls) =>
+      hasIdentifierCall(calls, ["TaggedErrorClass", "StatusCauseTaggedErrorClass"]) ||
+      hasPropertyAccessCall(calls, "S", ["TaggedErrorClass"]),
+  },
+  { kind: "error-class", matches: (calls) => hasPropertyAccessCall(calls, "S", ["ErrorClass"]) },
+  { kind: "tagged-class", matches: (calls) => hasPropertyAccessCall(calls, "S", ["TaggedClass"]) },
+  { kind: "schema-class", matches: (calls) => hasPropertyAccessCall(calls, "S", ["Class"]) },
+  { kind: "literal-kit", matches: (calls) => hasIdentifierCall(calls, ["LiteralKit", "MappedLiteralKit"]) },
+  { kind: "tagged-union", matches: (calls) => hasPropertyAccessCall(calls, "S", ["TaggedUnion", "toTaggedUnion"]) },
+  { kind: "union", matches: (calls) => hasPropertyAccessCall(calls, "S", ["Union"]) },
+  { kind: "tagged-struct", matches: (calls) => hasPropertyAccessCall(calls, "S", ["TaggedStruct"]) },
+  { kind: "struct-const", matches: (calls) => hasPropertyAccessCall(calls, "S", ["Struct"]) },
+  { kind: "brand", matches: (calls) => hasPropertyAccessCall(calls, "S", ["brand", "fromBrand"]) },
+  {
+    kind: "codec",
+    matches: (calls) =>
+      hasPropertyAccessCall(calls, "S", ["decodeTo", "encodeTo", "fromJsonString"]) ||
+      hasPropertyAccessCall(calls, "SchemaTransformation", SCHEMA_TRANSFORMATION_MEMBER_NAMES),
+  },
+  {
+    kind: "schema-const",
+    matches: (calls, node) =>
+      hasPropertyAccessCall(calls, "S", SCHEMA_CONST_MEMBER_NAMES) || expressionStartsWithSchemaPrimitive(node),
+  },
+];
+
 const schemaKindFromCalls = (
   calls: ReadonlyArray<CallExpression>,
   node: Node
-): O.Option<typeof SchemaCatalogEntryKind.Type> => {
-  if (hasIdentifierCall(calls, ["TaggedErrorClass", "StatusCauseTaggedErrorClass"])) {
-    return O.some("tagged-error");
-  }
-  if (hasPropertyAccessCall(calls, "S", ["TaggedErrorClass"])) {
-    return O.some("tagged-error");
-  }
-  if (hasPropertyAccessCall(calls, "S", ["ErrorClass"])) {
-    return O.some("error-class");
-  }
-  if (hasPropertyAccessCall(calls, "S", ["TaggedClass"])) {
-    return O.some("tagged-class");
-  }
-  if (hasPropertyAccessCall(calls, "S", ["Class"])) {
-    return O.some("schema-class");
-  }
-  if (hasIdentifierCall(calls, ["LiteralKit", "MappedLiteralKit"])) {
-    return O.some("literal-kit");
-  }
-  if (hasPropertyAccessCall(calls, "S", ["TaggedUnion", "toTaggedUnion"])) {
-    return O.some("tagged-union");
-  }
-  if (hasPropertyAccessCall(calls, "S", ["Union"])) {
-    return O.some("union");
-  }
-  if (hasPropertyAccessCall(calls, "S", ["TaggedStruct"])) {
-    return O.some("tagged-struct");
-  }
-  if (hasPropertyAccessCall(calls, "S", ["Struct"])) {
-    return O.some("struct-const");
-  }
-  if (hasPropertyAccessCall(calls, "S", ["brand", "fromBrand"])) {
-    return O.some("brand");
-  }
-  if (
-    hasPropertyAccessCall(calls, "S", ["decodeTo", "encodeTo", "fromJsonString"]) ||
-    hasPropertyAccessCall(calls, "SchemaTransformation", [
-      "transform",
-      "transformOrFail",
-      "transformOptional",
-      "fromJsonString",
-    ])
-  ) {
-    return O.some("codec");
-  }
-  if (
-    hasPropertyAccessCall(calls, "S", [
-      "Array",
-      "Boolean",
-      "Finite",
-      "Int",
-      "Literal",
-      "Null",
-      "Number",
-      "NumberFromString",
-      "OptionFromNullOr",
-      "OptionFromNullishOr",
-      "OptionFromOptional",
-      "OptionFromOptionalKey",
-      "Record",
-      "String",
-      "TemplateLiteral",
-      "Tuple",
-      "Undefined",
-      "Unknown",
-      "UnknownFromJsonString",
-    ]) ||
-    expressionStartsWithSchemaPrimitive(node)
-  ) {
-    return O.some("schema-const");
-  }
-  return O.none();
-};
+): O.Option<typeof SchemaCatalogEntryKind.Type> =>
+  pipe(
+    A.findFirst(SCHEMA_KIND_RULES, (rule) => rule.matches(calls, node)),
+    O.map((rule) => rule.kind)
+  );
 
-const initializerFromIdentifier = (
-  identifier: Identifier
-): O.Option<Expression> => {
+const initializerFromIdentifier = (identifier: Identifier): O.Option<Expression> => {
   const declarations = identifier.getSymbol()?.getDeclarations() ?? A.empty<Node>();
   for (const declaration of declarations) {
     if (Node.isVariableDeclaration(declaration)) {
@@ -366,10 +360,7 @@ const pipeReceiverExpression = (expression: Expression): O.Option<Expression> =>
   return O.some(callTarget.getExpression());
 };
 
-const schemaKindFromExpression = (
-  expression: Expression,
-  depth = 0
-): O.Option<typeof SchemaCatalogEntryKind.Type> => {
+const schemaKindFromExpression = (expression: Expression, depth = 0): O.Option<typeof SchemaCatalogEntryKind.Type> => {
   const directKind = schemaKindFromCalls(callExpressionsIn(expression), expression);
   if (O.isSome(directKind)) {
     return directKind;
@@ -505,6 +496,11 @@ const catalogEntryFromClassDeclaration = (
   file: string,
   owner: string
 ): O.Option<SchemaCatalogEntry> => {
+  // The catalog is the exported crispened surface; private helper schemas
+  // (module-local bases, internal codecs) stay out of it.
+  if (!declaration.isExported()) {
+    return O.none();
+  }
   const symbol = declaration.getName();
   const heritageExpression = declaration.getExtends()?.getExpression();
   if (symbol === undefined || heritageExpression === undefined) {
@@ -548,6 +544,9 @@ const collectCatalogEntriesFromSourceFile = (
   }
 
   for (const variableStatement of sourceFile.getVariableStatements()) {
+    if (!variableStatement.isExported()) {
+      continue;
+    }
     for (const declaration of variableStatement.getDeclarations()) {
       const entry = catalogEntryFromVariableDeclaration(declaration, file, owner);
       if (O.isSome(entry)) {
@@ -574,12 +573,28 @@ const collectCatalogEntriesFromSourceFile = (
 export const generateSchemaCatalogDocument = Effect.fn("SchemaCatalog.generateDocument")(function* () {
   return yield* Effect.gen(function* () {
     const path = yield* Path.Path;
-    const ownerResolver = yield* makeSchemaFirstOwnerResolver();
-    const project = yield* makeSchemaFirstProject();
+    const fsUtils = yield* FsUtils;
+    const repoRoot = yield* findRepoRoot();
+    const ownerResolver = yield* makeSchemaFirstOwnerResolver(repoRoot);
+    // Enumerate through FsUtils so the scan is anchored at the repo root even
+    // when the command runs from a workspace subdirectory (ts-morph resolves
+    // relative globs against the process cwd).
+    const sourcePaths = yield* fsUtils.globFiles(SchemaFirstIncludedGlobs, {
+      absolute: true,
+      cwd: repoRoot,
+      ignore: "**/docs/**",
+    });
+    const project = new Project({
+      skipAddingFilesFromTsConfig: true,
+      tsConfigFilePath: path.join(repoRoot, "tsconfig.json"),
+    });
+    for (const sourcePath of sourcePaths) {
+      project.addSourceFileAtPath(sourcePath);
+    }
     const entries = A.empty<SchemaCatalogEntry>();
 
     for (const sourceFile of project.getSourceFiles()) {
-      const filePath = toPosixPath(path.relative(process.cwd(), sourceFile.getFilePath()));
+      const filePath = toPosixPath(path.relative(repoRoot, sourceFile.getFilePath()));
       if (isExcludedFile(filePath)) {
         continue;
       }
@@ -635,7 +650,8 @@ export const generateSchemaCatalogText = Effect.fn("SchemaCatalog.generateText")
 
 const schemaCatalogPath = Effect.fn("SchemaCatalog.path")(function* () {
   const path = yield* Path.Path;
-  return path.resolve(process.cwd(), SCHEMA_CATALOG_PATH);
+  const repoRoot = yield* findRepoRoot();
+  return path.resolve(repoRoot, SCHEMA_CATALOG_PATH);
 });
 
 const writeSchemaCatalog = Effect.fn("SchemaCatalog.write")(function* (content: string) {

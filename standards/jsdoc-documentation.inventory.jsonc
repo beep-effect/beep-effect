@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-07-07T15:23:19.569Z",
+  "generatedAt": "2026-07-07T16:08:39.856Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 78,
     "publicModules": 1616,
-    "publicExports": 14444,
+    "publicExports": 14445,
     "openModules": 129,
     "openExports": 2205,
     "missingExportExamples": 2011,
@@ -16241,7 +16241,7 @@
         "srcDir": "src",
         "sourceFileCount": 102,
         "publicModuleCount": 100,
-        "publicExportCount": 652
+        "publicExportCount": 653
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -17610,7 +17610,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 21,
+          "exportCount": 22,
           "remediationStatus": "resolved"
         },
         {
@@ -27690,8 +27690,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 48,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-48-schemacatalogentrykind",
+          "line": 50,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-50-schemacatalogentrykind",
           "currentTags": [
             "@example",
             "@category",
@@ -27717,8 +27717,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 79,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-79-schemacatalogentry",
+          "line": 81,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-81-schemacatalogentry",
           "currentTags": [
             "@example",
             "@category",
@@ -27739,8 +27739,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 105,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-105-schemacatalogdocument",
+          "line": 107,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-107-schemacatalogdocument",
           "currentTags": [
             "@example",
             "@category",
@@ -27761,8 +27761,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 128,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-128-schemacatalogoptions",
+          "line": 130,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-130-schemacatalogoptions",
           "currentTags": [
             "@example",
             "@category",
@@ -27783,8 +27783,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 152,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-152-schemacatalogsummary",
+          "line": 154,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-154-schemacatalogsummary",
           "currentTags": [
             "@example",
             "@category",
@@ -27805,8 +27805,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 574,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-574-generateschemacatalogdocument",
+          "line": 573,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-573-generateschemacatalogdocument",
           "currentTags": [
             "@example",
             "@category",
@@ -27827,8 +27827,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 610,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-610-renderschemacatalogdocument",
+          "line": 625,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-625-renderschemacatalogdocument",
           "currentTags": [
             "@example",
             "@category",
@@ -27849,8 +27849,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 631,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-631-generateschemacatalogtext",
+          "line": 646,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-646-generateschemacatalogtext",
           "currentTags": [
             "@example",
             "@category",
@@ -27871,8 +27871,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 682,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-682-runschemacatalog",
+          "line": 698,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-698-runschemacatalog",
           "currentTags": [
             "@example",
             "@category",
@@ -27893,8 +27893,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaCatalog.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
-          "line": 716,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-716-lintschemacatalogcommand",
+          "line": 732,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemacatalog-ts-732-lintschemacatalogcommand",
           "currentTags": [
             "@example",
             "@category",
@@ -28185,8 +28185,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 614,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-614-makeschemafirstproject",
+          "line": 616,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-616-makeschemafirstproject",
           "currentTags": [
             "@example",
             "@category",
@@ -28207,8 +28207,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 654,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-654-schemacrispeningfamilyforfile",
+          "line": 656,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-656-schemacrispeningfamilyforfile",
           "currentTags": [
             "@param",
             "@returns",
@@ -28231,8 +28231,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 697,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-697-isschemacrispeningpolicyexempt",
+          "line": 699,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-699-isschemacrispeningpolicyexempt",
           "currentTags": [
             "@param",
             "@returns",
@@ -28255,8 +28255,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 1110,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1110-fnschemaentryfromfunctionlike",
+          "line": 1112,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1112-fnschemaentryfromfunctionlike",
           "currentTags": [
             "@param",
             "@returns",
@@ -28279,8 +28279,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 1161,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1161-nullreturnentryfromfunctionlike",
+          "line": 1163,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1163-nullreturnentryfromfunctionlike",
           "currentTags": [
             "@param",
             "@returns",
@@ -28303,8 +28303,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 1218,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1218-normalizationentryfromcallexpression",
+          "line": 1220,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1220-normalizationentryfromcallexpression",
           "currentTags": [
             "@param",
             "@returns",
@@ -28327,11 +28327,33 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 1274,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1274-getsomesstructentryfromcallexpression",
+          "line": 1276,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1276-getsomesstructentryfromcallexpression",
           "currentTags": [
             "@param",
             "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "literalMemberEquals",
+          "exportKind": "const",
+          "filePath": "src/commands/Lint/SchemaFirst.ts",
+          "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
+          "line": 1424,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1424-literalmemberequals",
+          "currentTags": [
             "@example",
             "@category",
             "@since"
@@ -28351,8 +28373,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 1527,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1527-sourcetexthasschemaarbitrarypropertycoverage",
+          "line": 1541,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-1541-sourcetexthasschemaarbitrarypropertycoverage",
           "currentTags": [
             "@param",
             "@returns",
@@ -28375,8 +28397,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 2093,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-2093-runschemafirstlint",
+          "line": 2107,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-2107-runschemafirstlint",
           "currentTags": [
             "@example",
             "@category",
@@ -28397,8 +28419,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Lint/SchemaFirst.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-          "line": 2136,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-2136-lintschemafirstcommand",
+          "line": 2150,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-schemafirst-ts-2150-lintschemafirstcommand",
           "currentTags": [
             "@example",
             "@category",
@@ -28572,12 +28594,12 @@
           "remediationStatus": "open"
         },
         {
-          "symbolName": "export {\n  fnSchemaEntryFromFunctionLike,\n  getsomesStructEntryFromCallExpression,\n  isSchemaCrispeningPolicyExempt,\n  makeSchemaFirstOwnerResolver,\n  makeSchemaFirstProject,\n  normalizationEntryFromCallExpression,\n  nullReturnEntryFromFunctionLike,\n  SchemaCrispeningFamilyPolicy,\n  SchemaCrispeningPolicyDocument,\n  SchemaFirstIncludedGlobs,\n  SchemaFirstInventoryEntry,\n  SchemaFirstSourceFileGlobs,\n  schemaCrispeningFamilyForFile,\n  sourceTextHasSchemaArbitraryPropertyCoverage,\n} from \"./SchemaFirst.ts\";",
+          "symbolName": "export {\n  fnSchemaEntryFromFunctionLike,\n  getsomesStructEntryFromCallExpression,\n  isSchemaCrispeningPolicyExempt,\n  literalMemberEquals,\n  makeSchemaFirstOwnerResolver,\n  makeSchemaFirstProject,\n  normalizationEntryFromCallExpression,\n  nullReturnEntryFromFunctionLike,\n  SchemaCrispeningFamilyPolicy,\n  SchemaCrispeningPolicyDocument,\n  SchemaFirstIncludedGlobs,\n  SchemaFirstInventoryEntry,\n  SchemaFirstSourceFileGlobs,\n  schemaCrispeningFamilyForFile,\n  sourceTextHasSchemaArbitraryPropertyCoverage,\n} from \"./SchemaFirst.ts\";",
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/index.ts",
           "line": 45,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-45-export-fnschemaentryfromfunctionlike-getsomesstructentryfromcallexpression-isschemacrispeningpolicyexempt-makeschemafirstownerresolver-makeschemafirstproject-normalizationentryfromcallexpression-nullreturnentryfromfunctionlike-schemacrispeningfamilypolicy-schemacrispeningpolicydocument-schemafirstincludedglobs-schemafirstinventoryentry-schemafirstsourcefileglobs-schemacrispeningfamilyforfile-sourcetexthasschemaarbitrarypropertycoverage-from-schemafirst-ts",
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-45-export-fnschemaentryfromfunctionlike-getsomesstructentryfromcallexpression-isschemacrispeningpolicyexempt-literalmemberequals-makeschemafirstownerresolver-makeschemafirstproject-normalizationentryfromcallexpression-nullreturnentryfromfunctionlike-schemacrispeningfamilypolicy-schemacrispeningpolicydocument-schemafirstincludedglobs-schemafirstinventoryentry-schemafirstsourcefileglobs-schemacrispeningfamilyforfile-sourcetexthasschemaarbitrarypropertycoverage-from-schemafirst-ts",
           "currentTags": [
             "@category",
             "@since"
@@ -28599,8 +28621,8 @@
           "exportKind": "re-export",
           "filePath": "src/commands/Lint/index.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Lint/index.ts",
-          "line": 67,
-          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-67-export-from-schematopology-ts",
+          "line": 68,
+          "anchor": "packages-tooling-tool-cli-src-commands-lint-index-ts-68-export-from-schematopology-ts",
           "currentTags": [
             "@category",
             "@since"

@@ -22,6 +22,8 @@ const testLayer = Layer.mergeAll(
 );
 
 const writeSchemaCatalogFixture = Effect.fn("SchemaCatalogTest.writeFixture")(function* () {
+  // Root marker so findRepoRoot resolves the temp fixture as the repo root.
+  yield* writeProjectFile("bun.lock", "");
   yield* writeProjectFile(
     "package.json",
     A.join(
@@ -76,6 +78,15 @@ const writeSchemaCatalogFixture = Effect.fn("SchemaCatalogTest.writeFixture")(fu
         '  $I.annoteSchema("FixtureStatus", { description: "Fixture status values." })',
         ");",
         "",
+        "class PrivateModel extends S.Class<PrivateModel>($I`PrivateModel`)(",
+        "  { id: S.String },",
+        '  $I.annote("PrivateModel", { description: "Module-local helper schema." })',
+        ") {}",
+        "",
+        "const PrivateStatus = LiteralKit([\"a\", \"b\"]);",
+        "",
+        "export const usePrivates = (): ReadonlyArray<unknown> => [PrivateModel, PrivateStatus];",
+        "",
       ],
       "\n"
     )
@@ -124,6 +135,11 @@ layer(testLayer)("schema catalog command", (it) => {
               expect(entry.value.identity).toBe("FixtureModel");
               expect(entry.value.description).toBe("Fixture model schema.");
             }
+
+            // Non-exported declarations are private helpers, not catalog surface.
+            const symbols = A.map(document.entries, (candidate) => candidate.symbol);
+            expect(A.contains(symbols, "PrivateModel")).toBe(false);
+            expect(A.contains(symbols, "PrivateStatus")).toBe(false);
           })
         );
       })

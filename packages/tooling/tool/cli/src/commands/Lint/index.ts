@@ -46,6 +46,7 @@ export {
   fnSchemaEntryFromFunctionLike,
   getsomesStructEntryFromCallExpression,
   isSchemaCrispeningPolicyExempt,
+  literalMemberEquals,
   makeSchemaFirstOwnerResolver,
   makeSchemaFirstProject,
   normalizationEntryFromCallExpression,
