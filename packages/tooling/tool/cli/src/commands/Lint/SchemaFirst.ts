@@ -578,12 +578,16 @@ export const makeSchemaFirstOwnerResolver = Effect.fn("makeSchemaFirstOwnerResol
   root?: undefined | string
 ) {
   const base = root ?? process.cwd();
+  // The workspace-entry matching mirrors DualArity.makeOwnerResolver by design:
+  // each law keeps its own fallback tail, so the shared prefix stays inline.
+  // fallow-ignore-next-line code-duplication
   const workspaces = yield* resolveWorkspaceDirs(base);
   const workspaceEntries = pipe(
     HashMap.toEntries(workspaces),
     A.map(([packageName, absolutePath]) => [packageName, toPosixPath(absolutePath)] as const),
     A.sort(byWorkspacePathLengthDescending)
   );
+  // fallow-ignore-next-line code-duplication
   const cwd = toPosixPath(base);
 
   return (absoluteFilePath: string): string => {
