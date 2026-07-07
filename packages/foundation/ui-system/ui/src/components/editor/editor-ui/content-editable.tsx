@@ -1,9 +1,5 @@
-import { $UiId } from "@beep/identity";
 import { ContentEditable as LexicalContentEditable } from "@lexical/react/LexicalContentEditable";
-import * as S from "effect/Schema";
 import type { JSX } from "react";
-
-const $I = $UiId.create("components/editor/content-editable");
 
 /**
  * The padding shared by the editable surface and its placeholder overlay. The
@@ -22,11 +18,11 @@ const DEFAULT_EDITABLE_CLASS_NAME =
 const DEFAULT_PLACEHOLDER_CLASS_NAME =
   "text-muted-foreground pointer-events-none absolute top-0 left-0 overflow-hidden px-8 py-4 text-ellipsis select-none";
 
-class Props extends S.Class<Props>($I`Props`)({
-  placeholder: S.String,
-  className: S.optionalKey(S.String),
-  placeholderClassName: S.optionalKey(S.String),
-}) {}
+type ContentEditableProps = {
+  readonly className?: string | undefined;
+  readonly placeholder: string;
+  readonly placeholderClassName?: string | undefined;
+};
 
 /**
  * Lexical content-editable surface with a padding-aligned placeholder.
@@ -55,7 +51,7 @@ class Props extends S.Class<Props>($I`Props`)({
  * @category components
  * @since 0.0.0
  */
-export function ContentEditable({ placeholder, className, placeholderClassName }: Props): JSX.Element {
+export function ContentEditable({ placeholder, className, placeholderClassName }: ContentEditableProps): JSX.Element {
   return (
     <LexicalContentEditable
       className={className ?? DEFAULT_EDITABLE_CLASS_NAME}

@@ -335,8 +335,29 @@ export class SpinParams extends S.Class<SpinParams>($I`SpinParams`)(
   })
 ) {}
 
-type BoundaryParamsInput = Exclude<(typeof BoundaryParams)["~type.make.in"], void>;
-type SpinParamsInput = Exclude<(typeof SpinParams)["~type.make.in"], void>;
+type BoundaryParamsInput = {
+  readonly defaultValue?: number | undefined;
+  readonly max?: number | undefined;
+  readonly min?: number | undefined;
+  readonly value?: number | undefined;
+};
+
+type BoundaryParamsValue = {
+  readonly defaultValue?: number | undefined;
+  readonly max: number;
+  readonly min: number;
+  readonly value?: number | undefined;
+};
+
+type SpinParamsInput = {
+  readonly precision?: number | undefined;
+  readonly step?: number | undefined;
+};
+
+type SpinParamsValue = {
+  readonly precision: number;
+  readonly step: number;
+};
 
 /**
  * Convert editable number-input text into a number when the text is parseable.
@@ -610,7 +631,7 @@ export type UseNumberInputOptions = BoundaryParamsInput &
     readonly onChange?: ((value: number | undefined, metadata: NumberInputChangeMetadata) => void) | undefined;
   };
 
-const makeBoundaryParams = (options: BoundaryParamsInput): BoundaryParams =>
+const makeBoundaryParams = (options: BoundaryParamsInput): BoundaryParamsValue =>
   BoundaryParams.make(
     O.getSomesStruct({
       defaultValue: O.fromUndefinedOr(options.defaultValue),
@@ -618,22 +639,22 @@ const makeBoundaryParams = (options: BoundaryParamsInput): BoundaryParams =>
       min: O.fromUndefinedOr(options.min),
       max: O.fromUndefinedOr(options.max),
     })
-  );
+  ) as BoundaryParamsValue;
 
 const isPositiveFiniteStep = S.is(PositiveFiniteStep);
 
-const makeSpinParams = (options: SpinParamsInput): SpinParams =>
+const makeSpinParams = (options: SpinParamsInput): SpinParamsValue =>
   SpinParams.make(
     O.getSomesStruct({
       precision: O.fromUndefinedOr(options.precision),
       step: pipe(O.fromUndefinedOr(options.step), O.filter(isPositiveFiniteStep)),
     })
-  );
+  ) as SpinParamsValue;
 
 // `step: 0` (or any non-positive/non-finite step) historically meant "spinning
 // is a no-op". The branded SpinParams cannot carry that state, so the hooks
 // collapse the effective step to 0 whenever the caller provided such a step.
-const effectiveStep = (provided: number | undefined, params: SpinParams): number =>
+const effectiveStep = (provided: number | undefined, params: SpinParamsValue): number =>
   provided !== undefined && !isPositiveFiniteStep(provided) ? 0 : params.step;
 
 /**

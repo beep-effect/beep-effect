@@ -13,7 +13,7 @@
  * @since 0.0.0
  */
 import {$ScratchpadId} from "@beep/identity";
-import {A, O, P, pipe} from "@beep/utils";
+import {A, O, P, identity, pipe} from "@beep/utils";
 import * as S from "effect/Schema";
 import {SchemaUtils} from "@beep/schema";
 import {HashMap} from "effect";
@@ -113,6 +113,8 @@ export class TabGroupColorPalette extends S.Class<TabGroupColorPalette>($I`TabGr
 }, $I.annote("TabGroupColorPalette", {
 	description: "Runtime palette for tab-group color accents.",
 })) {
+
+
 	static readonly new = (
 		entries: ReadonlyArray<DockviewTabGroupColorEntry>,
 		enabled?: undefined | boolean,
@@ -123,7 +125,7 @@ export class TabGroupColorPalette extends S.Class<TabGroupColorPalette>($I`TabGr
 				e.id,
 				e,
 			])), ...(P.isNotUndefined(enabled)
-				? {enabled: enabled}
+				? {enabled}
 				: {}),
 		},
 	})
@@ -144,13 +146,10 @@ export class TabGroupColorPalette extends S.Class<TabGroupColorPalette>($I`TabGr
 	 */
 	setEntries(entries: readonly DockviewTabGroupColorEntry[]): void {
 		this._.entries = A.slice(entries)
-		this._.byId = HashMap.fromIterable(A.map(
-			entries,
-			(e) => [
-				e.id,
-				e,
-			],
-		))
+		this._.byId = HashMap.fromIterable(A.map(entries, (e) => [
+			e.id,
+			e,
+		]))
 	}
 
 	entries(): readonly DockviewTabGroupColorEntry[] {
@@ -169,4 +168,64 @@ export class TabGroupColorPalette extends S.Class<TabGroupColorPalette>($I`TabGr
 	defaultId(): O.Option<string> {
 		return A.head(this._.entries).pipe(O.map((e) => e.id))
 	}
+
+	/**
+	 * Resolve a stored color to its CSS value, or undefined if no value
+	 * should be written (palette disabled, or color empty/undefined).
+	 */
+	resolveValue(color: string | undefined): O.Option<string> {
+		if (!this._.enabled || P.isUndefined(color)) {
+			return O.none<string>()
+		}
+		const entry = HashMap.get(this._.byId, color)
+
+		return O.match(entry, {
+			onNone: () => O.fromNullishOr(color),
+			onSome: (entry) => O.some(entry.value),
+		})
+	}
 }
+
+let _fallbackPalette: TabGroupColorPalette | undefined;
+
+/**
+ * Lazy-built palette used when the accessor isn't available (test mocks,
+ * isolated chip construction). Production code paths always pass a real
+ * palette through.
+ */
+function getFallbackPalette(): TabGroupColorPalette {
+	_fallbackPalette ??= TabGroupColorPalette.new(DEFAULT_TAB_GROUP_COLORS, true);
+	return _fallbackPalette;
+}
+
+
+/**
+ * Set the `--dv-tab-group-color` custom property on `el` to the resolved
+ * accent value, or remove it when the palette is disabled / color is unset.
+ */
+export function applyTabGroupAccent(
+	el: HTMLElement,
+	color: string | undefined,
+	palette: TabGroupColorPalette | undefined,
+): void {
+	const value = (palette ?? getFallbackPalette()).resolveValue(color);
+	if (O.isNone(value)) {
+		el.style.removeProperty('--dv-tab-group-color');
+	} else {
+		el.style.setProperty('--dv-tab-group-color', value.value);
+	}
+}
+
+/**
+ * Return the resolved CSS color for a tab group, or undefined when the
+ * palette is disabled or no color is set. Use this when you need the raw
+ * value to assign to a non-custom-property style (e.g. SVG stroke,
+ * backgroundColor on the indicator underline).
+ */
+export const resolveTabGroupAccent = (
+	color: string | undefined,
+	palette: TabGroupColorPalette | undefined,
+): O.Option<string> => pipe(O.fromNullishOr(palette), O.match({
+	onNone: () => getFallbackPalette(),
+	onSome: identity,
+})).resolveValue(color)
