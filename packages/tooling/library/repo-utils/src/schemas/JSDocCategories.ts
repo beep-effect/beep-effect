@@ -474,7 +474,6 @@ const JSDocCategoryNormalizationFromString = S.String.pipe(
  * const normalized = normalizeJSDocCategory("DomainModel")
  * console.log(normalized.status)
  * ```
- *
  * @category normalization
  * @since 0.0.0
  */

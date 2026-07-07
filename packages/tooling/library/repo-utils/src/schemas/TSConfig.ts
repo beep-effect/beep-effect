@@ -1611,6 +1611,8 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
   /**
    * Strictly decode an unknown value into the semantic `TSConfig` shape.
    *
+   * @param input - Unknown value to decode as strict tsconfig data.
+   * @returns Decode result containing a `TSConfig` value or schema error.
    * @example
    * ```ts
    * import { TSConfig } from "@beep/repo-utils/schemas/TSConfig"
@@ -1626,6 +1628,8 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
   /**
    * Strictly decode an unknown value into `TSConfig`, preserving failures in an `Exit`.
    *
+   * @param input - Unknown value to decode as strict tsconfig data.
+   * @returns Exit containing a `TSConfig` value or schema error.
    * @example
    * ```ts
    * import { TSConfig } from "@beep/repo-utils/schemas/TSConfig"
@@ -1644,6 +1648,8 @@ export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
   /**
    * Strictly decode an unknown value into `TSConfig` as an Effect.
    *
+   * @param input - Unknown value to decode as strict tsconfig data.
+   * @returns Effect that succeeds with `TSConfig` or fails with a schema error.
    * @example
    * ```ts
    * import { Effect } from "effect"

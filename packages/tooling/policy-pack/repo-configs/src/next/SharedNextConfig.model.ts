@@ -173,7 +173,9 @@ export const BeepNextMdxConfig = S.Union([S.Literal(false), BeepNextMdxConfigOpt
  * @example
  * ```ts
  * import type { BeepNextMdxConfig } from "@beep/repo-configs/next"
- * const config: BeepNextMdxConfig = {}
+ * const config: BeepNextMdxConfig = {
+ *   extension: /\.(md|mdx)$/
+ * }
  * console.log(config)
  * ```
  * @category models
@@ -229,7 +231,11 @@ export const BeepNextPwaConfig = S.Union([S.Literal(false), BeepNextPwaConfigOpt
  * @example
  * ```ts
  * import type { BeepNextPwaConfig } from "@beep/repo-configs/next"
- * const config: BeepNextPwaConfig = { enabled: false }
+ * const config: BeepNextPwaConfig = {
+ *   enabled: false,
+ *   swSrc: "src/app/sw.ts",
+ *   swDest: "public/sw.js"
+ * }
  * console.log(config)
  * ```
  * @category models

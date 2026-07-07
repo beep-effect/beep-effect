@@ -1,6 +1,8 @@
 import {
   assertSchemaArbitraryDecodesToSelf,
   BunSqliteTestDriver,
+  makePgliteIntegrationGate,
+  makePgliteSqlTestLayer,
   makeSqlTestLayer,
   NodeSqliteTestDriver,
   PgExternalConnectionUri,
@@ -31,7 +33,32 @@ const provideScopedLayer =
 const isBunRuntime = process.versions.bun !== undefined;
 const isCoverageRatchetRun = O.contains(Effect.runSync(Config.option(Config.string("VITEST_COVERAGE_RATCHET"))), "1");
 const localSqliteIt = it.effect.skipIf(isCoverageRatchetRun && !isBunRuntime);
+const nodeRuntimeIt = it.skipIf(isBunRuntime);
+const nodeRuntimeEffectIt = it.effect.skipIf(isBunRuntime);
 const expectedDriver = isBunRuntime ? "bun-sqlite" : "node-sqlite";
+
+const withBunEnv = <A>(env: Record<string, string | undefined>, run: () => A): A => {
+  const hadBun = Reflect.has(globalThis, "Bun");
+  const originalBun = Reflect.get(globalThis, "Bun");
+
+  Reflect.defineProperty(globalThis, "Bun", {
+    configurable: true,
+    value: { env },
+  });
+
+  try {
+    return run();
+  } finally {
+    if (hadBun) {
+      Reflect.defineProperty(globalThis, "Bun", {
+        configurable: true,
+        value: originalBun,
+      });
+    } else {
+      Reflect.deleteProperty(globalThis, "Bun");
+    }
+  }
+};
 
 const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
   schema: Schema,
@@ -193,6 +220,32 @@ describe("SqlTest", () => {
         expect(failure).toBeInstanceOf(SqlTestHarnessError);
         if (SqlTestHarnessError.is(failure)) {
           expect(failure.phase).toBe("migrate");
+          expect(failure.driver).toBe(expectedDriver);
+        }
+      }
+    })
+  );
+
+  localSqliteIt(
+    "wraps seed hook failures in a typed harness error",
+    Effect.fnUntraced(function* () {
+      const exit = yield* Effect.exit(
+        Effect.void.pipe(
+          provideScopedLayer(
+            makeLayer({
+              seed: Effect.fail("boom"),
+            })
+          )
+        )
+      );
+
+      expect(Exit.isFailure(exit)).toBe(true);
+      if (Exit.isFailure(exit)) {
+        const failure = Cause.squash(exit.cause);
+
+        expect(failure).toBeInstanceOf(SqlTestHarnessError);
+        if (SqlTestHarnessError.is(failure)) {
+          expect(failure.phase).toBe("seed");
           expect(failure.driver).toBe(expectedDriver);
         }
       }
@@ -391,4 +444,71 @@ describe("SqlTest", () => {
       { numRuns: 10 }
     );
   });
+
+  nodeRuntimeIt("selects PGLite integration gate branches from environment", () => {
+    withBunEnv({}, () => {
+      const gate = makePgliteIntegrationGate();
+
+      expect(O.isNone(gate.sharedConnectionUri)).toBe(true);
+      expect(gate.shouldRunPgliteIntegration).toBe(true);
+      expect(gate.shouldUseTestcontainers).toBe(false);
+      expect(gate.makePgliteLayer()).toBeDefined();
+      expect(gate.makePgliteLayer({ migrate: Effect.void })).toBeDefined();
+    });
+
+    withBunEnv({ BEEP_TEST_DATABASE_URL: "postgres://user:pass@localhost:5432/db" }, () => {
+      const gate = makePgliteIntegrationGate();
+
+      expect(O.isSome(gate.sharedConnectionUri)).toBe(true);
+      expect(gate.makePgliteLayer()).toBeDefined();
+      expect(gate.makePgliteLayer({ seed: Effect.void })).toBeDefined();
+    });
+
+    withBunEnv({ BEEP_TEST_DATABASE_DRIVER: "pglite-testcontainers" }, () => {
+      const gate = makePgliteIntegrationGate();
+
+      expect(gate.shouldUseTestcontainers).toBe(true);
+      expect(gate.makePgliteLayer()).toBeDefined();
+      expect(gate.makePgliteLayer({ migrate: Effect.void })).toBeDefined();
+    });
+  });
+
+  nodeRuntimeEffectIt(
+    "validates selected PGLite layer configs before provisioning",
+    Effect.fnUntraced(function* () {
+      const externalExit = yield* Effect.exit(Effect.scoped(Layer.build(makePgliteSqlTestLayer({ mode: "external" }))));
+      const testcontainersExit = yield* Effect.exit(
+        Effect.scoped(
+          Layer.build(
+            makePgliteSqlTestLayer({
+              mode: "testcontainers",
+              testcontainers: { internalPort: 0 },
+            })
+          )
+        )
+      );
+
+      expect(Exit.isFailure(externalExit)).toBe(true);
+      if (Exit.isFailure(externalExit)) {
+        const failure = Cause.squash(externalExit.cause);
+
+        expect(failure).toBeInstanceOf(SqlTestHarnessError);
+        if (SqlTestHarnessError.is(failure)) {
+          expect(failure.driver).toBe("pg-external");
+          expect(failure.phase).toBe("provision");
+        }
+      }
+
+      expect(Exit.isFailure(testcontainersExit)).toBe(true);
+      if (Exit.isFailure(testcontainersExit)) {
+        const failure = Cause.squash(testcontainersExit.cause);
+
+        expect(failure).toBeInstanceOf(SqlTestHarnessError);
+        if (SqlTestHarnessError.is(failure)) {
+          expect(failure.driver).toBe("pglite-testcontainers");
+          expect(failure.phase).toBe("provision");
+        }
+      }
+    })
+  );
 });

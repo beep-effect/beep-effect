@@ -149,12 +149,12 @@ export class ConfigurationSchema extends S.Class<ConfigurationSchema>($I`Configu
  *
  * @example
  * ```ts
- * import type { ConfigurationDocument } from "@beep/repo-docgen/Configuration"
+ * import { ConfigurationSchema, type ConfigurationDocument } from "@beep/repo-docgen/Configuration"
  *
- * const document: ConfigurationDocument = {
+ * const document: ConfigurationDocument = ConfigurationSchema.make({
  *   enforceVersion: true,
  *   srcDir: "src"
- * }
+ * })
  *
  * console.log(document.srcDir)
  * ```

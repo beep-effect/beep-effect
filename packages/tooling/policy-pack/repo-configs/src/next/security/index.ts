@@ -118,6 +118,8 @@ class SecureHeadersConfigValue extends S.Class<SecureHeadersConfigValue>($I`Secu
  * ```ts
  * import type { SecureHeadersConfig } from "@beep/repo-configs/next/security"
  * const config: SecureHeadersConfig = {
+ *   source: "/(.*)",
+ *   headers: [{ key: "X-Content-Type-Options", value: "nosniff" }],
  *   additionalHeaders: [{ key: "X-Beep", value: "1" }]
  * }
  * console.log(config)
@@ -138,7 +140,9 @@ export const SecureHeadersConfig = S.Union([S.Literal(false), SecureHeadersConfi
  * ```ts
  * import type { SecureHeadersConfig } from "@beep/repo-configs/next/security"
  * const config: SecureHeadersConfig = {
- *   source: "/(.*)"
+ *   source: "/(.*)",
+ *   headers: [{ key: "X-Frame-Options", value: "DENY" }],
+ *   additionalHeaders: []
  * }
  * console.log(config)
  * ```
@@ -183,6 +187,8 @@ const headerSource = (config: SecureHeadersConfig | undefined): string =>
  * ```ts
  * import { makeSecureHeaders } from "@beep/repo-configs/next/security"
  * const headers = makeSecureHeaders({
+ *   source: "/(.*)",
+ *   headers: [{ key: "X-Content-Type-Options", value: "nosniff" }],
  *   additionalHeaders: [{ key: "X-Beep", value: "1" }]
  * })
  * console.log(headers)

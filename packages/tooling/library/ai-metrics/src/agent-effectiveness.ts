@@ -85,7 +85,7 @@ query AgentEffectivenessPhoenixInventory {
  * ```ts
  * import { AgentEffectivenessStatus } from "@beep/repo-ai-metrics"
  *
- * console.log(AgentEffectivenessStatus.is("passed"))
+ * console.log(AgentEffectivenessStatus.is.passed("passed"))
  * ```
  * @category models
  * @since 0.0.0

@@ -1055,6 +1055,14 @@ Since v1.0.0`
         ),
       ]);
     });
+
+    it("should ignore empty export markers", () => {
+      const sourceFile = project.createSourceFile("empty-export.ts", `export {};`, { overwrite: true });
+
+      const actual = runSyncInLayer(makeParserTestLayer(sourceFile), Parser.parseExports);
+
+      expect(actual).toEqual([]);
+    });
   });
 
   describe("parseInterfaces", () => {

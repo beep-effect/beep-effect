@@ -19,7 +19,6 @@ import noOpaqueInstanceFields from "./no-opaque-instance-fields.ts";
  * }
  * console.log(binding.local)
  * ```
- *
  * @category models
  * @since 0.0.0
  */
