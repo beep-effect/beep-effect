@@ -107,20 +107,39 @@ export class Size extends S.Class<Size>($I`Size`)(
 ) {}
 
 export const AnchoredBox = S.Union(
-	[
-		S.Struct({ ...TopLeft.fields, ...Size.fields }),
-		S.Struct({ ...TopRight.fields, ...Size.fields }),
-		S.Struct({ ...BottomLeft.fields, ...Size.fields }),
-		S.Struct({ ...BottomRight.fields, ...Size.fields }),
-	]
+  [
+    S.Struct({
+      _tag: S.tagDefaultOmit("TopLeft"),
+      left: TopLeft.fields.left,
+      top: TopLeft.fields.top,
+      ...Size.fields,
+    }),
+    S.Struct({
+      _tag: S.tagDefaultOmit("TopRight"),
+      right: TopRight.fields.right,
+      top: TopRight.fields.top,
+      ...Size.fields,
+    }),
+    S.Struct({
+      _tag: S.tagDefaultOmit("BottomLeft"),
+      bottom: BottomLeft.fields.bottom,
+      left: BottomLeft.fields.left,
+      ...Size.fields,
+    }),
+    S.Struct({
+      _tag: S.tagDefaultOmit("BottomRight"),
+      bottom: BottomRight.fields.bottom,
+      right: BottomRight.fields.right,
+      ...Size.fields,
+    }),
+  ]
 ).pipe(
-	S.toTaggedUnion("_tag"),
-	$I.annoteSchema("AnchoredBox", {
-		description: "An anchored box",
-	})
-)
-
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("AnchoredBox", {
+    description: "An anchored box",
+  })
+);
 
 export declare namespace AnchoredBox {
-	export type Encoded = typeof AnchoredBox.Encoded;
+  export type Encoded = typeof AnchoredBox.Encoded;
 }
