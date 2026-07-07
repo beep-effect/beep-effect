@@ -12,11 +12,13 @@
  * @since 0.0.0
  */
 
+import { $LexicalSchemaId } from "@beep/identity/packages";
 import { segmentInlineRuns } from "@beep/md/Md.behavior";
 import * as Md from "@beep/md/Md.model";
-import { MappedLiteralKit, PosInt } from "@beep/schema";
+import { MappedLiteralKit, PosInt, SchemaUtils } from "@beep/schema";
 import { A, dual, O, P, Str } from "@beep/utils";
 import { Effect, flow, Match, pipe } from "effect";
+import * as S from "effect/Schema";
 import { nodeToPlainText } from "./Lexical.behavior.ts";
 import {
   ArtifactRefId,
@@ -29,6 +31,7 @@ import {
   LinkNode,
   ListItemNode,
   ListNode,
+  ListType,
   ParagraphNode,
   QuoteNode,
   RootNode,
@@ -43,8 +46,9 @@ import {
   withTextFormat,
   YouTubeNode,
 } from "./Lexical.model.ts";
-import type * as S from "effect/Schema";
 import type { TableCellHeaderState, TextFormatBit } from "./Lexical.model.ts";
+
+const $I = $LexicalSchemaId.create("Lexical.codec");
 
 /**
  * URI scheme that round-trips {@link ArtifactRefNode} through the Md AST as a
@@ -61,6 +65,49 @@ import type { TableCellHeaderState, TextFormatBit } from "./Lexical.model.ts";
  * @since 0.0.0
  */
 export const ARTIFACT_URI_PREFIX = "artifact://";
+
+/**
+ * Artifact URI form used when the Md projection carries an
+ * {@link ArtifactRefNode} as a link.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ArtifactUri } from "@beep/lexical-schema/Lexical.codec"
+ *
+ * const uri = S.decodeUnknownSync(ArtifactUri)("artifact://artifact-123")
+ * console.log(uri) // "artifact://artifact-123"
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export const ArtifactUri = S.TemplateLiteral([ARTIFACT_URI_PREFIX, ArtifactRefId]).pipe(
+  $I.annoteSchema("ArtifactUri", {
+    description: "artifact:// URI carrying a package-owned artifact reference id through the Md link projection.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Type for {@link ArtifactUri}.
+ *
+ * @example
+ * ```ts
+ * import type { ArtifactUri } from "@beep/lexical-schema/Lexical.codec"
+ *
+ * const accept = (uri: ArtifactUri) => uri
+ * console.log(accept)
+ * ```
+ *
+ * @category combinators
+ * @since 0.0.0
+ */
+export type ArtifactUri = typeof ArtifactUri.Type;
+
+const ArtifactUriParts = S.TemplateLiteralParser([ARTIFACT_URI_PREFIX, ArtifactRefId]).pipe(
+  SchemaUtils.withCodecStatics
+);
 
 const emptyTextFormat = TextFormatMask.make(0);
 const emptyTextDetail = TextDetailMask.make(0);
@@ -205,7 +252,7 @@ const listItemChildrenToLexical = (
     : Effect.map(textLeaf(mdListItemChildrenText(children), emptyTextFormat), A.of<LexicalNode>);
 
 const quoteChildToInlines = (block: Md.Block): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
-  block._tag === "p"
+  P.isTagged("p")(block)
     ? inlinesToLexical(block.children, emptyTextFormat)
     : Effect.map(textLeaf(mdBlockText(block), emptyTextFormat), A.of<LexicalNode>);
 
@@ -216,8 +263,8 @@ type ArtifactRef = {
 
 const artifactRefFromLink = (child: Md.A): O.Option<ArtifactRef> =>
   pipe(
-    ArtifactRefId.decodeOption(Str.slice(ARTIFACT_URI_PREFIX.length)(child.href)),
-    O.map((artifactId) => {
+    ArtifactUriParts.decodeOption(child.href),
+    O.map(([, artifactId]) => {
       const label = mdInlinesText(child.children);
       return {
         artifactId,
@@ -228,8 +275,8 @@ const artifactRefFromLink = (child: Md.A): O.Option<ArtifactRef> =>
 
 // A single inline child that is an `a` node whose href is an artifact:// URI.
 const isArtifactLink: P.Refinement<Md.Inline, Md.A> = P.chainRefinements([
-  (child: Md.Inline): child is Md.A => child._tag === "a",
-  (child: Md.A): child is Md.A => Str.startsWith(child.href, ARTIFACT_URI_PREFIX),
+  (child: Md.Inline): child is Md.A => P.isTagged("a")(child),
+  (child: Md.A): child is Md.A => ArtifactUri.is(child.href),
 ]);
 
 const paragraphArtifactRef = (block: Md.P): O.Option<ArtifactRef> =>
@@ -372,7 +419,7 @@ const inlineNodeToMd: (node: LexicalNode) => Md.Inline = LexicalNode.match({
   link: (node) => Md.A.make({ href: node.url, children: textRunToInlines(node.children) }),
   "artifact-ref": (node) =>
     Md.A.make({
-      href: `${ARTIFACT_URI_PREFIX}${node.artifactId}`,
+      href: ArtifactUri.fromUnknown(`${ARTIFACT_URI_PREFIX}${node.artifactId}`),
       children: [Md.Text.make({ value: O.getOrElse(node.label, () => node.artifactId) })],
     }),
   // Element nodes have no inline Md equivalent; they degrade to their plain text
@@ -442,15 +489,16 @@ const collectListItems = (list: ListNode): ReadonlyArray<CollectedListItem> =>
 
 const listToBlock = (node: ListNode): Md.Block => {
   const items = collectListItems(node);
-  if (node.listType === "check") {
-    return Md.TaskList.make({
-      children: A.map(items, (item) =>
-        Md.TaskItem.make({ checked: O.getOrElse(item.checked, () => false), children: item.inlines })
-      ),
-    });
-  }
-  const children = A.map(items, (item) => Md.Li.make({ children: item.inlines }));
-  return node.listType === "number" ? Md.Ol.make({ children }) : Md.Ul.make({ children });
+  return ListType.$match(node.listType, {
+    check: () =>
+      Md.TaskList.make({
+        children: A.map(items, (item) =>
+          Md.TaskItem.make({ ...O.getSomesStruct({ checked: item.checked }), children: item.inlines })
+        ),
+      }),
+    number: () => Md.Ol.make({ children: A.map(items, (item) => Md.Li.make({ children: item.inlines })) }),
+    bullet: () => Md.Ul.make({ children: A.map(items, (item) => Md.Li.make({ children: item.inlines })) }),
+  });
 };
 
 const tableChildToInlines = (node: LexicalNode): ReadonlyArray<Md.Inline> =>

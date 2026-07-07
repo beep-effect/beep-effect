@@ -1,0 +1,77 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/primitive/data/src/internal/data/keyboard-shortcuts.ts",
+    "line": 1,
+    "symbol": "KeyboardShortcutPlatformValues",
+    "smell": "Detector candidate: exported raw literal tuples for shortcut platform/scope/runtime/category domains have no `$I.annoteSchema` or schema annotations.",
+    "proposedTarget": "None -- keep as raw primitive data constants in @beep/data.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "@beep/data is the data-only source package and does not depend on @beep/schema; adding `$I.annoteSchema` here would invert the established dependency direction. Downstream schema wrappers are the right annotation home, as shown by @beep/schema CurrencyCode using LiteralKit over @beep/data at packages/foundation/modeling/schema/src/CurrencyCode.ts:43-47 and MimeType doing the same at packages/foundation/modeling/schema/src/MimeType.ts:99-113.",
+      "boundary": "primitive data package public constants; schema annotations belong in downstream @beep/schema wrappers"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/primitive/data/test/keyboard-shortcuts.test.ts",
+    "line": 49,
+    "symbol": "KeyboardShortcutDataValues fixture invariants",
+    "smell": "Detector candidate: the curated shortcut dataset is covered by hand-written fixture/invariant loops instead of a `S.toArbitrary`-derived property law.",
+    "proposedTarget": "None -- keep the static dataset audit tests here. If a downstream KeyboardShortcut schema is introduced, add additive S.toArbitrary property coverage there; S.toArbitrary is verified at .repos/effect-v4/packages/effect/src/Schema.ts:12970 and in-repo property-test exemplars include packages/foundation/modeling/schema/test/Did.test.ts:7 and packages/foundation/modeling/schema/test/SchemaUtils.test.ts:178.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These loops audit curated constant data against exported literal domains and source metadata. @beep/data has no production schemas under non-generated source, so there is no in-package schema domain for `S.toArbitrary` to sample; schema-derived laws would be additive downstream coverage, not a replacement for this dataset audit.",
+      "boundary": "curated static data integrity tests"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/primitive/data/test/mime-types.test.ts",
+    "line": 118,
+    "symbol": "MIME lookup golden fixtures",
+    "smell": "Detector candidate: the MIME lookup suite uses hand-written examples for known extensions, paths, case-folding, misses, and repo allowlist additions instead of schema-derived generated cases.",
+    "proposedTarget": "None -- keep the golden compatibility matrix. Downstream schema laws can cover literal MIME/FileExtension schemas separately; S.toArbitrary is verified at .repos/effect-v4/packages/effect/src/Schema.ts:12970, and existing @beep/schema LiteralKit wrappers over the same data live at packages/foundation/modeling/schema/src/MimeType.ts:99-113 and packages/foundation/modeling/schema/src/FileExtension.ts:95-102.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These are golden/regression fixtures for vendored `mime-types` lookup compatibility and the repo allowlist. Static fixtures are explicitly legitimate for external compatibility contracts; generated schema samples would not prove the exact public lookup table behavior.",
+      "boundary": "vendored MIME lookup compatibility fixtures"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/primitive/data/src/MimeTypes.ts",
+    "line": 424,
+    "symbol": "lookup",
+    "smell": "Detector candidate: the public `lookup` API accepts a broad `path: string` rather than a branded file-extension/path schema.",
+    "proposedTarget": "None -- keep the broad input contract in this package.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The function deliberately mirrors the vendored `mime-types.lookup` surface: callers may pass any bare extension, dotted extension, path, empty string, or unknown value and receive `false` on misses. This is an external compatibility boundary and not a domain field; S2 already records the separate normalization opportunity at the internal lookup adapter.",
+      "boundary": "vendored third-party MIME lookup API compatibility"
+    }
+  },
+  {
+    "ruleId": "SFV4-equivalence",
+    "file": "packages/foundation/primitive/data/src/internal/data/mime-types/index.ts",
+    "line": 293,
+    "symbol": "shouldKeepByPreference",
+    "smell": "Detector candidate: strict primitive equality/inequality compares MIME type and source-preference values in the lookup-cache algorithm.",
+    "proposedTarget": "None -- keep direct primitive comparisons here.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "No production Effect Schema exists in @beep/data for these values, and importing @beep/schema only to derive `S.toEquivalence` would invert the package dependency direction. `S.toEquivalence` is verified at .repos/effect-v4/packages/effect/src/Schema.ts:13201, but it applies when a schema is already the domain source of truth; this code is a private cache/preference gate over primitive keys.",
+      "boundary": "internal MIME lookup table initialization and source-preference ranking"
+    }
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/api-transport/src/Transport.ts",
+    "line": 107,
+    "symbol": "RateLimitSnapshot",
+    "smell": "limit/remaining/reset are S.optionalKey(S.Finite) — finite but not S.Int nor range-checked — for header fields that are canonically non-negative integers.",
+    "proposedTarget": "None — keep S.Finite. Tightening to S.Int.check(S.isGreaterThanOrEqualTo(0)) (S.Int verified .repos/effect-v4/packages/effect/src/Schema.ts:11398, isGreaterThanOrEqualTo at 7314, isBetween at 7401) would make RateLimitSnapshot.make throw inside the transport's response tap on real-world lenient headers.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Intentionally loose 3rd-party boundary: parseNumberHeader (line 120) deliberately admits negatives and fractions (regex -?\\d+(?:\\.\\d+)?) because heterogeneous APIs emit fractional x-ratelimit-reset-after and sentinel -1 remaining values; the snapshot is observational only (read via the rateLimit accessor, never used for enforcement — the native RateLimiter enforces), so the leniency cannot weaken any guard.",
+      "boundary": "3rd-party HTTP X-RateLimit-*/RateLimit-* response headers from gov/legal APIs (GovInfo, eCFR, CourtListener, DOL)"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/api-transport/src/Transport.ts",
+    "line": 56,
+    "symbol": "ApiAuth",
+    "smell": "Unbranded broad strings on domain fields: ApiKeyQueryAuth.param (line 56) and ApiKeyHeaderAuth.header (line 58) are bare string rather than non-empty/branded query-param and header names.",
+    "proposedTarget": "None — leave as Data.TaggedEnum with plain strings; a S.NonEmptyString brand (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420) would push schema construction into driver wiring for values that are compile-time literals (\"api_key\", \"X-API-KEY\").",
+    "confidence": 0.4,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Constructor-side wiring enum, not decoded input: every construction site supplies compile-time string literals from driver config, and the enum carries Redacted secrets — the same rationale the schema-first ledger records for the enclosing options bag (standards/schema-first.inventory.jsonc:554-561). Runtime validation of literal names adds no safety.",
+      "boundary": "internal driver-to-transport constructor wiring (ApiTransportOptions.auth)"
+    }
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/api-transport/src/Transport.ts",
+    "line": 171,
+    "symbol": "ApiTransportOptions",
+    "smell": "rateLimit.limit (line 171) is broad number where a positive integer is meant, and retryTimes (line 173) is broad optional number where a non-negative integer is meant, on a config surface.",
+    "proposedTarget": "None — the interface stays an interface; if ever tightened, the precision belongs at the driver config edge, not in this options bag.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "ApiTransportOptions is a ledgered schema-first exception (standards/schema-first.inventory.jsonc:554-561): a constructor-options bag with effect-native members (ApiAuth Data.TaggedEnum + Redacted + Duration.Input), not a decode-from-wire boundary model; limit/retryTimes are compile-time driver literals validated in use by the native RateLimiter and Schedule.",
+      "boundary": "makeApiTransport constructor options (in-process, driver-authored literals)"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/api-transport/src/Transport.ts",
+    "line": 170,
+    "symbol": "ApiTransportOptions",
+    "smell": "key (line 170) — the rate-limit bucket key — is bare string; an empty or colliding key would silently share a limiter bucket across drivers.",
+    "proposedTarget": "None mandated — same ledgered interface exception; if tightened later, a S.NonEmptyString brand (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420) at the driver config edge, not in this options bag.",
+    "confidence": 0.4,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Same ledgered schema-first exception as the enclosing interface (standards/schema-first.inventory.jsonc:554-561); key is a compile-time driver literal (\"govinfo\", \"ecfr\") in constructor wiring, not decoded input.",
+      "boundary": "makeApiTransport constructor options (in-process, driver-authored literals)"
+    }
+  }
+]

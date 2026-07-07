@@ -6,7 +6,7 @@
  */
 
 import { $ObservabilityId } from "@beep/identity/packages";
-import { DurationInput, LiteralKit } from "@beep/schema";
+import { DurationInput, LiteralKit, SchemaUtils } from "@beep/schema";
 import * as NodeSdk from "@effect/opentelemetry/NodeSdk";
 import { OTLPLogExporter } from "@opentelemetry/exporter-logs-otlp-proto";
 import { OTLPMetricExporter } from "@opentelemetry/exporter-metrics-otlp-proto";
@@ -90,13 +90,15 @@ const NodeSdkMetricTemporality = LiteralKit(["cumulative", "delta"]).pipe(
  */
 export class NodeSdkServerOptions extends S.Class<NodeSdkServerOptions>($I`NodeSdkServerOptions`)(
   {
-    loggerExportInterval: S.optionalKey(DurationInput),
-    loggerMergeWithExisting: S.optionalKey(S.Boolean),
+    loggerExportInterval: DurationInput.pipe(SchemaUtils.withKeyDefaults(Duration.seconds(1))),
+    loggerMergeWithExisting: S.Boolean.pipe(SchemaUtils.withKeyDefaults(true)),
     logRecordProcessor: S.optionalKey(NodeSdkLogRecordProcessorOption),
     metricReader: S.optionalKey(NodeSdkMetricReaderOption),
-    metricsExportInterval: S.optionalKey(DurationInput),
-    metricTemporality: S.optionalKey(NodeSdkMetricTemporality),
-    shutdownTimeout: S.optionalKey(DurationInput),
+    metricsExportInterval: DurationInput.pipe(SchemaUtils.withKeyDefaults(Duration.seconds(10))),
+    metricTemporality: NodeSdkMetricTemporality.pipe(
+      SchemaUtils.withKeyDefaults(NodeSdkMetricTemporality.Enum.cumulative)
+    ),
+    shutdownTimeout: DurationInput.pipe(SchemaUtils.withKeyDefaults(Duration.seconds(3))),
     spanProcessor: S.optionalKey(NodeSdkSpanProcessorOption),
   },
   $I.annote("NodeSdkServerOptions", {
@@ -104,8 +106,15 @@ export class NodeSdkServerOptions extends S.Class<NodeSdkServerOptions>($I`NodeS
   })
 ) {}
 
+/**
+ * Constructor input accepted by Node SDK layer builders before schema defaults are resolved.
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type NodeSdkServerOptionsInput = (typeof NodeSdkServerOptions)["~type.make.in"];
+
 const endpointUrl = (baseUrl: string, path: string): string => new URL(path, `${baseUrl}/`).toString();
-const isServerObservabilityConfig = S.is(ServerObservabilityConfig);
 
 /**
  * Convert the shared server observability config into a Node SDK resource shape.
@@ -163,22 +172,19 @@ export const toNodeSdkResource = (config: ServerObservabilityConfig): NonNullabl
  * @category observability
  */
 export const makeNodeSdkServerConfig: {
-  (config: ServerObservabilityConfig, options?: NodeSdkServerOptions | undefined): NodeSdk.Configuration;
-  (options: NodeSdkServerOptions | undefined): (config: ServerObservabilityConfig) => NodeSdk.Configuration;
+  (config: ServerObservabilityConfig, options?: NodeSdkServerOptionsInput | undefined): NodeSdk.Configuration;
+  (options: NodeSdkServerOptionsInput | undefined): (config: ServerObservabilityConfig) => NodeSdk.Configuration;
 } = dual(
-  (args) => isServerObservabilityConfig(args[0]),
-  (config: ServerObservabilityConfig, options?: NodeSdkServerOptions | undefined): NodeSdk.Configuration => {
-    const loggerExportInterval = Duration.toMillis(
-      Duration.fromInputUnsafe(options?.loggerExportInterval ?? Duration.seconds(1))
-    );
-    const metricsExportInterval = Duration.toMillis(
-      Duration.fromInputUnsafe(options?.metricsExportInterval ?? Duration.seconds(10))
-    );
+  (args) => ServerObservabilityConfig.is(args[0]),
+  (config: ServerObservabilityConfig, options?: NodeSdkServerOptionsInput | undefined): NodeSdk.Configuration => {
+    const resolvedOptions = NodeSdkServerOptions.make(options ?? {});
+    const loggerExportInterval = Duration.toMillis(Duration.fromInputUnsafe(resolvedOptions.loggerExportInterval));
+    const metricsExportInterval = Duration.toMillis(Duration.fromInputUnsafe(resolvedOptions.metricsExportInterval));
 
     return {
       resource: toNodeSdkResource(config),
       spanProcessor:
-        options?.spanProcessor ??
+        resolvedOptions.spanProcessor ??
         (config.otlpEnabled
           ? [
               new BatchSpanProcessor(
@@ -189,7 +195,7 @@ export const makeNodeSdkServerConfig: {
             ]
           : undefined),
       metricReader:
-        options?.metricReader ??
+        resolvedOptions.metricReader ??
         (config.otlpEnabled
           ? [
               new PeriodicExportingMetricReader({
@@ -201,7 +207,7 @@ export const makeNodeSdkServerConfig: {
             ]
           : undefined),
       logRecordProcessor:
-        options?.logRecordProcessor ??
+        resolvedOptions.logRecordProcessor ??
         (config.otlpEnabled
           ? [
               new BatchLogRecordProcessor({
@@ -212,9 +218,9 @@ export const makeNodeSdkServerConfig: {
               }),
             ]
           : undefined),
-      loggerMergeWithExisting: options?.loggerMergeWithExisting ?? true,
-      metricTemporality: options?.metricTemporality ?? "cumulative",
-      shutdownTimeout: options?.shutdownTimeout ?? Duration.seconds(3),
+      loggerMergeWithExisting: resolvedOptions.loggerMergeWithExisting,
+      metricTemporality: resolvedOptions.metricTemporality,
+      shutdownTimeout: resolvedOptions.shutdownTimeout,
     };
   }
 );
@@ -246,11 +252,11 @@ export const makeNodeSdkServerConfig: {
  * @category observability
  */
 export const makeNodeSdkServerTraceConfig: {
-  (config: ServerObservabilityConfig, options?: NodeSdkServerOptions | undefined): NodeSdk.Configuration;
-  (options: NodeSdkServerOptions | undefined): (config: ServerObservabilityConfig) => NodeSdk.Configuration;
+  (config: ServerObservabilityConfig, options?: NodeSdkServerOptionsInput | undefined): NodeSdk.Configuration;
+  (options: NodeSdkServerOptionsInput | undefined): (config: ServerObservabilityConfig) => NodeSdk.Configuration;
 } = dual(
-  (args) => isServerObservabilityConfig(args[0]),
-  (config: ServerObservabilityConfig, options?: NodeSdkServerOptions | undefined): NodeSdk.Configuration =>
+  (args) => ServerObservabilityConfig.is(args[0]),
+  (config: ServerObservabilityConfig, options?: NodeSdkServerOptionsInput | undefined): NodeSdk.Configuration =>
     makeNodeSdkServerConfig(config, {
       ...options,
       logRecordProcessor: options?.logRecordProcessor ?? [],
@@ -285,14 +291,19 @@ export const makeNodeSdkServerTraceConfig: {
  * @category layers
  */
 export const layerNodeSdkServer: {
-  (config: ServerObservabilityConfig, options?: NodeSdkServerOptions | undefined): Layer.Layer<OtelResource.Resource>;
   (
-    options: NodeSdkServerOptions | undefined
+    config: ServerObservabilityConfig,
+    options?: NodeSdkServerOptionsInput | undefined
+  ): Layer.Layer<OtelResource.Resource>;
+  (
+    options: NodeSdkServerOptionsInput | undefined
   ): (config: ServerObservabilityConfig) => Layer.Layer<OtelResource.Resource>;
 } = dual(
-  (args) => isServerObservabilityConfig(args[0]),
-  (config: ServerObservabilityConfig, options?: NodeSdkServerOptions | undefined): Layer.Layer<OtelResource.Resource> =>
-    NodeSdk.layer(() => makeNodeSdkServerConfig(config, options))
+  (args) => ServerObservabilityConfig.is(args[0]),
+  (
+    config: ServerObservabilityConfig,
+    options?: NodeSdkServerOptionsInput | undefined
+  ): Layer.Layer<OtelResource.Resource> => NodeSdk.layer(() => makeNodeSdkServerConfig(config, options))
 );
 
 /**
@@ -322,12 +333,17 @@ export const layerNodeSdkServer: {
  * @category layers
  */
 export const layerNodeSdkServerTraces: {
-  (config: ServerObservabilityConfig, options?: NodeSdkServerOptions | undefined): Layer.Layer<OtelResource.Resource>;
   (
-    options: NodeSdkServerOptions | undefined
+    config: ServerObservabilityConfig,
+    options?: NodeSdkServerOptionsInput | undefined
+  ): Layer.Layer<OtelResource.Resource>;
+  (
+    options: NodeSdkServerOptionsInput | undefined
   ): (config: ServerObservabilityConfig) => Layer.Layer<OtelResource.Resource>;
 } = dual(
-  (args) => isServerObservabilityConfig(args[0]),
-  (config: ServerObservabilityConfig, options?: NodeSdkServerOptions | undefined): Layer.Layer<OtelResource.Resource> =>
-    NodeSdk.layer(() => makeNodeSdkServerTraceConfig(config, options))
+  (args) => ServerObservabilityConfig.is(args[0]),
+  (
+    config: ServerObservabilityConfig,
+    options?: NodeSdkServerOptionsInput | undefined
+  ): Layer.Layer<OtelResource.Resource> => NodeSdk.layer(() => makeNodeSdkServerTraceConfig(config, options))
 );

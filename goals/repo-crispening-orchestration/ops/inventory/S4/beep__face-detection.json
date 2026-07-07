@@ -1,0 +1,120 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/face-detection/src/FaceDetection.models.ts",
+    "line": 29,
+    "symbol": "PositivePixelDimension",
+    "smell": "Public refined primitive schema `S.Int.check(...).pipe($I.annoteSchema(...))` has no colocated codec statics; consumers must use free `S.is` / `S.decodeUnknown*` helpers for runtime checks.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` so `PositivePixelDimension.is`, `.fromUnknown`, and `.decodeOption` are available. Helper verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/face-detection/src/FaceDetection.models.ts",
+    "line": 75,
+    "symbol": "FaceDetectionConfidence",
+    "smell": "Public refined numeric schema missing `SchemaUtils.withCodecStatics`; the confidence boundary is reused by request and result models but exposes no schema-owned guard/decoder.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after the annotation pipe, matching the refined/union statics pattern documented in packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:1.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/face-detection/src/FaceDetection.models.ts",
+    "line": 136,
+    "symbol": "FaceDetectionPercentage",
+    "smell": "Public refined numeric schema has no colocated codec statics, despite being a reusable domain scalar.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/face-detection/src/FaceDetection.models.ts",
+    "line": 197,
+    "symbol": "FaceDetectionTopK",
+    "smell": "Public refined integer schema has no `is` / `fromUnknown` / `decodeOption` statics; runtime checks would have to be rebuilt outside the data.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after the annotation pipe.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/face-detection/src/FaceDetection.models.ts",
+    "line": 443,
+    "symbol": "decodeFaceDetectionModelConfig",
+    "smell": "Exported schema-derived decoder `S.decodeUnknownEffect(FaceDetectionModelConfig)` sits as a free function instead of on the `FaceDetectionModelConfig` S.Class; FaceDetection.service.ts imports it at line 18 and calls it at line 724.",
+    "proposedTarget": "Move the decoder onto `FaceDetectionModelConfig` as an in-body `decodeEffect` static, then keep `decodeFaceDetectionModelConfig` as a compatibility alias or switch internal callers to `FaceDetectionModelConfig.decodeEffect`. In-repo static decode precedent: packages/foundation/modeling/nlp/src/Core/Pattern.ts:582; v4 `S.decodeUnknownEffect` verified at .repos/effect-v4/packages/effect/src/Schema.ts:1325.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/face-detection/src/FaceDetection.models.ts",
+    "line": 467,
+    "symbol": "decodeFaceDetectionImageRequest",
+    "smell": "Exported schema-derived decoder `S.decodeUnknownEffect(FaceDetectionImageRequest)` duplicates behavior that belongs on the request S.Class; the loaded detector calls it at FaceDetection.service.ts:659.",
+    "proposedTarget": "Move the decoder onto `FaceDetectionImageRequest` as an in-body `decodeEffect` static and leave the exported helper as a compatibility alias if needed.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/face-detection/src/FaceDetection.errors.ts",
+    "line": 25,
+    "symbol": "existingFaceDetectionError",
+    "smell": "Private guard helper wraps `S.is(FaceDetectionError)` so `FaceDetectionError.fromUnknown` can short-circuit existing errors; the guard belongs on the error class.",
+    "proposedTarget": "Add `static readonly is = S.is(FaceDetectionError)` inside `FaceDetectionError` and replace the helper body with `FaceDetectionError.is(cause) ? O.some(cause) : O.none()`. In-repo class guard precedent: packages/foundation/modeling/md/src/Md.model.ts:873.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
+    "line": 794,
+    "symbol": "withDetector",
+    "smell": "Exported fixed two-argument helper `(config, use) => Effect...` is not `dual`, so it cannot be used data-last in pipelines even though S4 requires public 2-3 arg helpers to be pipeable.",
+    "proposedTarget": "Give `withDetector` dual overloads and implement it with `dual(2, Effect.fn(\"FaceDetection.withDetector\")(...))`, preserving the existing body. Effect v4 `dual` arity behavior verified at .repos/effect-v4/packages/effect/src/Function.ts:102.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
+    "line": 116,
+    "symbol": "LoadedFaceDetector",
+    "smell": "Detector hit: exported interface contains a function member and can look like detached behavior.",
+    "proposedTarget": "None -- leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "This is a service/port interface for an already-loaded detector; S4 explicitly carves service-shape interfaces out of statics and dual rewrites.",
+      "boundary": "Service-contract/interface carve-out for `LoadedFaceDetector`."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
+    "line": 163,
+    "symbol": "FaceDetectionServiceShape",
+    "smell": "Detector hit: exported Effect service contract exposes a two-argument `withDetector` method and can look like a non-dual helper.",
+    "proposedTarget": "None -- leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "This is the Context.Service shape, not a standalone helper; service-contract interfaces are explicitly out of S4 scope. The exported convenience helper is tracked separately at line 794.",
+      "boundary": "Service-contract/interface carve-out for `FaceDetectionServiceShape`."
+    }
+  }
+]

@@ -11,10 +11,11 @@ import {
   resolveSourceCredential,
   SourceAuthRegistration,
 } from "@beep/mcp-kit";
-import { assert, describe, layer } from "@effect/vitest";
+import { assert, describe, it, layer } from "@effect/vitest";
 import { ConfigProvider, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { Tool, Toolkit } from "effect/unstable/ai";
 import * as McpServer from "effect/unstable/ai/McpServer";
 
@@ -22,7 +23,6 @@ const softRegistration = SourceAuthRegistration.make({
   name: "Soft Fixture Source",
   envVar: "MCP_KIT_TEST_SOFT_KEY",
   gate: "soft",
-  signupUrl: O.none(),
 });
 
 const SoftTool = Tool.make("soft_source_tool", {
@@ -55,6 +55,20 @@ const buildLayer = (env: Record<string, string>) =>
 
 const ApiKeyRequiredFailureFromJson = S.fromJsonString(ApiKeyRequiredFailure);
 const StringFromJson = S.fromJsonString(S.String);
+
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
+  const arbitrary = S.toArbitrary(schema);
+  const decode = S.decodeUnknownSync(schema);
+  const encode = S.encodeSync(schema);
+  const equals = S.toEquivalence(schema);
+
+  fc.assert(
+    fc.property(arbitrary, (value) => {
+      assert.isTrue(equals(decode(encode(value)), value));
+    }),
+    { numRuns: 50 }
+  );
+};
 
 describe("api_key_required envelope", () => {
   layer(buildLayer({}))("when the credential is absent", (it) => {
@@ -92,5 +106,23 @@ describe("api_key_required envelope", () => {
         assert.strictEqual(decoded, "ok");
       })
     );
+  });
+});
+
+describe("schema parity laws", () => {
+  it("round-trips SourceAuthRegistration with schema-owned signupUrl defaults", () => {
+    assert.deepStrictEqual(
+      SourceAuthRegistration.make({ name: "No Signup", envVar: "NO_SIGNUP", gate: "none" }).signupUrl,
+      O.none()
+    );
+    assertSchemaRoundTrip(SourceAuthRegistration);
+  });
+
+  it("round-trips ApiKeyRequiredFailure with the tag default owned by the schema", () => {
+    assert.strictEqual(
+      ApiKeyRequiredFailure.forTool({ registration: softRegistration, tool: "soft_source_tool" }).error,
+      "api_key_required"
+    );
+    assertSchemaRoundTrip(ApiKeyRequiredFailure);
   });
 });

@@ -1,5 +1,16 @@
-import { acceptsEscapedLocal, escapeLocal, isSafeLocal, prefixedNameOrIri, unescapeLocal } from "@beep/identity";
+import {
+  acceptsEscapedLocal,
+  EscapedPnLocal,
+  escapeLocal,
+  isSafeLocal,
+  prefixedNameOrIri,
+  SafePnLocal,
+  unescapeLocal,
+} from "@beep/identity";
 import { describe, expect, it } from "@effect/vitest";
+import * as Equal from "effect/Equal";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const escapableLocalCharacters = [
@@ -56,6 +67,28 @@ describe("PnLocal", () => {
           expect(acceptsEscapedLocal(escaped)).toBe(true);
         }
       )
+    );
+  });
+
+  it("round-trips generated safe PN_LOCAL schema values", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(SafePnLocal), (local) => {
+        const decoded = O.flatMap(S.encodeOption(SafePnLocal)(local), S.decodeUnknownOption(SafePnLocal));
+
+        expect(O.exists(decoded, (value) => Equal.equals(value, local))).toBe(true);
+        expect(isSafeLocal(local)).toBe(true);
+      })
+    );
+  });
+
+  it("round-trips generated escaped PN_LOCAL schema values", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(EscapedPnLocal), (local) => {
+        const decoded = O.flatMap(S.encodeOption(EscapedPnLocal)(local), S.decodeUnknownOption(EscapedPnLocal));
+
+        expect(O.exists(decoded, (value) => Equal.equals(value, local))).toBe(true);
+        expect(acceptsEscapedLocal(local)).toBe(true);
+      })
     );
   });
 

@@ -1,0 +1,54 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/_internal/db-admin/src/migrations/ArchitectureLab.ts",
+    "line": 39,
+    "symbol": "DbAdminMigrationTarget.name/schemaName/tables",
+    "smell": "DbAdminMigrationTarget models migration target names, database schema names, and table names as broad S.String/S.Array(S.String), even though all targets use stable slug/schema/table-name identifiers and table lists are non-empty.",
+    "proposedTarget": "Introduce annotated schemas such as MigrationTargetName = S.NonEmptyString.check(S.isPattern(/^[a-z][a-z0-9-]*$/u)), PostgresSchemaName/TableName = S.NonEmptyString.check(S.isPattern(/^[a-z][a-z0-9_]*$/u)), and `tables: S.NonEmptyArray(MigrationTableName)`. S.NonEmptyString, S.isPattern, and S.NonEmptyArray are verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:8420, :6521, and :4533. Add `.annotateKey({ description })` for each field.",
+    "confidence": 0.76,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/_internal/db-admin/test/ArchitectureLabMigrationTarget.test.ts",
+    "line": 8,
+    "symbol": "DbAdminMigrationTarget schema law",
+    "smell": "DbAdminMigrationTarget is exercised only through fixed registry fixtures; there is no S.toArbitrary-derived law for the migration target metadata schema.",
+    "proposedTarget": "After tightening name/schema/table fields, add an additive property test for DbAdminMigrationTarget using S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970). If `drizzleSchema: S.Unknown` remains intentionally opaque, attach a narrow toArbitrary annotation for known target-shaped fixtures or split the metadata fields into a precise schema that can round-trip independently from the Drizzle object boundary.",
+    "confidence": 0.62,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/_internal/db-admin/src/migrations/ArchitectureLab.ts",
+    "line": 38,
+    "symbol": "DbAdminMigrationTarget.drizzleSchema",
+    "smell": "Detector candidate: `drizzleSchema` is S.Unknown.",
+    "proposedTarget": "None - keep this field opaque unless db-admin grows an owned Drizzle schema metadata contract.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The field carries imported Drizzle table-schema objects from multiple table packages for migration generation only; db-admin owns the registry envelope, not the structural contract of Drizzle's schema object graph.",
+      "boundary": "Drizzle migration schema object boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/_internal/db-admin/test/integration/ArchitectureLabMigration.pglite.test.ts",
+    "line": 19,
+    "symbol": "db-admin migration SQL integration fixture",
+    "smell": "Detector candidate: PgLite migration integration uses fixed SQL inserts, ids, roles, table names, and explicit NULL parent_turn_id values.",
+    "proposedTarget": "None - keep this static migration proof fixture.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This test proves generated Drizzle migration SQL applies in PgLite and that concrete repo-owned tables accept representative rows, including SPEC fence 2 SQL-null parent_turn_id behavior. Schema-derived arbitraries cannot replace migration compatibility SQL fixtures.",
+      "boundary": "db-admin generated migration SQL and PgLite compatibility fixture"
+    }
+  }
+]

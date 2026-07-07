@@ -43,8 +43,6 @@ type Projection<Value> = {
   readonly value: Value;
 };
 
-type MdHeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
-
 const emptyProjection = <Value>(value: Value): Projection<Value> => ({ issues: [], value });
 
 const mergeIssues = <Value>(values: ReadonlyArray<Projection<Value>>): ReadonlyArray<PandocMappingIssue.Type> =>
@@ -56,17 +54,7 @@ const issue = (input: {
   readonly message: string;
   readonly path: JsonPath;
   readonly severity?: PandocMappingSeverity;
-}): PandocMappingIssue =>
-  PandocMappingIssue.fromPath({
-    construct: input.construct,
-    direction: input.direction,
-    message: input.message,
-    path: input.path,
-    severity: input.severity ?? "unsupported",
-  });
-
-const hasPandocAttr = (attr: PandocAttr.Type): boolean =>
-  attr.id.length > 0 || attr.classes.length > 0 || attr.keyValues.length > 0;
+}): PandocMappingIssue => PandocMappingIssue.fromPath(input);
 
 const hasCodeBlockDroppedAttr = (attr: PandocAttr.Type): boolean =>
   attr.id.length > 0 || attr.classes.length > 1 || attr.keyValues.length > 0;
@@ -94,8 +82,6 @@ const projectChildValues = <Input, Output>(
 const mdText = (value: string): Md.Text => Md.Text.make({ value });
 
 const mdInlinesText = (inlines: ReadonlyArray<Md.Inline>): string => A.join(A.map(inlines, mdInlineText), "");
-
-const isMdInline = S.is(Md.Inline);
 
 const mdInlineText: (inline: Md.Inline) => string = Match.type<Md.Inline>().pipe(
   Match.tagsExhaustive({
@@ -194,7 +180,7 @@ const pandocInlineToMd = (
         })),
       code: (node) =>
         Effect.succeed({
-          issues: hasPandocAttr(node.attr)
+          issues: PandocAttr.isNonEmpty(node.attr)
             ? [
                 issue({
                   construct: "Code",
@@ -211,7 +197,7 @@ const pandocInlineToMd = (
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues: [
             ...issues,
-            ...(hasPandocAttr(node.attr) || hasTargetTitle(node.target)
+            ...(PandocAttr.isNonEmpty(node.attr) || hasTargetTitle(node.target)
               ? [
                   issue({
                     construct: "Link",
@@ -229,7 +215,7 @@ const pandocInlineToMd = (
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues: [
             ...issues,
-            ...(hasPandocAttr(node.attr) || hasTargetTitle(node.target)
+            ...(PandocAttr.isNonEmpty(node.attr) || hasTargetTitle(node.target)
               ? [
                   issue({
                     construct: "Image",
@@ -247,7 +233,7 @@ const pandocInlineToMd = (
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues: [
             ...issues,
-            ...(hasPandocAttr(node.attr)
+            ...(PandocAttr.isNonEmpty(node.attr)
               ? [
                   issue({
                     construct: "Span",
@@ -305,7 +291,7 @@ const pandocInlinesToMd = (
 ): Effect.Effect<Projection<ReadonlyArray<Md.Inline>>, S.SchemaError> =>
   projectChildValues(inlines, path, pandocInlineToMd);
 
-const mdHeadingLevelFromPandoc = (level: number): MdHeadingLevel => {
+const mdHeadingLevelFromPandoc = (level: number): Md.HeadingLevel => {
   if (level <= 1) {
     return 1;
   }
@@ -324,7 +310,7 @@ const mdHeadingLevelFromPandoc = (level: number): MdHeadingLevel => {
   return 6;
 };
 
-const pandocHeadingLevelProjection = (level: number, path: JsonPath): Projection<MdHeadingLevel> => ({
+const pandocHeadingLevelProjection = (level: number, path: JsonPath): Projection<Md.HeadingLevel> => ({
   issues:
     level < 1 || level > 6
       ? [
@@ -340,7 +326,7 @@ const pandocHeadingLevelProjection = (level: number, path: JsonPath): Projection
   value: mdHeadingLevelFromPandoc(level),
 });
 
-const headingToMd = (level: MdHeadingLevel, children: ReadonlyArray<Md.Inline>): Md.Block =>
+const headingToMd = (level: Md.HeadingLevel, children: ReadonlyArray<Md.Inline>): Md.Block =>
   Md.Heading.make({ level, children });
 
 const isPlainOrPara = (block: PandocBlock.Type): block is Plain.Type | Para.Type =>
@@ -402,7 +388,7 @@ const mdListItemChildrenText = (children: ReadonlyArray<Md.ListItemChild>): stri
   };
 
   for (const child of children) {
-    if (isMdInline(child)) {
+    if (Md.Inline.is(child)) {
       A.appendInPlace(pendingInlines, child);
     } else {
       flushInlines();
@@ -441,7 +427,7 @@ const mdListItemChildrenToPandocBlocks = Effect.fn("mdListItemChildrenToPandocBl
     }
   });
   for (const [index, child] of children.entries()) {
-    if (isMdInline(child)) {
+    if (Md.Inline.is(child)) {
       if (pendingInlines.length === 0) {
         pendingStartIndex = index;
       }
@@ -549,7 +535,7 @@ const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect
           return {
             issues: [
               ...issues,
-              ...(hasPandocAttr(node.attr)
+              ...(PandocAttr.isNonEmpty(node.attr)
                 ? [
                     issue({
                       construct: "Header",
@@ -622,11 +608,11 @@ const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect
             issue({
               construct: "Div",
               direction: "pandoc-to-md",
-              message: hasPandocAttr(node.attr)
+              message: PandocAttr.isNonEmpty(node.attr)
                 ? "Pandoc div attributes, including DOCX custom styles, are recorded as a gap."
                 : "Pandoc div wrappers have no Md-core block equivalent and are rendered as blockquotes.",
               path,
-              severity: hasPandocAttr(node.attr) ? "unsupported" : "lossy",
+              severity: PandocAttr.isNonEmpty(node.attr) ? "unsupported" : "lossy",
             }),
           ],
           value: Md.BlockQuote.make({ children: value }),

@@ -32,6 +32,15 @@
       "@beep/form": [
         "../../../../packages/foundation/ui-system/form/src/index.ts"
       ],
+      "@beep/identity": [
+        "../../../../packages/foundation/modeling/identity/src/index.ts"
+      ],
+      "@beep/identity/*": [
+        "../../../../packages/foundation/modeling/identity/src/*.ts"
+      ],
+      "@beep/identity/packages": [
+        "../../../../packages/foundation/modeling/identity/src/packages.ts"
+      ],
       "@beep/schema": [
         "../../../../packages/foundation/modeling/schema/src/index.ts"
       ],

@@ -1,0 +1,50 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/sanity/src/Sanity.service.ts",
+    "line": 43,
+    "symbol": "SanityQueryParamValue",
+    "smell": "Exported union const is annotated without `SchemaUtils.withCodecStatics`; the docs show a free guard pattern (`const isQueryParamValue = S.is(SanityQueryParamValue)` at line 34) instead of a colocated `SanityQueryParamValue.is`.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)`, matching union/branded schema exemplars at packages/foundation/modeling/md/src/Md.model.ts:36 and packages/foundation/modeling/lexical/src/Lexical.model.ts:378.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/sanity/src/Sanity.service.ts",
+    "line": 165,
+    "symbol": "decodeQueryRequest",
+    "smell": "Decode wall for S.Class request/response models: `decodeQueryRequest` and `decodeQueryResponse` are free constants instead of statics on `SanityQueryRequest` / `SanityQueryResponse`.",
+    "proposedTarget": "Move the decoders into the classes as in-body statics (`static readonly decodeEffect = S.decodeUnknownEffect(SanityQueryRequest)` and same for response), following class-static decode exemplars at packages/foundation/modeling/nlp/src/Core/Pattern.ts:582 and packages/foundation/modeling/rdf/src/Rdf.ts:394.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/sanity/src/Sanity.errors.ts",
+    "line": 35,
+    "symbol": "SanityErrorReason",
+    "smell": "LiteralKit statics are dropped by annotation; docs rebuild a free guard with `S.is(SanityErrorReason)` at line 26 instead of calling a schema-owned `SanityErrorReason.is`.",
+    "proposedTarget": "Capture the LiteralKit base, then reattach `SchemaUtils.withLiteralKitStatics(base)` and `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/sanity/src/Sanity.errors.ts",
+    "line": 111,
+    "symbol": "SanityError.fromReason",
+    "smell": "Detector hit: public two-argument static constructor is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "The second argument is optional with a default (`options = {}`). Arity-based `dual(2, ...)` would turn the valid `fromReason(reason)` call into data-last partial application instead of constructing an error.",
+      "boundary": "Public error-constructor API with optional trailing args; dual dispatch is incompatible."
+    }
+  }
+]

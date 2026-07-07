@@ -1,0 +1,99 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
+    "line": 75,
+    "symbol": "decodeFfprobeOutput",
+    "smell": "Module-level `const decodeFfprobeOutput = S.decodeUnknownEffect(S.fromJsonString(FfprobeOutput))` textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Inline `S.decodeUnknownEffect(S.fromJsonString(FfprobeOutput))(result.stdout)` at the single use site (`packages/drivers/ffmpeg/src/FFmpeg.service.ts:867`) -- audited and rejected. Effect v4 `S.decodeUnknownEffect` and `S.fromJsonString` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325` and `:10983`.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.06,
+    "exception": {
+      "reason": "Single ffprobe JSON boundary codec: the schema remains the source of truth for unknown process stdout and the helper keeps the trusted-boundary decode readable at the only use site.",
+      "boundary": "ffprobe stdout JSON boundary codec"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
+    "line": 92,
+    "symbol": "FFmpegEventSink",
+    "smell": "Exported function type alias returning `Effect.Effect<void>` matches the schema-first-inventory function-contract surface.",
+    "proposedTarget": "Hypothetical `Fn({ input: FFmpegEvent, output: EffectSchema<void, never, never>() })` callback schema -- audited and rejected. `EffectSchema` is verified as a factory at `packages/foundation/modeling/schema/src/EffectSchema.ts:83`; `Fn(...).implementEffect`/`implementSync` helpers are verified in `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:369-410`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "This is an event callback port threaded through the service implementation. Its input is already the schema-backed `FFmpegEvent` union and the return is a runtime Effect handle; wrapping it would change callback invocation semantics rather than move payload truth into Schema.",
+      "boundary": "event sink callback port"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
+    "line": 112,
+    "symbol": "FFmpegShape",
+    "smell": "Exported interface with Effect-returning service methods matches the schema-first-inventory detector surface.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. Keep request/response payloads as schemas (`ExtractFramesRequest`, `ExtractFramesResult`, `ProbeVideoRequest`, `VideoProbe`) and keep `FFmpegShape` as the `Context.Service` shape used by `FFmpeg` at line 1020; Effect v4 class-style `Context.Service<Self, Shape>()(\"Key\")` verified at `.repos/effect-v4/packages/effect/src/Context.ts:162-163`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Service shapes and port interfaces are explicitly carved out by S1. This interface composes runtime operations; the operation payloads themselves are schema-modeled.",
+      "boundary": "Context.Service shape for the FFmpeg driver"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
+    "line": 330,
+    "symbol": "formatFrameFileName",
+    "smell": "Exported utility in a schema-modeled service file accepts an inline object type (`{ index; padding; prefix }`) whose invariants duplicate existing frame-prefix and numeric domains instead of a schema-carried function contract.",
+    "proposedTarget": "Introduce an annotated `FormatFrameFileNameOptions` schema (for example `S.Class` with `index`, `padding`, and `prefix: SafeFramePrefix`) and a `FormatFrameFileName = Fn({ input: FormatFrameFileNameOptions, output: S.String }).pipe($I.annoteSchema(...))`; implement the public helper with `FormatFrameFileName.implementSync(...)`. In-repo exemplars: `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66` and `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`; `Fn(...).implementSync` verified at `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:403`.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.8
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
+    "line": 350,
+    "symbol": "buildFfprobeArgs",
+    "smell": "Exported function in a schema-modeled file can look like an SFV4-fn-schema hit.",
+    "proposedTarget": "Hypothetical `Fn({ input: ProbeVideoRequest, output: S.Array(S.String) })` wrapper -- audited and rejected. `Fn(...).implementSync` is verified at `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:403`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The input contract is already the `ProbeVideoRequest` S.Class; the output is a command-vector projection for the native process port. Fn-wrapping would add invocation-time decode/throw semantics without moving a first-party payload invariant into Schema.",
+      "boundary": "native ffprobe argv projection"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.service.ts",
+    "line": 382,
+    "symbol": "buildExtractFramesArgs",
+    "smell": "Exported utility in a schema-modeled service file accepts an inline options object (`fps`, `outputPattern`, `videoPath`) instead of a named schema/Fn contract.",
+    "proposedTarget": "Introduce an annotated `BuildExtractFramesArgsOptions` S.Class for the command input and a `BuildExtractFramesArgs = Fn({ input: BuildExtractFramesArgsOptions, output: S.Array(S.String) }).pipe($I.annoteSchema(...))`, then implement the current helper with `.implementSync(...)`. In-repo exemplars: `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66` and `packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts:61`; `Fn(...).implementSync` verified at `packages/foundation/modeling/schema/src/Fn/Fn.schema.ts:403`.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 0.65
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/ffmpeg/src/FFmpeg.models.ts",
+    "line": 640,
+    "symbol": "decodeExtractFramesRequest / decodeProbeVideoRequest / encodeExtractFramesManifest",
+    "smell": "Exported schema-derived decode/encode constants can look like a public decode-helper wall (`S.decodeUnknownEffect(...)` / `S.encodeUnknownEffect(...)`).",
+    "proposedTarget": "None for S1. Keep these as package boundary codecs over the public models; Effect v4 `S.decodeUnknownEffect` and `S.encodeUnknownEffect` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325` and `:1788`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "The helpers are direct schema-derived public codecs for request/manifest boundaries, not alternate validation logic. The schema declarations remain the source of truth and callers get a stable package API.",
+      "boundary": "public FFmpeg model codec API"
+    }
+  }
+]

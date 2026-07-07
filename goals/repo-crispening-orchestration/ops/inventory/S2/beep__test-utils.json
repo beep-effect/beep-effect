@@ -1,0 +1,152 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/test-kit/test-utils/src/Schema.ts",
+    "line": 42,
+    "symbol": "assertSchemaArbitraryDecodesToSelf",
+    "smell": "`{ numRuns: options?.numRuns ?? 50 }` defaults an optional FastCheck tuning option inside an exported test helper.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "This is a test-helper ergonomics default over FastCheck runtime options, not a schema-modeled domain invariant. The helper's purpose is to test schemas, not introduce another schema for one optional assertion tuning value.",
+      "boundary": "testing helper option"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+    "line": 624,
+    "symbol": "makePgliteConfig",
+    "smell": "`decodePgliteTestcontainersTestDriverConfig(configInput === undefined ? {} : configInput)` defaults absent driver config input to `{}`.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 2,
+    "exception": {
+      "reason": "The actual driver field defaults already live on `PgliteTestcontainersTestDriverConfig` at lines 160-183 via `S.withConstructorDefault` + `S.withDecodingDefaultKey`; this wrapper only lets callers omit the entire test config object.",
+      "boundary": "test harness convenience wrapper around already-schema-defaulted config"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+    "line": 634,
+    "symbol": "makePgExternalConfig",
+    "smell": "`decodePgExternalTestDriverConfig(configInput === undefined ? {} : configInput)` repeats the whole-object omission fallback for external PostgreSQL config.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Field defaults for `connectTimeoutMs`, `isolation`, `maxConnections`, `schemaPrefix`, and `ssl` already live on `PgExternalTestDriverConfig` at lines 221-240; the wrapper supports omitted test config while preserving the required `connectionUri` validation.",
+      "boundary": "test harness convenience wrapper around already-schema-defaulted config"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+    "line": 356,
+    "symbol": "SqlTestHooks",
+    "smell": "`migrate?: undefined | Effect.Effect<...>` and `seed?: undefined | Effect.Effect<...>` model hook absence with optional/undefined fields.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "Hooks are function/effect-valued test extension points, so they are not schema-modelable data fields. The surrounding `SqlTestHarnessError.cause` already uses `S.OptionFromOptionalKey` at line 334.",
+      "boundary": "function-valued test hook contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+    "line": 518,
+    "symbol": "runHook",
+    "smell": "`hook: undefined | Effect.Effect<...>` plus `hook === undefined ? Effect.void : ...` is a detector hit for undefined branching.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "This is the execution adapter for optional function/effect-valued hooks, not a data model default. Modeling the hook as a schema field would violate the non-serializable function-valued boundary.",
+      "boundary": "function-valued test hook adapter"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+    "line": 661,
+    "symbol": "getPgliteImageBuild",
+    "smell": "`O.getOrElse(() => { ...build image... })` lazily initializes a cached PGLite Testcontainers image build.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "This is lazy resource-cache initialization around a process-local `Option<Promise<GenericContainer>>`, not a schema-field default or domain absence value.",
+      "boundary": "process-local test resource cache"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+    "line": 452,
+    "symbol": "databaseNameFromConnectionUri",
+    "smell": "`Str.replace(/^\\//, '')` strips the leading slash from `URL.pathname` and filters empty strings while deriving database metadata.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "This is URL component extraction for SQL test runtime metadata after the platform `URL` parser has already decoded the connection string. It is boundary parsing, not a reusable schema-field normalization leak.",
+      "boundary": "SQL connection URI parsing"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+    "line": 1219,
+    "symbol": "resolvePgliteExternalConfig",
+    "smell": "`config?.connectionUri !== undefined` gates whether `BEEP_TEST_DATABASE_URL` becomes the external PostgreSQL connection URI.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "The fallback comes from Effect `Config.string(...).pipe(Config.option)` and an environment variable; it is an effectful test-runtime boundary, not a static schema default.",
+      "boundary": "Effect Config / environment test-runtime boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+    "line": 1342,
+    "symbol": "makePgliteSqlTestLayer",
+    "smell": "`const mode = options.mode ?? 'auto';` defaults the public PGLite test-layer mode in the layer builder body.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "`PgliteSqlTestLayerOptions` includes non-serializable hook Effects and driver config inputs; the public helper is a test-layer constructor boundary. The package already carries durable driver defaults in the concrete config schemas.",
+      "boundary": "test layer constructor with function-valued hooks"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/tooling/test-kit/test-utils/test/integration/SqlTest.pglite.test.ts",
+    "line": 111,
+    "symbol": "countIsolatedNotes",
+    "smell": "`O.getOrElse(() => 0)` defaults an empty SQL aggregate result to zero inside an integration test helper; similar test assertions appear later in this file.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "This is test assertion/result ergonomics over raw SQL rows in an integration test file, not a production/domain schema default.",
+      "boundary": "integration test fixture/assertion"
+    }
+  }
+]

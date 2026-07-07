@@ -19,9 +19,9 @@
  */
 
 import { $EditorId } from "@beep/identity";
-import { TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { ImageMimeType, MimeType } from "@beep/schema/MimeType";
-import { Result } from "effect";
+import { flow, identity, Number as N, Result, SchemaTransformation } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $EditorId.create("chat/attachment-model");
@@ -52,16 +52,38 @@ export const IMAGE_MIME_TYPES = ImageMimeType.pickOptions(["image/png", "image/j
  * Schema for the vision-eligible image MIME subset, used to guard whether a
  * captured attachment is an image via {@link isImageAttachment}.
  *
+ * @example
+ * ```ts
+ * import { ImageAttachmentMimeType } from "@beep/editor/chat"
+ *
+ * console.log(ImageAttachmentMimeType.is("image/png")) // true
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
-const ImageAttachmentMimeType = S.Literals(IMAGE_MIME_TYPES).pipe(
+export const ImageAttachmentMimeType = S.Literals(IMAGE_MIME_TYPES).pipe(
   $I.annoteSchema("ImageAttachmentMimeType", {
     description: "The vision-eligible image MIME subset captured as thumbnailed attachments.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
-const isImageMimeType = S.is(ImageAttachmentMimeType);
+/**
+ * Companion type for {@link ImageAttachmentMimeType}.
+ *
+ * @example
+ * ```ts
+ * import type { ImageAttachmentMimeType } from "@beep/editor/chat"
+ *
+ * const mimeType: ImageAttachmentMimeType = "image/png"
+ * console.log(mimeType) // "image/png"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ImageAttachmentMimeType = typeof ImageAttachmentMimeType.Type;
 
 /**
  * Default maximum captured attachment size (10 MB).
@@ -91,18 +113,39 @@ const FileFromSelf = S.declare<File>((u): u is File => "File" in globalThis && u
   })
 );
 
-const AttachmentSizeBytes = S.Int.pipe(
-  S.check(
-    S.isBetween(
-      { minimum: 0, maximum: DEFAULT_MAX_ATTACHMENT_BYTES },
-      {
-        identifier: $I`AttachmentSizeBytes`,
-        title: "Attachment Size Bytes",
-        description: `A captured attachment size in bytes, bounded by the ${DEFAULT_MAX_ATTACHMENT_BYTES}-byte default.`,
-      }
-    )
-  )
+const AttachmentByteCount = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+  $I.annoteSchema("AttachmentByteCount", {
+    description: "A non-negative integer byte count.",
+  })
 );
+
+const AttachmentSizeBytes = AttachmentByteCount.pipe(
+  S.check(S.isLessThanOrEqualTo(DEFAULT_MAX_ATTACHMENT_BYTES)),
+  $I.annoteSchema("AttachmentSizeBytes", {
+    description: `A captured attachment size in bytes, bounded by the ${DEFAULT_MAX_ATTACHMENT_BYTES}-byte default.`,
+  })
+);
+
+const clampAttachmentCaptureLimitBytes = flow(
+  N.round(0),
+  N.clamp({ minimum: 0, maximum: DEFAULT_MAX_ATTACHMENT_BYTES })
+);
+
+const AttachmentCaptureLimitBytes = S.Finite.pipe(
+  S.decodeTo(
+    AttachmentSizeBytes,
+    SchemaTransformation.transform({
+      decode: clampAttachmentCaptureLimitBytes,
+      encode: identity,
+    })
+  ),
+  $I.annoteSchema("AttachmentCaptureLimitBytes", {
+    description: "A composer attachment capture limit clamped to the supported byte range.",
+  })
+);
+
+const resolveAttachmentCaptureLimitBytes = (maxBytes: number): number =>
+  Result.getOrElse(S.decodeUnknownResult(AttachmentCaptureLimitBytes)(maxBytes), () => DEFAULT_MAX_ATTACHMENT_BYTES);
 
 /**
  * A captured file rejected because it exceeds the (clamped) byte budget.
@@ -126,9 +169,9 @@ const AttachmentSizeBytes = S.Int.pipe(
 export class AttachmentTooLarge extends TaggedErrorClass<AttachmentTooLarge>($I`AttachmentTooLarge`)(
   "AttachmentTooLarge",
   {
-    filename: S.String,
-    size: S.Finite,
-    maxBytes: S.Finite,
+    filename: S.String.annotateKey({ description: "Original name of the rejected file." }),
+    size: AttachmentByteCount.annotateKey({ description: "Rejected file size in bytes." }),
+    maxBytes: AttachmentByteCount.annotateKey({ description: "Effective byte limit used during capture." }),
   },
   $I.annote("AttachmentTooLarge", {
     description: "A captured file rejected because it exceeds the (clamped) byte budget.",
@@ -159,8 +202,8 @@ export class AttachmentInvalidMimeType extends TaggedErrorClass<AttachmentInvali
 )(
   "AttachmentInvalidMimeType",
   {
-    filename: S.String,
-    mimeType: S.String,
+    filename: S.String.annotateKey({ description: "Original name of the rejected file." }),
+    mimeType: S.String.annotateKey({ description: "Raw browser File.type string that failed MIME decoding." }),
   },
   $I.annote("AttachmentInvalidMimeType", {
     description: "A captured file rejected because its `file.type` is empty or not a recognized MIME type.",
@@ -193,7 +236,8 @@ export const AttachmentRejection = S.Union([AttachmentTooLarge, AttachmentInvali
   $I.annoteSchema("AttachmentRejection", {
     description:
       "Why {@link ComposerAttachment.fromFile} declined to capture a file. A tagged\nunion so the capture pipeline can distinguish — and surface — an over-budget\nfile from one with an unrecognized MIME type, rather than collapsing both into\nan opaque `O.none()`.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -250,18 +294,18 @@ let attachmentSequence = 0;
  */
 export class ComposerAttachment extends S.Class<ComposerAttachment>($I`ComposerAttachment`)(
   {
-    /** Ephemeral UI identity used as the chip key. */
-    id: S.String,
-    /** The original file name. */
-    filename: S.String,
-    /** Validated MIME type of the captured file. */
-    mimeType: MimeType,
-    /** Captured file size in bytes, bounded by the default max. */
-    size: AttachmentSizeBytes,
-    /** In-memory object-URL reference (used for the thumbnail; not transported). */
-    objectUrl: S.String,
-    /** The captured file, kept for the app's upload-port to transport later. */
-    file: FileFromSelf,
+    id: S.String.annotateKey({ description: "Ephemeral UI identity used as the chip key." }),
+    filename: S.String.annotateKey({ description: "Original file name." }),
+    mimeType: MimeType.annotateKey({ description: "Validated MIME type of the captured file." }),
+    size: AttachmentSizeBytes.annotateKey({
+      description: "Captured file size in bytes, bounded by the default max.",
+    }),
+    objectUrl: S.String.annotateKey({
+      description: "In-memory object-URL reference used for the thumbnail; not transported.",
+    }),
+    file: FileFromSelf.annotateKey({
+      description: "Captured file handle kept for the app upload port to transport later.",
+    }),
   },
   $I.annote("ComposerAttachment", {
     description:
@@ -284,7 +328,7 @@ export class ComposerAttachment extends S.Class<ComposerAttachment>($I`ComposerA
    * @since 0.0.0
    */
   static readonly isWithinSize = (file: File, maxBytes: number = DEFAULT_MAX_ATTACHMENT_BYTES): boolean =>
-    file.size <= maxBytes;
+    file.size <= resolveAttachmentCaptureLimitBytes(maxBytes);
 
   /**
    * Read a captured `File` into a {@link ComposerAttachment} synchronously (via
@@ -320,7 +364,7 @@ export class ComposerAttachment extends S.Class<ComposerAttachment>($I`ComposerA
     file: File,
     maxBytes: number = DEFAULT_MAX_ATTACHMENT_BYTES
   ): Result.Result<ComposerAttachment, AttachmentRejection> => {
-    const effectiveMaxBytes = Math.min(maxBytes, DEFAULT_MAX_ATTACHMENT_BYTES);
+    const effectiveMaxBytes = resolveAttachmentCaptureLimitBytes(maxBytes);
     if (!ComposerAttachment.isWithinSize(file, effectiveMaxBytes)) {
       return Result.fail(
         AttachmentTooLarge.make({ filename: file.name, size: file.size, maxBytes: effectiveMaxBytes })
@@ -367,7 +411,8 @@ export class ComposerAttachment extends S.Class<ComposerAttachment>($I`ComposerA
  * @category utilities
  * @since 0.0.0
  */
-export const isImageAttachment = (attachment: ComposerAttachment): boolean => isImageMimeType(attachment.mimeType);
+export const isImageAttachment = (attachment: ComposerAttachment): boolean =>
+  ImageAttachmentMimeType.is(attachment.mimeType);
 
 /**
  * Read a captured `File` into a {@link ComposerAttachment} synchronously, or a

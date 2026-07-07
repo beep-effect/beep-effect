@@ -1,0 +1,72 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 236,
+    "symbol": "VeniceAIQueryValue",
+    "smell": "Union const lacks codec statics; line 1374 rebuilds its guard as free-floating `isEncodedQueryValue = S.is(VeniceAIQueryValue)` for query normalization.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` and replace `isEncodedQueryValue(value)` with `VeniceAIQueryValue.is(value)`. Union exemplar: `Block` at packages/foundation/modeling/md/src/Md.model.ts:1617; `withCodecStatics` verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 341,
+    "symbol": "VeniceAIOperationDescriptor",
+    "smell": "S.Class model uses a detached guard at line 521 (`const isVeniceAIOperationDescriptor = S.is(VeniceAIOperationDescriptor)`) for `dual` predicate dispatch.",
+    "proposedTarget": "Add `static readonly is = S.is(VeniceAIOperationDescriptor)` in the class body and use `VeniceAIOperationDescriptor.is(args[0])` in `VeniceAIError.fromDescriptor`. Class-static exemplar: `Heading.is` at packages/foundation/modeling/md/src/Md.model.ts:873.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 468,
+    "symbol": "VeniceAIResponse",
+    "smell": "Public response tagged union is built with `S.toTaggedUnion(\"_tag\")` but lacks colocated codec statics for guard/soft decode use.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)` so consumers can call `VeniceAIResponse.is`, `.fromUnknown`, and `.decodeOption`, matching the `Block` union pattern in packages/foundation/modeling/md/src/Md.model.ts:1617.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 679,
+    "symbol": "safeBoolean",
+    "smell": "Trivial one-step wrapper around `Result.try` + `Result.getOrElse` should be expressed as a reusable `flow(...)` pipeline.",
+    "proposedTarget": "`const safeBoolean: (evaluate: () => boolean) => boolean = flow(Result.try, Result.getOrElse(() => false));` using the existing `flow` import; v4 `flow` verified at .repos/effect-v4/packages/effect/src/Function.ts:1162.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 727,
+    "symbol": "decodeChatCompletionTextResponse",
+    "smell": "Free-floating class decoder `S.decodeUnknownEffect(ChatCompletionTextResponse)` lives immediately below the class it serves.",
+    "proposedTarget": "Move the decoder into `ChatCompletionTextResponse` as `static readonly decodeUnknownEffect = S.decodeUnknownEffect(ChatCompletionTextResponse)` and replace the local helper with that static. v4 `S.decodeUnknownEffect` verified at .repos/effect-v4/packages/effect/src/Schema.ts:1325.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts",
+    "line": 219,
+    "symbol": "model",
+    "smell": "Detector hit: exported 2-arg helper is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "`model(modelName, config?)` intentionally supports a one-argument constructor returning an `AiModel.Model`; `dual(2, ...)` would reinterpret that public call as data-last.",
+      "boundary": "Optional-trailing-argument public constructor; preserving current public form outranks pipeability."
+    }
+  }
+]

@@ -5,11 +5,14 @@ import {
   redactCauseForClient,
   redactString,
   sanitizeSensitiveText,
+  summarizeCause,
 } from "@beep/observability";
 import { NonNegativeInt } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
-import { Cause, Effect } from "effect";
+import { Cause, Effect, Equal } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 describe("CauseRedaction", () => {
   it("redacts secret-shaped tokens and home paths", () => {
@@ -64,6 +67,14 @@ describe("CauseRedaction", () => {
     expect(safe.message).toContain("[REDACTED]");
   });
 
+  it("supports data-last redaction with schema-backed options", () => {
+    const redactForClient = redactCause(RedactCauseOptions.make({ channel: "client" }));
+    const safe = redactForClient(Cause.fail(new Error("token=sk-EXAMPLEKEY00")));
+
+    expect(O.isNone(safe.detail)).toBe(true);
+    expect(safe.message).not.toContain("sk-EXAMPLEKEY00");
+  });
+
   it.effect(
     "exposes a traced Effect-friendly variant",
     Effect.fnUntraced(function* () {
@@ -80,5 +91,41 @@ describe("CauseRedaction", () => {
     );
     expect(safe.message.length).toBeLessThanOrEqual(32 + 3);
     expect(safe.truncated).toBe(true);
+  });
+
+  it("round-trips schema-derived redaction options", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(RedactCauseOptions), (options) => {
+        const decoded = O.flatMap(
+          S.encodeOption(RedactCauseOptions)(options),
+          S.decodeUnknownOption(RedactCauseOptions)
+        );
+        expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
+      }),
+      { numRuns: 50 }
+    );
+  });
+
+  it("honors generated redaction bounds and channel rules", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(RedactCauseOptions), fc.string(), (options, rawMessage) => {
+        const cause = Cause.fail(new Error(rawMessage));
+        const summary = summarizeCause(cause);
+        const safe = redactCause(cause, options);
+        const messageTruncated = sanitizeSensitiveText(summary.primaryMessage).length > options.messageLimit;
+        const detailTruncated =
+          options.channel === "diagnostic" && sanitizeSensitiveText(summary.pretty).length > options.detailLimit;
+
+        expect(safe.message.length).toBeLessThanOrEqual(options.messageLimit + 3);
+        expect(safe.truncated).toBe(messageTruncated || detailTruncated);
+
+        if (options.channel === "client") {
+          expect(O.isNone(safe.detail)).toBe(true);
+        } else {
+          expect(O.exists(safe.detail, (detail) => detail.length <= options.detailLimit + 3)).toBe(true);
+        }
+      }),
+      { numRuns: 50 }
+    );
   });
 });

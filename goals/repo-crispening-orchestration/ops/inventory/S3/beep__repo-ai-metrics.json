@@ -1,0 +1,195 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
+    "line": 1700,
+    "symbol": "resolveWorkerEvalReportPath/probePhoenix/buildJsdocWorkerSection",
+    "smell": "Six direct Option discriminator checks branch on `._tag === \"None\"` at lines 1700, 1739, 1756, 1764, 1773, and 2027. This hand-rolls the Effect Option tag guard instead of using the v4 Option guard API and makes the surrounding control flow look like raw tagged-union dispatch.",
+    "proposedTarget": "Replace the direct tag checks with `O.isNone(...)` / `O.isSome(...)` or `O.match(...)` as appropriate. Verified v4 helpers: `Option.isNone` at .repos/effect-v4/packages/effect/src/Option.ts:358, `Option.isSome` at .repos/effect-v4/packages/effect/src/Option.ts:388, and `Option.match` at .repos/effect-v4/packages/effect/src/Option.ts:423.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3.6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/ai-metrics/src/forwarder.ts",
+    "line": 277,
+    "symbol": "AiMetricsForwarderOtlpExport",
+    "smell": "AiMetricsForwarderOtlpExport unions two S.Class members whose `status` fields are disjoint literals (`\"exported\"` at line 208 and `\"failed\"` at line 243), but the schema is only `S.Union([...])`; the status discriminator is not lifted into a tagged union, so schema-derived `.match` / `.guards` / `.isAnyOf` are absent.",
+    "proposedTarget": "Derive the discriminator utilities with `S.Union([AiMetricsForwarderOtlpExported, AiMetricsForwarderOtlpExportFailed]).pipe(S.toTaggedUnion(\"status\"), ...)`. Verified v4 `S.toTaggedUnion` at .repos/effect-v4/packages/effect/src/Schema.ts:6094 and in-repo status exemplars at packages/foundation/capability/file-processing/src/Extraction/index.ts:586 and packages/tooling/tool/cli/src/commands/CreatePackage/TsMorphIntegrationService.ts:179.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 3.44
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/ai-metrics/src/install.ts",
+    "line": 39,
+    "symbol": "servicePort/serviceImage",
+    "smell": "AiMetricsTool is a LiteralKit with four members (models.ts:57), but servicePort (line 39) and serviceImage (line 676) manually chain `if (tool === AiMetricsTool.Enum...)` and then fall through to the posthog default. Adding a tool would silently inherit the posthog branch instead of producing an exhaustive handler error.",
+    "proposedTarget": "Use `AiMetricsTool.$match(tool, { langfuse: ..., phoenix: ..., opik: ..., posthog: ... })` for both lookup functions. Verified `LiteralKit.$match` data-first/data-last overloads at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:600 and in-repo kit-match exemplars at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:368 and packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts:157.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3.4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/ai-metrics/src/ingest.ts",
+    "line": 117,
+    "symbol": "decodeTranscriptTurn",
+    "smell": "decodeTranscriptTurn manually dispatches over the AiMetricsTranscriptSource LiteralKit (`codex`, `claude`, else openclaw) with two equality checks and a default branch. The default branch is standing in for exhaustiveness, so a future transcript source would decode as OpenClaw rather than fail at the handler table.",
+    "proposedTarget": "Replace the if-chain with `AiMetricsTranscriptSource.$match(sourceKind, { codex: ..., claude: ..., openclaw: ... })`, keeping the existing per-source decoder calls in the cases. Verified kit `$match` at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:600; AiMetricsTranscriptSource's source literals are defined at packages/tooling/library/ai-metrics/src/models.ts:88.",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 3.44
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/ai-metrics/src/internal/transcript-utils.ts",
+    "line": 36,
+    "symbol": "eventNamesForSource",
+    "smell": "eventNamesForSource manually dispatches over AiMetricsTranscriptSource with `codex`, `claude`, and default-openclaw branches even though the source domain is a LiteralKit. The function is a pure literal-domain lookup and should be exhaustiveness-checked by the kit.",
+    "proposedTarget": "Use `AiMetricsTranscriptSource.$match(sourceKind, { codex: () => codexEventNames, claude: () => claudeEventNames, openclaw: () => openClawEventNames })`. Verified `LiteralKit.$match` at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:600 and the `RepoPlanPhase.$match` lookup exemplar at packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts:368.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3.6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/ai-metrics/src/privacy.ts",
+    "line": 519,
+    "symbol": "makeAiMetricsSourceAttribution",
+    "smell": "makeAiMetricsSourceAttribution branches on AiMetricsTranscriptSource for openclaw and claude, then lets every remaining source fall into the Codex-specific session-metadata parser. That is manual literal-domain dispatch with a load-bearing default branch.",
+    "proposedTarget": "Route by `AiMetricsTranscriptSource.$match(sourceKind, { openclaw: ..., claude: ..., codex: ... })`; because the codex branch contains Effect work and local derived values, this should be an assisted rewrite rather than a blind codemod. Verified `LiteralKit.$match` at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:600.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 1.95
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
+    "line": 1579,
+    "symbol": "sectionStatus",
+    "smell": "sectionStatus maps the AgentEffectivenessStatus LiteralKit with three equality checks and a default `passed` branch. A future status would be treated as success/empty arrays instead of requiring a handler.",
+    "proposedTarget": "Replace the if-chain with `AgentEffectivenessStatus.$match(status, { failed: ..., unavailable: ..., warning: ..., passed: ... })`. Verified `LiteralKit.$match` at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:600; AgentEffectivenessStatus is the kit at packages/tooling/library/ai-metrics/src/agent-effectiveness.ts:95.",
+    "confidence": 0.88,
+    "mechanization": "assisted",
+    "roiRank": 3.52
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/ai-metrics/src/derived-storage.ts",
+    "line": 827,
+    "symbol": "parquetExportDirFor",
+    "smell": "parquetExportDirFor dispatches over AiMetricsParquetExportMode with `none`, then a ternary for `latest` vs implicit `snapshot`. The implicit snapshot default is not exhaustive against the three-member LiteralKit.",
+    "proposedTarget": "Use `AiMetricsParquetExportMode.$match(input.parquetExportMode, { none: () => O.none(), latest: () => O.some(pathApi.join(input.storage.parquetDir, \"latest\")), snapshot: () => O.some(pathApi.join(input.storage.parquetDir, input.ingestRunId)) })`. Verified `LiteralKit.$match` at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:600; the mode kit is defined at packages/tooling/library/ai-metrics/src/derived-storage.ts:50.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 2.34
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/ai-metrics/src/otlp.ts",
+    "line": 78,
+    "symbol": "AiMetricsOtlpAttributeValue",
+    "smell": "AiMetricsOtlpAttributeValue = S.Union([S.String, S.Finite, S.Boolean]) is an undiscriminated scalar union that a broad undiscriminated-union detector could flag as a tagged-union candidate.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is the JSON scalar value domain for OTLP attributes, not a finite variant family. Strings, finite numbers, and booleans are already disjoint primitive schemas and there is no stable discriminator field to lift with S.toTaggedUnion.",
+      "boundary": "OTLP attribute value wire shape"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
+    "line": 123,
+    "symbol": "AgentEffectivenessAnnotationValue",
+    "smell": "AgentEffectivenessAnnotationValue = S.Union([S.String, S.Finite, S.Boolean]) is an undiscriminated scalar union that a broad undiscriminated-union detector could flag.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The schema models primitive Phoenix annotation JSON values, not a behavior-bearing variant family. Tagging would change the public annotation payload shape.",
+      "boundary": "Phoenix/local annotation value wire shape"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
+    "line": 1408,
+    "symbol": "WorkerEvalPolicyViolation",
+    "smell": "WorkerEvalPolicyViolation = S.Union([S.String, WorkerEvalPolicyViolationObject]) is an undiscriminated string-or-object union that a broad S.Union detector could flag.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The union is an internal legacy/current wire compatibility decoder: historical worker-eval rows may encode a violation as `{ code }`, while current rows encode the string directly. A tagged union would reject or reshape one side of that input boundary.",
+      "boundary": "worker-eval report compatibility decoder"
+    }
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/tooling/library/ai-metrics/src/otlp.ts",
+    "line": 411,
+    "symbol": "sessionProjection",
+    "smell": "Detector candidate: `R.getSomes({...})` is spread into an OTLP attribute object. The argument uses fixed attribute-name keys, but every value is an `Option<string>` projected into `Record<string, AiMetricsOtlpAttributeValue>`.",
+    "proposedTarget": "None -- keep `R.getSomes` here.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is a homogeneous attribute dictionary: `R.getSomes` is verified as `<K extends string, A>(ReadonlyRecord<K, Option<A>>) => Record<..., A>` at .repos/effect-v4/packages/effect/src/Record.ts:824, and the resulting keys flow through `allowlistedAttributes: Record<string, AiMetricsOtlpAttributeValue>`.",
+      "boundary": "OTLP allowlisted string-attribute dictionary"
+    }
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/tooling/library/ai-metrics/src/otlp.ts",
+    "line": 436,
+    "symbol": "turnProjection",
+    "smell": "Detector candidate: `R.getSomes({...})` is spread into an OTLP attribute object for timestamp/tool-name fields. All three entries are optional string attribute values.",
+    "proposedTarget": "None -- keep `R.getSomes` here.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is the homogeneous dictionary form the card explicitly preserves: every option value has the same string value type and the output is immediately consumed as a dynamic OTLP attribute record.",
+      "boundary": "OTLP allowlisted string-attribute dictionary"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/ai-metrics/src/otlp.ts",
+    "line": 322,
+    "symbol": "allowlistedAttributes",
+    "smell": "`AI_METRICS_OTLP_ATTRIBUTE_ALLOWLIST as ReadonlyArray<string>` is a broad no-`as` detector candidate because it widens a readonly literal tuple before `A.contains`.",
+    "proposedTarget": "None -- keep out of S3 actionables.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The cast widens a static allowlist tuple for a dynamic record-key membership predicate; it is not narrowing a union, bypassing a schema guard, or dispatching on a discriminator. LiteralKit would be a separate allowlist-domain design, not a direct S3 remediation.",
+      "boundary": "dynamic OTLP attribute-key filter"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/ai-metrics/src/config-snapshot.ts",
+    "line": 220,
+    "symbol": "isExcludedDirName/isAgentDocName",
+    "smell": "`EXCLUDED_DIR_NAMES as ReadonlyArray<string>` and `AGENT_DOC_NAMES as ReadonlyArray<string>` widen readonly literal tuples before `A.contains`; a broad no-`as` detector could flag them.",
+    "proposedTarget": "None -- keep out of S3 actionables.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These are dynamic string membership predicates against local config filenames/directories, not discriminator branches or literal-family duplication. The `as const` source arrays are named tuples and are not inline LiteralKit arguments.",
+      "boundary": "config snapshot filename/directory membership filters"
+    }
+  }
+]

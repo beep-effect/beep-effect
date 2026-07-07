@@ -7,7 +7,7 @@
 
 import { observeWorkflow, redactCauseSummary, summarizeCause, trackDuration } from "@beep/observability";
 import { Effect, Metric } from "effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import type { Cause } from "effect";
 
@@ -44,7 +44,7 @@ const causeMetricAttributes = <E>(cause: Cause.Cause<E>): Record<string, string>
 // strips secrets/tokens/home paths, caps length, and keeps a stable fingerprint;
 // the redacted message/detail are emitted to logs but never to metric labels.
 const causeLogAttributes = <E>(cause: Cause.Cause<E>): Record<string, string> => {
-  const redacted = cause.pipe(summarizeCause, redactCauseSummary);
+  const redacted = pipe(cause, summarizeCause, (summary) => redactCauseSummary(summary));
   const base: Record<string, string> = {
     cause_classification: redacted.tag,
     cause_fingerprint: redacted.fingerprint,
@@ -153,7 +153,7 @@ export const trackNlpDuration: {
     attributes: Record<string, string>
   ): Effect.Effect<A, E, R> => {
     const metricAttributes = withPackageAttributes(attributes);
-    return trackDuration(effect, operationDuration, metricAttributes).pipe(
+    return trackDuration(effect, operationDuration, { attributes: metricAttributes }).pipe(
       Effect.withSpan(name, { attributes: metricAttributes })
     );
   }

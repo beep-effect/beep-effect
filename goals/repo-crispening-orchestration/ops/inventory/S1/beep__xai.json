@@ -1,0 +1,88 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/xai/src/XAi.service.ts",
+    "line": 99,
+    "symbol": "XAiEndpointMethod / XAiStreamMethod / XAiWebSocketMethod",
+    "smell": "Exported function type aliases in a schema-modeled service file match the S1 function-contract/type-alias smell.",
+    "proposedTarget": "Hypothetical `Fn`/`EffectSchema` wrappers for each endpoint method contract were audited and rejected. Keep the request/response payload truth in `XAiRequestOptions`, `XAiResponse`, `XAiServerSentEvent`, and `XAiWebSocketEvent`, and keep these aliases as service-method port types.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "These aliases are service method contracts for `Context.Service<XAi, XAiShape>()`, not standalone data payloads. The request and response values crossing the methods are already schema-modeled.",
+      "boundary": "xAI service method port aliases"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/xai/src/XAi.service.ts",
+    "line": 133,
+    "symbol": "XAiWebSocketSession",
+    "smell": "Exported interface with function members, a Stream handle, and Uint8Array write methods matches the schema-first-inventory detector surface.",
+    "proposedTarget": "None -- fence 1 service-contract/port-interface carve-out. The schema-owned WebSocket event payload is `XAiWebSocketEvent` (`packages/drivers/xai/src/XAi.models.ts:357`); the live session handle remains an interface.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Durably ledgered exception at `standards/schema-first.inventory.jsonc:513-518`: interface contains non-schema signals such as function members or runtime handles.",
+      "boundary": "live xAI WebSocket session handle"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/xai/src/XAi.service.ts",
+    "line": 193,
+    "symbol": "XAiShape",
+    "smell": "Exported service shape combines mapped endpoint methods and streaming helpers; a broad schema-first audit can surface it as a public type contract.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. `XAiShape` is consumed by `Context.Service<XAi, XAiShape>()` at `packages/drivers/xai/src/XAi.service.ts:995`; Effect v4 class-style `Context.Service<Self, Shape>()(\"Id\")` verified at `.repos/effect-v4/packages/effect/src/Context.ts:163` and `.repos/effect-v4/packages/effect/src/Context.ts:200`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Service shapes are an explicit S1 carve-out. The concrete endpoint descriptors and request/response values are schema-modeled separately.",
+      "boundary": "Context.Service shape for the xAI driver"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/xai/src/XAi.errors.ts",
+    "line": 67,
+    "symbol": "isXAiEndpointDescriptor",
+    "smell": "Top-level `const isXAiEndpointDescriptor = S.is(XAiEndpoint)` textually matches the guard-helper-wall smell.",
+    "proposedTarget": "Inline `S.is(XAiEndpoint)(args[0])` inside the `dual` discriminator at `packages/drivers/xai/src/XAi.errors.ts:116` -- audited and rejected. Effect v4 `S.is` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1256`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Schema-derived guard alias used only to name the overloaded `XAiError.fromDescriptor` discriminator. It does not replace schema validation; `XAiEndpoint` remains the source of truth.",
+      "boundary": "dual overload discriminator for endpoint-scoped error construction"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/xai/src/XAi.service.ts",
+    "line": 535,
+    "symbol": "decodeJsonOption",
+    "smell": "Top-level `const decodeJsonOption = S.decodeUnknownOption(S.UnknownFromJsonString)` textually matches the decode-helper-wall smell.",
+    "proposedTarget": "Inline `S.decodeUnknownOption(S.UnknownFromJsonString)(text)` at `packages/drivers/xai/src/XAi.service.ts:681` -- audited and rejected. Effect v4 `S.decodeUnknownOption` and `S.UnknownFromJsonString` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1500` and `.repos/effect-v4/packages/effect/src/Schema.ts:10905`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Single soft JSON parse at the WebSocket message boundary. The helper delegates to the schema JSON codec and falls back to text when the frame is not JSON; it is not a hand-rolled parser.",
+      "boundary": "WebSocket text-frame JSON-or-text boundary"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/xai/src/XAi.service.ts",
+    "line": 640,
+    "symbol": "XAiQueryScalar",
+    "smell": "Local primitive-union type alias plus `decodeQueryScalarOption = S.decodeUnknownOption(S.Union([S.Boolean, S.Null, S.Finite, S.String]))` duplicates the scalar half of the public `XAiQueryValue` schema (`packages/drivers/xai/src/XAi.models.ts:29`).",
+    "proposedTarget": "Promote the scalar concept into `packages/drivers/xai/src/XAi.models.ts` as an annotated `XAiQueryScalar` schema (`S.Union([S.Boolean, S.Null, S.Finite, S.String])`) with `export type XAiQueryScalar = typeof XAiQueryScalar.Type`; define `XAiQueryValue` from `S.Union([S.Array(XAiQueryScalar), XAiQueryScalar])`, then import that schema in `XAi.service.ts` for `S.decodeUnknownOption(XAiQueryScalar)`. Effect v4 `S.decodeUnknownOption` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1500`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 0.75
+  }
+]

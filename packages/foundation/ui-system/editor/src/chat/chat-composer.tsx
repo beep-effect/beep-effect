@@ -72,11 +72,6 @@ const EDITABLE_CLASS_NAME =
 const PLACEHOLDER_CLASS_NAME =
   "text-muted-foreground pointer-events-none absolute top-0 left-0 px-3 py-2.5 text-sm leading-6 select-none";
 
-// Sync non-throwing decode of the serialized state on every change; out-of-schema
-// states return O.none() and are simply skipped (the app observes decode failures
-// separately via its own reportDecodeFailureAtom).
-const decodeSerializedState = S.decodeUnknownOption(SerializedEditorState);
-
 /**
  * Props for {@link ChatComposer}. Additive to (not a replacement for) the bare
  * `EditorComposerProps`.
@@ -404,7 +399,7 @@ function ComposerFeaturePlugins({
         <OnChangePlugin
           ignoreSelectionChange={true}
           onChange={(nextEditorState) =>
-            O.match(decodeSerializedState(nextEditorState.toJSON()), {
+            O.match(SerializedEditorState.decodeOption(nextEditorState.toJSON()), {
               onSome: onSerializedChange,
               onNone: () => undefined,
             })

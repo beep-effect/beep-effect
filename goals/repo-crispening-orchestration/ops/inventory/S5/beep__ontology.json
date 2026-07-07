@@ -1,0 +1,32 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/ontology/src/Ontology.models.ts",
+    "line": 813,
+    "symbol": "ValidationError.input/ctx",
+    "smell": "input is optional S.Unknown and ctx is an optional broad S.Record(S.String, S.Unknown) on the exported ValidationError class.",
+    "proposedTarget": "Keep as-is. These transcribe FastAPI/Pydantic's HTTPValidationError detail shape, where input echoes the arbitrary offending payload and ctx is an open error-context bag — both are producer-defined open types on a third-party API response; typing them would reject valid error responses.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Faithful mirror of the FOLIO (FastAPI) validation-error wire contract, whose input/ctx members are open by upstream definition; the fields are already Option-wrapped with None defaults and never introspected in-repo.",
+      "boundary": "FOLIO OpenAPI HTTPValidationError response (https://folio.openlegalstandard.org/openapi.json)"
+    }
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/modeling/ontology/src/Ontology.models.ts",
+    "line": 767,
+    "symbol": "ValidationErrorLocationSegment",
+    "smell": "Detector candidate: the location segment numeric arm is bare S.Int with no non-negative index check.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The schema intentionally mirrors FastAPI/Pydantic's OpenAPI anyOf string/integer validation-error `loc` segment shape. Narrowing integer segments would reject upstream error payloads based on a local assumption about list-index sign, and the package only transports the diagnostic path.",
+      "boundary": "FOLIO OpenAPI HTTPValidationError response `detail[].loc` path"
+    }
+  }
+]

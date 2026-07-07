@@ -1,0 +1,32 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
+    "line": 1396,
+    "symbol": "LinkNode.rel/target/title",
+    "smell": "rel, target, and title are broad optional strings (S.OptionFromOptionalNullOr(S.String)); target in particular has a conventional closed-ish domain (_blank/_self/_parent/_top).",
+    "proposedTarget": "Keep as-is. The fields mirror @lexical/link's SerializedLinkNode, which types all three as string | null | undefined; narrowing target to a literal union would reject persisted states Lexical itself legally writes (custom frame names are valid HTML), and rel/title are genuinely free-form.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Third-party wire mirror of @lexical/link's serialized shape; the upstream contract is broad strings and custom browsing-context names are legal, so narrowing rejects valid persisted state without a safety gain (the href sink is the separate actionable finding).",
+      "boundary": "Lexical serialized editor state wire (@lexical/link SerializedLinkNode)"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
+    "line": 686,
+    "symbol": "BaseNode.$",
+    "smell": "The NODE_STATE_KEY payload is a broad optional S.Record(S.String, S.Unknown) inherited by every node in the union.",
+    "proposedTarget": "Keep as-is. \"$\" mirrors Lexical's NodeState extension point — an open, plugin-defined bag by upstream contract; typing it would reject persisted states written by any Lexical plugin. The field is already Option-wrapped with a None default and never inspected in-package.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Deliberate passthrough mirror of Lexical's open NodeState wire extension point; precision is upstream-impossible without enumerating third-party plugins.",
+      "boundary": "Lexical serialized editor state wire (NODE_STATE_KEY \"$\")"
+    }
+  }
+]

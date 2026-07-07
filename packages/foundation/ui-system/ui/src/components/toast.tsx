@@ -2,7 +2,7 @@
 
 import { Toast as ToastPrimitive } from "@base-ui/react/toast";
 import { $UiId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { XIcon } from "@phosphor-icons/react";
 import { cva } from "class-variance-authority";
 import * as S from "effect/Schema";
@@ -134,7 +134,13 @@ export type ToastVariant = typeof ToastVariant.Type;
  */
 export class ToastData extends S.Class<ToastData>($I`ToastData`)(
   {
-    variant: S.optionalKey(ToastVariant),
+    variant: ToastVariant.pipe(
+      S.optionalKey,
+      SchemaUtils.withKeyDefaults(ToastVariant.Enum.default),
+      $I.annoteKey("ToastData.variant", {
+        description: "Visual variant carried by toast notification data.",
+      })
+    ),
   },
   $I.annote("ToastData", {
     description: "Data carried by toast notifications.",

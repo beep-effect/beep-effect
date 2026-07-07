@@ -12,8 +12,8 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { ForegroundColorName, ModifierName } from "./ChalkSchema.ts";
-import type { BackgroundColorName } from "./ChalkSchema.ts";
+import { AnsiRenderLevel, ColorModelName, ForegroundColorName, ModifierName } from "./ChalkSchema.ts";
+import type { BackgroundColorName, StyleChannel, StyleName } from "./ChalkSchema.ts";
 
 type AnsiCodePair = readonly [open: number, close: number];
 const $I = $ChalkId.create("Domain");
@@ -66,21 +66,7 @@ export type ForegroundStyleName = ForegroundColorName;
  */
 export type BackgroundStyleName = BackgroundColorName;
 
-/**
- * Any supported Chalk style name.
- *
- * @example
- * ```ts
- * import type { StyleName } from "./AnsiStyles.ts"
- *
- * const styleName: StyleName = "underline"
- * console.log(styleName)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type StyleName = ModifierStyleName | ForegroundStyleName | BackgroundStyleName;
+export type { StyleName } from "./ChalkSchema.ts";
 
 /**
  * Open and close ANSI escape sequences for a style.
@@ -98,8 +84,8 @@ export type StyleName = ModifierStyleName | ForegroundStyleName | BackgroundStyl
  */
 export class StylerEntry extends S.Class<StylerEntry>($I`StylerEntry`)(
   {
-    open: S.String,
-    close: S.String,
+    open: S.NonEmptyString,
+    close: S.NonEmptyString,
   },
   $I.annote("StylerEntry", {
     description: "Open and close ANSI escape sequences for a single chalk style.",
@@ -183,26 +169,11 @@ const toStyleEntry = ([open, close]: AnsiCodePair): StylerEntry =>
     close: `\u001B[${close}m`,
   });
 
-const modifierStyles: Record<string, StylerEntry> = pipe(
-  modifierCodes,
-  R.toEntries,
-  A.map(([styleName, pair]) => [styleName, toStyleEntry(pair)] as const),
-  R.fromEntries
-);
+const modifierStyles: Record<ModifierStyleName, StylerEntry> = R.map(modifierCodes, toStyleEntry);
 
-const foregroundStyles: Record<string, StylerEntry> = pipe(
-  foregroundCodes,
-  R.toEntries,
-  A.map(([styleName, pair]) => [styleName, toStyleEntry(pair)] as const),
-  R.fromEntries
-);
+const foregroundStyles: Record<ForegroundStyleName, StylerEntry> = R.map(foregroundCodes, toStyleEntry);
 
-const backgroundStyles: Record<string, StylerEntry> = pipe(
-  backgroundCodes,
-  R.toEntries,
-  A.map(([styleName, pair]) => [styleName, toStyleEntry(pair)] as const),
-  R.fromEntries
-);
+const backgroundStyles: Record<BackgroundStyleName, StylerEntry> = R.map(backgroundCodes, toStyleEntry);
 
 /**
  * ANSI escape builders grouped by modifier, foreground color, and background color.
@@ -236,10 +207,6 @@ export const ansiStyles = {
   },
 };
 
-const isModifierStyleName = S.is(ModifierName);
-
-const isForegroundStyleName = S.is(ForegroundColorName);
-
 /**
  * Look up the ANSI style entry for a known Chalk style name.
  *
@@ -256,8 +223,8 @@ const isForegroundStyleName = S.is(ForegroundColorName);
  */
 export const getStyleEntry = Match.type<StyleName>().pipe(
   Match.withReturnType<StylerEntry>(),
-  Match.when(isModifierStyleName, (value) => modifierStyles[value]),
-  Match.when(isForegroundStyleName, (value) => foregroundStyles[value]),
+  Match.when(ModifierName.is, (value) => modifierStyles[value]),
+  Match.when(ForegroundColorName.is, (value) => foregroundStyles[value]),
   Match.orElse((value) => backgroundStyles[value])
 );
 
@@ -299,7 +266,7 @@ const renderMonochromeAnsi256 = (red: number): number => (red < 8 ? 16 : renderE
  */
 class BlueChannelOptionsModel extends S.Class<BlueChannelOptionsModel>($I`BlueChannelOptions`)(
   {
-    blue: S.Finite,
+    blue: S.Int.check(S.isGreaterThanOrEqualTo(0), S.isLessThanOrEqualTo(255)),
   },
   $I.annote("BlueChannelOptions", {
     description: "Blue channel companion value for dual RGB conversion helpers.",
@@ -448,24 +415,22 @@ export const hexToAnsi256 = (hex: string): number => {
 export const hexToAnsi = (hex: string): number => ansi256ToAnsi(hexToAnsi256(hex));
 
 const renderRgbModel = (
-  level: "ansi" | "ansi256" | "ansi16m",
-  type: "color" | "bgColor",
+  level: AnsiRenderLevel,
+  type: StyleChannel,
   arguments_: ReadonlyArray<number | string>
 ): string => {
   const [red = 0, green = 0, blue = 0] = arguments_;
 
-  return Match.type<"ansi" | "ansi256" | "ansi16m">().pipe(
-    Match.when("ansi16m", () => ansiStyles[type].ansi16m(Number(red), Number(green), Number(blue))),
-    Match.when("ansi256", () =>
-      ansiStyles[type].ansi256(rgbToAnsi256(Number(red), Number(green), { blue: Number(blue) }))
-    ),
-    Match.orElse(() => ansiStyles[type].ansi(rgbToAnsi(Number(red), Number(green), { blue: Number(blue) })))
-  )(level);
+  return AnsiRenderLevel.$match(level, {
+    ansi: () => ansiStyles[type].ansi(rgbToAnsi(Number(red), Number(green), { blue: Number(blue) })),
+    ansi16m: () => ansiStyles[type].ansi16m(Number(red), Number(green), Number(blue)),
+    ansi256: () => ansiStyles[type].ansi256(rgbToAnsi256(Number(red), Number(green), { blue: Number(blue) })),
+  });
 };
 
 const renderHexModel = (
-  level: "ansi" | "ansi256" | "ansi16m",
-  type: "color" | "bgColor",
+  level: AnsiRenderLevel,
+  type: StyleChannel,
   arguments_: ReadonlyArray<number | string>
 ): string => {
   const [color = ""] = arguments_;
@@ -473,7 +438,7 @@ const renderHexModel = (
   return getModelAnsi("rgb", level, type, ...hexToRgb(`${color}`));
 };
 
-const renderAnsi256Model = (type: "color" | "bgColor", arguments_: ReadonlyArray<number | string>): string => {
+const renderAnsi256Model = (type: StyleChannel, arguments_: ReadonlyArray<number | string>): string => {
   const [index = 0] = arguments_;
 
   return ansiStyles[type].ansi256(Number(index));
@@ -494,13 +459,13 @@ const renderAnsi256Model = (type: "color" | "bgColor", arguments_: ReadonlyArray
  * @since 0.0.0
  */
 export const getModelAnsi = (
-  model: "rgb" | "hex" | "ansi256",
-  level: "ansi" | "ansi256" | "ansi16m",
-  type: "color" | "bgColor",
+  model: ColorModelName,
+  level: AnsiRenderLevel,
+  type: StyleChannel,
   ...arguments_: ReadonlyArray<number | string>
 ): string =>
-  Match.type<"rgb" | "hex" | "ansi256">().pipe(
-    Match.when("rgb", () => renderRgbModel(level, type, arguments_)),
-    Match.when("hex", () => renderHexModel(level, type, arguments_)),
-    Match.orElse(() => renderAnsi256Model(type, arguments_))
-  )(model);
+  ColorModelName.$match(model, {
+    ansi256: () => renderAnsi256Model(type, arguments_),
+    hex: () => renderHexModel(level, type, arguments_),
+    rgb: () => renderRgbModel(level, type, arguments_),
+  });

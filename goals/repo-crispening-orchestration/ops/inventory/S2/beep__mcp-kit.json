@@ -1,0 +1,92 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+    "line": 166,
+    "symbol": "withSanitizedToolSpan",
+    "smell": "`options?.sanitizedKeys ?? defaultSanitizedSpanKeys` fallback in the body, paired with the plain `{ readonly sanitizedKeys?: ReadonlyArray<string> }` options bag (line 161) and the `const default*`-named constant at line 49 — the Appendix A `?? d` + `const thingDefault` tells for a default living outside a schema.",
+    "proposedTarget": "Two directions, needing a design call: (a) schema-model the options bag as an S.Class via $McpKitId with `sanitizedKeys: S.Array(S.String).pipe(SchemaUtils.withConstantDefault([\"parameters\"]))` (withConstructorDefaults.ts:80), collapsing this site and sanitizeTracerAttributes' default param in one change; or (b) accept as-is: this is a generic tracer combinator whose `(name, effect, options?)` surface mirrors effect core's own plain-options style (`Effect.withSpan`), the constant is deliberately exported, documented public API, and no schema exists anywhere near the Tracer plumbing. Judgment: (b) may be the correct crispening outcome.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 0.4,
+    "exception": {
+      "reason": "Remediation audit (@beep/mcp-kit): declined. withSanitizedToolSpan is a thin Effect.withSpan-style tracer combinator with an optional plain options bag; schema-modeling that bag would author a new public options schema for runtime tracer plumbing rather than absorb an existing data-model invariant. The helper was instead made pipeable/dual while preserving the documented exported default key list.",
+      "boundary": "public tracer-combinator options surface, not a schema-modeled payload"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+    "line": 75,
+    "symbol": "sanitizeTracerAttributes",
+    "smell": "Default parameter `sanitizedKeys: ReadonlyArray<string> = defaultSanitizedSpanKeys` — the `?? d`-equivalent defaulting site sharing the line-49 `defaultSanitizedSpanKeys` constant with the withSanitizedToolSpan finding (line 166).",
+    "proposedTarget": "Same design call as the line-166 finding: either both defaulting sites collapse into one schema-modeled options class carrying `SchemaUtils.withConstantDefault([\"parameters\"])`, or both stay as idiomatic plain-combinator defaults over the exported public constant. Resolve the pair together, not independently.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 0.4,
+    "exception": {
+      "reason": "Remediation audit (@beep/mcp-kit): declined. sanitizeTracerAttributes is a pure Tracer -> Tracer wrapper whose default parameter mirrors the exported defaultSanitizedSpanKeys constant. There is no owning schema or boundary payload for this default; introducing one would be new authoring, not crispening. The helper was made dual/pipeable instead.",
+      "boundary": "public tracer-combinator default parameter, not a schema-modeled payload"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 135,
+    "symbol": "stripNulls",
+    "smell": "Nullish checks in a body — `R.filter(value, (fieldValue) => fieldValue !== null && fieldValue !== undefined)` — audited as a normalization/under-modeling candidate.",
+    "proposedTarget": "None: keep as-is. The filter is the module's documented wire-size compaction over untyped `Record<string, unknown>` MCP payloads (port-with-attribution from uspto_pfw_mcp#4); no schema owns the payload values — the tier S.Structs are consulted for field names only (projectFieldTier line 169), so there is no codec for this invariant to move into.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Null-stripping IS the domain behavior (payload byte-shaving before returning MCP tool results), applied to foreign untyped data with no owning schema; moving it 'into a codec' has no codec to target and would change the module's generic-projection contract.",
+      "boundary": "MCP wire-payload compaction over untyped 3rd-party-shaped tool results (Record<string, unknown>)"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/capability/mcp-kit/src/FieldTier.ts",
+    "line": 361,
+    "symbol": "toColumnarEnvelope",
+    "smell": "`R.has(row, column) ? row[column] : null` produces `null` cell values in domain code — audited as a null-producing candidate.",
+    "proposedTarget": "None: keep as-is. A positional columnar wire format cannot omit cells; `null` is the documented absent-cell placeholder (JSDoc lines 338-342, asserted at test/FieldTier.test.ts:107) and the `rows` schema is `S.Unknown.pipe(S.Array, S.Array)` where null is a legal cell. Analogous to the fence-2 SQL carve-out: wire absence encodes null; Option lives on the consuming side.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The null is a wire-encoding placeholder required by the positional row format (cells cannot be omitted without breaking columns/rows alignment), mirroring the SQL-absence-encodes-null fence; the function itself returns a ColumnarEnvelope, never null.",
+      "boundary": "Columnar JSON wire encoding — positional rows require an explicit absent-cell marker"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+    "line": 302,
+    "symbol": "isDestructive",
+    "smell": "`Context.getOrElse(tool.annotations, AiTool.Destructive, () => true)` — a getOrElse-as-default tell, audited as a defaults candidate.",
+    "proposedTarget": "None: keep as-is. `Tool.Destructive` is a Context.Reference whose own defaultValue is constTrue (verified .repos/effect-v4/packages/effect/src/unstable/ai/Tool.ts:1764-1766), so `Context.get` would already resolve it; the explicit `() => true` deliberately restates the fail-closed security default in this module's source (comment lines 295-300) instead of inheriting it silently from a 3rd-party definition. Removing it weakens the visible trust boundary for zero behavior change.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The default duplicates the 3rd-party Context.Reference's own defaultValue purely to keep the fail-closed gate default explicit and reviewable at the enforcement point — a fence-4-style trust-boundary guard, not a schema-modelable data default.",
+      "boundary": "3rd-party effect/unstable/ai Tool annotation Context + fail-closed security-gate default (fence 4: no trust-boundary weakening)"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts",
+    "line": 218,
+    "symbol": "registerSanitizedToolkit",
+    "smell": "`structuredContent: P.isObject(result.encodedResult) ? result.encodedResult : undefined` — the `v ? v : undefined` tell, audited; nearby lines 182-191 (`Context.getOrUndefined` for `_meta`, `O.getOrUndefined` for the optional title spread) are the same family.",
+    "proposedTarget": "None: keep as-is. `CallToolResult.structuredContent` is upstream's `optional(Schema.Any)` field (verified .repos/effect-v4/packages/effect/src/unstable/ai/McpSchema.ts:1526-1529) where undefined means omit-on-wire, and the whole registration loop deliberately mirrors upstream `McpServer.registerToolkit` because upstream offers no dispatch-wrapping seam (module JSDoc lines 233-248). Diverging from the mirrored upstream shape here adds drift risk for zero invariant gain.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "`undefined` feeds a 3rd-party optional wire-schema field whose contract is undefined-means-omit, inside a block that intentionally mirrors upstream registerToolkit line-for-line; not a domain helper returning nullish.",
+      "boundary": "3rd-party effect/unstable/ai McpSchema.CallToolResult wire contract + upstream McpServer.registerToolkit mirror"
+    }
+  }
+]

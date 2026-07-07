@@ -1,0 +1,107 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/schema/src/StatusCauseError.ts",
+    "line": 120,
+    "symbol": "statusCauseInput",
+    "smell": "`StatusCauseInputOptions` models `cause` as raw `S.Defect`, while `statusCauseInput` accepts Option-ish/raw values and normalizes with `O.isOption(options.cause) ? options.cause : O.fromUndefinedOr(options.cause)` in the body.",
+    "proposedTarget": "Split raw encoded input from normalized data or move the optional-cause invariant onto `StatusCauseInputOptions`: `cause: S.OptionFromOptionalKey(S.Defect({ includeStack: true })).pipe(SchemaUtils.withNoneDefault)`. Then `statusCauseInput` can pass the decoded Option through directly; update `buildStatusCauseError` call sites in the same file as part of the same public-form sweep.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 10,
+    "exception": {
+      "reason": "Changing statusCauseInput and StatusCauseFields to schema-defaulted Option form would change exported public form with consumers outside @beep/schema; the required §5.4 consumer sweep is outside this package writer lane.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/modeling/schema/src/BinaryFileExtension.ts",
+    "line": 148,
+    "symbol": "extractNormalizedExtension",
+    "smell": "`extractNormalizedExtension` lowercases a path extension and defaults missing extension to `\"\"`; exported `hasBinaryExtension` consumes that body-level normalization instead of a schema transformation from path/name string to `BinaryFileExtension`.",
+    "proposedTarget": "Add a schema codec such as `BinaryFileExtensionFromPath = S.String.pipe(S.decodeTo(BinaryFileExtension, SchemaGetter.transformOrFail(...)))` that extracts, lowercases, and validates the dotted extension, then implement `hasBinaryExtension` through `S.decodeUnknownOption(BinaryFileExtensionFromPath)`/`O.isSome`. In-package exemplars for string normalization codecs: `CommonTextSchemas.ts:36-43` and `:81-88`.",
+    "confidence": 0.56,
+    "mechanization": "judgment",
+    "roiRank": 14,
+    "exception": {
+      "reason": "extractNormalizedExtension is the exported path utility behavior for arbitrary file/name strings. Promoting it to a new path-to-extension codec would add public schema surface and needs a dedicated BinaryFileExtension codec design/proof.",
+      "boundary": "exported path normalization utility, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/modeling/schema/src/SafeRemoteHost.ts",
+    "line": 110,
+    "symbol": "normalizeHost",
+    "smell": "`normalizeHost` lowercases hostnames and strips IPv6 brackets; detector hit for case/shape normalization in a function body.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 15,
+    "exception": {
+      "reason": "This is an explicit SSRF trust-boundary guard. SPEC fence 4 says escaping/sanitization/URL-injection guards stay explicit and property-tested; hiding the blocklist normalization in a schema transform would make the security audit harder.",
+      "boundary": "trust-boundary URL/host classifier"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/modeling/schema/src/CsvParser/CsvParser.parser.ts",
+    "line": 45,
+    "symbol": "normalizeColumn",
+    "smell": "`normalizeColumn` applies `Str.trim` / `Str.trimStart` / `Str.trimEnd` according to parser flags; detector hit for trim in a function body.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 16,
+    "exception": {
+      "reason": "This is the CSV parser's codec behavior controlled by decoded `ParserOptions`, not a field normalization invariant leaking out of a schema. The parsed rows are produced by the CSV text codec path.",
+      "boundary": "parser/codec implementation behavior"
+    }
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.adapter.ts",
+    "line": 117,
+    "symbol": "createDateTimeWithTimezone",
+    "smell": "Adapter helper returns `DateTime.DateTime | null` and returns `null` for `null`/`undefined` input.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 17,
+    "exception": {
+      "reason": "The module is explicitly adapter-facing for UI date/time pickers, where `null` is the empty value contract. S2's 3rd-party/react boundary carve-out applies.",
+      "boundary": "UI date/time picker adapter boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/schema/src/CrossOriginEmbedderPolicy/CrossOriginEmbedderPolicy.schema.ts",
+    "line": 140,
+    "symbol": "CrossOriginEmbedderPolicyHeader",
+    "smell": "`value: input === false || input === undefined ? undefined : input` is an encoded-side `undefined` emission in a one-way header transformation; detector hit for nullish return/default.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 18,
+    "exception": {
+      "reason": "The decoded/domain response header value is already modeled as `Option` via `S.OptionFromUndefinedOr(S.String)`; `undefined` here is the encoded HTTP header omission shape for a disabled one-way header codec.",
+      "boundary": "encoded HTTP response-header omission"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/schema/src/MutableHashMap.ts",
+    "line": 218,
+    "symbol": "MutableHashMapFromSelf",
+    "smell": "`const constraint = ctx.constraint ?? {};` and `const minLength = constraints.minLength ?? 0;` are detector hits for body-level defaults.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 19,
+    "exception": {
+      "reason": "These defaults are fast-check arbitrary-generation constraints inside a schema primitive implementation. They are not domain data defaults and cannot move onto a user-facing schema field.",
+      "boundary": "Effect Schema arbitrary-generation context"
+    }
+  }
+]

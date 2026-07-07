@@ -1,0 +1,54 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
+    "line": 34,
+    "symbol": "AiProviderCliProvider",
+    "smell": "LiteralKit provider vocabulary is annotated without reattaching kit/statics; `commandFor` uses `AiProviderCliProvider.$match` at AiProviderCli.service.ts:91, so the kit helpers are intended public behavior and should survive annotation.",
+    "proposedTarget": "Capture a base LiteralKit const, then pipe annotation through `SchemaUtils.withLiteralKitStatics(base)` and `SchemaUtils.withCodecStatics`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.models.ts",
+    "line": 78,
+    "symbol": "AiProviderCliAuthStatus",
+    "smell": "LiteralKit auth-status vocabulary is annotated without reattaching kit/static codec helpers, leaving status guards and matches detached from the schema value.",
+    "proposedTarget": "Use the same base-const plus `SchemaUtils.withLiteralKitStatics(base)` and `SchemaUtils.withCodecStatics` pattern as `AiProviderCliProvider`.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.service.ts",
+    "line": 55,
+    "symbol": "AiProviderCliRunner",
+    "smell": "Detector hit: exported three-argument function type is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "This is an injected process-runner service contract (`provider`, executable command, args), not a first-party data-first helper; dualizing the port shape would burden test doubles and adapters without improving pipeability.",
+      "boundary": "SPEC fence 1 - service-contract/port boundary."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/ai-provider-cli/src/AiProviderCli.service.ts",
+    "line": 247,
+    "symbol": "AiProviderCli.makeLayerFromRunner",
+    "smell": "Detector hit: public two-argument layer constructor is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "The second argument is optional with a default (`paths = {}`), and the method is a Context.Service layer constructor rather than a pipeable value transformer. Arity-based `dual(2, ...)` would reinterpret `makeLayerFromRunner(runner)` as partial application.",
+      "boundary": "Public layer constructor with optional trailing args; dual dispatch is incompatible."
+    }
+  }
+]

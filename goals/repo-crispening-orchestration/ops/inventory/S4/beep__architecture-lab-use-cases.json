@@ -1,0 +1,24 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.service.ts",
+    "line": 39,
+    "symbol": "isRepositoryNotFound",
+    "smell": "Top-of-file guard wall: `isRepositoryNotFound = S.is(WorkItemRepositoryNotFound)`, `isRepositoryConflict = S.is(WorkItemRepositoryConflict)`, `isRepositoryUnavailable = S.is(WorkItemRepositoryUnavailable)` (lines 39-41) reimplement guards that belong on the TaggedErrorClass errors themselves (WorkItem.repository.ts:37,70,99), which currently have no in-body `is` static.",
+    "proposedTarget": "Add `static readonly is = S.is(this)` in-body to WorkItemRepositoryNotFound, WorkItemRepositoryConflict, and WorkItemRepositoryUnavailable (TaggedErrorClass loses withCodecStatics identity when piped like S.Class, so in-body statics are the sanctioned form); replace the three guard-wall consts in toWorkItemActionError with `WorkItemRepositoryNotFound.is(error)` etc. and delete the wall.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.service.ts",
+    "line": 30,
+    "symbol": "isRepositoryNotFound",
+    "smell": "Identical top-of-file guard wall to the WorkItem sibling: `isRepositoryNotFound = S.is(WorkerRepositoryNotFound)`, `isRepositoryConflict = S.is(WorkerRepositoryConflict)`, `isRepositoryUnavailable = S.is(WorkerRepositoryUnavailable)` (lines 30-32) reimplement guards that belong on the TaggedErrorClass errors (Worker.repository.ts:37,68,95), which have no in-body `is` static.",
+    "proposedTarget": "Add `static readonly is = S.is(this)` in-body to WorkerRepositoryNotFound, WorkerRepositoryConflict, and WorkerRepositoryUnavailable; replace the three guard-wall consts in toWorkerActionError with `WorkerRepositoryNotFound.is(error)` etc. and delete the wall.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 2
+  }
+]

@@ -1,16 +1,46 @@
 import {
   decodePandocJson,
   decodePandocJsonString,
+  encodePandocJson,
   encodePandocJsonString,
   PandocJsonFromString,
 } from "@beep/pandoc-ast/Pandoc.codec";
+import {
+  Header,
+  Link,
+  PandocApiVersion,
+  PandocAttr,
+  PandocDocument,
+  PandocTarget,
+  Str,
+} from "@beep/pandoc-ast/Pandoc.model";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import type { PandocBlock } from "@beep/pandoc-ast/Pandoc.model";
 
-const fixture = (name: string): Effect.Effect<string> =>
-  Effect.promise(() => Bun.file(new URL(`./fixtures/${name}`, import.meta.url)).text());
+const PandocDocumentArbitrary = S.toArbitrary(PandocDocument);
+const PandocDocumentEquivalence = S.toEquivalence(PandocDocument);
+const provideScopedLayer =
+  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
+    layer.pipe(
+      Layer.build,
+      Effect.flatMap((context) => effect.pipe(Effect.provide(context))),
+      Effect.scoped
+    );
+const provideBunFileSystem = provideScopedLayer(BunFileSystem.layer);
+
+const fixture = Effect.fn("PandocCodecTest.fixture")((name: string) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    return yield* fs.readFileString(new URL(`./fixtures/${name}`, import.meta.url).pathname);
+  }).pipe(provideBunFileSystem)
+);
 const omitted = Symbol("omitted");
 
 const expectUnknownBlock = (block: PandocBlock | undefined, constructor: string, payload: unknown = omitted): void => {
@@ -54,6 +84,82 @@ describe("Pandoc.codec", () => {
 
         expect(roundTripped).toEqual(document);
       })
+    ));
+
+  it("preserves representative encoded wire shapes for attrs, targets, and API versions", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const document = PandocDocument.make({
+          apiVersion: PandocApiVersion.make([1, 23, 1]),
+          blocks: [
+            Header.make({
+              attr: PandocAttr.make({
+                classes: ["primary"],
+                id: "intro",
+                keyValues: [["custom-style", "Heading1"]],
+              }),
+              children: [
+                Link.make({
+                  attr: PandocAttr.empty,
+                  children: [Str.make({ text: "docs" })],
+                  target: PandocTarget.make({ title: "Docs", url: "https://example.com" }),
+                }),
+              ],
+              level: 2,
+            }),
+          ],
+          meta: {},
+        });
+
+        const wire = yield* encodePandocJson(document);
+
+        expect(wire).toEqual({
+          "pandoc-api-version": [1, 23, 1],
+          blocks: [
+            {
+              c: [
+                2,
+                ["intro", ["primary"], [["custom-style", "Heading1"]]],
+                [
+                  {
+                    c: [["", [], []], [{ c: "docs", t: "Str" }], ["https://example.com", "Docs"]],
+                    t: "Link",
+                  },
+                ],
+              ],
+              t: "Header",
+            },
+          ],
+          meta: {},
+        });
+
+        expect(yield* decodePandocJson(wire)).toEqual(document);
+      })
+    ));
+
+  it("round-trips schema-derived stable Pandoc JSON documents through the object codec", () =>
+    fc.assert(
+      fc.property(
+        PandocDocumentArbitrary.map((document) =>
+          PandocDocument.make({
+            apiVersion: document.apiVersion,
+            blocks: [],
+            meta: {},
+          })
+        ),
+        (document) => {
+          const encoded = Effect.runSync(encodePandocJson(document));
+          const decoded = Effect.runSync(decodePandocJson(encoded));
+
+          expect(encoded).toEqual({
+            "pandoc-api-version": document.apiVersion,
+            blocks: [],
+            meta: {},
+          });
+          expect(PandocDocumentEquivalence(decoded, document)).toBe(true);
+        }
+      ),
+      { numRuns: 50 }
     ));
 
   it("keeps DOCX-style gap constructs decodable as explicit model nodes", () =>

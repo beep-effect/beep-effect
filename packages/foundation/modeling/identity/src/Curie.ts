@@ -8,6 +8,7 @@
 import { Effect, pipe, SchemaIssue, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -17,6 +18,8 @@ import type { Curie, Expand, Predicate, VocabShape } from "./Vocab.ts";
 
 const $I = $IdentityId.create("Curie");
 
+type CoreCurie = Curie<typeof CoreVocab>;
+type CoreIri = Expand<CoreCurie, typeof CoreVocab>;
 type Contract<I extends string, V extends VocabShape> = {
   readonly [C in Curie<V>]: Expand<C, V> extends I ? C : never;
 }[Curie<V>];
@@ -25,6 +28,21 @@ type ExpandedPredicate<P extends string, V extends VocabShape> = P extends `^${i
   ? { readonly iri: Expand<C, V>; readonly inverse: true }
   : { readonly iri: Expand<P, V>; readonly inverse: false };
 
+const CoreCurieArbitraryValues = [
+  "rdf:type",
+  "rdfs:label",
+  "skos:prefLabel",
+  "owl:Class",
+  "dcterms:creator",
+] as const satisfies readonly [CoreCurie, ...Array<CoreCurie>];
+const CoreIriArbitraryValues = [
+  "http://www.w3.org/1999/02/22-rdf-syntax-ns#type",
+  "http://www.w3.org/2000/01/rdf-schema#label",
+  "http://www.w3.org/2004/02/skos/core#prefLabel",
+  "http://www.w3.org/2002/07/owl#Class",
+  "http://purl.org/dc/terms/creator",
+] as const satisfies readonly [CoreIri, ...Array<CoreIri>];
+
 const parseCurie = (curie: string) =>
   pipe(
     curie,
@@ -32,15 +50,13 @@ const parseCurie = (curie: string) =>
     O.map((separator) => [Str.slice(0, separator)(curie), Str.slice(separator + 1)(curie)] as const)
   );
 
-const hasTerm = (terms: readonly string[], term: string) => A.contains(terms, term);
-
 const expandOption = <const V extends VocabShape>(curie: string, vocab: V): O.Option<string> =>
   pipe(
     parseCurie(curie),
     O.flatMap(([prefix, term]) =>
       pipe(
         R.get(vocab, prefix),
-        O.filter((entry) => hasTerm(entry.terms, term)),
+        O.filter((entry) => A.contains(entry.terms, term)),
         O.map((entry) => `${entry.iri}${term}`)
       )
     )
@@ -69,6 +85,66 @@ const contractOption = <const V extends VocabShape>(iri: string, vocab: V): O.Op
   );
 
 const schemaIssue = (value: string, message: string) => new SchemaIssue.InvalidValue(O.some(value), { message });
+
+const isCoreCurie = (value: unknown): value is CoreCurie =>
+  P.isString(value) && O.isSome(expandOption(value, CoreVocab));
+
+const isCoreIri = (value: unknown): value is CoreIri => P.isString(value) && O.isSome(contractOption(value, CoreVocab));
+
+const CoreCurieSchema = S.declare<CoreCurie>(isCoreCurie, {
+  identifier: "@beep/identity/Curie/CoreCurie",
+  title: "Core CURIE",
+  description: "Finite CURIE literal from the built-in identity CoreVocab registry.",
+  toArbitrary: () => (fc) => fc.constantFrom(...CoreCurieArbitraryValues),
+});
+
+const CoreIriSchema = S.declare<CoreIri>(isCoreIri, {
+  identifier: "@beep/identity/Curie/CoreIri",
+  title: "Core IRI",
+  description: "Finite IRI literal from the built-in identity CoreVocab registry.",
+  toArbitrary: () => (fc) => fc.constantFrom(...CoreIriArbitraryValues),
+});
+
+const makeCurieTransformation = <const V extends VocabShape>(vocab: V) =>
+  SchemaTransformation.transformOrFail({
+    decode: (curie: string) =>
+      pipe(
+        expandOption(curie, vocab),
+        O.match({
+          onNone: () => Effect.fail(schemaIssue(curie, `Unknown CURIE: ${curie}`)),
+          onSome: Effect.succeed,
+        })
+      ),
+    encode: (iri: string) =>
+      pipe(
+        contractOption(iri, vocab),
+        O.match({
+          onNone: () => Effect.fail(schemaIssue(iri, `Unknown IRI: ${iri}`)),
+          onSome: Effect.succeed,
+        })
+      ),
+  });
+
+const CoreCurieTransformation = SchemaTransformation.transformOrFail({
+  decode: (curie: CoreCurie) =>
+    pipe(
+      expandOption(curie, CoreVocab),
+      O.filter(isCoreIri),
+      O.match({
+        onNone: () => Effect.fail(schemaIssue(curie, `Unknown CURIE: ${curie}`)),
+        onSome: Effect.succeed,
+      })
+    ),
+  encode: (iri: CoreIri) =>
+    pipe(
+      contractOption(iri, CoreVocab),
+      O.filter(isCoreCurie),
+      O.match({
+        onNone: () => Effect.fail(schemaIssue(iri, `Unknown IRI: ${iri}`)),
+        onSome: Effect.succeed,
+      })
+    ),
+});
 
 /**
  * Expand a known CURIE into its exact IRI literal.
@@ -146,7 +222,7 @@ export function expandPredicate(
   vocab: VocabShape
 ): { readonly iri: string; readonly inverse: boolean } | undefined;
 export function expandPredicate(predicate: string, vocab: VocabShape = CoreVocab) {
-  const inverse = pipe(predicate, Str.startsWith("^"));
+  const inverse = Str.startsWith("^")(predicate);
   const curie = inverse ? Str.slice(1)(predicate) : predicate;
 
   return pipe(
@@ -208,27 +284,7 @@ export const CoreCurieCodec = makeCurieCodec(CoreVocab);
  */
 export const makeCurieFromIri = <const V extends VocabShape>(vocab: V) =>
   S.String.pipe(
-    S.decodeTo(
-      S.String,
-      SchemaTransformation.transformOrFail({
-        decode: (curie) =>
-          pipe(
-            expandOption(curie, vocab),
-            O.match({
-              onNone: () => Effect.fail(schemaIssue(curie, `Unknown CURIE: ${curie}`)),
-              onSome: Effect.succeed,
-            })
-          ),
-        encode: (iri) =>
-          pipe(
-            contractOption(iri, vocab),
-            O.match({
-              onNone: () => Effect.fail(schemaIssue(iri, `Unknown IRI: ${iri}`)),
-              onSome: Effect.succeed,
-            })
-          ),
-      })
-    ),
+    S.decodeTo(S.String, makeCurieTransformation(vocab)),
     $I.annoteSchema("CurieFromIri", {
       description: "Codec that decodes registered CURIEs to IRIs and encodes registered IRIs to CURIEs.",
     })
@@ -249,7 +305,12 @@ export const makeCurieFromIri = <const V extends VocabShape>(vocab: V) =>
  * @category schemas
  * @since 0.0.0
  */
-export const CurieFromIri = makeCurieFromIri(CoreVocab);
+export const CurieFromIri = CoreCurieSchema.pipe(
+  S.decodeTo(CoreIriSchema, CoreCurieTransformation),
+  $I.annoteSchema("CurieFromIri", {
+    description: "Codec that decodes CoreVocab CURIEs to finite CoreVocab IRIs and encodes them back.",
+  })
+);
 
 /**
  * {@inheritDoc CurieFromIri}

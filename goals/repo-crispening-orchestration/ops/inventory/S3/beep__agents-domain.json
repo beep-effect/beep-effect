@@ -1,0 +1,39 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
+    "line": 182,
+    "symbol": "HeadingBlock.level",
+    "smell": "Heading levels are modeled as an inline S.Literals([\"h1\", \"h2\", \"h3\"]) field and repeated as Match.value cases in AssistantContent.behavior.ts:83-87 to project to Md heading levels; the finite vocabulary has no named LiteralKit source, kit guard, or kit-derived $match.",
+    "proposedTarget": "Introduce a named AssistantHeadingTag/HeadingTag LiteralKit([\"h1\", \"h2\", \"h3\"]) next to the model, use it for HeadingBlock.level, and replace the Match.value projection with kit-derived $match/thunk or a kit-keyed projection to Md.HeadingLevel. In-repo exemplars: HeadingTag at packages/foundation/modeling/lexical/src/Lexical.model.ts:508 and LiteralKit $match/toTaggedUnion helpers at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:647-667.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2.6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
+    "line": 240,
+    "symbol": "ListBlock.listType",
+    "smell": "List kind is an inline S.Literals([\"bullet\", \"number\"]) field and is re-dispatched by a manual ternary in AssistantContent.behavior.ts:97; the two-value list domain has no named kit source or kit-derived exhaustive projection.",
+    "proposedTarget": "Introduce AssistantListType = LiteralKit([\"bullet\", \"number\"]) for the field and replace the ternary with AssistantListType.$match/guards or a kit-keyed constructor table. In-repo exemplar: ListType = LiteralKit([\"number\", \"bullet\", \"check\"]) at packages/foundation/modeling/lexical/src/Lexical.model.ts:543; LiteralKit helpers are verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:647-667.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 2.1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+    "line": 146,
+    "symbol": "collectAgentsSourceFiles",
+    "smell": "if (info.type === \"Directory\") branches on a type-like discriminator while walking package files for a test assertion.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "info is Effect Platform FileSystem stat metadata, not a first-party schema-modeled union with derived match/guards. The branch is a test-local filesystem traversal decision, not domain variant dispatch.",
+      "boundary": "test-only package source scanner in @beep/agents-domain"
+    }
+  }
+]

@@ -1,0 +1,137 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/colors/src/Colors.ts",
+    "line": 80,
+    "symbol": "ProcessLike.argv",
+    "smell": "Field is `S.String.pipe(S.Array, S.optionalKey)` and its missing-key default lives in the consumer body: `const argv = processLike.argv ?? A.empty()` at src/Colors.ts:199 inside `supportsColor` — a `?? d` fallback where a schema decoding/constructor default belongs (S2 rule card).",
+    "proposedTarget": "Move the default into the schema: `argv: S.String.pipe(S.Array, SchemaUtils.withKeyDefaults(A.empty()))` (verified: `SchemaUtils.withKeyDefaults` = S.withConstructorDefault + S.withDecodingDefaultKey at packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:50; array-shaped variant `withEmptyArrayDefaults` at :114; import `{ SchemaUtils } from \"@beep/schema\"` per lexical exemplar Lexical.model.ts:21). Wire contract unchanged — missing key still decodes; `?? A.empty()` at :199 is deleted. Call sites passing bare object literals (test/index.test.ts supportsColor fixtures, JSDoc examples) must construct via `ProcessLike.make({...})` since the Type side becomes non-optional; dtslint/Colors.tst.ts type assertions need matching updates.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Defaulting argv in the schema would change the exported ProcessLike Type/make shape from an optional process.argv mirror to a required/defaulted field; supportsColor intentionally accepts structural process-like literals and keeps the fallback at the detection boundary.",
+      "boundary": "public ProcessLike structural contract / third-party runtime process.argv mirror"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/colors/src/Colors.ts",
+    "line": 81,
+    "symbol": "ProcessLike.env",
+    "smell": "Field is `S.Record(S.String, S.UndefinedOr(S.String)).pipe(S.optionalKey)` and its missing-key default lives in the consumer body: `const env = processLike.env ?? {}` at src/Colors.ts:199-200 inside `supportsColor`.",
+    "proposedTarget": "`env: S.Record(S.String, S.UndefinedOr(S.String)).pipe(SchemaUtils.withKeyDefaults({}))` so decode and `make` default the missing key to `{}` and the `?? {}` at :200 is deleted. Keep the `S.UndefinedOr(S.String)` VALUE type — it faithfully mirrors the 3rd-party `NodeJS.ProcessEnv` wire shape (`Record<string, string | undefined>`); only the missing-KEY fallback is the smell. Same call-site/dtslint blast radius as the argv finding.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Defaulting env in the schema would change the exported ProcessLike Type/make shape and encoded output for a third-party open environment dictionary; the current local fallback preserves the structural input contract while keeping env open.",
+      "boundary": "public ProcessLike structural contract / third-party runtime process.env mirror"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/colors/src/Colors.ts",
+    "line": 57,
+    "symbol": "ProcessLikeStdout.isTTY",
+    "smell": "`isTTY: S.optionalKey(S.Boolean)` forces the consumer to coerce absence in the body: `Boolean(processLike.stdout?.isTTY)` at src/Colors.ts:212 — absent/undefined-to-false defaulting lives in business logic instead of the schema.",
+    "proposedTarget": "`isTTY: SchemaUtils.BoolKeyDefaultFalse` (verified at packages/foundation/modeling/schema/src/SchemaUtils/withKeyDefaults.ts:207 — constructor + decoding-missing-key default `false`; matches the brief exemplar `checked: SchemaUtils.BoolKeyDefaultFalse`). Semantics identical to the current `Boolean(undefined)` coercion (no TTY info = not a TTY); combined with the ProcessLike.stdout finding, :212 collapses to a plain field read. Update dtslint/Colors.tst.ts:26 (`boolean | undefined` becomes `boolean`).",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Changing isTTY to a schema-defaulted required boolean would change the exported ProcessLikeStdout Type from optional TTY metadata to a required/defaulted field; absence is meaningful at the runtime boundary and is locally coerced only for capability detection.",
+      "boundary": "public ProcessLikeStdout structural contract / runtime stdout metadata mirror"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/colors/src/Colors.ts",
+    "line": 83,
+    "symbol": "ProcessLike.stdout",
+    "smell": "`stdout: S.optionalKey(ProcessLikeStdout)` yields `ProcessLikeStdout | undefined` on the Type side; the consumer handles absence with optional chaining + coercion `Boolean(processLike.stdout?.isTTY)` at src/Colors.ts:212 — nullish handling in the body instead of schema-carried absence (nullish -> Option / decode default).",
+    "proposedTarget": "Two verified routes, pick with the maintainer: (a) key default — `stdout: ProcessLikeStdout.pipe(SchemaUtils.withKeyDefaults(...))` defaulting to an empty stdout (isTTY defaults false via the isTTY finding), making :212 a plain `processLike.stdout.isTTY` read; note `withKeyDefaults` requires `Type & Encoded`-compatible default, so verify a `ProcessLikeStdout.make({})` instance satisfies the Encoded side, else use S.withConstructorDefault + S.withDecodingDefaultKey directly. (b) Option — `S.OptionFromOptionalKey(ProcessLikeStdout).pipe(SchemaUtils.withNoneDefault)` (verified: S.OptionFromOptionalKey at .repos/effect-v4/packages/effect/src/Schema.ts:8668; withNoneDefault at packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46) with consumption via `O.exists` (verified .repos/effect-v4/packages/effect/src/Option.ts:2312). Route (a) is crisper for this detection use.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2,
+    "exception": {
+      "reason": "Defaulting stdout or Option-modeling it would change the exported ProcessLike Type/Encoded shape and force structural callers through a new representation; optional stdout mirrors runtimes where stdout metadata is absent.",
+      "boundary": "public ProcessLike structural contract / runtime stdout metadata mirror"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/capability/colors/src/Colors.ts",
+    "line": 102,
+    "symbol": "hasForceColorEnv (family: hasNoColorEnv:100, TERM/CI checks at 212-213)",
+    "smell": "Env-flag invariants live as body predicates over the raw env dictionary: `env.FORCE_COLOR !== undefined && env.FORCE_COLOR !== \"0\"` (:102-103), `env.NO_COLOR !== undefined` (:100), `env.TERM !== \"dumb\"` and `env.CI !== undefined` (:212-213). Undefined/empty-literal checks in a function are the Appendix-A tell that the schema is under-modeled — the truthiness conventions of NO_COLOR/FORCE_COLOR/TERM/CI could precipitate into a decode-side transformation.",
+    "proposedTarget": "Model a `ColorEnv` view with per-flag fields (e.g. `NO_COLOR: S.OptionFromOptionalKey(S.String)`, `FORCE_COLOR` decoded to an enabled/disabled/unset discrimination via `S.decodeTo(...)` + SchemaTransformation) so `supportsColor` reads decoded flags instead of re-deriving them per call. Counterweight kept honest: env is a 3rd-party boundary dictionary, the predicates are picocolors-ported detection heuristics in a leaf capability package, and a schema redesign may be over-engineering — hence judgment tier.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 2,
+    "exception": {
+      "reason": "The env predicates are ported color-support heuristics over an intentionally open process.env dictionary; introducing a ColorEnv view would either drop unrelated env keys or add a second public/private shape with no encoded-shape parity gain.",
+      "boundary": "third-party runtime environment dictionary / color-support heuristic"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/colors/src/Colors.ts",
+    "line": 82,
+    "symbol": "ProcessLike.platform",
+    "smell": "`platform: S.optionalKey(S.String)` gives `string | undefined` on the domain side instead of Option; consumed as `processLike.platform === \"win32\"` at src/Colors.ts:211 (absence handled implicitly by the equality check).",
+    "proposedTarget": "Doctrine-consistent form: `platform: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` with consumption `O.contains(processLike.platform, \"win32\")` (verified: O.contains at .repos/effect-v4/packages/effect/src/Option.ts:2270). Functional gain is near zero — the current equality already handles absence correctly — so this is a consistency-only change; batch it with the other ProcessLike field changes or skip.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Option-modeling platform would change the exported ProcessLike Type for a consistency-only gain; the current equality check already handles absence without weakening the open runtime platform mirror.",
+      "boundary": "public ProcessLike structural contract / runtime platform mirror"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/colors/src/Colors.ts",
+    "line": 94,
+    "symbol": "runtimeProcessLike",
+    "smell": "`O.getOrElse(() => ProcessLike.make({}))` after `S.decodeUnknownOption(ProcessLike)(runtimeProcess)` — textually the `O.getOrElse(x, () => d)` default tell from the S2 smell list.",
+    "proposedTarget": "No action. This is a whole-value decode fallback at the Node runtime-global boundary (`Reflect.get(globalThis, \"process\")` at :90): the decode is already schema-mediated, and the empty ProcessLike is graceful degradation when the global is absent/malformed (browser, workers). Effect v4 has no decodingFallback-style annotation (verified absent from .repos/effect-v4/packages/effect/src/Schema.ts), so module-level `O.getOrElse` after `S.decodeUnknownOption` is the idiomatic whole-value boundary fallback.",
+    "confidence": 0.4,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Whole-value fallback for a failed boundary decode of a runtime global; already schema-mediated via S.decodeUnknownOption(ProcessLike); v4 offers no schema-level whole-value decode fallback to absorb it",
+      "boundary": "3rd-party runtime-global boundary (globalThis.process)"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/capability/colors/src/Colors.ts",
+    "line": 167,
+    "symbol": "formatter",
+    "smell": "`const text = String(input)` — coercion normalization in a function body, textually the coerce tell from the S2 smell list.",
+    "proposedTarget": "No action. The coercion IS the documented public contract (module JSDoc: \"Formatter inputs are normalized with String(...)\"; picocolors parity; test/index.test.ts:113 asserts `plain.dim(undefined) === \"undefined\"`). The Formatter is an `Fn({ input: FormatterInput, output: S.String })` function schema (src/internal/ColorsSchema.ts:66) — the function is itself the schema'd value, so there is no data-codec boundary to absorb per-call coercion, and hot-path formatters would pay decode overhead for zero invariant gain.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Coercion is the documented API contract of a hot-path formatter whose type is carried by an Fn function schema; no data boundary exists to move it into",
+      "boundary": "3rd-party API parity (picocolors) / Fn function-schema member"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/capability/colors/src/internal/ColorsSchema.ts",
+    "line": 29,
+    "symbol": "FormatterInput",
+    "smell": "`S.Union([S.String, S.Finite]).pipe(S.UndefinedOr, ...)` — an `| undefined` union in domain schema code, textually the nullish-instead-of-Option tell.",
+    "proposedTarget": "No action. `undefined` here is a legal member of the accepted INPUT DOMAIN, not absence modeling: formatters stringify it to \"undefined\" (test/index.test.ts:113), matching picocolors semantics. Modeling it as Option would change the public formatter call contract (`colors.dim(undefined)` must keep working) for no invariant gain.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "undefined is a value in the accepted input domain (stringified to \"undefined\"), not an absence to Option-model; Option would break the public formatter call contract",
+      "boundary": "3rd-party API parity (picocolors) / public formatter input contract"
+    }
+  }
+]

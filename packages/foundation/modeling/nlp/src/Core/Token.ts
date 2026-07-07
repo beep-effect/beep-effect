@@ -6,7 +6,7 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { thunkFalse, thunkTrue } from "@beep/utils";
 import { Brand } from "effect";
 import { dual } from "effect/Function";
@@ -49,7 +49,7 @@ export type TokenIndex = Brand.Branded<NonNegativeInt, "TokenIndex">;
  * @category validation
  * @since 0.0.0
  */
-export const isTokenIndex = (u: unknown): u is TokenIndex => S.is(NonNegativeInt)(u);
+export const isTokenIndex = (u: unknown): u is TokenIndex => TokenIndex.is(u);
 
 /**
  * Construct a branded token index after validating it is non-negative.
@@ -85,7 +85,8 @@ export const TokenIndex = NonNegativeInt.pipe(
   S.fromBrand("TokenIndex", tokenIndex),
   $I.annoteSchema("TokenIndex", {
     description: "Non-negative ordered index for an NLP token.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -121,7 +122,7 @@ export type CharPosition = Brand.Branded<NonNegativeInt, "CharPosition">;
  * @category validation
  * @since 0.0.0
  */
-export const isCharPosition = (u: unknown): u is CharPosition => S.is(NonNegativeInt)(u);
+export const isCharPosition = (u: unknown): u is CharPosition => CharPosition.is(u);
 
 /**
  * Construct a branded character offset after validating it is non-negative.
@@ -159,7 +160,8 @@ export const CharPosition = NonNegativeInt.pipe(
   S.fromBrand("CharPosition", charPosition),
   $I.annoteSchema("CharPosition", {
     description: "Non-negative character offset in source NLP text.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -208,20 +210,20 @@ export class Token extends S.Class<Token>($I`Token`)(
     index: TokenIndex,
     start: CharPosition,
     end: CharPosition,
-    pos: S.OptionFromOptionalKey(S.String),
-    lemma: S.OptionFromOptionalKey(S.String),
-    stem: S.OptionFromOptionalKey(S.String),
-    normal: S.OptionFromOptionalKey(S.String),
-    shape: S.OptionFromOptionalKey(S.String),
-    prefix: S.OptionFromOptionalKey(S.String),
-    suffix: S.OptionFromOptionalKey(S.String),
-    case: S.OptionFromOptionalKey(S.String),
-    uniqueId: S.OptionFromOptionalKey(S.Finite),
-    abbrevFlag: S.OptionFromOptionalKey(S.Boolean),
-    contractionFlag: S.OptionFromOptionalKey(S.Boolean),
-    stopWordFlag: S.OptionFromOptionalKey(S.Boolean),
-    negationFlag: S.OptionFromOptionalKey(S.Boolean),
-    precedingSpaces: S.OptionFromOptionalKey(S.String),
+    pos: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    lemma: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    stem: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    normal: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    shape: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    prefix: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    suffix: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    case: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    uniqueId: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
+    abbrevFlag: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    contractionFlag: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    stopWordFlag: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    negationFlag: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    precedingSpaces: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
     tags: S.Array(S.String),
   },
   $I.annote("Token", {

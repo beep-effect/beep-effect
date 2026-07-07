@@ -7,18 +7,15 @@
 import { $ObservabilityId } from "@beep/identity/packages";
 import { NonNegativeInt } from "@beep/schema";
 import { A, thunk0 } from "@beep/utils";
-import { Clock, Context, Effect, HashMap, Layer, Match, MutableRef, Queue, Result } from "effect";
+import { Clock, Context, Effect, HashMap, Layer, Match, MutableRef, Queue } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as DevToolsServer from "effect/unstable/devtools/DevToolsServer";
 import * as SocketServer from "effect/unstable/socket/SocketServer";
+import { decodeNonNegativeInt } from "../../internal/decode.ts";
 import type * as DevToolsSchema from "effect/unstable/devtools/DevToolsSchema";
 
 const $I = $ObservabilityId.create("experimental/server/DevToolsRelay");
-const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
-  cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
-const decodeNonNegativeInt = (input: unknown) =>
-  Result.getOrThrowWith(S.decodeUnknownResult(NonNegativeInt)(input), schemaIssueToError);
 const maxSpanEvents = 200;
 
 /**

@@ -6,7 +6,7 @@
  */
 
 import { $SemanticWebId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import { AbsoluteIRI } from "../iri.ts";
@@ -83,7 +83,7 @@ export class JsonLdDocumentError extends TaggedErrorClass<JsonLdDocumentError>($
   {
     reason: JsonLdDocumentErrorReason,
     message: S.String,
-    subject: S.OptionFromOptionalKey(S.String),
+    subject: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("JsonLdDocumentError", {
     description: "Typed JSON-LD document service error.",
@@ -215,8 +215,8 @@ export class FrameJsonLdDocumentRequest extends S.Class<FrameJsonLdDocumentReque
 export class JsonLdDocumentLoaderPolicy extends S.Class<JsonLdDocumentLoaderPolicy>($I`JsonLdDocumentLoaderPolicy`)(
   {
     allowRemoteDocuments: S.Boolean,
-    maxRemoteDocuments: S.OptionFromOptionalKey(NonNegativeInt),
-    baseIri: S.OptionFromOptionalKey(AbsoluteIRI),
+    maxRemoteDocuments: S.OptionFromOptionalKey(NonNegativeInt).pipe(SchemaUtils.withNoneDefault),
+    baseIri: S.OptionFromOptionalKey(AbsoluteIRI).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("JsonLdDocumentLoaderPolicy", {
     description: "Bounded JSON-LD document loader policy.",
@@ -287,7 +287,7 @@ export type JsonLdDocumentNormalizationProfile = typeof JsonLdDocumentNormalizat
 export class ExpandJsonLdDocumentRequest extends S.Class<ExpandJsonLdDocumentRequest>($I`ExpandJsonLdDocumentRequest`)(
   {
     document: JsonLdDocument,
-    loaderPolicy: S.OptionFromOptionalKey(JsonLdDocumentLoaderPolicy),
+    loaderPolicy: S.OptionFromOptionalKey(JsonLdDocumentLoaderPolicy).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ExpandJsonLdDocumentRequest", {
     description: "Expand JSON-LD document request.",
@@ -324,8 +324,8 @@ export class NormalizeJsonLdDocumentRequest extends S.Class<NormalizeJsonLdDocum
   {
     document: JsonLdDocument,
     profile: JsonLdDocumentNormalizationProfile,
-    loaderPolicy: S.OptionFromOptionalKey(JsonLdDocumentLoaderPolicy),
-    safeMode: S.OptionFromOptionalKey(S.Boolean),
+    loaderPolicy: S.OptionFromOptionalKey(JsonLdDocumentLoaderPolicy).pipe(SchemaUtils.withNoneDefault),
+    safeMode: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("NormalizeJsonLdDocumentRequest", {
     description: "Normalize JSON-LD document request.",
@@ -389,7 +389,7 @@ export class JsonLdToRdfRequest extends S.Class<JsonLdToRdfRequest>($I`JsonLdToR
 export class JsonLdFromRdfRequest extends S.Class<JsonLdFromRdfRequest>($I`JsonLdFromRdfRequest`)(
   {
     dataset: Dataset,
-    context: S.OptionFromOptionalKey(JsonLdContext),
+    context: S.OptionFromOptionalKey(JsonLdContext).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("JsonLdFromRdfRequest", {
     description: "RDF to JSON-LD request.",

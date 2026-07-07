@@ -1,0 +1,13 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/agents/client/src/Chat.atoms.ts",
+    "line": 441,
+    "symbol": "toTurnError",
+    "smell": "`S.is(ChatActionError)(error)` calls the guard combinator directly at its single call site instead of a colocated `.is` static; ChatActionError (TaggedErrorClass at packages/agents/use-cases/src/processes/Chat/Chat.errors.ts:31) already attaches `new`/`failEffect`/`failEffectThunk` in-body but not `is`.",
+    "proposedTarget": "Add `static readonly is = S.is(this)` to ChatActionError alongside its other in-body statics; call `ChatActionError.is(error)` here.",
+    "confidence": 0.4,
+    "mechanization": "judgment",
+    "roiRank": 1
+  }
+]

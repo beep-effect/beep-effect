@@ -1,0 +1,32 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/discord/src/Discord.service.ts",
+    "line": 31,
+    "symbol": "decodeChannelRequest / decodeCreateMessageRequest / decodeRawChannel / decodeRawMessage",
+    "smell": "Cluster of module-level schema-derived request and raw-response decoders can look like a decode-helper wall.",
+    "proposedTarget": "None -- keep these boundary codecs for Discord request validation and raw REST response decoding. Effect v4 `S.decodeUnknownEffect` was verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.06,
+    "exception": {
+      "reason": "The helpers are direct schema-derived decoders used at the HTTP boundary, not hand-rolled validation. `DiscordRawChannel` and `DiscordRawMessage` keep the raw response subset executable as schemas.",
+      "boundary": "Discord request/response boundary codecs"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/discord/src/Discord.service.ts",
+    "line": 65,
+    "symbol": "DiscordShape",
+    "smell": "Service interface with Effect-returning methods over schema-modeled Discord request/proof payloads matches the schema-first-inventory surface.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. Keep `DiscordShape` as the `Context.Service` shape used by `Discord extends Context.Service<Discord, DiscordShape>()` at line 254.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Context.Service shapes stay interfaces under SPEC Non-Goals fence 1; the request/proof payloads themselves are schema-modeled in `Discord.models.ts`.",
+      "boundary": "Context.Service shape for the Discord driver"
+    }
+  }
+]

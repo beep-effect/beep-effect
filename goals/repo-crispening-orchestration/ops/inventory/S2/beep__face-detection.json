@@ -1,0 +1,114 @@
+[
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/drivers/face-detection/src/FaceDetection.errors.ts",
+    "line": 18,
+    "symbol": "causeFromUnknown",
+    "smell": "`causeFromUnknown` returns `unknown | undefined`, and `FaceDetectionError.fromUnknown` passes that undefined into the schema-backed optional `cause` field at line 121; `imagePath`/`modelPath` also stay optional keys in both options and error context (lines 52-54 and 84-87).",
+    "proposedTarget": "Model error-context absence as Option: `cause`, `imagePath`, and `modelPath` should use `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` on `FaceDetectionErrorFromUnknownOptions` and `FaceDetectionError`; `causeFromUnknown` returns `O.Option<unknown>`, and call sites pass Options directly. In-repo exemplar: `packages/foundation/modeling/ontology/src/Ontology.models.ts:152-160`; v4 API verified at `.repos/effect-v4/packages/effect/src/Schema.ts:8648-8669`.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
+    "line": 492,
+    "symbol": "clamp01",
+    "smell": "`clamp01` normalizes raw ONNX classifier/objectness scores into [0, 1] before constructing `FaceDetection.confidence`, while the package already has a schema for that invariant (`FaceDetectionConfidence`, models.ts:75-101).",
+    "proposedTarget": "Move raw-score normalization into a schema codec such as `RawFaceDetectionConfidence = S.Finite.pipe(S.decodeTo(FaceDetectionConfidence, SchemaTransformation.transform({ decode: clamp01, encode: identity })))`, then decode tensor scores through that boundary. Keep the model-output fallback separate if missing tensor slots must still fail closed to zero. In-package range-schema exemplar: `FaceDetectionConfidence` at models.ts:75-101; `S.decodeTo`/`SchemaTransformation.transform` verified in `.repos/effect-v4` and repo exemplars.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
+    "line": 347,
+    "symbol": "preprocessImage",
+    "smell": "`metadata.width ?? 0`, `metadata.height ?? 0`, and `metadata.size ?? 0` are detector hits for nullish fallbacks.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Sharp metadata is an external image-boundary payload; defaulting missing dimensions to zero immediately trips the explicit unusable-dimensions error path and does not define a schema-field default.",
+      "boundary": "3rd-party sharp metadata validation"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
+    "line": 372,
+    "symbol": "preprocessImage",
+    "smell": "`O.getOrElse(() => 1)` and the paired padded-dimension defaults at lines 377/382 derive preprocessing geometry when the model has no fixed input size.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "Algorithmic image-preprocessing fallback: when `inputDimensions` is None, scale and padding are derived from the source image, not defaulted schema fields.",
+      "boundary": "image preprocessing geometry"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
+    "line": 440,
+    "symbol": "preprocessImage",
+    "smell": "`decoded.data[...] ?? 0` fills missing RGB channel reads with zero while preparing tensor data.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "Defensive tensor-buffer read at the image decoding boundary; the fallback fills malformed/missing channel slots during preprocessing, not a domain default.",
+      "boundary": "decoded pixel buffer boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
+    "line": 535,
+    "symbol": "scaleFaceToOriginal",
+    "smell": "`clamp(..., 0, image.width/height)` bounds model coordinates during inverse scaling.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "The bounds depend on the specific source image dimensions and preprocessing scale/offset, so this is cross-field geometry projection rather than a static schema normalization.",
+      "boundary": "image-specific coordinate projection"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/face-detection/src/FaceDetection.service.ts",
+    "line": 590,
+    "symbol": "decodeStrideFaces",
+    "smell": "`cls[index] ?? 0`, `obj[index] ?? 0`, bbox offsets, and keypoint offsets default missing tensor reads to zero.",
+    "proposedTarget": "None - keep the tensor-slot fallback local.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "ONNX output tensors are external model boundary data; zero is the fail-closed slot value while decoding a fixed tensor layout, not a schema-field default.",
+      "boundary": "3rd-party ONNX tensor decoding"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/face-detection/src/FaceDetection.errors.ts",
+    "line": 31,
+    "symbol": "messageWithCause",
+    "smell": "`O.getOrElse(() => message)` defaults an absent cause detail while formatting an error message.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "Derived presentation fallback in an error-message formatter; the optional detail is already modeled as Option and this does not belong on a schema field.",
+      "boundary": "error message formatting"
+    }
+  }
+]

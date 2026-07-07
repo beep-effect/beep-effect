@@ -1,0 +1,115 @@
+{
+  "schemaVersion": "initiative-manifest/v1",
+  "initiative": {
+    "id": "quality-gate-ratchets",
+    "title": "Quality Gate Ratchets",
+    "status": "completed-retained",
+    "created": "2026-07-06",
+    "updated": "2026-07-06",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/quality-gate-ratchets",
+  "lifecycle": "completed-retained",
+  "executionCapable": false,
+  "reflectionRequired": true,
+  "mission": "Turn declared-but-toothless quality gates into committed-baseline fail-on-regression ratchets (coverage, knip, jsdoc inventory, doctrine-pinned boundaries, commitlint-in-CI) and protect main with a real ruleset — one PR + post-merge ruleset enablement.",
+  "provenance": {
+    "exploration": null,
+    "note": "Deliberately no exploration packet: research = REPO_RATING.md path-to-10 + explorations/agent-pipeline-velocity/research/* + 2026-07-06 codex state recon (research/SOURCES.md); align = grill-with-docs session 2026-07-06 (9 locked decisions in the approved plan, mirrored in SPEC constraints)."
+  },
+  "relatedPackets": [
+    {
+      "id": "agent-pipeline-velocity",
+      "relation": "successor",
+      "notes": "Continues the REPO_RATING path-to-10 program after PR #295; uses the worktree tooling and greptile-only closeout it shipped."
+    },
+    {
+      "id": "repo-quality-throughput",
+      "relation": "successor",
+      "notes": "Gate additions must not regress the measured pipeline wins; rqt measured-delta conventions apply to any timing-relevant change."
+    },
+    {
+      "id": "skillopt-training-pilot",
+      "relation": "sibling-successor",
+      "notes": "Starts implementation only after this packet closes (grill decision: strict A→B order)."
+    }
+  ],
+  "executionMandate": {
+    "implementation": "codex-subagents",
+    "orchestration": "claude",
+    "conventions": [
+      "one lane = one agent = one sibling worktree = one deliverable",
+      "background-first, deliverable-on-disk, fresh relaunch over resume",
+      "no GitHub API writes from codex sandboxes; Claude performs A5/gh writes",
+      "lanes A2 and A4 sequential (shared Quality/Tasks.ts + check.yml)"
+    ]
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet AND the post-merge ruleset step is live with direct-push refusal proven.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/quality-gate-ratchets/README.md",
+    "goals/quality-gate-ratchets/SPEC.md",
+    "goals/quality-gate-ratchets/PLAN.md",
+    "goals/quality-gate-ratchets/GOAL.md",
+    "goals/quality-gate-ratchets/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/quality-gate-ratchets/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Lanes",
+      "status": "completed"
+    },
+    {
+      "id": "P1",
+      "name": "Proofs",
+      "status": "completed"
+    },
+    {
+      "id": "P2",
+      "name": "Ship",
+      "status": "completed"
+    },
+    {
+      "id": "P3",
+      "name": "Ruleset",
+      "status": "completed"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "completed"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/quality-gate-ratchets/GOAL.md)\" -le 4000",
+    "jq . goals/quality-gate-ratchets/ops/manifest.json",
+    "rg -n \"quality-gate-ratchets|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/quality-gate-ratchets",
+    "git diff --check -- goals/quality-gate-ratchets",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "A ratchet cannot be made two-way provable (fires on synthetic regression AND passes on revert).",
+    "A change would weaken full proof, hosted checks, or closeout gates.",
+    "#294 ratchet machinery proves non-reusable without forking it.",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "mergedPullRequest": 305
+}

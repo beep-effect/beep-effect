@@ -29,11 +29,14 @@
  */
 
 import { $ColorsId } from "@beep/identity";
-import { A, Str } from "@beep/utils";
+import { SchemaUtils } from "@beep/schema";
+import { A, Str, thunk } from "@beep/utils";
 import { pipe } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ColorsFields, Formatter as FormatterDefinition } from "./internal/ColorsSchema.ts";
+import type * as AST from "effect/SchemaAST";
 import type { Formatter as FormatterType } from "./internal/ColorsSchema.ts";
 
 const $I = $ColorsId.create("Domain");
@@ -54,7 +57,11 @@ const $I = $ColorsId.create("Domain");
  */
 export class ProcessLikeStdout extends S.Class<ProcessLikeStdout>($I`ProcessLikeStdout`)(
   {
-    isTTY: S.optionalKey(S.Boolean),
+    isTTY: S.optionalKey(S.Boolean).pipe(
+      $I.annoteKey("ProcessLikeStdout.isTTY", {
+        description: "Whether the stdout stream is attached to a TTY.",
+      })
+    ),
   },
   $I.annote("ProcessLikeStdout", {
     description: "Minimal stdout metadata used by ANSI color support detection.",
@@ -77,30 +84,65 @@ export class ProcessLikeStdout extends S.Class<ProcessLikeStdout>($I`ProcessLike
  */
 export class ProcessLike extends S.Class<ProcessLike>($I`ProcessLike`)(
   {
-    argv: S.String.pipe(S.Array, S.optionalKey),
-    env: S.Record(S.String, S.UndefinedOr(S.String)).pipe(S.optionalKey),
-    platform: S.optionalKey(S.String),
-    stdout: S.optionalKey(ProcessLikeStdout),
+    argv: S.String.pipe(
+      S.Array,
+      S.optionalKey,
+      $I.annoteKey("ProcessLike.argv", {
+        description: "Process argument vector consulted for ANSI color override flags.",
+      })
+    ),
+    env: S.Record(S.String, S.UndefinedOr(S.String)).pipe(
+      S.optionalKey,
+      $I.annoteKey("ProcessLike.env", {
+        description: "Process environment variables consulted for ANSI color support detection.",
+      })
+    ),
+    platform: S.optionalKey(S.String).pipe(
+      $I.annoteKey("ProcessLike.platform", {
+        description: "Runtime platform string used to detect Windows color support.",
+      })
+    ),
+    stdout: S.optionalKey(ProcessLikeStdout).pipe(
+      $I.annoteKey("ProcessLike.stdout", {
+        description: "Stdout metadata used to detect terminal color support.",
+      })
+    ),
   },
   $I.annote("ProcessLike", {
     description: "Minimal process-like runtime metadata used by ANSI color support detection.",
   })
-) {}
+) {
+  static readonly decodeOption: {
+    (input: unknown, options?: AST.ParseOptions): O.Option<ProcessLike>;
+    (options?: AST.ParseOptions): (input: unknown) => O.Option<ProcessLike>;
+  } = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownOption(ProcessLike));
+
+  static readonly supportsColor = (processLike: ProcessLike = runtimeProcessLike): boolean => {
+    const argv = processLike.argv ?? A.empty();
+    const env = processLike.env ?? {};
+
+    if (env.NO_COLOR !== undefined || A.contains(argv, "--no-color")) {
+      return false;
+    }
+
+    if (env.FORCE_COLOR !== undefined && env.FORCE_COLOR !== "0") {
+      return true;
+    }
+
+    return (
+      processLike.platform === "win32" ||
+      (Boolean(processLike.stdout?.isTTY) && env.TERM !== "dumb") ||
+      env.CI !== undefined
+    );
+  };
+}
 
 const runtimeProcess = Reflect.get(globalThis, "process");
-const decodeProcessLike = S.decodeUnknownOption(ProcessLike);
 const runtimeProcessLike: ProcessLike = pipe(
-  decodeProcessLike(runtimeProcess),
+  ProcessLike.decodeOption(runtimeProcess),
   O.getOrElse(() => ProcessLike.make({}))
 );
 const stringIdentity: FormatterType = String;
-
-const hasNoColorFlag = (argv: ReadonlyArray<string>): boolean => A.contains(argv, "--no-color");
-
-const hasNoColorEnv = (env: Readonly<Record<string, string | undefined>>): boolean => env.NO_COLOR !== undefined;
-
-const hasForceColorEnv = (env: Readonly<Record<string, string | undefined>>): boolean =>
-  env.FORCE_COLOR !== undefined && env.FORCE_COLOR !== "0";
 
 const findCloseFrom = (text: string, close: string, cursor: number): O.Option<number> =>
   pipe(
@@ -195,24 +237,7 @@ const formatter =
  * @returns `true` when ANSI escape sequences should be emitted.
  * @since 0.0.0
  */
-export const supportsColor = (processLike: ProcessLike = runtimeProcessLike): boolean => {
-  const argv = processLike.argv ?? A.empty();
-  const env = processLike.env ?? {};
-
-  if (hasNoColorEnv(env) || hasNoColorFlag(argv)) {
-    return false;
-  }
-
-  if (hasForceColorEnv(env)) {
-    return true;
-  }
-
-  return (
-    processLike.platform === "win32" ||
-    (Boolean(processLike.stdout?.isTTY) && env.TERM !== "dumb") ||
-    env.CI !== undefined
-  );
-};
+export const supportsColor = ProcessLike.supportsColor;
 
 /**
  * Whether ANSI color output is enabled for the current runtime.
@@ -294,7 +319,7 @@ export class Colors extends S.Class<Colors>($I`Colors`)(
  * @since 0.0.0
  */
 export const createColors = (enabled: boolean = isColorSupported): Colors => {
-  const makeFormatter: typeof formatter = enabled ? formatter : () => stringIdentity;
+  const makeFormatter: typeof formatter = enabled ? formatter : thunk(stringIdentity);
 
   return Colors.make({
     isColorSupported: enabled,

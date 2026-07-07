@@ -1,5 +1,14 @@
-import { measureElapsedMillis, observeHttpRequest, observeWorkflow, statusClass } from "@beep/observability";
-import { Effect, Metric } from "effect";
+import {
+  measureElapsedMillis,
+  observeHttpRequest,
+  observeWorkflow,
+  statusClass,
+  TrackDurationOptions,
+} from "@beep/observability";
+import { Effect, Equal, Metric } from "effect";
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
 describe("Metric", () => {
@@ -18,6 +27,19 @@ describe("Metric", () => {
         expect(elapsedMs).toBeGreaterThanOrEqual(0);
       })
     ));
+
+  it("round-trips schema-derived track duration options", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(TrackDurationOptions), (options) => {
+        const decoded = O.flatMap(
+          S.encodeOption(TrackDurationOptions)(options),
+          S.decodeUnknownOption(TrackDurationOptions)
+        );
+        expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
+      }),
+      { numRuns: 50 }
+    );
+  });
 
   it("tracks workflow counters on success", () =>
     Effect.runPromise(
@@ -43,6 +65,27 @@ describe("Metric", () => {
         expect(startedState.count).toBe(1);
         expect(completedState.count).toBe(1);
         expect(failedState.count).toBe(0);
+      })
+    ));
+
+  it("tracks workflow counters on interruption", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const interrupted = Metric.counter("test_workflow_interrupted_total");
+
+        yield* Effect.exit(
+          observeWorkflow(
+            {
+              name: "test-workflow",
+              interrupted,
+            },
+            Effect.interrupt
+          )
+        );
+
+        const interruptedState = yield* Metric.value(interrupted);
+
+        expect(interruptedState.count).toBe(1);
       })
     ));
 

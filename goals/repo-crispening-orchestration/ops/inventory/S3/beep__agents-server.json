@@ -1,0 +1,43 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/agents/server/src/AssistantTurn/AnthropicTurnCodec.ts",
+    "line": 41,
+    "symbol": "mermaidDiagramTypes",
+    "smell": "Mermaid diagram types are a finite allowlist stored as ReadonlyArray<string> and checked with A.contains at line 68, so the literal family is widened to string and has no schema/kit guard even though it drives provider validation.",
+    "proposedTarget": "Replace mermaidDiagramTypes with a named MermaidDiagramType = LiteralKit([...]) and validate the first token with S.is(MermaidDiagramType)(token) or kit guards; keep A.join(MermaidDiagramType.Options, \", \") for the error message. Verified targets: LiteralKit const-parameter API at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:743-761 and Effect v4 S.is at .repos/effect-v4/packages/effect/src/Schema.ts:1256.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3.4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/agents/server/src/AssistantTurn/AnthropicTurnKernel.ts",
+    "line": 129,
+    "symbol": "parts",
+    "smell": "LanguageModel.streamText(...).pipe(Stream.withExecutionPlan(...)) as Stream.Stream<RespondStreamPart, AiError.AiError | Config.ConfigError> is a non-const type assertion that a no-as detector will flag.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The assertion pins the Effect AI execution-plan stream type after the library generic widens to any, as documented immediately above the call. This is a type-adapter boundary, not a missing schema-derived narrowing or discriminator match.",
+      "boundary": "Effect AI LanguageModel.streamText withExecutionPlan typing boundary in the Anthropic turn kernel"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/agents/server/test/AnthropicTurnCodec.test.ts",
+    "line": 25,
+    "symbol": "decodeBlock paragraph assertion",
+    "smell": "if (block.type === \"paragraph\") manually narrows a decoded assistant block by its type discriminator in a provider-codec test.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The test imports only the provider codec output; the checked schema that owns the derived match is private to AnthropicTurnCodec.ts. This is a one-arm assertion after expect(block.type).toBe(\"paragraph\"), not production variant dispatch.",
+      "boundary": "test-only Anthropic provider codec smoke assertion"
+    }
+  }
+]

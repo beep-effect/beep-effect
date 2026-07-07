@@ -1,0 +1,92 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.codec.ts",
+    "line": 224,
+    "symbol": "artifactRefFromLink",
+    "smell": "`label === artifactId || Str.isEmpty(label) ? O.none<string>() : O.some(label)` - empty-string/equality check converts presentation text into absence inside the Md-to-Lexical projection.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Projection-specific sibling-derived absence: an artifact link whose label is empty or equal to the artifact id intentionally stores no custom label, and `ArtifactRefNode.label` is already an Option schema field with `SchemaUtils.withNoneDefault` at Lexical.model.ts:1534-1535.",
+      "boundary": "lossy Md-to-Lexical projection over an already Option-modeled field"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.codec.ts",
+    "line": 376,
+    "symbol": "inlineNodeToMd",
+    "smell": "`Md.Text.make({ value: O.getOrElse(node.label, () => node.artifactId) })` - getOrElse-as-default detector hit inside the artifact-ref projection arm.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "Sibling-derived display fallback (missing label -> render the artifactId as link text) inside a lossy Lexical-to-Md projection; schema constructor defaults cannot see sibling fields, and `label` is already correctly modeled as Option.",
+      "boundary": "sibling-derived presentation fallback in a projection codec"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.codec.ts",
+    "line": 476,
+    "symbol": "tableHasHeaderRow",
+    "smell": "`O.getOrElse(() => false)` terminating a findFirst/map Option chain - getOrElse-as-default detector hit.",
+    "proposedTarget": "None - keep as-is (at most `O.exists`, a style nit outside S2).",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "Algorithmic lookup-miss terminal (`no first row found -> table has no header row`), a derivation over already-Option-first data, not a schema-field default a codec could carry.",
+      "boundary": "graph/tree-walk derivation fallback"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.normalize.ts",
+    "line": 138,
+    "symbol": "sanitizeInlineStyle",
+    "smell": "`Str.trim` + `Str.toLowerCase` normalization pipeline in bodies (also parseSafeDeclaration:112-113, sanitizeStyleValue:161, legacyYouTubeVideoId:69) - detector hits for trim/case outside a codec.",
+    "proposedTarget": "None - keep as-is. Already the sanctioned shape: these are fence-4 trust-boundary sanitizers, and they are already wired into the schema as SchemaGetter transforms (Lexical.model.ts:619-620, 652-653 decode/encode + toArbitrary; legacyYouTubeVideoId consumed by the videoID getter at Lexical.model.ts:65-66). Do not absorb further.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "Fence 4: sanitizeInlineStyle/sanitizeStyleValue are explicit CSS-injection / UI-redressing guards over untrusted serialized editor state (allowlist + url()/escape rejection) and must stay explicit and property-tested; the module exists precisely so the schema getters can consume these pure guards. legacyYouTubeVideoId is legacy-input folding already applied inside a SchemaGetter.transformOrFail on the schema.",
+      "boundary": "trust boundary (untrusted persisted Lexical state rendered into DOM style attributes) + already inside schema codecs"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.behavior.ts",
+    "line": 74,
+    "symbol": "editorStateToPlainText",
+    "smell": "`Str.trim(nodeToPlainText(state.root))` (and `Str.trim(childText(node.children))` in the tablecell arm at line 52) - trim in a body, detector hit.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "The trim is the plain-text projection's output contract (no leading/trailing whitespace in the rendered text; tab-separated trimmed cells), i.e. the feature payload of a lossy rendering function - not a field-normalization invariant that belongs on a schema field.",
+      "boundary": "plain-text projection payload (rendering feature)"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
+    "line": 1373,
+    "symbol": "ListItemNode.Encoded",
+    "smell": "`readonly checked?: boolean | undefined` - nullish-union detector hit; the same family covers direction (`null | Direction`, line 830), LinkNode rel/target/title (1440-1442), CodeNode language/theme (1505-1506), TableCellNode backgroundColor/colSpan/rowSpan/verticalAlign/width (1732-1738), TableRowNode height (1800), and TableNode colWidths/frozen*/rowStriping (1873-1876).",
+    "proposedTarget": "None - keep as-is for the whole family.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "These are the `Encoded` companion interfaces inside `declare namespace` recursion blocks: they mirror Lexical's own serialized wire format where absence is `undefined`/`null` on the wire. The domain `Type` side is already Option (for example ListItemNode.Type.checked is `O.Option<boolean>` at line 1361) - exactly the decoded-Option / encoded-nullish split the S2 carve-outs mandate. Fence 5 additionally protects the namespace blocks themselves.",
+      "boundary": "3rd-party Lexical serialized wire format + fence 5 declare-namespace recursion blocks"
+    }
+  }
+]

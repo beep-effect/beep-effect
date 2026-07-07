@@ -579,3 +579,27 @@ export const makeReadonly = <T>(a: T | Array<T>): ReadonlyArray<T> => A.ensure(a
  */
 export const fromIterableNonEmpty = <const TArray>(collection: Iterable<TArray>): A.NonEmptyReadonlyArray<TArray> =>
   asNonEmptyReadonlyArray(A.fromIterable(collection));
+
+/**
+ * Creates an empty array.
+ *
+ * **When to use**
+ *
+ * Use to create a typed empty readonly array without allocating placeholder elements.
+ *
+ * **Example** (Creating an empty readonly array)
+ *
+ * ```ts
+ * import { A } from "@beep/utils"
+ *
+ * const result = A.emptyReadonly<number>()
+ * console.log(result) // []
+ * ```
+ *
+ * @see {@link of} — create a single-element array
+ * @see {@link make} — create from multiple values
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const emptyReadonly: <A = never>() => ReadonlyArray<A> = () => [];

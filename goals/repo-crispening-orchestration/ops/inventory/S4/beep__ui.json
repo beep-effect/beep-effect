@@ -1,0 +1,92 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/components/country-select.tsx",
+    "line": 47,
+    "symbol": "CountryCode",
+    "smell": "UI owns a second CountryCode LiteralKit even though @beep/schema/CountryCode already exports the canonical schema (packages/foundation/modeling/schema/src/CountryCode.ts:30). The file then exports isCountryCode at line 401 by scanning countryOptions, despite its own docs at lines 36-41 showing the schema-derived S.is(CountryCode) guard.",
+    "proposedTarget": "Import CountryCode and its type from @beep/schema/CountryCode, keep the phone metadata-specific isSupportedCountry check in phone-input.tsx:264, and replace isCountryCode with the colocated schema guard (CountryCode.is once the shared schema preserves LiteralKit statics via withLiteralKitStatics, or S.is(CountryCode) as the interim direct schema guard).",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 4,
+    "exception": {
+      "reason": "The shared @beep/schema/CountryCode includes CLDR territory codes that are not valid country-flag-icons component keys for this UI primitive. Replacing the local UI LiteralKit would widen the public FlagIcons index domain instead of colocating behavior safely; the local schema now carries annotation and the exported guard is derived with S.is(CountryCode).",
+      "boundary": "UI flag component country-code subset vs shared CLDR territory schema"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/components/color-picker.tsx",
+    "line": 37,
+    "symbol": "normalizeHexColorInput",
+    "smell": "Exported helper rebuilds soft decode behavior around Color.NormalizeHexColor with S.decodeUnknownResult + Result.match at lines 37-44. The helper is tested at FormWidgets.test.ts:19-21 and reused by ColorPicker state initialization/updates at lines 83, 127, and 131, but the codec behavior belongs on the NormalizeHexColor schema (defined at packages/foundation/modeling/schema/src/Color/Color.hex.ts:173-184).",
+    "proposedTarget": "Attach SchemaUtils.withCodecStatics to NormalizeHexColor in @beep/schema/Color, then rewrite this UI helper as the thin consumer of Color.NormalizeHexColor.decodeOption, returning O.getOrUndefined. This follows the withCodecStatics contract verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90-97.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 5,
+    "exception": {
+      "reason": "Attaching codec statics to Color.NormalizeHexColor requires editing @beep/schema outside this package. The UI helper now uses S.decodeUnknownOption(Color.NormalizeHexColor) directly, while colocating statics on the shared schema is deferred to a family-close sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/hooks/useSpinner.ts",
+    "line": 149,
+    "symbol": "useSpinner",
+    "smell": "Detector hit: exported 2-arg function is not dual.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "React hook APIs are call-order-sensitive UI boundaries, not public data-first/data-last helpers; currying the hook with dual would create an unnatural hook call surface and invite rule-of-hooks misuse.",
+      "boundary": "React hook boundary carve-out for JSX-facing state hooks."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/hooks/useNumberInput.ts",
+    "line": 555,
+    "symbol": "useNumberBoundary",
+    "smell": "Detector hit: exported 2-arg function is not dual.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "The second argument is an optional React atom scope used to coordinate hook state; this is a React hook boundary with optional setup state, not a pipeable helper surface.",
+      "boundary": "React hook boundary carve-out for UI state orchestration."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/components/editor/editor-ui/content-editable.tsx",
+    "line": 25,
+    "symbol": "Props",
+    "smell": "Detector hit: S.Class named Props lacks colocated codec statics.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "This class is a React component props boundary consumed directly by ContentEditable at line 58; the user instructions explicitly carve out React component props/interfaces and JSX-facing surfaces from S4 remediation.",
+      "boundary": "React component props / JSX-facing surface carve-out."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/components/knowledge-graph.tsx",
+    "line": 305,
+    "symbol": "HashSet.fromIterable",
+    "smell": "Detector hit during false-positive pass: graph visualization code uses HashSet to derive unique node types, superficially suggesting collection/schema colocation work.",
+    "proposedTarget": "None - leave as-is in S4.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 11,
+    "exception": {
+      "reason": "SPEC fences 6/7 exclude Graph and native/effect collection migration from this packet; this component is a visualization surface, not a schema-modeled const/class missing statics.",
+      "boundary": "SPEC fences 6/7 - no Graph/MutableHash/native-collection migration in S4."
+    }
+  }
+]

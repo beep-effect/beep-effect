@@ -8,21 +8,15 @@
 import { $ChalkId } from "@beep/identity/packages";
 import { TaggedErrorClass } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { pipe, Result, Tuple } from "effect";
+import { pipe, Tuple } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ansiStyles, getModelAnsi, getStyleEntry } from "./AnsiStyles.ts";
-import {
-  backgroundColorNameValues,
-  ColorSupportLevel,
-  foregroundColorNameValues,
-  modifierNameValues,
-} from "./ChalkSchema.ts";
+import { AnsiRenderLevel, ColorModelName, ColorSupportLevel, StyleName } from "./ChalkSchema.ts";
 import { ColorSupportLevelInput } from "./PublicSurface.ts";
 import { stringEncaseCRLFWithFirstIndex, stringReplaceAll } from "./Utilities.ts";
-import type { StyleName } from "./AnsiStyles.ts";
-import type { ColorInfo } from "./ChalkSchema.ts";
+import type { ColorInfo, ColorSupportLevel as ColorSupportLevelType } from "./ChalkSchema.ts";
 import type { ChalkConstructorOptions } from "./PublicSurface.ts";
 
 const $I = $ChalkId.create("Domain");
@@ -69,7 +63,12 @@ export const ChalkState = ColorSupportLevel.mapMembers(
     () => ChalkAnsi256ColorState,
     () => ChalkTrueColorState,
   ])
-).pipe(S.toTaggedUnion("level"));
+).pipe(
+  $I.annoteSchema("ChalkState", {
+    description: "Discriminated Chalk builder color state keyed by color support level.",
+  }),
+  S.toTaggedUnion("level")
+);
 type ChalkState = typeof ChalkState.Type;
 type MutableChalkState = {
   -readonly [Key in keyof ChalkState]: ChalkState[Key];
@@ -77,10 +76,10 @@ type MutableChalkState = {
 
 class Styler extends S.Class<Styler>($I`Styler`)(
   {
-    open: S.String,
-    close: S.String,
-    openAll: S.String,
-    closeAll: S.String,
+    open: S.NonEmptyString,
+    close: S.NonEmptyString,
+    openAll: S.NonEmptyString,
+    closeAll: S.NonEmptyString,
     parent: S.UndefinedOr(S.suspend((): S.Codec<Styler.Codec> => Styler)),
   },
   $I.annote("Styler", {
@@ -114,17 +113,12 @@ type ChalkPrototype = object;
 
 const builderMetaMap = new WeakMap<ChalkFunction, BuilderMeta>();
 
-const levelMapping = ["ansi", "ansi", "ansi256", "ansi16m"] as const;
-const styleNameValues: ReadonlyArray<StyleName> = [
-  ...modifierNameValues,
-  ...foregroundColorNameValues,
-  ...backgroundColorNameValues,
-];
-
-const decodeColorSupportLevel = S.decodeUnknownResult(ColorSupportLevel);
-const decodeColorSupportLevelInput = S.decodeUnknownResult(ColorSupportLevelInput);
-const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]): S.SchemaError =>
-  cause instanceof S.SchemaError ? cause : new S.SchemaError(cause);
+const levelMapping: Readonly<Record<ColorSupportLevelType, AnsiRenderLevel>> = {
+  0: AnsiRenderLevel.Enum.ansi,
+  1: AnsiRenderLevel.Enum.ansi,
+  2: AnsiRenderLevel.Enum.ansi256,
+  3: AnsiRenderLevel.Enum.ansi16m,
+};
 
 class MissingBuilderMetadataError extends TaggedErrorClass<MissingBuilderMetadataError>(
   $I`MissingBuilderMetadataError`
@@ -138,11 +132,8 @@ class MissingBuilderMetadataError extends TaggedErrorClass<MissingBuilderMetadat
   })
 ) {}
 
-const normalizeColorSupportLevel = (level: unknown): S.Schema.Type<typeof ColorSupportLevel> => {
-  const input = Result.getOrThrowWith(decodeColorSupportLevelInput(level), schemaIssueToError);
-
-  return Result.getOrThrowWith(decodeColorSupportLevel(input), schemaIssueToError);
-};
+const normalizeColorSupportLevel = (level: unknown): ColorSupportLevelType =>
+  ColorSupportLevel.fromUnknown(ColorSupportLevelInput.fromUnknown(level));
 
 const setChalkStateLevel = (state: ChalkState, level: unknown): void => {
   (state as MutableChalkState).level = normalizeColorSupportLevel(level);
@@ -182,32 +173,25 @@ const renderArguments = (arguments_: ReadonlyArray<unknown>): string => {
   return arguments_.length === 1 ? `${first}` : pipe(arguments_, A.map(renderJoinArgument), A.join(" "));
 };
 
-const stringIndexOfOrNotFound = (text: string, substring: string): number =>
-  pipe(
-    text,
-    Str.indexOf(substring),
-    O.getOrElse(() => -1)
-  );
-
 const capitalizeModelName = (modelName: string): string =>
   `${Str.toUpperCase(Str.slice(0, 1)(modelName))}${Str.slice(1)(modelName)}`;
 
 const createStyler = (open: string, close: string, parent: Styler | undefined): Styler =>
   P.isUndefined(parent)
-    ? {
+    ? Styler.make({
         close,
         closeAll: close,
         open,
         openAll: open,
         parent,
-      }
-    : {
+      })
+    : Styler.make({
         close,
         closeAll: close + parent.closeAll,
         open,
         openAll: parent.openAll + open,
         parent,
-      };
+      });
 
 const applyStyle = (builder: ChalkFunction, text: string): string => {
   const { isEmpty, state, styler } = getBuilderMeta(builder);
@@ -230,14 +214,18 @@ const applyStyle = (builder: ChalkFunction, text: string): string => {
     } while (P.isNotUndefined(currentStyler));
   }
 
-  const lineFeedIndex = stringIndexOfOrNotFound(rendered, "\n");
-
-  if (lineFeedIndex !== -1) {
-    rendered = stringEncaseCRLFWithFirstIndex(rendered, styler.closeAll, {
-      postfix: styler.openAll,
-      index: lineFeedIndex,
-    });
-  }
+  rendered = pipe(
+    rendered,
+    Str.indexOf("\n"),
+    O.match({
+      onNone: () => rendered,
+      onSome: (index) =>
+        stringEncaseCRLFWithFirstIndex(rendered, styler.closeAll, {
+          postfix: styler.openAll,
+          index,
+        }),
+    })
+  );
 
   return styler.openAll + rendered + styler.closeAll;
 };
@@ -267,7 +255,7 @@ const createPrototype = (): ChalkPrototype => {
     },
   });
 
-  for (const styleName of styleNameValues) {
+  for (const styleName of StyleName.Options) {
     Object.defineProperty(prototype, styleName, {
       get(this: ChalkFunction) {
         const { isEmpty, state, styler } = getBuilderMeta(this);
@@ -283,7 +271,7 @@ const createPrototype = (): ChalkPrototype => {
     });
   }
 
-  for (const modelName of ["rgb", "hex", "ansi256"] as const) {
+  for (const modelName of ColorModelName.Options) {
     Object.defineProperty(prototype, modelName, {
       get(this: ChalkFunction) {
         const level = getBuilderMeta(this).state.level;

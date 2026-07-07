@@ -7,15 +7,27 @@ import { describe, expect, layer } from "@effect/vitest";
 import { Duration, Effect, Fiber, Layer, Stream } from "effect";
 import { TestClock } from "effect/testing";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
+import * as Response from "effect/unstable/ai/Response";
+
+const TestUsage = Response.Usage.make({
+  inputTokens: { cacheRead: undefined, cacheWrite: undefined, total: 0, uncached: 0 },
+  outputTokens: { reasoning: undefined, text: 0, total: 0 },
+});
 
 const makeLanguageModelLayerFromEffect = (
   effect: Effect.Effect<{ readonly text: string }, never>
 ): Layer.Layer<LanguageModel.LanguageModel> =>
-  Layer.succeed(LanguageModel.LanguageModel, {
-    generateObject: () => Effect.die("generateObject is not used by V1 tests") as never,
-    generateText: () => effect as never,
-    streamText: () => Stream.empty as never,
-  } as LanguageModel.Service);
+  Layer.effect(
+    LanguageModel.LanguageModel,
+    LanguageModel.make({
+      generateText: () =>
+        Effect.map(effect, ({ text }) => [
+          Response.makePart("text", { text }),
+          Response.makePart("finish", { reason: "stop", response: undefined, usage: TestUsage }),
+        ]),
+      streamText: () => Stream.empty,
+    })
+  );
 
 const makeLanguageModelLayer = (text: string): Layer.Layer<LanguageModel.LanguageModel> =>
   makeLanguageModelLayerFromEffect(Effect.succeed({ text }));

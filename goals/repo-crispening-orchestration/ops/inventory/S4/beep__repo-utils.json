@@ -1,0 +1,209 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
+    "line": 107,
+    "symbol": "isNpmPackageName",
+    "smell": "Top-of-file guard wall: six private helpers `isNpmPackageName` / `isRepoPackageName` / `isExportTopLevelKey` / `isImportSpecifierKey` / `isExportConditionKey` / `isNonEmptyStringValue` are direct `S.is(...)` aliases for refined schemas and are reused by `makeStrictStringKeyRecord` call sites (lines 143, 154, 166, 760, 810, 860).",
+    "proposedTarget": "Import `SchemaUtils` and append `SchemaUtils.withCodecStatics` to the six refined schema consts, then pass `NpmPackageName.is`, `RepoPackageName.is`, etc. directly. API verified at `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`; in-repo exemplar: `packages/foundation/modeling/md/src/Md.model.ts:36`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/schemas/PackageJsonTools.ts",
+    "line": 44,
+    "symbol": "decodeBrowserResult",
+    "smell": "Decoder wall for package-field schemas: `decodeBrowserResult`, `decodePackageExportsResult`, `decodePackageImportsResult`, `decodePeerDependenciesMetaResult`, `decodePublishConfigResult`, and `decodeTypesVersionsResult` are all `S.decodeUnknownResult(...)` aliases whose consumers immediately throw via `Result.getOrThrow*` (lines 131, 162, 167, 174, 205, 239).",
+    "proposedTarget": "Attach `SchemaUtils.withCodecStatics` to `Browser` (PackageJson.ts:479), `PeerDependenciesMeta` (602), `TypesVersions` (624), `PackageExports` (782), `PackageImports` (860), and `PublishConfig` (942); replace this wall with `Browser.fromUnknown(...)`, `PackageExports.fromUnknown(...)`, etc. Keep the existing `schemaIssueToError` only where a non-schema error adapter remains necessary.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
+    "line": 1395,
+    "symbol": "decodePackageJsonUnknownResult",
+    "smell": "Strict `PackageJson` decode/encode behavior lives as module-level helpers (`decodePackageJsonUnknownResult`, `decodePackageJsonUnknownExit`, `decodePackageJsonUnknownEffect`, `encodePackageJsonUnknownEffect`, `encodePackageJsonJsonStringEffect`) plus exported wrappers, instead of on the `PackageJson` class it serves.",
+    "proposedTarget": "Because `PackageJson` is an `S.Class`, do not pipe `withCodecStatics`; attach in-body statics such as `static readonly decodeStrictResult`, `decodeStrictExit`, `decodeStrictEffect`, and encode helpers to `PackageJson`, preserving the existing exported functions as public aliases unless a same-PR consumer sweep removes them. `withCodecStatics` documents the class/static distinction at `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:10`.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
+    "line": 1636,
+    "symbol": "decodeJsoncUnknownTextExit",
+    "smell": "TSConfig has a module-level semantic/JSONC decode wall (`decodeJsoncUnknownTextExit`, `decodeTSConfigSemanticUnknownResult`, `decodeTSConfigSemanticUnknownExit`, `decodeTSConfigSemanticUnknownEffect`, encode helpers) feeding public wrappers, while `TSConfig` itself is the class schema boundary.",
+    "proposedTarget": "Move strict/semantic decode behavior onto `TSConfig` as in-body statics, e.g. `decodeSemanticStrict`, `decodeSemanticStrictExit`, `decodeSemanticStrictEffect`, and `decodeJsoncTextEffect`; keep exported functions as aliases to avoid a public-form break. Use in-body class statics rather than `withCodecStatics` for `S.Class`.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
+    "line": 87,
+    "symbol": "decodeByteLength",
+    "smell": "Large service-local decode/guard wall for TSMorph boundary data: lines 87-110 rebuild `S.decodeUnknownEffect`, `S.decodeOption`, and `S.is` for model schemas such as `ByteLength`, `ByteOffset`, `LineNumber`, `RepoRootPath`, `SourceText`, `SymbolNameSegment`, `SymbolQualifiedName`, `TsConfigFilePath`, and `TypeScriptFilePath`.",
+    "proposedTarget": "Colocate the effect decoders/guards on the schemas in `TSMorph.model.ts` using `SchemaUtils.withStatics((self) => ({ decodeEffect: S.decodeUnknownEffect(self), is: S.is(self) }))` where Effect failures are required; use `SchemaUtils.withCodecStatics` only for schemas whose sync `fromUnknown`/soft `decodeOption` statics are actually enough. In-package exemplar for schema-local decode statics: `JSDoc/models/TSCategory.model.ts:1524`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
+    "line": 1024,
+    "symbol": "decodeSymbolIdResult",
+    "smell": "Identity constructor behavior is split into private result decoders (`decodeSymbolIdResult`, `decodeProjectScopeIdResult`, `decodeProjectCacheKeyResult`) and exported free functions (`makeSymbolId`, `makeProjectScopeId`, `makeProjectCacheKey`) instead of being colocated with the identity schemas.",
+    "proposedTarget": "Attach `fromParts` / `fromString` statics to `SymbolId`, `ProjectScopeId`, and `ProjectCacheKey` with `SchemaUtils.withStatics`; keep `makeSymbolId`, `makeProjectScopeId`, and `makeProjectCacheKey` as compatibility aliases unless the remediation PR includes the required consumer sweep.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
+    "line": 1026,
+    "symbol": "decodeContentHashEffect",
+    "smell": "Effectful content-hash transform behavior is mediated through private decoder constants (`decodeContentHashEffect`, `decodeSha256HexFromBytesEffect`, `decodeContentHashFromBytesEffect`) instead of named statics on `ContentHash`, `ContentHashFromBytes`, and `ContentHashFromSourceText`.",
+    "proposedTarget": "Use `SchemaUtils.withStatics` to expose effectful decode helpers such as `ContentHash.decodeEffect` and `ContentHashFromBytes.decodeEffect`; leave external `Sha256HexFromBytes` alone unless a later shared-schema wave owns it. This is not a `withCodecStatics` codemod because the transform requires Effect services.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/JSDoc/JSDoc.ts",
+    "line": 526,
+    "symbol": "StructuralJSDoc",
+    "smell": "Public JSDoc aggregate tagged-union schemas (`StructuralJSDoc`, `AccessModifierJSDoc`, `DocumentationContentJSDoc`, `TSDocSpecificJSDoc`, `InlineJSDoc`, `OrganizationalJSDoc`, `EventDependencyJSDoc`, `RemainingJSDoc`, `ClosureSpecificJSDoc`, `TypeDocSpecificJSDoc`, `TypeScriptSpecificJSDoc`, and `JSDocTag`) are exported as bare unions with no colocated `is`/`fromUnknown`/`decodeOption` statics.",
+    "proposedTarget": "Import `SchemaUtils` and append `SchemaUtils.withCodecStatics` after each `S.toTaggedUnion(\"_tag\")` pipeline. This keeps decode/guard behavior on the aggregate schema; `withCodecStatics` is verified at `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90` and used in public model schemas at `packages/foundation/modeling/lexical/src/Lexical.model.ts:378`.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/JSDoc/models/tag-values/index.ts",
+    "line": 359,
+    "symbol": "TagValue",
+    "smell": "Central encoded tag-value tagged union is exported without codec statics, so callers that need a guard/decoder must rebuild `S.is(TagValue)` or `S.decodeUnknown*` externally.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `S.toTaggedUnion(\"_tag\")` on `TagValue`; this mirrors the public aggregate-union target for `JSDocTag` while keeping individual `TaggedClass` constructors unchanged.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 9
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/JSDoc/models/TSCategory.model.ts",
+    "line": 1523,
+    "symbol": "Category",
+    "smell": "`Category` has a partial custom static API (`decodeUnknown: S.decodeUnknownEffect(self)`) but lacks the canonical S4 codec statics (`is`, `fromUnknown`, `decodeOption`) expected on public union consts.",
+    "proposedTarget": "Keep the existing `decodeUnknown` compatibility static, then add `SchemaUtils.withCodecStatics` or extend the same `withStatics` block with `is`, `fromUnknown`, and `decodeOption`. `withStatics` is already in use here; codec statics are verified at `SchemaUtils/withCodecStatics.ts:90`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 10
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
+    "line": 323,
+    "symbol": "Person",
+    "smell": "Public package-field union schemas (`Person`, `Repository`, `Bugs`, `Funding`, `Bin`, `Man`, `SideEffects`, `BundleDependencies`, `Workspaces`) are exported as bare union/array schemas without colocated codec statics; the higher-traffic field schemas consumed by `PackageJsonTools` have the same missing-static shape.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the exported package-field union consts. Keep class schemas like `Directories` unchanged; `S.Class` uses in-body statics when needed.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 11
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
+    "line": 1458,
+    "symbol": "TsMorphScopeEntrypoint",
+    "smell": "Tagged union has a useful colocated `make` static, but no canonical codec statics; the same block rebuilds inline guards via `S.is(TsConfigFilePath)` and `S.is(TypeScriptFilePath)`.",
+    "proposedTarget": "Keep the `make` static and append `SchemaUtils.withCodecStatics` to `TsMorphScopeEntrypoint`; after path schema statics land, replace inline `S.is(...)` calls with `TsConfigFilePath.is` and `TypeScriptFilePath.is`.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 12
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
+    "line": 191,
+    "symbol": "BeepPackageFamily",
+    "smell": "Detector hit `LiteralKit(...).pipe($I.annoteSchema(...))` followed by kit usage (`BeepPackageFamily.mapMembers` at line 230). The archived S4 heuristic says annotation can drop kit statics, but the current repo identity helper preserves them.",
+    "proposedTarget": "No source change. `$I.annoteSchema` calls `preserveSchemaStatics(self, self.annotate(annotation))` (`packages/foundation/modeling/identity/src/Id.ts:70` and `:1386`), so the LiteralKit static surface is intentionally retained here.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 90,
+    "exception": {
+      "reason": "`$I.annoteSchema` preserves own schema statics in current repo code; this is not a lost-LiteralKit-static site.",
+      "boundary": "false-positive audit: verified identity annotation helper"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.service.ts",
+    "line": 338,
+    "symbol": "TSMorphServiceShape.inspectProject",
+    "smell": "Public two-argument service-contract method would be caught by a naive dual-arity detector, but it is part of the `TSMorphServiceShape` port/interface contract.",
+    "proposedTarget": "No source change. Service-shape and port interfaces are explicitly fenced from S4 dual/static recommendations.",
+    "confidence": 0.1,
+    "mechanization": "judgment",
+    "roiRank": 91,
+    "exception": {
+      "reason": "Service-contract carve-out: port interfaces stay interfaces and are outside S4 dual-arity remediation.",
+      "boundary": "fence 1 service-contract/interface"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/Graph.ts",
+    "line": 124,
+    "symbol": "topologicalSort",
+    "smell": "A terse-effect detector can see `return pipe(A.fromIterable(G.values(walker)), A.reverse)` as a direct-helper candidate, but this module is explicitly Graph/MutableHash-backed dependency traversal and the surrounding comments encode graph-order semantics.",
+    "proposedTarget": "No source change for S4. Graph/MutableHashMap/MutableHashSet usage belongs to the native/effect collection migration packet, not colocation/pipeability remediation.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 92,
+    "exception": {
+      "reason": "Graph/MutableHash usage is fenced from S4 pipeability/statics recommendations.",
+      "boundary": "fence 6/7 Graph and native-collection migration"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
+    "line": 585,
+    "symbol": "buildDocgenExamplesPaths",
+    "smell": "Callback `dependencyName => pipe(HashMap.get(workspaceAliasIndex, dependencyName), O.toArray)` superficially resembles a passthrough `flow` candidate.",
+    "proposedTarget": "No source change. Effect v4 `HashMap.get` is dual with the curried overload `get(key)(self)` (`.repos/effect-v4/packages/effect/src/HashMap.ts:332`), so this callback captures a fixed map and variable key; a simple `flow(...)` rewrite would change the argument order.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 93,
+    "exception": {
+      "reason": "Not a passthrough lambda after verifying the Effect v4 `HashMap.get` overload order.",
+      "boundary": "pipeability false-positive audit"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
+    "line": 251,
+    "symbol": "decodeStrict",
+    "smell": "Local decoder constants inside `makeLooseJsonObject` (`decodeStrict`, `encodeStrict`, `decodeRest`) look like a mini decode wall, but they are scoped to a schema transform and thread Effect Schema parse options through `SchemaGetter.transformOrFail`.",
+    "proposedTarget": "No source change. These are load-bearing transform internals rather than public or reusable schema behavior; moving them to generic statics would obscure the known/rest-field split and parse-options flow.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 94,
+    "exception": {
+      "reason": "Decoder constants are local to schema construction and preserve parse-options-sensitive transform behavior.",
+      "boundary": "false-positive audit: schema-transform internals"
+    }
+  }
+]

@@ -1,0 +1,50 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
+    "line": 47,
+    "symbol": "TextInline",
+    "smell": "`bold`, `italic`, and `code` are `S.optionalKey(S.Boolean)` flags, so `inlineToMd` has to treat absence as false with `t.code === true`, `t.italic === true`, and `t.bold === true` at AssistantContent.behavior.ts:38-45.",
+    "proposedTarget": "Move the false defaults onto the schema with `SchemaUtils.BoolKeyDefaultFalse` for all three flags (in-repo exemplars: `packages/foundation/modeling/md/src/Md.model.ts:1101` and `:1468`). Then `inlineToMd` consumes decoded booleans instead of optional flags. `SchemaUtils.BoolKeyDefaultFalse` is exported from `@beep/schema` (`packages/foundation/modeling/schema/src/index.ts:303`; helper definition at `SchemaUtils/withKeyDefaults.ts:207`).",
+    "confidence": 0.86,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.behavior.ts",
+    "line": 104,
+    "symbol": "blockToMd",
+    "smell": "`language: O.flatMap(O.fromNullishOr(b.language), Md.CodeFenceLanguage.decodeOption)` folds an optional free-form code language through the Markdown language codec in the projection body; the source field is `language: S.optionalKey(S.String)` at AssistantContent.model.ts:274.",
+    "proposedTarget": "Model the field as an Option/codec boundary in `CodeBlock`: `S.OptionFromOptionalKey(S.String).pipe(S.decodeTo(S.Option(Md.CodeFenceLanguage), { decode: SchemaGetter.transform((language) => O.flatMap(language, S.decodeUnknownOption(Md.CodeFenceLanguage))), encode: SchemaGetter.transform((language) => language) }), SchemaUtils.withNoneDefault)`. The same normalization pattern exists in `packages/foundation/modeling/md/src/Md.model.ts:1295-1301`; `S.OptionFromOptionalKey` and `S.decodeTo` were verified in `.repos/effect-v4/packages/effect/src/Schema.ts:8653-8669` and `:5408-5416`.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.behavior.ts",
+    "line": 109,
+    "symbol": "blockToMd",
+    "smell": "`headerRow: b.headerRow === true` is a body-level false default forced by `TableBlock.headerRow: S.optionalKey(S.Boolean)` at AssistantContent.model.ts:399.",
+    "proposedTarget": "Change `TableBlock.headerRow` to `SchemaUtils.BoolKeyDefaultFalse` (direct in-repo exemplar: `Md.Table.headerRow` at `packages/foundation/modeling/md/src/Md.model.ts:1468-1469`), then pass `headerRow: b.headerRow` in the projection.",
+    "confidence": 0.88,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/agents/domain/test/AgentsDomain.test.ts",
+    "line": 34,
+    "symbol": "assistantContentSchemaId",
+    "smell": "`readonly annotations: Record<string, unknown> | undefined` is a nullish-union detector hit in a test helper that inspects schema AST annotations.",
+    "proposedTarget": "None — keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "This is a test helper mirroring Effect v4 Schema AST metadata; v4 AST annotations are optional and must be accessed with `?.` (verified at `.repos/effect-v4/packages/effect/src/SchemaAST.ts:609-620` and used in `.repos/effect-v4/packages/effect/src/Schema.ts:13382`).",
+      "boundary": "test helper over Effect v4 Schema AST metadata"
+    }
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/primitive/data/src/internal/data/keyboard-shortcuts.ts",
+    "line": 1,
+    "symbol": "KeyboardShortcutPlatformValues",
+    "smell": "The shortcut platform/scope/runtime/category tuples at lines 1, 3, 5, and 12 look like LiteralKit candidates in a broad S3 literal-family sweep.",
+    "proposedTarget": "None -- keep as-is in @beep/data.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These are raw primitive data constants, not duplicate enum + guard + matcher families. @beep/data is the data-only source package and does not depend on @beep/schema; downstream schema wrappers are the established dependency direction, as seen in @beep/schema CurrencyCode using LiteralKit over @beep/data at packages/foundation/modeling/schema/src/CurrencyCode.ts:43.",
+      "boundary": "primitive data package public constants; avoid inverting @beep/schema -> @beep/data dependency ownership"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/primitive/data/src/internal/data/mime-types/index.ts",
+    "line": 303,
+    "symbol": "shouldKeepCurrentMapping",
+    "smell": "shouldKeepCurrentMapping, setTypeMapping, and populateMaps use Match.value over booleans at lines 303, 315, and 342. A broad branch detector might mistake these for manual variant dispatch.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The branches are boolean cache/preference gates over extension lookup state, not _tag/kind/status/type discriminator dispatch. Effect v4 Match.discriminatorsExhaustive and Match.tagsExhaustive are verified at .repos/effect-v4/packages/effect/src/Match.ts:880 and :1095, but they do not apply to this non-union lookup-cache path.",
+      "boundary": "internal MIME lookup table initialization; no finite variant family or public form change"
+    }
+  }
+]

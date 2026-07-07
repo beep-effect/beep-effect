@@ -1,0 +1,177 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+    "line": 45,
+    "symbol": "DatasetFormat",
+    "smell": "Public LiteralKit domain for dataset formats carries kit helpers but no colocated codec statics; DatasetMeta and MCP tool outputs expose this value at package boundaries, so callers must derive their own fromUnknown/decodeOption if they need to validate raw tool data.",
+    "proposedTarget": "Introduce `DatasetFormatBase = LiteralKit([\"json\", \"jsonl\", \"lines\", \"text\"])`, then export `DatasetFormat = DatasetFormatBase.pipe($I.annoteSchema(...), SchemaUtils.withCodecStatics, SchemaUtils.withLiteralKitStatics(DatasetFormatBase))` so `fromUnknown`/`decodeOption` are added while LiteralKit helpers are restored. Helpers verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90 and withLiteralKitStatics.ts:37; LiteralKit base-static exemplar: packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts:67.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+    "line": 81,
+    "symbol": "DatasetSourceType",
+    "smell": "Public LiteralKit domain for dataset provenance source channels has kit statics but no standard schema codec statics, despite being emitted in every DatasetMeta value.",
+    "proposedTarget": "Introduce `DatasetSourceTypeBase = LiteralKit([\"file\", \"url\"])`; pipe annotation through `SchemaUtils.withCodecStatics` and then `SchemaUtils.withLiteralKitStatics(DatasetSourceTypeBase)`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
+    "line": 157,
+    "symbol": "TextEncoding",
+    "smell": "Public LiteralKit domain for text decoding labels is reused by tool parameter schemas and file helpers, but only exposes kit helpers; raw option validation has no colocated `fromUnknown`/`decodeOption` surface.",
+    "proposedTarget": "Introduce `TextEncodingBase = LiteralKit([\"ascii\", \"latin1\", \"utf-8\"])`; export the annotated schema through `SchemaUtils.withCodecStatics` and `SchemaUtils.withLiteralKitStatics(TextEncodingBase)`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/nlp-mcp/src/Streaming/Pipeline.ts",
+    "line": 38,
+    "symbol": "PipelineStage",
+    "smell": "Public LiteralKit domain for user-supplied pipeline stages has stage-specific kit helpers but no colocated codec statics for validating raw stage values outside the MCP parameter schema.",
+    "proposedTarget": "Introduce `PipelineStageBase = LiteralKit([...])`; export through `$I.annoteSchema(...)`, `SchemaUtils.withCodecStatics`, and `SchemaUtils.withLiteralKitStatics(PipelineStageBase)`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+    "line": 54,
+    "symbol": "LinesOutput/FileInfoOutput/JsonlOutput/DataOutput/PipelineOutput",
+    "smell": "Exported MCP output schemas are rebuilt through `S.Class(...).mapFields(...).pipe($I.annoteSchema(...))`; their own examples reach for `S.decodeUnknownResult(Output)` (for example LinesOutput at line 47 and JsonlOutput at line 183) instead of a colocated decoder static.",
+    "proposedTarget": "For exported output schemas, append `SchemaUtils.withStatics((self) => ({ decodeResult: S.decodeUnknownResult(self), fromUnknown: S.decodeUnknownSync(self), decodeOption: S.decodeUnknownOption(self) }))` after annotation, or extract a local `withOutputCodecStatics` helper. Effect v4 decoder APIs verified at .repos/effect-v4/packages/effect/src/Schema.ts:1564, :1718, and :1500; keep Tool.make parameter schemas out of this helper unless real consumers need their statics.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+    "line": 245,
+    "symbol": "decodeJson",
+    "smell": "Detector hit: top-level `S.decodeEffect(S.UnknownFromJsonString)` feeding `parseJson` looks like a free-floating decoder wall.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "This is the JSON trust-boundary decoder for file/URL-loaded attacker-controlled text; `parseJson` maps schema failure into DatasetLoadError with the source location and safe message. `withCodecStatics` exposes only is/fromUnknown/decodeOption, not the Effect-returning decoder shape required here.",
+      "boundary": "No trust-boundary weakening; keep explicit JSON decode plus DatasetLoadError mapping at the loader boundary."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/nlp-mcp/src/Streaming/Jsonl.ts",
+    "line": 87,
+    "symbol": "decodeJsonLine",
+    "smell": "Detector hit: top-level `S.decodeResult(S.UnknownFromJsonString)` and `parseLine(line, lineNumber)` look like separated decode behavior.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "The decoder is intentionally scoped to the JSONL boundary so parse failures can be converted into JsonlLineError with the physical line number while preserving skipInvalid/result-stream semantics. Codec statics would not carry the required line-number context.",
+      "boundary": "Streaming JSONL parse boundary; structured per-line error context is load-bearing."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+    "line": 424,
+    "symbol": "ReadLinesParameters/FileInfoParameters/TextStatsParameters/... tool parameter schemas",
+    "smell": "Detector hit: many local Tool.make parameter schemas use `S.Class(...).mapFields((fields) => fields).pipe($I.annoteSchema(...))`, which resembles class-static loss.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "These schemas are local adapter objects handed directly to `Tool.make` as MCP boundary contracts. They are not exported, have no observed free guard/decode helpers, and converting them to class declarations or adding statics would add surface without deleting any helper wall.",
+      "boundary": "MCP Tool.make parameter-schema adapter boundary."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/nlp-mcp/src/Streaming/TextStream.ts",
+    "line": 310,
+    "symbol": "streamLines/readLines/readTextFile/head/tail/sampleLines/countLines/computeStats",
+    "smell": "Detector hit: public 2- and 3-argument text-file helpers are not `dual`.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "The first argument is an external file path, not a schema-modeled receiver, and the trailing options are optional/defaulted. `dual` would create ambiguous arity semantics for calls like `readTextFile(path)` and `head(path, n)` while providing little pipeability benefit over the existing Effect/Stream `.pipe(...)` results.",
+      "boundary": "Path-first file I/O boundary APIs with optional configuration."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/nlp-mcp/src/Streaming/Jsonl.ts",
+    "line": 133,
+    "symbol": "streamJsonl/readJsonl/sampleJsonl",
+    "smell": "Detector hit: public JSONL helpers with 2-3 arguments are not `dual`.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "These are path-first streaming constructors where the only likely receiver is the file path, and `sampleJsonl(path, sampleSize, options?)` has an optional trailing options object. Dualizing would be a public-form change with no duplicated helper wall to remove.",
+      "boundary": "Path-first JSONL stream/read/sample boundary APIs."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts",
+    "line": 393,
+    "symbol": "loadText/loadLines/loadJsonl/loadJson",
+    "smell": "Detector hit: public dataset loaders with path-or-URL plus optional options are not `dual`.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 11,
+    "exception": {
+      "reason": "The leading argument is a trust-boundary location string and the optional trailing options object controls encoding/timeout/skip behavior. A dual overload would complicate the boundary API and could obscure the SSRF/JSON decode checks that must stay explicit.",
+      "boundary": "Path-or-URL dataset load boundary with explicit security and decode handling."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/nlp-mcp/src/Streaming/Pipeline.ts",
+    "line": 179,
+    "symbol": "processFile",
+    "smell": "Detector hit: exported 3-argument helper `processFile(filePath, stages, options?)` is not `dual`.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 12,
+    "exception": {
+      "reason": "The API is a command-style file operation with a required path, required stage list, and optional options object. Dual's fixed-arity dispatch is a poor fit for the optional trailing config and would be a public-form change without deleting duplicated validation/guard helpers.",
+      "boundary": "Path-first line-transform pipeline boundary."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/nlp-mcp/src/StreamingHandlers.ts",
+    "line": 63,
+    "symbol": "compileRegex",
+    "smell": "Detector hit: private 2-argument helper is not `dual` and wraps `new RegExp`.",
+    "proposedTarget": "None — leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 13,
+    "exception": {
+      "reason": "This is a private injection/ReDoS guard that rejects long tool-supplied patterns before constructing RegExp and preserves InvalidPatternError context. It is not a public pipeable helper, and the explicit guard is protected by the no trust-boundary weakening fence.",
+      "boundary": "MCP handler regex-compilation security boundary."
+    }
+  }
+]

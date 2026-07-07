@@ -1,0 +1,77 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.codec.ts",
+    "line": 212,
+    "symbol": "ArtifactRef",
+    "smell": "Internal `type ArtifactRef = { artifactId; label: O.Option<string> }` struct alias for a domain payload — audited and rejected as independently actionable.",
+    "proposedTarget": "None standalone; if the SFV4-boundary-codec finding at line 217 is taken, this intermediate collapses into the decoded output of the ArtifactUri codec plus the existing `ArtifactRefNode` fields.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 0.08,
+    "exception": {
+      "reason": "Non-exported, ephemeral intermediate that lives for two Option-pipeline steps before `ArtifactRefNode.makeEffect` consumes it (line 265). Both fields are already schema-carried by `ArtifactRefNode` (Lexical.model.ts:1534 models `label` as `S.OptionFromOptionalKey(S.NonEmptyString)`); a parallel schema for the intermediate would duplicate truth, not add it.",
+      "boundary": "internal transient intermediate feeding a schema constructor"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.codec.ts",
+    "line": 345,
+    "symbol": "documentToEditorState",
+    "smell": "Exported Md⇄Lexical mapping surface in a schema-modeled file (`documentToEditorState` line 345, `editorStateToDocument` line 551, `blockToLexical` line 258, `nodeToBlocks` line 512; naive SFV4-fn-schema detector hits) — audited and rejected.",
+    "proposedTarget": "Hypothetical `SerializedEditorStateFromDocument` transformation codec (`S.decodeTo`) — audited and rejected.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0.08,
+    "exception": {
+      "reason": "Every contract is schema-typed end to end: inputs are `Md.Document`/`SerializedEditorState`/`Md.Block`/`LexicalNode` schema types, outputs are built via schema `.makeEffect`/`.make`, and dispatch uses schema-derived exhaustive matchers (`LexicalNode.match`, `Match.tagsExhaustive`). The pair is deliberately NOT a codec: the module header and README document an asymmetric lossiness profile (Lexical-only presentation state drops toward Md; hr/img/raw runs degrade toward Lexical), so `decode(encode(x)) === x` does not hold and a transformation schema would assert a round-trip law the domain explicitly rejects.",
+      "boundary": "schema-typed lossy projection pair with a documented lossiness profile (not a codec)"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.normalize.ts",
+    "line": 138,
+    "symbol": "sanitizeInlineStyle",
+    "smell": "Exported string→string normalization helpers (`sanitizeInlineStyle` line 138, `sanitizeStyleValue` line 160, `legacyYouTubeVideoId` line 68) look like normalization living outside codecs — audited and rejected.",
+    "proposedTarget": "None — the normalization ALREADY lives in codecs; these are the implementation layer the schema getters consume.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "Each helper is absorbed into the schema boundary: `SafeInlineStyle` (Lexical.model.ts:617) and `SafeStyleValue` (:650) run the sanitizers on BOTH decode and encode via `S.decode`+`SchemaGetter.transform`, and `legacyYouTubeVideoId` feeds the YouTube getter at Lexical.model.ts:66 before `Md.YouTubeVideoId` decides accept/reject. The module lives separately only to break the model→normalize import cycle (documented in the module header). Additionally these are trust-boundary sanitizers — fence 4 forbids weakening or restructuring them; they carry `toArbitrary` fixed-point projections that keep the round-trip law total.",
+      "boundary": "trust-boundary sanitizers already absorbed into schema getters (fence 4)"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.behavior.ts",
+    "line": 36,
+    "symbol": "nodeToPlainText",
+    "smell": "Exported functions in a schema-importing behavior module (`nodeToPlainText` line 36, `editorStateToPlainText` line 73; naive SFV4-fn-schema detector hits) — audited and rejected.",
+    "proposedTarget": "Hypothetical `Fn({ input: LexicalNode, output: S.String })` — audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Parameters are schema types (`LexicalNode.Type`, `SerializedEditorState.Type`), returns are primitive strings, and the fold is the schema-derived exhaustive matcher `LexicalNode.match` — the union schema is already the dispatch truth. Fn-wrapping adds decode-throwing invocation semantics with no truth gain (beep__colors precedent).",
+      "boundary": "schema-typed function contract (schema-derived exhaustive fold)"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/modeling/lexical/src/Lexical.model.ts",
+    "line": 192,
+    "symbol": "hasTextFormat",
+    "smell": "Exported overloaded helpers `hasTextFormat` (line 192) and `withTextFormat` (line 203) beside the `TextFormatMask` branded schema — audited and rejected.",
+    "proposedTarget": "None — audited; bitwise predicates are not expressible as refinements without losing the dual-arity pipeable surface.",
+    "confidence": 0.15,
+    "mechanization": "judgment",
+    "roiRank": 0.03,
+    "exception": {
+      "reason": "Overload surfaces are an explicit S1 carve-out. Both helpers are `dual`-arity combinators over the branded `TextFormatMask` schema type and re-enter the schema via `TextFormatMask.make` on construction (line 213), so the invariant (known-bits-only, non-negative) stays schema-enforced; the mask-domain invariant itself already lives in `TextFormatMaskBase` (NonNegativeInt + isLessThanOrEqualTo check, lines 157-169).",
+      "boundary": "overload surface / dual-arity combinators over a branded schema"
+    }
+  }
+]

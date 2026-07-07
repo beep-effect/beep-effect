@@ -70,6 +70,33 @@ export const ProvenanceExportProfile = LiteralKit(["prov-core-v1", "prov-core-ex
 );
 
 /**
+ * Provenance service error reason.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import * as S from "effect/Schema"
+ * import { ProvenanceServiceErrorReason } from "@beep/semantic-web/services/provenance"
+ *
+ * const reason = S.decodeUnknownSync(ProvenanceServiceErrorReason)("projectionLimit")
+ * strictEqual(reason, "projectionLimit")
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ProvenanceServiceErrorReason = LiteralKit([
+  "missingEvidenceAnchor",
+  "unsupportedProfile",
+  "projectionLimit",
+]).pipe(
+  $I.annoteSchema("ProvenanceServiceErrorReason", {
+    description: "Provenance service error reason.",
+    semanticSchemaMetadata: serviceContractMetadata("ProvenanceServiceErrorReason", "Provenance service error reason."),
+  })
+);
+
+/**
  * Provenance projection request.
  *
  * @example
@@ -257,7 +284,7 @@ export class ProvenanceSummary extends S.Class<ProvenanceSummary>($I`ProvenanceS
 export class ProvenanceServiceError extends TaggedErrorClass<ProvenanceServiceError>($I`ProvenanceServiceError`)(
   "ProvenanceServiceError",
   {
-    reason: LiteralKit(["missingEvidenceAnchor", "unsupportedProfile", "projectionLimit"]),
+    reason: ProvenanceServiceErrorReason,
     message: S.String,
   },
   $I.annote("ProvenanceServiceError", {
@@ -345,7 +372,7 @@ export class ProvenanceService extends Context.Service<ProvenanceService, Proven
 
 type ProvRecord = ProvBundle["records"][number];
 
-const takeUpTo = <A>(values: ReadonlyArray<A>, limit: number): ReadonlyArray<A> => pipe(values, A.take(limit));
+const takeUpTo = A.take;
 
 const isEntityRecord = S.is(Entity);
 const isActivityRecord = S.is(Activity);

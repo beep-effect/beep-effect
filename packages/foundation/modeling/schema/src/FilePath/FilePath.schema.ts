@@ -49,14 +49,14 @@ export const SupportedPathFamily = SupportedPathFamilyKit.pipe(
  */
 export type SupportedPathFamily = typeof SupportedPathFamily.Type;
 
-const isSupportedWindowsNamespace = S.is(SupportedWindowsNamespace);
-const isUsesPosixSeparator = S.is(UsesPosixSeparator);
-const isUsesWindowsSeparator = S.is(UsesWindowsSeparator);
-const isWindowsDrivePath = S.is(WindowsDrivePath);
-const isWindowsUncPath = S.is(WindowsUncPath);
-const isWindowsRelativePath = S.is(WindowsRelativePath);
-const isHasNullByte = S.is(HasNullByte);
-const isHasLeafSegment = S.is(HasLeafSegment);
+const isSupportedWindowsNamespace = SupportedWindowsNamespace.is;
+const isUsesPosixSeparator = UsesPosixSeparator.is;
+const isUsesWindowsSeparator = UsesWindowsSeparator.is;
+const isWindowsDrivePath = WindowsDrivePath.is;
+const isWindowsUncPath = WindowsUncPath.is;
+const isWindowsRelativePath = WindowsRelativePath.is;
+const isHasNullByte = HasNullByte.is;
+const isHasLeafSegment = HasLeafSegment.is;
 
 const classifyPathFamily = Match.type<string>().pipe(
   Match.when(Str.startsWith("\\\\"), SupportedPathFamilyKit.thunk.windowsUnc),

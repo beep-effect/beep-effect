@@ -1,0 +1,199 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/scripts/generate.ts",
+    "line": 867,
+    "symbol": "renderDeclaration",
+    "smell": "Generator renders exported generated schema aliases as `${schemaExpression}.pipe($I.annoteSchema(...))` with no codec statics; when `schemaForUnion` renders a literal enum as `LiteralKit(...)` (line 390), the generated schema still lacks `fromUnknown`/`decodeOption` and needs any added codec `is` static to preserve the LiteralKit `.is.<literal>` helper surface.",
+    "proposedTarget": "Extend the generated models prelude to import `SchemaUtils` from `@beep/schema`; render aliases with `SchemaUtils.withCodecStatics`, and for generated LiteralKit expressions render a base const plus `SchemaUtils.withCodecStatics` followed by `SchemaUtils.withLiteralKitStatics(base)` so `fromUnknown`/`decodeOption` are added while kit `.is` helpers are restored. Helpers verified at packages/foundation/modeling/schema/src/SchemaUtils/withLiteralKitStatics.ts:37 and SchemaUtils/withCodecStatics.ts:90.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/scripts/generate.ts",
+    "line": 1072,
+    "symbol": "BoxSerializedData/BoxSdkDate/BoxSdkDateTime/BoxMethodName",
+    "smell": "Generator hard-codes public generated schema consts with annotation but no codec statics: `BoxSerializedData` (line 1072), union consts `BoxSdkDate`/`BoxSdkDateTime` (lines 1106/1143), and LiteralKit `BoxMethodName` (line 1180). The BoxMethodName example promises structured kit guards at line 1174, so adding codec statics must not clobber that `.is[...]` surface.",
+    "proposedTarget": "Render the hard-coded generated schemas with `SchemaUtils.withCodecStatics`; render `BoxMethodName` from a `BoxMethodNameBase = LiteralKit([...])` and pipe through `SchemaUtils.withCodecStatics` then `SchemaUtils.withLiteralKitStatics(BoxMethodNameBase)`.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/src/Box.errors.ts",
+    "line": 34,
+    "symbol": "BoxErrorReason",
+    "smell": "Annotated LiteralKit has kit guards but no codec statics; the public example at line 28 promises `BoxErrorReason.is.transport(...)`, so remediation must add `fromUnknown`/`decodeOption` without replacing the structured LiteralKit `.is` helpers.",
+    "proposedTarget": "Introduce `BoxErrorReasonBase = LiteralKit([...])`, then export `BoxErrorReason = BoxErrorReasonBase.pipe($I.annoteSchema(...), SchemaUtils.withCodecStatics, SchemaUtils.withLiteralKitStatics(BoxErrorReasonBase))` so `fromUnknown`/`decodeOption` are added while kit helpers remain on the schema.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/src/Box.streaming.ts",
+    "line": 33,
+    "symbol": "BoxByteInputValue",
+    "smell": "Union const for accepted upload byte inputs is annotated but has no `SchemaUtils.withCodecStatics`, so the runtime-only data value has no colocated `is/fromUnknown/decodeOption` surface for the byte-input boundary.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)`; keep the conversion-specific branches in `byteInputToReadable`, but use `BoxByteInputValue.is`/`decodeOption` for generic validation instead of rebuilding guards later.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/src/experimental/domain/values/SerializedData/SerializedData.model.ts",
+    "line": 73,
+    "symbol": "SerializedData/SerializedDataList/SerializedDataMap",
+    "smell": "Exported recursive value schemas are all annotation-final (`SerializedData` line 73, `SerializedDataList` line 156, `SerializedDataMap` line 233) and their examples call `S.decodeUnknownSync(...)` / `S.encodeSync(...)` directly instead of schema-colocated codec helpers.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after each `$I.annoteSchema(...)` so consumers can call `SerializedData.fromUnknown(...)` / `.decodeOption(...)` and the list/map companions expose the same standard statics.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/src/experimental/Box.schemas.ts",
+    "line": 63,
+    "symbol": "SerializedData/SerializedDataList/SerializedDataMap",
+    "smell": "The older experimental Box.schemas recursive value family mirrors the same annotation-final pattern (`SerializedData` line 63, `SerializedDataList` line 125, `SerializedDataMap` line 181) with direct `S.decodeUnknownSync(...)` examples and no codec statics.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after each annotation, matching the exported recursive value-object family in experimental/domain/values once it is updated.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/src/experimental/Box.schemas.ts",
+    "line": 278,
+    "symbol": "BoxSdkError/BoxApiError/AiAgentAsk",
+    "smell": "Three exported instance schemas (`BoxSdkError` line 278, `BoxApiError` line 307, `AiAgentAsk` line 336) are annotation-final and their examples rebuild guards with `S.is(BoxSchemas.*)` instead of colocated schema statics.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after each `$I.annoteSchema(...)`; examples can then use `BoxSdkError.is(...)`, `BoxApiError.is(...)`, and `AiAgentAsk.is(...)` directly.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/src/internal/Box.runtime.ts",
+    "line": 13,
+    "symbol": "decodeWith",
+    "smell": "Detector hit: exported generic helper wraps `S.decodeUnknownEffect(schema)(value)` outside the concrete request/response schemas.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "This is the SDK trust-boundary decoder that maps schema issues into method-specific `BoxError` values with `request encoding` / `response decoding` reasons. `withCodecStatics` only provides `is`, throwing `fromUnknown`, and soft `decodeOption`, so replacing it would drop structured Effect error-channel context.",
+      "boundary": "SPEC fence 4 - no trust-boundary weakening."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/src/Box.streaming.ts",
+    "line": 940,
+    "symbol": "eventStreamFromSdkValue",
+    "smell": "Detector hit: event stream callback decodes each SDK payload with `S.decodeUnknownResult(M.Event)(payload)` outside the generated event schema.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "The Result form is required to either enqueue decoded events or fail the callback queue with a `BoxError` carrying the original schema issue. The standard codec statics do not provide queue-aware Result handling or error-channel preservation.",
+      "boundary": "SPEC fence 4 - no trust-boundary weakening; event stream boundary."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/src/Box.service.ts",
+    "line": 38,
+    "symbol": "BoxShape",
+    "smell": "Detector hit: public service-shape type exposes driver behavior away from schema-modeled data.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "This is the Context.Service shape for the Box driver, composed from generated and streaming operation ports. It is a service contract over Effectful SDK methods, not schema-modeled data with a runtime schema value to receive statics.",
+      "boundary": "SPEC fence 1 - service-contract/interface carve-out."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/src/Box.streaming.ts",
+    "line": 606,
+    "symbol": "BoxStreamingOperations",
+    "smell": "Detector hit: exported operation type contains many method signatures that are not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 11,
+    "exception": {
+      "reason": "This is the streaming half of the Box service contract and mirrors SDK operation groups. Dualizing type signatures would change the service port rather than improve a first-party data-first helper.",
+      "boundary": "SPEC fence 1 - service-contract/interface carve-out."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/src/Box.errors.ts",
+    "line": 174,
+    "symbol": "BoxError.fromReason",
+    "smell": "Detector hit: public two-argument static constructor is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 12,
+    "exception": {
+      "reason": "The second argument is optional with a default (`options = {}`). Arity-based `dual(2, ...)` would turn the valid `fromReason(reason)` call into data-last partial application instead of constructing an error.",
+      "boundary": "Public error-constructor API with optional trailing args; dual dispatch is incompatible."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/src/Box.errors.ts",
+    "line": 207,
+    "symbol": "BoxError.fromUnknown",
+    "smell": "Detector hit: public two-argument static helper is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 13,
+    "exception": {
+      "reason": "The arguments are context-first (`method`) then unknown SDK cause. Making the useful `cause` value the piped self would require a public argument-order change; preserving method-first order would only enable the unnatural `pipe(method, BoxError.fromUnknown(cause))` shape.",
+      "boundary": "Public error-constructor API; no stable self argument for dual pipeability."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/src/experimental/domain/values/SerializedData/SerializedData.model.ts",
+    "line": 30,
+    "symbol": "SerializedData namespace family",
+    "smell": "Detector hit: `declare namespace` blocks for `SerializedData`, `SerializedDataList`, and `SerializedDataMap` sit apart from the runtime schemas and look like behavior separated from data.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 14,
+    "exception": {
+      "reason": "Fence 5: the namespaces supply recursive `Encoded` aliases required by `S.suspend((): S.Codec<...> => ...)` in the mutually-recursive schema family. Restructuring those type blocks is explicitly out of scope.",
+      "boundary": "SPEC fence 5 - no `declare namespace` recursion blocks."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/box/src/experimental/Box.schemas.ts",
+    "line": 31,
+    "symbol": "SerializedData namespace family",
+    "smell": "Detector hit: the experimental `Box.schemas.ts` `SerializedData*` namespace blocks sit apart from the corresponding runtime schemas.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 15,
+    "exception": {
+      "reason": "Fence 5: these namespaces carry recursive `Encoded` aliases for the `S.suspend` schema cycle. They should not be moved or collapsed during S4 remediation.",
+      "boundary": "SPEC fence 5 - no `declare namespace` recursion blocks."
+    }
+  }
+]

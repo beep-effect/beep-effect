@@ -13,10 +13,10 @@
     ]
   },
   "phases": {
-    "P0_enforce": "in_progress",
-    "P1_baseline": "pending",
-    "P1_5_mechanize": "pending",
-    "P2_waves": "pending",
+    "P0_enforce": "done",
+    "P1_baseline": "done",
+    "P1_5_mechanize": "done",
+    "P2_waves": "in_progress",
     "P3_catalog": "pending",
     "P4_close": "pending"
   },
@@ -60,14 +60,1867 @@
     "status": "pending"
   },
   "waveOrder": ["foundation", "drivers", "tooling", "apps-slices"],
-  "sharedAssignment": "TBD-P1",
-  "infraAssignment": "TBD-P1",
+  "sharedAssignment": {
+    "family": "apps-slices",
+    "decidedOn": "2026-07-05",
+    "rationale": "packages/shared/{domain,tables} are consumed exclusively by slice packages (agents, architecture-lab, epistemic, law-practice, workspace) and apps/professional-desktop; upstream deps are foundation-only (identity, schema, utils). Shared kernel rides the apps-slices wave so its public-form changes and consumer sweeps stay inside one family."
+  },
+  "infraAssignment": {
+    "family": "tooling",
+    "decidedOn": "2026-07-05",
+    "rationale": "@beep/infra has zero workspace dependents and depends on foundation + @beep/repo-ai-metrics (tooling); it is an operational surface maintained alongside tooling, so it rides the tooling wave."
+  },
   "pilot": {
     "family": "foundation",
-    "package": "TBD (foundation/modeling exemplar, e.g. @beep/md or @beep/lexical)",
-    "status": "pending"
+    "package": "@beep/md",
+    "status": "pending",
+    "rationale": "GOAL-suggested foundation/modeling exemplar; 10 actionable findings spread across S1/S2/S4/S5 (S3 clean) — meaty enough to exercise the parity-proof + round-trip-law machinery, small enough to converge fast."
   },
-  "packages": {},
+  "packages": {
+    "@beep/architecture-lab-proof": {
+      "path": "apps/architecture-lab-proof",
+      "sanitized": "beep__architecture-lab-proof",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 0,
+        "S3": 0,
+        "S4": 1,
+        "S5": 2
+      },
+      "actionableCount": 2,
+      "exceptionCount": 3,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/oip-web": {
+      "path": "apps/oip-web",
+      "sanitized": "beep__oip-web",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 9,
+        "S2": 10,
+        "S3": 7,
+        "S4": 7,
+        "S5": 12
+      },
+      "actionableCount": 24,
+      "exceptionCount": 21,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/professional-desktop": {
+      "path": "apps/professional-desktop",
+      "sanitized": "beep__professional-desktop",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 7,
+        "S2": 10,
+        "S3": 2,
+        "S4": 8,
+        "S5": 7
+      },
+      "actionableCount": 16,
+      "exceptionCount": 18,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/storybook": {
+      "path": "apps/storybook",
+      "sanitized": "beep__storybook",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 3,
+        "S3": 0,
+        "S4": 0,
+        "S5": 0
+      },
+      "actionableCount": 0,
+      "exceptionCount": 3,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/infra": {
+      "path": "infra",
+      "sanitized": "beep__infra",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 17,
+        "S3": 4,
+        "S4": 5,
+        "S5": 11
+      },
+      "actionableCount": 21,
+      "exceptionCount": 19,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/agents-client": {
+      "path": "packages/agents/client",
+      "sanitized": "beep__agents-client",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 5,
+        "S2": 4,
+        "S3": 1,
+        "S4": 1,
+        "S5": 4
+      },
+      "actionableCount": 9,
+      "exceptionCount": 6,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/agents-domain": {
+      "path": "packages/agents/domain",
+      "sanitized": "beep__agents-domain",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 4,
+        "S3": 3,
+        "S4": 5,
+        "S5": 8
+      },
+      "actionableCount": 12,
+      "exceptionCount": 8,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/agents-server": {
+      "path": "packages/agents/server",
+      "sanitized": "beep__agents-server",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 6,
+        "S2": 9,
+        "S3": 3,
+        "S4": 0,
+        "S5": 7
+      },
+      "actionableCount": 7,
+      "exceptionCount": 18,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/agents-use-cases": {
+      "path": "packages/agents/use-cases",
+      "sanitized": "beep__agents-use-cases",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 7,
+        "S2": 5,
+        "S3": 2,
+        "S4": 4,
+        "S5": 9
+      },
+      "actionableCount": 15,
+      "exceptionCount": 12,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/architecture-lab-client": {
+      "path": "packages/architecture-lab/client",
+      "sanitized": "beep__architecture-lab-client",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0,
+        "S5": 0
+      },
+      "actionableCount": 0,
+      "exceptionCount": 2,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/architecture-lab-config": {
+      "path": "packages/architecture-lab/config",
+      "sanitized": "beep__architecture-lab-config",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 3,
+        "S3": 0,
+        "S4": 0,
+        "S5": 5
+      },
+      "actionableCount": 7,
+      "exceptionCount": 2,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/architecture-lab-domain": {
+      "path": "packages/architecture-lab/domain",
+      "sanitized": "beep__architecture-lab-domain",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 3,
+        "S3": 4,
+        "S4": 1,
+        "S5": 6
+      },
+      "actionableCount": 13,
+      "exceptionCount": 4,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/architecture-lab-server": {
+      "path": "packages/architecture-lab/server",
+      "sanitized": "beep__architecture-lab-server",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 4,
+        "S3": 2,
+        "S4": 4,
+        "S5": 4
+      },
+      "actionableCount": 7,
+      "exceptionCount": 8,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/architecture-lab-tables": {
+      "path": "packages/architecture-lab/tables",
+      "sanitized": "beep__architecture-lab-tables",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 4,
+        "S3": 0,
+        "S4": 0,
+        "S5": 2
+      },
+      "actionableCount": 2,
+      "exceptionCount": 7,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/architecture-lab-ui": {
+      "path": "packages/architecture-lab/ui",
+      "sanitized": "beep__architecture-lab-ui",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 2,
+        "S3": 1,
+        "S4": 2,
+        "S5": 6
+      },
+      "actionableCount": 8,
+      "exceptionCount": 4,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/architecture-lab-use-cases": {
+      "path": "packages/architecture-lab/use-cases",
+      "sanitized": "beep__architecture-lab-use-cases",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 10,
+        "S2": 3,
+        "S3": 6,
+        "S4": 2,
+        "S5": 5
+      },
+      "actionableCount": 17,
+      "exceptionCount": 9,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/acp": {
+      "path": "packages/drivers/acp",
+      "sanitized": "beep__acp",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 17,
+        "S2": 21,
+        "S3": 9,
+        "S4": 24,
+        "S5": 12
+      },
+      "actionableCount": 36,
+      "exceptionCount": 47,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/ai-provider-cli": {
+      "path": "packages/drivers/ai-provider-cli",
+      "sanitized": "beep__ai-provider-cli",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 3,
+        "S3": 0,
+        "S4": 4,
+        "S5": 7
+      },
+      "actionableCount": 10,
+      "exceptionCount": 6,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/anthropic": {
+      "path": "packages/drivers/anthropic",
+      "sanitized": "beep__anthropic",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 1,
+        "S3": 0,
+        "S4": 0,
+        "S5": 7
+      },
+      "actionableCount": 7,
+      "exceptionCount": 1,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/box": {
+      "path": "packages/drivers/box",
+      "sanitized": "beep__box",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 9,
+        "S2": 8,
+        "S3": 7,
+        "S4": 15,
+        "S5": 7
+      },
+      "actionableCount": 18,
+      "exceptionCount": 28,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/courtlistener": {
+      "path": "packages/drivers/courtlistener",
+      "sanitized": "beep__courtlistener",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0,
+        "S5": 0
+      },
+      "actionableCount": 0,
+      "exceptionCount": 0,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/discord": {
+      "path": "packages/drivers/discord",
+      "sanitized": "beep__discord",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 7,
+        "S3": 1,
+        "S4": 3,
+        "S5": 7
+      },
+      "actionableCount": 12,
+      "exceptionCount": 8,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/dol": {
+      "path": "packages/drivers/dol",
+      "sanitized": "beep__dol",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0,
+        "S5": 0
+      },
+      "actionableCount": 0,
+      "exceptionCount": 0,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/drizzle": {
+      "path": "packages/drivers/drizzle",
+      "sanitized": "beep__drizzle",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 5,
+        "S2": 8,
+        "S3": 1,
+        "S4": 5,
+        "S5": 8
+      },
+      "actionableCount": 9,
+      "exceptionCount": 18,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/duckdb": {
+      "path": "packages/drivers/duckdb",
+      "sanitized": "beep__duckdb",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 5,
+        "S2": 6,
+        "S3": 0,
+        "S4": 6,
+        "S5": 8
+      },
+      "actionableCount": 11,
+      "exceptionCount": 14,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/ecfr": {
+      "path": "packages/drivers/ecfr",
+      "sanitized": "beep__ecfr",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 5,
+        "S3": 1,
+        "S4": 3,
+        "S5": 5
+      },
+      "actionableCount": 9,
+      "exceptionCount": 7,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/face-detection": {
+      "path": "packages/drivers/face-detection",
+      "sanitized": "beep__face-detection",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 5,
+        "S2": 8,
+        "S3": 0,
+        "S4": 10,
+        "S5": 7
+      },
+      "actionableCount": 15,
+      "exceptionCount": 15,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/federal-register": {
+      "path": "packages/drivers/federal-register",
+      "sanitized": "beep__federal-register",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0,
+        "S5": 0
+      },
+      "actionableCount": 0,
+      "exceptionCount": 0,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/ffmpeg": {
+      "path": "packages/drivers/ffmpeg",
+      "sanitized": "beep__ffmpeg",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 7,
+        "S2": 11,
+        "S3": 1,
+        "S4": 10,
+        "S5": 10
+      },
+      "actionableCount": 23,
+      "exceptionCount": 16,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/firecrawl": {
+      "path": "packages/drivers/firecrawl",
+      "sanitized": "beep__firecrawl",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 8,
+        "S2": 5,
+        "S3": 4,
+        "S4": 18,
+        "S5": 8
+      },
+      "actionableCount": 21,
+      "exceptionCount": 22,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/govinfo": {
+      "path": "packages/drivers/govinfo",
+      "sanitized": "beep__govinfo",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 4,
+        "S3": 1,
+        "S4": 3,
+        "S5": 9
+      },
+      "actionableCount": 14,
+      "exceptionCount": 5,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/hubspot": {
+      "path": "packages/drivers/hubspot",
+      "sanitized": "beep__hubspot",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 7,
+        "S3": 0,
+        "S4": 8,
+        "S5": 9
+      },
+      "actionableCount": 16,
+      "exceptionCount": 11,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/libpff": {
+      "path": "packages/drivers/libpff",
+      "sanitized": "beep__libpff",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 6,
+        "S3": 1,
+        "S4": 5,
+        "S5": 7
+      },
+      "actionableCount": 16,
+      "exceptionCount": 6,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/m365-mcp": {
+      "path": "packages/drivers/m365-mcp",
+      "sanitized": "beep__m365-mcp",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 0,
+        "S4": 0,
+        "S5": 4
+      },
+      "actionableCount": 3,
+      "exceptionCount": 3,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/m365": {
+      "path": "packages/drivers/m365",
+      "sanitized": "beep__m365",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 7,
+        "S2": 8,
+        "S3": 3,
+        "S4": 7,
+        "S5": 8
+      },
+      "actionableCount": 14,
+      "exceptionCount": 19,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/nlp-mcp": {
+      "path": "packages/drivers/nlp-mcp",
+      "sanitized": "beep__nlp-mcp",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 22,
+        "S2": 13,
+        "S3": 4,
+        "S4": 13,
+        "S5": 11
+      },
+      "actionableCount": 26,
+      "exceptionCount": 37,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/onepassword-cli": {
+      "path": "packages/drivers/onepassword-cli",
+      "sanitized": "beep__onepassword-cli",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 3,
+        "S3": 0,
+        "S4": 3,
+        "S5": 7
+      },
+      "actionableCount": 10,
+      "exceptionCount": 5,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/openai-compat": {
+      "path": "packages/drivers/openai-compat",
+      "sanitized": "beep__openai-compat",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 6,
+        "S2": 8,
+        "S3": 6,
+        "S4": 7,
+        "S5": 8
+      },
+      "actionableCount": 19,
+      "exceptionCount": 16,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/pglite": {
+      "path": "packages/drivers/pglite",
+      "sanitized": "beep__pglite",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 0,
+        "S3": 1,
+        "S4": 1,
+        "S5": 4
+      },
+      "actionableCount": 2,
+      "exceptionCount": 6,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/phoenix": {
+      "path": "packages/drivers/phoenix",
+      "sanitized": "beep__phoenix",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 4,
+        "S2": 10,
+        "S3": 4,
+        "S4": 5,
+        "S5": 10
+      },
+      "actionableCount": 19,
+      "exceptionCount": 14,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/postgres": {
+      "path": "packages/drivers/postgres",
+      "sanitized": "beep__postgres",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 8,
+        "S2": 7,
+        "S3": 3,
+        "S4": 7,
+        "S5": 5
+      },
+      "actionableCount": 10,
+      "exceptionCount": 20,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/rdf-canonize": {
+      "path": "packages/drivers/rdf-canonize",
+      "sanitized": "beep__rdf-canonize",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 2,
+        "S3": 7,
+        "S4": 0,
+        "S5": 2
+      },
+      "actionableCount": 7,
+      "exceptionCount": 5,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/runpod": {
+      "path": "packages/drivers/runpod",
+      "sanitized": "beep__runpod",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 10,
+        "S2": 18,
+        "S3": 7,
+        "S4": 19,
+        "S5": 10
+      },
+      "actionableCount": 35,
+      "exceptionCount": 29,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/sanity": {
+      "path": "packages/drivers/sanity",
+      "sanitized": "beep__sanity",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 8,
+        "S3": 1,
+        "S4": 4,
+        "S5": 9
+      },
+      "actionableCount": 15,
+      "exceptionCount": 9,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/tika": {
+      "path": "packages/drivers/tika",
+      "sanitized": "beep__tika",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 5,
+        "S3": 1,
+        "S4": 3,
+        "S5": 7
+      },
+      "actionableCount": 12,
+      "exceptionCount": 7,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/uspto-mcp": {
+      "path": "packages/drivers/uspto-mcp",
+      "sanitized": "beep__uspto-mcp",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 1,
+        "S3": 2,
+        "S4": 4,
+        "S5": 6
+      },
+      "actionableCount": 11,
+      "exceptionCount": 5,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/uspto": {
+      "path": "packages/drivers/uspto",
+      "sanitized": "beep__uspto",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 5,
+        "S2": 11,
+        "S3": 3,
+        "S4": 7,
+        "S5": 6
+      },
+      "actionableCount": 23,
+      "exceptionCount": 9,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/venice-ai": {
+      "path": "packages/drivers/venice-ai",
+      "sanitized": "beep__venice-ai",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 9,
+        "S2": 13,
+        "S3": 7,
+        "S4": 6,
+        "S5": 7
+      },
+      "actionableCount": 26,
+      "exceptionCount": 16,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/wink": {
+      "path": "packages/drivers/wink",
+      "sanitized": "beep__wink",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 13,
+        "S2": 19,
+        "S3": 5,
+        "S4": 23,
+        "S5": 9
+      },
+      "actionableCount": 30,
+      "exceptionCount": 39,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/xai": {
+      "path": "packages/drivers/xai",
+      "sanitized": "beep__xai",
+      "family": "drivers",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 6,
+        "S2": 11,
+        "S3": 10,
+        "S4": 21,
+        "S5": 9
+      },
+      "actionableCount": 37,
+      "exceptionCount": 20,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/epistemic-domain": {
+      "path": "packages/epistemic/domain",
+      "sanitized": "beep__epistemic-domain",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 2,
+        "S3": 0,
+        "S4": 5,
+        "S5": 8
+      },
+      "actionableCount": 9,
+      "exceptionCount": 7,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/epistemic-server": {
+      "path": "packages/epistemic/server",
+      "sanitized": "beep__epistemic-server",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0,
+        "S5": 1
+      },
+      "actionableCount": 0,
+      "exceptionCount": 1,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/epistemic-tables": {
+      "path": "packages/epistemic/tables",
+      "sanitized": "beep__epistemic-tables",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 5,
+        "S2": 2,
+        "S3": 1,
+        "S4": 4,
+        "S5": 2
+      },
+      "actionableCount": 4,
+      "exceptionCount": 10,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/epistemic-use-cases": {
+      "path": "packages/epistemic/use-cases",
+      "sanitized": "beep__epistemic-use-cases",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 4,
+        "S2": 0,
+        "S3": 3,
+        "S4": 7,
+        "S5": 2
+      },
+      "actionableCount": 7,
+      "exceptionCount": 9,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/api-transport": {
+      "path": "packages/foundation/capability/api-transport",
+      "sanitized": "beep__api-transport",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 4,
+        "S2": 4,
+        "S3": 2,
+        "S4": 1,
+        "S5": 4
+      },
+      "actionableCount": 0,
+      "exceptionCount": 15,
+      "parityProofRef": "packages/foundation/capability/api-transport/test/Transport.test.ts (wire-shape fixture + S.toArbitrary RateLimitSnapshot encode/decode and fromHeaders laws)",
+      "policyFlipped": false,
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__api-transport.json after remediation: 15 records remain, all exceptions, 0 actionable. Fixed 6 records: SFV4-boundary-codec parseSnapshot by colocating RateLimitSnapshot.fromHeaders, SFV4-null-return parseNumberHeader via Option return, SFV4-static-api Effect.die eta-reduction + fromHeaders colocation, SFV4-precision-audit RateLimitSnapshot key annotations, and SFV4-arbitrary-tests package-local parity laws. Newly excepted 4 records: schema-first-inventory ApiAuth schema-union migration (cross-package driver ripple), two SFV4-defaults findings on the ledgered ApiTransportOptions constructor bag, and SFV4-normalization for retained 3rd-party header token parsing behind the new static parser/parity law. Source public Type/Encoded wire shape stays unchanged; no cross-package source edits; no policy flip. Codemod proposer getsomes-struct was attempted file-scoped but the shared codemod runner aborts before proposing diffs because Effect.tapErrorCause is unavailable in this Effect v4 runtime; the other codemods share the same runner call. Verification: bun run check --filter=@beep/api-transport PASS; bun run lint --filter=@beep/api-transport PASS; cd packages/foundation/capability/api-transport && npx vitest run PASS (1 file, 4 tests); bun run beep lint schema-first PASS (live_entries=tracked_entries=460, zero advisories)."
+    },
+    "@beep/chalk": {
+      "path": "packages/foundation/capability/chalk",
+      "sanitized": "beep__chalk",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 11,
+        "S2": 19,
+        "S3": 5,
+        "S4": 6,
+        "S5": 5
+      },
+      "actionableCount": 0,
+      "exceptionCount": 46,
+      "parityProofRef": "packages/foundation/capability/chalk/test/index.test.ts (it: round-trips schema-derived values through their encoded shapes)",
+      "policyFlipped": false,
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__chalk.json after P2 remediation: 46 records remain, all documented exceptions, 0 actionable. Fixed 46 records by moving literal/style domains into ChalkSchema, colocating codec statics/default normalizers, replacing optional-key spreads with O.getSomesStruct, tightening non-public numeric/string schemas, and adding an S.toArbitrary encoded round-trip law. Added 15 inventory exceptions for deliberate chalk-compatible public/dynamic boundaries (hex/FORCE_COLOR parsing, variadic color builders, dynamic builder defaults/prototype names, recursive styler absence, shared mutable builder state, and upstream-parity string replacement loops). No policy flip per orchestrator override; no cross-package ripple edits made."
+    },
+    "@beep/colors": {
+      "path": "packages/foundation/capability/colors",
+      "sanitized": "beep__colors",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 5,
+        "S2": 9,
+        "S3": 0,
+        "S4": 2,
+        "S5": 3
+      },
+      "actionableCount": 0,
+      "exceptionCount": 19,
+      "parityProofRef": "packages/foundation/capability/colors/test/index.test.ts (it: 'round-trips generated process-like values through the schema'; it: 'honors disable overrides for generated process-like values')",
+      "policyFlipped": false,
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__colors.json after remediation: 19 records remain, all exceptions, 0 actionable. Fixed 7 records: SFV4-static-api decodeProcessLike/supportsColor/makeFormatter; SFV4-arbitrary-tests supportsColor; SFV4-precision-audit ProcessLike/ProcessLikeStdout.isTTY/ColorsFields. Newly excepted 7 records: five SFV4-defaults ProcessLike structural-default findings, one SFV4-normalization ColorEnv redesign finding, and one SFV4-static-api stringIdentity duplication finding. Source changes keep public Type/Encoded shapes unchanged: ProcessLike/ProcessLikeStdout remain optional structural runtime mirrors; changes are statics, annotations, shared thunk use, and additive tests. Parity proof: ProcessLike S.toArbitrary encode/decode round-trip plus generated supportsColor disable-override laws. Codemod proposers were attempted file-scoped but both defaults-fallback and static-api-colocation failed before proposing diffs because Effect.tapErrorCause is unavailable in the current Effect v4 runtime; edits were reviewed/applied manually. Verification: bun run check --filter=@beep/colors PASS; bun run lint --filter=@beep/colors PASS after formatting-only fixes; cd packages/foundation/capability/colors && npx vitest run PASS (1 file, 15 tests). Final bun run beep lint schema-first FAILS before colors findings on out-of-scope @beep/chalk load error: WithStaticsStaticRedefinitionError Cannot redefine non-configurable static 'is' at packages/foundation/capability/chalk/src/internal/ChalkSchema.ts:212. No policy flip. No cross-package ripple edits."
+    },
+    "@beep/file-processing": {
+      "path": "packages/foundation/capability/file-processing",
+      "sanitized": "beep__file-processing",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 10,
+        "S2": 16,
+        "S3": 4,
+        "S4": 3,
+        "S5": 27
+      },
+      "actionableCount": 0,
+      "exceptionCount": 60,
+      "parityProofRef": "packages/foundation/capability/file-processing/test/FileProcessing.test.ts (TextSpan S.toArbitrary encode/decode + invariant law; JSON codec byte-identical encode/decode laws; path containment property law)",
+      "policyFlipped": false,
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__file-processing.json after remediation: 60 records remain, all exceptions, 0 actionable. Fixed 31 records: TaggedErrorNewInput-derived fromReason options; TextSpan NonNegativeInt + offset-order schema invariant; SchemaUtils.withCodecStatics on artifact ids, result/status/failure unions, and SelectedStrategy; schema-owned JSON encoder statics with retained free aliases; descriptor support predicates + FileFormatFamily process/extension statics; O.getSomesStruct service payload spreads; package-local S.toArbitrary parity laws and path-guard properties. Newly excepted 37 ops records, primarily public-form Option/brand/numeric/default ripples deferred to the family-close sweep across drivers/tooling/law-practice, plus low-ROI manual judgments for collectSourceOutcomeRecords/selectEngine and effectful deriveArtifactId. Added one live-detector schema-first inventory exception for TextSpan's Effect v4 checked-Struct class-wide filter false positive. No policy flip; no cross-package source edits. Codemod proposers were attempted file-scoped but all failed before proposing diffs because Effect.tapErrorCause is unavailable in this Effect v4 runtime. Verification: bun run check --filter=@beep/file-processing PASS; bun run lint --filter=@beep/file-processing PASS; cd packages/foundation/capability/file-processing && npx vitest run PASS (1 file, 10 tests); bun run beep lint schema-first PASS."
+    },
+    "@beep/langextract": {
+      "path": "packages/foundation/capability/langextract",
+      "sanitized": "beep__langextract",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 10,
+        "S2": 11,
+        "S3": 4,
+        "S4": 3,
+        "S5": 9
+      },
+      "actionableCount": 0,
+      "exceptionCount": 37,
+      "parityProofRef": "packages/foundation/capability/langextract/test/Extraction.test.ts (GroundedExtraction encoded optional-key parity; parseModelOutput schema-derived object/array round-trip), packages/foundation/capability/langextract/test/Alignment.test.ts (schema-derived span/cap laws)",
+      "policyFlipped": false,
+      "remediationNote": "P2 remediation completed without policy flip or commit. Local fixes: colocated GroundedExtraction.fromCandidate, O.getSomesStruct optional-key assembly, Option-returning private match helpers, fake LanguageModel without casts, derived AlignmentStatus guard, schema-derived parser/alignment laws. Public-form changes crossing @beep/law-practice are recorded as deferred exceptions. Verification: package check/lint/vitest pass; final bun run beep lint schema-first reports only an out-of-scope @beep/file-processing missing inventory entry, with no @beep/langextract findings."
+    },
+    "@beep/mcp-kit": {
+      "path": "packages/foundation/capability/mcp-kit",
+      "sanitized": "beep__mcp-kit",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 15,
+        "S2": 6,
+        "S3": 7,
+        "S4": 9,
+        "S5": 7
+      },
+      "actionableCount": 0,
+      "exceptionCount": 44,
+      "parityProofRef": "packages/foundation/capability/mcp-kit/test/ApiKeyRequired.test.ts, FieldTier.test.ts, TierGate.test.ts (S.toArbitrary encode/decode round-trip laws)",
+      "policyFlipped": false,
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__mcp-kit.json after P2 remediation: 44 records remain, all exception-ledgered in ops inventory, actionableCount 0. Fixed package-local findings include schema-backed FieldProjectionOutcome, SourceAuthDecision/TierGateDispatchResult Data constructors, TierGateVerdict literal-family consolidation + codec statics, SourceAuthRegistration/TierGateAuditRecord constructor defaults, ApiKeyRequiredFailure.forTool tag-default constructor, ColumnarEnvelope.fromRows, FourHintAnnotations canonical statics, dual annotateFourHints/withEnabledWhenApprovedTool/sanitizeTracerAttributes/withSanitizedToolSpan, R.values generic cast removal, TierGatePolicy.approvedTools NonEmptyString, ProjectWithinBudgetOptions.budgetBytes NonNegativeInt, and S.toArbitrary parity laws. Newly excepted records are deferred public-form/cross-family ripples or explicit boundary carve-outs (FetchableHandle UUID/DateTime, SourceAuth URL/env-var precision, projector/gate signature reorders, tracer option-bag defaults, getSomesStruct dependency decision). Codemod proposers were attempted file-scoped but all failed before mutation on stale Effect.tapErrorCause in the shared codemod runners; equivalent scoped edits were reviewed and applied manually. Policy not flipped per orchestrator override. Verification: bun run check --filter=@beep/mcp-kit passed; bun run lint --filter=@beep/mcp-kit passed; cd packages/foundation/capability/mcp-kit && npx vitest run passed (6 files, 23 tests). Final bun run beep lint schema-first was executed and failed on an out-of-scope live finding in packages/foundation/capability/file-processing/src/Extraction/index.ts:94 (anonymous@94 object-struct-schema); no @beep/mcp-kit schema-first findings remained."
+    },
+    "@beep/nlp-processing": {
+      "path": "packages/foundation/capability/nlp-processing",
+      "sanitized": "beep__nlp-processing",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 16,
+        "S2": 17,
+        "S3": 1,
+        "S4": 5,
+        "S5": 3
+      },
+      "actionableCount": 0,
+      "exceptionCount": 42,
+      "parityProofRef": "packages/foundation/capability/nlp-processing/test/Backend/{Composition,NLPBackend}.test.ts, test/Graph/{AnnotatedTextGraph,EffectGraph,GraphOperations}.test.ts, test/Tools/Schemas.test.ts (S.toArbitrary encode/decode round-trip laws)",
+      "policyFlipped": false,
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__nlp-processing.json after P2 remediation: 42 records remain, all exception-ledgered, actionableCount 0. Fixed package-local findings include AnnotatedNode runtime union, ExecutionOptions/CachingOptions schema defaults, backend error smart-constructor statics, ExecutionId/NodeId/backend/graph error codec statics, OperationCost and OperationCategory static/literal colocation, Effect string helpers in the graph catalog, shared phonetic/similarity literal vocabularies, ExportedToolError optional cause, NonNegativeInt/NonNegNum/UnitInterval count and cost domains, and schema-derived parity laws across backend, graph, and AI tool schemas. Newly excepted records are public clamp semantics, positional-tool adapter surfaces/docs, effectful withCaching dual ambiguity, and cross-package TextNode/refinement statics deferred to the family-close sweep. Codemod proposers were attempted file-scoped but failed before mutation on stale Effect.tapErrorCause in the shared runners; equivalent scoped edits were reviewed and applied manually. Policy not flipped per orchestrator override. Verification: bun run lint --filter=@beep/nlp-processing passed; cd packages/foundation/capability/nlp-processing && npx vitest run passed (7 files, 68 tests); bun run check --filter=@beep/nlp-processing was executed and failed before this package on out-of-scope @beep/observability src/Metric.ts:66 effect(instanceOfSchema); package-local bun run beep:check showed no @beep/nlp-processing errors after the same out-of-scope dependency blocker. Final bun run beep lint schema-first was executed and failed only on an out-of-scope live finding in packages/foundation/capability/file-processing/src/Extraction/index.ts:94; no SFV4 advisory counts remained."
+    },
+    "@beep/observability": {
+      "path": "packages/foundation/capability/observability",
+      "sanitized": "beep__observability",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 12,
+        "S2": 5,
+        "S3": 3,
+        "S4": 7,
+        "S5": 5
+      },
+      "actionableCount": 0,
+      "exceptionCount": 32,
+      "parityProofRef": "packages/foundation/capability/observability/test/{CauseRedaction,DevTools,ErrorReporting,HttpApiTelemetry,Logging,Metric,Observed,PhaseProfiler}.test.ts (S.toArbitrary encode/decode laws, Option/status/default parity, observed codec-static guards)",
+      "policyFlipped": false,
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__observability.json after remediation: 32 records remain, all documented exceptions, 0 actionable. Fixed package-local records for TrackDurationOptions, renderLogBanner options, NodeSdkServerOptions defaults, ServerObservabilityConfig.is, HttpApiStatusField.decodeOption, HttpStatusCode/descriptor precision, Option-returning httpApiFailureStatus, dual httpApiSuccessStatus/redaction helpers, DevTools Fn/options schemas, ErrorReporter option defaults, ObservedCause/ObservedExit codec statics, PhaseProfile non-empty phase, workflow outcome LiteralKit dispatch, and additive S.toArbitrary parity laws. Deferred cross-package NonNegativeInt codec-static and exported config-brand ripples; kept endpointErrorSchemas as an exception because the proposed Effect helper is not in installed effect used by check. Codemod proposers were attempted file-scoped but failed before proposing diffs because Effect.tapErrorCause is unavailable in this Effect v4 runtime. Verification: bun run check --filter=@beep/observability PASS; bun run lint --filter=@beep/observability PASS; affected non-Bun vitest subset PASS (8 files, 38 tests); full cd packages/foundation/capability/observability && npx vitest run FAILS only on existing Bun globals under npx (Bun.file, Bun.spawn, Bun.serve; 52/56 tests pass); bun run beep lint schema-first FAILS only on out-of-scope @beep/file-processing anonymous@94 object-struct-schema live finding, with no observability findings remaining. No policy flip; no commit."
+    },
+    "@beep/semantic-web": {
+      "path": "packages/foundation/capability/semantic-web",
+      "sanitized": "beep__semantic-web",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 16,
+        "S2": 5,
+        "S3": 2,
+        "S4": 9,
+        "S5": 2
+      },
+      "actionableCount": 0,
+      "exceptionCount": 34,
+      "parityProofRef": "packages/foundation/capability/semantic-web/test/JsonLd.test.ts (optional JSON-LD wire-key parity + JsonLdStreamSerializeRequest S.toArbitrary round-trip), packages/foundation/capability/semantic-web/test/ServicesAndSurface.test.ts (service control wire-key parity + Canonicalize/Fingerprint S.toArbitrary round-trip)",
+      "policyFlipped": false,
+      "remediationNote": "P2 remediation done for @beep/semantic-web. Fixed package-local defaults/statics/precision findings; 8 findings newly excepted for cross-package @beep/rdf ripples or safeMode wire-parity failure. Policy flip intentionally skipped by orchestrator override."
+    },
+    "@beep/html": {
+      "path": "packages/foundation/modeling/html",
+      "sanitized": "beep__html",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 7,
+        "S3": 1,
+        "S4": 15,
+        "S5": 6
+      },
+      "actionableCount": 0,
+      "exceptionCount": 31,
+      "parityProofRef": "packages/foundation/modeling/html/test/Html.test.ts (wire-shape parity snapshots for GlobalAttributesStruct, Doctype, Input, and HtmlElementMeta; S.toArbitrary round-trip laws for GlobalAttributesStruct, BooleanAttribute, Text, Comment, Doctype, Input, and HtmlElementMeta)",
+      "policyFlipped": false,
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__html.json after P2 remediation: 31 records remain, all exceptions, actionableCount 0. Fixed 10 records: schema-validated generator JSON inputs; Option-defaulted generated element attributes, global attributes, dataset, ARIA/event string helper, and Doctype fields with encoded wire parity; BooleanAttribute codec statics; GlobalAttributesStruct and generated HtmlElementMeta annotations/finite HtmlCategory; schema-derived round-trip laws. Newly excepted 2 records: S3 Struct.fromEntries literal-key cast kept because A.map tuple-union inference resolves keys to never without it; S5 token-domain narrowing deferred pending a complete HTML value-domain model. Removed stale standards/schema-first.inventory.jsonc entry for the old generator-local struct helper after live scan reported it stale. §5.4 consumer sweep found no out-of-package source imports of @beep/html requiring edits. Codemod proposers were run file-scoped but aborted before proposing diffs because Effect.tapErrorCause is unavailable in this Effect v4 runtime. Verification green: bun run check --filter=@beep/html; bun run lint --filter=@beep/html; cd packages/foundation/modeling/html && npx vitest run; bun run beep lint schema-first. Policy flip intentionally skipped by orchestrator override."
+    },
+    "@beep/identity": {
+      "path": "packages/foundation/modeling/identity",
+      "sanitized": "beep__identity",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 10,
+        "S2": 4,
+        "S3": 5,
+        "S4": 6,
+        "S5": 4
+      },
+      "actionableCount": 0,
+      "exceptionCount": 29,
+      "parityProofRef": "packages/foundation/modeling/identity/test/{Curie,Identity,PnLocal,Vocab}.test.ts (S.toArbitrary round-trip laws for CurieFromIri, BaseIdentityInput, SafePnLocal, EscapedPnLocal, and VocabRegistry; explicit prefix and PN_LOCAL parity fixtures)",
+      "policyFlipped": false,
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__identity.json after P2 remediation: 29 records remain, all documented exceptions, actionableCount 0. Fixed 11 records: schema-backed SafePnLocal/EscapedPnLocal predicates and Option tokenizer, VocabEntry/VocabRegistry runtime schemas, BaseIdentityInput normalization schema, finite CurieFromIri CoreVocab declaration codec + S.toArbitrary law, and S4 helper simplifications (Str.capitalize, direct A.contains, direct Str.startsWith, flow). Newly excepted 1 record: SFV4-null-return for existing CURIE undefined fallback overloads, deferred as a cross-package public-form ripple while compatibility wrappers stay byte-identical. Codemod proposers were run file-scoped; static-api-colocation, defaults-fallback, and getsomes-struct all aborted before proposing diffs because Effect.tapErrorCause is unavailable in this Effect v4 runtime. Verification: bun run check --filter=@beep/identity PASS; bun run lint --filter=@beep/identity PASS; cd packages/foundation/modeling/identity && npx vitest run PASS (6 files, 58 tests); bun run beep lint schema-first FAILS only on out-of-scope @beep/html live inventory drift in packages/foundation/modeling/html/scripts/generate.ts, with no @beep/identity findings remaining. No policy flip and no cross-package source edits."
+    },
+    "@beep/lexical-schema": {
+      "path": "packages/foundation/modeling/lexical",
+      "sanitized": "beep__lexical-schema",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 6,
+        "S2": 7,
+        "S3": 5,
+        "S4": 3,
+        "S5": 3
+      },
+      "actionableCount": 0,
+      "exceptionCount": 16,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": "Foundation-close wave; writer completed before a session restart, bookkeeping reconciled by orchestrator."
+    },
+    "@beep/md": {
+      "path": "packages/foundation/modeling/md",
+      "sanitized": "beep__md",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 12,
+        "S2": 7,
+        "S3": 0,
+        "S4": 10,
+        "S5": 5
+      },
+      "actionableCount": 0,
+      "exceptionCount": 28,
+      "parityProofRef": "packages/foundation/modeling/md/test/Md.test.ts (it: 'colocated escape-schema guards agree with their schemas')",
+      "policyFlipped": false,
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S4,S5}/beep__md.json after ledgering: 34 records total, 28 exceptions, 6 without-exception (all RESOLVED fixes) => 0 remaining actionable. Remediation edits complete and green on every @beep/md lane: build (tsc+babel OK), check (tsgo, no md errors), lint (biome clean), docgen (succeeded), tests (16/16 via `npx vitest run` from the package dir), plus `lint schema-first` (0 advisories, live==tracked) and `lint schema-topology` OK. WORK: 6 actionable resolved — colocated codec statics onto StringArray + UnsafeUrlProtocolDestination via SchemaUtils.withCodecStatics and deleted the two free-floating S.is(...) guard walls (S1 lines 55/390 + S4 lines 43/55/38/390, Md.escape.ts). 4 declined and now LEDGERED as `exception` in the inventory: SFV4-fn-schema option-bags (S1 Md.ts:843) + 3 dual-arity DSL constructors taskItem/pre/table (S4 Md.ts:843/896/946) — builder-DSL ergonomics, no pipe consumer, no un-absorbed invariant, byte-identical to main (`laws dual-arity --check`: 0 enforced candidates). Parity: withCodecStatics attaches statics only, so encoded/wire shape is unchanged and all pre-existing round-trip + JSON-boundary laws stay green; added an S.toArbitrary guard-parity law. Family NOT flipped to blocking (pilot, deviation #3). WAVE-GATE STATUS: the repo-wide `yeet verify` is red on a PRE-EXISTING, OUT-OF-SCOPE failure not attributable to @beep/md — packages/foundation/capability/observability/src/server/NodeSdk.ts:208 TS2561 ('exporter' not in type 'LogRecordExporter') from the OTel sdk-logs 2.9.0 bump (commit 67b6315970 / #297), cascading into @beep/firecrawl build+check and the repo-wide check/docgen/test lanes. Fixing it requires editing @beep/observability, forbidden by one-writer-per-package + fence 8. See activeBlockers. Orchestrator to run the gate via `yeet publish`; @beep/md needs no further edits once observability is repaired. Gate blocker (pre-existing OTel 2.9.0 break in @beep/observability) repaired separately and merged as #302; wave gate rerun green on the rebased branch."
+    },
+    "@beep/nlp": {
+      "path": "packages/foundation/modeling/nlp",
+      "sanitized": "beep__nlp",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 6,
+        "S2": 22,
+        "S3": 2,
+        "S4": 9,
+        "S5": 14
+      },
+      "actionableCount": 0,
+      "exceptionCount": 53,
+      "parityProofRef": "packages/foundation/modeling/nlp/test/CoreModels.test.ts; packages/foundation/modeling/nlp/test/PatternCore.test.ts; packages/foundation/modeling/nlp/test/Ontology/Kind.test.ts; packages/foundation/modeling/nlp/test/Algebra/NLPMonoid.test.ts",
+      "policyFlipped": false,
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__nlp.json after P2 remediation: 53 records remain, all exception-ledgered, actionableCount 0. Fixed 41 package-local findings: schema-backed guard/static colocation for Core/Ontology/Handoff IDs and Pattern codecs, constructor defaults for Core optional fields, Option-first PatternBuilder lookups, data-last compose overloads, NonNegativeCount domains in NLPMonoid, schema-derived stats equivalence, and S.toArbitrary parity laws. Newly excepted 23 findings are public Graph/Handoff/Core/Ontology/query/vectorization ripples deferred to the family-close sweep per SPEC §5.4. Codemod proposers were attempted file-scoped but failed before mutation on stale Effect.tapErrorCause in the shared runners; scoped edits were reviewed and applied manually. Policy not flipped per orchestrator override. Verification: bun run check --filter=@beep/nlp passed (8 tasks); bun run lint --filter=@beep/nlp passed (8 tasks); cd packages/foundation/modeling/nlp && npx vitest run passed (10 files, 166 tests); bun run beep lint schema-first executed and failed only on out-of-scope stale inventory entries in packages/foundation/modeling/html/scripts/generate.ts and packages/law-practice/domain/test/LawPracticeDomain.test.ts, with all SFV4 advisory counts at 0 and no @beep/nlp live/tracked drift."
+    },
+    "@beep/ontology": {
+      "path": "packages/foundation/modeling/ontology",
+      "sanitized": "beep__ontology",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 0,
+        "S3": 2,
+        "S4": 1,
+        "S5": 2
+      },
+      "actionableCount": 0,
+      "exceptionCount": 5,
+      "parityProofRef": "packages/foundation/modeling/ontology/test/Ontology.models.test.ts (wire-shape parity snapshots + S.toArbitrary round-trip laws)",
+      "policyFlipped": false,
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__ontology.json after removing fixed records: 5 records total, 5 exceptions, 0 remaining actionable. Fixed S5 records: OWLSearchScore redundant numeric union collapsed to S.Finite; HttpUrl gained an unbranded absolute-URL filter while preserving Type/Encoded string shape; OWLClass/OWLObjectProperty IRI-token fields and IRI-token arrays now use a shared non-empty schema building block; added S.toArbitrary round-trip laws and representative OpenAPI wire-shape parity snapshots. Existing S3/S4/S5 exception records were left in place. §5.4: repo consumer sweep found no external @beep/ontology model construction/import call sites requiring edits; no ripples deferred. Verification green: bun run check --filter=@beep/ontology; bun run lint --filter=@beep/ontology; cd packages/foundation/modeling/ontology && npx vitest run; bun run beep lint schema-first. Policy not flipped per orchestrator override."
+    },
+    "@beep/pandoc-ast": {
+      "path": "packages/foundation/modeling/pandoc-ast",
+      "sanitized": "beep__pandoc-ast",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 7,
+        "S2": 7,
+        "S3": 2,
+        "S4": 2,
+        "S5": 3
+      },
+      "actionableCount": 0,
+      "exceptionCount": 21,
+      "parityProofRef": "packages/foundation/modeling/pandoc-ast/test/Pandoc.codec.test.ts; packages/foundation/modeling/pandoc-ast/test/Pandoc.mapping.test.ts",
+      "policyFlipped": false,
+      "remediationNote": "Fixed 16 P2 findings; newly excepted top-level Pandoc JSON helper wrapper to preserve public Effect signatures. Added exact wire snapshots and S.toArbitrary parity laws for codec, report, and mapping invariants. Policy flip intentionally skipped by orchestrator override."
+    },
+    "@beep/provenance": {
+      "path": "packages/foundation/modeling/provenance",
+      "sanitized": "beep__provenance",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0,
+        "S5": 1
+      },
+      "actionableCount": 0,
+      "exceptionCount": 3,
+      "parityProofRef": "packages/foundation/modeling/provenance/test/TextAnchor.test.ts (it: 'round-trips schema-derived anchors through the encoded wire shape'; it: 'colocated well-ordered predicate agrees with ordered offset pairs')",
+      "policyFlipped": false,
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__provenance.json after burndown: 3 records remain, all exceptions, 0 actionable. Fixed 3 findings: SFV4-static-api isWellOrdered colocated as TextAnchor.isWellOrdered with public alias preserved; SFV4-arbitrary-tests covered by S.toArbitrary/S.toEquivalence round-trip property; SFV4-precision-audit TextAnchorFields key annotations added. Newly excepted 2 overlapping schema-level well-orderedness findings (S1 SFV4-fn-schema + S5 SFV4-precision-audit) because absorbing the cross-field check would require a cross-package consumer sweep for TextAnchorFields spread users such as @beep/epistemic-domain EvidenceSpan; boundary: cross-package ripple, deferred to family-close sweep. Encoded/wire shape unchanged for TextAnchor fields; source change is additive annotations + static alias."
+    },
+    "@beep/rdf": {
+      "path": "packages/foundation/modeling/rdf",
+      "sanitized": "beep__rdf",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 5,
+        "S2": 7,
+        "S3": 4,
+        "S4": 4,
+        "S5": 13
+      },
+      "actionableCount": 0,
+      "exceptionCount": 33,
+      "parityProofRef": "packages/foundation/modeling/rdf/test/Rdf.test.ts::@beep/rdf crispening parity",
+      "policyFlipped": false,
+      "remediationNote": "Fixed boundary codecs, schema-owned defaults/statics, LanguageTag normalization, PrefixMap key validation, and package parity laws; remaining records are documented cross-package/public-form ripples or existing carve-outs."
+    },
+    "@beep/schema": {
+      "path": "packages/foundation/modeling/schema",
+      "sanitized": "beep__schema",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 7,
+        "S2": 7,
+        "S3": 8,
+        "S4": 4,
+        "S5": 4
+      },
+      "actionableCount": 0,
+      "exceptionCount": 30,
+      "parityProofRef": "packages/foundation/modeling/schema/test/{Cuid,Color,DateTimeUtcFromValid,HttpHeaders,LiteralKit,MappedLiteralKit}.test.ts (S.toArbitrary Cuid/ColorAmount/LiteralKit/MappedLiteralKit laws, tagged DateTime statics, header max-age/default parity, CuidSeed encoded-shape parity)",
+      "policyFlipped": false,
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__schema.json after P2 remediation: 30 records remain, all exceptions, actionableCount 0. Fixed 51 records across S1-S5, including CuidSeed schema modeling, URL boundary codec, schema defaults, Option/null-return helpers, static API colocation, numeric-domain tightening, precision annotations, and arbitrary-test parity laws already present in the live package source. Newly excepted 7 records: StatusCause defaults/status public-form ripples, BinaryFileExtension path-normalization codec design, EntitySchema persisted-variant dispatcher, and three Graph topology/dispatch findings; cross-package source edits were not made. Removed two stale @beep/schema entries from standards/schema-first.inventory.jsonc after live detector proof; out-of-scope stale entries were left untouched. Codemod proposers defaults-fallback and static-api-colocation were attempted file-scoped but failed before proposing diffs because Effect.tapErrorCause is unavailable in the current Effect v4 runtime. Policy not flipped and no commit made. Verification: bun run check --filter=@beep/schema PASS; bun run lint --filter=@beep/schema PASS; cd packages/foundation/modeling/schema && npx vitest run PASS (67 files, 596 tests); bun run beep lint schema-topology PASS; bun run beep lint schema-first FAILS only on out-of-scope stale standard-inventory entries for @beep/html and @beep/law-practice-domain, with no @beep/schema missing/stale/actionable findings."
+    },
+    "@beep/utils": {
+      "path": "packages/foundation/modeling/utils",
+      "sanitized": "beep__utils",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 9,
+        "S2": 15,
+        "S3": 3,
+        "S4": 1,
+        "S5": 4
+      },
+      "actionableCount": 0,
+      "exceptionCount": 32,
+      "parityProofRef": "packages/foundation/modeling/utils/test/SchemaParity.test.ts",
+      "policyFlipped": false,
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__utils.json after burndown: 32 records remain, all existing exceptions, 0 actionable. Removed 10 fixed findings already satisfied in source plus the new parity test: Glob defaults resolved through ResolvedGlobOptions, toFileInfo uses Option.fromUndefinedOr, path lookup branches through PathLookupSchema.match/pathLookupToOption, GlobError cause decoding is hoisted and routed through GlobError.new, field annotations are present on Glob/FileSystem/Event schemas, AppendFileSyncOptions.mode is non-negative S.Int, and SchemaParity.test.ts adds encoded-shape snapshots plus S.toArbitrary round-trip laws. Codemod proposer functions were run file-scoped and reported unchanged; the standalone wrappers still reference missing Effect.tapErrorCause. No cross-package ripples; policy flip intentionally skipped by orchestrator override."
+    },
+    "@beep/data": {
+      "path": "packages/foundation/primitive/data",
+      "sanitized": "beep__data",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 11,
+        "S3": 2,
+        "S4": 6,
+        "S5": 5
+      },
+      "actionableCount": 0,
+      "exceptionCount": 27,
+      "parityProofRef": "No Effect Schema touched; runtime parity in packages/foundation/primitive/data/test/mime-types.test.ts and public type parity in packages/foundation/primitive/data/dtslint/mime-types.tst.ts",
+      "policyFlipped": false,
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__data.json after burndown: 27 records remain, all exceptions, 0 actionable. Fixed 4 findings: derived KeyboardShortcutCommandLabelValues from KeyboardShortcutCommandNameValues through formalizeValues, reduced formalizeValues to A.map(Str.capitalize), hoisted MIME lookup to lookupPath via Fn.flow/O.liftPredicate(Str.isNonEmpty) while preserving the exported lookup(path) signature, and tightened internal MimeTypeDefinition to finite source + non-empty extensions while keeping the public MimeTypes.mimeTypes facade widened for compatibility. Added a MIME table invariant test and verified dtslint public shape. Newly excepted 2 findings: Blockchain Networks executable schema wrapper is a cross-package @beep/schema ripple deferred to family-close sweep; MIME lookup normalization remains in the vendored primitive data facade rather than adding an unexported private schema. Codemod proposer attempted for S4 but the standalone codemod exits before touching files because its wrapper calls missing Effect.tapErrorCause. Policy flip intentionally skipped by orchestrator override."
+    },
+    "@beep/types": {
+      "path": "packages/foundation/primitive/types",
+      "sanitized": "beep__types",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 1,
+        "S3": 3,
+        "S4": 0,
+        "S5": 4
+      },
+      "actionableCount": 0,
+      "exceptionCount": 9,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": "Discovery found zero actionable records (4 audited exceptions only) — nothing to remediate."
+    },
+    "@beep/editor": {
+      "path": "packages/foundation/ui-system/editor",
+      "sanitized": "beep__editor",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 5,
+        "S2": 10,
+        "S3": 2,
+        "S4": 2,
+        "S5": 3
+      },
+      "actionableCount": 0,
+      "exceptionCount": 22,
+      "parityProofRef": "packages/foundation/ui-system/editor/test/chat-schema-parity.test.ts",
+      "policyFlipped": false,
+      "remediationNote": "Fixed 13 P2 records: schema-derived Lexical factory input types, attachment MIME/rejection codec statics, byte-count/capture-limit schemas, config field annotations/non-empty menu fields, exhaustive Mermaid render dispatch, SerializedEditorState.decodeOption reuse, and S.toArbitrary parity coverage. Remaining 22 records are pre-existing UI/Lexical boundary exceptions."
+    },
+    "@beep/form": {
+      "path": "packages/foundation/ui-system/form",
+      "sanitized": "beep__form",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 7,
+        "S2": 14,
+        "S3": 4,
+        "S4": 4,
+        "S5": 6
+      },
+      "actionableCount": 0,
+      "exceptionCount": 35,
+      "parityProofRef": "packages/foundation/ui-system/form/test/FormOptions.test.ts (it: 'round-trips ValidateOn without changing its encoded shape')",
+      "policyFlipped": false,
+      "remediationNote": "Counts recomputed from ops/inventory/{S1,S2,S3,S4,S5}/beep__form.json after removing fixed ValidateOn records: 35 records total, 35 exceptions, 0 remaining actionable. Fixed 2 duplicate ValidateOn records (S1 schema-first-inventory + S3 SFV4-static-api) by moving the validation-slot domain into a LiteralKit and routing buildValidators through ValidateOn.$match. Public string values and type imports remain unchanged. Added encoded-shape and S.toArbitrary round-trip parity coverage in FormOptions.test.ts. No cross-package ripples; policy flip intentionally skipped by orchestrator override. Package check/lint/vitest gates are green; final schema-first lint is blocked by two stale entries outside @beep/form."
+    },
+    "@beep/ui": {
+      "path": "packages/foundation/ui-system/ui",
+      "sanitized": "beep__ui",
+      "family": "foundation",
+      "discovery": "done",
+      "remediation": "done",
+      "findingsByDomain": {
+        "S1": 9,
+        "S2": 5,
+        "S3": 3,
+        "S4": 6,
+        "S5": 4
+      },
+      "actionableCount": 0,
+      "exceptionCount": 27,
+      "parityProofRef": "packages/foundation/ui-system/ui/test/schema-parity.test.ts",
+      "policyFlipped": false,
+      "remediationNote": "P2 remediation complete for @beep/ui: fixed 25 records across S1-S5, added 3 package-boundary exceptions, kept source edits scoped to packages/foundation/ui-system/ui. Direct @beep/ui lint and package vitest pass. Required turbo check/lint are blocked before @beep/ui by pre-existing @beep/schema dependency failures; schema-first lint reports zero live advisories but fails on 3 stale entries outside @beep/ui."
+    },
+    "@beep/db-admin": {
+      "path": "packages/_internal/db-admin",
+      "sanitized": "beep__db-admin",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 2,
+        "S2": 3,
+        "S3": 0,
+        "S4": 0,
+        "S5": 4
+      },
+      "actionableCount": 2,
+      "exceptionCount": 7,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/law-practice-domain": {
+      "path": "packages/law-practice/domain",
+      "sanitized": "beep__law-practice-domain",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 0,
+        "S3": 0,
+        "S4": 6,
+        "S5": 7
+      },
+      "actionableCount": 12,
+      "exceptionCount": 1,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/law-practice-server": {
+      "path": "packages/law-practice/server",
+      "sanitized": "beep__law-practice-server",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 0,
+        "S3": 2,
+        "S4": 0,
+        "S5": 1
+      },
+      "actionableCount": 1,
+      "exceptionCount": 3,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/law-practice-use-cases": {
+      "path": "packages/law-practice/use-cases",
+      "sanitized": "beep__law-practice-use-cases",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 6,
+        "S2": 5,
+        "S3": 4,
+        "S4": 7,
+        "S5": 7
+      },
+      "actionableCount": 17,
+      "exceptionCount": 12,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/shared-domain": {
+      "path": "packages/shared/domain",
+      "sanitized": "beep__shared-domain",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 9,
+        "S2": 7,
+        "S3": 3,
+        "S4": 17,
+        "S5": 8
+      },
+      "actionableCount": 28,
+      "exceptionCount": 16,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/shared-tables": {
+      "path": "packages/shared/tables",
+      "sanitized": "beep__shared-tables",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 0,
+        "S3": 0,
+        "S4": 0,
+        "S5": 1
+      },
+      "actionableCount": 0,
+      "exceptionCount": 2,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/repo-ai-metrics": {
+      "path": "packages/tooling/library/ai-metrics",
+      "sanitized": "beep__repo-ai-metrics",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 17,
+        "S2": 13,
+        "S3": 15,
+        "S4": 10,
+        "S5": 15
+      },
+      "actionableCount": 36,
+      "exceptionCount": 34,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/ai-sync": {
+      "path": "packages/tooling/library/ai-sync",
+      "sanitized": "beep__ai-sync",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 12,
+        "S3": 1,
+        "S4": 7,
+        "S5": 8
+      },
+      "actionableCount": 18,
+      "exceptionCount": 13,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/repo-utils": {
+      "path": "packages/tooling/library/repo-utils",
+      "sanitized": "beep__repo-utils",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 11,
+        "S2": 13,
+        "S3": 10,
+        "S4": 17,
+        "S5": 19
+      },
+      "actionableCount": 44,
+      "exceptionCount": 26,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/lint-rules": {
+      "path": "packages/tooling/policy-pack/lint-rules",
+      "sanitized": "beep__lint-rules",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 6,
+        "S2": 9,
+        "S3": 2,
+        "S4": 5,
+        "S5": 8
+      },
+      "actionableCount": 6,
+      "exceptionCount": 24,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/repo-configs": {
+      "path": "packages/tooling/policy-pack/repo-configs",
+      "sanitized": "beep__repo-configs",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 6,
+        "S2": 13,
+        "S3": 6,
+        "S4": 12,
+        "S5": 10
+      },
+      "actionableCount": 26,
+      "exceptionCount": 21,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/test-utils": {
+      "path": "packages/tooling/test-kit/test-utils",
+      "sanitized": "beep__test-utils",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 7,
+        "S2": 10,
+        "S3": 1,
+        "S4": 3,
+        "S5": 7
+      },
+      "actionableCount": 8,
+      "exceptionCount": 20,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/repo-cli": {
+      "path": "packages/tooling/tool/cli",
+      "sanitized": "beep__repo-cli",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 38,
+        "S2": 47,
+        "S3": 31,
+        "S4": 95,
+        "S5": 43
+      },
+      "actionableCount": 181,
+      "exceptionCount": 73,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/repo-docgen": {
+      "path": "packages/tooling/tool/docgen",
+      "sanitized": "beep__repo-docgen",
+      "family": "tooling",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 19,
+        "S2": 12,
+        "S3": 6,
+        "S4": 7,
+        "S5": 12
+      },
+      "actionableCount": 29,
+      "exceptionCount": 27,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/workspace-domain": {
+      "path": "packages/workspace/domain",
+      "sanitized": "beep__workspace-domain",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 0,
+        "S2": 2,
+        "S3": 0,
+        "S4": 0,
+        "S5": 8
+      },
+      "actionableCount": 6,
+      "exceptionCount": 4,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/workspace-server": {
+      "path": "packages/workspace/server",
+      "sanitized": "beep__workspace-server",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 3,
+        "S2": 7,
+        "S3": 4,
+        "S4": 0,
+        "S5": 5
+      },
+      "actionableCount": 8,
+      "exceptionCount": 11,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/workspace-tables": {
+      "path": "packages/workspace/tables",
+      "sanitized": "beep__workspace-tables",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 16,
+        "S2": 1,
+        "S3": 3,
+        "S4": 4,
+        "S5": 3
+      },
+      "actionableCount": 7,
+      "exceptionCount": 20,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    },
+    "@beep/workspace-use-cases": {
+      "path": "packages/workspace/use-cases",
+      "sanitized": "beep__workspace-use-cases",
+      "family": "apps-slices",
+      "discovery": "done",
+      "remediation": "pending",
+      "findingsByDomain": {
+        "S1": 1,
+        "S2": 3,
+        "S3": 0,
+        "S4": 2,
+        "S5": 7
+      },
+      "actionableCount": 9,
+      "exceptionCount": 4,
+      "parityProofRef": null,
+      "policyFlipped": false,
+      "remediationNote": ""
+    }
+  },
   "_note": "Populated during P1 baseline, one entry per package touched, mirroring goals/effect-native-migration/ops/progress.json's resumable per-package model. Each package entry shape: { \"path\": \"packages/...\", \"sanitized\": \"beep__<name>\", \"family\": \"foundation|drivers|tooling|apps-slices\", \"discovery\": \"pending|in_progress|done\", \"remediation\": \"pending|in_progress|blocked|exception|done\", \"findingsByDomain\": { \"S1\": 0, \"S2\": 0, \"S3\": 0, \"S4\": 0, \"S5\": 0 }, \"actionableCount\": 0, \"exceptionCount\": 0, \"parityProofRef\": null, \"policyFlipped\": false, \"remediationNote\": \"\" }. Reconcile against this file before each wave; skip packages already \"done\". `findingsByDomain` counts come from the §5.5 inventory records at ops/inventory/<Sn>/<sanitized-pkg>.json; `actionableCount` excludes ledgered exceptions; `policyFlipped` tracks whether this package's family has had its lint cards flipped advisory->blocking in standards/schema-crispening.policy.jsonc (G4/§5.7).",
   "activeBlockers": [],
   "scopeNotes": {

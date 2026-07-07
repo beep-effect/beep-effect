@@ -165,8 +165,11 @@ export const TypedTextSchema = <K extends TextKind>(kind: S.Schema<K>) =>
 
 const makeTyped =
   <K extends TextKind>(kind: K) =>
-  (content: string, metadata?: Record<string, unknown>): TypedText<K> =>
-    metadata !== undefined ? { kind, content, metadata } : { kind, content };
+  (content: string, metadata?: Record<string, unknown>): TypedText<K> => {
+    const schema = TypedTextSchema(S.Literal(kind));
+
+    return metadata !== undefined ? schema.make({ kind, content, metadata }) : schema.make({ kind, content });
+  };
 
 /**
  * Create document-level typed text at the top of the structural hierarchy.
@@ -379,48 +382,50 @@ export const Lemma: (content: string, metadata?: Record<string, unknown>) => Typ
  */
 export class KindContainment extends S.Class<KindContainment>($I`KindContainment`)(
   {
-    Character: TextKind.pipe(
+    Character: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
+    Chunk: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults(TextKind.pickOptions(["Token"]))),
+    Dependency: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
+    Document: TextKind.pipe(
       S.Array,
       S.optionalKey,
       SchemaUtils.withKeyDefaults(TextKind.pickOptions(["Paragraph", "Sentence"]))
     ),
-    Chunk: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults(TextKind.pickOptions(["Sentence"]))),
-    Dependency: TextKind.pipe(
+    Embedding: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
+    Entity: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
+    Lemma: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
+    Paragraph: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults(TextKind.pickOptions(["Sentence"]))),
+    POS: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
+    Relation: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
+    Sentence: TextKind.pipe(
       S.Array,
       S.optionalKey,
       SchemaUtils.withKeyDefaults(TextKind.pickOptions(["Token", "Chunk", "Dependency", "Entity", "Relation"]))
     ),
-    Document: TextKind.pipe(
+    Token: TextKind.pipe(
       S.Array,
       S.optionalKey,
       SchemaUtils.withKeyDefaults(TextKind.pickOptions(["Character", "POS", "Lemma"]))
     ),
-    Embedding: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
-    Entity: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
-    Lemma: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
-    Paragraph: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
-    POS: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
-    Relation: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
-    Sentence: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults(["Token"])),
-    Token: TextKind.pipe(S.Array, S.optionalKey, SchemaUtils.withKeyDefaults([])),
   },
   $I.annote("KindContainment", {
     description: "Represents the containment relationships between different kinds of text elements in the ontology.",
   })
 ) {
+  private static readonly defaults = KindContainment.make({});
+
   static readonly containment: Readonly<Record<TextKind, ReadonlyArray<TextKind>>> = {
-    Document: ["Paragraph", "Sentence"],
-    Paragraph: ["Sentence"],
-    Sentence: ["Token", "Chunk", "Dependency", "Entity", "Relation"],
-    Token: ["Character", "POS", "Lemma"],
-    Character: [],
-    POS: [],
-    Lemma: [],
-    Entity: [],
-    Relation: [],
-    Dependency: [],
-    Chunk: ["Token"],
-    Embedding: [],
+    Character: KindContainment.defaults.Character ?? [],
+    Chunk: KindContainment.defaults.Chunk ?? [],
+    Dependency: KindContainment.defaults.Dependency ?? [],
+    Document: KindContainment.defaults.Document ?? [],
+    Embedding: KindContainment.defaults.Embedding ?? [],
+    Entity: KindContainment.defaults.Entity ?? [],
+    Lemma: KindContainment.defaults.Lemma ?? [],
+    POS: KindContainment.defaults.POS ?? [],
+    Paragraph: KindContainment.defaults.Paragraph ?? [],
+    Relation: KindContainment.defaults.Relation ?? [],
+    Sentence: KindContainment.defaults.Sentence ?? [],
+    Token: KindContainment.defaults.Token ?? [],
   };
 }
 

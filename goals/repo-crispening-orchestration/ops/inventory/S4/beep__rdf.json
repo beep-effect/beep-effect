@@ -1,0 +1,62 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
+    "line": 39,
+    "symbol": "SemanticSchemaMetadataKind",
+    "smell": "Detector hit: annotated `LiteralKit` schema looked like a possible lost-statics site.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 25,
+    "exception": {
+      "reason": "`$I.annoteSchema` preserves existing schema statics through `preserveSchemaStatics` (packages/foundation/modeling/identity/src/Id.ts:1380), and LiteralKit preserves helper descriptors through `.annotate` (packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:625).",
+      "boundary": "False-positive audit: annotated LiteralKit statics already survive."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/rdf/src/Evidence.ts",
+    "line": 32,
+    "symbol": "EvidenceSelectorKind",
+    "smell": "Detector hit: annotated `LiteralKit` schema looked like a possible lost-statics site.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 26,
+    "exception": {
+      "reason": "`$I.annoteSchema` and LiteralKit preserve the helper surface; no duplicate guard or decoder wall exists for this literal domain.",
+      "boundary": "False-positive audit: annotated LiteralKit statics already survive."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/rdf/src/JsonLd.ts",
+    "line": 54,
+    "symbol": "JsonLdKeyword",
+    "smell": "Detector hit: annotated `LiteralKit` schema looked like a possible lost-statics site.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 27,
+    "exception": {
+      "reason": "`$I.annoteSchema` and LiteralKit preserve the helper surface; tests use `S.is(JsonLdKeyword)` but the LiteralKit helper surface is not actually lost.",
+      "boundary": "False-positive audit: annotated LiteralKit statics already survive."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/rdf/src/Rdf.ts",
+    "line": 1061,
+    "symbol": "escapeLiteralLexical",
+    "smell": "Detector hit: `Match.value(ch).pipe(...)` is a small manual branch that could look like a union/static-api candidate.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 28,
+    "exception": {
+      "reason": "This is a trust-boundary escaping table for N-Triples/N-Quads serialization, not behavior duplicated from a schema or tagged union static.",
+      "boundary": "SPEC fence 4 - no trust-boundary weakening."
+    }
+  }
+]

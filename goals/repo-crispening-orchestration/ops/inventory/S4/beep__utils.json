@@ -1,0 +1,17 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/utils/src/Glob.ts",
+    "line": 37,
+    "symbol": "Pattern / PathInput",
+    "smell": "Two union consts without `SchemaUtils.withCodecStatics`: `Pattern = S.Union([S.String, S.Array(S.String)])` (Glob.ts:37) and the internal `PathInput = S.Union([S.String, S.Array(S.String)])` (src/internal/StructPath.ts:31) — literal match for the 'union consts missing withCodecStatics' smell.",
+    "proposedTarget": "No action. If either gains decode/guard call sites, append `SchemaUtils.withCodecStatics` — but note @beep/utils sits below @beep/schema in the foundation dependency graph (it imports only effect + @beep/identity/@beep/types), so SchemaUtils may not even be importable here without an inversion; the attachment would have to be plain in-file statics instead.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0.3,
+    "exception": {
+      "reason": "Both unions are used purely as type carriers for dual helper signatures (Struct.ts/Option.ts path helpers, Glob service inputs); rg finds zero decode/guard/fromUnknown call sites for either anywhere in the repo. PathInput is module-internal. Attaching codec statics would add speculative surface with no helper wall to delete, and @beep/utils is itself the dual/flow helper home whose own primitives are out of S4 scope by packet instruction. The rest of the package is the S4 exemplar surface: dual-arity throughout (Str/Struct/Array/Stream/GlobalValue/Event), flow for passthroughs (Stream.ts:60), and statics already colocated on its schema classes (GlobError.new/newThunk).",
+      "boundary": "packages/foundation/modeling/utils (@beep/utils, the dual/flow helper home). Revisit only if the unions gain codec call sites."
+    }
+  }
+]

@@ -6,27 +6,16 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
-import { LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
+import { PosInt } from "@beep/schema";
 import * as S from "effect/Schema";
 import { Tool } from "effect/unstable/ai";
-import { AiPhoneticMatch, AiToolError } from "./_schemas.ts";
+import { AiPhoneticAlgorithm, AiPhoneticMatch, AiToolError } from "./_schemas.ts";
 
 const $I = $NlpProcessingId.create("Tools/PhoneticMatch");
-const PhoneticMatchAlgorithmKit = LiteralKit(["soundex", "phonetize"]).annotate(
-  $I.annote("PhoneticMatchAlgorithmKit", {
-    description: "LiteralKit backing schema for phonetic matching algorithms.",
-  })
-);
-const PhoneticMatchAlgorithm = PhoneticMatchAlgorithmKit.pipe(
-  $I.annoteSchema("PhoneticMatchAlgorithm", {
-    description: "Phonetic encoding algorithm used to compare text.",
-  }),
-  SchemaUtils.withLiteralKitStatics(PhoneticMatchAlgorithmKit)
-);
 
 class PhoneticMatchParameters extends S.Class<PhoneticMatchParameters>($I`PhoneticMatchParameters`)(
   {
-    algorithm: S.optionalKey(PhoneticMatchAlgorithm).annotateKey({
+    algorithm: S.optionalKey(AiPhoneticAlgorithm).annotateKey({
       description: "Phonetic algorithm to apply (default: soundex)",
     }),
     minTokenLength: S.optionalKey(PosInt).annotateKey({

@@ -11,6 +11,7 @@ import { $FileProcessingId } from "@beep/identity";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import { MimeType } from "@beep/schema/MimeType";
 import * as S from "effect/Schema";
+import type { TaggedErrorNewInput } from "@beep/schema/TaggedErrorClass";
 
 const $I = $FileProcessingId.create("Operation");
 
@@ -91,14 +92,7 @@ export class FileProcessingOperationError extends TaggedErrorClass<FileProcessin
    */
   static readonly fromReason = (
     reason: FileProcessingOperationErrorReason,
-    options: {
-      readonly artifactId?: ArtifactId;
-      readonly details?: Readonly<Record<string, string>>;
-      readonly engine?: string;
-      readonly format?: FileFormatFamily;
-      readonly message: string;
-      readonly operationId?: OperationId;
-    }
+    options: Omit<TaggedErrorNewInput<typeof FileProcessingOperationError>, "reason">
   ): FileProcessingOperationError => FileProcessingOperationError.make({ reason, ...options });
 }
 

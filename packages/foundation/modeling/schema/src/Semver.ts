@@ -28,7 +28,9 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as SchemaUtils from "./SchemaUtils/index.ts";
 import type * as Ordering from "effect/Ordering";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $SchemaId.create("Semver");
 
@@ -48,7 +50,8 @@ const SemverNumberSegmentString = S.String.check(
 ).pipe(
   $I.annoteSchema("SemverNumberSegmentString", {
     description: "A SemVer numeric identifier string.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 const SemverNumberSegment = S.Int.check(
@@ -61,7 +64,8 @@ const SemverNumberSegment = S.Int.check(
 ).pipe(
   $I.annoteSchema("SemverNumberSegment", {
     description: "A safe non-negative integer segment in a semantic version.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 const SemverPrereleaseIdentifier = S.String.check(
@@ -75,7 +79,8 @@ const SemverPrereleaseIdentifier = S.String.check(
 ).pipe(
   $I.annoteSchema("SemverPrereleaseIdentifier", {
     description: "A SemVer prerelease identifier.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 const SemverBuildIdentifier = S.String.check(
@@ -88,13 +93,15 @@ const SemverBuildIdentifier = S.String.check(
 ).pipe(
   $I.annoteSchema("SemverBuildIdentifier", {
     description: "A SemVer build metadata identifier.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 const RangeComparatorOperator = S.Literals(["^", ">=", ">", "<=", "<", "="]).pipe(
   $I.annoteSchema("RangeComparatorOperator", {
     description: "Comparator operator supported by the lightweight SemVer range checker.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 type RangeComparatorOperator = typeof RangeComparatorOperator.Type;
@@ -104,11 +111,11 @@ type RangeComparator = {
   readonly version: Semver;
 };
 
-const isSemverNumberSegmentString = S.is(SemverNumberSegmentString);
-const isSemverNumberSegment = S.is(SemverNumberSegment);
-const isSemverPrereleaseIdentifier = S.is(SemverPrereleaseIdentifier);
-const isSemverBuildIdentifier = S.is(SemverBuildIdentifier);
-const decodeRangeComparatorOperator = S.decodeUnknownOption(RangeComparatorOperator);
+const isSemverNumberSegmentString = SemverNumberSegmentString.is;
+const isSemverNumberSegment = SemverNumberSegment.is;
+const isSemverPrereleaseIdentifier = SemverPrereleaseIdentifier.is;
+const isSemverBuildIdentifier = SemverBuildIdentifier.is;
+const decodeRangeComparatorOperator = RangeComparatorOperator.decodeOption;
 
 const equalOrdering: Ordering.Ordering = 0;
 const greaterThanOrdering: Ordering.Ordering = 1;
@@ -295,7 +302,7 @@ const satisfiesComparator = (version: Semver, comparator: RangeComparator): bool
     Match.when("<=", () => compared <= equalOrdering),
     Match.when("<", () => compared < equalOrdering),
     Match.when("=", () => compared === equalOrdering),
-    Match.orElse(() => false)
+    Match.exhaustive
   )(comparator.operator);
 };
 
@@ -311,7 +318,7 @@ const parseSemver = (value: string): O.Option<Semver> => {
       build: parseOptionalIdentifierList(isSemverBuildIdentifier)(build),
     }),
     O.flatMap(({ main, prerelease, build }) =>
-      decodeSemverOption({
+      Semver.decodeOption({
         major: main.major,
         minor: main.minor,
         patch: main.patch,
@@ -376,6 +383,11 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
     description: "Structured semantic version with core, prerelease, and build metadata segments.",
   })
 ) {
+  static readonly decodeOption: {
+    (input: unknown, options?: AST.ParseOptions): O.Option<Semver>;
+    (options?: AST.ParseOptions): (input: unknown) => O.Option<Semver>;
+  } = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownOption(Semver));
+
   /**
    * Normalizes supported loose boundary strings before strict SemVer parsing.
    *
@@ -599,8 +611,6 @@ export class Semver extends S.Class<Semver>($I`Semver`)(
     )
   );
 }
-
-const decodeSemverOption = S.decodeUnknownOption(Semver);
 
 /**
  * Codec that decodes supported SemVer strings into {@link Semver} values.

@@ -1,0 +1,110 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/drizzle/src/EntityTable.models.ts",
+    "line": 339,
+    "symbol": "columnNameForAny",
+    "smell": "`descriptor.columnName ?? EntitySchema.columnNameFor(key, descriptor)` duplicates the descriptor column-name fallback even though `EntitySchema.columnNameFor` already centralizes that default (`EntitySchema.constructors.ts:152-165`).",
+    "proposedTarget": "Collapse the helper to `EntitySchema.columnNameFor(key, descriptor)`. This keeps the existing descriptor default in the schema package helper and removes the redundant `??` branch from the Drizzle projection.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/drizzle/src/Drizzle.errors.ts",
+    "line": 55,
+    "symbol": "makeContext",
+    "smell": "`DrizzleErrorContext` stores `query`/`params` as optional keys (lines 45-46), so the parser and merger use `string | undefined`, `O.getOrUndefined`, `context.query !== undefined`, and `context.query ?? nativeContext.query` before the final `DrizzleError` converts back to Option.",
+    "proposedTarget": "Make the intermediate context Option-first too: `query: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` and `params: S.OptionFromOptionalKey(S.Array(S.Unknown)).pipe(SchemaUtils.withNoneDefault)`. Then `makeContext`, `hasQueryContext`, `contextFromDrizzleError`, and `fromUnknown` can compose Options directly. In-package exemplar: final `DrizzleError` already uses `S.OptionFromOptionalKey` at lines 255-257; add `SchemaUtils.withNoneDefault` per `packages/foundation/modeling/ontology/src/Ontology.models.ts:152-160`.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/drizzle/src/EntityTable.models.ts",
+    "line": 388,
+    "symbol": "indexHintsForDescriptor",
+    "smell": "`O.fromNullishOr(descriptor.indexHints)` followed by `O.getOrElse(A.empty<EntitySchema.IndexHint>)` supplies an empty-index-hints default in the Drizzle projection; the root field is `PersistDescriptorFields.indexHints: S.Array(IndexHint).pipe(S.optionalKey)` in `@beep/schema` (EntitySchema.persist.ts:385).",
+    "proposedTarget": "Prefer moving the empty-array default upstream onto the descriptor schema, e.g. `S.Array(IndexHint).pipe(S.optionalKey, SchemaUtils.withEmptyArrayDefaults<IndexHint>())`, then this driver consumes a total `indexHints` array. Cross-package edit belongs to the foundation/schema wave, so Drizzle remediation should coordinate rather than local-patch only.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/drizzle/src/EntityTable.models.ts",
+    "line": 63,
+    "symbol": "EncodedAllowsNull",
+    "smell": "`type EncodedAllowsNull<Encoded> = null extends Encoded ? true : false` is a null detector hit.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "SQL nullability fence: this type-level check decides whether a persisted column builder stays nullable at the SQL row boundary. The SPEC explicitly requires SQL absence to encode as null while Option lives on the decoded/domain side.",
+      "boundary": "SQL row nullability encoding"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/drizzle/src/EntityTable.models.ts",
+    "line": 210,
+    "symbol": "TableFor",
+    "smell": "`schema: undefined` appears in the Drizzle table type parameter.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "This mirrors Drizzle's `PgTableWithColumns` type contract for no PostgreSQL schema name; it is not runtime domain absence or a schema default.",
+      "boundary": "3rd-party Drizzle type contract"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/drizzle/src/EntityTable.models.ts",
+    "line": 423,
+    "symbol": "indexesForDescriptor",
+    "smell": "`O.getOrElse(A.empty<PgTableExtraConfigValue>)` defaults a missing column lookup to no indexes.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "Adapter lookup fallback: if Drizzle did not expose a column in the extra-config callback, there is no column to index. This is not a schema-field default.",
+      "boundary": "Drizzle table extra-config column lookup"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/drivers/drizzle/src/Drizzle.errors.ts",
+    "line": 102,
+    "symbol": "contextFromDrizzleMessageMatch",
+    "smell": "`Str.trim` normalizes query and params captured from a native `Failed query:` error string.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "Native error-message parser: trimming is part of defensive extraction/redaction of 3rd-party Drizzle error text, not a reusable schema-field invariant.",
+      "boundary": "3rd-party Drizzle error string parsing"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/drizzle/src/Drizzle.errors.ts",
+    "line": 116,
+    "symbol": "parseDrizzleMessage",
+    "smell": "`O.getOrElse(emptyContext)` returns an empty context when a native error message does not match the query regex.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "Parser no-match fallback; once `DrizzleErrorContext` becomes Option-first, this remains the neutral context for absent native query data.",
+      "boundary": "native error parser fallback"
+    }
+  }
+]

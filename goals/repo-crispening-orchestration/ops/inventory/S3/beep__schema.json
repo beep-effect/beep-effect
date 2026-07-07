@@ -1,0 +1,122 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.factory.ts",
+    "line": 333,
+    "symbol": "matchVariantFieldDescriptor",
+    "smell": "PersistDescriptor is schema-backed and discriminated by storageKind (EntitySchema.persist.ts:401) and valueStrategy is a LiteralKit (EntitySchema.persist.ts:75), but matchVariantFieldDescriptor repeats valueStrategy/storageKind literals in predicate arms and ends with Match.orElse(() => field). A new ValueStrategy literal can fall through to the default field branch without an exhaustiveness error.",
+    "proposedTarget": "Refactor the dispatcher around the existing finite domains: either mirror explicitVariantCompatibilityFor's Match.type<PersistStrategy>().pipe(..., Match.exhaustive) shape from lines 181-201, or use ValueStrategy.$match(descriptor.valueStrategy, { ... }) with an inner StorageKind/descriptor match for the timestampDate/timestampMillis special cases. Keep the change in EntitySchema.factory.ts/EntitySchema.persist.ts; do not restructure the @beep/schema topology.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 3.1,
+    "exception": {
+      "reason": "The dispatcher spans PersistDescriptor storageKind/valueStrategy and intentionally falls back to the provided field for passthrough variants. Making it exhaustive needs a dedicated EntitySchema persisted-variant proof to preserve wire shape.",
+      "boundary": "EntitySchema persisted-variant dispatcher, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/schema/src/Graph/Graph.primitives.ts",
+    "line": 136,
+    "symbol": "GraphKind",
+    "smell": "The graph kind literal family is declared twice: Graph.shared.ts:31 defines GraphKindValue as LiteralKit([\"directed\", \"undirected\"]), while Graph.primitives.ts:136 re-declares the same literals with S.Literals. That splits the schema value used by GraphEncoded from the kit-derived helpers used by graph internals.",
+    "proposedTarget": "Make GraphKind derive from the existing GraphKindValue kit (or make GraphKind the single exported kit while preserving current public exports), then use that same source for GraphEncoded's type field and graph kind dispatch. The in-repo source of truth candidate is packages/foundation/modeling/schema/src/Graph/Graph.shared.ts:31; LiteralKit helper attachment is verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:754-805.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 2.4,
+    "exception": {
+      "reason": "Consolidating GraphKind with GraphKindValue changes the graph schema source of truth and public graph type surface; this belongs in the graph family-close sweep under the topology fence.",
+      "boundary": "Graph schema topology fence, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/schema/src/Graph/Graph.rebuild.ts",
+    "line": 82,
+    "symbol": "rebuildImmutableGraph",
+    "smell": "rebuildImmutableGraph branches on encoded.type === \"directed\" and treats every other decoded GraphKindValue as undirected. Because GraphKindValue is already a finite LiteralKit in Graph.shared.ts:31, this is a manual discriminator branch that would misclassify a future graph kind instead of requiring an exhaustive branch.",
+    "proposedTarget": "Dispatch encoded.type through GraphKindValue.$match(encoded.type, { directed: ..., undirected: ... }) after importing the runtime kit, or through Match.type<GraphKindValue>().pipe(Match.when(\"directed\", ...), Match.when(\"undirected\", ...), Match.exhaustive). LiteralKit.$match is verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:606-619 and Effect v4 Match.exhaustive at .repos/effect-v4/packages/effect/src/Match.ts:2003.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 2.8,
+    "exception": {
+      "reason": "Graph rebuild dispatch is tied to the same graph kind source-of-truth split. Updating it safely requires the coordinated GraphKind/GraphKindValue family sweep and parity proof.",
+      "boundary": "Graph schema topology fence, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/schema/src/Graph/Graph.transforms.ts",
+    "line": 85,
+    "symbol": "makeGraphTransform",
+    "smell": "makeGraphTransform repeats the same GraphKindValue branch twice (mutable target at line 85, immutable target at line 108) with expectedType === \"directed\" ? directed : undirected. This is another manual two-case discriminator branch over the existing GraphKindValue kit, and it would silently route a future kind to the undirected target.",
+    "proposedTarget": "Select the target schemas with GraphKindValue.$match(expectedType, { directed: ..., undirected: ... }) and share that selection between mutable and immutable branches, or use an exhaustive Match.type<GraphKindValue>() helper. Keep the current Graph role files; this is an in-place dispatch cleanup, not a schema-topology restructure.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 2.5,
+    "exception": {
+      "reason": "Graph transform dispatch is tied to the graph kind source-of-truth split. Updating it safely requires the coordinated GraphKind/GraphKindValue family sweep and parity proof.",
+      "boundary": "Graph schema topology fence, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/schema/src/DateTimeUtcFromValid/DateTimeUtcFromValid.schema.ts",
+    "line": 416,
+    "symbol": "DateTimeInput",
+    "smell": "DateTimeInput is an intentionally mixed union of raw Effect DateTime.Input values plus tagged transport wrappers; a naive undiscriminated-union detector would see the raw primitives and tagged classes and ask for a single tagged union.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The public boundary intentionally accepts raw Effect DateTime.Input values for decode compatibility while encoding to a deterministic tagged string wrapper. Forcing every input through DateTimeInputKind.toTaggedUnion would change the accepted public input form and violate the same-PR consumer sweep/fence constraints.",
+      "boundary": "DateTimeUtcFromValid public decode boundary for raw Effect DateTime.Input plus tagged transport encodings"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/schema/src/FrameGuard/FrameGuard.schema.ts",
+    "line": 125,
+    "symbol": "FrameGuardOption",
+    "smell": "FrameGuardOption is S.Union([S.Literal(false), FrameGuardMode, FrameGuardAllowFrom]); a naive literal-union or undiscriminated-union detector would ask to tag the false/mode/tuple cases. The same public option shape recurs across the secure-header concept modules.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The union is the public header-option wire/config form: false disables the header, mode strings are accepted directly, and tuple/config cases preserve the existing API. Tagging it would change caller input shape rather than improve exhaustiveness inside the package.",
+      "boundary": "secure-header public option/config schemas such as FrameGuardOption, XSSProtectionOption, ContentSecurityPolicyOption, PermissionsPolicyOption, and related Header codecs"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+    "line": 22,
+    "symbol": "MappedLiteralDuplicateErrorFields.side",
+    "smell": "The error field side uses S.Literals([\"from\", \"to\"]); a broad literal-domain detector could ask for a LiteralKit even though this is inside the implementation of MappedLiteralKit itself.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is a tiny internal error payload field in the schema-building primitive, with no duplicate runtime family, helpers, or branch surface. The package's own LiteralKit/MappedLiteralKit implementation internals are the toolbox, not S3 findings.",
+      "boundary": "MappedLiteralKit implementation internals"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+    "line": 235,
+    "symbol": "makeDirectionalKit",
+    "smell": "makeDirectionalKit constructs S.Literals(from).transform(to) and then builds LiteralKit(from) helpers next to it; a duplicate-literal-family detector could view that as parallel schema/helper sources.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is the MappedLiteralKit implementation boundary. It must construct the transformed schema and attach directional helpers from the same validated tuple; the duplication is the primitive's implementation detail, not a consumer-side parallel literal family.",
+      "boundary": "MappedLiteralKit implementation internals"
+    }
+  }
+]

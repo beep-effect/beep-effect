@@ -6,7 +6,7 @@
  */
 
 import { $NlpId } from "@beep/identity";
-import { NonNegativeInt } from "@beep/schema";
+import { NonNegativeInt, SchemaUtils } from "@beep/schema";
 import { Str } from "@beep/utils";
 import { Brand, Chunk } from "effect";
 import { dual } from "effect/Function";
@@ -71,7 +71,8 @@ export const SentenceIndex = NonNegativeInt.pipe(
   S.fromBrand("SentenceIndex", sentenceIndex),
   $I.annoteSchema("SentenceIndex", {
     description: "Non-negative ordered index for an NLP sentence.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -113,10 +114,10 @@ export class Sentence extends S.Class<Sentence>($I`Sentence`)(
     tokens: S.Chunk(Token),
     start: TokenIndex,
     end: TokenIndex,
-    sentiment: S.OptionFromOptionalKey(S.Finite),
-    importance: S.OptionFromOptionalKey(S.Finite),
-    negationFlag: S.OptionFromOptionalKey(S.Boolean),
-    markedUpText: S.OptionFromOptionalKey(S.String),
+    sentiment: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
+    importance: S.OptionFromOptionalKey(S.Finite).pipe(SchemaUtils.withNoneDefault),
+    negationFlag: S.OptionFromOptionalKey(S.Boolean).pipe(SchemaUtils.withNoneDefault),
+    markedUpText: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("Sentence", {
     description: "Immutable NLP sentence with token offsets and optional scoring metadata.",

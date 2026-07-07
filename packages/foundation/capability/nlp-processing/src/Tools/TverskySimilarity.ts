@@ -6,6 +6,7 @@
  */
 
 import { $NlpProcessingId } from "@beep/identity";
+import { SimilarityMethod } from "@beep/nlp/Core/Similarity";
 import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
@@ -44,7 +45,7 @@ class TverskySimilaritySuccess extends S.Class<TverskySimilaritySuccess>($I`Tver
     beta: UnitInterval.annotateKey({
       description: "Applied beta parameter",
     }),
-    method: S.Literal("set.tversky").annotateKey({
+    method: S.Literal(SimilarityMethod.Enum["set.tversky"]).annotateKey({
       description: "The similarity method used",
     }),
     score: UnitInterval.annotateKey({

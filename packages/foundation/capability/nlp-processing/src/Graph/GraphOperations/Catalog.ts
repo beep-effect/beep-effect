@@ -25,6 +25,7 @@
 import { A } from "@beep/utils";
 import { Effect, Struct } from "effect";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
 import * as Backend from "../../Backend/NLPBackend.ts";
 import { makeNode } from "../EffectGraph.ts";
 import * as Op from "./Operation.ts";
@@ -248,7 +249,7 @@ export const extractRelations: Op.GraphOperation<string, RelationNode, Backend.N
  */
 export const toLowerCase: Op.GraphOperation<string, string> = Op.transform({
   description: "Convert text to lowercase.",
-  f: (data) => data.toLowerCase(),
+  f: Str.toLowerCase,
   name: "toLowerCase",
 });
 
@@ -267,7 +268,7 @@ export const toLowerCase: Op.GraphOperation<string, string> = Op.transform({
  */
 export const toUpperCase: Op.GraphOperation<string, string> = Op.transform({
   description: "Convert text to uppercase.",
-  f: (data) => data.toUpperCase(),
+  f: Str.toUpperCase,
   name: "toUpperCase",
 });
 
@@ -286,7 +287,7 @@ export const toUpperCase: Op.GraphOperation<string, string> = Op.transform({
  */
 export const trim: Op.GraphOperation<string, string> = Op.transform({
   description: "Remove leading and trailing whitespace.",
-  f: (data) => data.trim(),
+  f: Str.trim,
   name: "trim",
 });
 

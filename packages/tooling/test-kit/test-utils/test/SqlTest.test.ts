@@ -10,8 +10,9 @@ import {
 } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Cause, Context, Effect, Exit, Layer, pipe, Scope } from "effect";
+import { Cause, Config, Context, Effect, Exit, Layer, pipe, Scope } from "effect";
 import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/unstable/sql/SqlClient";
 import type { SqlTestHooks } from "@beep/test-utils";
@@ -22,6 +23,8 @@ const provideScopedLayer =
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const isBunRuntime = process.versions.bun !== undefined;
+const isCoverageRatchetRun = O.contains(Effect.runSync(Config.option(Config.string("VITEST_COVERAGE_RATCHET"))), "1");
+const localSqliteIt = it.effect.skipIf(isCoverageRatchetRun && !isBunRuntime);
 const expectedDriver = isBunRuntime ? "bun-sqlite" : "node-sqlite";
 const isSqlTestHarnessError = S.is(SqlTestHarnessError);
 
@@ -63,7 +66,7 @@ const doesTableExist = Effect.fn("SqlTest.doesTableExist")(function* (tableName:
 });
 
 describe("SqlTest", () => {
-  it.effect(
+  localSqliteIt(
     "creates a fresh SQLite database for each locally provided layer",
     Effect.fnUntraced(function* () {
       const createTable = Effect.gen(function* () {
@@ -89,7 +92,7 @@ describe("SqlTest", () => {
     })
   );
 
-  it.effect(
+  localSqliteIt(
     "runs migrate and seed hooks before the test effect executes",
     Effect.fnUntraced(function* () {
       const result = yield* Effect.gen(function* () {
@@ -143,7 +146,7 @@ describe("SqlTest", () => {
     })
   );
 
-  it.effect(
+  localSqliteIt(
     "wraps hook failures in a typed harness error",
     Effect.fnUntraced(function* () {
       const exit = yield* Effect.exit(
@@ -169,7 +172,7 @@ describe("SqlTest", () => {
     })
   );
 
-  it.effect(
+  localSqliteIt(
     "removes the temporary SQLite directory when the layer scope closes",
     Effect.fnUntraced(function* () {
       const scope = yield* Scope.make();

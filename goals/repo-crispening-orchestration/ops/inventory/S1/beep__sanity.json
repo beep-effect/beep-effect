@@ -1,0 +1,32 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/sanity/src/Sanity.service.ts",
+    "line": 146,
+    "symbol": "SanityShape",
+    "smell": "Exported type literal with an Effect-returning service method matches the schema-first-inventory surface.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. Keep `SanityShape` as the `Context.Service` shape used by `Sanity extends Context.Service<Sanity, SanityShape>()` at line 337; request and response payloads are schema-modeled as `SanityQueryRequest` and `SanityQueryResponse`.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "Context.Service shapes stay interfaces/type aliases under SPEC Non-Goals fence 1; the request/response payloads are already schema-backed.",
+      "boundary": "Context.Service shape for the Sanity driver"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/sanity/src/Sanity.service.ts",
+    "line": 165,
+    "symbol": "decodeQueryRequest / decodeQueryResponse",
+    "smell": "Module-level schema-derived decoders can look like a decode-helper wall.",
+    "proposedTarget": "None -- keep these boundary codecs for request validation and Sanity response decoding. Effect v4 `S.decodeUnknownEffect` was verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.05,
+    "exception": {
+      "reason": "The helpers are direct schema-derived decoders used at the service boundary, not hand-rolled validation or schema bypasses.",
+      "boundary": "Sanity request/response boundary codecs"
+    }
+  }
+]

@@ -1,7 +1,7 @@
 {
   "$schema": "./fallow.boundaries.provenance.schema.json",
   "schemaVersion": "fallow-quality-enforcement/boundary-provenance/v1",
-  "updated": "2026-06-29",
+  "updated": "2026-07-06",
   "validatorVersion": "fallow-quality-enforcement-validator/v1",
   "generatedConfigRef": "standards/fallow.boundaries.generated.jsonc",
   "rules": [
@@ -984,6 +984,437 @@
       "catalogRefs": [],
       "promotionEligible": true,
       "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/agents-client",
+      "generatedRuleFrom": "@beep/agents-client",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/agents/client/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/agents-server",
+      "generatedRuleFrom": "@beep/agents-server",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/agents/server/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/api-transport",
+      "generatedRuleFrom": "@beep/api-transport",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/foundation/capability/api-transport/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/courtlistener",
+      "generatedRuleFrom": "@beep/courtlistener",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/drivers/courtlistener/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/dol",
+      "generatedRuleFrom": "@beep/dol",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/drivers/dol/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/ecfr",
+      "generatedRuleFrom": "@beep/ecfr",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/drivers/ecfr/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/editor",
+      "generatedRuleFrom": "@beep/editor",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/foundation/ui-system/editor/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/epistemic-server",
+      "generatedRuleFrom": "@beep/epistemic-server",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/epistemic/server/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/epistemic-tables",
+      "generatedRuleFrom": "@beep/epistemic-tables",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/epistemic/tables/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/epistemic-use-cases",
+      "generatedRuleFrom": "@beep/epistemic-use-cases",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/epistemic/use-cases/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/federal-register",
+      "generatedRuleFrom": "@beep/federal-register",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/drivers/federal-register/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/govinfo",
+      "generatedRuleFrom": "@beep/govinfo",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/drivers/govinfo/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/html",
+      "generatedRuleFrom": "@beep/html",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/foundation/modeling/html/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/law-practice-server",
+      "generatedRuleFrom": "@beep/law-practice-server",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/law-practice/server/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/law-practice-use-cases",
+      "generatedRuleFrom": "@beep/law-practice-use-cases",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/law-practice/use-cases/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/lexical-schema",
+      "generatedRuleFrom": "@beep/lexical-schema",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/foundation/modeling/lexical/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/lint-rules",
+      "generatedRuleFrom": "@beep/lint-rules",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/tooling/policy-pack/lint-rules/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/m365",
+      "generatedRuleFrom": "@beep/m365",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/drivers/m365/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/m365-mcp",
+      "generatedRuleFrom": "@beep/m365-mcp",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/drivers/m365-mcp/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/mcp-kit",
+      "generatedRuleFrom": "@beep/mcp-kit",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/foundation/capability/mcp-kit/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/pandoc-ast",
+      "generatedRuleFrom": "@beep/pandoc-ast",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/foundation/modeling/pandoc-ast/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/pglite",
+      "generatedRuleFrom": "@beep/pglite",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/drivers/pglite/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/provenance",
+      "generatedRuleFrom": "@beep/provenance",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/foundation/modeling/provenance/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/scratchpad",
+      "generatedRuleFrom": "@beep/scratchpad",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "scratchpad/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/uspto",
+      "generatedRuleFrom": "@beep/uspto",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/drivers/uspto/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/uspto-mcp",
+      "generatedRuleFrom": "@beep/uspto-mcp",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/drivers/uspto-mcp/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/workspace-server",
+      "generatedRuleFrom": "@beep/workspace-server",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/workspace/server/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "@beep/workspace-use-cases",
+      "generatedRuleFrom": "@beep/workspace-use-cases",
+      "sourceClass": "manifest-derived",
+      "sourceRefs": [
+        "package.json",
+        "packages/workspace/use-cases/package.json",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "declared-dependency-consistency"
+    },
+    {
+      "ruleId": "doctrine:domain-deny-drivers-tables-server",
+      "generatedRuleFrom": "doctrine:domain-deny-drivers-tables-server",
+      "sourceClass": "doctrine-pinned",
+      "sourceRefs": [
+        "standards/ARCHITECTURE.md#package-dependency-graph",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "layer-legality"
+    },
+    {
+      "ruleId": "doctrine:tables-deny-server",
+      "generatedRuleFrom": "doctrine:tables-deny-server",
+      "sourceClass": "doctrine-pinned",
+      "sourceRefs": [
+        "standards/ARCHITECTURE.md#package-dependency-graph",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "layer-legality"
+    },
+    {
+      "ruleId": "doctrine:ui-deny-server",
+      "generatedRuleFrom": "doctrine:ui-deny-server",
+      "sourceClass": "doctrine-pinned",
+      "sourceRefs": [
+        "standards/ARCHITECTURE.md#package-dependency-graph",
+        "standards/fallow.boundaries.generated.jsonc"
+      ],
+      "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],
+      "catalogRefs": [],
+      "promotionEligible": true,
+      "enforcementScope": "layer-legality"
     }
   ]
 }

@@ -1,0 +1,28 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/uspto-mcp/test/Server.test.ts",
+    "line": 156,
+    "symbol": "projection",
+    "smell": "The test decodes result text as S.Unknown and then casts decoded as { _tag: string; tier?: string } before asserting Inline. The payload type is the schema-derived DocumentsProjectionOutput tagged union built with LiteralKit(...).toTaggedUnion(\"_tag\") at packages/drivers/uspto-mcp/src/UsptoDocumentTiers.ts:89.",
+    "proposedTarget": "Decode with S.decodeUnknownEffect(S.fromJsonString(DocumentsProjectionOutput))(raw), then assert via DocumentsProjectionOutput.guards.Inline or DocumentsProjectionOutput.match instead of casting to a loose _tag object.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 2.2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/uspto-mcp/src/UsptoTools.ts",
+    "line": 96,
+    "symbol": "UsptoMcpFailure",
+    "smell": "S.Union([ApiKeyRequiredFailure, UsptoToolError]) is an undiscriminated public failure union that a generic S3 detector may propose to tag.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is a public MCP tool failure wire surface combining the mcp-kit api_key_required envelope with post-gate USPTO driver failures. Adding a wrapper discriminator would change client-visible JSON and blur the credential-gate boundary.",
+      "boundary": "USPTO MCP tool failure output schema"
+    }
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/modeling/schema/src/StatusCauseError.ts",
+    "line": 41,
+    "symbol": "StatusCauseFields.status / StatusCauseInputOptions.status / StatusCauseInput.status",
+    "smell": "Shared error status fields are documented as HTTP status values but are modeled as S.Finite in all three status/cause schemas, admitting NaN-free fractional and out-of-range statuses.",
+    "proposedTarget": "Reuse the existing HttpStatus schema (`Schema` alias at packages/foundation/modeling/schema/src/HttpStatus/HttpStatus.schema.ts:83) for the three status fields, or use S.Int with explicit 100-599 bounds if unofficial status coverage is intentionally wider. Because this narrows public input, apply the §5.4 consumer sweep and add an S.toArbitrary round-trip law like packages/foundation/modeling/schema/test/HttpStatus.test.ts:12. Effect v4 S.toArbitrary verified at .repos/effect-v4/packages/effect/src/Schema.ts:12970.",
+    "confidence": 0.66,
+    "mechanization": "assisted",
+    "roiRank": 4,
+    "exception": {
+      "reason": "Narrowing status from S.Finite to HttpStatus/non-negative integer range changes exported StatusCauseFields and StatusCauseInput public form with out-of-package consumers; the §5.4 ripple is outside this package writer lane.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/schema/src/SafeRemoteHost.ts",
+    "line": 85,
+    "symbol": "BlockedHostError.host/url/message",
+    "smell": "Detector candidate: BlockedHostError carries broad string fields around an SSRF guard.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The broad strings are diagnostics for a trust-boundary SSRF guard, not domain fields to validate more narrowly; the guard itself is explicit and property-like regression coverage exists for loopback, link-local, RFC1918, ULA, cloud metadata, resolver, allowlist, and IPv4-mapped IPv6 cases in SafeRemoteHost.test.ts.",
+      "boundary": "outbound HTTP(S) SSRF protection and diagnostic error payload"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/modeling/schema/src/Yaml.ts",
+    "line": 94,
+    "symbol": "YamlTextToUnknown",
+    "smell": "Detector candidate: parser boundary schema starts from broad S.String rather than a branded YAML text subtype, and tests use static parser fixtures rather than S.toArbitrary text generation.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "A YAML parser accepts arbitrary text and classifies validity by parsing; narrowing the input string before the parser would duplicate or weaken the parser boundary. The static fixtures in Yaml.test.ts exercise Bun-vs-package parser selection, fallback diagnostics, typed decode, and unsupported encode behavior, which are legitimate boundary fixtures.",
+      "boundary": "YAML text parser boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-equivalence",
+    "file": "packages/foundation/modeling/schema/src/EffectSchema.ts",
+    "line": 26,
+    "symbol": "EffectSchema / PromiseSchema / Fn reference equality annotations",
+    "smell": "Detector candidate: opaque runtime schemas provide hand-written `self === that` toEquivalence annotations.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Effect, Promise, and Function values are opaque runtime handles; deriving structural equality with S.toEquivalence would not express semantic equality without executing or observing them, so reference identity is the correct explicit equivalence annotation.",
+      "boundary": "opaque executable/runtime value schemas"
+    }
+  }
+]

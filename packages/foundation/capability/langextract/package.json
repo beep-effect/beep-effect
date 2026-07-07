@@ -27,7 +27,7 @@
     "beep:test": "bunx --bun vitest run",
     "build": "bun run beep:build",
     "check": "bun run beep:check",
-    "coverage": "bunx --bun vitest run --coverage",
+    "coverage": "bunx vitest run --coverage",
     "docgen": "bun run ../../../../packages/tooling/tool/docgen/src/bin.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
@@ -71,6 +71,7 @@
     "@beep/identity": "workspace:^",
     "@beep/nlp": "workspace:^",
     "@beep/schema": "workspace:^",
+    "@beep/utils": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {

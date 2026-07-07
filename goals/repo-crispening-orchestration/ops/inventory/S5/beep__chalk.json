@@ -1,0 +1,77 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/chalk/src/internal/PublicSurface.ts",
+    "line": 53,
+    "symbol": "ColorSupportLevelInput",
+    "smell": "Detector candidate: type-level input is broad number rather than the 0|1|2|3 literal union.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Breadth is deliberate and documented ('keeps the public constructor input broad as number'): runtime values are fully validated to integer 0-3 by ColorSupportLevelInputChecks (annotated filter group), and dtslint/Chalk.tst.ts:33 pins `new Chalk({ level: broadLevel })` accepting number for upstream-chalk API parity.",
+      "boundary": "public chalk-compatible constructor/setter API"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
+    "line": 335,
+    "symbol": "hexToRgb",
+    "smell": "Detector candidate: broad `hex: string` input with silent [0, 0, 0] fallback on malformed hex instead of a branded/pattern-checked HexColor schema.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Upstream chalk tolerates malformed hex by rendering black; introducing a validating HexColor brand on hex()/bgHex() would change public behavior from fallback to throw, breaking chalk API compatibility.",
+      "boundary": "public chalk-compatible color model API (hex/bgHex)"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/chalk/src/internal/PublicSurface.ts",
+    "line": 82,
+    "symbol": "ChalkInstanceSurface",
+    "smell": "Detector candidate: broad primitive method parameters (ansi256(index: number), rgb(red: number, green: number, blue: number), hex(color: string)) on the public instance surface.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is a declared abstract class mirroring the upstream chalk instance API, not a schema; narrowing parameter types would break drop-in compatibility that the dtslint suite pins (dtslint/Chalk.tst.ts:63-75).",
+      "boundary": "public chalk-compatible builder API surface"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+    "line": 47,
+    "symbol": "RuntimeProcessLikeModel.env/argv",
+    "smell": "Detector candidate: stringly S.Record(S.String, S.UndefinedOr(S.String)) env and unbounded S.Array(S.String) argv.",
+    "proposedTarget": "None — keep as is.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The model deliberately mirrors Node's process.env/process.argv shapes at a third-party runtime boundary; the schema's looseness matches the actual external domain, and normalizeRuntimeProcessLike already decodes defensively with an empty-model fallback.",
+      "boundary": "Node.js process introspection boundary (process.env/process.argv/os.release)"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/foundation/capability/chalk/test/index.test.ts",
+    "line": 42,
+    "symbol": "ANSI escape golden fixtures",
+    "smell": "Detector candidate: hand-written static fixtures asserting exact ANSI escape strings across the styling suite.",
+    "proposedTarget": "None — keep as is (schema-derived round-trip laws are additive coverage recorded separately, not a replacement).",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These are golden/regression fixtures for rendering behavior (escape-code composition, nesting, CRLF re-opening) — a legitimate static-fixture use per the S5 carve-out; they test the renderer, not a schema's domain-wide law.",
+      "boundary": "ANSI rendering golden fixtures"
+    }
+  }
+]

@@ -9,9 +9,11 @@
  * @since 0.0.0
  */
 import {
+  ColumnarEnvelope,
   defineFieldTiers,
   estimateJsonSize,
   FetchableHandle,
+  FieldProjectionOutcome,
   projectFieldTier,
   projectWithinBudget,
   toColumnarEnvelope,
@@ -19,6 +21,7 @@ import {
 import { NonNegativeInt } from "@beep/schema";
 import { assert, describe, it } from "@effect/vitest";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 const documentTiers = defineFieldTiers({
   balanced: S.Struct({ abstractText: S.String, documentId: S.String, title: S.String }),
@@ -40,6 +43,20 @@ const largeDocumentBagPayload: Record<string, unknown> = {
   title: "Fixture Patent Title",
 };
 
+const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
+  const arbitrary = S.toArbitrary(schema);
+  const decode = S.decodeUnknownSync(schema);
+  const encode = S.encodeSync(schema);
+  const equals = S.toEquivalence(schema);
+
+  fc.assert(
+    fc.property(arbitrary, (value) => {
+      assert.isTrue(equals(decode(encode(value)), value));
+    }),
+    { numRuns: 50 }
+  );
+};
+
 const mintFetchableHandle = (oversized: { readonly sizeBytes: number }): FetchableHandle =>
   FetchableHandle.make({
     handleId: "5b1d6a3e-8f3e-4a1a-9c1e-2e6b7a2f9c10",
@@ -57,7 +74,7 @@ describe("field-tier projector", () => {
   });
 
   it("reduces a large documentBag-shaped fixture payload below a configured size budget", () => {
-    const budgetBytes = 500;
+    const budgetBytes = NonNegativeInt.make(500);
     const fullSize = estimateJsonSize(largeDocumentBagPayload);
 
     assert.isAbove(fullSize, budgetBytes);
@@ -80,7 +97,7 @@ describe("field-tier projector", () => {
 
   it("never returns an oversized payload inline when even the minimal tier exceeds the budget", () => {
     const minimalProjectedSize = estimateJsonSize(projectFieldTier(documentTiers, "minimal", largeDocumentBagPayload));
-    const impossibleBudgetBytes = 1;
+    const impossibleBudgetBytes = NonNegativeInt.make(1);
 
     assert.isAbove(minimalProjectedSize, impossibleBudgetBytes);
 
@@ -91,10 +108,15 @@ describe("field-tier projector", () => {
 
     assert.strictEqual(projected._tag, "Fetchable");
     if (projected._tag === "Fetchable") {
-      assert.isTrue(S.is(FetchableHandle)(projected.handle));
+      assert.isTrue(FetchableHandle.is(projected.handle));
       assert.strictEqual(projected.handle.tier, "minimal");
     }
     assert.notProperty(projected, "value");
+  });
+
+  it("round-trips fetchable projection schemas through their encoded shape", () => {
+    assertSchemaRoundTrip(FetchableHandle);
+    assertSchemaRoundTrip(FieldProjectionOutcome);
   });
 });
 
@@ -107,5 +129,10 @@ describe("toColumnarEnvelope", () => {
       ["A", null],
       ["B", "2"],
     ]);
+    assert.deepStrictEqual(ColumnarEnvelope.fromRows([{ title: "A" }, { id: "2", title: "B" }]), envelope);
+  });
+
+  it("round-trips the columnar envelope schema", () => {
+    assertSchemaRoundTrip(ColumnarEnvelope);
   });
 });

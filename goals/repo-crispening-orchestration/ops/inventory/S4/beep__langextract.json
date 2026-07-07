@@ -1,0 +1,47 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/langextract/src/Service/index.ts",
+    "line": 137,
+    "symbol": "buildPrompt (with private renderTarget:97, renderExamples:106)",
+    "smell": "Pure formatting behavior over LangExtractRequest data (request -> deterministic prompt string) exported from the Service module, separated from the data class it consumes (Extraction/index.ts:270). S4 'behavior separated from its data': the prompt rendering reads only request fields and is deterministic/pure.",
+    "proposedTarget": "Colocate as a static on LangExtractRequest (e.g. `static readonly toPrompt = (request: LangExtractRequest): string => ...`) or a dedicated behavior module, leaving Service as wiring only. Counter-argument (why judgment, not assisted): prompt format is arguably a provider-presentation concern deliberately kept next to the LanguageModel call, and moving it changes the public @beep/langextract/Service API surface (ripple: docgen examples + any external callers). Unrelated same-line cleanups (raw JSON.stringify at Service/index.ts:112, native .map/.join) belong to S1/native-migration, not S4.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 2,
+    "exception": {
+      "reason": "buildPrompt remains a public Service formatter and provider-presentation concern; moving it onto LangExtractRequest changes the public import/call surface for naming-only gain.",
+      "boundary": "public API ripple, deferred formatter colocation"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/langextract/src/Handoff/index.ts",
+    "line": 109,
+    "symbol": "toAnnotatedDocument (with private definedExtractions:52, makeEntity:59)",
+    "smell": "Exported pure conversion (AnnotatedDocumentInput -> Contract.AnnotatedDocument) lives as a free function beside the AnnotatedDocumentInput class defined in the same file (line 39) whose only role is carrying this function's contract; repo exemplars (Md.model.ts, Lexical.model.ts) precipitate such behavior onto the class as statics.",
+    "proposedTarget": "In-body static on AnnotatedDocumentInput, e.g. `static readonly toAnnotatedDocument = (input: AnnotatedDocumentInput): Contract.AnnotatedDocument => ...` (callers like Service/index.ts:190 keep passing structural object literals, so no call-shape change beyond the qualifier). Low confidence because same-module adjacency already substantially satisfies colocation and the gain is naming/discoverability only.",
+    "confidence": 0.45,
+    "mechanization": "judgment",
+    "roiRank": 2,
+    "exception": {
+      "reason": "toAnnotatedDocument is already adjacent to AnnotatedDocumentInput and is the public Handoff API; moving it to a static is naming-only and would require call-site/docgen sweep.",
+      "boundary": "public API ripple, deferred colocation"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
+    "line": 390,
+    "symbol": "decodeModelOutputJson / decodeModelOutputPayload (ModelOutput:389)",
+    "smell": "Decode-wall detector candidate: two module-scope `S.decodeUnknownEffect(...)` consts above parseModelOutput, and the private ModelOutput union const carries no withCodecStatics.",
+    "proposedTarget": "None - legitimate as written. Pre-building `S.decodeUnknownEffect(schema)` once at module scope and composing with Effect.mapError into typed LangExtractError is the repo-canonical Effect decode pattern; SchemaUtils.withCodecStatics (packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90) provides only { is, fromUnknown, decodeOption } - no Effect-returning decoder - so it cannot replace these, and ModelOutput is module-private with a single consumer.",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Pre-built Effect decoders (`const decodeX = S.decodeUnknownEffect(Schema)`) used with Effect.mapError to translate to a TaggedErrorClass are the repo-blessed boundary-decode pattern, not a guard/decode wall; withCodecStatics offers no Effect-returning decode so colocation cannot absorb them.",
+      "boundary": "Module-private decoders feeding the parseModelOutput boundary codec in packages/foundation/capability/langextract/src/Extraction/index.ts (untrusted model output -> typed LangExtractError); ModelOutput union is non-exported and single-use."
+    }
+  }
+]

@@ -6,7 +6,21 @@ import {
   OperationId,
   SourceArtifact,
 } from "@beep/file-processing/Artifact";
+import {
+  ChildArtifactRecord,
+  encodeChildArtifactRecordJson,
+  encodeFileProcessingCoverageSummaryJson,
+  encodeFileProcessingFailureRecordJson,
+  encodeProcessRunManifestJson,
+  encodeSourceProcessingRecordJson,
+  FileProcessingCoverageSummary,
+  FileProcessingFailureRecord,
+  ProcessRunManifest,
+  SourceProcessingRecord,
+  TextSpan,
+} from "@beep/file-processing/Extraction";
 import { ExtractFileOperation, ProcessFileOperation } from "@beep/file-processing/Operation";
+import { isPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { extractFile, makeFileProcessingServiceLayer, processFile } from "@beep/file-processing/Service";
 import { TestFileProcessingEngine } from "@beep/file-processing/test";
 import { NonNegativeInt } from "@beep/schema";
@@ -23,6 +37,32 @@ const OperationIdArbitrary = S.toArbitrary(OperationId);
 const SourceArtifactArbitrary = S.toArbitrary(SourceArtifact);
 const ExtractFileOperationArbitrary = S.toArbitrary(ExtractFileOperation);
 const ProcessFileOperationArbitrary = S.toArbitrary(ProcessFileOperation);
+const TextSpanArbitrary = S.toArbitrary(TextSpan);
+const ProcessRunManifestArbitrary = S.toArbitrary(ProcessRunManifest);
+const FileProcessingCoverageSummaryArbitrary = S.toArbitrary(FileProcessingCoverageSummary);
+const SourceProcessingRecordArbitrary = S.toArbitrary(SourceProcessingRecord);
+const FileProcessingFailureRecordArbitrary = S.toArbitrary(FileProcessingFailureRecord);
+const ChildArtifactRecordArbitrary = S.toArbitrary(ChildArtifactRecord);
+const decodeTextSpan = S.decodeUnknownEffect(TextSpan);
+const encodeTextSpan = S.encodeEffect(TextSpan);
+const decodeProcessRunManifestJson = S.decodeUnknownEffect(S.fromJsonString(ProcessRunManifest));
+const decodeFileProcessingCoverageSummaryJson = S.decodeUnknownEffect(S.fromJsonString(FileProcessingCoverageSummary));
+const decodeSourceProcessingRecordJson = S.decodeUnknownEffect(S.fromJsonString(SourceProcessingRecord));
+const decodeFileProcessingFailureRecordJson = S.decodeUnknownEffect(S.fromJsonString(FileProcessingFailureRecord));
+const decodeChildArtifactRecordJson = S.decodeUnknownEffect(S.fromJsonString(ChildArtifactRecord));
+const pathSegmentArbitrary = fc.stringMatching(/^[a-z][a-z0-9-]{0,12}$/);
+
+const assertJsonRoundTrip = <A, EncodeError, DecodeError>(
+  value: A,
+  encode: (value: A) => Effect.Effect<string, EncodeError>,
+  decode: (value: string) => Effect.Effect<A, DecodeError>
+): void => {
+  const encoded = Effect.runSync(encode(value));
+  const decoded = Effect.runSync(decode(encoded));
+  const reencoded = Effect.runSync(encode(decoded));
+
+  expect(reencoded).toBe(encoded);
+};
 
 const fixtureIds = Effect.all({
   artifactId: S.decodeUnknownEffect(ArtifactId)(
@@ -111,6 +151,84 @@ describe("@beep/file-processing", () => {
           expect(decodedProcess.operationKind).toBe("process");
         }
       ),
+      { numRuns: 50 }
+    ));
+
+  it("round-trips TextSpan through its encoded shape and generated invariant", () =>
+    fc.assert(
+      fc.property(TextSpanArbitrary, (span) => {
+        const encoded = Effect.runSync(encodeTextSpan(span));
+        const decoded = Effect.runSync(decodeTextSpan(encoded));
+        const reencoded = Effect.runSync(encodeTextSpan(decoded));
+
+        expect(reencoded).toEqual(encoded);
+        expect(Number.isInteger(span.startOffset)).toBe(true);
+        expect(Number.isInteger(span.endOffset)).toBe(true);
+        expect(span.startOffset).toBeGreaterThanOrEqual(0);
+        expect(span.endOffset).toBeGreaterThanOrEqual(span.startOffset);
+      }),
+      { numRuns: 50 }
+    ));
+
+  it.effect("rejects invalid TextSpan offsets at decode", () =>
+    Effect.gen(function* () {
+      const negative = yield* Effect.exit(decodeTextSpan({ endOffset: 1, startOffset: -1, text: "bad" }));
+      const inverted = yield* Effect.exit(decodeTextSpan({ endOffset: 1, startOffset: 2, text: "bad" }));
+
+      expect(negative._tag).toBe("Failure");
+      expect(inverted._tag).toBe("Failure");
+    })
+  );
+
+  it("round-trips file-processing JSON codecs byte-identically", () => {
+    fc.assert(
+      fc.property(ProcessRunManifestArbitrary, (manifest) => {
+        assertJsonRoundTrip(manifest, encodeProcessRunManifestJson, decodeProcessRunManifestJson);
+      }),
+      { numRuns: 50 }
+    );
+
+    fc.assert(
+      fc.property(FileProcessingCoverageSummaryArbitrary, (summary) => {
+        assertJsonRoundTrip(summary, encodeFileProcessingCoverageSummaryJson, decodeFileProcessingCoverageSummaryJson);
+      }),
+      { numRuns: 50 }
+    );
+
+    fc.assert(
+      fc.property(SourceProcessingRecordArbitrary, (record) => {
+        assertJsonRoundTrip(record, encodeSourceProcessingRecordJson, decodeSourceProcessingRecordJson);
+      }),
+      { numRuns: 50 }
+    );
+
+    fc.assert(
+      fc.property(FileProcessingFailureRecordArbitrary, (record) => {
+        assertJsonRoundTrip(record, encodeFileProcessingFailureRecordJson, decodeFileProcessingFailureRecordJson);
+      }),
+      { numRuns: 50 }
+    );
+
+    fc.assert(
+      fc.property(ChildArtifactRecordArbitrary, (record) => {
+        assertJsonRoundTrip(record, encodeChildArtifactRecordJson, decodeChildArtifactRecordJson);
+      }),
+      { numRuns: 50 }
+    );
+  });
+
+  it("keeps path containment explicit and property-tested", () =>
+    fc.assert(
+      fc.property(pathSegmentArbitrary, pathSegmentArbitrary, (rootName, leafName) => {
+        const root = `/srv/${rootName}`;
+        const child = `${root}/${leafName}`;
+
+        expect(isPathWithinRoot(root, root)).toBe(true);
+        expect(isPathWithinRoot(`${root}/`, `${root}\\${leafName}`)).toBe(true);
+        expect(isPathWithinRoot(root, child)).toBe(true);
+        expect(isPathWithinRoot(root, `/srv/${rootName}-evil/${leafName}`)).toBe(false);
+        expect(isPathWithinRoot(root, `${root}/../${rootName}/${leafName}`)).toBe(false);
+      }),
       { numRuns: 50 }
     ));
 

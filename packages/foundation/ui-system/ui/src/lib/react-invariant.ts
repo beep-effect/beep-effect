@@ -29,7 +29,11 @@ export class ReactContextInvariantOptions extends S.Class<ReactContextInvariantO
   $I`ReactContextInvariantOptions`
 )(
   {
-    message: S.String,
+    message: S.NonEmptyString.pipe(
+      $I.annoteKey("ReactContextInvariantOptions.message", {
+        description: "Human-facing diagnostic emitted when a React context is missing.",
+      })
+    ),
   },
   $I.annote("ReactContextInvariantOptions", {
     description: "Options for a React context invariant check.",
@@ -55,7 +59,11 @@ export class ReactContextInvariantError extends TaggedErrorClass<ReactContextInv
 )(
   "ReactContextInvariantError",
   {
-    message: S.String,
+    message: S.NonEmptyString.pipe(
+      $I.annoteKey("ReactContextInvariantError.message", {
+        description: "Human-facing diagnostic emitted when a React context is missing.",
+      })
+    ),
   },
   $I.annote("ReactContextInvariantError", {
     description: "Synchronous React context invariant failure.",

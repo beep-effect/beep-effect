@@ -136,6 +136,11 @@ export const sourceMetadata = (
     ...extras,
   });
 
+type FetchSourceOptions = {
+  readonly headers?: Readonly<Record<string, string>>;
+  readonly publicUrl?: string;
+};
+
 const readResponseBytes = Effect.fn("SyncDataToTs.readResponseBytes")(function* (
   response: HttpClientResponse.HttpClientResponse,
   targetId: string,
@@ -164,19 +169,21 @@ const sha256Hex = Effect.fn("SyncDataToTs.sha256Hex")(function* (bytes: Uint8Arr
 export const fetchSource = Effect.fn("SyncDataToTs.fetchSource")(function* (
   targetId: string,
   id: string,
-  url: string
+  url: string,
+  options: FetchSourceOptions = {}
 ): Effect.fn.Return<SyncDataFetchedSource, SyncDataToTsError, HttpClient.HttpClient | Crypto.Crypto> {
-  const response = yield* HttpClient.get(url).pipe(
-    SyncDataToTsError.mapError(`Failed to fetch ${url}`, targetId),
+  const publicUrl = options.publicUrl ?? url;
+  const response = yield* HttpClient.get(url, { headers: options.headers ?? {} }).pipe(
+    SyncDataToTsError.mapError(`Failed to fetch ${publicUrl}`, targetId),
     Effect.flatMap((response) => HttpClientResponse.filterStatusOk(response)),
-    SyncDataToTsError.mapError(`Received a non-2xx response from ${url}`, targetId)
+    SyncDataToTsError.mapError(`Received a non-2xx response from ${publicUrl}`, targetId)
   );
-  const bytes = yield* readResponseBytes(response, targetId, url);
-  const sha256 = yield* sha256Hex(bytes, targetId, url);
+  const bytes = yield* readResponseBytes(response, targetId, publicUrl);
+  const sha256 = yield* sha256Hex(bytes, targetId, publicUrl);
 
   return {
     id,
-    url,
+    url: publicUrl,
     bytes,
     text: textDecoder.decode(bytes),
     sha256,

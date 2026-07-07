@@ -1,0 +1,91 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/postgres/src/Postgres.errors.ts",
+    "line": 298,
+    "symbol": "PostgresError",
+    "smell": "Tagged error class has duplicate free-floating guards in Postgres.errors.ts:74 and PostgresDiagnostics.service.ts:149 (`safeBoolean(() => S.is(PostgresError)(value))`) instead of a colocated class static.",
+    "proposedTarget": "Add `static readonly is = S.is(PostgresError)` inside `PostgresError`, then replace both local guard bodies with `safeBoolean(() => PostgresError.is(value))`. Class-static exemplar: `Heading.is` at packages/foundation/modeling/md/src/Md.model.ts:873; v4 `S.is` verified at .repos/effect-v4/packages/effect/src/Schema.ts:1256.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/postgres/src/PostgresDiagnostics.service.ts",
+    "line": 141,
+    "symbol": "safeBoolean",
+    "smell": "Passthrough pipe lambda `evaluate => pipe(Result.try(evaluate), Result.getOrElse(thunkFalse))` is an exact `flow(...)` candidate.",
+    "proposedTarget": "`const safeBoolean: (evaluate: () => boolean) => boolean = flow(Result.try, Result.getOrElse(thunkFalse));` (`flow` already imported here; v4 `flow` verified at .repos/effect-v4/packages/effect/src/Function.ts:1162).",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/postgres/src/PostgresDiagnostics.service.ts",
+    "line": 281,
+    "symbol": "postgresErrorFromCause",
+    "smell": "Passthrough pipeline `cause => pipe(readCauseReasons(cause), A.map(...), A.getSomes, A.head)` can be expressed point-free.",
+    "proposedTarget": "`const postgresErrorFromCause: (cause: Cause.Cause<unknown>) => O.Option<PostgresError> = flow(readCauseReasons, A.map(postgresErrorFromReason), A.getSomes, A.head);` using the existing `flow` import.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/postgres/src/Postgres.errors.ts",
+    "line": 66,
+    "symbol": "safeBoolean",
+    "smell": "Passthrough pipe lambda duplicates the diagnostics helper shape and should use the terser `flow(...)` form.",
+    "proposedTarget": "Import `flow` from `effect` and rewrite as `const safeBoolean: (evaluate: () => boolean) => boolean = flow(Result.try, Result.getOrElse(thunkFalse));`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/postgres/src/PostgresSqlState.models.ts",
+    "line": 1503,
+    "symbol": "isPgErrorCode",
+    "smell": "Detector hit: exported free-floating schema guard `S.is(PgErrorCode)` beside a LiteralKit domain.",
+    "proposedTarget": "None - leave as-is in this S4 pass.",
+    "confidence": 0.35,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "`PgErrorCode` is a LiteralKit; `$I.annoteSchema` already preserves LiteralKit statics (packages/foundation/modeling/identity/src/Id.ts:72 and :1386), while `SchemaUtils.withCodecStatics` would collide with LiteralKit's non-configurable `is` object. The exported full-domain guard is a compatibility API until a non-colliding LiteralKit codec-static convention exists.",
+      "boundary": "Verified current SchemaUtils/withStatics.ts:31-43 redefinition behavior; do not propose `withCodecStatics` on LiteralKit `is` surfaces."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/postgres/src/PostgresDiagnostics.service.ts",
+    "line": 313,
+    "symbol": "formatSql",
+    "smell": "Detector hit: exported 3-arg helper is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "`formatSql(statement, parameters = [], palette = colors)` intentionally supports 1-, 2-, and 3-argument calls. `dual(3, ...)` would reinterpret the existing one-argument call as data-last instead of returning formatted SQL.",
+      "boundary": "Optional-trailing-argument public utility; preserving current call semantics outranks pipeability."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/postgres/src/PostgresDiagnostics.service.ts",
+    "line": 344,
+    "symbol": "formatPostgresError",
+    "smell": "Detector hit: exported 2-arg helper is not `dual`.",
+    "proposedTarget": "None - leave as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "`formatPostgresError(error, palette = colors)` intentionally supports a one-argument formatting call. `dual(2, ...)` would turn that call into a data-last function and break the public API.",
+      "boundary": "Optional-trailing-argument public utility; no public-form change without same-PR consumer sweep."
+    }
+  }
+]

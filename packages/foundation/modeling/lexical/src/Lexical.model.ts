@@ -18,14 +18,15 @@
 // cspell:word youtu
 import { $LexicalSchemaId } from "@beep/identity/packages";
 import * as Md from "@beep/md/Md.model";
-import { LiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
+import { LiteralKit, MappedLiteralKit, NonNegativeInt, PosInt, SchemaUtils } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect, SchemaGetter } from "effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { legacyYouTubeVideoId, sanitizeInlineStyle, sanitizeStyleValue } from "./Lexical.normalize.ts";
+import { legacyYouTubeVideoId, sanitizeInlineStyle, sanitizeStyleValue, sanitizeUrl } from "./Lexical.normalize.ts";
 import type { CodeFenceLanguage as MdCodeFenceLanguage } from "@beep/md/Md.model";
 import type * as R from "effect/Record";
+import type * as AST from "effect/SchemaAST";
 
 const $I = $LexicalSchemaId.create("Lexical.model");
 type MdYouTubeVideoId = typeof Md.YouTubeVideoId.Type;
@@ -93,25 +94,27 @@ export const LexicalNodeVersion = S.Literal(1).pipe(
  */
 export type LexicalNodeVersion = typeof LexicalNodeVersion.Type;
 
+const TextFormatBitMapping = MappedLiteralKit([
+  ["bold", 1],
+  ["italic", 2],
+  ["strikethrough", 4],
+  ["underline", 8],
+  ["code", 16],
+  ["subscript", 32],
+  ["superscript", 64],
+  ["highlight", 128],
+  ["lowercase", 256],
+  ["uppercase", 512],
+  ["capitalize", 1024],
+] as const);
+
 /**
  * Lexical TextFormatType flag values.
  *
  * @category models
  * @since 0.0.0
  */
-export const TextFormatBits = {
-  bold: 1,
-  italic: 1 << 1,
-  strikethrough: 1 << 2,
-  underline: 1 << 3,
-  code: 1 << 4,
-  subscript: 1 << 5,
-  superscript: 1 << 6,
-  highlight: 1 << 7,
-  lowercase: 1 << 8,
-  uppercase: 1 << 9,
-  capitalize: 1 << 10,
-} as const;
+export const TextFormatBits = TextFormatBitMapping.From.Enum;
 
 /**
  * Reusable literal domain for individual Lexical text format bits.
@@ -119,19 +122,7 @@ export const TextFormatBits = {
  * @category models
  * @since 0.0.0
  */
-export const TextFormatBit = LiteralKit([
-  TextFormatBits.bold,
-  TextFormatBits.italic,
-  TextFormatBits.strikethrough,
-  TextFormatBits.underline,
-  TextFormatBits.code,
-  TextFormatBits.subscript,
-  TextFormatBits.superscript,
-  TextFormatBits.highlight,
-  TextFormatBits.lowercase,
-  TextFormatBits.uppercase,
-  TextFormatBits.capitalize,
-]).pipe(
+export const TextFormatBit = LiteralKit(TextFormatBitMapping.To.Options).pipe(
   $I.annoteSchema("TextFormatBit", {
     description: "One Lexical TextFormatType bit value.",
   })
@@ -205,16 +196,18 @@ export const withTextFormat: {
   (format: TextFormatMask, bit: TextFormatBit): TextFormatMask;
 } = dual(2, (format: TextFormatMask, bit: TextFormatBit): TextFormatMask => TextFormatMask.make(format | bit));
 
+const TextDetailBitMapping = MappedLiteralKit([
+  ["directionless", 1],
+  ["unmergeable", 2],
+] as const);
+
 /**
  * Lexical TextDetailType flag values.
  *
  * @category models
  * @since 0.0.0
  */
-export const TextDetailBits = {
-  directionless: 1,
-  unmergeable: 1 << 1,
-} as const;
+export const TextDetailBits = TextDetailBitMapping.From.Enum;
 
 /**
  * Reusable literal domain for individual Lexical text detail bits.
@@ -222,7 +215,7 @@ export const TextDetailBits = {
  * @category models
  * @since 0.0.0
  */
-export const TextDetailBit = LiteralKit([TextDetailBits.directionless, TextDetailBits.unmergeable]).pipe(
+export const TextDetailBit = LiteralKit(TextDetailBitMapping.To.Options).pipe(
   $I.annoteSchema("TextDetailBit", {
     description: "One Lexical TextDetailType bit value.",
   })
@@ -660,6 +653,50 @@ export const SafeStyleValue: S.decodeTo<S.toType<S.String>, S.String> = S.String
     toArbitrary: () => (fc) => fc.string().map(sanitizeStyleValue),
   })
 );
+
+/**
+ * Serialized Lexical link URL sanitized at the schema boundary before an
+ * untrusted editor state reaches an anchor `href` sink.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { SafeUrl } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const decode = S.decodeUnknownSync(SafeUrl)
+ * console.log(decode("javascript:alert(1)")) // "#"
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const SafeUrl: S.decodeTo<S.toType<S.String>, S.String> = S.String.pipe(
+  S.decode({
+    decode: SchemaGetter.transform(sanitizeUrl),
+    encode: SchemaGetter.transform(sanitizeUrl),
+  }),
+  $I.annoteSchema("SafeUrl", {
+    description:
+      "Serialized Lexical link target sanitized to safe URL destinations; active script/data protocols and disallowed absolute protocols collapse to a harmless fragment.",
+    toArbitrary: () => (fc) => fc.string().map(sanitizeUrl),
+  })
+);
+
+/**
+ * Type for {@link SafeUrl}.
+ *
+ * @example
+ * ```ts
+ * import type { SafeUrl } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const accept = (url: SafeUrl) => url
+ * console.log(accept)
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export type SafeUrl = typeof SafeUrl.Type;
 
 /**
  * Mirrors `SerializedLexicalNode`. The `type` discriminant is added by each
@@ -1392,7 +1429,7 @@ export declare namespace ListItemNode {
 export class LinkNode extends ElementNode.extend<LinkNode>($I`LinkNode`)(
   {
     type: S.tag("link"),
-    url: S.String.annotateKey({ description: "The link target URL." }),
+    url: SafeUrl.annotateKey({ description: "The link target URL, sanitized before it reaches an anchor href." }),
     rel: S.OptionFromOptionalNullOr(S.String).pipe(
       SchemaUtils.withNoneDefault,
       S.annotateKey({ description: "Optional anchor rel attribute." })
@@ -1913,7 +1950,7 @@ export const LexicalNode = S.Union([
   TableNode,
   TableRowNode,
   TableCellNode,
-]).pipe(S.toTaggedUnion("type"));
+]).pipe(S.toTaggedUnion("type"), SchemaUtils.withCodecStatics);
 
 /**
  * {@inheritDoc LexicalNode}
@@ -2011,7 +2048,29 @@ export class SerializedEditorState extends S.Class<SerializedEditorState>($I`Ser
     root: RootNode.annotateKey({ description: "The document root node." }),
   },
   $I.annote("SerializedEditorState", { description: "The serialized Lexical editor state envelope." })
-) {}
+) {
+  /**
+   * Soft-decodes an unknown serialized editor-state payload.
+   *
+   * @example
+   * ```ts
+   * import * as O from "effect/Option"
+   * import { SerializedEditorState } from "@beep/lexical-schema/Lexical.model"
+   *
+   * const state = SerializedEditorState.decodeOption({
+   *   root: { type: "root", version: 1, children: [], direction: null, format: "", indent: 0 }
+   * })
+   * console.log(O.isSome(state)) // true
+   * ```
+   *
+   * @category validation
+   * @since 0.0.0
+   */
+  static readonly decodeOption: {
+    (input: unknown, options?: AST.ParseOptions): O.Option<SerializedEditorState>;
+    (options?: AST.ParseOptions): (input: unknown) => O.Option<SerializedEditorState>;
+  } = dual(SchemaUtils.isCodecDataFirst, S.decodeUnknownOption(SerializedEditorState));
+}
 
 /**
  * Companion namespace for {@link SerializedEditorState}.

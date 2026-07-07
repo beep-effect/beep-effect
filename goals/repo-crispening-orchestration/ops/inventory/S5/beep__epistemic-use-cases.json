@@ -1,0 +1,28 @@
+[
+  {
+    "ruleId": "SFV4-equivalence",
+    "file": "packages/epistemic/use-cases/test/EpistemicUseCases.test.ts",
+    "line": 96,
+    "symbol": "ClaimProjectionView equality assertion",
+    "smell": "The projection determinism test compares two schema-modeled `ClaimProjectionView` values with `Equal.equals`; schema-derived equivalence would keep equality semantics tied to the view schema.",
+    "proposedTarget": "Derive a local test equivalence with `const sameClaimProjectionView = S.toEquivalence(ClaimProjectionView)` and assert `sameClaimProjectionView(view1, view2)`, or export a named equivalence from the domain value module if multiple packages need it. `S.toEquivalence` is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:13201; repo-local examples include packages/foundation/modeling/schema/test/Graph.test.ts:87 and packages/shared/domain/src/entity/EntityId.ts:500.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/epistemic/use-cases/test/EpistemicUseCases.test.ts",
+    "line": 31,
+    "symbol": "use-case behavior fixtures",
+    "smell": "Detector candidate: the use-case tests use fixed CandidateClaim/Evidence fixtures and exact lifecycle/projection assertions instead of schema-derived generators.",
+    "proposedTarget": "None - keep these static behavior fixtures.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This package owns service orchestration over imported domain schemas, not new domain schemas; the fixed fixtures prove SHACL gate behavior, lifecycle transition semantics, and deterministic projection ordering.",
+      "boundary": "epistemic use-case behavior and service-port fixtures"
+    }
+  }
+]

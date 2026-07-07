@@ -108,6 +108,7 @@ const FeatureFamily = LiteralKit([
 
 const RuleSourceClass = LiteralKit([
   "manifest-derived",
+  "doctrine-pinned",
   "architecture-derived-hard-check",
   "review-gate-only",
   "tool-native",
@@ -120,6 +121,7 @@ const RuleSourceClass = LiteralKit([
 
 const BoundaryEnforcementScope = LiteralKit([
   "declared-dependency-consistency",
+  "layer-legality",
   "architecture-legal-edge",
   "review-only",
 ]).pipe(
@@ -766,7 +768,7 @@ class BoundaryGeneratedRuleProvenance extends S.Class<BoundaryGeneratedRuleProve
     enforcementScope: BoundaryEnforcementScope,
     sourceRefs: S.NonEmptyArray(RepoRefString),
     doctrineRefs: S.NonEmptyArray(ArchitectureDoctrineRefString),
-    catalogRefs: S.NonEmptyArray(RepoRefString),
+    catalogRefs: S.Array(RepoRefString),
     promotionEligible: S.Boolean,
   },
   $I.annote("BoundaryGeneratedRuleProvenance", {
@@ -1144,7 +1146,6 @@ const auditAttributionNarrative =
 const auditBaselineSummaryCounts =
   "Post-remediation audit against origin/main passes under the new-only gate with 0 dead-code issues and 0 introduced dead-code, complexity, or duplication findings (goals/fallow-zero-dead-code).";
 const requiredBoundarySourceRefs = ["package.json", "standards/fallow.boundaries.generated.jsonc"];
-const requiredBoundaryCatalogRef = "standards/repo-exports.catalog.jsonc";
 const requiredBoundaryDoctrineRefPrefix = "standards/ARCHITECTURE.md";
 const requiredResearchReportArtifacts = [
   "research/audit.md",
@@ -1625,6 +1626,9 @@ const featureMatrixDiagnostics = (document: FeatureMatrixDocument): ReadonlyArra
           diagnostics.push(
             `${row.id}: ${source.ruleId} manifest-derived rules only prove declared dependency consistency`
           );
+        }
+        if (source.sourceClass === "doctrine-pinned" && source.enforcementScope !== "layer-legality") {
+          diagnostics.push(`${row.id}: ${source.ruleId} doctrine-pinned rules must use layer-legality scope`);
         }
         if (source.sourceClass === "review-gate-only" && source.enforcementScope !== "review-only") {
           diagnostics.push(`${row.id}: ${source.ruleId} review-gate-only rules must use review-only enforcementScope`);
@@ -2330,9 +2334,13 @@ const boundaryProvenanceDiagnostics = (
   packageNamesByManifestRef: ReadonlyMap<string, string>
 ): ReadonlyArray<string> => {
   const generatedFroms = A.map(generatedConfig.boundaries.rules, (rule) => rule.from);
-  const provenanceFroms = A.map(provenance.rules, (rule) => rule.generatedRuleFrom);
+  const manifestProvenanceFroms = pipe(
+    provenance.rules,
+    A.filter((rule) => rule.sourceClass === "manifest-derived"),
+    A.map((rule) => rule.generatedRuleFrom)
+  );
   return [
-    ...sameSetDiagnostics("generated boundary provenance rules", generatedFroms, provenanceFroms),
+    ...sameSetDiagnostics("generated boundary provenance rules", generatedFroms, manifestProvenanceFroms),
     ...uniqueDiagnostics(
       "generated boundary provenance ids",
       A.map(provenance.rules, (rule) => rule.ruleId)
@@ -2348,6 +2356,18 @@ const boundaryProvenanceDiagnostics = (
       }
       if (rule.sourceClass === "review-gate-only") {
         diagnostics.push(`${rule.ruleId}: generated boundary rules cannot be review-gate-only`);
+      }
+      if (rule.sourceClass === "doctrine-pinned") {
+        if (rule.enforcementScope !== "layer-legality") {
+          diagnostics.push(`${rule.ruleId}: doctrine-pinned boundary rules must use layer-legality`);
+        }
+        if (!A.some(rule.doctrineRefs, (ref) => Str.startsWith(requiredBoundaryDoctrineRefPrefix)(ref))) {
+          diagnostics.push(`${rule.ruleId}: doctrine-pinned boundary rules require standards/ARCHITECTURE.md ref`);
+        }
+        if (!rule.promotionEligible) {
+          diagnostics.push(`${rule.ruleId}: doctrine-pinned boundary rules must be promotionEligible`);
+        }
+        return diagnostics;
       }
       if (rule.sourceClass !== "manifest-derived") {
         diagnostics.push(`${rule.ruleId}: generated boundary rules must be manifest-derived`);
@@ -2365,11 +2385,6 @@ const boundaryProvenanceDiagnostics = (
         if (!A.contains(rule.sourceRefs, requiredRef)) {
           diagnostics.push(`${rule.ruleId}: generated boundary provenance requires sourceRef ${requiredRef}`);
         }
-      }
-      if (!A.contains(rule.catalogRefs, requiredBoundaryCatalogRef)) {
-        diagnostics.push(
-          `${rule.ruleId}: generated boundary provenance requires catalogRef ${requiredBoundaryCatalogRef}`
-        );
       }
       if (!A.some(rule.doctrineRefs, (ref) => Str.startsWith(requiredBoundaryDoctrineRefPrefix)(ref))) {
         diagnostics.push(

@@ -140,6 +140,11 @@ export * as EntitySchema from "./EntitySchema/index.ts";
  * @since 0.0.0
  * @category validation
  */
+export * as FileDiff from "./FileDiff.schema.ts";
+/**
+ * @since 0.0.0
+ * @category validation
+ */
 export * from "./FileExtension.ts";
 /**
  * @since 0.0.0

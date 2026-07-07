@@ -5,8 +5,13 @@
  * @since 0.0.0
  */
 
+import * as O from "effect/Option";
+import * as S from "effect/Schema";
+
 const PN_LOCAL_ESCAPABLE = "_~.-!$&'()*+,;=/?#@%";
 const HEX = /^[0-9A-Fa-f]$/;
+const SafePnLocalArbitraryValues = ["prefLabel", "a.b", "9lives", "_local", "skos:prefLabel"] as const;
+const EscapedPnLocalArbitraryValues = ["prefLabel", "Ontology.models\\/HttpUrl", "claim\\#1", "a%20b"] as const;
 
 const codePointOf = (character: string): number | undefined => character.codePointAt(0);
 
@@ -63,21 +68,7 @@ const isSafeMiddle = (character: string): boolean => isPnChars(character) || cha
 
 const isSafeFinal = (character: string): boolean => isPnChars(character) || character === ":";
 
-/**
- * Check whether a local name can be emitted as an unescaped Turtle PN_LOCAL.
- *
- * @example
- * ```ts
- * import { isSafeLocal } from "@beep/identity"
- *
- * console.log(isSafeLocal("prefLabel")) // true
- * console.log(isSafeLocal("Ontology.models/HttpUrl")) // false
- * ```
- *
- * @category predicates
- * @since 0.0.0
- */
-export const isSafeLocal = (local: string): boolean => {
+const isSafeLocalInternal = (local: string): boolean => {
   const characters = [...local];
 
   if (characters.length === 0 || !isSafeFirst(characters[0] ?? "")) {
@@ -97,9 +88,71 @@ export const isSafeLocal = (local: string): boolean => {
   return characters.slice(1, -1).every(isSafeMiddle);
 };
 
+/**
+ * Schema for local names that can be emitted as unescaped Turtle PN_LOCAL values.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { SafePnLocal } from "@beep/identity"
+ *
+ * console.log(S.is(SafePnLocal)("prefLabel")) // true
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const SafePnLocal = S.String.check(
+  S.makeFilter(isSafeLocalInternal, {
+    identifier: "@beep/identity/PnLocal/SafePnLocal",
+    title: "Safe PN_LOCAL",
+    description: "A local name that can be emitted as an unescaped Turtle PN_LOCAL value.",
+    message: "Expected an unescaped Turtle PN_LOCAL value.",
+  })
+).annotate({
+  identifier: "@beep/identity/PnLocal/SafePnLocal",
+  title: "Safe PN_LOCAL",
+  description: "A local name that can be emitted as an unescaped Turtle PN_LOCAL value.",
+  toArbitrary: () => (fc) => fc.constantFrom(...SafePnLocalArbitraryValues),
+});
+
+/**
+ * Runtime type for {@link SafePnLocal}.
+ *
+ * @example
+ * ```ts
+ * import type { SafePnLocal } from "@beep/identity"
+ *
+ * const local: SafePnLocal = "prefLabel"
+ * console.log(local)
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export type SafePnLocal = typeof SafePnLocal.Type;
+
+const isSafePnLocal = S.is(SafePnLocal);
+
+/**
+ * Check whether a local name can be emitted as an unescaped Turtle PN_LOCAL.
+ *
+ * @example
+ * ```ts
+ * import { isSafeLocal } from "@beep/identity"
+ *
+ * console.log(isSafeLocal("prefLabel")) // true
+ * console.log(isSafeLocal("Ontology.models/HttpUrl")) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isSafeLocal = (local: string): boolean => isSafePnLocal(local);
+
 type LocalUnit = { readonly kind: "plx" } | { readonly kind: "raw"; readonly character: string };
 
-const tokenizeLocal = (local: string): ReadonlyArray<LocalUnit> | undefined => {
+const tokenizeLocal = (local: string): O.Option<ReadonlyArray<LocalUnit>> => {
   const units: Array<LocalUnit> = [];
 
   for (let index = 0; index < local.length; ) {
@@ -109,7 +162,7 @@ const tokenizeLocal = (local: string): ReadonlyArray<LocalUnit> | undefined => {
       const escaped = local[index + 1] ?? "";
 
       if (!isEscapable(escaped)) {
-        return undefined;
+        return O.none();
       }
 
       units.push({ kind: "plx" });
@@ -122,7 +175,7 @@ const tokenizeLocal = (local: string): ReadonlyArray<LocalUnit> | undefined => {
       const second = local[index + 2] ?? "";
 
       if (!isHex(first) || !isHex(second)) {
-        return undefined;
+        return O.none();
       }
 
       units.push({ kind: "plx" });
@@ -133,14 +186,14 @@ const tokenizeLocal = (local: string): ReadonlyArray<LocalUnit> | undefined => {
     const [raw] = [...local.slice(index)];
 
     if (raw === undefined) {
-      return undefined;
+      return O.none();
     }
 
     units.push({ kind: "raw", character: raw });
     index += raw.length;
   }
 
-  return units;
+  return O.some(units);
 };
 
 const isFirstUnit = (unit: LocalUnit): boolean => unit.kind === "plx" || isSafeFirst(unit.character);
@@ -149,23 +202,8 @@ const isMiddleUnit = (unit: LocalUnit): boolean => unit.kind === "plx" || isSafe
 
 const isFinalUnit = (unit: LocalUnit): boolean => unit.kind === "plx" || isSafeFinal(unit.character);
 
-/**
- * Check whether an escaped local name is accepted by Turtle PN_LOCAL parsing.
- *
- * @example
- * ```ts
- * import { acceptsEscapedLocal } from "@beep/identity"
- *
- * console.log(acceptsEscapedLocal("Ontology.models\\/HttpUrl")) // true
- * ```
- *
- * @category predicates
- * @since 0.0.0
- */
-export const acceptsEscapedLocal = (local: string): boolean => {
-  const units = tokenizeLocal(local);
-
-  if (units === undefined || units.length === 0 || !isFirstUnit(units[0] ?? { kind: "raw", character: "" })) {
+const acceptsEscapedUnits = (units: ReadonlyArray<LocalUnit>): boolean => {
+  if (units.length === 0 || !isFirstUnit(units[0] ?? { kind: "raw", character: "" })) {
     return false;
   }
 
@@ -181,6 +219,73 @@ export const acceptsEscapedLocal = (local: string): boolean => {
 
   return units.slice(1, -1).every(isMiddleUnit);
 };
+
+const acceptsEscapedLocalInternal = (local: string): boolean =>
+  O.match(tokenizeLocal(local), {
+    onNone: () => false,
+    onSome: acceptsEscapedUnits,
+  });
+
+/**
+ * Schema for escaped local names accepted by Turtle PN_LOCAL parsing.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { EscapedPnLocal } from "@beep/identity"
+ *
+ * console.log(S.is(EscapedPnLocal)("Ontology.models\\/HttpUrl")) // true
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const EscapedPnLocal = S.String.check(
+  S.makeFilter(acceptsEscapedLocalInternal, {
+    identifier: "@beep/identity/PnLocal/EscapedPnLocal",
+    title: "Escaped PN_LOCAL",
+    description: "A local name with Turtle PN_LOCAL parser-side escapes accepted at the parser boundary.",
+    message: "Expected a Turtle PN_LOCAL value with valid parser-side escapes.",
+  })
+).annotate({
+  identifier: "@beep/identity/PnLocal/EscapedPnLocal",
+  title: "Escaped PN_LOCAL",
+  description: "A local name with Turtle PN_LOCAL parser-side escapes accepted at the parser boundary.",
+  toArbitrary: () => (fc) => fc.constantFrom(...EscapedPnLocalArbitraryValues),
+});
+
+/**
+ * Runtime type for {@link EscapedPnLocal}.
+ *
+ * @example
+ * ```ts
+ * import type { EscapedPnLocal } from "@beep/identity"
+ *
+ * const local: EscapedPnLocal = "Ontology.models\\/HttpUrl"
+ * console.log(local)
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export type EscapedPnLocal = typeof EscapedPnLocal.Type;
+
+const isEscapedPnLocal = S.is(EscapedPnLocal);
+
+/**
+ * Check whether an escaped local name is accepted by Turtle PN_LOCAL parsing.
+ *
+ * @example
+ * ```ts
+ * import { acceptsEscapedLocal } from "@beep/identity"
+ *
+ * console.log(acceptsEscapedLocal("Ontology.models\\/HttpUrl")) // true
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const acceptsEscapedLocal = (local: string): boolean => isEscapedPnLocal(local);
 
 /**
  * Remove Turtle PN_LOCAL backslash escapes from an escaped local name.

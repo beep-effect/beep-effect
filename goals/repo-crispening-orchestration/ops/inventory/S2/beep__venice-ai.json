@@ -1,0 +1,165 @@
+[
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 1308,
+    "symbol": "resolveConfig",
+    "smell": "`normalizeBaseUrl(config.baseUrl)` strips trailing slashes after `VeniceAIConfigInput.baseUrl` has already decoded/defaulted through `SchemaUtils.withKeyDefaults(VENICE_API_URL)` at line 320.",
+    "proposedTarget": "Move trailing-slash normalization onto a named `VeniceAIBaseUrl` schema using `S.decodeTo(..., SchemaTransformation.transform(...))` / `SchemaGetter.transform`, then keep `SchemaUtils.withKeyDefaults(VENICE_API_URL)` on that normalized schema. In-repo exemplars: `packages/foundation/modeling/identity/src/Curie.ts:209-214` and `packages/foundation/modeling/schema/src/internal/email.ts:36-39`.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 319,
+    "symbol": "VeniceAIConfigInput.apiKey",
+    "smell": "`apiKey: S.optionalKey(S.String.pipe(S.RedactedFromValue))` is converted back to Option in `resolveConfig` with `O.fromUndefinedOr(config.apiKey)` at lines 1311-1314.",
+    "proposedTarget": "`apiKey: S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(SchemaUtils.withNoneDefault)`, then `resolveConfig` can `O.orElse` the already-decoded Option with the environment override. Helper exemplar: `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46-51`.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 286,
+    "symbol": "VeniceAIRequestOptions",
+    "smell": "`accept`, `body`, `formData`, `headers`, `path`, and `query` are `S.optionalKey(...)`, then request construction applies `options.accept ?? defaultAcceptHeader(descriptor)`, `options.headers ?? {}`, default `{}` path params, `P.isUndefined(options.body)`, and `normalizeQuery(...): ... | undefined` across lines 1359-1468.",
+    "proposedTarget": "Default or Option the fields according to role: `headers`, `path`, and possibly `query` should use `SchemaUtils.withKeyDefaults(R.empty())`; payload fields (`body`, `formData`) should use `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` if absence remains meaningful. Keep `accept` descriptor-derived unless a request-profile schema is introduced. Same-PR consumer sweep required for public request option field types.",
+    "confidence": 0.64,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 379,
+    "symbol": "VeniceAIResponse.contentType",
+    "smell": "`contentType` is `S.optionalKey(S.String)` on JSON/Text/Binary response variants (lines 379, 411, 445), while `responseContext` separately extracts `responseContentType(response)` and sparse-spreads it at lines 1485-1490.",
+    "proposedTarget": "Use `S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault)` for response `contentType` fields so response construction passes the Option directly and consumers do not read `undefined`. This matches the response-content-type target already used in driver inventories and the Option/default helper at `SchemaUtils/withConstructorDefaults.ts:46-51`.",
+    "confidence": 0.66,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 547,
+    "symbol": "VeniceAIError",
+    "smell": "`cause`, `method`, `operation`, `path`, and `status` are `S.optionalKey(...)`, and constructors/adapters repeatedly use `R.getSomes`, `O.fromUndefinedOr`, and `=== undefined` checks (lines 589-599, 617-623, 1330-1341, and `VeniceAiLanguageModel.service.ts:65-90`).",
+    "proposedTarget": "Model optional diagnostics as `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` fields, then render/log/adapt through Option combinators. Same-PR consumer sweep required because the language-model adapter reads these fields directly.",
+    "confidence": 0.74,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 512,
+    "symbol": "VeniceAIServerSentEvent.data",
+    "smell": "`data: S.optionalKey(S.Unknown)` represents a parsed SSE event with optional payload as `undefined`; `[DONE]` events are constructed without `data` at line 1690 while data events pass a decoded payload at line 1693.",
+    "proposedTarget": "`data: S.OptionFromOptionalKey(S.Unknown).pipe(SchemaUtils.withNoneDefault)`, then `parseSseData` emits `O.none()` for `[DONE]` and `O.some(decoded)` for data events. This keeps the encoded key optional while making the decoded event explicit about absence.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 6
+  },
+  {
+    "ruleId": "SFV4-null-return",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 1379,
+    "symbol": "normalizeQuery",
+    "smell": "`normalizeQuery(...): Effect.Effect<VeniceAIEncodedQuery | undefined, VeniceAIError>` returns `undefined` when no query is supplied, then `HttpClientRequest.make` receives that undefined as `urlParams`.",
+    "proposedTarget": "Return `Effect.Effect<O.Option<VeniceAIEncodedQuery>, VeniceAIError>` or, if `query` gains an empty-record schema default, return `Effect.Effect<VeniceAIEncodedQuery, VeniceAIError>` and adapt once at the HTTP client boundary. Pair this with the `VeniceAIRequestOptions.query` schema change.",
+    "confidence": 0.66,
+    "mechanization": "assisted",
+    "roiRank": 7
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts",
+    "line": 52,
+    "symbol": "VeniceAiLanguageModelOptions.config",
+    "smell": "`config: S.optionalKey(OpenAiCompatLanguageModelConfig)` is mirrored by the public `model(..., config?: OpenAiCompatLanguageModelConfig | undefined)` helper at line 221.",
+    "proposedTarget": "Model adapter config absence as `S.OptionFromOptionalKey(OpenAiCompatLanguageModelConfig).pipe(SchemaUtils.withNoneDefault)` and choose the empty config once when constructing the OpenAI-compatible model layer. This should move with the sibling `@beep/openai-compat` config-field fix.",
+    "confidence": 0.62,
+    "mechanization": "assisted",
+    "roiRank": 8
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 1406,
+    "symbol": "addRequestHeaders",
+    "smell": "`HttpClientRequest.accept(options.accept ?? defaultAcceptHeader(descriptor))` is a nullish default over a request option.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "The Accept default is derived from the OpenAPI operation descriptor's response content types, so it cannot live on the request-options schema without descriptor/context access.",
+      "boundary": "descriptor-derived service default"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 1503,
+    "symbol": "contentMediaType",
+    "smell": "`contentMediaType` splits an HTTP Content-Type header, defaults a missing first segment to `\"\"`, then trims/lowercases it.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "This is HTTP response-header classification used to route JSON/text/binary/SSE decoding, not normalization of a domain field.",
+      "boundary": "HTTP response Content-Type parser"
+    }
+  },
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 1600,
+    "symbol": "dataLine",
+    "smell": "`dataLine` trims `data:` payload lines and `sseBlockData` trims joined SSE blocks before empty checks.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 11,
+    "exception": {
+      "reason": "SSE framing requires line/block parsing before JSON decoding; the trim belongs to the stream protocol parser, not to a package schema field.",
+      "boundary": "server-sent event protocol parser"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts",
+    "line": 73,
+    "symbol": "networkTransportError",
+    "smell": "`hash: undefined`, `method: error.method ?? \"POST\"`, and `url: error.path ?? \"/\"` build fallback request metadata for Effect AI network errors.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 12,
+    "exception": {
+      "reason": "This object is shaped for Effect AI's `AiError.NetworkError` request metadata contract; it is an adapter fallback from Venice diagnostics into a third-party error type.",
+      "boundary": "effect/unstable/ai NetworkError adapter boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/venice-ai/src/VeniceAI.service.ts",
+    "line": 702,
+    "symbol": "ChatCompletionMessageResponse.content",
+    "smell": "`content: S.NullOr(S.String)` preserves nullable chat message content and `extractChatText` converts it through `O.fromNullishOr` at line 1747.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 13,
+    "exception": {
+      "reason": "This is the provider JSON wire shape for OpenAI-compatible chat completion responses; null content is part of the external contract and is converted at the adapter boundary.",
+      "boundary": "third-party OpenAI-compatible chat response wire contract"
+    }
+  }
+]

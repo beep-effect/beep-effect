@@ -1,0 +1,47 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/colors/src/Colors.ts",
+    "line": 82,
+    "symbol": "ProcessLike.platform",
+    "smell": "Broad S.optionalKey(S.String) on a field compared against the literal \"win32\" (Colors.ts:211); Node's process.platform is a closed literal set, so S.Literals (verified .repos/effect-v4/packages/effect/src/Schema.ts:4801) would be more precise.",
+    "proposedTarget": "Keep as-is. Tightening to a platform literal union would make decodeUnknownOption(ProcessLike) fail for any unlisted runtime platform and fall back to ProcessLike.make({}) (Colors.ts:90-95), silently disabling color detection — a behavior regression, not a crispening.",
+    "confidence": 0.4,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Intentionally loose mirror of a third-party runtime value; whole-object decode failure on an unlisted platform would regress color detection to always-off.",
+      "boundary": "Node/Bun/Deno global process object (runtime intake at src/Colors.ts:90-95)"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/colors/src/Colors.ts",
+    "line": 80,
+    "symbol": "ProcessLike.argv",
+    "smell": "Unbounded S.Array of broad S.String on a domain-relevant field (scanned for \"--no-color\" at Colors.ts:98).",
+    "proposedTarget": "Keep as-is. argv mirrors process.argv, an arbitrary user-controlled third-party array; any element constraint (non-empty, pattern) could fail the whole ProcessLike decode and disable detection via the ProcessLike.make({}) fallback.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Third-party boundary mirror of process.argv; precision is intentionally loose because decode failure collapses the entire object to the empty fallback.",
+      "boundary": "Node/Bun/Deno global process object (runtime intake at src/Colors.ts:90-95)"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/colors/src/Colors.ts",
+    "line": 81,
+    "symbol": "ProcessLike.env",
+    "smell": "Broad S.Record(S.String, S.UndefinedOr(S.String)) on a domain-relevant field (NO_COLOR / FORCE_COLOR / TERM / CI consulted in supportsColor).",
+    "proposedTarget": "Keep as-is. env mirrors process.env, an open user-controlled dictionary; the consulted keys are optional presence checks and modeling them as named optional fields would reject or drop arbitrary unrelated env vars at the decode boundary.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Third-party boundary mirror of process.env; the open string dictionary is the correct shape for an environment block consumed via presence checks.",
+      "boundary": "Node/Bun/Deno global process object (runtime intake at src/Colors.ts:90-95)"
+    }
+  }
+]

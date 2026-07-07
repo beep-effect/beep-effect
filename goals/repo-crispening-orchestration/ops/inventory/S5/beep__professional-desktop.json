@@ -1,0 +1,87 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
+    "line": 78,
+    "symbol": "SidecarClosedPayload.kind",
+    "smell": "`SidecarClosedPayload.kind` is broad S.String, but the Rust producer emits a closed lifecycle reason family: `error`, `terminated`, and `event-stream-closed` in apps/professional-desktop/src-tauri/src/lib.rs:158, :264, :304, and :321.",
+    "proposedTarget": "Introduce `SidecarClosedKind = LiteralKit([\"error\", \"terminated\", \"event-stream-closed\"]).pipe($I.annoteSchema(...))` and use it for the payload field. `LiteralKit([...])` overloads were verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:743-751; this preserves the producer's finite vocabulary and enables derived guards/matchers if needed.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
+    "line": 78,
+    "symbol": "SidecarClosedPayload.code/signal",
+    "smell": "`code` and `signal` decode nullable lifecycle numbers with S.OptionFromNullOr(S.Finite), while the Tauri/Rust producer serializes both fields as Option<i32>; the schema accepts decimal finite numbers that the producer cannot emit.",
+    "proposedTarget": "Tighten to `S.OptionFromNullOr(S.Int)` at minimum, or use `S.OptionFromNullOr(NonNegativeInt)` / `S.Int.check(S.isBetween({ minimum: 0, maximum: 255 }))` for process exit codes if the remediation confirms platform semantics. `S.Int` and `S.isBetween` were verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7401; `NonNegativeInt` is available at packages/foundation/modeling/schema/src/Number.ts:182.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
+    "line": 78,
+    "symbol": "SidecarClosedPayload.message/SidecarClosedError.message/SidecarSendError.message",
+    "smell": "Sidecar lifecycle and socket error message fields are broad S.String even though every constructed message is non-empty error/log text and `sidecarClosedMessage` filters empty payload messages back to synthesized text.",
+    "proposedTarget": "Use `S.OptionFromNullOr(S.NonEmptyString)` for `SidecarClosedPayload.message` and `S.NonEmptyString` for tagged error message fields. `S.NonEmptyString` was verified at .repos/effect-v4/packages/effect/src/Schema.ts:8420.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "apps/professional-desktop/src/transport/TauriIpcSocket.ts",
+    "line": 78,
+    "symbol": "SidecarClosedPayload/InboundEvent/SidecarTransport runtime boundary schemas",
+    "smell": "The package decodes several app-local transport boundary schemas but only has a schema-derived arbitrary law for imported `TurnHistoryItem`; no S.toArbitrary-derived law covers the local Tauri sidecar payload/event/probe schemas.",
+    "proposedTarget": "Add an additive property test for local boundary schemas using the existing helper `assertSchemaArbitraryDecodesToSelf` from @beep/test-utils (definition packages/tooling/test-kit/test-utils/src/Schema.ts:30-42), for example `assertSchemaArbitraryDecodesToSelf(SidecarClosedPayload)` once the schema is exported or tested through a local test-only export. `S.toArbitrary` was verified at .repos/effect-v4/packages/effect/src/Schema.ts:12970.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "apps/professional-desktop/src/runtime/Migrations.ts",
+    "line": 205,
+    "symbol": "ProfessionalDesktopMigrationOptions.migrationsSchema",
+    "smell": "`migrationsSchema` is an optional broad S.String even though it is passed as a Drizzle/Postgres migration journal schema name; empty strings or invalid identifier-like values can reach the migration driver.",
+    "proposedTarget": "Extract an annotated `PostgresSchemaName = S.NonEmptyString.check(S.isPattern(/^[A-Za-z_][A-Za-z0-9_]*$/))` for this option, or promote a shared schema if other Postgres packages need it. `S.NonEmptyString` and `S.isPattern` were verified at .repos/effect-v4/packages/effect/src/Schema.ts:8420 and :6521.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "apps/professional-desktop/src/runtime/Migrations.ts",
+    "line": 22,
+    "symbol": "MigrationFile.name/sql",
+    "smell": "Detector candidate: `MigrationFile` models generated migration names and SQL bodies as broad S.String.",
+    "proposedTarget": "None — keep as generated-bundle carrier in this S5 pass.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The migration bundle content is a generated static artifact (`<generated:migration-bundle>`), and migration SQL is an opaque driver payload owned by the db-admin generation flow rather than an app-domain string to re-model by hand.",
+      "boundary": "generated runtime migration bundle"
+    }
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "apps/professional-desktop/test/chat-contract.test.ts",
+    "line": 60,
+    "symbol": "fixtureBlocksFor chat contract fixtures",
+    "smell": "Detector candidate: the contract and integration tests assert deterministic fixture blocks, persisted role order, wire history literals, and sidecar IPC smoke behavior with static expected values.",
+    "proposedTarget": "None — keep these fixtures; the imported schema-domain law for `TurnHistoryItem` is already covered at apps/professional-desktop/test/chat-contract.test.ts:332-333.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These are regression/compatibility fixtures for orchestration ordering, persistence semantics, and OS-pipe IPC behavior. S.toArbitrary laws are additive for schema domains and should not replace these deterministic protocol proofs.",
+      "boundary": "desktop chat orchestration and sidecar IPC regression tests"
+    }
+  }
+]

@@ -1,0 +1,43 @@
+[
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/tika/src/Tika.errors.ts",
+    "line": 89,
+    "symbol": "TikaError.fromReason / makeTikaError",
+    "smell": "Exported/static error constructors accept an inline options object (`{ cause?: string; statusCode?: NonNegativeInt }`) that duplicates optional fields on the `TikaError` tagged schema.",
+    "proposedTarget": "Promote the options bag to `TikaErrorOptions extends S.Class` beside `TikaError`, mirroring `GovinfoErrorOptions` at `packages/drivers/govinfo/src/Govinfo.errors.ts:70`; change `fromReason` and `makeTikaError` to accept `TikaErrorOptions = TikaErrorOptions.make({})` while preserving the public fields.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.62
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/drivers/tika/src/Tika.tikaapp.ts",
+    "line": 102,
+    "symbol": "decodeTikaJsonRows",
+    "smell": "Module-level `S.decodeUnknownEffect(S.fromJsonString(S.Array(S.Record(S.String, S.Unknown))))` can look like a decode-helper-wall hit.",
+    "proposedTarget": "None -- keep this boundary codec for tika-app `-J` stdout JSON. Effect v4 `S.decodeUnknownEffect` and `S.fromJsonString` were verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325` and `:10983`.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0.06,
+    "exception": {
+      "reason": "The helper is the single schema-derived decode boundary for subprocess stdout JSON; it does not duplicate validation outside Schema.",
+      "boundary": "tika-app stdout JSON boundary codec"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/drivers/tika/src/Tika.tikaapp.ts",
+    "line": 145,
+    "symbol": "makeTikaAppFileProcessingEngine",
+    "smell": "Exported Effect.fn in a schema-modeled file can look like an SFV4-fn-schema hit because it accepts `TikaAppEngineConfig` and returns a runtime engine object.",
+    "proposedTarget": "None -- a hypothetical `Fn({ input: TikaAppEngineConfig, output: FileProcessingEngineShape })` wrapper was audited and rejected.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This constructor captures ChildProcessSpawner and returns a file-processing engine port. The input config is schema-backed; the output is runtime service wiring, not data.",
+      "boundary": "subprocess file-processing engine factory"
+    }
+  }
+]

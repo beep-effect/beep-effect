@@ -158,7 +158,7 @@ export class YouTubeNode extends DecoratorBlockNode {
  * @category constructors
  * @since 0.0.0
  */
-export const $createYouTubeNode = (videoID: string): YouTubeNode => new YouTubeNode(videoID);
+export const $createYouTubeNode = (videoID: SerializedYouTubeNode["videoID"]): YouTubeNode => new YouTubeNode(videoID);
 
 /**
  * Type guard for {@link YouTubeNode}.

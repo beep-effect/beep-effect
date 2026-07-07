@@ -1,0 +1,35 @@
+[
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.commands.ts",
+    "line": 97,
+    "symbol": "ListWorkersQuery.status",
+    "smell": "`S.OptionFromOptionalKey(DomainWorker.WorkerStatus).pipe(S.withConstructorDefault(Effect.succeed(O.none<DomainWorker.WorkerStatus>())))` hand-rolls an Option absence default.",
+    "proposedTarget": "Use `SchemaUtils.withNoneDefault` on the Option field. Verified helper: packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46-51; in-repo exemplar: packages/foundation/modeling/lexical/src/Lexical.model.ts:686-688.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.commands.ts",
+    "line": 45,
+    "symbol": "CreateWorkItemCommand.priority",
+    "smell": "`S.OptionFromOptionalKey(DomainWorkPriority.WorkPriority).pipe(S.withConstructorDefault(Effect.succeed(O.none<DomainWorkPriority.WorkPriority>())))` duplicates the repo's Option-default helper.",
+    "proposedTarget": "Use `SchemaUtils.withNoneDefault` on the Option field. Verified helper: packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46-51; in-repo exemplar: packages/foundation/modeling/lexical/src/Lexical.model.ts:686-688.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.commands.ts",
+    "line": 221,
+    "symbol": "ListWorkItemsQuery.status",
+    "smell": "`S.OptionFromOptionalKey(DomainWorkItem.WorkItemStatus).pipe(S.withConstructorDefault(Effect.succeed(O.none<DomainWorkItem.WorkItemStatus>())))` duplicates the repo's Option-default helper.",
+    "proposedTarget": "Use `SchemaUtils.withNoneDefault` on the Option field. Verified helper: packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46-51; in-repo exemplar: packages/foundation/modeling/lexical/src/Lexical.model.ts:686-688.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 3
+  }
+]

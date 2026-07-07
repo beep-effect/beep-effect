@@ -1,0 +1,69 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/phoenix/src/Phoenix.errors.ts",
+    "line": 58,
+    "symbol": "isPhoenixOperation",
+    "smell": "Free-floating guard `const isPhoenixOperation = S.is(PhoenixOperation)` duplicates the LiteralKit-derived `.is` static; `PhoenixError.operation` only needs it for the `dual` discriminator at line 160.",
+    "proposedTarget": "Delete the helper and use `PhoenixOperation.is(args[0])` in the `dual` predicate. This is valid in this checkout because `$I.annoteSchema` preserves source statics via `preserveSchemaStatics` at packages/foundation/modeling/identity/src/Id.ts:70 and line 1386.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/phoenix/src/Phoenix.models.ts",
+    "line": 137,
+    "symbol": "PhoenixAnnotationValue",
+    "smell": "Public union const `S.Union([S.Boolean, S.Finite, S.String]).pipe($I.annoteSchema(...))` has no colocated codec statics, so future guards/decoders for annotation values would have to be rebuilt as free helpers.",
+    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after `$I.annoteSchema(...)`, matching the union precedent in packages/foundation/modeling/md/src/Md.model.ts:608 and line 1612. The helper attaches `is`, `fromUnknown`, and `decodeOption` at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/phoenix/src/Phoenix.models.ts",
+    "line": 29,
+    "symbol": "Phoenix LiteralKit domains",
+    "smell": "Detector hit: multiple `LiteralKit(...).pipe($I.annoteSchema(...))` declarations can look like the statics-lost pattern.",
+    "proposedTarget": "None -- leave as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 3,
+    "exception": {
+      "reason": "`$I.annoteSchema` preserves non-protocol statics from the source schema in this checkout, and downstream code uses preserved `.Enum` statics at Phoenix.models.ts:542, Phoenix.models.ts:546, and Phoenix.models.ts:725.",
+      "boundary": "False-positive audit for annotated LiteralKit domains; no `withLiteralKitStatics` repair needed unless a later transform drops statics."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
+    "line": 81,
+    "symbol": "PhoenixSdkShape",
+    "smell": "Detector hit: exported SDK adapter shape is a bag of function members and can look like detached behavior or public non-dual helpers.",
+    "proposedTarget": "None -- leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 4,
+    "exception": {
+      "reason": "This is a port/service contract over the promise-returning Phoenix SDK adapter; S4 explicitly excludes service-shape interfaces from schema/statics and dual/flow rewrites.",
+      "boundary": "Service-contract/interface carve-out for `PhoenixSdkShape`."
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/phoenix/src/Phoenix.service.ts",
+    "line": 109,
+    "symbol": "PhoenixShape",
+    "smell": "Detector hit: exported Effect service shape contains operation functions and can look like a public-helper surface.",
+    "proposedTarget": "None -- leave as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "This is the public Context.Service contract for Phoenix operations and must remain an explicit interface.",
+      "boundary": "Service-contract/interface carve-out for `PhoenixShape`."
+    }
+  }
+]

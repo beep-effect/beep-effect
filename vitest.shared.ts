@@ -12,7 +12,7 @@ type AliasEntry = {
 
 const projectRootDirectory = new URL("./", import.meta.url);
 const rootTsconfigPath = new URL("./tsconfig.json", import.meta.url).pathname;
-const coverageProvider = process.versions.bun !== undefined ? "istanbul" : "v8";
+const coverageProvider = "v8";
 const configStringOptionSync = (name: string): O.Option<string> => Effect.runSync(Config.option(Config.string(name)));
 const configStringEqualsSync = (name: string, expected: string): boolean =>
   pipe(
@@ -20,19 +20,17 @@ const configStringEqualsSync = (name: string, expected: string): boolean =>
     O.exists((value) => value === expected)
   );
 export const vitestCoverageReportOnly = configStringEqualsSync("VITEST_COVERAGE_REPORT_ONLY", "1");
-const coverageThresholds = vitestCoverageReportOnly
-  ? {
-      branches: 0,
-      functions: 0,
-      lines: 0,
-      statements: 0,
-    }
-  : {
-      branches: 80,
-      functions: 60,
-      lines: 30,
-      statements: 30,
-    };
+// Env flags do not survive every spawn chain (root script -> turbo ->
+// package script -> vitest); the vitest process's own argv is authoritative.
+const vitestCoverageRunActive =
+  vitestCoverageReportOnly ||
+  configStringEqualsSync("VITEST_COVERAGE_RATCHET", "1") ||
+  process.argv.includes("--coverage");
+// Fixed global coverage floors are retired (quality-gate-ratchets, 2026-07-06):
+// the committed per-package baseline compare (standards/coverage.regression-baseline.jsonc,
+// fail-on-drop) is the sole coverage judge. Package-local floors (e.g.
+// workspace/tables' 100% proof contract) remain package decisions.
+const coverageThresholds = undefined;
 
 const escapeRegExp = Str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
@@ -108,7 +106,14 @@ const config: ViteUserConfig = {
     // even though they finish in well under a second in isolation. Use a
     // generous global cap; a genuine hang still fails well within each lane's
     // job timeout, and packages may still override per-test where needed.
-    testTimeout: 30_000,
+    // Coverage instrumentation (v8 under node) slows heavy schema decodes
+    // 10x+ on small CI runners; instrumented runs get generous timeouts —
+    // the coverage ratchet judges coverage, not latency.
+    testTimeout: vitestCoverageRunActive ? 180_000 : 30_000,
+    hookTimeout: vitestCoverageRunActive ? 180_000 : 10_000,
+    // Baseline generation/regeneration must tolerate test-less packages;
+    // the ratchet compare, not vitest, decides coverage outcomes.
+    passWithNoTests: vitestCoverageRunActive,
     exclude: ["**/.context/**", "**/node_modules/**"],
     setupFiles: [new URL("./vitest.setup.ts", import.meta.url).pathname],
     fakeTimers: {
@@ -120,6 +125,7 @@ const config: ViteUserConfig = {
     include: ["test/**/*.test.{ts,tsx}"],
     coverage: {
       provider: coverageProvider,
+      include: ["src/**/*.{ts,tsx}"],
       reporter: ["text", "html", "lcov", "json-summary"],
       reportsDirectory: "coverage",
       exclude: [
@@ -137,7 +143,7 @@ const config: ViteUserConfig = {
         "**/vitest.setup.*",
         "**/vitest.shared.*",
       ],
-      thresholds: coverageThresholds,
+      ...(P.isUndefined(coverageThresholds) ? {} : { thresholds: coverageThresholds }),
     },
   },
 };

@@ -6,7 +6,7 @@
  */
 import { $SchemaId } from "@beep/identity";
 import { O } from "@beep/utils";
-import { Brand, pipe, Result } from "effect";
+import { Brand } from "effect";
 import * as S from "effect/Schema";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 import { NonEmptyTrimmedStr } from "./String.ts";
@@ -14,11 +14,7 @@ import { NonEmptyTrimmedStr } from "./String.ts";
 const $I = $SchemaId.create("URL");
 
 const isURLStr = (u: unknown): u is URLStr =>
-  S.is(NonEmptyTrimmedStr)(u) &&
-  pipe(
-    Result.try(() => new URL(u)),
-    Result.isSuccess
-  );
+  S.is(NonEmptyTrimmedStr)(u) && O.isSome(S.decodeUnknownOption(S.URLFromString)(u));
 
 const filterURLStr = S.makeFilter(isURLStr, {
   message: "URL must be a valid URL encoded string",

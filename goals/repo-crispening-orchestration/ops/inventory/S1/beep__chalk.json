@@ -1,0 +1,167 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/chalk/src/internal/AnsiStyles.ts",
+    "line": 335,
+    "symbol": "hexToRgb",
+    "smell": "Hand-rolled hex-color parsing (parseHexMatch regex at :264 + canonicalizeHex:273 + toRgbTuple bit-shifts:275) where a schema codec is a direct fit; invalid input silently falls back to [0, 0, 0] for upstream-chalk parity. No existing hex codec in @beep/colors to reuse (verified: zero hex matches in packages/foundation/capability/colors/src).",
+    "proposedTarget": "Branded HexColorString schema (3-or-6-hex-digit check) with an S.decodeTo transform to an RgbTuple (S.Tuple of range-checked channels); decode via S.decodeUnknownOption + O.getOrElse(() => [0,0,0]) to keep the silent-fallback behavior byte-identical (section 5.3 parity).",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "Malformed hex input deliberately falls back to black for upstream chalk API compatibility; a validating HexColor schema would either reject public hex()/bgHex() inputs or hide that compatibility policy in a boundary transform. Deferred to a dedicated chalk color-argument codec sweep.",
+      "boundary": "public chalk-compatible hex/bgHex color argument behavior"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/chalk/src/internal/SupportsColor.ts",
+    "line": 275,
+    "symbol": "envForceColor",
+    "smell": "Hand-rolled FORCE_COLOR env parsing: literalForceColorLevel matcher (:185) + forceColorIntegerPattern regex (:183) + Number.parseInt + normalizeParsedForceColorLevel clamp (:173) where a String-to-ColorSupportLevel schema codec is a direct fit; the clamp normalization living outside a codec also overlaps S2 (SFV4-normalization).",
+    "proposedTarget": "A ColorSupportLevelFromForceColorString transform codec colocated with ColorSupportLevel in ChalkSchema.ts, decoded with S.decodeUnknownOption to keep the O.Option result and chalk-compatible clamping semantics.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 5,
+    "exception": {
+      "reason": "FORCE_COLOR parsing is a third-party environment heuristic with chalk-compatible literal, empty-string, integer, and clamp semantics. A true codec belongs in a focused supports-color boundary redesign so the public ColorSupportLevel schema is not overloaded with env-only parsing policy.",
+      "boundary": "Node.js environment compatibility heuristic"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/chalk/src/Chalk.ts",
+    "line": 87,
+    "symbol": "ChalkInstance",
+    "smell": "Exported interface with a call signature extending ChalkInstanceSurface — candidate hit for the exported-interface detector.",
+    "proposedTarget": "None — keep as interface.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Recursive callable fluent-builder surface: a call signature plus this-returning style properties is not schema-representable, and Fn from @beep/schema requires a schema output (verified Fn.schema.ts:558-660). Fence 1 service/port-surface carve-out.",
+      "boundary": "Public chalk-compatible builder API surface of @beep/chalk"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/chalk/src/Chalk.browser.ts",
+    "line": 69,
+    "symbol": "ChalkInstance",
+    "smell": "Exported interface with a call signature extending ChalkInstanceSurface (browser twin of Chalk.ts:87) — candidate hit for the exported-interface detector.",
+    "proposedTarget": "None — keep as interface.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Same recursive callable fluent-builder surface as Chalk.ts:87; fence 1 port-surface carve-out.",
+      "boundary": "Public chalk-compatible builder API surface of @beep/chalk (browser entry)"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/chalk/src/internal/PublicSurface.ts",
+    "line": 82,
+    "symbol": "ChalkInstanceSurface",
+    "smell": "Exported declare abstract class describing the full styling property/method surface — interface-like candidate for the schema-first detectors.",
+    "proposedTarget": "None — keep as declared type-only surface.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Fluent-builder port surface built on `this`-polymorphic properties (every style getter returns `this`); schemas cannot express this-typed chaining. Fence 1 carve-out; the data invariants it references (level: ColorSupportLevel) are already schema-typed.",
+      "boundary": "Type-level contract between internal ChalkRuntime proxy builders and the public API"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/chalk/src/internal/PublicSurface.ts",
+    "line": 188,
+    "symbol": "ChalkConstructorBase",
+    "smell": "Exported type alias `new () => object` — candidate hit for the exported-type-alias detector.",
+    "proposedTarget": "None — keep as type alias.",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Type-level constructor utility used to parameterize makeChalkConstructor's Proxy wiring; not a data payload. Type-level-utility carve-out per the S1 brief.",
+      "boundary": "Internal constructor-wiring generics of PublicSurface.ts"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/chalk/src/internal/PublicSurface.ts",
+    "line": 208,
+    "symbol": "ChalkCreator",
+    "smell": "Exported function type alias `(options?: ChalkConstructorOptions) => object` in a schema-modeled file — the classic Fn-schema candidate shape.",
+    "proposedTarget": "None — Fn({ input, output }) is not a fit.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Factory port contract whose output is an opaque callable builder proxy with no schema representation; Fn from @beep/schema requires an S.Top output schema (verified Fn.schema.ts:558-660). The input side is already schema-carried (ChalkConstructorOptions = S.Class Encoded).",
+      "boundary": "Internal wiring between ChalkRuntime.makeCreateChalk factories and makeChalkConstructor"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/chalk/src/internal/PublicSurface.ts",
+    "line": 225,
+    "symbol": "makeChalkConstructor",
+    "smell": "Exported dual function in a schema-modeled file — candidate hit for SFV4-fn-schema.",
+    "proposedTarget": "None — keep as dual generic utility.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Generic + overload surface (dual 2-arity) wiring a Proxy constructor around a class base; parameters are a constructor and a creator function, not data. Matches the detector's deliberate generic-skip escape hatch and the overload-surface carve-out.",
+      "boundary": "Constructor plumbing for the public Chalk/ChalkStderr classes"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/chalk/src/internal/ChalkRuntime.ts",
+    "line": 353,
+    "symbol": "makeCreateChalk",
+    "smell": "Exported factory in a schema-modeled file returning `(options?: ChalkConstructorOptions) => ChalkFunction` — function-typed return candidate for SFV4-fn-schema.",
+    "proposedTarget": "None — contract already schema-carried.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Both parameters are schema-typed (ColorInfo union schema, ChalkConstructorOptions S.Class Encoded) and level normalization goes through S.decodeUnknownResult of ColorSupportLevelInput/ColorSupportLevel; the return is a factory of callable builder proxies, which has no schema-representable output for Fn.",
+      "boundary": "Internal builder-runtime factory consumed by Chalk.ts / Chalk.browser.ts entrypoints"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/chalk/src/Chalk.ts",
+    "line": 118,
+    "symbol": "Chalk",
+    "smell": "Exported type alias to the declaration-merged runtime class ChalkValue — candidate hit for the exported-type-alias detector.",
+    "proposedTarget": "None — keep the class/interface merge.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Alias of a declaration-merged runtime class implementing the callable builder surface (new Chalk() via Proxy construct trap); not a data payload. Constructor input is validated by the ChalkConstructorOptions schema at the boundary.",
+      "boundary": "Public chalk-compatible class API"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/chalk/src/Chalk.browser.ts",
+    "line": 83,
+    "symbol": "Chalk",
+    "smell": "Exported type alias to the declaration-merged runtime class ChalkValue (browser twin of Chalk.ts:118).",
+    "proposedTarget": "None — keep the class/interface merge.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Same declaration-merged runtime class alias as Chalk.ts:118; not a data payload.",
+      "boundary": "Public chalk-compatible class API (browser entry)"
+    }
+  }
+]

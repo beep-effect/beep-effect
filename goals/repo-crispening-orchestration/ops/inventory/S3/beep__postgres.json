@@ -1,0 +1,43 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/postgres/src/PostgresSqlState.models.ts",
+    "line": 31,
+    "symbol": "PostgresErrorCodeByName / PgErrorCodeValues / PgErrorNameValues",
+    "smell": "The SQLSTATE literal family is maintained in parallel: PostgresErrorCodeByName starts at line 31, PgErrorCodeValues starts at line 300, PgErrorNameValues starts at line 563, pgErrorEntries recovers entries with a double cast at line 878, and PgErrorAliasesByCode / PgErrorCanonicalNameByCode repeat the same source table at lines 896 and 1178. The package already has LiteralKit schemas at lines 1461 and 1483, but the kit inputs are not the single source of truth.",
+    "proposedTarget": "Collapse to one canonical non-empty SQLSTATE entry table and derive the maps, aliases, canonical-name lookup, and LiteralKit inputs from it. In-repo derivation exemplars: CurrencyCode derives a LiteralKit from Struct.keysNonEmpty at packages/foundation/modeling/schema/src/CurrencyCode.ts:43, ContinentCode uses Struct.keysNonEmpty plus MappedLiteralKit when the map is reversible at packages/foundation/modeling/schema/src/ContinentCode.ts:31 and :111. MappedLiteralKit is not the direct fit for SQLSTATE name->code because duplicate codes exist; its duplicate-target guard is verified at packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts:84-103.",
+    "confidence": 0.58,
+    "mechanization": "judgment",
+    "roiRank": 1.74
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/postgres/src/Postgres.errors.ts",
+    "line": 239,
+    "symbol": "extractDrizzleQueryContext",
+    "smell": "False-positive-audited discriminator candidate: extractDrizzleQueryContext reads an unknown external `_tag` and checks for \"EffectDrizzleQueryError\" at lines 239-240.",
+    "proposedTarget": "None -- keep as-is. This is a defensive boundary read of Drizzle's external error object, not a package-owned tagged union with schema-derived .match/.guards.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "External Drizzle error normalization deliberately reads an unknown `_tag` after object/seen-cycle checks; there is no in-repo schema or LiteralKit source to dispatch from.",
+      "boundary": "Postgres driver boundary for drizzle-orm/effect-postgres query failures"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/postgres/src/PostgresDrizzle.service.ts",
+    "line": 105,
+    "symbol": "makeDrizzle / getDrizzleSession / runPgEffectMigrations",
+    "smell": "False-positive-audited `as` candidates: makeDrizzle defaults and retypes Drizzle's database at lines 105 and 108, getDrizzleSession peeks at an unexported session field via a double cast at line 155, and runPgEffectMigrations adapts the RC-shaped migrator signature at line 165.",
+    "proposedTarget": "None -- keep as-is for S3. The casts are compatibility shims around external Drizzle Effect APIs, and the file documents the RC-shaped migrator/session surface at lines 157-158.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These casts bridge external Drizzle generic/session types; they are not failed narrowing over a package-owned discriminated union or literal family.",
+      "boundary": "Drizzle Effect Postgres interop surface"
+    }
+  }
+]

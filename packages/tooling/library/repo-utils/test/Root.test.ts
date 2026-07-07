@@ -45,9 +45,9 @@ layer(NodeFileSystem.layer)("Root", (it) => {
           exists: () => Effect.succeed(false),
         });
 
-        const result = yield* findRepoRoot("/marker-free/deep/nested/dir").pipe(
-          Effect.provideService(Fs.FileSystem, markerFreeFileSystem),
-          Effect.catchTag("NoSuchFileError", (e) => Effect.succeed(`caught: ${e._tag}`))
+        const result = yield* findRepoRoot("/beep-repo-utils-root/deep/nested/dir").pipe(
+          Effect.catchTag("NoSuchFileError", (e) => Effect.succeed(`caught: ${e._tag}`)),
+          Effect.provideService(Fs.FileSystem, markerFreeFileSystem)
         );
         expect(result).toBe("caught: NoSuchFileError");
       })

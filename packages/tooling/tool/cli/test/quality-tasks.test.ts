@@ -1,6 +1,11 @@
 import { fallowCiUploadDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command";
 import {
+  CoveragePackageBaseline,
+  CoverageRegressionBaseline,
   collectEffectTsgoDiagnosticLines,
+  compareCoverageRegressionSnapshotsForTesting,
+  compareJSDocTotalsForTesting,
+  compareKnipFindingsForTesting,
   detectQualityProfileForTesting,
   devQualityStepsForTesting,
   FallowReportFinding,
@@ -11,7 +16,9 @@ import {
   githubCheckPromotedFallowLaneDiagnosticsForTesting,
   githubCheckQualityLanesForTesting,
   githubCheckRepoSanityLanesForTesting,
+  KnipFinding,
   lintFixChangedStepForTesting,
+  normalizeKnipReportForTesting,
   parseQualityTaskInvocation,
   promotedFallowGithubCheckLaneIdsForTesting,
   QualityTaskFailed,
@@ -54,6 +61,24 @@ const decodeGithubChecksFallowFeatureMatrixJsoncForTesting = decodeJsoncTextAs(G
 const isQualityTaskFailed = S.is(QualityTaskFailed);
 const isQualityTaskGroupFailed = S.is(QualityTaskGroupFailed);
 const isString = (value: unknown): value is string => typeof value === "string";
+const coveragePackageBaseline = (path: string, metric = 50): CoveragePackageBaseline =>
+  CoveragePackageBaseline.make({
+    path,
+    lines: metric,
+    statements: metric,
+    branches: metric,
+    functions: metric,
+  });
+const coverageRegressionBaseline = CoverageRegressionBaseline.make({
+  schema_version: 1,
+  generated_at: "2026-07-06T00:00:00.000Z",
+  git_sha: "test-sha",
+  command: "bun run coverage:baseline:write",
+  epsilon: 0.001,
+  packages: {
+    "@beep/existing": coveragePackageBaseline("packages/existing"),
+  },
+});
 
 const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>
   Effect.scoped(
@@ -221,6 +246,11 @@ describe("quality task adapter", () => {
       fix: false,
       args: ["packages", "--filter=@beep/schema"],
     });
+    expect(getInvocation(["coverage", "--affected"])).toMatchObject({
+      task: "coverage",
+      fix: false,
+      args: ["--affected"],
+    });
   });
 
   it("builds package-only audit steps by default and keeps turbo filters", () =>
@@ -369,6 +399,8 @@ describe("quality task adapter", () => {
     expect(A.map(lanes, (lane) => lane.id)).toEqual([
       "quality:build",
       "quality:check",
+      "quality:knip",
+      "quality:jsdoc-ratchet",
       "quality:lint",
       "quality:docgen",
       "quality:test",
@@ -376,8 +408,10 @@ describe("quality task adapter", () => {
     expect(A.every(lanes, (lane) => lane.stage === "repo-quality")).toBe(true);
     expect(A.every(lanes, (lane) => lane.blockedBy.length === 0)).toBe(true);
     expect(lanes[1]?.step.args).toEqual(["run", "check"]);
-    expect(lanes[2]?.step.args).toEqual(["run", "lint"]);
-    expect(lanes[4]?.step.args).toEqual(["run", "test"]);
+    expect(lanes[2]?.step.args).toEqual(["run", "beep", "quality", "knip"]);
+    expect(lanes[3]?.step.args).toEqual(["run", "beep", "quality", "jsdoc-ratchet"]);
+    expect(lanes[4]?.step.args).toEqual(["run", "lint"]);
+    expect(lanes[6]?.step.args).toEqual(["run", "test"]);
   });
 
   it("maps repo-sanity github checks as collector lanes", () => {
@@ -641,6 +675,101 @@ describe("quality task adapter", () => {
     expect(diagnostics).toEqual(["src/example.test.ts:1:1 - warning TS90001: unsafe effect(service) usage"]);
   });
 
+  it("normalizes Knip findings with stable ordering and without position fields", () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const findings = yield* normalizeKnipReportForTesting(
+          encodeJson({
+            issues: [
+              {
+                file: "b.ts",
+                exports: [{ name: "Beta", line: 5, col: 14, pos: 100 }],
+              },
+              {
+                file: "a.ts",
+                dependencies: [{ name: "left-pad", line: 10, col: 6, pos: 220 }],
+                files: [{ name: "a.ts" }],
+              },
+            ],
+          })
+        );
+
+        expect(findings).toEqual([
+          KnipFinding.make({ kind: "dependencies", file: "a.ts", name: "left-pad" }),
+          KnipFinding.make({ kind: "exports", file: "b.ts", name: "Beta" }),
+          KnipFinding.make({ kind: "files", file: "a.ts", name: "a.ts" }),
+        ]);
+      })
+    ));
+
+  it("compares Knip findings as fail-on-growth and advisory shrinkage", () => {
+    const inherited = KnipFinding.make({ kind: "exports", file: "src/a.ts", name: "legacy" });
+    const removed = KnipFinding.make({ kind: "dependencies", file: "package.json", name: "unused-lib" });
+    const introduced = KnipFinding.make({ kind: "types", file: "src/b.ts", name: "NewType" });
+
+    expect(compareKnipFindingsForTesting([inherited], [removed, inherited])).toMatchObject({
+      current_count: 1,
+      baseline_count: 2,
+      introduced: [],
+      resolved: [removed],
+    });
+    expect(compareKnipFindingsForTesting([inherited, introduced], [inherited])).toMatchObject({
+      current_count: 2,
+      baseline_count: 1,
+      introduced: [introduced],
+      resolved: [],
+    });
+  });
+
+  it("compares JSDoc totals as fail-on-growth and advisory shrinkage", () => {
+    expect(
+      compareJSDocTotalsForTesting(
+        {
+          missingExportExamples: 10,
+          unsafeExampleFindings: 2,
+        },
+        {
+          missingExportExamples: 12,
+          unsafeExampleFindings: 2,
+        }
+      )
+    ).toMatchObject({
+      increased: [],
+      decreased: [
+        {
+          metric: "missingExportExamples",
+          baseline: 12,
+          current: 10,
+          delta: -2,
+        },
+      ],
+      missing_current_metrics: [],
+    });
+
+    expect(
+      compareJSDocTotalsForTesting(
+        {
+          missingExportExamples: 13,
+        },
+        {
+          missingExportExamples: 12,
+          unsafeExampleFindings: 2,
+        }
+      )
+    ).toMatchObject({
+      increased: [
+        {
+          metric: "missingExportExamples",
+          baseline: 12,
+          current: 13,
+          delta: 1,
+        },
+      ],
+      decreased: [],
+      missing_current_metrics: ["unsafeExampleFindings"],
+    });
+  });
+
   it("skips repo-level tsgo diagnostics only for explicit package filters", () => {
     const steps = rootQualityStepsForTesting("/repo", getInvocation(["check", "--filter=@beep/schema"]));
 
@@ -771,7 +900,7 @@ describe("quality task adapter", () => {
     ]);
   });
 
-  it("runs combined root coverage tasks in report-only mode", () => {
+  it("runs combined root coverage tasks in ratchet mode", () => {
     const passthroughTasks = ["build", "check", "test", "coverage", "audit", "lint", "docgen"] as const;
     const steps = rootQualityStepsForTesting("/repo", getInvocation(["lint", "--fix", ...passthroughTasks]));
 
@@ -780,9 +909,92 @@ describe("quality task adapter", () => {
       command: "bunx",
       args: expectedRootTurboArgs("lint:fix", passthroughTasks),
       env: {
+        VITEST_COVERAGE_RATCHET: "1",
+      },
+    });
+    expect(steps[0]?.env).not.toHaveProperty("VITEST_COVERAGE_REPORT_ONLY");
+  });
+
+  it("runs root coverage as the ratchet gate by default", () => {
+    const steps = rootQualityStepsForTesting("/repo", getInvocation(["coverage"]));
+
+    expect(steps).toHaveLength(1);
+    expect(steps[0]).toMatchObject({
+      label: "coverage:ratchet",
+      command: "bunx",
+      args: expectedRootTurboArgs("coverage", []),
+      env: {
+        VITEST_COVERAGE_RATCHET: "1",
+      },
+    });
+    expect(steps[0]?.env).not.toHaveProperty("VITEST_COVERAGE_REPORT_ONLY");
+  });
+
+  it("keeps report-only coverage reserved for baseline regeneration", () => {
+    const steps = rootQualityStepsForTesting(
+      "/repo",
+      getInvocation(["coverage", "--write-baseline", "--concurrency=1"])
+    );
+
+    expect(steps).toHaveLength(1);
+    expect(steps[0]).toMatchObject({
+      label: "coverage:baseline",
+      command: "bunx",
+      args: expectedTurboArgs("coverage", ["--concurrency=1"]),
+      env: {
+        VITEST_COVERAGE_RATCHET: "1",
         VITEST_COVERAGE_REPORT_ONLY: "1",
       },
     });
+  });
+
+  it("compares coverage snapshots with fail-on-drop and warning-only new package semantics", () => {
+    const result = compareCoverageRegressionSnapshotsForTesting(
+      coverageRegressionBaseline,
+      [
+        {
+          packageName: "@beep/existing",
+          baseline: CoveragePackageBaseline.make({
+            path: "packages/existing",
+            lines: 49.998,
+            statements: 50,
+            branches: 50,
+            functions: 50,
+          }),
+        },
+        {
+          packageName: "@beep/new",
+          baseline: coveragePackageBaseline("packages/new"),
+        },
+      ],
+      false
+    );
+
+    expect(result.comparedCount).toBe(1);
+    expect(result.missingActuals).toEqual([]);
+    expect(result.newPackages).toEqual([
+      expect.objectContaining({
+        packageName: "@beep/new",
+        baseline: expect.objectContaining({ path: "packages/new" }),
+      }),
+    ]);
+    expect(result.failures).toEqual([
+      expect.objectContaining({
+        packageName: "@beep/existing",
+        metric: "lines",
+        actual: 49.998,
+        baseline: 50,
+      }),
+    ]);
+  });
+
+  it("only fails missing baseline-package summaries for unscoped coverage runs", () => {
+    expect(compareCoverageRegressionSnapshotsForTesting(coverageRegressionBaseline, [], false).missingActuals).toEqual([
+      "@beep/existing",
+    ]);
+    expect(compareCoverageRegressionSnapshotsForTesting(coverageRegressionBaseline, [], true).missingActuals).toEqual(
+      []
+    );
   });
 
   it("runs unit and types as separate turbo invocations", () => {

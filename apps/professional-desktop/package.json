@@ -30,7 +30,7 @@
     "beep:test:integration:ipc": "bun run build:sidecar && BEEP_TEST_SIDECAR_IPC=1 bunx --bun vitest run --config vitest.integration.config.ts test/integration/sidecar-ipc-stdio.test.ts",
     "build": "bun run beep:build",
     "check": "bun run beep:check",
-    "coverage": "bunx --bun vitest run --coverage --exclude=test/integration/**",
+    "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",

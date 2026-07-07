@@ -1,0 +1,47 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/components/calendar-event-card.tsx",
+    "line": 23,
+    "symbol": "EventStatus",
+    "smell": "EventStatus/EventVariant are exported string-literal prop types and `actionContent` uses `Match.value(status).pipe(..., Match.orElse(() => \"Confirm\"))` at lines 104-117; a broad finite-domain detector could suggest a LiteralKit plus exhaustive match.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is JSX-facing component render state, not schema-relevant domain or wire data. The `idle` case intentionally shares the default Confirm rendering path, and schema-ifying the public prop literals would be ceremony plus a public-form change with no exhaustiveness gain.",
+      "boundary": "React component props and local JSX rendering in CalendarEventCard"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/components/orb-background.tsx",
+    "line": 22,
+    "symbol": "OrbTone",
+    "smell": "OrbTone and OrbIntensity are finite string-literal prop domains with parallel `Record<OrbTone, number>` / `Record<OrbIntensity, number>` style tables at lines 40, 50, and 56; a duplicate-literal-family detector could suggest LiteralKit.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The literals are purely visual React props that index local style constants for a decorative component. They are not decoded, persisted, serialized, or branched as schema data, and the orchestrator explicitly carves out React component props/interfaces and JSX-facing surfaces for this package.",
+      "boundary": "decorative component styling surface in OrbBackground"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/ui-system/ui/src/components/live-waveform.tsx",
+    "line": 286,
+    "symbol": "setupMicrophone",
+    "smell": "`window as unknown as { webkitAudioContext: typeof AudioContext }` is a double cast that a no-as detector will flag while selecting the WebKit-prefixed AudioContext constructor.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is a browser API compatibility boundary for a non-standard vendor-prefixed DOM field, not schema discrimination or finite variant branching. Replacing it would require equivalent platform-boundary code rather than a schema or Match-derived narrowing.",
+      "boundary": "Web Audio browser-compatibility adapter inside LiveWaveform setup"
+    }
+  }
+]

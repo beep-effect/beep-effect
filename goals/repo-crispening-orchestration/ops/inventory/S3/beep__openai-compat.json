@@ -1,0 +1,76 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+    "line": 219,
+    "symbol": "toFinishReason",
+    "smell": "toFinishReason manually repeats the OpenAI finish-reason literals with an if-chain over \"stop\", \"length\", \"tool_calls\" / \"function_call\", and \"content_filter\" at lines 223-232. The same finite domain already exists as OpenAiCompatFinishReason at OpenAiCompat.models.ts:79.",
+    "proposedTarget": "Import OpenAiCompatFinishReason as a value, decode/filter the optional provider string through S.decodeOption(OpenAiCompatFinishReason) (Effect v4 S.decodeOption verified at .repos/effect-v4/packages/effect/src/Schema.ts:1530), then map known values through OpenAiCompatFinishReason.$match (LiteralKit.$match verified at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:600-607). Preserve onNone -> \"unknown\" and unknown provider strings -> \"other\".",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 2.25
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+    "line": 412,
+    "symbol": "prepareMessage",
+    "smell": "prepareMessage dispatches Prompt.Message by hand with role checks for \"system\", \"user\", and \"assistant\" before implicitly treating the remainder as tool at lines 412-450. Effect v4 Prompt.Message is a role-discriminated Schema.Union of SystemMessage | UserMessage | AssistantMessage | ToolMessage at .repos/effect-v4/packages/effect/src/unstable/ai/Prompt.ts:1650-1679.",
+    "proposedTarget": "Replace the if-chain with `pipe(Match.type<Prompt.Message>(), Match.discriminatorsExhaustive(\"role\")({ system: ..., user: ..., assistant: ..., tool: ... }))(message)` so upstream role additions become compile-time handler changes. Effect v4 Match.discriminatorsExhaustive is verified at .repos/effect-v4/packages/effect/src/Match.ts:880.",
+    "confidence": 0.68,
+    "mechanization": "assisted",
+    "roiRank": 2.04
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+    "line": 559,
+    "symbol": "prepareResponseFormat",
+    "smell": "prepareResponseFormat checks `responseFormat.type === \"text\"` and treats every non-text ProviderOptions response format as JSON schema at lines 559-582. Effect v4 LanguageModel.ProviderOptions currently defines responseFormat as a `type: \"text\" | \"json\"` union at .repos/effect-v4/packages/effect/src/unstable/ai/LanguageModel.ts:673-681.",
+    "proposedTarget": "Use `Match.discriminatorsExhaustive(\"type\")({ text: ..., json: ... })` over LanguageModel.ProviderOptions[\"responseFormat\"] so a new Effect response format cannot fall into the JSON branch accidentally.",
+    "confidence": 0.62,
+    "mechanization": "assisted",
+    "roiRank": 1.24
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+    "line": 599,
+    "symbol": "makeRequest",
+    "smell": "makeRequest spreads one fixed object literal through R.getSomes at lines 599-611, mixing optional numbers, booleans, response_format objects, stream flags, tool_choice, tools arrays, and nullable temperature/top_p values. This is the heterogeneous Option-struct shape where Record.getSomes loses per-key precision.",
+    "proposedTarget": "Replace the spread with `...O.getSomesStruct({ max_completion_tokens: ..., max_tokens: ..., parallel_tool_calls: ..., response_format: ..., seed: ..., stream: ..., stream_options: ..., temperature: ..., tool_choice: ..., tools: ..., top_p: ..., user: ... })`. The repo helper is verified at packages/foundation/modeling/utils/src/Option.ts:102; Effect v4 R.getSomes is the homogeneous record helper at .repos/effect-v4/packages/effect/src/Record.ts:824. Held at judgment per D5 until the Law 20/47 amendment sweep is cleared.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 1.6
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+    "line": 441,
+    "symbol": "prepareMessage",
+    "smell": "False-positive-audited R.getSomes candidate: the assistant message spread at lines 441-443 compacts only the singleton `tool_calls` option.",
+    "proposedTarget": "None -- keep as-is for S3. This is a single optional field, not a heterogeneous struct. R.getSomes remains the verified homogeneous/singleton helper at .repos/effect-v4/packages/effect/src/Record.ts:824.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The object literal contains one Option value, so per-key heterogeneous preservation is irrelevant.",
+      "boundary": "assistant tool_calls optional payload assembly"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/drivers/openai-compat/src/OpenAiCompat.models.ts",
+    "line": 288,
+    "symbol": "OpenAiCompatChatContent",
+    "smell": "False-positive-audited undiscriminated-union candidate: OpenAiCompatChatContent is S.Union([S.String, S.Array(S.Record(S.String, S.Unknown))]) for OpenAI-compatible text-or-multimodal message content.",
+    "proposedTarget": "None -- keep as-is. This mirrors the provider wire shape, where `content` is either a string or an array of content-part records; tagging would change the JSON payload.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "This is an external protocol codec, not package-owned variant state.",
+      "boundary": "OpenAI-compatible chat-completion request wire format"
+    }
+  }
+]

@@ -695,7 +695,6 @@ describe("yeet planner", () => {
     ).toEqual([
       "prepare:laws:effect-imports",
       "prepare:laws:dual-arity",
-      "prepare:fallow:boundaries",
       "prepare:config-sync",
       "prepare:lint:fix",
       "prepare:docgen",
@@ -807,7 +806,6 @@ describe("yeet planner", () => {
     ).toEqual([
       "prepare:laws:effect-imports",
       "prepare:laws:dual-arity",
-      "prepare:fallow:boundaries",
       "prepare:config-sync",
       "prepare:lint:fix",
       "prepare:docgen",

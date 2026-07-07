@@ -1,0 +1,72 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/architecture-lab/domain/src/aggregates/WorkItem/WorkItem.values.ts",
+    "line": 33,
+    "symbol": "WorkItemId",
+    "smell": "WorkItemId is a branded aggregate identifier, but the runtime schema starts from bare S.String; Effect v4 brand is type-only and does not reject empty strings or malformed ids.",
+    "proposedTarget": "Tighten the runtime side before branding, e.g. S.NonEmptyString.pipe(S.brand(\"ArchitectureLabWorkItemId\"), $I.annoteSchema(...)) or a WorkItem slug pattern if the public form is intentionally hyphenated. S.brand's no-runtime-check behavior is verified at .repos/effect-v4/packages/effect/src/Schema.ts:5063-5064 and S.NonEmptyString at :8420.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/architecture-lab/domain/src/aggregates/WorkItem/WorkItem.values.ts",
+    "line": 81,
+    "symbol": "WorkItemTitle",
+    "smell": "WorkItemTitle is a reusable domain value schema modeled as broad S.String even though examples and aggregate usage treat an empty title as invalid user-facing text.",
+    "proposedTarget": "Replace the base with S.NonEmptyString.pipe($I.annoteSchema(\"WorkItemTitle\", ...)) so CreateWorkItemInput, WorkItem, and downstream command/config projections all inherit the title invariant. S.NonEmptyString is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:8420.",
+    "confidence": 0.8,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/architecture-lab/domain/src/entities/Worker/Worker.model.ts",
+    "line": 183,
+    "symbol": "Worker / WorkItem domain schema fields",
+    "smell": "Exported domain S.Class and TaggedErrorClass schemas carry whole-schema $I.annote metadata, but their reusable fields (ids, title, status, assignee, priority, displayName, transition from/to, and workItemId) have no field-level annotateKey descriptions.",
+    "proposedTarget": "Add behavior-neutral .annotateKey({ description }) metadata to public domain fields while preserving the current schema shapes; use the field-annotation style from packages/agents/server/src/AssistantTurn/BlockRepair.ts:62-64 and packages/drivers/uspto-mcp/src/UsptoTools.ts:73-79. Effect v4 annotateKey is verified at .repos/effect-v4/packages/effect/src/Schema.ts:185 and :605.",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/architecture-lab/domain/src/aggregates/WorkItem/WorkItem.errors.ts",
+    "line": 194,
+    "symbol": "WorkItemDomainError",
+    "smell": "The exported reusable WorkItemDomainError schema union is bare S.Union([...]) with JSDoc only; it lacks $I.annoteSchema metadata unlike the member TaggedErrorClass schemas.",
+    "proposedTarget": "Pipe the union through $I.annoteSchema(\"WorkItemDomainError\", { title: \"WorkItem domain error\", description: ... }) after S.Union([...]); this mirrors the package's LiteralKit annotation style and the S.Union annotation pattern used in packages/agents/use-cases/src/processes/AssistantTurn/AssistantTurn.contracts.ts:80.",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+    "line": 21,
+    "symbol": "architecture-lab domain schema laws",
+    "smell": "The package has static behavior tests for Worker, WorkPriority, and WorkItem lifecycle flows, but no S.toArbitrary-derived round-trip/property law for its exported domain schemas.",
+    "proposedTarget": "Add additive schema-law tests importing production schemas from @beep/architecture-lab-domain and using assertSchemaArbitraryDecodesToSelf from @beep/test-utils (packages/tooling/test-kit/test-utils/src/Schema.ts:30-43) for WorkPriority, WorkerStatus, Worker, CreateWorkerInput, WorkItemStatus, WorkItem, CreateWorkItemInput, and WorkItemDomainError. S.toArbitrary is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:12970.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-arbitrary-tests",
+    "file": "packages/architecture-lab/domain/test/WorkItem.test.ts",
+    "line": 21,
+    "symbol": "domain lifecycle behavior fixtures",
+    "smell": "Detector candidate: the package tests use fixed Worker/WorkItem ids, titles, priorities, and lifecycle assertions.",
+    "proposedTarget": "None — keep these static behavior fixtures; the schema-derived law recorded separately is additive coverage.",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "These tests prove lifecycle behavior, typed failure channels, default priority application, and entity construction examples; generated schema samples cannot replace those command-flow assertions.",
+      "boundary": "architecture-lab domain behavior and regression fixtures"
+    }
+  }
+]

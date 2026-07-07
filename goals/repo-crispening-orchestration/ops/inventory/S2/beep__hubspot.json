@@ -1,0 +1,87 @@
+[
+  {
+    "ruleId": "SFV4-normalization",
+    "file": "packages/drivers/hubspot/src/HubSpot.service.ts",
+    "line": 284,
+    "symbol": "normalizeBaseUrl",
+    "smell": "`const normalizeBaseUrl = Str.replace(/\\/+$/, \"\")` trims trailing slashes in service code, then `resolveConfig` applies it to `crmApiUrl` and `formsApiUrl` even though both are config schema fields with defaults (HubSpot.config.ts:66-67).",
+    "proposedTarget": "Move URL normalization into a config URL schema transformation, e.g. a `HubSpotBaseUrl` schema built with `S.decodeTo(..., SchemaTransformation.transform(...))`, then use it for `crmApiUrl` and `formsApiUrl`. In-repo transformation exemplars: `packages/foundation/modeling/schema/src/PosixPath.ts:71-73` and `packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyConfig.ts:21-34`.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 1
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/hubspot/src/HubSpot.service.ts",
+    "line": 306,
+    "symbol": "resolveConfig",
+    "smell": "`headers: input.headers ?? {}` is a runtime default for `HubSpotConfigInput.headers`, which is currently `S.optionalKey(S.Record(S.String, S.String))` (HubSpot.config.ts:68).",
+    "proposedTarget": "Move the empty headers default to the config schema: `headers: S.Record(S.String, S.String).pipe(SchemaUtils.withKeyDefaults(R.empty()))`, following `packages/drivers/phoenix/src/Phoenix.config.ts:53` and `packages/drivers/runpod/src/Runpod.config.ts:66`.",
+    "confidence": 0.9,
+    "mechanization": "codemod",
+    "roiRank": 2
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/hubspot/src/HubSpot.service.ts",
+    "line": 293,
+    "symbol": "resolveConfig",
+    "smell": "`O.fromNullishOr(input.accountId)` and `O.fromUndefinedOr(input.accessToken)` convert config optional keys into Options inside the resolver instead of the config schema carrying absence explicitly.",
+    "proposedTarget": "Make optional config absence schema-native: `accessToken: S.OptionFromOptionalKey(S.String.pipe(S.RedactedFromValue)).pipe(SchemaUtils.withNoneDefault)`; for `accountId`, either make it required (`S.String`) or model it as `OptionFromOptionalKey(...).pipe(withNoneDefault)` and keep the config-error check over Option. In-repo exemplar: `packages/foundation/modeling/ontology/src/Ontology.models.ts:152-160`.",
+    "confidence": 0.65,
+    "mechanization": "assisted",
+    "roiRank": 3
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/hubspot/src/HubSpot.service.ts",
+    "line": 87,
+    "symbol": "HubSpotFormContext",
+    "smell": "HubSpot request/response payload models use `S.optionalKey` for domain absence (`HubSpotFormContext.ipAddress/pageName/pageUri`, `HubSpotSubmitFormRequest.context/submittedAt`, `HubSpotSubmitFormResponse.inlineMessage/redirectUri`, `HubSpotUpsertContactRequest.objectWriteTraceId`, and `HubSpotUpsertContactResponse.status`).",
+    "proposedTarget": "Use `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` on decoded first-party fields, preserving omitted keys at the HTTP JSON boundary through schema encoding. This removes `undefined` from the decoded request/response surface while keeping HubSpot's wire shape. In-repo exemplar: `packages/foundation/modeling/ontology/src/Ontology.models.ts:152-160`.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 4
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/hubspot/src/HubSpot.errors.ts",
+    "line": 83,
+    "symbol": "HubSpotError",
+    "smell": "`HubSpotError` and `HubSpotErrorOptions` store `cause`, `email`, `formGuid`, `status`, and `url` as optional keys, while `fromReason` immediately converts option fields with `O.fromUndefinedOr` before spreading them into the error.",
+    "proposedTarget": "Make error context fields `S.OptionFromOptionalKey(...).pipe(SchemaUtils.withNoneDefault)` in both `HubSpotErrorOptions` and `HubSpotError`; `fromReason` can then pass through Options directly. In-package contrast: `ResolvedHubSpotConfig.accessToken` is already modeled as `S.Option` (service.ts:274).",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 5
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/hubspot/src/HubSpot.service.ts",
+    "line": 410,
+    "symbol": "decodeResponse",
+    "smell": "`response.headers[\"content-type\"] ?? \"\"` defaults a missing HTTP response header before checking whether the body is JSON.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.25,
+    "mechanization": "judgment",
+    "roiRank": 6,
+    "exception": {
+      "reason": "HTTP response header lookup fallback; missing content type means treat the response as non-JSON and return an empty form response. This is adapter control flow, not a schema-field default.",
+      "boundary": "HTTP response header boundary"
+    }
+  },
+  {
+    "ruleId": "SFV4-defaults",
+    "file": "packages/drivers/hubspot/test/HubSpot.service.test.ts",
+    "line": 58,
+    "symbol": "HubSpotTestHttp.handle",
+    "smell": "`O.getOrElse(() => request.url)` falls back while capturing a test HTTP request URL.",
+    "proposedTarget": "None - keep as-is.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 7,
+    "exception": {
+      "reason": "Test fixture capture fallback for the in-memory HTTP client; not domain normalization or a schema default.",
+      "boundary": "test fixture"
+    }
+  }
+]

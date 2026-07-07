@@ -1,0 +1,137 @@
+[
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
+    "line": 283,
+    "symbol": "LangExtractRequest",
+    "smell": "targets is S.NonEmptyArray(ExtractionTarget) with no maximum count while every sibling axis of the same request is fail-closed bounded per the file's own CPU-budget doctrine (lines 20-30): examples capped at MAX_REQUEST_EXAMPLES=64 (lines 273-281), text capped at MAX_REQUEST_TEXT_LENGTH=1,000,000 (lines 284-288), model-output candidates capped at MAX_MODEL_OUTPUT_CANDIDATES=1,024 (lines 374-378). Each target renders a prompt line via renderTarget (src/Service/index.ts:97-104, joined at 144), so target count is the one unbounded prompt axis on a cross-package boundary schema (imported by packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts).",
+    "proposedTarget": "Add MAX_REQUEST_TARGETS to the existing bounds block and cap the field: targets: S.NonEmptyArray(ExtractionTarget).pipe(S.check(S.isMaxLength(MAX_REQUEST_TARGETS, { message: ... }))) — the identical array-cap pattern already used for examples at line 276; S.isMaxLength verified .repos/effect-v4/packages/effect/src/Schema.ts:7995, S.NonEmptyArray at 4533. Narrowing accepted inputs on a public schema: same-PR consumer sweep of the one known consumer (§5.4).",
+    "confidence": 0.85,
+    "mechanization": "assisted",
+    "roiRank": 4,
+    "exception": {
+      "reason": "Adding a max target count tightens the exported request schema consumed by @beep/law-practice target builders; cap choice and consumer proof belong in that sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
+    "line": 236,
+    "symbol": "GroundedExtraction",
+    "smell": "GroundedExtraction drops every fail-closed bound its source ExtractionCandidate enforces: attributes (line 239) is an unbounded S.Record while ExtractionCandidate.attributes caps at MAX_CANDIDATE_ATTRIBUTES=64 via S.isMaxProperties (lines 196-202); label (241) and text (244) are S.NonEmptyString without the MAX_CANDIDATE_TEXT_LENGTH=4,096 caps the candidate applies (lines 204-213); matchedText (242) is broad S.String. The class is exported, embedded in LangExtractResult, and independently decodable, so decoding a stored/wire GroundedExtraction bypasses the documented bounds doctrine even though the in-process construction path (makeGrounded, src/Alignment/index.ts:36-70) copies label/text/attributes verbatim from an already-bounded candidate.",
+    "proposedTarget": "Mirror the candidate bounds on attributes/label/text (S.isMaxProperties verified .repos/effect-v4/packages/effect/src/Schema.ts:8250, S.isMaxLength at 7995). CAUTION for matchedText: it is a source slice, and with a caller-supplied low fuzzyThreshold a fuzzy window can legally span up to MAX_FUZZY_SOURCE_LENGTH=100,000 chars (src/Alignment/index.ts:30,174-204), so cap matchedText at the fuzzy source bound (or a dedicated MAX_MATCHED_TEXT_LENGTH), NOT at MAX_CANDIDATE_TEXT_LENGTH, or makeGrounded can throw at runtime on pathological-but-legal inputs.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Tightening GroundedExtraction bounds changes the exported result schema embedded in @beep/law-practice IrToLaw ports and services; defer to the consumer sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/langextract/src/Target/index.ts",
+    "line": 62,
+    "symbol": "ExtractionTarget",
+    "smell": "Prompt-side fields are entirely unbounded while the request/candidate surfaces are carefully capped: attributes (line 64) is an unbounded S.Array of unbounded S.NonEmptyString, description (65) is broad optional S.String, name (67) is uncapped S.NonEmptyString. All three interpolate directly into the model prompt via renderTarget (src/Service/index.ts:97-104), and this is a cross-package construction surface (imported by packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts via ln/Target).",
+    "proposedTarget": "Bound name/description and each attribute entry with S.isMaxLength (verified .repos/effect-v4/packages/effect/src/Schema.ts:7995) and cap the attributes array count (array-form isMaxLength, same pattern as Extraction/index.ts:276), introducing MAX_* consts in the spirit of the Extraction module's bounds block (Extraction/index.ts:26-30). Cap values are a writer judgment call; the mechanical pattern is established in-package.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Target prompt-field bounds tighten a public schema constructed by @beep/law-practice; cap values and prompt snapshots need that consumer sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/langextract/src/Target/index.ts",
+    "line": 87,
+    "symbol": "ExtractionExampleItem",
+    "smell": "Few-shot example items are unbounded where their model-output twin is capped: label (line 90) and text (91) are uncapped S.NonEmptyString and attributes (89) is an unbounded S.Record, while the structurally analogous ExtractionCandidate caps label/text at MAX_CANDIDATE_TEXT_LENGTH=4,096 and attributes at MAX_CANDIDATE_ATTRIBUTES=64 (Extraction/index.ts:194-218). Example items are serialized into the prompt by renderExamples (src/Service/index.ts:106-114), so the MAX_REQUEST_EXAMPLES=64 count cap does not bound total prompt size.",
+    "proposedTarget": "Reuse the candidate-scale caps: label/text .check(S.isMaxLength(MAX_CANDIDATE_TEXT_LENGTH, ...)) and attributes .check(S.isMaxProperties(MAX_CANDIDATE_ATTRIBUTES, ...)) (verified .repos/effect-v4/packages/effect/src/Schema.ts:7995/8250), either by exporting the bounds consts from the Extraction module or hoisting them to a shared internal module — writer's call on placement.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 2,
+    "exception": {
+      "reason": "Few-shot example field caps are public prompt-schema tightening and need cap-value/product agreement plus prompt snapshot parity; defer to the prompt-schema sweep.",
+      "boundary": "public-form precision, deferred prompt-schema sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/langextract/src/Target/index.ts",
+    "line": 114,
+    "symbol": "ExtractionExample",
+    "smell": "text (line 117) — the example's full source text — is broad unbounded S.String while the real request source text is capped at MAX_REQUEST_TEXT_LENGTH=1,000,000 (Extraction/index.ts:284-288); each of up to 64 examples injects its entire text into the prompt via renderExamples (src/Service/index.ts:111-113), making example text an unbounded prompt axis.",
+    "proposedTarget": "Cap with a dedicated MAX_EXAMPLE_TEXT_LENGTH via .check(S.isMaxLength(...)) (verified .repos/effect-v4/packages/effect/src/Schema.ts:7995); few-shot example texts are conventionally short, so a candidate-scale (4,096) rather than request-scale bound is the sensible default — value is a writer judgment call.",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 2,
+    "exception": {
+      "reason": "Example text caps are public prompt-schema tightening and need cap-value/product agreement plus prompt snapshot parity; defer to the prompt-schema sweep.",
+      "boundary": "public-form precision, deferred prompt-schema sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
+    "line": 270,
+    "symbol": "LangExtractRequest",
+    "smell": "Every exported schema class in the package (LangExtractRequest, LangExtractResult, LangExtractOptions, ExtractionCandidate, GroundedExtraction, LangExtractDiagnostics here; ExtractionTarget/ExtractionExampleItem/ExtractionExample in Target/index.ts; AnnotatedDocumentInput in Handoff/index.ts) carries a whole-class $I.annote description but zero per-field key annotations and no runtime examples in the annotation extras (JSDoc @example exists but is not runtime-retrievable). These are cross-package boundary schemas (law-practice/use-cases constructs LangExtractRequest and ExtractionTarget), so field descriptions are exactly the runtime-retrievable documentation the annotation catalog (SPEC P3) expects.",
+    "proposedTarget": "Per-field annotations via the pipeable identity helper, e.g. text: S.String.check(...).pipe($I.annoteKey(\"LangExtractRequest.text\", { description: \"Source text to extract from; capped at 1,000,000 chars.\" })) — $I.annoteKey verified packages/foundation/modeling/identity/src/Id.ts:1398-1414 (exposed at 1524), plain .annotateKey({ description }) fallback verified .repos/effect-v4/packages/effect/src/Schema.ts:185/605 — plus examples added to the existing $I.annote extras. Start with the two externally-constructed schemas (LangExtractRequest, ExtractionTarget) and the result envelope; purely additive, no shape change.",
+    "confidence": 0.75,
+    "mechanization": "assisted",
+    "roiRank": 3,
+    "exception": {
+      "reason": "Runtime field annotations span every exported class in the package; this additive catalog work is deferred to a focused annotation/catalog sweep rather than mixed into behavioral remediation.",
+      "boundary": "documentation/catalog sweep deferred"
+    }
+  },
+  {
+    "ruleId": "SFV4-numeric-domain",
+    "file": "packages/foundation/capability/langextract/src/Handoff/index.ts",
+    "line": 45,
+    "symbol": "AnnotatedDocumentInput",
+    "smell": "timestamp is S.Finite — finite but admitting negative and fractional values — for a field documented as epoch milliseconds and fed from Clock.currentTimeMillis (src/Service/index.ts:189), where a non-negative integer domain is the true shape.",
+    "proposedTarget": "None locally — keep S.Finite. The field flows verbatim into Contract.Provenance.make (lines 110-114) and Contract.Provenance.timestamp is itself S.Finite (packages/foundation/modeling/nlp/src/Handoff/Contract.ts:229, 'epoch ms'); tightening only this adapter input to NonNegativeInt (packages/foundation/modeling/schema/src/Number.ts:182-197) would desync it from the handoff contract it mirrors. Any tightening belongs upstream in @beep/nlp's own wave, with this field following in the same sweep.",
+    "confidence": 0.4,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Deliberate contract-parity mirror: AnnotatedDocumentInput.timestamp reproduces the upstream @beep/nlp Contract.Provenance.timestamp domain (S.Finite, epoch ms) that it is converted into; locally narrowing the adapter input while the target contract stays broad adds no safety and creates cross-package domain skew. Cross-package public-form change is out of scope for this package's finding.",
+      "boundary": "@beep/nlp Handoff Contract.Provenance (packages/foundation/modeling/nlp/src/Handoff/Contract.ts:224-231)"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
+    "line": 90,
+    "symbol": "LangExtractError",
+    "smell": "details is an unbounded optional S.Record(S.String, S.String) on an exported error schema — broad keys/values with no property-count or length caps, unlike the bounded domain records in the same file.",
+    "proposedTarget": "None — keep as-is. If ever tightened, S.isMaxProperties (verified .repos/effect-v4/packages/effect/src/Schema.ts:8250) is the mechanical fit, but the payload is producer-controlled, not decoded input.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Sanitized diagnostic detail bag on a tagged error: every construction site supplies short compile-time literals (e.g. { cause: \"json-parse-failed\" } at lines 425-429/433-437, src/Service/index.ts:170-184); the record is never decoded from an untrusted wire, so bounding it validates nothing an attacker controls. Error-payload leniency here cannot weaken any guard (fence 4 untouched).",
+      "boundary": "in-process error construction via LangExtractError.fromReason (producer-side only)"
+    }
+  },
+  {
+    "ruleId": "SFV4-precision-audit",
+    "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
+    "line": 367,
+    "symbol": "LangExtractResult",
+    "smell": "text is broad unbounded S.String on the result envelope while the value it echoes — the request source text — is capped at MAX_REQUEST_TEXT_LENGTH=1,000,000 at the true decode boundary (lines 284-288); an independently decoded LangExtractResult accepts unbounded text.",
+    "proposedTarget": "Mirror the request bound: text: S.String.check(S.isMaxLength(MAX_REQUEST_TEXT_LENGTH, ...)) (verified .repos/effect-v4/packages/effect/src/Schema.ts:7995). Construction-safe by definition: the service copies request.text (src/Service/index.ts:210), which already satisfies the bound. Low urgency — the result is currently produced in-process, not decoded from a wire; the cap only matters if results are ever persisted/re-decoded.",
+    "confidence": 0.6,
+    "mechanization": "assisted",
+    "roiRank": 1,
+    "exception": {
+      "reason": "Tightening LangExtractResult.text changes the exported result schema consumed by law-practice service contracts; defer to the consumer sweep with result fixtures.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  }
+]

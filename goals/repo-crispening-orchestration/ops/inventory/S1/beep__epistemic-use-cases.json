@@ -1,0 +1,54 @@
+[
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/epistemic/use-cases/src/ClaimProjection/ClaimProjection.ts",
+    "line": 37,
+    "symbol": "ClaimProjection",
+    "smell": "Exported function type alias carries the projection contract outside an executable `Fn` schema.",
+    "proposedTarget": "Model the contract as `export const ClaimProjection = Fn({ input: S.Array(DomainCandidateClaim.CandidateClaim), output: ClaimProjectionView }).pipe($I.annoteSchema(\"ClaimProjection\", ...)); export type ClaimProjection = typeof ClaimProjection.Type; export const projectClaims = ClaimProjection.implementSync((authority) => ...)`. In-repo exemplars: `Formatter` at `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66` and `IrToLawShape.toLaw` at `packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts:95`-`97`; Effect v4/repo `S.Array` usage verified at `packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts:96`.",
+    "confidence": 0.78,
+    "mechanization": "assisted",
+    "roiRank": 0.62
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/epistemic/use-cases/src/ClaimGate/ClaimGate.service.ts",
+    "line": 32,
+    "symbol": "decodeClaimGateResult / decodeShaclValidationRequest / encodeDataset",
+    "smell": "Top-of-file schema codec helper wall binds three `S.decodeUnknownSync` / `S.encodeSync` helpers before the gate logic.",
+    "proposedTarget": "Either inline the single-use request/dataset codecs and keep the domain result decode at the construction site, or promote schema-owned codec statics on the source schemas with `SchemaUtils.withCodecStatics`, whose local API is `is`, `fromUnknown`, and `decodeOption` at `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`. The executable contract should stay on `ClaimGateResult`, `ShaclValidationRequest`, and `Dataset`, not a free helper wall.",
+    "confidence": 0.67,
+    "mechanization": "assisted",
+    "roiRank": 0.44
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/epistemic/use-cases/src/ClaimGate/ClaimGate.ports.ts",
+    "line": 42,
+    "symbol": "ClaimGateShape",
+    "smell": "Exported interface with an Effect-returning method matches the schema-first-inventory detector surface.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. The method payloads are schema-backed domain values (`CandidateClaim`, `Evidence`, `ClaimGateResult`); the interface is the behavior port.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This is a `Context.Service` shape for the claim-gate use-case port, not a wire, persisted, config, or pure data payload.",
+      "boundary": "ClaimGate service port"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/epistemic/use-cases/src/ClaimLifecycle/ClaimLifecycle.service.ts",
+    "line": 39,
+    "symbol": "ClaimTransitionShape",
+    "smell": "Exported interface with an Effect-returning method matches the schema-first-inventory detector surface.",
+    "proposedTarget": "None -- fence 1 service-contract carve-out. The claim, gate verdict, and transition error are already schema-backed domain values.",
+    "confidence": 0.2,
+    "mechanization": "judgment",
+    "roiRank": 0.04,
+    "exception": {
+      "reason": "This is a `Context.Service` shape for the lifecycle-transition use-case port, not a data payload to schema-ify.",
+      "boundary": "Claim lifecycle service port"
+    }
+  }
+]

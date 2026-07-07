@@ -1,0 +1,17 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/nlp-processing/src/Tools/ToolExport.ts",
+    "line": 228,
+    "symbol": "handleTool",
+    "smell": "toolkit.handle(tool.name as never, params as never) as Effect.Effect<...> is a no-as detector candidate at the dynamic positional-export boundary.",
+    "proposedTarget": "None -- keep as-is unless effect/unstable/ai adds a correlation-preserving dynamic handle helper.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The adapter decodes params with the selected tool.parametersSchema immediately before the call, but TypeScript cannot preserve the correlation between the iterated NlpTool union member, its literal name, and Tool.Parameters<typeof member> through Toolkit.WithHandler.handle<Name extends keyof Tools>. Effect v4's Toolkit.handle signature is the generic name/parameter pair at .repos/effect-v4/packages/effect/src/unstable/ai/Toolkit.ts:194-203, and upstream dynamic callers use the same cast boundary pattern.",
+      "boundary": "dynamic adapter from positional tool descriptors to effect/unstable/ai Toolkit.WithHandler"
+    }
+  }
+]

@@ -4,9 +4,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { HashSet } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { LiteralKit } from "../LiteralKit/index.ts";
+import * as SchemaUtils from "../SchemaUtils/index.ts";
 import {
   $I,
   windowsInvalidSegmentCharacterRegExp,
@@ -93,7 +95,8 @@ export const ValidWindowsPlainPathSegment = S.NonEmptyString.check(
   S.brand("ValidWindowsPlainPathSegment"),
   $I.annoteSchema("ValidWindowsPlainPathSegment", {
     description: "A non-empty Windows path segment without separators, reserved characters, or trailing dots/spaces.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -104,7 +107,8 @@ export const ValidWindowsPlainPathSegment = S.NonEmptyString.check(
  */
 export type ValidWindowsPlainPathSegment = typeof ValidWindowsPlainPathSegment.Type;
 
-const isWindowsDotSegment = S.is(WindowsDotSegment);
+const windowsDotSegmentSet = HashSet.fromIterable(WindowsDotSegment.Options);
+const isWindowsDotSegment = (value: string): value is WindowsDotSegment => HashSet.has(windowsDotSegmentSet, value);
 
 /**
  * Branded schema for Windows root segments such as UNC server and share names.
@@ -132,7 +136,8 @@ export const ValidWindowsRootSegment = ValidWindowsPlainPathSegment.check(
   S.brand("ValidWindowsRootSegment"),
   $I.annoteSchema("ValidWindowsRootSegment", {
     description: "A Windows root segment suitable for drive roots and UNC server/share segments.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -163,7 +168,8 @@ export const ValidWindowsPathSegment = S.Union([WindowsDotSegment, ValidWindowsP
   S.brand("ValidWindowsPathSegment"),
   $I.annoteSchema("ValidWindowsPathSegment", {
     description: "A Windows path segment that is either a valid plain segment or a dot-segment marker.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -193,7 +199,8 @@ export const WindowsSegments = S.NonEmptyArray(ValidWindowsPathSegment).pipe(
   S.brand("WindowsSegments"),
   $I.annoteSchema("WindowsSegments", {
     description: "A non-empty Windows path segment list.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -224,7 +231,8 @@ export const ValidWindowsUncRest = S.NonEmptyArray(ValidWindowsPathSegment).pipe
   S.brand("ValidWindowsUncRest"),
   $I.annoteSchema("ValidWindowsUncRest", {
     description: "The non-empty remainder segment list of a UNC file path after the server and share segments.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -257,7 +265,8 @@ export const ValidWindowsUncSegments = S.TupleWithRest(
   S.brand("ValidWindowsUncSegments"),
   $I.annoteSchema("ValidWindowsUncSegments", {
     description: "A UNC segment list with server, share, and at least one leaf segment.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

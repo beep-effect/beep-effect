@@ -365,6 +365,7 @@ const acquireIso4217Projection = Effect.fn("SyncDataToTs.Iso4217.acquire")(funct
  */
 export const iso4217Target: SyncDataTarget = {
   id: targetId,
+  access: "public",
   description: "Sync official ISO 4217 currency codes from SIX List One (XML).",
   sourceUrls: [ISO4217_SOURCE_URL],
   acquire: acquireIso4217Projection(),

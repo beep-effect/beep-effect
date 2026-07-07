@@ -1,0 +1,77 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/identity/src/PnLocal.ts",
+    "line": 146,
+    "symbol": "LocalUnit",
+    "smell": "LocalUnit is a two-member parser-internal union whose positional validators branch on unit.kind (lines 146-150); a broad discriminator detector would flag the repeated kind checks.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "No schema-derived matcher or guard exists for this parser-local union, and the three checks encode Turtle PN_LOCAL first/middle/final character positions rather than variant behavior. Replacing them with Match.valueTags would add dispatch ceremony without improving exhaustiveness.",
+      "boundary": "explicit Turtle PN_LOCAL trust-boundary parser helpers; SPEC fence 4 keeps escaping and URL/injection-style guards explicit"
+    }
+  },
+  {
+    "ruleId": "SFV4-getsomes-struct",
+    "file": "packages/foundation/modeling/identity/src/Id.ts",
+    "line": 1331,
+    "symbol": "identityAnnotation",
+    "smell": "Conditional spread adds iri and curie as an all-or-none pair when a composer is bound; a broad optional-struct-spread detector would resemble the O.getSomesStruct target shape.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The invariant is pair presence, not independent optional fields. O.getSomesStruct({ iri: O.fromUndefinedOr(composer.iri), curie: O.fromUndefinedOr(composer.curie) }) would admit one key without the other if the binding invariant ever failed, changing the boundary semantics.",
+      "boundary": "identity binding annotation shape; iri and curie travel together as one binding-derived public annotation pair"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/identity/src/Id.ts",
+    "line": 1370,
+    "symbol": "annote",
+    "smell": "annote merges generic extras with identity-derived annotation fields and casts the constructed object as unknown as IdentityAnnotationResult<...>; a no-as detector would flag the double cast.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The result type preserves a dependent relationship between the caller's generic extras, the validated segment literal, and optional binding-derived iri/curie fields. The runtime object is constructed from identityAnnotation plus currentExtras; no Effect narrowing primitive or tagged-union matcher can express that type-level merge more precisely here.",
+      "boundary": "generic annotation result reification inside IdentityComposer.annote"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/identity/src/Id.ts",
+    "line": 1468,
+    "symbol": "compose",
+    "smell": "compose maps validated module segments to computed `$...Id` keys and casts R.fromEntries(entries) as unknown as TaggedModuleRecord<...>; a no-as detector would flag the double cast.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "R.fromEntries necessarily returns a runtime record from computed keys, while TaggedModuleRecord preserves a mapped type over the variadic segment tuple. The entries are produced by validateModuleSegment and toTaggedKey in this scope; no discriminator or schema-derived exhaustive matcher applies.",
+      "boundary": "type-level reification of variadic identity composer keys"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/modeling/identity/src/Id.ts",
+    "line": 1536,
+    "symbol": "createComposer",
+    "smell": "Object.defineProperties(createTemplateIdentity, ...) is cast as unknown as IdentityComposer<...>; a no-as detector would flag the callable-object double cast.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "IdentityComposer is a callable object with dynamically attached methods and dependent literal projections. TypeScript cannot infer that shape from Object.defineProperties, and the implementation attaches every interface member in the local property table before the cast.",
+      "boundary": "callable IdentityComposer object construction"
+    }
+  }
+]

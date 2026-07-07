@@ -21,13 +21,39 @@
  * @since 0.0.0
  */
 
+import { $ObservabilityId } from "@beep/identity/packages";
 import { P } from "@beep/utils";
 import { Clock, Duration, Effect, Exit, Match, Metric, pipe } from "effect";
 import { dual } from "effect/Function";
+import * as S from "effect/Schema";
+import { PhaseOutcome } from "./PhaseProfiler.ts";
 
-interface TrackDurationOptions {
-  readonly attributes?: Record<string, string> | undefined;
-}
+const $I = $ObservabilityId.create("Metric");
+
+/**
+ * Options for the trackDuration metric helper.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class TrackDurationOptions extends S.Class<TrackDurationOptions>($I`TrackDurationOptions`)(
+  {
+    attributes: S.Record(S.String, S.String).pipe(S.optionalKey).annotateKey({
+      description: "Metric attributes attached to the duration measurement.",
+    }),
+  },
+  $I.annote("TrackDurationOptions", {
+    description: "Options for tracking one duration metric around an Effect.",
+  })
+) {}
+
+/**
+ * Constructor input accepted by {@link trackDuration} before schema defaults are resolved.
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type TrackDurationOptionsInput = typeof TrackDurationOptions.Encoded;
 
 interface ObserveWorkflowOptions {
   readonly attributes?: Record<string, string> | undefined;
@@ -47,14 +73,8 @@ interface ObserveHttpRequestOptions {
   readonly successStatus: number;
 }
 
-const defaultTrackDurationOptions: TrackDurationOptions = { attributes: undefined };
-
-const isTrackDurationOptions = (
-  options: TrackDurationOptions | Record<string, string>
-): options is TrackDurationOptions => P.hasProperty(options, "attributes");
-
-const normalizeTrackDurationOptions = (options: TrackDurationOptions | Record<string, string>): TrackDurationOptions =>
-  isTrackDurationOptions(options) ? options : { attributes: options };
+const normalizeTrackDurationOptions = (options?: TrackDurationOptionsInput | undefined): TrackDurationOptions =>
+  TrackDurationOptions.make(options ?? {});
 
 const isTrackDurationDataFirst = (args: IArguments): boolean => Effect.isEffect(args[0]) || Effect.isEffect(args[1]);
 
@@ -71,6 +91,20 @@ const incrementCounter = Effect.fn("incrementCounter")(function* (
 ): Effect.fn.Return<void> {
   return yield* P.isUndefined(counter) ? Effect.void : Metric.update(withMetricAttributes(counter, attributes), 1);
 });
+
+const phaseOutcomeFromExit = <A, E>(exit: Exit.Exit<A, E>): PhaseOutcome =>
+  Match.value(exit).pipe(
+    Match.when(Exit.isSuccess, () => PhaseOutcome.Enum.completed),
+    Match.when(Exit.hasInterrupts, () => PhaseOutcome.Enum.interrupted),
+    Match.orElse(PhaseOutcome.thunk.failed)
+  );
+
+const incrementOutcomeCounter = (outcome: PhaseOutcome, options: ObserveWorkflowOptions): Effect.Effect<void> =>
+  PhaseOutcome.$match({
+    completed: () => incrementCounter(options.completed, options.attributes),
+    failed: () => incrementCounter(options.failed, options.attributes),
+    interrupted: () => incrementCounter(options.interrupted, options.attributes),
+  })(outcome);
 
 /**
  * Normalize an HTTP status code to its class label (e.g. `"2xx"`, `"4xx"`).
@@ -159,7 +193,7 @@ export const measureElapsedMillis = Effect.fn("measureElapsedMillis")(function* 
  *
  * const createUser = Effect.succeed({ id: "user__1", name: "Alice" })
  *
- * const tracked = trackDuration(timer, createUser, { service: "iam" })
+ * const tracked = trackDuration(timer, createUser, { attributes: { service: "iam" } })
  *
  * console.log(Effect.runPromise(tracked))
  * ```
@@ -204,12 +238,12 @@ export const trackDuration: {
   <A, E, R>(
     effect: Effect.Effect<A, E, R>,
     metric: Metric.Metric<Duration.Duration, unknown>,
-    options: TrackDurationOptions
+    options: TrackDurationOptionsInput
   ): Effect.Effect<A, E, R>;
   <A, E, R>(effect: Effect.Effect<A, E, R>, metric: Metric.Metric<Duration.Duration, unknown>): Effect.Effect<A, E, R>;
   (
     metric: Metric.Metric<Duration.Duration, unknown>,
-    options: TrackDurationOptions
+    options: TrackDurationOptionsInput
   ): <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
   (
     metric: Metric.Metric<Duration.Duration, unknown>
@@ -217,14 +251,14 @@ export const trackDuration: {
   <A, E, R>(
     metric: Metric.Metric<Duration.Duration, unknown>,
     effect: Effect.Effect<A, E, R>,
-    attributes?: Record<string, string>
+    options?: TrackDurationOptionsInput
   ): Effect.Effect<A, E, R>;
 } = dual(
   isTrackDurationDataFirst,
   Effect.fn("trackDuration")(function* <A, E, R>(
     effect: Effect.Effect<A, E, R> | Metric.Metric<Duration.Duration, unknown>,
     metric: Metric.Metric<Duration.Duration, unknown> | Effect.Effect<A, E, R>,
-    options: TrackDurationOptions | Record<string, string> = defaultTrackDurationOptions
+    options?: TrackDurationOptionsInput | undefined
   ): Effect.fn.Return<A, E, R> {
     const normalizedOptions = normalizeTrackDurationOptions(options);
 
@@ -284,16 +318,8 @@ const observeWorkflowImpl = Effect.fn("observeWorkflowImpl")(function* <A, E, R>
                 Effect.flatMap(
                   Effect.fnUntraced(function* (endedAt) {
                     const durationMs = Math.max(0, endedAt - startedAt);
-                    const outcome = Match.value(exit).pipe(
-                      Match.when(Exit.isSuccess, () => "completed" as const),
-                      Match.when(Exit.hasInterrupts, () => "interrupted" as const),
-                      Match.orElse(() => "failed" as const)
-                    );
-                    const outcomeEffect = Match.value(outcome).pipe(
-                      Match.when("completed", () => incrementCounter(options.completed, options.attributes)),
-                      Match.when("interrupted", () => incrementCounter(options.interrupted, options.attributes)),
-                      Match.orElse(() => incrementCounter(options.failed, options.attributes))
-                    );
+                    const outcome = phaseOutcomeFromExit(exit);
+                    const outcomeEffect = incrementOutcomeCounter(outcome, options);
                     const durationEffect = P.isUndefined(options.duration)
                       ? Effect.void
                       : Metric.update(

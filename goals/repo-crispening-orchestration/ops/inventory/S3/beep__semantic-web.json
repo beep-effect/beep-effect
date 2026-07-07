@@ -1,0 +1,32 @@
+[
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/semantic-web/src/services/provenance.ts",
+    "line": 350,
+    "symbol": "ProvenanceServiceLive",
+    "smell": "Provenance summary/export classification builds a manual S.is guard wall over ProvRecord variants (Entity, Activity, Agent, SoftwareAgent, and a 12-entry extensionTierRecordGuards list at lines 350-368), then counts by invoking those guards. The underlying @beep/rdf ProvRecord members already carry a provType discriminator via S.tag, but ProvRecord itself is still a plain S.Union without derived match/guards.",
+    "proposedTarget": "Add S.toTaggedUnion(\"provType\") to @beep/rdf ProvRecord (records already define provType with S.tag; Effect v4 S.tag is verified at .repos/effect-v4/packages/effect/src/Schema.ts:5919 and S.toTaggedUnion at :6094), then replace the semantic-web guard wall with ProvRecord.match / derived guards or a small provType category table. This keeps the PROV classes separate, preserves the encoded provType field, and requires the same-PR consumer sweep because the canonical schema lives in @beep/rdf (packages/foundation/modeling/rdf/src/Prov.ts:922).",
+    "confidence": 0.72,
+    "mechanization": "assisted",
+    "roiRank": 2.88,
+    "exception": {
+      "reason": "The proposed ProvRecord.toTaggedUnion(\"provType\") change belongs to the public @beep/rdf ProvRecord schema. Fence 8 forbids this package writer from changing that public form; defer the consumer sweep to the family-close pass.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "SFV4-static-api",
+    "file": "packages/foundation/capability/semantic-web/src/services/sparql-query.ts",
+    "line": 100,
+    "symbol": "SparqlQueryResult",
+    "smell": "SparqlSelectResult/SparqlAskResult/SparqlConstructResult repeat S.Literal(\"select\" | \"ask\" | \"construct\") while SparqlQueryProfile is a LiteralKit at line 44, so a duplicate-literal-family detector could flag the result models.",
+    "proposedTarget": "None -- keep as-is.",
+    "confidence": 0.3,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "The result family is already a discriminated union via S.Union([...]).pipe(S.toTaggedUnion(\"profile\")) at lines 181-182, and the three S.Class exports are public result models with distinct payload shapes. The repeated literals are discriminator fields inside those classes, not a parallel array/enum/guard family, and replacing the classes with kit-generated anonymous cases would be a public-form change.",
+      "boundary": "public SPARQL result model classes in @beep/semantic-web"
+    }
+  }
+]

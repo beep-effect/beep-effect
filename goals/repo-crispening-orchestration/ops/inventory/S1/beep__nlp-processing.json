@@ -1,0 +1,242 @@
+[
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
+    "line": 90,
+    "symbol": "isTextNode, isPOSNode, isEntityNode, isLemmaNode, isDependencyNode, isRelationNode",
+    "smell": "Top-of-file wall of six exported `const isX = S.is(X)` guards (lines 90-195) re-exporting what the member schemas already express; consumed in-file at lines 402, 450, 758-767 (an if-chain fold) and in tests only.",
+    "proposedTarget": "Derive guards from the runtime AnnotatedNode union schema (or use S.is(TextNode) at call sites / static is on the node classes); replace the countNodesByType conditional chain with an exhaustive match over the union. Public-form change: needs the same-PR consumer sweep (in-package + test consumers only; no external src consumers found).",
+    "confidence": 0.7,
+    "mechanization": "assisted",
+    "roiRank": 2,
+    "exception": {
+      "reason": "Per-type refinement statics belong on the upstream @beep/nlp node schemas; this package now owns the AnnotatedNode runtime union and keeps public guard aliases for compatibility.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
+    "line": 90,
+    "symbol": "ExecutionStrategy (Parallel.concurrency, Batch.batchSize)",
+    "smell": "Invariant lives off-schema: Parallel.concurrency and Batch.batchSize are bare S.Finite, while the real domain (integer in [1, MAX_PARALLEL_CONCURRENCY], fail-closed to 1) is enforced imperatively in Executor.ts clampConcurrency (lines 139-148) - imperative validation a refinement/transform could express.",
+    "proposedTarget": "Push the bound onto the schema field (S.Int + S.between(1, MAX_PARALLEL_CONCURRENCY), or a clamping decode transform to preserve the documented clamp-not-reject security posture); design decision required on clamp-vs-reject semantics, hence judgment.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 8,
+    "exception": {
+      "reason": "ExecutionStrategy intentionally accepts finite public values while the executor clamps concurrency at runtime; tightening constructors would reject previously accepted persisted/public options.",
+      "boundary": "public clamp semantics preserved for family-close review"
+    }
+  },
+  {
+    "ruleId": "SFV4-fn-schema",
+    "file": "packages/foundation/capability/nlp-processing/src/Tools/ToolExport.ts",
+    "line": 174,
+    "symbol": "ExportedTool (handle)",
+    "smell": "Exported interface in a schema-modeled file describes a runtime tool descriptor whose `handle: (args: ReadonlyArray<unknown>) => Effect.Effect<unknown, ExportedToolError>` function contract (line 176) plainly warrants the Fn schema from @beep/schema, and whose data fields (name, description, parameterNames, timeoutMs, usageExamples, JSON schemas) form a serializable manifest payload.",
+    "proposedTarget": "Model the descriptor as an S.Class with an Fn-schema field for handle (Fn({ input: ..., output: S.Unknown }) + .implementEffect) or split manifest (S.Class) from behavior; cross-package contract consumed by @beep/wink, so a design pass plus consumer sweep is required.",
+    "confidence": 0.55,
+    "mechanization": "judgment",
+    "roiRank": 9,
+    "exception": {
+      "reason": "ExportedTool is the positional integration adapter surface; replacing handle with an Fn schema would change the public adapter contract and ripple through non-Effect-tool callers.",
+      "boundary": "public adapter contract, deferred to adapter-family sweep"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/nlp-processing/src/Tools/ToolExport.ts",
+    "line": 24,
+    "symbol": "TOOL_PARAMETER_NAMES",
+    "smell": "Positional-argument ordering invariant for tool parameter schemas lives in a stringly-keyed Partial<Record<...>> beside the schemas; a renamed tool or parameter silently drifts to the Struct.keys fallback in parameterNamesForTool (lines 64-78) instead of failing.",
+    "proposedTarget": "Carry parameter ordering on the schemas themselves (per-tool annotation on parametersSchema, or rely on declared field order of each S.Class) so the ordering cannot diverge from the schema; judgment because Tool.make schemas are the shared source consumed by effect/unstable/ai.",
+    "confidence": 0.5,
+    "mechanization": "judgment",
+    "roiRank": 10,
+    "exception": {
+      "reason": "The explicit positional parameter table is the adapter ABI for callers that cannot reflect Effect Tool schemas; it remains the schema-to-position boundary.",
+      "boundary": "public adapter contract, deferred to adapter-family sweep"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/nlp-processing/src/NLPService.ts",
+    "line": 50,
+    "symbol": "NLPServiceShape",
+    "smell": "Exported interface with Effect-returning members (detector-shaped hit).",
+    "proposedTarget": "none - keep as interface",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Context.Service shape for the NLPService tag (class NLPService extends Context.Service<...>()); service contracts stay interfaces per fence 1.",
+      "boundary": "service contract / Context.Service shape"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/nlp-processing/src/Backend/NLPBackend.ts",
+    "line": 269,
+    "symbol": "NLPBackendShape",
+    "smell": "Exported interface with Effect-returning members (detector-shaped hit).",
+    "proposedTarget": "none - keep as interface",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Port interface for pluggable NLP backends (wink et al.) and Context.Service shape for the NLPBackend tag; deliberately an interface per fence 1.",
+      "boundary": "port interface / Context.Service shape"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/ResultStore.ts",
+    "line": 178,
+    "symbol": "ResultStoreShape",
+    "smell": "Exported interface with Effect-returning members (detector-shaped hit).",
+    "proposedTarget": "none - keep as interface",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Context.Service shape for the ResultStore tag; service contracts stay interfaces per fence 1.",
+      "boundary": "service contract / Context.Service shape"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Executor.ts",
+    "line": 78,
+    "symbol": "GraphExecutorShape",
+    "smell": "Exported interface with Effect-returning members and dual-signature overload surfaces (detector-shaped hit).",
+    "proposedTarget": "none - keep as interface",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Context.Service shape for the GraphExecutor tag whose members are generic dual-arity overload surfaces; service contracts and overload surfaces stay interfaces per fence 1.",
+      "boundary": "service contract / overload surface"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/TypeClass.ts",
+    "line": 59,
+    "symbol": "TextOperation, Composable, Foldable, FreeOperation, ForgetfulOperation, Functor",
+    "smell": "Exported interfaces/type aliases with function-typed members (detector-shaped hits at lines 59, 142, 234, 377, 399, 552).",
+    "proposedTarget": "none - keep as type-level abstractions",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Category-theory type classes parameterized by unconstrained generics (A, B, R, E, F); the Fn schema requires concrete input/output schemas and cannot express free type variables. Type-level utilities carve-out.",
+      "boundary": "type-level utility / generic type class"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/TextGraph.ts",
+    "line": 48,
+    "symbol": "TextGraph, MutableTextGraph",
+    "smell": "Exported type aliases of a data-structure type (detector-shaped hits at lines 48, 64).",
+    "proposedTarget": "none - keep as Graph aliases",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Aliases of effect/Graph DirectedGraph/MutableDirectedGraph over schema-typed nodes/edges; Graph is an effect-native data structure, not a schema candidate (fence 6).",
+      "boundary": "effect-native data structure (Graph)"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
+    "line": 215,
+    "symbol": "AnnotatedTextGraph, MutableAnnotatedTextGraph",
+    "smell": "Exported type aliases of a data-structure type (detector-shaped hits at lines 215, 231).",
+    "proposedTarget": "none - keep as Graph aliases",
+    "confidence": 0.95,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Aliases of effect/Graph DirectedGraph/MutableDirectedGraph; Graph is an effect-native data structure, not a schema candidate (fence 6).",
+      "boundary": "effect-native data structure (Graph)"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/EffectGraph.ts",
+    "line": 176,
+    "symbol": "GraphNode, EffectGraph",
+    "smell": "Exported generic interfaces describing node and graph containers (detector-shaped hits at lines 176, 225).",
+    "proposedTarget": "none - keep as generic containers",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Generic containers over unconstrained payload A that intentionally holds non-serializable values (TypeClass.ap stores functions in node data); EffectGraph wraps Graph.DirectedGraph plus HashMap side indices (fence 6). Constituent schema parts (NodeId, NodeMetadata, GraphEdge) are already schemas.",
+      "boundary": "generic data-structure interior / effect-native Graph wrapper"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/EffectGraph.ts",
+    "line": 499,
+    "symbol": "GraphAlgebra, GraphCoalgebra",
+    "smell": "Exported function type aliases (detector-shaped hits at lines 499, 577).",
+    "proposedTarget": "none - keep as generic function aliases",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Recursion-scheme algebra/coalgebra signatures generic in A and B; Fn schema requires concrete input/output schemas and cannot express free type variables.",
+      "boundary": "type-level utility / generic function alias"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Operation.ts",
+    "line": 57,
+    "symbol": "GraphOperation",
+    "smell": "Exported generic interface with Effect-returning members (detector-shaped hit).",
+    "proposedTarget": "none - keep as generic operation contract",
+    "confidence": 0.9,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Generic morphism contract over unconstrained A, B, R, E consumed by the executor; a type class, not a data payload. Fn cannot express free type variables.",
+      "boundary": "type-level utility / generic type class"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
+    "line": 733,
+    "symbol": "OperationResult",
+    "smell": "Exported generic interface describing an execution result (detector-shaped hit); sibling fields (ExecutionId, ExecutionMetrics) are already schemas.",
+    "proposedTarget": "none - keep as generic result container",
+    "confidence": 0.85,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Generic in B and E with a documented intentionally-opaque `originalGraph: unknown` and GraphNode<B> payloads that may be non-serializable; in-memory engine value, never a wire/persisted payload.",
+      "boundary": "generic in-memory result container"
+    }
+  },
+  {
+    "ruleId": "schema-first-inventory",
+    "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/ResultStore.ts",
+    "line": 113,
+    "symbol": "StoredResult, AnyOperationResult",
+    "smell": "Exported interface + type alias for cache entries (detector-shaped hits at lines 113, 54); the key half (ResultKey) is already an S.Class.",
+    "proposedTarget": "none - keep as cache-interior types",
+    "confidence": 0.8,
+    "mechanization": "judgment",
+    "roiRank": 0,
+    "exception": {
+      "reason": "Type-erased in-memory cache entries over OperationResult<unknown, unknown> whose payloads are intentionally opaque and possibly non-serializable; interior state of the ResultStore service, never crosses a serialization boundary.",
+      "boundary": "in-memory service interior / type-erased cache entry"
+    }
+  }
+]
