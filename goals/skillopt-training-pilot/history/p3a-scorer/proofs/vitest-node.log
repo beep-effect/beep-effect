@@ -1,0 +1,9 @@
+
+ RUN  v4.1.9 /home/elpresidank/YeeBois/projects/beep-effect-worktrees/skillopt-p3-scorer/packages/tooling/tool/cli
+
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  17:18:33
+   Duration  6.46s (transform 1.58s, setup 309ms, import 4.86s, tests 1.17s, environment 0ms)
+

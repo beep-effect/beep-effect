@@ -1,0 +1,12 @@
+Implemented [src/FrameFileName.ts](/home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-real/steps/step_0001/rollout/scratch/sfv4-fn-schema-001/worktree/src/FrameFileName.ts:1).
+
+What changed:
+- `FrameFileNameInput` is now schema-owned via `S.Class`.
+- Added exported `FormatFrameFileName` as an executable schema transform from input model to filename string.
+- `formatFrameFileName` is exported from that contract with the same output behavior as before.
+
+Verification:
+- Passed focused standalone compile with:
+  `NODE_PATH=/home/elpresidank/YeeBois/projects/beep-effect/node_modules bunx tsc src/FrameFileName.ts --ignoreConfig --noEmit --strict --moduleResolution bundler --module ESNext --target ES2022 --skipLibCheck`
+
+Note: the fixture’s `tsconfig.json` extends a missing copied-base path in this scratch rollout, so direct `tsc -p tsconfig.json` is blocked by that environment path, not by this file.

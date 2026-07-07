@@ -1,0 +1,1 @@
+$ bun run packages/tooling/tool/cli/src/bin.ts -- agent-effectiveness evals score --dir packages/tooling/tool/cli/test/fixtures/agent-effectiveness/scorer-pass/fixture --task packages/tooling/tool/cli/test/fixtures/agent-effectiveness/scorer-pass/task.json --json

@@ -1,0 +1,52 @@
+{
+  "taskId": "sfv4-fn-schema-001",
+  "score": 0.6,
+  "breakdown": {
+    "completion": 0.6,
+    "stubRequiredForbidden": 0.6
+  },
+  "violations": [
+    {
+      "source": "completion",
+      "ruleId": "requiredPatterns",
+      "file": "src/FrameFileName.ts",
+      "line": 0,
+      "message": "required pattern not found: export\\s+const\\s+FormatFrameFileName\\s*=\\s*Fn\\s*\\("
+    },
+    {
+      "source": "completion",
+      "ruleId": "requiredPatterns",
+      "file": "src/FrameFileName.ts",
+      "line": 0,
+      "message": "required pattern not found: FormatFrameFileName\\.implementSync\\s*\\("
+    }
+  ],
+  "stub": true,
+  "checks": [
+    {
+      "kind": "requiredPatterns",
+      "pattern": "export\\s+class\\s+FrameFileNameInput\\s+extends\\s+S\\.Class\\b",
+      "ok": true
+    },
+    {
+      "kind": "requiredPatterns",
+      "pattern": "export\\s+const\\s+FormatFrameFileName\\s*=\\s*Fn\\s*\\(",
+      "ok": false
+    },
+    {
+      "kind": "requiredPatterns",
+      "pattern": "FormatFrameFileName\\.implementSync\\s*\\(",
+      "ok": false
+    },
+    {
+      "kind": "forbiddenPatterns",
+      "pattern": "export\\s+interface\\s+FrameFileNameInput\\b",
+      "ok": true
+    },
+    {
+      "kind": "forbiddenPatterns",
+      "pattern": "\\btype\\s+FrameFileNameInput\\s*=\\s*\\{",
+      "ok": true
+    }
+  ]
+}

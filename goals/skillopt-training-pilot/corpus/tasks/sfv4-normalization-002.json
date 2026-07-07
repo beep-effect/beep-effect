@@ -1,0 +1,28 @@
+{
+  "id": "sfv4-normalization-002",
+  "ruleIds": ["SFV4-normalization"],
+  "derivedFrom": [
+    "packages/drivers/ecfr/scripts/generate.ts:124 ruleId SFV4-normalization @ schema-first.inventory 2026-07-06"
+  ],
+  "prompt": "Refactor goals/skillopt-training-pilot/corpus/fixtures/sfv4-normalization-002/src/OperationCode.ts so operation codes are canonicalized by the exported schema path, not by direct normalization inside the helper. Export OperationCode and decodeOperationCode from the entrypoint. Preserve behavior and keep the fixture typechecking.",
+  "fixture": "goals/skillopt-training-pilot/corpus/fixtures/sfv4-normalization-002",
+  "entrypoint": "src/OperationCode.ts",
+  "completion": {
+    "requiredExports": [
+      "OperationCode",
+      "decodeOperationCode",
+      "operationCodeOf"
+    ],
+    "requiredPatterns": [
+      "export\\s+const\\s+OperationCode\\s*=",
+      "SchemaTransformation\\.toUpperCase\\s*\\(",
+      "S\\.decode\\s*\\(",
+      "S\\.decodeUnknownOption\\s*\\(\\s*OperationCode\\s*\\)"
+    ],
+    "forbiddenPatterns": [
+      "operation\\.toUpperCase\\s*\\(",
+      "export\\s+type\\s+OperationCode\\s*=\\s*string"
+    ]
+  },
+  "weights": { "completion": 0.5, "law": 0.5 }
+}

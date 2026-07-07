@@ -1,0 +1,27 @@
+{
+  "id": "sfv4-fn-schema-001",
+  "ruleIds": ["SFV4-fn-schema"],
+  "derivedFrom": [
+    "packages/drivers/ffmpeg/src/FFmpeg.service.ts:330 ruleId SFV4-fn-schema @ schema-first.inventory 2026-07-06"
+  ],
+  "prompt": "Refactor goals/skillopt-training-pilot/corpus/fixtures/sfv4-fn-schema-001/src/FrameFileName.ts so the frame filename helper keeps its behavior while exposing a schema-owned input model and executable function contract. Export FrameFileNameInput, FormatFrameFileName, and formatFrameFileName from the entrypoint. Keep the fixture standalone and typechecking.",
+  "fixture": "goals/skillopt-training-pilot/corpus/fixtures/sfv4-fn-schema-001",
+  "entrypoint": "src/FrameFileName.ts",
+  "completion": {
+    "requiredExports": [
+      "FrameFileNameInput",
+      "FormatFrameFileName",
+      "formatFrameFileName"
+    ],
+    "requiredPatterns": [
+      "export\\s+class\\s+FrameFileNameInput\\s+extends\\s+S\\.Class\\b",
+      "export\\s+const\\s+FormatFrameFileName\\s*=\\s*Fn\\s*\\(",
+      "FormatFrameFileName\\.implementSync\\s*\\("
+    ],
+    "forbiddenPatterns": [
+      "export\\s+interface\\s+FrameFileNameInput\\b",
+      "\\btype\\s+FrameFileNameInput\\s*=\\s*\\{"
+    ]
+  },
+  "weights": { "completion": 0.5, "law": 0.5 }
+}

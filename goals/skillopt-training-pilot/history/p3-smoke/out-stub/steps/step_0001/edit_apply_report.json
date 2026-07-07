@@ -1,0 +1,9 @@
+[
+  {
+    "op": "insert_after",
+    "target": "- Prefer `MappedLiteralKit` when a protocol/code mapping needs both encoded and\n  decoded literal helper surfaces.",
+    "content_preview": "- When a task asks for a schema-owned input model plus an \"executable function\n  contract\" (not just a plain helper function), model the contract itself as a\n  schema-derived `Fn(...)` value built fro",
+    "status": "applied_insert_after",
+    "index": 1
+  }
+]

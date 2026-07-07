@@ -1,0 +1,10 @@
+[
+  {
+    "id": "gate-accept-val",
+    "question": "What is the beta task token, formatted per the beep spike response convention?",
+    "context": "[DOC] The beta task token is spike-echo-beta.",
+    "answers": ["beep: spike-echo-beta"],
+    "reference_text": "Validation twin of the train item with a different token: passes only if the candidate skill encodes the generalizable 'beep: ' prefix convention rather than a hardcoded train answer.",
+    "task_type": "gate_accept_probe"
+  }
+]

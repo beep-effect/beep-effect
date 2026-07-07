@@ -113,3 +113,6 @@ sst-env.d.ts
 # secrets / credential exports (never commit; public repo)
 *cookies*.txt
 openai.com_cookies.txt
+
+# SkillOpt pilot local env (tools/skillopt is a uv project; lock is committed)
+tools/skillopt/.venv/

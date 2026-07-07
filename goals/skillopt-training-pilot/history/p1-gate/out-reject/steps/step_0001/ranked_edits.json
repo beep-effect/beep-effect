@@ -1,0 +1,12 @@
+{
+  "reasoning": "The single failure is a formatting miss: the question explicitly asked for the answer formatted per the 'beep spike response convention', and the gold answer required a 'beep: ' prefix on the value. The skill has no guidance about this output-formatting convention, so the agent returned the bare value. Adding a fast rule that instructs prefixing answers with 'beep: ' whenever the task references this convention closes the gap without hardcoding the specific token value.",
+  "edits": [
+    {
+      "op": "insert_after",
+      "target": "## Fast Rules",
+      "content": "\n- When a task or question asks for output \"formatted per the beep spike response convention\" (or similarly references a \"beep\" response/answer convention), prefix the literal value with `beep: ` (e.g., a token `foo-bar` becomes `beep: foo-bar`) rather than returning the bare value.\n",
+      "source_type": "failure",
+      "support_count": 1
+    }
+  ]
+}

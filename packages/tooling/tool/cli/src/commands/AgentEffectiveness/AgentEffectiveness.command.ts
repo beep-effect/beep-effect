@@ -39,6 +39,7 @@ import { FetchHttpClient } from "effect/unstable/http";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
 import { jsonFlag } from "../../internal/cli/Flags.js";
 import { printLines } from "../../internal/cli/Printer.js";
+import { runAgentEffectivenessEvalScoreCommand } from "./internal/EvalScorer.js";
 import type {
   AgentEffectivenessAnnotationCheckReport,
   AgentEffectivenessAnnotationPlan,
@@ -83,6 +84,15 @@ const workerEvalReportFlag = Flag.string("worker-eval-report").pipe(
 );
 const writeFlag = Flag.boolean("write").pipe(
   Flag.withDescription("Perform live Phoenix writes instead of the default dry-run")
+);
+const evalFixtureDirFlag = Flag.directory("dir", { mustExist: true }).pipe(
+  Flag.withDescription("SkillOpt fixture copy directory to score")
+);
+const evalTaskManifestFlag = Flag.file("task", { mustExist: true }).pipe(
+  Flag.withDescription("SkillOpt task manifest JSON path")
+);
+const evalRecordFlag = Flag.boolean("record").pipe(
+  Flag.withDescription("Record the score as an ai-metrics BenchmarkRun row")
 );
 const confirmPhoenixWriteFlag = Flag.string("confirm-phoenix-write").pipe(
   Flag.withDescription(
@@ -643,6 +653,22 @@ const phoenixCommand = Command.make("phoenix", {}, () =>
   printLines(["Agent-effectiveness Phoenix commands:", "- sync"])
 ).pipe(Command.withDescription("Guarded Phoenix sync workflow"), Command.withSubcommands([phoenixSyncCommand]));
 
+const evalsScoreCommand = Command.make(
+  "score",
+  {
+    dataRoot: dataRootFlag,
+    dir: evalFixtureDirFlag,
+    json: jsonFlag,
+    record: evalRecordFlag,
+    taskPath: evalTaskManifestFlag,
+  },
+  flow(runAgentEffectivenessEvalScoreCommand, runAgentEffectivenessProgram)
+).pipe(Command.withDescription("Score a SkillOpt eval fixture with completion and repo-law checks"));
+
+const evalsCommand = Command.make("evals", {}, () =>
+  printLines(["Agent-effectiveness eval commands:", "- score"])
+).pipe(Command.withDescription("Run SkillOpt eval scorer commands"), Command.withSubcommands([evalsScoreCommand]));
+
 /**
  * Agent-effectiveness root command.
  *
@@ -663,6 +689,7 @@ export const agentEffectivenessCommand = Command.make("agent-effectiveness", {},
     "- datasets bundle",
     "- prompts bundle",
     "- experiments bundle",
+    "- evals score",
     "- phoenix sync",
   ])
 ).pipe(
@@ -673,6 +700,7 @@ export const agentEffectivenessCommand = Command.make("agent-effectiveness", {},
     datasetsCommand,
     promptsCommand,
     experimentsCommand,
+    evalsCommand,
     phoenixCommand,
   ])
 );
