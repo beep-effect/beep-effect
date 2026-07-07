@@ -623,6 +623,7 @@
           "@beep/agents-domain",
           "@beep/agents-use-cases",
           "@beep/md",
+          "@beep/schema",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -630,6 +631,7 @@
           "@beep/agents-domain",
           "@beep/agents-use-cases",
           "@beep/md",
+          "@beep/schema",
           "@beep/utils"
         ]
       },
@@ -777,11 +779,13 @@
         "from": "@beep/architecture-lab-config",
         "allow": [
           "@beep/architecture-lab-config",
-          "@beep/identity"
+          "@beep/identity",
+          "@beep/schema"
         ],
         "allowTypeOnly": [
           "@beep/architecture-lab-config",
-          "@beep/identity"
+          "@beep/identity",
+          "@beep/schema"
         ]
       },
       {
@@ -2027,12 +2031,14 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },

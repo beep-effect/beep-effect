@@ -31,10 +31,18 @@ export class ApprovalGate extends BaseEntity.Class<ApprovalGate>($I`ApprovalGate
   Workspace.ApprovalGateId,
   {
     fields: {
-      decision: ApprovalDecision,
-      fixtureKey: S.String,
-      lifecycle: CandidateLifecycle,
-      snapshot: UnknownRecord,
+      decision: ApprovalDecision.annotateKey({
+        description: "Current human approval decision for the candidate work.",
+      }),
+      fixtureKey: S.NonEmptyString.annotateKey({
+        description: "Stable fixture key for the approval gate.",
+      }),
+      lifecycle: CandidateLifecycle.annotateKey({
+        description: "Candidate lifecycle state when the gate was recorded.",
+      }),
+      snapshot: UnknownRecord.annotateKey({
+        description: "Opaque runtime proof snapshot captured for the approval gate.",
+      }),
     },
     persisted: {
       decision: EntitySchema.persist.literal({

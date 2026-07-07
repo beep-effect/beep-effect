@@ -10,7 +10,7 @@
     "foundation": { "blocking": true },
     "drivers": { "blocking": true },
     "tooling": { "blocking": true },
-    "apps-slices": { "blocking": false }
+    "apps-slices": { "blocking": true }
   },
   "ownerOverrides": {}
 }

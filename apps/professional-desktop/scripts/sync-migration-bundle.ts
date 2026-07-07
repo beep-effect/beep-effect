@@ -1,7 +1,9 @@
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
-import { Data, Effect, FileSystem, Layer, Match, Path } from "effect";
+import { Data, Effect, FileSystem, Layer, Match, Order, Path } from "effect";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
 
 const startMarker = "// <generated:migration-bundle>";
 const endMarker = "// </generated:migration-bundle>";
@@ -23,25 +25,30 @@ class StaleMigrationBundle extends Data.TaggedError("StaleMigrationBundle")<{
 const quoteTemplateLiteral = (value: string): string =>
   `\`${value.replaceAll("\\", "\\\\").replaceAll("`", "\\`").replaceAll("${", "\\${")}\``;
 
+type MigrationBundleEntry = {
+  readonly name: string;
+  readonly sql: string;
+};
+
 const readMigrationBundleEntry = Effect.fnUntraced(function* (sourceFolder: string, entry: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const entryPath = path.join(sourceFolder, entry);
   const info = yield* fs.stat(entryPath);
   if (info.type !== "Directory") {
-    return undefined;
+    return O.none<MigrationBundleEntry>();
   }
 
   const migrationSqlPath = path.join(entryPath, "migration.sql");
   const hasMigrationSql = yield* fs.exists(migrationSqlPath).pipe(Effect.orElseSucceed(() => false));
   if (!hasMigrationSql) {
-    return undefined;
+    return O.none<MigrationBundleEntry>();
   }
 
-  return {
+  return O.some({
     name: entry,
     sql: yield* fs.readFileString(migrationSqlPath),
-  };
+  });
 });
 
 const readMigrationBundle = Effect.fn("ProfessionalDesktop.syncMigrationBundle.readMigrationBundle")(function* (
@@ -50,16 +57,14 @@ const readMigrationBundle = Effect.fn("ProfessionalDesktop.syncMigrationBundle.r
   const fs = yield* FileSystem.FileSystem;
   const entries = yield* fs.readDirectory(sourceFolder);
   const migrations = yield* Effect.all(
-    entries.map((entry) => readMigrationBundleEntry(sourceFolder, entry)),
+    A.map(entries, (entry) => readMigrationBundleEntry(sourceFolder, entry)),
     { concurrency: "unbounded" }
   );
-  const sortedMigrations = migrations
-    .filter((migration): migration is Exclude<typeof migration, undefined> => migration !== undefined)
-    .toSorted((left, right) => left.name.localeCompare(right.name));
+  const sortedMigrations = A.sortWith(A.getSomes(migrations), (migration) => migration.name, Order.String);
   const lines = [
     startMarker,
     "const MigrationBundle: ReadonlyArray<MigrationFile> = [",
-    ...sortedMigrations.flatMap((migration) => [
+    ...A.flatMap(sortedMigrations, (migration) => [
       "  {",
       `    name: ${JSON.stringify(migration.name)},`,
       `    sql: ${quoteTemplateLiteral(migration.sql)},`,

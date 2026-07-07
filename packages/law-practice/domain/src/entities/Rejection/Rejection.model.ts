@@ -8,7 +8,7 @@ import { $LawPracticeDomainId } from "@beep/identity/packages";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import * as S from "effect/Schema";
+import { LawPracticeFixtureKey } from "../LawPracticeEntity.fields.js";
 import { RejectionGround } from "./Rejection.values.js";
 
 const $I = $LawPracticeDomainId.create("entities/Rejection/Rejection.model");
@@ -53,10 +53,18 @@ export class Rejection extends BaseEntity.Class<Rejection>($I`Rejection`)(
   LawPractice.RejectionId,
   {
     fields: {
-      claimFixtureKey: S.String,
-      fixtureKey: S.String,
-      ground: RejectionGround,
-      officeActionFixtureKey: S.String,
+      claimFixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Fixture key for the rejected claim.",
+      }),
+      fixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Stable fixture key for the rejection.",
+      }),
+      ground: RejectionGround.annotateKey({
+        description: "Statutory rejection ground.",
+      }),
+      officeActionFixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Fixture key for the office action that raised this rejection.",
+      }),
     },
     persisted: {
       claimFixtureKey: EntitySchema.persist.text({

@@ -6,9 +6,11 @@
  */
 
 import { $SharedDomainId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import * as S from "effect/Schema";
 
 const $I = $SharedDomainId.create("entity/SourceKind");
+const SourceKindBase = LiteralKit(["User", "Agent", "Admin", "Application", "System", "Sync", "Connector"]);
 
 /**
  * Denormalized source facet used by BaseEntity rows and audit filters.
@@ -23,10 +25,15 @@ const $I = $SharedDomainId.create("entity/SourceKind");
  * @since 0.0.0
  * @category schemas
  */
-export const SourceKind = LiteralKit(["User", "Agent", "Admin", "Application", "System", "Sync", "Connector"]).pipe(
+export const SourceKind = SourceKindBase.pipe(
   $I.annoteSchema("SourceKind", {
     description: "Canonical denormalized source of persisted entity data.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(SourceKindBase),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**

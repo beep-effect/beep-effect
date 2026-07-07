@@ -7,11 +7,15 @@
  */
 
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
+import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
+import * as DomainWorkPriority from "@beep/architecture-lab-domain/values/WorkPriority";
+import { $ArchitectureLabTablesId } from "@beep/identity/packages";
 import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
-import { pipe } from "effect";
+import { pipe, Result } from "effect";
 import * as O from "effect/Option";
-import type * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
-import type * as DomainWorkPriority from "@beep/architecture-lab-domain/values/WorkPriority";
+import * as S from "effect/Schema";
+
+const $I = $ArchitectureLabTablesId.create("aggregates/WorkItem/WorkItem.table");
 
 /**
  * Physical Postgres table name for persisted architecture lab WorkItems.
@@ -129,6 +133,39 @@ export type WorkItemRow = typeof workItemTable.$inferSelect;
  */
 export type WorkItemInsert = typeof workItemTable.$inferInsert;
 
+class WorkItemInsertRow extends S.Class<WorkItemInsertRow>($I`WorkItemInsertRow`)(
+  {
+    id: DomainWorkItem.WorkItemId,
+    title: DomainWorkItem.WorkItemTitle,
+    status: DomainWorkItem.WorkItemStatus,
+    assigneeId: S.NullOr(DomainWorker.WorkerId),
+    priority: S.NullOr(DomainWorkPriority.WorkPriority),
+  },
+  $I.annote("WorkItemInsertRow", {
+    title: "WorkItem insert row",
+    description: "SQL insert row boundary for persisted architecture lab WorkItems.",
+  })
+) {}
+
+class WorkItemSelectedRow extends S.Class<WorkItemSelectedRow>($I`WorkItemSelectedRow`)(
+  {
+    id: DomainWorkItem.WorkItemId,
+    title: DomainWorkItem.WorkItemTitle,
+    status: DomainWorkItem.WorkItemStatus,
+    assigneeId: S.NullOr(DomainWorker.WorkerId),
+    priority: S.NullOr(DomainWorkPriority.WorkPriority),
+    createdAt: S.Date,
+    updatedAt: S.Date,
+  },
+  $I.annote("WorkItemSelectedRow", {
+    title: "WorkItem selected row",
+    description: "SQL select row boundary for persisted architecture lab WorkItems.",
+  })
+) {}
+
+const decodeWorkItemInsertRow = S.decodeUnknownResult(WorkItemInsertRow);
+const decodeWorkItemSelectedRow = S.decodeUnknownResult(WorkItemSelectedRow);
+
 /**
  * Convert a WorkItem aggregate to the insert row accepted by {@link workItemTable}.
  *
@@ -166,11 +203,15 @@ export type WorkItemInsert = typeof workItemTable.$inferInsert;
  * @since 0.0.0
  */
 export const toWorkItemInsert = (workItem: DomainWorkItem.WorkItem): WorkItemInsert => ({
-  id: workItem.id,
-  title: workItem.title,
-  status: workItem.status,
-  assigneeId: pipe(workItem.assignee, O.getOrNull),
-  priority: pipe(workItem.priority, O.getOrNull),
+  ...Result.getOrThrow(
+    decodeWorkItemInsertRow({
+      id: workItem.id,
+      title: workItem.title,
+      status: workItem.status,
+      assigneeId: pipe(workItem.assignee, O.getOrNull),
+      priority: pipe(workItem.priority, O.getOrNull),
+    })
+  ),
 });
 
 /**
@@ -211,11 +252,14 @@ export const toWorkItemInsert = (workItem: DomainWorkItem.WorkItem): WorkItemIns
  * @category tables
  * @since 0.0.0
  */
-export const fromWorkItemRow = (row: WorkItemRow): DomainWorkItem.WorkItem =>
-  DomainWorkItem.WorkItem.make({
-    id: row.id,
-    title: row.title,
-    status: row.status,
-    assignee: O.fromNullishOr(row.assigneeId),
-    priority: O.fromNullishOr(row.priority),
+export const fromWorkItemRow = (row: WorkItemRow): DomainWorkItem.WorkItem => {
+  const decoded = Result.getOrThrow(decodeWorkItemSelectedRow(row));
+
+  return DomainWorkItem.WorkItem.make({
+    id: decoded.id,
+    title: decoded.title,
+    status: decoded.status,
+    assignee: O.fromNullishOr(decoded.assigneeId),
+    priority: O.fromNullishOr(decoded.priority),
   });
+};

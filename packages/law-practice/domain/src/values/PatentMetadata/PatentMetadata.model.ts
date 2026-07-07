@@ -870,15 +870,16 @@ const kindCodeExplanationTable = (country: O.Option<string>): Readonly<Record<st
  * @example
  * ```ts
  * import { getKindCodeExplanation } from "@beep/law-practice-domain"
+ * import * as O from "effect/Option"
  *
- * console.log(getKindCodeExplanation("EP", "A1"))
- * // "European application published with the search report."
+ * const explanation = getKindCodeExplanation("EP", "A1")
+ * console.log(O.getOrElse(explanation, () => "Unknown kind code"))
  * ```
  *
  * @category utilities
  * @since 0.0.0
  */
-export const getKindCodeExplanation = (country?: string, kindCode?: string): string | undefined =>
+export const getKindCodeExplanation = (country?: string, kindCode?: string): O.Option<string> =>
   pipe(
     O.fromNullishOr(kindCode),
     O.map(toUpperTrimmed),
@@ -899,8 +900,7 @@ export const getKindCodeExplanation = (country?: string, kindCode?: string): str
             ),
         })
       );
-    }),
-    O.getOrUndefined
+    })
   );
 
 /**

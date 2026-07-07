@@ -4,9 +4,12 @@ import { describe, expect, it } from "@effect/vitest";
 import { getColumns, getTableName } from "drizzle-orm";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 const decodeWorkerId = S.decodeUnknownEffect(DomainWorker.WorkerId);
 const decodeOrganizationId = S.decodeUnknownEffect(DomainWorker.WorkerOrganizationId);
+const WorkerArbitrary = S.toArbitrary(DomainWorker.Worker);
+const WorkerEquivalence = S.toEquivalence(DomainWorker.Worker);
 
 describe("Worker table", () => {
   it.effect(
@@ -31,4 +34,15 @@ describe("Worker table", () => {
       expect(fromWorkerRow({ ...row, id }).displayName).toBe("Ada Lovelace");
     })
   );
+
+  it("round-trips schema-derived Workers through the row converters", () =>
+    fc.assert(
+      fc.property(WorkerArbitrary, (worker) => {
+        const insert = toWorkerInsert(worker);
+        const decoded = fromWorkerRow({ ...insert, id: worker.id });
+
+        expect(WorkerEquivalence(decoded, worker)).toBe(true);
+      }),
+      { numRuns: 50 }
+    ));
 });

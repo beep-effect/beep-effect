@@ -6,9 +6,12 @@
  */
 
 import { $SharedDomainId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
+import * as S from "effect/Schema";
 
 const $I = $SharedDomainId.create("entities/Membership/Membership.values");
+const RoleBase = LiteralKit(["owner", "member"]);
+const StatusBase = LiteralKit(["active"]);
 
 /**
  * Organization membership role.
@@ -23,10 +26,15 @@ const $I = $SharedDomainId.create("entities/Membership/Membership.values");
  * @category schemas
  * @since 0.0.0
  */
-export const Role = LiteralKit(["owner", "member"]).pipe(
+export const Role = RoleBase.pipe(
   $I.annoteSchema("Role", {
     description: "Shared organization membership role.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(RoleBase),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**
@@ -58,10 +66,15 @@ export type Role = typeof Role.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const Status = LiteralKit(["active"]).pipe(
+export const Status = StatusBase.pipe(
   $I.annoteSchema("Status", {
     description: "Shared organization membership lifecycle status.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(StatusBase),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**

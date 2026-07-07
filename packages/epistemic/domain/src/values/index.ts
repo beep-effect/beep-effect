@@ -57,6 +57,20 @@ export * from "./ClaimLifecycle/index.js";
  */
 export * from "./ClaimProjection/index.js";
 /**
+ * Epistemic fixture-key value exports.
+ *
+ * @example
+ * ```ts
+ * import { EpistemicFixtureKey } from "@beep/epistemic-domain/values"
+ *
+ * console.log(EpistemicFixtureKey.make("claim.patentability"))
+ * ```
+
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./EpistemicFixtureKey/index.js";
+/**
  * Evidence span value exports.
  *
  * @example

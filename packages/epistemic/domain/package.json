@@ -38,6 +38,7 @@
     "./values/ClaimGate": "./src/values/ClaimGate/index.ts",
     "./values/ClaimLifecycle": "./src/values/ClaimLifecycle/index.ts",
     "./values/ClaimProjection": "./src/values/ClaimProjection/index.ts",
+    "./values/EpistemicFixtureKey": "./src/values/EpistemicFixtureKey/index.ts",
     "./values/EvidenceSpan": "./src/values/EvidenceSpan/index.ts",
     "./package.json": "./package.json"
   },

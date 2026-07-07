@@ -2,17 +2,6 @@
   {
     "ruleId": "SFV4-defaults",
     "file": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts",
-    "line": 146,
-    "symbol": "emptyState",
-    "smell": "`emptyState` hand-builds the same defaults already declared on `InMemoryState` fields at lines 132-139 (`HashMap.empty()` for maps, `1` for `nextId`).",
-    "proposedTarget": "Let the schema constructor own the defaults: replace the literal with `InMemoryState.make({})`. The class already uses `S.withConstructorDefault` for every field, and the local helper docs show constructor-default omission via `.make({})` at `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:31-37` and `:65-71`.",
-    "confidence": 0.9,
-    "mechanization": "codemod",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts",
     "line": 278,
     "symbol": "makeInMemoryThreadStore.appendTurn",
     "smell": "`O.getOrNull` converts `AppendTurnInput.parentTurnId` to the encoded nullable shape before decoding a `Turn` entity.",

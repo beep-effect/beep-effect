@@ -50,11 +50,21 @@ const $I = $LawPracticeUseCasesId.create("IrToLaw/IrToLaw.ports");
  */
 export class LawEntities extends S.Class<LawEntities>($I`LawEntities`)(
   {
-    claim: Claim,
-    distinction: Distinction,
-    officeAction: OfficeAction,
-    priorArtReference: PriorArtReference,
-    rejection: Rejection,
+    claim: Claim.annotateKey({
+      description: "Patent claim resolved from the grounded claim extraction.",
+    }),
+    distinction: Distinction.annotateKey({
+      description: "Applicant distinction resolved from the grounded distinction extraction.",
+    }),
+    officeAction: OfficeAction.annotateKey({
+      description: "Office-action entity resolved from the source document extraction.",
+    }),
+    priorArtReference: PriorArtReference.annotateKey({
+      description: "Prior-art reference cited by the rejection extraction.",
+    }),
+    rejection: Rejection.annotateKey({
+      description: "Section 102 rejection linking the claim and prior-art reference.",
+    }),
   },
   $I.annote("LawEntities", {
     description:
@@ -91,12 +101,19 @@ export class LawEntities extends S.Class<LawEntities>($I`LawEntities`)(
  * @category services
  * @since 0.0.0
  */
-export class IrToLawShape extends S.Class<IrToLawShape>($I`IrToLawShape`)({
-  toLaw: Fn({
-    input: S.Array(GroundedExtraction),
-    output: EffectSchema<LawEntities, IrToLawExtractionError, never>(),
-  }),
-}) {}
+export class IrToLawShape extends S.Class<IrToLawShape>($I`IrToLawShape`)(
+  {
+    toLaw: Fn({
+      input: S.Array(GroundedExtraction),
+      output: EffectSchema<LawEntities, IrToLawExtractionError, never>(),
+    }).annotateKey({
+      description: "Map grounded office-action extractions into law-practice entities.",
+    }),
+  },
+  $I.annote("IrToLawShape", {
+    description: "Service shape for mapping grounded extraction output into law-practice entities.",
+  })
+) {}
 
 /**
  * IR-to-law mapping service tag.

@@ -2,28 +2,6 @@
   {
     "ruleId": "SFV4-static-api",
     "file": "packages/architecture-lab/server/src/aggregates/WorkItem/WorkItem.http.ts",
-    "line": 44,
-    "symbol": "WorkItemHttpStatus",
-    "smell": "LiteralKit const `LiteralKit([200, 201, 404, 409, 422, 503]).pipe($I.annoteSchema(...))` has no `withLiteralKitStatics`/`withCodecStatics` attached — the file's own doc comment (line 35) has to reach for the bare `S.is(WorkItemHttpStatus)` free function instead of a colocated `.is`, and there is no `.fromUnknown`/`.decodeOption` pair for consumers validating a raw numeric status.",
-    "proposedTarget": "Capture the kit in a base const and compose both statics, mirroring packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts:30-35: `const WorkItemHttpStatusBase = LiteralKit([200, 201, 404, 409, 422, 503]); export const WorkItemHttpStatus = WorkItemHttpStatusBase.pipe($I.annoteSchema(\"WorkItemHttpStatus\", {...}), SchemaUtils.withLiteralKitStatics(WorkItemHttpStatusBase), SchemaUtils.withCodecStatics)` (statics verified at packages/foundation/modeling/schema/src/SchemaUtils/withLiteralKitStatics.ts:37 and withCodecStatics.ts:90).",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/architecture-lab/server/src/aggregates/WorkItem/WorkItem.http.ts",
-    "line": 17,
-    "symbol": "isNotFound, isConflict, isActionRejected",
-    "smell": "Top-of-file guard wall: three module-level `const isX = S.is(WorkItemUseCases.WorkItemX)` built from imported `TaggedErrorClass` members (packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.errors.ts:55,86,118), used only inside `toWorkItemHttpError` (line 118-129) to branch on error shape — the exact duplicate-guard-wall this rule targets, since none of the three error classes nor the `WorkItemActionError` union (WorkItem.errors.ts:195) carries a colocated `.is`.",
-    "proposedTarget": "Cross-package fix: add in-body `static readonly is = S.is(Self)` to `WorkItemNotFound`/`WorkItemConflict`/`WorkItemActionRejected` in `@beep/architecture-lab-use-cases` (or attach `SchemaUtils.withCodecStatics` to the `WorkItemActionError` union so `WorkItemActionError.is.WorkItemNotFound`-style discrimination is available), then replace the three local consts here with `WorkItemUseCases.WorkItemNotFound.is(error)` etc. Flagged for `@beep/architecture-lab-use-cases`'s S4 pass too since the fix's load-bearing half lives there; recorded here because this file is the guard-wall's actual location.",
-    "confidence": 0.6,
-    "mechanization": "judgment",
-    "roiRank": 6
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/architecture-lab/server/src/aggregates/WorkItem/WorkItem.http.ts",
     "line": 131,
     "symbol": "toSuccess",
     "smell": "Detector scan hit: private (unexported) curried helper `(status: 200 | 201) => (body: unknown): WorkItemHttpResponse => WorkItemHttpResponse.make({ status, body })`, called only as `toSuccess(201)`/`toSuccess(200)` inside `Effect.match` blocks in this file — matches the 2-arg-helper heuristic but is not part of any public pipeable surface.",

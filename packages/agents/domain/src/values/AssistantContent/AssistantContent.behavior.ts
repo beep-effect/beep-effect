@@ -9,10 +9,9 @@
  */
 
 import * as Md from "@beep/md/Md.model";
-import { Match } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { AssistantBlock, InlineNode } from "./AssistantContent.model.js";
+import { AssistantBlock, AssistantHeadingTag, AssistantListType, InlineNode } from "./AssistantContent.model.js";
 
 /**
  * Lift a single {@link InlineNode} into a `@beep/md` inline node.
@@ -80,12 +79,11 @@ export const blockToMd = (block: AssistantBlock): Md.Block.Type =>
     paragraph: (b): Md.Block.Type => Md.P.make({ children: inlinesToMd(b.children) }),
     heading: (b): Md.Block.Type => {
       const children = inlinesToMd(b.children);
-      const level = Match.value(b.level).pipe(
-        Match.when("h1", () => 1 as const),
-        Match.when("h2", () => 2 as const),
-        Match.when("h3", () => 3 as const),
-        Match.exhaustive
-      );
+      const level = AssistantHeadingTag.$match(b.level, {
+        h1: () => 1 as const,
+        h2: () => 2 as const,
+        h3: () => 3 as const,
+      });
       return Md.Heading.make({ level, children });
     },
     quote: (b): Md.Block.Type =>
@@ -94,7 +92,10 @@ export const blockToMd = (block: AssistantBlock): Md.Block.Type =>
       }),
     list: (b): Md.Block.Type => {
       const children = A.map(b.items, (item) => Md.Li.make({ children: inlinesToMd(item.children) }));
-      return b.listType === "number" ? Md.Ol.make({ children }) : Md.Ul.make({ children });
+      return AssistantListType.$match(b.listType, {
+        bullet: () => Md.Ul.make({ children }),
+        number: () => Md.Ol.make({ children }),
+      });
     },
     code: (b): Md.Block.Type =>
       Md.Pre.make({

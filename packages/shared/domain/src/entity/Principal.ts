@@ -6,11 +6,12 @@
  */
 
 import { $SharedDomainId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 import * as Shared from "../identity/Shared.js";
 
 const $I = $SharedDomainId.create("entity/Principal");
+const SystemComponentBase = LiteralKit(["Runtime", "Sync", "Migration", "Policy", "Generator"]);
 
 /**
  * Shared system components that can author persisted rows.
@@ -25,10 +26,15 @@ const $I = $SharedDomainId.create("entity/Principal");
  * @since 0.0.0
  * @category schemas
  */
-export const SystemComponent = LiteralKit(["Runtime", "Sync", "Migration", "Policy", "Generator"]).pipe(
+export const SystemComponent = SystemComponentBase.pipe(
   $I.annoteSchema("SystemComponent", {
     description: "System component allowed to appear in a system principal.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(SystemComponentBase),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**
@@ -68,8 +74,8 @@ export type SystemComponent = typeof SystemComponent.Type;
  */
 export class UserPrincipal extends S.Class<UserPrincipal>($I`UserPrincipal`)(
   {
-    kind: S.tag("User"),
-    userId: Shared.UserId,
+    kind: S.tag("User").annotateKey({ description: "Principal discriminator for a user actor." }),
+    userId: Shared.UserId.annotateKey({ description: "Shared user id for the actor." }),
   },
   $I.annote("UserPrincipal", {
     description: "Canonical actor reference for a user.",
@@ -97,9 +103,16 @@ export class UserPrincipal extends S.Class<UserPrincipal>($I`UserPrincipal`)(
  */
 export class ServiceAccountPrincipal extends S.Class<ServiceAccountPrincipal>($I`ServiceAccountPrincipal`)(
   {
-    kind: S.tag("ServiceAccount"),
-    onBehalfOfUserId: S.OptionFromOptionalKey(Shared.UserId),
-    serviceAccountId: Shared.ServiceAccountId,
+    kind: S.tag("ServiceAccount").annotateKey({
+      description: "Principal discriminator for a service-account actor.",
+    }),
+    onBehalfOfUserId: S.OptionFromOptionalKey(Shared.UserId).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional user id represented by the service account." })
+    ),
+    serviceAccountId: Shared.ServiceAccountId.annotateKey({
+      description: "Shared service-account id for the actor.",
+    }),
   },
   $I.annote("ServiceAccountPrincipal", {
     description: "Canonical actor reference for a service account.",
@@ -129,11 +142,16 @@ export class ServiceAccountPrincipal extends S.Class<ServiceAccountPrincipal>($I
  */
 export class AgentPrincipal extends S.Class<AgentPrincipal>($I`AgentPrincipal`)(
   {
-    agentId: Shared.AgentId,
-    agentVersionId: Shared.AgentVersionId,
-    kind: S.tag("Agent"),
-    onBehalfOfTeamId: S.OptionFromOptionalKey(Shared.TeamId),
-    onBehalfOfUserId: Shared.UserId,
+    agentId: Shared.AgentId.annotateKey({ description: "Shared agent id for the actor." }),
+    agentVersionId: Shared.AgentVersionId.annotateKey({
+      description: "Shared agent-version id for the actor.",
+    }),
+    kind: S.tag("Agent").annotateKey({ description: "Principal discriminator for an AI-agent actor." }),
+    onBehalfOfTeamId: S.OptionFromOptionalKey(Shared.TeamId).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional team id represented by the agent." })
+    ),
+    onBehalfOfUserId: Shared.UserId.annotateKey({ description: "User id represented by the agent." }),
   },
   $I.annote("AgentPrincipal", {
     description: "Canonical actor reference for an agent.",
@@ -161,9 +179,16 @@ export class AgentPrincipal extends S.Class<AgentPrincipal>($I`AgentPrincipal`)(
  */
 export class ConnectorAccountPrincipal extends S.Class<ConnectorAccountPrincipal>($I`ConnectorAccountPrincipal`)(
   {
-    connectorAccountId: Shared.ConnectorAccountId,
-    kind: S.tag("ConnectorAccount"),
-    onBehalfOfUserId: S.OptionFromOptionalKey(Shared.UserId),
+    connectorAccountId: Shared.ConnectorAccountId.annotateKey({
+      description: "Shared connector-account id for the actor.",
+    }),
+    kind: S.tag("ConnectorAccount").annotateKey({
+      description: "Principal discriminator for a connector-account actor.",
+    }),
+    onBehalfOfUserId: S.OptionFromOptionalKey(Shared.UserId).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional user id represented by the connector account." })
+    ),
   },
   $I.annote("ConnectorAccountPrincipal", {
     description: "Canonical actor reference for a connector account.",
@@ -189,8 +214,8 @@ export class ConnectorAccountPrincipal extends S.Class<ConnectorAccountPrincipal
  */
 export class SystemPrincipal extends S.Class<SystemPrincipal>($I`SystemPrincipal`)(
   {
-    component: SystemComponent,
-    kind: S.tag("System"),
+    component: SystemComponent.annotateKey({ description: "System component responsible for the action." }),
+    kind: S.tag("System").annotateKey({ description: "Principal discriminator for internal system work." }),
   },
   $I.annote("SystemPrincipal", {
     description: "Canonical actor reference for a system component.",
@@ -226,7 +251,8 @@ export const Principal = S.Union([
   $I.annoteSchema("Principal", {
     description: "Principal actor reference used by shared-kernel persisted entity fields.",
   }),
-  S.toTaggedUnion("kind")
+  S.toTaggedUnion("kind"),
+  SchemaUtils.withCodecStatics
 );
 
 /**

@@ -8,7 +8,11 @@
     "proposedTarget": "Fold the spike construction boundary into a named schema-backed helper/model instead of free decoders, or attach schema-owned codec statics where the owning schemas allow it. Local target examples: `EntityInput` is already an `S.Class` in `packages/law-practice/use-cases/src/internal/spikeEntity.ts:88`, and `SchemaUtils.withCodecStatics` exposes codec statics at `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`.",
     "confidence": 0.63,
     "mechanization": "assisted",
-    "roiRank": 0.42
+    "roiRank": 0.42,
+    "exception": {
+      "reason": "The actual decode-static colocation belongs on CandidateClaim/Evidence in @beep/epistemic-domain; this package can only keep trusted spike decode adapters until those entity statics exist.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "schema-first-inventory",
@@ -19,18 +23,11 @@
     "proposedTarget": "Replace the free decoder wall with a schema-backed spike construction boundary that names the decoded payload once, then builds `LawEntities`. In-package exemplar: `LawEntities` is already an `S.Class` at `packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts:51`, and the `IrToLawShape.toLaw` method is already modeled with `Fn({ input: S.Array(GroundedExtraction), output: EffectSchema<...>() })` at `packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts:94`-`97`.",
     "confidence": 0.64,
     "mechanization": "assisted",
-    "roiRank": 0.5
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/law-practice/use-cases/src/IrToLaw/IrToLaw.service.ts",
-    "line": 90,
-    "symbol": "anchorOf",
-    "smell": "Internal Effect.fn return annotation is an inline object type `{ endChar, quote, startChar }` duplicating the existing `TextAnchor` schema used by `Distinction.anchor`.",
-    "proposedTarget": "Import `TextAnchor` from `@beep/provenance` and return `Effect.fn.Return<TextAnchor, IrToLawExtractionError>`, constructing with `TextAnchor.make({ endChar: span.end, quote, startChar: span.start })` or an Effect schema decode if encoded input must be checked. Existing schema: `TextAnchor` at `packages/foundation/modeling/provenance/src/TextAnchor.ts:62`; consuming field: `Distinction.anchor: TextAnchor` at `packages/law-practice/domain/src/entities/Distinction/Distinction.model.ts:63`.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 0.58
+    "roiRank": 0.5,
+    "exception": {
+      "reason": "The decode-static colocation belongs on Claim/OfficeAction/PriorArtReference/Rejection/Distinction or their BaseEntity factory in @beep/law-practice-domain/@beep/shared-domain; this package cannot add those statics without crossing the wave boundary.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "schema-first-inventory",

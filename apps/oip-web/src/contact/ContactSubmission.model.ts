@@ -6,12 +6,11 @@
  */
 
 import { $OipWebId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, TrimmedNonEmptyText } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, TrimmedNonEmptyText } from "@beep/schema";
 import { Str } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Effect, pipe, Result, SchemaTransformation } from "effect";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
 const $I = $OipWebId.create("contact/ContactSubmission.model");
@@ -78,6 +77,8 @@ const ContactMessage = TrimmedContactText.check(
     toArbitrary: () => (fc) => fc.constantFrom(...ContactMessageArbitraryValues),
   });
 
+const ContactSubmissionStatusBase = LiteralKit(["accepted", "rejected"]);
+
 /**
  * Public contact submission status.
  *
@@ -92,10 +93,15 @@ const ContactMessage = TrimmedContactText.check(
  * @category schemas
  * @since 0.0.0
  */
-export const ContactSubmissionStatus = LiteralKit(["accepted", "rejected"]).pipe(
+export const ContactSubmissionStatus = ContactSubmissionStatusBase.pipe(
   $I.annoteSchema("ContactSubmissionStatus", {
     description: "Public contact submission result status.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(ContactSubmissionStatusBase),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**
@@ -113,6 +119,43 @@ export const ContactSubmissionStatus = LiteralKit(["accepted", "rejected"]).pipe
  * @since 0.0.0
  */
 export type ContactSubmissionStatus = typeof ContactSubmissionStatus.Type;
+
+/**
+ * Non-empty public contact response message text.
+ *
+ * @example
+ * ```ts
+ * import { ContactResponseMessage } from "@beep/oip-web/contact"
+ *
+ * const message: ContactResponseMessage = "Your note was received."
+ * console.log(message)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ContactResponseMessage = S.NonEmptyString.pipe(
+  $I.annoteSchema("ContactResponseMessage", {
+    description: "Non-empty public message text returned by the OIP contact API.",
+    toArbitrary: () => (fc) => fc.constant("Your note was received."),
+  })
+);
+
+/**
+ * Type for {@link ContactResponseMessage}.
+ *
+ * @example
+ * ```ts
+ * import type { ContactResponseMessage } from "@beep/oip-web/contact"
+ *
+ * const message: ContactResponseMessage = "The submission could not be accepted."
+ * console.log(message)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ContactResponseMessage = typeof ContactResponseMessage.Type;
 
 /**
  * Browser-submitted OIP contact form payload.
@@ -140,15 +183,15 @@ export type ContactSubmissionStatus = typeof ContactSubmissionStatus.Type;
  */
 export class ContactSubmission extends S.Class<ContactSubmission>($I`ContactSubmission`)(
   {
-    company: S.optionalKey(TrimmedContactText),
+    company: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
     email: ContactEmail,
     message: ContactMessage,
     name: ContactName,
-    phone: S.optionalKey(TrimmedContactText),
-    posture: S.optionalKey(TrimmedContactText),
+    phone: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
+    posture: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
     submittedAt: NonNegativeInt,
-    technology: S.optionalKey(TrimmedContactText),
-    website: S.optionalKey(TrimmedContactText),
+    technology: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
+    website: S.OptionFromOptionalKey(TrimmedContactText).pipe(SchemaUtils.withNoneDefault),
   },
   $I.annote("ContactSubmission", {
     description: "Browser-submitted OIP contact form payload.",
@@ -214,9 +257,6 @@ export class ContactSubmissionFormPayload extends S.Class<ContactSubmissionFormP
   static readonly decodeUnknownEffect = S.decodeUnknownEffect(this);
 }
 
-const decodeContactSubmissionFormPayloadResult = ContactSubmissionFormPayload.decodeUnknownResult;
-const decodeContactSubmissionFormPayloadEffect = ContactSubmissionFormPayload.decodeUnknownEffect;
-
 const formTextOption = (value: FormDataEntryValue | null): O.Option<string> =>
   pipe(O.fromNullishOr(value), O.filter(P.isString), O.map(Str.trim), O.filter(Str.isNonEmpty));
 
@@ -230,7 +270,7 @@ const contactSubmissionPayloadInputFromFormData = (formData: FormData) => ({
   email: requiredFormTextValue(formData.get("email")),
   message: requiredFormTextValue(formData.get("message")),
   name: requiredFormTextValue(formData.get("name")),
-  ...R.getSomes({
+  ...O.getSomesStruct({
     company: formTextOption(formData.get("company")),
     phone: formTextOption(formData.get("phone")),
     posture: formTextOption(formData.get("posture")),
@@ -246,7 +286,7 @@ const contactSubmissionPayloadFallback = (formData: FormData): ContactSubmission
     message: requiredFormTextValue(formData.get("message")),
     name: requiredFormTextValue(formData.get("name")),
     submittedAt: NonNegativeInt.make(0),
-    ...R.getSomes({
+    ...O.getSomesStruct({
       company: formTextOption(formData.get("company")),
       phone: formTextOption(formData.get("phone")),
       posture: formTextOption(formData.get("posture")),
@@ -276,7 +316,7 @@ const contactSubmissionPayloadFallback = (formData: FormData): ContactSubmission
  * @since 0.0.0
  */
 export const contactSubmissionPayloadFromFormDataEffect = (formData: FormData) =>
-  decodeContactSubmissionFormPayloadEffect(contactSubmissionPayloadInputFromFormData(formData));
+  ContactSubmissionFormPayload.decodeUnknownEffect(contactSubmissionPayloadInputFromFormData(formData));
 
 /**
  * Converts browser form data into the contact submission wire payload.
@@ -301,7 +341,7 @@ export const contactSubmissionPayloadFromFormDataEffect = (formData: FormData) =
 export const contactSubmissionPayloadFromFormData = (formData: FormData): ContactSubmissionFormPayload =>
   pipe(contactSubmissionPayloadInputFromFormData(formData), (input) =>
     pipe(
-      decodeContactSubmissionFormPayloadResult(input),
+      ContactSubmissionFormPayload.decodeUnknownResult(input),
       Result.getOrElse(() => contactSubmissionPayloadFallback(formData))
     )
   );
@@ -326,7 +366,7 @@ export const contactSubmissionPayloadFromFormData = (formData: FormData): Contac
  */
 export class ContactSubmissionResponse extends S.Class<ContactSubmissionResponse>($I`ContactSubmissionResponse`)(
   {
-    message: S.String,
+    message: ContactResponseMessage,
     status: ContactSubmissionStatus,
   },
   $I.annote("ContactSubmissionResponse", {

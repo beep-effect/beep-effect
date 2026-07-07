@@ -1,28 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.service.ts",
-    "line": 73,
-    "symbol": "toWorkItemActionError",
-    "smell": "toWorkItemActionError translates WorkItemRepositoryError | WorkItemDomainError through three S.is guard branches and then falls through to WorkItemActionRejected using error._tag. This is manual tagged-error dispatch; adding another repository/domain tag can silently route to the fallback instead of forcing an exhaustive mapping.",
-    "proposedTarget": "Rewrite the translator as Match.tagsExhaustive over the combined tagged-error union, with explicit cases for WorkItemRepositoryNotFound/Conflict/Unavailable and each WorkItem domain error tag while preserving domain error._tag as the public rejection reason. Verified Effect v4 target API: Match.tagsExhaustive at .repos/effect-v4/packages/effect/src/Match.ts:1095-1106; in-repo usage exemplar: packages/drivers/acp/src/AcpProtocol.service.ts:579.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 3.1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/architecture-lab/use-cases/src/entities/Worker/Worker.service.ts",
-    "line": 63,
-    "symbol": "toWorkerActionError",
-    "smell": "toWorkerActionError translates WorkerRepositoryError through three S.is guard branches and an \"Unknown Worker repository failure\" fallback even though WorkerRepositoryError is a finite tagged-error union. The fallback makes the function non-exhaustive at the type level.",
-    "proposedTarget": "Replace the S.is if-chain with Match.tagsExhaustive cases for WorkerRepositoryNotFound, WorkerRepositoryConflict, and WorkerRepositoryUnavailable so new repository error tags fail the mapping at compile time. Verified Effect v4 target API: Match.tagsExhaustive at .repos/effect-v4/packages/effect/src/Match.ts:1095-1106; in-repo usage exemplar: packages/tooling/tool/docgen/src/Printer.ts:449.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 2.9
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/architecture-lab/use-cases/src/aggregates/WorkItem/WorkItem.errors.ts",
     "line": 195,
     "symbol": "WorkItemActionError",

@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-07T08:06:06.755Z
+Generated: 2026-07-07T12:47:53.012Z
 
 ## Scope
 
@@ -11,21 +11,21 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 104 |
-| cleanPackages | 18 |
+| cleanPackages | 19 |
 | packagesWithoutPublicSrcSurface | 3 |
-| packagesNeedingRemediation | 79 |
-| publicModules | 1605 |
-| publicExports | 14366 |
+| packagesNeedingRemediation | 78 |
+| publicModules | 1615 |
+| publicExports | 14428 |
 | openModules | 129 |
-| openExports | 2207 |
-| missingExportExamples | 2008 |
+| openExports | 2203 |
+| missingExportExamples | 2010 |
 | missingExportCategories | 91 |
 | missingExportSince | 91 |
 | forbiddenTagFindings | 2 |
 | malformedConditionalTagFindings | 0 |
 | exampleImportFindings | 24 |
 | unsafeExampleFindings | 71 |
-| schemaAnnotationFindings | 132 |
+| schemaAnnotationFindings | 126 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -47,7 +47,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 4 | `optionalDependencies` | `<unresolved>` | missing-workspace-metadata | 0 | 0 | 0 | 0 |
 | 5 | `@beep/dol` | `packages/drivers/dol` | clean | 1 | 1 | 0 | 0 |
 | 6 | `@beep/hubspot` | `packages/drivers/hubspot` | needs-remediation | 4 | 22 | 0 | 4 |
-| 7 | `@beep/agents-domain` | `packages/agents/domain` | clean | 11 | 35 | 0 | 0 |
+| 7 | `@beep/agents-domain` | `packages/agents/domain` | clean | 12 | 48 | 0 | 0 |
 | 8 | `@beep/ontology` | `packages/foundation/modeling/ontology` | needs-remediation | 2 | 22 | 0 | 1 |
 | 9 | `@beep/rdf-canonize` | `packages/drivers/rdf-canonize` | needs-remediation | 2 | 2 | 0 | 1 |
 | 10 | `@beep/architecture-lab-ui` | `packages/architecture-lab/ui` | needs-remediation | 3 | 7 | 0 | 1 |
@@ -57,40 +57,40 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 14 | `@beep/mcp-kit` | `packages/foundation/capability/mcp-kit` | needs-remediation | 8 | 57 | 0 | 11 |
 | 15 | `@beep/law-practice-server` | `packages/law-practice/server` | needs-remediation | 2 | 3 | 0 | 1 |
 | 16 | `@beep/db-admin` | `packages/_internal/db-admin` | needs-remediation | 7 | 13 | 0 | 4 |
-| 17 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 39 | 221 | 0 | 7 |
+| 17 | `@beep/shared-domain` | `packages/shared/domain` | needs-remediation | 40 | 225 | 0 | 6 |
 | 18 | `@beep/discord` | `packages/drivers/discord` | needs-remediation | 4 | 15 | 0 | 3 |
 | 19 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 33 | 0 | 0 |
 | 20 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 2 |
 | 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 99 | 637 | 0 | 138 |
 | 22 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 0 | 3 |
 | 23 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
-| 24 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 7 | 23 | 0 | 6 |
+| 24 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 7 | 27 | 0 | 6 |
 | 25 | `@beep/courtlistener` | `packages/drivers/courtlistener` | clean | 1 | 1 | 0 | 0 |
-| 26 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | needs-remediation | 8 | 22 | 0 | 7 |
+| 26 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | needs-remediation | 8 | 25 | 0 | 7 |
 | 27 | `@beep/editor` | `packages/foundation/ui-system/editor` | needs-remediation | 21 | 86 | 0 | 20 |
 | 28 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 93 | 0 | 11 |
-| 29 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 49 | 115 | 0 | 45 |
+| 29 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 50 | 122 | 0 | 46 |
 | 30 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 9 | 82 | 0 | 16 |
 | 31 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | needs-remediation | 8 | 94 | 0 | 24 |
 | 32 | `@beep/ai-provider-cli` | `packages/drivers/ai-provider-cli` | clean | 4 | 14 | 0 | 0 |
 | 33 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 8 | 32 | 7 | 8 |
 | 34 | `@beep/colors` | `packages/foundation/capability/colors` | clean | 1 | 9 | 0 | 0 |
-| 35 | `@beep/agents-use-cases` | `packages/agents/use-cases` | needs-remediation | 23 | 70 | 0 | 7 |
+| 35 | `@beep/agents-use-cases` | `packages/agents/use-cases` | needs-remediation | 23 | 72 | 0 | 7 |
 | 36 | `@beep/m365-mcp` | `packages/drivers/m365-mcp` | needs-remediation | 4 | 21 | 0 | 20 |
-| 37 | `@beep/workspace-server` | `packages/workspace/server` | needs-remediation | 6 | 14 | 0 | 4 |
+| 37 | `@beep/workspace-server` | `packages/workspace/server` | needs-remediation | 7 | 19 | 0 | 4 |
 | 38 | `@beep/chalk` | `packages/foundation/capability/chalk` | clean | 1 | 35 | 0 | 0 |
 | 39 | `@beep/uspto` | `packages/drivers/uspto` | needs-remediation | 5 | 24 | 0 | 9 |
 | 40 | `@beep/phoenix` | `packages/drivers/phoenix` | needs-remediation | 5 | 50 | 0 | 10 |
 | 41 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 5 | 32 | 0 | 8 |
 | 42 | `@beep/types` | `packages/foundation/primitive/types` | clean | 5 | 10 | 0 | 0 |
-| 43 | `@beep/oip-web` | `apps/oip-web` | needs-remediation | 30 | 80 | 1 | 11 |
+| 43 | `@beep/oip-web` | `apps/oip-web` | needs-remediation | 31 | 84 | 1 | 11 |
 | 44 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 45 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 5 | 103 | 0 | 50 |
 | 46 | `@beep/langextract` | `packages/foundation/capability/langextract` | needs-remediation | 6 | 30 | 0 | 5 |
 | 47 | `@beep/shared-tables` | `packages/shared/tables` | needs-remediation | 11 | 14 | 0 | 9 |
 | 48 | `@beep/scratchpad` | `scratchpad` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 49 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 6 | 170 | 0 | 48 |
-| 50 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | needs-remediation | 11 | 25 | 0 | 1 |
+| 50 | `@beep/law-practice-use-cases` | `packages/law-practice/use-cases` | clean | 12 | 29 | 0 | 0 |
 | 51 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 27 | 60 | 0 | 0 |
 | 52 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | needs-remediation | 28 | 107 | 0 | 27 |
 | 53 | `@beep/utils` | `packages/foundation/modeling/utils` | needs-remediation | 26 | 213 | 0 | 22 |
@@ -107,9 +107,9 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 64 | `@beep/openai-compat` | `packages/drivers/openai-compat` | clean | 4 | 54 | 0 | 0 |
 | 65 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | needs-remediation | 48 | 311 | 0 | 21 |
 | 66 | `@beep/anthropic` | `packages/drivers/anthropic` | needs-remediation | 5 | 26 | 0 | 4 |
-| 67 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 23 | 42 | 2 | 23 |
-| 68 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 20 | 39 | 0 | 0 |
-| 69 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | needs-remediation | 18 | 62 | 0 | 20 |
+| 67 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 25 | 48 | 2 | 23 |
+| 68 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 22 | 43 | 0 | 0 |
+| 69 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | needs-remediation | 18 | 64 | 0 | 18 |
 | 70 | `@beep/firecrawl` | `packages/drivers/firecrawl` | needs-remediation | 5 | 267 | 0 | 3 |
 | 71 | `@beep/ecfr` | `packages/drivers/ecfr` | needs-remediation | 5 | 23 | 0 | 13 |
 | 72 | `@beep/acp` | `packages/drivers/acp` | clean | 10 | 410 | 0 | 0 |
@@ -125,22 +125,22 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 82 | `@beep/govinfo` | `packages/drivers/govinfo` | needs-remediation | 32 | 85 | 0 | 45 |
 | 83 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 144 | 0 | 36 |
 | 84 | `@beep/xai` | `packages/drivers/xai` | clean | 7 | 70 | 0 | 0 |
-| 85 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | needs-remediation | 13 | 34 | 0 | 13 |
+| 85 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | needs-remediation | 13 | 34 | 0 | 12 |
 | 86 | `@beep/duckdb` | `packages/drivers/duckdb` | needs-remediation | 4 | 17 | 0 | 3 |
 | 87 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | needs-remediation | 4 | 54 | 0 | 6 |
-| 88 | `@beep/agents-client` | `packages/agents/client` | needs-remediation | 3 | 22 | 0 | 3 |
+| 88 | `@beep/agents-client` | `packages/agents/client` | needs-remediation | 3 | 24 | 0 | 3 |
 | 89 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | needs-remediation | 7 | 29 | 0 | 15 |
 | 90 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
-| 91 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | needs-remediation | 10 | 18 | 0 | 1 |
+| 91 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | needs-remediation | 10 | 19 | 0 | 1 |
 | 92 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 6 | 74 | 0 | 5 |
 | 93 | `@beep/observability` | `packages/foundation/capability/observability` | needs-remediation | 24 | 159 | 3 | 31 |
 | 94 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 5 | 339 | 0 | 333 |
 | 95 | `@beep/ui` | `packages/foundation/ui-system/ui` | needs-remediation | 132 | 578 | 114 | 64 |
 | 96 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | needs-remediation | 5 | 119 | 0 | 92 |
-| 97 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 25 | 137 | 0 | 5 |
+| 97 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 25 | 138 | 0 | 6 |
 | 98 | `@beep/wink` | `packages/drivers/wink` | needs-remediation | 14 | 71 | 0 | 13 |
 | 99 | `@beep/postgres` | `packages/drivers/postgres` | needs-remediation | 7 | 36 | 0 | 6 |
-| 100 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | needs-remediation | 15 | 52 | 0 | 19 |
+| 100 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | needs-remediation | 15 | 52 | 0 | 18 |
 | 101 | `@beep/provenance` | `packages/foundation/modeling/provenance` | needs-remediation | 2 | 4 | 0 | 1 |
 | 102 | `@beep/epistemic-tables` | `packages/epistemic/tables` | needs-remediation | 6 | 12 | 0 | 1 |
 | 103 | `@beep/federal-register` | `packages/drivers/federal-register` | clean | 1 | 1 | 0 | 0 |
@@ -177,7 +177,7 @@ Export findings:
 Path: `packages/architecture-lab/ui`
 
 Export findings:
-- `src/aggregates/WorkItem/WorkItem.view-model.ts:75` `WorkItemVisibleAction` (type) - 1 unsafe example violation(s)
+- `src/aggregates/WorkItem/WorkItem.view-model.ts:80` `WorkItemVisibleAction` (type) - 1 unsafe example violation(s)
 
 ### @beep/pacer
 
@@ -242,13 +242,12 @@ Export findings:
 Path: `packages/shared/domain`
 
 Export findings:
-- `src/entity/EntityId.ts:71` `EntityIdValue` (type) - 1 unsafe example violation(s)
-- `src/entity/EntityId.ts:87` `EntityIdValueFor` (type) - 1 unsafe example violation(s)
-- `src/entity/EntityId.ts:242` `Definition` (class) - 1 unsafe example violation(s)
-- `src/entity/EntityId.ts:304` `EntityId` (type) - 1 unsafe example violation(s)
-- `src/entity/EntityId.ts:349` `Any` (type) - 1 unsafe example violation(s)
+- `src/entity/EntityId.ts:121` `EntityIdValue` (type) - 1 unsafe example violation(s)
+- `src/entity/EntityId.ts:137` `EntityIdValueFor` (type) - 1 unsafe example violation(s)
+- `src/entity/EntityId.ts:308` `Definition` (class) - 1 unsafe example violation(s)
+- `src/entity/EntityId.ts:374` `EntityId` (type) - 1 unsafe example violation(s)
+- `src/entity/EntityId.ts:420` `Any` (type) - 1 unsafe example violation(s)
 - `src/values/OnePasswordReference/index.ts:9` `export * from "./OnePasswordReference.model.ts";` (re-export) - missing @example
-- `src/values/Rule/Rule.model.ts:29` `Effect` (const) - 1 schema annotation/type-alias gap(s)
 
 ### @beep/discord
 
@@ -620,12 +619,12 @@ Export findings:
 Path: `packages/agents/server`
 
 Export findings:
-- `src/AssistantTurn/BlockRepair.ts:223` `PatchOpSummaryBase` (class) - missing @example
-- `src/AssistantTurn/BlockRepair.ts:238` `AddPatchOpSummary` (class) - missing @example
-- `src/AssistantTurn/BlockRepair.ts:253` `RemovePatchOpSummary` (class) - missing @example
-- `src/AssistantTurn/BlockRepair.ts:268` `ReplacePatchOpSummary` (class) - missing @example
-- `src/AssistantTurn/BlockRepair.ts:283` `PatchOpSummary` (const) - missing @example
-- `src/AssistantTurn/BlockRepair.ts:296` `PatchOpSummary` (type) - missing @example
+- `src/AssistantTurn/BlockRepair.ts:260` `PatchOpSummaryBase` (class) - missing @example
+- `src/AssistantTurn/BlockRepair.ts:277` `AddPatchOpSummary` (class) - missing @example
+- `src/AssistantTurn/BlockRepair.ts:292` `RemovePatchOpSummary` (class) - missing @example
+- `src/AssistantTurn/BlockRepair.ts:307` `ReplacePatchOpSummary` (class) - missing @example
+- `src/AssistantTurn/BlockRepair.ts:322` `PatchOpSummary` (const) - missing @example
+- `src/AssistantTurn/BlockRepair.ts:335` `PatchOpSummary` (type) - missing @example
 
 ### @beep/workspace-use-cases
 
@@ -705,13 +704,14 @@ Export findings:
 - `src/entities/Rejection/index.ts:16` `export * from "./Rejection.values.js";` (re-export) - missing @example
 - `src/entities/index.ts:9` `export * from "./Claim/index.js";` (re-export) - missing @example
 - `src/entities/index.ts:16` `export * from "./Distinction/index.js";` (re-export) - missing @example
-- `src/entities/index.ts:23` `export * from "./LegalClient/index.js";` (re-export) - missing @example
-- `src/entities/index.ts:30` `export * from "./LegalContact/index.js";` (re-export) - missing @example
-- `src/entities/index.ts:37` `export * from "./Matter/index.js";` (re-export) - missing @example
-- `src/entities/index.ts:44` `export * from "./OfficeAction/index.js";` (re-export) - missing @example
-- `src/entities/index.ts:51` `export * from "./PatentAsset/index.js";` (re-export) - missing @example
-- `src/entities/index.ts:58` `export * from "./PriorArtReference/index.js";` (re-export) - missing @example
-- `src/entities/index.ts:65` `export * from "./Rejection/index.js";` (re-export) - missing @example
+- `src/entities/index.ts:23` `export * from "./LawPracticeEntity.fields.js";` (re-export) - missing @example
+- `src/entities/index.ts:30` `export * from "./LegalClient/index.js";` (re-export) - missing @example
+- `src/entities/index.ts:37` `export * from "./LegalContact/index.js";` (re-export) - missing @example
+- `src/entities/index.ts:44` `export * from "./Matter/index.js";` (re-export) - missing @example
+- `src/entities/index.ts:51` `export * from "./OfficeAction/index.js";` (re-export) - missing @example
+- `src/entities/index.ts:58` `export * from "./PatentAsset/index.js";` (re-export) - missing @example
+- `src/entities/index.ts:65` `export * from "./PriorArtReference/index.js";` (re-export) - missing @example
+- `src/entities/index.ts:72` `export * from "./Rejection/index.js";` (re-export) - missing @example
 - `src/index.ts:9` `export * from "./entities/index.ts";` (re-export) - missing @example
 - `src/index.ts:16` `export * from "./values/index.ts";` (re-export) - missing @example
 - `src/values/ApplicationNumber/ApplicationNumber.model.ts:81` `ApplicationNumber` (type) - 1 unsafe example violation(s)
@@ -801,7 +801,7 @@ Module findings:
 
 Export findings:
 - `src/index.ts:154` `RuleRegistrySchema` (class) - 1 schema annotation/type-alias gap(s)
-- `src/rules/index.ts:43` `default` (CallExpression) - missing summary; missing @example, @category, @since
+- `src/rules/index.ts:42` `default` (CallExpression) - missing summary; missing @example, @category, @since
 - `src/rules/namespace-node-imports.ts:59` `default` (CallExpression) - missing summary; missing @example, @category, @since
 - `src/rules/no-global-process-runtime.ts:53` `default` (CallExpression) - missing summary; missing @example, @category, @since
 - `src/rules/no-inline-schema-compile.ts:85` `default` (CallExpression) - missing summary; missing @example, @category, @since
@@ -814,13 +814,13 @@ Export findings:
 Path: `packages/agents/use-cases`
 
 Export findings:
-- `src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:27` `RuntimeCandidateLifecycle` (const) - 1 schema annotation/type-alias gap(s)
-- `src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:48` `RuntimeClaimConfidence` (const) - 1 schema annotation/type-alias gap(s)
-- `src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:69` `RuntimeApprovalDecision` (const) - 1 schema annotation/type-alias gap(s)
-- `src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:90` `RuntimeRequestKind` (const) - 1 schema annotation/type-alias gap(s)
-- `src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:111` `RuntimeSourceKind` (const) - 1 schema annotation/type-alias gap(s)
-- `src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:132` `RuntimeActivityType` (const) - 1 schema annotation/type-alias gap(s)
-- `src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:153` `RuntimeUsageMode` (const) - 1 schema annotation/type-alias gap(s)
+- `src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:65` `RuntimeCandidateLifecycle` (const) - 1 schema annotation/type-alias gap(s)
+- `src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:86` `RuntimeClaimConfidence` (const) - 1 schema annotation/type-alias gap(s)
+- `src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:107` `RuntimeApprovalDecision` (const) - 1 schema annotation/type-alias gap(s)
+- `src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:128` `RuntimeRequestKind` (const) - 1 schema annotation/type-alias gap(s)
+- `src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:149` `RuntimeSourceKind` (const) - 1 schema annotation/type-alias gap(s)
+- `src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:170` `RuntimeActivityType` (const) - 1 schema annotation/type-alias gap(s)
+- `src/processes/ProfessionalRuntime/ProfessionalRuntime.values.ts:191` `RuntimeUsageMode` (const) - 1 schema annotation/type-alias gap(s)
 
 ### @beep/m365-mcp
 
@@ -911,9 +911,9 @@ Module findings:
 - `src/components/MattersCarousel.tsx:1` (none) - missing summary; missing @since
 
 Export findings:
-- `src/app/api/contact/ContactRouteResponse.ts:87` `contactRequestResponseWithSubmit` (const) - 1 unsafe example violation(s)
+- `src/app/api/contact/ContactRouteResponse.ts:88` `contactRequestResponseWithSubmit` (const) - 1 unsafe example violation(s)
 - `src/app/layout.tsx:146` `instant` (const) - missing @example
-- `src/app/page.tsx:37` `instant` (const) - missing @example
+- `src/app/page.tsx:36` `instant` (const) - missing @example
 - `src/components/HeroVideo.tsx:158` `HERO_ROTATE_MS` (const) - missing @example
 - `src/contact/index.ts:14` `export * from "./ContactSubmission.http.ts";` (re-export) - missing @example
 - `src/contact/index.ts:21` `export * from "./ContactSubmission.model.ts";` (re-export) - missing @example
@@ -1058,13 +1058,6 @@ Export findings:
 - `src/Md.model.ts:1626` `Block` (type) - missing @example
 - `src/Md.model.ts:1634` `Block` (namespace) - missing @example
 - `src/Md.model.ts:1698` `Document` (namespace) - missing @example
-
-### @beep/law-practice-use-cases
-
-Path: `packages/law-practice/use-cases`
-
-Export findings:
-- `src/IrToLaw/IrToLaw.ports.ts:94` `IrToLawShape` (class) - 1 schema annotation/type-alias gap(s)
 
 ### @beep/semantic-web
 
@@ -1327,20 +1320,20 @@ Export findings:
 - `src/chat/ChatFixtures.ts:15` `decodeWorkspaceId` (const) - missing summary; missing @example, @category, @since
 - `src/chat/ChatFixtures.ts:17` `userDocument` (const) - missing summary; missing @example, @category, @since
 - `src/chat/ChatFixtures.ts:20` `userParagraphDocument` (const) - missing summary; missing @example, @category, @since
-- `src/chat/ChatOrchestrator.ts:50` `documentToPlainText` (const) - missing @example
+- `src/chat/ChatOrchestrator.ts:52` `documentToPlainText` (const) - missing @example
 - `src/chat/ChatOrchestrator.ts:359` `makeChatOperations` (const) - missing @example
 - `src/chat/UsageRecordSink.ts:27` `UsageRecordSinkShape` (interface) - missing @example
 - `src/chat/UsageRecordSink.ts:38` `UsageRecordSink` (class) - missing @example
 - `src/chat/UsageRecordSink.ts:51` `makeInMemoryUsageRecordSink` (const) - missing @example
 - `src/chat/UsageRecordSink.ts:72` `UsageRecordSinkInMemory` (const) - missing @example
 - `src/chat/UsageRecordSink.ts:125` `UsageRecordSinkDrizzle` (const) - missing @example
-- `src/chat/ui/StreamingBlocks.tsx:40` `boundedKey` (const) - missing @example, @category, @since
-- `src/chat/ui/StreamingBlocks.tsx:51` `stableOccurrenceKeys` (const) - missing @example, @category, @since
-- `src/chat/ui/StreamingBlocks.tsx:79` `blockRenderKey` (const) - missing summary; missing @example, @category, @since
+- `src/chat/ui/StreamingBlocks.tsx:41` `boundedKey` (const) - missing @example, @category, @since
+- `src/chat/ui/StreamingBlocks.tsx:52` `stableOccurrenceKeys` (const) - missing @example, @category, @since
+- `src/chat/ui/StreamingBlocks.tsx:80` `blockRenderKey` (const) - missing summary; missing @example, @category, @since
 - `src/runtime/Layer.ts:50` `ChatHandlersLayer` (type) - missing @example
 - `src/runtime/Layer.ts:82` `RuntimeLive` (const) - missing @example
 - `src/runtime/Layer.ts:97` `RuntimeTest` (const) - missing @example
-- `src/runtime/Migrations.ts:254` `SidecarReadyMarker` (const) - missing @example
+- `src/runtime/Migrations.ts:269` `SidecarReadyMarker` (const) - missing @example
 - `src/runtime/Observability.ts:97` `ObservabilityLive` (const) - missing @example
 - `src/runtime/Pglite.ts:72` `ChatDbCompatibilityMarker` (const) - missing @example
 - `src/runtime/Pglite.ts:112` `markCompatibleChatDbDataDir` (const) - missing @example
@@ -1353,14 +1346,12 @@ Export findings:
 Path: `packages/architecture-lab/use-cases`
 
 Export findings:
-- `src/aggregates/WorkItem/WorkItem.errors.ts:195` `WorkItemActionError` (const) - 1 schema annotation/type-alias gap(s)
 - `src/aggregates/WorkItem/index.ts:7` `export * from "./WorkItem.commands.js";` (re-export) - missing @example
 - `src/aggregates/WorkItem/index.ts:14` `export * from "./WorkItem.errors.js";` (re-export) - missing @example
 - `src/aggregates/WorkItem/index.ts:21` `export * from "./WorkItem.use-cases.js";` (re-export) - missing @example
 - `src/aggregates/WorkItem/server.ts:7` `export * from "./index.js";` (re-export) - missing @example
 - `src/aggregates/WorkItem/server.ts:14` `export * from "./WorkItem.repository.js";` (re-export) - missing @example
 - `src/aggregates/WorkItem/server.ts:21` `export { makeWorkItemUseCases, toWorkItemActionError } from "./WorkItem.service.js";` (re-export) - missing @example
-- `src/entities/Worker/Worker.errors.ts:163` `WorkerActionError` (const) - 1 schema annotation/type-alias gap(s)
 - `src/entities/Worker/index.ts:7` `export * from "./Worker.commands.js";` (re-export) - missing @example
 - `src/entities/Worker/index.ts:14` `export * from "./Worker.errors.js";` (re-export) - missing @example
 - `src/entities/Worker/index.ts:21` `export * from "./Worker.use-cases.js";` (re-export) - missing @example
@@ -2687,7 +2678,6 @@ Path: `packages/architecture-lab/server`
 
 Export findings:
 - `src/aggregates/WorkItem/WorkItem.http.ts:44` `WorkItemHttpStatus` (const) - 1 unsafe example violation(s)
-- `src/aggregates/WorkItem/WorkItem.http.ts:86` `WorkItemHttpResponse` (class) - 1 schema annotation/type-alias gap(s)
 - `src/aggregates/WorkItem/index.ts:7` `export * from "./WorkItem.http.js";` (re-export) - missing @example
 - `src/aggregates/WorkItem/index.ts:14` `export * from "./WorkItem.layer.js";` (re-export) - missing @example
 - `src/aggregates/WorkItem/index.ts:21` `export * from "./WorkItem.repo.js";` (re-export) - missing @example
@@ -2726,9 +2716,9 @@ Export findings:
 Path: `packages/agents/client`
 
 Export findings:
-- `src/Chat.atoms.ts:360` `StreamingTurn` (class) - 1 schema annotation/type-alias gap(s)
-- `src/Chat.atoms.ts:463` `EditTarget` (class) - 1 schema annotation/type-alias gap(s)
-- `src/Chat.atoms.ts:619` `TurnRequest` (const) - 1 schema annotation/type-alias gap(s)
+- `src/Chat.atoms.ts:408` `StreamingTurn` (class) - 1 schema annotation/type-alias gap(s)
+- `src/Chat.atoms.ts:519` `EditTarget` (class) - 1 schema annotation/type-alias gap(s)
+- `src/Chat.atoms.ts:689` `TurnRequest` (const) - 1 schema annotation/type-alias gap(s)
 
 ### @beep/uspto-mcp
 
@@ -3444,6 +3434,7 @@ Export findings:
 - `src/next/internal.ts:31` `isFunctionValue` (const) - missing @example
 - `src/next/models/AllowedDevOrigin.schema.ts:59` `AllowedDevOrigin` (type) - 1 unsafe example violation(s)
 - `src/next/models/ImageConfig.schema.ts:29` `LoaderValue` (const) - 1 schema annotation/type-alias gap(s)
+- `src/next/security/index.ts:179` `SecureHeadersConfigInput` (type) - missing @example
 
 ### @beep/wink
 
@@ -3481,12 +3472,11 @@ Export findings:
 Path: `packages/architecture-lab/domain`
 
 Export findings:
-- `src/aggregates/WorkItem/WorkItem.errors.ts:194` `WorkItemDomainError` (const) - 1 schema annotation/type-alias gap(s)
 - `src/aggregates/WorkItem/index.ts:7` `export * from "./WorkItem.errors.js";` (re-export) - missing @example
 - `src/aggregates/WorkItem/index.ts:14` `export * from "./WorkItem.model.js";` (re-export) - missing @example
 - `src/aggregates/WorkItem/index.ts:21` `export * from "./WorkItem.values.js";` (re-export) - missing @example
 - `src/aggregates/index.ts:7` `export * as WorkItem from "./WorkItem/index.js";` (re-export) - missing @example
-- `src/entities/Worker/Worker.model.ts:102` `WorkerOrganizationId` (type) - 1 unsafe example violation(s)
+- `src/entities/Worker/Worker.model.ts:101` `WorkerOrganizationId` (type) - 1 unsafe example violation(s)
 - `src/entities/Worker/index.ts:7` `export * from "./Worker.model.js";` (re-export) - missing @example
 - `src/entities/index.ts:15` `export * as Worker from "./Worker/index.js";` (re-export) - missing @example
 - `src/identity/index.ts:15` `export * as ArchitectureLab from "./ArchitectureLab.js";` (re-export) - missing @example

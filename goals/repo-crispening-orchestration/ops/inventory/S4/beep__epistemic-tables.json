@@ -8,7 +8,11 @@
     "proposedTarget": "Add `static readonly encode = S.encodeSync(Self)` in-body on `UsageRecord` (packages/epistemic/domain/src/entities/UsageRecord/UsageRecord.model.ts) per the S4 in-body-statics fix for `S.Class`/`BaseEntity.Class`; then replace this file's module const with `UsageRecord.encode(usageRecord)` at its call site (line 140).",
     "confidence": 0.65,
     "mechanization": "assisted",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "The only durable colocation target is the `UsageRecord` schema class owned by `@beep/epistemic-domain`; adding that static is outside this package's write scope and would require a same-PR consumer sweep.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -19,7 +23,11 @@
     "proposedTarget": "Add `static readonly fromUnknown = S.decodeUnknownSync(Self)` in-body on `UsageRecord` (packages/epistemic/domain/src/entities/UsageRecord/UsageRecord.model.ts); then `export const fromUsageRecordRow = UsageRecord.fromUnknown` (direct helper ref, no wrapper lambda) once the type-level `UsageRecordRow -> unknown` widening is acceptable, or keep a thin explicit-typed re-export if the row/unknown boundary needs to stay explicit.",
     "confidence": 0.6,
     "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 2,
+    "exception": {
+      "reason": "The decoder static belongs on the `UsageRecord` schema class in `@beep/epistemic-domain`; changing that owner is outside this package's write scope and the row-boundary wrapper must keep its public signature until the family-close sweep handles consumers.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -30,7 +38,11 @@
     "proposedTarget": "Once `UsageRecord.fromUnknown` exists in-body, evaluate collapsing to a direct re-export; if the `UsageRecordRow`-typed boundary must stay explicit for row-shape safety, keep the thin wrapper (this is a judgment call, not a mechanical rewrite).",
     "confidence": 0.4,
     "mechanization": "judgment",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "The wrapper can only collapse after `UsageRecord.fromUnknown` exists on the cross-package domain schema; keeping the typed row-boundary function preserves the existing exported helper signature.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

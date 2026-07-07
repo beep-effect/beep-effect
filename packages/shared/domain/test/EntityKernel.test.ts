@@ -115,7 +115,7 @@ describe("EntityId", () => {
     expect(CustomDocumentId.resource).toBe("custom.document");
     expect(CustomDocumentId.entityType).toBe("CustomDocument");
     expect(CustomDocumentId.brand).toBe("CustomDocumentId");
-    expect(CustomDocumentId.definition.overrides.description).toBe("Custom document id.");
+    expect(O.getOrThrow(CustomDocumentId.definition.overrides.description)).toBe("Custom document id.");
   });
 
   it("supports data-first and data-last factories", () => {

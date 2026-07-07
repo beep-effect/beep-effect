@@ -1,13 +1,1 @@
-[
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/architecture-lab/domain/src/entities/Worker/Worker.model.ts",
-    "line": 244,
-    "symbol": "decodeWorker",
-    "smell": "Top-of-file decode-wall entry `const decodeWorker = S.decodeUnknownResult(Worker)`; its sole consumer `create` (line 271) immediately does `Result.getOrThrow(decodeWorker(...))` — exactly `fromUnknown` (trusted-boundary decode-or-throw) semantics that belong on the entity itself.",
-    "proposedTarget": "Add an in-body `static readonly fromUnknown = S.decodeUnknownSync(this)` static to `Worker` (BaseEntity.Class loses withCodecStatics identity when piped like S.Class, so in-body statics are the sanctioned form); replace `Result.getOrThrow(decodeWorker({...}))` in `create` with `Worker.fromUnknown({...})` and delete the module-level const.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 1
-  }
-]
+[]

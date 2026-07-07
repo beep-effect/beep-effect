@@ -11,6 +11,7 @@ import { BlockRepairFailed } from "@beep/agents-use-cases/server";
 import { generateAnthropicToolJson } from "@beep/anthropic";
 import { make } from "@beep/identity";
 import { redactString } from "@beep/observability";
+import { isNonNegative } from "@beep/schema/Number";
 import { Effect, JsonPatch, Metric } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -23,6 +24,40 @@ const { $AgentsServerId } = make("agents-server");
 const $I = $AgentsServerId.create("AssistantTurn/BlockRepair");
 
 const REPAIR_ATTEMPTS = 2;
+const PATCH_PATH_LIMIT = 128;
+
+const BlockIndex = S.Int.check(isNonNegative).pipe(
+  $I.annoteSchema("BlockIndex", {
+    description: "Non-negative integer index of an assistant block inside a turn envelope.",
+  })
+);
+
+const PatchOperationCount = S.Int.check(isNonNegative).pipe(
+  $I.annoteSchema("PatchOperationCount", {
+    description: "Non-negative integer count of structural JSON Patch operations.",
+  })
+);
+
+const redactedJsonPointerPathPattern = /^(?:$|\/)/u;
+
+const RedactedJsonPointerPath = S.String.check(
+  S.isPattern(redactedJsonPointerPathPattern, {
+    identifier: $I`RedactedJsonPointerPathPattern`,
+    title: "Redacted JSON Pointer Path",
+    description: "Accepts the empty JSON Pointer root or a slash-prefixed JSON Pointer path after redaction.",
+    message: "Expected a JSON Pointer root or slash-prefixed path.",
+  }),
+  S.isMaxLength(PATCH_PATH_LIMIT + 3, {
+    identifier: $I`RedactedJsonPointerPathMaxLength`,
+    title: "Redacted JSON Pointer Path Max Length",
+    description: "Keeps redacted JSON Pointer paths within the configured truncation limit plus ellipsis.",
+    message: `Expected a redacted JSON Pointer path of ${PATCH_PATH_LIMIT + 3} characters or fewer.`,
+  })
+).pipe(
+  $I.annoteSchema("RedactedJsonPointerPath", {
+    description: "Redacted and length-bounded JSON Pointer path safe for repair observability.",
+  })
+);
 
 const REPAIR_SYSTEM = A.join(
   [
@@ -59,7 +94,7 @@ const blocksRepaired = Metric.counter("agents_assistant_turn_blocks_repaired_tot
  */
 export class IssueReport extends S.Class<IssueReport>($I`IssueReport`)(
   {
-    index: S.Finite.annotateKey({ description: "Original block index in the assistant turn envelope." }),
+    index: BlockIndex.annotateKey({ description: "Original block index in the assistant turn envelope." }),
     raw: S.String.annotateKey({ description: "The raw JSON slice that failed validation." }),
     report: S.String.annotateKey({ description: "Validation issue that caused the slice to be held for repair." }),
   },
@@ -70,8 +105,8 @@ export class IssueReport extends S.Class<IssueReport>($I`IssueReport`)(
 
 class RepairItem extends S.Class<RepairItem>($I`RepairItem`)(
   {
-    index: S.Finite.annotateKey({ description: "Original failure index echoed unchanged." }),
-    block: AssistantBlock,
+    index: BlockIndex.annotateKey({ description: "Original failure index echoed unchanged." }),
+    block: AssistantBlock.annotateKey({ description: "Corrected assistant block returned for the failure index." }),
   },
   $I.annote("RepairItem", {
     description: "One corrected assistant block returned by the repair tool.",
@@ -89,8 +124,12 @@ class RepairEnvelope extends S.Class<RepairEnvelope>($I`RepairEnvelope`)(
 
 class RepairAttemptState extends S.Class<RepairAttemptState>($I`RepairAttemptState`)(
   {
-    pending: S.Array(IssueReport),
-    repaired: S.Array(IndexedBlock),
+    pending: S.Array(IssueReport).annotateKey({
+      description: "Failure reports still pending after the current repair attempt.",
+    }),
+    repaired: S.Array(IndexedBlock).annotateKey({
+      description: "Accepted repaired blocks accumulated across repair attempts.",
+    }),
   },
   $I.annote("RepairAttemptState", {
     description: "Accumulator for unrepaired failures and accepted repaired blocks across repair attempts.",
@@ -212,8 +251,6 @@ const defaultRepairCall: BlockRepairCall = (pending, attempt) =>
 
 const toBlockRepairFailed = (message: string): BlockRepairFailed => BlockRepairFailed.make({ message });
 
-const PATCH_PATH_LIMIT = 128;
-
 /**
  * Base schema fields shared by every summarized JSON Patch operation, carrying the redacted JSON Pointer path.
  *
@@ -222,7 +259,9 @@ const PATCH_PATH_LIMIT = 128;
  */
 export class PatchOpSummaryBase extends S.Class<PatchOpSummaryBase>($I`PatchOpSummaryBase`)(
   {
-    path: S.String,
+    path: RedactedJsonPointerPath.annotateKey({
+      description: "Redacted and truncated JSON Pointer path for the summarized patch operation.",
+    }),
   },
   $I.annote("PatchOpSummaryBase", {
     description: "A single JSON Patch operation.",
@@ -297,8 +336,12 @@ export type PatchOpSummary = typeof PatchOpSummary.Type;
 
 class PatchSummarization extends S.Class<PatchSummarization>($I`PatchSummarization`)(
   {
-    operations: S.Finite,
-    ops: S.Array(PatchOpSummary),
+    operations: PatchOperationCount.annotateKey({
+      description: "Number of structural JSON Patch operations summarized.",
+    }),
+    ops: S.Array(PatchOpSummary).annotateKey({
+      description: "Redacted per-operation patch summaries safe for logs.",
+    }),
   },
   $I.annote("PatchSummarization", {
     description:

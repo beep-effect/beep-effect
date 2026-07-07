@@ -8,7 +8,7 @@ import { $LawPracticeDomainId } from "@beep/identity/packages";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as LawPractice from "@beep/shared-domain/identity/LawPractice";
-import * as S from "effect/Schema";
+import { LawPracticeFixtureKey, LawPracticeText } from "../LawPracticeEntity.fields.js";
 
 const $I = $LawPracticeDomainId.create("entities/OfficeAction/OfficeAction.model");
 
@@ -51,10 +51,18 @@ export class OfficeAction extends BaseEntity.Class<OfficeAction>($I`OfficeAction
   LawPractice.OfficeActionId,
   {
     fields: {
-      applicationNumber: S.String,
-      fixtureKey: S.String,
-      matterFixtureKey: S.String,
-      patentAssetFixtureKey: S.String,
+      applicationNumber: LawPracticeText.annotateKey({
+        description: "Application number text extracted from the office action.",
+      }),
+      fixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Stable fixture key for the office action.",
+      }),
+      matterFixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Fixture key for the matter this office action belongs to.",
+      }),
+      patentAssetFixtureKey: LawPracticeFixtureKey.annotateKey({
+        description: "Fixture key for the patent asset examined by this office action.",
+      }),
     },
     persisted: {
       applicationNumber: EntitySchema.persist.text({

@@ -15,6 +15,13 @@ export * from "./Claim/index.js";
  */
 export * from "./Distinction/index.js";
 /**
+ * Shared law-practice entity field schemas.
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export * from "./LawPracticeEntity.fields.js";
+/**
  * Legal client entity and value-object exports.
  *
  * @category entities

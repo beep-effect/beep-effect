@@ -12,33 +12,18 @@
  */
 
 import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client";
-import { $ProfessionalDesktopId } from "@beep/identity";
 import { Toaster } from "@beep/ui/components/sonner";
 import { useAtomMount, useAtomValue } from "@effect/atom-react";
 import { Cause, Effect } from "effect";
-import * as S from "effect/Schema";
 import { AsyncResult, Atom } from "effect/unstable/reactivity";
 import { ChatApp } from "./chat/ui/ChatApp.tsx";
 import { ChatTurnErrorToasts } from "./chat/ui/ChatTurnErrorToasts.tsx";
 import { IpcChatProtocolLive } from "./transport/IpcChatClient.ts";
 import { IpcSpikePanel } from "./transport/IpcSpikePanel.tsx";
+import { SidecarTransport } from "./transport/SidecarTransport.ts";
 import type { JSX } from "react";
 
-const $I = $ProfessionalDesktopId.create("App");
-
-class SidecarTransport extends S.Class<SidecarTransport>($I`SidecarTransport`)(
-  {
-    ipc: S.Boolean,
-  },
-  $I.annote("SidecarTransport", {
-    description: "The transport used to communicate with the sidecar.",
-  })
-) {}
-
 const hasTauriRuntime = (): boolean => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
-
-// Decode the Rust `sidecar_transport` command result through the schema.
-const decodeSidecarTransport = S.decodeUnknownEffect(SidecarTransport);
 
 // effect-first: probe which transport the sidecar speaks. In a Tauri webview
 // this invokes the Rust `sidecar_transport` command — bridged through Effect at
@@ -50,7 +35,7 @@ const readSidecarTransport = Effect.suspend(() =>
   hasTauriRuntime()
     ? Effect.tryPromise(() => import("@tauri-apps/api/core")).pipe(
         Effect.flatMap(({ invoke }) => Effect.tryPromise(() => invoke("sidecar_transport"))),
-        Effect.flatMap(decodeSidecarTransport)
+        Effect.flatMap(SidecarTransport.decodeUnknownEffect)
       )
     : Effect.succeed(SidecarTransport.make({ ipc: false }))
 );

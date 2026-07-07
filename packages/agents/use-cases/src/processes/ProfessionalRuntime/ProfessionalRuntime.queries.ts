@@ -7,6 +7,7 @@
 import { $AgentsUseCasesId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { RuntimeScope } from "./ProfessionalRuntime.contracts.js";
+import { RuntimeFixtureScenarioId } from "./ProfessionalRuntime.values.js";
 
 const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalRuntime.queries");
 
@@ -35,9 +36,11 @@ const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalR
  */
 export class GetContextPacket extends S.Class<GetContextPacket>($I`GetContextPacket`)(
   {
-    artifactId: S.String,
-    scenarioId: S.String,
-    scope: RuntimeScope,
+    artifactId: S.NonEmptyString.annotateKey({ description: "Source artifact identifier requested by the SDK." }),
+    scenarioId: RuntimeFixtureScenarioId.annotateKey({
+      description: "Fixture scenario identifier requested by the SDK.",
+    }),
+    scope: RuntimeScope.annotateKey({ description: "Runtime scope for the context packet query." }),
   },
   $I.annote("GetContextPacket", {
     description: "Query requesting the context packet for a scenario artifact and scope.",

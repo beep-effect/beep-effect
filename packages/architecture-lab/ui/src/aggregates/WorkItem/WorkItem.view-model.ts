@@ -13,7 +13,7 @@
 
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import { $ArchitectureLabUiId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { pipe } from "effect";
 import { dual } from "effect/Function";
@@ -22,6 +22,7 @@ import * as S from "effect/Schema";
 import type { WorkItemPublicConfig } from "@beep/architecture-lab-config/public";
 
 const $I = $ArchitectureLabUiId.create("aggregates/WorkItem/WorkItem.view-model");
+const WorkItemVisibleActionBase = LiteralKit(["assign", "complete", "reopen", "archive"]);
 
 /**
  * Closed action vocabulary the WorkItem UI may expose for a summary row.
@@ -29,9 +30,8 @@ const $I = $ArchitectureLabUiId.create("aggregates/WorkItem/WorkItem.view-model"
  * @example
  * ```ts
  * import { WorkItemVisibleAction } from "@beep/architecture-lab-ui/aggregates/WorkItem"
- * import * as S from "effect/Schema"
  *
- * const action = S.decodeUnknownSync(WorkItemVisibleAction)("archive")
+ * const action = WorkItemVisibleAction.fromUnknown("archive")
  *
  * if (action !== WorkItemVisibleAction.Enum.archive) {
  *   throw new Error("expected archive to be a visible WorkItem action")
@@ -41,11 +41,16 @@ const $I = $ArchitectureLabUiId.create("aggregates/WorkItem/WorkItem.view-model"
  * @category value-objects
  * @since 0.0.0
  */
-export const WorkItemVisibleAction = LiteralKit(["assign", "complete", "reopen", "archive"]).pipe(
+export const WorkItemVisibleAction = WorkItemVisibleActionBase.pipe(
   $I.annoteSchema("WorkItemVisibleAction", {
     title: "WorkItem visible action",
     description: "Action key exposed by the architecture lab WorkItem UI view model.",
-  })
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    decodeOption: S.decodeUnknownOption(schema),
+    fromUnknown: S.decodeUnknownSync(schema),
+  })),
+  SchemaUtils.withLiteralKitStatics(WorkItemVisibleActionBase)
 );
 
 /**
@@ -73,6 +78,22 @@ export const WorkItemVisibleAction = LiteralKit(["assign", "complete", "reopen",
  * @since 0.0.0
  */
 export type WorkItemVisibleAction = typeof WorkItemVisibleAction.Type;
+
+const WorkItemStatusLabel = S.NonEmptyString.check(S.isUppercased()).pipe(
+  $I.annoteSchema("WorkItemStatusLabel", {
+    title: "WorkItem status label",
+    description: "Uppercase display label derived from the canonical WorkItem status.",
+  })
+);
+
+const VisibleActionList = S.Array(WorkItemVisibleAction)
+  .check(S.isMaxLength(3), S.isUnique())
+  .pipe(
+    $I.annoteSchema("VisibleActionList", {
+      title: "Visible action list",
+      description: "Unique WorkItem action keys exposed for a summary row.",
+    })
+  );
 
 /**
  * Client-renderable summary for a canonical WorkItem aggregate.
@@ -109,12 +130,24 @@ export type WorkItemVisibleAction = typeof WorkItemVisibleAction.Type;
  */
 export class WorkItemSummaryViewModel extends S.Class<WorkItemSummaryViewModel>($I`WorkItemSummaryViewModel`)(
   {
-    id: DomainWorkItem.WorkItemId,
-    title: DomainWorkItem.WorkItemTitle,
-    status: DomainWorkItem.WorkItemStatus,
-    statusLabel: S.String,
-    assigneeLabel: S.OptionFromOptionalKey(S.String),
-    visibleActions: S.Array(WorkItemVisibleAction),
+    id: DomainWorkItem.WorkItemId.annotateKey({
+      description: "Stable identifier of the summarized WorkItem aggregate.",
+    }),
+    title: DomainWorkItem.WorkItemTitle.annotateKey({
+      description: "Human-readable title shown for the WorkItem summary row.",
+    }),
+    status: DomainWorkItem.WorkItemStatus.annotateKey({
+      description: "Canonical lifecycle status that drives summary presentation.",
+    }),
+    statusLabel: WorkItemStatusLabel.annotateKey({
+      description: "Uppercase display label derived from the canonical status.",
+    }),
+    assigneeLabel: S.OptionFromOptionalKey(S.NonEmptyString).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional display label for the assigned Worker.",
+    }),
+    visibleActions: VisibleActionList.annotateKey({
+      description: "Unique browser-safe action keys currently visible for the WorkItem.",
+    }),
   },
   $I.annote("WorkItemSummaryViewModel", {
     title: "WorkItem summary view model",
@@ -124,19 +157,31 @@ export class WorkItemSummaryViewModel extends S.Class<WorkItemSummaryViewModel>(
 
 const makeStatusLabel: (status: DomainWorkItem.WorkItemStatus) => string = Str.toUpperCase;
 
+const activeVisibleActions: ReadonlyArray<WorkItemVisibleAction> = [
+  WorkItemVisibleAction.Enum.assign,
+  WorkItemVisibleAction.Enum.complete,
+  WorkItemVisibleAction.Enum.archive,
+];
+const completedVisibleActions: ReadonlyArray<WorkItemVisibleAction> = [
+  WorkItemVisibleAction.Enum.reopen,
+  WorkItemVisibleAction.Enum.archive,
+];
+const noVisibleActions: ReadonlyArray<WorkItemVisibleAction> = A.empty();
+
 const makeVisibleActions = (
   workItem: DomainWorkItem.WorkItem,
   config: WorkItemPublicConfig
 ): ReadonlyArray<WorkItemVisibleAction> => {
-  if (workItem.status === "archived") {
-    return [];
-  }
-  const baseActions: ReadonlyArray<WorkItemVisibleAction> =
-    workItem.status === "completed" ? ["reopen", "archive"] : ["assign", "complete", "archive"];
+  const baseActions: ReadonlyArray<WorkItemVisibleAction> = DomainWorkItem.WorkItemStatus.$match(workItem.status, {
+    open: () => activeVisibleActions,
+    assigned: () => activeVisibleActions,
+    completed: () => completedVisibleActions,
+    archived: () => noVisibleActions,
+  });
   return pipe(
     baseActions,
-    A.filter((action) => action !== "assign" || config.assignmentEnabled),
-    A.filter((action) => action !== "reopen" || config.reopenCompletedEnabled)
+    A.filter((action) => action !== WorkItemVisibleAction.Enum.assign || config.assignmentEnabled),
+    A.filter((action) => action !== WorkItemVisibleAction.Enum.reopen || config.reopenCompletedEnabled)
   );
 };
 

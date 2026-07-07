@@ -8,18 +8,11 @@
     "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the pipe (signature verified at packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90) so `IrToLawExtractionErrorReason.is(value)` (overall guard), `.fromUnknown`, and `.decodeOption` exist alongside the kit's per-literal `.is` map.",
     "confidence": 0.85,
     "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.ports.ts",
-    "line": 103,
-    "symbol": "OfficeActionReviewError",
-    "smell": "Union-of-tagged-errors const built with raw `S.Union([...]).annotate($I.annote(...))` (not `$I.annoteSchema`, so no `preserveSchemaStatics` wrapping runs at all — `.annotate` returns a bare `this[\"Rebuild\"]`, verified at .repos/effect-v4/packages/effect/src/Schema.ts:184) — zero statics survive. The module's own JSDoc (line 97) demonstrates the resulting free-floating-guard workaround: `S.is(OfficeActionReviewError)(error)`.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` after the annotate step so callers use `OfficeActionReviewError.is(error)` / `.decodeOption` / `.fromUnknown` directly instead of wrapping the schema in `S.is(...)` at each call site.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 2
+    "roiRank": 1,
+    "exception": {
+      "reason": "SchemaUtils.withCodecStatics would overwrite LiteralKit's existing per-literal `.is` guard map on IrToLawExtractionErrorReason, removing the documented `IrToLawExtractionErrorReason.is[reason]` API. This needs a distinct helper/static design rather than a local overwrite.",
+      "boundary": "LiteralKit static-surface collision, deferred to SchemaUtils helper enhancement"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -30,7 +23,11 @@
     "proposedTarget": "Depends on an upstream fix in @beep/law-practice-domain/@beep/shared-domain (BaseEntity.Class) to attach in-body `static readonly fromUnknown = S.decodeUnknownSync(Self)` per entity; once available, delete this wall and call `Claim.fromUnknown(...)` etc. directly at each of the five call sites in buildLawEntities (lines 135-172). Filed here since the wall physically sits in this package; the fix lands in the entity classes, not this file.",
     "confidence": 0.55,
     "mechanization": "judgment",
-    "roiRank": 5
+    "roiRank": 5,
+    "exception": {
+      "reason": "Claim/OfficeAction/PriorArtReference/Rejection/Distinction do not expose colocated decode statics yet; adding them would touch @beep/law-practice-domain or @beep/shared-domain outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",
@@ -41,7 +38,11 @@
     "proposedTarget": "Depends on an upstream fix in @beep/epistemic-domain (out of this packet's touch scope) to attach in-body `.fromUnknown` on CandidateClaim/Evidence; once available, delete this wall and call `CandidateClaim.fromUnknown(...)` / `Evidence.fromUnknown(...)` directly at candidateClaimOf (line 74) / evidenceOf (line 82).",
     "confidence": 0.5,
     "mechanization": "judgment",
-    "roiRank": 6
+    "roiRank": 6,
+    "exception": {
+      "reason": "CandidateClaim/Evidence do not expose colocated decode statics yet; adding them would touch @beep/epistemic-domain outside this package.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "SFV4-static-api",

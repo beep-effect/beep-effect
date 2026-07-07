@@ -8,18 +8,11 @@
     "proposedTarget": "Introduce an `OipJsonLdGraph`/`OipJsonLdNode` boundary schema near `OipSeo.ts` and make the helper return that schema type, or wrap the projection with `Fn({ input: OipSiteContent, output: OipJsonLdGraph })`. In-repo exemplars: HTTP wire response schemas in `apps/oip-web/src/contact/ContactSubmission.http.ts:38` and `apps/oip-web/src/contact/ContactSubmission.http.ts:66`, plus `Fn` usage in `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66`.",
     "confidence": 0.56,
     "mechanization": "judgment",
-    "roiRank": 0.28
-  },
-  {
-    "ruleId": "SFV4-fn-schema",
-    "file": "apps/oip-web/src/app/api/contact/ContactRouteResponse.ts",
-    "line": 18,
-    "symbol": "SubmitContact",
-    "smell": "Function type alias for an injected contact workflow takes `unknown` even though `readContactFormPayload` decodes the request into the contact payload schema before invoking it.",
-    "proposedTarget": "Narrow the contract to the available contact payload schema, matching `apps/oip-web/src/app/api/contact/ContactHttpApiRoute.ts:14`; for a schema-carried function contract, model it as `Fn({ input: ContactSubmissionPayload, output: EffectSchema<ContactSubmissionResponse, never, never>() })` following `packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts:94`.",
-    "confidence": 0.82,
-    "mechanization": "assisted",
-    "roiRank": 0.62
+    "roiRank": 0.28,
+    "exception": {
+      "reason": "JSON-LD is an external schema.org projection assembled from already-decoded OipSiteContent and escaped at the Next.js script boundary; a local partial schema would duplicate schema.org terms without strengthening the trusted content boundary.",
+      "boundary": "schema.org JSON-LD projection boundary over decoded OipSiteContent"
+    }
   },
   {
     "ruleId": "SFV4-fn-schema",

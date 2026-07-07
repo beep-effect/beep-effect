@@ -8,6 +8,10 @@
     "proposedTarget": "Add `static readonly is = S.is(this)` to ChatActionError alongside its other in-body statics; call `ChatActionError.is(error)` here.",
     "confidence": 0.4,
     "mechanization": "judgment",
-    "roiRank": 1
+    "roiRank": 1,
+    "exception": {
+      "reason": "The static belongs on the exported ChatActionError class in @beep/agents-use-cases; changing it requires a public use-cases package edit outside this package writer scope.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   }
 ]

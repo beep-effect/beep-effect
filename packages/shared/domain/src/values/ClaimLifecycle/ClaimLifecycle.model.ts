@@ -11,10 +11,16 @@
  * @since 0.0.0
  */
 import { $SharedDomainId } from "@beep/identity";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $SharedDomainId.create("values/ClaimLifecycle/ClaimLifecycle.model");
+const ClaimLifecycleBase = LiteralKit(["candidate", "shape_valid", "consistency_checked", "admitted"]);
+const ClaimLifecycleTransitionReason = S.NonEmptyString.pipe(
+  $I.annoteSchema("ClaimLifecycleTransitionReason", {
+    description: "Non-empty reason text explaining a claim lifecycle transition.",
+  })
+);
 
 /**
  * Lifecycle vocabulary for claims.
@@ -35,10 +41,15 @@ const $I = $SharedDomainId.create("values/ClaimLifecycle/ClaimLifecycle.model");
  * @category schemas
  * @since 0.0.0
  */
-export const ClaimLifecycle = LiteralKit(["candidate", "shape_valid", "consistency_checked", "admitted"]).pipe(
+export const ClaimLifecycle = ClaimLifecycleBase.pipe(
   $I.annoteSchema("ClaimLifecycle", {
     description: "Admission lifecycle state for a claim: candidate -> shape_valid -> consistency_checked -> admitted.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(ClaimLifecycleBase),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**
@@ -81,9 +92,9 @@ export type ClaimLifecycle = typeof ClaimLifecycle.Type;
  */
 export class ClaimLifecycleTransition extends S.Class<ClaimLifecycleTransition>($I`ClaimLifecycleTransition`)(
   {
-    from: ClaimLifecycle,
-    to: ClaimLifecycle,
-    reason: S.String,
+    from: ClaimLifecycle.annotateKey({ description: "Lifecycle state before the transition." }),
+    to: ClaimLifecycle.annotateKey({ description: "Lifecycle state after the transition." }),
+    reason: ClaimLifecycleTransitionReason.annotateKey({ description: "Reason the transition occurred." }),
   },
   $I.annote("ClaimLifecycleTransition", {
     description: "A single claim lifecycle state change with from/to states and a reason.",

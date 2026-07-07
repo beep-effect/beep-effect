@@ -1,13 +1,1 @@
-[
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/agents/client/src/ClientObservability.ts",
-    "line": 40,
-    "symbol": "otlpBaseUrl",
-    "smell": "globalThis is cast to { __BEEP_OTLP_URL__?: unknown } to read an optional runtime override, even though the package already imports predicate helpers and this is exactly the kind of unknown-boundary narrowing they cover.",
-    "proposedTarget": "Replace the cast with predicate narrowing, e.g. P.hasProperty(globalThis, \"__BEEP_OTLP_URL__\") ? globalThis.__BEEP_OTLP_URL__ : undefined followed by P.isString. In-repo exemplar: Chat.atoms.ts:436 uses P.hasProperty + P.isString for unknown error.message; P.hasProperty is verified at packages/foundation/modeling/utils/src/Predicate.ts:188 and :384.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 2.55
-  }
-]
+[]

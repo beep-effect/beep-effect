@@ -9,6 +9,7 @@
  */
 
 import { $AgentsDomainId } from "@beep/identity/packages";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -106,7 +107,8 @@ export const InlineNode = S.Union([TextInline, LinkInline]).pipe(
   S.toTaggedUnion("type"),
   $I.annoteSchema("InlineNode", {
     description: "Inline content held by an assistant block.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -128,6 +130,42 @@ export type InlineNode = typeof InlineNode.Type;
 // ---------------------------------------------------------------------------
 // Blocks (structured assistant turn block vocabulary)
 // ---------------------------------------------------------------------------
+
+/**
+ * Heading tags supported by assistant-content heading blocks.
+ *
+ * @example
+ * ```ts
+ * import { AssistantHeadingTag } from "@beep/agents-domain/values/AssistantContent"
+ *
+ * const headingTag = AssistantHeadingTag.Enum.h2
+ * console.log(AssistantHeadingTag.is.h2(headingTag))
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export const AssistantHeadingTag = LiteralKit(["h1", "h2", "h3"]).pipe(
+  $I.annoteSchema("AssistantHeadingTag", {
+    description: "Heading tags supported by assistant-content heading blocks.",
+  })
+);
+
+/**
+ * Type accepted by the {@link AssistantHeadingTag} schema.
+ *
+ * @example
+ * ```ts
+ * import type { AssistantHeadingTag } from "@beep/agents-domain/values/AssistantContent"
+ *
+ * const headingTag = "h2" satisfies AssistantHeadingTag
+ * console.log(headingTag)
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export type AssistantHeadingTag = typeof AssistantHeadingTag.Type;
 
 /**
  * A paragraph of inline content.
@@ -179,7 +217,7 @@ export class ParagraphBlock extends S.Class<ParagraphBlock>($I`ParagraphBlock`)(
 export class HeadingBlock extends S.Class<HeadingBlock>($I`HeadingBlock`)(
   {
     type: S.tag("heading"),
-    level: S.Literals(["h1", "h2", "h3"]).annotateKey({ description: "Heading level" }),
+    level: AssistantHeadingTag.annotateKey({ description: "Heading level" }),
     children: S.Array(InlineNode).annotateKey({ description: "Inline content in order" }),
   },
   $I.annote("HeadingBlock", {
@@ -216,6 +254,42 @@ export class QuoteBlock extends S.Class<QuoteBlock>($I`QuoteBlock`)(
 ) {}
 
 /**
+ * List markers supported by assistant-content list blocks.
+ *
+ * @example
+ * ```ts
+ * import { AssistantListType } from "@beep/agents-domain/values/AssistantContent"
+ *
+ * const listType = AssistantListType.Enum.bullet
+ * console.log(AssistantListType.is.bullet(listType))
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export const AssistantListType = LiteralKit(["bullet", "number"]).pipe(
+  $I.annoteSchema("AssistantListType", {
+    description: "List markers supported by assistant-content list blocks.",
+  })
+);
+
+/**
+ * Type accepted by the {@link AssistantListType} schema.
+ *
+ * @example
+ * ```ts
+ * import type { AssistantListType } from "@beep/agents-domain/values/AssistantContent"
+ *
+ * const listType = "bullet" satisfies AssistantListType
+ * console.log(listType)
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export type AssistantListType = typeof AssistantListType.Type;
+
+/**
  * A flat list of items.
  *
  * @example
@@ -237,7 +311,7 @@ export class QuoteBlock extends S.Class<QuoteBlock>($I`QuoteBlock`)(
 export class ListBlock extends S.Class<ListBlock>($I`ListBlock`)(
   {
     type: S.tag("list"),
-    listType: S.Literals(["bullet", "number"]).annotateKey({ description: "Bulleted or numbered list" }),
+    listType: AssistantListType.annotateKey({ description: "Bulleted or numbered list" }),
     items: S.Array(
       S.Struct({
         children: S.Array(InlineNode).annotateKey({ description: "Inline content of the item" }),
@@ -465,7 +539,8 @@ export const AssistantBlock = S.Union([
   S.toTaggedUnion("type"),
   $I.annoteSchema("AssistantBlock", {
     description: "A single block of an assistant turn.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

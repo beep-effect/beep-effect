@@ -1,39 +1,6 @@
 [
   {
     "ruleId": "SFV4-static-api",
-    "file": "packages/epistemic/domain/src/values/ClaimGate/ClaimGateResult.model.ts",
-    "line": 30,
-    "symbol": "ClaimGateSeverity",
-    "smell": "LiteralKit const `LiteralKit([\"info\", \"warning\", \"violation\"]).pipe($I.annoteSchema(...))` has no `withLiteralKitStatics`/`withCodecStatics` attached at all — the kit's own `.is` is a per-member guard object (`ClaimGateSeverity.is.violation(x)`, confirmed at packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts:753-800), not a single decode/guard pair, so no `.fromUnknown`/`.decodeOption` exists for consumers who need to validate raw input against the whole literal domain.",
-    "proposedTarget": "Capture the kit in a base const and compose both statics, mirroring packages/foundation/modeling/schema/src/HttpMethod/HttpMethod.schema.ts:30-35 and the chalk exemplar: `const ClaimGateSeverityBase = LiteralKit([\"info\", \"warning\", \"violation\"]); export const ClaimGateSeverity = ClaimGateSeverityBase.pipe($I.annoteSchema(\"ClaimGateSeverity\", {...}), SchemaUtils.withLiteralKitStatics(ClaimGateSeverityBase), SchemaUtils.withCodecStatics)` (statics verified at packages/foundation/modeling/schema/src/SchemaUtils/withLiteralKitStatics.ts:37 and withCodecStatics.ts:90).",
-    "confidence": 0.75,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/epistemic/domain/src/values/ClaimGate/ClaimGateResult.model.ts",
-    "line": 114,
-    "symbol": "ClaimGateResult",
-    "smell": "Tagged-union const built from `ClaimGateVerdict.toTaggedUnion(\"verdict\")({...}).pipe($I.annoteSchema(...))` has no `withCodecStatics`; the sole consumer (`@beep/epistemic-use-cases`) compensates with a free-floating module-level `const decodeClaimGateResult = S.decodeUnknownSync(ClaimGateResult)` (packages/epistemic/use-cases/src/ClaimGate/ClaimGate.service.ts:32) — the exact duplicate-decoder-wall this rule targets. Verified repo pattern: `S.Union([...]).pipe(S.toTaggedUnion(\"_tag\"), $I.annoteSchema(...), SchemaUtils.withCodecStatics)` at packages/foundation/modeling/md/src/Md.model.ts:606-613.",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the pipe: `.pipe($I.annoteSchema(\"ClaimGateResult\", {...}), SchemaUtils.withCodecStatics)`; then replace `ClaimGate.service.ts:32`'s `decodeClaimGateResult` with `ClaimGateResult.fromUnknown` (trusted, throws) — the call sites there are built from known-good literals per the file's own comment, matching `fromUnknown` semantics.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-static-api",
-    "file": "packages/epistemic/domain/src/values/ClaimLifecycle/ClaimLifecycle.errors.ts",
-    "line": 78,
-    "symbol": "ClaimLifecycleError",
-    "smell": "Error union const `S.Union([ClaimInvalidTransition]).pipe($I.annoteSchema(...))` missing `withCodecStatics`; no `.is`/`.decodeOption` guard is colocated on the schema for callers that need to discriminate a caught error against the full union (only the single member's own `_tag` check is available today).",
-    "proposedTarget": "Append `SchemaUtils.withCodecStatics` to the pipe so `ClaimLifecycleError.is` / `.decodeOption` live on the schema for future multi-member growth of the union.",
-    "confidence": 0.55,
-    "mechanization": "judgment",
-    "roiRank": 5
-  },
-  {
-    "ruleId": "SFV4-static-api",
     "file": "packages/epistemic/domain/src/entities/UsageRecord/UsageRecord.model.ts",
     "line": 213,
     "symbol": "appendTurnFinalizationUsageRecord",

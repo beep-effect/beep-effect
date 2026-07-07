@@ -14,6 +14,7 @@
 
 import { CandidateClaim, Evidence } from "@beep/epistemic-domain";
 import { projectClaims } from "@beep/epistemic-use-cases/ClaimProjection";
+import { ProcessFileResult } from "@beep/file-processing/Extraction";
 import { FileProcessingOperationError, ProcessFileOperation } from "@beep/file-processing/Operation";
 import { LangExtractRequest } from "@beep/langextract/Extraction";
 import { ExtractionTarget } from "@beep/langextract/Target";
@@ -22,9 +23,9 @@ import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { spikeEntityInput } from "../internal/spikeEntity.ts";
+import { OfficeActionExtractionLabel } from "./OfficeActionExtractionLabel.js";
 import type { ClaimGateShape } from "@beep/epistemic-use-cases/ClaimGate";
 import type { ClaimTransitionShape } from "@beep/epistemic-use-cases/ClaimLifecycle";
-import type { ProcessFileResult } from "@beep/file-processing/Extraction";
 import type { FileProcessingServiceShape } from "@beep/file-processing/Service";
 import type { LangExtractError, LangExtractResult } from "@beep/langextract/Extraction";
 import type { IrToLawShape, LawEntities } from "../IrToLaw/index.ts";
@@ -51,22 +52,22 @@ export const officeActionExtractionTargets: LangExtractRequest["targets"] = [
   ExtractionTarget.make({
     description: "The office-action document identifier or heading.",
     kind: "entity",
-    name: "office_action",
+    name: OfficeActionExtractionLabel.Enum.office_action,
   }),
   ExtractionTarget.make({
     description: "The rejected claim text.",
     kind: "entity",
-    name: "claim",
+    name: OfficeActionExtractionLabel.Enum.claim,
   }),
   ExtractionTarget.make({
     description: "The prior-art reference cited by the rejection.",
     kind: "entity",
-    name: "rejection_reference",
+    name: OfficeActionExtractionLabel.Enum.rejection_reference,
   }),
   ExtractionTarget.make({
     description: "Applicant distinction text copied from the office-action response material.",
     kind: "custom",
-    name: "distinction",
+    name: OfficeActionExtractionLabel.Enum.distinction,
   }),
 ];
 
@@ -108,16 +109,19 @@ const failFileExtraction = (
 const sourceTextFrom = Effect.fn("law_practice.office_action.source_text_from")(function* (
   result: ProcessFileResult
 ): Effect.fn.Return<string, FileProcessingOperationError> {
-  if (result.resultKind !== "extracted") {
-    return yield* failFileExtraction(
-      result,
-      `Office-action review requires extracted text, received ${result.resultKind}.`
-    );
-  }
-
-  return yield* O.match(O.fromUndefinedOr(result.extraction.text), {
-    onNone: () => failFileExtraction(result, "Office-action review requires text extraction output."),
-    onSome: Effect.succeed,
+  return yield* ProcessFileResult.match(result, {
+    "archive-exported": (archiveExported) =>
+      failFileExtraction(
+        archiveExported,
+        `Office-action review requires extracted text, received ${archiveExported.resultKind}.`
+      ),
+    extracted: (extracted) =>
+      O.match(O.fromUndefinedOr(extracted.extraction.text), {
+        onNone: () => failFileExtraction(extracted, "Office-action review requires text extraction output."),
+        onSome: Effect.succeed,
+      }),
+    skipped: (skipped) =>
+      failFileExtraction(skipped, `Office-action review requires extracted text, received ${skipped.resultKind}.`),
   });
 });
 

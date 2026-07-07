@@ -8,9 +8,8 @@
 
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
 import { A } from "@beep/utils";
-import { Effect, pipe } from "effect";
+import { Effect, Match, pipe } from "effect";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import {
   WORK_ITEM_ACTION_UNAVAILABLE_REASON,
   WorkItemActionFailed,
@@ -18,11 +17,6 @@ import {
   WorkItemConflict,
   WorkItemNotFound,
 } from "./WorkItem.errors.js";
-import {
-  WorkItemRepositoryConflict,
-  WorkItemRepositoryNotFound,
-  WorkItemRepositoryUnavailable,
-} from "./WorkItem.repository.js";
 import type {
   ArchiveWorkItemCommand,
   AssignWorkItemCommand,
@@ -35,10 +29,6 @@ import type {
 import type { WorkItemActionError } from "./WorkItem.errors.js";
 import type { WorkItemRepositoryError, WorkItemRepositoryShape } from "./WorkItem.repository.js";
 import type { WorkItemUseCasesShape } from "./WorkItem.use-cases.js";
-
-const isRepositoryNotFound = S.is(WorkItemRepositoryNotFound);
-const isRepositoryConflict = S.is(WorkItemRepositoryConflict);
-const isRepositoryUnavailable = S.is(WorkItemRepositoryUnavailable);
 
 /**
  * Translate repository and aggregate failures to public WorkItem action failures.
@@ -70,23 +60,31 @@ const isRepositoryUnavailable = S.is(WorkItemRepositoryUnavailable);
  * @category use-cases
  * @since 0.0.0
  */
-export const toWorkItemActionError = (
+export const toWorkItemActionError: (
   error: WorkItemRepositoryError | DomainWorkItem.WorkItemDomainError
-): WorkItemActionError => {
-  if (isRepositoryNotFound(error)) {
-    return WorkItemNotFound.make({ workItemId: error.workItemId });
-  }
-  if (isRepositoryConflict(error)) {
-    return WorkItemConflict.make({ workItemId: error.workItemId, reason: error.reason });
-  }
-  if (isRepositoryUnavailable(error)) {
-    return WorkItemActionFailed.make({ reason: WORK_ITEM_ACTION_UNAVAILABLE_REASON });
-  }
-  return WorkItemActionRejected.make({
-    workItemId: error.workItemId,
-    reason: error._tag,
-  });
-};
+) => WorkItemActionError = Match.type<WorkItemRepositoryError | DomainWorkItem.WorkItemDomainError>().pipe(
+  Match.tagsExhaustive({
+    WorkItemRepositoryNotFound: (error) => WorkItemNotFound.make({ workItemId: error.workItemId }),
+    WorkItemRepositoryConflict: (error) =>
+      WorkItemConflict.make({ workItemId: error.workItemId, reason: error.reason }),
+    WorkItemRepositoryUnavailable: () => WorkItemActionFailed.make({ reason: WORK_ITEM_ACTION_UNAVAILABLE_REASON }),
+    WorkItemAlreadyArchived: (error) =>
+      WorkItemActionRejected.make({
+        workItemId: error.workItemId,
+        reason: error._tag,
+      }),
+    WorkItemInvalidTransition: (error) =>
+      WorkItemActionRejected.make({
+        workItemId: error.workItemId,
+        reason: error._tag,
+      }),
+    WorkItemAssigneeRequired: (error) =>
+      WorkItemActionRejected.make({
+        workItemId: error.workItemId,
+        reason: error._tag,
+      }),
+  })
+);
 
 const mutateStoredWorkItem = (
   repository: WorkItemRepositoryShape,

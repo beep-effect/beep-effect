@@ -1,4 +1,4 @@
-import { EmailString } from "@beep/schema";
+import { EmailString, NonNegativeInt } from "@beep/schema";
 import { Button } from "@beep/ui/components/ui/button";
 import { A } from "@beep/utils";
 import { useAtom } from "@effect/atom-react";
@@ -171,11 +171,21 @@ const oipRuntimeKvsAtom = Atom.kvs({
   schema: S.String,
 });
 const OipSiteContentArbitrary = S.toArbitrary(OipSiteContent);
+const OipSiteContentEquivalence = S.toEquivalence(OipSiteContent);
+const ContactSubmissionArbitrary = S.toArbitrary(ContactSubmission);
+const ContactSubmissionEquivalence = S.toEquivalence(ContactSubmission);
 const ContactSubmissionFormPayloadArbitrary = S.toArbitrary(ContactSubmissionFormPayload);
+const ContactSubmissionFormPayloadEquivalence = S.toEquivalence(ContactSubmissionFormPayload);
+const ContactSubmissionResponseArbitrary = S.toArbitrary(ContactSubmissionResponse);
+const ContactSubmissionResponseEquivalence = S.toEquivalence(ContactSubmissionResponse);
 const encodeOipSiteContent = S.encodeSync(OipSiteContent);
 const decodeOipSiteContent = S.decodeUnknownSync(OipSiteContent);
+const encodeContactSubmission = S.encodeSync(ContactSubmission);
+const decodeContactSubmissionSync = S.decodeUnknownSync(ContactSubmission);
 const encodeContactSubmissionFormPayload = S.encodeSync(ContactSubmissionFormPayload);
 const decodeContactSubmissionFormPayload = S.decodeUnknownSync(ContactSubmissionFormPayload);
+const encodeContactSubmissionResponse = S.encodeSync(ContactSubmissionResponse);
+const decodeContactSubmissionResponse = S.decodeUnknownSync(ContactSubmissionResponse);
 
 function OipRuntimeKvsHarness() {
   const [value, setValue] = useAtom(oipRuntimeKvsAtom);
@@ -214,15 +224,62 @@ describe("@beep/oip-web", { concurrent: false }, () => {
 
   it("derives valid OIP content and contact form values from production schemas", { timeout: 20_000 }, () => {
     fc.assert(
-      fc.property(OipSiteContentArbitrary, ContactSubmissionFormPayloadArbitrary, (content, payload) => {
-        const encodedContent = encodeOipSiteContent(content);
-        const encodedPayload = encodeContactSubmissionFormPayload(payload);
+      fc.property(
+        OipSiteContentArbitrary,
+        ContactSubmissionArbitrary,
+        ContactSubmissionFormPayloadArbitrary,
+        ContactSubmissionResponseArbitrary,
+        (content, submission, payload, response) => {
+          const encodedContent = encodeOipSiteContent(content);
+          const encodedSubmission = encodeContactSubmission(submission);
+          const encodedPayload = encodeContactSubmissionFormPayload(payload);
+          const encodedResponse = encodeContactSubmissionResponse(response);
 
-        expect(decodeOipSiteContent(encodedContent)).toEqual(content);
-        expect(decodeContactSubmissionFormPayload(encodedPayload)).toEqual(payload);
-      }),
+          expect(OipSiteContentEquivalence(decodeOipSiteContent(encodedContent), content)).toBe(true);
+          expect(ContactSubmissionEquivalence(decodeContactSubmissionSync(encodedSubmission), submission)).toBe(true);
+          expect(
+            ContactSubmissionFormPayloadEquivalence(decodeContactSubmissionFormPayload(encodedPayload), payload)
+          ).toBe(true);
+          expect(ContactSubmissionResponseEquivalence(decodeContactSubmissionResponse(encodedResponse), response)).toBe(
+            true
+          );
+        }
+      ),
       { numRuns: 100 }
     );
+  });
+
+  it("preserves encoded contact wire shape while decoding optional fields to Option", () => {
+    const submittedAt = NonNegativeInt.make(5_000);
+    const encoded = {
+      company: "OIP Builders",
+      email: "builder@example.com",
+      message: "I would like to discuss a patent matter.",
+      name: "Builder",
+      phone: "+16125550100",
+      posture: "ready",
+      submittedAt,
+      technology: "planter",
+      website: "https://example.com",
+    };
+    const decoded = decodeContactSubmissionSync(encoded);
+
+    expect(encodeContactSubmission(decoded)).toEqual(encoded);
+    expect(
+      encodeContactSubmission(
+        ContactSubmission.make({
+          email: encoded.email,
+          message: encoded.message,
+          name: encoded.name,
+          submittedAt,
+        })
+      )
+    ).toEqual({
+      email: encoded.email,
+      message: encoded.message,
+      name: encoded.name,
+      submittedAt,
+    });
   });
 
   it("exposes schema class-local decoders beside compatibility exports", () =>

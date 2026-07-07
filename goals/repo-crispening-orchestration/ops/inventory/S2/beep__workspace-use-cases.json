@@ -1,28 +1,6 @@
 [
   {
     "ruleId": "SFV4-defaults",
-    "file": "packages/workspace/use-cases/src/aggregates/Thread/ThreadStore.ts",
-    "line": 92,
-    "symbol": "AppendTurnInput.parentTurnId",
-    "smell": "`parentTurnId: S.Option(WorkspaceIdentity.TurnId)` makes no-parent callers pass `O.none()` explicitly; the examples and server tests pass `parentTurnId: O.none()` only to satisfy the constructor shape.",
-    "proposedTarget": "Pipe the Option field through `SchemaUtils.withNoneDefault` so callers can omit the field while still passing `O.some(id)` for branches. Verified helper: `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46-51`; in-repo exemplar: `packages/foundation/modeling/lexical/src/Lexical.model.ts:686-688`.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 1
-  },
-  {
-    "ruleId": "SFV4-defaults",
-    "file": "packages/workspace/use-cases/src/aggregates/Thread/ThreadTimeline.ts",
-    "line": 154,
-    "symbol": "TimelineTurn.parentTurnId",
-    "smell": "`parentTurnId: S.OptionFromNullOr(WorkspaceIdentity.TurnId)` models nullable wire input as Option, but lacks a constructor-side `none` default.",
-    "proposedTarget": "Pipe the field through `SchemaUtils.withNoneDefault`. Verified v4 API: `.repos/effect-v4/packages/effect/src/Schema.ts:8576-8580` (`S.OptionFromNullOr`); verified helper: `packages/foundation/modeling/schema/src/SchemaUtils/withConstructorDefaults.ts:46-51`; in-repo exemplar: `packages/foundation/modeling/lexical/src/Lexical.model.ts:686-688`.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-defaults",
     "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
     "line": 22,
     "symbol": "ThreadTimeline decode fixture",

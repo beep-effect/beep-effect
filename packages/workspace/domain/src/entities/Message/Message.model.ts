@@ -66,10 +66,18 @@ export class Message extends BaseEntity.Class<Message>($I`Message`)(
   WorkspaceIdentity.MessageId,
   {
     fields: {
-      content: Document,
-      role: MessageRole,
-      threadId: WorkspaceIdentity.ThreadId,
-      turnId: WorkspaceIdentity.TurnId,
+      content: Document.annotateKey({
+        description: "Md-aligned message document content.",
+      }),
+      role: MessageRole.annotateKey({
+        description: "Author role for the workspace message.",
+      }),
+      threadId: WorkspaceIdentity.ThreadId.annotateKey({
+        description: "Thread containing the message.",
+      }),
+      turnId: WorkspaceIdentity.TurnId.annotateKey({
+        description: "Turn that owns the message content.",
+      }),
     },
     persisted: {
       content: EntitySchema.persist.jsonb({

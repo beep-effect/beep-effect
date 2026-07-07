@@ -6,11 +6,55 @@
  */
 
 import { $OipWebId } from "@beep/identity/packages";
-import { EmailString, LiteralKit } from "@beep/schema";
+import { EmailString, LiteralKit, SchemaUtils } from "@beep/schema";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $OipWebId.create("content/OipContent.model");
+
+const HttpsUrl = S.NonEmptyString.check(S.isPattern(/^https:\/\/\S+$/)).pipe(
+  $I.annoteSchema("HttpsUrl", {
+    description: "Absolute HTTPS URL used by public OIP website content.",
+    toArbitrary: () => (fc) => fc.constant("https://example.com"),
+  })
+);
+
+const PublicAssetPath = S.NonEmptyString.check(S.isPattern(/^\/\S+$/)).pipe(
+  $I.annoteSchema("PublicAssetPath", {
+    description: "Root-relative public asset path served by the OIP website.",
+    toArbitrary: () => (fc) => fc.constant("/oip/asset.png"),
+  })
+);
+
+const HashAnchor = S.NonEmptyString.check(S.isPattern(/^#[A-Za-z][A-Za-z0-9_-]*$/)).pipe(
+  $I.annoteSchema("HashAnchor", {
+    description: "Hash anchor used for in-page OIP navigation links.",
+    toArbitrary: () => (fc) => fc.constant("#contact"),
+  })
+);
+
+const ImagePixelDimension = S.Int.check(S.isGreaterThanOrEqualTo(1)).pipe(
+  $I.annoteSchema("ImagePixelDimension", {
+    description: "Positive integer pixel dimension for public OIP image metadata.",
+    toArbitrary: () => (fc) => fc.integer({ min: 1, max: 4_000 }),
+  })
+);
+
+const CssAspectRatio = S.NonEmptyString.check(S.isPattern(/^[1-9]\d*\/[1-9]\d*$/)).pipe(
+  $I.annoteSchema("CssAspectRatio", {
+    description: "CSS aspect-ratio text using positive integer numerator and denominator.",
+    toArbitrary: () => (fc) => fc.constant("4/1"),
+  })
+);
+
+const PressDate = S.NonEmptyString.check(S.isPattern(/^\d{4}-\d{2}-\d{2}$/)).pipe(
+  $I.annoteSchema("PressDate", {
+    description: "ISO calendar date text for public press metadata.",
+    toArbitrary: () => (fc) => fc.constant("2026-05-14"),
+  })
+);
+
+const ReviewStatusBase = LiteralKit(["approved", "needs_review"]);
 
 /**
  * Review state for public claims that need launch approval.
@@ -26,10 +70,15 @@ const $I = $OipWebId.create("content/OipContent.model");
  * @category schemas
  * @since 0.0.0
  */
-export const ReviewStatus = LiteralKit(["approved", "needs_review"]).pipe(
+export const ReviewStatus = ReviewStatusBase.pipe(
   $I.annoteSchema("ReviewStatus", {
     description: "Review state for public OIP website claims.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(ReviewStatusBase),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**
@@ -96,7 +145,7 @@ export class ReviewGate extends S.Class<ReviewGate>($I`ReviewGate`)(
  */
 export class ExternalLink extends S.Class<ExternalLink>($I`ExternalLink`)(
   {
-    href: S.String,
+    href: HttpsUrl,
     label: S.String,
   },
   $I.annote("ExternalLink", {
@@ -171,7 +220,7 @@ export type SocialPlatform = typeof SocialPlatform.Type;
  */
 export class SocialLink extends S.Class<SocialLink>($I`SocialLink`)(
   {
-    href: S.String,
+    href: HttpsUrl,
     label: S.String,
     platform: SocialPlatform,
     active: S.Boolean.pipe(
@@ -206,9 +255,9 @@ export class SiteAsset extends S.Class<SiteAsset>($I`SiteAsset`)(
   {
     alt: S.String,
     credit: S.optionalKey(S.String),
-    height: S.optionalKey(S.Finite),
-    src: S.String,
-    width: S.optionalKey(S.Finite),
+    height: S.optionalKey(ImagePixelDimension),
+    src: PublicAssetPath,
+    width: S.optionalKey(ImagePixelDimension),
   },
   $I.annote("SiteAsset", {
     description: "Runtime asset reference served by the OIP website.",
@@ -240,10 +289,10 @@ export class SiteAsset extends S.Class<SiteAsset>($I`SiteAsset`)(
 export class SiteMetadataContent extends S.Class<SiteMetadataContent>($I`SiteMetadataContent`)(
   {
     description: S.String,
-    linkedInUrl: S.String,
-    ogImage: S.String,
+    linkedInUrl: HttpsUrl,
+    ogImage: PublicAssetPath,
     siteName: S.String,
-    siteUrl: S.String,
+    siteUrl: HttpsUrl,
     title: S.String,
   },
   $I.annote("SiteMetadataContent", {
@@ -267,7 +316,7 @@ export class SiteMetadataContent extends S.Class<SiteMetadataContent>($I`SiteMet
  */
 export class NavItem extends S.Class<NavItem>($I`NavItem`)(
   {
-    href: S.String,
+    href: HashAnchor,
     label: S.String,
   },
   $I.annote("NavItem", {
@@ -453,7 +502,7 @@ export class MatterItem extends S.Class<MatterItem>($I`MatterItem`)(
  * import { ClientLogo, ReviewGate, SiteAsset } from "@beep/oip-web/content"
  *
  * const client = new ClientLogo({
- *   aspectRatio: "4 / 1",
+ *   aspectRatio: "4/1",
  *   id: "client",
  *   logo: new SiteAsset({ alt: "Client", src: "/oip/client.svg" }),
  *   review: new ReviewGate({ note: "Approved.", status: "approved" }),
@@ -468,11 +517,11 @@ export class MatterItem extends S.Class<MatterItem>($I`MatterItem`)(
  */
 export class ClientLogo extends S.Class<ClientLogo>($I`ClientLogo`)(
   {
-    aspectRatio: S.String,
+    aspectRatio: CssAspectRatio,
     id: S.String,
     logo: SiteAsset,
     review: ReviewGate,
-    website: S.optionalKey(S.String),
+    website: S.optionalKey(HttpsUrl),
   },
   $I.annote("ClientLogo", {
     description: "Client logo reference for the OIP home page.",
@@ -504,7 +553,7 @@ export class ClientLogo extends S.Class<ClientLogo>($I`ClientLogo`)(
 export class PressItem extends S.Class<PressItem>($I`PressItem`)(
   {
     body: S.String,
-    date: S.String,
+    date: PressDate,
     dateLabel: S.String,
     headline: S.String,
     publication: S.String,
@@ -567,15 +616,15 @@ export class ContactContent extends S.Class<ContactContent>($I`ContactContent`)(
  */
 export class OipSiteContent extends S.Class<OipSiteContent>($I`OipSiteContent`)(
   {
-    about: S.Array(AboutPanel),
-    clients: S.Array(ClientLogo),
+    about: S.NonEmptyArray(AboutPanel),
+    clients: S.NonEmptyArray(ClientLogo),
     contact: ContactContent,
     hero: HeroContent,
-    matters: S.Array(MatterItem),
+    matters: S.NonEmptyArray(MatterItem),
     metadata: SiteMetadataContent,
-    nav: S.Array(NavItem),
-    practices: S.Array(PracticeArea),
-    press: S.Array(PressItem),
+    nav: S.NonEmptyArray(NavItem),
+    practices: S.NonEmptyArray(PracticeArea),
+    press: S.NonEmptyArray(PressItem),
     socials: S.Array(SocialLink).pipe(
       S.withConstructorDefault(Effect.succeed([])),
       S.withDecodingDefaultKey(Effect.succeed([]))

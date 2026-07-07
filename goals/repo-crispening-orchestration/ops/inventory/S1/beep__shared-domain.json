@@ -15,17 +15,6 @@
     }
   },
   {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/shared/domain/src/values/LocalDate/LocalDate.behavior.ts",
-    "line": 46,
-    "symbol": "make / makeOption / makeEffect",
-    "smell": "Exported constructors in a schema-modeled behavior file accept the hand-authored `CalendarParts` object alias, duplicating the `LocalDate.Model` field contract.",
-    "proposedTarget": "Replace the local object alias with a schema-derived constructor input (`type CalendarParts = typeof LocalDate.Model.Encoded`) or promote a named exported calendar-parts schema next to `LocalDateFields`, then keep these public constructors as thin wrappers over `LocalDate.Model.make`, `.makeOption`, and `.makeEffect`. In-repo exemplars: `OptionsInput = typeof Options.Encoded` at `packages/shared/domain/src/entity/EntityId.ts:197` and `ChalkConstructorOptions = typeof ChalkConstructorOptions.Encoded` at `packages/foundation/capability/chalk/src/internal/PublicSurface.ts:172`.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 0.52
-  },
-  {
     "ruleId": "schema-first-inventory",
     "file": "packages/shared/domain/src/values/LocalDate/LocalDate.behavior.ts",
     "line": 116,
@@ -39,17 +28,6 @@
       "reason": "The predicate is derived directly from `LocalDate.Model` and does not hand-roll validation. The model schema remains the source of truth.",
       "boundary": "public schema-derived LocalDate guard"
     }
-  },
-  {
-    "ruleId": "SFV4-boundary-codec",
-    "file": "packages/shared/domain/src/values/LocalDate/LocalDate.behavior.ts",
-    "line": 216,
-    "symbol": "fromString",
-    "smell": "Exported parser manually regex-matches, parses, and calendar-validates a date string even though the same file already defines the `LocalDateFromString` codec for this boundary.",
-    "proposedTarget": "Define `LocalDateFromString` before the convenience function and implement `fromString` as `S.decodeUnknownEffect(LocalDateFromString)(dateString)`, leaving `decodeLocalDateFromString` as the single schema transform implementation. In-package exemplar: `LocalDateFromString` is the schema boundary at `packages/shared/domain/src/values/LocalDate/LocalDate.behavior.ts:703`; Effect v4 `S.decodeUnknownEffect` verified at `.repos/effect-v4/packages/effect/src/Schema.ts:1325`.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 0.58
   },
   {
     "ruleId": "schema-first-inventory",

@@ -8,7 +8,7 @@
 
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { $ArchitectureLabUseCasesId } from "@beep/identity/packages";
-import { TaggedErrorClass } from "@beep/schema";
+import { SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabUseCasesId.create("entities/Worker/Worker.errors");
@@ -86,8 +86,12 @@ export class WorkerNotFound extends TaggedErrorClass<WorkerNotFound>($I`WorkerNo
 export class WorkerConflict extends TaggedErrorClass<WorkerConflict>($I`WorkerConflict`)(
   "WorkerConflict",
   {
-    workerId: DomainWorker.WorkerId,
-    reason: S.String,
+    workerId: DomainWorker.WorkerId.annotateKey({
+      description: "Worker identity whose command conflicted with persisted state.",
+    }),
+    reason: S.NonEmptyString.annotateKey({
+      description: "Non-empty public conflict reason.",
+    }),
   },
   $I.annote("WorkerConflict", {
     title: "Worker conflict",
@@ -113,7 +117,9 @@ export class WorkerConflict extends TaggedErrorClass<WorkerConflict>($I`WorkerCo
 export class WorkerActionFailed extends TaggedErrorClass<WorkerActionFailed>($I`WorkerActionFailed`)(
   "WorkerActionFailed",
   {
-    reason: S.String,
+    reason: S.NonEmptyString.annotateKey({
+      description: "Non-empty public failure reason with internal repository details redacted.",
+    }),
   },
   $I.annote("WorkerActionFailed", {
     title: "Worker action failed",
@@ -122,7 +128,34 @@ export class WorkerActionFailed extends TaggedErrorClass<WorkerActionFailed>($I`
 ) {}
 
 /**
- * Public Worker use-case failure.
+ * Public Worker use-case failure schema.
+ *
+ * @example
+ * ```ts
+ * import {
+ *   WorkerActionError,
+ *   WorkerActionFailed,
+ * } from "@beep/architecture-lab-use-cases/entities/Worker"
+ *
+ * const isActionError = WorkerActionError.is
+ *
+ * console.log(isActionError(WorkerActionFailed.make({ reason: "Repository unavailable" }))) // true
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const WorkerActionError = S.Union([WorkerNotFound, WorkerConflict, WorkerActionFailed]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("WorkerActionError", {
+    title: "Worker action error",
+    description: "Tagged union of public Worker use-case failures.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Runtime type for {@link WorkerActionError}.
  *
  * @example
  * ```ts
@@ -139,25 +172,4 @@ export class WorkerActionFailed extends TaggedErrorClass<WorkerActionFailed>($I`
  * @category errors
  * @since 0.0.0
  */
-export type WorkerActionError = WorkerNotFound | WorkerConflict | WorkerActionFailed;
-
-/**
- * Public Worker use-case failure schema.
- *
- * @example
- * ```ts
- * import {
- *   WorkerActionError,
- *   WorkerActionFailed
- * } from "@beep/architecture-lab-use-cases/entities/Worker"
- * import * as S from "effect/Schema"
- *
- * const isActionError = S.is(WorkerActionError)
- *
- * console.log(isActionError(WorkerActionFailed.make({ reason: "Repository unavailable" }))) // true
- * ```
- *
- * @category errors
- * @since 0.0.0
- */
-export const WorkerActionError = S.Union([WorkerNotFound, WorkerConflict, WorkerActionFailed]);
+export type WorkerActionError = typeof WorkerActionError.Type;

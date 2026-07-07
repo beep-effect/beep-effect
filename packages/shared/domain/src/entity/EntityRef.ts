@@ -13,6 +13,7 @@ import * as S from "effect/Schema";
 import * as EntityId from "./EntityId.js";
 
 const $I = $SharedDomainId.create("entity/EntityRef");
+const entityTypePattern = /^[A-Z][A-Za-z0-9]*$/u;
 
 class EntityRefInvariantError extends TaggedErrorClass<EntityRefInvariantError>($I`EntityRefInvariantError`)(
   "EntityRefInvariantError",
@@ -45,7 +46,14 @@ class EntityRefInvariantError extends TaggedErrorClass<EntityRefInvariantError>(
  * @since 0.0.0
  * @category schemas
  */
-export const EntityType = S.NonEmptyString.pipe(
+export const EntityType = S.NonEmptyString.check(
+  S.isPattern(entityTypePattern, {
+    identifier: $I`EntityRefEntityTypePattern`,
+    title: "EntityRef entity type pattern",
+    description: "PascalCase entity type token used by polymorphic entity references.",
+    message: "Expected a PascalCase entity type token",
+  })
+).pipe(
   S.brand("EntityType"),
   $I.annoteSchema("EntityType", {
     description: "PascalCase entity type token used by polymorphic entity references.",
@@ -93,8 +101,8 @@ export type EntityType = typeof EntityType.Type;
  */
 export class EntityRef extends S.Class<EntityRef>($I`EntityRef`)(
   {
-    entityType: EntityType,
-    id: EntityId.EntityIdValue,
+    entityType: EntityType.annotateKey({ description: "PascalCase entity type token for the referenced entity." }),
+    id: EntityId.EntityIdValue.annotateKey({ description: "Storage-neutral numeric id for the referenced entity." }),
   },
   $I.annote("EntityRef", {
     description: "Storage-neutral polymorphic entity reference.",

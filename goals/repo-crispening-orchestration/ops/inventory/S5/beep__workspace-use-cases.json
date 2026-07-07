@@ -1,61 +1,6 @@
 [
   {
     "ruleId": "SFV4-precision-audit",
-    "file": "packages/workspace/use-cases/src/aggregates/Thread/ThreadStore.ts",
-    "line": 52,
-    "symbol": "CreateThreadInput.title",
-    "smell": "CreateThreadInput accepts `title: S.String` even though the persisted Thread title schema requires S.NonEmptyString and the set-title command in the same file already uses S.NonEmptyString for both title fields.",
-    "proposedTarget": "Change CreateThreadInput.title to S.NonEmptyString.annotateKey({ description: ... }) or introduce a shared annotated ThreadTitle schema reused by CreateThreadInput, SetThreadTitleIfEmptyInput, and the domain Thread entity. S.NonEmptyString is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:8420; the domain field is packages/workspace/domain/src/entities/Thread/Thread.model.ts:33 and sibling title fields are ThreadStore.ts:154-156.",
-    "confidence": 0.85,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/workspace/use-cases/src/aggregates/Thread/Thread.errors.ts",
-    "line": 75,
-    "symbol": "ThreadStoreConflict.reason / ThreadStoreUnavailable.reason",
-    "smell": "ThreadStore error reason fields are broad S.String, allowing empty diagnostic messages despite examples and repository adapters always emitting meaningful text.",
-    "proposedTarget": "Use S.NonEmptyString or a named annotated ThreadStoreErrorReason schema for both reason fields, with field-level annotateKey metadata. S.NonEmptyString is verified at .repos/effect-v4/packages/effect/src/Schema.ts:8420; the unavailable adapter message is built from operation/table context at packages/workspace/server/src/aggregates/Thread/ThreadStore.repo.ts:323-325.",
-    "confidence": 0.66,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-numeric-domain",
-    "file": "packages/workspace/use-cases/src/aggregates/Thread/ThreadTimeline.ts",
-    "line": 156,
-    "symbol": "TimelineTurn.costMicros",
-    "smell": "TimelineTurn.costMicros is bare S.Finite even though it represents a microsecond cost rollup and all current projections emit the non-negative integer value 0.",
-    "proposedTarget": "Introduce an annotated CostMicros schema using S.Int.check(S.isGreaterThanOrEqualTo(0)) or reuse a shared non-negative integer schema; Effect v4 S.Int and S.isGreaterThanOrEqualTo are verified at .repos/effect-v4/packages/effect/src/Schema.ts:11398 and :7314.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/workspace/use-cases/src/aggregates/Thread/ThreadStore.ts",
-    "line": 52,
-    "symbol": "Thread use-case schema fields",
-    "smell": "ThreadStore inputs/results/errors and ThreadTimeline read models carry whole-schema `$I.annote` / `$I.annoteSchema` metadata, but their fields have no `annotateKey` descriptions, so generated docs/catalog consumers lose field-level semantics.",
-    "proposedTarget": "Add behavior-neutral `.annotateKey({ description })` or `$I.annoteKey(...)` metadata to fields on CreateThreadInput, AppendTurnInput, AppendTurnResult, SetThreadTitleIfEmptyInput, ThreadStore errors, TimelineMessageItem, TimelineToolCallItem, TimelineTurn, and ThreadTimeline; follow packages/agents/server/src/AssistantTurn/BlockRepair.ts:62-64. Effect v4 `annotateKey` is verified at .repos/effect-v4/packages/effect/src/Schema.ts:185 and :605.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/workspace/use-cases/test/ThreadTimeline.test.ts",
-    "line": 8,
-    "symbol": "ThreadTimeline / ThreadStoreError schema laws",
-    "smell": "The package has a fixed ThreadTimeline decode fixture, but no S.toArbitrary-derived round-trip/property law for exported read-model and server-error schemas.",
-    "proposedTarget": "Add additive schema-law tests using assertSchemaArbitraryDecodesToSelf from @beep/test-utils (packages/tooling/test-kit/test-utils/src/Schema.ts:30-43) for TimelineMessageItem, TimelineToolCallItem, TimelineItem, TimelineTurn, ThreadTimeline, ThreadStoreNotFound, ThreadStoreConflict, ThreadStoreUnavailable, ThreadStoreError, and SetThreadTitleIfEmptyInput. S.toArbitrary is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:12970.",
-    "confidence": 0.68,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
     "file": "packages/workspace/use-cases/src/aggregates/Thread/ThreadTimeline.ts",
     "line": 155,
     "symbol": "TimelineTurn.items / ThreadTimeline.turns",

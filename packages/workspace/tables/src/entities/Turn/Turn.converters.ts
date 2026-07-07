@@ -89,8 +89,23 @@ const decodeTurnRow = S.decodeUnknownSync(Turn);
  * @since 0.0.0
  */
 export const toTurnInsert = (turn: Turn): TurnInsert => {
-  const { id: _id, ...rest } = encodeTurn(turn);
-  return rest as TurnInsert;
+  const encoded = encodeTurn(turn);
+
+  return {
+    createdAt: encoded.createdAt,
+    createdByPrincipal: encoded.createdByPrincipal,
+    entityType: encoded.entityType,
+    items: encoded.items,
+    orgId: encoded.orgId,
+    parentTurnId: encoded.parentTurnId,
+    rowVersion: encoded.rowVersion,
+    schemaVersion: encoded.schemaVersion,
+    source: encoded.source,
+    threadId: encoded.threadId,
+    turnIndex: encoded.turnIndex,
+    updatedAt: encoded.updatedAt,
+    updatedByPrincipal: encoded.updatedByPrincipal,
+  } satisfies TurnInsert;
 };
 
 /**

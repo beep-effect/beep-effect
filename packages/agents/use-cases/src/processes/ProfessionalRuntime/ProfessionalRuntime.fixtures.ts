@@ -7,10 +7,11 @@
 
 import { $AgentsUseCasesId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import { Effect, Match } from "effect";
+import { Effect } from "effect";
 import * as S from "effect/Schema";
 import { CandidateOutputSet } from "./ProfessionalRuntime.contracts.js";
 import { ProfessionalRuntimeValidationError } from "./ProfessionalRuntime.errors.js";
+import { RuntimeFixtureScenarioId } from "./ProfessionalRuntime.values.js";
 
 // cspell:words Priya Raman
 
@@ -19,7 +20,7 @@ const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalR
 class RuntimeFixtureEmailInput extends S.Class<RuntimeFixtureEmailInput>($I`RuntimeFixtureEmailInput`)(
   {
     artifactId: S.String,
-    scenarioId: S.String,
+    scenarioId: RuntimeFixtureScenarioId,
     sourceSpans: S.Array(S.String),
     subject: S.String,
     threadId: S.String,
@@ -52,7 +53,7 @@ class RuntimeFixtureWorkspaceInput extends S.Class<RuntimeFixtureWorkspaceInput>
 class RuntimeFixtureSeedInput extends S.Class<RuntimeFixtureSeedInput>($I`RuntimeFixtureSeedInput`)(
   {
     organization: RuntimeFixtureOrganizationInput,
-    scenarioId: S.String,
+    scenarioId: RuntimeFixtureScenarioId,
     workspace: RuntimeFixtureWorkspaceInput,
   },
   $I.annote("RuntimeFixtureSeedInput", {
@@ -100,8 +101,6 @@ export class RuntimeFixtureInput extends S.Class<RuntimeFixtureInput>($I`Runtime
   })
 ) {}
 
-const decodeOutputSet = S.decodeUnknownSync(CandidateOutputSet);
-
 const assertScenario = (input: RuntimeFixtureInput): void => {
   if (input.seed.scenarioId !== input.email.scenarioId) {
     ProfessionalRuntimeValidationError.throwError(
@@ -124,7 +123,7 @@ const runLawPatentIntake = (input: RuntimeFixtureInput): CandidateOutputSet => {
   const spanIds = ["law-email-001-s2", "law-email-001-s3", "law-email-001-s4", "law-email-001-s5"];
   assertSpanRefs(input, spanIds);
 
-  return decodeOutputSet({
+  return CandidateOutputSet.fromUnknown({
     scenarioId: "law-patent-intake",
     claims: [
       {
@@ -405,7 +404,7 @@ const runWealthCashRequest = (input: RuntimeFixtureInput): CandidateOutputSet =>
   const spanIds = ["wealth-email-001-s2", "wealth-email-001-s3", "wealth-email-001-s4", "wealth-email-001-s5"];
   assertSpanRefs(input, spanIds);
 
-  return decodeOutputSet({
+  return CandidateOutputSet.fromUnknown({
     scenarioId: "wealth-cash-request",
     claims: [
       {
@@ -685,15 +684,12 @@ const runWealthCashRequest = (input: RuntimeFixtureInput): CandidateOutputSet =>
   });
 };
 
-const fixtureRunnerForScenario: (scenarioId: string) => (input: RuntimeFixtureInput) => CandidateOutputSet =
-  Match.type<string>().pipe(
-    Match.when("law-patent-intake", () => runLawPatentIntake),
-    Match.when("wealth-cash-request", () => runWealthCashRequest),
-    Match.orElse(
-      (scenarioId) => () =>
-        ProfessionalRuntimeValidationError.throwError(`Unknown runtime fixture scenario: ${scenarioId}`)
-    )
-  );
+const fixtureRunnerForScenario: (
+  scenarioId: RuntimeFixtureScenarioId
+) => (input: RuntimeFixtureInput) => CandidateOutputSet = RuntimeFixtureScenarioId.$match({
+  "law-patent-intake": () => runLawPatentIntake,
+  "wealth-cash-request": () => runWealthCashRequest,
+});
 
 /**
  * Run one deterministic runtime data-loop fixture.

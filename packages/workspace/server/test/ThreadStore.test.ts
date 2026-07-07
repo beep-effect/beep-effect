@@ -1,17 +1,31 @@
 import { Document, P, Text } from "@beep/md";
+import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { makeInMemoryThreadStore } from "@beep/workspace-server/aggregates/Thread";
+import { ThreadStoreRepoTestSchemas } from "@beep/workspace-server/test";
 import { SetThreadTitleIfEmptyInput } from "@beep/workspace-use-cases/aggregates/Thread/server";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect } from "effect";
+import { Effect, HashMap } from "effect";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 
 const decodeWorkspaceId = S.decodeUnknownEffect(WorkspaceIdentity.WorkspaceId);
 const SetThreadTitleIfEmptyInputArbitrary = S.toArbitrary(SetThreadTitleIfEmptyInput);
+const { InMemoryState, MessageEntityInput, ThreadEntityInput, TurnEntityInput } = ThreadStoreRepoTestSchemas;
+const InMemoryStateArbitrary = S.toArbitrary(InMemoryState);
+const MessageEntityInputArbitrary = S.toArbitrary(MessageEntityInput);
+const ThreadEntityInputArbitrary = S.toArbitrary(ThreadEntityInput);
+const TurnEntityInputArbitrary = S.toArbitrary(TurnEntityInput);
 const docOf = (value: string) => Document.make({ children: [P.make({ children: [Text.make({ value })] })] });
+
+const schemaRoundTrips = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schema["Type"]): boolean => {
+  const encoded = S.encodeSync(schema)(value);
+  const decoded = S.decodeUnknownSync(schema)(encoded);
+  return Eq.equals(decoded, value) || S.toEquivalence(schema)(decoded, value);
+};
 
 describe("ThreadStore in-memory", () => {
   it.effect(
@@ -104,6 +118,84 @@ describe("ThreadStore in-memory", () => {
         expect(input.emptyTitle.length).toBeGreaterThan(0);
         expect(input.title.length).toBeGreaterThan(0);
       })
+    );
+  });
+
+  it("keeps crispened construction schema encoded shapes stable", () => {
+    expect(
+      S.encodeSync(ThreadEntityInput)(
+        ThreadEntityInput.make({
+          id: PosInt.make(1),
+          title: "Matter intake",
+          workspaceId: PosInt.make(2),
+        })
+      )
+    ).toEqual({ id: 1, title: "Matter intake", workspaceId: 2 });
+
+    expect(
+      S.encodeSync(TurnEntityInput)(
+        TurnEntityInput.make({
+          id: PosInt.make(3),
+          messageId: PosInt.make(4),
+          parentTurnId: null,
+          threadId: PosInt.make(1),
+          turnIndex: NonNegativeInt.make(0),
+        })
+      )
+    ).toEqual({ id: 3, messageId: 4, parentTurnId: null, threadId: 1, turnIndex: 0 });
+
+    expect(
+      S.encodeSync(MessageEntityInput)(
+        MessageEntityInput.make({
+          content: docOf("Hello"),
+          id: PosInt.make(4),
+          role: "assistant",
+          threadId: PosInt.make(1),
+          turnId: PosInt.make(3),
+        })
+      )
+    ).toEqual({
+      content: {
+        _tag: "document",
+        children: [{ _tag: "p", children: [{ _tag: "text", value: "Hello" }] }],
+      },
+      id: 4,
+      role: "assistant",
+      threadId: 1,
+      turnId: 3,
+    });
+
+    const encodedState = S.encodeSync(InMemoryState)(InMemoryState.make({}));
+    expect(encodedState.nextId).toBe(1);
+    expect(HashMap.size(encodedState.messages)).toBe(0);
+    expect(HashMap.size(encodedState.threads)).toBe(0);
+    expect(HashMap.size(encodedState.turns)).toBe(0);
+  });
+
+  it("round-trips crispened construction schemas from derived arbitraries", () => {
+    fc.assert(
+      fc.property(ThreadEntityInputArbitrary, (value) => schemaRoundTrips(ThreadEntityInput, value)),
+      {
+        numRuns: 25,
+      }
+    );
+    fc.assert(
+      fc.property(TurnEntityInputArbitrary, (value) => schemaRoundTrips(TurnEntityInput, value)),
+      {
+        numRuns: 25,
+      }
+    );
+    fc.assert(
+      fc.property(MessageEntityInputArbitrary, (value) => schemaRoundTrips(MessageEntityInput, value)),
+      {
+        numRuns: 25,
+      }
+    );
+    fc.assert(
+      fc.property(InMemoryStateArbitrary, (value) => schemaRoundTrips(InMemoryState, value)),
+      {
+        numRuns: 25,
+      }
     );
   });
 

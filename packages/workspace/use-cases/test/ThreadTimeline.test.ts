@@ -1,9 +1,12 @@
 import { Document } from "@beep/md";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { Thread } from "@beep/workspace-use-cases/public";
+import { Thread as ServerThread } from "@beep/workspace-use-cases/server";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 describe("ThreadTimeline", () => {
   it.effect(
@@ -35,4 +38,102 @@ describe("ThreadTimeline", () => {
       expect(timeline.turns[0]?.items.map((item) => item.kind)).toEqual(["message", "tool_call"]);
     })
   );
+
+  it.effect(
+    "keeps thread input and timeline encoded shapes stable",
+    Effect.fnUntraced(function* () {
+      const workspaceId = yield* S.decodeUnknownEffect(WorkspaceIdentity.WorkspaceId)(7);
+      const threadId = yield* S.decodeUnknownEffect(WorkspaceIdentity.ThreadId)(10);
+      const turnId = yield* S.decodeUnknownEffect(WorkspaceIdentity.TurnId)(20);
+      const content = Document.make({ children: [] });
+      const encodedContent = yield* S.encodeEffect(Document)(content);
+
+      const createInput = ServerThread.CreateThreadInput.make({
+        title: "Matter intake",
+        workspaceId,
+      });
+      expect(yield* S.encodeEffect(ServerThread.CreateThreadInput)(createInput)).toStrictEqual({
+        title: "Matter intake",
+        workspaceId: 7,
+      });
+
+      const appendInput = ServerThread.AppendTurnInput.make({
+        content,
+        role: "user",
+        threadId,
+      });
+      expect(O.isNone(appendInput.parentTurnId)).toBe(true);
+      expect(yield* S.encodeEffect(ServerThread.AppendTurnInput)(appendInput)).toStrictEqual({
+        content: encodedContent,
+        parentTurnId: O.none(),
+        role: "user",
+        threadId: 10,
+      });
+
+      const wireTimeline = {
+        threadId: 10,
+        turns: [
+          {
+            turnId: 20,
+            turnIndex: 0,
+            parentTurnId: null,
+            costMicros: 0,
+            items: [
+              { kind: "message", role: "user", content: encodedContent },
+              { kind: "tool_call", name: "search" },
+            ],
+          },
+        ],
+      };
+      const timeline = yield* S.decodeUnknownEffect(Thread.ThreadTimeline)(wireTimeline);
+      expect(yield* S.encodeEffect(Thread.ThreadTimeline)(timeline)).toStrictEqual(wireTimeline);
+      expect(Thread.TimelineItem.is(timeline.turns[0]?.items[0])).toBe(true);
+
+      expect(
+        yield* S.decodeUnknownEffect(Thread.TimelineTurn)({
+          turnId: 20,
+          turnIndex: 0,
+          parentTurnId: null,
+          costMicros: -1,
+          items: [],
+        }).pipe(Effect.flip)
+      ).toBeDefined();
+
+      const unavailable = ServerThread.ThreadStoreUnavailable.make({ reason: "database unavailable" });
+      expect(ServerThread.ThreadStoreError.is(unavailable)).toBe(true);
+      expect(yield* S.encodeEffect(ServerThread.ThreadStoreError)(unavailable)).toStrictEqual({
+        _tag: "ThreadStoreUnavailable",
+        reason: "database unavailable",
+      });
+
+      expect(turnId).toStrictEqual(timeline.turns[0]?.turnId);
+    })
+  );
+
+  it("schema-derived arbitraries round-trip through exported schemas", () => {
+    const schemas: ReadonlyArray<S.Codec<unknown>> = [
+      ServerThread.CreateThreadInput,
+      ServerThread.AppendTurnInput,
+      ServerThread.SetThreadTitleIfEmptyInput,
+      Thread.TimelineMessageItem,
+      Thread.TimelineToolCallItem,
+      Thread.TimelineItem,
+      Thread.TimelineTurn,
+      Thread.ThreadTimeline,
+      ServerThread.ThreadStoreNotFound,
+      ServerThread.ThreadStoreConflict,
+      ServerThread.ThreadStoreUnavailable,
+      ServerThread.ThreadStoreError,
+    ];
+
+    for (const schema of schemas) {
+      const decode = S.decodeUnknownSync(schema);
+      const encode = S.encodeSync(schema);
+      const equivalent = S.toEquivalence(schema);
+      fc.assert(
+        fc.property(S.toArbitrary(schema), (value) => equivalent(decode(encode(value)), value)),
+        { numRuns: 5 }
+      );
+    }
+  });
 });

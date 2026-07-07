@@ -7,9 +7,22 @@
  */
 
 import { $ArchitectureLabConfigId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $ArchitectureLabConfigId.create("WorkItemConfig");
+const WORK_ITEM_MIGRATION_SCHEMA_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/u;
+
+const WorkItemMigrationSchemaName = S.NonEmptyString.check(
+  S.isPattern(WORK_ITEM_MIGRATION_SCHEMA_NAME_PATTERN, {
+    description: "A database schema identifier beginning with a letter or underscore.",
+  })
+).pipe(
+  $I.annoteSchema("WorkItemMigrationSchemaName", {
+    title: "WorkItem migration schema name",
+    description: "Database schema identifier used by WorkItem migration tooling.",
+  })
+);
 
 /**
  * Client-safe feature flags for WorkItem behavior.
@@ -32,8 +45,12 @@ const $I = $ArchitectureLabConfigId.create("WorkItemConfig");
  */
 export class WorkItemPublicConfig extends S.Class<WorkItemPublicConfig>($I`WorkItemPublicConfig`)(
   {
-    assignmentEnabled: S.Boolean,
-    reopenCompletedEnabled: S.Boolean,
+    assignmentEnabled: SchemaUtils.BoolKeyDefaultTrue.annotateKey({
+      description: "Whether WorkItem assignment controls are available to clients.",
+    }),
+    reopenCompletedEnabled: SchemaUtils.BoolKeyDefaultTrue.annotateKey({
+      description: "Whether completed WorkItems may be reopened by clients.",
+    }),
   },
   $I.annote("WorkItemPublicConfig", {
     title: "WorkItem public config",
@@ -62,8 +79,12 @@ export class WorkItemPublicConfig extends S.Class<WorkItemPublicConfig>($I`WorkI
  */
 export class WorkItemServerConfig extends S.Class<WorkItemServerConfig>($I`WorkItemServerConfig`)(
   {
-    repositoryName: S.String,
-    migrationSchemaName: S.String,
+    repositoryName: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("architecture-lab-work-items")).annotateKey({
+      description: "Repository name used for architecture lab WorkItem persistence.",
+    }),
+    migrationSchemaName: WorkItemMigrationSchemaName.pipe(SchemaUtils.withKeyDefaults("architecture_lab")).annotateKey({
+      description: "Database schema name used for architecture lab WorkItem migrations.",
+    }),
   },
   $I.annote("WorkItemServerConfig", {
     title: "WorkItem server config",
@@ -91,7 +112,9 @@ export class WorkItemServerConfig extends S.Class<WorkItemServerConfig>($I`WorkI
  */
 export class WorkItemSecretConfig extends S.Class<WorkItemSecretConfig>($I`WorkItemSecretConfig`)(
   {
-    connectionName: S.String,
+    connectionName: S.NonEmptyString.pipe(SchemaUtils.withKeyDefaults("architecture-lab-proof")).annotateKey({
+      description: "Secret connection reference name for the WorkItem backing connection.",
+    }),
   },
   $I.annote("WorkItemSecretConfig", {
     title: "WorkItem secret config",
@@ -116,10 +139,7 @@ export class WorkItemSecretConfig extends S.Class<WorkItemSecretConfig>($I`WorkI
  * @category configuration
  * @since 0.0.0
  */
-export const defaultWorkItemPublicConfig = WorkItemPublicConfig.make({
-  assignmentEnabled: true,
-  reopenCompletedEnabled: true,
-});
+export const defaultWorkItemPublicConfig = WorkItemPublicConfig.make({});
 
 /**
  * Default server-side WorkItem repository and migration names.
@@ -134,10 +154,7 @@ export const defaultWorkItemPublicConfig = WorkItemPublicConfig.make({
  * @category configuration
  * @since 0.0.0
  */
-export const defaultWorkItemServerConfig = WorkItemServerConfig.make({
-  repositoryName: "architecture-lab-work-items",
-  migrationSchemaName: "architecture_lab",
-});
+export const defaultWorkItemServerConfig = WorkItemServerConfig.make({});
 
 /**
  * Default WorkItem secret reference name for local proof wiring.
@@ -152,6 +169,4 @@ export const defaultWorkItemServerConfig = WorkItemServerConfig.make({
  * @category configuration
  * @since 0.0.0
  */
-export const defaultWorkItemSecretConfig = WorkItemSecretConfig.make({
-  connectionName: "architecture-lab-proof",
-});
+export const defaultWorkItemSecretConfig = WorkItemSecretConfig.make({});

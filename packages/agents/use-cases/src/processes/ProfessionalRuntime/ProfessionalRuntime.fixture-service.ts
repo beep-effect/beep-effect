@@ -17,13 +17,14 @@ import type { CandidateOutputSet, RuntimeEvidenceRef, SdkContextPacket } from ".
 import type { RuntimeFixtureInput } from "./ProfessionalRuntime.fixtures.js";
 import type { GetContextPacket } from "./ProfessionalRuntime.queries.js";
 import type { ProfessionalRuntimeSdk } from "./ProfessionalRuntime.service.js";
+import type { RuntimeFixtureScenarioId } from "./ProfessionalRuntime.values.js";
 
 const ensure = (condition: boolean, message: string): Effect.Effect<void, ProfessionalRuntimeValidationError> =>
   condition ? Effect.void : ProfessionalRuntimeValidationError.failEffect(message);
 
 const fixtureForScenario = (
   fixtures: ReadonlyArray<RuntimeFixtureInput>,
-  scenarioId: string
+  scenarioId: RuntimeFixtureScenarioId
 ): Effect.Effect<RuntimeFixtureInput, ProfessionalRuntimeValidationError> =>
   O.match(
     A.findFirst(fixtures, (fixture) => fixture.email.scenarioId === scenarioId),
@@ -44,8 +45,8 @@ const sameOrderedStrings = (left: ReadonlyArray<string>, right: ReadonlyArray<st
 const toPlainJson = (value: unknown): string => S.encodeUnknownSync(S.UnknownFromJsonString)(value);
 
 const spanIdsFromEvidence = (evidence: RuntimeEvidenceRef): ReadonlyArray<string> => [
-  ...(evidence.spanId === undefined ? [] : [evidence.spanId]),
-  ...(evidence.spanIds ?? []),
+  ...O.toArray(evidence.spanId),
+  ...O.getOrElse(evidence.spanIds, A.empty<string>),
 ];
 
 const collectEvidence = (outputSet: CandidateOutputSet): ReadonlyArray<RuntimeEvidenceRef> => [

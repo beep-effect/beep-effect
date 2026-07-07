@@ -1,13 +1,1 @@
-[
-  {
-    "ruleId": "schema-first-inventory",
-    "file": "packages/architecture-lab/server/src/aggregates/WorkItem/WorkItem.http.ts",
-    "line": 17,
-    "symbol": "isNotFound / isConflict / isActionRejected",
-    "smell": "Top-of-file guard aliases `S.is(...)` for public WorkItem action errors form a guard wall before `toWorkItemHttpError`.",
-    "proposedTarget": "Make `WorkItemActionError` a derived tagged-union schema with `S.toTaggedUnion(\"_tag\")`, then replace the guard aliases and if-chain with schema-owned `WorkItemActionError.match(...)` for HTTP status selection. In-repo exemplar: `ThreadStoreError` uses `S.Union(...).pipe(S.toTaggedUnion(\"_tag\"))` at `packages/workspace/use-cases/src/aggregates/Thread/Thread.errors.ts:128`-`:130`; Effect v4 match utility verified at `.repos/effect-v4/packages/effect/src/Schema.ts:6042`-`:6055`.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 0.56
-  }
-]
+[]

@@ -22,6 +22,7 @@
  */
 
 import { $LawPracticeUseCasesId } from "@beep/identity";
+import { NonNegativeInt, PosInt } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
@@ -58,15 +59,15 @@ export const spikeEntityInput: {
   2,
   (entityType: string, id: number): EntityInput =>
     EntityInput.make({
-      createdAt: id,
+      createdAt: NonNegativeInt.make(id),
       createdByPrincipal: SystemPrincipal.make({}),
       entityType,
-      id,
+      id: PosInt.make(id),
       orgId: 1,
       rowVersion: 1,
       schemaVersion: "0.0.0",
       source: "System",
-      updatedAt: id + 1,
+      updatedAt: NonNegativeInt.make(id + 1),
       updatedByPrincipal: SystemPrincipal.make({}),
     })
 );
@@ -87,16 +88,36 @@ export const spikeEntityInput: {
  */
 export class EntityInput extends S.Class<EntityInput>($I`EntityInput`)(
   {
-    createdAt: S.Finite,
-    createdByPrincipal: SystemPrincipal,
-    entityType: S.String,
-    id: S.Finite,
-    orgId: S.tag(1),
-    rowVersion: S.tag(1),
-    schemaVersion: S.tag("0.0.0"),
-    source: S.tag("System"),
-    updatedAt: S.Finite,
-    updatedByPrincipal: SystemPrincipal,
+    createdAt: NonNegativeInt.annotateKey({
+      description: "Synthetic creation timestamp in milliseconds for spike entity construction.",
+    }),
+    createdByPrincipal: SystemPrincipal.annotateKey({
+      description: "System principal that created the spike entity.",
+    }),
+    entityType: S.NonEmptyString.annotateKey({
+      description: "Persisted entity type literal expected by the target domain entity.",
+    }),
+    id: PosInt.annotateKey({
+      description: "Positive synthetic entity id for spike entity construction.",
+    }),
+    orgId: S.tag(1).annotateKey({
+      description: "Synthetic organization id for spike entity construction.",
+    }),
+    rowVersion: S.tag(1).annotateKey({
+      description: "Initial persisted row version for spike entity construction.",
+    }),
+    schemaVersion: S.tag("0.0.0").annotateKey({
+      description: "Schema version stamped on spike entities.",
+    }),
+    source: S.tag("System").annotateKey({
+      description: "Synthetic source kind for spike entity construction.",
+    }),
+    updatedAt: NonNegativeInt.annotateKey({
+      description: "Synthetic update timestamp in milliseconds for spike entity construction.",
+    }),
+    updatedByPrincipal: SystemPrincipal.annotateKey({
+      description: "System principal that last updated the spike entity.",
+    }),
   },
   $I.annote("EntityInput", {
     description: "Input for constructing a spike entity",

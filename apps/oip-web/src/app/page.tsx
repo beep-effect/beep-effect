@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { A, Str } from "@beep/utils";
+import { A, O, Str } from "@beep/utils";
 import { Clock, Effect } from "effect";
 import * as S from "effect/Schema";
 import { headers } from "next/headers";
@@ -19,7 +19,6 @@ type HomeProps = {
   readonly searchParams?: Promise<Record<string, ReadonlyArray<string> | string | undefined>>;
 };
 
-const isContactSubmissionStatus = S.is(ContactSubmissionStatus);
 // TODO(effect-native-migration): model schema
 const safeJsonScript = (value: unknown) =>
   Str.replaceAll("<", "\\u003c")(S.encodeUnknownSync(S.UnknownFromJsonString)(value));
@@ -106,7 +105,7 @@ export default function Home({ searchParams }: HomeProps) {
     .then(([params, requestHeaders, content]) => {
       const nonce = requestHeaders.get("x-nonce") ?? undefined;
       const contactStatusValue = A.isArray(params?.contact) ? params.contact[0] : params?.contact;
-      const contactStatus = isContactSubmissionStatus(contactStatusValue) ? contactStatusValue : undefined;
+      const contactStatus = O.getOrUndefined(ContactSubmissionStatus.decodeOption(contactStatusValue));
       const initialContactSubmittedAt = Effect.runSync(Clock.currentTimeMillis);
 
       return (

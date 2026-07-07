@@ -2,39 +2,6 @@
   {
     "ruleId": "SFV4-precision-audit",
     "file": "packages/agents/client/src/Chat.atoms.ts",
-    "line": 360,
-    "symbol": "StreamingTurn fields",
-    "smell": "StreamingTurn is an exported S.Class with whole-schema description and JSDoc comments, but its threadId/userContent/truncateFrom/blocks fields do not use annotateKey, so generated schema/catalog metadata loses field-level meaning.",
-    "proposedTarget": "Add .annotateKey({ description }) to threadId, userContent, truncateFrom, and blocks while keeping the existing field comments. Use the field-annotation style from AssistantContent at packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts:46 and BlockRepair at packages/agents/server/src/AssistantTurn/BlockRepair.ts:62.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/agents/client/src/Chat.atoms.ts",
-    "line": 463,
-    "symbol": "EditTarget / SendTurnRequest / EditTurnRequest fields",
-    "smell": "The exported client-side request/edit schemas have class-level docs but no field-level annotateKey descriptions for turnId/threadId/content.",
-    "proposedTarget": "Annotate fields on EditTarget, SendTurnRequest, and EditTurnRequest with .annotateKey({ description }) so the public client schema surface is as descriptive as the domain and server models.",
-    "confidence": 0.8,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/agents/client/dtslint/Chat.tst.ts",
-    "line": 7,
-    "symbol": "StreamingTurn/EditTarget/TurnRequest",
-    "smell": "The client package only has dtslint export/type-shape coverage for its exported schema models; there is no S.toArbitrary-derived encode/decode round-trip law for StreamingTurn, EditTarget, SendTurnRequest, EditTurnRequest, or TurnRequest.",
-    "proposedTarget": "Add a runtime test importing the production schemas from @beep/agents-client and deriving arbitraries with S.toArbitrary (verified .repos/effect-v4/packages/effect/src/Schema.ts:12970). Round-trip StreamingTurn, EditTarget, and TurnRequest through encode/decode; if Document or AssistantBlock reports generator gaps, use the existing @beep/md arbitrary property at packages/foundation/modeling/md/test/Md.test.ts:150 as the model.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/agents/client/src/Chat.atoms.ts",
     "line": 37,
     "symbol": "SERVER_URL / ClientObservability otlpBaseUrl",
     "smell": "Detector candidate: browser/runtime-derived URL configuration is represented as broad string constants instead of URL schemas.",
@@ -43,7 +10,7 @@
     "mechanization": "judgment",
     "roiRank": 0,
     "exception": {
-      "reason": "These are module-load runtime configuration derivations, not persisted or wire-domain schemas: SERVER_URL is constrained by live http(s) origin or local sidecar fallback, and ClientObservability uses an empty string to mean telemetry disabled.",
+      "reason": "These are module-load runtime configuration derivations, not persisted or wire-domain schemas: SERVER_URL is constrained by live http(s) origin or local sidecar fallback, and ClientObservability now keeps telemetry absence as Option at the runtime boundary.",
       "boundary": "browser/runtime-derived client configuration"
     }
   }

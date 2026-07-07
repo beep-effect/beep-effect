@@ -6,7 +6,6 @@
  * @since 0.0.0
  */
 
-import { Match } from "effect";
 import { dual } from "effect/Function";
 import { WorkPriority as WorkPrioritySchema } from "./WorkPriority.model.js";
 import type { WorkPriority } from "./WorkPriority.model.js";
@@ -51,12 +50,11 @@ export const defaultWorkPriority: WorkPriority = WorkPrioritySchema.Enum.normal;
  * @category value-objects
  * @since 0.0.0
  */
-export const rank: (priority: WorkPriority) => number = Match.type<WorkPriority>().pipe(
-  Match.when("low", () => 0),
-  Match.when("normal", () => 1),
-  Match.when("high", () => 2),
-  Match.exhaustive
-);
+export const rank: (priority: WorkPriority) => number = WorkPrioritySchema.$match({
+  low: () => 0,
+  normal: () => 1,
+  high: () => 2,
+});
 
 /**
  * Compare two priorities by their relative rank.

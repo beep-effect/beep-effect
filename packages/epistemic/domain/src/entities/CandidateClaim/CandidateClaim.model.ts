@@ -5,13 +5,12 @@
  * @since 0.0.0
  */
 
-import { ClaimLifecycle } from "@beep/epistemic-domain/values";
+import { ClaimLifecycle, EpistemicFixtureKey } from "@beep/epistemic-domain/values";
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { UnknownRecord } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
-import * as S from "effect/Schema";
 
 const $I = $EpistemicDomainId.create("entities/CandidateClaim/CandidateClaim.model");
 
@@ -50,7 +49,9 @@ export class CandidateClaim extends BaseEntity.Class<CandidateClaim>($I`Candidat
   Epistemic.CandidateClaimId,
   {
     fields: {
-      fixtureKey: S.String,
+      fixtureKey: EpistemicFixtureKey.annotateKey({
+        description: "Stable fixture key for the candidate claim.",
+      }),
       lifecycle: ClaimLifecycle,
       snapshot: UnknownRecord,
     },

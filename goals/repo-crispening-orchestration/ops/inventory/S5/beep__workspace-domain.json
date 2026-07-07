@@ -1,61 +1,6 @@
 [
   {
     "ruleId": "SFV4-precision-audit",
-    "file": "packages/workspace/domain/src/entities/Workspace/Workspace.model.ts",
-    "line": 32,
-    "symbol": "Workspace fixture/reference keys and display name",
-    "smell": "Workspace and sibling workspace entities persist fixture/reference fields as broad S.String (`fixtureKey`, `organizationFixtureKey`, `ownerPrincipalFixtureKey`, `artifactFixtureKey`, `threadFixtureKey`, `scenarioFixtureKey`) and `Workspace.name` as broad S.String, while examples and tests use stable dotted non-empty keys plus a meaningful display name.",
-    "proposedTarget": "Introduce named annotated schemas such as WorkspaceFixtureKey/WorkspaceReferenceKey backed at minimum by S.NonEmptyString (verified .repos/effect-v4/packages/effect/src/Schema.ts:8420), optionally with S.isPattern for dotted fixture ids (verified :6521), and use TrimmedNonEmptyText for `name` (packages/foundation/modeling/schema/src/CommonTextSchemas.ts:36). In-package examples at WorkspaceDomain.test.ts:66-69 show the key grammar (`workspace.acme`, `org.acme`, `principal.owner`).",
-    "confidence": 0.66,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/workspace/domain/src/entities/EmailArtifact/EmailArtifact.model.ts",
-    "line": 36,
-    "symbol": "EmailArtifact.receivedAt/sourceSpans",
-    "smell": "`receivedAt` is S.String and `sourceSpans` is S.Array(S.String), even though the model describes a normalized imported email artifact with timestamp and source-span identifiers.",
-    "proposedTarget": "Use an annotated timestamp schema such as ISOStr or ToIsoStr from packages/foundation/modeling/schema/src/Timestamp/Timestamp.schema.ts:45 and :130 for `receivedAt`, and use S.Array(S.NonEmptyString) or NonEmptyArrayOfNonEmptyStrings (packages/foundation/modeling/schema/src/ArrayOf.ts:86 and :115) for `sourceSpans` depending on whether imported artifacts may legitimately have no spans. Effect v4 S.NonEmptyArray is verified at .repos/effect-v4/packages/effect/src/Schema.ts:4533.",
-    "confidence": 0.7,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/workspace/domain/src/entities/Turn/Turn.model.ts",
-    "line": 240,
-    "symbol": "TurnItems",
-    "smell": "`TurnItems` is an unbounded S.Array(TurnItem), but all observed turn creation paths insert at least one message item and the schema prose says it is the ordered item list held by a turn aggregate.",
-    "proposedTarget": "If empty turns are not a durable state, tighten to S.NonEmptyArray(TurnItem).pipe($I.annoteSchema(\"TurnItems\", ...)); S.NonEmptyArray is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:4533. Keep S.Array only if remediation confirms a draft/in-progress empty-turn boundary, and ledger that exception explicitly.",
-    "confidence": 0.62,
-    "mechanization": "assisted",
-    "roiRank": 2
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
-    "file": "packages/workspace/domain/src/entities/Workspace/Workspace.model.ts",
-    "line": 32,
-    "symbol": "workspace domain schema fields",
-    "smell": "Reusable exported entity/value schemas carry whole-schema `$I.annote` / `$I.annoteSchema` metadata, but public fields such as Workspace.fixtureKey/name, EmailArtifact.receivedAt/sourceSpans, Turn.items/turnIndex, and candidate snapshot fields have no field-level `annotateKey` descriptions.",
-    "proposedTarget": "Add behavior-neutral `.annotateKey({ description })` or `$I.annoteKey(...)` metadata to public fields while preserving current wire shape; follow packages/agents/server/src/AssistantTurn/BlockRepair.ts:62-64. Effect v4 `annotateKey` is verified at .repos/effect-v4/packages/effect/src/Schema.ts:185 and :605.",
-    "confidence": 0.72,
-    "mechanization": "assisted",
-    "roiRank": 3
-  },
-  {
-    "ruleId": "SFV4-arbitrary-tests",
-    "file": "packages/workspace/domain/test/WorkspaceDomain.test.ts",
-    "line": 63,
-    "symbol": "workspace domain schema laws",
-    "smell": "The package has one S.toArbitrary-derived law for MessageRole only; exported entity schemas and aggregate item schemas are covered by hand-written decode/constructor fixtures but no schema-derived round-trip/property law.",
-    "proposedTarget": "Add additive schema-law tests importing production schemas from @beep/workspace-domain and using assertSchemaArbitraryDecodesToSelf from @beep/test-utils (packages/tooling/test-kit/test-utils/src/Schema.ts:30-43) for ApprovalDecision, CandidateLifecycle, MessageRole, TurnItem, TurnItems, Workspace, Thread, Message, Turn, EmailArtifact, ContextPacket, ApprovalGate, CandidateDraft, CandidateProject, and CandidateTask after any precision tightening. S.toArbitrary is verified in Effect v4 at .repos/effect-v4/packages/effect/src/Schema.ts:12970.",
-    "confidence": 0.68,
-    "mechanization": "assisted",
-    "roiRank": 4
-  },
-  {
-    "ruleId": "SFV4-precision-audit",
     "file": "packages/workspace/domain/src/entities/EmailArtifact/EmailArtifact.model.ts",
     "line": 34,
     "symbol": "EmailArtifact.body/subject/from/to",

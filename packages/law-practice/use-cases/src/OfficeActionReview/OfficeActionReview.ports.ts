@@ -14,6 +14,7 @@ import { OperationId, SourceArtifact } from "@beep/file-processing/Artifact";
 import { FileProcessingOperationError } from "@beep/file-processing/Operation";
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { LangExtractError } from "@beep/langextract/Extraction";
+import { SchemaUtils } from "@beep/schema";
 import { Context } from "effect";
 import * as S from "effect/Schema";
 import { IrToLawExtractionError } from "../IrToLaw/index.ts";
@@ -68,10 +69,18 @@ const $I = $LawPracticeUseCasesId.create("OfficeActionReview/OfficeActionReview.
  */
 export class OfficeActionReviewInput extends S.Class<OfficeActionReviewInput>($I`OfficeActionReviewInput`)(
   {
-    matterFixtureKey: S.NonEmptyString,
-    officeActionFixtureKey: S.NonEmptyString,
-    operationId: OperationId,
-    sourceArtifact: SourceArtifact,
+    matterFixtureKey: S.NonEmptyString.annotateKey({
+      description: "Stable fixture key for the prosecuted matter.",
+    }),
+    officeActionFixtureKey: S.NonEmptyString.annotateKey({
+      description: "Stable fixture key for the office action under review.",
+    }),
+    operationId: OperationId.annotateKey({
+      description: "File-processing operation id used to process the source artifact.",
+    }),
+    sourceArtifact: SourceArtifact.annotateKey({
+      description: "Source artifact whose text is extracted for review.",
+    }),
   },
   $I.annote("OfficeActionReviewInput", {
     description: "Schema-backed input for reviewing one office-action source artifact.",
@@ -86,7 +95,6 @@ export class OfficeActionReviewInput extends S.Class<OfficeActionReviewInput>($I
  * ```ts
  * import { IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw"
  * import { OfficeActionReviewError } from "@beep/law-practice-use-cases/OfficeActionReview"
- * import * as S from "effect/Schema"
  *
  * const error = IrToLawExtractionError.fromReason("required-extraction-unaligned", {
  *   alignmentStatus: "unaligned",
@@ -94,7 +102,7 @@ export class OfficeActionReviewInput extends S.Class<OfficeActionReviewInput>($I
  *   message: "The distinction could not be grounded."
  * })
  *
- * console.log(S.is(OfficeActionReviewError)(error)) // true
+ * console.log(OfficeActionReviewError.is(error)) // true
  * ```
  *
  * @category errors
@@ -104,10 +112,11 @@ export const OfficeActionReviewError = S.Union([
   FileProcessingOperationError,
   LangExtractError,
   IrToLawExtractionError,
-]).annotate(
-  $I.annote("OfficeActionReviewError", {
+]).pipe(
+  $I.annoteSchema("OfficeActionReviewError", {
     description: "Failure union for the law-practice office-action review loop.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

@@ -8,7 +8,13 @@
 import { Effect, Layer } from "effect";
 import { HttpRouter, HttpServer } from "effect/unstable/http";
 import { HttpApiBuilder } from "effect/unstable/httpapi";
-import { ContactSubmissionAccepted, ContactSubmissionRejected, OipHttpApi, submitContact } from "../../../contact";
+import {
+  ContactSubmissionAccepted,
+  ContactSubmissionRejected,
+  ContactSubmissionStatus,
+  OipHttpApi,
+  submitContact,
+} from "../../../contact";
 import type { ContactSubmissionPayload, ContactSubmissionResponse } from "../../../contact";
 
 type SubmitContact = (payload: ContactSubmissionPayload) => Effect.Effect<ContactSubmissionResponse>;
@@ -16,19 +22,22 @@ type SubmitContact = (payload: ContactSubmissionPayload) => Effect.Effect<Contac
 const contactHttpApiResponse = (
   response: ContactSubmissionResponse
 ): Effect.Effect<ContactSubmissionAccepted, ContactSubmissionRejected> =>
-  response.status === "accepted"
-    ? Effect.succeed(
+  ContactSubmissionStatus.$match(response.status, {
+    accepted: (status) =>
+      Effect.succeed(
         ContactSubmissionAccepted.make({
           message: response.message,
-          status: response.status,
+          status,
         })
-      )
-    : Effect.fail(
+      ),
+    rejected: (status) =>
+      Effect.fail(
         ContactSubmissionRejected.make({
           message: response.message,
-          status: response.status,
+          status,
         })
-      );
+      ),
+  });
 
 const makeOipContactHttpApiRouteLive = (submit: SubmitContact) =>
   HttpApiBuilder.group(OipHttpApi, "contact", (handlers) =>

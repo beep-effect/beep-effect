@@ -5,10 +5,11 @@
  * @since 0.0.0
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { LiteralKit } from "@beep/schema";
+import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $EpistemicDomainId.create("values/ClaimGate/ClaimGateResult.model");
+const ClaimGateSeverityBase = LiteralKit(["info", "warning", "violation"]);
 
 /**
  * Severity of a claim gate violation. Mirrors the bounded SHACL severity
@@ -27,10 +28,15 @@ const $I = $EpistemicDomainId.create("values/ClaimGate/ClaimGateResult.model");
  * @category schemas
  * @since 0.0.0
  */
-export const ClaimGateSeverity = LiteralKit(["info", "warning", "violation"]).pipe(
+export const ClaimGateSeverity = ClaimGateSeverityBase.pipe(
   $I.annoteSchema("ClaimGateSeverity", {
     description: "Severity of a claim gate violation.",
-  })
+  }),
+  SchemaUtils.withLiteralKitStatics(ClaimGateSeverityBase),
+  SchemaUtils.withStatics((schema) => ({
+    fromUnknown: S.decodeUnknownSync(schema),
+    decodeOption: S.decodeUnknownOption(schema),
+  }))
 );
 
 /**
@@ -71,17 +77,21 @@ export type ClaimGateSeverity = typeof ClaimGateSeverity.Type;
  */
 export class ClaimGateViolation extends S.Class<ClaimGateViolation>($I`ClaimGateViolation`)(
   {
-    focusNode: S.String,
-    path: S.String,
-    message: S.String,
-    severity: ClaimGateSeverity,
+    focusNode: S.String.annotateKey({ description: "SHACL focus node projected as a stable string token." }),
+    path: S.String.annotateKey({ description: "SHACL result path projected as a stable string token." }),
+    message: S.String.annotateKey({ description: "Human-readable validation message." }),
+    severity: ClaimGateSeverity.annotateKey({ description: "Severity assigned by the claim gate." }),
   },
   $I.annote("ClaimGateViolation", {
     description: "A single claim gate violation projected from a SHACL validation violation.",
   })
 ) {}
 
-const ClaimGateVerdict = LiteralKit(["admitted", "rejected"]);
+const ClaimGateVerdict = LiteralKit(["admitted", "rejected"]).annotate(
+  $I.annote("ClaimGateVerdict", {
+    description: "Internal literal verdict vocabulary used to build ClaimGateResult.",
+  })
+);
 
 /**
  * Typed verdict returned by the claim gate, discriminated on `verdict`: an
@@ -113,11 +123,16 @@ const ClaimGateVerdict = LiteralKit(["admitted", "rejected"]);
  */
 export const ClaimGateResult = ClaimGateVerdict.toTaggedUnion("verdict")({
   admitted: {},
-  rejected: { violations: S.Array(ClaimGateViolation) },
+  rejected: {
+    violations: S.Array(ClaimGateViolation).annotateKey({
+      description: "Claim gate violations that blocked admission.",
+    }),
+  },
 }).pipe(
   $I.annoteSchema("ClaimGateResult", {
     description: "Typed admitted/rejected verdict returned by the claim gate.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

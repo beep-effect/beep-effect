@@ -9,6 +9,44 @@ import { $AgentsUseCasesId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 
 const $I = $AgentsUseCasesId.create("processes/ProfessionalRuntime/ProfessionalRuntime.values");
+
+/**
+ * Fixture scenario ids supported by the deterministic professional runtime proof.
+ *
+ * @example
+ * ```ts
+ * import { RuntimeFixtureScenarioId } from "@beep/agents-use-cases/public"
+ * import * as S from "effect/Schema"
+ *
+ * const isScenario = S.is(RuntimeFixtureScenarioId)
+ * console.log(isScenario("law-patent-intake")) // true
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export const RuntimeFixtureScenarioId = LiteralKit(["law-patent-intake", "wealth-cash-request"]).annotate(
+  $I.annote("RuntimeFixtureScenarioId", {
+    description: "Fixture scenario ids supported by the deterministic professional runtime proof.",
+  })
+);
+
+/**
+ * Runtime type for {@link RuntimeFixtureScenarioId}.
+ *
+ * @example
+ * ```ts
+ * import type { RuntimeFixtureScenarioId } from "@beep/agents-use-cases/public"
+ *
+ * const scenarioId: RuntimeFixtureScenarioId = "law-patent-intake"
+ * console.log(scenarioId)
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export type RuntimeFixtureScenarioId = typeof RuntimeFixtureScenarioId.Type;
+
 /**
  * Candidate lifecycle vocabulary used by runtime output sections.
  *

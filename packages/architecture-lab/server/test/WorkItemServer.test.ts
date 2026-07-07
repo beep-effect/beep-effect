@@ -1,9 +1,15 @@
 import * as DomainWorkItem from "@beep/architecture-lab-domain/aggregates/WorkItem";
-import { makeWorkItemHttpHandlers, WorkItemServer } from "@beep/architecture-lab-server/aggregates/WorkItem";
+import {
+  makeWorkItemHttpHandlers,
+  WorkItemHttpResponse,
+  WorkItemHttpStatus,
+  WorkItemServer,
+} from "@beep/architecture-lab-server/aggregates/WorkItem";
 import { ArchitectureLabServerTest } from "@beep/architecture-lab-server/test";
 import { WorkItem as WorkItemUseCases } from "@beep/architecture-lab-use-cases/public";
+import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, Layer, Option as O } from "effect";
+import { Effect, Equal, Layer, Option as O } from "effect";
 import * as S from "effect/Schema";
 
 const provideScopedLayer =
@@ -12,8 +18,37 @@ const provideScopedLayer =
     Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 
 const decodeWorkItemId = S.decodeUnknownEffect(DomainWorkItem.WorkItemId);
+const decodeWorkItemActionFailed = S.decodeUnknownEffect(WorkItemUseCases.WorkItemActionFailed);
+const decodeWorkItemHttpResponse = S.decodeUnknownEffect(WorkItemHttpResponse);
+const encodeWorkItemHttpResponse = S.encodeEffect(WorkItemHttpResponse);
+const encodeWorkItemHttpStatus = S.encodeEffect(WorkItemHttpStatus);
 
 describe("WorkItem server", () => {
+  it.effect(
+    "keeps HTTP schema encoded shapes byte-identical",
+    Effect.fnUntraced(function* () {
+      const encodedStatus = yield* encodeWorkItemHttpStatus(201);
+      const response = WorkItemHttpResponse.make({
+        status: 201,
+        body: { id: "work-item-1" },
+      });
+      const encodedResponse = yield* encodeWorkItemHttpResponse(response);
+      const decodedResponse = yield* decodeWorkItemHttpResponse(encodedResponse);
+
+      expect(encodedStatus).toBe(201);
+      expect(encodedResponse).toEqual({
+        status: 201,
+        body: { id: "work-item-1" },
+      });
+      expect(Equal.equals(decodedResponse, response)).toBe(true);
+    })
+  );
+
+  it("round-trips schema-derived HTTP values", () => {
+    assertSchemaArbitraryDecodesToSelf(WorkItemHttpStatus, { numRuns: 25 });
+    assertSchemaArbitraryDecodesToSelf(WorkItemHttpResponse, { numRuns: 25 });
+  });
+
   it.effect(
     "redacts unavailable details from HTTP failure bodies",
     Effect.fnUntraced(function* () {
@@ -33,7 +68,7 @@ describe("WorkItem server", () => {
       });
 
       const response = yield* handlers.get(WorkItemUseCases.GetWorkItemQuery.make({ id }));
-      const body = response.body as WorkItemUseCases.WorkItemActionFailed;
+      const body = yield* decodeWorkItemActionFailed(response.body);
 
       expect(response.status).toBe(503);
       expect(body._tag).toBe("WorkItemActionFailed");

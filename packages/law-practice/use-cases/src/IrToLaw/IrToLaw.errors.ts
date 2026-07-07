@@ -7,7 +7,9 @@
  */
 
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
-import { LiteralKit, TaggedErrorClass } from "@beep/schema";
+import { AlignmentStatus } from "@beep/langextract/Extraction";
+import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $LawPracticeUseCasesId.create("IrToLaw/IrToLaw.errors");
@@ -86,10 +88,18 @@ export type IrToLawExtractionErrorReason = typeof IrToLawExtractionErrorReason.T
 export class IrToLawExtractionError extends TaggedErrorClass<IrToLawExtractionError>($I`IrToLawExtractionError`)(
   "IrToLawExtractionError",
   {
-    alignmentStatus: S.optionalKey(S.String),
-    label: S.NonEmptyString,
-    message: S.String,
-    reason: IrToLawExtractionErrorReason,
+    alignmentStatus: S.OptionFromOptionalKey(AlignmentStatus).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional LangExtract alignment status copied from the rejected extraction.",
+    }),
+    label: S.NonEmptyString.annotateKey({
+      description: "Required extraction label that failed validation.",
+    }),
+    message: S.NonEmptyString.annotateKey({
+      description: "Sanitized diagnostic for the failed IR-to-law extraction boundary.",
+    }),
+    reason: IrToLawExtractionErrorReason.annotateKey({
+      description: "Machine-readable reason for rejecting the extraction output.",
+    }),
   },
   $I.annote("IrToLawExtractionError", {
     description: "Sanitized failure emitted when office-action extraction output cannot be grounded.",
@@ -104,9 +114,15 @@ export class IrToLawExtractionError extends TaggedErrorClass<IrToLawExtractionEr
   static readonly fromReason = (
     reason: IrToLawExtractionErrorReason,
     options: {
-      readonly alignmentStatus?: string;
+      readonly alignmentStatus?: AlignmentStatus;
       readonly label: string;
       readonly message: string;
     }
-  ): IrToLawExtractionError => IrToLawExtractionError.make({ reason, ...options });
+  ): IrToLawExtractionError =>
+    IrToLawExtractionError.make({
+      alignmentStatus: O.fromUndefinedOr(options.alignmentStatus),
+      label: options.label,
+      message: options.message,
+      reason,
+    });
 }

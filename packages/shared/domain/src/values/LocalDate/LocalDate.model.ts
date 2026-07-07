@@ -10,35 +10,15 @@
  */
 import { $SharedDomainId } from "@beep/identity";
 import { Str } from "@beep/utils";
-import { DateTime, Hash, Match } from "effect";
+import { DateTime, Hash } from "effect";
 import * as Eq from "effect/Equal";
 import * as S from "effect/Schema";
+import { CalendarParts, isValidGregorianDate } from "./LocalDate.calendar.ts";
 
 const $I = $SharedDomainId.create("values/LocalDate/LocalDate.model");
 
-type CalendarParts = {
-  readonly year: number;
-  readonly month: number;
-  readonly day: number;
-};
-
-const isLeapYearInternal = (year: number): boolean => (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-
-const getDaysInMonth = (year: number, month: number): number =>
-  Match.value(month).pipe(
-    Match.when(2, () => (isLeapYearInternal(year) ? 29 : 28)),
-    Match.whenOr(4, 6, 9, 11, () => 30),
-    Match.orElse(() => 31)
-  );
-
-const isValidCalendarDate = ({ day, month, year }: CalendarParts): boolean => day <= getDaysInMonth(year, month);
-
-const LocalDateFields = S.Struct({
-  year: S.Int.check(S.makeFilterGroup([S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(9999)])),
-  month: S.Int.check(S.makeFilterGroup([S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(12)])),
-  day: S.Int.check(S.makeFilterGroup([S.isGreaterThanOrEqualTo(1), S.isLessThanOrEqualTo(31)])),
-}).check(
-  S.makeFilter(isValidCalendarDate, {
+const LocalDateFields = S.Struct(CalendarParts.fields).check(
+  S.makeFilter(isValidGregorianDate, {
     description: "LocalDate calendar fields must represent a real day in the selected month and year.",
     identifier: "LocalDateCalendarDay",
     message: "Invalid calendar date",
@@ -72,6 +52,8 @@ export class Model extends S.Class<Model>($I`LocalDateModel`)(
       "Stores year, month, and day as integer fields, validates real calendar days, and formats them as YYYY-MM-DD.",
   })
 ) {
+  static readonly is = S.is(Model);
+
   /**
    * Format the date as an ISO 8601 local-date string.
    *
@@ -133,7 +115,7 @@ export class Model extends S.Class<Model>($I`LocalDateModel`)(
    * @since 0.0.0
    */
   [Eq.symbol](that: Eq.Equal): boolean {
-    return S.is(Model)(that) && this.year === that.year && this.month === that.month && this.day === that.day;
+    return Model.is(that) && ModelEquivalence(this, that);
   }
 
   /**
@@ -201,3 +183,5 @@ export class Model extends S.Class<Model>($I`LocalDateModel`)(
    */
   readonly toDate = (): Date => DateTime.toDateUtc(this.toDateTime());
 }
+
+const ModelEquivalence = S.toEquivalence(Model);

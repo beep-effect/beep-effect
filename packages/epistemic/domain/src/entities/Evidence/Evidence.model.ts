@@ -4,12 +4,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { EvidenceSpan } from "@beep/epistemic-domain/values";
+import { EpistemicFixtureKey, EvidenceSpan } from "@beep/epistemic-domain/values";
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
-import * as S from "effect/Schema";
 
 const $I = $EpistemicDomainId.create("entities/Evidence/Evidence.model");
 
@@ -56,9 +55,13 @@ export class Evidence extends BaseEntity.Class<Evidence>($I`Evidence`)(
   Epistemic.EvidenceId,
   {
     fields: {
-      artifactFixtureKey: S.String,
-      spanFixtureKey: S.String,
-      span: EvidenceSpan,
+      artifactFixtureKey: EpistemicFixtureKey.annotateKey({
+        description: "Stable fixture key for the source artifact.",
+      }),
+      spanFixtureKey: EpistemicFixtureKey.annotateKey({
+        description: "Stable fixture key for the evidence span.",
+      }),
+      span: EvidenceSpan.annotateKey({ description: "Char-offset evidence span persisted with the evidence row." }),
     },
     persisted: {
       artifactFixtureKey: EntitySchema.persist.text({

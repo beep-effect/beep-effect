@@ -6,7 +6,7 @@
  */
 
 import { $WorkspaceDomainId } from "@beep/identity/packages";
-import { LiteralKit, NonNegativeInt, UnknownRecord } from "@beep/schema";
+import { LiteralKit, NonNegativeInt, SchemaUtils, UnknownRecord } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as EpistemicIdentity from "@beep/shared-domain/identity/Epistemic";
@@ -237,9 +237,9 @@ export type TurnItem = typeof TurnItem.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const TurnItems = S.Array(TurnItem).pipe(
+export const TurnItems = S.NonEmptyArray(TurnItem).pipe(
   $I.annoteSchema("TurnItems", {
-    description: "Ordered list of typed items held by a turn aggregate.",
+    description: "Non-empty ordered list of typed items held by a turn aggregate.",
   })
 );
 
@@ -283,10 +283,18 @@ export class Turn extends BaseEntity.Class<Turn>($I`Turn`)(
   WorkspaceIdentity.TurnId,
   {
     fields: {
-      items: TurnItems,
-      parentTurnId: S.OptionFromNullOr(WorkspaceIdentity.TurnId),
-      threadId: WorkspaceIdentity.ThreadId,
-      turnIndex: NonNegativeInt,
+      items: TurnItems.annotateKey({
+        description: "Non-empty ordered items held by the turn aggregate.",
+      }),
+      parentTurnId: S.OptionFromNullOr(WorkspaceIdentity.TurnId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+        description: "Optional parent turn lineage; encodes absent roots as SQL/wire null.",
+      }),
+      threadId: WorkspaceIdentity.ThreadId.annotateKey({
+        description: "Thread containing the turn.",
+      }),
+      turnIndex: NonNegativeInt.annotateKey({
+        description: "Zero-based turn ordering index within the thread.",
+      }),
     },
     persisted: {
       items: EntitySchema.persist.jsonb({

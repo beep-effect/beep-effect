@@ -30,24 +30,25 @@
  * @since 0.0.0
  */
 
-import { P, Str } from "@beep/utils";
+import { O, P, Str } from "@beep/utils";
 import { Layer } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
 import { Otlp, OtlpSerialization } from "effect/unstable/observability";
 
 // browser/runtime-derived config boundary — no vite env, no node `process`.
-const otlpBaseUrl = ((): string => {
-  const override = (globalThis as { __BEEP_OTLP_URL__?: unknown }).__BEEP_OTLP_URL__;
+const otlpBaseUrl = ((): O.Option<string> => {
+  const runtime: unknown = globalThis;
+  const override = P.hasProperty(runtime, "__BEEP_OTLP_URL__") ? runtime.__BEEP_OTLP_URL__ : undefined;
   if (P.isString(override)) {
-    return override;
+    return O.some(override);
   }
   if (typeof window !== "undefined") {
     const origin = window.location.origin;
     if (Str.startsWith(origin, "http://") || Str.startsWith(origin, "https://")) {
-      return new URL("/otlp", origin).toString();
+      return O.some(new URL("/otlp", origin).toString());
     }
   }
-  return "";
+  return O.none();
 })();
 
 /**
@@ -67,12 +68,14 @@ const otlpBaseUrl = ((): string => {
  * @category layers
  * @since 0.0.0
  */
-export const ClientObservabilityLive: Layer.Layer<never> = Str.isEmpty(otlpBaseUrl)
-  ? Layer.empty
-  : Otlp.layer({
-      baseUrl: otlpBaseUrl,
+export const ClientObservabilityLive: Layer.Layer<never> = O.match(otlpBaseUrl, {
+  onNone: () => Layer.empty,
+  onSome: (baseUrl) =>
+    Otlp.layer({
+      baseUrl,
       resource: {
         serviceName: "professional-desktop-web",
         serviceVersion: "0.0.3",
       },
-    }).pipe(Layer.provide([FetchHttpClient.layer, OtlpSerialization.layerJson]));
+    }).pipe(Layer.provide([FetchHttpClient.layer, OtlpSerialization.layerJson])),
+});

@@ -1,0 +1,37 @@
+/**
+ * Desktop sidecar transport probe schema.
+ *
+ * @packageDocumentation
+ * @category transport
+ * @since 0.0.0
+ */
+
+import { $ProfessionalDesktopId } from "@beep/identity";
+import * as S from "effect/Schema";
+
+const $I = $ProfessionalDesktopId.create("transport/SidecarTransport");
+
+/**
+ * Transport probe result returned by the desktop sidecar.
+ *
+ * @example
+ * ```ts
+ * import { SidecarTransport } from "@/transport/SidecarTransport"
+ *
+ * const transport = SidecarTransport.make({ ipc: false })
+ * console.log(transport.ipc) // false
+ * ```
+ *
+ * @category transport
+ * @since 0.0.0
+ */
+export class SidecarTransport extends S.Class<SidecarTransport>($I`SidecarTransport`)(
+  {
+    ipc: S.Boolean,
+  },
+  $I.annote("SidecarTransport", {
+    description: "The transport used to communicate with the sidecar.",
+  })
+) {
+  static readonly decodeUnknownEffect = S.decodeUnknownEffect(SidecarTransport);
+}

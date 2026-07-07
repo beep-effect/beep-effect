@@ -29,10 +29,18 @@ export class Workspace extends BaseEntity.Class<Workspace>($I`Workspace`)(
   WorkspaceIdentity.WorkspaceId,
   {
     fields: {
-      fixtureKey: S.String,
-      name: S.String,
-      organizationFixtureKey: S.String,
-      ownerPrincipalFixtureKey: S.String,
+      fixtureKey: S.NonEmptyString.annotateKey({
+        description: "Stable workspace fixture key used to seed and reference the workspace.",
+      }),
+      name: S.NonEmptyString.annotateKey({
+        description: "Human-readable workspace display name.",
+      }),
+      organizationFixtureKey: S.NonEmptyString.annotateKey({
+        description: "Stable fixture key for the owning organization.",
+      }),
+      ownerPrincipalFixtureKey: S.NonEmptyString.annotateKey({
+        description: "Stable fixture key for the owner principal.",
+      }),
     },
     persisted: {
       fixtureKey: EntitySchema.persist.text({

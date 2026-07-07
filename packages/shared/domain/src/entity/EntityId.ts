@@ -9,13 +9,62 @@ import { $SharedDomainId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { PosInt } from "@beep/schema/Int";
 import { Str } from "@beep/utils";
-import { pipe } from "effect";
+import { pipe, Result } from "effect";
 import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { IdentityComposer } from "@beep/identity";
 import type * as BrandNS from "effect/Brand";
 
 const $I = $SharedDomainId.create("entity/EntityId");
+const entityIdTokenPattern = /^[a-z][a-z0-9_]*$/u;
+const entityIdResourcePattern = /^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$/u;
+const entityIdPascalPattern = /^[A-Z][A-Za-z0-9]*$/u;
+
+const EntityIdToken = S.NonEmptyString.check(
+  S.isPattern(entityIdTokenPattern, {
+    identifier: $I`EntityIdTokenPattern`,
+    title: "Entity id token pattern",
+    description: "Lowercase snake-case token used for entity-id slice, name, and table metadata.",
+    message: "Expected a lowercase snake-case entity-id token",
+  })
+).pipe(
+  $I.annoteSchema("EntityIdToken", {
+    description: "Lowercase snake-case token used for shared entity-id metadata.",
+  })
+);
+
+const EntityIdResource = S.NonEmptyString.check(
+  S.isPattern(entityIdResourcePattern, {
+    identifier: $I`EntityIdResourcePattern`,
+    title: "Entity id resource pattern",
+    description: "Dot-separated lowercase resource token used for authorization metadata.",
+    message: "Expected a dot-separated lowercase resource token",
+  })
+).pipe(
+  $I.annoteSchema("EntityIdResource", {
+    description: "Dot-separated lowercase resource token used by shared entity-id metadata.",
+  })
+);
+
+const EntityIdPascalToken = S.NonEmptyString.check(
+  S.isPattern(entityIdPascalPattern, {
+    identifier: $I`EntityIdPascalTokenPattern`,
+    title: "Entity id PascalCase token pattern",
+    description: "PascalCase token used for entity type and brand metadata.",
+    message: "Expected a PascalCase entity-id token",
+  })
+).pipe(
+  $I.annoteSchema("EntityIdPascalToken", {
+    description: "PascalCase token used by shared entity-id metadata.",
+  })
+);
+
+const EntityIdDescription = S.NonEmptyString.pipe(
+  $I.annoteSchema("EntityIdDescription", {
+    description: "Human-readable entity-id description text.",
+  })
+);
 
 /**
  * Storage-neutral positive integer used by every v1 persisted entity id.
@@ -51,7 +100,8 @@ export const EntityIdValue = PosInt.check(
   S.brand("EntityIdValue"),
   $I.annoteSchema("EntityIdValue", {
     description: "Storage-neutral positive integer used by shared-kernel persisted entity ids.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -92,9 +142,10 @@ export type EntityIdValueFor<TBrand extends string> = BrandNS.Branded<EntityIdVa
  * @example
  * ```ts
  * import { Options } from "@beep/shared-domain/entity/EntityId"
+ * import * as O from "effect/Option"
  *
- * const options = Options.make({ tableName: "shared_organization" })
- * console.log(options.tableName)
+ * const options = Options.make({ tableName: O.some("shared_organization") })
+ * console.log(O.getOrThrow(options.tableName))
  * ```
  *
  * @since 0.0.0
@@ -102,11 +153,26 @@ export type EntityIdValueFor<TBrand extends string> = BrandNS.Branded<EntityIdVa
  */
 export class Options extends S.Class<Options>($I`Options`)(
   {
-    brand: S.optionalKey(S.String),
-    description: S.optionalKey(S.String),
-    entityType: S.optionalKey(S.String),
-    resource: S.optionalKey(S.String),
-    tableName: S.optionalKey(S.String),
+    brand: S.OptionFromOptionalKey(EntityIdPascalToken).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional schema brand override for the generated entity id." })
+    ),
+    description: S.OptionFromOptionalKey(EntityIdDescription).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional human-readable description override for the generated entity id." })
+    ),
+    entityType: S.OptionFromOptionalKey(EntityIdPascalToken).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional PascalCase entity type override for the generated entity id." })
+    ),
+    resource: S.OptionFromOptionalKey(EntityIdResource).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional dot-separated authorization resource override." })
+    ),
+    tableName: S.OptionFromOptionalKey(EntityIdToken).pipe(
+      SchemaUtils.withNoneDefault,
+      S.annotateKey({ description: "Optional SQL table-name override for the generated entity id." })
+    ),
   },
   $I.annote("Options", {
     description: "Constrained metadata overrides accepted by EntityId.factory.",
@@ -241,14 +307,18 @@ type ResolvedBrand<Slice extends string, Name extends string, Overrides> = Overr
  */
 export class Definition extends S.Class<Definition>($I`Definition`)(
   {
-    brand: S.String,
-    description: S.String,
-    entityType: S.String,
-    name: S.String,
-    overrides: Options,
-    resource: S.String,
-    slice: S.String,
-    tableName: S.String,
+    brand: EntityIdPascalToken.annotateKey({ description: "Resolved schema brand for the generated entity id." }),
+    description: EntityIdDescription.annotateKey({
+      description: "Human-readable description for the generated entity id.",
+    }),
+    entityType: EntityIdPascalToken.annotateKey({
+      description: "Resolved PascalCase entity type for the generated entity id.",
+    }),
+    name: EntityIdToken.annotateKey({ description: "Entity segment used to derive shared entity-id metadata." }),
+    overrides: Options.annotateKey({ description: "Original metadata overrides supplied to EntityId.factory." }),
+    resource: EntityIdResource.annotateKey({ description: "Resolved dot-separated authorization resource token." }),
+    slice: EntityIdToken.annotateKey({ description: "Slice segment used to derive shared entity-id metadata." }),
+    tableName: EntityIdToken.annotateKey({ description: "Resolved SQL table name for the generated entity id." }),
   },
   $I.annote("Definition", {
     description: "Materialized entity-id metadata derived from a slice and entity name.",
@@ -331,6 +401,7 @@ type EntityIdStatics<
 type EntityIdEquivalence<TBrand extends string> = {
   bivarianceHack(self: EntityIdValueFor<TBrand>, that: EntityIdValueFor<TBrand>): boolean;
 }["bivarianceHack"];
+const decodeOptionsResult = S.decodeUnknownResult(Options);
 
 /**
  * Any entity id schema produced by {@link factory}.
@@ -431,23 +502,23 @@ const buildDefinition = <
   ResolvedEntityType<Slice, Name, Overrides>,
   ResolvedBrand<Slice, Name, Overrides>
 > => {
-  const overrides = Options.make(input ?? {});
+  const overrides = Result.getOrThrow(decodeOptionsResult(input ?? {}));
   const defaultEntityType = Str.prefix(
     pipe(name, Str.snakeCase, Str.snakeToPascal),
     pipe(slice, Str.snakeCase, Str.snakeToPascal)
   );
-  const entityType = overrides.entityType ?? defaultEntityType;
-  const brand = overrides.brand ?? Str.postfix(entityType, "Id");
+  const entityType = O.getOrElse(overrides.entityType, () => defaultEntityType);
+  const brand = O.getOrElse(overrides.brand, () => Str.postfix(entityType, "Id"));
   return literalDefinition<Slice, Name, Overrides>(
     Definition.make({
       brand,
-      description: overrides.description ?? `${entityType} entity identifier.`,
+      description: O.getOrElse(overrides.description, () => `${entityType} entity identifier.`),
       entityType,
       name,
       overrides,
-      resource: overrides.resource ?? defaultResource(slice, name),
+      resource: O.getOrElse(overrides.resource, () => defaultResource(slice, name)),
       slice,
-      tableName: overrides.tableName ?? defaultTableName(slice, name),
+      tableName: O.getOrElse(overrides.tableName, () => defaultTableName(slice, name)),
     })
   );
 };

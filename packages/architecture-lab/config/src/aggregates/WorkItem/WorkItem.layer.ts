@@ -46,9 +46,15 @@ const $I = $ArchitectureLabConfigId.create("WorkItemConfigLayer");
  */
 export class WorkItemConfigValue extends S.Class<WorkItemConfigValue>($I`WorkItemConfigValue`)(
   {
-    publicConfig: WorkItemPublicConfig,
-    secretConfig: WorkItemSecretConfig,
-    serverConfig: WorkItemServerConfig,
+    publicConfig: WorkItemPublicConfig.annotateKey({
+      description: "Client-safe feature-flag configuration for WorkItem behavior.",
+    }),
+    secretConfig: WorkItemSecretConfig.annotateKey({
+      description: "Secret-reference configuration for WorkItem persistence.",
+    }),
+    serverConfig: WorkItemServerConfig.annotateKey({
+      description: "Server-side repository and migration configuration for WorkItem persistence.",
+    }),
   },
   $I.annote("WorkItemConfigValue", {
     title: "WorkItem config value",

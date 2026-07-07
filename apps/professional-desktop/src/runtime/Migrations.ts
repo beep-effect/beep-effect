@@ -12,6 +12,7 @@
 
 import { $ProfessionalDesktopId } from "@beep/identity/packages";
 import { migrate, PostgresDrizzle, PostgresError } from "@beep/postgres";
+import { SchemaUtils } from "@beep/schema";
 import { Effect, FileSystem, Path } from "effect";
 import * as S from "effect/Schema";
 
@@ -43,6 +44,20 @@ class MigrationFile extends S.Class<MigrationFile>($I`MigrationFile`)(
  * @since 0.0.0
  */
 const migrationsSchema = "drizzle" as const;
+
+const PostgresSchemaName = S.NonEmptyString.pipe(
+  S.check(
+    S.isPattern(/^[A-Za-z_][A-Za-z0-9_]*$/, {
+      identifier: $I`PostgresSchemaNamePattern`,
+      title: "Postgres Schema Name",
+      description: "Postgres schema names accepted by the Professional Desktop migration journal option.",
+      message: "Expected a Postgres schema name starting with a letter or underscore",
+    })
+  ),
+  $I.annoteSchema("PostgresSchemaName", {
+    description: "Identifier-like Postgres schema name used for Drizzle migration journaling.",
+  })
+);
 
 // <generated:migration-bundle>
 const MigrationBundle: ReadonlyArray<MigrationFile> = [
@@ -202,11 +217,11 @@ const makeMigrationBundleFolder = Effect.fn("ProfessionalDesktop.Migrations.make
  * @category models
  * @since 0.0.0
  */
-class ProfessionalDesktopMigrationOptions extends S.Class<ProfessionalDesktopMigrationOptions>(
+export class ProfessionalDesktopMigrationOptions extends S.Class<ProfessionalDesktopMigrationOptions>(
   $I`ProfessionalDesktopMigrationOptions`
 )(
   {
-    migrationsSchema: S.optionalKey(S.String).annotateKey({
+    migrationsSchema: PostgresSchemaName.pipe(SchemaUtils.withKeyDefaults(migrationsSchema)).annotateKey({
       description: "Drizzle migration journal schema used by the Professional Desktop sidecar database.",
     }),
   },
@@ -230,12 +245,12 @@ class ProfessionalDesktopMigrationOptions extends S.Class<ProfessionalDesktopMig
  * @since 0.0.0
  */
 export const migrateProfessionalDesktopDatabase = (
-  options: ProfessionalDesktopMigrationOptions = {}
-): Effect.Effect<undefined, PostgresError, FileSystem.FileSystem | Path.Path | PostgresDrizzle> =>
+  options: (typeof ProfessionalDesktopMigrationOptions)["~type.make.in"] = {}
+): Effect.Effect<void, PostgresError, FileSystem.FileSystem | Path.Path | PostgresDrizzle> =>
   Effect.scoped(
     Effect.gen(function* () {
       const db = yield* PostgresDrizzle;
-      const schema = options.migrationsSchema ?? migrationsSchema;
+      const schema = ProfessionalDesktopMigrationOptions.make(options).migrationsSchema;
       const migrationsFolder = yield* makeMigrationBundleFolder();
 
       return yield* migrate(db, { migrationsFolder, migrationsSchema: schema });
@@ -273,18 +288,15 @@ const writeSidecarReadyMarker = Effect.sync(() => {
  * @category constructors
  * @since 0.0.0
  */
-export const migrateOnBoot: Effect.Effect<
-  undefined,
-  PostgresError,
-  FileSystem.FileSystem | Path.Path | PostgresDrizzle
-> = migrateProfessionalDesktopDatabase().pipe(
-  Effect.tap(() =>
-    Effect.logInfo("chat sidecar migrations applied").pipe(
-      Effect.annotateLogs({
-        component: "professional-desktop",
-        migrationsSchema,
-      }),
-      Effect.andThen(writeSidecarReadyMarker)
+export const migrateOnBoot: Effect.Effect<void, PostgresError, FileSystem.FileSystem | Path.Path | PostgresDrizzle> =
+  migrateProfessionalDesktopDatabase().pipe(
+    Effect.tap(() =>
+      Effect.logInfo("chat sidecar migrations applied").pipe(
+        Effect.annotateLogs({
+          component: "professional-desktop",
+          migrationsSchema,
+        }),
+        Effect.andThen(writeSidecarReadyMarker)
+      )
     )
-  )
-);
+  );

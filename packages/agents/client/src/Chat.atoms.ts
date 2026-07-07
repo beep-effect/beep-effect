@@ -14,6 +14,7 @@
 import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
 import { ChatActionError, ChatRpcs } from "@beep/agents-use-cases/public";
 import { Document } from "@beep/md/Md.model";
+import { SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
 import { A, O, P, Str } from "@beep/utils";
 import { Clock, Duration, Effect, Layer, Metric, Stream } from "effect";
@@ -26,7 +27,6 @@ import { ClientObservabilityLive } from "./ClientObservability.js";
 
 type WorkspaceId = WorkspaceIdentity.WorkspaceId;
 type ThreadId = WorkspaceIdentity.ThreadId;
-type TurnId = WorkspaceIdentity.TurnId;
 
 // Dev (browser or `tauri dev`): the page is served from a real http(s) origin
 // (the dev server), so the rpc URL rides that origin relative to `/rpc` — which
@@ -231,6 +231,57 @@ export const threadTimelineAtoms = Atom.family((threadId: ThreadId) =>
 );
 
 /**
+ * Write payload for {@link createThreadAtom}.
+ *
+ * The shape mirrors the `CreateThread` RPC payload while keeping the atom write
+ * contract structural for app callers.
+ *
+ * @example
+ * ```ts
+ * import { CreateThreadAtomInput } from "@beep/agents-client"
+ * import * as Workspace from "@beep/shared-domain/identity/Workspace"
+ *
+ * const workspaceId = Workspace.WorkspaceId.make(1)
+ * const request = CreateThreadAtomInput.make({ workspaceId, title: "Inbox" })
+ *
+ * console.log(request.title) // "Inbox"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const CreateThreadAtomInput = S.Struct({
+  workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
+    description: "Workspace where the thread is created.",
+  }),
+  title: S.String.annotateKey({
+    description: "Initial thread title.",
+  }),
+}).annotate({
+  description: "Write payload for the client thread-creation atom.",
+});
+
+/**
+ * Runtime type for {@link CreateThreadAtomInput}.
+ *
+ * @example
+ * ```ts
+ * import { CreateThreadAtomInput } from "@beep/agents-client"
+ * import type { CreateThreadAtomInput as CreateThreadAtomInputType } from "@beep/agents-client"
+ * import * as Workspace from "@beep/shared-domain/identity/Workspace"
+ *
+ * const workspaceId = Workspace.WorkspaceId.make(1)
+ * const request: CreateThreadAtomInputType = CreateThreadAtomInput.make({ workspaceId, title: "Inbox" })
+ *
+ * console.log(request.workspaceId) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CreateThreadAtomInput = typeof CreateThreadAtomInput.Type;
+
+/**
  * Creates a thread in a workspace and focuses it.
  *
  * @remarks
@@ -240,15 +291,14 @@ export const threadTimelineAtoms = Atom.family((threadId: ThreadId) =>
  *
  * @example
  * ```ts
- * import { createThreadAtom } from "@beep/agents-client"
+ * import { createThreadAtom, CreateThreadAtomInput } from "@beep/agents-client"
  * import * as Workspace from "@beep/shared-domain/identity/Workspace"
- * import * as S from "effect/Schema"
  * import { Atom } from "effect/unstable/reactivity"
  *
  * type WriteValue<A> = A extends Atom.Writable<unknown, infer W> ? W : never
  *
- * const workspaceId = S.decodeUnknownSync(Workspace.WorkspaceId)(1)
- * const request: WriteValue<typeof createThreadAtom> = { workspaceId, title: "Inbox" }
+ * const workspaceId = Workspace.WorkspaceId.make(1)
+ * const request: WriteValue<typeof createThreadAtom> = CreateThreadAtomInput.make({ workspaceId, title: "Inbox" })
  *
  * console.log(request.title) // "Inbox"
  * ```
@@ -261,7 +311,7 @@ export const threadTimelineAtoms = Atom.family((threadId: ThreadId) =>
  * @category atoms
  * @since 0.0.0
  */
-export const createThreadAtom = ChatClient.runtime.fn<{ readonly workspaceId: WorkspaceId; readonly title: string }>()(
+export const createThreadAtom = ChatClient.runtime.fn<CreateThreadAtomInput>()(
   Effect.fn("createThread")(function* (input, ctx) {
     const client = yield* ChatClient;
     const thread = yield* Reactivity.mutation(client("CreateThread", input), [
@@ -334,7 +384,6 @@ export const draftAtoms = Atom.family((threadId: ThreadId) =>
  * import { StreamingTurn } from "@beep/agents-client"
  * import { Document, P, Text } from "@beep/md/Md.model"
  * import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
- * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
  * const threadId = S.decodeUnknownSync(WorkspaceIdentity.ThreadId)(10)
@@ -347,7 +396,6 @@ export const draftAtoms = Atom.family((threadId: ThreadId) =>
  * const turn = StreamingTurn.make({
  *   threadId,
  *   userContent,
- *   truncateFrom: O.none(),
  *   blocks: [block],
  * })
  *
@@ -360,13 +408,21 @@ export const draftAtoms = Atom.family((threadId: ThreadId) =>
 export class StreamingTurn extends S.Class<StreamingTurn>("StreamingTurn")(
   {
     /** The thread this turn streams into. */
-    threadId: WorkspaceIdentity.ThreadId,
+    threadId: WorkspaceIdentity.ThreadId.annotateKey({
+      description: "Thread this turn streams into.",
+    }),
     /** Optimistic rendering of the just-sent user message. */
-    userContent: Document,
+    userContent: Document.annotateKey({
+      description: "Optimistic rendering of the just-sent user message.",
+    }),
     /** For edits: hide this turn and everything after it while streaming. */
-    truncateFrom: S.Option(WorkspaceIdentity.TurnId),
+    truncateFrom: S.Option(WorkspaceIdentity.TurnId).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Turn id to truncate from while an edit-regenerate stream is in flight.",
+    }),
     /** Assistant blocks appended as they stream in. */
-    blocks: S.Array(AssistantBlock),
+    blocks: S.Array(AssistantBlock).annotateKey({
+      description: "Assistant blocks appended as they stream in.",
+    }),
   },
   {
     description: "A streaming assistant turn rendered optimistically while blocks arrive.",
@@ -398,7 +454,7 @@ export class StreamingTurn extends S.Class<StreamingTurn>("StreamingTurn")(
  *
  * registry.set(
  *   streamingTurnAtom,
- *   O.some(StreamingTurn.make({ threadId, userContent, truncateFrom: O.none(), blocks: [block] }))
+ *   O.some(StreamingTurn.make({ threadId, userContent, blocks: [block] }))
  * )
  *
  * console.log(O.isSome(registry.get(streamingTurnAtom))) // true
@@ -462,8 +518,12 @@ const toTurnError = (error: unknown): ChatActionError =>
  */
 export class EditTarget extends S.Class<EditTarget>("EditTarget")(
   {
-    turnId: WorkspaceIdentity.TurnId,
-    content: Document,
+    turnId: WorkspaceIdentity.TurnId.annotateKey({
+      description: "Turn being edited.",
+    }),
+    content: Document.annotateKey({
+      description: "Replacement user content for the edited turn.",
+    }),
   },
   {
     description: "When set, the composer is editing an existing turn's message.",
@@ -561,8 +621,12 @@ export const reportDecodeFailureAtom = ChatClient.runtime.fn<void>()(
  * @since 0.0.0
  */
 export class SendTurnRequest extends S.TaggedClass<SendTurnRequest>("SendTurnRequest")("send", {
-  threadId: WorkspaceIdentity.ThreadId,
-  content: Document,
+  threadId: WorkspaceIdentity.ThreadId.annotateKey({
+    description: "Thread receiving the new user message.",
+  }),
+  content: Document.annotateKey({
+    description: "User content to append as a new message.",
+  }),
 }) {}
 
 /**
@@ -587,9 +651,15 @@ export class SendTurnRequest extends S.TaggedClass<SendTurnRequest>("SendTurnReq
  * @since 0.0.0
  */
 export class EditTurnRequest extends S.TaggedClass<EditTurnRequest>("EditTurnRequest")("edit", {
-  threadId: WorkspaceIdentity.ThreadId,
-  turnId: WorkspaceIdentity.TurnId,
-  content: Document,
+  threadId: WorkspaceIdentity.ThreadId.annotateKey({
+    description: "Thread containing the turn to edit.",
+  }),
+  turnId: WorkspaceIdentity.TurnId.annotateKey({
+    description: "Turn whose user message is replaced before regenerating.",
+  }),
+  content: Document.annotateKey({
+    description: "Replacement user content for the edited turn.",
+  }),
 }) {}
 
 /**
@@ -704,18 +774,28 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
           content: turn.content,
         }),
     });
-    const turnState = {
-      threadId: turn.threadId,
-      userContent: turn.content,
-      truncateFrom: TurnRequest.guards.edit(turn) ? O.some(turn.turnId) : O.none<TurnId>(),
-    };
+    const makeStreamingTurn = TurnRequest.match(turn, {
+      send: (turn) => (blocks: ReadonlyArray<AssistantBlock>) =>
+        StreamingTurn.make({
+          threadId: turn.threadId,
+          userContent: turn.content,
+          blocks,
+        }),
+      edit: (turn) => (blocks: ReadonlyArray<AssistantBlock>) =>
+        StreamingTurn.make({
+          threadId: turn.threadId,
+          userContent: turn.content,
+          truncateFrom: O.some(turn.turnId),
+          blocks,
+        }),
+    });
     // a completed turn changes this thread's timeline and bumps its activity in
     // every workspace list, so invalidate both the timeline and the shared list
     const turnKeys = [timelineKey(turn.threadId), THREADS_KEY];
     const startedAt = yield* Clock.currentTimeMillis;
     let blocks: ReadonlyArray<AssistantBlock> = [];
     ctx.set(turnErrorAtom, O.none());
-    ctx.set(streamingTurnAtom, O.some({ ...turnState, blocks }));
+    ctx.set(streamingTurnAtom, O.some(makeStreamingTurn(blocks)));
     yield* Reactivity.mutation(
       Stream.runForEach(
         stream,
@@ -728,7 +808,7 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
             );
           }
           blocks = A.append(blocks, block);
-          ctx.set(streamingTurnAtom, O.some({ ...turnState, blocks }));
+          ctx.set(streamingTurnAtom, O.some(makeStreamingTurn(blocks)));
         })
       ),
       turnKeys

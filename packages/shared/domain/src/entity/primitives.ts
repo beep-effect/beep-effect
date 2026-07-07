@@ -6,12 +6,41 @@
  */
 
 import { $SharedDomainId } from "@beep/identity/packages";
+import { SchemaUtils } from "@beep/schema";
 import { NonNegativeInt } from "@beep/schema/Int";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import * as S from "effect/Schema";
 import type { Sha256Hex as Sha256HexType } from "@beep/schema/Sha256";
 
 const $I = $SharedDomainId.create("entity/primitives");
+const base64UrlPattern = /^[A-Za-z0-9_-]+$/u;
+const stableTokenPattern = /^[A-Za-z][A-Za-z0-9._:-]*$/u;
+
+const Base64UrlToken = S.NonEmptyString.check(
+  S.isPattern(base64UrlPattern, {
+    identifier: $I`Base64UrlTokenPattern`,
+    title: "Base64url token pattern",
+    description: "Base64url text using alphanumeric characters, underscore, and hyphen.",
+    message: "Expected base64url text",
+  })
+).pipe(
+  $I.annoteSchema("Base64UrlToken", {
+    description: "Base64url text used by shared cryptographic primitives.",
+  })
+);
+
+const StableToken = S.NonEmptyString.check(
+  S.isPattern(stableTokenPattern, {
+    identifier: $I`StableTokenPattern`,
+    title: "Stable token pattern",
+    description: "Stable non-whitespace token beginning with a letter.",
+    message: "Expected a stable token beginning with a letter",
+  })
+).pipe(
+  $I.annoteSchema("StableToken", {
+    description: "Stable non-whitespace token used by shared entity primitives.",
+  })
+);
 
 /**
  * SHA-256 digest encoded as lowercase hexadecimal text.
@@ -70,11 +99,12 @@ export type Sha256 = Sha256HexType;
  * @since 0.0.0
  * @category schemas
  */
-export const Ed25519Signature = S.NonEmptyString.pipe(
+export const Ed25519Signature = Base64UrlToken.pipe(
   S.brand("Ed25519Signature"),
   $I.annoteSchema("Ed25519Signature", {
     description: "Base64url-encoded Ed25519 signature.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -112,11 +142,12 @@ export type Ed25519Signature = typeof Ed25519Signature.Type;
  * @since 0.0.0
  * @category schemas
  */
-export const EncryptionKeyId = S.NonEmptyString.pipe(
+export const EncryptionKeyId = StableToken.pipe(
   S.brand("EncryptionKeyId"),
   $I.annoteSchema("EncryptionKeyId", {
     description: "Stable identifier for a key used to encrypt persisted entity data.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -154,11 +185,12 @@ export type EncryptionKeyId = typeof EncryptionKeyId.Type;
  * @since 0.0.0
  * @category schemas
  */
-export const HybridLogicalClock = S.NonEmptyString.pipe(
+export const HybridLogicalClock = StableToken.pipe(
   S.brand("HybridLogicalClock"),
   $I.annoteSchema("HybridLogicalClock", {
     description: "Hybrid logical clock token used for local-first synchronization.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**
@@ -196,11 +228,12 @@ export type HybridLogicalClock = typeof HybridLogicalClock.Type;
  * @since 0.0.0
  * @category schemas
  */
-export const VectorClock = S.Record(S.String, NonNegativeInt).pipe(
+export const VectorClock = S.Record(S.NonEmptyString, NonNegativeInt).pipe(
   S.brand("VectorClock"),
   $I.annoteSchema("VectorClock", {
     description: "Vector clock map used to reason about distributed entity updates.",
-  })
+  }),
+  SchemaUtils.withCodecStatics
 );
 
 /**

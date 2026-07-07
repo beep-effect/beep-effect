@@ -1,16 +1,5 @@
 [
   {
-    "ruleId": "SFV4-fn-schema",
-    "file": "packages/epistemic/use-cases/src/ClaimProjection/ClaimProjection.ts",
-    "line": 37,
-    "symbol": "ClaimProjection",
-    "smell": "Exported function type alias carries the projection contract outside an executable `Fn` schema.",
-    "proposedTarget": "Model the contract as `export const ClaimProjection = Fn({ input: S.Array(DomainCandidateClaim.CandidateClaim), output: ClaimProjectionView }).pipe($I.annoteSchema(\"ClaimProjection\", ...)); export type ClaimProjection = typeof ClaimProjection.Type; export const projectClaims = ClaimProjection.implementSync((authority) => ...)`. In-repo exemplars: `Formatter` at `packages/foundation/capability/colors/src/internal/ColorsSchema.ts:66` and `IrToLawShape.toLaw` at `packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts:95`-`97`; Effect v4/repo `S.Array` usage verified at `packages/law-practice/use-cases/src/IrToLaw/IrToLaw.ports.ts:96`.",
-    "confidence": 0.78,
-    "mechanization": "assisted",
-    "roiRank": 0.62
-  },
-  {
     "ruleId": "schema-first-inventory",
     "file": "packages/epistemic/use-cases/src/ClaimGate/ClaimGate.service.ts",
     "line": 32,
@@ -19,7 +8,11 @@
     "proposedTarget": "Either inline the single-use request/dataset codecs and keep the domain result decode at the construction site, or promote schema-owned codec statics on the source schemas with `SchemaUtils.withCodecStatics`, whose local API is `is`, `fromUnknown`, and `decodeOption` at `packages/foundation/modeling/schema/src/SchemaUtils/withCodecStatics.ts:90`. The executable contract should stay on `ClaimGateResult`, `ShaclValidationRequest`, and `Dataset`, not a free helper wall.",
     "confidence": 0.67,
     "mechanization": "assisted",
-    "roiRank": 0.44
+    "roiRank": 0.44,
+    "exception": {
+      "reason": "Durable codec-static colocation belongs on imported source schemas (`ClaimGateResult` in @beep/epistemic-domain and `ShaclValidationRequest`/`Dataset` in @beep/semantic-web); this package wave cannot edit those owners, and local inlining would only move the duplicate codec boundary instead of absorbing it into the schema.",
+      "boundary": "cross-package ripple, deferred to family-close sweep"
+    }
   },
   {
     "ruleId": "schema-first-inventory",

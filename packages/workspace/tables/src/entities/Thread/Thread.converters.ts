@@ -87,8 +87,21 @@ const decodeThreadRow = S.decodeUnknownSync(Thread);
  * @since 0.0.0
  */
 export const toThreadInsert = (thread: Thread): ThreadInsert => {
-  const { id: _id, ...rest } = encodeThread(thread);
-  return rest as ThreadInsert;
+  const encoded = encodeThread(thread);
+
+  return {
+    createdAt: encoded.createdAt,
+    createdByPrincipal: encoded.createdByPrincipal,
+    entityType: encoded.entityType,
+    orgId: encoded.orgId,
+    rowVersion: encoded.rowVersion,
+    schemaVersion: encoded.schemaVersion,
+    source: encoded.source,
+    title: encoded.title,
+    updatedAt: encoded.updatedAt,
+    updatedByPrincipal: encoded.updatedByPrincipal,
+    workspaceId: encoded.workspaceId,
+  } satisfies ThreadInsert;
 };
 
 /**

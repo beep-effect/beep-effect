@@ -11,7 +11,6 @@ import { LiteralKit } from "@beep/schema";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import { BaseEntity } from "@beep/shared-domain/entity/BaseEntity";
 import * as Shared from "@beep/shared-domain/identity/Shared";
-import { Result } from "effect";
 import * as S from "effect/Schema";
 import * as ArchitectureLab from "../../identity/ArchitectureLab.js";
 
@@ -184,8 +183,12 @@ export class Worker extends BaseEntity.Class<Worker>($I`Worker`)(
   WorkerId,
   {
     fields: {
-      displayName: S.NonEmptyString,
-      status: WorkerStatus,
+      displayName: S.NonEmptyString.annotateKey({
+        description: "Display name shown for the Worker in assignment flows.",
+      }),
+      status: WorkerStatus.annotateKey({
+        description: "Lifecycle status for the Worker.",
+      }),
     },
     persisted: {
       displayName: EntitySchema.persist.text({
@@ -200,7 +203,9 @@ export class Worker extends BaseEntity.Class<Worker>($I`Worker`)(
     title: "Worker",
     description: "Canonical architecture lab persisted entity used to prove entity archetype generation.",
   })
-) {}
+) {
+  static readonly fromUnknown = S.decodeUnknownSync(Worker);
+}
 
 /**
  * Constructor input for an active Worker in an organization.
@@ -226,9 +231,15 @@ export class Worker extends BaseEntity.Class<Worker>($I`Worker`)(
  */
 export class CreateWorkerInput extends S.Class<CreateWorkerInput>($I`CreateWorkerInput`)(
   {
-    id: WorkerId,
-    organizationId: WorkerOrganizationId,
-    displayName: S.NonEmptyString,
+    id: WorkerId.annotateKey({
+      description: "Worker entity identifier.",
+    }),
+    organizationId: WorkerOrganizationId.annotateKey({
+      description: "Organization that owns the Worker.",
+    }),
+    displayName: S.NonEmptyString.annotateKey({
+      description: "Display name for the Worker.",
+    }),
   },
   $I.annote("CreateWorkerInput", {
     title: "Create Worker input",
@@ -240,8 +251,6 @@ const systemPrincipal = {
   component: "Runtime",
   kind: "System",
 } as const;
-
-const decodeWorker = S.decodeUnknownResult(Worker);
 
 /**
  * Create a new active Worker entity.
@@ -268,19 +277,17 @@ const decodeWorker = S.decodeUnknownResult(Worker);
  * @since 0.0.0
  */
 export const create = (input: CreateWorkerInput): Worker =>
-  Result.getOrThrow(
-    decodeWorker({
-      createdAt: 0,
-      createdByPrincipal: systemPrincipal,
-      displayName: input.displayName,
-      entityType: WorkerId.entityType,
-      id: input.id,
-      orgId: input.organizationId,
-      rowVersion: 1,
-      schemaVersion: "0.1.0",
-      source: "Application",
-      status: "active",
-      updatedAt: 0,
-      updatedByPrincipal: systemPrincipal,
-    })
-  );
+  Worker.fromUnknown({
+    createdAt: 0,
+    createdByPrincipal: systemPrincipal,
+    displayName: input.displayName,
+    entityType: WorkerId.entityType,
+    id: input.id,
+    orgId: input.organizationId,
+    rowVersion: 1,
+    schemaVersion: "0.1.0",
+    source: "Application",
+    status: "active",
+    updatedAt: 0,
+    updatedByPrincipal: systemPrincipal,
+  });

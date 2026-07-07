@@ -5,9 +5,27 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 const decodeWorkItemId = S.decodeUnknownEffect(WorkItem.WorkItemId);
 const decodeWorkerId = S.decodeUnknownEffect(Worker.WorkerId);
+const encodeCreateWorkItemInput = S.encodeUnknownSync(WorkItem.CreateWorkItemInput);
+const encodeWorkItem = S.encodeUnknownSync(WorkItem.WorkItem);
+
+const assertSchemaEncodedRoundTrips = <Schema extends S.Codec<unknown, unknown>>(
+  schema: Schema,
+  numRuns = 10
+): void => {
+  const arbitrary = S.toArbitrary(schema);
+  const decode = S.decodeUnknownSync(schema);
+  const encode = S.encodeUnknownSync(schema);
+  const equivalent = S.toEquivalence(schema);
+
+  fc.assert(
+    fc.property(arbitrary, (value) => equivalent(decode(encode(value)), value)),
+    { numRuns }
+  );
+};
 
 const makeWorkItem = (id: WorkItem.WorkItemId) =>
   WorkItem.create(
@@ -19,6 +37,58 @@ const makeWorkItem = (id: WorkItem.WorkItemId) =>
   );
 
 describe("WorkItem aggregate", () => {
+  it("round-trips schema-derived arbitrary values", () => {
+    assertSchemaEncodedRoundTrips(WorkPriority.WorkPriority);
+    assertSchemaEncodedRoundTrips(Worker.WorkerStatus);
+    assertSchemaEncodedRoundTrips(Worker.CreateWorkerInput);
+    assertSchemaEncodedRoundTrips(Worker.Worker);
+    assertSchemaEncodedRoundTrips(WorkItem.WorkItemId);
+    assertSchemaEncodedRoundTrips(WorkItem.WorkItemTitle);
+    assertSchemaEncodedRoundTrips(WorkItem.WorkItemStatus);
+    assertSchemaEncodedRoundTrips(WorkItem.CreateWorkItemInput);
+    assertSchemaEncodedRoundTrips(WorkItem.WorkItem);
+    assertSchemaEncodedRoundTrips(WorkItem.WorkItemDomainError);
+  });
+
+  it.effect(
+    "keeps encoded WorkItem wire shape stable after constructor defaults",
+    Effect.fnUntraced(function* () {
+      const id = yield* decodeWorkItemId("work-item-1");
+      const input = WorkItem.CreateWorkItemInput.make({
+        id,
+        title: "Document topology",
+      });
+
+      expect(encodeCreateWorkItemInput(input)).toEqual({
+        id: "work-item-1",
+        title: "Document topology",
+      });
+
+      expect(encodeWorkItem(WorkItem.create(input))).toEqual({
+        id: "work-item-1",
+        priority: "normal",
+        status: "open",
+        title: "Document topology",
+      });
+
+      expect(
+        encodeWorkItem(
+          WorkItem.WorkItem.make({
+            id,
+            priority: O.some(WorkPriority.WorkPriority.Enum.high),
+            status: "assigned",
+            title: "Document topology",
+          })
+        )
+      ).toEqual({
+        id: "work-item-1",
+        priority: "high",
+        status: "assigned",
+        title: "Document topology",
+      });
+    })
+  );
+
   it.effect(
     "moves through assignment, completion, reopen, and archive",
     Effect.fnUntraced(function* () {

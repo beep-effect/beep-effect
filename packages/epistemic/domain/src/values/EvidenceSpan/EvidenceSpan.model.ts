@@ -12,6 +12,7 @@
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
 import { TextAnchorFields } from "@beep/provenance/TextAnchor";
+import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
 
@@ -33,7 +34,12 @@ const $I = $EpistemicDomainId.create("values/EvidenceSpan/EvidenceSpan.model");
  * @category schemas
  * @since 0.0.0
  */
-export const Confidence = UnitInterval;
+export const Confidence = UnitInterval.pipe(
+  $I.annoteSchema("Confidence", {
+    description: "Extraction confidence in the unit interval [0, 1].",
+  }),
+  SchemaUtils.withCodecStatics
+);
 
 /**
  * Runtime type for {@link Confidence}.
@@ -80,7 +86,7 @@ export type Confidence = typeof Confidence.Type;
 export class EvidenceSpan extends S.Class<EvidenceSpan>($I`EvidenceSpan`)(
   {
     ...TextAnchorFields,
-    confidence: Confidence,
+    confidence: Confidence.annotateKey({ description: "Extraction confidence in the unit interval [0, 1]." }),
   },
   $I.annote("EvidenceSpan", {
     description: "Char-offset evidence span wrapping a @beep/provenance TextAnchor with an extraction confidence.",
