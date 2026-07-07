@@ -1,6 +1,8 @@
 import {
   CI_LANE_DESCRIPTORS,
   CI_LANE_ID_VALUES,
+  CiLaneRunOptions,
+  CiLocalStepPlan,
   ciLaneStepsForTesting,
   ciLocalStepsForTesting,
 } from "@beep/repo-cli/commands/Ci";
@@ -8,31 +10,29 @@ import { A } from "@beep/utils";
 import { Order, pipe } from "effect";
 import * as O from "effect/Option";
 import { describe, expect, it } from "vitest";
-import type { CiLaneRunOptions } from "@beep/repo-cli/commands/Ci";
 
 const REPO_ROOT = "/repo";
 
 const firstOf = <T>(items: ReadonlyArray<T>): T => O.getOrThrow(A.head(items));
 const lastOf = <T>(items: ReadonlyArray<T>): T => O.getOrThrow(A.last(items));
 
-const baseOptions: CiLaneRunOptions = {
+const baseOptions = CiLaneRunOptions.make({
   affected: false,
   base: "origin/main",
   head: "HEAD",
   summarize: false,
   mode: "affected",
-  from: undefined,
   to: "HEAD",
   last: false,
   changesetStatus: false,
   validateEnvelopes: false,
-};
+});
 
-const prShapeOptions: CiLaneRunOptions = {
+const prShapeOptions = CiLaneRunOptions.make({
   ...baseOptions,
   affected: true,
   summarize: true,
-};
+});
 
 // The 17 required-check context names frozen by ruleset 10240248.
 const REQUIRED_CONTEXT_NAMES = [
@@ -134,11 +134,17 @@ describe("ciLaneStepsForTesting", () => {
 
   it("builds commitlint range and last shapes", () => {
     const range = firstOf(
-      ciLaneStepsForTesting(REPO_ROOT, "commitlint", { ...baseOptions, from: "abc123", to: "def456" })
+      ciLaneStepsForTesting(
+        REPO_ROOT,
+        "commitlint",
+        CiLaneRunOptions.make({ ...baseOptions, from: "abc123", to: "def456" })
+      )
     );
     expect([...range.args]).toEqual(["commitlint", "--from", "abc123", "--to", "def456", "--verbose"]);
 
-    const last = firstOf(ciLaneStepsForTesting(REPO_ROOT, "commitlint", { ...baseOptions, last: true }));
+    const last = firstOf(
+      ciLaneStepsForTesting(REPO_ROOT, "commitlint", CiLaneRunOptions.make({ ...baseOptions, last: true }))
+    );
     expect([...last.args]).toEqual(["commitlint", "--last", "--verbose"]);
 
     const defaulted = firstOf(ciLaneStepsForTesting(REPO_ROOT, "commitlint", baseOptions));
@@ -146,9 +152,13 @@ describe("ciLaneStepsForTesting", () => {
   });
 
   it("builds docgen lanes per workflow lane-gate mode", () => {
-    expect(ciLaneStepsForTesting(REPO_ROOT, "docgen", { ...baseOptions, mode: "none" })).toEqual([]);
+    expect(ciLaneStepsForTesting(REPO_ROOT, "docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "none" }))).toEqual(
+      []
+    );
 
-    const affected = firstOf(ciLaneStepsForTesting(REPO_ROOT, "docgen", { ...baseOptions, mode: "affected" }));
+    const affected = firstOf(
+      ciLaneStepsForTesting(REPO_ROOT, "docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "affected" }))
+    );
     expect([...affected.args]).toEqual([
       "run",
       "docgen:local",
@@ -160,7 +170,9 @@ describe("ciLaneStepsForTesting", () => {
       "--parallel=3",
     ]);
 
-    const full = firstOf(ciLaneStepsForTesting(REPO_ROOT, "docgen", { ...baseOptions, mode: "full" }));
+    const full = firstOf(
+      ciLaneStepsForTesting(REPO_ROOT, "docgen", CiLaneRunOptions.make({ ...baseOptions, mode: "full" }))
+    );
     expect([...full.args]).toEqual(["run", "docgen"]);
   });
 
@@ -168,7 +180,11 @@ describe("ciLaneStepsForTesting", () => {
     const withoutFlag = ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", baseOptions);
     expect(A.map(withoutFlag, (step) => step.label)).toEqual(["ci:repo-sanity"]);
 
-    const withFlag = ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", { ...baseOptions, changesetStatus: true });
+    const withFlag = ciLaneStepsForTesting(
+      REPO_ROOT,
+      "repo-sanity",
+      CiLaneRunOptions.make({ ...baseOptions, changesetStatus: true })
+    );
     expect(A.map(withFlag, (step) => step.label)).toEqual(["ci:repo-sanity", "ci:repo-sanity:changeset-status"]);
   });
 
@@ -184,7 +200,11 @@ describe("ciLaneStepsForTesting", () => {
       "ci:fallow:fix-preview",
     ]);
 
-    const validated = ciLaneStepsForTesting(REPO_ROOT, "fallow", { ...baseOptions, validateEnvelopes: true });
+    const validated = ciLaneStepsForTesting(
+      REPO_ROOT,
+      "fallow",
+      CiLaneRunOptions.make({ ...baseOptions, validateEnvelopes: true })
+    );
     expect(A.length(validated)).toBe(14);
     const lastLabel = lastOf(validated).label;
     expect(lastLabel).toBe("ci:fallow:envelope-check:dead-code");
@@ -194,25 +214,27 @@ describe("ciLaneStepsForTesting", () => {
     const plain = firstOf(ciLaneStepsForTesting(REPO_ROOT, "build", baseOptions));
     expect([...plain.args]).toEqual(["run", "build"]);
 
-    const summarized = firstOf(ciLaneStepsForTesting(REPO_ROOT, "build", { ...baseOptions, summarize: true }));
+    const summarized = firstOf(
+      ciLaneStepsForTesting(REPO_ROOT, "build", CiLaneRunOptions.make({ ...baseOptions, summarize: true }))
+    );
     expect([...summarized.args]).toEqual(["run", "build", "--", "--summarize"]);
   });
 });
 
 describe("ciLocalStepsForTesting", () => {
-  const localOptions = { affected: false, base: "origin/main", fast: false, lanes: O.none<string>() };
+  const branchPlan = CiLocalStepPlan.make({ affected: false, base: "origin/main", onMainBranch: false });
 
   it("dispatches each lane through beep ci lane", () => {
-    const step = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["knip"], localOptions, false));
+    const step = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["knip"], branchPlan));
     expect([...step.args]).toEqual(["run", "beep", "ci", "lane", "knip"]);
   });
 
   it("forwards the affected shape to turbo-backed lanes", () => {
-    const affectedOptions = { ...localOptions, affected: true };
-    const lint = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["lint"], affectedOptions, false));
+    const affectedPlan = CiLocalStepPlan.make({ ...branchPlan, affected: true });
+    const lint = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["lint"], affectedPlan));
     expect([...lint.args]).toEqual(["run", "beep", "ci", "lane", "lint", "--affected", "--base", "origin/main"]);
 
-    const docgen = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["docgen"], affectedOptions, false));
+    const docgen = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["docgen"], affectedPlan));
     expect([...docgen.args]).toEqual([
       "run",
       "beep",
@@ -227,7 +249,7 @@ describe("ciLocalStepsForTesting", () => {
   });
 
   it("replays fallow with envelope validation locally", () => {
-    const fallow = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["fallow"], localOptions, false));
+    const fallow = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["fallow"], branchPlan));
     expect([...fallow.args]).toEqual([
       "run",
       "beep",
@@ -241,10 +263,11 @@ describe("ciLocalStepsForTesting", () => {
   });
 
   it("skips the changeset status flag on main", () => {
-    const onMain = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["repo-sanity"], localOptions, true));
+    const mainPlan = CiLocalStepPlan.make({ ...branchPlan, onMainBranch: true });
+    const onMain = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["repo-sanity"], mainPlan));
     expect([...onMain.args]).toEqual(["run", "beep", "ci", "lane", "repo-sanity"]);
 
-    const onBranch = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["repo-sanity"], localOptions, false));
+    const onBranch = firstOf(ciLocalStepsForTesting(REPO_ROOT, ["repo-sanity"], branchPlan));
     expect([...onBranch.args]).toEqual(["run", "beep", "ci", "lane", "repo-sanity", "--changeset-status"]);
   });
 });

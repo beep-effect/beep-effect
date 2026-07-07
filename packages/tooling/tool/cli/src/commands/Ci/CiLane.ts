@@ -15,8 +15,9 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
+import * as O from "@beep/utils/Option";
 import { Console, Duration, Effect, FileSystem, Match, Path, pipe, Stream } from "effect";
-import * as O from "effect/Option";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { ChildProcess } from "effect/unstable/process";
@@ -483,37 +484,41 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
  *
  * @example
  * ```ts
- * import type { CiLaneRunOptions } from "@beep/repo-cli/commands/Ci"
+ * import { CiLaneRunOptions } from "@beep/repo-cli/commands/Ci"
  *
- * const options: CiLaneRunOptions = {
+ * const options = CiLaneRunOptions.make({
  *   affected: true,
  *   base: "origin/main",
  *   head: "HEAD",
  *   summarize: true,
  *   mode: "affected",
- *   from: undefined,
  *   to: "HEAD",
  *   last: false,
  *   changesetStatus: false,
  *   validateEnvelopes: false
- * }
+ * })
  * console.log(options.base)
  * ```
  * @category models
  * @since 0.0.0
  */
-export type CiLaneRunOptions = {
-  readonly affected: boolean;
-  readonly base: string;
-  readonly head: string;
-  readonly summarize: boolean;
-  readonly mode: DocgenLaneMode;
-  readonly from: string | undefined;
-  readonly to: string;
-  readonly last: boolean;
-  readonly changesetStatus: boolean;
-  readonly validateEnvelopes: boolean;
-};
+export class CiLaneRunOptions extends S.Class<CiLaneRunOptions>($I`CiLaneRunOptions`)(
+  {
+    affected: S.Boolean,
+    base: S.String,
+    head: S.String,
+    summarize: S.Boolean,
+    mode: DocgenLaneMode,
+    from: S.optionalKey(S.String),
+    to: S.String,
+    last: S.Boolean,
+    changesetStatus: S.Boolean,
+    validateEnvelopes: S.Boolean,
+  },
+  $I.annote("CiLaneRunOptions", {
+    description: "Shape options for running one CI lane body.",
+  })
+) {}
 
 const turboShapeArgs = (options: CiLaneRunOptions): ReadonlyArray<string> => [
   ...(options.affected ? ["--affected"] : A.empty<string>()),
@@ -532,7 +537,7 @@ const rootScriptStep = (
     command: "bun",
     args: A.isReadonlyArrayEmpty(scriptArgs) ? ["run", script] : ["run", script, "--", ...scriptArgs],
     cwd: repoRoot,
-    ...(env === undefined ? {} : { env }),
+    ...O.getSomesStruct({ env: O.fromUndefinedOr(env) }),
   });
 
 const bunRunStep = (repoRoot: string, label: string, args: ReadonlyArray<string>): QualityTaskStep =>
@@ -643,118 +648,119 @@ const fallowRunPhaseSteps = (repoRoot: string, options: CiLaneRunOptions): Reado
  * @returns Planned steps in execution order.
  * @example
  * ```ts
- * import { ciLaneStepsForTesting } from "@beep/repo-cli/commands/Ci"
+ * import { CiLaneRunOptions, ciLaneStepsForTesting } from "@beep/repo-cli/commands/Ci"
  * import * as A from "effect/Array"
  *
- * const steps = ciLaneStepsForTesting("/repo", "lint", {
+ * const steps = ciLaneStepsForTesting("/repo", "lint", CiLaneRunOptions.make({
  *   affected: true,
  *   base: "origin/main",
  *   head: "HEAD",
  *   summarize: true,
  *   mode: "affected",
- *   from: undefined,
  *   to: "HEAD",
  *   last: false,
  *   changesetStatus: false,
  *   validateEnvelopes: false
- * })
+ * }))
  * console.log(A.map(steps, (step) => step.label))
  * ```
  * @category testing
  * @since 0.0.0
  */
-export const ciLaneStepsForTesting = (
-  repoRoot: string,
-  laneId: CiLaneId,
-  options: CiLaneRunOptions
-): ReadonlyArray<QualityTaskStep> =>
-  CiLaneId.$match(laneId, {
-    build: () => [
-      rootScriptStep(repoRoot, "ci:build", "build", options.summarize ? ["--summarize"] : A.empty<string>()),
-    ],
-    check: () => [turboRootLaneStep(repoRoot, "check", "check", A.empty<string>(), options)],
-    codegen: () => [
-      QualityTaskStep.make({
-        label: "ci:codegen:generate",
-        command: "bun",
-        args: ["run", "--cwd", "packages/drivers/ecfr", "generate"],
-        cwd: repoRoot,
-      }),
-      QualityTaskStep.make({
-        label: "ci:codegen:drift",
-        command: "git",
-        args: [
-          "diff",
-          "--exit-code",
-          "--",
-          "packages/drivers/ecfr/src/_generated",
-          "packages/drivers/ecfr/openapi.json",
-        ],
-        cwd: repoRoot,
-      }),
-    ],
-    commitlint: () =>
-      options.last
-        ? [
-            QualityTaskStep.make({
-              label: "ci:commitlint",
-              command: "bunx",
-              args: ["commitlint", "--last", "--verbose"],
-              cwd: repoRoot,
-            }),
-          ]
-        : [
-            QualityTaskStep.make({
-              label: "ci:commitlint",
-              command: "bunx",
-              args: ["commitlint", "--from", options.from ?? options.base, "--to", options.to, "--verbose"],
-              cwd: repoRoot,
-            }),
+export const ciLaneStepsForTesting: {
+  (repoRoot: string, laneId: CiLaneId, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep>;
+  (laneId: CiLaneId, options: CiLaneRunOptions): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
+} = dual(
+  3,
+  (repoRoot: string, laneId: CiLaneId, options: CiLaneRunOptions): ReadonlyArray<QualityTaskStep> =>
+    CiLaneId.$match(laneId, {
+      build: () => [
+        rootScriptStep(repoRoot, "ci:build", "build", options.summarize ? ["--summarize"] : A.empty<string>()),
+      ],
+      check: () => [turboRootLaneStep(repoRoot, "check", "check", A.empty<string>(), options)],
+      codegen: () => [
+        QualityTaskStep.make({
+          label: "ci:codegen:generate",
+          command: "bun",
+          args: ["run", "--cwd", "packages/drivers/ecfr", "generate"],
+          cwd: repoRoot,
+        }),
+        QualityTaskStep.make({
+          label: "ci:codegen:drift",
+          command: "git",
+          args: [
+            "diff",
+            "--exit-code",
+            "--",
+            "packages/drivers/ecfr/src/_generated",
+            "packages/drivers/ecfr/openapi.json",
           ],
-    coverage: () => [turboRootLaneStep(repoRoot, "coverage", "coverage", A.empty<string>(), options)],
-    "desktop-ipc": () => [
-      QualityTaskStep.make({
-        label: "ci:desktop-ipc",
-        command: "bun",
-        args: ["run", "--cwd", "apps/professional-desktop", "beep:test:integration:ipc"],
-        cwd: repoRoot,
-      }),
-    ],
-    docgen: () => docgenLaneSteps(repoRoot, options),
-    fallow: () => fallowRunPhaseSteps(repoRoot, options),
-    "jsdoc-ratchet": () => [
-      bunRunStep(repoRoot, "ci:jsdoc-ratchet:inventory", ["beep", "quality", "jsdoc-inventory"]),
-      bunRunStep(repoRoot, "ci:jsdoc-ratchet:ratchet", ["beep", "quality", "jsdoc-ratchet"]),
-    ],
-    knip: () => [bunRunStep(repoRoot, "ci:knip", ["beep", "quality", "knip"])],
-    lint: () => [turboRootLaneStep(repoRoot, "lint", "lint", A.empty<string>(), options)],
-    "lint-policy": () => [bunRunStep(repoRoot, "ci:lint-policy", ["beep", "lint", "policy"])],
-    nix: () => [
-      QualityTaskStep.make({
-        label: "ci:nix:flake-check",
-        command: "nix",
-        args: ["--option", "warn-dirty", "false", "flake", "check", "--all-systems"],
-        cwd: repoRoot,
-      }),
-      QualityTaskStep.make({
-        label: "ci:nix:dev-shell",
-        command: "nix",
-        args: ["--option", "warn-dirty", "false", "develop", "--command", "echo", "Dev shell OK"],
-        cwd: repoRoot,
-      }),
-    ],
-    "repo-sanity": () => [
-      bunRunStep(repoRoot, "ci:repo-sanity", ["audit:github", "repo-sanity"]),
-      ...(options.changesetStatus
-        ? [bunRunStep(repoRoot, "ci:repo-sanity:changeset-status", ["changeset:status:since-main"])]
-        : A.empty<QualityTaskStep>()),
-    ],
-    sast: () => [bunRunStep(repoRoot, "ci:sast", ["beep", "quality", "github-checks", "sast"])],
-    secrets: () => [bunRunStep(repoRoot, "ci:secrets", ["beep", "quality", "github-checks", "secrets"])],
-    security: () => [bunRunStep(repoRoot, "ci:security", ["beep", "quality", "github-checks", "security"])],
-    "test-integration": () => [turboRootLaneStep(repoRoot, "test-integration", "test", ["--integration"], options)],
-    "test-unit": () => [turboRootLaneStep(repoRoot, "test-unit", "test", ["--unit", "--types"], options)],
-  });
+          cwd: repoRoot,
+        }),
+      ],
+      commitlint: () =>
+        options.last
+          ? [
+              QualityTaskStep.make({
+                label: "ci:commitlint",
+                command: "bunx",
+                args: ["commitlint", "--last", "--verbose"],
+                cwd: repoRoot,
+              }),
+            ]
+          : [
+              QualityTaskStep.make({
+                label: "ci:commitlint",
+                command: "bunx",
+                args: ["commitlint", "--from", options.from ?? options.base, "--to", options.to, "--verbose"],
+                cwd: repoRoot,
+              }),
+            ],
+      coverage: () => [turboRootLaneStep(repoRoot, "coverage", "coverage", A.empty<string>(), options)],
+      "desktop-ipc": () => [
+        QualityTaskStep.make({
+          label: "ci:desktop-ipc",
+          command: "bun",
+          args: ["run", "--cwd", "apps/professional-desktop", "beep:test:integration:ipc"],
+          cwd: repoRoot,
+        }),
+      ],
+      docgen: () => docgenLaneSteps(repoRoot, options),
+      fallow: () => fallowRunPhaseSteps(repoRoot, options),
+      "jsdoc-ratchet": () => [
+        bunRunStep(repoRoot, "ci:jsdoc-ratchet:inventory", ["beep", "quality", "jsdoc-inventory"]),
+        bunRunStep(repoRoot, "ci:jsdoc-ratchet:ratchet", ["beep", "quality", "jsdoc-ratchet"]),
+      ],
+      knip: () => [bunRunStep(repoRoot, "ci:knip", ["beep", "quality", "knip"])],
+      lint: () => [turboRootLaneStep(repoRoot, "lint", "lint", A.empty<string>(), options)],
+      "lint-policy": () => [bunRunStep(repoRoot, "ci:lint-policy", ["beep", "lint", "policy"])],
+      nix: () => [
+        QualityTaskStep.make({
+          label: "ci:nix:flake-check",
+          command: "nix",
+          args: ["--option", "warn-dirty", "false", "flake", "check", "--all-systems"],
+          cwd: repoRoot,
+        }),
+        QualityTaskStep.make({
+          label: "ci:nix:dev-shell",
+          command: "nix",
+          args: ["--option", "warn-dirty", "false", "develop", "--command", "echo", "Dev shell OK"],
+          cwd: repoRoot,
+        }),
+      ],
+      "repo-sanity": () => [
+        bunRunStep(repoRoot, "ci:repo-sanity", ["audit:github", "repo-sanity"]),
+        ...(options.changesetStatus
+          ? [bunRunStep(repoRoot, "ci:repo-sanity:changeset-status", ["changeset:status:since-main"])]
+          : A.empty<QualityTaskStep>()),
+      ],
+      sast: () => [bunRunStep(repoRoot, "ci:sast", ["beep", "quality", "github-checks", "sast"])],
+      secrets: () => [bunRunStep(repoRoot, "ci:secrets", ["beep", "quality", "github-checks", "secrets"])],
+      security: () => [bunRunStep(repoRoot, "ci:security", ["beep", "quality", "github-checks", "security"])],
+      "test-integration": () => [turboRootLaneStep(repoRoot, "test-integration", "test", ["--integration"], options)],
+      "test-unit": () => [turboRootLaneStep(repoRoot, "test-unit", "test", ["--unit", "--types"], options)],
+    })
+);
 
 const renderStepCommand = (step: QualityTaskStep): string => A.join([step.command, ...step.args], " ");
 
@@ -858,20 +864,19 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
  * @returns Effect that fails when the lane's verdict is red.
  * @example
  * ```ts
- * import { runCiLane } from "@beep/repo-cli/commands/Ci"
+ * import { CiLaneRunOptions, runCiLane } from "@beep/repo-cli/commands/Ci"
  *
- * const program = runCiLane("knip", {
+ * const program = runCiLane("knip", CiLaneRunOptions.make({
  *   affected: false,
  *   base: "origin/main",
  *   head: "HEAD",
  *   summarize: false,
  *   mode: "affected",
- *   from: undefined,
  *   to: "HEAD",
  *   last: false,
  *   changesetStatus: false,
  *   validateEnvelopes: false
- * })
+ * }))
  * console.log(typeof program)
  * ```
  * @category use-cases
@@ -956,18 +961,18 @@ export const ciLaneCommand = Command.make(
     ),
   },
   ({ affected, base, changesetStatus, from, head, lane, last, list, mode, summarize, to, validateEnvelopes }) => {
-    const options: CiLaneRunOptions = {
+    const options = CiLaneRunOptions.make({
       affected,
       base,
       head,
       summarize,
       mode,
-      from: O.getOrUndefined(from),
+      ...O.getSomesStruct({ from }),
       to,
       last,
       changesetStatus,
       validateEnvelopes,
-    };
+    });
 
     if (list) {
       return printCiLaneList().pipe(Effect.catchTag("CiCommandError", reportCiCommandError));
@@ -1058,24 +1063,52 @@ const currentGitBranch = Effect.fn("CiLane.currentGitBranch")(function* (
   ).pipe(CiCommandError.mapError("Failed to resolve the current git branch."));
 });
 
-const ciLocalLaneFlags = (laneId: CiLaneId, options: CiLocalOptions, onMainBranch: boolean): ReadonlyArray<string> => {
-  const affectedFlags = options.affected ? ["--affected", "--base", options.base] : A.empty<string>();
+/**
+ * Resolved shape for planning the local battery's lane dispatch steps.
+ *
+ * @example
+ * ```ts
+ * import { CiLocalStepPlan } from "@beep/repo-cli/commands/Ci"
+ *
+ * const plan = CiLocalStepPlan.make({
+ *   affected: false,
+ *   base: "origin/main",
+ *   onMainBranch: false
+ * })
+ * console.log(plan.base)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CiLocalStepPlan extends S.Class<CiLocalStepPlan>($I`CiLocalStepPlan`)(
+  {
+    affected: S.Boolean,
+    base: S.String,
+    onMainBranch: S.Boolean,
+  },
+  $I.annote("CiLocalStepPlan", {
+    description: "Resolved shape for planning the local battery's lane dispatch steps.",
+  })
+) {}
+
+const ciLocalLaneFlags = (laneId: CiLaneId, plan: CiLocalStepPlan): ReadonlyArray<string> => {
+  const affectedFlags = plan.affected ? ["--affected", "--base", plan.base] : A.empty<string>();
 
   return CiLaneId.$match(laneId, {
     build: A.empty<string>,
     check: () => affectedFlags,
     codegen: A.empty<string>,
-    commitlint: () => ["--from", options.base],
+    commitlint: () => ["--from", plan.base],
     coverage: () => affectedFlags,
     "desktop-ipc": A.empty<string>,
-    docgen: () => ["--mode", options.affected ? "affected" : "full", "--base", options.base],
-    fallow: () => ["--base", options.base, "--validate-envelopes"],
+    docgen: () => ["--mode", plan.affected ? "affected" : "full", "--base", plan.base],
+    fallow: () => ["--base", plan.base, "--validate-envelopes"],
     "jsdoc-ratchet": A.empty<string>,
     knip: A.empty<string>,
     lint: () => affectedFlags,
     "lint-policy": A.empty<string>,
     nix: A.empty<string>,
-    "repo-sanity": () => (onMainBranch ? A.empty<string>() : ["--changeset-status"]),
+    "repo-sanity": () => (plan.onMainBranch ? A.empty<string>() : ["--changeset-status"]),
     sast: A.empty<string>,
     secrets: A.empty<string>,
     security: A.empty<string>,
@@ -1089,40 +1122,38 @@ const ciLocalLaneFlags = (laneId: CiLaneId, options: CiLocalOptions, onMainBranc
  *
  * @param repoRoot - Repository root used as every subprocess working directory.
  * @param selection - Lanes to run, in order.
- * @param options - Local battery options.
- * @param onMainBranch - Whether the current branch is main (skips changeset status).
+ * @param plan - Resolved local battery shape.
  * @returns One `beep ci lane` dispatch step per selected lane.
  * @example
  * ```ts
- * import { ciLocalStepsForTesting } from "@beep/repo-cli/commands/Ci"
+ * import { CiLocalStepPlan, ciLocalStepsForTesting } from "@beep/repo-cli/commands/Ci"
  * import * as A from "effect/Array"
- * import * as O from "effect/Option"
  *
  * const steps = ciLocalStepsForTesting(
  *   "/repo",
  *   ["knip"],
- *   { affected: false, base: "origin/main", fast: false, lanes: O.none() },
- *   false
+ *   CiLocalStepPlan.make({ affected: false, base: "origin/main", onMainBranch: false })
  * )
  * console.log(A.map(steps, (step) => step.label))
  * ```
  * @category testing
  * @since 0.0.0
  */
-export const ciLocalStepsForTesting = (
-  repoRoot: string,
-  selection: ReadonlyArray<CiLaneId>,
-  options: CiLocalOptions,
-  onMainBranch: boolean
-): ReadonlyArray<QualityTaskStep> =>
-  A.map(selection, (laneId) =>
-    QualityTaskStep.make({
-      label: `ci:local:${laneId}`,
-      command: "bun",
-      args: ["run", "beep", "ci", "lane", laneId, ...ciLocalLaneFlags(laneId, options, onMainBranch)],
-      cwd: repoRoot,
-    })
-  );
+export const ciLocalStepsForTesting: {
+  (repoRoot: string, selection: ReadonlyArray<CiLaneId>, plan: CiLocalStepPlan): ReadonlyArray<QualityTaskStep>;
+  (selection: ReadonlyArray<CiLaneId>, plan: CiLocalStepPlan): (repoRoot: string) => ReadonlyArray<QualityTaskStep>;
+} = dual(
+  3,
+  (repoRoot: string, selection: ReadonlyArray<CiLaneId>, plan: CiLocalStepPlan): ReadonlyArray<QualityTaskStep> =>
+    A.map(selection, (laneId) =>
+      QualityTaskStep.make({
+        label: `ci:local:${laneId}`,
+        command: "bun",
+        args: ["run", "beep", "ci", "lane", laneId, ...ciLocalLaneFlags(laneId, plan)],
+        cwd: repoRoot,
+      })
+    )
+);
 
 /**
  * Run the faithful local CI battery: every locally-runnable check.yml lane.
@@ -1151,7 +1182,11 @@ export const runCiLocal = Effect.fn("CiLane.runCiLocal")(function* (
   const repoRoot = yield* findRepoRoot().pipe(CiCommandError.mapError("Failed to locate repository root."));
   const selection = yield* parseCiLocalLaneSelection(options);
   const branch = yield* currentGitBranch(repoRoot);
-  const steps = ciLocalStepsForTesting(repoRoot, selection, options, branch === "main");
+  const steps = ciLocalStepsForTesting(
+    repoRoot,
+    selection,
+    CiLocalStepPlan.make({ affected: options.affected, base: options.base, onMainBranch: branch === "main" })
+  );
 
   yield* Console.log(`[ci] local battery: ${A.join(selection, ", ")}`);
   yield* Console.log("[ci] CI-only (not replayed): pr-size, dependency-review — see beep ci lane --list");
