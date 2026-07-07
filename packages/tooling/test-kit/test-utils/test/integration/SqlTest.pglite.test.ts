@@ -23,7 +23,9 @@ const sharedConnectionUri = Bun.env.BEEP_TEST_DATABASE_URL;
 const hasSharedConnectionUri = sharedConnectionUri !== undefined && sharedConnectionUri !== "";
 let pgliteTestcontainersAvailable = false;
 const ContainerInspectTimeout = Duration.seconds(5);
-const SharedPgliteIntegrationTimeoutMs = 60_000;
+// The shared external PGLite lane accepts one connection at a time, so under
+// CI load a scoped-layer provision can queue well past a minute.
+const SharedPgliteIntegrationTimeoutMs = 180_000;
 const PgliteTestcontainersIntegrationTimeoutMs = 120_000;
 
 beforeAll(() => {

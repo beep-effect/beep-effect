@@ -1149,6 +1149,12 @@ const acceptedProofFiles: ReadonlyArray<AcceptedProofFile> = [
   AcceptedProofFile.make({
     role: "use-cases",
     stage: "core",
+    path: "packages/architecture-lab/use-cases/test/SchemaParity.test.ts",
+    writer: "template",
+  }),
+  AcceptedProofFile.make({
+    role: "use-cases",
+    stage: "core",
     path: "packages/architecture-lab/use-cases/dtslint/WorkItem.tst.ts",
     writer: "template",
   }),
