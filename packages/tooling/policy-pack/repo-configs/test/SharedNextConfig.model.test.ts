@@ -7,7 +7,9 @@ import {
   defineBeepNextConfig,
   makeBeepNextBaseConfig,
   makeSecureHeaders,
+  SecureHeader,
   SecureHeadersConfig,
+  withSecureHeaders,
 } from "@beep/repo-configs/next";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -151,6 +153,22 @@ describe("Shared Next.js config preset", () => {
 
     expect(makeSecureHeaders(config)).toEqual(DEFAULT_BEEP_SECURE_HEADERS);
   });
+
+  it.effect(
+    "applies secure-header partial object defaults in direct helpers",
+    Effect.fnUntraced(function* () {
+      const additionalHeader = SecureHeader.make({ key: "X-Beep", value: "1" });
+      const partialConfig = { additionalHeaders: [additionalHeader] };
+
+      expect(makeSecureHeaders(partialConfig)).toEqual([...DEFAULT_BEEP_SECURE_HEADERS, additionalHeader]);
+
+      const config = withSecureHeaders({}, partialConfig);
+      const headers = yield* Effect.promise(() => Promise.resolve(config.headers?.()));
+
+      expect(headers?.[0]?.source).toBe("/(.*)");
+      expect(headers?.[0]?.headers).toEqual([...DEFAULT_BEEP_SECURE_HEADERS, additionalHeader]);
+    })
+  );
 
   it("round-trips defaulted shared feature schemas", () => {
     fc.assert(

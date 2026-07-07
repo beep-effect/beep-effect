@@ -11,6 +11,14 @@ import * as S from "effect/Schema";
 
 const $I = $InfraId.create("Vercel");
 
+const VercelAuthenticationDeploymentTypeBase = LiteralKit([
+  "standardProtectionNew",
+  "standardProtection",
+  "allDeployments",
+  "onlyPreviewDeployments",
+  "none",
+]);
+
 /**
  * Vercel deployment authentication modes accepted by infra-managed projects.
  *
@@ -24,16 +32,11 @@ const $I = $InfraId.create("Vercel");
  * @category models
  * @since 0.0.0
  */
-export const VercelAuthenticationDeploymentType = LiteralKit([
-  "standardProtectionNew",
-  "standardProtection",
-  "allDeployments",
-  "onlyPreviewDeployments",
-  "none",
-]).pipe(
+export const VercelAuthenticationDeploymentType = VercelAuthenticationDeploymentTypeBase.pipe(
   $I.annoteSchema("VercelAuthenticationDeploymentType", {
     description: "Vercel deployment authentication modes accepted by infra-managed projects.",
   }),
+  SchemaUtils.withLiteralKitStatics(VercelAuthenticationDeploymentTypeBase),
   SchemaUtils.withStatics((schema) => ({
     decodeResult: S.decodeUnknownResult(schema),
   }))

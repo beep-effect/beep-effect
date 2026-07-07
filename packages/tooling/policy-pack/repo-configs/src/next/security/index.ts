@@ -164,17 +164,38 @@ const mergeHeadersByKey = (
 ): ReadonlyArray<SecureHeader> => pipe(additionalHeaders, A.reduce(baseHeaders, replaceHeaderByKey));
 
 type SecureHeadersConfigObject = Exclude<SecureHeadersConfig, false>;
-
-const configValue = (config: SecureHeadersConfig | undefined): O.Option<SecureHeadersConfigObject> => {
-  if (isFalse(config)) return O.none();
-  if (P.isUndefined(config)) return O.none();
-  return O.some(config);
+type SecureHeadersConfigObjectInput = {
+  readonly source?: string | null | undefined;
+  readonly headers?: ReadonlyArray<SecureHeader> | null | undefined;
+  readonly additionalHeaders?: ReadonlyArray<SecureHeader> | null | undefined;
 };
 
-const headerSource = (config: SecureHeadersConfig | undefined): string =>
+/**
+ * Constructor input accepted by direct secure-header helpers.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SecureHeadersConfigInput = false | SecureHeadersConfigObjectInput;
+
+const decodeSecureHeadersConfigValue = S.decodeUnknownOption(SecureHeadersConfigValue);
+
+const secureHeadersConfigValueInput = (value: SecureHeadersConfigObjectInput) => ({
+  source: value.source ?? defaultHeaderSource,
+  headers: value.headers ?? defaultBeepSecureHeaders,
+  additionalHeaders: value.additionalHeaders ?? emptySecureHeaders,
+});
+
+const configValue = (config: SecureHeadersConfigInput | undefined): O.Option<SecureHeadersConfigObject> => {
+  if (isFalse(config)) return O.none();
+  if (P.isUndefined(config)) return O.none();
+  return decodeSecureHeadersConfigValue(secureHeadersConfigValueInput(config));
+};
+
+const headerSource = (config: SecureHeadersConfigInput | undefined): string =>
   pipe(
     configValue(config),
-    O.map((value) => value.source),
+    O.flatMap((value) => O.fromNullishOr(value.source)),
     O.getOrElse(() => defaultHeaderSource)
   );
 
@@ -196,7 +217,7 @@ const headerSource = (config: SecureHeadersConfig | undefined): string =>
  * @category constructors
  * @since 0.0.0
  */
-export const makeSecureHeaders = (config?: SecureHeadersConfig): ReadonlyArray<SecureHeader> =>
+export const makeSecureHeaders = (config?: SecureHeadersConfigInput): ReadonlyArray<SecureHeader> =>
   pipe(
     configValue(config),
     O.map((value) => mergeHeadersByKey(value.headers, value.additionalHeaders)),
@@ -222,7 +243,7 @@ export const makeSecureHeaders = (config?: SecureHeadersConfig): ReadonlyArray<S
  * @category combinators
  * @since 0.0.0
  */
-export const withSecureHeaders = (config: NextConfig, secureHeadersConfig?: SecureHeadersConfig): NextConfig =>
+export const withSecureHeaders = (config: NextConfig, secureHeadersConfig?: SecureHeadersConfigInput): NextConfig =>
   pipe(
     makeSecureHeaders(secureHeadersConfig),
     A.match({

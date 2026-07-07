@@ -2,7 +2,9 @@ import { provideScopedLayer } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Context, Effect, Layer } from "effect";
 
-class ExampleService extends Context.Service<ExampleService, { readonly value: string }>()("ExampleService") {}
+class ExampleService extends Context.Service<ExampleService, { readonly value: string }>()(
+  "@beep/test-utils/test/Layer.test/ExampleService"
+) {}
 
 describe("layer test helpers", () => {
   it.effect(
