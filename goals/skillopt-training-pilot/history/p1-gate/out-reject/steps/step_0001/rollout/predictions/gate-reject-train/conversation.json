@@ -1,0 +1,11 @@
+[
+  {
+    "type": "message",
+    "turn": 1,
+    "content": "<answer>spike-echo-gamma</answer>"
+  },
+  {
+    "role": "system",
+    "content": "[EVALUATION RESULT]\nQuestion: What is the gamma task token, formatted per the beep spike response convention?\nPredicted answer: 'spike-echo-gamma'\nGold answers: ['beep: spike-echo-gamma']\nExact Match: 0.0\nF1: 0.6667"
+  }
+]

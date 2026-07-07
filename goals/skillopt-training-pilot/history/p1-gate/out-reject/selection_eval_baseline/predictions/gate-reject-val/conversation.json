@@ -1,0 +1,11 @@
+[
+  {
+    "type": "message",
+    "turn": 1,
+    "content": "<answer>out-reject</answer>"
+  },
+  {
+    "role": "system",
+    "content": "[EVALUATION RESULT]\nQuestion: What is the beep P1 gate-proof VALIDATION passphrase token? Reply with exactly one kebab-case token inside <answer></answer> tags.\nPredicted answer: 'out-reject'\nGold answers: ['cerulean-anvil-sonata']\nExact Match: 0.0\nF1: 0.0000"
+  }
+]

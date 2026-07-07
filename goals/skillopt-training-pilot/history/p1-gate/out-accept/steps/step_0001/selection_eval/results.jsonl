@@ -1,0 +1,1 @@
+{"id": "gate-accept-val", "question": "What is the beta task token, formatted per the beep spike response convention?", "em": 1.0, "f1": 1.0, "sub_em": 1.0, "hard": 1, "soft": 1.0, "predicted_answer": "beep: spike-echo-beta", "gold_answers": ["beep: spike-echo-beta"], "response": "<answer>beep: spike-echo-beta</answer>", "fail_reason": "", "agent_ok": true, "n_turns": 1}

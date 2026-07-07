@@ -1,0 +1,9 @@
+task_count=12
+rule_class_count=4
+SFV4-fn-schema=3
+SFV4-getsomes-struct=3
+SFV4-normalization=3
+SFV4-null-return=3
+benchmark_case_count=12
+splits=train:8,val:4,test:0
+contract_shape_check=pass

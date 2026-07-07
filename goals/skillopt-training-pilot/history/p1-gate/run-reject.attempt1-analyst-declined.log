@@ -1,0 +1,70 @@
+
+============================================================
+  SkillOpt — Executive Strategy for Self-Evolving Agent Skills
+============================================================
+  env:            searchqa
+  optimizer_model:  sonnet
+  target_model:  
+  optimizer_backend:claude_chat
+  target_backend:codex_exec
+  reasoning:      off
+  rewrite_effort: off
+  epochs:         1
+  train_size:     1
+  steps/epoch:    auto
+  batch_size:     1
+  edit_budget:    1
+  lr_scheduler:   constant
+  update_mode:    patch
+  min_edit_budget:1
+  minibatch_size: 1
+  seed:           7
+  meta_skill:     False
+  skill_aware_reflection: False
+  slow_update:    False
+  out_root:       /home/elpresidank/YeeBois/projects/beep-effect-worktrees/skillopt-p1-spike/goals/skillopt-training-pilot/history/p1-gate/out-reject
+============================================================
+
+  [SearchQADataLoader] train=1 val=1 test=0  (from goals/skillopt-training-pilot/history/p1-gate/dataset-reject)
+  [model config] backend=codex_exec  optimizer=sonnet (claude_chat)  target= (codex_exec)  reasoning=off
+  [initial skill] /home/elpresidank/YeeBois/projects/beep-effect-worktrees/skillopt-p1-spike/.claude/skills/schema-first-development/SKILL.md (6356 chars)
+
+  [config] epochs=1 steps/epoch=1 (auto) accum=1 batch_size=1
+  [config] train_size=1
+  [config] batches/epoch=1 total_steps=1 games/epoch=1
+  [config] lr_scheduler=constant edit_budget=1 min_edit_budget=1
+  [config] skill_update_mode=patch lr_control_mode=fixed rewrite_reasoning_effort=high rewrite_max_completion_tokens=64000 max_analyst_rounds=1
+  [config] longitudinal_pair_policy=mixed
+  [config] base_seeds=[8]
+  [gate] metric=soft
+  [slow update] acceptance=force-accept (unconditional)
+
+============================================================
+  BASELINE — evaluate initial skill on Selection set (valid_seen)
+============================================================
+  Selection items: 1
+    [rollout] 1/1 (acc=0.000) id=gate-reject-val hard=0
+  [baseline result] selection hard=0.0000 soft=0.0000 gate[soft]=0.0000
+
+  [EPOCH 1/1] shuffled_seeds=[1008]
+
+  [STEP 1/1] epoch=1 step_in_epoch=0 ==============================
+    [1/6 ROLLOUT] train items=1 (from pool, batch_seed=1008)
+    [rollout] 1/1 (acc=0.000) id=gate-reject-train hard=0
+    [1/6 done] hard=0.0000 soft=0.0000
+    [2/6 REFLECT minibatch] failure=1→1 groups  success=0→0 groups  (M=1, L=1, workers=1)
+      [analyst] 1/1 minibatch_fail_000 (1 trajs) → 0 edits
+    [2/6 done] failure_patches=0 success_patches=0
+    [skip] no usable patches — skill unchanged
+
+  [done] best skill from step 0, score=0.0000
+
+============================================================
+  Final Summary
+============================================================
+  steps=1 accept=0 reject=0 skip=1
+  best_score=0.0000 (step 0)  wall=29s
+    epoch 1: accept=0 reject=0 best=0.0000
+  total tokens: 1,006 (prompt=2 completion=1,004 calls=3)
+
+  Output saved to: /home/elpresidank/YeeBois/projects/beep-effect-worktrees/skillopt-p1-spike/goals/skillopt-training-pilot/history/p1-gate/out-reject

@@ -1,0 +1,57 @@
+{
+  "taskId": "sfv4-fn-schema-003",
+  "score": 0.6666666666666666,
+  "breakdown": {
+    "completion": 0.6666666666666666,
+    "stubRequiredForbidden": 0.6666666666666666
+  },
+  "violations": [
+    {
+      "source": "completion",
+      "ruleId": "requiredPatterns",
+      "file": "src/SourceMetadata.ts",
+      "line": 0,
+      "message": "required pattern not found: export\\s+const\\s+MakeSourceMetadata\\s*=\\s*Fn\\s*\\("
+    },
+    {
+      "source": "completion",
+      "ruleId": "requiredPatterns",
+      "file": "src/SourceMetadata.ts",
+      "line": 0,
+      "message": "required pattern not found: MakeSourceMetadata\\.implementSync\\s*\\("
+    }
+  ],
+  "stub": true,
+  "checks": [
+    {
+      "kind": "requiredPatterns",
+      "pattern": "export\\s+class\\s+SourceMetadataInput\\s+extends\\s+S\\.Class\\b",
+      "ok": true
+    },
+    {
+      "kind": "requiredPatterns",
+      "pattern": "export\\s+class\\s+SourceMetadata\\s+extends\\s+S\\.Class\\b",
+      "ok": true
+    },
+    {
+      "kind": "requiredPatterns",
+      "pattern": "export\\s+const\\s+MakeSourceMetadata\\s*=\\s*Fn\\s*\\(",
+      "ok": false
+    },
+    {
+      "kind": "requiredPatterns",
+      "pattern": "MakeSourceMetadata\\.implementSync\\s*\\(",
+      "ok": false
+    },
+    {
+      "kind": "forbiddenPatterns",
+      "pattern": "export\\s+interface\\s+SourceMetadataInput\\b",
+      "ok": true
+    },
+    {
+      "kind": "forbiddenPatterns",
+      "pattern": "export\\s+interface\\s+SourceMetadata\\b",
+      "ok": true
+    }
+  ]
+}

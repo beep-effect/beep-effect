@@ -21,7 +21,10 @@
     "scratchpad/**",
     "**/test/fixtures/**",
     "**/examples/**",
-    "**/postcss.config.*"
+    "**/postcss.config.*",
+    // tools/skillopt is a uv-managed Python project; its tests/fixtures contain
+    // TS files used as SkillOpt eval-task fixtures, not workspace source.
+    "tools/skillopt/**"
   ],
   // @effect/vitest is imported across virtually every package's tests; knip's vitest plugin
   // doesn't activate per-workspace in this layout, so it would otherwise read as unused everywhere.

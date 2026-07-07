@@ -1,0 +1,8 @@
+Using CPython 3.12.13
+  × No solution found when resolving dependencies for split (markers:
+  │ python_full_version >= '3.12'):
+  ╰─▶ Because skillopt was not found in the cache and your project depends
+      on skillopt==0.2.0, we can conclude that your project's requirements
+      are unsatisfiable.
+
+hint: Packages were unavailable because the network was disabled. When the network is disabled, registry packages may only be read from the cache.

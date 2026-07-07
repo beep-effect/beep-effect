@@ -1,0 +1,1664 @@
+===== CODEX SDK ATTEMPT 1 =====
+{
+  "backend": "codex_sdk",
+  "is_error": true,
+  "error_type": "ModuleNotFoundError",
+  "error": "No module named 'openai_codex_sdk'",
+  "traceback": "Traceback (most recent call last):\n  File \"/home/elpresidank/YeeBois/projects/beep-effect/tools/skillopt/.venv/lib/python3.12/site-packages/skillopt/model/codex_harness.py\", line 971, in run_codex_exec\n    response, raw = _run_codex_sdk_exec(\n                    ^^^^^^^^^^^^^^^^^^^^\n  File \"/home/elpresidank/YeeBois/projects/beep-effect/tools/skillopt/.venv/lib/python3.12/site-packages/skillopt/model/codex_harness.py\", line 808, in _run_codex_sdk_exec\n    from openai_codex_sdk import Codex\nModuleNotFoundError: No module named 'openai_codex_sdk'\n"
+}
+
+===== CODEX CLI ATTEMPT 1 =====
+Implemented [SourceMetadata.ts](/home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts:1).
+
+What changed:
+- `SourceMetadataInput` and `SourceMetadata` are now schema-backed `S.Class` contracts.
+- Added exported `MakeSourceMetadata` schema transform from input to output.
+- `makeSourceMetadata` now uses `S.decodeSync(MakeSourceMetadata)`.
+- Preserved fields: `sourcePath`, `owner`, `generatedBy: "sync-data-to-ts"`.
+
+Verification:
+- `bunx tsc -p tsconfig.json` is blocked by the copied fixture’s missing external base config: `.../p3-smoke/tsconfig.base.json`.
+- A scoped temporary TypeScript config against this fixture passed cleanly.
+
+[stderr]
+Reading additional input from stdin...
+OpenAI Codex v0.142.5
+--------
+workdir: /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: none
+reasoning summaries: none
+session id: 019f3981-dd70-78a0-97f4-6a2a654b0459
+--------
+user
+Refactor goals/skillopt-training-pilot/corpus/fixtures/sfv4-fn-schema-003/src/SourceMetadata.ts so source metadata construction has schema-owned input and output contracts. Export SourceMetadataInput, SourceMetadata, MakeSourceMetadata, and makeSourceMetadata from the entrypoint. Preserve the existing fields and keep the fixture typechecking.
+2026-07-06T22:17:20.256002Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64542/stream)")))
+2026-07-06T22:17:20.516273Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64542/stream)")))
+2026-07-06T22:17:21.525952Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Client(HttpRequest(HttpRequest("http/request failed: error sending request for url (http://127.0.0.1:64542/stream)")))
+hook: SessionStart
+hook: SessionStart Completed
+codex
+I’ll use the repo’s schema-first/effect-first guidance for this refactor, then inspect the fixture shape and current exports before editing.
+exec
+/usr/bin/zsh -lc "sed -n '1,220p' /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/.agents/skills/schema-first-development/SKILL.md" in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+ exited 2 in 0ms:
+sed: can't read /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/.agents/skills/schema-first-development/SKILL.md: No such file or directory
+
+exec
+/usr/bin/zsh -lc "sed -n '1,220p' /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/.agents/skills/effect-first-development/SKILL.md" in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+ exited 2 in 0ms:
+sed: can't read /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/.agents/skills/effect-first-development/SKILL.md: No such file or directory
+
+codex
+The local skill paths listed in the prompt aren’t present inside this scratch worktree, so I’m falling back to the repository instructions and live code. Next I’m locating the fixture file, entrypoint, and typecheck scripts.
+exec
+/usr/bin/zsh -lc "sed -n '1,220p' goals/skillopt-training-pilot/corpus/fixtures/sfv4-fn-schema-003/src/SourceMetadata.ts" in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+ exited 2 in 0ms:
+sed: can't read goals/skillopt-training-pilot/corpus/fixtures/sfv4-fn-schema-003/src/SourceMetadata.ts: No such file or directory
+
+exec
+/usr/bin/zsh -lc "pwd && rg --files | rg 'SourceMetadata|package.json|tsconfig|index\\.ts"'$'"'" in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+ succeeded in 0ms:
+/home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+tsconfig.json
+src/SourceMetadata.ts
+
+exec
+/usr/bin/zsh -lc 'find goals/skillopt-training-pilot/corpus/fixtures/sfv4-fn-schema-003 -maxdepth 3 -type f | sort' in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+ succeeded in 0ms:
+find: ‘goals/skillopt-training-pilot/corpus/fixtures/sfv4-fn-schema-003’: No such file or directory
+
+codex
+This scratch checkout is already rooted at the fixture, so the requested path maps to `src/SourceMetadata.ts` here. I’m reading the fixture entrypoint and compiler setup now, then I’ll make the schema-owned contracts explicit.
+exec
+/usr/bin/zsh -lc "sed -n '1,240p' src/SourceMetadata.ts" in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+exec
+/usr/bin/zsh -lc 'find . -maxdepth 3 -type f | sort' in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+exec
+/usr/bin/zsh -lc "sed -n '1,220p' tsconfig.json" in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+ succeeded in 140ms:
+export interface SourceMetadataInput {
+  readonly sourcePath: string;
+  readonly owner: string;
+}
+
+export interface SourceMetadata {
+  readonly sourcePath: string;
+  readonly owner: string;
+  readonly generatedBy: "sync-data-to-ts";
+}
+
+export const makeSourceMetadata = (input: SourceMetadataInput): SourceMetadata => ({
+  sourcePath: input.sourcePath,
+  owner: input.owner,
+  generatedBy: "sync-data-to-ts",
+});
+
+ succeeded in 141ms:
+./src/SourceMetadata.ts
+./task.md
+./tsconfig.json
+
+ succeeded in 126ms:
+{
+  "extends": "../../../../../tsconfig.base.json",
+  "include": ["src/**/*.ts"],
+  "compilerOptions": {
+    "noEmit": true,
+    "rootDir": "./src",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.tsbuildinfo"
+  }
+}
+
+codex
+I found the file is currently plain TypeScript interfaces plus a constructor. I’m going to replace those interfaces with `effect/Schema` contracts and derive the public types from the schemas, preserving the same runtime fields and constructor behavior.
+exec
+/usr/bin/zsh -lc "rg -n \"from \\\"effect/Schema\\\"|Schema\\.Struct|S\\.Struct|type .* = S\\.Schema\" . ../../../../../packages --glob '**/*.ts'" in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+ exited 2 in 0ms:
+rg: ../../../../../packages: No such file or directory (os error 2)
+
+exec
+/usr/bin/zsh -lc "sed -n '1,160p' task.md" in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+ succeeded in 0ms:
+# Beeplaw Task
+
+Refactor goals/skillopt-training-pilot/corpus/fixtures/sfv4-fn-schema-003/src/SourceMetadata.ts so source metadata construction has schema-owned input and output contracts. Export SourceMetadataInput, SourceMetadata, MakeSourceMetadata, and makeSourceMetadata from the entrypoint. Preserve the existing fields and keep the fixture typechecking.
+
+## Fixture
+You are running inside a copied fixture directory. Edit files in this directory only.
+
+## Entrypoint
+`src/SourceMetadata.ts`
+
+## Task Manifest
+`/home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/corpus/tasks/sfv4-fn-schema-003.json`
+
+codex
+There isn’t a broader package tree in this copied fixture, so I’m keeping the implementation self-contained around `effect/Schema`. I’ll edit only the requested entrypoint.
+apply patch
+patch: completed
+/home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+diff --git a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+index fc8aac01524547b20a3f1c98c9ab70de65a29103..137e0d5aa18d0f159d175755ac3a663744679dbe
+--- a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
++++ b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+@@ -1,13 +1,30 @@
+-export interface SourceMetadataInput {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-}
++import * as S from "effect/Schema";
++
++export class SourceMetadataInput extends S.Class<SourceMetadataInput>("SourceMetadataInput")({
++  sourcePath: S.String,
++  owner: S.String,
++}) {}
+ 
+-export interface SourceMetadata {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-  readonly generatedBy: "sync-data-to-ts";
+-}
++export class SourceMetadata extends S.Class<SourceMetadata>("SourceMetadata")({
++  sourcePath: S.String,
++  owner: S.String,
++  generatedBy: S.Literal("sync-data-to-ts"),
++}) {}
++
++export class MakeSourceMetadata extends S.transform(SourceMetadataInput, SourceMetadata, {
++  strict: true,
++  decode: (input) =>
++    new SourceMetadata({
++      sourcePath: input.sourcePath,
++      owner: input.owner,
++      generatedBy: "sync-data-to-ts",
++    }),
++  encode: (metadata) =>
++    new SourceMetadataInput({
++      sourcePath: metadata.sourcePath,
++      owner: metadata.owner,
++    }),
++}) {}
+ 
+ export const makeSourceMetadata = (input: SourceMetadataInput): SourceMetadata => ({
+   sourcePath: input.sourcePath,
+
+diff --git a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+index fc8aac01524547b20a3f1c98c9ab70de65a29103..137e0d5aa18d0f159d175755ac3a663744679dbe
+--- a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
++++ b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+@@ -1,13 +1,30 @@
+-export interface SourceMetadataInput {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-}
++import * as S from "effect/Schema";
++
++export class SourceMetadataInput extends S.Class<SourceMetadataInput>("SourceMetadataInput")({
++  sourcePath: S.String,
++  owner: S.String,
++}) {}
+ 
+-export interface SourceMetadata {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-  readonly generatedBy: "sync-data-to-ts";
+-}
++export class SourceMetadata extends S.Class<SourceMetadata>("SourceMetadata")({
++  sourcePath: S.String,
++  owner: S.String,
++  generatedBy: S.Literal("sync-data-to-ts"),
++}) {}
++
++export class MakeSourceMetadata extends S.transform(SourceMetadataInput, SourceMetadata, {
++  strict: true,
++  decode: (input) =>
++    new SourceMetadata({
++      sourcePath: input.sourcePath,
++      owner: input.owner,
++      generatedBy: "sync-data-to-ts",
++    }),
++  encode: (metadata) =>
++    new SourceMetadataInput({
++      sourcePath: metadata.sourcePath,
++      owner: metadata.owner,
++    }),
++}) {}
+ 
+ export const makeSourceMetadata = (input: SourceMetadataInput): SourceMetadata => ({
+   sourcePath: input.sourcePath,
+
+codex
+The schemas are now in place. I’m running the fixture typecheck to catch any Effect v4 syntax or constructor typing mismatch before closing this out.
+exec
+/usr/bin/zsh -lc 'bunx tsc -p tsconfig.json' in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+diff --git a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+index fc8aac01524547b20a3f1c98c9ab70de65a29103..137e0d5aa18d0f159d175755ac3a663744679dbe
+--- a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
++++ b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+@@ -1,13 +1,30 @@
+-export interface SourceMetadataInput {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-}
++import * as S from "effect/Schema";
++
++export class SourceMetadataInput extends S.Class<SourceMetadataInput>("SourceMetadataInput")({
++  sourcePath: S.String,
++  owner: S.String,
++}) {}
+ 
+-export interface SourceMetadata {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-  readonly generatedBy: "sync-data-to-ts";
+-}
++export class SourceMetadata extends S.Class<SourceMetadata>("SourceMetadata")({
++  sourcePath: S.String,
++  owner: S.String,
++  generatedBy: S.Literal("sync-data-to-ts"),
++}) {}
++
++export class MakeSourceMetadata extends S.transform(SourceMetadataInput, SourceMetadata, {
++  strict: true,
++  decode: (input) =>
++    new SourceMetadata({
++      sourcePath: input.sourcePath,
++      owner: input.owner,
++      generatedBy: "sync-data-to-ts",
++    }),
++  encode: (metadata) =>
++    new SourceMetadataInput({
++      sourcePath: metadata.sourcePath,
++      owner: metadata.owner,
++    }),
++}) {}
+ 
+ export const makeSourceMetadata = (input: SourceMetadataInput): SourceMetadata => ({
+   sourcePath: input.sourcePath,
+
+ exited 2 in 1803ms:
+error TS5083: Cannot read file '/home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/tsconfig.base.json'.
+src/SourceMetadata.ts(14,43): error TS2339: Property 'transform' does not exist on type 'typeof import("/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema")'.
+src/SourceMetadata.ts(16,12): error TS7006: Parameter 'input' implicitly has an 'any' type.
+src/SourceMetadata.ts(22,12): error TS7006: Parameter 'metadata' implicitly has an 'any' type.
+../../../../../../../../../node_modules/effect/dist/Effect.d.ts(11983,52): error TS2304: Cannot find name 'AsyncDisposable'.
+../../../../../../../../../node_modules/effect/dist/Effect.d.ts(11983,70): error TS2304: Cannot find name 'Disposable'.
+../../../../../../../../../node_modules/effect/dist/internal/schema/schema.d.ts(9,15): error TS2304: Cannot find name 'SchemaErrorTypeId'.
+../../../../../../../../../node_modules/effect/dist/internal/schema/schema.d.ts(9,42): error TS2304: Cannot find name 'SchemaErrorTypeId'.
+
+codex
+The copied fixture’s `tsconfig` points outside the scratch tree to a missing base config, but TypeScript still showed a real API issue: this Effect build doesn’t expose `S.transform`. I’m switching to the local schema combinator that exists in this dependency version and then rerunning a scoped compiler check.
+exec
+/usr/bin/zsh -lc 'rg -n "declare (const|function) .*Transform|transform|Class" /home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts /home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema*.d.ts' in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+ succeeded in 0ms:
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaUtils.d.ts:18: * @see {@link Schema.Class} for defining schema-backed classes directly
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaUtils.d.ts:19: * @see {@link Schema.ErrorClass} for defining schema-backed error classes
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaUtils.d.ts:24:export declare function getNativeClassSchema<C extends new (...args: any) => any, S extends Schema.Struct<Schema.Struct.Fields>>(constructor: C, options: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaParser.d.ts:122: * failure channel is `SchemaIssue.Issue`, while preserving transformations
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaRepresentation.d.ts:9: * Use when inspecting or transforming non-primitive schema types.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaRepresentation.d.ts:1612: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaRepresentation.d.ts:1653: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaRepresentation.d.ts:1729: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaRepresentation.d.ts:1753: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaRepresentation.d.ts:1893: * processing, allowing pre-transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaIssue.d.ts:7: * keys, invalid types, invalid values, failed filters, failed transformations,
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaIssue.d.ts:161: * Represents a schema issue produced when a schema transformation (encode/decode step) fails.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaIssue.d.ts:166: *   transformations.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaIssue.d.ts:170: * - `ast` is the AST node for the transformation that failed.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaIssue.d.ts:175: * @see {@link Filter} — failure from a refinement check (not a transformation)
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:6: * transformations to connect two representations, such as a string and a
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:8: * application value. This module includes transformation and middleware types,
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:59: * @see {@link Transformation} — value-level bidirectional transformation
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:71:declare const TypeId = "~effect/SchemaTransformation/Transformation";
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:73: * Represents a bidirectional transformation between a decoded type `T` and an encoded
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:78: * Use when you need a schema transformation that defines how a schema converts
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:80: * - You want to compose multiple transformations into a pipeline.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:81: * - You want to flip a transformation to swap decode/encode.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:94: * **Example** (Composing two transformations)
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:107: * @see {@link transform} — construct from pure functions
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:108: * @see {@link transformOrFail} — construct from effectful functions
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:128: * Use to check whether a value is already a schema transformation before
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:154:export declare function isTransformation(u: unknown): u is Transformation<any, any, unknown, unknown>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:162: * a schema transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:175: *   decode: SchemaGetter.transform<number, string>((s) => Number(s)),
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:176: *   encode: SchemaGetter.transform<string, number>((n) => String(n))
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:180: * @see {@link transform} — simpler constructor from pure functions
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:181: * @see {@link transformOrFail} — constructor from effectful functions
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:197: * Use when you need a schema transformation that may fail or require Effect
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:214: *     SchemaTransformation.transformOrFail({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:227: * @see {@link transform} — for infallible, pure transformations
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:228: * @see {@link transformOptional} — for transformations that handle missing keys
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:229: * @see {@link make} — for transformations from existing Getters
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:234:export declare function transformOrFail<T, E, RD = never, RE = never>(options: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:244: * Use when you need an infallible schema transformation that does not require
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:261: *     SchemaTransformation.transform({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:269: * @see {@link transformOrFail} — for fallible or effectful transformations
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:270: * @see {@link transformOptional} — for transformations that handle missing keys
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:276:export declare function transform<T, E>(options: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:286: * Use when you need a schema transformation to produce or consume `Option.None`
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:306: *       SchemaTransformation.transformOptional({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:315: * @see {@link transform} — when you don't need Option-level control
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:322:export declare function transformOptional<T, E>(options: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:332: * Use when you need a schema transformation to normalize user input by
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:355: * @category String transformations
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:358:export declare function trim(): Transformation<string, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:365: * Use when you need a schema transformation to convert API field names between
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:372: * The transformation is round-trippable for standard snake_case and camelCase.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:387: * @category String transformations
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:390:export declare function snakeToCamel(): Transformation<string, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:397: * Use when you need a schema transformation to normalize strings to lowercase
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:418: * @category String transformations
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:421:export declare function toLowerCase(): Transformation<string, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:428: * Use when you need a schema transformation to normalize strings to uppercase
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:449: * @category String transformations
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:452:export declare function toUpperCase(): Transformation<string, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:459: * Use when you need a schema transformation to normalize display names or
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:480: * @category String transformations
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:483:export declare function capitalize(): Transformation<string, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:490: * Use when you need a schema transformation to normalize identifiers or field
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:511: * @category String transformations
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:514:export declare function uncapitalize(): Transformation<string, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:521: * Use when you need a schema transformation to parse query-string-like or
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:528: * record back into a string using the same separators. The transformation is
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:548: * @category String transformations
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:561: * Use when you need a schema transformation to connect two schemas that share
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:583: * @see {@link transform}
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:591:export declare function passthrough<T>(): Transformation<T, T>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:598: * Use when you need a no-op schema transformation whose decoded side is
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:604: * transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:620:export declare function passthroughSupertype<T extends E, E>(): Transformation<T, E>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:627: * Use when you need a no-op schema transformation whose encoded side is more
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:649:export declare function passthroughSubtype<T, E extends T>(): Transformation<T, E>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:656: * Use when you need a schema transformation to parse numeric strings from APIs,
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:677: * @see {@link transform}
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:682:export declare const numberFromString: Transformation<number, string, never, never>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:689: * Use when you need a schema transformation to parse large integer strings
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:709: * @see {@link transform}
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:714:export declare const bigintFromString: Transformation<bigint, string, never, never>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:720: * Use when you need a schema transformation to parse ISO 8601 date strings from
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:745:export declare const dateFromString: Transformation<globalThis.Date, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:752: * Use when you need a schema transformation to parse human-readable duration
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:775: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:778:export declare const durationFromString: Transformation<Duration.Duration, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:785: * Use when you need a schema transformation for nanosecond-precision timestamps
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:806: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:809:export declare const durationFromNanos: Transformation<Duration.Duration, bigint>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:816: * Use when you need a schema transformation to decode timeouts, delays, elapsed
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:836: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:839:export declare const durationFromMillis: Transformation<Duration.Duration, number>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:846: * Use when you need a schema transformation to convert nullable API fields to
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:853: * `Option.some(value)` to `value`. The transformation is pure and synchronous.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:870: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:873:export declare function optionFromNullOr<T>(): Transformation<Option.Option<T>, T | null>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:880: * Use when you need a schema transformation to convert API fields that use
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:887: * `Option.some(value)` to `value`. The transformation is pure and synchronous.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:905: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:908:export declare function optionFromUndefinedOr<T>(): Transformation<Option.Option<T>, T | undefined>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:916: * Use when you need a schema transformation to convert nullish API fields to
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:924: * `Option.some(value)` to `value`. The transformation is pure and synchronous.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:942: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:954: * Use when you need a schema transformation to convert optional struct keys
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:962: * `transformOptional` under the hood.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:981: * @see {@link transformOptional}
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:983: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:986:export declare function optionFromOptionalKey<T>(): Transformation<Option.Option<T>, T>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:993: * Use when you need a schema transformation to convert optional (possibly
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1001: * `transformOptional` under the hood and filters out `undefined` on decode.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1020: * @see {@link transformOptional}
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1022: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1025:export declare function optionFromOptional<T>(): Transformation<Option.Option<T>, T | undefined>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1032: * Use when you need a schema transformation to parse URL strings from user
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1051: * @see {@link transformOrFail}
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1053: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1056:export declare const urlFromString: Transformation<URL, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1063: * Use when you need a schema transformation to parse decimal number strings
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1072: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1075:export declare const bigDecimalFromString: Transformation<BigDecimal.BigDecimal, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1082: * Use when you need a schema transformation for binary data transmitted as
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1101: * @see `Schema.Uint8ArrayFromBase64` - a ready-made schema wrapping this transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1106:export declare const uint8ArrayFromBase64String: Transformation<Uint8Array<ArrayBufferLike>, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1113: * Use when you need a schema transformation for text data transmitted as Base64
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1132: * @see `Schema.StringFromBase64` - a ready-made schema wrapping this transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1137:export declare const stringFromBase64String: Transformation<string, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1143: * Use when you need a schema transformation for text data transmitted as Base64
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1162: * @see `Schema.StringFromBase64Url` - a ready-made schema wrapping this transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1167:export declare const stringFromBase64UrlString: Transformation<string, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1173: * Use when you need a schema transformation for text data transmitted as
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1192: * @see `Schema.StringFromHex` - a ready-made schema wrapping this transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1197:export declare const stringFromHexString: Transformation<string, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1204: * Use when you need a schema transformation to store structured data in URL
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1224: * @see `Schema.StringFromUriComponent` - a ready-made schema wrapping this transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1229:export declare const stringFromUriComponent: Transformation<string, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1236: * Use when you need a schema transformation to decode JSON stored or
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1261:export declare const fromJsonString: Transformation<unknown, string, never, never>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1268: * Use when you need a schema transformation for form or multipart payloads
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1293:export declare const fromFormData: Transformation<unknown, FormData, never, never>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1300: * Use when you need a schema transformation for query strings whose keys, such
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1325:export declare const fromURLSearchParams: Transformation<unknown, URLSearchParams, never, never>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1332: * Use when you need a schema transformation to represent fixed-offset time
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1343: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1346:export declare const timeZoneOffsetFromNumber: Transformation<DateTime.TimeZone.Offset, number>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1353: * Use when you need a schema transformation to accept only IANA time-zone
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1363: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1366:export declare const timeZoneNamedFromString: Transformation<DateTime.TimeZone.Named, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1373: * Use when you need a schema transformation to accept either an IANA time-zone
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1385: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1388:export declare const timeZoneFromString: Transformation<DateTime.TimeZone, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1395: * Use when you need a schema transformation to decode date-time strings to a
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1407: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1410:export declare const dateTimeUtcFromString: Transformation<DateTime.Utc, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1417: * Use when you need a schema transformation for ISO zoned date-time strings
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1428: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts:1431:export declare const dateTimeZonedFromString: Transformation<DateTime.Zoned, string>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:71: * inspecting, traversing, or transforming schema ASTs.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:158: * or transforming a Schema AST.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:173: * Use to detect `Number` AST nodes while inspecting, traversing, or transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:186: * transforming schema definitions.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:200: * Use to identify bigint AST nodes while inspecting or transforming schema ASTs.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:250: * inspecting or transforming a Schema AST.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:324: * - `to` — the AST node on the other side of this transformation step.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:325: * - `transformation` — the bidirectional conversion logic (decode/encode).
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:337:    readonly transformation: SchemaTransformation.Transformation<any, any, any, any> | SchemaTransformation.Middleware<any, any, any, any, any, any>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:338:    constructor(to: AST, transformation: SchemaTransformation.Transformation<any, any, any, any> | SchemaTransformation.Middleware<any, any, any, any, any, any>);
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:341: * A non-empty chain of {@link Link} values representing the transformation
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:347: * encoding transformation (type and encoded forms are identical).
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:356: * Options that control schema parsing, validation, transformation, and output behavior.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:371: *   transformations.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:427:     * transformations.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:496: *   transformations.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:528: *   validates or transforms raw input.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:1004: * or transforming schemas at the AST level.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:1283:export declare class Filter<in E> extends Pipeable.Class {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:1314:export declare class FilterGroup<in E> extends Pipeable.Class {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:1381: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:1391: * This is the low-level primitive behind `Schema.transform` and
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:1392: * `Schema.transformOrFail`. It appends a {@link Link} to the `to` node's
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:1400: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:1403:export declare function decodeTo<A extends AST>(from: AST, to: A, transformation: SchemaTransformation.Transformation<any, any, any, any>): A;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:1419: * Strips all encoding transformations from an AST, returning the decoded
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:1440: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:1467: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaAST.d.ts:1485: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:6: * services. Schema transformations use getters to describe one direction of a
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:22: * Represents a composable transformation from an encoded type `E` to a decoded type `T`.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:26: * Use when you need a schema getter to build and compose custom transformations
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:45: * const parseNumber = SchemaGetter.transform<number, string>((s) => Number(s))
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:46: * const double = SchemaGetter.transform<number, number>((n) => n * 2)
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:51: * @see {@link transform} to create a getter from a pure function
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:53: * @see {@link transformOrFail} for fallible transformation
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:58:export declare class Getter<out T, in E, R = never> extends Pipeable.Class {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:86: * @see {@link transform} when you need to use the input value
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:168: * **Example** (Passing through identity transformations)
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:173: * // No transformation needed — types already match
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:184: * @see {@link transform} when you need to change the value
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:316: * Use when you need a schema getter to transform or validate only when a field
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:337: * @see {@link transform} for a simpler pure transformation of present values
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:338: * @see {@link transformOrFail} for fallible transformation of present values
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:362: * - Does not transform the value — input and output types are the same.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:374: * @see {@link transform} when you need to change the value, not just validate
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:386: * Use when you need a schema getter for a pure, infallible transformation
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:404: *     decode: SchemaGetter.transform((s) => Number(s)),
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:405: *     encode: SchemaGetter.transform((n) => String(n))
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:410: * @see {@link transformOrFail} when the transformation can fail
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:411: * @see {@link transformOptional} when you need to handle `None` inputs
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:412: * @see {@link passthrough} when no transformation is needed
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:417:export declare function transform<T, E>(f: (e: E) => T): Getter<T, E>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:419: * Creates a getter that applies a fallible, effectful transformation to present values.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:423: * Use when you need a schema getter for a transformation that may fail, require
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:437: * const safeParseInt = SchemaGetter.transformOrFail<number, string>(
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:447: * @see {@link transform} when transformation cannot fail
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:453:export declare function transformOrFail<T, E, R = never>(f: (e: E, options: SchemaAST.ParseOptions) => Effect.Effect<T, SchemaIssue.Issue, R>): Getter<T, E, R>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:455: * Creates a getter that transforms the full `Option` — both present and absent values.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:472: * const skipEmpty = SchemaGetter.transformOptional<string, string>((o) =>
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:477: * @see {@link transform} when you only need to transform present values
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:483:export declare function transformOptional<T, E>(f: (oe: Option.Option<E>) => Option.Option<T>): Getter<T, E>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:505: * @see {@link transformOptional} when you want conditional omission
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:563: * @see {@link transform} for custom string conversions
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaGetter.d.ts:591: * @see {@link transformOrFail} for validated number parsing
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8: * transformations, defaults, classes, JSON Schema generation, test data
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:80: * Options for `makeEffect`, `make`, and Class constructors.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:106: * transformation behavior.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1311: * **Example** (Decoding with a transformation schema)
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1323: * //   └─ Encoded side transformation failure
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1723: * class MyString extends Schema.asClass(Schema.String) {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1734:export declare function asClass<S extends Top>(schema: S): S & {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1913: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1932: * discarding the encoding transformation path.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1934: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1941: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1960: * discarding the decoding transformation path.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1962: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1970: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1989: * Use to invert a schema transformation direction.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2005: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2017:    transform<L2 extends SchemaAST.LiteralValue>(to: L2): decodeTo<Literal<L2>, Literal<L>>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2666:     *   transformations change the schema type, the original refinement functions
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2667:     *   may no longer be valid or safe to apply to the transformed schema. Only
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2669:     *   after the transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2744: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2761: * transformation schema that decodes from the renamed keys and encodes back to
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2780: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2816: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3002: * For transformed key schemas, property selection is based on encoded property
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3335:     *   transformations change the schema type, the original refinement functions
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3336:     *   may no longer be valid or safe to apply to the transformed schema. Only
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3338:     *   after the transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3671: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3708: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3754:     *   transformations change the schema type, the original refinement functions
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3755:     *   may no longer be valid or safe to apply to the transformed schema. Only
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3757:     *   after the transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3806:    transform<const L2 extends {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4192: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4207: * Type-level representation returned by {@link decodeTo} without a custom transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4209: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4215: * Creates a schema that transforms from a source schema to a target schema.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4220: * with an optional custom bidirectional transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4229: * When no transformation is provided, `SchemaTransformation.passthrough()` is
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4232: * schemas and any custom transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4236: * In a custom transformation, `decode` maps `From["Type"]` to `To["Encoded"]`
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4240: * **Example** (Transforming strings to numbers with a schema transformation)
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4249: *       decode: SchemaGetter.transform((s) => Number(s)),
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4250: *       encode: SchemaGetter.transform((n) => String(n))
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4259: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4263:export declare function decodeTo<To extends Constraint, From extends Constraint, RD = never, RE = never>(to: To, transformation: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4268: * Applies a transformation to a schema, creating a new schema with the same type but transformed encoding/decoding.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4272: * Use when the decoded type stays the same and the transformation only
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4277: * Call it with a transformation object and then pipe a schema into the returned
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4279: * the source schema, while applying the transformation during both decoding and
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4283: * requirements from the source schema and the transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4287: * Use {@link decodeTo} instead when the transformation should change the
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4288: * decoded type. For this helper, both transformation getters operate on
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4298: *     decode: SchemaGetter.transform((s) => s.trim()),
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4299: *     encode: SchemaGetter.transform((s) => s.trim())
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4307: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4310:export declare function decode<S extends Constraint, RD = never, RE = never>(transformation: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4315: * Reverses a schema transformation so the encoded schema is supplied first.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4319: * Use to define a transformation by naming the encoded schema before the
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4334: *     decode: SchemaGetter.transform((s: string) => Number(s)),
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4335: *     encode: SchemaGetter.transform((n: number) => String(n))
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4340: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4344:export declare function encodeTo<To extends Constraint, From extends Constraint, RD = never, RE = never>(to: To, transformation: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4349: * Applies a transformation to a schema's encoded type, creating a new schema where encoding/decoding
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4364: *     decode: SchemaGetter.transform((s: string) => s.toLowerCase()),
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4365: *     encode: SchemaGetter.transform((s: string) => s.toUpperCase())
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4370: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4373:export declare function encode<S extends Constraint, RD = never, RE = never>(transformation: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4466: * of the `Encoded` type (before any decoding transformations).
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4511: * through the decoding transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4542: * field's decoding transformation runs.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4547: * decoding transformations).
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4591: * pass through the field's decoding transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4597: * the decoding transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4944: * Used when building low-level AST transformations that bridge two schema types.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4946: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4949:export declare function link<T>(): <To extends Constraint>(encodeTo: To, transformation: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:6565: * Use to validate, transform, or serialize Effect failure causes when typed
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8264: * Type-level representation returned by {@link Class}.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8269:export interface Class<Self, S extends Constraint & {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8293:     *   transformations change the schema type, the original refinement functions
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8294:     *   may no longer be valid or safe to apply to the transformed schema. Only
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8296:     *   after the transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8323:        <NewFields extends Struct.Fields>(fields: NewFields, annotations?: Annotations.Declaration<Extended, readonly [Struct<Simplify<Assign<S["fields"], NewFields>>>]>): [Extended] extends [never] ? MissingSelfGeneric<"Base.extend"> : InheritStaticMembers<Class<Extended, Struct<Simplify<Assign<S["fields"], NewFields>>>, Self & Brand>, Static>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8324:        <Extension extends Struct<Struct.Fields>>(schema: Extension, annotations?: Annotations.Declaration<Extended, readonly [Struct<Simplify<Assign<S["fields"], Extension["fields"]>>>]>): [Extended] extends [never] ? MissingSelfGeneric<"Base.extend"> : InheritStaticMembers<Class<Extended, Struct<Simplify<Assign<S["fields"], Extension["fields"]>>>, Self & Brand>, Static>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8353: * class Person extends Schema.Class<Person>("Person")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8368: * class Animal extends Schema.Class<Animal>("Animal")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8381: * @see {@link TaggedClass} for adding a `_tag` literal field to the class schema
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8382: * @see {@link ErrorClass} for defining schema-backed error classes
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8383: * @see {@link TaggedErrorClass} for defining tagged schema-backed error classes
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8388:export declare const Class: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8413:     * class Person extends Schema.Class<Person>("Person")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8428:     * class Animal extends Schema.Class<Animal>("Animal")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8441:     * @see {@link TaggedClass} for adding a `_tag` literal field to the class schema
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8442:     * @see {@link ErrorClass} for defining schema-backed error classes
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8443:     * @see {@link TaggedErrorClass} for defining tagged schema-backed error classes
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8473:         * class Person extends Schema.Class<Person>("Person")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8488:         * class Animal extends Schema.Class<Animal>("Animal")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8501:         * @see {@link TaggedClass} for adding a `_tag` literal field to the class schema
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8502:         * @see {@link ErrorClass} for defining schema-backed error classes
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8503:         * @see {@link TaggedErrorClass} for defining tagged schema-backed error classes
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8508:        <const Fields extends Struct.Fields>(fields: Fields, annotations?: Annotations.Declaration<Self, readonly [Struct<Fields>]>): [Self] extends [never] ? MissingSelfGeneric<"Schema.Class"> : Class<Self, Struct<Fields>, Brand>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8533:         * class Person extends Schema.Class<Person>("Person")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8548:         * class Animal extends Schema.Class<Animal>("Animal")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8561:         * @see {@link TaggedClass} for adding a `_tag` literal field to the class schema
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8562:         * @see {@link ErrorClass} for defining schema-backed error classes
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8563:         * @see {@link TaggedErrorClass} for defining tagged schema-backed error classes
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8568:        <S extends Struct<Struct.Fields>>(schema: S, annotations?: Annotations.Declaration<Self, readonly [S]>): [Self] extends [never] ? MissingSelfGeneric<"Schema.Class"> : Class<Self, S, Brand>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8589: * class Circle extends Schema.TaggedClass<Circle>()("Circle", {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8601:export declare const TaggedClass: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8620:     * class Circle extends Schema.TaggedClass<Circle>()("Circle", {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8651:         * class Circle extends Schema.TaggedClass<Circle>()("Circle", {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8663:        <Tag extends string, const Fields extends Struct.Fields>(tag: Tag, fields: Fields, annotations?: Annotations.Declaration<Self, readonly [TaggedStruct<Tag, Fields>]>): [Self] extends [never] ? MissingSelfGeneric<"Schema.TaggedClass"> : Class<Self, TaggedStruct<Tag, Fields>, Brand>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8682:         * class Circle extends Schema.TaggedClass<Circle>()("Circle", {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8696:        } & S["fields"]>>]>): [Self] extends [never] ? MissingSelfGeneric<"Schema.TaggedClass"> : Class<Self, Struct<Simplify<{
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8703: * yieldable error in Effect programs. Combines {@link Class} validation with
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8712: * class NotFound extends Schema.ErrorClass<NotFound>("NotFound")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8724:export declare const ErrorClass: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8727:     * yieldable error in Effect programs. Combines {@link Class} validation with
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8736:     * class NotFound extends Schema.ErrorClass<NotFound>("NotFound")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8751:         * yieldable error in Effect programs. Combines {@link Class} validation with
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8760:         * class NotFound extends Schema.ErrorClass<NotFound>("NotFound")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8772:        <const Fields extends Struct.Fields>(fields: Fields, annotations?: Annotations.Declaration<Self, readonly [Struct<Fields>]>): [Self] extends [never] ? MissingSelfGeneric<"Schema.ErrorClass"> : Class<Self, Struct<Fields>, Cause_.YieldableError & Brand>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8775:         * yieldable error in Effect programs. Combines {@link Class} validation with
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8784:         * class NotFound extends Schema.ErrorClass<NotFound>("NotFound")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8796:        <S extends Struct<Struct.Fields>>(schema: S, annotations?: Annotations.Declaration<Self, readonly [S]>): [Self] extends [never] ? MissingSelfGeneric<"Schema.ErrorClass"> : Class<Self, S, Cause_.YieldableError & Brand>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8813: * class NotFound extends Schema.TaggedErrorClass<NotFound>()("NotFound", {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8825:export declare const TaggedErrorClass: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8840:     * class NotFound extends Schema.TaggedErrorClass<NotFound>()("NotFound", {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8867:         * class NotFound extends Schema.TaggedErrorClass<NotFound>()("NotFound", {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8879:        <Tag extends string, const Fields extends Struct.Fields>(tag: Tag, fields: Fields, annotations?: Annotations.Declaration<Self, readonly [TaggedStruct<Tag, Fields>]>): [Self] extends [never] ? MissingSelfGeneric<"Schema.TaggedErrorClass"> : Class<Self, TaggedStruct<Tag, Fields>, Cause_.YieldableError & Brand>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8894:         * class NotFound extends Schema.TaggedErrorClass<NotFound>()("NotFound", {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8908:        } & S["fields"]>>]>): [Self] extends [never] ? MissingSelfGeneric<"Schema.TaggedErrorClass"> : Class<Self, Struct<Simplify<{
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:9305: * Use to provide a custom ISO transformation when the default derivation is not
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:9311: * provided `decode` and `encode` getters to transform between the schema type
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:9317:export declare function overrideToCodecIso<S extends Constraint, Iso>(to: Codec<Iso>, transformation: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8: * transformations, defaults, classes, JSON Schema generation, test data
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:80: * Options for `makeEffect`, `make`, and Class constructors.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:106: * transformation behavior.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1311: * **Example** (Decoding with a transformation schema)
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1323: * //   └─ Encoded side transformation failure
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1723: * class MyString extends Schema.asClass(Schema.String) {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1734:export declare function asClass<S extends Top>(schema: S): S & {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1913: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1932: * discarding the encoding transformation path.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1934: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1941: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1960: * discarding the decoding transformation path.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1962: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1970: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:1989: * Use to invert a schema transformation direction.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2005: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2017:    transform<L2 extends SchemaAST.LiteralValue>(to: L2): decodeTo<Literal<L2>, Literal<L>>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2666:     *   transformations change the schema type, the original refinement functions
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2667:     *   may no longer be valid or safe to apply to the transformed schema. Only
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2669:     *   after the transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2744: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2761: * transformation schema that decodes from the renamed keys and encodes back to
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2780: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:2816: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3002: * For transformed key schemas, property selection is based on encoded property
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3335:     *   transformations change the schema type, the original refinement functions
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3336:     *   may no longer be valid or safe to apply to the transformed schema. Only
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3338:     *   after the transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3671: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3708: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3754:     *   transformations change the schema type, the original refinement functions
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3755:     *   may no longer be valid or safe to apply to the transformed schema. Only
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3757:     *   after the transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:3806:    transform<const L2 extends {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4192: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4207: * Type-level representation returned by {@link decodeTo} without a custom transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4209: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4215: * Creates a schema that transforms from a source schema to a target schema.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4220: * with an optional custom bidirectional transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4229: * When no transformation is provided, `SchemaTransformation.passthrough()` is
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4232: * schemas and any custom transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4236: * In a custom transformation, `decode` maps `From["Type"]` to `To["Encoded"]`
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4240: * **Example** (Transforming strings to numbers with a schema transformation)
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4249: *       decode: SchemaGetter.transform((s) => Number(s)),
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4250: *       encode: SchemaGetter.transform((n) => String(n))
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4259: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4263:export declare function decodeTo<To extends Constraint, From extends Constraint, RD = never, RE = never>(to: To, transformation: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4268: * Applies a transformation to a schema, creating a new schema with the same type but transformed encoding/decoding.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4272: * Use when the decoded type stays the same and the transformation only
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4277: * Call it with a transformation object and then pipe a schema into the returned
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4279: * the source schema, while applying the transformation during both decoding and
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4283: * requirements from the source schema and the transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4287: * Use {@link decodeTo} instead when the transformation should change the
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4288: * decoded type. For this helper, both transformation getters operate on
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4298: *     decode: SchemaGetter.transform((s) => s.trim()),
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4299: *     encode: SchemaGetter.transform((s) => s.trim())
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4307: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4310:export declare function decode<S extends Constraint, RD = never, RE = never>(transformation: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4315: * Reverses a schema transformation so the encoded schema is supplied first.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4319: * Use to define a transformation by naming the encoded schema before the
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4334: *     decode: SchemaGetter.transform((s: string) => Number(s)),
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4335: *     encode: SchemaGetter.transform((n: number) => String(n))
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4340: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4344:export declare function encodeTo<To extends Constraint, From extends Constraint, RD = never, RE = never>(to: To, transformation: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4349: * Applies a transformation to a schema's encoded type, creating a new schema where encoding/decoding
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4364: *     decode: SchemaGetter.transform((s: string) => s.toLowerCase()),
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4365: *     encode: SchemaGetter.transform((s: string) => s.toUpperCase())
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4370: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4373:export declare function encode<S extends Constraint, RD = never, RE = never>(transformation: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4466: * of the `Encoded` type (before any decoding transformations).
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4511: * through the decoding transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4542: * field's decoding transformation runs.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4547: * decoding transformations).
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4591: * pass through the field's decoding transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4597: * the decoding transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4944: * Used when building low-level AST transformations that bridge two schema types.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4946: * @category transforming
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:4949:export declare function link<T>(): <To extends Constraint>(encodeTo: To, transformation: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:6565: * Use to validate, transform, or serialize Effect failure causes when typed
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8264: * Type-level representation returned by {@link Class}.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8269:export interface Class<Self, S extends Constraint & {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8293:     *   transformations change the schema type, the original refinement functions
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8294:     *   may no longer be valid or safe to apply to the transformed schema. Only
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8296:     *   after the transformation.
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8323:        <NewFields extends Struct.Fields>(fields: NewFields, annotations?: Annotations.Declaration<Extended, readonly [Struct<Simplify<Assign<S["fields"], NewFields>>>]>): [Extended] extends [never] ? MissingSelfGeneric<"Base.extend"> : InheritStaticMembers<Class<Extended, Struct<Simplify<Assign<S["fields"], NewFields>>>, Self & Brand>, Static>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8324:        <Extension extends Struct<Struct.Fields>>(schema: Extension, annotations?: Annotations.Declaration<Extended, readonly [Struct<Simplify<Assign<S["fields"], Extension["fields"]>>>]>): [Extended] extends [never] ? MissingSelfGeneric<"Base.extend"> : InheritStaticMembers<Class<Extended, Struct<Simplify<Assign<S["fields"], Extension["fields"]>>>, Self & Brand>, Static>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8353: * class Person extends Schema.Class<Person>("Person")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8368: * class Animal extends Schema.Class<Animal>("Animal")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8381: * @see {@link TaggedClass} for adding a `_tag` literal field to the class schema
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8382: * @see {@link ErrorClass} for defining schema-backed error classes
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8383: * @see {@link TaggedErrorClass} for defining tagged schema-backed error classes
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8388:export declare const Class: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8413:     * class Person extends Schema.Class<Person>("Person")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8428:     * class Animal extends Schema.Class<Animal>("Animal")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8441:     * @see {@link TaggedClass} for adding a `_tag` literal field to the class schema
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8442:     * @see {@link ErrorClass} for defining schema-backed error classes
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8443:     * @see {@link TaggedErrorClass} for defining tagged schema-backed error classes
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8473:         * class Person extends Schema.Class<Person>("Person")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8488:         * class Animal extends Schema.Class<Animal>("Animal")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8501:         * @see {@link TaggedClass} for adding a `_tag` literal field to the class schema
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8502:         * @see {@link ErrorClass} for defining schema-backed error classes
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8503:         * @see {@link TaggedErrorClass} for defining tagged schema-backed error classes
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8508:        <const Fields extends Struct.Fields>(fields: Fields, annotations?: Annotations.Declaration<Self, readonly [Struct<Fields>]>): [Self] extends [never] ? MissingSelfGeneric<"Schema.Class"> : Class<Self, Struct<Fields>, Brand>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8533:         * class Person extends Schema.Class<Person>("Person")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8548:         * class Animal extends Schema.Class<Animal>("Animal")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8561:         * @see {@link TaggedClass} for adding a `_tag` literal field to the class schema
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8562:         * @see {@link ErrorClass} for defining schema-backed error classes
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8563:         * @see {@link TaggedErrorClass} for defining tagged schema-backed error classes
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8568:        <S extends Struct<Struct.Fields>>(schema: S, annotations?: Annotations.Declaration<Self, readonly [S]>): [Self] extends [never] ? MissingSelfGeneric<"Schema.Class"> : Class<Self, S, Brand>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8589: * class Circle extends Schema.TaggedClass<Circle>()("Circle", {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8601:export declare const TaggedClass: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8620:     * class Circle extends Schema.TaggedClass<Circle>()("Circle", {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8651:         * class Circle extends Schema.TaggedClass<Circle>()("Circle", {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8663:        <Tag extends string, const Fields extends Struct.Fields>(tag: Tag, fields: Fields, annotations?: Annotations.Declaration<Self, readonly [TaggedStruct<Tag, Fields>]>): [Self] extends [never] ? MissingSelfGeneric<"Schema.TaggedClass"> : Class<Self, TaggedStruct<Tag, Fields>, Brand>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8682:         * class Circle extends Schema.TaggedClass<Circle>()("Circle", {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8696:        } & S["fields"]>>]>): [Self] extends [never] ? MissingSelfGeneric<"Schema.TaggedClass"> : Class<Self, Struct<Simplify<{
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8703: * yieldable error in Effect programs. Combines {@link Class} validation with
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8712: * class NotFound extends Schema.ErrorClass<NotFound>("NotFound")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8724:export declare const ErrorClass: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8727:     * yieldable error in Effect programs. Combines {@link Class} validation with
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8736:     * class NotFound extends Schema.ErrorClass<NotFound>("NotFound")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8751:         * yieldable error in Effect programs. Combines {@link Class} validation with
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8760:         * class NotFound extends Schema.ErrorClass<NotFound>("NotFound")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8772:        <const Fields extends Struct.Fields>(fields: Fields, annotations?: Annotations.Declaration<Self, readonly [Struct<Fields>]>): [Self] extends [never] ? MissingSelfGeneric<"Schema.ErrorClass"> : Class<Self, Struct<Fields>, Cause_.YieldableError & Brand>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8775:         * yieldable error in Effect programs. Combines {@link Class} validation with
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8784:         * class NotFound extends Schema.ErrorClass<NotFound>("NotFound")({
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8796:        <S extends Struct<Struct.Fields>>(schema: S, annotations?: Annotations.Declaration<Self, readonly [S]>): [Self] extends [never] ? MissingSelfGeneric<"Schema.ErrorClass"> : Class<Self, S, Cause_.YieldableError & Brand>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8813: * class NotFound extends Schema.TaggedErrorClass<NotFound>()("NotFound", {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8825:export declare const TaggedErrorClass: {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8840:     * class NotFound extends Schema.TaggedErrorClass<NotFound>()("NotFound", {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8867:         * class NotFound extends Schema.TaggedErrorClass<NotFound>()("NotFound", {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8879:        <Tag extends string, const Fields extends Struct.Fields>(tag: Tag, fields: Fields, annotations?: Annotations.Declaration<Self, readonly [TaggedStruct<Tag, Fields>]>): [Self] extends [never] ? MissingSelfGeneric<"Schema.TaggedErrorClass"> : Class<Self, TaggedStruct<Tag, Fields>, Cause_.YieldableError & Brand>;
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8894:         * class NotFound extends Schema.TaggedErrorClass<NotFound>()("NotFound", {
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:8908:        } & S["fields"]>>]>): [Self] extends [never] ? MissingSelfGeneric<"Schema.TaggedErrorClass"> : Class<Self, Struct<Simplify<{
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:9305: * Use to provide a custom ISO transformation when the default derivation is not
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:9311: * provided `decode` and `encode` getters to transform between the schema type
+/home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts:9317:export declare function overrideToCodecIso<S extends Constraint, Iso>(to: Codec<Iso>, transformation: {
+
+diff --git a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+index fc8aac01524547b20a3f1c98c9ab70de65a29103..137e0d5aa18d0f159d175755ac3a663744679dbe
+--- a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
++++ b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+@@ -1,13 +1,30 @@
+-export interface SourceMetadataInput {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-}
++import * as S from "effect/Schema";
++
++export class SourceMetadataInput extends S.Class<SourceMetadataInput>("SourceMetadataInput")({
++  sourcePath: S.String,
++  owner: S.String,
++}) {}
+ 
+-export interface SourceMetadata {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-  readonly generatedBy: "sync-data-to-ts";
+-}
++export class SourceMetadata extends S.Class<SourceMetadata>("SourceMetadata")({
++  sourcePath: S.String,
++  owner: S.String,
++  generatedBy: S.Literal("sync-data-to-ts"),
++}) {}
++
++export class MakeSourceMetadata extends S.transform(SourceMetadataInput, SourceMetadata, {
++  strict: true,
++  decode: (input) =>
++    new SourceMetadata({
++      sourcePath: input.sourcePath,
++      owner: input.owner,
++      generatedBy: "sync-data-to-ts",
++    }),
++  encode: (metadata) =>
++    new SourceMetadataInput({
++      sourcePath: metadata.sourcePath,
++      owner: metadata.owner,
++    }),
++}) {}
+ 
+ export const makeSourceMetadata = (input: SourceMetadataInput): SourceMetadata => ({
+   sourcePath: input.sourcePath,
+
+codex
+I confirmed this version uses `S.decodeTo` plus schema getters for transforms. I’m applying that form and keeping the public constructor as the single value-level creation path.
+exec
+/usr/bin/zsh -lc "sed -n '4240,4270p' /home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts && sed -n '240,285p' /home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/SchemaTransformation.d.ts && rg -n \"SchemaGetter\" /home/elpresidank/YeeBois/projects/beep-effect/node_modules/effect/dist/Schema.d.ts | head -20" in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+ succeeded in 0ms:
+ * **Example** (Transforming strings to numbers with a schema transformation)
+ *
+ * ```ts
+ * import { Schema, SchemaGetter } from "effect"
+ *
+ * const NumberFromString = Schema.String.pipe(
+ *   Schema.decodeTo(
+ *     Schema.Number,
+ *     {
+ *       decode: SchemaGetter.transform((s) => Number(s)),
+ *       encode: SchemaGetter.transform((n) => String(n))
+ *     }
+ *   )
+ * )
+ *
+ * const result = Schema.decodeUnknownSync(NumberFromString)("123")
+ * // result: 123
+ * ```
+ *
+ * @category transforming
+ * @since 4.0.0
+ */
+export declare function decodeTo<To extends Constraint>(to: To): <From extends Constraint>(from: From) => compose<To, From>;
+export declare function decodeTo<To extends Constraint, From extends Constraint, RD = never, RE = never>(to: To, transformation: {
+    readonly decode: SchemaGetter.Getter<NoInfer<To["Encoded"]>, NoInfer<From["Type"]>, RD>;
+    readonly encode: SchemaGetter.Getter<NoInfer<From["Type"]>, NoInfer<To["Encoded"]>, RE>;
+}): (from: From) => decodeTo<To, From, RD, RE>;
+/**
+ * Applies a transformation to a schema, creating a new schema with the same type but transformed encoding/decoding.
+ *
+ * **When to use**
+ * functions.
+ *
+ * **When to use**
+ *
+ * Use when you need an infallible schema transformation that does not require
+ * Effect services.
+ *
+ * **Details**
+ *
+ * - Each function receives the input and returns the output directly.
+ * - Skips `None` inputs (missing keys) — functions are only called on present values.
+ * - Does not allocate Effects internally; uses optimized sync path.
+ *
+ * **Example** (Converting between cents and dollars)
+ *
+ * ```ts
+ * import { Schema, SchemaTransformation } from "effect"
+ *
+ * const CentsFromDollars = Schema.Number.pipe(
+ *   Schema.decodeTo(
+ *     Schema.Number,
+ *     SchemaTransformation.transform({
+ *       decode: (dollars) => dollars * 100,
+ *       encode: (cents) => cents / 100
+ *     })
+ *   )
+ * )
+ * ```
+ *
+ * @see {@link transformOrFail} — for fallible or effectful transformations
+ * @see {@link transformOptional} — for transformations that handle missing keys
+ * @see {@link passthrough} — when no conversion is needed
+ *
+ * @category constructors
+ * @since 3.10.0
+ */
+export declare function transform<T, E>(options: {
+    readonly decode: (input: E) => T;
+    readonly encode: (input: T) => E;
+}): Transformation<T, E>;
+/**
+ * Creates a `Transformation` where decode and encode operate on `Option`
+ * values, giving full control over missing-key handling.
+ *
+ * **When to use**
+ *
+40:import * as SchemaGetter from "./SchemaGetter.ts";
+4243: * import { Schema, SchemaGetter } from "effect"
+4249: *       decode: SchemaGetter.transform((s) => Number(s)),
+4250: *       encode: SchemaGetter.transform((n) => String(n))
+4264:    readonly decode: SchemaGetter.Getter<NoInfer<To["Encoded"]>, NoInfer<From["Type"]>, RD>;
+4265:    readonly encode: SchemaGetter.Getter<NoInfer<From["Type"]>, NoInfer<To["Encoded"]>, RE>;
+4294: * import { Schema, SchemaGetter } from "effect"
+4298: *     decode: SchemaGetter.transform((s) => s.trim()),
+4299: *     encode: SchemaGetter.transform((s) => s.trim())
+4311:    readonly decode: SchemaGetter.Getter<S["Type"], S["Type"], RD>;
+4312:    readonly encode: SchemaGetter.Getter<S["Type"], S["Type"], RE>;
+4330: * import { Schema, SchemaGetter } from "effect"
+4334: *     decode: SchemaGetter.transform((s: string) => Number(s)),
+4335: *     encode: SchemaGetter.transform((n: number) => String(n))
+4345:    readonly decode: SchemaGetter.Getter<NoInfer<From["Encoded"]>, NoInfer<To["Type"]>, RD>;
+4346:    readonly encode: SchemaGetter.Getter<NoInfer<To["Type"]>, NoInfer<From["Encoded"]>, RE>;
+4360: * import { Schema, SchemaGetter } from "effect"
+4364: *     decode: SchemaGetter.transform((s: string) => s.toLowerCase()),
+4365: *     encode: SchemaGetter.transform((s: string) => s.toUpperCase())
+4374:    readonly decode: SchemaGetter.Getter<S["Encoded"], S["Encoded"], RD>;
+
+diff --git a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+index fc8aac01524547b20a3f1c98c9ab70de65a29103..137e0d5aa18d0f159d175755ac3a663744679dbe
+--- a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
++++ b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+@@ -1,13 +1,30 @@
+-export interface SourceMetadataInput {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-}
++import * as S from "effect/Schema";
++
++export class SourceMetadataInput extends S.Class<SourceMetadataInput>("SourceMetadataInput")({
++  sourcePath: S.String,
++  owner: S.String,
++}) {}
+ 
+-export interface SourceMetadata {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-  readonly generatedBy: "sync-data-to-ts";
+-}
++export class SourceMetadata extends S.Class<SourceMetadata>("SourceMetadata")({
++  sourcePath: S.String,
++  owner: S.String,
++  generatedBy: S.Literal("sync-data-to-ts"),
++}) {}
++
++export class MakeSourceMetadata extends S.transform(SourceMetadataInput, SourceMetadata, {
++  strict: true,
++  decode: (input) =>
++    new SourceMetadata({
++      sourcePath: input.sourcePath,
++      owner: input.owner,
++      generatedBy: "sync-data-to-ts",
++    }),
++  encode: (metadata) =>
++    new SourceMetadataInput({
++      sourcePath: metadata.sourcePath,
++      owner: metadata.owner,
++    }),
++}) {}
+ 
+ export const makeSourceMetadata = (input: SourceMetadataInput): SourceMetadata => ({
+   sourcePath: input.sourcePath,
+
+codex
+Because `MakeSourceMetadata` is a schema value rather than a data class, I’m defining it as a const schema and deriving the function from its synchronous decoder. This keeps the input/output contracts schema-owned without adding extra runtime behavior.
+apply patch
+patch: completed
+/home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+diff --git a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+index fc8aac01524547b20a3f1c98c9ab70de65a29103..b445be6c4b0de56f273abdceddfad349ab8e2d0e
+--- a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
++++ b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+@@ -1,13 +1,49 @@
+-export interface SourceMetadataInput {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-}
++import * as S from "effect/Schema";
++import * as SG from "effect/SchemaGetter";
++
++export class SourceMetadataInput extends S.Class<SourceMetadataInput>("SourceMetadataInput")({
++  sourcePath: S.String,
++  owner: S.String,
++}) {}
++
++export class SourceMetadata extends S.Class<SourceMetadata>("SourceMetadata")({
++  sourcePath: S.String,
++  owner: S.String,
++  generatedBy: S.Literal("sync-data-to-ts"),
++}) {}
++
++export const MakeSourceMetadata = SourceMetadataInput.pipe(
++  S.decodeTo(SourceMetadata, {
++    decode: SG.transform(
++      (input: SourceMetadataInput) =>
++        new SourceMetadata({
++          sourcePath: input.sourcePath,
++          owner: input.owner,
++          generatedBy: "sync-data-to-ts",
++        }),
++    ),
++    encode: SG.transform(
++      (metadata: SourceMetadata) =>
++        new SourceMetadataInput({
++          sourcePath: metadata.sourcePath,
++          owner: metadata.owner,
++        }),
++    ),
++  }),
++);
+ 
+-export interface SourceMetadata {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-  readonly generatedBy: "sync-data-to-ts";
+-}
++export const makeSourceMetadata = S.decodeSync(MakeSourceMetadata);
++    new SourceMetadata({
++      sourcePath: input.sourcePath,
++      owner: input.owner,
++      generatedBy: "sync-data-to-ts",
++    }),
++  encode: (metadata) =>
++    new SourceMetadataInput({
++      sourcePath: metadata.sourcePath,
++      owner: metadata.owner,
++    }),
++}) {}
+ 
+ export const makeSourceMetadata = (input: SourceMetadataInput): SourceMetadata => ({
+   sourcePath: input.sourcePath,
+
+diff --git a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+index fc8aac01524547b20a3f1c98c9ab70de65a29103..b445be6c4b0de56f273abdceddfad349ab8e2d0e
+--- a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
++++ b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+@@ -1,13 +1,49 @@
+-export interface SourceMetadataInput {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-}
++import * as S from "effect/Schema";
++import * as SG from "effect/SchemaGetter";
++
++export class SourceMetadataInput extends S.Class<SourceMetadataInput>("SourceMetadataInput")({
++  sourcePath: S.String,
++  owner: S.String,
++}) {}
++
++export class SourceMetadata extends S.Class<SourceMetadata>("SourceMetadata")({
++  sourcePath: S.String,
++  owner: S.String,
++  generatedBy: S.Literal("sync-data-to-ts"),
++}) {}
++
++export const MakeSourceMetadata = SourceMetadataInput.pipe(
++  S.decodeTo(SourceMetadata, {
++    decode: SG.transform(
++      (input: SourceMetadataInput) =>
++        new SourceMetadata({
++          sourcePath: input.sourcePath,
++          owner: input.owner,
++          generatedBy: "sync-data-to-ts",
++        }),
++    ),
++    encode: SG.transform(
++      (metadata: SourceMetadata) =>
++        new SourceMetadataInput({
++          sourcePath: metadata.sourcePath,
++          owner: metadata.owner,
++        }),
++    ),
++  }),
++);
+ 
+-export interface SourceMetadata {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-  readonly generatedBy: "sync-data-to-ts";
+-}
++export const makeSourceMetadata = S.decodeSync(MakeSourceMetadata);
++    new SourceMetadata({
++      sourcePath: input.sourcePath,
++      owner: input.owner,
++      generatedBy: "sync-data-to-ts",
++    }),
++  encode: (metadata) =>
++    new SourceMetadataInput({
++      sourcePath: metadata.sourcePath,
++      owner: metadata.owner,
++    }),
++}) {}
+ 
+ export const makeSourceMetadata = (input: SourceMetadataInput): SourceMetadata => ({
+   sourcePath: input.sourcePath,
+
+codex
+I need to inspect the file after the patch; the original constructor may still be present below the new decoder. If so, I’ll remove the duplicate export before rerunning TypeScript.
+exec
+/usr/bin/zsh -lc "sed -n '1,220p' src/SourceMetadata.ts" in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+ succeeded in 0ms:
+import * as S from "effect/Schema";
+import * as SG from "effect/SchemaGetter";
+
+export class SourceMetadataInput extends S.Class<SourceMetadataInput>("SourceMetadataInput")({
+  sourcePath: S.String,
+  owner: S.String,
+}) {}
+
+export class SourceMetadata extends S.Class<SourceMetadata>("SourceMetadata")({
+  sourcePath: S.String,
+  owner: S.String,
+  generatedBy: S.Literal("sync-data-to-ts"),
+}) {}
+
+export const MakeSourceMetadata = SourceMetadataInput.pipe(
+  S.decodeTo(SourceMetadata, {
+    decode: SG.transform(
+      (input: SourceMetadataInput) =>
+        new SourceMetadata({
+          sourcePath: input.sourcePath,
+          owner: input.owner,
+          generatedBy: "sync-data-to-ts",
+        }),
+    ),
+    encode: SG.transform(
+      (metadata: SourceMetadata) =>
+        new SourceMetadataInput({
+          sourcePath: metadata.sourcePath,
+          owner: metadata.owner,
+        }),
+    ),
+  }),
+);
+
+export const makeSourceMetadata = S.decodeSync(MakeSourceMetadata);
+    new SourceMetadata({
+      sourcePath: input.sourcePath,
+      owner: input.owner,
+      generatedBy: "sync-data-to-ts",
+    }),
+  encode: (metadata) =>
+    new SourceMetadataInput({
+      sourcePath: metadata.sourcePath,
+      owner: metadata.owner,
+    }),
+}) {}
+
+export const makeSourceMetadata = (input: SourceMetadataInput): SourceMetadata => ({
+  sourcePath: input.sourcePath,
+  owner: input.owner,
+  generatedBy: "sync-data-to-ts",
+});
+
+diff --git a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+index fc8aac01524547b20a3f1c98c9ab70de65a29103..b445be6c4b0de56f273abdceddfad349ab8e2d0e
+--- a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
++++ b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+@@ -1,13 +1,49 @@
+-export interface SourceMetadataInput {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-}
++import * as S from "effect/Schema";
++import * as SG from "effect/SchemaGetter";
++
++export class SourceMetadataInput extends S.Class<SourceMetadataInput>("SourceMetadataInput")({
++  sourcePath: S.String,
++  owner: S.String,
++}) {}
++
++export class SourceMetadata extends S.Class<SourceMetadata>("SourceMetadata")({
++  sourcePath: S.String,
++  owner: S.String,
++  generatedBy: S.Literal("sync-data-to-ts"),
++}) {}
++
++export const MakeSourceMetadata = SourceMetadataInput.pipe(
++  S.decodeTo(SourceMetadata, {
++    decode: SG.transform(
++      (input: SourceMetadataInput) =>
++        new SourceMetadata({
++          sourcePath: input.sourcePath,
++          owner: input.owner,
++          generatedBy: "sync-data-to-ts",
++        }),
++    ),
++    encode: SG.transform(
++      (metadata: SourceMetadata) =>
++        new SourceMetadataInput({
++          sourcePath: metadata.sourcePath,
++          owner: metadata.owner,
++        }),
++    ),
++  }),
++);
+ 
+-export interface SourceMetadata {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-  readonly generatedBy: "sync-data-to-ts";
+-}
++export const makeSourceMetadata = S.decodeSync(MakeSourceMetadata);
++    new SourceMetadata({
++      sourcePath: input.sourcePath,
++      owner: input.owner,
++      generatedBy: "sync-data-to-ts",
++    }),
++  encode: (metadata) =>
++    new SourceMetadataInput({
++      sourcePath: metadata.sourcePath,
++      owner: metadata.owner,
++    }),
++}) {}
+ 
+ export const makeSourceMetadata = (input: SourceMetadataInput): SourceMetadata => ({
+   sourcePath: input.sourcePath,
+
+codex
+The old tail survived below the new implementation, so I’m cleaning that stray duplicate block now. Then I’ll run a direct typecheck with a temporary local config because the fixture’s extended base config is absent from this copied directory.
+apply patch
+patch: completed
+/home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+diff --git a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+index fc8aac01524547b20a3f1c98c9ab70de65a29103..26788560cd67d25d1a33ceed2644d9cfdb0ba5b8
+--- a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
++++ b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+@@ -1,16 +1,35 @@
+-export interface SourceMetadataInput {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-}
++import * as S from "effect/Schema";
++import * as SG from "effect/SchemaGetter";
+ 
+-export interface SourceMetadata {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-  readonly generatedBy: "sync-data-to-ts";
+-}
++export class SourceMetadataInput extends S.Class<SourceMetadataInput>("SourceMetadataInput")({
++  sourcePath: S.String,
++  owner: S.String,
++}) {}
+ 
+-export const makeSourceMetadata = (input: SourceMetadataInput): SourceMetadata => ({
+-  sourcePath: input.sourcePath,
+-  owner: input.owner,
+-  generatedBy: "sync-data-to-ts",
+-});
++export class SourceMetadata extends S.Class<SourceMetadata>("SourceMetadata")({
++  sourcePath: S.String,
++  owner: S.String,
++  generatedBy: S.Literal("sync-data-to-ts"),
++}) {}
++
++export const MakeSourceMetadata = SourceMetadataInput.pipe(
++  S.decodeTo(SourceMetadata, {
++    decode: SG.transform(
++      (input: SourceMetadataInput) =>
++        new SourceMetadata({
++          sourcePath: input.sourcePath,
++          owner: input.owner,
++          generatedBy: "sync-data-to-ts",
++        }),
++    ),
++    encode: SG.transform(
++      (metadata: SourceMetadata) =>
++        new SourceMetadataInput({
++          sourcePath: metadata.sourcePath,
++          owner: metadata.owner,
++        }),
++    ),
++  }),
++);
++
++export const makeSourceMetadata = S.decodeSync(MakeSourceMetadata);
+
+diff --git a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+index fc8aac01524547b20a3f1c98c9ab70de65a29103..26788560cd67d25d1a33ceed2644d9cfdb0ba5b8
+--- a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
++++ b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+@@ -1,16 +1,35 @@
+-export interface SourceMetadataInput {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-}
++import * as S from "effect/Schema";
++import * as SG from "effect/SchemaGetter";
+ 
+-export interface SourceMetadata {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-  readonly generatedBy: "sync-data-to-ts";
+-}
++export class SourceMetadataInput extends S.Class<SourceMetadataInput>("SourceMetadataInput")({
++  sourcePath: S.String,
++  owner: S.String,
++}) {}
+ 
+-export const makeSourceMetadata = (input: SourceMetadataInput): SourceMetadata => ({
+-  sourcePath: input.sourcePath,
+-  owner: input.owner,
+-  generatedBy: "sync-data-to-ts",
+-});
++export class SourceMetadata extends S.Class<SourceMetadata>("SourceMetadata")({
++  sourcePath: S.String,
++  owner: S.String,
++  generatedBy: S.Literal("sync-data-to-ts"),
++}) {}
++
++export const MakeSourceMetadata = SourceMetadataInput.pipe(
++  S.decodeTo(SourceMetadata, {
++    decode: SG.transform(
++      (input: SourceMetadataInput) =>
++        new SourceMetadata({
++          sourcePath: input.sourcePath,
++          owner: input.owner,
++          generatedBy: "sync-data-to-ts",
++        }),
++    ),
++    encode: SG.transform(
++      (metadata: SourceMetadata) =>
++        new SourceMetadataInput({
++          sourcePath: metadata.sourcePath,
++          owner: metadata.owner,
++        }),
++    ),
++  }),
++);
++
++export const makeSourceMetadata = S.decodeSync(MakeSourceMetadata);
+
+codex
+The file is syntactically clean now. I’m going to verify both the requested `tsconfig` result and a local scratch `tsconfig` that bypasses only the missing base-config problem.
+exec
+/usr/bin/zsh -lc "sed -n '1,220p' src/SourceMetadata.ts" in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+ succeeded in 0ms:
+import * as S from "effect/Schema";
+import * as SG from "effect/SchemaGetter";
+
+export class SourceMetadataInput extends S.Class<SourceMetadataInput>("SourceMetadataInput")({
+  sourcePath: S.String,
+  owner: S.String,
+}) {}
+
+export class SourceMetadata extends S.Class<SourceMetadata>("SourceMetadata")({
+  sourcePath: S.String,
+  owner: S.String,
+  generatedBy: S.Literal("sync-data-to-ts"),
+}) {}
+
+export const MakeSourceMetadata = SourceMetadataInput.pipe(
+  S.decodeTo(SourceMetadata, {
+    decode: SG.transform(
+      (input: SourceMetadataInput) =>
+        new SourceMetadata({
+          sourcePath: input.sourcePath,
+          owner: input.owner,
+          generatedBy: "sync-data-to-ts",
+        }),
+    ),
+    encode: SG.transform(
+      (metadata: SourceMetadata) =>
+        new SourceMetadataInput({
+          sourcePath: metadata.sourcePath,
+          owner: metadata.owner,
+        }),
+    ),
+  }),
+);
+
+export const makeSourceMetadata = S.decodeSync(MakeSourceMetadata);
+
+exec
+/usr/bin/zsh -lc 'bunx tsc -p tsconfig.json' in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+diff --git a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+index fc8aac01524547b20a3f1c98c9ab70de65a29103..26788560cd67d25d1a33ceed2644d9cfdb0ba5b8
+--- a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
++++ b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+@@ -1,16 +1,35 @@
+-export interface SourceMetadataInput {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-}
++import * as S from "effect/Schema";
++import * as SG from "effect/SchemaGetter";
+ 
+-export interface SourceMetadata {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-  readonly generatedBy: "sync-data-to-ts";
+-}
++export class SourceMetadataInput extends S.Class<SourceMetadataInput>("SourceMetadataInput")({
++  sourcePath: S.String,
++  owner: S.String,
++}) {}
+ 
+-export const makeSourceMetadata = (input: SourceMetadataInput): SourceMetadata => ({
+-  sourcePath: input.sourcePath,
+-  owner: input.owner,
+-  generatedBy: "sync-data-to-ts",
+-});
++export class SourceMetadata extends S.Class<SourceMetadata>("SourceMetadata")({
++  sourcePath: S.String,
++  owner: S.String,
++  generatedBy: S.Literal("sync-data-to-ts"),
++}) {}
++
++export const MakeSourceMetadata = SourceMetadataInput.pipe(
++  S.decodeTo(SourceMetadata, {
++    decode: SG.transform(
++      (input: SourceMetadataInput) =>
++        new SourceMetadata({
++          sourcePath: input.sourcePath,
++          owner: input.owner,
++          generatedBy: "sync-data-to-ts",
++        }),
++    ),
++    encode: SG.transform(
++      (metadata: SourceMetadata) =>
++        new SourceMetadataInput({
++          sourcePath: metadata.sourcePath,
++          owner: metadata.owner,
++        }),
++    ),
++  }),
++);
++
++export const makeSourceMetadata = S.decodeSync(MakeSourceMetadata);
+
+ exited 2 in 1339ms:
+error TS5083: Cannot read file '/home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/tsconfig.base.json'.
+../../../../../../../../../node_modules/effect/dist/Effect.d.ts(11983,52): error TS2304: Cannot find name 'AsyncDisposable'.
+../../../../../../../../../node_modules/effect/dist/Effect.d.ts(11983,70): error TS2304: Cannot find name 'Disposable'.
+../../../../../../../../../node_modules/effect/dist/internal/schema/schema.d.ts(9,15): error TS2304: Cannot find name 'SchemaErrorTypeId'.
+../../../../../../../../../node_modules/effect/dist/internal/schema/schema.d.ts(9,42): error TS2304: Cannot find name 'SchemaErrorTypeId'.
+
+codex
+The requested config still can’t fully run in this copied fixture because its base config is outside the sandbox and missing. I’m creating a temporary compiler config under `/tmp` with the needed libs and path include to validate this file’s types without modifying the fixture.
+exec
+/usr/bin/zsh -lc "printf '%s
+' '{\"compilerOptions\":{\"target\":\"ES2022\",\"module\":\"NodeNext\",\"moduleResolution\":\"NodeNext\",\"strict\":true,\"noEmit\":true,\"skipLibCheck\":true,\"lib\":[\"ES2022\",\"ESNext.Disposable\"]},\"include\":[\"/home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/**/*.ts\"]}' > /tmp/sfv4-fn-schema-003.tsconfig.json && bunx tsc -p /tmp/sfv4-fn-schema-003.tsconfig.json" in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+diff --git a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+index fc8aac01524547b20a3f1c98c9ab70de65a29103..26788560cd67d25d1a33ceed2644d9cfdb0ba5b8
+--- a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
++++ b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+@@ -1,16 +1,35 @@
+-export interface SourceMetadataInput {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-}
++import * as S from "effect/Schema";
++import * as SG from "effect/SchemaGetter";
+ 
+-export interface SourceMetadata {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-  readonly generatedBy: "sync-data-to-ts";
+-}
++export class SourceMetadataInput extends S.Class<SourceMetadataInput>("SourceMetadataInput")({
++  sourcePath: S.String,
++  owner: S.String,
++}) {}
+ 
+-export const makeSourceMetadata = (input: SourceMetadataInput): SourceMetadata => ({
+-  sourcePath: input.sourcePath,
+-  owner: input.owner,
+-  generatedBy: "sync-data-to-ts",
+-});
++export class SourceMetadata extends S.Class<SourceMetadata>("SourceMetadata")({
++  sourcePath: S.String,
++  owner: S.String,
++  generatedBy: S.Literal("sync-data-to-ts"),
++}) {}
++
++export const MakeSourceMetadata = SourceMetadataInput.pipe(
++  S.decodeTo(SourceMetadata, {
++    decode: SG.transform(
++      (input: SourceMetadataInput) =>
++        new SourceMetadata({
++          sourcePath: input.sourcePath,
++          owner: input.owner,
++          generatedBy: "sync-data-to-ts",
++        }),
++    ),
++    encode: SG.transform(
++      (metadata: SourceMetadata) =>
++        new SourceMetadataInput({
++          sourcePath: metadata.sourcePath,
++          owner: metadata.owner,
++        }),
++    ),
++  }),
++);
++
++export const makeSourceMetadata = S.decodeSync(MakeSourceMetadata);
+
+ succeeded in 374ms:
+codex
+The scoped typecheck passes with a temporary config. I’m checking the final diff now to make sure only the entrypoint changed.
+exec
+/usr/bin/zsh -lc 'git diff -- src/SourceMetadata.ts' in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+ succeeded in 0ms:
+exec
+/usr/bin/zsh -lc 'git status --short' in /home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree
+ succeeded in 0ms:
+?? ../../../../../../../../../X.tayss.txt
+?? ../../../../../
+
+diff --git a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+index fc8aac01524547b20a3f1c98c9ab70de65a29103..26788560cd67d25d1a33ceed2644d9cfdb0ba5b8
+--- a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
++++ b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+@@ -1,16 +1,35 @@
+-export interface SourceMetadataInput {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-}
++import * as S from "effect/Schema";
++import * as SG from "effect/SchemaGetter";
+ 
+-export interface SourceMetadata {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-  readonly generatedBy: "sync-data-to-ts";
+-}
++export class SourceMetadataInput extends S.Class<SourceMetadataInput>("SourceMetadataInput")({
++  sourcePath: S.String,
++  owner: S.String,
++}) {}
+ 
+-export const makeSourceMetadata = (input: SourceMetadataInput): SourceMetadata => ({
+-  sourcePath: input.sourcePath,
+-  owner: input.owner,
+-  generatedBy: "sync-data-to-ts",
+-});
++export class SourceMetadata extends S.Class<SourceMetadata>("SourceMetadata")({
++  sourcePath: S.String,
++  owner: S.String,
++  generatedBy: S.Literal("sync-data-to-ts"),
++}) {}
++
++export const MakeSourceMetadata = SourceMetadataInput.pipe(
++  S.decodeTo(SourceMetadata, {
++    decode: SG.transform(
++      (input: SourceMetadataInput) =>
++        new SourceMetadata({
++          sourcePath: input.sourcePath,
++          owner: input.owner,
++          generatedBy: "sync-data-to-ts",
++        }),
++    ),
++    encode: SG.transform(
++      (metadata: SourceMetadata) =>
++        new SourceMetadataInput({
++          sourcePath: metadata.sourcePath,
++          owner: metadata.owner,
++        }),
++    ),
++  }),
++);
++
++export const makeSourceMetadata = S.decodeSync(MakeSourceMetadata);
+
+codex
+`git diff` is empty because this scratch fixture is not tracked at this nested path, but the file content is updated. I also see unrelated untracked files outside this fixture path and left them alone.
+codex
+Implemented [SourceMetadata.ts](/home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts:1).
+
+What changed:
+- `SourceMetadataInput` and `SourceMetadata` are now schema-backed `S.Class` contracts.
+- Added exported `MakeSourceMetadata` schema transform from input to output.
+- `makeSourceMetadata` now uses `S.decodeSync(MakeSourceMetadata)`.
+- Preserved fields: `sourcePath`, `owner`, `generatedBy: "sync-data-to-ts"`.
+
+Verification:
+- `bunx tsc -p tsconfig.json` is blocked by the copied fixture’s missing external base config: `.../p3-smoke/tsconfig.base.json`.
+- A scoped temporary TypeScript config against this fixture passed cleanly.
+diff --git a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+index fc8aac01524547b20a3f1c98c9ab70de65a29103..26788560cd67d25d1a33ceed2644d9cfdb0ba5b8
+--- a/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
++++ b/goals/skillopt-training-pilot/history/p3-smoke/out-stub/selection_eval_baseline/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts
+@@ -1,16 +1,35 @@
+-export interface SourceMetadataInput {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-}
++import * as S from "effect/Schema";
++import * as SG from "effect/SchemaGetter";
+ 
+-export interface SourceMetadata {
+-  readonly sourcePath: string;
+-  readonly owner: string;
+-  readonly generatedBy: "sync-data-to-ts";
+-}
++export class SourceMetadataInput extends S.Class<SourceMetadataInput>("SourceMetadataInput")({
++  sourcePath: S.String,
++  owner: S.String,
++}) {}
+ 
+-export const makeSourceMetadata = (input: SourceMetadataInput): SourceMetadata => ({
+-  sourcePath: input.sourcePath,
+-  owner: input.owner,
+-  generatedBy: "sync-data-to-ts",
+-});
++export class SourceMetadata extends S.Class<SourceMetadata>("SourceMetadata")({
++  sourcePath: S.String,
++  owner: S.String,
++  generatedBy: S.Literal("sync-data-to-ts"),
++}) {}
++
++export const MakeSourceMetadata = SourceMetadataInput.pipe(
++  S.decodeTo(SourceMetadata, {
++    decode: SG.transform(
++      (input: SourceMetadataInput) =>
++        new SourceMetadata({
++          sourcePath: input.sourcePath,
++          owner: input.owner,
++          generatedBy: "sync-data-to-ts",
++        }),
++    ),
++    encode: SG.transform(
++      (metadata: SourceMetadata) =>
++        new SourceMetadataInput({
++          sourcePath: metadata.sourcePath,
++          owner: metadata.owner,
++        }),
++    ),
++  }),
++);
++
++export const makeSourceMetadata = S.decodeSync(MakeSourceMetadata);
+
+hook: Stop
+hook: Stop Completed
+tokens used
+44,584

@@ -1,0 +1,11 @@
+{
+  "id": "toy-required-pattern",
+  "prompt": "Ensure src/example.ts contains the READY_FOR_BEEPLAW marker and does not contain the forbidden marker.",
+  "fixture": "tools/skillopt/tests/fixtures/fixtures/toy-required-pattern",
+  "entrypoint": "src/example.ts",
+  "completion": {
+    "requiredPatterns": ["READY_FOR_BEEPLAW"],
+    "forbiddenPatterns": ["FORBIDDEN_BEEPLAW"]
+  },
+  "weights": { "completion": 1.0, "law": 0.0 }
+}

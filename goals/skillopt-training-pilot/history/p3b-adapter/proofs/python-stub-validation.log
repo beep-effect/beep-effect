@@ -1,0 +1,3 @@
+  [BeepLawDataLoader] train=1 val=1 test=0  (from /home/elpresidank/YeeBois/projects/beep-effect-worktrees/skillopt-p3-adapter/tools/skillopt/tests/fixtures/splits)
+    [beeplaw rollout] 1/1 (acc=1.000) id=toy-required-pattern hard=1.0
+stub-ok toy-required-pattern 1.0 1.0
