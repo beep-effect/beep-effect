@@ -141,6 +141,7 @@ function assertEntityRefFor<const Entity extends EntityId.Any>(
   entityId: Entity,
   ref: EntityRef
 ): asserts ref is EntityRefFor<Entity> {
+  /* istanbul ignore next -- makeResult builds the ref from entityId's own entityType and typed id, so the mismatch guard is unreachable via the public constructors */
   if (!isEntityRefFor(entityId, ref)) {
     throw EntityRefInvariantError.make({
       actualEntityType: ref.entityType,

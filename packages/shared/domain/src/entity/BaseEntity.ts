@@ -208,6 +208,7 @@ const replaceClass = <Base extends object>(base: Base): Omit<Base, "Class"> & { 
   if (hasReplacementClass(base)) {
     return base;
   }
+  /* istanbul ignore next -- Reflect.defineProperty on the module-local base cannot fail; defensive attachment guard */
   throw BaseEntityAttachmentError.make({ message: "Failed to attach BaseEntity Class factory." });
 };
 
