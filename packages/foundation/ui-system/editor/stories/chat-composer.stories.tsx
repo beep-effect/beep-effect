@@ -87,12 +87,13 @@ export const WithContent: Story = {
  * skips dispatch when the editor has no text.
  */
 export const EmptyEnterIsNoOp: Story = {
-  play: async ({ canvasElement, args }) => {
+  play: ({ canvasElement, args }) => {
     const editable = canvasElement.querySelector('[contenteditable="true"]');
     void expect(editable).not.toBeNull();
     (editable as HTMLElement).focus();
-    await userEvent.keyboard("{Enter}");
-    void expect(args.onSend).not.toHaveBeenCalled();
+    return userEvent.keyboard("{Enter}").then(() => {
+      void expect(args.onSend).not.toHaveBeenCalled();
+    });
   },
 };
 

@@ -32,14 +32,16 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByRole("button", { name: /choose image/i })).toBeInTheDocument();
+    expect(canvas.getByRole("button", { name: /choose image/i })).toBeInTheDocument();
     const input = canvasElement.querySelector<HTMLInputElement>('input[type="file"]');
-    await expect(input).not.toBeNull();
-    if (input !== null) {
-      await userEvent.upload(input, new File([previewSvg], "avatar.svg", { type: "image/svg+xml" }));
+    expect(input).not.toBeNull();
+    if (input === null) {
+      return Promise.resolve();
     }
-    await expect(canvas.getByAltText("avatar.svg")).toBeInTheDocument();
+    return userEvent.upload(input, new File([previewSvg], "avatar.svg", { type: "image/svg+xml" })).then(() => {
+      expect(canvas.getByAltText("avatar.svg")).toBeInTheDocument();
+    });
   },
 };

@@ -39,10 +39,11 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  play: async ({ canvasElement }) => {
+  play: ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const input = canvas.getByLabelText("Phone");
-    await userEvent.type(input, "4155552671");
-    await expect(input).toHaveValue("+1 415 555 2671");
+    return userEvent.type(input, "4155552671").then(() => {
+      expect(input).toHaveValue("+1 415 555 2671");
+    });
   },
 };
