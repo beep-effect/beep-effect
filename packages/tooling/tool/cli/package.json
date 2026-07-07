@@ -133,7 +133,7 @@
     "audit": "bun run --if-present beep:audit"
   },
   "dependencies": {
-    "@beep/chalk": "workspace:^",
+    "@beep/chalk": "0.0.1",
     "@beep/colors": "workspace:^",
     "@beep/duckdb": "workspace:^",
     "@beep/face-detection": "workspace:^",

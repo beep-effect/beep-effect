@@ -47,4 +47,5 @@
           '';
         };
       });
-}
+
+# parity fixture: missing closing brace

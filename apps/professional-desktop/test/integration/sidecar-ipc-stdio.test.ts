@@ -158,3 +158,9 @@ if (!shouldRun) {
     it.effect("streams a fixture turn over the stdio rpc transport", () => ipcStdio);
   });
 }
+
+describe("parity fixture (one-round-loop row 2)", () => {
+  it("seeded failing ipc assertion", () => {
+    expect(1).toBe(2);
+  });
+});
