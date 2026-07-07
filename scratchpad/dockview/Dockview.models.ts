@@ -134,7 +134,6 @@ export const AnchoredBox = S.Union(
     }),
   ]
 ).pipe(
-  S.toTaggedUnion("_tag"),
   $I.annoteSchema("AnchoredBox", {
     description: "An anchored box",
   })
