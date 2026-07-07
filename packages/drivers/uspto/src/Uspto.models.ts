@@ -6,9 +6,9 @@
  */
 
 import { $UsptoId } from "@beep/identity";
-import { SchemaUtils } from "@beep/schema";
+import { NonEmptyTrimmedStr, SchemaUtils } from "@beep/schema";
 import { Str } from "@beep/utils";
-import { Effect, flow, pipe, SchemaGetter, SchemaIssue } from "effect";
+import { Effect, flow, pipe, SchemaGetter, SchemaIssue, SchemaTransformation } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -228,6 +228,40 @@ export const normalizeUsptoPatentNumber: (text: string) => O.Option<string> = fl
   O.map((value): string => value)
 );
 
+const UsptoMetadataText = NonEmptyTrimmedStr.pipe(
+  $I.annoteSchema("UsptoMetadataText", {
+    description: "Trimmed non-empty text carried by USPTO metadata fields.",
+  })
+);
+
+type UsptoMetadataText = typeof UsptoMetadataText.Type;
+
+const UsptoMetadataTextInput = S.Union([S.String, S.Option(UsptoMetadataText)]);
+const decodeUsptoMetadataTextOption = S.decodeUnknownOption(UsptoMetadataText);
+
+const decodeOptionalUsptoMetadataText = (
+  value: O.Option<string | O.Option<UsptoMetadataText>>
+): O.Option<O.Option<string>> =>
+  O.some(
+    pipe(
+      value,
+      O.flatMap((input) => (O.isOption(input) ? input : decodeUsptoMetadataTextOption(input)))
+    )
+  );
+
+const optionalUsptoMetadataText = (description: string) =>
+  S.optionalKey(UsptoMetadataTextInput).pipe(
+    S.decodeTo(
+      S.Option(UsptoMetadataText),
+      SchemaTransformation.transformOptional<O.Option<string>, string | O.Option<UsptoMetadataText>>({
+        decode: decodeOptionalUsptoMetadataText,
+        encode: (value) => O.flatten(value),
+      })
+    ),
+    SchemaUtils.withNoneDefault,
+    S.annotateKey({ description })
+  );
+
 /**
  * Official application metadata resolved from the Open Data Portal.
  *
@@ -243,69 +277,23 @@ export const normalizeUsptoPatentNumber: (text: string) => O.Option<string> = fl
  */
 export class UsptoApplicationMetadata extends S.Class<UsptoApplicationMetadata>($I`UsptoApplicationMetadata`)(
   {
-    applicationNumberText: S.NonEmptyString.annotateKey({
+    applicationNumberText: UsptoMetadataText.annotateKey({
       description: "USPTO application number associated with the metadata row.",
     }),
-    applicationStatusDescriptionText: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Human-readable USPTO status for the application when provided.",
-      })
+    applicationStatusDescriptionText: optionalUsptoMetadataText(
+      "Human-readable USPTO status for the application when provided."
     ),
-    applicationTypeLabelName: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "USPTO application type label when provided.",
-      })
+    applicationTypeLabelName: optionalUsptoMetadataText("USPTO application type label when provided."),
+    docketNumber: optionalUsptoMetadataText("Attorney docket number when published in the wrapper metadata."),
+    earliestPublicationNumber: optionalUsptoMetadataText(
+      "Earliest publication number associated with the application."
     ),
-    docketNumber: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Attorney docket number when published in the wrapper metadata.",
-      })
-    ),
-    earliestPublicationNumber: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Earliest publication number associated with the application.",
-      })
-    ),
-    filingDate: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Application filing date string when published by USPTO.",
-      })
-    ),
-    firstApplicantName: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "First listed applicant name when present in the metadata row.",
-      })
-    ),
-    firstInventorName: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "First listed inventor name when present in the metadata row.",
-      })
-    ),
-    grantDate: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Patent grant date string when the application has issued.",
-      })
-    ),
-    inventionTitle: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Published invention title when included in the wrapper metadata.",
-      })
-    ),
-    patentNumber: S.OptionFromOptionalKey(S.String).pipe(
-      SchemaUtils.withNoneDefault,
-      S.annotateKey({
-        description: "Issued patent number associated with the application when present.",
-      })
-    ),
+    filingDate: optionalUsptoMetadataText("Application filing date string when published by USPTO."),
+    firstApplicantName: optionalUsptoMetadataText("First listed applicant name when present in the metadata row."),
+    firstInventorName: optionalUsptoMetadataText("First listed inventor name when present in the metadata row."),
+    grantDate: optionalUsptoMetadataText("Patent grant date string when the application has issued."),
+    inventionTitle: optionalUsptoMetadataText("Published invention title when included in the wrapper metadata."),
+    patentNumber: optionalUsptoMetadataText("Issued patent number associated with the application when present."),
   },
   $I.annote("UsptoApplicationMetadata", {
     description: "Official USPTO application metadata projected from a patent file wrapper response.",

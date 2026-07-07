@@ -194,11 +194,11 @@ describe("Uspto schema parity", () => {
     const config = Result.getOrThrow(
       S.decodeUnknownResult(UsptoConfigInput)({ apiKey: "test-key", apiUrl: "https://api.uspto.gov/" })
     );
-    const metadata = UsptoApplicationMetadata.make({
+    const metadata = decode(UsptoApplicationMetadata, {
       applicationNumberText: "16138242",
-      firstApplicantName: O.some("Precision Widgets LLC"),
-      inventionTitle: O.some("Adjustable widget assembly"),
-      patentNumber: O.some("10772255"),
+      firstApplicantName: "Precision Widgets LLC",
+      inventionTitle: "Adjustable widget assembly",
+      patentNumber: "10772255",
     });
     const continuity = UsptoContinuity.make({
       childApplicationNumbers: [UsptoApplicationNumber.make("17999999")],
@@ -229,8 +229,10 @@ describe("Uspto schema parity", () => {
       patentNumber: "10772255",
     });
     expect(
-      encode(UsptoApplicationMetadata, UsptoApplicationMetadata.make({ applicationNumberText: "16138242" }))
-    ).toEqual({ applicationNumberText: "16138242" });
+      encode(UsptoApplicationMetadata, decode(UsptoApplicationMetadata, { applicationNumberText: "16138242" }))
+    ).toEqual({
+      applicationNumberText: "16138242",
+    });
     expect(encode(UsptoContinuity, continuity)).toEqual({
       childApplicationNumbers: ["17999999"],
       parentApplicationNumbers: ["15111111"],
