@@ -7,9 +7,7 @@
     {
       "pattern": "answer_format: Agent returned the raw extracted value without applying the answer-formatting convention explicitly named in the question (gold expected a 'beep: ' prefix).",
       "count": 1,
-      "task_ids": [
-        "gate-accept-train"
-      ]
+      "task_ids": ["gate-accept-train"]
     }
   ]
 }

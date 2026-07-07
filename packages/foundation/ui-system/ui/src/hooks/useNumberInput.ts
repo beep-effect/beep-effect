@@ -299,7 +299,12 @@ export class BoundaryParams extends S.Class<BoundaryParams>($I`BoundaryParams`)(
   $I.annote("BoundaryParams", {
     description: "Optional numeric boundary settings accepted by number input hooks.",
   })
-) {}
+) {
+  declare readonly defaultValue?: number;
+  declare readonly value?: number;
+  declare readonly min: number;
+  declare readonly max: number;
+}
 
 /**
  * Schema describing step and precision overrides for spinner changes.
@@ -333,7 +338,10 @@ export class SpinParams extends S.Class<SpinParams>($I`SpinParams`)(
   $I.annote("SpinParams", {
     description: "Precision and step overrides accepted by number input increment and decrement actions.",
   })
-) {}
+) {
+  declare readonly precision: number;
+  declare readonly step: number;
+}
 
 type BoundaryParamsInput = {
   readonly defaultValue?: number | undefined;

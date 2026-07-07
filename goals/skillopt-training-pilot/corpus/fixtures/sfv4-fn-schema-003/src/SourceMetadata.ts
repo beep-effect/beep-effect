@@ -1,12 +1,12 @@
 export interface SourceMetadataInput {
-  readonly sourcePath: string;
   readonly owner: string;
+  readonly sourcePath: string;
 }
 
 export interface SourceMetadata {
-  readonly sourcePath: string;
-  readonly owner: string;
   readonly generatedBy: "sync-data-to-ts";
+  readonly owner: string;
+  readonly sourcePath: string;
 }
 
 export const makeSourceMetadata = (input: SourceMetadataInput): SourceMetadata => ({

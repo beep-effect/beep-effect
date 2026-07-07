@@ -2,9 +2,9 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 
 export interface RunpodDiagnostics {
+  readonly gpuCount?: number;
   readonly podId?: string;
   readonly status?: string;
-  readonly gpuCount?: number;
 }
 
 export type RunpodPod = {

@@ -8,7 +8,10 @@
   "fixture": "goals/skillopt-training-pilot/corpus/fixtures/sfv4-getsomes-struct-001",
   "entrypoint": "src/ContactSubmission.ts",
   "completion": {
-    "requiredExports": ["ContactSubmissionDraft", "contactSubmissionPayloadInputFromRecord"],
+    "requiredExports": [
+      "ContactSubmissionDraft",
+      "contactSubmissionPayloadInputFromRecord"
+    ],
     "requiredPatterns": [
       "export\\s+class\\s+ContactSubmissionDraft\\s+extends\\s+S\\.Class\\b",
       "import\\s+\\{\\s*O\\s*\\}\\s+from\\s+\"@beep/utils\"",

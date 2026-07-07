@@ -8,7 +8,11 @@
   "fixture": "goals/skillopt-training-pilot/corpus/fixtures/sfv4-normalization-001",
   "entrypoint": "src/CorpusExtension.ts",
   "completion": {
-    "requiredExports": ["CorpusExtension", "decodeCorpusExtension", "extensionOf"],
+    "requiredExports": [
+      "CorpusExtension",
+      "decodeCorpusExtension",
+      "extensionOf"
+    ],
     "requiredPatterns": [
       "export\\s+const\\s+CorpusExtension\\s*=",
       "SchemaTransformation\\.toLowerCase\\s*\\(",

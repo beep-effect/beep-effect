@@ -13,16 +13,40 @@
  * @since 0.0.0
  */
 
-import { createRequire } from "node:module";
+import { $UtilsId } from "@beep/identity/packages";
+import { dual } from "effect/Function";
+import * as S from "effect/Schema";
 import type { Path as PlatformPath } from "effect";
 
+const $I = $UtilsId.create("Path");
+
+class NodePathUnavailableError extends S.TaggedErrorClass<NodePathUnavailableError>($I`NodePathUnavailableError`)(
+  "NodePathUnavailableError",
+  {
+    module: S.Literal("node:path"),
+  },
+  $I.annote("NodePathUnavailableError", {
+    description: "Thrown when node:path is unavailable to path helpers.",
+  })
+) {}
+
 /**
- * Synchronous `node:path` handle. Acquired via `createRequire` (rather than a
- * static `import ... from "node:path"`) so this module can mirror effect's
- * `Path` interface over the sync `node:path` API while remaining its
- * sanctioned home.
+ * Synchronous `node:path` handle, resolved lazily via
+ * `process.getBuiltinModule` on first call (never via a static Node import) so
+ * browser bundles can import this module — and the `@beep/utils` barrel —
+ * without evaluating Node builtins. Only invoking a helper requires a
+ * Node-compatible runtime.
  */
-const NPath: typeof import("node:path") = createRequire(import.meta.url)("node:path");
+let nodePathHandle: typeof import("node:path") | undefined;
+const NPath = (): typeof import("node:path") => {
+  if (nodePathHandle === undefined) {
+    nodePathHandle = globalThis.process?.getBuiltinModule?.("node:path");
+    if (nodePathHandle === undefined) {
+      throw NodePathUnavailableError.make({ module: "node:path" });
+    }
+  }
+  return nodePathHandle;
+};
 
 /**
  * `file:` URL conversions re-exported from the sibling `NodeUrl` module:
@@ -73,7 +97,7 @@ export type Parsed = PlatformPath.Path.Parsed;
  * @category constants
  * @since 0.0.0
  */
-export const sep: string = NPath.sep;
+export const sep: string = globalThis.process?.getBuiltinModule?.("node:path")?.sep ?? "/";
 
 /**
  * Joins path segments into a single normalized path.
@@ -88,7 +112,7 @@ export const sep: string = NPath.sep;
  * @category combinators
  * @since 0.0.0
  */
-export const join = (...paths: ReadonlyArray<string>): string => NPath.join(...paths);
+export const join = (...paths: ReadonlyArray<string>): string => NPath().join(...paths);
 
 /**
  * Resolves a sequence of path segments into an absolute path.
@@ -103,7 +127,7 @@ export const join = (...paths: ReadonlyArray<string>): string => NPath.join(...p
  * @category combinators
  * @since 0.0.0
  */
-export const resolve = (...pathSegments: ReadonlyArray<string>): string => NPath.resolve(...pathSegments);
+export const resolve = (...pathSegments: ReadonlyArray<string>): string => NPath().resolve(...pathSegments);
 
 /**
  * Normalizes a path, collapsing `.`/`..` segments and redundant separators.
@@ -118,7 +142,7 @@ export const resolve = (...pathSegments: ReadonlyArray<string>): string => NPath
  * @category combinators
  * @since 0.0.0
  */
-export const normalize: (path: string) => string = NPath.normalize;
+export const normalize: (path: string) => string = (path) => NPath().normalize(path);
 
 /**
  * Computes the relative path from `from` to `to`.
@@ -133,7 +157,10 @@ export const normalize: (path: string) => string = NPath.normalize;
  * @category getters
  * @since 0.0.0
  */
-export const relative: (from: string, to: string) => string = NPath.relative;
+export const relative: {
+  (to: string): (from: string) => string;
+  (from: string, to: string): string;
+} = dual(2, (from: string, to: string): string => NPath().relative(from, to));
 
 /**
  * Returns the last portion of a path, optionally stripping `suffix`.
@@ -148,7 +175,10 @@ export const relative: (from: string, to: string) => string = NPath.relative;
  * @category getters
  * @since 0.0.0
  */
-export const basename: (path: string, suffix?: string) => string = NPath.basename;
+export const basename: {
+  (suffix: string): (path: string) => string;
+  (path: string, suffix: string): string;
+} = dual(2, (path: string, suffix: string): string => NPath().basename(path, suffix));
 
 /**
  * Returns the directory portion of a path.
@@ -163,7 +193,7 @@ export const basename: (path: string, suffix?: string) => string = NPath.basenam
  * @category getters
  * @since 0.0.0
  */
-export const dirname: (path: string) => string = NPath.dirname;
+export const dirname: (path: string) => string = (path) => NPath().dirname(path);
 
 /**
  * Returns the extension of a path, including the leading dot.
@@ -178,7 +208,7 @@ export const dirname: (path: string) => string = NPath.dirname;
  * @category getters
  * @since 0.0.0
  */
-export const extname: (path: string) => string = NPath.extname;
+export const extname: (path: string) => string = (path) => NPath().extname(path);
 
 /**
  * Reports whether a path is absolute.
@@ -193,7 +223,7 @@ export const extname: (path: string) => string = NPath.extname;
  * @category predicates
  * @since 0.0.0
  */
-export const isAbsolute: (path: string) => boolean = NPath.isAbsolute;
+export const isAbsolute: (path: string) => boolean = (path) => NPath().isAbsolute(path);
 
 /**
  * Parses a path into its `root`/`dir`/`base`/`ext`/`name` components.
@@ -208,7 +238,7 @@ export const isAbsolute: (path: string) => boolean = NPath.isAbsolute;
  * @category getters
  * @since 0.0.0
  */
-export const parse: (path: string) => Parsed = NPath.parse;
+export const parse: (path: string) => Parsed = (path) => NPath().parse(path);
 
 /**
  * Formats a {@link Parsed}-shaped object back into a path string.
@@ -223,7 +253,7 @@ export const parse: (path: string) => Parsed = NPath.parse;
  * @category getters
  * @since 0.0.0
  */
-export const format: (pathObject: Partial<Parsed>) => string = NPath.format;
+export const format: (pathObject: Partial<Parsed>) => string = (pathObject) => NPath().format(pathObject);
 
 /**
  * Returns the equivalent namespace-prefixed path (a no-op outside Windows).
@@ -238,4 +268,4 @@ export const format: (pathObject: Partial<Parsed>) => string = NPath.format;
  * @category getters
  * @since 0.0.0
  */
-export const toNamespacedPath: (path: string) => string = NPath.toNamespacedPath;
+export const toNamespacedPath: (path: string) => string = (path) => NPath().toNamespacedPath(path);

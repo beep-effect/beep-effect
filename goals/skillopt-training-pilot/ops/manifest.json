@@ -3,14 +3,16 @@
   "initiative": {
     "id": "skillopt-training-pilot",
     "title": "SkillOpt Training Pilot",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-07-06",
     "updated": "2026-07-06",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/skillopt-training-pilot",
-  "lifecycle": "active",
-  "executionCapable": true,
+  "lifecycle": "completed-retained",
+  "mergedPullRequest": 309,
+  "verdict": "PARK with findings (2026-07-06): loop-runs bar met at full scale; gate rejected all 6 candidate edits (zero lift at edit-budget-1 patch mode); harness/corpus/scorer shipped and rerunnable — see history/p5-training/FINDINGS.md.",
+  "executionCapable": false,
   "reflectionRequired": true,
   "mission": "Compose existing eval bricks (QualityWorkerEval runner pattern, ai-metrics BenchmarkCase storage, schema-first/tsgo law-scorers, beep worktree) into a SkillOpt training loop and run it end-to-end on schema-first-development; loop-runs = success, lift = evidence, park-with-findings = legitimate verdict.",
   "provenance": {
@@ -103,17 +105,17 @@
     {
       "id": "P4",
       "name": "Ship harness",
-      "status": "in_progress"
+      "status": "completed"
     },
     {
       "id": "P5",
       "name": "Training run",
-      "status": "pending"
+      "status": "completed"
     },
     {
       "id": "P6",
       "name": "Stretch + close",
-      "status": "pending"
+      "status": "completed"
     }
   ],
   "verificationCommands": [

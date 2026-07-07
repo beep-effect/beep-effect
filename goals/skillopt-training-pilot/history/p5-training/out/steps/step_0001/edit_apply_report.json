@@ -1,0 +1,9 @@
+[
+  {
+    "op": "append",
+    "target": "",
+    "content_preview": "## Explicit Absence and Full-File Sweep (failure-learned)\n\n- When a task asks for an explicit absence result from a lookup/getter helper that currently returns `undefined`/`null`, construct the result",
+    "status": "applied_append",
+    "index": 1
+  }
+]

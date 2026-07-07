@@ -2,9 +2,9 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 
 export interface ContactSubmissionDraft {
-  readonly name?: string;
   readonly email?: string;
   readonly message?: string;
+  readonly name?: string;
 }
 
 export type ContactSubmissionRaw = {
@@ -13,9 +13,7 @@ export type ContactSubmissionRaw = {
   readonly message?: string | null;
 };
 
-export const contactSubmissionPayloadInputFromRecord = (
-  raw: ContactSubmissionRaw
-): Partial<ContactSubmissionDraft> =>
+export const contactSubmissionPayloadInputFromRecord = (raw: ContactSubmissionRaw): Partial<ContactSubmissionDraft> =>
   R.getSomes({
     name: O.fromNullishOr(raw.name),
     email: O.fromNullishOr(raw.email),

@@ -8,7 +8,11 @@
   "fixture": "goals/skillopt-training-pilot/corpus/fixtures/sfv4-normalization-002",
   "entrypoint": "src/OperationCode.ts",
   "completion": {
-    "requiredExports": ["OperationCode", "decodeOperationCode", "operationCodeOf"],
+    "requiredExports": [
+      "OperationCode",
+      "decodeOperationCode",
+      "operationCodeOf"
+    ],
     "requiredPatterns": [
       "export\\s+const\\s+OperationCode\\s*=",
       "SchemaTransformation\\.toUpperCase\\s*\\(",

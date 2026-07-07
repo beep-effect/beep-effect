@@ -702,6 +702,30 @@
       "diagnostics": ["third-param-not-object-like"]
     },
     {
+      "file": "packages/law-practice/domain/src/values/Span/Span.model.ts",
+      "qualifiedName": "Span.fromGroupIndex",
+      "kind": "static-function-property",
+      "status": "candidate",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 89,
+      "column": 19,
+      "parameterCount": 3,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/law-practice/domain/src/values/Span/Span.model.ts",
+      "qualifiedName": "Span.resolveOriginal",
+      "kind": "static-function-property",
+      "status": "candidate",
+      "owner": "@beep/law-practice-domain",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 128,
+      "column": 19,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
       "file": "packages/tooling/library/ai-metrics/src/agent-effectiveness.ts",
       "qualifiedName": "AgentEffectivenessPhoenixSyncInput.new",
       "kind": "static-function-property",

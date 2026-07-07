@@ -8,7 +8,11 @@
   "fixture": "goals/skillopt-training-pilot/corpus/fixtures/sfv4-fn-schema-001",
   "entrypoint": "src/FrameFileName.ts",
   "completion": {
-    "requiredExports": ["FrameFileNameInput", "FormatFrameFileName", "formatFrameFileName"],
+    "requiredExports": [
+      "FrameFileNameInput",
+      "FormatFrameFileName",
+      "formatFrameFileName"
+    ],
     "requiredPatterns": [
       "export\\s+class\\s+FrameFileNameInput\\s+extends\\s+S\\.Class\\b",
       "export\\s+const\\s+FormatFrameFileName\\s*=\\s*Fn\\s*\\(",

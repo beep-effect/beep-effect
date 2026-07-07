@@ -8,7 +8,12 @@
   "fixture": "goals/skillopt-training-pilot/corpus/fixtures/sfv4-fn-schema-002",
   "entrypoint": "src/ExtractFrames.ts",
   "completion": {
-    "requiredExports": ["ExtractFramesInput", "ExtractFramesArgs", "BuildExtractFramesArgs", "buildExtractFramesArgs"],
+    "requiredExports": [
+      "ExtractFramesInput",
+      "ExtractFramesArgs",
+      "BuildExtractFramesArgs",
+      "buildExtractFramesArgs"
+    ],
     "requiredPatterns": [
       "export\\s+class\\s+ExtractFramesInput\\s+extends\\s+S\\.Class\\b",
       "export\\s+const\\s+ExtractFramesArgs\\s*=",

@@ -352,3 +352,41 @@ export const DistinctionId = make("distinction", {
  * @since 0.0.0
  */
 export type DistinctionId = typeof DistinctionId.Type;
+
+/**
+ * Citation entity identifier.
+ *
+ * @example
+ * ```ts
+ * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
+ *
+ * console.log(LawPractice.CitationId.entityType)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export const CitationId = make("citation", {
+  description: "Identifier for a law-practice citation entity.",
+});
+
+/**
+ * Runtime type for {@link CitationId}.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as LawPractice from "@beep/shared-domain/identity/LawPractice"
+ * import * as S from "effect/Schema"
+ *
+ * const program = Effect.gen(function* () {
+ *   const id: LawPractice.CitationId = yield* S.decodeUnknownEffect(LawPractice.CitationId)(1)
+ *   return id
+ * })
+ * console.log(program)
+ * ```
+ *
+ * @category entity-ids
+ * @since 0.0.0
+ */
+export type CitationId = typeof CitationId.Type;
