@@ -21,22 +21,32 @@ P0 PR branch, with check.yml still unmodified.
 
 | Lane | check.yml verdict | Shadow verdict | CLI-echoed command matches CI body |
 |---|---|---|---|
-| Lint | _pending_ | _pending_ | _pending_ |
-| Lint Policy | _pending_ | _pending_ | _pending_ |
-| Repo Sanity | _pending_ | _pending_ | _pending_ |
-| Check | _pending_ | _pending_ | _pending_ |
-| Test Unit | _pending_ | _pending_ | _pending_ |
-| Test Integration | _pending_ | _pending_ | _pending_ |
-| Coverage Regression | _pending_ | _pending_ | _pending_ |
-| Docgen | _pending_ | _pending_ | _pending_ |
-| Codegen Drift | _pending_ | _pending_ | _pending_ |
-| Professional Desktop IPC Stdio | _pending_ | _pending_ | _pending_ |
-| Fallow Advisory Envelopes | _pending_ | _pending_ | _pending_ |
-| Knip | _pending_ | _pending_ | _pending_ |
-| JSDoc Ratchet | _pending_ | _pending_ | _pending_ |
-| Commitlint | _pending_ | _pending_ | _pending_ |
-| Nix Shell | _pending_ | _pending_ | _pending_ |
-| SAST | _pending_ | _pending_ | _pending_ |
+| Lint | success | success | _echo harvest pending_ |
+| Lint Policy | success | success | _echo harvest pending_ |
+| Repo Sanity | success | success | _echo harvest pending_ |
+| Check | success | success | _echo harvest pending_ |
+| Test Unit | success | success | _echo harvest pending_ |
+| Test Integration | success | success | _echo harvest pending_ |
+| Coverage Regression | success | success | _echo harvest pending_ |
+| Docgen | success | success | _echo harvest pending_ |
+| Codegen Drift | success | success | _echo harvest pending_ |
+| Professional Desktop IPC Stdio | success (path filter: skip) | success (path filter: skip) | n/a (both skipped for this change set) |
+| Fallow Advisory Envelopes | success | success | _echo harvest pending_ |
+| Knip | infra-cancelled → attempt 2 _pending_ | success | _echo harvest pending_ |
+| JSDoc Ratchet | success | success | _echo harvest pending_ |
+| Commitlint | success | infra-cancelled → attempt 2 _pending_ | _echo harvest pending_ |
+| Nix Shell | success | success | _echo harvest pending_ |
+| SAST | success | success | _echo harvest pending_ |
+
+Attempt-1 note (S4 evidence, observed live): both runs completed with
+exactly one *infra-cancelled* job each — `Knip` on the check.yml run,
+`Shadow: Commitlint` on the shadow run — while every other job
+succeeded (~23:07Z window; unrelated jobs, likely a runner incident).
+The whole-run conclusion flips to `cancelled` off a single job, which
+is precisely the S4 "benign supersession vs infra cancellation"
+distinction: these were NOT concurrency supersessions (no newer run on
+the ref). Recovery: `gh run rerun <id> --failed` re-ran only the
+cancelled jobs on the SAME SHA (attempt 2).
 
 Excluded by class (parity by identity — workflow bodies unchanged):
 PR Size Label, Secret Scanning, Security (OSV + dependency-review).
