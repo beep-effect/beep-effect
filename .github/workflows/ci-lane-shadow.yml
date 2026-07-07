@@ -18,6 +18,12 @@ name: CI Lane Shadow
 
 on:
   workflow_dispatch:
+  # workflow_dispatch only registers once the file reaches the default
+  # branch; the push trigger below lets the shadow run fire on the P0 PR
+  # branch itself — on the SAME head SHA as the pull_request-event
+  # check.yml run (D9's same-SHA comparison), with check.yml unmodified.
+  push:
+    branches: [goals/one-round-loop-p0]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
