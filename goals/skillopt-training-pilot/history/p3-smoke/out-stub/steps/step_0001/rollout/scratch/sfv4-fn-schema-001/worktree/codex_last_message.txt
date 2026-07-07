@@ -1,0 +1,11 @@
+Implemented [src/FrameFileName.ts](/home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/steps/step_0001/rollout/scratch/sfv4-fn-schema-001/worktree/src/FrameFileName.ts:1).
+
+It now exports:
+
+- `FrameFileNameInput` as a schema-owned `S.Class`
+- `FormatFrameFileName` as the schema contract from input model to string
+- `formatFrameFileName` as the executable helper, preserving the existing `basename-000000.ext` behavior
+
+Verification:
+- `bunx tsc --ignoreConfig --noEmit --target ES2023 --module NodeNext --moduleResolution NodeNext --strict --skipLibCheck src/FrameFileName.ts` passed.
+- `bunx tsc -p tsconfig.json --noEmit` is still blocked by fixture environment issues: the copied worktree is missing the inherited `tsconfig.base.json`, and parent Effect declarations reference globals unavailable under that config.
