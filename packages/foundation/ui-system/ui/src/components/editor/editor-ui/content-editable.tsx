@@ -26,7 +26,11 @@ class Props extends S.Class<Props>($I`Props`)({
   placeholder: S.String,
   className: S.optionalKey(S.String),
   placeholderClassName: S.optionalKey(S.String),
-}) {}
+}) {
+  declare readonly placeholder: string;
+  declare readonly className?: string;
+  declare readonly placeholderClassName?: string;
+}
 
 /**
  * Lexical content-editable surface with a padding-aligned placeholder.
