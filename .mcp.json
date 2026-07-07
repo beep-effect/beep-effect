@@ -27,14 +27,6 @@
       "command": "bun",
       "args": ["run", "./packages/drivers/nlp-mcp/src/bin.ts"]
     },
-    "firecrawl": {
-      "type": "stdio",
-      "command": "op",
-      "args": ["run", "--", "npx", "-y", "firecrawl-mcp"],
-      "env": {
-        "FIRECRAWL_API_KEY": "op://BEEP_SECRETS/BEEP_SECRETS/AI_FIRECRAWL_API_KEY"
-      }
-    },
     "webstorm": {
       "url": "http://127.0.0.1:64542/stream",
       "type": "http",
