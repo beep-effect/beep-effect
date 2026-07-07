@@ -10,9 +10,14 @@ Shadow workflow: `.github/workflows/ci-lane-shadow.yml` (temporary,
 workflow_dispatch). Both runs execute against the SAME head SHA on the
 P0 PR branch, with check.yml still unmodified.
 
-- Head SHA: _pending_
-- check.yml run (unmodified, pull_request event): _pending run ID_
-- ci-lane-shadow run (workflow_dispatch, same SHA): _pending run ID_
+- Head SHA: `098abe2e4afbc7f43b03fa74a654280cda0a3e3d` (PR
+  [#321](https://github.com/beep-effect/beep-effect/pull/321))
+- check.yml run (unmodified, pull_request event): run `28904708899`
+- ci-lane-shadow run (push event on the same SHA — workflow_dispatch
+  cannot target a workflow absent from the default branch, so the
+  shadow fires on push to the P0 branch, which is the same head SHA the
+  pull_request run executes): run `28904706866`
+- Verdicts: _pending both runs' completion_
 
 | Lane | check.yml verdict | Shadow verdict | CLI-echoed command matches CI body |
 |---|---|---|---|
