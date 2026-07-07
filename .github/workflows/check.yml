@@ -193,59 +193,39 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true'
         run: |
           set -euo pipefail
-          turbo_args=()
+          # Lane bodies live in the beep CLI (one-round-loop P0 inversion;
+          # same-SHA parity proof recorded in
+          # goals/one-round-loop/history/p0-parity-evidence.md). This case
+          # block carries only GitHub-context orchestration: the
+          # event-dependent shape flags each lane receives.
+          shape_args=()
 
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            export TURBO_SCM_BASE="origin/${GITHUB_BASE_REF:-main}"
-            turbo_args+=(--affected)
+            shape_args+=(--affected --base "origin/${GITHUB_BASE_REF:-main}")
           fi
 
-          turbo_args+=(--summarize)
+          shape_args+=(--summarize)
 
           case "${{ matrix.id }}" in
-            lint)
-              bun run lint -- "${turbo_args[@]}"
+            lint|check|test-unit|test-integration|coverage)
+              bun run beep ci lane "${{ matrix.id }}" "${shape_args[@]}"
               ;;
-            lint-policy)
-              bun run beep lint policy
+            lint-policy|codegen)
+              bun run beep ci lane "${{ matrix.id }}"
               ;;
             repo-sanity)
-              bun run audit:github repo-sanity
               if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-                bun run changeset:status:since-main
+                bun run beep ci lane repo-sanity --changeset-status
+              else
+                bun run beep ci lane repo-sanity
               fi
-              ;;
-            check)
-              bun run check -- "${turbo_args[@]}"
-              ;;
-            test-unit)
-              bun run test -- --unit --types "${turbo_args[@]}"
-              ;;
-            test-integration)
-              bun run test -- --integration "${turbo_args[@]}"
-              ;;
-            coverage)
-              bun run coverage -- "${turbo_args[@]}"
               ;;
             docgen)
               if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-                if [[ "${{ steps.lane-gate.outputs.docgen_mode }}" == "full" ]]; then
-                  bun run docgen
-                else
-                  bun run docgen:local -- --base "origin/${GITHUB_BASE_REF:-main}" --head HEAD --parallel=3
-                fi
+                bun run beep ci lane docgen --mode "${{ steps.lane-gate.outputs.docgen_mode }}" --base "origin/${GITHUB_BASE_REF:-main}" --head HEAD
               else
-                bun run docgen
+                bun run beep ci lane docgen --mode full
               fi
-              ;;
-            codegen)
-              # Per-driver codegen-drift gate: regenerate committed generated
-              # artifacts from their checked-in specs (offline; no upstream
-              # download) and fail on drift. Keyless eCFR ships a generator; the
-              # keyed GovInfo driver is hand-authored (no generator, no drift
-              # surface). Extend this list as committed-spec drivers are added.
-              bun run --cwd packages/drivers/ecfr generate
-              git diff --exit-code -- packages/drivers/ecfr/src/_generated packages/drivers/ecfr/openapi.json
               ;;
           esac
 
@@ -316,7 +296,7 @@ jobs:
 
       - name: Run desktop IPC stdio proof
         if: steps.lane-gate.outputs.should_run == 'true'
-        run: bun run --cwd apps/professional-desktop beep:test:integration:ipc
+        run: bun run beep ci lane desktop-ipc
 
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
@@ -397,75 +377,10 @@ jobs:
           TURBO_TEAM: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
           TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw,remote:r' || '' }}
         run: |
-          set -euo pipefail
-
-          mkdir -p .beep/fallow
-          : > .beep/fallow/status.md
-
-          run_blocking_fallow() {
-            local lane="$1"
-            local started_at="$SECONDS"
-
-            set +e
-            bun run beep quality fallow "$lane" \
-              --check \
-              --base "${{ steps.base.outputs.base_ref }}" \
-              --out ".beep/fallow/${lane}.json" \
-              --quiet
-            local status=$?
-            set -e
-            local elapsed_seconds=$((SECONDS - started_at))
-
-            echo "- ${lane}: ${status} (${elapsed_seconds}s)" >> .beep/fallow/status.md
-            return "$status"
-          }
-
-          run_advisory_fallow() {
-            local lane="$1"
-            local started_at="$SECONDS"
-
-            set +e
-            bun run beep quality fallow "$lane" \
-              --advisory \
-              --base "${{ steps.base.outputs.base_ref }}" \
-              --out ".beep/fallow/${lane}.json" \
-              --quiet
-            local status=$?
-            set -e
-            local elapsed_seconds=$((SECONDS - started_at))
-
-            echo "- ${lane}: ${status} (${elapsed_seconds}s)" >> .beep/fallow/status.md
-          }
-
-          blocking_status=0
-          for lane in audit dead-code; do
-            if run_blocking_fallow "$lane"; then
-              :
-            else
-              status=$?
-              if (( blocking_status == 0 )); then
-                blocking_status=$status
-              fi
-            fi
-          done
-
-          for lane in health boundaries flags security fix-preview; do
-            run_advisory_fallow "$lane"
-          done
-
-          for lane in audit dead-code; do
-            test -s ".beep/fallow/${lane}.json"
-          done
-
-          {
-            echo "lane_status<<FALLOW_STATUS"
-            cat .beep/fallow/status.md
-            echo "FALLOW_STATUS"
-          } >> "$GITHUB_OUTPUT"
-
-          if (( blocking_status != 0 )); then
-            exit "$blocking_status"
-          fi
+          # Lane body (blocking audit/dead-code, advisory sweep, status.md
+          # accounting, envelope existence) lives in the beep CLI; envelope
+          # validation, the step summary, and artifact upload stay below.
+          bun run beep ci lane fallow --base "${{ steps.base.outputs.base_ref }}"
 
       - name: Validate Fallow envelopes
         if: always()
@@ -536,7 +451,7 @@ jobs:
           use-node: "false"
 
       - name: Run Knip regression gate
-        run: bun run beep quality knip
+        run: bun run beep ci lane knip
 
   jsdoc-ratchet:
     name: JSDoc Ratchet
@@ -562,16 +477,12 @@ jobs:
         run: |
           set -euo pipefail
           SECONDS=0
-          bun run beep quality jsdoc-inventory
-          inventory_seconds="$SECONDS"
-          bun run beep quality jsdoc-ratchet
+          bun run beep ci lane jsdoc-ratchet
           total_seconds="$SECONDS"
           {
             echo "### JSDoc Ratchet"
             echo
-            echo "- inventory command: \`bun run beep quality jsdoc-inventory\`"
-            echo "- inventory wall time: \`${inventory_seconds}s\`"
-            echo "- command: \`bun run beep quality jsdoc-ratchet\`"
+            echo "- command: \`bun run beep ci lane jsdoc-ratchet\` (inventory + ratchet)"
             echo "- total wall time: \`${total_seconds}s\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -604,7 +515,7 @@ jobs:
           cache-write: "true"
 
       - name: Run build checks
-        run: bun run build -- --summarize
+        run: bun run beep ci lane build --summarize
 
       - name: Append Turbo summary
         if: always()
@@ -662,9 +573,9 @@ jobs:
           set -euo pipefail
 
           if [[ "${{ steps.range.outputs.mode }}" == "range" ]]; then
-            bunx commitlint --from "${{ steps.range.outputs.from_ref }}" --to "${{ steps.range.outputs.to_ref }}" --verbose
+            bun run beep ci lane commitlint --from "${{ steps.range.outputs.from_ref }}" --to "${{ steps.range.outputs.to_ref }}"
           else
-            bunx commitlint --last --verbose
+            bun run beep ci lane commitlint --last
           fi
 
   secrets:
@@ -815,7 +726,6 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup monorepo CI
-        if: github.event_name == 'push'
         uses: ./.github/actions/setup-monorepo-ci
         with:
           cache-turbo: "false"
@@ -841,17 +751,8 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
         continue-on-error: true
 
-      - name: Run Nix checks (direct PR proof)
-        if: github.event_name != 'push'
-        shell: bash
-        run: |
-          set -euo pipefail
-          nix --option warn-dirty false flake check --all-systems
-          nix --option warn-dirty false develop --command echo "Dev shell OK"
-
-      - name: Run Nix checks (repo-cli fallback)
-        if: github.event_name == 'push'
-        run: bun run audit:github nix
+      - name: Run Nix checks
+        run: bun run beep ci lane nix
 
   sast:
     name: SAST
@@ -882,4 +783,4 @@ jobs:
         run: |
           # Keep Semgrep parity with the previous semgrep-action packs:
           # p/typescript, p/javascript, p/security-audit, and p/secrets.
-          bun run beep quality github-checks sast
+          bun run beep ci lane sast

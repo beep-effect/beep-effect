@@ -10,7 +10,7 @@
       "id": "orl-001",
       "rank": 1,
       "phase": "P0",
-      "status": "in_progress",
+      "status": "done",
       "title": "beep ci lane <id> — lane definitions in the CLI",
       "detail": "Add `lane` subcommand beside append-turbo-summary in commands/Ci/. FIRST deliverable: the lane-by-lane parity table classifying every check.yml lane as cli-runnable / workflow-gated / ci-native (D2) — early research's 5-lane delta understates it (pre-push also differs in SHAPE: full vs affected/summarized, and Security has sub-gates). Then express every cli-runnable/workflow-gated lane body as GithubCheckLaneSpec-style steps reusing QualityTaskStep + the Tasks.ts runners; GitHub-context orchestration (docgen lane-gate, desktop-IPC path filter, fallow envelope-validation/artifacts, commitlint range, base-pinned gitleaks config) STAYS in YAML and passes results as flags (--base, --mode, --affected, --summarize). Machine-readable --list with per-lane class (Verification Matrix row 3; no equivalents accepted). Extend the bin-main fast path to the ci verb."
     },
@@ -18,7 +18,7 @@
       "id": "orl-002",
       "rank": 2,
       "phase": "P0",
-      "status": "in_progress",
+      "status": "done",
       "blockedBy": ["orl-001"],
       "title": "beep ci local — faithful local battery",
       "detail": "Runs all locally-runnable lanes from the same definitions: github-checks pre-push coverage PLUS the delta (Coverage Regression, Codegen Drift, Commitlint, Desktop IPC). --lanes selection, --fast preset (skip coverage/test-integration/nix), --affected. dependency-review documented as CI-only. Local verdict parity fixture proof (Verification Matrix row 2)."
@@ -27,7 +27,7 @@
       "id": "orl-003",
       "rank": 3,
       "phase": "P0",
-      "status": "pending",
+      "status": "in_progress",
       "blockedBy": ["orl-001", "orl-002"],
       "title": "Thin check.yml to lane dispatch",
       "detail": "Blocked on BOTH the lane definitions and `beep ci local` — thinning never precedes the faithful local battery. Matrix case-block and cli-runnable standalone jobs become `bun run beep ci lane <id> [flags]`; workflow-gated orchestration stays in YAML; ci-native jobs (gitleaks image, OSV action, dependency-review) keep workflow bodies, marked CI-native in --list. FENCE: 17 required-check context names unchanged (ruleset 10240248) or same-change gh api update. Parity proof per D9: temporary workflow_dispatch shadow workflow dispatching every lane via `beep ci lane` on the SAME head SHA as the unmodified check.yml run; lane set + CLI-echoed commands + verdicts must match; run IDs recorded in history/ BEFORE the thinning commit replaces check.yml bodies. This PR itself dogfoods: `beep ci local` from its own branch before push (D4)."
