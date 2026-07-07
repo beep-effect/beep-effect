@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "one-round-loop/progress/v1",
+  "generatedOn": "2026-07-07",
+  "legend": {
+    "statuses": ["pending", "in_progress", "done", "wont_fix"],
+    "wontFixRule": "Stretch items only; requires a rationale string."
+  },
+  "phases": {
+    "P0_ci_inversion": "pending",
+    "P1_property_lane": "pending",
+    "P2_medium_tier": "pending",
+    "P3_stretch": "pending",
+    "P4_close": "pending"
+  },
+  "coreItems": {
+    "C1_ci_lane_inversion": { "status": "pending" },
+    "C2_property_law_lane": { "status": "pending" },
+    "C3_coverage_baseline_v2": { "status": "pending" },
+    "C4_cwd_independence": { "status": "pending" },
+    "C5_regen_generated": { "status": "pending" },
+    "C6_with_normalized_check": { "status": "pending" }
+  },
+  "stretchItems": {
+    "S1_fallow_envelope_locations": { "status": "pending", "rationale": null },
+    "S2_yeet_committed_branch": { "status": "pending", "rationale": null },
+    "S3_worktree_lane_adoption": { "status": "pending", "rationale": null },
+    "S4_cancel_rerun_quarantine": { "status": "pending", "rationale": null }
+  },
+  "dogfoodLedger": {
+    "activeFrom": null,
+    "prRounds": []
+  }
+}
