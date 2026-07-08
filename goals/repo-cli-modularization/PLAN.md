@@ -146,12 +146,12 @@ goes after its dependencies are battle-tested.
 
 ## Phase 7 - Metrics/Data Family (Wave 7)
 
-- [ ] AIMetrics (3839): schemas/errors/config roles +
+- [x] AIMetrics (3839): schemas/errors/config roles +
   internal/{Window,Install,Ingest,Forwarder,Scorecard}; DuckDb provider from
   `@beep/repo-ai-metrics`.
-- [ ] AgentEffectiveness: role files + `EvalScorer` (1294) split; adopts wire
+- [x] AgentEffectiveness: role files + `EvalScorer` (1294) split; adopts wire
   contract + shared exec.
-- [ ] Corpus: `Corpus.service.ts` (3150) -> semantic internals;
+- [x] Corpus: `Corpus.service.ts` (3150) -> semantic internals;
   `Corpus.schemas.ts` (1574) re-seamed.
 
 ## Phase 8 - Config-Sync Family (Wave 8)

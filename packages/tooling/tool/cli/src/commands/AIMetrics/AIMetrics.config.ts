@@ -1,0 +1,20 @@
+/**
+ * Effect ConfigProvider-backed AI metrics command resolution helpers.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+export {
+  readOptionalConfigString,
+  readOptionalRedactedConfigString,
+  requireHashSaltForTarget,
+  requireHashSaltSecretRefForTarget,
+  requireRawArchiveKeySecretRefForTarget,
+  resolveHashSalt,
+  resolveHashSaltSecretRef,
+  resolveHomeDir,
+  resolveRawArchiveKey,
+  resolveRawArchiveKeySecretRef,
+  resolveRepoRoot,
+} from "./internal/Programs.js";

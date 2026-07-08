@@ -19229,11 +19229,225 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.errors.ts",
+      "symbol": "AiMetricsProgramError",
+      "kind": "tagged-union",
+      "owner": "@beep/repo-cli"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/AIMetrics.errors.ts",
       "symbol": "AiMetricsStatusExit",
       "kind": "tagged-error",
       "owner": "@beep/repo-cli",
       "identity": "AiMetricsStatusExit",
       "description": "Silent non-zero process exit requested after a command has already rendered its result."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "ExportForwarderDerivedOtlpOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ExportForwarderDerivedOtlpOptions",
+      "description": "Forwarder run context required to export derived OTLP spans."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "ForwarderOtlpExportFailedOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ForwarderOtlpExportFailedOptions",
+      "description": "Forwarder run context used to render a derived OTLP export failure payload."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeBenchmarkCaseAddProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeBenchmarkCaseAddProgramOptions",
+      "description": "CLI flags for upserting a benchmark case used by AI metrics scoring."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeBenchmarkCaseListProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeBenchmarkCaseListProgramOptions",
+      "description": "CLI flags for listing benchmark cases from AI metrics storage."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeBenchmarkRunProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeBenchmarkRunProgramOptions",
+      "description": "CLI flags for recording one benchmark run in AI metrics storage."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeCommandInstallInputOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeCommandInstallInputOptions",
+      "description": "CLI install flags before environment-backed secret references are resolved."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeCommandInstallSpecOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeCommandInstallSpecOptions",
+      "description": "CLI install flags used to build a concrete AI metrics install spec."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeConfigSnapshotProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeConfigSnapshotProgramOptions",
+      "description": "CLI flags for capturing repository configuration into an AI metrics snapshot."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeForwarderRunProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeForwarderRunProgramOptions",
+      "description": "CLI flags for running the AI metrics forwarder and optional derived exports."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeForwarderTimerProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeForwarderTimerProgramOptions",
+      "description": "CLI flags for rendering the AI metrics forwarder systemd timer plan."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeIngestProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeIngestProgramOptions",
+      "description": "CLI flags for summarizing a transcript file into AI metrics ingest output."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeInstallApplyProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeInstallApplyProgramOptions",
+      "description": "CLI flags for dry-running an AI metrics install apply plan."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeInstallComposeProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeInstallComposeProgramOptions",
+      "description": "CLI flags for rendering a local compose file for an AI metrics backend."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeInstallDoctorProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeInstallDoctorProgramOptions",
+      "description": "CLI flags for checking AI metrics install readiness and source discovery."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeInstallPlanProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeInstallPlanProgramOptions",
+      "description": "CLI flags for producing an AI metrics install plan."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeInstallPreviewProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeInstallPreviewProgramOptions",
+      "description": "CLI flags for rendering an AI metrics install spec preview."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeLabelAddProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeLabelAddProgramOptions",
+      "description": "CLI flags for adding one human outcome label to an AI metrics task."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeLabelQueueProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeLabelQueueProgramOptions",
+      "description": "CLI flags for selecting unlabeled AI metrics tasks within a time window."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeOtlpExportProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeOtlpExportProgramOptions",
+      "description": "CLI flags for exporting one derived ingest run to the configured OTLP endpoint."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakePrivacyCheckProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakePrivacyCheckProgramOptions",
+      "description": "CLI flags for checking transcript privacy before derived AI metrics use."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeSourcesDiscoverProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeSourcesDiscoverProgramOptions",
+      "description": "CLI flags for discovering transcript sources available to AI metrics."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "MakeWeeklyReportProgramOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MakeWeeklyReportProgramOptions",
+      "description": "CLI flags for generating a weekly AI metrics scorecard report."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "ParseWindowOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ParseWindowOptions",
+      "description": "Optional inclusive lower and exclusive upper timestamp flags for report windows."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "RequireHashSaltForTargetOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RequireHashSaltForTargetOptions",
+      "description": "Resolved hash salt and deployment target for commands that require path hashing."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "RequireHashSaltSecretRefForTargetOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RequireHashSaltSecretRefForTargetOptions",
+      "description": "Resolved hash-salt secret reference and deployment target for install planning."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AIMetrics/internal/Programs.ts",
+      "symbol": "RequireRawArchiveKeySecretRefForTargetOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RequireRawArchiveKeySecretRefForTargetOptions",
+      "description": "Resolved raw-archive key secret reference and deployment target for install planning."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.errors.ts",

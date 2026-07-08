@@ -2374,52 +2374,52 @@
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
       "symbol": "extensionOf.toLowerCase",
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-normalization",
-      "line": 874,
+      "line": 783,
       "owner": "@beep/repo-cli",
       "reason": "Normalization call \".toLowerCase()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
       "symbol": "pipeDocket.toUpperCase",
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-normalization",
-      "line": 2146,
+      "line": 2055,
       "owner": "@beep/repo-cli",
       "reason": "Normalization call \".toUpperCase()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
       "symbol": "sanitizeSegment.trim",
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-normalization",
-      "line": 2153,
+      "line": 2062,
       "owner": "@beep/repo-cli",
       "reason": "Normalization call \".trim()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
       "symbol": "versionStem.toLowerCase",
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-normalization",
-      "line": 2166,
+      "line": 2075,
       "owner": "@beep/repo-cli",
       "reason": "Normalization call \".toLowerCase()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
       "symbol": "versionStem.trim",
       "kind": "schema-policy-advisory",
       "status": "advisory",
       "ruleId": "SFV4-normalization",
-      "line": 2166,
+      "line": 2075,
       "owner": "@beep/repo-cli",
       "reason": "Normalization call \".trim()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
     },
