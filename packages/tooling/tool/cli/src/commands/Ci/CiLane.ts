@@ -1025,7 +1025,7 @@ const parseCiLocalLaneSelection = Effect.fn("CiLane.parseCiLocalLaneSelection")(
   const requested = yield* O.match(options.lanes, {
     onNone: () => Effect.succeed(CI_LOCAL_DEFAULT_LANES),
     onSome: Effect.fnUntraced(function* (rawLanes) {
-      const entries = pipe(Str.split(rawLanes, ","), A.map(Str.trim), A.filter(Str.isNonEmpty));
+      const entries = pipe(Str.split(rawLanes, ","), A.map(Str.trim), A.filter(Str.isNonEmpty), A.dedupe);
       const invalid = A.filter(entries, (entry) => !isCiLaneId(entry));
       if (A.isReadonlyArrayNonEmpty(invalid)) {
         return yield* CiCommandError.make({
