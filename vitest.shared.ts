@@ -30,8 +30,14 @@ export const vitestCoverageRunActive =
   process.argv.includes("--coverage");
 
 // one-round-loop P1: an active BEEP_FC_NUM_RUNS floor marks a deep
-// property sweep (PR lane at 400, nightly at 1000+).
-const parsedFcNumRuns = Number(process.env.BEEP_FC_NUM_RUNS ?? "");
+// property sweep (PR lane at 400, nightly at 1000+). Read via Config
+// like the coverage flags above (boot-snapshot semantics are exactly
+// what the lane wants — CI exports the floor before vitest starts).
+const parsedFcNumRuns = pipe(
+  Effect.runSync(Config.option(Config.string("BEEP_FC_NUM_RUNS"))),
+  O.map(Number),
+  O.getOrElse(() => 0)
+);
 const fcDeepSweepActive = Number.isInteger(parsedFcNumRuns) && parsedFcNumRuns > 0;
 // Fixed global coverage floors are retired (quality-gate-ratchets, 2026-07-06):
 // the committed per-package baseline compare (standards/coverage.regression-baseline.jsonc,
