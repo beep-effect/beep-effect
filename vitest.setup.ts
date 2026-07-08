@@ -13,6 +13,7 @@ import { createServer } from "node:http";
 import { join } from "node:path";
 import { P } from "@beep/utils";
 import { addEqualityTesters } from "@effect/vitest";
+import { FastCheck } from "effect/testing";
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import picomatch from "picomatch";
@@ -20,6 +21,18 @@ import * as Toml from "toml";
 import type { ServerResponse } from "node:http";
 
 addEqualityTesters();
+
+// one-round-loop P1: env-raisable fast-check floor. Inline numRuns
+// overrides this global, so migrated sites use fcRuns() from
+// @beep/test-utils; this floor covers options-less fc.assert calls.
+// BEEP_FC_NUM_RUNS never lowers anything: 100 is fast-check's default.
+{
+  const rawFcFloor = process.env.BEEP_FC_NUM_RUNS;
+  const parsedFcFloor = rawFcFloor === undefined ? 0 : Number(rawFcFloor);
+  FastCheck.configureGlobal({
+    numRuns: Math.max(100, Number.isInteger(parsedFcFloor) && parsedFcFloor > 0 ? parsedFcFloor : 0),
+  });
+}
 
 type BunFileShim = {
   readonly arrayBuffer: () => Promise<ArrayBuffer>;

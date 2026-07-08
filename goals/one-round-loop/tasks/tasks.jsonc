@@ -36,7 +36,7 @@
       "id": "orl-010",
       "rank": 4,
       "phase": "P1",
-      "status": "pending",
+      "status": "in_progress",
       "blockedBy": ["orl-003"],
       "title": "Env-max property options helper + configureGlobal floor",
       "detail": "@beep/test-utils helper: effective numRuns = max(BEEP_FC_NUM_RUNS, inline ?? default); model on assertSchemaArbitraryDecodesToSelf. fc.configureGlobal floor in vitest.setup.ts for options-less asserts. Existing inline values are floors (fence 3)."

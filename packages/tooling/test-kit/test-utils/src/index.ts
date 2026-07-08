@@ -15,6 +15,13 @@
  */
 export * from "./Entity.js";
 /**
+ * Fast-check run-count helper exports.
+ *
+ * @category fast-check
+ * @since 0.0.0
+ */
+export * from "./FastCheckRuns.js";
+/**
  * Effect layer test helper exports.
  *
  * @category testing

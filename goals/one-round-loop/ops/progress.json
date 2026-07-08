@@ -7,7 +7,7 @@
   },
   "phases": {
     "P0_ci_inversion": "done",
-    "P1_property_lane": "pending",
+    "P1_property_lane": "in_progress",
     "P2_medium_tier": "pending",
     "P3_stretch": "pending",
     "P4_close": "pending"
@@ -17,7 +17,7 @@
       "status": "done"
     },
     "C2_property_law_lane": {
-      "status": "pending"
+      "status": "in_progress"
     },
     "C3_coverage_baseline_v2": {
       "status": "pending"
