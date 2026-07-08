@@ -24,7 +24,10 @@ import { FastCheck as fc } from "effect/testing";
 import { Tool } from "effect/unstable/ai";
 
 const writeTool = Tool.make("delete_document", { success: S.String }).annotate(Tool.Destructive, true);
-const readTool = Tool.make("search_documents", { success: S.String }).annotate(Tool.Destructive, false);
+const readTool = Tool.make("search_documents", { success: S.String })
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.Destructive, false);
+const nonReadOnlyWriteTool = Tool.make("write_cache", { success: S.String }).annotate(Tool.Destructive, false);
 const unannotatedTool = Tool.make("unannotated_tool", { success: S.String });
 
 const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, never>>(schema: Schema) => {
@@ -100,6 +103,25 @@ describe("dispatchWithTierGate", () => {
     })
   );
 
+  it.effect("refuses a non-destructive write without explicit read-only approval", () =>
+    Effect.gen(function* () {
+      const gate = fromApprovedToolsPolicy({ approvedTools: [] });
+      const result = yield* dispatchWithTierGate(
+        { tool: nonReadOnlyWriteTool, toolCallId: O.none() },
+        Effect.succeed("this handler must never run")
+      ).pipe(Effect.provideService(TierGate, TierGate.of(gate)));
+
+      assert.strictEqual(result._tag, "Refused");
+      if (result._tag === "Refused") {
+        assert.isTrue(TierGateAuditRecord.is(result.audit));
+        assert.strictEqual(result.audit.tool, "write_cache");
+        assert.strictEqual(result.audit.outcome, "refused");
+        assert.isFalse(result.audit.destructive);
+        assert.strictEqual(result.audit.reason, "Tool is not marked read-only; approval required.");
+      }
+    })
+  );
+
   it.effect("refuses an unannotated tool fail-closed as a value, never a throw", () =>
     Effect.gen(function* () {
       const gate = fromApprovedToolsPolicy({ approvedTools: [] });
@@ -124,7 +146,7 @@ describe("tier-gate schema parity laws", () => {
     const audit = TierGateAuditRecord.make({
       tool: "search_documents",
       outcome: "approved",
-      reason: "Tool is not destructive; no approval required.",
+      reason: "Tool is read-only and non-destructive; no approval required.",
       destructive: false,
       occurredAt: "2026-07-01T00:00:00.000Z",
     });
@@ -134,7 +156,7 @@ describe("tier-gate schema parity laws", () => {
       S.decodeUnknownSync(TierGateAuditRecord)({
         tool: "search_documents",
         outcome: "approved",
-        reason: "Tool is not destructive; no approval required.",
+        reason: "Tool is read-only and non-destructive; no approval required.",
         destructive: false,
         toolCallId: "",
         occurredAt: "2026-07-01T00:00:00.000Z",

@@ -150,7 +150,7 @@ export class TierGateAuditRecord extends S.Class<TierGateAuditRecord>($I`TierGat
  *   audit: {
  *     tool: "search_documents",
  *     outcome: "approved",
- *     reason: "Tool is not destructive; no approval required.",
+ *     reason: "Tool is read-only and non-destructive; no approval required.",
  *     destructive: false,
  *     toolCallId: null,
  *     occurredAt: "2026-07-01T00:00:00.000Z"
@@ -186,7 +186,7 @@ export const TierGateVerdict = TierGateOutcomeTag.toTaggedUnion("verdict")({
  *   audit: {
  *     tool: "search_documents",
  *     outcome: "approved",
- *     reason: "Tool is not destructive; no approval required.",
+ *     reason: "Tool is read-only and non-destructive; no approval required.",
  *     destructive: false,
  *     toolCallId: O.none(),
  *     occurredAt: "2026-07-01T00:00:00.000Z"
@@ -230,7 +230,7 @@ export interface ToolCallRequest {
  * const approvedAudit = TierGateAuditRecord.make({
  *   tool: "search_documents",
  *   outcome: "approved",
- *   reason: "Tool is not destructive; no approval required.",
+ *   reason: "Tool is read-only and non-destructive; no approval required.",
  *   destructive: false,
  *   toolCallId: O.none(),
  *   occurredAt: "2026-07-01T00:00:00.000Z"
@@ -263,7 +263,7 @@ export interface TierGateShape {
  * const approvedAudit = TierGateAuditRecord.make({
  *   tool: "search_documents",
  *   outcome: "approved",
- *   reason: "Tool is not destructive; no approval required.",
+ *   reason: "Tool is read-only and non-destructive; no approval required.",
  *   destructive: false,
  *   toolCallId: O.none(),
  *   occurredAt: "2026-07-01T00:00:00.000Z"
@@ -326,25 +326,34 @@ export class TierGatePolicy extends S.Class<TierGatePolicy>($I`TierGatePolicy`)(
 const isDestructive = (tool: AiTool.Any): boolean =>
   Context.getOrElse(tool.annotations, AiTool.Destructive, () => true);
 
-const isPolicyApproved = (policy: TierGatePolicy, tool: AiTool.Any): boolean =>
-  !isDestructive(tool) || A.contains(policy.approvedTools, tool.name);
+// `Tool.Readonly` defaults false. A non-destructive annotation alone is only
+// a weak hint; bypassing approval requires an explicit read-only assertion too.
+const isReadOnly = (tool: AiTool.Any): boolean => Context.getOrElse(tool.annotations, AiTool.Readonly, () => false);
 
-const auditReason = (approved: boolean, destructive: boolean): string => {
+const isPolicyApproved = (policy: TierGatePolicy, tool: AiTool.Any): boolean =>
+  (isReadOnly(tool) && !isDestructive(tool)) || A.contains(policy.approvedTools, tool.name);
+
+const auditReason = (approved: boolean, destructive: boolean, readOnly: boolean): string => {
   if (!approved) {
-    return "Tool is destructive and not present in the approved-tools policy.";
+    return destructive
+      ? "Tool is destructive and not present in the approved-tools policy."
+      : "Tool is not marked read-only; approval required.";
   }
-  return destructive
-    ? "Destructive tool explicitly approved by policy."
-    : "Tool is not destructive; no approval required.";
+  if (destructive) {
+    return "Destructive tool explicitly approved by policy.";
+  }
+  return readOnly
+    ? "Tool is read-only and non-destructive; no approval required."
+    : "Tool explicitly approved by policy.";
 };
 
 /**
  * Builds a fail-closed {@link TierGateShape} from an approved-tools policy.
- * Read-only/non-destructive tools (per `Tool.Destructive`) always pass;
- * destructive tools — including tools with no `Tool.Destructive` annotation
- * at all, which default to destructive — pass only when explicitly named in
- * `policy.approvedTools`. Every call produces a {@link TierGateAuditRecord},
- * approved or refused (Q7).
+ * Tools pass without explicit approval only when they are marked both
+ * `Tool.Readonly: true` and `Tool.Destructive: false`. Destructive tools,
+ * unannotated tools, and non-read-only writes pass only when explicitly named
+ * in `policy.approvedTools`. Every call produces a
+ * {@link TierGateAuditRecord}, approved or refused (Q7).
  *
  * @example
  * ```ts
@@ -368,11 +377,12 @@ export const fromApprovedToolsPolicy = (policy: TierGatePolicy): TierGateShape =
   evaluate: (request) =>
     Effect.map(DateTime.now, (now) => {
       const destructive = isDestructive(request.tool);
+      const readOnly = isReadOnly(request.tool);
       const approved = isPolicyApproved(policy, request.tool);
       const audit = TierGateAuditRecord.make({
         tool: request.tool.name,
         outcome: approved ? "approved" : "refused",
-        reason: auditReason(approved, destructive),
+        reason: auditReason(approved, destructive, readOnly),
         destructive,
         toolCallId: request.toolCallId,
         occurredAt: DateTime.formatIso(now),

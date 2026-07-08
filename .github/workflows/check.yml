@@ -97,26 +97,20 @@ jobs:
             uses_turbo: "false"
             install_typos: "false"
     env:
-      # CSF-001, amended 2026-07-05 (goals/agent-pipeline-velocity, B2): the
-      # verify matrix runs PR-controlled code, so same-repo PR jobs now get
-      # READ-ONLY remote cache (TURBO_CACHE=local:rw,remote:r) — they consume
-      # push-warmed artifacts but can never write, preserving the
-      # cache-poisoning defense this rule exists for (lineage:
-      # vercel/turborepo#1188 -> vercel/turbo#6624). Fork PRs still get no
-      # credentials; push events keep read-write. Read-only also skips uploads,
-      # halving the request volume behind the historical Vercel 429 storms that
-      # SIGINTed Test Unit (exit 130) — if 429s resurface, revert this grant.
-      TURBO_TOKEN: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
-      TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw,remote:r' || '' }}
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      DATABASE_URL_UNPOOLED: ${{ secrets.DATABASE_URL_UNPOOLED }}
-      EMAIL_RESEND_API_KEY: ${{ secrets.EMAIL_RESEND_API_KEY }}
-      AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
-      BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET }}
-      BETTER_AUTH_URL: ${{ secrets.BETTER_AUTH_URL }}
-      SECURITY_TRUSTED_ORIGINS: ${{ secrets.SECURITY_TRUSTED_ORIGINS }}
-      LIVEBLOCKS_SECRET_KEY: ${{ secrets.LIVEBLOCKS_SECRET_KEY }}
+      # Verification runs PR-controlled code. Keep every secret-backed value on
+      # trusted push events only; PR lanes use local cache and fixture/default
+      # app configuration.
+      TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
+      TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
+      TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw' || '' }}
+      DATABASE_URL: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
+      DATABASE_URL_UNPOOLED: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
+      EMAIL_RESEND_API_KEY: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
+      AUTH_SECRET: ${{ github.event_name == 'push' && secrets.AUTH_SECRET || '' }}
+      BETTER_AUTH_SECRET: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_SECRET || '' }}
+      BETTER_AUTH_URL: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}
+      SECURITY_TRUSTED_ORIGINS: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
+      LIVEBLOCKS_SECRET_KEY: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -313,11 +307,11 @@ jobs:
     permissions:
       contents: read
     env:
-      # Same CSF-001 posture as the verify matrix: read-only remote cache on
-      # same-repo PRs, nothing for forks, read-write on push.
-      TURBO_TOKEN: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && secrets.TURBO_TOKEN || '' }}
-      TURBO_TEAM: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
-      TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw,remote:r' || '' }}
+      # Same secret posture as the verify matrix: PR-controlled code gets no
+      # repository secrets and uses local Turbo cache only.
+      TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
+      TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
+      TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw' || '' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -420,14 +414,11 @@ jobs:
         id: fallow
         shell: bash
         env:
-          # Fallow runs PR-controlled `bun run beep` code. CSF-001 amendment
-          # (2026-07-05, goals/agent-pipeline-velocity B2): same-repo PRs get
-          # READ-ONLY remote cache (consume-only; writes impossible), fork PRs
-          # get nothing, push stays read-write. See the verify-matrix env
-          # comment for the full rationale and rollback trigger.
-          TURBO_TOKEN: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && secrets.TURBO_TOKEN || '' }}
-          TURBO_TEAM: ${{ (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository) && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
-          TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw,remote:r' || '' }}
+          # Fallow runs PR-controlled `bun run beep` code; keep repository
+          # secrets on push only and use local cache for pull requests.
+          TURBO_TOKEN: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
+          TURBO_TEAM: ${{ github.event_name == 'push' && (vars.TURBO_TEAM || secrets.TURBO_TEAM) || '' }}
+          TURBO_CACHE: ${{ github.event_name == 'pull_request' && 'local:rw' || '' }}
         run: |
           # Lane body (blocking audit/dead-code, advisory sweep, status.md
           # accounting, envelope existence) lives in the beep CLI; envelope

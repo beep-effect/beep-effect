@@ -1,9 +1,0 @@
-[
-  {
-    "op": "insert_after",
-    "target": "- Use `S.withConstructorDefault(...)`, `S.withDecodingDefault(...)`, and\n  `S.decodeTo(...)` with `SchemaTransformation` for normalization and fallback\n  behavior.",
-    "content_preview": "- Before hand-writing a function-argument/output contract builder (e.g. an\n  exported `BuildXArgs`/`buildXArgs` pair), search the repo for the `Fn(...)`\n  combinator (`Fn(<InputSchema>, <OutputSchema>",
-    "status": "applied_insert_after",
-    "index": 1
-  }
-]

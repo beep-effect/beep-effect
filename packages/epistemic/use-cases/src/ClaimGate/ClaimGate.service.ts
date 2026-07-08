@@ -12,12 +12,12 @@
  * @since 0.0.0
  */
 
-import { ClaimGateResult } from "@beep/epistemic-domain/values";
+import { ClaimGateResult, isEvidenceSpanInternallyConsistent } from "@beep/epistemic-domain/values";
 import { Dataset, makeDataset, makeLiteral, makeNamedNode, makeQuad } from "@beep/semantic-web/rdf";
 import { ShaclValidationRequest } from "@beep/semantic-web/services/shacl-validation";
 import { RDF_TYPE } from "@beep/semantic-web/vocab/rdf";
 import { XSD_STRING } from "@beep/semantic-web/vocab/xsd";
-import { Effect } from "effect";
+import { Effect, pipe } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import type * as DomainCandidateClaim from "@beep/epistemic-domain/entities/CandidateClaim";
@@ -39,8 +39,10 @@ const toDataset = (
 ): Dataset => {
   const subject = makeNamedNode(`${CLAIM_SUBJECT_PREFIX}${encodeURIComponent(claim.fixtureKey)}`);
   const typeQuad = makeQuad(subject, RDF_TYPE, makeNamedNode(CLAIM_CLASS_IRI));
-  const quoteQuads = A.map(evidence, (ev) =>
-    makeQuad(subject, makeNamedNode(EVIDENCE_QUOTE_IRI), makeLiteral(ev.span.quote, XSD_STRING.value))
+  const quoteQuads = pipe(
+    evidence,
+    A.filter((ev) => isEvidenceSpanInternallyConsistent(ev.span)),
+    A.map((ev) => makeQuad(subject, makeNamedNode(EVIDENCE_QUOTE_IRI), makeLiteral(ev.span.quote, XSD_STRING.value)))
   );
   return makeDataset([typeQuad, ...quoteQuads]);
 };

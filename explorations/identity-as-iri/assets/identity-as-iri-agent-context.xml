@@ -3,8 +3,8 @@
   <metadata>
     <title>Identity as IRI, Ontology Specifications, and Fibered Metadata Retrieval</title>
     <created_at>2026-07-01</created_at>
-    <source_file path="/home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/Exploring ontology specifications and semantic standards.md" line_count="1829" byte_size="136259" />
-    <handoff_file path="/home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/identity-iri-fibration-handoff.md" present="true" />
+    <source_file path="<local-scratch>/Exploring ontology specifications and semantic standards.md" line_count="1829" byte_size="136259" />
+    <handoff_file path="<local-scratch>/identity-iri-fibration-handoff.md" present="true" />
     <intended_consumers>
       <consumer>Fable / Claude Code on elpresidank workstation</consumer>
       <consumer>Codex or other repo agents working in beep-effect</consumer>
@@ -37,22 +37,22 @@
   </how_to_use>
 
   <attachments>
-    <attachment index="1"><![CDATA[[Ontology.model.ts](/home/elpresidank/YeeBois/projects/beep-effect3/packages/foundation/modeling/ontology/src/Ontology.models.ts)]]></attachment>
-    <attachment index="2"><![CDATA[old version of [@beep/ontology](/home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/)]]></attachment>
-    <attachment index="3"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/annotations.ts]]></attachment>
-    <attachment index="4"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/assembly.ts]]></attachment>
-    <attachment index="5"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/create.ts]]></attachment>
-    <attachment index="6"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/index.ts]]></attachment>
-    <attachment index="7"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/model.ts]]></attachment>
-    <attachment index="8"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/references.ts]]></attachment>
+    <attachment index="1"><![CDATA[[Ontology.model.ts](<repo-root>/packages/foundation/modeling/ontology/src/Ontology.models.ts)]]></attachment>
+    <attachment index="2"><![CDATA[old version of [@beep/ontology](<local-scratch>/ontology/src/)]]></attachment>
+    <attachment index="3"><![CDATA[- <local-scratch>/ontology/src/annotations.ts]]></attachment>
+    <attachment index="4"><![CDATA[- <local-scratch>/ontology/src/assembly.ts]]></attachment>
+    <attachment index="5"><![CDATA[- <local-scratch>/ontology/src/create.ts]]></attachment>
+    <attachment index="6"><![CDATA[- <local-scratch>/ontology/src/index.ts]]></attachment>
+    <attachment index="7"><![CDATA[- <local-scratch>/ontology/src/model.ts]]></attachment>
+    <attachment index="8"><![CDATA[- <local-scratch>/ontology/src/references.ts]]></attachment>
     <attachment index="9"><![CDATA[- projections]]></attachment>
-    <attachment index="10"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/projections/jsonld.ts]]></attachment>
-    <attachment index="11"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/projections/markdown.ts]]></attachment>
-    <attachment index="12"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/projections/skos.ts]]></attachment>
-    <attachment index="13"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/src/projections/turtle.ts]]></attachment>
-    <attachment index="14"><![CDATA[- /home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/ontology/test/Ontology.test.ts]]></attachment>
-    <attachment index="15"><![CDATA[current [@beep/identity](/home/elpresidank/YeeBois/projects/beep-effect3/packages/foundation/modeling/identity/src/Id.ts)]]></attachment>
-    <attachment index="16" role="existing_handoff" path="/home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/identity-iri-fibration-handoff.md">Existing Markdown handoff distilled during the source conversation.</attachment>
+    <attachment index="10"><![CDATA[- <local-scratch>/ontology/src/projections/jsonld.ts]]></attachment>
+    <attachment index="11"><![CDATA[- <local-scratch>/ontology/src/projections/markdown.ts]]></attachment>
+    <attachment index="12"><![CDATA[- <local-scratch>/ontology/src/projections/skos.ts]]></attachment>
+    <attachment index="13"><![CDATA[- <local-scratch>/ontology/src/projections/turtle.ts]]></attachment>
+    <attachment index="14"><![CDATA[- <local-scratch>/ontology/test/Ontology.test.ts]]></attachment>
+    <attachment index="15"><![CDATA[current [@beep/identity](<repo-root>/packages/foundation/modeling/identity/src/Id.ts)]]></attachment>
+    <attachment index="16" role="existing_handoff" path="<local-scratch>/identity-iri-fibration-handoff.md">Existing Markdown handoff distilled during the source conversation.</attachment>
   </attachments>
 
   <distilled_summary>
@@ -106,7 +106,7 @@
     </phase>
   </implementation_packet>
 
-  <handoff_markdown path="/home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/identity-iri-fibration-handoff.md">
+  <handoff_markdown path="<local-scratch>/identity-iri-fibration-handoff.md">
 <![CDATA[# Identity as IRI — Design Handoff
 
 **Merging `IdentityComposer`, the ontology layer, and fibered metadata retrieval**
@@ -1029,7 +1029,7 @@ block, deterministic across runs.
     </section>
   </handoff_sections>
 
-  <raw_conversation source="/home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/Exploring ontology specifications and semantic standards.md">
+  <raw_conversation source="<local-scratch>/Exploring ontology specifications and semantic standards.md">
     <turn index="1">
       <section index="1" kind="assistant_response" source_label="response 1">
 <![CDATA[You've stumbled onto something with a name, and reading your own file back to you is the fastest way to see it. Look at the `identifier` you attached to each field of `OWLClass`:
@@ -2348,7 +2348,7 @@ So the bigger story, stated flatly: `$I` is the **identity layer of the `@beep` 
     </turn>
     <turn index="3">
       <section index="5" kind="user_prompt" source_label="prompt 3">
-<![CDATA[attachment: /home/elpresidank/Downloads/ontology.md
+<![CDATA[attachment: <local-downloads>/ontology.md
 This is exactly where I'm going next "The one seam left to close is trivial next to all that: @beep/… is a CURIE, not yet a dereferenceable IRI." you're on the money. Now I want to make the construction of the identity composers a fully compliant typesafe (literals preserved) Iri builder and leverage that along with the typesafe string transforms to derive other annotations properties from the IdentityComposer. Now this was also something I played with a while back but I deleted it because I wasn't satisfied with its ergonomics/api. Maybe you can help me here. If you could go back and forth with me to make this more ergonomic and composable with solid naming and merge it with my IdentityComposer system I think this would be a banger.]]>
       </section>
       <section index="6" kind="model_trace" source_label="reasonging 3">
@@ -2666,9 +2666,9 @@ Given you'll be authoring hundreds of these for FOLIO-adjacent IP terms — whic
     </turn>
     <turn index="5">
       <section index="11" kind="user_prompt" source_label="prompt 5">
-<![CDATA[- attached [JSDoc.ts](/home/elpresidank/YeeBois/projects/beep-effect3/packages/tooling/library/repo-utils/src/JSDoc
+<![CDATA[- attached [JSDoc.ts](<repo-root>/packages/tooling/library/repo-utils/src/JSDoc
 /JSDoc.ts)
-- attached [JSDocTagDefinition.model.ts](/home/elpresidank/YeeBois/projects/beep-effect3/packages/tooling/library
+- attached [JSDocTagDefinition.model.ts](<repo-root>/packages/tooling/library
 /repo-utils/src/JSDoc/models/JSDocTagDefinition.model.ts)
 ````
 Ok so I want to graduate this into an artifact that I can handoff to Fable on my workstation. However, I have one more concept that I want to explore that to me seems relevant but I'm not quite sure how....Grothendieck fibrations
@@ -2779,7 +2779,7 @@ Two things still flagged OPEN in §10 that only you can answer, D7 (inline vs fo
 One parting thought on the fibration insight, because I think it's the deepest thing in this whole session: you've now got the same construction appearing at three scales — a JSDoc tag's metadata over its tag, a schema's annotations over its `$I` identity, and the knowledge graph's triples over its IRIs. Same base-and-section shape, three stores, one index. When Fable builds `project(value, policy)`, your skill's context-lifting rules stop being documentation about how agents *should* use metadata and become the executable sections themselves. The skill was the spec all along.
 ````
 
-/home/elpresidank/.config/JetBrains/WebStorm2026.2/scratches/Identity as IRI/identity-iri-fibration-handoff.md]]>
+<local-scratch>/identity-iri-fibration-handoff.md]]>
       </section>
     </turn>
   </raw_conversation>

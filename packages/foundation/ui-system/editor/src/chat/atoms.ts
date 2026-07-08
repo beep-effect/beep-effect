@@ -159,9 +159,9 @@ export const maxAttachmentBytesAtom = Atom.family((_editor: LexicalEditor) =>
 
 /**
  * Per-editor upload-port callback. The composer seeds the consumer's `onAttach`
- * here (once per mount); {@link captureAttachmentsFn} reads it at capture time
- * and notifies the app with the raw captured files. Defaults to a no-op so an
- * unseeded read is valid (e.g. in Storybook with no provider).
+ * here (once per mount); {@link captureAttachmentsFn} reads it after capture
+ * validation and notifies the app with accepted files only. Defaults to a no-op
+ * so an unseeded read is valid (e.g. in Storybook with no provider).
  *
  * @example
  * ```tsx
@@ -212,12 +212,12 @@ export const composerRuntime = Atom.runtime(Layer.empty);
 /**
  * Capture-attachments mutation, modeled as a runtime `fn` atom. Writing
  * `{ editor, files }` runs the capture pipeline entirely inside the runtime: it
- * notifies the per-editor {@link onAttachAtom} upload-port with the raw files,
- * decodes each through {@link fileToAttachment} (a `Result` per file), logs any
- * tagged {@link AttachmentRejection}s through the runtime, then appends the
- * captured attachments to {@link attachmentsAtom}. The size bound is read from
- * {@link maxAttachmentBytesAtom}. Both the footer picker and the drag-drop
- * binding drive this same path.
+ * decodes each file through {@link fileToAttachment} (a `Result` per file),
+ * logs any tagged {@link AttachmentRejection}s through the runtime, notifies the
+ * per-editor {@link onAttachAtom} upload-port with accepted files only, then
+ * appends the captured attachments to {@link attachmentsAtom}. The size bound is
+ * read from {@link maxAttachmentBytesAtom}. Both the footer picker and the
+ * drag-drop binding drive this same path.
  *
  * @example
  * ```tsx
@@ -232,8 +232,9 @@ export const composerRuntime = Atom.runtime(Layer.empty);
  * }
  * ```
  *
- * @effects Invokes the per-editor upload-port callback and appends successfully
- * decoded attachments to {@link attachmentsAtom}; rejected files are logged.
+ * @effects Invokes the per-editor upload-port callback with accepted files and
+ * appends successfully decoded attachments to {@link attachmentsAtom}; rejected
+ * files are logged.
  *
  * @category atoms
  * @since 0.0.0
@@ -244,7 +245,6 @@ export const captureAttachmentsFn = composerRuntime.fn<{
 }>()(
   Effect.fnUntraced(function* ({ editor, files }, get) {
     if (A.isReadonlyArrayEmpty(files)) return;
-    get(onAttachAtom(editor))(files);
     const results = A.map(files, (file) => fileToAttachment(file, get(maxAttachmentBytesAtom(editor))));
     // Surface (rather than silently drop) why a file was declined; the failure
     // channel is the whole reason `fromFile` returns `Result` not `O.Option`.
@@ -256,6 +256,7 @@ export const captureAttachmentsFn = composerRuntime.fn<{
     // `FnContext.set` writes a value (no updater form), so the append reads the
     // current attachments via `get` and writes the concatenated array.
     if (A.isReadonlyArrayNonEmpty(captured)) {
+      get(onAttachAtom(editor))(A.map(captured, (attachment) => attachment.file));
       get.set(attachmentsAtom(editor), [...get(attachmentsAtom(editor)), ...captured]);
     }
   })
@@ -361,6 +362,18 @@ export const characterCountAtom = Atom.family((editor: LexicalEditor) =>
   })
 );
 
+const hasCommandModifier = (event: KeyboardEvent): boolean => event.ctrlKey || event.metaKey;
+
+const isImeComposing = (event: KeyboardEvent): boolean => {
+  // Modern browsers set `isComposing`; legacy IME paths can still surface only
+  // `keyCode === 229`.
+  const legacyKeyCode = (event as unknown as { readonly keyCode?: number }).keyCode;
+  return event.isComposing || legacyKeyCode === 229;
+};
+
+const shouldSendFromEnter = (event: KeyboardEvent, sendOn: ComposerFeatures["sendOn"]): boolean =>
+  sendOn === "enter" ? !event.shiftKey && !event.altKey && !hasCommandModifier(event) : hasCommandModifier(event);
+
 /**
  * Per-editor Enter-to-send key binding. The read fn registers
  * `KEY_ENTER_COMMAND` at `COMMAND_PRIORITY_HIGH` (torn down via the atom
@@ -398,14 +411,8 @@ export const sendKeyBindingAtom = Atom.family((editor: LexicalEditor) =>
         (event) => {
           if (event === null) return false;
           if (get.once(anyMenuOpenAtom(editor))) return false;
-          // IME guard: never send mid-composition (`isComposing` is the modern,
-          // well-supported signal; the legacy `keyCode === 229` fallback is dropped
-          // as deprecated).
-          if (event.isComposing) return false;
-          const sendOn = get.once(featuresAtom(editor)).sendOn;
-          const hasModifier = event.ctrlKey || event.metaKey;
-          const send = sendOn === "enter" ? !event.shiftKey && !event.altKey && !hasModifier : hasModifier;
-          if (!send) return false;
+          if (isImeComposing(event)) return false;
+          if (!shouldSendFromEnter(event, get.once(featuresAtom(editor)).sendOn)) return false;
           event.preventDefault();
           editor.dispatchCommand(SEND_MESSAGE_COMMAND, undefined);
           return true;

@@ -1,0 +1,264 @@
+{
+  "schemaVersion": "initiative-manifest/v1",
+  "initiative": {
+    "id": "codex-security-findings-2026-07-08",
+    "title": "Codex Security Findings (2026-07-08)",
+    "status": "active",
+    "created": "2026-07-08",
+    "updated": "2026-07-08",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/codex-security-findings-2026-07-08",
+  "lifecycle": "active",
+  "executionCapable": true,
+  "reflectionRequired": false,
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor), is merged, and Codex shows zero open security findings.",
+    "grandfathered": false
+  },
+  "branch": "security/codex-findings-2026-07-08",
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/codex-security-findings-2026-07-08/README.md",
+    "goals/codex-security-findings-2026-07-08/SPEC.md",
+    "goals/codex-security-findings-2026-07-08/PLAN.md",
+    "goals/codex-security-findings-2026-07-08/GOAL.md"
+  ],
+  "source": {
+    "provider": "Codex Cloud Security UI",
+    "repository": "beep-effect/beep-effect",
+    "url": "https://chatgpt.com/codex/cloud/security/findings/",
+    "capturedAt": "2026-07-08T10:31:52.761Z",
+    "captureMethodPolicy": "chrome-control-markdown-capture",
+    "rawCaptureRoot": "goals/codex-security-findings-2026-07-08/raw",
+    "rawCaptureTracked": false
+  },
+  "catalog": {
+    "expectedCount": 45,
+    "capturedCount": 45,
+    "severityCountsKnown": true,
+    "severityCounts": {
+      "High": 6,
+      "Medium": 9,
+      "Low": 11,
+      "Informational": 19
+    },
+    "verdictCounts": {
+      "fixed": 4,
+      "dismissed": 11,
+      "untriaged": 0,
+      "notCaptured": 0,
+      "openRemediate": 30,
+      "remediatedPendingMerge": 30
+    },
+    "dispositionCounts": {
+      "remediate": 30,
+      "already-fixed": 4,
+      "false-positive": 6,
+      "out-of-scope": 5,
+      "untriaged": 0,
+      "notCaptured": 0
+    },
+    "note": "P2 validation complete 2026-07-08T11:10:27.310Z: 30 remediate, 5 out-of-scope, 6 false-positive, 4 already-fixed, 0 untriaged. P3 invalid/already-fixed closeout complete 2026-07-08T11:26:24.118Z: 15 findings closed or verified closed in Codex. P4/P5 remediation complete locally 2026-07-08: 30 legitimate maintained-code findings fixed and awaiting Yeet PR merge before Codex closure."
+  },
+  "closeoutPolicy": {
+    "fixed": "Already fixed",
+    "alreadyFixed": "Already fixed",
+    "dismissedInvalid": "False positive",
+    "outOfScope": "False positive",
+    "acceptedRisk": "not allowed"
+  },
+  "dispositionPolicy": {
+    "default": "remediate",
+    "acceptedRiskAllowed": false,
+    "falsePositiveThreshold": "strict proof: affected code absent, unreachable, non-shipped, out-of-scope, or materially misunderstood",
+    "outOfScopePaths": [".repos/**"],
+    "fixPhilosophy": "minimal scoped fixes by default; repeated maintained-code vulnerability classes may use existing helpers or a doctrine-correct package-local/tooling/driver/foundation helper after live source and barrel discovery"
+  },
+  "sanitation": {
+    "trackedRawFindingContent": false,
+    "rawCaptureLocation": "goals/codex-security-findings-2026-07-08/raw",
+    "commitsOnlySanitizedMarkdown": true,
+    "codexPatchTextTracked": false,
+    "publicFindingPolicy": "Tracked ledgers carry title, severity, owner area, disposition, rationale, changed files, and verification. Full reports and Codex patch bodies stay in gitignored raw evidence.",
+    "redactedPatterns": [
+      "private keys",
+      "signed artifact URLs",
+      "token-like query params",
+      "authorization header values",
+      "Cookie headers",
+      "secret file paths"
+    ]
+  },
+  "lanePolicy": {
+    "validationBatchSize": 6,
+    "remediationBatchSize": 6,
+    "validationWrites": "sub-agents return structured verdicts; main agent writes ledgers",
+    "remediationWrites": "workers may edit only assigned disjoint paths; main agent owns shared helpers and integration",
+    "record": "ops/triage.json#/lanes"
+  },
+  "closurePolicy": {
+    "tool": "codex-chrome-control",
+    "invalidsClosedBy": "main-agent",
+    "invalidsClosedAfter": "strict-proof validation",
+    "remediatedClosedWhen": "after PR merge",
+    "finalTrackedCloseout": false,
+    "invalidsClosedAt": "2026-07-08T11:26:24.118Z",
+    "invalidsClosedCount": 15,
+    "remediatedPendingCloseCount": 30,
+    "remediationCompletedAt": "2026-07-08T12:18:00.000Z"
+  },
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/codex-security-findings-2026-07-08/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "bootstrap",
+      "status": "complete",
+      "exit": "Branch created from fresh origin/main; packet scaffolded."
+    },
+    {
+      "id": "P1",
+      "name": "capture",
+      "status": "complete",
+      "exit": "All open findings captured into ignored raw evidence and sanitized tracked CSF files."
+    },
+    {
+      "id": "P2",
+      "name": "validate",
+      "status": "complete",
+      "exit": "Every finding has a strict-proof disposition, verdict, rationale, and owner area."
+    },
+    {
+      "id": "P3",
+      "name": "close-invalids",
+      "status": "complete",
+      "exit": "Invalid, out-of-scope, and already-fixed findings closed or verified closed in Codex (15) at 2026-07-08T11:26:24.118Z."
+    },
+    {
+      "id": "P4",
+      "name": "lane-partition",
+      "status": "complete",
+      "exit": "Legitimate maintained-code findings partitioned into six non-overlapping remediation lanes."
+    },
+    {
+      "id": "P5",
+      "name": "remediate",
+      "status": "complete",
+      "exit": "Every legitimate maintained-code finding fixed with changed files and targeted verification recorded; Codex closure waits for PR merge."
+    },
+    {
+      "id": "P6",
+      "name": "yeet-to-mergeable",
+      "status": "active",
+      "exit": "Yeet proof, hosted checks, and review closeout are green; PR is mergeable."
+    },
+    {
+      "id": "P7",
+      "name": "merge",
+      "status": "pending",
+      "exit": "PR merged using repository default merge behavior."
+    },
+    {
+      "id": "P8",
+      "name": "close-remediated",
+      "status": "pending",
+      "exit": "Remediated findings closed in Codex as Already fixed; zero open findings visible."
+    },
+    {
+      "id": "P9",
+      "name": "local-closeout",
+      "status": "pending",
+      "exit": "Local untracked closeout evidence and final agent report record zero open findings."
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/codex-security-findings-2026-07-08/GOAL.md)\" -le 4000",
+    "jq . goals/codex-security-findings-2026-07-08/ops/manifest.json",
+    "jq . goals/codex-security-findings-2026-07-08/ops/triage.json",
+    "test \"$(ls goals/codex-security-findings-2026-07-08/findings/CSF-*.md 2>/dev/null | wc -l | tr -d ' ')\" = \"$(jq -r '.catalog.capturedCount' goals/codex-security-findings-2026-07-08/ops/manifest.json)\"",
+    "rg -n 'BEGIN (RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY|X-Amz-Signature=|[?&](sig|token|access_token|api_key|apikey)=[A-Za-z0-9._-]{12,}|Authorization: (Bearer|Basic) [A-Za-z0-9._+/=-]{12,}|Cookie: [^ ]+=[^ ]{8,}|eyJ[A-Za-z0-9_-]{10,}[.][A-Za-z0-9_-]{10,}' goals/codex-security-findings-2026-07-08 --glob '!**/raw/**' --glob '!**/PLAN.md' --glob '!**/ops/manifest.json' && exit 1 || exit 0",
+    "git diff --check -- goals/codex-security-findings-2026-07-08",
+    "bunx --bun vitest run packages/tooling/tool/cli/test/skills-command.test.ts packages/tooling/tool/cli/test/sync-data-to-ts.test.ts packages/drivers/pacer/test/Pacer.test.ts packages/drivers/uspto-mcp/test/Server.test.ts packages/tooling/tool/cli/test/corpus-command.test.ts packages/epistemic/use-cases/test/EpistemicUseCases.test.ts packages/law-practice/server/test/LawPracticeServer.test.ts",
+    "(cd packages/foundation/capability/mcp-kit && bunx --bun vitest run test/TierGate.test.ts)",
+    "(cd packages/foundation/modeling/utils && bunx --bun vitest run test/Struct.test.ts)",
+    "(cd packages/foundation/modeling/md && bunx --bun vitest run test/Md.test.ts)",
+    "(cd packages/foundation/modeling/identity && bunx --bun vitest run test/PnLocal.test.ts)",
+    "(cd packages/foundation/modeling/provenance && bunx --bun vitest run test/TextAnchor.test.ts)",
+    "(cd packages/foundation/capability/langextract && bunx --bun vitest run test/Service.test.ts)",
+    "bunx --bun vitest run --config scratchpad/vitest.config.ts scratchpad/test/logging-rotating-file-sink.test.ts scratchpad/test/ontology-emit-iris.test.ts --passWithNoTests",
+    "git diff --check"
+  ],
+  "stopConditions": [
+    "Chrome cannot access the authenticated Codex security findings page.",
+    "Sanitization scan finds a secret in tracked files, or raw evidence is staged.",
+    "A legitimate maintained-code finding cannot be remediated without an explicit policy or architecture decision outside this packet.",
+    "A proposed helper would violate architecture doctrine and no local fix is viable.",
+    "Yeet or hosted CI exposes a security/check failure that cannot be attributed to environment or unrelated baseline after investigation.",
+    "Required source files are missing or materially contradictory.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "paths": {
+    "index": "findings/INDEX.md",
+    "triage": "ops/triage.json",
+    "raw": "raw/",
+    "findings": [
+      "findings/CSF-001.md",
+      "findings/CSF-002.md",
+      "findings/CSF-003.md",
+      "findings/CSF-004.md",
+      "findings/CSF-005.md",
+      "findings/CSF-006.md",
+      "findings/CSF-007.md",
+      "findings/CSF-008.md",
+      "findings/CSF-009.md",
+      "findings/CSF-010.md",
+      "findings/CSF-011.md",
+      "findings/CSF-012.md",
+      "findings/CSF-013.md",
+      "findings/CSF-014.md",
+      "findings/CSF-015.md",
+      "findings/CSF-016.md",
+      "findings/CSF-017.md",
+      "findings/CSF-018.md",
+      "findings/CSF-019.md",
+      "findings/CSF-020.md",
+      "findings/CSF-021.md",
+      "findings/CSF-022.md",
+      "findings/CSF-023.md",
+      "findings/CSF-024.md",
+      "findings/CSF-025.md",
+      "findings/CSF-026.md",
+      "findings/CSF-027.md",
+      "findings/CSF-028.md",
+      "findings/CSF-029.md",
+      "findings/CSF-030.md",
+      "findings/CSF-031.md",
+      "findings/CSF-032.md",
+      "findings/CSF-033.md",
+      "findings/CSF-034.md",
+      "findings/CSF-035.md",
+      "findings/CSF-036.md",
+      "findings/CSF-037.md",
+      "findings/CSF-038.md",
+      "findings/CSF-039.md",
+      "findings/CSF-040.md",
+      "findings/CSF-041.md",
+      "findings/CSF-042.md",
+      "findings/CSF-043.md",
+      "findings/CSF-044.md",
+      "findings/CSF-045.md"
+    ]
+  }
+}

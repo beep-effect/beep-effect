@@ -411,6 +411,30 @@ describe("corpus catalog run manifests", () => {
 });
 
 describe("corpus extract and salvage", () => {
+  it.effect("rejects traversal out labels before writing staging output", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const corpusRoot = yield* fs.makeTempDirectoryScoped({ prefix: "corpus-extract-label-test-" });
+
+      const error = yield* extractCorpus(
+        CorpusExtractOptions.make({
+          concurrency: 1,
+          corpusRoot,
+          exportChildren: false,
+          includeDuplicates: false,
+          outLabel: "../outside",
+          overwrite: false,
+          tikaJarPath: path.join(corpusRoot, "missing-tika.jar"),
+        })
+      ).pipe(Effect.flip);
+      const escapedExists = yield* fs.exists(path.join(corpusRoot, "outside"));
+
+      expect(error.message).toContain("Invalid corpus extract out-label");
+      expect(escapedExists).toBe(false);
+    }).pipe(Effect.scoped, provideTestLayer)
+  );
+
   it.effect("extracts a synthetic corpus through stub engines and verifies salvage", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

@@ -24,6 +24,7 @@ import { FastCheck as fc } from "effect/testing";
 const cfg = Pacer.mockPacerConfig();
 const initialToken = Str.repeat(128)("Q");
 const rotatedToken = Str.repeat(128)("R");
+const encodeUnknownJson = S.encodeUnknownSync(S.UnknownFromJsonString);
 
 const mockLayer = (options: Parameters<typeof Pacer.makePacerMockHttpClient>[0] = {}) =>
   Pacer.makePacerLayer(cfg, Pacer.makePacerMockHttpClient(options)).full;
@@ -179,6 +180,34 @@ describe("PACER end-to-end (mock transport)", () => {
       )
   );
 
+  const authRequestBodies = Ref.makeUnsafe<ReadonlyArray<unknown>>([]);
+  it.layer(Pacer.makePacerLayer(cfg, Pacer.makePacerMockHttpClient({ requestBodies: authRequestBodies })).auth)(
+    "auth request body",
+    (it) =>
+      it.effect(
+        "encodes login/logout request bodies without Effect Option internals",
+        Effect.fnUntraced(function* () {
+          const auth = yield* Pacer.PacerAuth;
+          const token = yield* auth.login;
+          yield* auth.logout(token);
+          const bodies = yield* Ref.get(authRequestBodies);
+          expect(bodies).toEqual([
+            {
+              clientCode: "MOCK-CLIENT-CODE",
+              loginId: "mock-login-id",
+              password: "mock-password",
+            },
+            {
+              nextGenCSO: initialToken,
+            },
+          ]);
+          const bodiesJson = encodeUnknownJson(bodies);
+          expect(bodiesJson).not.toContain("_tag");
+          expect(bodiesJson).not.toContain("_id");
+        })
+      )
+  );
+
   const deletedReportIds = Ref.makeUnsafe<ReadonlyArray<number>>([]);
   it.layer(mockLayer({ deletedReportIds }))("batch success", (it) =>
     it.effect(
@@ -294,14 +323,14 @@ describe("PACER end-to-end (mock transport)", () => {
     "invalid report id cleanup",
     (it) =>
       it.effect(
-        "downloadCases still attempts delete cleanup when the server returns an invalid report id",
+        "downloadCases rejects invalid report ids before delete cleanup",
         Effect.fnUntraced(function* () {
           const pcl = yield* Pacer.PclClient;
           const error = yield* Effect.flip(pcl.downloadCases(Pacer.CourtCaseSearchDto.make({})));
           expect(error._tag).toBe("PacerPclError");
           expect(error.reason).toBe("server-error");
           expect(error.cause).toBe("invalid reportId from server");
-          expect(yield* Ref.get(invalidReportDeletedSegments)).toEqual(["abc"]);
+          expect(yield* Ref.get(invalidReportDeletedSegments)).toEqual([]);
         })
       )
   );
@@ -311,14 +340,14 @@ describe("PACER end-to-end (mock transport)", () => {
     "fractional report id cleanup",
     (it) =>
       it.effect(
-        "downloadCases attempts delete cleanup for fractional server report ids before failing validation",
+        "downloadCases rejects fractional server report ids before delete cleanup",
         Effect.fnUntraced(function* () {
           const pcl = yield* Pacer.PclClient;
           const error = yield* Effect.flip(pcl.downloadCases(Pacer.CourtCaseSearchDto.make({})));
           expect(error._tag).toBe("PacerPclError");
           expect(error.reason).toBe("server-error");
           expect(error.cause).toBe("invalid reportId from server");
-          expect(yield* Ref.get(invalidNumberReportDeletedSegments)).toEqual(["3.14"]);
+          expect(yield* Ref.get(invalidNumberReportDeletedSegments)).toEqual([]);
         })
       )
   );

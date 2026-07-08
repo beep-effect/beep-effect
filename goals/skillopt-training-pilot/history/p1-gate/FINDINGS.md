@@ -59,9 +59,9 @@ The rejected edit is recorded with the step's `rejected_edits` in
 
 ```sh
 cd <worktree-root>
-env UV_CACHE_DIR=/tmp/uv-cache-skillopt uv run --project tools/skillopt --offline \
+env UV_CACHE_DIR=<tmp-uv-cache> uv run --project tools/skillopt --offline \
   skillopt-train --config goals/skillopt-training-pilot/history/p1-gate/config.gate-accept.yaml
-env UV_CACHE_DIR=/tmp/uv-cache-skillopt uv run --project tools/skillopt --offline \
+env UV_CACHE_DIR=<tmp-uv-cache> uv run --project tools/skillopt --offline \
   skillopt-train --config goals/skillopt-training-pilot/history/p1-gate/config.gate-reject.yaml
 ```
 

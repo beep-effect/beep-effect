@@ -257,7 +257,7 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
           );
 
         const withReportCleanup = Effect.fnUntraced(function* <A>(
-          reportId: ReportIdValue,
+          reportId: number,
           effect: Effect.Effect<A, PacerPclError>
         ) {
           const result = yield* Effect.result(effect);
@@ -272,14 +272,14 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
           payload: CourtCaseSearchDto
         ) {
           const started = yield* startCaseDownload(payload);
+          const reportId = yield* O.match(ReportId.decodeOption(started.reportId), {
+            onNone: () =>
+              Effect.fail(PacerPclError.fromReason("server-error", { cause: "invalid reportId from server" })),
+            onSome: Effect.succeed,
+          });
           return yield* withReportCleanup(
-            started.reportId,
+            reportId,
             Effect.gen(function* () {
-              const reportId = yield* O.match(ReportId.decodeOption(started.reportId), {
-                onNone: () =>
-                  Effect.fail(PacerPclError.fromReason("server-error", { cause: "invalid reportId from server" })),
-                onSome: Effect.succeed,
-              });
               const completed = yield* pollUntilComplete(reportId);
               if (O.contains(completed.status, ReportStatus.Enum.FAILED)) {
                 return yield* PacerPclError.fromReason("server-error", { cause: "report failed" });

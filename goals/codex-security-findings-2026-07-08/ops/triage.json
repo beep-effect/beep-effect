@@ -1,0 +1,2457 @@
+{
+  "meta": {
+    "schemaVersion": "codex-triage/v1",
+    "repository": "beep-effect/beep-effect",
+    "findingsView": "repo-scoped, status=open",
+    "branch": "security/codex-findings-2026-07-08",
+    "expectedCount": 45,
+    "capturedCount": 45,
+    "capturedAt": "2026-07-08T10:31:52.761Z",
+    "validationBatchSize": 6,
+    "note": "P2 validation complete; P3 invalid/already-fixed Codex closeout complete; P4/P5 remediation complete locally with 30 legitimate maintained-code findings fixed pending PR merge and post-merge Codex closure.",
+    "remediationCompletedAt": "2026-07-08T12:18:00.000Z"
+  },
+  "lanes": {
+    "RL-001": {
+      "id": "RL-001",
+      "title": "CI, release, and repo-security policy",
+      "status": "complete pending merge",
+      "ownerArea": "GitHub Actions and repository security configuration",
+      "findingIds": ["CSF-001", "CSF-005", "CSF-007", "CSF-011", "CSF-014"],
+      "completedAt": "2026-07-08T12:18:00.000Z"
+    },
+    "RL-002": {
+      "id": "RL-002",
+      "title": "Agent/plugin and committed local-path surfaces",
+      "status": "complete pending merge",
+      "ownerArea": "agent skills, plugin marketplace, and authored research/goal docs",
+      "findingIds": [
+        "CSF-003",
+        "CSF-016",
+        "CSF-023",
+        "CSF-024",
+        "CSF-026",
+        "CSF-027",
+        "CSF-032"
+      ],
+      "completedAt": "2026-07-08T12:18:00.000Z"
+    },
+    "RL-003": {
+      "id": "RL-003",
+      "title": "Repo-cli generators, skills updater, corpus, and codemod tooling",
+      "status": "complete pending merge",
+      "ownerArea": "@beep/repo-cli and goal-local codemod tooling",
+      "findingIds": ["CSF-006", "CSF-008", "CSF-012", "CSF-030", "CSF-031"],
+      "completedAt": "2026-07-08T12:18:00.000Z"
+    },
+    "RL-004": {
+      "id": "RL-004",
+      "title": "Foundation and editor boundary validation",
+      "status": "complete pending merge",
+      "ownerArea": "foundation packages and editor chat composer",
+      "findingIds": [
+        "CSF-010",
+        "CSF-017",
+        "CSF-018",
+        "CSF-019",
+        "CSF-022",
+        "CSF-044"
+      ],
+      "completedAt": "2026-07-08T12:18:00.000Z"
+    },
+    "RL-005": {
+      "id": "RL-005",
+      "title": "Remote extraction and evidence integrity gates",
+      "status": "complete pending merge",
+      "ownerArea": "LangExtract/law-practice and epistemic claim gate",
+      "findingIds": ["CSF-015", "CSF-025"],
+      "completedAt": "2026-07-08T12:18:00.000Z"
+    },
+    "RL-006": {
+      "id": "RL-006",
+      "title": "Drivers and scratchpad generator/runtime hardening",
+      "status": "complete pending merge",
+      "ownerArea": "PACER, USPTO MCP, scratchpad ontology/logging",
+      "findingIds": ["CSF-029", "CSF-033", "CSF-036", "CSF-038", "CSF-040"],
+      "completedAt": "2026-07-08T12:18:00.000Z"
+    }
+  },
+  "validationBatches": [
+    {
+      "id": "VB-001",
+      "findingIds": [
+        "CSF-001",
+        "CSF-002",
+        "CSF-003",
+        "CSF-004",
+        "CSF-005",
+        "CSF-006"
+      ],
+      "agentIds": [
+        "019f4149-3233-79c1-a6cc-7da7899d203b",
+        "019f4149-5038-7730-8bea-38b4a9465f6c",
+        "019f4149-6b4c-7f23-aac2-f2d5f1804016",
+        "019f4149-8548-7610-a6e2-e59b461fc037",
+        "019f4149-9edc-72b0-8f38-774431289972",
+        "019f4149-b820-74e2-ba2c-cf3fe4b92385"
+      ],
+      "completedAt": "2026-07-08T10:37:22.965Z",
+      "status": "complete"
+    },
+    {
+      "id": "VB-002",
+      "findingIds": [
+        "CSF-007",
+        "CSF-008",
+        "CSF-009",
+        "CSF-010",
+        "CSF-011",
+        "CSF-012"
+      ],
+      "agentIds": [
+        "019f414e-d04c-7263-a38e-7d9dc58762ac",
+        "019f414e-ea1e-7ba0-8998-d2ecad8e7670",
+        "019f414f-05aa-7d93-8224-5b093540da64",
+        "019f414f-2713-7671-9f8c-63e262d6155d",
+        "019f414f-4a52-71f0-ad30-cad6fe6aaba8",
+        "019f414f-670c-7501-996e-509fa2c91880"
+      ],
+      "completedAt": "2026-07-08T10:42:41.311Z",
+      "status": "complete"
+    },
+    {
+      "id": "VB-003",
+      "findingIds": [
+        "CSF-013",
+        "CSF-014",
+        "CSF-015",
+        "CSF-016",
+        "CSF-017",
+        "CSF-018"
+      ],
+      "agentIds": [
+        "019f4153-4fc7-75e0-b2c7-d8a43750742e",
+        "019f4153-508c-7493-a49e-97921857936c",
+        "019f4153-5146-7292-9823-c3ba10b24a71",
+        "019f4153-5212-7311-9a39-d266881fe279",
+        "019f4153-52f8-7c80-b2d6-845fc268b6a6",
+        "019f4153-53e1-7911-bb90-ded1019e298c"
+      ],
+      "completedAt": "2026-07-08T10:47:35.912Z",
+      "status": "complete"
+    },
+    {
+      "id": "VB-004",
+      "findingIds": [
+        "CSF-019",
+        "CSF-020",
+        "CSF-021",
+        "CSF-022",
+        "CSF-023",
+        "CSF-024"
+      ],
+      "agentIds": [
+        "019f4157-9f1e-75c3-9e06-81dc37e8acb2",
+        "019f4157-9ff9-7983-aadb-55d6187989cf",
+        "019f4157-a11a-7b01-b802-e2a915fe126a",
+        "019f4157-a1f3-7682-a81e-c325d08475e2",
+        "019f4157-a302-7442-9265-730977626ed8",
+        "019f4157-a3e9-7a81-85f4-da2623faae55"
+      ],
+      "completedAt": "2026-07-08T10:51:52.902Z",
+      "status": "complete"
+    },
+    {
+      "id": "VB-005",
+      "findingIds": [
+        "CSF-025",
+        "CSF-026",
+        "CSF-027",
+        "CSF-028",
+        "CSF-029",
+        "CSF-030"
+      ],
+      "agentIds": [
+        "019f415b-8cf3-7da1-b243-7600bb19161d",
+        "019f415b-8dba-7810-b00b-eb97de52a9ea",
+        "019f415b-8eb4-75c3-bc31-aae84c80340d",
+        "019f415b-8ff4-7963-ba6c-fa4da1e7f0c2",
+        "019f415b-90fa-78b2-97d3-5bacd60c9bb1",
+        "019f415b-91f5-77b2-8989-7b084dbccdf3"
+      ],
+      "completedAt": "2026-07-08T10:56:29.456Z",
+      "status": "complete"
+    },
+    {
+      "id": "VB-006",
+      "findingIds": [
+        "CSF-031",
+        "CSF-032",
+        "CSF-033",
+        "CSF-034",
+        "CSF-035",
+        "CSF-036"
+      ],
+      "agentIds": [
+        "019f415f-c5a7-7121-8e14-c4edac9692a3",
+        "019f415f-c66b-7f02-acb3-9153cd1a8c3f",
+        "019f415f-c741-76a3-b745-887053316413",
+        "019f415f-c82e-7fb0-a5e9-74917e997d85",
+        "019f415f-c912-7012-9854-134a8aa003c8",
+        "019f415f-c9fb-73a2-9a7d-fd65152cb9e3"
+      ],
+      "completedAt": "2026-07-08T11:01:16.165Z",
+      "status": "complete"
+    },
+    {
+      "id": "VB-007",
+      "findingIds": [
+        "CSF-037",
+        "CSF-038",
+        "CSF-039",
+        "CSF-040",
+        "CSF-041",
+        "CSF-042"
+      ],
+      "agentIds": [
+        "019f4164-40da-7023-9dce-4ff711190561",
+        "019f4164-425d-7121-9c1e-cfcf1d4d0dda",
+        "019f4164-445a-7661-893c-2c1b669a674c",
+        "019f4164-455b-7c63-8b90-51f2b25bda50",
+        "019f4164-4675-7a50-86bd-5731fb6eabeb",
+        "019f4164-473f-76c3-b913-f1738da704b6"
+      ],
+      "completedAt": "2026-07-08T11:06:33.468Z",
+      "status": "complete"
+    },
+    {
+      "id": "VB-008",
+      "findingIds": ["CSF-043", "CSF-044", "CSF-045"],
+      "agentIds": [
+        "019f4168-d66b-7a62-a1cf-b09716b4146f",
+        "019f4168-d745-7fa0-9fa2-c9b3c8d08294",
+        "019f4168-d840-7fd2-a83c-28955ef64342"
+      ],
+      "completedAt": "2026-07-08T11:10:27.310Z",
+      "status": "complete"
+    }
+  ],
+  "findings": [
+    {
+      "id": "CSF-001",
+      "codexId": "c892c74454f881919959780aa3403d4c",
+      "title": "Turbo token exposed to same-repo PR code",
+      "severity": "High",
+      "codexStatus": "New",
+      "committed": "2d ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-001.md",
+      "patchCaptured": true,
+      "ownerArea": "CI/GitHub Actions",
+      "classes": [
+        "ci-secret-exposure",
+        "credential-exposure",
+        "supply-chain-risk"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-001",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4149-3233-79c1-a6cc-7da7899d203b",
+        "rationale": "Maintained pull_request workflow jobs still expose Turbo credentials to same-repo PR code paths that run checked-out local actions and repo commands. The affected workflow is maintained code, not .repos.",
+        "evidence": [".github/workflows/check.yml"],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:37:22.965Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Limited Turbo and app secrets to trusted push contexts and forced pull-request cache behavior to local mode.",
+        "changedFiles": [".github/workflows/check.yml"],
+        "verificationCommands": [
+          "rg -n \"TURBO_TOKEN|TURBO_TEAM|TURBO_CACHE\" .github/workflows/check.yml"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Restrict Turbo credentials to trusted events or otherwise ensure PR-controlled code cannot read inherited Turbo secrets."
+    },
+    {
+      "id": "CSF-002",
+      "codexId": "fdace9ea23b08191a0999311982249d6",
+      "title": "Host header controls TLS SNI and certificate identity",
+      "severity": "High",
+      "codexStatus": "Closed",
+      "committed": "1w ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-002.md",
+      "patchCaptured": true,
+      "ownerArea": ".repos external/vendor checkout",
+      "classes": [
+        "tls-sni-host-header-confusion",
+        "out-of-scope-vendored-source"
+      ],
+      "verdict": "out-of-scope",
+      "disposition": "out-of-scope",
+      "codexCloseReason": "False positive",
+      "lane": "_none_",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4149-5038-7730-8bea-38b4a9465f6c",
+        "rationale": "The captured finding targets an external checkout under .repos and no matching maintained source pattern was found outside .repos. Per packet policy, .repos findings are out of scope.",
+        "evidence": [
+          ".repos/undici-types/lib/core/request.js",
+          ".repos/undici-types/lib/core/connect.js",
+          ".repos/undici-types/lib/dispatcher/client.js",
+          ".repos/undici-types/lib/dispatcher/client-h1.js",
+          ".repos/undici-types/lib/dispatcher/client-h2.js",
+          ".repos/undici-types/test/request.js"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:37:22.965Z"
+      },
+      "remediation": {
+        "status": "not required",
+        "changedFiles": [],
+        "verificationCommands": [
+          "git ls-files | rg \"(^|/)lib/core/(request|connect)\\.js$|(^|/)lib/dispatcher/client(-h[12])?\\.js$|(^|/)undici\""
+        ]
+      },
+      "closeout": {
+        "status": "closed in Codex",
+        "closedAt": "2026-07-08T11:26:24.118Z",
+        "reason": "False positive"
+      },
+      "remediationHint": "No maintained-code remediation. Close in Codex as false positive."
+    },
+    {
+      "id": "CSF-003",
+      "codexId": "5e356d5bfee481919545922bff45ec40",
+      "title": "DataMoat plugin installs code that captures local AI histories",
+      "severity": "High",
+      "codexStatus": "New",
+      "committed": "1w ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-003.md",
+      "patchCaptured": true,
+      "ownerArea": "agent plugin marketplace",
+      "classes": [
+        "local-code-execution",
+        "sensitive-local-data-capture",
+        "agent-plugin-supply-chain"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-002",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4149-6b4c-7f23-aac2-f2d5f1804016",
+        "rationale": "The tracked plugin marketplace advertises a local DataMoat plugin with install/run scripts and broad agent permissions. Those maintained plugin files are in scope and not under .repos.",
+        "evidence": [
+          ".agents/plugins/marketplace.json",
+          "plugins/datamoat/.codex-plugin/plugin.json",
+          "plugins/datamoat/.claude-plugin/plugin.json",
+          "plugins/datamoat/skills/datamoat/SKILL.md",
+          "plugins/datamoat/skills/datamoat/scripts/install-datamoat-linux.sh",
+          "plugins/datamoat/skills/datamoat/scripts/install-datamoat-macos.sh",
+          "plugins/datamoat/skills/datamoat/scripts/install-datamoat-windows.ps1",
+          "plugins/datamoat/skills/datamoat/scripts/datamoat-status.sh",
+          "plugins/datamoat/skills/datamoat/scripts/datamoat-status.ps1"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:37:22.965Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Removed the installable DataMoat marketplace entry and plugin payload from tracked agent plugin surfaces.",
+        "changedFiles": [
+          ".agents/plugins/marketplace.json",
+          "plugins/datamoat/.claude-plugin/plugin.json",
+          "plugins/datamoat/.codex-plugin/plugin.json",
+          "plugins/datamoat/skills/datamoat/SKILL.md",
+          "plugins/datamoat/skills/datamoat/scripts/datamoat-status.ps1",
+          "plugins/datamoat/skills/datamoat/scripts/datamoat-status.sh",
+          "plugins/datamoat/skills/datamoat/scripts/install-datamoat-linux.sh",
+          "plugins/datamoat/skills/datamoat/scripts/install-datamoat-macos.sh",
+          "plugins/datamoat/skills/datamoat/scripts/install-datamoat-windows.ps1"
+        ],
+        "verificationCommands": [
+          "jq . .agents/plugins/marketplace.json >/dev/null",
+          "! rg -n \"datamoat|DataMoat\" .agents plugins --glob \"!**/.repos/**\""
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Remove the installable DataMoat plugin entry and plugin files, or replace them with a non-installing documentation-only surface that cannot start background capture from agent scripts."
+    },
+    {
+      "id": "CSF-004",
+      "codexId": "e2900b328e648191be63e48a5b6c1b0b",
+      "title": "Event-log RPC trusts client-supplied public keys",
+      "severity": "High",
+      "codexStatus": "Closed",
+      "committed": "2w ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-004.md",
+      "patchCaptured": true,
+      "ownerArea": "External effect-v4 mirror under .repos",
+      "classes": [
+        "authorization-bypass",
+        "identity-confusion",
+        "out-of-scope-vendored-code"
+      ],
+      "verdict": "out-of-scope",
+      "disposition": "out-of-scope",
+      "codexCloseReason": "False positive",
+      "lane": "_none_",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4149-8548-7610-a6e2-e59b461fc037",
+        "rationale": "The reported RPC implementation files exist only under .repos/effect-v4 and are outside maintained beep-effect code. Maintained matches do not expose the reported remote server path.",
+        "evidence": [
+          ".repos/effect-v4/packages/effect/src/unstable/eventlog/EventLogMessage.ts",
+          ".repos/effect-v4/packages/effect/src/unstable/eventlog/EventLogServer.ts",
+          ".repos/effect-v4/packages/effect/src/unstable/eventlog/EventLogServerUnencrypted.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:37:22.965Z"
+      },
+      "remediation": {
+        "status": "not required",
+        "changedFiles": [],
+        "verificationCommands": [
+          "rg --files | rg \"(^|/)EventLog(Message|Server|ServerUnencrypted|SessionAuth)|eventlog|EventLog\""
+        ]
+      },
+      "closeout": {
+        "status": "closed in Codex",
+        "closedAt": "2026-07-08T11:26:24.118Z",
+        "reason": "False positive"
+      },
+      "remediationHint": "No maintained-code remediation. Close in Codex as false positive."
+    },
+    {
+      "id": "CSF-005",
+      "codexId": "fc99dd398e5c8191acea1d4f3f32b5bc",
+      "title": "Signing key is read before release approval",
+      "severity": "High",
+      "codexStatus": "New",
+      "committed": "2w ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-005.md",
+      "patchCaptured": true,
+      "ownerArea": "desktop release CI",
+      "classes": [
+        "ci-secret-gating",
+        "approval-gate-bypass",
+        "release-signing",
+        "supply-chain"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-001",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4149-9edc-72b0-8f38-774431289972",
+        "rationale": "The desktop release preflight still maps the updater signing secret before the protected approval environment gate. The updater public-key config makes the signing key security-sensitive for the update channel.",
+        "evidence": [
+          ".github/workflows/release-desktop.yml",
+          "apps/professional-desktop/src-tauri/tauri.conf.json"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:37:22.965Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Moved signing secret validation behind the protected desktop release environment.",
+        "changedFiles": [".github/workflows/release-desktop.yml"],
+        "verificationCommands": [
+          "rg -n \"environment: professional-desktop-release|TAURI_SIGNING_PRIVATE_KEY|release-desktop-ready\" .github/workflows/release-desktop.yml"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Keep preflight non-secret and move signing-secret presence checks behind the protected release approval gate."
+    },
+    {
+      "id": "CSF-006",
+      "codexId": "48e9a65e65e88191b1dce25f0f13e489",
+      "title": "Unescaped upstream data can inject generated TypeScript",
+      "severity": "High",
+      "codexStatus": "New",
+      "committed": "2w ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-006.md",
+      "patchCaptured": true,
+      "ownerArea": "repo-cli SyncDataToTs data generation and data-sync workflow",
+      "classes": ["CWE-94", "CWE-116", "supply-chain-code-generation"],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-003",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4149-b820-74e2-ba2c-cf3fe4b92385",
+        "rationale": "Maintained SyncDataToTs renderers interpolate upstream metadata into generated TypeScript block comments without a comment-safe formatter. The scheduled data-sync workflow imports generated output during checks/tests.",
+        "evidence": [
+          "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/IanaTimezones.ts",
+          "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/IanaMediaTypes.ts",
+          "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/CldrTerritories.ts",
+          "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/Iso4217.ts",
+          ".github/workflows/data-sync.yml",
+          "packages/foundation/primitive/data/src/Timezones.ts",
+          "packages/foundation/primitive/data/test/timezones.test.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:37:22.965Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Escaped upstream metadata before rendering generated TypeScript comments and added hostile metadata coverage.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Source.ts",
+          "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/CldrTerritories.ts",
+          "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/IanaMediaTypes.ts",
+          "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/IanaTimezones.ts",
+          "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/Iso3166.ts",
+          "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/Iso4217.ts",
+          "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run packages/tooling/tool/cli/test/sync-data-to-ts.test.ts"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Add and apply a block-comment-safe metadata formatter, then add a regression test for hostile metadata in generated headers."
+    },
+    {
+      "id": "CSF-007",
+      "codexId": "b5c03ec0d2888191b8d9256069aac5a3",
+      "title": "Workflow dispatch input enables shell injection",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "committed": "50m ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-007.md",
+      "patchCaptured": false,
+      "ownerArea": "CI / GitHub Actions",
+      "classes": [
+        "CWE-78",
+        "GitHub Actions script injection",
+        "shell injection"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-001",
+      "validation": {
+        "status": "complete",
+        "agent": "019f414e-d04c-7263-a38e-7d9dc58762ac",
+        "rationale": "The maintained workflow expands a manual dispatch input directly inside a bash run step without strict numeric validation or safe environment handoff. The job has issue write access and CI secrets context, so command execution has meaningful impact.",
+        "evidence": [".github/workflows/property-laws-nightly.yml"],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:42:41.311Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Moved manual run count input through an environment variable and validated it as a bounded positive integer before shell use.",
+        "changedFiles": [".github/workflows/property-laws-nightly.yml"],
+        "verificationCommands": [
+          "rg -n \"BEEP_PROPERTY_RUNS|workflow_dispatch|^[[:space:]]*if ! \\[\\[\" .github/workflows/property-laws-nightly.yml"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Move the dispatch value into an environment variable, validate it as a positive integer, and pass only the validated value to the property sweep command."
+    },
+    {
+      "id": "CSF-008",
+      "codexId": "4d1586f75c44819188077892583ee904",
+      "title": "Research daily can commit raw browser history on scan failure",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "committed": "2d ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-008.md",
+      "patchCaptured": false,
+      "ownerArea": "repo-cli research command",
+      "classes": [
+        "CWE-459 incomplete cleanup",
+        "CWE-200 sensitive information exposure"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-003",
+      "validation": {
+        "status": "complete",
+        "agent": "019f414e-ea1e-7ba0-8998-d2ecad8e7670",
+        "rationale": "Maintained research code copies a browser history database into a vault-local scratch directory, removes it only on successful scanning, continues daily work after failures, and commit mode stages broadly. Timer setup enables commit mode by default.",
+        "evidence": [
+          "packages/tooling/tool/cli/src/commands/Research/internal/BrowserHistory.ts",
+          "packages/tooling/tool/cli/src/commands/Research/Research.service.ts",
+          "packages/tooling/tool/cli/src/commands/Research/internal/Timers.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:42:41.311Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Copied browser history into scoped temporary storage and kept research commits from staging raw .beep artifacts.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Research/Research.service.ts",
+          "packages/tooling/tool/cli/src/commands/Research/internal/BrowserHistory.ts"
+        ],
+        "verificationCommands": [
+          "rg -n \"makeTempDirectoryScoped|Effect.ensuring|git add\" packages/tooling/tool/cli/src/commands/Research"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Ensure history scratch copies are cleaned with acquire/release or ensuring, keep transient state outside versioned commits, and stage only an allowlist of generated artifacts."
+    },
+    {
+      "id": "CSF-009",
+      "codexId": "1a97d53804648191bb5c3885b535de5b",
+      "title": "Unbounded event-log chunk reassembly enables DoS",
+      "severity": "Medium",
+      "codexStatus": "Closed",
+      "committed": "2d ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-009.md",
+      "patchCaptured": false,
+      "ownerArea": ".repos/effect-v4 vendored upstream Effect reference",
+      "classes": [
+        "CWE-400",
+        "denial-of-service",
+        "unbounded-resource-consumption",
+        "out-of-scope-vendored-code"
+      ],
+      "verdict": "out-of-scope",
+      "disposition": "out-of-scope",
+      "codexCloseReason": "False positive",
+      "lane": "_none_",
+      "validation": {
+        "status": "complete",
+        "agent": "019f414f-05aa-7d93-8224-5b093540da64",
+        "rationale": "The reported event-log chunk reassembly implementation exists only under .repos/effect-v4. Searches outside .repos found no maintained server implementation exposing the reported code path.",
+        "evidence": [
+          ".repos/effect-v4/packages/effect/src/unstable/eventlog/EventLogMessage.ts",
+          ".repos/effect-v4/packages/effect/src/unstable/eventlog/EventLogServer.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:42:41.311Z"
+      },
+      "remediation": {
+        "status": "not required",
+        "changedFiles": [],
+        "verificationCommands": [
+          "rg -n \"EventLogRemote|EventLog\\.WriteChunked|ChunkedMessage|unstable/eventlog|effect/eventlog\" . --glob \"!node_modules/**\" --glob \"!.repos/**\" --glob \"!goals/codex-security-findings-2026-07-08/raw/**\""
+        ]
+      },
+      "closeout": {
+        "status": "closed in Codex",
+        "closedAt": "2026-07-08T11:26:24.118Z",
+        "reason": "False positive"
+      },
+      "remediationHint": "No maintained-code remediation. Close in Codex as false positive."
+    },
+    {
+      "id": "CSF-010",
+      "codexId": "a688672e8c6081918e434272ee07f92d",
+      "title": "Tier gate permits non-read-only writes without approval",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "committed": "6d ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-010.md",
+      "patchCaptured": false,
+      "ownerArea": "packages/foundation/capability/mcp-kit",
+      "classes": [
+        "CWE-862",
+        "authorization-bypass",
+        "tool-approval-policy-bypass"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-004",
+      "validation": {
+        "status": "complete",
+        "agent": "019f414f-2713-7671-9f8c-63e262d6155d",
+        "rationale": "The maintained tier gate automatically approves any tool whose destructive annotation is false without also requiring a read-only annotation. Non-read-only additive/idempotent writes can therefore bypass explicit policy approval.",
+        "evidence": ["packages/foundation/capability/mcp-kit/src/TierGate.ts"],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:42:41.311Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Required readonly tool annotations before non-destructive auto-approval can bypass approval.",
+        "changedFiles": [
+          "packages/foundation/capability/mcp-kit/src/TierGate.ts",
+          "packages/foundation/capability/mcp-kit/test/TierGate.test.ts"
+        ],
+        "verificationCommands": [
+          "(cd packages/foundation/capability/mcp-kit && bunx --bun vitest run test/TierGate.test.ts)"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Automatically approve only read-only and non-destructive tools; require explicit policy approval for all non-read-only or destructive tools, with a regression test."
+    },
+    {
+      "id": "CSF-011",
+      "codexId": "74e159f9e3d481919cdacd026ad3b49f",
+      "title": "Broad gitleaks allowlist disables secret scanning",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "committed": "6d ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-011.md",
+      "patchCaptured": false,
+      "ownerArea": "repo-security-ci",
+      "classes": [
+        "secret-scanning-bypass",
+        "gitleaks-allowlist-misconfiguration",
+        "ci-security-control-regression"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-001",
+      "validation": {
+        "status": "complete",
+        "agent": "019f414f-4a52-71f0-ad30-cad6fe6aaba8",
+        "rationale": "The maintained gitleaks config globally allows research SOURCES.md paths without rule scoping, suppressing all rule matches in those files. CI, local quality, and pre-commit lanes consume that config.",
+        "evidence": [
+          ".gitleaks.toml",
+          ".github/workflows/check.yml",
+          "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+          "lefthook.yml"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:42:41.311Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Scoped the research allowlist to the generic API-key rule instead of disabling broad secret scanning.",
+        "changedFiles": [".gitleaks.toml"],
+        "verificationCommands": [
+          "rg -n \"targetRules|generic-api-key|research-allowlist\" .gitleaks.toml"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Scope the SOURCES.md allowlist to the intended rule, such as generic-api-key, while preserving anchored path patterns."
+    },
+    {
+      "id": "CSF-012",
+      "codexId": "e1b876909298819181f0810c89bb449f",
+      "title": "Remote skill updater allows path traversal writes",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "committed": "1w ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-012.md",
+      "patchCaptured": false,
+      "ownerArea": "repo-cli skills updater",
+      "classes": ["CWE-22", "CWE-73"],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-003",
+      "validation": {
+        "status": "complete",
+        "agent": "019f414f-670c-7501-996e-509fa2c91880",
+        "rationale": "The maintained remote skill updater derives local write paths from remote entry paths using prefix checks and path joins without rejecting traversal or proving resolved containment. The root package exposes the write-mode updater.",
+        "evidence": [
+          "package.json",
+          "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:42:41.311Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Rejected traversal and out-of-root paths from GitHub skill tree entries before writing updates.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
+          "packages/tooling/tool/cli/test/skills-command.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run packages/tooling/tool/cli/test/skills-command.test.ts"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Normalize and validate every remote path before fetch/write, reject absolute/traversal/special segments, and assert resolved destinations remain inside the canonical skill directory."
+    },
+    {
+      "id": "CSF-013",
+      "codexId": "b1bf2eea83848191aa454446c34d4343",
+      "title": "N3 writer allows RDF injection via unescaped IRIs",
+      "severity": "Medium",
+      "codexStatus": "Closed",
+      "committed": "1w ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-013.md",
+      "patchCaptured": false,
+      "ownerArea": "external N3 dependency / ignored research checkout",
+      "classes": ["RDF serialization injection", "IRI delimiter injection"],
+      "verdict": "out-of-scope",
+      "disposition": "out-of-scope",
+      "codexCloseReason": "False positive",
+      "lane": "_none_",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4153-4fc7-75e0-b2c7-d8a43750742e",
+        "rationale": "The reported root N3 implementation files are not tracked maintained repo files. Matching files exist only in ignored dependency installs or out-of-scope research checkouts, and maintained packages/apps do not import n3.",
+        "evidence": [],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:47:35.912Z"
+      },
+      "remediation": {
+        "status": "not required",
+        "changedFiles": [],
+        "verificationCommands": [
+          "git ls-files -- src/N3Writer.js src/N3DataFactory.js .repos/n3/src/N3Writer.js .repos/n3/src/N3DataFactory.js"
+        ]
+      },
+      "closeout": {
+        "status": "closed in Codex",
+        "closedAt": "2026-07-08T11:26:24.118Z",
+        "reason": "False positive"
+      },
+      "remediationHint": "No maintained-code remediation. Close in Codex as false positive."
+    },
+    {
+      "id": "CSF-014",
+      "codexId": "33a35d9afa308191810d5b813946077c",
+      "title": "Desktop signing job no longer uses protected environment",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "committed": "2w ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-014.md",
+      "patchCaptured": false,
+      "ownerArea": "GitHub Actions desktop release / professional-desktop",
+      "classes": [
+        "ci-cd-control-regression",
+        "github-actions-environment-protection",
+        "release-signing-supply-chain"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-001",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4153-508c-7493-a49e-97921857936c",
+        "rationale": "The maintained desktop release workflow attaches the protected environment only to an approval placeholder job while signing and release-writing jobs run without the protected environment. A needs dependency orders jobs but does not make dependents protected.",
+        "evidence": [".github/workflows/release-desktop.yml"],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:47:35.912Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Restored protected-environment gating for desktop release signing and readiness.",
+        "changedFiles": [".github/workflows/release-desktop.yml"],
+        "verificationCommands": [
+          "rg -n \"environment: professional-desktop-release|release-desktop-ready|TAURI_SIGNING_PRIVATE_KEY\" .github/workflows/release-desktop.yml"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Attach the protected environment to every job that reads signing credentials or stages release assets, or move signing/upload work into the protected job."
+    },
+    {
+      "id": "CSF-015",
+      "codexId": "b756556479a88191a66e8863d5b000c2",
+      "title": "Office actions sent to LLM provider without a guard",
+      "severity": "Medium",
+      "codexStatus": "New",
+      "committed": "2w ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-015.md",
+      "patchCaptured": false,
+      "ownerArea": "law-practice server / LangExtract",
+      "classes": ["CWE-200", "CWE-201", "LLM data exposure"],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-005",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4153-5146-7292-9823-c3ba10b24a71",
+        "rationale": "The office-action review path sends full extracted document text through LangExtract and the injected LanguageModel path. The live law-practice layer can use remote provider layers and no local-only, consent, redaction, classification, or policy guard was found.",
+        "evidence": [
+          "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts",
+          "packages/foundation/capability/langextract/src/Service/index.ts",
+          "packages/law-practice/server/src/Layer.ts",
+          "packages/drivers/openai-compat/src/OpenAiCompatLanguageModel.service.ts",
+          "packages/drivers/xai/src/XAiLanguageModel.service.ts",
+          "packages/drivers/venice-ai/src/VeniceAiLanguageModel.service.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:47:35.912Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Added a default-deny remote extraction policy and wired law-practice server config to opt into remote LangExtract use.",
+        "changedFiles": [
+          "packages/foundation/capability/langextract/src/Extraction/index.ts",
+          "packages/foundation/capability/langextract/src/Service/index.ts",
+          "packages/foundation/capability/langextract/test/Service.test.ts",
+          "packages/law-practice/server/src/Layer.ts",
+          "packages/law-practice/server/test/LawPracticeServer.test.ts"
+        ],
+        "verificationCommands": [
+          "(cd packages/foundation/capability/langextract && bunx --bun vitest run test/Service.test.ts)",
+          "bunx --bun vitest run packages/law-practice/server/test/LawPracticeServer.test.ts"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Fail closed before extraction unless policy permits the selected provider and data class; add local/remote provider capability checks and tenant/user opt-in or redaction."
+    },
+    {
+      "id": "CSF-016",
+      "codexId": "6a1fd70adaa48191b5b2409303cea34c",
+      "title": "Committed SkillOpt artifacts leak local filesystem paths",
+      "severity": "Low",
+      "codexStatus": "New",
+      "committed": "1d ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-016.md",
+      "patchCaptured": false,
+      "ownerArea": "goals/skillopt-training-pilot generated SkillOpt history artifacts",
+      "classes": [
+        "information-disclosure",
+        "local-path-disclosure",
+        "committed-generated-artifact"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-002",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4153-5212-7311-9a39-d266881fe279",
+        "rationale": "Tracked SkillOpt generated history under goals still contains absolute developer-machine paths and execution metadata. The affected paths are not under .repos and a targeted secret-pattern check did not find direct secrets.",
+        "evidence": [
+          "goals/skillopt-training-pilot/history/p1-gate/FINDINGS.md",
+          "goals/skillopt-training-pilot/history/p1-gate/config.gate-accept.yaml",
+          "goals/skillopt-training-pilot/history/p1-gate/config.gate-reject.yaml",
+          "goals/skillopt-training-pilot/history/p1-gate/out-accept/config.json",
+          "goals/skillopt-training-pilot/history/p1-gate/out-accept/runtime_state.json",
+          "goals/skillopt-training-pilot/history/p1-gate/out-accept/selection_eval_baseline/predictions/gate-accept-val/codex_raw.txt",
+          "goals/skillopt-training-pilot/history/p1-gate/out-accept/steps/step_0001/rollout/predictions/gate-accept-train/codex_raw.txt",
+          "goals/skillopt-training-pilot/history/p1-gate/out-accept/steps/step_0001/selection_eval/predictions/gate-accept-val/codex_raw.txt",
+          "goals/skillopt-training-pilot/history/p1-gate/out-accept/summary.json",
+          "goals/skillopt-training-pilot/history/p1-gate/out-reject/config.json",
+          "goals/skillopt-training-pilot/history/p1-gate/out-reject/runtime_state.json",
+          "goals/skillopt-training-pilot/history/p1-gate/out-reject/selection_eval_baseline/predictions/gate-reject-val/codex_raw.txt",
+          "goals/skillopt-training-pilot/history/p1-gate/out-reject/steps/step_0001/rollout/predictions/gate-reject-train/codex_raw.txt",
+          "goals/skillopt-training-pilot/history/p1-gate/out-reject/steps/step_0001/selection_eval/predictions/gate-reject-val/codex_raw.txt",
+          "goals/skillopt-training-pilot/history/p1-gate/out-reject/summary.json",
+          "goals/skillopt-training-pilot/history/p1-gate/run-accept.log",
+          "goals/skillopt-training-pilot/history/p1-gate/run-reject.attempt1-analyst-declined.log",
+          "goals/skillopt-training-pilot/history/p1-gate/run-reject.log"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:47:35.912Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Removed tracked generated SkillOpt run outputs and scrubbed remaining local filesystem paths from retained findings/proofs.",
+        "changedFiles": [
+          "goals/skillopt-training-pilot/history/.gitignore",
+          "goals/skillopt-training-pilot/history/p1-gate/FINDINGS.md",
+          "goals/skillopt-training-pilot/history/p1-spike/FINDINGS.md",
+          "goals/skillopt-training-pilot/history/p3-smoke/FINDINGS.md",
+          "goals/skillopt-training-pilot/history/p3a-scorer/LANE-SUMMARY.md",
+          "goals/skillopt-training-pilot/history/p3a-scorer/proofs/record.stderr.log",
+          "goals/skillopt-training-pilot/history/p3a-scorer/proofs/vitest-node.log",
+          "goals/skillopt-training-pilot/history/p3b-adapter/LANE-SUMMARY.md",
+          "goals/skillopt-training-pilot/history/p3b-adapter/proofs/python-stub-validation.log",
+          "goals/skillopt-training-pilot/history/p3b-adapter/proofs/test-adapter-stub.log",
+          "goals/skillopt-training-pilot/history/p1-gate/out-accept/**",
+          "goals/skillopt-training-pilot/history/p1-gate/out-reject/**",
+          "goals/skillopt-training-pilot/history/p1-spike/out/**",
+          "goals/skillopt-training-pilot/history/p3-smoke/out-real/**",
+          "goals/skillopt-training-pilot/history/p3-smoke/out-stub/**",
+          "goals/skillopt-training-pilot/history/p5-training/out/**"
+        ],
+        "verificationCommands": [
+          "! rg -n \"/home/elpresidank|YeeBois|/tmp/|/Users/|beep-effect2\" goals/skillopt-training-pilot --glob \"!**/.repos/**\""
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Remove or regenerate the committed generated history with local paths and execution traces scrubbed, and add ignore/export sanitation for future SkillOpt artifacts."
+    },
+    {
+      "id": "CSF-017",
+      "codexId": "6e47c5f135208191b95c4fe11fc41b40",
+      "title": "Unsafe Turtle IRI formatting permits RDF injection",
+      "severity": "Low",
+      "codexStatus": "New",
+      "committed": "6d ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-017.md",
+      "patchCaptured": false,
+      "ownerArea": "foundation/modeling/identity",
+      "classes": ["RDF injection", "unsafe serialization", "input validation"],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-004",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4153-52f8-7c80-b2d6-845fc268b6a6",
+        "rationale": "The public identity helper validates the local name but directly interpolates caller-provided prefix or full IRI into Turtle output. The helper is re-exported from maintained package code.",
+        "evidence": [
+          "packages/foundation/modeling/identity/src/PnLocal.ts",
+          "packages/foundation/modeling/identity/src/index.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:47:35.912Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Validated PN_LOCAL prefixes and percent-encoded unsafe full IRI references before rendering.",
+        "changedFiles": [
+          "packages/foundation/modeling/identity/src/PnLocal.ts",
+          "packages/foundation/modeling/identity/test/PnLocal.test.ts"
+        ],
+        "verificationCommands": [
+          "(cd packages/foundation/modeling/identity && bunx --bun vitest run test/PnLocal.test.ts)"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Validate prefix and full IRI emission rules or accept branded validated values; add regression tests for delimiter, quote, backslash, and control-character rejection."
+    },
+    {
+      "id": "CSF-018",
+      "codexId": "f0783d95ca24819183b258081c61a466",
+      "title": "Unsafe deepMerge permits prototype poisoning",
+      "severity": "Low",
+      "codexStatus": "New",
+      "committed": "1w ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-018.md",
+      "patchCaptured": false,
+      "ownerArea": "foundation/modeling/utils",
+      "classes": [
+        "prototype-poisoning",
+        "unsafe-recursive-merge",
+        "library-sink"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-004",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4153-53e1-7911-bb90-ded1019e298c",
+        "rationale": "The exported deepMerge helper clones into an ordinary object and assigns patch entries directly. A blocked-key guard exists nearby but is not applied in deepMerge.",
+        "evidence": ["packages/foundation/modeling/utils/src/Struct.ts"],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:47:35.912Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Skipped blocked object keys during deep merge and covered prototype-pollution inputs.",
+        "changedFiles": [
+          "packages/foundation/modeling/utils/src/Struct.ts",
+          "packages/foundation/modeling/utils/test/Struct.test.ts"
+        ],
+        "verificationCommands": [
+          "(cd packages/foundation/modeling/utils && bunx --bun vitest run test/Struct.test.ts)"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Reject prototype-sensitive property names during recursive merge and add tests for top-level and nested hostile patch keys."
+    },
+    {
+      "id": "CSF-019",
+      "codexId": "e3330b08e0908191bc9b78d5832b0bc0",
+      "title": "Dynamic heading level enables HTML injection",
+      "severity": "Low",
+      "codexStatus": "New",
+      "committed": "1w ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-019.md",
+      "patchCaptured": false,
+      "ownerArea": "@beep/md HTML renderer",
+      "classes": ["CWE-79", "CWE-20", "HTML injection"],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-004",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4157-9f1e-75c3-9e06-81dc37e8acb2",
+        "rationale": "Maintained HTML render paths build heading tags from runtime heading level data without schema-decoding the public render boundary. Malformed in-memory documents can alter the trusted HtmlFragment output at the library/API boundary.",
+        "evidence": [
+          "packages/foundation/modeling/md/src/Md.render.ts",
+          "packages/foundation/modeling/md/src/Md.model.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:51:52.902Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Validated heading levels through the schema guard and fell back to h6 for forged values.",
+        "changedFiles": [
+          "packages/foundation/modeling/md/src/Md.render.ts",
+          "packages/foundation/modeling/md/test/Md.test.ts"
+        ],
+        "verificationCommands": [
+          "(cd packages/foundation/modeling/md && bunx --bun vitest run test/Md.test.ts)"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Render headings through a closed 1..6 mapping or validate Document/Block at public HTML render boundaries, with regression coverage."
+    },
+    {
+      "id": "CSF-020",
+      "codexId": "42691d9b480481918b59ed01b56b88af",
+      "title": "Predictable /tmp inspector script path enables local code execution",
+      "severity": "Low",
+      "codexStatus": "Closed",
+      "committed": "1w ago",
+      "page": "1-20 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-020.md",
+      "patchCaptured": false,
+      "ownerArea": "dev-tooling / vendored subtree hygiene",
+      "classes": [
+        "insecure-temporary-path",
+        "untrusted-local-helper-execution",
+        "local-developer-tool-risk"
+      ],
+      "verdict": "already-fixed",
+      "disposition": "already-fixed",
+      "codexCloseReason": "Already fixed",
+      "lane": "_none_",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4157-9ff9-7983-aadb-55d6187989cf",
+        "rationale": "The referenced generator is absent from current HEAD, no .repos/node-types checkout is present, and tracked source no longer contains the relevant inspector helper symbols. The current snapshot is already fixed.",
+        "evidence": [],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:51:52.902Z"
+      },
+      "remediation": {
+        "status": "not required",
+        "changedFiles": [],
+        "verificationCommands": [
+          "rg --files | rg \"(^|/)scripts/generate-inspector/(index\\.ts|README\\.md|tsconfig\\.json)$|generate-inspector|inspector_protocol\""
+        ]
+      },
+      "closeout": {
+        "status": "closed in Codex",
+        "closedAt": "2026-07-08T11:26:24.118Z",
+        "reason": "Already fixed"
+      },
+      "remediationHint": "No current remediation. If reintroduced, use private mkdtemp directories and avoid executing helpers from shared temp paths."
+    },
+    {
+      "id": "CSF-021",
+      "codexId": "21533390ff388191987c4edda44e8f39",
+      "title": "Schema.Void now accepts arbitrary input",
+      "severity": "Low",
+      "codexStatus": "Closed",
+      "committed": "1w ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-021.md",
+      "patchCaptured": false,
+      "ownerArea": "Vendored/external Effect v4 dependency",
+      "classes": [
+        "input-validation",
+        "dependency-behavior",
+        "vendored-source-out-of-scope"
+      ],
+      "verdict": "out-of-scope",
+      "disposition": "out-of-scope",
+      "codexCloseReason": "False positive",
+      "lane": "_none_",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4157-a11a-7b01-b802-e2a915fe126a",
+        "rationale": "The reported behavior is in vendored Effect files under .repos or dependency copies, not first-party maintained source. Maintained RPC declarations inspected provide explicit payload schemas and do not rely on the reported default.",
+        "evidence": [
+          ".repos/effect-v4/packages/effect/src/Schema.ts",
+          ".repos/effect-v4/packages/effect/src/SchemaAST.ts",
+          ".repos/effect-v4/packages/effect/src/unstable/rpc/Rpc.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:51:52.902Z"
+      },
+      "remediation": {
+        "status": "not required",
+        "changedFiles": [],
+        "verificationCommands": [
+          "rg -n \"Rpc\\.make\\(|payload:\\s*S\\.(Void|Undefined)|payload:\\s*Schema\\.(Void|Undefined)\" packages apps --glob \"**/*.{ts,tsx}\""
+        ]
+      },
+      "closeout": {
+        "status": "closed in Codex",
+        "closedAt": "2026-07-08T11:26:24.118Z",
+        "reason": "False positive"
+      },
+      "remediationHint": "No maintained-code remediation. Close in Codex as false positive."
+    },
+    {
+      "id": "CSF-022",
+      "codexId": "3a3ea697ab6881918a48a8b9bcc9f3f9",
+      "title": "Attachment size limit bypasses upload callback",
+      "severity": "Low",
+      "codexStatus": "New",
+      "committed": "2w ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-022.md",
+      "patchCaptured": false,
+      "ownerArea": "@beep/editor chat composer attachments",
+      "classes": [
+        "CWE-770",
+        "client-side resource-control bypass",
+        "inconsistent validation boundary"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-004",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4157-a1f3-7682-a81e-c325d08475e2",
+        "rationale": "Picker and drag/drop/paste flows route raw File arrays into captureAttachmentsFn, which invokes onAttach before applying maxAttachmentBytes. Oversized files can reach the upload callback despite being rejected from local state.",
+        "evidence": [
+          "packages/foundation/ui-system/editor/src/chat/atoms.ts",
+          "packages/foundation/ui-system/editor/src/chat/attachment-model.ts",
+          "packages/foundation/ui-system/editor/src/chat/attachments.tsx",
+          "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:51:52.902Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Filtered oversized attachments before invoking callbacks and kept IME composition guards intact.",
+        "changedFiles": [
+          "packages/foundation/ui-system/editor/src/chat/atoms.ts",
+          "packages/foundation/ui-system/editor/src/chat/send.tsx"
+        ],
+        "verificationCommands": [
+          "rg -n \"acceptedFiles|onAttach|keyCode === 229|isComposing\" packages/foundation/ui-system/editor/src/chat"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Filter/decode files against maxAttachmentBytes before invoking onAttach, or change the callback contract to accepted attachments plus rejections, with regression coverage."
+    },
+    {
+      "id": "CSF-023",
+      "codexId": "65957467b2fc8191981bbb7ec6f13048",
+      "title": "Developer-local paths committed in research prompt",
+      "severity": "Low",
+      "codexStatus": "New",
+      "committed": "2w ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-023.md",
+      "patchCaptured": false,
+      "ownerArea": "goals/chat-input-and-theming research seed documentation",
+      "classes": [
+        "CWE-200",
+        "developer-local-path-disclosure",
+        "committed-metadata-disclosure"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-002",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4157-a302-7442-9265-730977626ed8",
+        "rationale": "The maintained seed prompt still contains multiple absolute developer-local links. The file is under goals and not covered by the .repos out-of-scope rule.",
+        "evidence": [
+          "goals/chat-input-and-theming/research/seed/USER_PROMPT_INITIAL.md"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:51:52.902Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Replaced developer-local checkout paths in the research seed prompt with generic placeholders.",
+        "changedFiles": [
+          "goals/chat-input-and-theming/research/seed/USER_PROMPT_INITIAL.md"
+        ],
+        "verificationCommands": [
+          "! rg -n \"/home/elpresidank|YeeBois|/tmp/|/Users/|beep-effect2\" goals/chat-input-and-theming/research/seed/USER_PROMPT_INITIAL.md"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Replace absolute developer-machine links with repo-relative references, public upstream URLs, or sanitized placeholders."
+    },
+    {
+      "id": "CSF-024",
+      "codexId": "77f321288fa88191ae603b14acc7ae61",
+      "title": "Internal Tailnet service URL leaked in README",
+      "severity": "Low",
+      "codexStatus": "New",
+      "committed": "2w ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-024.md",
+      "patchCaptured": false,
+      "ownerArea": "explorations/solo-firm-docketing docs",
+      "classes": ["CWE-200", "information-disclosure", "internal-service-url"],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-002",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4157-a3e9-7a81-85f4-da2623faae55",
+        "rationale": "A tracked exploration README still contains a concrete internal Tailnet service URL, while adjacent files mention Tailnet only generically.",
+        "evidence": ["explorations/solo-firm-docketing/README.md"],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:51:52.902Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Redacted the internal Tailnet service URL from the exploration README.",
+        "changedFiles": ["explorations/solo-firm-docketing/README.md"],
+        "verificationCommands": [
+          "! rg -n \"tailnet|ts.net|/home/elpresidank|YeeBois|/tmp/|/Users/|beep-effect2\" explorations/solo-firm-docketing/README.md"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Remove the concrete internal URL and replace it with a generic private deployment placeholder."
+    },
+    {
+      "id": "CSF-025",
+      "codexId": "186268b3f5488191988ed21094114551",
+      "title": "Claim gate admits claims with fabricated evidence spans",
+      "severity": "Low",
+      "codexStatus": "New",
+      "committed": "2w ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-025.md",
+      "patchCaptured": false,
+      "ownerArea": "epistemic claim admission / provenance spans",
+      "classes": ["CWE-20", "data-integrity", "provenance-validation"],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-005",
+      "validation": {
+        "status": "complete",
+        "agent": "019f415b-8cf3-7da1-b243-7600bb19161d",
+        "rationale": "Maintained claim/evidence admission allows nonnegative but unordered offsets and arbitrary quote text, and the ClaimGate validation only checks for one typed quote triple rather than source/span/quote consistency.",
+        "evidence": [
+          "packages/foundation/modeling/provenance/src/TextAnchor.ts",
+          "packages/epistemic/domain/src/values/EvidenceSpan/EvidenceSpan.model.ts",
+          "packages/epistemic/domain/src/entities/Evidence/Evidence.model.ts",
+          "packages/epistemic/use-cases/src/ClaimGate/ClaimGate.service.ts",
+          "packages/foundation/capability/semantic-web/src/adapters/shacl-engine.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:56:29.456Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Required non-empty, internally consistent evidence anchors and filtered fabricated spans before claim admission.",
+        "changedFiles": [
+          "packages/foundation/modeling/provenance/src/TextAnchor.ts",
+          "packages/foundation/modeling/provenance/test/TextAnchor.test.ts",
+          "packages/epistemic/domain/src/values/EvidenceSpan/EvidenceSpan.model.ts",
+          "packages/epistemic/use-cases/src/ClaimGate/ClaimGate.service.ts",
+          "packages/epistemic/use-cases/test/EpistemicUseCases.test.ts"
+        ],
+        "verificationCommands": [
+          "(cd packages/foundation/modeling/provenance && bunx --bun vitest run test/TextAnchor.test.ts)",
+          "bunx --bun vitest run packages/epistemic/use-cases/test/EpistemicUseCases.test.ts"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Require non-empty quote, ordered offsets, evidence/source binding, and quote equality against the referenced source slice before admission."
+    },
+    {
+      "id": "CSF-026",
+      "codexId": "d1fcf507c67081919f19652cc625af68",
+      "title": "1Password skill exposes vault metadata to agent transcripts",
+      "severity": "Low",
+      "codexStatus": "New",
+      "committed": "2w ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-026.md",
+      "patchCaptured": false,
+      "ownerArea": "repo-local agent skills / developer workflow",
+      "classes": [
+        "CWE-200",
+        "secret-management metadata disclosure",
+        "agent transcript exposure"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-002",
+      "validation": {
+        "status": "complete",
+        "agent": "019f415b-8dba-7810-b00b-eb97de52a9ea",
+        "rationale": "A tracked repo-local 1Password skill still has broad activation and instructions that can emit host/auth diagnostics and vault/item/field/reference metadata into agent transcripts. It does not expose raw secret values but still leaks operational metadata.",
+        "evidence": [".claude/skills/onepassword-secret-refs/SKILL.md"],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:56:29.456Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Narrowed the 1Password skill trigger and required approval-gated, metadata-only secret-reference inventory.",
+        "changedFiles": [".claude/skills/onepassword-secret-refs/SKILL.md"],
+        "verificationCommands": [
+          "rg -n \"approval|op://|--reveal|BEEP_SECRETS\" .claude/skills/onepassword-secret-refs/SKILL.md"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Narrow activation, remove default process/account diagnostics, require explicit user approval before inventory, and default to redacted status/counts."
+    },
+    {
+      "id": "CSF-027",
+      "codexId": "d53692049620819191d429f2c1019e9f",
+      "title": "Training artifacts disclose local filesystem paths",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "committed": "1d ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-027.md",
+      "patchCaptured": false,
+      "ownerArea": "goals/skillopt-training-pilot training history",
+      "classes": [
+        "CWE-200",
+        "information-disclosure",
+        "local-path-disclosure",
+        "generated-artifact-hygiene"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-002",
+      "validation": {
+        "status": "complete",
+        "agent": "019f415b-8eb4-75c3-bc31-aae84c80340d",
+        "rationale": "Tracked retained training artifacts still contain absolute developer workstation paths. A bounded secret-pattern scan did not identify direct credentials.",
+        "evidence": [
+          "goals/skillopt-training-pilot/history/p5-training/run.log",
+          "goals/skillopt-training-pilot/history/p5-training/out/config.json",
+          "goals/skillopt-training-pilot/history/p5-training/out/runtime_state.json",
+          "goals/skillopt-training-pilot/history/p5-training/out/summary.json",
+          "goals/skillopt-training-pilot/history/p5-training/out/selection_eval_baseline/results.jsonl",
+          "goals/skillopt-training-pilot/history/p5-training/out/steps/step_0001/rollout/results.jsonl",
+          "goals/skillopt-training-pilot/history/p5-training/out/steps/step_0001/selection_eval/results.jsonl",
+          "goals/skillopt-training-pilot/history/p5-training/out/steps/step_0002/rollout/results.jsonl",
+          "goals/skillopt-training-pilot/history/p5-training/out/steps/step_0002/selection_eval/results.jsonl",
+          "goals/skillopt-training-pilot/history/p5-training/out/steps/step_0003/rollout/results.jsonl",
+          "goals/skillopt-training-pilot/history/p5-training/out/steps/step_0003/selection_eval/results.jsonl",
+          "goals/skillopt-training-pilot/history/p5-training/out/steps/step_0004/rollout/results.jsonl",
+          "goals/skillopt-training-pilot/history/p5-training/out/steps/step_0005/rollout/results.jsonl",
+          "goals/skillopt-training-pilot/history/p5-training/out/steps/step_0005/selection_eval/results.jsonl",
+          "goals/skillopt-training-pilot/history/p5-training/out/steps/step_0006/rollout/results.jsonl",
+          "goals/skillopt-training-pilot/history/p5-training/out/steps/step_0006/selection_eval/results.jsonl",
+          "goals/skillopt-training-pilot/history/p5-training/out/steps/step_0007/rollout/results.jsonl",
+          "goals/skillopt-training-pilot/history/p5-training/out/steps/step_0008/rollout/results.jsonl",
+          "goals/skillopt-training-pilot/history/p5-training/out/steps/step_0008/selection_eval/results.jsonl"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:56:29.456Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Removed committed training outputs and replaced remaining local path disclosures in retained SkillOpt history files.",
+        "changedFiles": [
+          "goals/skillopt-training-pilot/history/.gitignore",
+          "goals/skillopt-training-pilot/history/p1-spike/dataset/searchqa/train/items.json",
+          "goals/skillopt-training-pilot/history/p1-spike/dataset/searchqa/val/items.json",
+          "goals/skillopt-training-pilot/history/**/FINDINGS.md",
+          "goals/skillopt-training-pilot/history/**/LANE-SUMMARY.md",
+          "goals/skillopt-training-pilot/history/**/proofs/*.log",
+          "goals/skillopt-training-pilot/history/**/out*/**"
+        ],
+        "verificationCommands": [
+          "! rg -n \"/home/elpresidank|YeeBois|/tmp/|/Users/|beep-effect2\" goals/skillopt-training-pilot --glob \"!**/.repos/**\""
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Scrub or relativize absolute host paths in retained training artifacts and add sanitizer/export handling for future generated logs and JSON/JSONL records."
+    },
+    {
+      "id": "CSF-028",
+      "codexId": "84d54681e0d4819195798a734b1ef40d",
+      "title": "Path.basename one-argument calls now return a function",
+      "severity": "Informational",
+      "codexStatus": "Closed",
+      "committed": "1d ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-028.md",
+      "patchCaptured": false,
+      "ownerArea": "foundation/modeling/utils",
+      "classes": [
+        "functional-api-regression",
+        "api-arity-mismatch",
+        "no-security-impact"
+      ],
+      "verdict": "false-positive",
+      "disposition": "false-positive",
+      "codexCloseReason": "False positive",
+      "lane": "_none_",
+      "validation": {
+        "status": "complete",
+        "agent": "019f415b-8ff4-7963-ba6c-fa4da1e7f0c2",
+        "rationale": "The one-argument basename helper has a correctness/API mismatch, but static search found no maintained production use and the helper is not a security boundary.",
+        "evidence": [
+          "packages/foundation/modeling/utils/src/Path.ts",
+          "packages/foundation/modeling/utils/test/Path.test.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:56:29.456Z"
+      },
+      "remediation": {
+        "status": "not required",
+        "changedFiles": [],
+        "verificationCommands": [
+          "rg -n \"Path\\.basename\\(\" --glob \"!.repos/**\" --glob \"!goals/codex-security-findings-2026-07-08/raw/**\""
+        ]
+      },
+      "closeout": {
+        "status": "closed in Codex",
+        "closedAt": "2026-07-08T11:26:24.118Z",
+        "reason": "False positive"
+      },
+      "remediationHint": "No security remediation required. It may be fixed as a normal quality bug separately."
+    },
+    {
+      "id": "CSF-029",
+      "codexId": "7faa711bac00819199fa28258262aba1",
+      "title": "Unvalidated PACER report IDs used in cleanup DELETEs",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "committed": "1d ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-029.md",
+      "patchCaptured": false,
+      "ownerArea": "@beep/pacer PACER PCL client",
+      "classes": [
+        "input-validation",
+        "path-injection",
+        "credentialed-request-misrouting"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-006",
+      "validation": {
+        "status": "complete",
+        "agent": "019f415b-90fa-78b2-97d3-5bacd60c9bb1",
+        "rationale": "The PACER driver passes a server-supplied batch report id into cleanup before strict integer decoding, interpolating it into a credentialed same-origin DELETE path. Existing tests assert cleanup for invalid IDs.",
+        "evidence": [
+          "packages/drivers/pacer/src/PclClient.service.ts",
+          "packages/drivers/pacer/src/Pcl.models.ts",
+          "packages/drivers/pacer/test/Pacer.test.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:56:29.456Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Validated server report IDs before cleanup and prevented DELETE calls for invalid or fractional IDs.",
+        "changedFiles": [
+          "packages/drivers/pacer/src/PclClient.service.ts",
+          "packages/drivers/pacer/test/Pacer.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run packages/drivers/pacer/test/Pacer.test.ts"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Decode report ID immediately after start, never cleanup using an untrusted raw value, and update tests so invalid IDs fail without cleanup."
+    },
+    {
+      "id": "CSF-030",
+      "codexId": "d27c76f6363c8191b5765946d6587e83",
+      "title": "Static API codemod rewrites shadowed identifiers",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "committed": "2d ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-030.md",
+      "patchCaptured": false,
+      "ownerArea": "repo-crispening-orchestration codemods",
+      "classes": [
+        "developer-tooling",
+        "codemod-correctness",
+        "shadowed-identifier-rewrite",
+        "source-integrity"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-003",
+      "validation": {
+        "status": "complete",
+        "agent": "019f415b-91f5-77b2-8989-7b084dbccdf3",
+        "rationale": "The tracked codemod records relocation targets by const name and rewrites identifiers by text rather than proving reference identity, so shadowed locals or parameters can be rewritten.",
+        "evidence": [
+          "goals/repo-crispening-orchestration/ops/codemods/static-api-colocation.codemod.ts",
+          "goals/repo-crispening-orchestration/ops/codemods/static-api-colocation.test.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T10:56:29.456Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Resolved usage identifiers to the original relocated symbol and expanded shorthand properties without touching shadowed bindings.",
+        "changedFiles": [
+          "goals/repo-crispening-orchestration/ops/codemods/static-api-colocation.codemod.ts",
+          "goals/repo-crispening-orchestration/ops/codemods/static-api-colocation.test.ts"
+        ],
+        "verificationCommands": [
+          "direct in-memory shadowing regression for rewriteStaticApiColocation passed in operator transcript"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Collect verified reference nodes before removing declarations or resolve usages to the original symbol; exclude binding/declaration/import/type-only identifiers and add shadowing tests."
+    },
+    {
+      "id": "CSF-031",
+      "codexId": "b58954eda1108191a84d821bb2fc3828",
+      "title": "Unsanitized extract out-label permits path traversal",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "committed": "4d ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-031.md",
+      "patchCaptured": false,
+      "ownerArea": "@beep/repo-cli corpus extract",
+      "classes": [
+        "CWE-22",
+        "CWE-73",
+        "path-traversal",
+        "unsafe-recursive-delete",
+        "local-cli-input-validation"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-003",
+      "validation": {
+        "status": "complete",
+        "agent": "019f415f-c5a7-7121-8e14-c4edac9692a3",
+        "rationale": "Corpus extract accepts an unrestricted output label, joins it into a staging output path, then removes/writes through that computed path without segment validation or root containment for the label.",
+        "evidence": [
+          "packages/tooling/tool/cli/src/commands/Corpus/Corpus.command.ts",
+          "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+          "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T11:01:16.165Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Rejected corpus extract labels that are empty, absolute, traversal, contain separators, or contain NUL before staging writes.",
+        "changedFiles": [
+          "packages/tooling/tool/cli/src/commands/Corpus/Corpus.command.ts",
+          "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+          "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+          "packages/tooling/tool/cli/test/corpus-command.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run packages/tooling/tool/cli/test/corpus-command.test.ts"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Validate out-label as a single safe path segment and resolve the final output directory under the corpus staging root before removal or writes."
+    },
+    {
+      "id": "CSF-032",
+      "codexId": "bec753a1e9c88191888547eac7038bf1",
+      "title": "Research docs leak private repo paths and internals",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "committed": "6d ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-032.md",
+      "patchCaptured": false,
+      "ownerArea": "explorations/identity-as-iri research docs",
+      "classes": [
+        "information-disclosure",
+        "repo-hygiene",
+        "private-metadata-disclosure"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-002",
+      "validation": {
+        "status": "complete",
+        "agent": "019f415f-c66b-7f02-acb3-9153cd1a8c3f",
+        "rationale": "Tracked research docs contain developer-local absolute paths and private external-repo implementation metadata. This is passive repo disclosure, not a runtime exploit.",
+        "evidence": [
+          "explorations/identity-as-iri/research/20-repo-mining-synthesis.md",
+          "explorations/identity-as-iri/research/repos/skygest.md"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T11:01:16.165Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Scrubbed private checkout, scratch, download, and memory paths from identity-as-IRI research artifacts.",
+        "changedFiles": [
+          "explorations/identity-as-iri/assets/identity-as-iri-agent-context.xml",
+          "explorations/identity-as-iri/research/10-audit-semantic-schema-metadata.md",
+          "explorations/identity-as-iri/research/20-repo-mining-synthesis.md",
+          "explorations/identity-as-iri/research/repos/dxos-semantic-index.md",
+          "explorations/identity-as-iri/research/repos/n3.md",
+          "explorations/identity-as-iri/research/repos/ontograph-core.md",
+          "explorations/identity-as-iri/research/repos/ontology-master.md",
+          "explorations/identity-as-iri/research/repos/ontorite.md",
+          "explorations/identity-as-iri/research/repos/ontosphere.md",
+          "explorations/identity-as-iri/research/repos/owl-fol-translator.md",
+          "explorations/identity-as-iri/research/repos/rdflib-js.md",
+          "explorations/identity-as-iri/research/repos/skygest.md"
+        ],
+        "verificationCommands": [
+          "! rg -n \"/home/elpresidank|YeeBois|/tmp/|/Users/|beep-effect2\" explorations/identity-as-iri --glob \"!**/.repos/**\""
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Redact local paths and private repo internals; use repo-relative references or summarized private-repo learnings without concrete private layouts."
+    },
+    {
+      "id": "CSF-033",
+      "codexId": "f11dd817dfe88191add08c93af730f61",
+      "title": "Exported bin module starts MCP server on import",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "committed": "6d ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-033.md",
+      "patchCaptured": false,
+      "ownerArea": "packages/drivers/uspto-mcp",
+      "classes": [
+        "import-time side effect",
+        "local availability",
+        "executable module exported as library subpath"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-006",
+      "validation": {
+        "status": "complete",
+        "agent": "019f415f-c741-76a3-b745-887053316413",
+        "rationale": "The package wildcard export makes the bin subpath importable, and src/bin.ts starts the stdio MCP server during module evaluation while exporting configuration.",
+        "evidence": [
+          "packages/drivers/uspto-mcp/package.json",
+          "packages/drivers/uspto-mcp/src/bin.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T11:01:16.165Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Guarded MCP server startup behind import.meta.main and added import-only coverage.",
+        "changedFiles": [
+          "packages/drivers/uspto-mcp/src/bin.ts",
+          "packages/drivers/uspto-mcp/test/Server.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run packages/drivers/uspto-mcp/test/Server.test.ts"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Move reusable config to an import-safe module and keep executable startup behind an entrypoint guard or non-exported launcher; correct package export/sideEffects metadata."
+    },
+    {
+      "id": "CSF-034",
+      "codexId": "8ecf8f1b6cf88191888f1705ca74dc41",
+      "title": "Inherited keys accepted as skill names",
+      "severity": "Informational",
+      "codexStatus": "Closed",
+      "committed": "1w ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-034.md",
+      "patchCaptured": false,
+      "ownerArea": "repo-cli skills updater",
+      "classes": [
+        "prototype-property-lookup",
+        "local-tooling-robustness",
+        "no-security-impact"
+      ],
+      "verdict": "false-positive",
+      "disposition": "false-positive",
+      "codexCloseReason": "False positive",
+      "lane": "_none_",
+      "validation": {
+        "status": "complete",
+        "agent": "019f415f-c82e-7fb0-a5e9-74917e997d85",
+        "rationale": "A correctness defect exists in local skills tooling, but the reachable impact is local command failure or malformed metadata, not code execution, auth bypass, secret exposure, or cross-boundary access.",
+        "evidence": [
+          "packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts",
+          "packages/tooling/tool/cli/test/skills-command.test.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T11:01:16.165Z"
+      },
+      "remediation": {
+        "status": "not required",
+        "changedFiles": [],
+        "verificationCommands": [
+          "rg -n \"remoteSkillSourcesByName|R.fromEntries|Object\\.hasOwn|new Map|remoteSkillSourcesByName\\[\" packages/tooling/tool/cli/src/commands/Skills/Skills.command.ts"
+        ]
+      },
+      "closeout": {
+        "status": "closed in Codex",
+        "closedAt": "2026-07-08T11:26:24.118Z",
+        "reason": "False positive"
+      },
+      "remediationHint": "No security remediation required. As robustness cleanup, use Map/null-prototype/hasOwn checks for skill names."
+    },
+    {
+      "id": "CSF-035",
+      "codexId": "6f2a8026da4c8191b44a2045c344a73f",
+      "title": "Removed overrides reintroduce vulnerable Autolinker",
+      "severity": "Informational",
+      "codexStatus": "Closed",
+      "committed": "1w ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-035.md",
+      "patchCaptured": false,
+      "ownerArea": "tooling/docgen",
+      "classes": [
+        "transitive-dependency",
+        "dependency-hygiene",
+        "unreachable-xss",
+        "local-build-tool"
+      ],
+      "verdict": "false-positive",
+      "disposition": "false-positive",
+      "codexCloseReason": "False positive",
+      "lane": "_none_",
+      "validation": {
+        "status": "complete",
+        "agent": "019f415f-c912-7012-9854-134a8aa003c8",
+        "rationale": "Autolinker exists transitively via markdown-toc, but maintained source uses it only for local Markdown TOC generation, and the checked code path did not invoke Autolinker or serve public HTML.",
+        "evidence": [
+          "package.json",
+          "bun.lock",
+          "packages/tooling/tool/docgen/package.json",
+          "packages/tooling/tool/docgen/src/Core.ts",
+          "packages/tooling/tool/docgen/src/markdown-toc.d.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T11:01:16.165Z"
+      },
+      "remediation": {
+        "status": "not required",
+        "changedFiles": [],
+        "verificationCommands": [
+          "rg -n \"markdownToc|@effect/markdown-toc|remarkable|autolinker|linkify\" package.json bun.lock packages apps docs --glob \"!**/.repos/**\""
+        ]
+      },
+      "closeout": {
+        "status": "closed in Codex",
+        "closedAt": "2026-07-08T11:26:24.118Z",
+        "reason": "False positive"
+      },
+      "remediationHint": "No security remediation required. Optional dependency hygiene can replace markdown-toc or pin/override the transitive dependency."
+    },
+    {
+      "id": "CSF-036",
+      "codexId": "5f5ff05418c88191919f07e62490da39",
+      "title": "PACER auth sends Option wrappers in login JSON",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "committed": "1w ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-036.md",
+      "patchCaptured": false,
+      "ownerArea": "@beep/pacer authentication",
+      "classes": [
+        "auth-request-serialization",
+        "schema-encoding-bypass",
+        "CWE-20"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-006",
+      "validation": {
+        "status": "complete",
+        "agent": "019f415f-c9fb-73a2-9a7d-fd65152cb9e3",
+        "rationale": "PACER auth builds a CsoAuthRequest with Effect Option fields and sends the runtime object directly through bodyJson, serializing option wrappers instead of schema-encoded plain JSON.",
+        "evidence": [
+          "packages/drivers/pacer/src/PacerAuth.service.ts",
+          "packages/drivers/pacer/src/CsoAuth.models.ts",
+          "packages/drivers/pacer/src/Pacer.mock.ts",
+          "packages/drivers/pacer/test/Pacer.test.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T11:01:16.165Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Schema-encoded login/logout request bodies before bodyJson and asserted that Option internals are not serialized.",
+        "changedFiles": [
+          "packages/drivers/pacer/src/PacerAuth.service.ts",
+          "packages/drivers/pacer/src/Pacer.mock.ts",
+          "packages/drivers/pacer/test/Pacer.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run packages/drivers/pacer/test/Pacer.test.ts"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Encode CsoAuthRequest through schemaBodyJson or S.encode before bodyJson, and assert login request JSON shape in mock/tests."
+    },
+    {
+      "id": "CSF-037",
+      "codexId": "6293e4d58abc819192ad597ecc566d4a",
+      "title": "Schema default refactor drops defensive fallbacks",
+      "severity": "Informational",
+      "codexStatus": "Closed",
+      "committed": "1w ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-037.md",
+      "patchCaptured": false,
+      "ownerArea": "@beep/scratchpad ontology codegen",
+      "classes": [
+        "non-security local availability",
+        "developer-tooling robustness",
+        "schema-default normalization"
+      ],
+      "verdict": "false-positive",
+      "disposition": "false-positive",
+      "codexCloseReason": "False positive",
+      "lane": "_none_",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4164-40da-7023-9dce-4ff711190561",
+        "rationale": "Malformed plain objects can cause local scratchpad/codegen crashes, but this private scratchpad code has no product/runtime import path or attacker-reachable boundary.",
+        "evidence": [
+          "scratchpad/ontology/buildJsonSchema.ts",
+          "scratchpad/ontology/emitIrisModule.ts",
+          "scratchpad/ontology/parseTtl.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T11:06:33.468Z"
+      },
+      "remediation": {
+        "status": "not required",
+        "changedFiles": [],
+        "verificationCommands": [
+          "rg -n \"@beep/scratchpad|scratchpad/ontology|emitIrisModule|mergeClassTables|buildJsonSchema\" packages apps scratchpad --glob \"!.repos/**\" --glob \"!**/node_modules/**\" --glob \"!**/*.md\""
+        ]
+      },
+      "closeout": {
+        "status": "closed in Codex",
+        "closedAt": "2026-07-08T11:26:24.118Z",
+        "reason": "False positive"
+      },
+      "remediationHint": "No security remediation required. Optional robustness can normalize helper inputs through schema decoders or restore local fallbacks."
+    },
+    {
+      "id": "CSF-038",
+      "codexId": "8932e26dc4a4819187faf74d753f6461",
+      "title": "Unsafe ontology IRI codegen allows TS code injection",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "committed": "1w ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-038.md",
+      "patchCaptured": false,
+      "ownerArea": "@beep/scratchpad ontology codegen",
+      "classes": [
+        "CWE-94",
+        "code-generation-injection",
+        "unsafe-output-encoding"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-006",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4164-425d-7121-9c1e-cfcf1d4d0dda",
+        "rationale": "Tracked scratchpad ontology codegen preserves IRIs as raw strings, derives term keys, and renders term keys/full IRI values directly into generated TypeScript. Reachability is private developer tooling, but the codegen sink is maintained and unsafe.",
+        "evidence": [
+          "scratchpad/ontology/emitIrisModule.ts",
+          "scratchpad/ontology/parseTtl.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T11:06:33.468Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Rendered generated object keys and IRI values as safe TypeScript literals and removed a cloned-map bucket path that hid dynamic terms from tests.",
+        "changedFiles": [
+          "scratchpad/ontology/emitIrisModule.ts",
+          "scratchpad/test/ontology-emit-iris.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run --config scratchpad/vitest.config.ts scratchpad/test/ontology-emit-iris.test.ts --passWithNoTests",
+          "scoped tsc check over scratchpad/ontology/emitIrisModule.ts"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Serialize generated object keys and IRI values as safe literals or reject non-identifier terms with strict validation; add codegen regression coverage."
+    },
+    {
+      "id": "CSF-039",
+      "codexId": "f3fe56fa20dc8191aeddedb5f46fc4b6",
+      "title": "UTF-16 lastIndexOf returns code-unit offset",
+      "severity": "Informational",
+      "codexStatus": "Closed",
+      "committed": "1w ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-039.md",
+      "patchCaptured": false,
+      "ownerArea": "third-party dependency / Buffer compatibility",
+      "classes": [
+        "dependency-correctness",
+        "api-compatibility",
+        "no-reachable-security-boundary"
+      ],
+      "verdict": "false-positive",
+      "disposition": "false-positive",
+      "codexCloseReason": "False positive",
+      "lane": "_none_",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4164-445a-7661-893c-2c1b669a674c",
+        "rationale": "The UTF-16 offset mismatch is in an installed third-party buffer package, not tracked maintained source, and no maintained source imports the npm buffer polyfill or calls Buffer.lastIndexOf with UTF-16 encodings.",
+        "evidence": ["bun.lock"],
+        "confidence": "high",
+        "completedAt": "2026-07-08T11:06:33.468Z"
+      },
+      "remediation": {
+        "status": "not required",
+        "changedFiles": [],
+        "verificationCommands": [
+          "rg -n \"from ['\"]buffer/?['\"]|require\\(['\"]buffer/?['\"]\\)|Buffer\\.prototype\\.lastIndexOf|\\.lastIndexOf\\([^\\n]*(ucs2|ucs-2|utf16le|utf-16le)\" . --glob \"!**/.repos/**\" --glob \"!**/node_modules/**\""
+        ]
+      },
+      "closeout": {
+        "status": "closed in Codex",
+        "closedAt": "2026-07-08T11:26:24.118Z",
+        "reason": "False positive"
+      },
+      "remediationHint": "No security remediation required. Track as dependency correctness only if browser Buffer parity matters."
+    },
+    {
+      "id": "CSF-040",
+      "codexId": "dc9ac83457488191a4ff4666ef539ba2",
+      "title": "Scratchpad logging code fails to compile and can crash",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "committed": "1w ago",
+      "page": "21-40 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-040.md",
+      "patchCaptured": false,
+      "ownerArea": "scratchpad/explore shared Logging",
+      "classes": ["build-failure", "local-runtime-crash", "non-security"],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-006",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4164-455b-7c63-8b90-51f2b25bda50",
+        "rationale": "Scratchpad Logging code imports a missing sibling Identity module, imports a non-exported read error symbol, and references undefined identifiers in the write path. The scratchpad tsconfig includes these files.",
+        "evidence": [
+          "scratchpad/explore/shared/Logging/Logging.models.ts",
+          "scratchpad/explore/shared/Logging/Logging.errors.ts",
+          "scratchpad/tsconfig.json"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T11:06:33.468Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Removed invalid imports, fixed the write path for string/Buffer chunks, and covered rotating log writes.",
+        "changedFiles": [
+          "scratchpad/explore/shared/Logging/Logging.models.ts",
+          "scratchpad/explore/shared/Logging/Logging.errors.ts",
+          "scratchpad/test/logging-rotating-file-sink.test.ts"
+        ],
+        "verificationCommands": [
+          "bunx --bun vitest run --config scratchpad/vitest.config.ts scratchpad/test/logging-rotating-file-sink.test.ts --passWithNoTests",
+          "scoped tsc check over scratchpad/explore/shared/Logging/*.ts"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Fix/remove the identity import, align exported error imports, and rewrite RotatingFileSink.write so all values are scoped and defined."
+    },
+    {
+      "id": "CSF-041",
+      "codexId": "efdb3a05a3348191bd4c1abea030988b",
+      "title": "PACER token rotation is not logged out on session release",
+      "severity": "Informational",
+      "codexStatus": "Closed",
+      "committed": "1w ago",
+      "page": "41-45 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-041.md",
+      "patchCaptured": false,
+      "ownerArea": "@beep/pacer",
+      "classes": ["session-lifecycle", "token-rotation", "resource-cleanup"],
+      "verdict": "already-fixed",
+      "disposition": "already-fixed",
+      "codexCloseReason": "Already fixed",
+      "lane": "_none_",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4164-4675-7a50-86bd-5731fb6eabeb",
+        "rationale": "Maintained PACER session finalization reads the latest tokenRef before logout, PclClient writes rotated token values into that ref, and tests cover release after rotation.",
+        "evidence": [
+          "packages/drivers/pacer/src/PacerAuth.service.ts",
+          "packages/drivers/pacer/src/PclClient.service.ts",
+          "packages/drivers/pacer/test/Pacer.test.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T11:06:33.468Z"
+      },
+      "remediation": {
+        "status": "not required",
+        "changedFiles": [],
+        "verificationCommands": [
+          "rg -n \"Ref\\.get\\(tokenRef\\)|auth\\.logout\\(|x-next-gen-cso|rotateNextGenCso|logoutTokens\" packages/drivers/pacer"
+        ]
+      },
+      "closeout": {
+        "status": "closed in Codex",
+        "closedAt": "2026-07-08T11:26:24.118Z",
+        "reason": "Already fixed"
+      },
+      "remediationHint": "No remediation needed; keep the regression test."
+    },
+    {
+      "id": "CSF-042",
+      "codexId": "18ce7b0b42d08191a50e173f6f83a10e",
+      "title": "Root utils import now loads Node-only filesystem modules",
+      "severity": "Informational",
+      "codexStatus": "Closed",
+      "committed": "1w ago",
+      "page": "41-45 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-042.md",
+      "patchCaptured": false,
+      "ownerArea": "foundation/modeling/utils",
+      "classes": [
+        "availability",
+        "browser-compatibility",
+        "node-builtins-in-browser",
+        "import-graph"
+      ],
+      "verdict": "already-fixed",
+      "disposition": "already-fixed",
+      "codexCloseReason": "Already fixed",
+      "lane": "_none_",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4164-473f-76c3-b913-f1738da704b6",
+        "rationale": "Current source and dist outputs removed top-level createRequire/static node:* imports; Node builtins are lazily resolved through guarded process.getBuiltinModule only when Node-specific helpers run.",
+        "evidence": [
+          "packages/foundation/modeling/utils/src/index.ts",
+          "packages/foundation/modeling/utils/src/FileSystem.ts",
+          "packages/foundation/modeling/utils/src/Path.ts",
+          "packages/foundation/modeling/utils/src/NodeUrl.ts"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T11:06:33.468Z"
+      },
+      "remediation": {
+        "status": "not required",
+        "changedFiles": [],
+        "verificationCommands": [
+          "rg -n \"node:module|createRequire|from ['\"]node:(fs|path|url)['\"]\" packages/foundation/modeling/utils/src packages/foundation/modeling/utils/dist --glob \"!**/.repos/**\""
+        ]
+      },
+      "closeout": {
+        "status": "closed in Codex",
+        "closedAt": "2026-07-08T11:26:24.118Z",
+        "reason": "Already fixed"
+      },
+      "remediationHint": "No remediation needed; keep Node-only helper resolution lazy/guarded."
+    },
+    {
+      "id": "CSF-043",
+      "codexId": "1364c23a10048191acc499fbc735a4dc",
+      "title": "Recharts pie story uses nullable index as a number",
+      "severity": "Informational",
+      "codexStatus": "Closed",
+      "committed": "1w ago",
+      "page": "41-45 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-043.md",
+      "patchCaptured": false,
+      "ownerArea": "foundation/ui-system/ui Storybook chart stories",
+      "classes": ["storybook-demo", "type-safety", "non-security"],
+      "verdict": "false-positive",
+      "disposition": "false-positive",
+      "codexCloseReason": "False positive",
+      "lane": "_none_",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4168-d66b-7a62-a1cf-b09716b4146f",
+        "rationale": "Live Recharts types define the sector index as number, Storybook typecheck passes, and the path is demo-only without a security-sensitive sink.",
+        "evidence": [
+          "packages/foundation/ui-system/ui/stories/components/chart.stories.tsx"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T11:10:27.310Z"
+      },
+      "remediation": {
+        "status": "not required",
+        "changedFiles": [],
+        "verificationCommands": [
+          "./node_modules/.bin/tsc -p packages/foundation/ui-system/ui/tsconfig.stories.json --noEmit --incremental false --pretty false"
+        ]
+      },
+      "closeout": {
+        "status": "closed in Codex",
+        "closedAt": "2026-07-08T11:26:24.118Z",
+        "reason": "False positive"
+      },
+      "remediationHint": "No security remediation needed. If Recharts widens the index type later, normalize before array lookup."
+    },
+    {
+      "id": "CSF-044",
+      "codexId": "4520d5366ea0819193fd983c32b00436",
+      "title": "IME Enter guard regression can submit mid-composition",
+      "severity": "Informational",
+      "codexStatus": "New",
+      "committed": "2w ago",
+      "page": "41-45 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-044.md",
+      "patchCaptured": false,
+      "ownerArea": "foundation/ui-system editor chat composer",
+      "classes": [
+        "ui-input-handling",
+        "ime-composition",
+        "accidental-submit",
+        "non-security-regression"
+      ],
+      "verdict": "real",
+      "disposition": "remediate",
+      "codexCloseReason": "pending post-merge",
+      "lane": "RL-004",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4168-d745-7fa0-9fa2-c9b3c8d08294",
+        "rationale": "The Enter key binding documents an IME bail-out but only checks modern composition state before applying default send policy. Legacy IME Enter can dispatch send.",
+        "evidence": [
+          "packages/foundation/ui-system/editor/src/chat/atoms.ts",
+          "packages/foundation/ui-system/editor/src/chat/send.tsx",
+          "packages/foundation/ui-system/editor/src/chat/config.ts",
+          "packages/foundation/ui-system/editor/src/chat/chat-composer.tsx",
+          "apps/professional-desktop/src/chat/ui/Composer.tsx"
+        ],
+        "confidence": "high",
+        "completedAt": "2026-07-08T11:10:27.310Z"
+      },
+      "remediation": {
+        "status": "complete pending merge",
+        "completedAt": "2026-07-08T12:18:00.000Z",
+        "summary": "Restored the legacy IME keyCode 229 bail-out alongside modern composition-state checks.",
+        "changedFiles": [
+          "packages/foundation/ui-system/editor/src/chat/atoms.ts",
+          "packages/foundation/ui-system/editor/src/chat/send.tsx"
+        ],
+        "verificationCommands": [
+          "rg -n \"keyCode === 229|isComposing|SEND_MESSAGE_COMMAND|sendOn\" packages/foundation/ui-system/editor/src/chat"
+        ]
+      },
+      "closeout": {
+        "status": "pending post-merge",
+        "closedAt": null,
+        "reason": null
+      },
+      "remediationHint": "Restore legacy IME key fallback beside the modern composition guard, preferably via a named helper, with focused coverage."
+    },
+    {
+      "id": "CSF-045",
+      "codexId": "0ebed66ab6908191a1420331a5ac7a58",
+      "title": "ColorKit copy constructor now aliases mutable state",
+      "severity": "Informational",
+      "codexStatus": "Closed",
+      "committed": "2w ago",
+      "page": "41-45 of 45",
+      "rawEvidence": "goals/codex-security-findings-2026-07-08/raw/CSF-045.md",
+      "patchCaptured": false,
+      "ownerArea": "@beep/scratchpad / removed ColorKit sheet",
+      "classes": [
+        "mutable-state-aliasing",
+        "state-integrity",
+        "scratchpad-only",
+        "removed-code"
+      ],
+      "verdict": "already-fixed",
+      "disposition": "already-fixed",
+      "codexCloseReason": "Already fixed",
+      "lane": "_none_",
+      "validation": {
+        "status": "complete",
+        "agent": "019f4168-d840-7fd2-a83c-28955ef64342",
+        "rationale": "The reported ColorKit file and implementation are not present in current HEAD, and git history shows the path was deleted. No maintained ColorKit implementation remains outside finding metadata.",
+        "evidence": [],
+        "confidence": "high",
+        "completedAt": "2026-07-08T11:10:27.310Z"
+      },
+      "remediation": {
+        "status": "not required",
+        "changedFiles": [],
+        "verificationCommands": [
+          "git ls-files \"scratchpad/sheets/ColorKit.schemas.ts\" \"scratchpad/sheets/*\""
+        ]
+      },
+      "closeout": {
+        "status": "closed in Codex",
+        "closedAt": "2026-07-08T11:26:24.118Z",
+        "reason": "Already fixed"
+      },
+      "remediationHint": "No code change required. If ColorKit returns, clone internal state and add regression coverage."
+    }
+  ]
+}

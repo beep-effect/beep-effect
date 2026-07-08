@@ -154,8 +154,8 @@ The full example continues by spreading imported entity, event, relation, action
 
 Design authority read before mining:
 
-- `/home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md`
-- `/home/elpresidank/YeeBois/projects/beep-effect/scratchpad/identity/README.md`
+- `<repo-root>/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md`
+- `<repo-root>/scratchpad/identity/README.md`
 
 Ontograph-core files inspected:
 

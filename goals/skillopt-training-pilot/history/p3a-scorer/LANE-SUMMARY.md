@@ -50,7 +50,7 @@ Determinism proof: `cmp -s .proofs-scorer/determinism-a.json .proofs-scorer/dete
 
 ## Record status
 
-`--record` is implemented without ai-metrics schema changes. It upserts a `BenchmarkCase` using `promptHash` plus `promptRef`, then writes a `BenchmarkRun` with sanitized score/breakdown note only. Smoke-tested with `--data-root /tmp/skillopt-scorer-record-proof-final` to avoid creating repo-local database artifacts.
+`--record` is implemented without ai-metrics schema changes. It upserts a `BenchmarkCase` using `promptHash` plus `promptRef`, then writes a `BenchmarkRun` with sanitized score/breakdown note only. Smoke-tested with `--data-root <tmp-data-root>` to avoid creating repo-local database artifacts.
 
 ## Open risks
 

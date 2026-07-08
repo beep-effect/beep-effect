@@ -11,7 +11,10 @@
  * @since 0.0.0
  */
 import { $EpistemicDomainId } from "@beep/identity/packages";
-import { TextAnchorFields } from "@beep/provenance/TextAnchor";
+import {
+  isInternallyConsistent as isTextAnchorInternallyConsistent,
+  TextAnchorFields,
+} from "@beep/provenance/TextAnchor";
 import { SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as S from "effect/Schema";
@@ -91,4 +94,37 @@ export class EvidenceSpan extends S.Class<EvidenceSpan>($I`EvidenceSpan`)(
   $I.annote("EvidenceSpan", {
     description: "Char-offset evidence span wrapping a @beep/provenance TextAnchor with an extraction confidence.",
   })
-) {}
+) {
+  /**
+   * Whether the span is internally consistent before source-text re-slicing:
+   * non-empty range, non-empty quote, and quote length matching the range width.
+   *
+   * @category validation
+   * @since 0.0.0
+   */
+  static readonly isInternallyConsistent = (span: EvidenceSpan): boolean => isTextAnchorInternallyConsistent(span);
+}
+
+/**
+ * Whether an evidence span is internally consistent before source-text re-slicing.
+ *
+ * @example
+ * ```ts
+ * import { Confidence, EvidenceSpan, isEvidenceSpanInternallyConsistent } from "@beep/epistemic-domain/values/EvidenceSpan"
+ * import { NonNegativeInt } from "@beep/schema"
+ * import * as S from "effect/Schema"
+ *
+ * const span = EvidenceSpan.make({
+ *   startChar: NonNegativeInt.make(0),
+ *   endChar: NonNegativeInt.make(12),
+ *   quote: "Ada Lovelace",
+ *   confidence: S.decodeUnknownSync(Confidence)(0.98)
+ * })
+ *
+ * console.log(isEvidenceSpanInternallyConsistent(span))
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const isEvidenceSpanInternallyConsistent = EvidenceSpan.isInternallyConsistent;

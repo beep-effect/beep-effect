@@ -1,7 +1,0 @@
-Implemented [src/SourceMetadata.ts](/home/elpresidank/YeeBois/projects/beep-effect/goals/skillopt-training-pilot/history/p3-smoke/out-stub/steps/step_0001/selection_eval/scratch/sfv4-fn-schema-003/worktree/src/SourceMetadata.ts:1).
-
-The entrypoint now exports schema-owned `SourceMetadataInput` and `SourceMetadata` contracts via `effect/Schema`, derives their TypeScript types from those schemas, and exports `MakeSourceMetadata` plus `makeSourceMetadata` while preserving `sourcePath`, `owner`, and `generatedBy: "sync-data-to-ts"`.
-
-Verification:
-- `bun x tsc src/SourceMetadata.ts --ignoreConfig --noEmit --pretty false --moduleResolution bundler --module esnext --target es2022 --lib es2022,esnext.disposable,dom --skipLibCheck` passed.
-- Full `bun x tsc --noEmit --pretty false` is blocked in this copied fixture because `../../../../../tsconfig.base.json` resolves to a missing scratch path, with ambient lib errors from the inherited setup.

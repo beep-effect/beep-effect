@@ -50,7 +50,17 @@ jobs:
 
       - name: Run full property sweep
         shell: bash
-        run: bun run beep ci lane property --runs "${{ inputs.runs || '1000' }}" --summarize
+        env:
+          BEEP_PROPERTY_RUNS: ${{ inputs.runs || '1000' }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "${BEEP_PROPERTY_RUNS}" =~ ^[1-9][0-9]{0,5}$ ]]; then
+            echo "::error::runs must be a positive integer with at most 6 digits."
+            exit 1
+          fi
+
+          bun run beep ci lane property --runs "${BEEP_PROPERTY_RUNS}" --summarize
 
       - name: Append Turbo summary
         if: always()

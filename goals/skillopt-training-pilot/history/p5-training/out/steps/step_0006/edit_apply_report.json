@@ -1,9 +1,0 @@
-[
-  {
-    "op": "insert_after",
-    "target": "  key; reserve `R.getSomes({...})` for homogeneous dynamic-key dictionaries.\n    Use `O.all({...})` for all-or-nothing fixed-shape composition. (Amended\n    2026-07-05 — see `standards/architecture/DE",
-    "content_preview": "- Import the `O` namespace exactly as `import { O } from \"@beep/utils\"` (the\n  package's named barrel export) — not a submodule path or a differently\n  named/aliased import — since completion checks g",
-    "status": "applied_insert_after_fallback_append",
-    "index": 1
-  }
-]

@@ -824,6 +824,7 @@ export const deepMerge: {
 
   const next = { ...current } as Record<string, unknown>;
   for (const [key, value] of entries(patch)) {
+    if (isBlockedObjectKey(key)) continue;
     if (value === undefined) continue;
 
     const existing = next[key];
