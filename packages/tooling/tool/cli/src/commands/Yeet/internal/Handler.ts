@@ -603,6 +603,7 @@ const runGitOutput = Effect.fn("Yeet.runGitOutput")(function* (
 });
 
 const blockedMonitorBranches: ReadonlyArray<string> = ["main", "master", "HEAD"];
+const protectedPublishBranches: ReadonlyArray<string> = ["main", "master", "HEAD"];
 const shouldMonitorChecks = (options: YeetRunOptions): boolean =>
   options.monitor || options.mode === "monitor" || options.mode === "closeout";
 
@@ -619,6 +620,31 @@ const validateMonitorBranch = (context: RepoRunContext): Effect.Effect<void, Yee
     })
   );
 };
+
+const validatePublishBranch = (
+  context: RepoRunContext,
+  options: YeetRunOptions
+): Effect.Effect<void, YeetCommandError> => {
+  if (options.mode !== "publish" || !A.contains(protectedPublishBranches, context.branch)) {
+    return Effect.void;
+  }
+
+  return Effect.fail(
+    YeetCommandError.make({
+      message: `yeet publish is PR-branch-only; refusing to publish directly from "${context.branch}". Create a feature branch from ${context.base}, then rerun yeet publish.`,
+      command: `git switch -c <feature-branch> ${context.base}`,
+      exitCode: 1,
+    })
+  );
+};
+
+/**
+ * Expose the protected-branch publish guard for focused tests.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const validatePublishBranchForTesting = validatePublishBranch;
 
 const runGhPullRequestView = Effect.fn("Yeet.runGhPullRequestView")(function* (
   context: RepoRunContext
@@ -2779,6 +2805,7 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
 > {
   const message = yield* validateRequiredMessage(options);
   const context = yield* hydrateYeetRunContext(options);
+  yield* validatePublishBranch(context, options);
   yield* validateMonitorGuards(context, options);
   const forceTurbo =
     options.mode === "repair" || options.mode === "verify" || options.mode === "publish"
