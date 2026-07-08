@@ -347,7 +347,8 @@ const resolveTrustedMediaToolPath = Effect.fn("Files.resolveTrustedMediaToolPath
  *   detectFacesFiles: () => Effect.never,
  *   normalizeFiles: () => Effect.never,
  *   processFiles: () => Effect.never,
- *   sortAndRenameFiles: () => Effect.never
+ *   sortAndRenameFiles: () => Effect.never,
+ *   stripMetadataFiles: () => Effect.never
  * }
  *
  * console.log(typeof service.processFiles)

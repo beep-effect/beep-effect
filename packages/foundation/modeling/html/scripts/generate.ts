@@ -24,6 +24,7 @@ import { Effect, FileSystem, Layer, Logger, MutableHashMap, MutableHashSet, Path
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { GlobalAttributes } from "../src/Html.attributes.ts";
 
 const $I = $HtmlId.create("scripts/generate");
@@ -102,7 +103,7 @@ const RESERVED = MutableHashSet.fromIterable([
 ]);
 
 const className = (tag: string): string => {
-  const pascal = tag.charAt(0).toUpperCase() + tag.slice(1);
+  const pascal = Str.toUpperCase(tag.charAt(0)) + tag.slice(1);
   return MutableHashSet.has(RESERVED, pascal) ? `${pascal}Element` : pascal;
 };
 

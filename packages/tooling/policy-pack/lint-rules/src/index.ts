@@ -152,16 +152,17 @@ type RuleMetadata = S.Schema.Type<typeof RuleMetadataSchema>;
  * @since 0.0.0
  */
 export class RuleRegistrySchema extends S.Class<RuleRegistrySchema>("RuleRegistrySchema")(
-  S.Struct({
+  {
     "no-native-error": RuleMetadataSchema,
     "no-bigint-literals": RuleMetadataSchema,
     "no-empty-named-blocks": RuleMetadataSchema,
     "prefer-array-flat-map": RuleMetadataSchema,
-  }).annotate({
+  },
+  {
     identifier: "@beep/lint-rules/RuleRegistrySchema",
     title: "RuleRegistrySchema",
     description: "Schema for the finite rule registry keyed by rule slug.",
-  })
+  }
 ) {}
 
 /**

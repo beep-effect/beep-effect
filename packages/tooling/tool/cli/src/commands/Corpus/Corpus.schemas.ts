@@ -319,6 +319,13 @@ export const RecycleBinFormatVersion = LiteralKit(["v1", "v2"]).pipe(
 /**
  * Type for {@link RecycleBinFormatVersion}.
  *
+ * @example
+ * ```ts
+ * import type { RecycleBinFormatVersion } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const version: RecycleBinFormatVersion = "v2"
+ * console.log(version)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -508,6 +515,19 @@ export const CorpusRestorationRecord = S.Union([
 /**
  * Type for {@link CorpusRestorationRecord}.
  *
+ * @example
+ * ```ts
+ * import { CorpusRestorationRecord } from "@beep/repo-cli/commands/Corpus"
+ * import * as S from "effect/Schema"
+ *
+ * const record: CorpusRestorationRecord = S.decodeUnknownSync(CorpusRestorationRecord)({
+ *   contentRelativePath: "$R0CB4M9.docx",
+ *   matchStatus: "unmatched-content",
+ *   pairKey: "0CB4M9.docx",
+ *   sourceLabel: "source-a"
+ * })
+ * console.log(record.matchStatus) // "unmatched-content"
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -622,6 +642,13 @@ export const RecycleBinEntryKind = LiteralKit(["metadata", "content"]).pipe(
 /**
  * Type for {@link RecycleBinEntryKind}.
  *
+ * @example
+ * ```ts
+ * import type { RecycleBinEntryKind } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const kind: RecycleBinEntryKind = "metadata"
+ * console.log(kind)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -949,6 +976,13 @@ export const CorpusOrganizeCategory = LiteralKit([
 /**
  * Type for {@link CorpusOrganizeCategory}.
  *
+ * @example
+ * ```ts
+ * import type { CorpusOrganizeCategory } from "@beep/repo-cli/commands/Corpus"
+ *
+ * const category: CorpusOrganizeCategory = "docket"
+ * console.log(category)
+ * ```
  * @category models
  * @since 0.0.0
  */

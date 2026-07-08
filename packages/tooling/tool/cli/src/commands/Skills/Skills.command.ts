@@ -216,6 +216,12 @@ const skillSource = (source: {
 /**
  * GitHub-backed skills that this repo can update automatically.
  *
+ * @example
+ * ```ts
+ * import { remoteSkillSources } from "@beep/repo-cli/commands/Skills"
+ *
+ * console.log(remoteSkillSources.some((source) => source.name === "grill-me")) // true
+ * ```
  * @category constants
  * @since 0.0.0
  */
@@ -701,6 +707,13 @@ const renderSkillsBlock = (names: ReadonlyArray<string>): string =>
  * @param configText - Existing Codex config text.
  * @param names - Skill names to render into the managed skills table.
  * @returns Codex config text with the managed skills table replaced or appended.
+ * @example
+ * ```ts
+ * import { renderCodexConfigWithSkills } from "@beep/repo-cli/commands/Skills"
+ *
+ * const rendered = renderCodexConfigWithSkills("", ["grill-me"])
+ * console.log(rendered.includes("[skills]")) // true
+ * ```
  * @category commands
  * @since 0.0.0
  */
@@ -841,6 +854,15 @@ const resolveMode = (check: boolean, dryRun: boolean): Effect.Effect<SkillsRunMo
 /**
  * Run the skills update workflow.
  *
+ * @example
+ * ```ts
+ * import { runSkillsUpdate } from "@beep/repo-cli/commands/Skills"
+ * import { Effect } from "effect"
+ * import * as O from "effect/Option"
+ *
+ * const program = runSkillsUpdate({ mode: "check", skill: O.none() })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
  * @category use-cases
  * @since 0.0.0
  */

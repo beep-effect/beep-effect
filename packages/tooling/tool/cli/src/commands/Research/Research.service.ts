@@ -97,6 +97,24 @@ type ResearchCommandServiceRequirements =
 /**
  * Service contract for research knowledge-vault operations.
  *
+ * @example
+ * ```ts
+ * import type { ResearchCommandServiceShape } from "@beep/repo-cli/commands/Research"
+ * import { Effect } from "effect"
+ *
+ * const service: ResearchCommandServiceShape = {
+ *   captureUrl: () => Effect.never,
+ *   cognify: () => Effect.never,
+ *   daily: () => Effect.never,
+ *   digest: () => Effect.never,
+ *   historySift: () => Effect.never,
+ *   notionPull: () => Effect.never,
+ *   repoCard: () => Effect.never,
+ *   status: () => Effect.never
+ * }
+ *
+ * console.log(typeof service.daily)
+ * ```
  * @category services
  * @since 0.0.0
  */

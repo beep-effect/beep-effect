@@ -253,36 +253,19 @@ export const threadTimelineAtoms = Atom.family((threadId: ThreadId) =>
  * @category models
  * @since 0.0.0
  */
-export const CreateThreadAtomInput = S.Struct({
-  workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
-    description: "Workspace where the thread is created.",
-  }),
-  title: S.String.annotateKey({
-    description: "Initial thread title.",
-  }),
-}).annotate({
-  description: "Write payload for the client thread-creation atom.",
-});
-
-/**
- * Runtime type for {@link CreateThreadAtomInput}.
- *
- * @example
- * ```ts
- * import { CreateThreadAtomInput } from "@beep/agents-client"
- * import type { CreateThreadAtomInput as CreateThreadAtomInputType } from "@beep/agents-client"
- * import * as Workspace from "@beep/shared-domain/identity/Workspace"
- *
- * const workspaceId = Workspace.WorkspaceId.make(1)
- * const request: CreateThreadAtomInputType = CreateThreadAtomInput.make({ workspaceId, title: "Inbox" })
- *
- * console.log(request.workspaceId) // 1
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type CreateThreadAtomInput = typeof CreateThreadAtomInput.Type;
+export class CreateThreadAtomInput extends S.Class<CreateThreadAtomInput>($I`CreateThreadAtomInput`)(
+  {
+    workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
+      description: "Workspace where the thread is created.",
+    }),
+    title: S.String.annotateKey({
+      description: "Initial thread title.",
+    }),
+  },
+  $I.annote("CreateThreadAtomInput", {
+    description: "Write payload for the client thread-creation atom.",
+  })
+) {}
 
 /**
  * Creates a thread in a workspace and focuses it.

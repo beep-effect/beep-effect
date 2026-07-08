@@ -166,6 +166,13 @@ const stringifyJsonLine = SchemaGetter.stringifyJson({ space: 0 });
  * Stable schema-first policy rule identifiers emitted for lint and Yeet issue routing.
  *
  * @internal
+ * @example
+ * ```ts
+ * import { SchemaFirstPolicyRuleId } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(SchemaFirstPolicyRuleId)("SFV4-null-return")) // true
+ * ```
  * @category schema
  * @since 0.0.0
  */
@@ -189,6 +196,22 @@ export const SchemaFirstPolicyRuleId = LiteralKit([
   })
 );
 
+/**
+ * Stable schema-first policy rule identifier.
+ *
+ * @internal
+ * @example
+ * ```ts
+ * import type { SchemaFirstPolicyRuleId } from "@beep/repo-cli/commands/Lint"
+ *
+ * const ruleId: SchemaFirstPolicyRuleId = "SFV4-null-return"
+ * console.log(ruleId)
+ * ```
+ * @category schema
+ * @since 0.0.0
+ */
+export type SchemaFirstPolicyRuleId = typeof SchemaFirstPolicyRuleId.Type;
+
 const SchemaFirstPolicySeverity = LiteralKit(["warning", "error"]).pipe(
   $I.annoteSchema("SchemaFirstPolicySeverity", {
     description: "Severity levels emitted by schema-first policy lint findings.",
@@ -199,6 +222,13 @@ const SchemaFirstPolicySeverity = LiteralKit(["warning", "error"]).pipe(
  * Kinds of schema-first inventory findings.
  *
  * @internal
+ * @example
+ * ```ts
+ * import { SchemaFirstEntryKind } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(SchemaFirstEntryKind)("object-struct-schema")) // true
+ * ```
  * @category schema
  * @since 0.0.0
  */
@@ -214,9 +244,32 @@ export const SchemaFirstEntryKind = LiteralKit([
 );
 
 /**
+ * Kind of one schema-first inventory finding.
+ *
+ * @internal
+ * @example
+ * ```ts
+ * import type { SchemaFirstEntryKind } from "@beep/repo-cli/commands/Lint"
+ *
+ * const kind: SchemaFirstEntryKind = "object-struct-schema"
+ * console.log(kind)
+ * ```
+ * @category schema
+ * @since 0.0.0
+ */
+export type SchemaFirstEntryKind = typeof SchemaFirstEntryKind.Type;
+
+/**
  * Tracked status for a schema-first inventory finding.
  *
  * @internal
+ * @example
+ * ```ts
+ * import { SchemaFirstEntryStatus } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(SchemaFirstEntryStatus)("exception")) // true
+ * ```
  * @category schema
  * @since 0.0.0
  */
@@ -225,6 +278,22 @@ export const SchemaFirstEntryStatus = LiteralKit(["candidate", "exception", "adv
     description: "Tracked status for a schema-first inventory finding.",
   })
 );
+
+/**
+ * Tracked status of one schema-first inventory finding.
+ *
+ * @internal
+ * @example
+ * ```ts
+ * import type { SchemaFirstEntryStatus } from "@beep/repo-cli/commands/Lint"
+ *
+ * const status: SchemaFirstEntryStatus = "exception"
+ * console.log(status)
+ * ```
+ * @category schema
+ * @since 0.0.0
+ */
+export type SchemaFirstEntryStatus = typeof SchemaFirstEntryStatus.Type;
 
 /**
  * Single tracked schema-first inventory finding for a source file symbol.
@@ -355,6 +424,13 @@ class SchemaFirstLintSummary extends S.Class<SchemaFirstLintSummary>($I`SchemaFi
  * by path prefix.
  *
  * @internal
+ * @example
+ * ```ts
+ * import { SchemaCrispeningFamily } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(SchemaCrispeningFamily)("tooling")) // true
+ * ```
  * @category schema
  * @since 0.0.0
  */
@@ -363,6 +439,22 @@ export const SchemaCrispeningFamily = LiteralKit(["foundation", "drivers", "tool
     description: "Wave-family keys used to resolve the schema-crispening policy blocking flag by path prefix.",
   })
 );
+
+/**
+ * Wave-family key used to resolve the schema-crispening policy blocking flag.
+ *
+ * @internal
+ * @example
+ * ```ts
+ * import type { SchemaCrispeningFamily } from "@beep/repo-cli/commands/Lint"
+ *
+ * const family: SchemaCrispeningFamily = "tooling"
+ * console.log(family)
+ * ```
+ * @category schema
+ * @since 0.0.0
+ */
+export type SchemaCrispeningFamily = typeof SchemaCrispeningFamily.Type;
 
 /**
  * Blocking flag for a schema-crispening wave family or per-owner policy override.
@@ -456,7 +548,7 @@ const sortEntries: (entries: ReadonlyArray<SchemaFirstInventoryEntry>) => Readon
   flow(A.sort(byEntryKeyAscending));
 
 const isActiveRuleAdvisory =
-  (ruleId: typeof SchemaFirstPolicyRuleId.Type) =>
+  (ruleId: SchemaFirstPolicyRuleId) =>
   (entry: SchemaFirstInventoryEntry): boolean =>
     entry.ruleId === ruleId && entry.status === "advisory";
 
@@ -630,7 +722,7 @@ export const makeSchemaFirstProject = Effect.fn("makeSchemaFirstProject")(functi
   return project;
 });
 
-const SCHEMA_CRISPENING_FAMILY_PREFIXES: ReadonlyArray<readonly [string, typeof SchemaCrispeningFamily.Type]> = [
+const SCHEMA_CRISPENING_FAMILY_PREFIXES: ReadonlyArray<readonly [string, SchemaCrispeningFamily]> = [
   ["packages/foundation/", "foundation"],
   ["packages/drivers/", "drivers"],
   ["packages/tooling/", "tooling"],
@@ -663,7 +755,7 @@ const SCHEMA_CRISPENING_FAMILY_PREFIXES: ReadonlyArray<readonly [string, typeof 
  * @category utilities
  * @since 0.0.0
  */
-export const schemaCrispeningFamilyForFile = (file: string): O.Option<typeof SchemaCrispeningFamily.Type> =>
+export const schemaCrispeningFamilyForFile = (file: string): O.Option<SchemaCrispeningFamily> =>
   pipe(
     A.findFirst(SCHEMA_CRISPENING_FAMILY_PREFIXES, ([prefix]) => Str.startsWith(prefix)(file)),
     O.map(([, family]) => family)
@@ -1441,6 +1533,12 @@ const PERMANENT_SCHEMA_FIRST_EXCLUSIONS: ReadonlyArray<PermanentSchemaFirstExclu
     symbol: "LocalDateFields",
     reason:
       "S.Struct(CalendarParts.fields).check(...) feeds directly into S.Class<Model>(...)'s fields argument — a genuine feeds-an-S.Class-constructor shape, but CalendarParts.fields is a property-access reference rather than an inline object literal, so detectStructReason's non-object-literal-first-argument branch fires before isStructFieldsInputForSchemaClass ever runs; the feeds-S.Class detector heuristic misses this exact shape, which is why this entry is promoted rather than left to the generic branch.",
+  },
+  {
+    file: "packages/drivers/box/src/Box.config.ts",
+    symbol: "BoxCcgConfigShape",
+    reason:
+      "Same feeds-an-S.Class-constructor bucket as LocalDateFields above: the pre-checked S.Struct({...}).check(...) feeds directly into BoxCcgConfig's S.Class(...) fields argument. Driver-verified (FINAL-B): this is the only form that preserves both the enterpriseId-or-userId decode invariant (S.makeFilter) and .make() construction — S.Class's own static .check() returns a non-constructible decodeTo, verified against effect v4 source.",
   },
   {
     file: "packages/foundation/modeling/html/src/Html.meta.ts",
@@ -2584,13 +2682,13 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
   const pushEntry = (
     file: string,
     symbol: string,
-    kind: typeof SchemaFirstEntryKind.Type,
-    status: typeof SchemaFirstEntryStatus.Type,
+    kind: SchemaFirstEntryKind,
+    status: SchemaFirstEntryStatus,
     reason: string,
     owner: string,
     options: {
       readonly line?: number;
-      readonly ruleId?: typeof SchemaFirstPolicyRuleId.Type;
+      readonly ruleId?: SchemaFirstPolicyRuleId;
     } = {}
   ) =>
     void A.appendInPlace(

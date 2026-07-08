@@ -20,6 +20,7 @@ import { Match } from "effect";
 import * as A from "effect/Array";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as R from "effect/Record";
+import * as Str from "effect/String";
 
 const packageRoot = new URL("../", import.meta.url);
 const specPath = new URL("openapi.json", packageRoot);
@@ -214,7 +215,7 @@ const operationsOf = (
 ): ReadonlyArray<{ readonly op: Operation; readonly method: string; readonly path: string }> =>
   R.toEntries(spec.paths)
     .flatMap(([path, methods]) =>
-      R.toEntries(methods).map(([method, op]) => ({ method: method.toUpperCase(), op, path }))
+      R.toEntries(methods).map(([method, op]) => ({ method: Str.toUpperCase(method), op, path }))
     )
     .sort((a, b) => a.op.operationId.localeCompare(b.op.operationId));
 

@@ -262,6 +262,17 @@ export const TsconfigSyncRunOptions = TsconfigSyncMode.mapMembers(
 /**
  * Runtime options for executing tsconfig sync at a repo root.
  *
+ * @example
+ * ```ts
+ * import { TsconfigSyncRunOptions } from "@beep/repo-cli/commands/TsconfigSync"
+ * import * as S from "effect/Schema"
+ *
+ * const options: TsconfigSyncRunOptions = S.decodeUnknownSync(TsconfigSyncRunOptions)({
+ *   mode: "sync",
+ *   verbose: false
+ * })
+ * console.log(options.mode) // "sync"
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -294,6 +305,13 @@ export const TsconfigSyncSection = LiteralKit([
 /**
  * Sync change section categories.
  *
+ * @example
+ * ```ts
+ * import type { TsconfigSyncSection } from "@beep/repo-cli/commands/TsconfigSync"
+ *
+ * const section: TsconfigSyncSection = "root-references"
+ * console.log(section)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -396,6 +414,18 @@ export const TsconfigSyncChange = TsconfigSyncSection.mapMembers(
 /**
  * A single planned file change.
  *
+ * @example
+ * ```ts
+ * import { TsconfigSyncChange } from "@beep/repo-cli/commands/TsconfigSync"
+ * import * as S from "effect/Schema"
+ *
+ * const change: TsconfigSyncChange = S.decodeUnknownSync(TsconfigSyncChange)({
+ *   filePath: "tsconfig.json",
+ *   summary: "Updated project references.",
+ *   section: "root-references"
+ * })
+ * console.log(change.section) // "root-references"
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -510,6 +540,19 @@ export const PlannedFileChange = TsconfigSyncSection.mapMembers(
 /**
  * A planned file change with transformed file content.
  *
+ * @example
+ * ```ts
+ * import { PlannedFileChange } from "@beep/repo-cli/commands/TsconfigSync"
+ * import * as S from "effect/Schema"
+ *
+ * const change: PlannedFileChange = S.decodeUnknownSync(PlannedFileChange)({
+ *   filePath: "tsconfig.json",
+ *   summary: "Updated project references.",
+ *   section: "root-references",
+ *   content: "{}"
+ * })
+ * console.log(change.section) // "root-references"
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -572,6 +615,18 @@ export const TsconfigSyncResult = TsconfigSyncMode.mapMembers(
 /**
  * Result emitted after a sync run.
  *
+ * @example
+ * ```ts
+ * import { TsconfigSyncResult } from "@beep/repo-cli/commands/TsconfigSync"
+ * import * as S from "effect/Schema"
+ *
+ * const result: TsconfigSyncResult = S.decodeUnknownSync(TsconfigSyncResult)({
+ *   mode: "sync",
+ *   changedFiles: 0,
+ *   changes: []
+ * })
+ * console.log(result.mode) // "sync"
+ * ```
  * @category models
  * @since 0.0.0
  */
