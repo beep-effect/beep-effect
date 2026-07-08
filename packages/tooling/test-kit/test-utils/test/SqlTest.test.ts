@@ -38,37 +38,6 @@ const nodeRuntimeIt = it.skipIf(isBunRuntime);
 const nodeRuntimeEffectIt = it.effect.skipIf(isBunRuntime);
 const expectedDriver = isBunRuntime ? "bun-sqlite" : "node-sqlite";
 
-// The PGLite gate reads its selection from the LIVE process environment
-// (SqlTest.ts uses process.env, not Bun.env, so consumers that only import
-// fcRuns from the barrel still type-check under Node). Set exactly the two
-// gate keys on process.env for the duration of `run`, restoring prior values.
-const GATE_ENV_KEYS = ["BEEP_TEST_DATABASE_URL", "BEEP_TEST_DATABASE_DRIVER"] as const;
-
-// This helper deliberately drives the LIVE process environment so the gate's
-// runtime env reads (SqlTest.ts) can be exercised per-case — the intended
-// behavior under test, not app configuration.
-const setEnvKey = (key: string, value: string | undefined): void => {
-  if (value === undefined) {
-    // @effect-diagnostics-next-line processEnv:off
-    delete process.env[key];
-  } else {
-    // @effect-diagnostics-next-line processEnv:off
-    process.env[key] = value;
-  }
-};
-
-const withBunEnv = <A>(env: Record<string, string | undefined>, run: () => A): A => {
-  // @effect-diagnostics-next-line processEnv:off
-  const restore = A.map(GATE_ENV_KEYS, (key) => [key, process.env[key]] as const);
-  A.forEach(GATE_ENV_KEYS, (key) => setEnvKey(key, env[key]));
-
-  try {
-    return run();
-  } finally {
-    A.forEach(restore, ([key, original]) => setEnvKey(key, original));
-  }
-};
-
 const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
   schema: Schema,
   options?: {
@@ -455,31 +424,28 @@ describe("SqlTest", () => {
   });
 
   nodeRuntimeIt("selects PGLite integration gate branches from environment", () => {
-    withBunEnv({}, () => {
-      const gate = makePgliteIntegrationGate();
+    const emptyGate = makePgliteIntegrationGate({ databaseDriver: undefined, databaseUrl: undefined });
+    expect(O.isNone(emptyGate.sharedConnectionUri)).toBe(true);
+    expect(emptyGate.shouldRunPgliteIntegration).toBe(true);
+    expect(emptyGate.shouldUseTestcontainers).toBe(false);
+    expect(emptyGate.makePgliteLayer()).toBeDefined();
+    expect(emptyGate.makePgliteLayer({ migrate: Effect.void })).toBeDefined();
 
-      expect(O.isNone(gate.sharedConnectionUri)).toBe(true);
-      expect(gate.shouldRunPgliteIntegration).toBe(true);
-      expect(gate.shouldUseTestcontainers).toBe(false);
-      expect(gate.makePgliteLayer()).toBeDefined();
-      expect(gate.makePgliteLayer({ migrate: Effect.void })).toBeDefined();
+    const externalGate = makePgliteIntegrationGate({
+      databaseDriver: undefined,
+      databaseUrl: "postgres://user:pass@localhost:5432/db",
     });
+    expect(O.isSome(externalGate.sharedConnectionUri)).toBe(true);
+    expect(externalGate.makePgliteLayer()).toBeDefined();
+    expect(externalGate.makePgliteLayer({ seed: Effect.void })).toBeDefined();
 
-    withBunEnv({ BEEP_TEST_DATABASE_URL: "postgres://user:pass@localhost:5432/db" }, () => {
-      const gate = makePgliteIntegrationGate();
-
-      expect(O.isSome(gate.sharedConnectionUri)).toBe(true);
-      expect(gate.makePgliteLayer()).toBeDefined();
-      expect(gate.makePgliteLayer({ seed: Effect.void })).toBeDefined();
+    const testcontainersGate = makePgliteIntegrationGate({
+      databaseDriver: "pglite-testcontainers",
+      databaseUrl: undefined,
     });
-
-    withBunEnv({ BEEP_TEST_DATABASE_DRIVER: "pglite-testcontainers" }, () => {
-      const gate = makePgliteIntegrationGate();
-
-      expect(gate.shouldUseTestcontainers).toBe(true);
-      expect(gate.makePgliteLayer()).toBeDefined();
-      expect(gate.makePgliteLayer({ migrate: Effect.void })).toBeDefined();
-    });
+    expect(testcontainersGate.shouldUseTestcontainers).toBe(true);
+    expect(testcontainersGate.makePgliteLayer()).toBeDefined();
+    expect(testcontainersGate.makePgliteLayer({ migrate: Effect.void })).toBeDefined();
   });
 
   nodeRuntimeEffectIt(

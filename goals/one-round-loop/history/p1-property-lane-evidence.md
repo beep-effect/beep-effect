@@ -132,3 +132,27 @@ fixed without a wasted round beyond the discovery:
    other unlucky seeds does not block merge; the P4 required-flip is
    explicitly gated on these product bugs being fixed (D3: "flip after a
    stable green history").
+
+
+## Review-fix round 3 — the SqlTest env-read 3-way bind (resolved)
+
+`@beep/test-utils` SqlTest's PGLite gate reads test env. My earlier
+attempts hit a genuine three-way constraint, each fix breaking another:
+
+- `Bun.env` (main's form) → breaks consumer builds: oip-web's `next
+  build` deep-type-checks the barrel's SqlTest.ts and lacks Bun types
+  ("Cannot find name 'Bun'"), surfaced because the sweep added an
+  fcRuns import to oip-web's tests.
+- `process.env` → trips both the `processEnv` tsgo rule and the
+  `native-runtime` lint rule; `@effect-diagnostics:off` directives are
+  themselves banned in scanned src/test roots (`tsgo-rules` enforcement
+  drift).
+- `Config` (boot snapshot) → satisfies the laws and builds, but cannot
+  observe the runtime env mutation the branch test relied on.
+
+Resolution: `makePgliteIntegrationGate(env?)` reads via `Config` by
+default (Node-safe, law-clean; CI exports the vars before boot, so the
+snapshot is correct) and accepts an explicit `env` override so the
+branch test injects each case directly — no env mutation, no Bun global,
+no suppression directives. Verified: oip-web build green, test-utils
+check green, `tsgo-rules` exit 0, `native-runtime` clean, SqlTest 14/14.

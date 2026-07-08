@@ -1392,13 +1392,9 @@ const shouldUseExternalPgliteLayer = (mode: PgliteSqlTestLayerMode, config: PgEx
 
 const shouldUseTestcontainersPgliteLayer = (mode: PgliteSqlTestLayerMode): boolean =>
   PgliteSqlTestLayerMode.$match(mode, {
-    // Test-infra env gate: the PGLite integration layer is selected from the
-    // LIVE test environment, which the harness mutates per-case. Config's
-    // default provider snapshots at boot and cannot observe those mutations,
-    // so this reads process.env directly (Node-typed — no Bun global — so
-    // consumers that only import fcRuns from the barrel still type-check).
-    // @effect-diagnostics-next-line processEnv:off
-    auto: () => process.env.BEEP_TEST_DATABASE_DRIVER === "pglite-testcontainers",
+    auto: () =>
+      O.getOrUndefined(Effect.runSync(Config.option(Config.string("BEEP_TEST_DATABASE_DRIVER")))) ===
+      "pglite-testcontainers",
     external: () => false,
     "in-process": () => false,
     testcontainers: () => true,
@@ -1419,6 +1415,24 @@ const makeConfiguredSqlTestLayer = <Config, Services, SqlService extends Service
         driver,
         hooks,
       });
+
+/**
+ * Explicit environment selection for {@link makePgliteIntegrationGate}.
+ *
+ * @example
+ * ```ts
+ * import type { PgliteIntegrationGateEnv } from "@beep/test-utils"
+ *
+ * const env: PgliteIntegrationGateEnv = { databaseDriver: "pglite-testcontainers", databaseUrl: undefined }
+ * console.log(env.databaseDriver)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type PgliteIntegrationGateEnv = {
+  readonly databaseUrl?: string | undefined;
+  readonly databaseDriver?: string | undefined;
+};
 
 /**
  * Pre-computed gate values for PGLite integration tests.
@@ -1447,14 +1461,17 @@ const makeConfiguredSqlTestLayer = <Config, Services, SqlService extends Service
  * @category constructors
  * @since 0.0.0
  */
-export const makePgliteIntegrationGate = () => {
-  // Live test-env reads (see shouldUseTestcontainersPgliteLayer): the harness
-  // mutates these per-case, so process.env (live, Node-typed) is used instead
-  // of Config (boot snapshot, cannot observe runtime mutation).
-  // @effect-diagnostics-next-line processEnv:off
-  const sharedConnectionUri = pipe(process.env.BEEP_TEST_DATABASE_URL, O.fromNullishOr, O.filter(Str.isNonEmpty));
-  // @effect-diagnostics-next-line processEnv:off
-  const shouldUseTestcontainers = process.env.BEEP_TEST_DATABASE_DRIVER === "pglite-testcontainers";
+export const makePgliteIntegrationGate = (env?: PgliteIntegrationGateEnv) => {
+  // Real usage reads the selection from the environment via Config (Node-safe,
+  // law-clean; CI exports these before the process starts, so the boot snapshot
+  // is exactly right). Tests pass `env` explicitly to exercise each branch
+  // without mutating the process environment.
+  const resolved: PgliteIntegrationGateEnv = env ?? {
+    databaseDriver: O.getOrUndefined(Effect.runSync(Config.option(Config.string("BEEP_TEST_DATABASE_DRIVER")))),
+    databaseUrl: O.getOrUndefined(Effect.runSync(Config.option(Config.string("BEEP_TEST_DATABASE_URL")))),
+  };
+  const sharedConnectionUri = pipe(resolved.databaseUrl, O.fromNullishOr, O.filter(Str.isNonEmpty));
+  const shouldUseTestcontainers = resolved.databaseDriver === "pglite-testcontainers";
   // The in-process @beep/pglite driver is the docker-free default, so the pglite
   // integration suites always run. `BEEP_TEST_DATABASE_URL` (external) and
   // `BEEP_TEST_DATABASE_DRIVER=pglite-testcontainers` remain opt-in fallbacks.
