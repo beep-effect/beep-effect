@@ -27,7 +27,7 @@
       "id": "orl-003",
       "rank": 3,
       "phase": "P0",
-      "status": "in_progress",
+      "status": "done",
       "blockedBy": ["orl-001", "orl-002"],
       "title": "Thin check.yml to lane dispatch",
       "detail": "Blocked on BOTH the lane definitions and `beep ci local` — thinning never precedes the faithful local battery. Matrix case-block and cli-runnable standalone jobs become `bun run beep ci lane <id> [flags]`; workflow-gated orchestration stays in YAML; ci-native jobs (gitleaks image, OSV action, dependency-review) keep workflow bodies, marked CI-native in --list. FENCE: 17 required-check context names unchanged (ruleset 10240248) or same-change gh api update. Parity proof per D9: temporary workflow_dispatch shadow workflow dispatching every lane via `beep ci lane` on the SAME head SHA as the unmodified check.yml run; lane set + CLI-echoed commands + verdicts must match; run IDs recorded in history/ BEFORE the thinning commit replaces check.yml bodies. This PR itself dogfoods: `beep ci local` from its own branch before push (D4)."

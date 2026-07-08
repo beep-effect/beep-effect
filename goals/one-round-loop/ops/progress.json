@@ -6,7 +6,7 @@
     "wontFixRule": "Stretch items only; requires a rationale string."
   },
   "phases": {
-    "P0_ci_inversion": "in_progress",
+    "P0_ci_inversion": "done",
     "P1_property_lane": "pending",
     "P2_medium_tier": "pending",
     "P3_stretch": "pending",
@@ -14,7 +14,7 @@
   },
   "coreItems": {
     "C1_ci_lane_inversion": {
-      "status": "in_progress"
+      "status": "done"
     },
     "C2_property_law_lane": {
       "status": "pending"
@@ -77,9 +77,9 @@
       {
         "pr": 324,
         "title": "ci: p0 thinning to main (PR C)",
-        "ciRounds": null,
+        "ciRounds": 2,
         "localProof": "same content as PR 323 (16/16)",
-        "outcome": "open"
+        "outcome": "merged; round 1 failed on stale fallow contract test (turbo cache-input gap, evidence \u00a77); round 2 green"
       }
     ]
   }
