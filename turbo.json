@@ -110,7 +110,7 @@
       ]
     },
     "test:property": {
-      "env": ["BEEP_FC_NUM_RUNS"],
+      "env": ["BEEP_FC_NUM_RUNS", "BEEP_FC_SEED"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/vitest.shared.ts",

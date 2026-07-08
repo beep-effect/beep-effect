@@ -484,9 +484,9 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
     required: false,
     laneClass: "cli-runnable",
     replay: "exact",
-    flags: ["--affected", "--base", "--summarize", "--runs"],
+    flags: ["--affected", "--base", "--summarize", "--runs", "--seed"],
     notes:
-      "Added by one-round-loop P1 (D3): schema property laws at a 400-run PR floor via BEEP_FC_NUM_RUNS; lands non-required, flips to required at P4 after a stable green history.",
+      "Added by one-round-loop P1 (D3): schema property laws at a 400-run PR floor via BEEP_FC_NUM_RUNS, pinned to a fixed BEEP_FC_SEED so local and CI test identical inputs (one-round determinism; nightly rotates seeds); lands non-required, flips to required at P4 after a stable green history.",
   }),
 ];
 
@@ -526,6 +526,7 @@ export class CiLaneRunOptions extends S.Class<CiLaneRunOptions>($I`CiLaneRunOpti
     changesetStatus: S.Boolean,
     validateEnvelopes: S.Boolean,
     runs: S.optionalKey(S.String),
+    seed: S.optionalKey(S.String),
   },
   $I.annote("CiLaneRunOptions", {
     description: "Shape options for running one CI lane body.",
@@ -544,12 +545,29 @@ const turboShapeArgs = (options: CiLaneRunOptions): ReadonlyArray<string> => [
 // blank input back to the intended floor.
 const DEFAULT_PROPERTY_LANE_RUNS = "400";
 
+// Fixed fast-check seed for the per-PR property lane (one-round-loop P1). A
+// FIXED seed makes the lane deterministic so a local `beep ci lane property`
+// and the CI Property Laws lane (which runs the same command) test identical
+// inputs — a local green then predicts a CI green, closing the seed-dependent
+// gap that otherwise costs extra CI rounds. The nightly sweep leaves this
+// unset to rotate seeds for breadth. Read as a floor of a fixed constant so a
+// blank `--seed ""` cannot silently drop determinism.
+const DEFAULT_PROPERTY_LANE_SEED = "20260708";
+
 const resolvePropertyLaneRuns = (runs: string | undefined): string =>
   pipe(
     O.fromNullishOr(runs),
     O.map(Str.trim),
     O.filter(Str.isNonEmpty),
     O.getOrElse(() => DEFAULT_PROPERTY_LANE_RUNS)
+  );
+
+const resolvePropertyLaneSeed = (seed: string | undefined): string =>
+  pipe(
+    O.fromNullishOr(seed),
+    O.map(Str.trim),
+    O.filter(Str.isNonEmpty),
+    O.getOrElse(() => DEFAULT_PROPERTY_LANE_SEED)
   );
 
 const rootScriptStep = (
@@ -783,6 +801,7 @@ export const ciLaneStepsForTesting: {
           cwd: repoRoot,
           env: {
             BEEP_FC_NUM_RUNS: resolvePropertyLaneRuns(options.runs),
+            BEEP_FC_SEED: resolvePropertyLaneSeed(options.seed),
             ...(options.affected ? { TURBO_SCM_BASE: options.base } : {}),
           },
         }),
@@ -997,13 +1016,32 @@ export const ciLaneCommand = Command.make(
       Flag.withDefault("400"),
       Flag.withDescription("BEEP_FC_NUM_RUNS floor for the property lane (values only raise, never lower)")
     ),
+    seed: Flag.string("seed").pipe(
+      Flag.withDefault(DEFAULT_PROPERTY_LANE_SEED),
+      Flag.withDescription("BEEP_FC_SEED for the property lane; a fixed seed makes local and CI test identical inputs")
+    ),
     list: Flag.boolean("list").pipe(Flag.withDescription("Print the machine-readable lane inventory and exit")),
     lane: Argument.choice("lane", CI_LANE_ID_VALUES).pipe(
       Argument.withDescription("CI lane id to run"),
       Argument.optional
     ),
   },
-  ({ affected, base, changesetStatus, from, head, lane, last, list, mode, runs, summarize, to, validateEnvelopes }) => {
+  ({
+    affected,
+    base,
+    changesetStatus,
+    from,
+    head,
+    lane,
+    last,
+    list,
+    mode,
+    runs,
+    seed,
+    summarize,
+    to,
+    validateEnvelopes,
+  }) => {
     const options = CiLaneRunOptions.make({
       affected,
       base,
@@ -1016,6 +1054,7 @@ export const ciLaneCommand = Command.make(
       changesetStatus,
       validateEnvelopes,
       runs,
+      seed,
     });
 
     if (list) {

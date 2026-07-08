@@ -1401,7 +1401,7 @@
       "kind": "schema-class",
       "owner": "@beep/box",
       "identity": "BoxApiFailureContext",
-      "description": "Sanitized key-value context copied from a Box API failure."
+      "description": "Sanitized JSON key-value context copied from a Box API failure."
     },
     {
       "file": "packages/drivers/box/src/Box.errors.ts",

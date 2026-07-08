@@ -210,16 +210,16 @@ describe("ciLaneStepsForTesting", () => {
     expect(lastLabel).toBe("ci:fallow:envelope-check:dead-code");
   });
 
-  it("builds the property lane with the 400-run floor and cache-partitioning env", () => {
+  it("builds the property lane with the 400-run floor, fixed seed, and cache-partitioning env", () => {
     const step = firstOf(ciLaneStepsForTesting(REPO_ROOT, "property", prShapeOptions));
     expect(step.command).toBe("bunx");
     expect([...step.args]).toEqual(["turbo", "run", "test:property", "--affected", "--summarize"]);
-    expect(step.env).toEqual({ BEEP_FC_NUM_RUNS: "400", TURBO_SCM_BASE: "origin/main" });
+    expect(step.env).toEqual({ BEEP_FC_NUM_RUNS: "400", BEEP_FC_SEED: "20260708", TURBO_SCM_BASE: "origin/main" });
 
     const deep = firstOf(
       ciLaneStepsForTesting(REPO_ROOT, "property", CiLaneRunOptions.make({ ...baseOptions, runs: "1000" }))
     );
-    expect(deep.env).toEqual({ BEEP_FC_NUM_RUNS: "1000" });
+    expect(deep.env).toEqual({ BEEP_FC_NUM_RUNS: "1000", BEEP_FC_SEED: "20260708" });
 
     // A blank or whitespace-only --runs must fall back to the 400 floor,
     // never reach the lane as BEEP_FC_NUM_RUNS="" (which parsers read as
@@ -228,7 +228,20 @@ describe("ciLaneStepsForTesting", () => {
       const step = firstOf(
         ciLaneStepsForTesting(REPO_ROOT, "property", CiLaneRunOptions.make({ ...baseOptions, runs: blank }))
       );
-      expect(step.env).toEqual({ BEEP_FC_NUM_RUNS: "400" });
+      expect(step.env).toEqual({ BEEP_FC_NUM_RUNS: "400", BEEP_FC_SEED: "20260708" });
+    }
+
+    // --seed overrides the deterministic default; blank/whitespace falls back
+    // to the fixed seed so the PR lane can never silently go non-deterministic.
+    const seeded = firstOf(
+      ciLaneStepsForTesting(REPO_ROOT, "property", CiLaneRunOptions.make({ ...baseOptions, seed: "12345" }))
+    );
+    expect(seeded.env).toEqual({ BEEP_FC_NUM_RUNS: "400", BEEP_FC_SEED: "12345" });
+    for (const blank of ["", "   "]) {
+      const fallback = firstOf(
+        ciLaneStepsForTesting(REPO_ROOT, "property", CiLaneRunOptions.make({ ...baseOptions, seed: blank }))
+      );
+      expect(fallback.env).toEqual({ BEEP_FC_NUM_RUNS: "400", BEEP_FC_SEED: "20260708" });
     }
   });
 
