@@ -145,9 +145,19 @@ type CorpusCommandServiceRequirements =
  * @example
  * ```ts
  * import type { CorpusCommandServiceShape } from "@beep/repo-cli/commands/Corpus"
+ * import { Effect } from "effect"
  *
- * const service = {} as CorpusCommandServiceShape
- * console.log(service)
+ * const service: CorpusCommandServiceShape = {
+ *   archiveMove: () => Effect.never,
+ *   catalogCorpus: () => Effect.never,
+ *   enrichCorpus: () => Effect.never,
+ *   extractCorpus: () => Effect.never,
+ *   organizeCorpus: () => Effect.never,
+ *   salvageCorpus: () => Effect.never,
+ *   verifySalvage: () => Effect.never
+ * }
+ *
+ * console.log(typeof service.catalogCorpus)
  * ```
  * @category services
  * @since 0.0.0

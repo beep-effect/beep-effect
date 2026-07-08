@@ -15,19 +15,17 @@ import type { Redacted } from "effect";
 
 const $I = $BoxId.create("Box.config");
 
-const BoxCcgConfigShape = S.Struct({
-  clientId: S.String,
-  clientSecret: S.Redacted(S.String),
-  enterpriseId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-  userId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
-}).check(
-  S.makeFilter((config) => O.isSome(config.enterpriseId) || O.isSome(config.userId), {
-    identifier: $I`BoxCcgSubjectCheck`,
-    title: "Box CCG subject",
-    description: "Requires either an enterprise id or user id for Box Client Credentials Grant auth.",
-    message: "Expected enterpriseId or userId for Box CCG auth",
+class BoxCcgConfigBase extends S.Class<BoxCcgConfigBase>($I`BoxCcgConfig`)(
+  {
+    clientId: S.String,
+    clientSecret: S.Redacted(S.String),
+    enterpriseId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+    userId: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault),
+  },
+  $I.annote("BoxCcgConfig", {
+    description: "Client Credentials Grant configuration for the Box technical driver.",
   })
-);
+) {}
 
 /**
  * Developer-token configuration for local Box access.
@@ -73,12 +71,22 @@ export class BoxDeveloperTokenConfig extends S.Class<BoxDeveloperTokenConfig>($I
  * @category models
  * @since 0.0.0
  */
-export class BoxCcgConfig extends S.Class<BoxCcgConfig>($I`BoxCcgConfig`)(
-  BoxCcgConfigShape,
-  $I.annote("BoxCcgConfig", {
-    description: "Client Credentials Grant configuration for the Box technical driver.",
+export const BoxCcgConfig = BoxCcgConfigBase.check(
+  S.makeFilter((config) => O.isSome(config.enterpriseId) || O.isSome(config.userId), {
+    identifier: $I`BoxCcgSubjectCheck`,
+    title: "Box CCG subject",
+    description: "Requires either an enterprise id or user id for Box Client Credentials Grant auth.",
+    message: "Expected enterpriseId or userId for Box CCG auth",
   })
-) {}
+);
+
+/**
+ * Type for {@link BoxCcgConfig}.
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type BoxCcgConfig = InstanceType<typeof BoxCcgConfigBase>;
 
 /**
  * Box developer-token configuration service.

@@ -40,6 +40,13 @@ export const ArchitectureDomainKind = LiteralKit(["aggregates", "entities", "val
 /**
  * Canonical architecture domain-kind folder.
  *
+ * @example
+ * ```ts
+ * import type { ArchitectureDomainKind } from "@beep/repo-cli/commands/Architecture"
+ *
+ * const kind: ArchitectureDomainKind = "aggregates"
+ * console.log(kind)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -67,6 +74,13 @@ export const ArchitecturePlanStage = LiteralKit(["core", "persistence", "protoco
 /**
  * Staged architecture proof target.
  *
+ * @example
+ * ```ts
+ * import type { ArchitecturePlanStage } from "@beep/repo-cli/commands/Architecture"
+ *
+ * const stage: ArchitecturePlanStage = "persistence"
+ * console.log(stage)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -104,6 +118,13 @@ export const ArchitectureSliceRole = LiteralKit([
 /**
  * Canonical architecture slice role.
  *
+ * @example
+ * ```ts
+ * import type { ArchitectureSliceRole } from "@beep/repo-cli/commands/Architecture"
+ *
+ * const role: ArchitectureSliceRole = "use-cases"
+ * console.log(role)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -212,6 +233,13 @@ export const ArchitectureWriterKind = LiteralKit(["template", "json", "jsonc", "
 /**
  * Writer family selected from normalized architecture operations.
  *
+ * @example
+ * ```ts
+ * import type { ArchitectureWriterKind } from "@beep/repo-cli/commands/Architecture"
+ *
+ * const writer: ArchitectureWriterKind = "package-json"
+ * console.log(writer)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -641,11 +669,28 @@ export const ArchitectureOperation = S.Union([
   WritePackageJsonOperation,
   EnsureFileOperation,
   EnsureAbsentPathOperation,
-]);
+]).pipe(
+  $I.annoteSchema("ArchitectureOperation", {
+    description: "Union of every canonical architecture operation-plan operation kind.",
+  })
+);
 
 /**
  * Canonical operation-plan operation.
  *
+ * @example
+ * ```ts
+ * import { EnsureFileOperation } from "@beep/repo-cli/commands/Architecture"
+ * import type { ArchitectureOperation } from "@beep/repo-cli/commands/Architecture"
+ *
+ * const operation: ArchitectureOperation = EnsureFileOperation.make({
+ *   description: "Confirm the use-case barrel exists.",
+ *   kind: "ensure-file",
+ *   path: "packages/research-lab/use-cases/src/index.ts",
+ *   role: "use-cases"
+ * })
+ * console.log(operation.kind)
+ * ```
  * @category models
  * @since 0.0.0
  */
