@@ -20,7 +20,6 @@ import {
   RunpodRawResponse,
 } from "@beep/runpod";
 import { decodeJsonString } from "@beep/schema/Json";
-import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { describe, expect, layer } from "@effect/vitest";
 import { Context, Effect, Equal, Layer, pipe, Redacted, Ref, Result } from "effect";
@@ -91,7 +90,7 @@ const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
     fc.property(arbitrary, (value) => {
       expectRoundTrip(schema, value);
     }),
-    fcRuns(25)
+    { numRuns: 25 }
   );
 };
 
@@ -99,45 +98,6 @@ const RunpodRawRequestArbitrary = S.toArbitrary(RunpodRawRequest).map((request) 
   RunpodRawRequest.make({
     ...request,
     path: normalizeRawPathForTest(request.path),
-  })
-);
-
-const RunpodErrorOptionsArbitrary = S.toArbitrary(RunpodErrorOptions).map((options) =>
-  RunpodErrorOptions.make(options.status === undefined ? {} : { status: options.status })
-);
-
-// one-round-loop P1 input seed-exclusion (SPEC stop-condition): Runpod's
-// error schemas do not preserve round-trip equivalence for an empty-message
-// `Error` cause (seed 948470019 finds `new Error("")`) — the same pre-existing
-// product class as @beep/box BoxError (fixed upstream in #331). Until Runpod's
-// codec gets the analogous fix, these arbitraries force `cause: O.none()` so
-// the lane runs at the FULL env floor over every other field. This excludes
-// the buggy INPUT, not the run count — no floor is lowered.
-const RunpodErrorArbitrary = S.toArbitrary(RunpodError).map((error) =>
-  RunpodError.make({
-    cause: O.none(),
-    method: error.method,
-    methodName: error.methodName,
-    operationId: error.operationId,
-    path: error.path,
-    reason: error.reason,
-    status: error.status,
-  })
-);
-
-const RunpodDocsErrorOptionsArbitrary = S.toArbitrary(RunpodDocsErrorOptions).map((options) =>
-  RunpodDocsErrorOptions.make({
-    ...(options.status === undefined ? {} : { status: options.status }),
-    ...(options.url === undefined ? {} : { url: options.url }),
-  })
-);
-
-const RunpodDocsErrorArbitrary = S.toArbitrary(RunpodDocsError).map((error) =>
-  RunpodDocsError.make({
-    cause: O.none(),
-    reason: error.reason,
-    status: error.status,
-    url: error.url,
   })
 );
 
@@ -460,7 +420,7 @@ describe("@beep/runpod", () => {
         fc.property(S.toArbitrary(RunpodConfigInput), (value) => {
           expectRoundTrip(RunpodConfigInput, value);
         }),
-        fcRuns(25)
+        { numRuns: 25 }
       );
       assertSchemaRoundTrip(RunpodDocsConfigInput);
       expect(encode(RunpodRawRequest, RunpodRawRequest.make({ method: "GET", path: "future" }))).toMatchObject({
@@ -468,10 +428,10 @@ describe("@beep/runpod", () => {
       });
       assertSchemaRoundTrip(RunpodRawRequest, RunpodRawRequestArbitrary);
       assertSchemaRoundTrip(RunpodRawResponse);
-      assertSchemaRoundTrip(RunpodErrorOptions, RunpodErrorOptionsArbitrary);
-      assertSchemaRoundTrip(RunpodError, RunpodErrorArbitrary);
-      assertSchemaRoundTrip(RunpodDocsErrorOptions, RunpodDocsErrorOptionsArbitrary);
-      assertSchemaRoundTrip(RunpodDocsError, RunpodDocsErrorArbitrary);
+      assertSchemaRoundTrip(RunpodErrorOptions);
+      assertSchemaRoundTrip(RunpodError);
+      assertSchemaRoundTrip(RunpodDocsErrorOptions);
+      assertSchemaRoundTrip(RunpodDocsError);
       assertSchemaRoundTrip(RunpodDocsIndexEntry);
       assertSchemaRoundTrip(RunpodDocsIndex);
     })
