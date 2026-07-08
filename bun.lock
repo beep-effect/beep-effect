@@ -780,7 +780,6 @@
         "effect": "catalog:",
       },
       "devDependencies": {
-        "@beep/test-utils": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1343,7 +1342,6 @@
         "yaml": "catalog:",
       },
       "devDependencies": {
-        "@beep/test-utils": "workspace:^",
         "@beep/types": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
@@ -1360,7 +1358,6 @@
         "picomatch": "catalog:",
       },
       "devDependencies": {
-        "@beep/test-utils": "workspace:^",
         "@beep/types": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",

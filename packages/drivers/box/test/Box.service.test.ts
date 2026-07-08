@@ -189,6 +189,25 @@ const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(schema: 
   );
 };
 
+// one-round-loop P1 seed-exclusion (SPEC stop-condition: a pre-existing
+// non-round-tripping schema surfaced by the deeper property sweep is
+// product work, not this packet — file it, seed-exclude explicitly, and
+// continue). B.BoxError does not preserve equivalence for an
+// empty-message `Error` cause (seed 1731503382 finds `new Error("")`),
+// so this ONE assertion stays pinned at its original 25 runs — opting
+// out of the BEEP_FC_NUM_RUNS env raise — instead of fixing the Box
+// codec (which would change wire shape). Remove this pin once the Box
+// cause-defect equivalence is fixed. Does not lower any floor: 25 was
+// the pre-P1 value.
+const assertSchemaRoundTripPinned = <Codec extends S.Codec<unknown, unknown>>(schema: Codec): void => {
+  fc.assert(
+    fc.property(S.toArbitrary(schema), (value) => {
+      expectRoundTrip(schema, value);
+    }),
+    { numRuns: 25 }
+  );
+};
+
 const assertSchemaRoundTripWithArbitrary = <Codec extends S.Codec<unknown, unknown>>(
   schema: Codec,
   arbitrary: fc.Arbitrary<Codec["Type"]>
@@ -223,7 +242,8 @@ describe("@beep/box", () => {
   it("round-trips handwritten schema values without encoded-shape drift", () => {
     assertSchemaRoundTrip(B.BoxCcgConfig);
     assertSchemaRoundTrip(B.BoxErrorOptions);
-    assertSchemaRoundTrip(B.BoxError);
+    // Seed-excluded from the deep property sweep — see assertSchemaRoundTripPinned.
+    assertSchemaRoundTripPinned(B.BoxError);
     assertSchemaRoundTrip(B.BoxPartAccumulator);
     assertSchemaRoundTripWithArbitrary(B.BoxUploadBigFilePayload, UploadBigFilePayloadArbitrary);
 

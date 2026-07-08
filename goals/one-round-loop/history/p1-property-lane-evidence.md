@@ -65,3 +65,37 @@ existing `vitestCoverageRunActive` precedent). Post-fix: 14/14 green at
   `--runs` (floor override; raise-only semantics via fcRuns).
 - `beep ci local` battery includes the property lane (affected shape
   passthrough; not skipped by `--fast`).
+
+## Row 4 addendum — live catch on the P1 PR itself (2026-07-08)
+
+The property lane caught a **pre-existing non-round-tripping schema on
+the P1 PR's own CI run** — the packet's thesis proving itself:
+
+- `@beep/box` `BoxError` fails equivalence round-trip for an
+  empty-message `Error` cause (`new Error("")`, seed 1731503382, first
+  counterexample at test #216). Invisible at the pre-P1 inline value of
+  25 runs; surfaced once the lane raised the floor to 400.
+- Encode→decode succeeds; line 180's `Equal.equals || toEquivalence`
+  assertion is what fails (the decoded empty-message Error is not
+  equivalent to the original).
+- SPEC stop-condition disposition: this is product work (fixing the Box
+  cause codec could change wire shape — fence 4 bars it here). Filed as
+  a spawned task; the single `assertSchemaRoundTrip(B.BoxError)` call is
+  seed-excluded via `assertSchemaRoundTripPinned` (hard `{ numRuns: 25 }`,
+  its original value — no floor lowered, fence 3 intact). The other
+  three Box schemas stay env-raisable. Remove the pin when the codec is
+  fixed.
+
+## Review-fix findings (PR #327)
+
+- **Dependency cycle (blocking).** The sweep introduced the first
+  `@beep/test-utils` import into 55 packages; declaring it as a devDep
+  in the three that are in test-utils's OWN dependency closure
+  (`@beep/utils`, `@beep/schema`, `@beep/pglite`) created a turbo cycle
+  (`utils→data→schema→pglite→test-utils→…`), failing every affected
+  turbo lane instantly. Those three keep the undeclared import (always
+  resolvable — test-utils depends on them, so they are always
+  installed); the other 52 declare it. This is the reason foundation
+  packages never declared test-utils before.
+- **Blank `--runs` floor drop.** `resolvePropertyLaneRuns` normalizes a
+  blank/whitespace `--runs` back to 400 (`??` only guards `undefined`).
