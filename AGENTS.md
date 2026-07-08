@@ -46,7 +46,8 @@ Ship reliable code with effect-first and schema-first patterns.
   Keep repo quality commands green.
 - `main` is PR-only. Do not commit saving/wip/tmp checkpoints to shared
   branches; publish from a feature branch through Yeet and let hosted required
-  checks gate the merge.
+  checks gate the merge. GitHub merge/squash commit messages are also
+  server-side commitlint input; keep body lines wrapped under 100 characters.
 - Fast-plus-monitor is opt-in only (`publish --fast --monitor`, PR-branch
   guarded). Default to plain `publish --message`. Keep
   `bun run audit:github pre-push` as the explicit full local fallback for
