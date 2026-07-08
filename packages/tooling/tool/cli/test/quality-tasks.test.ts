@@ -1320,6 +1320,9 @@ describe("quality task adapter", () => {
           expect(commandLog).toContain("bun run beep laws effect-imports --check");
           expect(commandLog).toContain("bun run beep docgen check --reuse-proof-manifest");
           expect(commandLog).toContain("bunx typos");
+
+          const logText = A.join(A.filter(yield* TestConsole.logLines, isString), "\n");
+          expect(logText).toContain("[beep-cli] lint: running 20 step(s) with concurrency 3");
         })
       )
     ));

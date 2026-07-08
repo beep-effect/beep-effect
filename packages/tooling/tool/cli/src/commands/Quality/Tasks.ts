@@ -72,10 +72,14 @@ const LINT_FIX_AGGREGATE_ARGS = ["--full", "--repo"] as const;
 const ROOT_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";
 const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
+// Full root lint runs the aggregate Turbo graph plus repo policy tools. Keep
+// its group fan-out aligned with the root Turbo cap so hosted main checks do
+// not start multiple CPU/memory-heavy process graphs at once.
+const ROOT_LINT_STEP_CONCURRENCY = 3;
 // Lint-policy steps are independent read-only tools (cspell, markdownlint,
 // oxlint, eslint-jsdoc, law checks, madge...). Running them grouped-concurrent
 // converts the lane from sum-of-steps to max-of-steps; 6 balances the
-// CPU-heavy members (turbo-lint, tsgo-rules, eslint) against memory
+// policy-only lane's CPU-heavy members (tsgo-rules, eslint) against memory
 // (rqt-012, goals/agent-pipeline-velocity D4).
 const LINT_POLICY_STEP_CONCURRENCY = 6;
 
@@ -1139,7 +1143,7 @@ const runRootLintTask = Effect.fn("QualityTasks.runRootLintTask")(function* (
     return;
   }
 
-  yield* runStepGroup("lint", [lintStep, ...rootRepoLintPolicySteps(repoRoot)], LINT_POLICY_STEP_CONCURRENCY);
+  yield* runStepGroup("lint", [lintStep, ...rootRepoLintPolicySteps(repoRoot)], ROOT_LINT_STEP_CONCURRENCY);
 });
 
 const rootAuditSteps = (repoRoot: string, args: ReadonlyArray<string>) => {
