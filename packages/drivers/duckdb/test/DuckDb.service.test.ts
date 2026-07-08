@@ -16,6 +16,7 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, Exit, Fiber, FileSystem, Layer, Path, Stream } from "effect";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -730,6 +731,36 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
     }).pipe(provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" })))
   );
 
+  it.effect("normalizes Date and Uint8Array bind values for generic SQL callers", () =>
+    Effect.gen(function* () {
+      const sql = (yield* SqlClient.SqlClient).withoutTransforms();
+      const timestamp = DateTime.toDateUtc(DateTime.makeUnsafe("2026-01-02T03:04:05.000Z"));
+      const bytes = new Uint8Array([1, 2, 3]);
+
+      const rows = yield* sql<{
+        readonly blob_type: string;
+        readonly blob_value: string;
+        readonly timestamp_type: string;
+        readonly timestamp_value: string;
+      }>`
+          SELECT
+            typeof(${timestamp}) AS timestamp_type,
+            ${timestamp}::VARCHAR AS timestamp_value,
+            typeof(${bytes}) AS blob_type,
+            ${bytes}::VARCHAR AS blob_value
+        `;
+
+      expect(rows).toEqual([
+        {
+          blob_type: "BLOB",
+          blob_value: "\\x01\\x02\\x03",
+          timestamp_type: "TIMESTAMP_MS",
+          timestamp_value: "2026-01-02 03:04:05",
+        },
+      ]);
+    }).pipe(provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" })))
+  );
+
   it.effect("builds from a caller-owned live connection", () =>
     withNativeDuckDbConnection((liveConnection) =>
       Effect.gen(function* () {
@@ -834,6 +865,46 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
         yield* Effect.all([sql`SELECT 1 AS value`, sql`SELECT 2 AS value`], { concurrency: 2 });
 
         expect(maxActiveExecutions).toBe(1);
+      }).pipe(provideScopedLayer(Reactivity.layer))
+    )
+  );
+
+  it.effect("streams rows through DuckDB streaming results", () =>
+    withNativeDuckDbConnection((liveConnection) =>
+      Effect.gen(function* () {
+        const client = yield* DuckDbSqlClient.fromClient({
+          databasePath: ":memory:",
+          liveConnection,
+        });
+        const sql = client.withoutTransforms();
+
+        yield* sql`CREATE TABLE stream_events (id VARCHAR)`;
+        yield* sql`INSERT INTO stream_events VALUES (${"stream-1"}), (${"stream-2"})`;
+
+        let streamCalls = 0;
+        let runAndReadAllCalls = 0;
+        const stream = liveConnection.stream.bind(liveConnection);
+        const runAndReadAll = liveConnection.runAndReadAll.bind(liveConnection);
+        liveConnection.stream = (...args: Parameters<DuckDBConnection["stream"]>) => {
+          streamCalls += 1;
+          return stream(...args);
+        };
+        liveConnection.runAndReadAll = (...args: Parameters<DuckDBConnection["runAndReadAll"]>) => {
+          runAndReadAllCalls += 1;
+          return runAndReadAll(...args);
+        };
+
+        const streamedRows = yield* Stream.runCollect(
+          sql<{ readonly id: string }>`
+              SELECT id
+              FROM stream_events
+              ORDER BY id
+            `.stream
+        );
+
+        expect(A.fromIterable(streamedRows)).toEqual([{ id: "stream-1" }, { id: "stream-2" }]);
+        expect(streamCalls).toBe(1);
+        expect(runAndReadAllCalls).toBe(0);
       }).pipe(provideScopedLayer(Reactivity.layer))
     )
   );
@@ -1056,7 +1127,7 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
     }).pipe(provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" })))
   );
 
-  it.effect("pins nested rollback behavior when savepoints are unavailable", () =>
+  it.effect("marks the outer transaction rollback-only when a nested transaction fails", () =>
     Effect.gen(function* () {
       const sql = (yield* SqlClient.SqlClient).withoutTransforms();
       yield* sql`
@@ -1065,27 +1136,30 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
           )
         `;
 
-      yield* sql.withTransaction(
-        Effect.gen(function* () {
-          yield* sql`INSERT INTO nested_failure_events VALUES (${"outer-before"})`;
-          yield* sql
-            .withTransaction(
-              Effect.gen(function* () {
-                yield* sql`INSERT INTO nested_failure_events VALUES (${"inner-kept"})`;
-                return yield* Effect.fail("inner failure");
-              })
-            )
-            .pipe(Effect.ignore);
-          yield* sql`INSERT INTO nested_failure_events VALUES (${"outer-after"})`;
-        })
+      const exit = yield* Effect.exit(
+        sql.withTransaction(
+          Effect.gen(function* () {
+            yield* sql`INSERT INTO nested_failure_events VALUES (${"outer-before"})`;
+            yield* sql
+              .withTransaction(
+                Effect.gen(function* () {
+                  yield* sql`INSERT INTO nested_failure_events VALUES (${"inner-rolled-back"})`;
+                  return yield* Effect.fail("inner failure");
+                })
+              )
+              .pipe(Effect.ignore);
+            yield* sql`INSERT INTO nested_failure_events VALUES (${"outer-after"})`;
+          })
+        )
       );
+      expect(Exit.isFailure(exit)).toBe(true);
 
       const rows = yield* sql<{ readonly id: string }>`
           SELECT id
           FROM nested_failure_events
           ORDER BY id
         `;
-      expect(rows).toEqual([{ id: "inner-kept" }, { id: "outer-after" }, { id: "outer-before" }]);
+      expect(rows).toEqual([]);
     }).pipe(provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath: ":memory:" })))
   );
 });

@@ -9,17 +9,18 @@
  * DuckDB. DuckDB-specific capabilities such as Parquet export remain on this
  * driver-specific client and are not added to the generic SQL tag.
  *
- * Nested `sql.withTransaction(...)` calls reuse the active DuckDB transaction
- * and do not provide savepoint isolation because DuckDB rejects `SAVEPOINT` in
- * the native Node API path used by this package.
+ * Nested `sql.withTransaction(...)` calls reuse the active DuckDB transaction.
+ * DuckDB rejects `SAVEPOINT` in the native Node API path used by this package,
+ * so a failed nested transaction marks the outer transaction rollback-only
+ * instead of pretending savepoint isolation exists.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { make as makeIdentity } from "@beep/identity";
-import { DuckDBInstance, quotedIdentifier, quotedString } from "@duckdb/node-api";
-import { Context, Effect, Layer, Scope, Semaphore, Stream } from "effect";
+import { blobValue, DuckDBInstance, quotedIdentifier, quotedString, timestampMillisValue } from "@duckdb/node-api";
+import { Clock, Context, Effect, Exit, Layer, Scope, Semaphore, Stream, Tracer } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -36,7 +37,6 @@ import type { DuckDbConnectionOptions, DuckDbParquetExport } from "./DuckDb.mode
 const { $DuckdbId } = makeIdentity("duckdb");
 const $I = $DuckdbId.create("DuckDbSqlClient.service");
 const ATTR_DB_SYSTEM_NAME = "db.system.name";
-const noopTransactionSql = "SELECT 1";
 
 /**
  * Runtime type identifier for DuckDB-backed Effect SQL clients.
@@ -120,6 +120,7 @@ export type DuckDbSqlClientValue = SqlClient.SqlClient & {
 type DuckDbSqlRow = Readonly<Record<string, Json>>;
 type DuckDbSqlRows = ReadonlyArray<DuckDbSqlRow>;
 type DuckDbRowReader = Awaited<ReturnType<DuckDBConnection["runAndReadAll"]>>;
+type DuckDbTransactionAcquirer = Effect.Effect<readonly [Scope.Closeable | undefined, DuckDbSqlConnection], SqlError>;
 
 interface NativeConnection {
   readonly connection: DuckDBConnection;
@@ -135,13 +136,18 @@ const sqlConnectionError = (operation: string, message: string, cause: unknown):
 const classifyExecutionError = (operation: string, cause: unknown): SqlError =>
   sqlUnknownError(operation, "DuckDB SQL operation failed.", cause);
 
+const toBlobValue = (value: Int8Array | Uint8Array): DuckDBValue =>
+  blobValue(value instanceof Uint8Array ? value : new Uint8Array(value.buffer, value.byteOffset, value.byteLength));
+
 const normalizeParameter = Effect.fn("DuckDbSqlClient.normalizeParameter")(
   (value: unknown): Effect.Effect<DuckDBValue, SqlError> =>
     P.isNullish(value)
       ? Effect.succeed(null)
-      : P.isString(value) || P.isNumber(value) || P.isBoolean(value) || P.isBigInt(value)
-        ? Effect.succeed(value)
-        : Effect.fail(sqlUnknownError("bind", "DuckDB SQL parameters must be primitive scalar values.", value))
+      : P.isDate(value)
+        ? Effect.succeed(timestampMillisValue(BigInt(value.getTime())))
+        : P.isUint8Array(value) || value instanceof Int8Array
+          ? Effect.succeed(toBlobValue(value))
+          : Effect.succeed(value as DuckDBValue)
 );
 
 const normalizeParameters = Effect.fn("DuckDbSqlClient.normalizeParameters")(function* (
@@ -173,6 +179,7 @@ const acquireNativeConnection = Effect.fn("DuckDbSqlClient.acquireNativeConnecti
 
 class DuckDbSqlConnection implements SqlConnection.Connection {
   readonly connection: DuckDBConnection;
+  private rollbackOnly = false;
 
   constructor(connection: DuckDBConnection) {
     this.connection = connection;
@@ -210,6 +217,30 @@ class DuckDbSqlConnection implements SqlConnection.Connection {
     );
   }
 
+  beginTransaction(): Effect.Effect<void, SqlError> {
+    this.rollbackOnly = false;
+    return Effect.asVoid(this.executeUnprepared("BEGIN", [], undefined));
+  }
+
+  commitTransaction(): Effect.Effect<void, SqlError> {
+    return commitDuckDbTransaction(this);
+  }
+
+  isRollbackOnly(): boolean {
+    return this.rollbackOnly;
+  }
+
+  markRollbackOnly(): Effect.Effect<void> {
+    return Effect.sync(() => {
+      this.rollbackOnly = true;
+    });
+  }
+
+  rollbackTransaction(): Effect.Effect<void, SqlError> {
+    this.rollbackOnly = false;
+    return Effect.asVoid(this.executeUnprepared("ROLLBACK", [], undefined));
+  }
+
   execute(
     sql: string,
     params: ReadonlyArray<unknown>,
@@ -235,7 +266,24 @@ class DuckDbSqlConnection implements SqlConnection.Connection {
     params: ReadonlyArray<unknown>,
     transformRows: (<A extends object>(rows: ReadonlyArray<A>) => ReadonlyArray<A>) | undefined
   ): Stream.Stream<DuckDbSqlRow, SqlError> {
-    return Stream.fromArrayEffect(this.execute(sql, params, transformRows));
+    const connection = this.connection;
+    const stream = Effect.flatMap(normalizeParameters(params), (duckDbParams) =>
+      Effect.tryPromise({
+        try: () => connection.stream(sql, duckDbParams),
+        catch: (cause) => classifyExecutionError("executeStream", cause),
+      })
+    );
+
+    return Stream.unwrap(
+      Effect.map(stream, (result) =>
+        Stream.fromAsyncIterable(result.yieldRowObjectJson(), (cause) =>
+          classifyExecutionError("executeStream", cause)
+        ).pipe(
+          Stream.map((rows) => (P.isUndefined(transformRows) ? rows : transformRows(rows))),
+          Stream.flattenIterable
+        )
+      )
+    );
   }
 
   executeUnprepared(
@@ -262,6 +310,80 @@ class DuckDbSqlConnection implements SqlConnection.Connection {
   }
 }
 
+const commitDuckDbTransaction = Effect.fn("DuckDbSqlConnection.commitTransaction")(function* (
+  connection: DuckDbSqlConnection
+) {
+  if (connection.isRollbackOnly()) {
+    yield* connection.rollbackTransaction();
+    return yield* sqlUnknownError(
+      "commit",
+      "DuckDB transaction rolled back because a nested transaction failed and savepoints are unavailable.",
+      "nested transaction failed"
+    );
+  }
+  yield* connection.executeUnprepared("COMMIT", [], undefined);
+});
+
+const makeDuckDbWithTransaction =
+  (options: {
+    readonly transactionService: DuckDbSqlClientValue["transactionService"];
+    readonly spanAttributes: ReadonlyArray<readonly [string, unknown]>;
+    readonly acquireConnection: DuckDbTransactionAcquirer;
+  }): DuckDbSqlClientValue["withTransaction"] =>
+  <R, E, A>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | SqlError, R> =>
+    Effect.uninterruptibleMask((restore) =>
+      Effect.useSpan("sql.transaction", { kind: "client" }, (span) =>
+        Effect.withFiber<A, E | SqlError, R>((fiber) => {
+          for (const [key, value] of options.spanAttributes) {
+            span.attribute(key, value);
+          }
+          const services = fiber.context;
+          const clock = fiber.getRef(Clock.Clock);
+          const activeTransaction = Context.getOption(services, options.transactionService);
+          const activeConnection =
+            activeTransaction._tag === "Some"
+              ? Effect.succeed([undefined, activeTransaction.value[0] as DuckDbSqlConnection] as const)
+              : options.acquireConnection;
+          const id = activeTransaction._tag === "Some" ? activeTransaction.value[1] + 1 : 0;
+
+          return Effect.flatMap(activeConnection, ([scope, connection]) =>
+            (id === 0 ? connection.beginTransaction() : Effect.void).pipe(
+              Effect.flatMap(() =>
+                Effect.provideContext(
+                  restore(effect),
+                  Context.mutate(services, (services) =>
+                    services.pipe(
+                      Context.add(options.transactionService, [connection, id]),
+                      Context.add(Tracer.ParentSpan, span)
+                    )
+                  )
+                )
+              ),
+              Effect.exit,
+              Effect.flatMap((exit) => {
+                let finalize: Effect.Effect<void, SqlError>;
+                if (Exit.isSuccess(exit)) {
+                  if (id === 0) {
+                    span.event("db.transaction.commit", clock.currentTimeNanosUnsafe());
+                    finalize = connection.commitTransaction();
+                  } else {
+                    span.event("db.transaction.nested", clock.currentTimeNanosUnsafe());
+                    finalize = Effect.void;
+                  }
+                } else {
+                  span.event("db.transaction.rollback", clock.currentTimeNanosUnsafe());
+                  finalize = id > 0 ? connection.markRollbackOnly() : connection.rollbackTransaction();
+                }
+                const finalizeWithScope =
+                  scope === undefined ? finalize : Effect.ensuring(finalize, Scope.close(scope, exit));
+                return Effect.flatMap(finalizeWithScope, () => exit);
+              })
+            )
+          );
+        })
+      )
+    );
+
 const makeClientFromConnection = Effect.fn("DuckDbSqlClient.makeClientFromConnection")(function* (
   options: DuckDbSqlClientOptions,
   nativeConnection: DuckDBConnection
@@ -286,18 +408,24 @@ const makeClientFromConnection = Effect.fn("DuckDbSqlClient.makeClientFromConnec
   );
   const acquirer = scopedAcquirer;
   const transactionAcquirer = scopedAcquirer;
+  const duckDbTransactionAcquirer: DuckDbTransactionAcquirer = Effect.flatMap(Scope.make(), (scope) =>
+    Effect.map(
+      Scope.provide(transactionAcquirer, scope),
+      (connection) => [scope, connection as DuckDbSqlConnection] as const
+    )
+  );
 
   const sqlClient = yield* SqlClient.make({
     acquirer,
-    beginTransaction: "BEGIN",
-    commit: "COMMIT",
     compiler,
-    rollback: "ROLLBACK",
-    rollbackSavepoint: () => noopTransactionSql,
-    savepoint: () => noopTransactionSql,
     spanAttributes,
     transactionAcquirer,
     transformRows,
+  });
+  const withTransaction = makeDuckDbWithTransaction({
+    acquireConnection: duckDbTransactionAcquirer,
+    spanAttributes,
+    transactionService: sqlClient.transactionService,
   });
   const copyAcquirer: SqlConnection.Acquirer = Effect.flatMap(
     Effect.serviceOption(sqlClient.transactionService),
@@ -324,7 +452,7 @@ const makeClientFromConnection = Effect.fn("DuckDbSqlClient.makeClientFromConnec
       )
   );
 
-  const client = sqlClient as SqlClient.SqlClient & {
+  const client = sqlClient as unknown as SqlClient.SqlClient & {
     [DuckDbSqlClientTypeId]: DuckDbSqlClientTypeId;
     config: DuckDbSqlClientOptions;
     copyTableToParquet: (request: DuckDbParquetExport) => Effect.Effect<void, SqlError>;
@@ -332,6 +460,7 @@ const makeClientFromConnection = Effect.fn("DuckDbSqlClient.makeClientFromConnec
   client[DuckDbSqlClientTypeId] = DuckDbSqlClientTypeId;
   client.config = options;
   client.copyTableToParquet = copyTableToParquet;
+  (client as unknown as { withTransaction: DuckDbSqlClientValue["withTransaction"] }).withTransaction = withTransaction;
 
   return client;
 });
