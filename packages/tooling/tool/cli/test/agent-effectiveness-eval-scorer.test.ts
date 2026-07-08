@@ -7,13 +7,13 @@ import {
   evaluateSkillOptCompletion,
   lawComponentScore,
   SkillOptTaskManifest,
-} from "@beep/repo-cli/commands/AgentEffectiveness/internal/EvalScorer";
+} from "@beep/repo-cli/test/AgentEffectiveness";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, pipe } from "effect";
 import * as S from "effect/Schema";
-import type { AgentEffectivenessEvalViolation } from "@beep/repo-cli/commands/AgentEffectiveness/internal/EvalScorer";
+import type { AgentEffectivenessEvalViolation } from "@beep/repo-cli/test/AgentEffectiveness";
 
 const TestLayer = NodeServices.layer;
 const decodeTaskManifest = S.decodeUnknownEffect(SkillOptTaskManifest);

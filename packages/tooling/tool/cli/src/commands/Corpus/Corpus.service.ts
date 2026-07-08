@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { createHash } from "node:crypto";
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { ArtifactId, ContentDigest, OperationId, SourceArtifact } from "@beep/file-processing/Artifact";
 import {
@@ -57,13 +56,14 @@ import {
   Path,
   Ref,
   Result,
-  Stream,
 } from "effect";
 import * as A from "effect/Array";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { hashFileSha256 as sharedHashFileSha256 } from "../../internal/cli/FsGuards.js";
 import { printLines } from "../../internal/cli/Printer.js";
+import { withDuckDb } from "../../internal/duckdb/WithDuckDb.js";
 import {
   CorpusArchiveMoveDestinationConflictError,
   CorpusArchiveMoveDigestMismatchError,
@@ -365,11 +365,7 @@ const runWithCorpusDb = <A, E>(
   message: string,
   work: Effect.Effect<A, E, DuckDb>
 ): Effect.Effect<A, CorpusCommandError> =>
-  Effect.scoped(
-    Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))).pipe(
-      Effect.flatMap((context) => work.pipe(Effect.provide(context)))
-    )
-  ).pipe(CorpusCommandError.mapError(message));
+  work.pipe(withDuckDb(DuckDbConnectionOptions.make({ databasePath })), CorpusCommandError.mapError(message));
 
 const insertRows = <Row>(
   db: DuckDbShape,
@@ -912,14 +908,10 @@ const writeCorpusStringFile = Effect.fn("CorpusCommandService.writeCorpusStringF
 
 const hashFileSha256 = Effect.fn("CorpusCommandService.hashFileSha256")(function* (
   filePath: string
-): Effect.fn.Return<string, CorpusCommandError, FileSystem.FileSystem> {
-  const fs = yield* FileSystem.FileSystem;
-  const hash = createHash("sha256");
-  yield* fs.stream(filePath).pipe(
-    Stream.runForEach((chunk) => Effect.sync(() => hash.update(chunk))),
-    CorpusCommandError.mapError(`Failed hashing file "${filePath}".`)
+): Effect.fn.Return<string, CorpusCommandError, FileSystem.FileSystem | Crypto.Crypto> {
+  return yield* sharedHashFileSha256(filePath, (cause) =>
+    CorpusCommandError.make({ cause, message: `Failed hashing file "${filePath}".` })
   );
-  return hash.digest("hex");
 });
 
 interface CorpusExtractOutcome {
@@ -1906,7 +1898,7 @@ const validateArchiveFile = Effect.fn("CorpusCommandService.validateArchiveFile"
   sourcePath: string,
   originPath: string,
   provenanceByOrigin: MutableHashMap.MutableHashMap<string, ArchiveProvenanceMatch>
-): Effect.fn.Return<ArchiveValidatedFile, CorpusArchiveMoveError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<ArchiveValidatedFile, CorpusArchiveMoveError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const match = MutableHashMap.get(provenanceByOrigin, originPath);
   if (O.isNone(match)) {
@@ -1958,7 +1950,7 @@ const isCrossDeviceRename = (error: PlatformError.PlatformError): boolean => {
 const copyVerifyAndRemoveFile = Effect.fn("CorpusCommandService.copyVerifyAndRemoveFile")(function* (
   sourcePath: string,
   archivePath: string
-): Effect.fn.Return<void, CorpusArchiveMoveError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusArchiveMoveError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const sourceSha256 = yield* hashFileSha256(sourcePath);
@@ -1986,7 +1978,7 @@ const copyVerifyAndRemoveFile = Effect.fn("CorpusCommandService.copyVerifyAndRem
 const moveSourceAcrossDevice = Effect.fn("CorpusCommandService.moveSourceAcrossDevice")(function* (
   sourcePath: string,
   archivePath: string
-): Effect.fn.Return<void, CorpusArchiveMoveError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusArchiveMoveError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const files = yield* collectArchiveSourceFiles(sourcePath);
@@ -2013,7 +2005,7 @@ const moveSourceAcrossDevice = Effect.fn("CorpusCommandService.moveSourceAcrossD
 const moveArchiveSource = Effect.fn("CorpusCommandService.moveArchiveSource")(function* (
   sourcePath: string,
   archivePath: string
-): Effect.fn.Return<void, CorpusArchiveMoveError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<void, CorpusArchiveMoveError, Crypto.Crypto | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.rename(sourcePath, archivePath).pipe(
     Effect.catchTag("PlatformError", (error) =>

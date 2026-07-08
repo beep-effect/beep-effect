@@ -19236,31 +19236,7 @@
       "description": "Silent non-zero process exit requested after a command has already rendered its result."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScorer.ts",
-      "symbol": "AgentEffectivenessEvalRecordResult",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "AgentEffectivenessEvalRecordResult",
-      "description": "Identifiers written by --record after a SkillOpt eval scorer run."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScorer.ts",
-      "symbol": "AgentEffectivenessEvalScoreBreakdown",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "AgentEffectivenessEvalScoreBreakdown",
-      "description": "Scorer component fractions in the fixed contract output."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScorer.ts",
-      "symbol": "AgentEffectivenessEvalScoreReport",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "AgentEffectivenessEvalScoreReport",
-      "description": "Machine-readable SkillOpt eval score report emitted by agent-effectiveness evals score."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScorer.ts",
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.errors.ts",
       "symbol": "AgentEffectivenessEvalScorerError",
       "kind": "tagged-error",
       "owner": "@beep/repo-cli",
@@ -19268,7 +19244,31 @@
       "description": "Operational scorer failure; law and completion findings stay in score reports instead."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScorer.ts",
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.schemas.ts",
+      "symbol": "AgentEffectivenessEvalRecordResult",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "AgentEffectivenessEvalRecordResult",
+      "description": "Identifiers written by --record after a SkillOpt eval scorer run."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.schemas.ts",
+      "symbol": "AgentEffectivenessEvalScoreBreakdown",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "AgentEffectivenessEvalScoreBreakdown",
+      "description": "Scorer component fractions in the fixed contract output."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.schemas.ts",
+      "symbol": "AgentEffectivenessEvalScoreReport",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "AgentEffectivenessEvalScoreReport",
+      "description": "Machine-readable SkillOpt eval score report emitted by agent-effectiveness evals score."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.schemas.ts",
       "symbol": "AgentEffectivenessEvalViolation",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19276,7 +19276,7 @@
       "description": "Normalized SkillOpt eval scorer violation."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScorer.ts",
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.schemas.ts",
       "symbol": "AgentEffectivenessEvalViolationSource",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -19284,7 +19284,7 @@
       "description": "Bounded sources emitted in SkillOpt eval scorer violations."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScorer.ts",
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/AgentEffectiveness.schemas.ts",
       "symbol": "SkillOptTaskManifest",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19292,10 +19292,20 @@
       "description": "SkillOpt eval task manifest with deterministic completion criteria."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScorer.ts",
-      "symbol": "encodeAgentEffectivenessEvalScoreReportJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScoring.ts",
+      "symbol": "CompletionResult",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CompletionResult",
+      "description": "Result of a completion."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/AgentEffectiveness/internal/EvalScoring.ts",
+      "symbol": "LawEvaluation",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "LawEvaluation",
+      "description": "Result of a law evaluation."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
@@ -19580,7 +19590,7 @@
       "description": "A failure raised while preparing or applying a corpus curation operation."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ArchiveMove.schemas.ts",
       "symbol": "CorpusArchiveMoveManifestRecord",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19588,7 +19598,7 @@
       "description": "JSONL-safe archive move record for one source moved after provenance verification."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ArchiveMove.schemas.ts",
       "symbol": "CorpusArchiveMoveOptions",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19596,7 +19606,7 @@
       "description": "Validated source, archive-root, and provenance manifest paths used by corpus archive-move."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ArchiveMove.schemas.ts",
       "symbol": "CorpusArchiveMoveSummary",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19604,15 +19614,7 @@
       "description": "Summary counts returned by corpus archive-move after moving provenance-covered sources."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "CorpusCatalogDigestRow",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "CorpusCatalogDigestRow",
-      "description": "Digest-to-raw-path row loaded from the corpus DuckDB catalog or raw provenance manifests."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Catalog.schemas.ts",
       "symbol": "CorpusCatalogOptions",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19620,7 +19622,7 @@
       "description": "Validated options used by corpus catalog."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Catalog.schemas.ts",
       "symbol": "CorpusCatalogRunSummary",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19628,7 +19630,7 @@
       "description": "Per-run record, distinct-digest, and incremental distinct-digest counts emitted by corpus catalog."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Catalog.schemas.ts",
       "symbol": "CorpusCatalogSourceFileRecord",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19636,7 +19638,7 @@
       "description": "One source-file occurrence loaded into the catalog after adding the provenance run label and canonical raw-byte path."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Catalog.schemas.ts",
       "symbol": "CorpusCatalogSummary",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19644,15 +19646,7 @@
       "description": "Summary counts returned by corpus catalog."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "CorpusCopyMode",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "CorpusCopyMode",
-      "description": "Whether salvage copied bytes into raw storage or only recorded provenance for content already present by digest."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Catalog.schemas.ts",
       "symbol": "CorpusDuplicateScope",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -19660,7 +19654,7 @@
       "description": "Whether a duplicate digest occurs within one catalog run or across multiple run labels."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Catalog.schemas.ts",
       "symbol": "CorpusDuplicateSetRecord",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19668,7 +19662,7 @@
       "description": "A digest shared by multiple salvaged file occurrences, with member paths and run labels joined for reporting."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Enrich.schemas.ts",
       "symbol": "CorpusEnrichOptions",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19676,7 +19670,7 @@
       "description": "Validated options used by corpus enrich."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Enrich.schemas.ts",
       "symbol": "CorpusEnrichSummary",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19684,7 +19678,7 @@
       "description": "Summary counts returned by corpus enrich."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Enrich.schemas.ts",
       "symbol": "CorpusEnrichmentRecord",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19692,7 +19686,7 @@
       "description": "JSONL-safe USPTO enrichment row for one corpus-derived identifier candidate."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Extract.schemas.ts",
       "symbol": "CorpusExtractOptions",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19700,7 +19694,7 @@
       "description": "Validated options used by corpus extract."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Extract.schemas.ts",
       "symbol": "CorpusExtractSummary",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19708,7 +19702,7 @@
       "description": "Summary counts returned by corpus extract."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Organize.schemas.ts",
       "symbol": "CorpusOrganizeCategory",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -19716,7 +19710,7 @@
       "description": "Taxonomy category: client-mapped, docket-grouped, PST email archive, per-message email export, recycle-bin metadata, or unsorted."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Organize.schemas.ts",
       "symbol": "CorpusOrganizeOptions",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19724,7 +19718,7 @@
       "description": "Validated options used by corpus organize."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Organize.schemas.ts",
       "symbol": "CorpusOrganizeRecord",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19732,7 +19726,7 @@
       "description": "JSONL-safe organize manifest row for one canonical corpus artifact."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Organize.schemas.ts",
       "symbol": "CorpusOrganizeSummary",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19740,15 +19734,7 @@
       "description": "Summary counts returned by corpus organize."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "CorpusProvenanceRecord",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "CorpusProvenanceRecord",
-      "description": "JSONL-safe provenance record written for one verified salvaged corpus file."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RecycleBin.schemas.ts",
       "symbol": "CorpusRestorationRecord",
       "kind": "tagged-union",
       "owner": "@beep/repo-cli",
@@ -19756,39 +19742,7 @@
       "description": "JSONL-safe recycle-bin name-restoration record emitted by corpus catalog."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "CorpusSalvageOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "CorpusSalvageOptions",
-      "description": "Validated options used by corpus salvage verification or copy runs."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "CorpusSalvageOriginFile",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "CorpusSalvageOriginFile",
-      "description": "One source file selected for a corpus salvage copy run."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "CorpusSalvageSourceSpec",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "CorpusSalvageSourceSpec",
-      "description": "Generic source label plus filesystem path for a salvage copy run; labels should be source-a/source-b style aliases."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "CorpusSalvageSummary",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "CorpusSalvageSummary",
-      "description": "Summary counts returned by corpus salvage verification."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RecycleBin.schemas.ts",
       "symbol": "MatchedRestorationRecord",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19796,7 +19750,7 @@
       "description": "A $R content file whose original name and path were restored from its paired $I metadata file."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RecycleBin.schemas.ts",
       "symbol": "RecycleBinEntryKind",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -19804,7 +19758,7 @@
       "description": "Whether a recycle-bin artifact is a $I metadata file or a $R content file."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RecycleBin.schemas.ts",
       "symbol": "RecycleBinFormatVersion",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -19812,7 +19766,7 @@
       "description": "Windows Recycle Bin $I metadata format family: v1 (Vista-8.1 fixed path) or v2 (10+ sized path)."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RecycleBin.schemas.ts",
       "symbol": "RecycleBinOriginal",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19820,7 +19774,7 @@
       "description": "Original path, name, size, and deletion time recovered from a $I recycle-bin metadata file."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RecycleBin.schemas.ts",
       "symbol": "RecycleBinPairedEntry",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19828,7 +19782,7 @@
       "description": "A matched $I metadata and $R content pair sharing one pair key."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RecycleBin.schemas.ts",
       "symbol": "RecycleBinPairing",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19836,7 +19790,7 @@
       "description": "Matched pairs plus unmatched $I and $R leftovers for one pairing pass."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RecycleBin.schemas.ts",
       "symbol": "RecycleBinScanEntry",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19844,7 +19798,7 @@
       "description": "A $I or $R artifact observed in a salvaged source, keyed for pairing."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RecycleBin.schemas.ts",
       "symbol": "UnmatchedContentRestorationRecord",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19852,7 +19806,7 @@
       "description": "A $R content file whose $I metadata file is absent, so its original name stays unknown."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/RecycleBin.schemas.ts",
       "symbol": "UnmatchedMetadataRestorationRecord",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -19860,82 +19814,60 @@
       "description": "A $I metadata file whose paired $R content file is absent from the salvaged corpus."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "decodeCorpusProvenanceRecordJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Salvage.schemas.ts",
+      "symbol": "CorpusCatalogDigestRow",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CorpusCatalogDigestRow",
+      "description": "Digest-to-raw-path row loaded from the corpus DuckDB catalog or raw provenance manifests."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "encodeCorpusArchiveMoveManifestRecordJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Salvage.schemas.ts",
+      "symbol": "CorpusCopyMode",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "CorpusCopyMode",
+      "description": "Whether salvage copied bytes into raw storage or only recorded provenance for content already present by digest."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "encodeCorpusCatalogSourceFileRecordJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Salvage.schemas.ts",
+      "symbol": "CorpusProvenanceRecord",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CorpusProvenanceRecord",
+      "description": "JSONL-safe provenance record written for one verified salvaged corpus file."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "encodeCorpusCatalogSummaryJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Salvage.schemas.ts",
+      "symbol": "CorpusSalvageOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CorpusSalvageOptions",
+      "description": "Validated options used by corpus salvage verification or copy runs."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "encodeCorpusDuplicateSetReportJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Salvage.schemas.ts",
+      "symbol": "CorpusSalvageOriginFile",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CorpusSalvageOriginFile",
+      "description": "One source file selected for a corpus salvage copy run."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "encodeCorpusEnrichSummaryJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Salvage.schemas.ts",
+      "symbol": "CorpusSalvageSourceSpec",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CorpusSalvageSourceSpec",
+      "description": "Generic source label plus filesystem path for a salvage copy run; labels should be source-a/source-b style aliases."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "encodeCorpusEnrichmentRecordJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "encodeCorpusExtractSummaryJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "encodeCorpusOrganizeRecordJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "encodeCorpusOrganizeSummaryJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "encodeCorpusProvenanceRecordJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "encodeCorpusRestorationRecordJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.schemas.ts",
-      "symbol": "encodeCorpusSalvageSummaryJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Salvage.schemas.ts",
+      "symbol": "CorpusSalvageSummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CorpusSalvageSummary",
+      "description": "Summary counts returned by corpus salvage verification."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/CreatePackage/ConfigUpdater.ts",
