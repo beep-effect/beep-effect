@@ -65,7 +65,7 @@ const roundTrip = <Schema extends S.Codec<unknown>>(schema: Schema, value: Schem
 // default that CPU-bound test starves its millisecond-fast fixture siblings
 // past the deep-sweep timeout; running the suite sequentially keeps the fast
 // tests instant and gives the heavy property its own core.
-describe.sequential("@beep/agents-use-cases", () => {
+describe("@beep/agents-use-cases", { concurrent: false }, () => {
   it("runs deterministic fixtures into structured candidate output sets", () =>
     Effect.gen(function* () {
       const outputSet = yield* runRuntimeFixture(lawFixture);
