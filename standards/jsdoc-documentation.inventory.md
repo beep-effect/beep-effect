@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-08T09:53:50.264Z
+Generated: 2026-07-08T16:21:44.466Z
 
 ## Scope
 
@@ -10,12 +10,12 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 
 | Metric | Count |
 |---|---:|
-| packages | 104 |
-| cleanPackages | 19 |
+| packages | 105 |
+| cleanPackages | 21 |
 | packagesWithoutPublicSrcSurface | 3 |
-| packagesNeedingRemediation | 78 |
-| publicModules | 1618 |
-| publicExports | 14473 |
+| packagesNeedingRemediation | 77 |
+| publicModules | 1622 |
+| publicExports | 14497 |
 | openModules | 129 |
 | openExports | 2207 |
 | missingExportExamples | 2013 |
@@ -62,7 +62,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 19 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 33 | 0 | 0 |
 | 20 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 2 |
 | 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 101 | 676 | 0 | 141 |
-| 22 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 0 | 3 |
+| 22 | `@beep/pglite` | `packages/drivers/pglite` | clean | 4 | 11 | 0 | 0 |
 | 23 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 24 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 7 | 27 | 0 | 6 |
 | 25 | `@beep/courtlistener` | `packages/drivers/courtlistener` | clean | 1 | 1 | 0 | 0 |
@@ -81,12 +81,12 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 38 | `@beep/chalk` | `packages/foundation/capability/chalk` | clean | 1 | 35 | 0 | 0 |
 | 39 | `@beep/uspto` | `packages/drivers/uspto` | needs-remediation | 5 | 24 | 0 | 9 |
 | 40 | `@beep/phoenix` | `packages/drivers/phoenix` | needs-remediation | 5 | 50 | 0 | 10 |
-| 41 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 6 | 37 | 0 | 9 |
+| 41 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 6 | 34 | 0 | 9 |
 | 42 | `@beep/types` | `packages/foundation/primitive/types` | clean | 5 | 10 | 0 | 0 |
 | 43 | `@beep/oip-web` | `apps/oip-web` | needs-remediation | 31 | 84 | 1 | 11 |
 | 44 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 45 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 5 | 103 | 0 | 50 |
-| 46 | `@beep/langextract` | `packages/foundation/capability/langextract` | needs-remediation | 6 | 30 | 0 | 5 |
+| 46 | `@beep/langextract` | `packages/foundation/capability/langextract` | needs-remediation | 6 | 34 | 0 | 5 |
 | 47 | `@beep/shared-tables` | `packages/shared/tables` | needs-remediation | 11 | 14 | 0 | 9 |
 | 48 | `@beep/scratchpad` | `scratchpad` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 49 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 6 | 170 | 0 | 48 |
@@ -100,7 +100,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 57 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 4 | 19 | 0 | 5 |
 | 58 | `@beep/venice-ai` | `packages/drivers/venice-ai` | clean | 3 | 35 | 0 | 0 |
 | 59 | `@beep/form` | `packages/foundation/ui-system/form` | needs-remediation | 42 | 114 | 0 | 1 |
-| 60 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 6 | 166 | 0 | 21 |
+| 60 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 6 | 170 | 0 | 21 |
 | 61 | `@beep/drizzle` | `packages/drivers/drizzle` | needs-remediation | 4 | 17 | 0 | 3 |
 | 62 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | needs-remediation | 2 | 8 | 0 | 1 |
 | 63 | `@beep/box` | `packages/drivers/box` | needs-remediation | 103 | 4497 | 0 | 53 |
@@ -108,7 +108,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 65 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | needs-remediation | 48 | 311 | 0 | 21 |
 | 66 | `@beep/anthropic` | `packages/drivers/anthropic` | needs-remediation | 5 | 26 | 0 | 4 |
 | 67 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 25 | 48 | 2 | 23 |
-| 68 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 22 | 43 | 0 | 0 |
+| 68 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 22 | 44 | 0 | 0 |
 | 69 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | needs-remediation | 18 | 64 | 0 | 18 |
 | 70 | `@beep/firecrawl` | `packages/drivers/firecrawl` | needs-remediation | 5 | 267 | 0 | 3 |
 | 71 | `@beep/ecfr` | `packages/drivers/ecfr` | needs-remediation | 5 | 23 | 0 | 13 |
@@ -116,35 +116,36 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 73 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 312 | 0 | 34 |
 | 74 | `@beep/infra` | `infra` | clean | 5 | 34 | 0 | 0 |
 | 75 | `@beep/runpod` | `packages/drivers/runpod` | needs-remediation | 6 | 178 | 0 | 7 |
-| 76 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 649 | 2 | 73 |
-| 77 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 241 | 1566 | 0 | 640 |
-| 78 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 2 | 3 | 0 | 1 |
-| 79 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 17 | 208 | 0 | 8 |
-| 80 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | needs-remediation | 4 | 16 | 0 | 5 |
-| 81 | `@beep/architecture-lab-config` | `packages/architecture-lab/config` | needs-remediation | 9 | 21 | 0 | 7 |
-| 82 | `@beep/govinfo` | `packages/drivers/govinfo` | needs-remediation | 32 | 85 | 0 | 45 |
-| 83 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 144 | 0 | 36 |
-| 84 | `@beep/xai` | `packages/drivers/xai` | clean | 7 | 70 | 0 | 0 |
-| 85 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | needs-remediation | 13 | 34 | 0 | 12 |
-| 86 | `@beep/duckdb` | `packages/drivers/duckdb` | needs-remediation | 4 | 17 | 0 | 3 |
-| 87 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | needs-remediation | 4 | 54 | 0 | 6 |
-| 88 | `@beep/agents-client` | `packages/agents/client` | needs-remediation | 3 | 24 | 0 | 3 |
-| 89 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | needs-remediation | 7 | 29 | 0 | 15 |
-| 90 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
-| 91 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | needs-remediation | 10 | 19 | 0 | 1 |
-| 92 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 6 | 74 | 0 | 5 |
-| 93 | `@beep/observability` | `packages/foundation/capability/observability` | needs-remediation | 24 | 159 | 3 | 31 |
-| 94 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 5 | 339 | 0 | 333 |
-| 95 | `@beep/ui` | `packages/foundation/ui-system/ui` | needs-remediation | 132 | 578 | 114 | 64 |
-| 96 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | needs-remediation | 5 | 119 | 0 | 92 |
-| 97 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 25 | 138 | 0 | 6 |
-| 98 | `@beep/wink` | `packages/drivers/wink` | needs-remediation | 14 | 71 | 0 | 13 |
-| 99 | `@beep/postgres` | `packages/drivers/postgres` | needs-remediation | 7 | 36 | 0 | 6 |
-| 100 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | needs-remediation | 15 | 52 | 0 | 18 |
-| 101 | `@beep/provenance` | `packages/foundation/modeling/provenance` | needs-remediation | 2 | 4 | 0 | 1 |
-| 102 | `@beep/epistemic-tables` | `packages/epistemic/tables` | needs-remediation | 6 | 12 | 0 | 1 |
-| 103 | `@beep/federal-register` | `packages/drivers/federal-register` | clean | 1 | 1 | 0 | 0 |
-| 104 | `@beep/sanity` | `packages/drivers/sanity` | needs-remediation | 4 | 16 | 0 | 3 |
+| 76 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | clean | 2 | 5 | 0 | 0 |
+| 77 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 649 | 2 | 73 |
+| 78 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 241 | 1566 | 0 | 640 |
+| 79 | `@beep/epistemic-server` | `packages/epistemic/server` | needs-remediation | 2 | 3 | 0 | 1 |
+| 80 | `@beep/rdf` | `packages/foundation/modeling/rdf` | needs-remediation | 17 | 208 | 0 | 8 |
+| 81 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | needs-remediation | 4 | 16 | 0 | 5 |
+| 82 | `@beep/architecture-lab-config` | `packages/architecture-lab/config` | needs-remediation | 9 | 21 | 0 | 7 |
+| 83 | `@beep/govinfo` | `packages/drivers/govinfo` | needs-remediation | 32 | 85 | 0 | 45 |
+| 84 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 144 | 0 | 36 |
+| 85 | `@beep/xai` | `packages/drivers/xai` | clean | 7 | 70 | 0 | 0 |
+| 86 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | needs-remediation | 13 | 34 | 0 | 12 |
+| 87 | `@beep/duckdb` | `packages/drivers/duckdb` | needs-remediation | 6 | 28 | 0 | 6 |
+| 88 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | needs-remediation | 4 | 54 | 0 | 6 |
+| 89 | `@beep/agents-client` | `packages/agents/client` | needs-remediation | 3 | 24 | 0 | 3 |
+| 90 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | needs-remediation | 7 | 30 | 0 | 15 |
+| 91 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
+| 92 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | needs-remediation | 10 | 19 | 0 | 1 |
+| 93 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 6 | 74 | 0 | 5 |
+| 94 | `@beep/observability` | `packages/foundation/capability/observability` | needs-remediation | 24 | 159 | 3 | 31 |
+| 95 | `@beep/html` | `packages/foundation/modeling/html` | needs-remediation | 5 | 339 | 0 | 333 |
+| 96 | `@beep/ui` | `packages/foundation/ui-system/ui` | needs-remediation | 132 | 578 | 114 | 64 |
+| 97 | `@beep/pandoc-ast` | `packages/foundation/modeling/pandoc-ast` | needs-remediation | 5 | 119 | 0 | 92 |
+| 98 | `@beep/repo-configs` | `packages/tooling/policy-pack/repo-configs` | needs-remediation | 25 | 138 | 0 | 6 |
+| 99 | `@beep/wink` | `packages/drivers/wink` | needs-remediation | 14 | 71 | 0 | 13 |
+| 100 | `@beep/postgres` | `packages/drivers/postgres` | needs-remediation | 7 | 36 | 0 | 6 |
+| 101 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | needs-remediation | 15 | 52 | 0 | 18 |
+| 102 | `@beep/provenance` | `packages/foundation/modeling/provenance` | needs-remediation | 2 | 5 | 0 | 1 |
+| 103 | `@beep/epistemic-tables` | `packages/epistemic/tables` | needs-remediation | 6 | 12 | 0 | 1 |
+| 104 | `@beep/federal-register` | `packages/drivers/federal-register` | clean | 1 | 1 | 0 | 0 |
+| 105 | `@beep/sanity` | `packages/drivers/sanity` | needs-remediation | 4 | 16 | 0 | 3 |
 
 ## Open Findings
 
@@ -209,8 +210,8 @@ Path: `packages/foundation/capability/mcp-kit`
 
 Export findings:
 - `src/TierGate.ts:211` `ToolCallRequest` (interface) - missing @example
-- `src/TierGate.ts:397` `TierGateDispatchResult` (type) - missing @example
-- `src/TierGate.ts:412` `TierGateDispatchResult` (const) - missing @example
+- `src/TierGate.ts:407` `TierGateDispatchResult` (type) - missing @example
+- `src/TierGate.ts:422` `TierGateDispatchResult` (const) - missing @example
 - `src/ToolkitComposition.ts:34` `GatedLayer` (interface) - missing @example
 - `src/index.ts:23` `export * from "./ApiKeyRequired.ts";` (re-export) - missing @example
 - `src/index.ts:32` `export * from "./FieldTier.ts";` (re-export) - missing @example
@@ -293,7 +294,7 @@ Export findings:
 - `src/commands/Corpus/Corpus.schemas.ts:325` `RecycleBinFormatVersion` (type) - missing @example
 - `src/commands/Corpus/Corpus.schemas.ts:514` `CorpusRestorationRecord` (type) - missing @example
 - `src/commands/Corpus/Corpus.schemas.ts:628` `RecycleBinEntryKind` (type) - missing @example
-- `src/commands/Corpus/Corpus.schemas.ts:955` `CorpusOrganizeCategory` (type) - missing @example
+- `src/commands/Corpus/Corpus.schemas.ts:956` `CorpusOrganizeCategory` (type) - missing @example
 - `src/commands/Corpus/Corpus.service.ts:153` `CorpusCommandServiceShape` (interface) - 1 unsafe example violation(s)
 - `src/commands/Corpus/index.ts:15` `export * from "./Corpus.command.js";` (re-export) - missing @example
 - `src/commands/Corpus/index.ts:22` `export * from "./Corpus.errors.js";` (re-export) - missing @example
@@ -401,8 +402,8 @@ Export findings:
 - `src/commands/Research/index.ts:29` `export * from "./Research.schemas.js";` (re-export) - missing @example
 - `src/commands/Research/index.ts:36` `export * from "./Research.service.js";` (re-export) - missing @example
 - `src/commands/Skills/Skills.command.ts:222` `remoteSkillSources` (const) - missing @example
-- `src/commands/Skills/Skills.command.ts:707` `renderCodexConfigWithSkills` (const) - missing @example
-- `src/commands/Skills/Skills.command.ts:847` `runSkillsUpdate` (const) - missing @example
+- `src/commands/Skills/Skills.command.ts:746` `renderCodexConfigWithSkills` (const) - missing @example
+- `src/commands/Skills/Skills.command.ts:886` `runSkillsUpdate` (const) - missing @example
 - `src/commands/Skills/index.ts:14` `export * from "./Skills.command.js";` (re-export) - missing @example
 - `src/commands/Skills/index.ts:21` `export * from "./Skills.errors.js";` (re-export) - missing @example
 - `src/commands/SyncDataToTs/index.ts:13` `export * from "./SyncDataToTs.command.js";` (re-export) - missing @example
@@ -623,15 +624,6 @@ Export findings:
    */
   yeetCommand,
 } from "./commands/Yeet/index.js";` (re-export) - missing @example
-
-### @beep/pglite
-
-Path: `packages/drivers/pglite`
-
-Export findings:
-- `src/index.ts:33` `export * from "./Pglite.errors.ts";` (re-export) - missing @example
-- `src/index.ts:40` `export * from "./Pglite.test-layer.ts";` (re-export) - missing @example
-- `src/index.ts:47` `export * from "./PgliteClient.service.ts";` (re-export) - missing @example
 
 ### @beep/agents-server
 
@@ -2715,9 +2707,12 @@ Export findings:
 Path: `packages/drivers/duckdb`
 
 Export findings:
+- `src/DuckDbNative.ts:24` `ignoreNativeClose` (const) - missing @example
+- `src/DuckDbNative.ts:39` `releaseNativeConnection` (const) - missing @example
 - `src/index.ts:20` `export * from "./DuckDb.errors.ts";` (re-export) - missing @example
 - `src/index.ts:27` `export * from "./DuckDb.models.ts";` (re-export) - missing @example
 - `src/index.ts:34` `export * from "./DuckDb.service.ts";` (re-export) - missing @example
+- `src/index.ts:41` `export * from "./DuckDbSqlClient.service.ts";` (re-export) - missing @example
 
 ### @beep/ffmpeg
 

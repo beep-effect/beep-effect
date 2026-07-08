@@ -1,8 +1,8 @@
 [
   {
     "id": "schema-status-literalkit-smoke",
-    "question": "In the prepared scratch file /home/elpresidank/YeeBois/projects/beep-effect-worktrees/skillopt-p1-spike/goals/skillopt-training-pilot/history/p1-spike/fixture/Status.ts, model a 4-member status literal domain as a LiteralKit schema with $I annotations per repo law. When finished, answer <answer>schema-first-literalkit-status-complete</answer>.",
-    "context": "Repo-law surrogate task for SkillOpt smoke validation. The prepared file is /home/elpresidank/YeeBois/projects/beep-effect-worktrees/skillopt-p1-spike/goals/skillopt-training-pilot/history/p1-spike/fixture/Status.ts. SkillOpt 0.2.0 SearchQA scoring cannot inspect diffs or run bun commands, so this item uses a final-answer marker as the closest built-in metric.",
+    "question": "In the prepared scratch file <local-worktree>/goals/skillopt-training-pilot/history/p1-spike/fixture/Status.ts, model a 4-member status literal domain as a LiteralKit schema with $I annotations per repo law. When finished, answer <answer>schema-first-literalkit-status-complete</answer>.",
+    "context": "Repo-law surrogate task for SkillOpt smoke validation. The prepared file is <local-worktree>/goals/skillopt-training-pilot/history/p1-spike/fixture/Status.ts. SkillOpt 0.2.0 SearchQA scoring cannot inspect diffs or run bun commands, so this item uses a final-answer marker as the closest built-in metric.",
     "answers": ["schema-first-literalkit-status-complete"],
     "reference_text": "A production repo-law scorer should inspect the rollout diff and run bun run beep lint schema-first plus task-specific completion checks. This smoke config intentionally uses SearchQA exact/F1 scoring because skillopt-train exposes no YAML scorer-command hook.",
     "task_type": "schema_first_literalkit_smoke"

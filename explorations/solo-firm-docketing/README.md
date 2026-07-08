@@ -73,9 +73,8 @@ evaluate CPI/LawToolBox partner-API access now or after the handroll spine ships
   AppColl as docket-of-record anchor, malpractice/reliability framing, ODP/Graph
   operational constraints, maintenance-fee edge cases, and vendor action links.
   Still stopped at `align`.
-- 2026-06-18: served [`rundown.html`](./rundown.html) on the tailnet at
-  `https://dankstation.tailc7c348.ts.net:8443/solo-firm-docketing-rundown` for
-  review/sharing. Still stopped at `align`.
+- 2026-06-18: served [`rundown.html`](./rundown.html) on a private tailnet URL
+  for review/sharing. Still stopped at `align`.
 - 2026-06-18: added official vendor action links to the buy-option cards in
   [`rundown.html`](./rundown.html): CPI demo/contact, LawToolBox demo, Alt Legal
   demo/trial, and AppColl pricing. Still stopped at `align`.

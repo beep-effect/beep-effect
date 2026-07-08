@@ -155,16 +155,18 @@ export const make = Effect.fnUntraced(function*<
       Effect.fnUntraced(function*(scope) {
         let isShuttingDown = false
 
+        const handlerContext = Context.mutate(context, (context) =>
+          context.pipe(
+            Context.add(CurrentAddress, address),
+            Context.add(CurrentRunnerAddress, options.runnerAddress),
+            Context.add(KeepAliveLatch, keepAliveLatch),
+            Context.add(Scope.Scope, scope),
+            Context.add(CurrentLogAnnotations, {})
+          ))
+
         // Initiate the behavior for the entity
         const handlers = yield* (entity.protocol.toHandlers(buildHandlers as any).pipe(
-          Effect.provideService(CurrentLogAnnotations, {}),
-          Effect.provideContext(Context.mutate(context, (context) =>
-            context.pipe(
-              Context.add(CurrentAddress, address),
-              Context.add(CurrentRunnerAddress, options.runnerAddress),
-              Context.add(KeepAliveLatch, keepAliveLatch),
-              Context.add(Scope.Scope, scope)
-            ))),
+          Effect.setContext(handlerContext as Context.Context<any>),
           Effect.sandbox,
           Effect.tapError((cause) => Effect.logError("Defect building entity handlers", cause)),
           Effect.retry(defectRetryPolicy)
@@ -280,7 +282,7 @@ export const make = Effect.fnUntraced(function*<
           }
         }).pipe(
           Scope.provide(scope),
-          Effect.provideContext(handlers)
+          Effect.setContext(Context.merge(handlerContext, handlers))
         )
 
         yield* Scope.addFinalizer(

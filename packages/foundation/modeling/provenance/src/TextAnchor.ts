@@ -41,7 +41,7 @@ export const TextAnchorFields = {
   endChar: NonNegativeInt.annotateKey({
     description: "Exclusive end character offset into the source text.",
   }),
-  quote: S.String.annotateKey({
+  quote: S.NonEmptyString.annotateKey({
     description: "Exact quoted substring; source.slice(startChar, endChar) should reproduce it.",
   }),
 };
@@ -87,6 +87,24 @@ export class TextAnchor extends S.Class<TextAnchor>($I`TextAnchor`)(
    */
   static readonly isWellOrdered = (anchor: Pick<typeof TextAnchor.Encoded, "startChar" | "endChar">): boolean =>
     anchor.startChar <= anchor.endChar;
+
+  /**
+   * Whether an anchor is internally consistent without needing the source text:
+   * a non-empty half-open range whose width equals the quote length.
+   *
+   * @example
+   * ```ts
+   * import { TextAnchor } from "@beep/provenance/TextAnchor"
+   *
+   * console.log(TextAnchor.isInternallyConsistent({ startChar: 0, endChar: 4, quote: "fact" })) // true
+   * ```
+   *
+   * @category validation
+   * @since 0.0.0
+   */
+  static readonly isInternallyConsistent = (
+    anchor: Pick<typeof TextAnchor.Encoded, "startChar" | "endChar" | "quote">
+  ): boolean => anchor.startChar < anchor.endChar && anchor.endChar - anchor.startChar === anchor.quote.length;
 }
 
 /**
@@ -110,3 +128,18 @@ export class TextAnchor extends S.Class<TextAnchor>($I`TextAnchor`)(
  * @since 0.0.0
  */
 export const isWellOrdered = TextAnchor.isWellOrdered;
+
+/**
+ * Whether an anchor is internally consistent without needing the source text.
+ *
+ * @example
+ * ```ts
+ * import { isInternallyConsistent } from "@beep/provenance/TextAnchor"
+ *
+ * console.log(isInternallyConsistent({ startChar: 0, endChar: 4, quote: "fact" })) // true
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const isInternallyConsistent = TextAnchor.isInternallyConsistent;

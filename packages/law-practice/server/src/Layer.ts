@@ -17,16 +17,22 @@ import { EpistemicServerLive } from "@beep/epistemic-server/layer";
 import { ClaimGate } from "@beep/epistemic-use-cases/ClaimGate";
 import { ClaimTransition } from "@beep/epistemic-use-cases/ClaimLifecycle";
 import { FileProcessingService, makeFileProcessingServiceLayer } from "@beep/file-processing/Service";
-import { layer as LangExtractLayer, LangExtractService } from "@beep/langextract/Service";
+import {
+  layer as LangExtractLayer,
+  LangExtractService,
+  remoteExtractionPolicyFromConfig,
+} from "@beep/langextract/Service";
 import { IrToLaw, makeIrToLaw } from "@beep/law-practice-use-cases/IrToLaw";
 import { makeOfficeActionReview, OfficeActionReview } from "@beep/law-practice-use-cases/OfficeActionReview";
 import { TikaFileProcessingEngine } from "@beep/tika";
 import { Effect, Layer } from "effect";
+import type { Config } from "effect";
 import type * as Crypto from "effect/Crypto";
 import type * as LanguageModel from "effect/unstable/ai/LanguageModel";
 
 const IrToLawLayer = Layer.succeed(IrToLaw, IrToLaw.of(makeIrToLaw()));
 const FileProcessingLayer = makeFileProcessingServiceLayer([TikaFileProcessingEngine]);
+const GuardedLangExtractLayer = LangExtractLayer.pipe(Layer.provide(remoteExtractionPolicyFromConfig));
 
 const OfficeActionReviewLayer = Layer.effect(
   OfficeActionReview,
@@ -48,8 +54,9 @@ const OfficeActionReviewLayer = Layer.effect(
  * Hosts must merge in a `LanguageModel.LanguageModel` provider and a
  * `Crypto.Crypto` provider (e.g. `BunCrypto.layer`); this layer keeps model
  * selection and the runtime crypto primitive outside law-practice while
- * `LangExtractLayer` consumes the model provider for structured extraction and
- * the file-processing capability uses crypto for content hashing.
+ * LangExtract consumes the model provider for structured extraction only when
+ * `BEEP_LANGEXTRACT_ALLOW_REMOTE=true`, and the file-processing capability uses
+ * crypto for content hashing.
  *
  * @example
  * ```ts
@@ -63,7 +70,7 @@ const OfficeActionReviewLayer = Layer.effect(
  */
 export const LawPracticeServerLive: Layer.Layer<
   OfficeActionReview | IrToLaw,
-  never,
+  Config.ConfigError,
   LanguageModel.LanguageModel | Crypto.Crypto
 > = OfficeActionReviewLayer.pipe(
   // `provideMerge` satisfies the loop's `IrToLaw` dependency while keeping
@@ -73,6 +80,6 @@ export const LawPracticeServerLive: Layer.Layer<
   // epistemic server supplies the gate + transition the loop also requires.
   Layer.provideMerge(IrToLawLayer),
   Layer.provide(FileProcessingLayer),
-  Layer.provide(LangExtractLayer),
+  Layer.provide(GuardedLangExtractLayer),
   Layer.provide(EpistemicServerLive)
 );

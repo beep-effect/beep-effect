@@ -40,6 +40,32 @@ export const isPublicGuard = S.is(ImportedThing);
 export const check = (value: unknown): boolean => isImported(value);
 `;
 
+const SHADOWED_IDENTIFIER_BEFORE = `import * as S from "effect/Schema";
+
+class Widget extends S.Class<Widget>("Widget")({
+  name: S.String,
+}) {}
+
+const isWidget = S.is(Widget);
+
+export const check = (value: unknown): boolean => isWidget(value);
+
+export const checkWithOverride = (isWidget: (value: unknown) => boolean, value: unknown): boolean => isWidget(value);
+`;
+
+const SHADOWED_IDENTIFIER_AFTER = `import * as S from "effect/Schema";
+
+class Widget extends S.Class<Widget>("Widget")({
+  name: S.String,
+}) {
+    static readonly is = S.is(Widget);
+}
+
+export const check = (value: unknown): boolean => Widget.is(value);
+
+export const checkWithOverride = (isWidget: (value: unknown) => boolean, value: unknown): boolean => isWidget(value);
+`;
+
 /** Materialize an in-repo temp dir (subject.ts + tsconfig.json), run body, always clean up. */
 const withSubject = <A>(
   label: string,
@@ -94,6 +120,24 @@ layer(TestLayer, { timeout: 300_000 })("static-api-colocation codemod", (it) => 
             expect(results).toEqual([{ filePath: subjectPath, changed: false }]);
             const actual = yield* fs.readFileString(subjectPath);
             expect(actual).toBe(NEGATIVE_ONLY);
+          })
+        );
+      })
+    );
+  });
+
+  describe("shadowing", () => {
+    it.effect(
+      "does not rewrite identifiers bound to a shadowed local symbol",
+      Effect.fn(function* () {
+        const fs = yield* FileSystem.FileSystem;
+
+        yield* withSubject("shadowed", SHADOWED_IDENTIFIER_BEFORE, (subjectPath) =>
+          Effect.gen(function* () {
+            const results = yield* runStaticApiColocationCodemod([subjectPath]);
+            expect(results).toEqual([{ filePath: subjectPath, changed: true }]);
+            const actual = yield* fs.readFileString(subjectPath);
+            expect(actual).toBe(SHADOWED_IDENTIFIER_AFTER);
           })
         );
       })

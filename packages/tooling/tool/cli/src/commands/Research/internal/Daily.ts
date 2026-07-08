@@ -23,6 +23,7 @@ import { cognifyImpl } from "./Cognify.js";
 import { digestImpl } from "./Digest.js";
 import { historySiftImpl } from "./HistorySift.js";
 import { notionPullImpl } from "./NotionPullRun.js";
+import { VAULT_DIRS } from "./Vault.js";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ResearchDailyOptions } from "../Research.schemas.js";
 import type { ResearchCommandServiceRequirements } from "../Research.service.js";
@@ -61,7 +62,7 @@ export const commitVault = Effect.fn("Research.commitVault")(function* (
           ResearchCommandError.make({ message: `git ${A.join(args, " ")} exited with ${exitCode} in the vault.` })
       )
     );
-  yield* run(["add", "-A"]);
+  yield* run(["add", "-A", "--", ".", `:(exclude)${VAULT_DIRS.state}/**`]);
   const status = yield* Effect.scoped(
     Effect.gen(function* () {
       const handle = yield* ChildProcess.make("git", ["diff", "--cached", "--quiet"], {

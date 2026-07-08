@@ -68,6 +68,11 @@
       "sourceType": "local",
       "computedHash": "d847a12fddb0f0c0c06ed8d6939e77dc428f612dc75a2035451a1eb4291d2a64"
     },
+    "oracle": {
+      "source": "repo-local",
+      "sourceType": "local",
+      "computedHash": "7d26aca9256fabd6c96a755e980aee8c53f755bbdf361819ac9ac59072d70f9f"
+    },
     "ponytail": {
       "source": "DietrichGebert/ponytail",
       "sourceType": "github",

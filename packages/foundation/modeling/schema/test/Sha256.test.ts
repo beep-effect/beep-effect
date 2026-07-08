@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { Sha256Hex, Sha256HexFromBytes, Sha256HexFromHexBytes } from "@beep/schema/Sha256";
 import { Str } from "@beep/utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -31,7 +32,7 @@ describe("Sha256Hex", () => {
         expect(digest).toHaveLength(64);
         expect(digest).toMatch(/^[0-9a-f]{64}$/);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 

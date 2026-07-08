@@ -1,0 +1,4 @@
+interface:
+  display_name: "Oracle"
+  short_description: "Bundle prompts and files for Oracle CLI"
+  default_prompt: "Use $oracle to bundle a prompt plus the right local files, copy it, and submit it through the user's ChatGPT session when the safety preflight passes. Prefer @Chrome, then Computer Use in Chrome, then @Browser; otherwise prepare for manual paste."

@@ -2,9 +2,10 @@
  * Enter-to-send key handling and the live character count.
  *
  * Per the deep-research a11y contract, Enter-to-send is suppressed while an IME
- * composition session is active (`KeyboardEvent.isComposing`), so committing a
- * CJK/diacritic candidate never sends. The send keystroke itself is configurable
- * via `sendOn`; both the key handler and the send button dispatch the same
+ * composition session is active (`KeyboardEvent.isComposing` or the legacy
+ * `keyCode === 229` signal), so committing a CJK/diacritic candidate never
+ * sends. The send keystroke itself is configurable via `sendOn`; both the key
+ * handler and the send button dispatch the same
  * {@link SEND_MESSAGE_COMMAND}. Per the repo atom-first law the key registration
  * and the character count are per-editor `@effect/atom` bindings (no `useEffect`,
  * no `useState`); see {@link sendKeyBindingAtom} and {@link characterCountAtom}.
@@ -23,7 +24,8 @@ import { characterCountAtom, sendKeyBindingAtom } from "./atoms.ts";
  * plugin takes no props. With `sendOn="enter"`, plain Enter sends and any
  * modifier inserts a newline; with `sendOn="modifierEnter"`, Cmd/Ctrl+Enter
  * sends and plain Enter inserts a newline. Enter during IME composition never
- * sends, and Enter while a typeahead menu is open selects the option instead.
+ * sends, including legacy `keyCode === 229` events, and Enter while a typeahead
+ * menu is open selects the option instead.
  *
  * @example
  * ```tsx

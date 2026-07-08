@@ -11,7 +11,7 @@
     "omitted_fields": ["line", "col", "pos"]
   },
   "check": {
-    "total_findings": 77,
+    "total_findings": 78,
     "binaries": 3,
     "dependencies": 4,
     "devDependencies": 13,
@@ -22,7 +22,7 @@
     "optionalPeerDependencies": 0,
     "types": 1,
     "unlisted": 0,
-    "unresolved": 26
+    "unresolved": 27
   },
   "findings": [
     {
@@ -408,6 +408,11 @@
     {
       "kind": "unresolved",
       "file": "packages/tooling/library/ai-sync/tsconfig.test.json",
+      "name": "bun-types"
+    },
+    {
+      "kind": "unresolved",
+      "file": "packages/tooling/test-kit/fc-runs/tsconfig.test.json",
       "name": "bun-types"
     }
   ]

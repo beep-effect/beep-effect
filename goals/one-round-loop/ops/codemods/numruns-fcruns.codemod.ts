@@ -41,15 +41,18 @@ import type { CallExpression, ObjectLiteralExpression, SourceFile } from "ts-mor
 
 const FAST_CHECK_MODULE = "effect/testing";
 const TEST_UTILS_MODULE = "@beep/test-utils";
+const FC_RUNS_MODULE = "@beep/fc-runs";
 const HELPER_NAME = "fcRuns";
 
 /**
  * Packages inside `@beep/test-utils`' own dependency closure. `@beep/test-utils`
- * depends on `@beep/schema`, `@beep/utils`, and `@beep/pglite`, so migrating
- * their test files to `fcRuns` would make them import the helper back out of a
- * package that depends on them — a package cycle (greptile: "Cyclic Helper
- * Import"). The codemod leaves their inline `numRuns` untouched; lift this
- * carve-out by relocating `fcRuns` to a leaf package upstream of the closure.
+ * depends on `@beep/schema`, `@beep/utils`, and `@beep/pglite`, so importing
+ * `fcRuns` from `@beep/test-utils` in their test files would make them import
+ * the helper back out of a package that depends on them — a package cycle
+ * (greptile: "Cyclic Helper Import"). `fcRuns` therefore lives in the leaf
+ * `@beep/fc-runs`, upstream of the whole closure: these files import it from
+ * the leaf directly, while every other file keeps importing from
+ * `@beep/test-utils` (which re-exports the leaf).
  */
 const TEST_UTILS_CLOSURE_MARKERS: ReadonlyArray<string> = [
   "/foundation/modeling/schema/",
@@ -59,6 +62,15 @@ const TEST_UTILS_CLOSURE_MARKERS: ReadonlyArray<string> = [
 
 const isTestUtilsClosureFile = (filePath: string): boolean =>
   A.some(TEST_UTILS_CLOSURE_MARKERS, (marker) => Str.includes(marker)(filePath));
+
+/**
+ * Resolve which module a file imports `fcRuns` from. Closure files
+ * (schema/utils/pglite) import the upstream leaf `@beep/fc-runs` to avoid a
+ * package cycle; every other file imports `@beep/test-utils`, which re-exports
+ * the leaf.
+ */
+const resolveFcRunsModule = (filePath: string): string =>
+  isTestUtilsClosureFile(filePath) ? FC_RUNS_MODULE : TEST_UTILS_MODULE;
 
 /**
  * Per-file codemod outcome.
@@ -134,16 +146,16 @@ const rewriteOptionsObject = (options: ObjectLiteralExpression): boolean => {
   return true;
 };
 
-const ensureFcRunsImport = (sourceFile: SourceFile): void => {
+const ensureFcRunsImport = (sourceFile: SourceFile, moduleSpecifier: string): void => {
   const existing = A.findFirst(
     sourceFile.getImportDeclarations(),
-    (declaration) => declaration.getModuleSpecifierValue() === TEST_UTILS_MODULE && !declaration.isTypeOnly()
+    (declaration) => declaration.getModuleSpecifierValue() === moduleSpecifier && !declaration.isTypeOnly()
   );
 
   O.match(existing, {
     onNone: () => {
       sourceFile.addImportDeclaration({
-        moduleSpecifier: TEST_UTILS_MODULE,
+        moduleSpecifier,
         namedImports: [HELPER_NAME],
       });
     },
@@ -157,10 +169,6 @@ const ensureFcRunsImport = (sourceFile: SourceFile): void => {
 };
 
 const rewriteNumRunsToFcRuns = (sourceFile: SourceFile): boolean => {
-  if (isTestUtilsClosureFile(sourceFile.getFilePath())) {
-    return false;
-  }
-
   const fcAlias = resolveFastCheckAlias(sourceFile);
   if (O.isNone(fcAlias)) {
     return false;
@@ -182,7 +190,7 @@ const rewriteNumRunsToFcRuns = (sourceFile: SourceFile): boolean => {
     return false;
   }
 
-  ensureFcRunsImport(sourceFile);
+  ensureFcRunsImport(sourceFile, resolveFcRunsModule(sourceFile.getFilePath()));
   return true;
 };
 

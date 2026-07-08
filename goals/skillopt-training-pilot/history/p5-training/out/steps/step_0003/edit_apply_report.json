@@ -1,9 +1,0 @@
-[
-  {
-    "op": "insert_after",
-    "target": "  - Use `S.withConstructorDefault(...)`, `S.withDecodingDefault(...)`, and\n    `S.decodeTo(...)` with `SchemaTransformation` for normalization and fallback\n    behavior.",
-    "content_preview": "- When a task asks that a normalization or derived-value step (case-folding,\n    trimming, coercion, etc.) move out of a helper's body and into the exported\n    schema path, compose the transform from",
-    "status": "applied_insert_after_fallback_append",
-    "index": 1
-  }
-]

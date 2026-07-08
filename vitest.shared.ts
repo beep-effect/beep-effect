@@ -38,7 +38,7 @@ const parsedFcNumRuns = pipe(
   O.map(Number),
   O.getOrElse(() => 0)
 );
-const fcDeepSweepActive = Number.isInteger(parsedFcNumRuns) && parsedFcNumRuns > 0;
+export const vitestFcDeepSweepActive = Number.isInteger(parsedFcNumRuns) && parsedFcNumRuns > 0;
 // Fixed global coverage floors are retired (quality-gate-ratchets, 2026-07-06):
 // the committed per-package baseline compare (standards/coverage.regression-baseline.jsonc,
 // fail-on-drop) is the sole coverage judge. Package-local floors (e.g.
@@ -125,8 +125,8 @@ const config: ViteUserConfig = {
     // Deep property sweeps (BEEP_FC_NUM_RUNS raises fast-check run counts
     // 8-20x for the property lane and nightly sweep) scale test wall time
     // the same way instrumentation does; give them the same generous cap.
-    testTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 180_000 : 30_000,
-    hookTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 180_000 : 10_000,
+    testTimeout: vitestCoverageRunActive || vitestFcDeepSweepActive ? 180_000 : 30_000,
+    hookTimeout: vitestCoverageRunActive || vitestFcDeepSweepActive ? 180_000 : 10_000,
     // Baseline generation/regeneration must tolerate test-less packages;
     // the ratchet compare, not vitest, decides coverage outcomes.
     passWithNoTests: vitestCoverageRunActive,

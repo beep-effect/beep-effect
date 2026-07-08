@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { Did } from "@beep/schema/Did";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
@@ -59,7 +60,7 @@ describe("Did", () => {
         expect(did).toMatch(/^did:[a-z0-9]+:/u);
         expect(did).not.toMatch(/[/?#\s]/u);
       }),
-      { numRuns: 100 }
+      fcRuns(100)
     );
   });
 });

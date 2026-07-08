@@ -67,7 +67,9 @@ const sourceLabelFlag = Flag.string("source").pipe(
 );
 /** @since 0.0.0 */
 const extractOutLabelFlag = Flag.string("out-label").pipe(
-  Flag.withDescription("Write extraction output under staging/<out-label> instead of staging/extract"),
+  Flag.withDescription(
+    "Write extraction output under staging/<out-label> instead of staging/extract; must be one directory name"
+  ),
   Flag.optional
 );
 /** @since 0.0.0 */

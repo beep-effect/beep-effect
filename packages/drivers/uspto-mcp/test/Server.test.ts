@@ -139,6 +139,15 @@ const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
 };
 
 describe("uspto-mcp fixture proofs", () => {
+  it.effect("imports the bin module without launching the stdio server", () =>
+    Effect.gen(function* () {
+      const bin = yield* Effect.promise(() => import("@beep/uspto-mcp/bin"));
+
+      assert.strictEqual(bin.SERVER_CONFIG.name, "beep-uspto");
+      assert.strictEqual(typeof bin.runUsptoMcpServer, "function");
+    })
+  );
+
   it.effect("returns the api_key_required envelope when USPTO_API_KEY is absent", () =>
     Effect.gen(function* () {
       const result = yield* callSearch().pipe(provideScopedLayer(buildLayer({}, respondWith(applicationEnvelope))));

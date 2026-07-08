@@ -50,6 +50,25 @@ const ReportId = S.Union([S.Int, S.FiniteFromString.pipe(S.check(S.isInt()))]).p
   SchemaUtils.withCodecStatics
 );
 
+const invalidReportIdError = (): PacerPclError =>
+  PacerPclError.fromReason("server-error", { cause: "invalid reportId from server" });
+
+const formatReportDeletePathSegment = (reportId: ReportIdValue): O.Option<string> =>
+  P.isNumber(reportId)
+    ? pipe(
+        ReportId.decodeOption(reportId),
+        O.map((value) => `${value}`)
+      )
+    : pipe(O.liftPredicate(Str.isNonEmpty)(reportId), O.map(globalThis.encodeURIComponent), O.filter(Str.isNonEmpty));
+
+const formatServerReportDeletePathSegment = (reportId: ReportIdValue): O.Option<string> =>
+  P.isNumber(reportId)
+    ? pipe(
+        S.decodeOption(S.Finite)(reportId),
+        O.map((value) => globalThis.encodeURIComponent(`${value}`))
+      )
+    : pipe(O.liftPredicate(Str.isNonEmpty)(reportId), O.map(globalThis.encodeURIComponent), O.filter(Str.isNonEmpty));
+
 /** Max status polls before a batch download is treated as timed out (~10s at 200ms). */
 const POLL_MAX_ATTEMPTS = 50;
 
@@ -222,7 +241,7 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
         const caseDownloadResults = (reportId: number) =>
           callPcl(client.pcl.caseDownloadResults({ params: { reportId } }));
 
-        const deleteCaseReportByValue = (reportId: ReportIdValue): Effect.Effect<void, PacerPclError> =>
+        const deleteCaseReportByPathSegment = (reportId: string): Effect.Effect<void, PacerPclError> =>
           callPcl(
             injected.execute(
               HttpClientRequest.make("DELETE")(`${cfg.pclBaseUrl}/pcl-public-api/rest/cases/reports/${reportId}`)
@@ -236,7 +255,10 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
           );
 
         const deleteCaseReport = (reportId: number): Effect.Effect<void, PacerPclError> =>
-          deleteCaseReportByValue(reportId);
+          O.match(formatReportDeletePathSegment(reportId), {
+            onNone: () => Effect.fail(invalidReportIdError()),
+            onSome: deleteCaseReportByPathSegment,
+          });
 
         const pollUntilComplete = (reportId: number): Effect.Effect<ReportInfoType, PacerPclError> =>
           caseDownloadStatus(reportId).pipe(
@@ -252,9 +274,10 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
           );
 
         const cleanupReport = (reportId: ReportIdValue): Effect.Effect<void, PacerPclError> =>
-          deleteCaseReportByValue(reportId).pipe(
-            Effect.tapError((error) => Effect.logWarning(`Pacer PCL report cleanup failed: ${error.reason}`))
-          );
+          O.match(formatServerReportDeletePathSegment(reportId), {
+            onNone: (): Effect.Effect<void, PacerPclError> => Effect.void,
+            onSome: deleteCaseReportByPathSegment,
+          }).pipe(Effect.tapError((error) => Effect.logWarning(`Pacer PCL report cleanup failed: ${error.reason}`)));
 
         const withReportCleanup = Effect.fnUntraced(function* <A>(
           reportId: ReportIdValue,
@@ -276,8 +299,7 @@ export class PclClient extends Context.Service<PclClient, PclClientShape>()($I`P
             started.reportId,
             Effect.gen(function* () {
               const reportId = yield* O.match(ReportId.decodeOption(started.reportId), {
-                onNone: () =>
-                  Effect.fail(PacerPclError.fromReason("server-error", { cause: "invalid reportId from server" })),
+                onNone: () => Effect.fail(invalidReportIdError()),
                 onSome: Effect.succeed,
               });
               const completed = yield* pollUntilComplete(reportId);

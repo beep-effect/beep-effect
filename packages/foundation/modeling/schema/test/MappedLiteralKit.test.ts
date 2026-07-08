@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { LiteralKitKeyCollisionError } from "@beep/schema/LiteralKit";
 import { MappedLiteralDuplicateError, MappedLiteralKit } from "@beep/schema/MappedLiteralKit";
 import { describe, expect, it } from "@effect/vitest";
@@ -30,7 +31,7 @@ describe("MappedLiteralKit", () => {
         expect(SqlState.To.Options).toContain(literal);
         expect(decode(encode(literal))).toBe(literal);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 

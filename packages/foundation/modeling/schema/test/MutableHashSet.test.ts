@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { isMutableHashSet, MutableHashSet, MutableHashSetFromSelf } from "@beep/schema/MutableHashSet";
 import { withKeyDefaults } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { A } from "@beep/utils";
@@ -54,7 +55,7 @@ describe("MutableHashSetFromSelf", () => {
         const decoded = decode(encoded);
         expect(equivalence(decoded, set)).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });

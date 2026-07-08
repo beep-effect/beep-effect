@@ -1359,7 +1359,9 @@
       "@beep/pacer/*": ["./packages/drivers/pacer/src/*"],
       "@beep/epistemic-domain/values/EpistemicFixtureKey": [
         "./packages/epistemic/domain/src/values/EpistemicFixtureKey/index.ts"
-      ]
+      ],
+      "@beep/fc-runs": ["./packages/tooling/test-kit/fc-runs/src/index.ts"],
+      "@beep/fc-runs/*": ["./packages/tooling/test-kit/fc-runs/src/*"]
     }
   }
 }
