@@ -44,6 +44,12 @@
       "@beep/identity/packages": [
         "../../../../packages/foundation/modeling/identity/src/packages.ts"
       ],
+      "@beep/test-utils": [
+        "../../../../packages/tooling/test-kit/test-utils/src/index.ts"
+      ],
+      "@beep/test-utils/*": [
+        "../../../../packages/tooling/test-kit/test-utils/src/*.ts"
+      ],
       "@beep/utils": [
         "../../../../packages/foundation/modeling/utils/src/index.ts"
       ],

@@ -407,6 +407,12 @@
       "@beep/schema/test/Yaml": [
         "../../../../packages/foundation/modeling/schema/src/internal/test/Yaml.test-kit.ts"
       ],
+      "@beep/test-utils": [
+        "../../../../packages/tooling/test-kit/test-utils/src/index.ts"
+      ],
+      "@beep/test-utils/*": [
+        "../../../../packages/tooling/test-kit/test-utils/src/*.ts"
+      ],
       "@beep/ui": ["../../../../packages/foundation/ui-system/ui/src/index.ts"],
       "@beep/ui/themes": [
         "../../../../packages/foundation/ui-system/ui/src/themes/index.ts"
