@@ -127,7 +127,40 @@ fixture branch itself):
   structural identity (the local lane runs the byte-identical CI
   command, per the D9 echo evidence) with expected PASS/PASS.
 
-Round-3 verdict table: _pending (local battery + CI on ab19e4979c)_.
+**Round-3/4 same-SHA verdict table.** PR A's merge to main made the
+fixture PR CONFLICTING → GitHub cannot build refs/pull/N/merge →
+pull_request runs silently stop triggering (a distinct S4-adjacent
+class: the "stuck queue" was an unbuildable merge ref). Fixture branch
+rebased onto main (injections verified intact) → final SHA
+`025473601b`; local battery re-run on that SHA and CI run on the same
+SHA (PR #322):
+
+| Lane | Local verdict | CI verdict | Match |
+|---|---|---|---|
+| commitlint | FAIL | FAIL | ✔ |
+| repo-sanity | FAIL | FAIL | ✔ |
+| lint-policy | FAIL | FAIL | ✔ |
+| lint | FAIL | FAIL | ✔ |
+| check | FAIL | FAIL | ✔ |
+| codegen | FAIL | FAIL | ✔ |
+| knip | FAIL | FAIL | ✔ |
+| jsdoc-ratchet | FAIL | FAIL | ✔ |
+| secrets | FAIL | FAIL | ✔ (approximate row) |
+| sast | PASS | PASS | ✔ (no-constructible-fixture row; structural identity) |
+| security | FAIL | FAIL | ✔ (approximate row) |
+| build | FAIL | skipped (push-only) | ✔ per table note (local battery is the verdict source) |
+| test-unit | FAIL | FAIL | ✔ |
+| test-integration | FAIL | FAIL | ✔ |
+| docgen | FAIL | FAIL | ✔ |
+| coverage | FAIL | FAIL | ✔ |
+| desktop-ipc | FAIL | FAIL | ✔ |
+| fallow | FAIL | FAIL | ✔ |
+| nix | FAIL | FAIL | ✔ |
+
+**Row 2 verdict: PROVEN.** Every row's local verdict matches CI's on
+the same SHA; every seeded lane fails on both sides; the one PASS/PASS
+row is the documented SAST coverage-gap disposition. Fixture PR #322
+closed unmerged; branch and worktree deleted.
 
 ## 3. Lane inventory single-sourcing (matrix row 3)
 
@@ -135,15 +168,15 @@ Round-3 verdict table: _pending (local battery + CI on ab19e4979c)_.
   pr-size + dependency-review) with class/replay/flags — verified by
   `packages/tooling/tool/cli/test/ci-lane.test.ts` (descriptor suite:
   21 entries, unique ids, frozen 17 required-context set).
-- check.yml body thinning (orl-003, PR B): every cli-runnable /
-  workflow-gated body now dispatches `bun run beep ci lane <id>` (16
-  dispatch sites); the remaining case block carries only event-shape
-  flags; ci-native jobs (pr-size, secrets, security) untouched; all 20
-  context names unchanged (fence 2); the temporary shadow workflow is
-  removed with the proof recorded above. Workflow-side environment
-  addition: the Nix job now runs setup-monorepo-ci on PR events too
-  (the lane dispatch needs bun; the nix commands themselves are
-  unchanged).
+- check.yml body thinning (orl-003): MERGED to main as
+  [#324](https://github.com/beep-effect/beep-effect/pull/324)
+  (2026-07-08T01:27Z). Every cli-runnable / workflow-gated body
+  dispatches `bun run beep ci lane <id>` (16 sites); ci-native jobs
+  untouched; all 20 context names unchanged (fence 2); the temporary
+  shadow workflow removed. The thinned check.yml ran LIVE on PR #324
+  itself: all checks green (round 2; round 1 failed on the stale
+  fallow contract test, §7). Nix job now runs setup-monorepo-ci on PR
+  events (dispatch needs bun; commands unchanged).
 
 ## 4. Dogfood ledger (D4) — P0 PR
 
@@ -266,3 +299,15 @@ declare `.github/workflows/**` in the relevant turbo task `inputs` (or
 globalDependencies), or move workflow-contract tests behind a
 non-cached lane. Until then: workflow-touching PRs should run the
 affected test lane with `--force` locally.
+
+## 8. P0 exit summary
+
+- Matrix row 1 (D9 same-SHA shadow): PROVEN (§1).
+- Matrix row 2 (local-verdict fixtures): PROVEN (§2, same-SHA table).
+- Matrix row 3 (lane inventory single-sourced + thinning): DONE (§3;
+  check.yml contains no raw cli-runnable lane bodies).
+- Dogfood (D4): every packet PR ran the battery from its branch before
+  push; PR #324 needed 2 CI rounds — root-caused (stale contract test
+  green under a turbo cache hit; cache-input gap, §7) with the local
+  catch demonstrated (uncached test run reproduces the failure) — DoD.2
+  satisfied for the >1-round PR.
