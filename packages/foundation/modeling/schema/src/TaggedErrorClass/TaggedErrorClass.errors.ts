@@ -298,9 +298,25 @@ export const TaggedErrorClass: TaggedErrorClassConstructor = (identifier?: undef
     tagValue: string,
     schema: TaggedErrorFields | TaggedErrorStruct,
     annotations?: S.Annotations.Declaration<TUnsafe.Any, readonly [TaggedErrorStruct]>
-  ) =>
-    S.TaggedErrorClass<TUnsafe.Any, TUnsafe.Any>(identifier)(
+  ) => {
+    // Tagged errors extend `Error`, so effect's `Data.Error` machinery captures
+    // transient stack metadata (`stack`/`line`/`column`/`sourceURL`/...) as
+    // enumerable own properties. The structural equivalence derived by
+    // `S.toEquivalence` includes those, so two errors with IDENTICAL schema
+    // fields are never equivalent across construction sites (e.g. `make` vs
+    // `decode`) — which breaks every schema round-trip property test. Derive the
+    // equivalence from the DECLARED FIELDS only (each via its own schema), so
+    // `S.toEquivalence(ThisError)` is stack-independent and round-trip-safe.
+    // Only the derived equivalence changes; `Equal.equals`/`Hash` (identity and
+    // keying) are untouched.
+    const fieldsStruct = S.isSchema(schema) ? (schema as TaggedErrorStruct) : S.Struct(schema as TaggedErrorFields);
+    const withFieldEquivalence = {
+      ...(annotations ?? {}),
+      toEquivalence: () => S.toEquivalence(fieldsStruct as never),
+    };
+    return S.TaggedErrorClass<TUnsafe.Any, TUnsafe.Any>(identifier)(
       tagValue,
       schema as never,
-      annotations as never
-    )) as unknown as UnsafeTaggedErrorClassFactory;
+      withFieldEquivalence as never
+    );
+  }) as unknown as UnsafeTaggedErrorClassFactory;
