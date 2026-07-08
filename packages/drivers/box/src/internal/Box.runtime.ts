@@ -1,8 +1,9 @@
-import { Effect, Exit } from "effect";
+import { Effect } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { BoxError } from "../Box.errors.ts";
+import type { Exit } from "effect";
 import type { BoxMethodName } from "../_generated/Box.models.gen.ts";
 
 /**
