@@ -162,9 +162,35 @@ describe("packages/tooling/tool/cli schema-first models", () => {
     expect(schemaCrispeningFamilyForFile("packages/epistemic/src/Foo.ts")).toEqual(O.some("apps-slices"));
     expect(schemaCrispeningFamilyForFile("packages/law-practice/src/Foo.ts")).toEqual(O.some("apps-slices"));
     expect(schemaCrispeningFamilyForFile("packages/workspace/src/Foo.ts")).toEqual(O.some("apps-slices"));
-    expect(O.isNone(schemaCrispeningFamilyForFile("packages/shared/kernel/src/Foo.ts"))).toBe(true);
-    expect(O.isNone(schemaCrispeningFamilyForFile("infra/pulumi/src/Foo.ts"))).toBe(true);
+    // R4: packages/shared/** and infra/** are assigned families (apps-slices,
+    // tooling respectively) — they are no longer unassigned/non-blocking.
+    expect(schemaCrispeningFamilyForFile("packages/shared/kernel/src/Foo.ts")).toEqual(O.some("apps-slices"));
+    expect(schemaCrispeningFamilyForFile("infra/pulumi/src/Foo.ts")).toEqual(O.some("tooling"));
     expect(O.isNone(schemaCrispeningFamilyForFile("README.md"))).toBe(true);
+  });
+
+  it("resolves every schema-first lint scan scope root to an assigned family", () => {
+    // INCLUDED_GLOBS covers apps/**, packages/**, infra/** — every root below
+    // must resolve to Some(family); none may fall through to family-unassigned.
+    const scanScopeRoots: ReadonlyArray<readonly [string, string]> = [
+      ["apps/web/src/Foo.tsx", "apps-slices"],
+      ["packages/foundation/modeling/schema/src/Foo.ts", "foundation"],
+      ["packages/drivers/postgres/src/Foo.ts", "drivers"],
+      ["packages/tooling/tool/cli/src/Foo.ts", "tooling"],
+      ["packages/agents/src/Foo.ts", "apps-slices"],
+      ["packages/architecture-lab/src/Foo.ts", "apps-slices"],
+      ["packages/epistemic/src/Foo.ts", "apps-slices"],
+      ["packages/law-practice/src/Foo.ts", "apps-slices"],
+      ["packages/shared/kernel/src/Foo.ts", "apps-slices"],
+      ["packages/workspace/src/Foo.ts", "apps-slices"],
+      ["infra/pulumi/src/Foo.ts", "tooling"],
+    ];
+
+    for (const [file, family] of scanScopeRoots) {
+      const resolved = schemaCrispeningFamilyForFile(file);
+      expect(O.isSome(resolved)).toBe(true);
+      expect(resolved).toEqual(O.some(family));
+    }
   });
 
   describe("isSchemaCrispeningPolicyExempt", () => {
@@ -230,7 +256,7 @@ describe("packages/tooling/tool/cli schema-first models", () => {
       expect(isSchemaCrispeningPolicyExempt(policy)(trackedEntry)).toBe(false);
     });
 
-    it("treats an unassigned family (e.g. packages/shared) as non-blocking, hence exempt", () => {
+    it("R4: does not exempt a carded packages/shared entry now that it resolves to the blocking apps-slices family", () => {
       const sharedEntry = SchemaFirstInventoryEntry.make({
         ...trackedEntry,
         file: "packages/shared/kernel/src/Foo.ts",
@@ -239,11 +265,27 @@ describe("packages/tooling/tool/cli schema-first models", () => {
         SchemaCrispeningPolicyDocument.make({
           schemaVersion: "schema-crispening-policy/v1",
           cards: ["SFV4-defaults"],
-          families: {},
+          families: { "apps-slices": { blocking: true } },
           ownerOverrides: {},
         })
       );
-      expect(isSchemaCrispeningPolicyExempt(policy)(sharedEntry)).toBe(true);
+      expect(isSchemaCrispeningPolicyExempt(policy)(sharedEntry)).toBe(false);
+    });
+
+    it("R4: does not exempt a carded infra entry now that it resolves to the blocking tooling family", () => {
+      const infraEntry = SchemaFirstInventoryEntry.make({
+        ...trackedEntry,
+        file: "infra/pulumi/src/Foo.ts",
+      });
+      const policy = O.some(
+        SchemaCrispeningPolicyDocument.make({
+          schemaVersion: "schema-crispening-policy/v1",
+          cards: ["SFV4-defaults"],
+          families: { tooling: { blocking: true } },
+          ownerOverrides: {},
+        })
+      );
+      expect(isSchemaCrispeningPolicyExempt(policy)(infraEntry)).toBe(false);
     });
   });
 });

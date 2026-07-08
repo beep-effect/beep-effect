@@ -348,15 +348,44 @@ const exampleImportViolations = (commentText: string): ReadonlyArray<Documentati
   return violations;
 };
 
+const importStatementTerminatorPattern = /from\s*["'][^"']*["']\s*;?\s*$/;
+const bareImportStatementPattern = /^\s*import\s*["'][^"']*["']\s*;?\s*$/;
+
+// Strips complete import statements — including multi-line named-import
+// blocks (`import {\n  type X as Y,\n} from "mod"`) — rather than only lines
+// that start with `import `, so continuation lines like `type X as Y,` never
+// reach the no-type-assertions scan below (ruling R3-J3).
+const stripImportStatements = (example: string): string => {
+  const lines = Str.split(/\r?\n/)(example);
+  const kept: Array<string> = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index] ?? "";
+    if (bareImportStatementPattern.test(line)) {
+      index += 1;
+      continue;
+    }
+    if (/^\s*import\b/.test(line)) {
+      let cursor = index;
+      while (cursor < lines.length && !importStatementTerminatorPattern.test(lines[cursor] ?? "")) {
+        cursor += 1;
+      }
+      index = cursor + 1;
+      continue;
+    }
+    A.appendInPlace(kept, Str.trim(line));
+    index += 1;
+  }
+
+  return A.join(kept, "\n");
+};
+
 const unsafeExampleViolations = (commentText: string): ReadonlyArray<DocumentationIssue> => {
   const violations: Array<DocumentationIssue> = [];
 
   for (const [exampleIndex, example] of A.entries(extractExamples(commentText))) {
-    const nonImportLines = A.filter(
-      A.map(Str.split(/\r?\n/)(example), (line) => Str.trim(line)),
-      (line) => !Str.startsWith("import ")(line)
-    );
-    const nonImportText = A.join(nonImportLines, "\n");
+    const nonImportText = stripImportStatements(example);
 
     if (/\bdeclare\b/.test(nonImportText)) {
       A.appendInPlace(violations, {
@@ -508,7 +537,6 @@ const analyzeExportDeclaration = (
 ): InventoryEntry => {
   const commentText = `${leadingJsDocText(declaration)}\n${declaration.getText()}`;
   const presentTags = tagsFromComment(commentText);
-  const missingTags = missingRequiredTags(presentTags, requiredExportTags);
   const filePath = normalizeSlashes(path.relative(packagePath, sourceFile.getFilePath()));
   const repoPath = repoRelative(sourceFile.getFilePath(), repoRoot, path);
   const line = declaration.getStartLineNumber();
@@ -517,7 +545,12 @@ const analyzeExportDeclaration = (
   const unsafeIssues = unsafeExampleViolations(commentText);
   const categoryIssues = categoryViolations(commentText);
   const forbidden = forbiddenTagsIn(presentTags);
-  const missingSummary = O.isNone(summaryFromComment(commentText));
+  // Re-export declarations are graph edges, not symbol-quality subjects
+  // (.patterns/jsdoc-documentation.md:91-96; rulings R2, R5): exempt them from
+  // requiredExportTags and missingSummary entirely instead of demanding fake
+  // examples on a barrel.
+  const missingTags: ReadonlyArray<string> = [];
+  const missingSummary = false;
   const findingCount =
     missingTags.length +
     forbidden.length +
@@ -954,7 +987,7 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
   const path = yield* Path.Path;
   const { generatedAt, repoRoot } = yield* resolveJSDocInventoryOptions(options);
   const packageByName = yield* discoverWorkspacePackages(repoRoot, path);
-  const topoNames = yield* topoSortPackageNames(repoRoot);
+  const topoNames = yield* topoSortPackageNames(repoRoot, path);
   const rootPolicy = yield* analyzeRootPolicy(repoRoot, path);
   const packages = yield* Effect.forEach(
     topoNames,

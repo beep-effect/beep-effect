@@ -25,7 +25,7 @@ Counters snapshot after every regen (source of truth: `ops/progress.json`).
 | Checkpoint | candidates | exceptions |
 |---|---|---|
 | 2026-07-07 baseline | 107 | 13 |
-| after P1 (expected) | ~45 | 13 |
+| 2026-07-08 after P1 | 46 | 11 |
 | target | 0 | 0 |
 
 ### schema-first (`beep lint schema-first`)
@@ -41,8 +41,10 @@ Counters snapshot after every regen (source of truth: `ops/progress.json`).
 | Checkpoint | pkgs needing remediation | missing @example | @category | @since | unsafe | schemaAnnotation | exampleImport | forbidden |
 |---|---|---|---|---|---|---|---|---|
 | 2026-07-07 baseline | 78 | 2012 | 91 | 91 | 71 | 127 | 24 | 2 |
-| after P1 (expected) | TBD | ~1215 | 91 | 91 | ~54 | 127 | 24 | 2 |
+| 2026-07-08 after P1 | 45 | 1215 | 91 | 91 | 68 | 127 | 24 | 2 |
 | target | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 |
+
+(P1 also removed the 4 phantom packages: inventory now spans 100 real packages.)
 
 ### knip / allowlist
 

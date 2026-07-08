@@ -222,6 +222,41 @@ layer(testLayer)("dual arity laws", (it) => {
     )
   );
 
+  it.effect("ignores static schema-codec callables while tracking plain static function properties", () =>
+    withTempWorkingDirectory(
+      Effect.gen(function* () {
+        yield* writeProjectScaffold;
+        yield* writeProjectFile(
+          "packages/demo/src/index.ts",
+          A.join(
+            [
+              'import * as S from "effect/Schema";',
+              "",
+              "export class Codec extends S.asClass(S.String) {",
+              "  static readonly decodeUnknownSync = S.decodeUnknownSync(this);",
+              "}",
+              "",
+              "export class Plain {",
+              "  static readonly combine: (a: string, b: string) => string = (a: string, b: string): string =>",
+              "    `${a}:${b}`;",
+              "}",
+              "",
+            ],
+            "\n"
+          )
+        );
+
+        const summary = yield* runLaw();
+        const diagnostics = A.join(summary.diagnostics, "\n");
+
+        expect(summary.liveEntries).toBe(1);
+        expect(diagnostics).not.toContain("Codec.decodeUnknownSync");
+        expect(diagnostics).toContain("Plain.combine");
+        expect(diagnostics).toContain("missing-dual");
+      })
+    )
+  );
+
   it.effect("defers optional-trailing and variadic public shapes", () =>
     withTempWorkingDirectory(
       Effect.gen(function* () {
@@ -437,10 +472,23 @@ layer(testLayer)("dual arity laws", (it) => {
               "  (label: string, options: readonly [string, string]): (self: string) => string",
               "} = dual(3, (self: string, label: string, options: readonly [string, string]): string => `${self}:${label}:${options[0]}`);",
               "",
-              "export const functionBad: {",
+              "export const functionCallableOk: {",
               "  (self: string, label: string, options: () => string): string",
               "  (label: string, options: () => string): (self: string) => string",
               "} = dual(3, (self: string, label: string, options: () => string): string => `${self}:${label}:${options()}`);",
+              "",
+              "export const stringBad: {",
+              "  (self: string, label: string, options: string): string",
+              "  (label: string, options: string): (self: string) => string",
+              "} = dual(3, (self: string, label: string, options: string): string => `${self}:${label}:${options}`);",
+              "",
+              "export function nonDualFunctionThirdParam(",
+              "  self: string,",
+              "  label: string,",
+              "  transform: (value: string) => string",
+              "): string {",
+              "  return transform(`${self}:${label}`);",
+              "}",
               "",
               "export const effectBad: {",
               "  (self: string, label: string, options: EffectOptions): string",
@@ -480,10 +528,12 @@ layer(testLayer)("dual arity laws", (it) => {
         const summary = yield* runLaw();
         const diagnostics = A.join(summary.diagnostics, "\n");
 
-        expect(summary.liveEntries).toBe(9);
+        expect(summary.liveEntries).toBe(10);
         expect(diagnostics).toContain("arrayBad");
         expect(diagnostics).toContain("tupleBad");
-        expect(diagnostics).toContain("functionBad");
+        expect(diagnostics).toContain("stringBad");
+        expect(diagnostics).toContain("nonDualFunctionThirdParam");
+        expect(diagnostics).toContain("missing-dual");
         expect(diagnostics).toContain("effectBad");
         expect(diagnostics).toContain("schemaBad");
         expect(diagnostics).toContain("promiseBad");
@@ -496,6 +546,7 @@ layer(testLayer)("dual arity laws", (it) => {
         expect(diagnostics).not.toContain("classOk");
         expect(diagnostics).not.toContain("recordOk");
         expect(diagnostics).not.toContain("constrainedGenericOk");
+        expect(diagnostics).not.toContain("functionCallableOk");
       })
     )
   );

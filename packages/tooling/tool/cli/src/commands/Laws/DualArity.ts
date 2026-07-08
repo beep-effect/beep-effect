@@ -491,7 +491,7 @@ const isFunctionExportInitializer = (
 };
 
 const SCHEMA_CALLABLE_VALUE_FACTORY_PATTERN =
-  /^(?:S|Schema)\.(?:decodeEffect|decodeOption|decodeResult|decodeUnknownEffect|decodeUnknownOption|decodeUnknownResult|encodeEffect|encodeOption|encodeResult|encodeUnknownEffect|encodeUnknownOption|encodeUnknownResult|toEquivalence)$/u;
+  /^(?:S|Schema)\.(?:(?:decode|encode)(?:Unknown)?(?:Effect|Exit|Option|Promise|Result|Sync)|toEquivalence)$/u;
 
 const isOrderValueType = (type: Type): boolean => {
   const typeText = type.getText();
@@ -651,6 +651,8 @@ const isPrimitiveType = (type: Type): boolean =>
   type.isVoid();
 
 const isOptionalTypeMarker = (type: Type): boolean => type.isUndefined() || type.isNull();
+
+const isCallableType = (type: Type): boolean => !A.isReadonlyArrayEmpty(type.getCallSignatures());
 
 const isStrictObjectLikeType = (type: Type): boolean => {
   if (type.isTypeParameter()) {
@@ -849,7 +851,17 @@ const collectCandidateDiagnostics = (
     diagnostics = A.append(diagnostics, "invalid-dual-arity");
   }
 
-  if (candidate.parameterCount === 3 && !pipe(candidate.thirdParameterType, O.exists(isStrictObjectLikeType))) {
+  const hasValidDualWithCallableThirdParameter =
+    O.isSome(dualCall) &&
+    dualCall.value.validSource &&
+    hasMatchingDualArity &&
+    pipe(candidate.thirdParameterType, O.exists(isCallableType));
+
+  if (
+    candidate.parameterCount === 3 &&
+    !pipe(candidate.thirdParameterType, O.exists(isStrictObjectLikeType)) &&
+    !hasValidDualWithCallableThirdParameter
+  ) {
     diagnostics = A.append(diagnostics, "third-param-not-object-like");
   }
 
@@ -1086,6 +1098,9 @@ const collectStaticPropertyCandidate = (
   const initializer = property.getInitializer();
   const callableType = property.getType();
   if (P.isUndefined(initializer) && A.isReadonlyArrayEmpty(callableType.getCallSignatures())) {
+    return O.none();
+  }
+  if (!P.isUndefined(initializer) && isNonHelperCallableValue(initializer, callableType)) {
     return O.none();
   }
 

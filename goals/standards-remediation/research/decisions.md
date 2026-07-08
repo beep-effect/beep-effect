@@ -25,24 +25,44 @@ barrel just to satisfy quality tooling." **Ruling: detector bug. Fix in P1**
 behavior unchanged — measured misses there are already 0); fixture pair
 mandatory. Expected prune ≈ 797 findings.
 
-## R3 — pending P1 verification (agent-reported, NOT yet driver-verified)
+## R3 — three more detector bugs (LOCKED, driver-verified 2026-07-07)
 
-- **D2**: callable 3rd param on properly-dual combinators (GraphOps `bimap` et
-  al., ~13 entries) flagged because `collectCandidateDiagnostics` doesn't
-  consult `hasDualSignatures(callableType, 3)`.
-- **J2**: 4 phantom "packages" (`dependencies`, `devDependencies`, …) from
-  `parseTopoSortOutput` (`QualityArtifactSupport.ts:456-469`) taking the first
-  token of every non-`$` line.
-- **J3**: multi-line `import { type X as Y }` trips
-  `no-type-assertions-in-examples` because only lines *starting with* `import `
-  are stripped (confirmed instance:
-  `packages/architecture-lab/ui/src/aggregates/WorkItem/WorkItem.view-model.ts:80`).
+- **D2 (LOCKED)**: `collectCandidateDiagnostics` emits
+  `third-param-not-object-like` unconditionally for every 3-param candidate
+  (`DualArity.ts:852-854`) — including properly-dual combinators. Driver read
+  `GraphOps.bimap` (`packages/foundation/modeling/nlp/src/Graph/GraphOps.ts:266-279`):
+  a textbook `dual(3, ...)` with both call signatures, flagged solely for its
+  callable 3rd param — the `A.reduce(self, b, f)` shape Effect core itself
+  uses. **Ruling: exempt the diagnostic only when the candidate has a VALID
+  dual (`validSource` + matching arity) AND the 3rd param type is callable.**
+  Primitive 3rd params stay flagged even on duals. 13 solo entries affected.
+- **J2 (LOCKED)**: `parseTopoSortOutput` (`QualityArtifactSupport.ts:456-469`)
+  takes the first whitespace token of every non-`$` line, so section lines like
+  `dependencies:` become phantom packages (4 in the live inventory). **Ruling:
+  intersect parsed names with discovered workspace package names.**
+- **J3 (LOCKED)**: `unsafeExampleViolations`
+  (`JSDocDocumentationInventory.ts:351-387`) strips only lines *starting with*
+  `import ` (`:357`) before running the `as`-assertion regex (`:377`), so
+  continuation lines of multi-line imports (`type X as Y,`) false-positive
+  `no-type-assertions-in-examples`. Confirmed instance:
+  `packages/architecture-lab/ui/src/aggregates/WorkItem/WorkItem.view-model.ts:80`.
+  **Ruling: strip complete (multi-line) import statements before the regexes.**
 
-Driver must verify each in-code before the P1 lane's fix is accepted.
-
-## R4 — crispening policy family gap (pending P1)
+## R4 — crispening policy family gap (LOCKED, driver-verified 2026-07-07)
 
 `SCHEMA_CRISPENING_FAMILY_PREFIXES` (`SchemaFirst.ts:634-644`) omits
-`packages/shared/**` and `infra/**`; unassigned family ⇒ non-blocking ⇒ exempt
-from missing-entry detection for carded rules. Close by assigning families or
-defaulting unassigned→blocking.
+`packages/shared/**` and `infra/**`; the doc comment (`:646-660`) calls them
+"unassigned until their P1 wave assignment lands" — that assignment never
+landed after crispening closed. Unassigned ⇒ `resolveSchemaCrispeningPolicyBlocking`
+falls to `false` (`:682`) ⇒ carded advisories in those paths are exempt
+(`isSchemaCrispeningPolicyExempt:705-718`) while the scan scope includes them.
+**Ruling: assign `packages/shared/` → `apps-slices` and `infra/` → `tooling`
+(both families blocking), update the doc comment, and replace the
+unassigned-exempt test with assigned-not-exempt coverage.**
+
+## R5 — jsdoc re-export exemption scope (LOCKED with R2)
+
+Per the policy prose, re-export declarations are graph edges: exempt them from
+ALL `requiredExportTags` (not only `@example`); measured `@category`/`@since`
+misses on re-exports are already 0, so the observable delta is the 797
+`@example` findings. Fixture: direct export still fires; re-export silent.

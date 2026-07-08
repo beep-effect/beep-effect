@@ -1,11 +1,7 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-07",
-  "scope": [
-    "apps/**/*.{ts,tsx}",
-    "packages/**/*.{ts,tsx}",
-    "infra/**/*.ts"
-  ],
+  "generatedOn": "2026-07-08",
+  "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
       "file": "apps/oip-web/src/components/HeroVideo.tsx",
@@ -2533,7 +2529,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-normalization",
-      "line": 413,
+      "line": 442,
       "owner": "@beep/repo-cli",
       "reason": "Exception: ts-morph initializer text parser for generated JSDoc inventory; trim is local AST-source inspection before regex classification, not schema data normalization."
     },

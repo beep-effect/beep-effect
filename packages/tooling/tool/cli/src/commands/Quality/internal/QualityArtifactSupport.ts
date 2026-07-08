@@ -471,13 +471,26 @@ const parseTopoSortOutput = (
 /**
  * Read package names from the repository topo-sort command.
  *
+ * `bun run topo-sort` output interleaves real package names with dependency
+ * section headers (`dependencies`, `devDependencies`, `peerDependencies`,
+ * `optionalDependencies`); {@link parseTopoSortOutput} takes the first
+ * whitespace token of every line, so those headers parse as phantom package
+ * names. The parsed names are intersected against
+ * {@link discoverWorkspacePackages} so only real workspace packages survive
+ * (ruling R3-J2).
+ *
  * @category workspaces
  * @since 0.0.0
  */
 export const topoSortPackageNames = Effect.fn("QualityArtifactSupport.topoSortPackageNames")(function* (
   repoRoot: string,
+  path: Path.Path,
   includeLine: (line: string) => boolean = (line) => line.length > 0 && !Str.startsWith("$")(line)
-): Effect.fn.Return<ReadonlyArray<string>, QualityArtifactGeneratorError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<string>,
+  QualityArtifactGeneratorError,
+  FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
+> {
   const command = "bun run topo-sort";
   const result = yield* Effect.scoped(
     Effect.gen(function* () {
@@ -504,7 +517,9 @@ export const topoSortPackageNames = Effect.fn("QualityArtifactSupport.topoSortPa
     });
   }
 
-  return parseTopoSortOutput(result.output, includeLine);
+  const parsedNames = parseTopoSortOutput(result.output, includeLine);
+  const workspacePackages = yield* discoverWorkspacePackages(repoRoot, path);
+  return A.filter(parsedNames, (packageName) => MutableHashMap.has(workspacePackages, packageName));
 });
 
 /**

@@ -635,21 +635,26 @@ const SCHEMA_CRISPENING_FAMILY_PREFIXES: ReadonlyArray<readonly [string, typeof 
   ["packages/foundation/", "foundation"],
   ["packages/drivers/", "drivers"],
   ["packages/tooling/", "tooling"],
+  ["infra/", "tooling"],
   ["apps/", "apps-slices"],
   ["packages/agents/", "apps-slices"],
   ["packages/architecture-lab/", "apps-slices"],
   ["packages/epistemic/", "apps-slices"],
   ["packages/law-practice/", "apps-slices"],
+  ["packages/shared/", "apps-slices"],
   ["packages/workspace/", "apps-slices"],
 ] as const;
 
 /**
  * Resolve the schema-crispening wave family for a repo-relative source file
- * path by prefix. `packages/shared/**` and `infra/**` are unassigned until
- * their P1 wave assignment lands and resolve to `O.none` (non-blocking).
+ * path by prefix. Every schema-first lint scan scope root — `apps/**`, each
+ * `packages/**` family prefix (`foundation`, `drivers`, `tooling`, `agents`,
+ * `architecture-lab`, `epistemic`, `law-practice`, `shared`, `workspace`),
+ * and `infra/**` — is assigned to a family here; `O.none` is reserved for
+ * paths entirely outside the schema-first scan scope (e.g. `scripts/**`).
  *
  * @param file - Repo-relative posix path, e.g. `packages/foundation/modeling/schema/src/Foo.ts`.
- * @returns The resolved wave family, or `O.none` when the path is unassigned.
+ * @returns The resolved wave family, or `O.none` when the path is outside the schema-first scan scope.
  * @example
  * ```ts
  * import { schemaCrispeningFamilyForFile } from "@beep/repo-cli/commands/Lint"

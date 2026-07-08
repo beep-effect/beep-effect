@@ -1,12 +1,12 @@
 {
   "schemaVersion": "standards-remediation-progress/v1",
   "_note": "Driver-owned resumable state. Lane record shape: { lane, scope (package or file-set), entries, status: pending|dispatched|collected|challenged|done|blocked, report, blocker }. Counters are snapshotted after every driver regen; the inventories themselves are the source of truth for slices.",
-  "updated": "2026-07-07",
+  "updated": "2026-07-08",
   "branch": "standards-remediation",
-  "umbrellaPr": null,
+  "umbrellaPr": 326,
   "phases": {
-    "P0": "in_progress",
-    "P1": "pending",
+    "P0": "done",
+    "P1": "proving",
     "P2": "pending",
     "P3": "pending",
     "P4": "pending",
@@ -21,47 +21,106 @@
     "pending": ["R3", "R4"]
   },
   "counters": {
-    "checkpoint": "2026-07-07 baseline",
-    "dualArity": { "candidates": 107, "exceptions": 13 },
-    "schemaFirst": { "entries": 326 },
+    "checkpoint": "2026-07-08 post-P1 regen",
+    "dualArity": {
+      "candidates": 46,
+      "exceptions": 11
+    },
+    "schemaFirst": {
+      "entries": 326
+    },
     "jsdoc": {
-      "packagesNeedingRemediation": 78,
-      "missingExportExamples": 2012,
+      "packagesNeedingRemediation": 45,
+      "missingExportExamples": 1215,
       "missingExportCategories": 91,
       "missingExportSince": 91,
-      "unsafeExampleFindings": 71,
+      "unsafeExampleFindings": 68,
       "schemaAnnotationFindings": 127,
       "exampleImportFindings": 24,
       "forbiddenTagFindings": 2
     },
-    "knip": { "findings": 73 },
-    "allowlist": { "entries": 17 }
+    "knip": {
+      "findings": 73
+    },
+    "allowlist": {
+      "entries": 17
+    }
   },
   "waves": {
     "P1-detectors": {
-      "status": "pending",
+      "status": "proving",
       "inventory": "detectors",
+      "lanes": {
+        "p1-a-dualarity": {
+          "lane": "p1-a",
+          "scope": "DualArity.ts + test/dual-arity.test.ts (R1, R3-D2)",
+          "status": "done",
+          "report": "ops/reports/P1-detectors/p1-a-dualarity.md",
+          "blocker": null
+        },
+        "p1-b-jsdoc": {
+          "lane": "p1-b",
+          "scope": "JSDocDocumentationInventory.ts + QualityArtifactSupport.ts + tests (R2, R5, R3-J2, R3-J3)",
+          "status": "done",
+          "report": "ops/reports/P1-detectors/p1-b-jsdoc.md",
+          "blocker": null
+        },
+        "p1-c-schemafirst": {
+          "lane": "p1-c",
+          "scope": "SchemaFirst.ts + test/schema-first.test.ts (R4)",
+          "status": "done",
+          "report": "ops/reports/P1-detectors/p1-c-schemafirst.md",
+          "blocker": null
+        }
+      }
+    },
+    "P2-audits": {
+      "status": "pending",
+      "inventory": "rulings",
       "lanes": {}
     },
-    "P2-audits": { "status": "pending", "inventory": "rulings", "lanes": {} },
     "DA-1": {
       "status": "pending",
       "inventory": "dual-arity",
-      "note": "foundation/modeling pilot — slice after P1 regen",
+      "note": "foundation/modeling pilot \u2014 slice after P1 regen",
       "lanes": {}
     },
-    "DA-2": { "status": "pending", "inventory": "dual-arity", "lanes": {} },
-    "DA-3": { "status": "pending", "inventory": "dual-arity", "lanes": {} },
-    "DA-4": { "status": "pending", "inventory": "dual-arity", "lanes": {} },
+    "DA-2": {
+      "status": "pending",
+      "inventory": "dual-arity",
+      "lanes": {}
+    },
+    "DA-3": {
+      "status": "pending",
+      "inventory": "dual-arity",
+      "lanes": {}
+    },
+    "DA-4": {
+      "status": "pending",
+      "inventory": "dual-arity",
+      "lanes": {}
+    },
     "SF-1": {
       "status": "pending",
       "inventory": "schema-first",
       "note": "slice after P2 rulings",
       "lanes": {}
     },
-    "SF-2": { "status": "pending", "inventory": "schema-first", "lanes": {} },
-    "SF-3": { "status": "pending", "inventory": "schema-first", "lanes": {} },
-    "SF-4": { "status": "pending", "inventory": "schema-first", "lanes": {} },
+    "SF-2": {
+      "status": "pending",
+      "inventory": "schema-first",
+      "lanes": {}
+    },
+    "SF-3": {
+      "status": "pending",
+      "inventory": "schema-first",
+      "lanes": {}
+    },
+    "SF-4": {
+      "status": "pending",
+      "inventory": "schema-first",
+      "lanes": {}
+    },
     "JD-1": {
       "status": "pending",
       "inventory": "jsdoc",
@@ -116,7 +175,15 @@
       "note": "apps + slices",
       "lanes": {}
     },
-    "KN-1": { "status": "pending", "inventory": "knip", "lanes": {} },
-    "AL-1": { "status": "pending", "inventory": "allowlist", "lanes": {} }
+    "KN-1": {
+      "status": "pending",
+      "inventory": "knip",
+      "lanes": {}
+    },
+    "AL-1": {
+      "status": "pending",
+      "inventory": "allowlist",
+      "lanes": {}
+    }
   }
 }
