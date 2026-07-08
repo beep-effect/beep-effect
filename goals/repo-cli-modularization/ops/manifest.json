@@ -10,7 +10,7 @@
   },
   "mission": "Modularize the ~92k-LOC repo CLI: split the 27 files >=1000 LOC along natural seams into canonical role files, extract a shared internal substrate (subprocess, git, JSON/JSONC, ratchet, gh, schema kits), bring touched command groups to full topology compliance, and raise JSDoc on touched files to the .patterns rubric.",
   "currentSourceOfTruth": "SPEC.md",
-  "currentTargetPhase": "P1",
+  "currentTargetPhase": "P2",
   "package": {
     "name": "@beep/repo-cli",
     "path": "packages/tooling/tool/cli",
@@ -60,7 +60,7 @@
     {
       "id": "P1",
       "name": "In-package shared substrate",
-      "status": "pending",
+      "status": "completed",
       "exitCriteriaSummary": "internal/process, internal/repo-run/GitExec, internal/cli extensions landed additively with unit tests, rubric JSDoc, and pilot adoptions."
     },
     {

@@ -18,9 +18,10 @@ import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { runRepoCommandCapture, runRepoCommandStreamingCapture } from "../../internal/repo-run/index.js";
+import { runGitOutput, runRepoCommandStreamingCapture } from "../../internal/repo-run/index.js";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreeExistsError } from "./Worktree.errors.js";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+import type { GitCommandErrorAdapter } from "../../internal/repo-run/index.js";
 
 const $I = $RepoCliId.create("commands/Worktree/Worktree.command");
 
@@ -386,17 +387,19 @@ const failOnNonZeroExit = Effect.fn("Worktree.failOnNonZeroExit")(function* (
   }
 });
 
+const worktreeGitErrorAdapter = (failMessage: string): GitCommandErrorAdapter<WorktreeCommandError> => ({
+  onSpawnFailure: (commandLine) => WorktreeCommandError.new(failMessage, { command: commandLine }),
+  onNonZeroExit: ({ commandLine, exitCode }) =>
+    WorktreeCommandError.make({ message: `${failMessage} (exit ${exitCode}).`, command: commandLine, exitCode }),
+  onTruncated: O.none(),
+});
+
 const runGitCapture = Effect.fn("Worktree.runGitCapture")(function* (
   cwd: string,
   args: ReadonlyArray<string>,
   failMessage: string
 ): Effect.fn.Return<string, WorktreeCommandError, ChildProcessSpawner.ChildProcessSpawner> {
-  const commandText = A.join(["git", ...args], " ");
-  const result = yield* runRepoCommandCapture("git", args, cwd).pipe(
-    Effect.mapError(WorktreeCommandError.new(failMessage, { command: commandText }))
-  );
-  yield* failOnNonZeroExit(commandText, failMessage, result.exitCode);
-  return result.output;
+  return yield* runGitOutput(cwd, args, worktreeGitErrorAdapter(failMessage));
 });
 
 const runStreamingStep = Effect.fn("Worktree.runStreamingStep")(function* (

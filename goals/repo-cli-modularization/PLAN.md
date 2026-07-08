@@ -56,20 +56,20 @@ Condensed from `synthesis.json` (25 entries); locations are
 
 Purely additive modules inside `@beep/repo-cli`; no group files move.
 
-- [ ] `internal/cli/Json.ts`: export `encodeCommandJson`; add
+- [x] `internal/cli/Json.ts`: export `encodeCommandJson`; add
   `renderPrettyCommandJson` (jsonc pretty + 500k cap, 7 copies today).
-- [ ] `internal/cli/Printer.ts`: `printJsonOrLines`, tagged logger,
+- [x] `internal/cli/Printer.ts`: `printJsonOrLines`, tagged logger,
   duration formatting.
-- [ ] `internal/process/StepExec.ts`: captured / must-succeed / best-effort /
+- [x] `internal/process/StepExec.ts`: captured / must-succeed / best-effort /
   inherited-stdio subprocess variants, bounded output fold, caller-supplied
   error mapper; absorbs `QualityTaskStep` + `collectText`.
-- [ ] `internal/repo-run/GitExec.ts`: `runGitOutput`/`runGitLines`/path-list
+- [x] `internal/repo-run/GitExec.ts`: `runGitOutput`/`runGitLines`/path-list
   helpers, changed-files-since-base, branch/ref safety.
-- [ ] `internal/cli/`: `Timing.ts`, `RunMode.ts`, `UnknownProbe.ts`,
+- [x] `internal/cli/`: `Timing.ts`, `RunMode.ts`, `UnknownProbe.ts`,
   `CommandErrorFields.ts`, `Progress.ts`, `FsGuards.ts`, `Flags.ts` extensions.
-- [ ] Pilot adoption at 2-3 low-risk call sites per helper (e.g. Worktree git
+- [x] Pilot adoption at 2-3 low-risk call sites per helper (e.g. Worktree git
   capture, Ci duration format) to prove shapes.
-- [ ] Unit tests for pure logic (bounded fold, glob translation, run-mode
+- [x] Unit tests for pure logic (bounded fold, glob translation, run-mode
   resolution); full JSDoc rubric on all new exports.
 
 ## Phase 2 - Cross-Package Seeds & Contracts (Wave 2)

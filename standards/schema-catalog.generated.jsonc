@@ -22748,6 +22748,14 @@
       "description": "Silent non-zero process exit requested after command output was rendered."
     },
     {
+      "file": "packages/tooling/tool/cli/src/internal/cli/RunMode.ts",
+      "symbol": "RunMode",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "RunMode",
+      "description": "Command execution mode: check, write, or dry-run."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts",
       "symbol": "RepoGraphHealthStatus",
       "kind": "literal-kit",
