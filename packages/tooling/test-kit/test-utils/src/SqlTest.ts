@@ -1392,9 +1392,13 @@ const shouldUseExternalPgliteLayer = (mode: PgliteSqlTestLayerMode, config: PgEx
 
 const shouldUseTestcontainersPgliteLayer = (mode: PgliteSqlTestLayerMode): boolean =>
   PgliteSqlTestLayerMode.$match(mode, {
-    auto: () =>
-      O.getOrUndefined(Effect.runSync(Config.option(Config.string("BEEP_TEST_DATABASE_DRIVER")))) ===
-      "pglite-testcontainers",
+    // Test-infra env gate: the PGLite integration layer is selected from the
+    // LIVE test environment, which the harness mutates per-case. Config's
+    // default provider snapshots at boot and cannot observe those mutations,
+    // so this reads process.env directly (Node-typed — no Bun global — so
+    // consumers that only import fcRuns from the barrel still type-check).
+    // @effect-diagnostics-next-line processEnv:off
+    auto: () => process.env.BEEP_TEST_DATABASE_DRIVER === "pglite-testcontainers",
     external: () => false,
     "in-process": () => false,
     testcontainers: () => true,
@@ -1444,13 +1448,13 @@ const makeConfiguredSqlTestLayer = <Config, Services, SqlService extends Service
  * @since 0.0.0
  */
 export const makePgliteIntegrationGate = () => {
-  const sharedConnectionUri = pipe(
-    Effect.runSync(Config.option(Config.string("BEEP_TEST_DATABASE_URL"))),
-    O.filter(Str.isNonEmpty)
-  );
-  const shouldUseTestcontainers =
-    O.getOrUndefined(Effect.runSync(Config.option(Config.string("BEEP_TEST_DATABASE_DRIVER")))) ===
-    "pglite-testcontainers";
+  // Live test-env reads (see shouldUseTestcontainersPgliteLayer): the harness
+  // mutates these per-case, so process.env (live, Node-typed) is used instead
+  // of Config (boot snapshot, cannot observe runtime mutation).
+  // @effect-diagnostics-next-line processEnv:off
+  const sharedConnectionUri = pipe(process.env.BEEP_TEST_DATABASE_URL, O.fromNullishOr, O.filter(Str.isNonEmpty));
+  // @effect-diagnostics-next-line processEnv:off
+  const shouldUseTestcontainers = process.env.BEEP_TEST_DATABASE_DRIVER === "pglite-testcontainers";
   // The in-process @beep/pglite driver is the docker-free default, so the pglite
   // integration suites always run. `BEEP_TEST_DATABASE_URL` (external) and
   // `BEEP_TEST_DATABASE_DRIVER=pglite-testcontainers` remain opt-in fallbacks.

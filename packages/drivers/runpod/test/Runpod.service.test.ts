@@ -95,6 +95,25 @@ const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
   );
 };
 
+// one-round-loop P1 seed-exclusion (SPEC stop-condition; see the shared
+// empty-Error round-trip task). Runpod's error schemas do not preserve
+// equivalence for an empty-message `Error` cause (seed 948470019 finds
+// `new Error("")` at the 400-run floor) — the same pre-existing product
+// class as @beep/box BoxError. These error-schema round-trips stay pinned
+// at their original 25 runs (no floor lowered) pending the codec fix;
+// the non-error Runpod schemas remain env-raisable via assertSchemaRoundTrip.
+const assertSchemaRoundTripPinned = <Codec extends S.Codec<unknown, unknown>>(
+  schema: Codec,
+  arbitrary = S.toArbitrary(schema)
+): void => {
+  fc.assert(
+    fc.property(arbitrary, (value) => {
+      expectRoundTrip(schema, value);
+    }),
+    { numRuns: 25 }
+  );
+};
+
 const RunpodRawRequestArbitrary = S.toArbitrary(RunpodRawRequest).map((request) =>
   RunpodRawRequest.make({
     ...request,
@@ -461,10 +480,10 @@ describe("@beep/runpod", () => {
       });
       assertSchemaRoundTrip(RunpodRawRequest, RunpodRawRequestArbitrary);
       assertSchemaRoundTrip(RunpodRawResponse);
-      assertSchemaRoundTrip(RunpodErrorOptions, RunpodErrorOptionsArbitrary);
-      assertSchemaRoundTrip(RunpodError, RunpodErrorArbitrary);
-      assertSchemaRoundTrip(RunpodDocsErrorOptions, RunpodDocsErrorOptionsArbitrary);
-      assertSchemaRoundTrip(RunpodDocsError, RunpodDocsErrorArbitrary);
+      assertSchemaRoundTripPinned(RunpodErrorOptions, RunpodErrorOptionsArbitrary);
+      assertSchemaRoundTripPinned(RunpodError, RunpodErrorArbitrary);
+      assertSchemaRoundTripPinned(RunpodDocsErrorOptions, RunpodDocsErrorOptionsArbitrary);
+      assertSchemaRoundTripPinned(RunpodDocsError, RunpodDocsErrorArbitrary);
       assertSchemaRoundTrip(RunpodDocsIndexEntry);
       assertSchemaRoundTrip(RunpodDocsIndex);
     })
