@@ -1,0 +1,10 @@
+{
+  "scope": "packages/foundation/capability/api-transport",
+  "findings": [
+    {
+      "kind": "unresolved",
+      "file": "packages/foundation/capability/api-transport/tsconfig.test.json",
+      "name": "bun-types"
+    }
+  ]
+}

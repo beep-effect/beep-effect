@@ -43,6 +43,8 @@ export {
  * @since 0.0.0
  */
 export {
+  detectInterfaceReason,
+  detectTypeAliasReason,
   fnSchemaEntryFromFunctionLike,
   getsomesStructEntryFromCallExpression,
   isSchemaCrispeningPolicyExempt,
@@ -51,10 +53,14 @@ export {
   makeSchemaFirstProject,
   normalizationEntryFromCallExpression,
   nullReturnEntryFromFunctionLike,
+  SchemaCrispeningFamily,
   SchemaCrispeningFamilyPolicy,
   SchemaCrispeningPolicyDocument,
+  SchemaFirstEntryKind,
+  SchemaFirstEntryStatus,
   SchemaFirstIncludedGlobs,
   SchemaFirstInventoryEntry,
+  SchemaFirstPolicyRuleId,
   SchemaFirstSourceFileGlobs,
   schemaCrispeningFamilyForFile,
   sourceTextHasSchemaArbitraryPropertyCoverage,

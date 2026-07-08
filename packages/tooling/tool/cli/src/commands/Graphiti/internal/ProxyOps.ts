@@ -368,6 +368,25 @@ const composeStep = (config: GraphitiRestoreConfig, label: string, args: Readonl
   });
 
 /**
+ * Options for {@link shouldInstallProxyServiceForTesting}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ProxyServiceUnitCheckOptions extends S.Class<ProxyServiceUnitCheckOptions>(
+  $I`ProxyServiceUnitCheckOptions`
+)(
+  {
+    repoRoot: S.String,
+    unitText: S.String,
+    upstream: S.String,
+  },
+  $I.annote("ProxyServiceUnitCheckOptions", {
+    description: "Current unit text and expected service invariants for a systemd-unit drift check.",
+  })
+) {}
+
+/**
  * Decide whether the live proxy systemd unit should be reinstalled.
  *
  * @param options - Current unit text and expected service invariants.
@@ -384,11 +403,7 @@ const composeStep = (config: GraphitiRestoreConfig, label: string, args: Readonl
  * @category testing
  * @since 0.0.0
  */
-export const shouldInstallProxyServiceForTesting = (options: {
-  readonly repoRoot: string;
-  readonly unitText: string;
-  readonly upstream: string;
-}): boolean => {
+export const shouldInstallProxyServiceForTesting = (options: ProxyServiceUnitCheckOptions): boolean => {
   const unitLines = pipe(Str.split(options.unitText, "\n"), A.map(Str.trim));
   return (
     Str.isEmpty(options.unitText) ||
@@ -1272,6 +1287,26 @@ export const recoverGraphitiStack = Effect.fn("GraphitiProxyOps.recoverGraphitiS
 });
 
 /**
+ * Options for {@link shouldRecoverGraphitiStackForTesting}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ProxyRecoveryDecisionOptions extends S.Class<ProxyRecoveryDecisionOptions>(
+  $I`ProxyRecoveryDecisionOptions`
+)(
+  {
+    recoverOnUnhealthy: S.Boolean,
+    force: S.Boolean,
+    falkor: S.String,
+    graphiti: S.String,
+  },
+  $I.annote("ProxyRecoveryDecisionOptions", {
+    description: "Recovery decision inputs for the Graphiti stack recovery routine.",
+  })
+) {}
+
+/**
  * Decide whether Graphiti recovery should restart the backing containers.
  *
  * @internal
@@ -1290,12 +1325,7 @@ export const recoverGraphitiStack = Effect.fn("GraphitiProxyOps.recoverGraphitiS
  * @category testing
  * @since 0.0.0
  */
-export const shouldRecoverGraphitiStackForTesting = (options: {
-  readonly recoverOnUnhealthy: boolean;
-  readonly force: boolean;
-  readonly falkor: string;
-  readonly graphiti: string;
-}): boolean =>
+export const shouldRecoverGraphitiStackForTesting = (options: ProxyRecoveryDecisionOptions): boolean =>
   options.force || (options.recoverOnUnhealthy && (options.falkor !== "healthy" || options.graphiti !== "healthy"));
 
 const escapeSystemdEnvironmentValue = (value: string): string => Str.replaceAll("%", "%%")(value);

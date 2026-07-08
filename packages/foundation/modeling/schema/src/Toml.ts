@@ -103,6 +103,25 @@ export const TomlTextToUnknown = S.String.pipe(
 );
 
 /**
+ * {@inheritDoc TomlTextToUnknown}
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { TomlTextToUnknown } from "@beep/schema/Toml"
+ *
+ * const program = S.decodeUnknownEffect(TomlTextToUnknown)("port = 8080")
+ * const parsed: typeof TomlTextToUnknown.Type = await Effect.runPromise(program)
+ * console.log(parsed.port)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TomlTextToUnknown = typeof TomlTextToUnknown.Type;
+
+/**
  * Builds a decoder that parses TOML text and then decodes the result through a
  * target schema.
  *

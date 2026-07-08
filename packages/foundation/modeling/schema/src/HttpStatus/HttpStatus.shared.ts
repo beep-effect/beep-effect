@@ -10,6 +10,14 @@ import { $SchemaId } from "@beep/identity";
 /**
  * Internal identity composer for HTTP status schemas.
  *
+ * @example
+ * ```ts
+ * import { $SchemaId } from "@beep/identity"
+ *
+ * const $I = $SchemaId.create("HttpStatus")
+ * console.log($I`Example`)
+ * ```
+ *
  * @internal
  * @category symbols
  * @since 0.0.0

@@ -19,3 +19,10 @@ export * from "./OperationPlan.js";
  * @since 0.0.0
  */
 export * from "./OperationPlanExecution.js";
+/**
+ * Architecture operation-plan package manifest rendering exports.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./OperationPlanPackageJson.js";

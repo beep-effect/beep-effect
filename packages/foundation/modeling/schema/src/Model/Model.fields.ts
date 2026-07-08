@@ -16,6 +16,15 @@ import type { VariantsDatabase } from "./Model.variants.ts";
 /**
  * Interface for a database-generated field present in `select`, `update`, and `json` variants.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import * as Model from "@beep/schema/Model"
+ *
+ * const field: Model.Generated<typeof S.String> = Model.Generated(S.String)
+ * console.log(S.isSchema(field.schemas.select))
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -55,6 +64,15 @@ export const Generated = <S extends S.Top>(schema: S): Generated<S> =>
 
 /**
  * Interface for an application-generated field present in `select`, `insert`, `update`, and `json` variants.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import * as Model from "@beep/schema/Model"
+ *
+ * const field: Model.GeneratedByApp<typeof S.String> = Model.GeneratedByApp(S.String)
+ * console.log(S.isSchema(field.schemas.select))
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -96,6 +114,15 @@ export const GeneratedByApp = <S extends S.Top>(schema: S): GeneratedByApp<S> =>
 /**
  * Interface for a sensitive field excluded from all JSON variants.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import * as Model from "@beep/schema/Model"
+ *
+ * const field: Model.Sensitive<typeof S.String> = Model.Sensitive(S.String)
+ * console.log(S.isSchema(field.schemas.select))
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -136,11 +163,11 @@ export const Sensitive = <S extends S.Top>(schema: S): Sensitive<S> =>
  *
  * @example
  * ```ts
- * import * as Schema from "effect/Schema"
+ * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
  *
- * const field: Model.optionalOption<typeof Schema.String> =
- *   Model.optionalOption(Schema.String)
+ * const field: Model.optionalOption<typeof S.String> =
+ *   Model.optionalOption(S.String)
  *
  * console.log(field)
  * ```
@@ -156,10 +183,10 @@ export interface optionalOption<S extends S.Top>
  *
  * @example
  * ```ts
- * import * as Schema from "effect/Schema"
+ * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
  *
- * const opt = Model.optionalOption(Schema.Finite)
+ * const opt = Model.optionalOption(S.Finite)
  * console.log(opt)
  * ```
  *
@@ -186,11 +213,11 @@ export const optionalOption = <S extends S.Top>(schema: S): optionalOption<S> =>
  *
  * @example
  * ```ts
- * import * as Schema from "effect/Schema"
+ * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
  *
- * const opt: Model.FieldOption<typeof Schema.String> =
- *   Model.FieldOption(Schema.String)
+ * const opt: Model.FieldOption<typeof S.String> =
+ *   Model.FieldOption(S.String)
  *
  * console.log(opt)
  * ```
@@ -216,10 +243,10 @@ export interface FieldOption<S extends S.Top>
  *
  * @example
  * ```ts
- * import * as Schema from "effect/Schema"
+ * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
  *
- * const opt = Model.FieldOption(Schema.String)
+ * const opt = Model.FieldOption(S.String)
  * console.log(opt)
  * ```
  *

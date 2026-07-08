@@ -7,13 +7,19 @@
     "primaryTarget": "explorations/citation-grounding-hallucination-guard",
     "targetExists": false,
     "proposedSlug": "citation-grounding-hallucination-guard",
-    "secondaryTargets": ["packages/agents", "explorations/rag-retrieval-projection"],
+    "secondaryTargets": [
+      "packages/agents",
+      "explorations/rag-retrieval-projection"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "citation-grounding-hallucination-guard",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (grounded context + citation output contract)",
     "rationale": "The reusable gold is the source-attribution footer + mandatory-disclaimer output contract that must be re-grounded on real provenance spans (ground-before-cite), which is exactly the citation-grounding guard's scope; the grounded context-block builder is a rag-retrieval-projection concern. No agent Skill prompt-template owner exists for this disclaimer/sources contract.",
-    "cautions": ["Juris.AI sources are fabricated mock data with NO spans — beep must invert this and require verified provenance-spanned evidence before the LLM; port the disclaimer/footer PATTERN only", "unknown license — reimplement, do not copy"]
+    "cautions": [
+      "Juris.AI sources are fabricated mock data with NO spans — beep must invert this and require verified provenance-spanned evidence before the LLM; port the disclaimer/footer PATTERN only",
+      "unknown license — reimplement, do not copy"
+    ]
   },
   {
     "id": "Juris.AI#3",
@@ -23,13 +29,19 @@
     "primaryTarget": "explorations/deterministic-doc-structure-extraction",
     "targetExists": false,
     "proposedSlug": "deterministic-doc-structure-extraction",
-    "secondaryTargets": ["packages/foundation/capability/nlp", "packages/epistemic/domain", "explorations/court-vocabulary-resolver"],
+    "secondaryTargets": [
+      "packages/foundation/capability/nlp",
+      "packages/epistemic/domain",
+      "explorations/court-vocabulary-resolver"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "deterministic-doc-structure-extraction",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (deterministic regex pre-tagger feeding CandidateClaim spans)",
     "rationale": "A deterministic regex legal-entity pre-tagger (statute/case/court/legal-term via matchAll → char-span CandidateClaim seeds) is the LOGIC-side deterministic extractor; no such extractor exists in @beep/nlp, and it belongs in the deterministic-doc-structure sibling exploration coordinated with @beep/nlp, with court patterns cross-linked to court-vocabulary-resolver.",
-    "cautions": ["unknown license — reimplement patterns; court-name regex overlaps court-vocabulary-resolver (coordinate, do not duplicate)"]
+    "cautions": [
+      "unknown license — reimplement patterns; court-name regex overlaps court-vocabulary-resolver (coordinate, do not duplicate)"
+    ]
   },
   {
     "id": "Juris.AI#4",
@@ -39,13 +51,19 @@
     "primaryTarget": "explorations/rag-retrieval-projection",
     "targetExists": false,
     "proposedSlug": "rag-retrieval-projection",
-    "secondaryTargets": ["packages/foundation/capability/nlp", "apps/desktop-portal"],
+    "secondaryTargets": [
+      "packages/foundation/capability/nlp",
+      "apps/desktop-portal"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "rag-retrieval-projection",
     "goldSynthesisSection": "RAG / retrieval projection (local-first embeddings)",
     "rationale": "A local-first legal embedding pipeline (zero server round-trip, Tauri-webview capable) is the rebuildable embedding/projection tier of rag-retrieval-projection per the seed's local-ONNX-embeddings note; only the embedding-pipeline wiring is gold.",
-    "cautions": ["model law-ai/InLegalBERT is Indian-legal, not US IP — adapt model choice; @xenova/transformers.js binding is provider-specific — beep is provider-neutral local ONNX, keep vectors as projection not authority", "relevance scoring in source is a Math.random stub — do not port"]
+    "cautions": [
+      "model law-ai/InLegalBERT is Indian-legal, not US IP — adapt model choice; @xenova/transformers.js binding is provider-specific — beep is provider-neutral local ONNX, keep vectors as projection not authority",
+      "relevance scoring in source is a Math.random stub — do not port"
+    ]
   },
   {
     "id": "LegalEase#1",
@@ -55,13 +73,19 @@
     "primaryTarget": "goals/langextract-capability",
     "targetExists": true,
     "proposedSlug": null,
-    "secondaryTargets": ["packages/foundation/capability/langextract", "packages/epistemic/domain"],
+    "secondaryTargets": [
+      "packages/foundation/capability/langextract",
+      "packages/epistemic/domain"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "anti-inference-structured-extraction",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (clause extraction prompt → CandidateClaim)",
     "rationale": "Risk-scored clause extraction with a strict 'respond ONLY with valid JSON' contract extends the active langextract span-grounded extraction goal (clause-as-candidate-with-risk prompt) rather than starting fresh; CandidateClaim already owns the candidate schema.",
-    "cautions": ["gold echoes 'exact text of the clause' but emits NO offsets — beep extension MUST add source char spans to satisfy the provenance wall", "unknown license — reimplement prompt"]
+    "cautions": [
+      "gold echoes 'exact text of the clause' but emits NO offsets — beep extension MUST add source char spans to satisfy the provenance wall",
+      "unknown license — reimplement prompt"
+    ]
   },
   {
     "id": "LegalEase#2",
@@ -77,7 +101,9 @@
     "wedgeHint": "llm-output-repair",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (resilient structured-output parsing)",
     "rationale": "Balanced-bracket JSON recovery from chatty LLM output is already implemented in @beep/anthropic repair (Anthropic.repair.ts) and agents BlockRepair (AnthropicTurnKernel) — repo already owns this capability.",
-    "cautions": ["reference-only; do not re-port — beep's forced-tool repair tail supersedes a bracket-counting recovery routine"]
+    "cautions": [
+      "reference-only; do not re-port — beep's forced-tool repair tail supersedes a bracket-counting recovery routine"
+    ]
   },
   {
     "id": "TalentScore#1",
@@ -87,13 +113,18 @@
     "primaryTarget": "goals/langextract-capability",
     "targetExists": true,
     "proposedSlug": null,
-    "secondaryTargets": ["packages/foundation/capability/langextract", "packages/epistemic/domain"],
+    "secondaryTargets": [
+      "packages/foundation/capability/langextract",
+      "packages/epistemic/domain"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "anti-inference-structured-extraction",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (anti-inference 'LLM as pure OCR' discipline)",
     "rationale": "Canonical anti-inference / 'extract EXACTLY as written, DO NOT infer' prompt discipline — the retrieval-side gold langextract needs; per the locked-decision routing this is Case A (anti-inference pure-OCR prompt mode) which EXTENDS langextract-capability, not the deferred-streaming sibling.",
-    "cautions": ["BAML is BoundaryML's external Apache-2.0 DSL/runtime — port the anti-inference prompt PATTERN + field-by-field class breakdown, do NOT adopt the BAML runtime or copy code"]
+    "cautions": [
+      "BAML is BoundaryML's external Apache-2.0 DSL/runtime — port the anti-inference prompt PATTERN + field-by-field class breakdown, do NOT adopt the BAML runtime or copy code"
+    ]
   },
   {
     "id": "TalentScore#6",
@@ -103,13 +134,20 @@
     "primaryTarget": "explorations/deterministic-doc-structure-extraction",
     "targetExists": false,
     "proposedSlug": "deterministic-doc-structure-extraction",
-    "secondaryTargets": ["packages/agents", "packages/foundation/capability/langextract"],
+    "secondaryTargets": [
+      "packages/agents",
+      "packages/foundation/capability/langextract"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "deterministic-doc-structure-extraction",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (Partial-candidate vs Complete-authoritative streaming gate)",
     "rationale": "The Partial(candidate)/Complete(authoritative) streaming gate is the net-new piece; langextract V1 SPEC explicitly DEFERS streaming (locked decision), so it cannot extend langextract and routes to the deterministic-doc-structure sibling per the locked-decision routing.",
-    "cautions": ["@beep/agents AnthropicTurnKernel + @beep/langextract Service already implement the candidate-then-finalize adapter shape (study as reference, do NOT re-port)", "Partial/Complete gate CONFLICTS langextract V1's streaming-deferral lock — needs a standards decision", "BAML external Apache-2.0"]
+    "cautions": [
+      "@beep/agents AnthropicTurnKernel + @beep/langextract Service already implement the candidate-then-finalize adapter shape (study as reference, do NOT re-port)",
+      "Partial/Complete gate CONFLICTS langextract V1's streaming-deferral lock — needs a standards decision",
+      "BAML external Apache-2.0"
+    ]
   },
   {
     "id": "agentmemory#3",
@@ -119,13 +157,20 @@
     "primaryTarget": "explorations/agent-memory-tiers-bitemporal-edges",
     "targetExists": false,
     "proposedSlug": "agent-memory-tiers-bitemporal-edges",
-    "secondaryTargets": ["packages/foundation/capability/langextract", "packages/epistemic/domain"],
+    "secondaryTargets": [
+      "packages/foundation/capability/langextract",
+      "packages/epistemic/domain"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "agent-memory-tiers-bitemporal-edges",
     "goldSynthesisSection": "Knowledge graph / agent memory (versioned-edge temporal extraction prompt)",
     "rationale": "The temporal-knowledge extraction prompt's NEVER-overwrite/always-version edge discipline + directness-weighting (1.0 explicit / 0.5 inferred / 0.1 speculative) maps to the bitemporal-edges memory wedge, which the completed epistemic gate explicitly deferred; reuse the prompt SHAPE only.",
-    "cautions": ["agentmemory is Apache-2.0 but plain TS+Zod (DI/Layer patterns do NOT transfer)", "do NOT copy the brittle parseTemporalGraphXml regex parser — reuse prompt shape and ADD exact char-span grounding (the XML scheme lacks it)", "bitemporal store + rejected/superseded states were explicitly DEFERRED by goals/epistemic-claim-lifecycle-gate"]
+    "cautions": [
+      "agentmemory is Apache-2.0 but plain TS+Zod (DI/Layer patterns do NOT transfer)",
+      "do NOT copy the brittle parseTemporalGraphXml regex parser — reuse prompt shape and ADD exact char-span grounding (the XML scheme lacks it)",
+      "bitemporal store + rejected/superseded states were explicitly DEFERRED by goals/epistemic-claim-lifecycle-gate"
+    ]
   },
   {
     "id": "courtlistener#4",
@@ -141,7 +186,10 @@
     "wedgeHint": "uspto-patent-driver-depth",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (docket/serial-number normalization skill + eval corpus)",
     "rationale": "Few-shot docket-number normalization (guidelines + ~55 input→output examples + tie-breaker) is explicitly uspto-aligned (USPTO application/serial numbers behave the same); routes to the uspto-patent-driver-depth wedge as a normalization skill + eval-fixture corpus over the existing ODP driver's number-normalization surface.",
-    "cautions": ["courtlistener cl/ code is AGPL — reimplement the prompt; reuse the example corpus only as test fixtures if license permits, else regenerate", "do NOT reintroduce PatentsView/PEDS — keep aligned to ODP data.uspto.gov"]
+    "cautions": [
+      "courtlistener cl/ code is AGPL — reimplement the prompt; reuse the example corpus only as test fixtures if license permits, else regenerate",
+      "do NOT reintroduce PatentsView/PEDS — keep aligned to ODP data.uspto.gov"
+    ]
   },
   {
     "id": "courtlistener#6",
@@ -157,7 +205,9 @@
     "wedgeHint": "structured-output-guardrails",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (closed-struct extraction contracts)",
     "rationale": "extra='forbid' (additionalProperties:false) closed-struct + annotated-description extraction discipline is already owned by the schema kit + epistemic.CandidateClaim effect/Schema (closed structs + annotations) — Pydantic analog is a dup.",
-    "cautions": ["reference-only; the schema-kit + CandidateClaim already enforce closed structs and field-guidance annotations"]
+    "cautions": [
+      "reference-only; the schema-kit + CandidateClaim already enforce closed structs and field-guidance annotations"
+    ]
   },
   {
     "id": "courtlistener#10",
@@ -167,13 +217,19 @@
     "primaryTarget": "explorations/rag-retrieval-projection",
     "targetExists": false,
     "proposedSlug": "rag-retrieval-projection",
-    "secondaryTargets": ["packages/foundation/capability/nlp", "goals/epistemic-claim-lifecycle-gate"],
+    "secondaryTargets": [
+      "packages/foundation/capability/nlp",
+      "goals/epistemic-claim-lifecycle-gate"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "rag-retrieval-projection",
     "goldSynthesisSection": "RAG / retrieval projection (near-dup candidate-evidence clustering before the gate)",
     "rationale": "MinHash/LSH near-dup clustering of candidate holdings/prior-art is a NEW similarity capability (@beep/nlp has cosine/Tversky/phonetic but no LSH dedup); its purpose — collapse repetitive evidence and rank most-described ideas before the human gate — is a retrieval-side projection/ranking concern.",
-    "cautions": ["courtlistener cl/ code is AGPL — reimplement MinHash/LSH from the datasketch algorithm (num_perm=64, threshold 0.5), do not copy source", "new LSH Tool lands in @beep/nlp but the dedup-before-gate consumer is the rag/epistemic boundary"]
+    "cautions": [
+      "courtlistener cl/ code is AGPL — reimplement MinHash/LSH from the datasketch algorithm (num_perm=64, threshold 0.5), do not copy source",
+      "new LSH Tool lands in @beep/nlp but the dedup-before-gate consumer is the rag/epistemic boundary"
+    ]
   },
   {
     "id": "courts-db#2",
@@ -183,13 +239,18 @@
     "primaryTarget": "explorations/court-vocabulary-resolver",
     "targetExists": false,
     "proposedSlug": "court-vocabulary-resolver",
-    "secondaryTargets": ["packages/drivers/courtlistener", "goals/official-data-sync-foundation"],
+    "secondaryTargets": [
+      "packages/drivers/courtlistener",
+      "goals/official-data-sync-foundation"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "court-vocabulary-resolver",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (court-name normalization vocabulary)",
     "rationale": "The variables.json regex-template dictionary (fuzzy OCR/abbreviation-tolerant court-name fragments) is the regex normalization vocabulary at the heart of the court-vocabulary-resolver wedge; no such vocabulary exists in packages/ or @beep/data.",
-    "cautions": ["courts-db is BSD-2 (permissive, attribution-friendly) — safe to vendor the dataset/regex dictionary with attribution; resolver logic reimplement-don't-copy"]
+    "cautions": [
+      "courts-db is BSD-2 (permissive, attribution-friendly) — safe to vendor the dataset/regex dictionary with attribution; resolver logic reimplement-don't-copy"
+    ]
   },
   {
     "id": "courts-db#3",
@@ -199,13 +260,18 @@
     "primaryTarget": "explorations/court-vocabulary-resolver",
     "targetExists": false,
     "proposedSlug": "court-vocabulary-resolver",
-    "secondaryTargets": ["packages/epistemic/domain", "packages/foundation/capability/nlp"],
+    "secondaryTargets": [
+      "packages/epistemic/domain",
+      "packages/foundation/capability/nlp"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "court-vocabulary-resolver",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (span-gated court-string resolver)",
     "rationale": "find_court_ids_by_name's partial-match span gating (reject matches whose span length != full string length) is exactly the char-offset logic for GroundedExtraction.span when canonicalizing court mentions to IDs; core resolver algorithm of the court-vocabulary-resolver wedge.",
-    "cautions": ["courts-db BSD-2 — reimplement resolver in Effect; reuse the @beep/epistemic GroundedExtraction.span primitive rather than a parallel span type"]
+    "cautions": [
+      "courts-db BSD-2 — reimplement resolver in Effect; reuse the @beep/epistemic GroundedExtraction.span primitive rather than a parallel span type"
+    ]
   },
   {
     "id": "courts-db#7",
@@ -215,13 +281,19 @@
     "primaryTarget": "explorations/court-vocabulary-resolver",
     "targetExists": false,
     "proposedSlug": "court-vocabulary-resolver",
-    "secondaryTargets": ["goals/ip-law-knowledge-graph", "packages/drivers/courtlistener"],
+    "secondaryTargets": [
+      "goals/ip-law-knowledge-graph",
+      "packages/drivers/courtlistener"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "court-vocabulary-resolver",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (court/jurisdiction entity-resolution index)",
     "rationale": "gather_regexes' 'compiled pattern + (id,name,type,location,parent) metadata tuple' index is the entity-resolution index pattern the court-vocabulary-resolver mirrors in Effect to resolve mentions to graph IDs with downstream-filter metadata.",
-    "cautions": ["courts-db BSD-2", "graph-shape Court/Jurisdiction nodes remain owned by goals/ip-law-knowledge-graph — this wedge owns the vocabulary/index only"]
+    "cautions": [
+      "courts-db BSD-2",
+      "graph-shape Court/Jurisdiction nodes remain owned by goals/ip-law-knowledge-graph — this wedge owns the vocabulary/index only"
+    ]
   },
   {
     "id": "doc-haus#3",
@@ -231,13 +303,20 @@
     "primaryTarget": "explorations/deterministic-doc-structure-extraction",
     "targetExists": false,
     "proposedSlug": "deterministic-doc-structure-extraction",
-    "secondaryTargets": ["packages/foundation/capability/nlp", "packages/epistemic/domain", "packages/law-practice/domain"],
+    "secondaryTargets": [
+      "packages/foundation/capability/nlp",
+      "packages/epistemic/domain",
+      "packages/law-practice/domain"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "deterministic-doc-structure-extraction",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (deterministic contract-structure extraction with char offsets)",
     "rationale": "Pure-regex contract-structure extraction (defined terms, cross-refs, parties, amendments) where every row carries verbatim text + char offsets and NO model is in the loop is the deterministic LOGIC-side complement to langextract; no such extractor exists in @beep/nlp — the canonical seed for the deterministic-doc-structure exploration.",
-    "cautions": ["doc-haus is MIT (safe to study/adapt)", "keep the extractor provider-neutral and span-bearing (out of drivers); feed GroundedExtraction → epistemic.CandidateClaim and law-practice Claim/Distinction/party models; built-in versioned re-extraction migration is worth porting"]
+    "cautions": [
+      "doc-haus is MIT (safe to study/adapt)",
+      "keep the extractor provider-neutral and span-bearing (out of drivers); feed GroundedExtraction → epistemic.CandidateClaim and law-practice Claim/Distinction/party models; built-in versioned re-extraction migration is worth porting"
+    ]
   },
   {
     "id": "doctor#4",
@@ -253,7 +332,10 @@
     "wedgeHint": "deterministic-doc-structure-extraction",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (caption-line normalization before structure parse)",
     "rationale": "Per-jurisdiction caption separator alignment (§ Texas, : NY, ) most courts) is a deterministic normalization that improves downstream caption/party parsing — a low-value but clean preprocessing step for the deterministic-doc-structure extractor.",
-    "cautions": ["doctor is BSD-2 (adapt with attribution)", "reference-grade / low value — fold in only if caption parsing is in the extractor's first slice"]
+    "cautions": [
+      "doctor is BSD-2 (adapt with attribution)",
+      "reference-grade / low value — fold in only if caption parsing is in the extractor's first slice"
+    ]
   },
   {
     "id": "doctor#5",
@@ -263,13 +345,19 @@
     "primaryTarget": "explorations/deterministic-doc-structure-extraction",
     "targetExists": false,
     "proposedSlug": "deterministic-doc-structure-extraction",
-    "secondaryTargets": ["goals/file-processing-capability", "packages/foundation/modeling/provenance"],
+    "secondaryTargets": [
+      "goals/file-processing-capability",
+      "packages/foundation/modeling/provenance"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "deterministic-doc-structure-extraction",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (docket/document-number extraction + provenance linkage)",
     "rationale": "Regex extraction of the court-applied header-stamp docket document number (Document:/Doc:/DktEntry:) grounds a filing to its docket entry — a deterministic extractor feeding @beep/provenance source linkage; the pdfplumber header-stamp isolation (font/position filter) is the layout-aware-PDF piece owned by file-processing-capability.",
-    "cautions": ["doctor BSD-2", "header-stamp isolation needs layout-aware PDF extraction — coordinate with goals/file-processing-capability's deferred OCR/PDF-diagnostics layer rather than rebuilding it here"]
+    "cautions": [
+      "doctor BSD-2",
+      "header-stamp isolation needs layout-aware PDF extraction — coordinate with goals/file-processing-capability's deferred OCR/PDF-diagnostics layer rather than rebuilding it here"
+    ]
   },
   {
     "id": "harvest-mcp#3",
@@ -279,13 +367,18 @@
     "primaryTarget": "explorations/deterministic-doc-structure-extraction",
     "targetExists": false,
     "proposedSlug": "deterministic-doc-structure-extraction",
-    "secondaryTargets": ["packages/drivers/nlp-mcp", "goals/langextract-capability"],
+    "secondaryTargets": [
+      "packages/drivers/nlp-mcp",
+      "goals/langextract-capability"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "deterministic-doc-structure-extraction",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (deterministic-first then LLM-refine pipeline)",
     "rationale": "Layered heuristic-then-LLM classification (cheap deterministic pass first, LLM only as fallback/refinement) is the concrete tiered-confidence wiring of beep's hard wall (deterministic/SHACL logic first, LLM only proposes); it is the orchestration pattern that binds the deterministic doc-structure extractor to the langextract LLM-refine pass.",
-    "cautions": ["harvest-mcp unknown license — reimplement the tiered-confidence pattern, do not copy"]
+    "cautions": [
+      "harvest-mcp unknown license — reimplement the tiered-confidence pattern, do not copy"
+    ]
   },
   {
     "id": "judge-pics#2",
@@ -295,13 +388,21 @@
     "primaryTarget": "explorations/court-vocabulary-resolver",
     "targetExists": false,
     "proposedSlug": "court-vocabulary-resolver",
-    "secondaryTargets": ["packages/foundation/capability/langextract", "packages/foundation/capability/nlp", "packages/drivers/courtlistener"],
+    "secondaryTargets": [
+      "packages/foundation/capability/langextract",
+      "packages/foundation/capability/nlp",
+      "packages/drivers/courtlistener"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "court-vocabulary-resolver",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (fuzzy-candidate vs exact-ID entity resolution)",
     "rationale": "Fuzzy name→entity resolution with a confidence threshold + integer-bypass to authoritative CourtListener person-ID is the candidate-vs-authority resolution pattern for linking extracted names to graph entities; lands in the court-vocabulary-resolver wedge as judge/court entity resolution against the CourtListener authority.",
-    "cautions": ["freelawproject asset (likely BSD-2) — verify; reimplement resolver", "beep already has fuzzy Levenshtein alignment in @beep/langextract (threshold 0.82) — extend/study it rather than adding a new fuzzy engine", "judges are adjacent to the court/jurisdiction vocabulary scope — generalize the candidate-vs-ID pattern"]
+    "cautions": [
+      "freelawproject asset (likely BSD-2) — verify; reimplement resolver",
+      "beep already has fuzzy Levenshtein alignment in @beep/langextract (threshold 0.82) — extend/study it rather than adding a new fuzzy engine",
+      "judges are adjacent to the court/jurisdiction vocabulary scope — generalize the candidate-vs-ID pattern"
+    ]
   },
   {
     "id": "legalmind-ai#1",
@@ -317,7 +418,10 @@
     "wedgeHint": "anti-inference-structured-extraction",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (verdict/legal-analysis extraction prompt schema)",
     "rationale": "A fixed legal-analysis record extraction prompt (caseNumber/parties/keyFacts/legalIssues/... + required-field validation loop) is the same structured-extraction family as the clause/office-action prompts; extends langextract-capability expressed as effect/Schema with char-span provenance instead of free text.",
-    "cautions": ["jurisdiction is Taiwan (not US IP) — adjacent reference only; re-shape for IP office-action/verdict use", "unknown license — reimplement; replace free-text fields with span-grounded effect/Schema"]
+    "cautions": [
+      "jurisdiction is Taiwan (not US IP) — adjacent reference only; re-shape for IP office-action/verdict use",
+      "unknown license — reimplement; replace free-text fields with span-grounded effect/Schema"
+    ]
   },
   {
     "id": "mike#13",
@@ -327,13 +431,20 @@
     "primaryTarget": "goals/law-practice-office-action-extraction-rung",
     "targetExists": true,
     "proposedSlug": null,
-    "secondaryTargets": ["packages/foundation/capability/langextract", "packages/epistemic/domain", "packages/law-practice/domain"],
+    "secondaryTargets": [
+      "packages/foundation/capability/langextract",
+      "packages/epistemic/domain",
+      "packages/law-practice/domain"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "grounded-extraction-grid",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (relational grounded-extraction grid with per-cell citations + status)",
     "rationale": "tabular_reviews columns_config + tabular_cells (content + citations jsonb + status per document×column) is a relational model of grounded extraction at scale — a grid of GroundedExtractions with provenance + candidate-gate status; extends the office-action-extraction-rung (GroundedExtraction[] → IrToLaw) with the at-scale grid model.",
-    "cautions": ["mike is unknown/AGPL-flagged license — reimplement, study as reference", "map per-cell citations to @beep/epistemic Evidence/EvidenceSpan and status to the ClaimGate verdict rather than a parallel status field"]
+    "cautions": [
+      "mike is unknown/AGPL-flagged license — reimplement, study as reference",
+      "map per-cell citations to @beep/epistemic Evidence/EvidenceSpan and status to the ClaimGate verdict rather than a parallel status field"
+    ]
   },
   {
     "id": "patents-mcp-server#9",
@@ -343,13 +454,20 @@
     "primaryTarget": "goals/agentic-professional-runtime",
     "targetExists": true,
     "proposedSlug": null,
-    "secondaryTargets": ["packages/agents", "packages/drivers/uspto", "packages/drivers/anthropic"],
+    "secondaryTargets": [
+      "packages/agents",
+      "packages/drivers/uspto",
+      "packages/drivers/anthropic"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "ip-attorney-agent-skills",
     "goldSynthesisSection": "MCP / agent skills (IP-attorney patent-analysis prompt workflows)",
     "rationale": "Six structured patent-analysis prompt workflows (prior_art_search, patent_validity, competitor_portfolio, ptab_research, freedom_to_operate, patent_landscape) are IP-attorney agent Skills; agentic-professional-runtime explicitly scopes 'agents, skills, commands' and 'patent/trademark/copyright work', so these add new Skill-content scope to that ACTIVE runtime over the uspto driver + anthropic kernel.",
-    "cautions": ["patents-mcp-server is MIT (portable) — reimplement prompts as @beep/agents Skill prompt templates, do not vendor FastMCP", "compose over the existing @beep/uspto ODP driver; ground outputs through provenance spans + ClaimGate, not bare LLM assertions"]
+    "cautions": [
+      "patents-mcp-server is MIT (portable) — reimplement prompts as @beep/agents Skill prompt templates, do not vendor FastMCP",
+      "compose over the existing @beep/uspto ODP driver; ground outputs through provenance spans + ClaimGate, not bare LLM assertions"
+    ]
   },
   {
     "id": "patents-mcp-server#13",
@@ -365,7 +483,11 @@
     "wedgeHint": "uspto-patent-driver-depth",
     "goldSynthesisSection": "MCP / agent skills (EPO CQL + BigQuery + ODP query-syntax grounding resource)",
     "rationale": "The EPO CQL fields/operators/limits + ODP free-text + BigQuery SEARCH/UNNEST cheat-sheet is query-construction grounding knowledge feeding the uspto-patent-driver-depth query-DSL + net-new EPO/BigQuery work; lands as a prose→patent-query grounding resource on the uspto driver wedge.",
-    "cautions": ["packages/drivers/epo does NOT exist (net-new EPO OPS driver); EPO/BigQuery require credentialed auth (OAuth2/GCP)", "keep ODP query DSL targeting data.uspto.gov — never reintroduce PatentsView (api.patentsview.org sunset 301→ODP)", "10-term/2000-result EPO limits must be encoded"]
+    "cautions": [
+      "packages/drivers/epo does NOT exist (net-new EPO OPS driver); EPO/BigQuery require credentialed auth (OAuth2/GCP)",
+      "keep ODP query DSL targeting data.uspto.gov — never reintroduce PatentsView (api.patentsview.org sunset 301→ODP)",
+      "10-term/2000-result EPO limits must be encoded"
+    ]
   },
   {
     "id": "stenoai#1",
@@ -375,13 +497,19 @@
     "primaryTarget": "goals/langextract-capability",
     "targetExists": true,
     "proposedSlug": null,
-    "secondaryTargets": ["packages/foundation/capability/nlp", "explorations/rag-retrieval-projection"],
+    "secondaryTargets": [
+      "packages/foundation/capability/nlp",
+      "explorations/rag-retrieval-projection"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "char-span-chunking",
     "goldSynthesisSection": "Legal NLP / prose-to-proof (context-budget overlapping chunker)",
     "rationale": "Context-budget-sized overlapping chunking that prefers clean newline breaks is the long-document chunker beep lacks (@beep/nlp has ChunkBySentences/Paragraphize but no context-budget overlap chunker); per the RAG rationale the chunker piece attaches to langextract for map-reduce extraction before the candidate gate.",
-    "cautions": ["source lacks char-offset tracking — beep's span-grounded extraction REQUIRES an offset-preserving chunker carrying charStart/charEnd; add offsets when porting to TS", "coordinate the offset-preserving chunker with rag-retrieval-projection so there is one chunker, not two"]
+    "cautions": [
+      "source lacks char-offset tracking — beep's span-grounded extraction REQUIRES an offset-preserving chunker carrying charStart/charEnd; add offsets when porting to TS",
+      "coordinate the offset-preserving chunker with rag-retrieval-projection so there is one chunker, not two"
+    ]
   },
   {
     "id": "us-legal-tools#6",
@@ -391,13 +519,20 @@
     "primaryTarget": "explorations/citation-grounding-hallucination-guard",
     "targetExists": false,
     "proposedSlug": "citation-grounding-hallucination-guard",
-    "secondaryTargets": ["packages/drivers/courtlistener", "explorations/gov-legal-data-driver-codegen", "packages/epistemic/domain"],
+    "secondaryTargets": [
+      "packages/drivers/courtlistener",
+      "explorations/gov-legal-data-driver-codegen",
+      "packages/epistemic/domain"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "citation-grounding-hallucination-guard",
     "goldSynthesisSection": "Provenance & grounding (prose→normalized-citation CandidateClaim)",
     "rationale": "The CourtListener citation-lookup endpoint (free-text blob in → normalized_citations with char offsets out) is beep's prose→candidate-citation flow exactly; the citation-as-CandidateClaim-with-spans capability is the citation-grounding guard, while building the bare @beep/courtlistener driver around the endpoint is owned by gov-legal-data-driver-codegen.",
-    "cautions": ["@beep/courtlistener is a bare VERSION-only skeleton — driver build belongs to gov-legal-data-driver-codegen; this nugget is the citation-grounding consumer", "CourtListener V4 ENFORCES Token auth (Authorization: Token <key>), rate-limited 60 cites/min, 250/request; us-legal-tools is MIT (port architecture, not Orval/axios/Zod output)"]
+    "cautions": [
+      "@beep/courtlistener is a bare VERSION-only skeleton — driver build belongs to gov-legal-data-driver-codegen; this nugget is the citation-grounding consumer",
+      "CourtListener V4 ENFORCES Token auth (Authorization: Token <key>), rate-limited 60 cites/min, 250/request; us-legal-tools is MIT (port architecture, not Orval/axios/Zod output)"
+    ]
   },
   {
     "id": "uspto_pfw_mcp#13",
@@ -407,12 +542,20 @@
     "primaryTarget": "goals/agentic-professional-runtime",
     "targetExists": true,
     "proposedSlug": null,
-    "secondaryTargets": ["packages/agents", "packages/drivers/uspto", "packages/drivers/anthropic"],
+    "secondaryTargets": [
+      "packages/agents",
+      "packages/drivers/uspto",
+      "packages/drivers/anthropic"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "ip-attorney-agent-skills",
     "goldSynthesisSection": "MCP / agent skills (multi-step invalidity-analysis prompt scaffold)",
     "rationale": "A structured 102/103/101 invalidity-analysis prompt orchestrating PFW + PTAB + Citations with explicit data-availability gating and a mandatory verification-first step is an IP-attorney agent Skill scaffold; adds new Skill scope to the ACTIVE agentic-professional-runtime composing the uspto driver + anthropic kernel.",
-    "cautions": ["uspto_pfw_mcp is MIT (portable)", "PTAB/FPD/Citations scope overlaps the existing @beep/uspto skeleton driver — coordinate to avoid duplicate driver surface", "respect data-availability windows (enriched citations only Oct 2017+); ground through provenance + ClaimGate"]
+    "cautions": [
+      "uspto_pfw_mcp is MIT (portable)",
+      "PTAB/FPD/Citations scope overlaps the existing @beep/uspto skeleton driver — coordinate to avoid duplicate driver surface",
+      "respect data-availability windows (enriched citations only Oct 2017+); ground through provenance + ClaimGate"
+    ]
   }
 ]

@@ -1,3 +1,9 @@
+/**
+ * App-wide MUI theme composition: options, component overrides, and the constructed theme.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 import { createTheme } from "@mui/material/styles";
 import { colors } from "./colors.ts";

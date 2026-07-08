@@ -285,13 +285,12 @@ const cacheResult: {
     key: ResultStore.ResultKey,
     newNodes: ReadonlyArray<GraphNode<B>>
   ): Effect.fn.Return<void, ExecutionError> {
-    const opResult = yield* Types.makeOperationResult(
-      yield* Types.generateExecutionId,
-      O.none(),
+    const opResult = yield* Types.makeOperationResult(yield* Types.generateExecutionId, {
+      originalGraph: O.none(),
       newNodes,
-      A.empty<unknown>(),
-      Types.ExecutionMetrics.empty()
-    );
+      errors: A.empty<unknown>(),
+      metrics: Types.ExecutionMetrics.empty(),
+    });
     yield* Effect.mapError(store.store(key, opResult), (e) =>
       ExecutionError.make({ cause: O.some(e), message: "Storage store failed" })
     );
@@ -432,7 +431,12 @@ const execute: GraphExecutorShape["execute"] = dual(
         nodes_created: `${fold.metrics.nodesCreated}`,
         nodes_processed: `${fold.metrics.nodesProcessed}`,
       });
-      return yield* Types.makeOperationResult(executionId, graph, fold.newNodes, fold.errors, fold.metrics);
+      return yield* Types.makeOperationResult(executionId, {
+        originalGraph: graph,
+        newNodes: fold.newNodes,
+        errors: fold.errors,
+        metrics: fold.metrics,
+      });
     }).pipe(Obs.observeNlpWorkflow("nlp.graph_executor.execute", attributes));
   })
 );

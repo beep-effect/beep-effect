@@ -13,7 +13,7 @@
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { $RepoCliId } from "@beep/identity/packages";
-import { Config, DateTime, Effect, FileSystem, Layer, Path } from "effect";
+import { Config, DateTime, Effect, FileSystem, Layer, Path, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -245,6 +245,8 @@ const ALLOW_PATTERNS: ReadonlyArray<RegExp> = [
 export const isInterestingUrl = (url: string): boolean =>
   !A.some(DENY_PATTERNS, (pattern) => pattern.test(url)) && A.some(ALLOW_PATTERNS, (pattern) => pattern.test(url));
 
+const decodeLowercasedString = S.decodeSync(S.String.pipe(S.decode(SchemaTransformation.toLowerCase())));
+
 /**
  * Collapse repository subpages to their repository root so one browsing
  * session over a repo yields one stub instead of ten.
@@ -257,7 +259,7 @@ export const isInterestingUrl = (url: string): boolean =>
 export const canonicalizeForSift = (url: string): string => {
   const repoMatch = url.match(/^https?:\/\/(github|gitlab)\.com\/([^/?#]+)\/([^/?#]+)/i);
   if (repoMatch !== null) {
-    return `https://${Str.toLowerCase(repoMatch[1] ?? "")}.com/${repoMatch[2]}/${repoMatch[3]}`;
+    return `https://${decodeLowercasedString(repoMatch[1] ?? "")}.com/${repoMatch[2]}/${repoMatch[3]}`;
   }
   return url;
 };

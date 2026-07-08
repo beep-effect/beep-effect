@@ -49,6 +49,14 @@ export const SecureHeader = SecureHeaderBase.pipe(
 /**
  * Runtime type for secure header identifiers.
  *
+ * @example
+ * ```ts
+ * import { SecureHeader } from "@beep/schema/SecureHeader"
+ *
+ * const header: SecureHeader = "NO_SNIFF"
+ * console.log(SecureHeader.Options.includes(header))
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

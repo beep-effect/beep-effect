@@ -38,9 +38,13 @@ const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<str
  * @example
  * ```ts
  * import type { OnePasswordCliRunner } from "@beep/onepassword-cli/OnePasswordCli.service"
+ * import { OnePasswordCliProcessResult } from "@beep/onepassword-cli/OnePasswordCli.models"
+ * import { Effect } from "effect"
  *
- * const value = {} as OnePasswordCliRunner
- * console.log(value)
+ * const runner: OnePasswordCliRunner = (command, args) =>
+ *   Effect.succeed(
+ *     OnePasswordCliProcessResult.make({ exitCode: 0, stderr: "", stdout: `${command} ${args.join(" ")}` })
+ *   )
  * ```
  *
  * @category services

@@ -99,6 +99,15 @@ export const Float16Arr = S.declare(isFloat16Array)
 /**
  * Type for {@link Float16Arr}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { Float16Arr } from "@beep/schema/Float16Array";
+ *
+ * const value: Float16Arr = S.decodeUnknownSync(Float16Arr)(new Float16Array([1, 2, 3]));
+ * console.log(value.length); // 3
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -150,6 +159,15 @@ export const Float16ArrayFromArray = S.Finite.pipe(
 /**
  * Type for {@link Float16ArrayFromArray}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { Float16ArrayFromArray } from "@beep/schema/Float16Array";
+ *
+ * const value: Float16ArrayFromArray = S.decodeUnknownSync(Float16ArrayFromArray)([0.5, 1.25, 2.75]);
+ * console.log(value instanceof Float16Array); // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -157,6 +175,14 @@ export type Float16ArrayFromArray = typeof Float16ArrayFromArray.Type;
 
 /**
  * Namespace members for {@link Float16ArrayFromArray}.
+ *
+ * @example
+ * ```ts
+ * import { type Float16ArrayFromArray } from "@beep/schema/Float16Array";
+ *
+ * const payload: Float16ArrayFromArray.Encoded = [0.5, 1.25, 2.75];
+ * console.log(payload.length); // 3
+ * ```
  *
  * @category models
  * @since 0.0.0

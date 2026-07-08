@@ -1,3 +1,9 @@
+/**
+ * Shared type surface for theme options and component override maps.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import type { createTheme } from "@mui/material/styles";
 
 /**
@@ -7,8 +13,9 @@ import type { createTheme } from "@mui/material/styles";
  * ```ts
  * import type { ThemeOptions } from "@beep/ui/themes/types"
  *
- * const value = {} as ThemeOptions
- * console.log(value)
+ * const describe = (options: ThemeOptions): string => Object.keys(options).join(",")
+ *
+ * console.log(typeof describe)
  * ```
  *
  * @category type-level
@@ -23,8 +30,9 @@ export type ThemeOptions = NonNullable<Parameters<typeof createTheme>[0]>;
  * ```ts
  * import type { ThemeComponents } from "@beep/ui/themes/types"
  *
- * const value = {} as ThemeComponents
- * console.log(value)
+ * const describe = (components: ThemeComponents): string => Object.keys(components ?? {}).join(",")
+ *
+ * console.log(typeof describe)
  * ```
  *
  * @category type-level

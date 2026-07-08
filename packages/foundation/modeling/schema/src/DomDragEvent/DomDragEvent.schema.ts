@@ -48,6 +48,15 @@ export const DOMDragEvent = S.declare(isDragEvent).pipe(
 /**
  * Type for {@link DOMDragEvent}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { DOMDragEvent } from "@beep/schema/DomDragEvent"
+ *
+ * const event: DOMDragEvent = S.decodeUnknownSync(DOMDragEvent)(new DragEvent("dragstart"))
+ * console.log(event.type)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */

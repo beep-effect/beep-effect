@@ -1,3 +1,9 @@
+/**
+ * Switch primitive: an accessible toggle switch built on Base UI's switch.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Switch as SwitchPrimitive } from "@base-ui/react/switch";

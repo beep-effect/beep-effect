@@ -290,7 +290,7 @@ const readNormalizedTokensFromWink = Effect.fn("Wink.WinkCorpusManager.readNorma
   yield* Effect.annotateCurrentSpan({
     corpus_id: corpusId,
     document_id: document.id,
-    ...textLengthAttribute("document_text", document.text),
+    ...textLengthAttribute(document.text, "document_text"),
   });
   const its = yield* engine.its.pipe(
     Effect.mapError((cause) => CorpusManagerError.fromCause(cause, "Failed to access wink helpers", { corpusId }))
@@ -707,7 +707,7 @@ const makeWinkCorpusManager = Effect.gen(function* () {
         corpus_id: params.corpusId,
         include_text: `${params.includeText}`,
         top_n: `${params.topN ?? "default"}`,
-        ...textLengthAttribute("query", params.query),
+        ...textLengthAttribute(params.query, "query"),
       });
       const state = yield* getState(params.corpusId);
       const { compiled, state: compiledState } = yield* ensureCompiled(state);

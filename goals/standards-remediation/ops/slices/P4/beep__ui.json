@@ -1,0 +1,21 @@
+{
+  "owner": "@beep/ui",
+  "entries": [
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/tour.tsx",
+      "symbol": "Step",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/ui",
+      "reason": "React tour step configuration carries ReactNode values and component prop slices, so it is a render contract rather than a pure schema model."
+    },
+    {
+      "file": "packages/foundation/ui-system/ui/src/components/tour.tsx",
+      "symbol": "Tour",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/ui",
+      "reason": "React tour configuration is coupled to Step render contracts containing ReactNode values, so it stays tracked as a UI boundary exception."
+    }
+  ]
+}

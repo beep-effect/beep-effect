@@ -1,3 +1,9 @@
+/**
+ * Aspect-ratio primitive: a fixed-ratio wrapper that keeps media cropped inside a stable box.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { cn } from "../lib/index.ts";
 
 /**

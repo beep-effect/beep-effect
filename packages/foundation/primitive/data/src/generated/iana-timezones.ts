@@ -12,6 +12,13 @@
 /**
  * Stable source metadata for the official IANA tzdb data-only distribution.
  *
+ * @example
+ * ```typescript
+ * import { TimezoneDataMetadata } from "@beep/data/generated/iana-timezones"
+ *
+ * console.assert(TimezoneDataMetadata.version === "2026b")
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -24,6 +31,13 @@ export const TimezoneDataMetadata = {
 /**
  * IANA tzdb version.
  *
+ * @example
+ * ```typescript
+ * import { TimezoneDataVersion } from "@beep/data/generated/iana-timezones"
+ *
+ * console.assert(TimezoneDataVersion === "2026b")
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -31,6 +45,13 @@ export const TimezoneDataVersion = "2026b" as const;
 
 /**
  * IANA tzdb data-only source URL.
+ *
+ * @example
+ * ```typescript
+ * import { TimezoneDataSourceUrl } from "@beep/data/generated/iana-timezones"
+ *
+ * console.assert(TimezoneDataSourceUrl.endsWith("tzdata-latest.tar.gz"))
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -40,6 +61,13 @@ export const TimezoneDataSourceUrl = "https://data.iana.org/time-zones/tzdata-la
 /**
  * SHA-256 digest of the official source payload used for this generated module.
  *
+ * @example
+ * ```typescript
+ * import { TimezoneDataSourceSha256 } from "@beep/data/generated/iana-timezones"
+ *
+ * console.assert(TimezoneDataSourceSha256.length === 64)
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -47,6 +75,14 @@ export const TimezoneDataSourceSha256 = "114543d9f19a6bfeb5bca43686aea173d38755a
 
 /**
  * Normalized IANA timezone entries.
+ *
+ * @example
+ * ```typescript
+ * import { TimezoneDataValues } from "@beep/data/generated/iana-timezones"
+ *
+ * const sample = TimezoneDataValues.find((entry) => entry.name === "UTC")
+ * console.assert(sample?.name === "UTC")
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -1851,6 +1887,13 @@ export const TimezoneDataValues = [
 /**
  * Normalized IANA timezone entries keyed by timezone identifier.
  *
+ * @example
+ * ```typescript
+ * import { TimezoneDataByName } from "@beep/data/generated/iana-timezones"
+ *
+ * console.assert(TimezoneDataByName["UTC"].name === "UTC")
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -3653,6 +3696,13 @@ export const TimezoneDataByName = {
 
 /**
  * IANA timezone identifier literals.
+ *
+ * @example
+ * ```typescript
+ * import { TimezoneNameValues } from "@beep/data/generated/iana-timezones"
+ *
+ * console.assert(TimezoneNameValues.includes("UTC"))
+ * ```
  *
  * @category constants
  * @since 0.0.0

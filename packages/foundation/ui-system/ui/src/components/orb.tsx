@@ -1,3 +1,9 @@
+/**
+ * Orb primitive: an agent-state-driven animated indicator.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { A } from "@beep/utils";
@@ -17,8 +23,9 @@ import type React from "react";
  * ```ts
  * import type { AgentState } from "@beep/ui/components/orb"
  *
- * const value = {} as AgentState
- * console.log(value)
+ * const describe = (state: AgentState): string => state ?? "idle"
+ *
+ * console.log(describe("thinking"))
  * ```
  *
  * @category type-level

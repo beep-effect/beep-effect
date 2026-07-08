@@ -7,13 +7,21 @@
     "primaryTarget": "explorations/multi-provider-llm-dispatch-fallback",
     "targetExists": false,
     "proposedSlug": "multi-provider-llm-dispatch-fallback",
-    "secondaryTargets": ["packages/drivers/anthropic", "packages/drivers/openai-compat", "packages/drivers/xai", "packages/drivers/venice-ai", "explorations/effect-orchestration-patterns"],
+    "secondaryTargets": [
+      "packages/drivers/anthropic",
+      "packages/drivers/openai-compat",
+      "packages/drivers/xai",
+      "packages/drivers/venice-ai",
+      "explorations/effect-orchestration-patterns"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "multi-provider-llm-dispatch-fallback",
     "goldSynthesisSection": "mcp-design — shared multi-provider LLM fallback layer over the four LLM drivers (GOLD_SYNTHESIS §MCP-design L1574, L2407)",
     "rationale": "The per-provider LLM drivers (anthropic/openai-compat/xai/venice-ai) exist, but no shared dispatch Layer owns user-key>env precedence + graceful fallback; GOLD flags this as a gap, so the user-key->env precedence + Layer.orElse fallback chain is net-new in a new dispatch packet.",
-    "cautions": ["Re-express switch/try-catch as typed-error Effect Layer.orElse, not ported imperatively"]
+    "cautions": [
+      "Re-express switch/try-catch as typed-error Effect Layer.orElse, not ported imperatively"
+    ]
   },
   {
     "id": "TalentScore#2",
@@ -23,13 +31,20 @@
     "primaryTarget": "explorations/multi-provider-llm-dispatch-fallback",
     "targetExists": false,
     "proposedSlug": "multi-provider-llm-dispatch-fallback",
-    "secondaryTargets": ["packages/drivers/anthropic", "packages/drivers/openai-compat", "explorations/effect-orchestration-patterns"],
+    "secondaryTargets": [
+      "packages/drivers/anthropic",
+      "packages/drivers/openai-compat",
+      "explorations/effect-orchestration-patterns"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "multi-provider-llm-dispatch-fallback",
     "goldSynthesisSection": "mcp-design — declarative multi-provider client config (round-robin/fallback/retry) (GOLD_SYNTHESIS §MCP-design)",
     "rationale": "BAML client declarations are a config-pattern reference for the new dispatch packet (round-robin/ordered-fallback/named-retry strategies); the LLM drivers already exist so only the resilience-strategy composition is net-new, with retry-policy DRY shared with effect-orchestration-patterns.",
-    "cautions": ["BAML is BoundaryML's external Apache-2.0 DSL/runtime — port the PATTERN, do not adopt the runtime", "recommendation reference-only"]
+    "cautions": [
+      "BAML is BoundaryML's external Apache-2.0 DSL/runtime — port the PATTERN, do not adopt the runtime",
+      "recommendation reference-only"
+    ]
   },
   {
     "id": "agentmemory#4",
@@ -39,13 +54,20 @@
     "primaryTarget": "explorations/multi-provider-llm-dispatch-fallback",
     "targetExists": false,
     "proposedSlug": "multi-provider-llm-dispatch-fallback",
-    "secondaryTargets": ["packages/drivers/anthropic", "packages/drivers/openai-compat", "packages/drivers/xai", "packages/drivers/venice-ai"],
+    "secondaryTargets": [
+      "packages/drivers/anthropic",
+      "packages/drivers/openai-compat",
+      "packages/drivers/xai",
+      "packages/drivers/venice-ai"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "multi-provider-llm-dispatch-fallback",
     "goldSynthesisSection": "mcp-design — multi-provider fallback layer; per-provider OWN default model (GOLD_SYNTHESIS §MCP-design)",
     "rationale": "The resilient-wrapper + fallback-chain pattern, and especially the per-provider OWN env-driven default-model resolution (so a fallback never inherits an incompatible model name), is the highest-value insight for the net-new shared dispatch Layer; the provider drivers themselves already exist.",
-    "cautions": ["agentmemory is Apache-2.0 + plain TS/Zod — reuse algorithm/shape, reimplement in Effect-Schema"]
+    "cautions": [
+      "agentmemory is Apache-2.0 + plain TS/Zod — reuse algorithm/shape, reimplement in Effect-Schema"
+    ]
   },
   {
     "id": "agentmemory#8",
@@ -87,13 +109,19 @@
     "primaryTarget": "explorations/multi-provider-llm-dispatch-fallback",
     "targetExists": false,
     "proposedSlug": "multi-provider-llm-dispatch-fallback",
-    "secondaryTargets": ["packages/drivers/anthropic", "packages/drivers/openai-compat", "packages/foundation/capability/langextract"],
+    "secondaryTargets": [
+      "packages/drivers/anthropic",
+      "packages/drivers/openai-compat",
+      "packages/foundation/capability/langextract"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "multi-provider-llm-dispatch-fallback",
     "goldSynthesisSection": "mcp-design — provider/model-string select + schema-validated structured output (GOLD_SYNTHESIS §MCP-design)",
     "rationale": "The provider/model-string single-select + typed response_model maps cleanly onto the new dispatch Layer plus effect/Schema-validated structured outputs; the response_model->effect/Schema pattern is a reference for the dispatch packet rather than net-new extraction (langextract already owns schema-first extraction).",
-    "cautions": ["Instructor/Pydantic is Python — port the provider-string-select + schema-output shape only; recommendation reference"]
+    "cautions": [
+      "Instructor/Pydantic is Python — port the provider-string-select + schema-output shape only; recommendation reference"
+    ]
   },
   {
     "id": "doc-haus#8",
@@ -103,13 +131,19 @@
     "primaryTarget": "explorations/mcp-auth-gated-registration",
     "targetExists": false,
     "proposedSlug": "mcp-auth-gated-registration",
-    "secondaryTargets": ["goals/agent-governance-control-plane", "goals/epistemic-claim-lifecycle-gate", "packages/drivers/nlp-mcp"],
+    "secondaryTargets": [
+      "goals/agent-governance-control-plane",
+      "goals/epistemic-claim-lifecycle-gate",
+      "packages/drivers/nlp-mcp"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — tool permission matrix (read=allow/mutate=ask/edit+bash=deny) (GOLD_SYNTHESIS §MCP-design L2068)",
     "rationale": "The declarative per-tool allow/ask/deny permission matrix is the MCP-side write-vs-read gate the auth-gated-registration packet owns (tier-gating at the candidate->approved wall); the approval/audit plumbing it feeds lives in goals/agent-governance-control-plane and aligns with the epistemic ClaimGate boundary.",
-    "cautions": ["Keep the MCP permission matrix MCP-side; reuse existing ClaimGate/approval plumbing rather than a parallel gate"]
+    "cautions": [
+      "Keep the MCP permission matrix MCP-side; reuse existing ClaimGate/approval plumbing rather than a parallel gate"
+    ]
   },
   {
     "id": "google-patents-mcp#2",
@@ -125,7 +159,9 @@
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — bare MCP scaffold lessons are dups (GOLD_SYNTHESIS §MCP-design L1574, L2446)",
     "rationale": "The minimal stdio MCP server scaffold (Server construction, ListTools/CallTool, empty ListResources/ListPrompts stubs) is already owned by the two shipped Effect-native MCP servers built on McpServer.layerStdio; gapStatus=dup. The empty-list-method client-compat checklist can be referenced into the auth-gated packet, but no build opens.",
-    "cautions": ["recommendation reference-only — DUP per the two-MCP-server substrate"]
+    "cautions": [
+      "recommendation reference-only — DUP per the two-MCP-server substrate"
+    ]
   },
   {
     "id": "harvest-mcp#1",
@@ -135,7 +171,12 @@
     "primaryTarget": "explorations/multi-provider-llm-dispatch-fallback",
     "targetExists": false,
     "proposedSlug": "multi-provider-llm-dispatch-fallback",
-    "secondaryTargets": ["packages/drivers/anthropic", "packages/drivers/openai-compat", "packages/drivers/xai", "packages/drivers/venice-ai"],
+    "secondaryTargets": [
+      "packages/drivers/anthropic",
+      "packages/drivers/openai-compat",
+      "packages/drivers/xai",
+      "packages/drivers/venice-ai"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "multi-provider-llm-dispatch-fallback",
@@ -157,7 +198,9 @@
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — per-domain tool registrars with narrow injected context (GOLD_SYNTHESIS §MCP-design L2395)",
     "rationale": "Per-domain registrar functions each receiving a narrow context factory is the registration-organization pattern for conditional/credential-keyed Toolkit composition; nlp-mcp already mounts two toolkits into one server, so this refines the composition approach rather than re-scaffolding.",
-    "cautions": ["nlp-mcp already composes multiple toolkits via McpServer.layerStdio — refine, do not duplicate"]
+    "cautions": [
+      "nlp-mcp already composes multiple toolkits via McpServer.layerStdio — refine, do not duplicate"
+    ]
   },
   {
     "id": "lawyergpt#4",
@@ -167,13 +210,20 @@
     "primaryTarget": "explorations/rag-retrieval-projection",
     "targetExists": false,
     "proposedSlug": "rag-retrieval-projection",
-    "secondaryTargets": ["explorations/citation-grounding-hallucination-guard", "packages/drivers/nlp-mcp", "goals/epistemic-claim-lifecycle-gate"],
+    "secondaryTargets": [
+      "explorations/citation-grounding-hallucination-guard",
+      "packages/drivers/nlp-mcp",
+      "goals/epistemic-claim-lifecycle-gate"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "rag-retrieval-projection",
     "goldSynthesisSection": "mcp-design — un-gated tool-calling RAG (the anti-pattern beep rejects) (GOLD_SYNTHESIS §RAG)",
     "rationale": "The Vercel-AI getInformation tool that feeds raw chunks straight to the LLM is the explicit anti-pattern the rag-retrieval-projection packet is defined against; it belongs there as a negative reference — beep tool outputs must carry CandidateClaim+Evidence spans through the ClaimGate, not bare chunks.",
-    "cautions": ["lawyergpt license UNKNOWN — negative reference only", "un-gated RAG is an explicit anti-pattern; do not port the design"]
+    "cautions": [
+      "lawyergpt license UNKNOWN — negative reference only",
+      "un-gated RAG is an explicit anti-pattern; do not port the design"
+    ]
   },
   {
     "id": "mcp-uspto#2",
@@ -199,13 +249,19 @@
     "primaryTarget": "explorations/mcp-auth-gated-registration",
     "targetExists": false,
     "proposedSlug": "mcp-auth-gated-registration",
-    "secondaryTargets": ["packages/drivers/courtlistener", "explorations/gov-legal-data-driver-codegen", "packages/drivers/nlp-mcp"],
+    "secondaryTargets": [
+      "packages/drivers/courtlistener",
+      "explorations/gov-legal-data-driver-codegen",
+      "packages/drivers/nlp-mcp"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — progressive-disclosure tool ladder metadata->snippet->read (GOLD_SYNTHESIS §MCP-design)",
     "rationale": "The metadata->find_in_case->read_case context-reduction ladder is the progressive-disclosure pattern the auth-gated packet owns; it lands on the courtlistener tool surface built by gov-legal-data-driver-codegen but the ladder design is the MCP-side concern.",
-    "cautions": ["mike is AGPL/unknown-license — reimplement the ladder design, do not copy"]
+    "cautions": [
+      "mike is AGPL/unknown-license — reimplement the ladder design, do not copy"
+    ]
   },
   {
     "id": "mike#7",
@@ -215,13 +271,19 @@
     "primaryTarget": "explorations/mcp-auth-gated-registration",
     "targetExists": false,
     "proposedSlug": "mcp-auth-gated-registration",
-    "secondaryTargets": ["goals/agent-governance-control-plane", "explorations/ingestion-security-secret-governance", "packages/drivers/nlp-mcp"],
+    "secondaryTargets": [
+      "goals/agent-governance-control-plane",
+      "explorations/ingestion-security-secret-governance",
+      "packages/drivers/nlp-mcp"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — confirmation gate + untrusted-context wrapping + audit log (GOLD_SYNTHESIS §MCP-design L2068)",
     "rationale": "The MCP tool governance blueprint (requires_confirmation filter, 'MCP responses are untrusted external context' injection-defense suffix, audit-log sink) is the auth-gated-registration packet's core; confirmation/audit coordinate with goals/agent-governance-control-plane and the injection-defense suffix cross-links the ingestion-security secret-governance split.",
-    "cautions": ["mike is AGPL/unknown-license — reimplement the ethical-wall/injection-hardening contract from spec"]
+    "cautions": [
+      "mike is AGPL/unknown-license — reimplement the ethical-wall/injection-hardening contract from spec"
+    ]
   },
   {
     "id": "mike#10",
@@ -237,7 +299,10 @@
     "wedgeHint": "multi-provider-llm-dispatch-fallback",
     "goldSynthesisSection": "mcp-design — single-source tool schema adapted per provider (GOLD_SYNTHESIS §MCP-design)",
     "rationale": "Define tools once, dispatch per provider (Claude/Gemini normalization) is part of the multi-provider dispatch concern; routed there as a study item — but effect/unstable/ai Toolkit likely already abstracts provider tool formats, so verify before building.",
-    "cautions": ["effect/unstable/ai Toolkit may already provide single-source->per-provider tool dispatch (potential DUP) — verify against the vendored effect-v4 AI module first", "recommendation study"]
+    "cautions": [
+      "effect/unstable/ai Toolkit may already provide single-source->per-provider tool dispatch (potential DUP) — verify against the vendored effect-v4 AI module first",
+      "recommendation study"
+    ]
   },
   {
     "id": "patent-search-mcp-server#5",
@@ -263,13 +328,19 @@
     "primaryTarget": "explorations/mcp-auth-gated-registration",
     "targetExists": false,
     "proposedSlug": "mcp-auth-gated-registration",
-    "secondaryTargets": ["packages/drivers/nlp-mcp", "packages/drivers/uspto", "explorations/gov-legal-data-driver-codegen"],
+    "secondaryTargets": [
+      "packages/drivers/nlp-mcp",
+      "packages/drivers/uspto",
+      "explorations/gov-legal-data-driver-codegen"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — conditional tool registration keyed on available credentials (GOLD_SYNTHESIS §MCP-design L2298)",
     "rationale": "Registering a source's tools only when its keys are present is the canonical conditional/credential-keyed Toolkit composition this packet owns; re-expressed as building the Toolkit only from driver Layers whose Effect Config resolved, with write tools behind the candidate->approved wall.",
-    "cautions": ["patents-mcp-server is MIT (portable); reimplement on effect Config/Layer, not FastMCP"]
+    "cautions": [
+      "patents-mcp-server is MIT (portable); reimplement on effect Config/Layer, not FastMCP"
+    ]
   },
   {
     "id": "patents-mcp-server#3",
@@ -295,13 +366,19 @@
     "primaryTarget": "explorations/mcp-auth-gated-registration",
     "targetExists": false,
     "proposedSlug": "mcp-auth-gated-registration",
-    "secondaryTargets": ["explorations/gov-legal-data-driver-codegen", "packages/drivers/uspto"],
+    "secondaryTargets": [
+      "explorations/gov-legal-data-driver-codegen",
+      "packages/drivers/uspto"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — multi-provider config loader + source-availability matrix (GOLD_SYNTHESIS §MCP-design)",
     "rationale": "loadConfig's typed env parsing, path/credential expansion, and getAvailableSources configured/healthy matrix is the multi-provider credential-layering + check-api-status health-probe template the auth-gated packet owns; coordinates with the per-driver env-auth matrix in gov-legal-data-driver-codegen.",
-    "cautions": ["priority IMPUTED P2 (catalog record had no priority/finalBeepTarget/gapStatus fields)", "patents-mcp-server is MIT (portable)"]
+    "cautions": [
+      "priority IMPUTED P2 (catalog record had no priority/finalBeepTarget/gapStatus fields)",
+      "patents-mcp-server is MIT (portable)"
+    ]
   },
   {
     "id": "patents-mcp#4",
@@ -311,13 +388,18 @@
     "primaryTarget": "explorations/mcp-auth-gated-registration",
     "targetExists": false,
     "proposedSlug": "mcp-auth-gated-registration",
-    "secondaryTargets": ["explorations/uspto-patent-driver-depth", "packages/drivers/uspto"],
+    "secondaryTargets": [
+      "explorations/uspto-patent-driver-depth",
+      "packages/drivers/uspto"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — capability-gated driver self-disable on absent credentials (GOLD_SYNTHESIS §MCP-design L2360)",
     "rationale": "A data source that self-disables when credentials are absent (catch auth failure, set client=None, every method guards) is the conditional/auth-gated Layer pattern this packet owns; the BigQuery driver itself is net-new under uspto-patent-driver-depth, but the capability-gating pattern is MCP-side.",
-    "cautions": ["patents-mcp license MIT; the Google Patents BigQuery driver is separately net-new (uspto-patent-driver-depth), requires GCP creds"]
+    "cautions": [
+      "patents-mcp license MIT; the Google Patents BigQuery driver is separately net-new (uspto-patent-driver-depth), requires GCP creds"
+    ]
   },
   {
     "id": "patents-mcp#5",
@@ -333,7 +415,9 @@
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — single-tool method-dispatch vs many-tools tradeoff (GOLD_SYNTHESIS §MCP-design)",
     "rationale": "One uspto_patents tool with a method discriminator vs ~25 discrete tools is a context-reduction tool-surface-design tradeoff (with per-method required-arg validation) the auth-gated packet evaluates; routed as a design study, not a build.",
-    "cautions": ["recommendation study — giant arg signature hurts schema clarity vs discrete tools"]
+    "cautions": [
+      "recommendation study — giant arg signature hurts schema clarity vs discrete tools"
+    ]
   },
   {
     "id": "research-squad#4",
@@ -349,7 +433,9 @@
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — tool registry + schema-validated dispatch with requiresAuth/category gating (GOLD_SYNTHESIS §MCP-design)",
     "rationale": "withInputValidation (schema decode -> ToolValidationError) is largely covered by effect Tool.make's failureMode:'return'->AiToolError; the genuinely net-new piece is the ToolMetadata registry's requiresAuth/category gating, which is the auth-gated packet's concern.",
-    "cautions": ["effect Tool.make already provides schema-validated I/O + typed AiToolError (partial DUP) — reuse it; only requiresAuth/category registry gating is net-new"]
+    "cautions": [
+      "effect Tool.make already provides schema-validated I/O + typed AiToolError (partial DUP) — reuse it; only requiresAuth/category registry gating is net-new"
+    ]
   },
   {
     "id": "research-squad#15",
@@ -359,13 +445,20 @@
     "primaryTarget": "explorations/multi-provider-llm-dispatch-fallback",
     "targetExists": false,
     "proposedSlug": "multi-provider-llm-dispatch-fallback",
-    "secondaryTargets": ["explorations/effect-orchestration-patterns", "packages/drivers/anthropic", "packages/drivers/openai-compat"],
+    "secondaryTargets": [
+      "explorations/effect-orchestration-patterns",
+      "packages/drivers/anthropic",
+      "packages/drivers/openai-compat"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "multi-provider-llm-dispatch-fallback",
     "goldSynthesisSection": "mcp-design — round-robin + ordered-fallback + per-client retry-policy reference (GOLD_SYNTHESIS §MCP-design)",
     "rationale": "BAML CustomFast (round-robin) / OpenaiFallback (ordered fallback) with per-client retry_policy is a concise reference for provider abstraction + retry-policy attachment in the dispatch packet; retry-policy DRY shared with effect-orchestration-patterns.",
-    "cautions": ["BAML is external Apache-2.0 DSL; beep uses Effect not BAML — reference the strategy shape only", "recommendation reference; serendipitous relevance"]
+    "cautions": [
+      "BAML is external Apache-2.0 DSL; beep uses Effect not BAML — reference the strategy shape only",
+      "recommendation reference; serendipitous relevance"
+    ]
   },
   {
     "id": "screenpipe#1",
@@ -375,13 +468,18 @@
     "primaryTarget": "explorations/mcp-auth-gated-registration",
     "targetExists": false,
     "proposedSlug": "mcp-auth-gated-registration",
-    "secondaryTargets": ["packages/drivers/nlp-mcp", "packages/drivers/m365-mcp"],
+    "secondaryTargets": [
+      "packages/drivers/nlp-mcp",
+      "packages/drivers/m365-mcp"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — USE WHEN / DO NOT USE tool-description routing + annotations (GOLD_SYNTHESIS §MCP-design L2478)",
     "rationale": "Embedding USE WHEN / DO NOT USE disambiguation prose + readOnly/idempotent/openWorld annotation hints in each tool definition reduces tool-selection errors and keeps the agent on candidate-vs-proof rails; adapt the prose convention into the existing effect Tool definitions of nlp-mcp/m365-mcp.",
-    "cautions": ["screenpipe license flagged unknown — adapt the prose pattern, not the framework/code"]
+    "cautions": [
+      "screenpipe license flagged unknown — adapt the prose pattern, not the framework/code"
+    ]
   },
   {
     "id": "screenpipe#2",
@@ -397,7 +495,9 @@
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — server-side response reshaping for context-window protection (GOLD_SYNTHESIS §MCP-design L2479)",
     "rationale": "Columnar csv/tsv (~70% cut), deduped outline/tree (~91% cut), dotted-path fields whitelist, and max_content_length middle-truncation are concrete context-reduction tactics for MCP tool outputs / KG-query results — a server-side response-reshaping layer the auth-gated packet owns.",
-    "cautions": ["screenpipe license flagged unknown — reimplement the reshaping tactics"]
+    "cautions": [
+      "screenpipe license flagged unknown — reimplement the reshaping tactics"
+    ]
   },
   {
     "id": "us-gov-open-data-mcp#1",
@@ -407,13 +507,19 @@
     "primaryTarget": "explorations/mcp-auth-gated-registration",
     "targetExists": false,
     "proposedSlug": "mcp-auth-gated-registration",
-    "secondaryTargets": ["packages/drivers/nlp-mcp", "explorations/rag-retrieval-projection"],
+    "secondaryTargets": [
+      "packages/drivers/nlp-mcp",
+      "explorations/rag-retrieval-projection"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — WASM code-mode context reduction over tool output (GOLD_SYNTHESIS §MCP-design)",
     "rationale": "Running an LLM-written JS extractor against a tool's raw response inside a QuickJS WASM sandbox (capturing only console.log, with before/after byte metrics) is a strong progressive-disclosure primitive that pairs with span-grounded extraction; routed as a context-reduction study for the auth-gated packet.",
-    "cautions": ["us-gov-open-data-mcp license unverified — reimplement-don't-copy", "QuickJS WASM sandbox is a heavy dependency; recommendation study"]
+    "cautions": [
+      "us-gov-open-data-mcp license unverified — reimplement-don't-copy",
+      "QuickJS WASM sandbox is a heavy dependency; recommendation study"
+    ]
   },
   {
     "id": "us-gov-open-data-mcp#4",
@@ -423,13 +529,18 @@
     "primaryTarget": "explorations/mcp-auth-gated-registration",
     "targetExists": false,
     "proposedSlug": "mcp-auth-gated-registration",
-    "secondaryTargets": ["explorations/gov-legal-data-driver-codegen", "packages/drivers/nlp-mcp"],
+    "secondaryTargets": [
+      "explorations/gov-legal-data-driver-codegen",
+      "packages/drivers/nlp-mcp"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — columnar response envelope + server-side trend/stat (GOLD_SYNTHESIS §MCP-design)",
     "rationale": "Standardized timeseries/table/record/list envelopes with toColumnar/stripNulls compression plus server-side detectTrend (linear-regression slope+R2) is a reusable tool-result-formatting helper that compresses payloads before they hit the LLM and computes numeric summaries server-side.",
-    "cautions": ["us-gov-open-data-mcp license unverified — reimplement-don't-copy"]
+    "cautions": [
+      "us-gov-open-data-mcp license unverified — reimplement-don't-copy"
+    ]
   },
   {
     "id": "us-gov-open-data-mcp#5",
@@ -439,13 +550,18 @@
     "primaryTarget": "explorations/mcp-auth-gated-registration",
     "targetExists": false,
     "proposedSlug": "mcp-auth-gated-registration",
-    "secondaryTargets": ["explorations/gov-legal-data-driver-codegen", "packages/agents/domain"],
+    "secondaryTargets": [
+      "explorations/gov-legal-data-driver-codegen",
+      "packages/agents/domain"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — metadata-driven module auto-discovery + generated instructions/routing (GOLD_SYNTHESIS §MCP-design L2372)",
     "rationale": "Per-API ApiModule auto-discovery with default annotations, selective loading, startup env validation, and buildInstructions() auto-generating system instructions + a question-type->sources routing table is the conditional-loading + generated-agent-guidance pattern; coordinates with per-driver metadata in gov-legal-data-driver-codegen.",
-    "cautions": ["us-gov-open-data-mcp license unverified — reimplement-don't-copy"]
+    "cautions": [
+      "us-gov-open-data-mcp license unverified — reimplement-don't-copy"
+    ]
   },
   {
     "id": "us-gov-open-data-mcp#6",
@@ -455,13 +571,18 @@
     "primaryTarget": "explorations/mcp-auth-gated-registration",
     "targetExists": false,
     "proposedSlug": "mcp-auth-gated-registration",
-    "secondaryTargets": ["packages/agents/domain", "explorations/gov-legal-data-driver-codegen"],
+    "secondaryTargets": [
+      "packages/agents/domain",
+      "explorations/gov-legal-data-driver-codegen"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — ApiModule/ModuleMeta contract with Domain/QuestionType/RouteHint (GOLD_SYNTHESIS §MCP-design L2372)",
     "rationale": "The schema-first ModuleMeta contract (Domain union, QuestionType union, RouteHint question->tool mapping) is the typed driver/skill registry + query-routing metadata behind #5's generated routing table; lands as agent-routing metadata feeding @beep/agents-domain, owned alongside the auth-gated registration packet.",
-    "cautions": ["us-gov-open-data-mcp license unverified — reimplement the typed taxonomy in effect/Schema; recommendation study"]
+    "cautions": [
+      "us-gov-open-data-mcp license unverified — reimplement the typed taxonomy in effect/Schema; recommendation study"
+    ]
   },
   {
     "id": "us-gov-open-data-mcp#8",
@@ -471,13 +592,18 @@
     "primaryTarget": "explorations/mcp-auth-gated-registration",
     "targetExists": false,
     "proposedSlug": "mcp-auth-gated-registration",
-    "secondaryTargets": ["packages/drivers/uspto", "explorations/uspto-patent-driver-depth"],
+    "secondaryTargets": [
+      "packages/drivers/uspto",
+      "explorations/uspto-patent-driver-depth"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — flat-string DSL tool inputs -> typed query objects (GOLD_SYNTHESIS §MCP-design)",
     "rationale": "Exposing simple flat string params ('field v1,v2', 'field from:to', 'field order') to the model and deterministically parsing them into typed query objects is a generic MCP tool-input ergonomics helper; the example targets ODP filters so it cross-links the uspto query-DSL work.",
-    "cautions": ["Re-themed from legal-nlp; the ODP-filter example overlaps the uspto-patent-driver-depth query DSL — keep the parser generic in nlp-mcp, escape Lucene specials in the uspto layer"]
+    "cautions": [
+      "Re-themed from legal-nlp; the ODP-filter example overlaps the uspto-patent-driver-depth query DSL — keep the parser generic in nlp-mcp, escape Lucene specials in the uspto layer"
+    ]
   },
   {
     "id": "us-legal-tools#1",
@@ -487,13 +613,23 @@
     "primaryTarget": "explorations/gov-legal-data-driver-codegen",
     "targetExists": false,
     "proposedSlug": "gov-legal-data-driver-codegen",
-    "secondaryTargets": ["packages/drivers/courtlistener", "packages/drivers/ecfr", "packages/drivers/dol", "packages/drivers/federal-register", "packages/drivers/runpod", "packages/drivers/acp"],
+    "secondaryTargets": [
+      "packages/drivers/courtlistener",
+      "packages/drivers/ecfr",
+      "packages/drivers/dol",
+      "packages/drivers/federal-register",
+      "packages/drivers/runpod",
+      "packages/drivers/acp"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "mcp-design — single OpenAPI spec -> dual SDK + MCP server codegen (GOLD_SYNTHESIS L2050, single highest-leverage item)",
     "rationale": "The createOrvalConfig two-target (typed SDK + MCP server from one OpenAPI input) is exactly the OpenAPI->driver+MCP codegen the gov-legal-data-driver-codegen packet owns; port the two-target ARCHITECTURE onto Effect/effect-rpc + effect/Schema (reuse runpod/acp codegen precedent), not the Orval/axios/Zod output.",
-    "cautions": ["us-legal-tools is MIT but value is the PIPELINE not the axios/Zod output — port architecture onto Effect/HttpApi", "Orval @orval/mcp generator is single-spec-mode only"]
+    "cautions": [
+      "us-legal-tools is MIT but value is the PIPELINE not the axios/Zod output — port architecture onto Effect/HttpApi",
+      "Orval @orval/mcp generator is single-spec-mode only"
+    ]
   },
   {
     "id": "us-legal-tools#4",
@@ -503,13 +639,18 @@
     "primaryTarget": "explorations/gov-legal-data-driver-codegen",
     "targetExists": false,
     "proposedSlug": "gov-legal-data-driver-codegen",
-    "secondaryTargets": ["explorations/mcp-auth-gated-registration", "packages/drivers/nlp-mcp"],
+    "secondaryTargets": [
+      "explorations/mcp-auth-gated-registration",
+      "packages/drivers/nlp-mcp"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "mcp-design — MCP tool registration with structured path/query/body param groups (GOLD_SYNTHESIS §MCP-design)",
     "rationale": "The Orval-generated server.tool(name, desc, {queryParams|bodyParams|pathParams}, handler) convention with operationId-derived names is the tool-registration shape the codegen pipeline emits; lands in gov-legal-data-driver-codegen, with the param-grouping convention cross-linked to the auth-gated registration packet.",
-    "cautions": ["us-legal-tools MIT — port the param-grouping convention onto effect/Schema tool inputs"]
+    "cautions": [
+      "us-legal-tools MIT — port the param-grouping convention onto effect/Schema tool inputs"
+    ]
   },
   {
     "id": "us-legal-tools#5",
@@ -519,13 +660,18 @@
     "primaryTarget": "explorations/mcp-auth-gated-registration",
     "targetExists": false,
     "proposedSlug": "mcp-auth-gated-registration",
-    "secondaryTargets": ["explorations/gov-legal-data-driver-codegen", "packages/drivers/nlp-mcp"],
+    "secondaryTargets": [
+      "explorations/gov-legal-data-driver-codegen",
+      "packages/drivers/nlp-mcp"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — rich per-field .describe()/enum/default tool-input metadata (GOLD_SYNTHESIS §MCP-design L2311)",
     "rationale": "Per-field describe() text, enum constraints, defaults, and pagination cursors are the LLM-facing tool contract; port the shape to effect/Schema field annotations for MCP tool inputs — the precise-affordance convention the auth-gated packet standardizes across nlp-mcp and codegen'd servers.",
-    "cautions": ["us-legal-tools MIT — port the annotation richness to effect/Schema, not Zod"]
+    "cautions": [
+      "us-legal-tools MIT — port the annotation richness to effect/Schema, not Zod"
+    ]
   },
   {
     "id": "us-legal-tools#9",
@@ -535,13 +681,20 @@
     "primaryTarget": "explorations/mcp-auth-gated-registration",
     "targetExists": false,
     "proposedSlug": "mcp-auth-gated-registration",
-    "secondaryTargets": ["explorations/gov-legal-data-driver-codegen", "packages/drivers/courtlistener", "packages/drivers/govinfo", "packages/drivers/dol"],
+    "secondaryTargets": [
+      "explorations/gov-legal-data-driver-codegen",
+      "packages/drivers/courtlistener",
+      "packages/drivers/govinfo",
+      "packages/drivers/dol"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — multi-provider MCP server env-auth matrix (GOLD_SYNTHESIS §MCP-design)",
     "rationale": "The per-server required-env-credential matrix (no-auth public APIs unconditional; COURTLISTENER/GOV_INFO/DOL keyed sources gate on env presence) is the multi-provider auth matrix + conditional registration the auth-gated packet owns; coordinates with the per-driver auth in gov-legal-data-driver-codegen.",
-    "cautions": ["us-legal-tools MIT; CourtListener V4 ENFORCES 'Authorization: Token <key>' (not Bearer); GovInfo/DOL need api.data.gov api_key; eCFR/FedReg keyless"]
+    "cautions": [
+      "us-legal-tools MIT; CourtListener V4 ENFORCES 'Authorization: Token <key>' (not Bearer); GovInfo/DOL need api.data.gov api_key; eCFR/FedReg keyless"
+    ]
   },
   {
     "id": "uspto-patents-mcp#4",
@@ -551,13 +704,18 @@
     "primaryTarget": "explorations/mcp-auth-gated-registration",
     "targetExists": false,
     "proposedSlug": "mcp-auth-gated-registration",
-    "secondaryTargets": ["goals/agent-governance-control-plane", "packages/drivers/nlp-mcp"],
+    "secondaryTargets": [
+      "goals/agent-governance-control-plane",
+      "packages/drivers/nlp-mcp"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — tier/role-gated conditional tool registration (GOLD_SYNTHESIS §MCP-design L2384)",
     "rationale": "The premium-flag tier filter on listTools() + per-call tier rpcError is the tier/role-gated conditional registration the auth-gated packet owns, re-cast as read-vs-write gating at the candidate->approved wall; approval semantics coordinate with goals/agent-governance-control-plane.",
-    "cautions": ["uspto-patents-mcp MIT — reimplement tier gating on effect Config/tier, not the hand-rolled premium flag"]
+    "cautions": [
+      "uspto-patents-mcp MIT — reimplement tier gating on effect Config/tier, not the hand-rolled premium flag"
+    ]
   },
   {
     "id": "uspto-patents-mcp#5",
@@ -573,7 +731,9 @@
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — hand-rolled MCP JSON-RPC transport is a dup of McpServer.layerStdio (GOLD_SYNTHESIS §MCP-design)",
     "rationale": "A ~90-line dependency-free MCP JSON-RPC server (initialize/tools.list/tools.call/ping + content[{type:text}] envelope) is already owned by the two shipped Effect-native servers on McpServer.layerStdio; gapStatus=dup. Keep only as a reference for a future Tauri-sidecar lightweight transport — no packet opens.",
-    "cautions": ["recommendation reference-only — DUP per the two-MCP-server substrate; pins protocolVersion 2025-06-18"]
+    "cautions": [
+      "recommendation reference-only — DUP per the two-MCP-server substrate; pins protocolVersion 2025-06-18"
+    ]
   },
   {
     "id": "uspto_pfw_mcp#4",
@@ -583,13 +743,19 @@
     "primaryTarget": "explorations/mcp-auth-gated-registration",
     "targetExists": false,
     "proposedSlug": "mcp-auth-gated-registration",
-    "secondaryTargets": ["packages/drivers/uspto", "explorations/uspto-patent-driver-depth", "packages/drivers/nlp-mcp"],
+    "secondaryTargets": [
+      "packages/drivers/uspto",
+      "explorations/uspto-patent-driver-depth",
+      "packages/drivers/nlp-mcp"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "mcp-design — progressive-disclosure named field tiers (minimal/balanced/complete) (GOLD_SYNTHESIS §MCP-design L2323)",
     "rationale": "YAML-driven named field-set tiers ('95-99% context reduction', documentBag 100x-blowup warnings) over a USPTO response schema is the progressive-disclosure field-tier projection named in the auth-gated seed; the projection convention is MCP-side, the concrete PFW field catalogue lands in the uspto driver.",
-    "cautions": ["uspto_pfw_mcp MIT — reimplement field-tier projection in effect/Schema; the PFW field catalogue feeds uspto-patent-driver-depth"]
+    "cautions": [
+      "uspto_pfw_mcp MIT — reimplement field-tier projection in effect/Schema; the PFW field catalogue feeds uspto-patent-driver-depth"
+    ]
   },
   {
     "id": "uspto_pfw_mcp#9",

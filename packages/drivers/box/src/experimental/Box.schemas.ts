@@ -105,6 +105,15 @@ export const BoxSdkError = S.instanceOf(Box.BoxSdkError).pipe(
 /**
  * {@inheritDoc BoxSdkError}
  *
+ * @example
+ * ```ts
+ * import * as Box from "box-node-sdk/box"
+ * import type { BoxSdkError } from "@beep/box/experimental/Box.schemas"
+ *
+ * const error: BoxSdkError = new Box.BoxSdkError({ message: "Box SDK error" })
+ * console.log(error.message)
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -134,6 +143,19 @@ export const BoxApiError = S.instanceOf(Box.BoxApiError).pipe(
 
 /**
  * {@inheritDoc BoxApiError}
+ *
+ * @example
+ * ```ts
+ * import * as Box from "box-node-sdk/box"
+ * import type { BoxApiError } from "@beep/box/experimental/Box.schemas"
+ *
+ * const error: BoxApiError = new Box.BoxApiError({
+ *   message: "Box API error",
+ *   requestInfo: { method: "GET", url: "https://api.box.com/2.0/files/1", queryParams: {}, headers: {} },
+ *   responseInfo: { statusCode: 404, headers: {} }
+ * })
+ * console.log(error.responseInfo.statusCode)
+ * ```
  *
  * @category type-level
  * @since 0.0.0

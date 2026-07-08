@@ -11,6 +11,6 @@
     "outDir": "dist-test",
     "rootDir": ".",
     "sourceMap": false,
-    "types": ["node", "bun-types"]
+    "types": ["node", "bun"]
   }
 }

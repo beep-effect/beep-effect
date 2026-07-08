@@ -48,6 +48,14 @@ export * from "./Server.ts";
 /**
  * Package version.
  *
+ * @example
+ * ```ts
+ * import { VERSION } from "@beep/m365-mcp"
+ *
+ * console.log(VERSION)
+ * // "0.1.0"
+ * ```
+ *
  * @category constants
  * @since 0.1.0
  */

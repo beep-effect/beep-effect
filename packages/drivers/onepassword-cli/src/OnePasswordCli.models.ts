@@ -47,6 +47,14 @@ export const OnePasswordReferenceProbeStatus = OnePasswordReferenceProbeStatusBa
 /**
  * Runtime type for {@link OnePasswordReferenceProbeStatus}.
  *
+ * @example
+ * ```ts
+ * import { OnePasswordReferenceProbeStatus } from "@beep/onepassword-cli/OnePasswordCli.models"
+ *
+ * const status: OnePasswordReferenceProbeStatus = "resolved"
+ * console.log(OnePasswordReferenceProbeStatus.is.resolved(status))
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

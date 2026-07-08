@@ -502,8 +502,8 @@ const makePhoenixSyncProgram = Effect.fn("AgentEffectiveness.makePhoenixSyncProg
   const makePhoenixSyncInput = pipe(
     confirmPhoenixWrite,
     O.match({
-      onNone: () => AgentEffectivenessPhoenixSyncInput.new(!write),
-      onSome: (confirmToken) => AgentEffectivenessPhoenixSyncInput.new(!write, confirmToken),
+      onNone: () => AgentEffectivenessPhoenixSyncInput.new({ dryRun: !write }),
+      onSome: (confirmToken) => AgentEffectivenessPhoenixSyncInput.new({ confirmToken, dryRun: !write }),
     })
   );
 

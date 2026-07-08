@@ -1,3 +1,9 @@
+/**
+ * Sonner primitive: theme-aware toaster wiring the `sonner` toast renderer.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { CheckCircleIcon, InfoIcon, SpinnerIcon, WarningIcon, XCircleIcon } from "@phosphor-icons/react";

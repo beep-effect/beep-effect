@@ -3,13 +3,13 @@
   "initiative": {
     "id": "schema-first-zero-actionables",
     "title": "Schema-First Zero Actionables",
-    "status": "active",
+    "status": "complete",
     "created": "2026-06-11",
-    "updated": "2026-06-11",
+    "updated": "2026-07-07",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/schema-first-zero-actionables",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "executionCapable": true,
   "completionGate": {
     "operator": "yeet",
@@ -74,7 +74,7 @@
     {
       "id": "P5",
       "name": "PR closure",
-      "status": "in-progress"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -94,5 +94,10 @@
     "Generated output needs rewriting rather than exclusion or handwritten wrapper migration.",
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "supersededBy": {
+    "packet": "goals/standards-remediation",
+    "scope": "remaining exception ledger to zero entries",
+    "date": "2026-07-07"
+  }
 }

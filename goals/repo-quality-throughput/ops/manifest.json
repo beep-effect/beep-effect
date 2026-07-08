@@ -7,9 +7,7 @@
     "created": "2026-06-06",
     "updated": "2026-06-06",
     "packetAnchorDocument": "SPEC.md",
-    "supersedes": [
-      "repo-quality-acceleration"
-    ]
+    "supersedes": ["repo-quality-acceleration"]
   },
   "packetPath": "goals/repo-quality-throughput",
   "lifecycle": "complete",
@@ -36,16 +34,8 @@
       "packages/tooling/library/repo-utils",
       "packages/tooling/library/repo-codegraph"
     ],
-    "workflowPaths": [
-      ".github/workflows",
-      ".github/actions"
-    ],
-    "configPaths": [
-      "turbo.json",
-      "biome.jsonc",
-      "lefthook.yml",
-      "package.json"
-    ]
+    "workflowPaths": [".github/workflows", ".github/actions"],
+    "configPaths": ["turbo.json", "biome.jsonc", "lefthook.yml", "package.json"]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -102,10 +92,7 @@
     "rqt-009",
     "rqt-010"
   ],
-  "rejectedTasks": [
-    "rqt-011",
-    "rqt-012"
-  ],
+  "rejectedTasks": ["rqt-011", "rqt-012"],
   "phases": [
     {
       "id": "P0",

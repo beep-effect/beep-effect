@@ -1,0 +1,10 @@
+{
+  "scope": "packages/architecture-lab/server/src",
+  "findings": [
+    {
+      "kind": "files",
+      "file": "packages/architecture-lab/server/src/entities/index.ts",
+      "name": "packages/architecture-lab/server/src/entities/index.ts"
+    }
+  ]
+}

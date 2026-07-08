@@ -19,6 +19,16 @@ const youtubeVideoIdPattern = /^[A-Za-z0-9_-]{11}$/u;
 /**
  * Single safe Markdown fenced-code info-string token.
  *
+ * @example
+ * ```ts
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ * import { CodeFenceLanguage } from "@beep/md/Md.model"
+ *
+ * const language = Result.getOrThrow(S.decodeUnknownResult(CodeFenceLanguage)("ts"))
+ * console.log(language) // "ts"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -39,6 +49,16 @@ export const CodeFenceLanguage = S.NonEmptyString.check(
 /**
  * Type for {@link CodeFenceLanguage}.
  *
+ * @example
+ * ```ts
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ * import { CodeFenceLanguage } from "@beep/md/Md.model"
+ *
+ * const language: CodeFenceLanguage = Result.getOrThrow(S.decodeUnknownResult(CodeFenceLanguage)("tsx"))
+ * console.log(language) // "tsx"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -50,6 +70,16 @@ export type CodeFenceLanguage = typeof CodeFenceLanguage.Type;
  * Constraining the id to the safe character class rejects malformed UTF-16
  * (e.g. lone surrogates) at the schema boundary, so downstream consumers that
  * percent-encode the id cannot be crashed by a `URIError`.
+ *
+ * @example
+ * ```ts
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ * import { YouTubeVideoId } from "@beep/md/Md.model"
+ *
+ * const videoId = Result.getOrThrow(S.decodeUnknownResult(YouTubeVideoId)("dQw4w9WgXcQ"))
+ * console.log(videoId) // "dQw4w9WgXcQ"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -72,6 +102,16 @@ export const YouTubeVideoId = S.String.check(
  * Recursive inline child list used by inline containers and text-bearing block
  * nodes.
  *
+ * @example
+ * ```ts
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ * import { InlineChildren, Text } from "@beep/md/Md.model"
+ *
+ * const children = Result.getOrThrow(S.decodeUnknownResult(InlineChildren)([Text.make({ value: "Hello" })]))
+ * console.log(children.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -82,7 +122,33 @@ export const InlineChildren = S.Array(S.suspend((): S.Codec<Inline.Type, Inline.
 );
 
 /**
+ * Type for {@link InlineChildren}.
+ *
+ * @example
+ * ```ts
+ * import { Text } from "@beep/md/Md.model"
+ * import type { InlineChildren } from "@beep/md/Md.model"
+ *
+ * const children: InlineChildren = [Text.make({ value: "Hello" })]
+ * console.log(children.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type InlineChildren = typeof InlineChildren.Type;
+
+/**
  * Companion namespace for {@link InlineChildren}.
+ *
+ * @example
+ * ```ts
+ * import { Text } from "@beep/md/Md.model"
+ * import type { InlineChildren } from "@beep/md/Md.model"
+ *
+ * const children: InlineChildren.Type = [Text.make({ value: "Hello" })]
+ * console.log(children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -127,6 +193,14 @@ export class Text extends S.TaggedClass<Text>($I`Text`)(
 
 /**
  * Companion namespace for {@link Text}.
+ *
+ * @example
+ * ```ts
+ * import { Text } from "@beep/md/Md.model"
+ *
+ * const node: Text.Type = Text.make({ value: "Hello" })
+ * console.log(node.value) // "Hello"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -174,6 +248,14 @@ export class RawMarkdown extends S.TaggedClass<RawMarkdown>($I`RawMarkdown`)(
 
 /**
  * Companion namespace for {@link RawMarkdown}.
+ *
+ * @example
+ * ```ts
+ * import { RawMarkdown } from "@beep/md/Md.model"
+ *
+ * const node: RawMarkdown.Type = RawMarkdown.make({ value: "**trusted**" })
+ * console.log(node.value) // "**trusted**"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -225,6 +307,14 @@ export class RawHtml extends S.TaggedClass<RawHtml>($I`RawHtml`)(
 /**
  * Companion namespace for {@link RawHtml}.
  *
+ * @example
+ * ```ts
+ * import { RawHtml } from "@beep/md/Md.model"
+ *
+ * const node: RawHtml.Type = RawHtml.make({ value: "<span>trusted</span>" })
+ * console.log(node.value) // "<span>trusted</span>"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -271,6 +361,14 @@ export class Strong extends S.TaggedClass<Strong>($I`Strong`)(
 
 /**
  * Companion namespace for {@link Strong}.
+ *
+ * @example
+ * ```ts
+ * import { Strong, Text } from "@beep/md/Md.model"
+ *
+ * const node: Strong.Type = Strong.make({ children: [Text.make({ value: "important" })] })
+ * console.log(node.children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -322,6 +420,14 @@ export class Em extends S.TaggedClass<Em>($I`Em`)(
 /**
  * Companion namespace for {@link Em}.
  *
+ * @example
+ * ```ts
+ * import { Em, Text } from "@beep/md/Md.model"
+ *
+ * const node: Em.Type = Em.make({ children: [Text.make({ value: "note" })] })
+ * console.log(node.children.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -371,6 +477,14 @@ export class Del extends S.TaggedClass<Del>($I`Del`)(
 
 /**
  * Companion namespace for {@link Del}.
+ *
+ * @example
+ * ```ts
+ * import { Del, Text } from "@beep/md/Md.model"
+ *
+ * const node: Del.Type = Del.make({ children: [Text.make({ value: "removed" })] })
+ * console.log(node.children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -422,6 +536,14 @@ export class Code extends S.TaggedClass<Code>($I`Code`)(
 /**
  * Companion namespace for {@link Code}.
  *
+ * @example
+ * ```ts
+ * import { Code } from "@beep/md/Md.model"
+ *
+ * const node: Code.Type = Code.make({ value: "console.log()" })
+ * console.log(node.value) // "console.log()"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -471,6 +593,14 @@ export class A extends S.TaggedClass<A>($I`A`)(
 
 /**
  * Companion namespace for {@link A}.
+ *
+ * @example
+ * ```ts
+ * import { A, Text } from "@beep/md/Md.model"
+ *
+ * const node: A.Type = A.make({ href: "https://example.com", children: [Text.make({ value: "Example" })] })
+ * console.log(node.href) // "https://example.com"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -527,6 +657,14 @@ export class Img extends S.TaggedClass<Img>($I`Img`)(
 /**
  * Companion namespace for {@link Img}.
  *
+ * @example
+ * ```ts
+ * import { Img } from "@beep/md/Md.model"
+ *
+ * const node: Img.Type = Img.make({ src: "/logo.png", alt: "Logo" })
+ * console.log(node.src) // "/logo.png"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -570,6 +708,14 @@ export class Br extends S.TaggedClass<Br>($I`Br`)(
 
 /**
  * Companion namespace for {@link Br}.
+ *
+ * @example
+ * ```ts
+ * import { Br } from "@beep/md/Md.model"
+ *
+ * const node: Br.Type = Br.make({})
+ * console.log(node._tag) // "br"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -616,6 +762,15 @@ export const Inline = S.Union([Text, RawMarkdown, RawHtml, Strong, Em, Del, Code
 /**
  * Runtime type for {@link Inline}.
  *
+ * @example
+ * ```ts
+ * import { Text } from "@beep/md/Md.model"
+ * import type { Inline } from "@beep/md/Md.model"
+ *
+ * const node: Inline = Text.make({ value: "Hello" })
+ * console.log(node._tag) // "text"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -623,6 +778,15 @@ export type Inline = typeof Inline.Type;
 
 /**
  * Companion namespace for {@link Inline}.
+ *
+ * @example
+ * ```ts
+ * import { Text } from "@beep/md/Md.model"
+ * import type { Inline } from "@beep/md/Md.model"
+ *
+ * const node: Inline.Type = Text.make({ value: "Hello" })
+ * console.log(node._tag) // "text"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -662,6 +826,18 @@ export declare namespace Inline {
 /**
  * Recursive block child list used by document and block quote containers.
  *
+ * @example
+ * ```ts
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ * import { BlockChildren, P, Text } from "@beep/md/Md.model"
+ *
+ * const children = Result.getOrThrow(
+ *   S.decodeUnknownResult(BlockChildren)([P.make({ children: [Text.make({ value: "Hello" })] })])
+ * )
+ * console.log(children.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -672,7 +848,33 @@ export const BlockChildren = S.Array(S.suspend((): S.Codec<Block.Type, Block.Enc
 );
 
 /**
+ * Type for {@link BlockChildren}.
+ *
+ * @example
+ * ```ts
+ * import { P, Text } from "@beep/md/Md.model"
+ * import type { BlockChildren } from "@beep/md/Md.model"
+ *
+ * const children: BlockChildren = [P.make({ children: [Text.make({ value: "Hello" })] })]
+ * console.log(children.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type BlockChildren = typeof BlockChildren.Type;
+
+/**
  * Companion namespace for {@link BlockChildren}.
+ *
+ * @example
+ * ```ts
+ * import { P, Text } from "@beep/md/Md.model"
+ * import type { BlockChildren } from "@beep/md/Md.model"
+ *
+ * const children: BlockChildren.Type = [P.make({ children: [Text.make({ value: "Hello" })] })]
+ * console.log(children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -694,6 +896,16 @@ export declare namespace BlockChildren {
  * block children preserve nested document structure such as paragraphs, code
  * blocks, and nested lists.
  *
+ * @example
+ * ```ts
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ * import { ListItemChild, Text } from "@beep/md/Md.model"
+ *
+ * const child = Result.getOrThrow(S.decodeUnknownResult(ListItemChild)(Text.make({ value: "Hello" })))
+ * console.log(child._tag) // "text"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -708,6 +920,15 @@ export const ListItemChild = S.suspend(
 /**
  * Runtime type for {@link ListItemChild}.
  *
+ * @example
+ * ```ts
+ * import { Text } from "@beep/md/Md.model"
+ * import type { ListItemChild } from "@beep/md/Md.model"
+ *
+ * const child: ListItemChild = Text.make({ value: "Hello" })
+ * console.log(child._tag) // "text"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -715,6 +936,15 @@ export type ListItemChild = typeof ListItemChild.Type;
 
 /**
  * Companion namespace for {@link ListItemChild}.
+ *
+ * @example
+ * ```ts
+ * import { Text } from "@beep/md/Md.model"
+ * import type { ListItemChild } from "@beep/md/Md.model"
+ *
+ * const child: ListItemChild.Type = Text.make({ value: "Hello" })
+ * console.log(child._tag) // "text"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -734,6 +964,16 @@ export declare namespace ListItemChild {
 /**
  * List item children used by ordered, unordered, and task list items.
  *
+ * @example
+ * ```ts
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ * import { ListItemChildren, Text } from "@beep/md/Md.model"
+ *
+ * const children = Result.getOrThrow(S.decodeUnknownResult(ListItemChildren)([Text.make({ value: "Hello" })]))
+ * console.log(children.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -744,7 +984,33 @@ export const ListItemChildren = S.Array(ListItemChild).pipe(
 );
 
 /**
+ * Type for {@link ListItemChildren}.
+ *
+ * @example
+ * ```ts
+ * import { Text } from "@beep/md/Md.model"
+ * import type { ListItemChildren } from "@beep/md/Md.model"
+ *
+ * const children: ListItemChildren = [Text.make({ value: "Hello" })]
+ * console.log(children.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ListItemChildren = typeof ListItemChildren.Type;
+
+/**
  * Companion namespace for {@link ListItemChildren}.
+ *
+ * @example
+ * ```ts
+ * import { Text } from "@beep/md/Md.model"
+ * import type { ListItemChildren } from "@beep/md/Md.model"
+ *
+ * const children: ListItemChildren.Type = [Text.make({ value: "Hello" })]
+ * console.log(children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -789,6 +1055,14 @@ export class P extends S.TaggedClass<P>($I`P`)(
 
 /**
  * Companion namespace for {@link P}.
+ *
+ * @example
+ * ```ts
+ * import { P, Text } from "@beep/md/Md.model"
+ *
+ * const node: P.Type = P.make({ children: [Text.make({ value: "Hello" })] })
+ * console.log(node.children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -836,6 +1110,16 @@ export const HeadingLevel = LiteralKit([1, 2, 3, 4, 5, 6]).pipe(
 /**
  * Type for {@link HeadingLevel}.
  *
+ * @example
+ * ```ts
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ * import { HeadingLevel } from "@beep/md/Md.model"
+ *
+ * const level: HeadingLevel = Result.getOrThrow(S.decodeUnknownResult(HeadingLevel)(3))
+ * console.log(level) // 3
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -875,6 +1159,14 @@ export class Heading extends S.TaggedClass<Heading>($I`Heading`)(
 
 /**
  * Companion namespace for {@link Heading}.
+ *
+ * @example
+ * ```ts
+ * import { Heading, Text } from "@beep/md/Md.model"
+ *
+ * const node: Heading.Type = Heading.make({ level: 1, children: [Text.make({ value: "Title" })] })
+ * console.log(node.level) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -930,6 +1222,14 @@ export class Li extends S.TaggedClass<Li>($I`Li`)(
 /**
  * Companion namespace for {@link Li}.
  *
+ * @example
+ * ```ts
+ * import { Li, Text } from "@beep/md/Md.model"
+ *
+ * const node: Li.Type = Li.make({ children: [Text.make({ value: "Item" })] })
+ * console.log(node.children.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -954,6 +1254,18 @@ export declare namespace Li {
 /**
  * List children used by ordered and unordered list blocks.
  *
+ * @example
+ * ```ts
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ * import { Li, ListChildren, Text } from "@beep/md/Md.model"
+ *
+ * const children = Result.getOrThrow(
+ *   S.decodeUnknownResult(ListChildren)([Li.make({ children: [Text.make({ value: "Item" })] })])
+ * )
+ * console.log(children.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -964,7 +1276,33 @@ export const ListChildren = S.Array(Li).pipe(
 );
 
 /**
+ * Type for {@link ListChildren}.
+ *
+ * @example
+ * ```ts
+ * import { Li, Text } from "@beep/md/Md.model"
+ * import type { ListChildren } from "@beep/md/Md.model"
+ *
+ * const children: ListChildren = [Li.make({ children: [Text.make({ value: "Item" })] })]
+ * console.log(children.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ListChildren = typeof ListChildren.Type;
+
+/**
  * Companion namespace for {@link ListChildren}.
+ *
+ * @example
+ * ```ts
+ * import { Li, Text } from "@beep/md/Md.model"
+ * import type { ListChildren } from "@beep/md/Md.model"
+ *
+ * const children: ListChildren.Type = [Li.make({ children: [Text.make({ value: "Item" })] })]
+ * console.log(children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1009,6 +1347,14 @@ export class Ul extends S.TaggedClass<Ul>($I`Ul`)(
 
 /**
  * Companion namespace for {@link Ul}.
+ *
+ * @example
+ * ```ts
+ * import { Li, Text, Ul } from "@beep/md/Md.model"
+ *
+ * const node: Ul.Type = Ul.make({ children: [Li.make({ children: [Text.make({ value: "Item" })] })] })
+ * console.log(node.children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1059,6 +1405,14 @@ export class Ol extends S.TaggedClass<Ol>($I`Ol`)(
 
 /**
  * Companion namespace for {@link Ol}.
+ *
+ * @example
+ * ```ts
+ * import { Li, Ol, Text } from "@beep/md/Md.model"
+ *
+ * const node: Ol.Type = Ol.make({ children: [Li.make({ children: [Text.make({ value: "First" })] })] })
+ * console.log(node.children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1115,6 +1469,14 @@ export class TaskItem extends S.TaggedClass<TaskItem>($I`TaskItem`)(
 /**
  * Companion namespace for {@link TaskItem}.
  *
+ * @example
+ * ```ts
+ * import { TaskItem, Text } from "@beep/md/Md.model"
+ *
+ * const node: TaskItem.Type = TaskItem.make({ checked: true, children: [Text.make({ value: "Done" })] })
+ * console.log(node.checked) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1141,6 +1503,18 @@ export declare namespace TaskItem {
 /**
  * Task item children used by GFM task list blocks.
  *
+ * @example
+ * ```ts
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
+ * import { TaskItem, TaskItemChildren, Text } from "@beep/md/Md.model"
+ *
+ * const children = Result.getOrThrow(
+ *   S.decodeUnknownResult(TaskItemChildren)([TaskItem.make({ checked: false, children: [Text.make({ value: "Todo" })] })])
+ * )
+ * console.log(children.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1151,7 +1525,33 @@ export const TaskItemChildren = S.Array(TaskItem).pipe(
 );
 
 /**
+ * Type for {@link TaskItemChildren}.
+ *
+ * @example
+ * ```ts
+ * import { TaskItem, Text } from "@beep/md/Md.model"
+ * import type { TaskItemChildren } from "@beep/md/Md.model"
+ *
+ * const children: TaskItemChildren = [TaskItem.make({ checked: false, children: [Text.make({ value: "Todo" })] })]
+ * console.log(children.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TaskItemChildren = typeof TaskItemChildren.Type;
+
+/**
  * Companion namespace for {@link TaskItemChildren}.
+ *
+ * @example
+ * ```ts
+ * import { TaskItem, Text } from "@beep/md/Md.model"
+ * import type { TaskItemChildren } from "@beep/md/Md.model"
+ *
+ * const children: TaskItemChildren.Type = [TaskItem.make({ checked: false, children: [Text.make({ value: "Todo" })] })]
+ * console.log(children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1196,6 +1596,16 @@ export class TaskList extends S.TaggedClass<TaskList>($I`TaskList`)(
 
 /**
  * Companion namespace for {@link TaskList}.
+ *
+ * @example
+ * ```ts
+ * import { TaskItem, TaskList, Text } from "@beep/md/Md.model"
+ *
+ * const node: TaskList.Type = TaskList.make({
+ *   children: [TaskItem.make({ checked: false, children: [Text.make({ value: "Todo" })] })],
+ * })
+ * console.log(node.children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1246,6 +1656,14 @@ export class BlockQuote extends S.TaggedClass<BlockQuote>($I`BlockQuote`)(
 
 /**
  * Companion namespace for {@link BlockQuote}.
+ *
+ * @example
+ * ```ts
+ * import { BlockQuote, P, Text } from "@beep/md/Md.model"
+ *
+ * const node: BlockQuote.Type = BlockQuote.make({ children: [P.make({ children: [Text.make({ value: "Quote" })] })] })
+ * console.log(node.children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1314,6 +1732,15 @@ export class Pre extends S.TaggedClass<Pre>($I`Pre`)(
 /**
  * Companion namespace for {@link Pre}.
  *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { Pre } from "@beep/md/Md.model"
+ *
+ * const node: Pre.Type = Pre.make({ language: O.some("ts"), value: "console.log('beep')" })
+ * console.log(node.value) // "console.log('beep')"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1372,6 +1799,14 @@ export class TableCell extends S.TaggedClass<TableCell>($I`TableCell`)(
 /**
  * Companion namespace for {@link TableCell}.
  *
+ * @example
+ * ```ts
+ * import { TableCell, Text } from "@beep/md/Md.model"
+ *
+ * const node: TableCell.Type = TableCell.make({ children: [Text.make({ value: "Name" })] })
+ * console.log(node.children.length) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1423,6 +1858,14 @@ export class TableRow extends S.TaggedClass<TableRow>($I`TableRow`)(
 
 /**
  * Companion namespace for {@link TableRow}.
+ *
+ * @example
+ * ```ts
+ * import { TableCell, TableRow, Text } from "@beep/md/Md.model"
+ *
+ * const node: TableRow.Type = TableRow.make({ children: [TableCell.make({ children: [Text.make({ value: "Name" })] })] })
+ * console.log(node.children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1480,6 +1923,17 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
 /**
  * Companion namespace for {@link Table}.
  *
+ * @example
+ * ```ts
+ * import { Table, TableCell, TableRow, Text } from "@beep/md/Md.model"
+ *
+ * const node: Table.Type = Table.make({
+ *   headerRow: true,
+ *   children: [TableRow.make({ children: [TableCell.make({ children: [Text.make({ value: "Name" })] })] })],
+ * })
+ * console.log(node.headerRow) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1532,6 +1986,14 @@ export class YouTube extends S.TaggedClass<YouTube>($I`YouTube`)(
 /**
  * Companion namespace for {@link YouTube}.
  *
+ * @example
+ * ```ts
+ * import { YouTube } from "@beep/md/Md.model"
+ *
+ * const node: YouTube.Type = YouTube.make({ videoId: "dQw4w9WgXcQ" })
+ * console.log(node.videoId) // "dQw4w9WgXcQ"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1574,6 +2036,14 @@ export class Hr extends S.TaggedClass<Hr>($I`Hr`)(
 
 /**
  * Companion namespace for {@link Hr}.
+ *
+ * @example
+ * ```ts
+ * import { Hr } from "@beep/md/Md.model"
+ *
+ * const node: Hr.Type = Hr.make({})
+ * console.log(node._tag) // "hr"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1620,6 +2090,15 @@ export const Block = S.Union([Heading, P, BlockQuote, Pre, Ul, Ol, TaskList, Tab
 /**
  * Runtime type for {@link Block}.
  *
+ * @example
+ * ```ts
+ * import { P, Text } from "@beep/md/Md.model"
+ * import type { Block } from "@beep/md/Md.model"
+ *
+ * const node: Block = P.make({ children: [Text.make({ value: "Hello" })] })
+ * console.log(node._tag) // "p"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1627,6 +2106,15 @@ export type Block = typeof Block.Type;
 
 /**
  * Companion namespace for {@link Block}.
+ *
+ * @example
+ * ```ts
+ * import { P, Text } from "@beep/md/Md.model"
+ * import type { Block } from "@beep/md/Md.model"
+ *
+ * const node: Block.Type = P.make({ children: [Text.make({ value: "Hello" })] })
+ * console.log(node._tag) // "p"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1691,6 +2179,14 @@ export class Document extends S.TaggedClass<Document>($I`Document`)(
 
 /**
  * Companion namespace for {@link Document}.
+ *
+ * @example
+ * ```ts
+ * import { Document, P, Text } from "@beep/md/Md.model"
+ *
+ * const node: Document.Type = Document.make({ children: [P.make({ children: [Text.make({ value: "Hello" })] })] })
+ * console.log(node.children.length) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0

@@ -53,6 +53,15 @@ export const Float32Arr = S.instanceOf<globalThis.Float32ArrayConstructor, globa
 /**
  * Type for {@link Float32Arr}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { Float32Arr } from "@beep/schema/Float32Array";
+ *
+ * const value: Float32Arr = S.decodeUnknownSync(Float32Arr)(new Float32Array([1, 2, 3]));
+ * console.log(value.length); // 3
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -101,6 +110,15 @@ export const Float32ArrayFromArray = S.Finite.pipe(
 /**
  * Type for {@link Float32ArrayFromArray}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { Float32ArrayFromArray } from "@beep/schema/Float32Array";
+ *
+ * const value: Float32ArrayFromArray = S.decodeUnknownSync(Float32ArrayFromArray)([0.5, 1.25, 2.75]);
+ * console.log(value instanceof Float32Array); // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -108,6 +126,14 @@ export type Float32ArrayFromArray = typeof Float32ArrayFromArray.Type;
 
 /**
  * Namespace members for {@link Float32ArrayFromArray}.
+ *
+ * @example
+ * ```ts
+ * import { type Float32ArrayFromArray } from "@beep/schema/Float32Array";
+ *
+ * const payload: Float32ArrayFromArray.Encoded = [0.5, 1.25, 2.75];
+ * console.log(payload.length); // 3
+ * ```
  *
  * @category models
  * @since 0.0.0

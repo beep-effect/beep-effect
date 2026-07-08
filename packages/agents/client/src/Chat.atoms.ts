@@ -13,6 +13,7 @@
  */
 import { AssistantBlock } from "@beep/agents-domain/values/AssistantContent";
 import { ChatActionError, ChatRpcs } from "@beep/agents-use-cases/public";
+import { $AgentsClientId } from "@beep/identity/packages";
 import { Document } from "@beep/md/Md.model";
 import { SchemaUtils } from "@beep/schema";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
@@ -24,6 +25,8 @@ import { KeyValueStore } from "effect/unstable/persistence";
 import { Atom, AtomRegistry, AtomRpc, Reactivity } from "effect/unstable/reactivity";
 import { RpcClient, RpcSerialization } from "effect/unstable/rpc";
 import { ClientObservabilityLive } from "./ClientObservability.js";
+
+const $I = $AgentsClientId.create("Chat.atoms");
 
 type WorkspaceId = WorkspaceIdentity.WorkspaceId;
 type ThreadId = WorkspaceIdentity.ThreadId;
@@ -250,36 +253,19 @@ export const threadTimelineAtoms = Atom.family((threadId: ThreadId) =>
  * @category models
  * @since 0.0.0
  */
-export const CreateThreadAtomInput = S.Struct({
-  workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
-    description: "Workspace where the thread is created.",
-  }),
-  title: S.String.annotateKey({
-    description: "Initial thread title.",
-  }),
-}).annotate({
-  description: "Write payload for the client thread-creation atom.",
-});
-
-/**
- * Runtime type for {@link CreateThreadAtomInput}.
- *
- * @example
- * ```ts
- * import { CreateThreadAtomInput } from "@beep/agents-client"
- * import type { CreateThreadAtomInput as CreateThreadAtomInputType } from "@beep/agents-client"
- * import * as Workspace from "@beep/shared-domain/identity/Workspace"
- *
- * const workspaceId = Workspace.WorkspaceId.make(1)
- * const request: CreateThreadAtomInputType = CreateThreadAtomInput.make({ workspaceId, title: "Inbox" })
- *
- * console.log(request.workspaceId) // 1
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type CreateThreadAtomInput = typeof CreateThreadAtomInput.Type;
+export class CreateThreadAtomInput extends S.Class<CreateThreadAtomInput>($I`CreateThreadAtomInput`)(
+  {
+    workspaceId: WorkspaceIdentity.WorkspaceId.annotateKey({
+      description: "Workspace where the thread is created.",
+    }),
+    title: S.String.annotateKey({
+      description: "Initial thread title.",
+    }),
+  },
+  $I.annote("CreateThreadAtomInput", {
+    description: "Write payload for the client thread-creation atom.",
+  })
+) {}
 
 /**
  * Creates a thread in a workspace and focuses it.
@@ -405,7 +391,7 @@ export const draftAtoms = Atom.family((threadId: ThreadId) =>
  * @category models
  * @since 0.0.0
  */
-export class StreamingTurn extends S.Class<StreamingTurn>("StreamingTurn")(
+export class StreamingTurn extends S.Class<StreamingTurn>($I`StreamingTurn`)(
   {
     /** The thread this turn streams into. */
     threadId: WorkspaceIdentity.ThreadId.annotateKey({
@@ -424,9 +410,9 @@ export class StreamingTurn extends S.Class<StreamingTurn>("StreamingTurn")(
       description: "Assistant blocks appended as they stream in.",
     }),
   },
-  {
+  $I.annote("StreamingTurn", {
     description: "A streaming assistant turn rendered optimistically while blocks arrive.",
-  }
+  })
 ) {}
 
 /**
@@ -516,7 +502,7 @@ const toTurnError = (error: unknown): ChatActionError =>
  * @category models
  * @since 0.0.0
  */
-export class EditTarget extends S.Class<EditTarget>("EditTarget")(
+export class EditTarget extends S.Class<EditTarget>($I`EditTarget`)(
   {
     turnId: WorkspaceIdentity.TurnId.annotateKey({
       description: "Turn being edited.",
@@ -525,9 +511,9 @@ export class EditTarget extends S.Class<EditTarget>("EditTarget")(
       description: "Replacement user content for the edited turn.",
     }),
   },
-  {
+  $I.annote("EditTarget", {
     description: "When set, the composer is editing an existing turn's message.",
-  }
+  })
 ) {}
 
 /**
@@ -686,7 +672,10 @@ export class EditTurnRequest extends S.TaggedClass<EditTurnRequest>("EditTurnReq
  * @category schemas
  * @since 0.0.0
  */
-export const TurnRequest = S.Union([SendTurnRequest, EditTurnRequest]).pipe(S.toTaggedUnion("_tag"));
+export const TurnRequest = S.Union([SendTurnRequest, EditTurnRequest]).pipe(
+  S.annotate({ description: "A composer submission: either a new turn to send or an existing turn to edit." }),
+  S.toTaggedUnion("_tag")
+);
 
 /**
  * Runtime type for {@link TurnRequest}.

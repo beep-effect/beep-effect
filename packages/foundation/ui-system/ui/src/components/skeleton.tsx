@@ -1,3 +1,9 @@
+/**
+ * Skeleton primitive: a pulsing placeholder block for loading states.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { cn } from "../lib/index.ts";
 import type React from "react";
 

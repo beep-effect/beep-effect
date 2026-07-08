@@ -95,6 +95,17 @@ export const ArtifactId = S.TemplateLiteral(["artifact:", Sha256Hex]).pipe(
 /**
  * Type for {@link ArtifactId}.
  *
+ * @example
+ * ```ts
+ * import { ArtifactId } from "@beep/file-processing/Artifact"
+ * import * as S from "effect/Schema"
+ *
+ * const id: ArtifactId = S.decodeUnknownSync(ArtifactId)(
+ *   "artifact:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ * )
+ * console.log(id.startsWith("artifact:")) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -132,6 +143,17 @@ export const OperationId = S.TemplateLiteral(["operation:", Sha256Hex]).pipe(
 /**
  * Type for {@link OperationId}.
  *
+ * @example
+ * ```ts
+ * import { OperationId } from "@beep/file-processing/Artifact"
+ * import * as S from "effect/Schema"
+ *
+ * const id: OperationId = S.decodeUnknownSync(OperationId)(
+ *   "operation:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ * )
+ * console.log(id.startsWith("operation:")) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -168,6 +190,17 @@ export const ContentDigest = S.TemplateLiteral(["sha256:", Sha256Hex]).pipe(
 
 /**
  * Type for {@link ContentDigest}.
+ *
+ * @example
+ * ```ts
+ * import { ContentDigest } from "@beep/file-processing/Artifact"
+ * import * as S from "effect/Schema"
+ *
+ * const digest: ContentDigest = S.decodeUnknownSync(ContentDigest)(
+ *   "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+ * )
+ * console.log(digest.slice(0, 7)) // "sha256:"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -227,6 +260,14 @@ export const ArtifactLocatorKind = LiteralKit(["file", "synthetic", "memory"]).p
 
 /**
  * Type for {@link ArtifactLocatorKind}.
+ *
+ * @example
+ * ```ts
+ * import { ArtifactLocatorKind } from "@beep/file-processing/Artifact"
+ *
+ * const kind: ArtifactLocatorKind = "memory"
+ * console.log(ArtifactLocatorKind.is.memory(kind)) // true
+ * ```
  *
  * @category models
  * @since 0.0.0

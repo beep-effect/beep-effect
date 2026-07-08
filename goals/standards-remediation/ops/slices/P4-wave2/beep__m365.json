@@ -1,0 +1,13 @@
+{
+  "owner": "@beep/m365",
+  "entries": [
+    {
+      "file": "packages/drivers/m365/src/M365.schemas.ts",
+      "symbol": "GraphCollection",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/m365",
+      "reason": "S.Struct with non-identifier or spread keys stays tracked as an exception."
+    }
+  ]
+}

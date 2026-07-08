@@ -37,6 +37,14 @@ export const Ok = S.Literal(200).pipe(
 /**
  * {@inheritDoc Ok}
  *
+ * @example
+ * ```ts
+ * import type { Ok } from "@beep/schema/HttpStatus"
+ *
+ * const status: Ok = 200
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -64,6 +72,14 @@ export const Created = S.Literal(201).pipe(
 
 /**
  * {@inheritDoc Created}
+ *
+ * @example
+ * ```ts
+ * import type { Created } from "@beep/schema/HttpStatus"
+ *
+ * const status: Created = 201
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -95,6 +111,14 @@ export const Accepted = S.Literal(202).pipe(
 
 /**
  * {@inheritDoc Accepted}
+ *
+ * @example
+ * ```ts
+ * import type { Accepted } from "@beep/schema/HttpStatus"
+ *
+ * const status: Accepted = 202
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -128,6 +152,14 @@ export const NonAuthoritativeInformation = S.Literal(203).pipe(
 /**
  * {@inheritDoc NonAuthoritativeInformation}
  *
+ * @example
+ * ```ts
+ * import type { NonAuthoritativeInformation } from "@beep/schema/HttpStatus"
+ *
+ * const status: NonAuthoritativeInformation = 203
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -156,6 +188,14 @@ export const NoContent = S.Literal(204).pipe(
 
 /**
  * {@inheritDoc NoContent}
+ *
+ * @example
+ * ```ts
+ * import type { NoContent } from "@beep/schema/HttpStatus"
+ *
+ * const status: NoContent = 204
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -186,6 +226,14 @@ export const ResetContent = S.Literal(205).pipe(
 
 /**
  * {@inheritDoc ResetContent}
+ *
+ * @example
+ * ```ts
+ * import type { ResetContent } from "@beep/schema/HttpStatus"
+ *
+ * const status: ResetContent = 205
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -219,6 +267,14 @@ export const PartialContent = S.Literal(206).pipe(
 /**
  * {@inheritDoc PartialContent}
  *
+ * @example
+ * ```ts
+ * import type { PartialContent } from "@beep/schema/HttpStatus"
+ *
+ * const status: PartialContent = 206
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -249,6 +305,14 @@ export const MultiStatus = S.Literal(207).pipe(
 
 /**
  * {@inheritDoc MultiStatus}
+ *
+ * @example
+ * ```ts
+ * import type { MultiStatus } from "@beep/schema/HttpStatus"
+ *
+ * const status: MultiStatus = 207
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -281,6 +345,14 @@ export const AlreadyReported = S.Literal(208).pipe(
 /**
  * {@inheritDoc AlreadyReported}
  *
+ * @example
+ * ```ts
+ * import type { AlreadyReported } from "@beep/schema/HttpStatus"
+ *
+ * const status: AlreadyReported = 208
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -311,6 +383,14 @@ export const ImUsed = S.Literal(226).pipe(
 
 /**
  * {@inheritDoc ImUsed}
+ *
+ * @example
+ * ```ts
+ * import type { ImUsed } from "@beep/schema/HttpStatus"
+ *
+ * const status: ImUsed = 226
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -352,6 +432,16 @@ export const HttpStatus2XX = MappedLiteralKit([
 /**
  * A namespace for {@link HttpStatus2XX} to contain the Encoded type
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HttpStatus2XX } from "@beep/schema/HttpStatus"
+ *
+ * const encoded: HttpStatus2XX.Encoded = "Ok"
+ * const status = S.decodeUnknownSync(HttpStatus2XX)(encoded)
+ * console.log(status) // 200
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -367,6 +457,14 @@ export declare namespace HttpStatus2XX {
 
 /**
  * {@inheritDoc HttpStatus2XX}
+ *
+ * @example
+ * ```ts
+ * import type { HttpStatus2XX } from "@beep/schema/HttpStatus"
+ *
+ * const status: HttpStatus2XX = 200
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation

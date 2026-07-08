@@ -1,0 +1,127 @@
+{
+  "cluster": "D5-toomany",
+  "totalCount": 10,
+  "sampled": [
+    {
+      "file": "packages/drivers/box/src/internal/Box.runtime.ts",
+      "qualifiedName": "decodeWith",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/box",
+      "reason": "Public helper APIs may not expose more than 3 positional parameters.",
+      "line": 13,
+      "column": 14,
+      "parameterCount": 4,
+      "diagnostics": ["too-many-positional-params"]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
+      "qualifiedName": "makeOperationResult",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/nlp-processing",
+      "reason": "Public helper APIs may not expose more than 3 positional parameters. dual arity must match the public positional arity and may not exceed 3.",
+      "line": 748,
+      "column": 14,
+      "parameterCount": 5,
+      "diagnostics": ["too-many-positional-params", "invalid-dual-arity"]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/TextGraph.ts",
+      "qualifiedName": "addChildren",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/nlp-processing",
+      "reason": "Public helper APIs may not expose more than 3 positional parameters. dual arity must match the public positional arity and may not exceed 3.",
+      "line": 275,
+      "column": 14,
+      "parameterCount": 4,
+      "diagnostics": ["too-many-positional-params", "invalid-dual-arity"]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Algebra/Monoid.ts",
+      "qualifiedName": "checkAssociativity",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/nlp",
+      "reason": "Public helper APIs may not expose more than 3 positional parameters.",
+      "line": 751,
+      "column": 14,
+      "parameterCount": 5,
+      "diagnostics": ["too-many-positional-params"]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/GraphOps.ts",
+      "qualifiedName": "batchNodes",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/nlp",
+      "reason": "Public helper APIs may not expose more than 3 positional parameters. dual arity must match the public positional arity and may not exceed 3.",
+      "line": 909,
+      "column": 14,
+      "parameterCount": 4,
+      "diagnostics": ["too-many-positional-params", "invalid-dual-arity"]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/GraphOps.ts",
+      "qualifiedName": "foldTraversal",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/nlp",
+      "reason": "Public helper APIs may not expose more than 3 positional parameters. dual arity must match the public positional arity and may not exceed 3.",
+      "line": 396,
+      "column": 14,
+      "parameterCount": 5,
+      "diagnostics": ["too-many-positional-params", "invalid-dual-arity"]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/GraphOps.ts",
+      "qualifiedName": "traverseNodes",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/nlp",
+      "reason": "Public helper APIs may not expose more than 3 positional parameters. dual arity must match the public positional arity and may not exceed 3.",
+      "line": 701,
+      "column": 14,
+      "parameterCount": 4,
+      "diagnostics": ["too-many-positional-params", "invalid-dual-arity"]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/GraphOps.ts",
+      "qualifiedName": "traverseNodesCollect",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/nlp",
+      "reason": "Public helper APIs may not expose more than 3 positional parameters. dual arity must match the public positional arity and may not exceed 3.",
+      "line": 749,
+      "column": 14,
+      "parameterCount": 4,
+      "diagnostics": ["too-many-positional-params", "invalid-dual-arity"]
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Operations/Composable.ts",
+      "qualifiedName": "zipWith",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/nlp",
+      "reason": "Public helper APIs may not expose more than 3 positional parameters. dual arity must match the public positional arity and may not exceed 3.",
+      "line": 426,
+      "column": 14,
+      "parameterCount": 4,
+      "diagnostics": ["too-many-positional-params", "invalid-dual-arity"]
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Array.ts",
+      "qualifiedName": "spliceInPlace",
+      "kind": "exported-const-function",
+      "status": "exception",
+      "owner": "@beep/utils",
+      "reason": "Explicit in-place Array.prototype.splice parity helper centralizes the rare identity-preserving mutation cases found by the native Array sweep.",
+      "issue": "UTILS-ARRAY-NATIVE-PARITY",
+      "line": 508,
+      "column": 14,
+      "parameterCount": 4,
+      "diagnostics": ["too-many-positional-params"]
+    }
+  ]
+}

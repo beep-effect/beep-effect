@@ -91,6 +91,14 @@ export class M365ToolError extends S.Class<M365ToolError>($I`M365ToolError`)(
 /**
  * Lists SharePoint and OneDrive drives visible through the configured tenant.
  *
+ * @example
+ * ```ts
+ * import { M365ListDrivesTool } from "@beep/m365-mcp"
+ *
+ * console.log(M365ListDrivesTool.name)
+ * // "m365_list_drives"
+ * ```
+ *
  * @category tools
  * @since 0.1.0
  */
@@ -107,6 +115,14 @@ export const M365ListDrivesTool = annotateFourHints(
 
 /**
  * Lists SharePoint sites visible through the configured tenant.
+ *
+ * @example
+ * ```ts
+ * import { M365ListSitesTool } from "@beep/m365-mcp"
+ *
+ * console.log(M365ListSitesTool.name)
+ * // "m365_list_sites"
+ * ```
  *
  * @category tools
  * @since 0.1.0
@@ -125,6 +141,14 @@ export const M365ListSitesTool = annotateFourHints(
 /**
  * Loads a single SharePoint site by id or path.
  *
+ * @example
+ * ```ts
+ * import { M365GetSiteTool } from "@beep/m365-mcp"
+ *
+ * console.log(M365GetSiteTool.name)
+ * // "m365_get_site"
+ * ```
+ *
  * @category tools
  * @since 0.1.0
  */
@@ -141,6 +165,14 @@ export const M365GetSiteTool = annotateFourHints(
 
 /**
  * Reads a drive delta feed for changed drive items.
+ *
+ * @example
+ * ```ts
+ * import { M365DeltaDriveItemsTool } from "@beep/m365-mcp"
+ *
+ * console.log(M365DeltaDriveItemsTool.name)
+ * // "m365_delta_drive_items"
+ * ```
  *
  * @category tools
  * @since 0.1.0
@@ -159,6 +191,14 @@ export const M365DeltaDriveItemsTool = annotateFourHints(
 /**
  * Downloads drive item bytes or reports that an encrypted item was skipped.
  *
+ * @example
+ * ```ts
+ * import { M365DownloadDriveItemContentTool } from "@beep/m365-mcp"
+ *
+ * console.log(M365DownloadDriveItemContentTool.name)
+ * // "m365_download_drive_item_content"
+ * ```
+ *
  * @category tools
  * @since 0.1.0
  */
@@ -175,6 +215,14 @@ export const M365DownloadDriveItemContentTool = annotateFourHints(
 
 /**
  * Loads a drive item's SharePoint list item fields.
+ *
+ * @example
+ * ```ts
+ * import { M365GetListItemTool } from "@beep/m365-mcp"
+ *
+ * console.log(M365GetListItemTool.name)
+ * // "m365_get_list_item"
+ * ```
  *
  * @category tools
  * @since 0.1.0
@@ -193,6 +241,14 @@ export const M365GetListItemTool = annotateFourHints(
 /**
  * Lists versions for a drive item.
  *
+ * @example
+ * ```ts
+ * import { M365ListDriveItemVersionsTool } from "@beep/m365-mcp"
+ *
+ * console.log(M365ListDriveItemVersionsTool.name)
+ * // "m365_list_drive_item_versions"
+ * ```
+ *
  * @category tools
  * @since 0.1.0
  */
@@ -209,6 +265,14 @@ export const M365ListDriveItemVersionsTool = annotateFourHints(
 
 /**
  * Lists Outlook mail messages.
+ *
+ * @example
+ * ```ts
+ * import { M365ListMessagesTool } from "@beep/m365-mcp"
+ *
+ * console.log(M365ListMessagesTool.name)
+ * // "m365_list_messages"
+ * ```
  *
  * @category tools
  * @since 0.1.0
@@ -227,6 +291,14 @@ export const M365ListMessagesTool = annotateFourHints(
 /**
  * Loads a single Outlook mail message.
  *
+ * @example
+ * ```ts
+ * import { M365GetMessageTool } from "@beep/m365-mcp"
+ *
+ * console.log(M365GetMessageTool.name)
+ * // "m365_get_message"
+ * ```
+ *
  * @category tools
  * @since 0.1.0
  */
@@ -243,6 +315,14 @@ export const M365GetMessageTool = annotateFourHints(
 
 /**
  * Lists Outlook calendar events.
+ *
+ * @example
+ * ```ts
+ * import { M365ListEventsTool } from "@beep/m365-mcp"
+ *
+ * console.log(M365ListEventsTool.name)
+ * // "m365_list_events"
+ * ```
  *
  * @category tools
  * @since 0.1.0
@@ -261,6 +341,14 @@ export const M365ListEventsTool = annotateFourHints(
 /**
  * Loads a single Outlook calendar event.
  *
+ * @example
+ * ```ts
+ * import { M365GetEventTool } from "@beep/m365-mcp"
+ *
+ * console.log(M365GetEventTool.name)
+ * // "m365_get_event"
+ * ```
+ *
  * @category tools
  * @since 0.1.0
  */
@@ -277,6 +365,14 @@ export const M365GetEventTool = annotateFourHints(
 
 /**
  * Read-only Microsoft 365 MCP toolkit.
+ *
+ * @example
+ * ```ts
+ * import { M365Toolkit } from "@beep/m365-mcp"
+ *
+ * console.log(Object.keys(M365Toolkit.tools).includes("m365_list_drives"))
+ * // true
+ * ```
  *
  * @category tools
  * @since 0.1.0
@@ -297,6 +393,15 @@ export const M365Toolkit = Toolkit.make(
 
 /**
  * Read-only Microsoft 365 MCP toolkit type.
+ *
+ * @example
+ * ```ts
+ * import { M365Toolkit } from "@beep/m365-mcp"
+ *
+ * const toolkit: M365Toolkit = M365Toolkit
+ * console.log(Object.keys(toolkit.tools).length)
+ * // 11
+ * ```
  *
  * @category tools
  * @since 0.1.0

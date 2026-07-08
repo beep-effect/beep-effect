@@ -174,10 +174,12 @@ export class RunpodRawResponse extends S.Class<RunpodRawResponse>($I`RunpodRawRe
  * @example
  * ```ts
  * import type { RunpodShape } from "@beep/runpod"
+ * import { RunpodRawRequest } from "@beep/runpod"
  *
  * type RawRequest = Parameters<RunpodShape["raw"]>[0]
- * type RawResponse = Awaited<ReturnType<RunpodShape["raw"]>>
- * console.log({} as { request: RawRequest; response: RawResponse })
+ *
+ * const request: RawRequest = RunpodRawRequest.make({ method: "GET", path: "/health" })
+ * console.log(request.path)
  * ```
  *
  * @category services

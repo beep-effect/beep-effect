@@ -45,6 +45,14 @@ export const CorpValue = CorpValueBase.pipe(
 /**
  * Type for allowed `Cross-Origin-Resource-Policy` values.
  *
+ * @example
+ * ```ts
+ * import type { CorpValue } from "@beep/schema/CrossOriginResourcePolicy"
+ *
+ * const value: CorpValue = "same-origin"
+ * console.log(value)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -75,6 +83,14 @@ export const CrossOriginResourcePolicyOption = CrossOriginResourcePolicyOptionBa
 
 /**
  * Type for enabled or disabled `Cross-Origin-Resource-Policy` options.
+ *
+ * @example
+ * ```ts
+ * import type { CrossOriginResourcePolicyOption } from "@beep/schema/CrossOriginResourcePolicy"
+ *
+ * const option: CrossOriginResourcePolicyOption = false
+ * console.log(option)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -185,6 +201,18 @@ export const CrossOriginResourcePolicyHeader = S.Union([CrossOriginResourcePolic
 /**
  * Type for rendered `Cross-Origin-Resource-Policy` response headers.
  *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { CrossOriginResourcePolicyResponseHeader, type CrossOriginResourcePolicyHeader } from "@beep/schema/CrossOriginResourcePolicy"
+ *
+ * const header: CrossOriginResourcePolicyHeader = CrossOriginResourcePolicyResponseHeader.make({
+ *   name: "Cross-Origin-Resource-Policy",
+ *   value: O.some("same-origin"),
+ * })
+ * console.log(header.name)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -196,8 +224,41 @@ export type CrossOriginResourcePolicyHeader = typeof CrossOriginResourcePolicyHe
  * @category schemas
  * @since 0.0.0
  */
-export {
-  CrossOriginResourcePolicyHeader as Header,
-  CrossOriginResourcePolicyOption as Option,
-  CrossOriginResourcePolicyResponseHeader as ResponseHeader,
-};
+export { CrossOriginResourcePolicyOption as Option, CrossOriginResourcePolicyResponseHeader as ResponseHeader };
+
+/**
+ * Concise alias for {@link CrossOriginResourcePolicyHeader}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Header } from "@beep/schema/CrossOriginResourcePolicy"
+ *
+ * const header = S.decodeUnknownSync(Header)("same-origin")
+ * console.log(header.name)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Header = CrossOriginResourcePolicyHeader;
+
+/**
+ * Type-level representation of {@link Header}.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { CrossOriginResourcePolicyResponseHeader, type Header } from "@beep/schema/CrossOriginResourcePolicy"
+ *
+ * const header: Header = CrossOriginResourcePolicyResponseHeader.make({
+ *   name: "Cross-Origin-Resource-Policy",
+ *   value: O.some("same-origin"),
+ * })
+ * console.log(header.name)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Header = typeof Header.Type;

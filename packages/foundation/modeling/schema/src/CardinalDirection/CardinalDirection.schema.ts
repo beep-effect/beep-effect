@@ -32,6 +32,14 @@ export const CardinalDirection = LiteralKit(["north", "south", "east", "west"]).
 /**
  * {@inheritDoc CardinalDirection}
  *
+ * @example
+ * ```ts
+ * import { CardinalDirection } from "@beep/schema/CardinalDirection"
+ *
+ * const direction: CardinalDirection = "north"
+ * console.log(CardinalDirection.Options.includes(direction))
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -59,15 +67,77 @@ export const CardinalDirectionAbbrev = LiteralKit(["N", "S", "E", "W"]).pipe(
 /**
  * {@inheritDoc CardinalDirectionAbbrev}
  *
+ * @example
+ * ```ts
+ * import { CardinalDirectionAbbrev } from "@beep/schema/CardinalDirection"
+ *
+ * const abbrev: CardinalDirectionAbbrev = "N"
+ * console.log(CardinalDirectionAbbrev.Options.includes(abbrev))
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
 export type CardinalDirectionAbbrev = typeof CardinalDirectionAbbrev.Type;
 
 /**
- * Public aliases for concise namespace roles.
+ * {@inheritDoc CardinalDirection}
  *
- * @category schemas
+ * @example
+ * ```ts
+ * import { Schema } from "@beep/schema/CardinalDirection"
+ *
+ * console.log(Schema.Options.includes("north"))
+ * ```
+ *
+ * @category validation
  * @since 0.0.0
  */
-export { CardinalDirection as Schema, CardinalDirectionAbbrev as Abbrev };
+export const Schema = CardinalDirection;
+
+/**
+ * {@inheritDoc CardinalDirection}
+ *
+ * @example
+ * ```ts
+ * import type { Schema } from "@beep/schema/CardinalDirection"
+ *
+ * const direction: Schema = "north"
+ * console.log(direction)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Schema = CardinalDirection;
+
+/**
+ * {@inheritDoc CardinalDirectionAbbrev}
+ *
+ * @example
+ * ```ts
+ * import { Abbrev } from "@beep/schema/CardinalDirection"
+ *
+ * console.log(Abbrev.Options.includes("N"))
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const Abbrev = CardinalDirectionAbbrev;
+
+/**
+ * {@inheritDoc CardinalDirectionAbbrev}
+ *
+ * @example
+ * ```ts
+ * import type { Abbrev } from "@beep/schema/CardinalDirection"
+ *
+ * const abbrev: Abbrev = "N"
+ * console.log(abbrev)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Abbrev = CardinalDirectionAbbrev;

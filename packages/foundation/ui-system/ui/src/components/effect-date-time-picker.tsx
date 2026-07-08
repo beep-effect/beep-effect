@@ -1,3 +1,9 @@
+/**
+ * MUI X date/time pickers backed by Effect `DateTime`.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 /**

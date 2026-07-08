@@ -95,6 +95,17 @@ export type MutableHashMapIso<Key extends S.Top, Value extends S.Top> = Readonly
 /**
  * Schema for validating an existing `MutableHashMap` instance.
  *
+ * @example
+ * ```ts
+ * import { MutableHashMap } from "effect"
+ * import * as S from "effect/Schema"
+ * import { MutableHashMapFromSelf } from "@beep/schema/MutableHashMap"
+ *
+ * const MapSchema = MutableHashMapFromSelf({ key: S.String, value: S.Finite })
+ * const map = MutableHashMap.fromIterable([["a", 1]])
+ * console.log(S.is(MapSchema)(map))
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -112,6 +123,16 @@ export interface MutableHashMapFromSelf<Key extends S.Top, Value extends S.Top>
 
 /**
  * Schema for transforming entry arrays into `MutableHashMap` instances.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { MutableHashMap } from "@beep/schema/MutableHashMap"
+ *
+ * const StringNumberMap = MutableHashMap({ key: S.String, value: S.FiniteFromString })
+ * const decoded = S.decodeUnknownSync(StringNumberMap)([["a", "1"]])
+ * console.log(decoded)
+ * ```
  *
  * @since 0.0.0
  * @category validation

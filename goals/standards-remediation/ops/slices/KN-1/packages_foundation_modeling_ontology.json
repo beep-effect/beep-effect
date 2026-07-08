@@ -1,0 +1,15 @@
+{
+  "scope": "packages/foundation/modeling/ontology",
+  "findings": [
+    {
+      "kind": "devDependencies",
+      "file": "packages/foundation/modeling/ontology/package.json",
+      "name": "@types/n3"
+    },
+    {
+      "kind": "unresolved",
+      "file": "packages/foundation/modeling/ontology/tsconfig.test.json",
+      "name": "bun-types"
+    }
+  ]
+}

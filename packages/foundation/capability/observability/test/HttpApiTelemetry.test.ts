@@ -48,14 +48,13 @@ describe("HttpApiTelemetry", () => {
           successStatus: httpApiSuccessStatus(S.String),
         });
 
-        yield* observeHttpApiHandler(
+        yield* observeHttpApiHandler(Effect.succeed("ok"), {
           descriptor,
-          {
+          metrics: {
             requestsTotal,
             requestDuration,
           },
-          Effect.succeed("ok")
-        );
+        });
 
         const state = yield* Metric.value(
           Metric.withAttributes(requestsTotal, {

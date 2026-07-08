@@ -1,0 +1,13 @@
+{
+  "owner": "@beep/law-practice-use-cases",
+  "entries": [
+    {
+      "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts",
+      "symbol": "OfficeActionReviewDeps",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/law-practice-use-cases",
+      "reason": "Dependency-injection container of Effect service shapes (FileProcessingService/ClaimGate/IrToLaw/ClaimTransition); a wiring bundle of function-bearing services, not serializable data."
+    }
+  ]
+}

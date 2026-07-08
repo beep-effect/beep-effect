@@ -75,6 +75,15 @@ export const ThemeMode = LiteralKit(["light", "dark", "system"]).pipe(
 /**
  * Type of {@link ThemeMode}.
  *
+ * @example
+ * ```ts
+ * import type { ThemeMode } from "@beep/ui/themes/theme-provider"
+ *
+ * const preference: ThemeMode = "system"
+ *
+ * console.log(preference)
+ * ```
+ *
  * @since 0.0.0
  * @category configuration
  */
@@ -101,6 +110,15 @@ export const ResolvedThemeMode = LiteralKit(ThemeMode.omitOptions(["system"])).p
 
 /**
  * Type of {@link ResolvedThemeMode}.
+ *
+ * @example
+ * ```ts
+ * import type { ResolvedThemeMode } from "@beep/ui/themes/theme-provider"
+ *
+ * const resolved: ResolvedThemeMode = "dark"
+ *
+ * console.log(resolved)
+ * ```
  *
  * @since 0.0.0
  * @category configuration

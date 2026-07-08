@@ -48,6 +48,15 @@ export const DOMEvent = S.declare(isEvent).pipe(
 /**
  * Type for {@link DOMEvent}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { DOMEvent } from "@beep/schema/DomEvent"
+ *
+ * const event: DOMEvent = S.decodeUnknownSync(DOMEvent)(new Event("submit"))
+ * console.log(event.type)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */

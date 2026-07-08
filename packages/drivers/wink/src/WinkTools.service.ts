@@ -130,8 +130,8 @@ const tokenToAi = (token: Token) => ({
 });
 
 const textPairLengthAttributes = (text1: string, text2: string): Record<string, string> => ({
-  ...textLengthAttribute("text_1", text1),
-  ...textLengthAttribute("text_2", text2),
+  ...textLengthAttribute(text1, "text_1"),
+  ...textLengthAttribute(text2, "text_2"),
 });
 
 const countAttribute = (name: string, count: number): Record<string, string> => ({
@@ -379,7 +379,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
     return {
       Analyze: Effect.fn("WinkNlpToolkit.Analyze")(
         function* ({ text }) {
-          yield* Effect.annotateCurrentSpan(textLengthAttribute("text", text));
+          yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
           const document = yield* tokenization.document(text, "analyze");
           const tokens = Chunk.toReadonlyArray(document.tokens);
           const sentences = Chunk.toReadonlyArray(document.sentences);
@@ -400,7 +400,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
 
       BagOfWords: Effect.fn("WinkNlpToolkit.BagOfWords")(
         function* ({ text }) {
-          yield* Effect.annotateCurrentSpan(textLengthAttribute("text", text));
+          yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
           const document = yield* tokenization.document(text, "bag-of-words");
           const terms = pipe(
             R.toEntries(tokenBagOfWords(Chunk.toReadonlyArray(document.tokens))),
@@ -453,7 +453,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
         function* ({ maxChunkChars, text }) {
           yield* Effect.annotateCurrentSpan({
             max_chunk_chars: `${maxChunkChars}`,
-            ...textLengthAttribute("text", text),
+            ...textLengthAttribute(text, "text"),
           });
           const document = yield* tokenization.document(text, "sentence-chunks");
           const sentences = pipe(
@@ -568,7 +568,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
 
       DocumentStats: Effect.fn("WinkNlpToolkit.DocumentStats")(
         function* ({ text }) {
-          yield* Effect.annotateCurrentSpan(textLengthAttribute("text", text));
+          yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
           const document = yield* tokenization.document(text, "document-stats");
           const tokens = Chunk.toReadonlyArray(document.tokens);
           const wordCount = pipe(tokens, A.filter(isWordLikeToken), A.length);
@@ -590,7 +590,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
         function* ({ includeCustom, text }) {
           yield* Effect.annotateCurrentSpan({
             include_custom: `${includeCustom ?? true}`,
-            ...textLengthAttribute("text", text),
+            ...textLengthAttribute(text, "text"),
           });
           const [document, its, winkDoc] = yield* Effect.all([
             tokenization.document(text, "entities"),
@@ -654,7 +654,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
         function* ({ text, topN }) {
           yield* Effect.annotateCurrentSpan({
             top_n: `${topN ?? 10}`,
-            ...textLengthAttribute("text", text),
+            ...textLengthAttribute(text, "text"),
           });
           return yield* vectorizer.withFreshInstance(
             Effect.fn(function* (isolated) {
@@ -768,7 +768,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
             mode: mode ?? "bag",
             size: `${size}`,
             top_n: `${topN ?? "default"}`,
-            ...textLengthAttribute("text", text),
+            ...textLengthAttribute(text, "text"),
           });
           const resolvedMode = mode ?? "bag";
           const resolvedSize = size;
@@ -807,7 +807,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
 
       Paragraphize: Effect.fn("WinkNlpToolkit.Paragraphize")(
         function* ({ text }) {
-          yield* Effect.annotateCurrentSpan(textLengthAttribute("text", text));
+          yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
           const paragraphs = pipe(text.split(/\n\s*\n/), A.map(Str.trim), A.filter(Str.isNonEmpty));
           return {
             count: A.length(paragraphs),
@@ -865,7 +865,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
             corpus_id: params.corpusId,
             include_text: `${params.includeText ?? false}`,
             top_n: `${params.topN ?? "default"}`,
-            ...textLengthAttribute("query", params.query),
+            ...textLengthAttribute(params.query, "query"),
           });
           return yield* corpusManager.query(params);
         },
@@ -877,7 +877,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
           yield* Effect.annotateCurrentSpan({
             top_n: `${topN ?? "default"}`,
             ...countAttribute("candidate_text_count", A.length(texts)),
-            ...textLengthAttribute("query", query),
+            ...textLengthAttribute(query, "query"),
           });
           return yield* vectorizer.withFreshInstance(
             Effect.fn(function* (isolated) {
@@ -934,7 +934,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
 
       RemoveStopWords: Effect.fn("WinkNlpToolkit.RemoveStopWords")(
         function* ({ text }) {
-          yield* Effect.annotateCurrentSpan(textLengthAttribute("text", text));
+          yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
           const document = yield* tokenization.document(text, "remove-stop-words");
           const wordLike = pipe(Chunk.toReadonlyArray(document.tokens), A.filter(isWordLikeToken));
           const tokens = pipe(
@@ -953,7 +953,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
 
       Sentences: Effect.fn("WinkNlpToolkit.Sentences")(
         function* ({ text }) {
-          yield* Effect.annotateCurrentSpan(textLengthAttribute("text", text));
+          yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
           const document = yield* tokenization.document(text, "sentences");
           const sentences = pipe(
             Chunk.toReadonlyArray(document.sentences),
@@ -988,7 +988,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
 
       Stem: Effect.fn("WinkNlpToolkit.Stem")(
         function* ({ text }) {
-          yield* Effect.annotateCurrentSpan(textLengthAttribute("text", text));
+          yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
           const document = yield* tokenization.document(text, "stem");
           const stems = pipe(
             Chunk.toReadonlyArray(document.tokens),
@@ -1033,7 +1033,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
 
       Tokenize: Effect.fn("WinkNlpToolkit.Tokenize")(
         function* ({ text }) {
-          yield* Effect.annotateCurrentSpan(textLengthAttribute("text", text));
+          yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
           const tokens = yield* tokenization.tokenize(text);
           return {
             tokenCount: A.length(tokens),
@@ -1047,7 +1047,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
         function* ({ operations, text }) {
           yield* Effect.annotateCurrentSpan({
             ...countAttribute("operation_count", A.length(operations)),
-            ...textLengthAttribute("text", text),
+            ...textLengthAttribute(text, "text"),
           });
           let current = text;
           const operationsApplied = A.empty<string>();
@@ -1104,7 +1104,7 @@ export const WinkNlpToolkitLive: Layer.Layer<
 
       WordCount: Effect.fn("WinkNlpToolkit.WordCount")(
         function* ({ text }) {
-          yield* Effect.annotateCurrentSpan(textLengthAttribute("text", text));
+          yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
           const document = yield* tokenization.document(text, "word-count");
           const tokens = Chunk.toReadonlyArray(document.tokens);
           return {

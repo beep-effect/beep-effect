@@ -287,6 +287,64 @@ describe("schema-first lint command", { concurrent: false }, () => {
   );
 
   it(
+    "reports untracked SFV4 fn-schema advisories for a .ts function (R17-2 still-fires case)",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstSourceFixture([
+              'import * as S from "effect/Schema";',
+              'export class Widget extends S.Class<Widget>("Widget")({',
+              "  id: S.String,",
+              "}) {}",
+              "export function updateWidget(input: { id: string; name: string }): void {}",
+              "",
+            ]);
+
+            const exit = yield* Effect.exit(runLintCommand(["schema-first"]));
+
+            const errorLines = yield* TestConsole.errorLines;
+            expectReportedExit(exit);
+            expect(errorLines).toContain("[schema-first] untracked live findings:");
+            expect(errorLines).toContain(
+              '- packages/example/src/Example.ts :: updateWidget [schema-policy-advisory] Exported function "updateWidget" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable.'
+            );
+            const structuredIssueLine =
+              '[schema-first:issue] {"category":"schema-first-policy","ruleId":"SFV4-fn-schema",' +
+              '"severity":"warning","file":"packages/example/src/Example.ts","line":5,' +
+              '"symbol":"updateWidget",' +
+              '"message":"Exported function \\"updateWidget\\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable.",' +
+              '"remediation":"Model inline object parameter/return contracts with Fn({ input, output }) from @beep/schema or an S.Class, or run bun run beep lint schema-first --write with a justification when the shape intentionally stays inline."}';
+            expect(errorLines).toContain(structuredIssueLine);
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
+    "does not report SFV4 fn-schema advisories for a .tsx component (R17-2 newly-excluded case)",
+    () =>
+      Effect.runPromise(
+        withTempWorkingDirectory(
+          Effect.gen(function* () {
+            yield* writeSchemaFirstFileFixture("packages/example/src/Example.tsx", [
+              'import * as S from "effect/Schema";',
+              'export class Widget extends S.Class<Widget>("Widget")({',
+              "  id: S.String,",
+              "}) {}",
+              "export function UpdateWidgetDemo(input: { id: string; name: string }): void {}",
+              "",
+            ]);
+
+            yield* runSchemaFirstAndExpectNoErrors();
+          })
+        ).pipe(provideScopedLayer(testLayer))
+      ),
+    5_000
+  );
+
+  it(
     "excludes inventoried precision-audit exceptions from active advisory counts",
     () =>
       Effect.runPromise(

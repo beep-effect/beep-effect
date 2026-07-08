@@ -50,6 +50,23 @@ export const JsonLdContextErrorReason = LiteralKit(["unknownTerm", "policyViolat
 );
 
 /**
+ * Type for {@link JsonLdContextErrorReason}.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { JsonLdContextErrorReason } from "@beep/semantic-web/services/jsonld-context"
+ *
+ * const reason: JsonLdContextErrorReason = "unknownTerm"
+ * strictEqual(JsonLdContextErrorReason.is.unknownTerm(reason), true)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type JsonLdContextErrorReason = typeof JsonLdContextErrorReason.Type;
+
+/**
  * Typed JSON-LD context service error.
  *
  * @example

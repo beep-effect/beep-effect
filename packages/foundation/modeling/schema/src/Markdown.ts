@@ -134,6 +134,15 @@ export const Markdown = S.String.pipe(
 /**
  * Branded Markdown document string type extracted from {@link Markdown}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Markdown } from "@beep/schema/Markdown"
+ *
+ * const document: Markdown = S.decodeUnknownSync(Markdown)("# Hello")
+ * console.log(document)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

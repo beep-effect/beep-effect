@@ -1,0 +1,567 @@
+{
+  "schemaVersion": "standards-remediation-progress/v1",
+  "_note": "Driver-owned resumable state. Lane record shape: { lane, scope (package or file-set), entries, status: pending|dispatched|collected|challenged|done|blocked, report, blocker }. Counters are snapshotted after every driver regen; the inventories themselves are the source of truth for slices.",
+  "updated": "2026-07-08",
+  "branch": "standards-remediation",
+  "umbrellaPr": 326,
+  "phases": {
+    "P0": "done",
+    "P1": "done",
+    "P2": "done",
+    "P3": "done",
+    "P4": "wave-2-in-progress",
+    "P5": "in_progress",
+    "P6": "zero-pending-baseline-write",
+    "P7": "in_progress",
+    "P8": "pending"
+  },
+  "rulings": {
+    "file": "research/decisions.md",
+    "locked": [
+      "R1",
+      "R2",
+      "R3",
+      "R4",
+      "R5",
+      "R6",
+      "R7",
+      "R8",
+      "R10",
+      "R11",
+      "R12",
+      "R14",
+      "R15",
+      "R16",
+      "R17",
+      "R18",
+      "R19",
+      "R20",
+      "R21",
+      "R22",
+      "R23",
+      "R24",
+      "R25",
+      "R26"
+    ],
+    "pending": [
+      "R9"
+    ]
+  },
+  "counters": {
+    "checkpoint": "2026-07-08 wave-3 consolidated (Opus driver, lanes stopped)",
+    "dualArity": {
+      "entries": 0,
+      "status": "ZERO (empty inventory)"
+    },
+    "schemaFirst": {
+      "entries": 4,
+      "status": "4 documented exceptions, gate GREEN",
+      "detail": "GraphCollection, usptoDocumentFieldTiers (FINAL-B unconvertible), makePgliteIntegrationGate (test infra), uspto R.getSomes (Law 20/47) \u2014 R23"
+    },
+    "jsdoc": {
+      "exportLevel": "~25 open -> FINAL-C",
+      "moduleLevel": "~117 @since -> FINAL-D",
+      "ratchetGate": "PASSES (at/below baseline)"
+    },
+    "knip": {
+      "entries": 0,
+      "status": "ZERO (empty baseline written)"
+    },
+    "allowlist": {
+      "entries": 6,
+      "note": "3 challenged survivors + 3 justified UI compound-component Object.assign idioms (R26)"
+    }
+  },
+  "waves": {
+    "P1-detectors": {
+      "status": "done",
+      "inventory": "detectors",
+      "lanes": {
+        "p1-a-dualarity": {
+          "lane": "p1-a",
+          "scope": "DualArity.ts + test/dual-arity.test.ts (R1, R3-D2)",
+          "status": "done",
+          "report": "ops/reports/P1-detectors/p1-a-dualarity.md",
+          "blocker": null
+        },
+        "p1-b-jsdoc": {
+          "lane": "p1-b",
+          "scope": "JSDocDocumentationInventory.ts + QualityArtifactSupport.ts + tests (R2, R5, R3-J2, R3-J3)",
+          "status": "done",
+          "report": "ops/reports/P1-detectors/p1-b-jsdoc.md",
+          "blocker": null
+        },
+        "p1-c-schemafirst": {
+          "lane": "p1-c",
+          "scope": "SchemaFirst.ts + test/schema-first.test.ts (R4)",
+          "status": "done",
+          "report": "ops/reports/P1-detectors/p1-c-schemafirst.md",
+          "blocker": null
+        }
+      }
+    },
+    "P2-audits": {
+      "status": "done",
+      "inventory": "rulings",
+      "lanes": {
+        "p2-s1-generic": {
+          "lane": "p2-s1-generic",
+          "scope": "S1 generic interfaces (73) \u2014 conversion attempts",
+          "status": "challenged",
+          "report": "ops/reports/P2-audits/p2-s1-generic.md",
+          "blocker": null
+        },
+        "p2-s2-signals": {
+          "lane": "p2-s2-signals",
+          "scope": "S2 non-schema-signal interfaces (85) \u2014 sub-class split",
+          "status": "challenged",
+          "report": "ops/reports/P2-audits/p2-s2-signals.md",
+          "blocker": null
+        },
+        "p2-s3-extends": {
+          "lane": "p2-s3-extends",
+          "scope": "S3 extends-derived interfaces (55) \u2014 external vs repo-local",
+          "status": "challenged",
+          "report": "ops/reports/P2-audits/p2-s3-extends.md",
+          "blocker": null
+        },
+        "p2-s7s9": {
+          "lane": "p2-s7s9",
+          "scope": "S7 struct oddballs (9) + S9 manual exceptions (37)",
+          "status": "challenged",
+          "report": "ops/reports/P2-audits/p2-s7s9.md",
+          "blocker": null
+        },
+        "p2-d5d8": {
+          "lane": "p2-d5d8",
+          "scope": "D5 too-many-positional (10) + D8 exceptions (11)",
+          "status": "challenged",
+          "report": "ops/reports/P2-audits/p2-d5d8.md",
+          "blocker": null
+        },
+        "p2-j5-html": {
+          "lane": "p2-j5-html",
+          "scope": "J5 Html.model.ts generator investigation",
+          "status": "challenged",
+          "report": "ops/reports/P2-audits/p2-j5-html.md",
+          "blocker": null
+        }
+      }
+    },
+    "DA-1": {
+      "status": "done",
+      "inventory": "dual-arity",
+      "lanes": {
+        "p25-detectors": {
+          "lane": "p25",
+          "scope": "@beep/repo-cli SchemaFirst.ts+DualArity.ts detector framework (R6/R7/R11/R12) + fixtures",
+          "status": "done",
+          "report": "ops/reports/P25-detectors/p25-detectors.md",
+          "blocker": null,
+          "note": "All R6/R7/R11/R12/R13 changes + 59/59 tests. Self-caught finding-swap fixed via named AST-input aliases."
+        },
+        "da-1-nlp": {
+          "lane": "da-1",
+          "scope": "@beep/nlp 19 candidates",
+          "status": "done",
+          "report": "ops/reports/DA-1/da-1-nlp.md",
+          "blocker": null,
+          "note": "19/19 + TraversalStart S.Class + Monoid fallow extraction (checkIdentity helper); 166/166; zero introduced findings reference nlp (raw-JSON verified); pre-existing inherited clone left alone."
+        },
+        "da-1-nlpproc": {
+          "lane": "da-1",
+          "scope": "@beep/nlp-processing 7 + @beep/wink 1 (granted)",
+          "status": "done",
+          "report": "ops/reports/DA-1/da-1-nlpproc.md",
+          "blocker": null,
+          "note": "8/8 + both options aliases inlined/deleted (no external refs); 68/68 + 45/45 green; repo grep empty."
+        },
+        "da-1-utils": {
+          "lane": "da-1",
+          "scope": "@beep/utils Array.ts natives 4 (cross-pkg sweep granted)",
+          "status": "done",
+          "report": "ops/reports/DA-1/da-1-utils.md",
+          "blocker": null,
+          "note": "4/4 + fallow extraction done (shared IndexLookup helpers; lastIndexOf ECMA-262 argument-presence semantics preserved); 157/157; fallow introduced findings 7->3 at its re-scan."
+        },
+        "da-1-batch": {
+          "lane": "da-1",
+          "scope": "8 small packages sequential (~13 entries)",
+          "status": "done",
+          "report": "ops/reports/DA-1/da-1-batch.md",
+          "blocker": null,
+          "note": "12 fixed (incl 2 driver-challenged follow-ups), 2 blocked:ripple queued for DA-2. All 8 packages proven (tsgo+vitest+filtered turbo)."
+        }
+      }
+    },
+    "DA-2": {
+      "status": "done",
+      "inventory": "dual-arity",
+      "lanes": {
+        "da-2-repocli": {
+          "scope": "@beep/repo-cli 6 cand + 4 rco exc; granted ai-metrics (Phoenix ripple)",
+          "status": "done",
+          "report": "ops/reports/DA-2/da-2-repocli.md",
+          "note": "Everything done: dual-arity 10/10 + Phoenix + fallow trio + R14 + R15 (+40 entries silenced, 602/602, fallow introduced=0). Round-2: Str.toLowerCase (fixed a real asymmetric-filter bug) + JSDoc reattached; 0 live advisories."
+        },
+        "da-2-ripples": {
+          "scope": "mcp-kit projectFieldTier + uspto-mcp sweep; box decodeWith dual",
+          "status": "done",
+          "report": "ops/reports/DA-2/da-2-ripples.md",
+          "note": "3/3 dual-arity + box fallow extraction (acquireSdkCallController); introduced findings 6->2 dups (+1 cplx), all remaining in repo-cli. turbo 19/19."
+        }
+      }
+    },
+    "DA-3": {
+      "status": "pending",
+      "inventory": "dual-arity",
+      "lanes": {}
+    },
+    "DA-4": {
+      "status": "pending",
+      "inventory": "dual-arity",
+      "lanes": {}
+    },
+    "SF-1": {
+      "status": "done",
+      "inventory": "schema-first",
+      "lanes": {
+        "sf-1-schema": {
+          "scope": "@beep/schema 35 (LiteralKit union high-risk flagged)",
+          "status": "done",
+          "report": "ops/reports/SF-1/sf-1-schema.md",
+          "note": "2 fixed w/ parity; 2 unconvertible w/ reproduced regressions; 4 detector gaps driver-verified -> R15; 617 tests green."
+        },
+        "sf-1-repoutils": {
+          "scope": "@beep/repo-utils 17 (audit prior art)",
+          "status": "done",
+          "report": "ops/reports/SF-1/sf-1-repoutils.md",
+          "note": "15/17 fixed (187/187, turbo 19/19, cross-pkg docgen verified); 3 residue -> R15 curated list (generic-Fields Self blocker + StructWithRest ast constraint, twice-reproduced). Follow-up: CanonicalDocgenConfigJson -> schema-derived type (187/187, cross-pkg clean)."
+        },
+        "sf-1-nlpmcp": {
+          "scope": "@beep/nlp-mcp 15",
+          "status": "done",
+          "report": "ops/reports/SF-1/sf-1-nlpmcp.md",
+          "note": "15/15 conversions + 15 type-alias @examples (docgen 97->112 exactly); all suites green."
+        },
+        "sf-1-graphnode": {
+          "scope": "R6-3 pilot: nlp-processing + nlp categorical generics, full refactor authority",
+          "status": "done",
+          "report": "ops/reports/SF-1/sf-1-graphnode.md",
+          "note": "Pilot verdict driver-verified: 11/12 unconvertible (function-instantiated type params); TypedText converted; R14 locked \u2014 curated exclusion list + factory-derived rule queued for SchemaFirst.ts owner."
+        }
+      }
+    },
+    "SF-2": {
+      "status": "in_progress",
+      "inventory": "schema-first",
+      "lanes": {
+        "sf-2-repocli": {
+          "scope": "@beep/repo-cli 26 SF + 8 allowlist",
+          "status": "dispatched",
+          "report": "ops/reports/SF-2/sf-2-repocli.md"
+        },
+        "sf-2-taila": {
+          "scope": "modeling tail: nlp 8, schema 5, identity 3, md 2, utils 2 (sequential)",
+          "status": "done",
+          "report": "ops/reports/SF-2/sf-2-taila.md",
+          "note": "13/20 fixed across 5 pkgs (nlp 8/8); 7 unconvertible -> R18 curation; R15 estimate corrected by live probes."
+        },
+        "sf-2-tailb": {
+          "scope": "acp 4, form 4, test-utils 4, mcp-kit 3, box 2, api-transport 2, langextract 2, ui 2+1AL (sequential)",
+          "status": "done",
+          "report": "ops/reports/SF-2/sf-2-tailb.md",
+          "note": "4 fixed, 14 unconvertible (cited verified classes), 6 -> R17 rules. All 8 pkgs green."
+        }
+      }
+    },
+    "SF-3": {
+      "status": "pending",
+      "inventory": "schema-first",
+      "lanes": {}
+    },
+    "SF-4": {
+      "status": "pending",
+      "inventory": "schema-first",
+      "lanes": {}
+    },
+    "JD-1": {
+      "status": "done",
+      "inventory": "jsdoc",
+      "lanes": {
+        "jd-1-pilot": {
+          "scope": "@beep/md 47+2+5, @beep/govinfo 14+1+1 \u2014 throughput calibration",
+          "status": "done",
+          "report": "ops/reports/JD-1/jd-1-pilot.md",
+          "note": "md + govinfo at ZERO; recipe + calibration ~190/hr (fixture-rich shape); slower where fixtures invented."
+        }
+      }
+    },
+    "JD-2": {
+      "status": "pending",
+      "inventory": "jsdoc",
+      "note": "@beep/schema shard 1",
+      "lanes": {}
+    },
+    "JD-3": {
+      "status": "pending",
+      "inventory": "jsdoc",
+      "note": "@beep/schema shard 2",
+      "lanes": {}
+    },
+    "JD-4": {
+      "status": "done",
+      "inventory": "jsdoc",
+      "lanes": {
+        "jd-4-html": {
+          "scope": "@beep/html generator templates (331 ex + 16 annot) + 2 AL entries in generate.ts",
+          "status": "done",
+          "report": "ops/reports/JD-4/jd-4-html.md",
+          "note": "331->0 examples, 16->0 annotations, 2/2 AL converted; generate:check deterministic; docgen green."
+        }
+      }
+    },
+    "JD-5": {
+      "status": "pending",
+      "inventory": "jsdoc",
+      "note": "tooling",
+      "lanes": {}
+    },
+    "JD-6": {
+      "status": "pending",
+      "inventory": "jsdoc",
+      "note": "ui-system + capability",
+      "lanes": {}
+    },
+    "JD-7": {
+      "status": "done",
+      "inventory": "jsdoc",
+      "lanes": {
+        "jd-7a-modeling": {
+          "scope": "pandoc-ast 94, lexical-schema 50, data 36 (sequential)",
+          "status": "done",
+          "report": "ops/reports/JD-7/jd-7a.md",
+          "note": "180->0 across 3 pkgs. Generator-first on @beep/data (4 SyncDataToTs templates emit formatTsLiteral-derived examples; outputs synced). NOTE: crossed into repo-cli fence for the templates (right doctrine call; landed on top of sf2 worker's earlier edits without conflict \u2014 consolidated proof will validate)."
+        }
+      }
+    },
+    "JD-8": {
+      "status": "done",
+      "inventory": "jsdoc",
+      "lanes": {
+        "jd-8a-batch": {
+          "scope": "file-processing 18, m365-mcp 17, semantic-web 12, observability 11, phoenix 10, uspto-mcp 10, repo-docgen 9 (sequential)",
+          "status": "done",
+          "report": "ops/reports/JD-8/jd-8a.md",
+          "note": "87->0 across 7 pkgs; 492 docgen examples; 221/221 tests. Noted micro-gap: unsafe-example regex matched 'declare' inside a string literal (reworded; rule it if it recurs at scale)."
+        },
+        "jd-8b": {
+          "status": "done",
+          "note": "66/66 fixed (R21 registration completed: $AgentsClientId live, both classes on $I.annote; identifier+annotation migrated together). 0 phantoms, 0 blocked."
+        }
+      }
+    },
+    "JD-9": {
+      "status": "pending",
+      "inventory": "jsdoc",
+      "note": "apps + slices",
+      "lanes": {}
+    },
+    "KN-1": {
+      "status": "done",
+      "inventory": "knip",
+      "lanes": {
+        "kn-1a-batch": {
+          "scope": "~63 conflict-free findings incl. tsconfig.test.json root-cause cluster; 10 conflicted deferred to KN-1b",
+          "status": "done",
+          "report": "ops/reports/KN-1/kn-1a.md",
+          "note": "73 -> 10 remaining (all conflicted-scope: 9 bun-types manifests + 1 rustc). ReviewGate deduped for real; ignoreExportsUsedInFile scoped to oip-web only (correct knip semantic). KN-1b mop-up queued behind owning lanes."
+        },
+        "kn-1b-mopup": {
+          "scope": "10 one-liners",
+          "status": "done",
+          "note": "KNIP AT ZERO real findings repo-wide (1 transient untracked probe from the repo-cli lane, self-cleaning)."
+        }
+      }
+    },
+    "AL-1": {
+      "status": "in_progress",
+      "inventory": "allowlist",
+      "lanes": {
+        "al-1a-batch": {
+          "scope": "6 entries: chalk WeakMap, wink Set, ecfr x2, rdf, desktop script (sequential)",
+          "status": "done",
+          "report": "ops/reports/AL-1/al-1a.md",
+          "note": "6/6 adjudicated: ecfr x2 + desktop FIXED (in tree); chalk/wink/rdf verified-irreplaceable w/ benchmarks -> P8 in-code exclusions + corrected rdf reason."
+        }
+      }
+    },
+    "JD-S": {
+      "status": "done",
+      "inventory": "jsdoc",
+      "lanes": {
+        "jd-s1-headers": {
+          "scope": "@beep/schema shard: HttpStatus + security-header dirs (~175)",
+          "status": "done",
+          "report": "ops/reports/JD-S/jd-s1-headers.md",
+          "note": "~175 findings, 26 files; scoped docgen probe + biome + static audit (package-wide deferred to consolidated proof per fallback instruction)."
+        },
+        "jd-s2-model": {
+          "scope": "@beep/schema shard: Color/FilePath/Model/EntitySchema (~106)",
+          "status": "done",
+          "report": "ops/reports/JD-S/jd-s2-model.md",
+          "note": "106->0; final package-wide turbo docgen GREEN with all three shards combined: 1243 examples 0 errors, 617/617 tests \u2014 @beep/schema jsdoc 460->0 complete."
+        },
+        "jd-s3-tail": {
+          "scope": "@beep/schema shard: Graph + everything else (~180)",
+          "status": "done",
+          "report": "ops/reports/JD-S/jd-s3-tail.md",
+          "note": "tail shard done incl. BufferEncoding/Timestamp (the unnecessaryTypeofType sources)"
+        }
+      }
+    },
+    "JD-UI": {
+      "status": "done",
+      "inventory": "jsdoc",
+      "lanes": {
+        "jd-ui": {
+          "scope": "@beep/ui 110",
+          "status": "done",
+          "report": "ops/reports/JD-UI/jd-ui.md",
+          "note": "110->0 target; 15 files, 32/32 tests, biome clean; docgen end-to-end deferred to consolidated proof (upstream @beep/schema mid-edit by shard lanes, grep-confirmed zero own-path failures)."
+        }
+      }
+    },
+    "JD-MB": {
+      "status": "done",
+      "inventory": "jsdoc",
+      "lanes": {
+        "jd-modelingb": {
+          "scope": "identity 49, nlp 49, utils 46 (sequential; just-modified signatures)",
+          "status": "done",
+          "report": "ops/reports/JD-MB/jd-mb.md",
+          "note": "59 fixed (identity 17, nlp 25, utils 17) w/ live re-audit over stale coordinates; bootstrap-file annotation technique; all suites green. Assignment 2: 80 fixed across 6 pkgs; found R20 (default-export doc misattribution) + annotate-before-toTaggedUnion trap + 2 ecfr generator bugs."
+        }
+      }
+    },
+    "FINAL": {
+      "status": "done",
+      "lanes": {
+        "final-a-repocli": {
+          "scope": "R20 x2 + R9 detector closures + 13 curated additions + repo-cli 58 jsdoc",
+          "status": "dispatched",
+          "report": "ops/reports/FINAL/final-a.md"
+        },
+        "final-b-mixed": {
+          "scope": "13-package sequential: 3 dual-arity + 11 SF converts + 3 advisories + ~60 jsdoc",
+          "status": "dispatched",
+          "report": "ops/reports/FINAL/final-b.md"
+        },
+        "final-c-exports": {
+          "scope": "~25 export-level jsdoc (Model.variants 8, identity 3, misc)",
+          "status": "done",
+          "report": "ops/reports/FINAL/final-c.md"
+        },
+        "final-d-modules": {
+          "scope": "~117 module-level @since (ui 113 + oip-web + desktop)",
+          "status": "done",
+          "report": "ops/reports/FINAL/final-d.md",
+          "note": "openModules 120->4 (116 module docs); 4 residual (3 observability @since + 1 ui summary) -> driver mop-up"
+        }
+      }
+    }
+  },
+  "ciRounds": {
+    "wave-2": [
+      {
+        "round": 1,
+        "failures": [
+          "fallow-advisory-envelopes: 1 introduced complexity (collectCandidateDiagnostics cyclomatic 23) + 6 introduced duplication groups",
+          "repo-sanity: changeset missing"
+        ],
+        "note": "neither caught by ci local --fast \u2014 lane-parity gap (fallow audit --check + changeset:status not in fast battery); record for one-round-loop",
+        "resolution": "changeset written; all 7 fallow introduced findings extracted (audit exits 0, introduced=0); readExistingRepoFile orElseSucceed behavior change driver-reviewed and accepted"
+      },
+      {
+        "round": 2,
+        "failures": [
+          "repo-sanity: mixed changeset (ignored @beep/repo-cli listed alongside non-ignored)"
+        ],
+        "resolution": "changeset fixed (drop ignored, add uspto-mcp), verified locally, pushed 521cedbb7f",
+        "lesson": "run `bun run changeset:status:since-main` locally after authoring any changeset \u2014 fully reproducible pre-push"
+      },
+      {
+        "round": 3,
+        "failures": [
+          "lint: @beep/box useImportType (biome) \u2014 turbo-cache false-green locally"
+        ],
+        "resolution": "biome --write fix pushed",
+        "lesson": "TURBO_FORCE=1 bun run lint (or at least lint --filter on all touched packages with TURBO_FORCE) belongs in the pre-push battery \u2014 matches the existing verify-lint-with-turbo-force memory"
+      },
+      {
+        "round": 4,
+        "failures": [
+          "lint: @beep/repo-cli biome format x2 (fail-fast hid it behind box round 3)",
+          "test-integration: Postgres.pglite hook timeout \u2014 KNOWN flake class per crispening reflection, package untouched by any lane; re-rolled by this push"
+        ],
+        "resolution": "biome --write + full TURBO_FORCE lint verified green across 98 packages before push"
+      },
+      {
+        "round": 5,
+        "failures": [
+          "lint-policy: reflection-artifacts \u2014 schema-first-zero-actionables marked complete in P0 without closeout reflection (latent since first push)"
+        ],
+        "resolution": "closeout reflection authored + validated (0 blocking), pushed 5a7a964bf5",
+        "lesson": "run `beep lint policy` (incl. reflection-artifacts) pre-push whenever any goals/*/ops/manifest.json lifecycle changes; local typos failures on untracked user files are local-only noise (CI sees tracked files)"
+      },
+      {
+        "round": 6,
+        "failures": [
+          "lint-policy: typos on docs/graphs/*.md \u2014 user scratch files accidentally committed in b55729a5bc despite unstage attempt"
+        ],
+        "resolution": "git rm -r --cached docs/graphs (files preserved untracked), pushed ea2e954a11",
+        "lesson": "verify staging exclusions actually held (git ls-tree HEAD <path> after commit) \u2014 a restore --staged followed by any later git add -A in another call silently re-sweeps; prefer explicit pathspec staging for wave commits"
+      },
+      {
+        "round": "post-rebase",
+        "result": "ALL GREEN \u2014 first fully green run on PR #326 (Lint Policy included). Rebased onto main 65002b47e9."
+      }
+    ]
+  },
+  "landingChecklist": [
+    "bun run beep lint schema-catalog --write (new S.Class exports from SF-1 lanes)",
+    "bun run changeset:status:since-main (pre-push, after any changeset edit)",
+    "TURBO_FORCE=1 lint on touched packages pre-push",
+    "beep lint policy pre-push when packet manifests change lifecycle"
+  ],
+  "jsdocRemaining": {
+    "packages": 41,
+    "findings": 1200,
+    "bigRocks": {
+      "@beep/schema": 460,
+      "@beep/ui": 110,
+      "@beep/pandoc-ast": 94,
+      "@beep/repo-cli": 58,
+      "@beep/lexical-schema": 50
+    },
+    "note": "JD-schema (460, sharded x3-4) waits for sf2-taila to free the package; ui 110 waits for sf2-tailb; repo-cli 58 waits for sf2-repocli; desktop 35 + ecfr 9 wait for al1a; long tail after."
+  },
+  "gitState": "HEAD=origin/standards-remediation (all pushed); auto-tooling committed lane work + merged origin/main; 7 uncommitted jsdoc-example files + reports remain; detector work verified present",
+  "blockedOn": "FINAL-C final steps (file-processing TextSpan + lint-rules RuleRegistrySchema); identity already stable",
+  "detectorTestsGreen": "jsdoc 11/11, dual-arity+schema-first 72/72 (R24 fixture + fixed R20 test)",
+  "allLanesComplete": true,
+  "finalCNote": "Model.variants 8 handled by R24 (no source change); identity/lint-rules/file-processing schemaAnnotation fixed (repaired FINAL-B annote regression; lint-rules gained @beep/identity devDep + composer); TextSpan @example added",
+  "consolidationPush": {
+    "sha": "8bca70da81",
+    "supersedes": "a89de2bae9 (broken auto-push)",
+    "files": 247,
+    "localGatesGreen": "dual-arity/schema-first/jsdoc-ratchet/knip/allowlist/biome/reflection/fallow-audit/fallow-dead-code/turbo-check all PASS",
+    "baselinesZeroed": "jsdoc-totals all 6 = 0"
+  },
+  "ciGreening": "Repo Sanity + Lint Policy fixed locally (exit 0); Property Laws central timeout bump (best-effort, non-required lane)",
+  "ciRound4": {
+    "sha": "ff51f3b7b6",
+    "result": "Repo Sanity GREEN; Check GREEN; Lint Policy down to 1 sub-step (docgen: 3 ui exports missing metadata); Property Laws root-caused (11 vitest configs lack fcDeepSweepActive)",
+    "lane": "ci-fix-final dispatched: export fcDeepSweepActive + 11 configs + ui docgen metadata"
+  }
+}

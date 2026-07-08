@@ -42,6 +42,16 @@ export const DevToolsSpanFilter = Fn({
 /**
  * Runtime type for {@link DevToolsSpanFilter}.
  *
+ * @example
+ * ```typescript
+ * import { Str } from "@beep/utils"
+ * import type { DevToolsSpanFilter } from "@beep/observability/server"
+ *
+ * const filter: DevToolsSpanFilter = (name) => Str.startsWith(name, "Http.")
+ * console.log(filter("Http.server"))
+ * // true
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -49,6 +59,18 @@ export type DevToolsSpanFilter = typeof DevToolsSpanFilter.Type;
 
 /**
  * Options for mirroring selected spans to the Effect devtools websocket.
+ *
+ * @example
+ * ```typescript
+ * import { LayerFilteredDevToolsOptions } from "@beep/observability/server"
+ *
+ * const options = LayerFilteredDevToolsOptions.make({
+ *   url: "ws://localhost:34437",
+ *   shouldPublish: (name: string) => name.startsWith("Http.")
+ * })
+ * console.log(options.url)
+ * // "ws://localhost:34437"
+ * ```
  *
  * @since 0.0.0
  * @category models

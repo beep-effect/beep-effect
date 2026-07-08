@@ -48,6 +48,15 @@ export const UsptoApplicationNumber = S.String.check(
 /**
  * Type for {@link UsptoApplicationNumber}.
  *
+ * @example
+ * ```ts
+ * import { UsptoApplicationNumber } from "@beep/uspto"
+ * import * as S from "effect/Schema"
+ *
+ * const number: UsptoApplicationNumber = S.decodeUnknownSync(UsptoApplicationNumber)("16138242")
+ * console.log(number)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -97,6 +106,23 @@ export const UsptoApplicationNumberFromText = S.String.pipe(
 );
 
 /**
+ * Type for {@link UsptoApplicationNumberFromText}.
+ *
+ * @example
+ * ```ts
+ * import { UsptoApplicationNumberFromText } from "@beep/uspto"
+ * import * as S from "effect/Schema"
+ *
+ * const number: UsptoApplicationNumberFromText = S.decodeUnknownSync(UsptoApplicationNumberFromText)("16/138,242")
+ * console.log(number)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UsptoApplicationNumberFromText = typeof UsptoApplicationNumberFromText.Type;
+
+/**
  * Normalized USPTO patent number with optional kind prefix.
  *
  * @example
@@ -126,6 +152,15 @@ export const UsptoPatentNumber = S.String.check(
 
 /**
  * Type for {@link UsptoPatentNumber}.
+ *
+ * @example
+ * ```ts
+ * import { UsptoPatentNumber } from "@beep/uspto"
+ * import * as S from "effect/Schema"
+ *
+ * const number: UsptoPatentNumber = S.decodeUnknownSync(UsptoPatentNumber)("10772255")
+ * console.log(number)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -177,6 +212,23 @@ export const UsptoPatentNumberFromText = S.String.pipe(
   }),
   SchemaUtils.withCodecStatics
 );
+
+/**
+ * Type for {@link UsptoPatentNumberFromText}.
+ *
+ * @example
+ * ```ts
+ * import { UsptoPatentNumberFromText } from "@beep/uspto"
+ * import * as S from "effect/Schema"
+ *
+ * const number: UsptoPatentNumberFromText = S.decodeUnknownSync(UsptoPatentNumberFromText)("US 10,772,255 B2")
+ * console.log(number)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UsptoPatentNumberFromText = typeof UsptoPatentNumberFromText.Type;
 
 /**
  * Normalize free-text into a USPTO application number candidate.

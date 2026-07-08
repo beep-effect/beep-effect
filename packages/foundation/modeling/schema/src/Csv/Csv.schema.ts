@@ -331,6 +331,14 @@ export const Csv: {
  * Branded runtime type for CSV document text produced by encoding a `CSV`
  * schema.
  *
+ * @example
+ * ```ts
+ * import type { CsvText } from "@beep/schema/Csv"
+ *
+ * const describe = (text: CsvText): string => `${text.length} characters`
+ * console.log(describe.length)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

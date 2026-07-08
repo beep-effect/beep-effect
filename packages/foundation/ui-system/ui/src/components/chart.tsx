@@ -1,9 +1,16 @@
+/**
+ * Chart primitive: Recharts container wiring shared theme colors and tooltip/legend styling to a `ChartConfig`.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { cn } from "@beep/ui/lib/utils";
 import { A, O, P, Str, Struct } from "@beep/utils";
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
+import { requireReactContext } from "../lib/react-invariant.ts";
 import type { TooltipValueType } from "recharts";
 
 // Format: { THEME_NAME: CSS_SELECTOR }
@@ -47,12 +54,7 @@ const ChartContext = React.createContext<ChartContextProps | null>(null);
 
 function useChart() {
   const context = React.useContext(ChartContext);
-
-  if (context === null) {
-    throw new Error("useChart must be used within a <ChartContainer />");
-  }
-
-  return context;
+  return requireReactContext(context, { message: "useChart must be used within a <ChartContainer />" });
 }
 
 /**

@@ -12,12 +12,14 @@ import { TSMorphService, TsMorphProjectInspectionRequest } from "@beep/repo-util
 import { resolveWorkspaceDirs } from "@beep/repo-utils/Workspaces";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Console, DateTime, Effect, FileSystem, HashMap, Match, MutableHashSet, Order, Path, pipe } from "effect";
+import { Console, Effect, FileSystem, HashMap, Match, MutableHashSet, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { parse, printParseErrorCode } from "jsonc-parser";
 import { Node, SyntaxKind } from "ts-morph";
+import { todayYmd } from "../../internal/cli/DateStamp.js";
+import { readExistingRepoFile } from "../../internal/cli/RepoFile.js";
 import { DualArityInventoryReadError } from "./Laws.errors.js";
 import type { ParseError } from "jsonc-parser";
 import type {
@@ -261,14 +263,6 @@ const byWorkspacePathLengthDescending: Order.Order<readonly [string, string]> = 
 const sortEntries = (entries: ReadonlyArray<DualArityInventoryEntry>): ReadonlyArray<DualArityInventoryEntry> =>
   A.sort(entries, byEntryKeyAscending);
 
-const todayYmd = (): string => {
-  const now = DateTime.nowUnsafe();
-  const year = `${DateTime.getPartUtc(now, "year")}`;
-  const month = Str.padStart(2, "0")(`${DateTime.getPartUtc(now, "month")}`);
-  const day = Str.padStart(2, "0")(`${DateTime.getPartUtc(now, "day")}`);
-  return `${year}-${month}-${day}`;
-};
-
 const isExcludedPublicApiName = (filePath: string, qualifiedName: string): boolean => {
   const name = pipe(
     Str.split(".")(qualifiedName),
@@ -491,7 +485,7 @@ const isFunctionExportInitializer = (
 };
 
 const SCHEMA_CALLABLE_VALUE_FACTORY_PATTERN =
-  /^(?:S|Schema)\.(?:decodeEffect|decodeOption|decodeResult|decodeUnknownEffect|decodeUnknownOption|decodeUnknownResult|encodeEffect|encodeOption|encodeResult|encodeUnknownEffect|encodeUnknownOption|encodeUnknownResult|toEquivalence)$/u;
+  /^(?:S|Schema)\.(?:(?:decode|encode)(?:Unknown)?(?:Effect|Exit|Option|Promise|Result|Sync)|toEquivalence)$/u;
 
 const isOrderValueType = (type: Type): boolean => {
   const typeText = type.getText();
@@ -652,6 +646,8 @@ const isPrimitiveType = (type: Type): boolean =>
 
 const isOptionalTypeMarker = (type: Type): boolean => type.isUndefined() || type.isNull();
 
+const isCallableType = (type: Type): boolean => !A.isReadonlyArrayEmpty(type.getCallSignatures());
+
 const isStrictObjectLikeType = (type: Type): boolean => {
   if (type.isTypeParameter()) {
     const constraint = type.getConstraint();
@@ -707,7 +703,38 @@ const hasJSDocCategory = (node: import("ts-morph").Node, category: string): bool
   return Str.includes(`@category ${category}`)(jsDocText);
 };
 
-const isFactoryReturnType = (type: Type): boolean => {
+// R12: an all-methods-record return type (e.g. `makeChatOperations`'s
+// `{ listThreads: (...) => Effect.Effect<...>; createThread: (...) => ...;
+// ... }`) is a legitimate tagged-constructor-factory return shape. Checked
+// via each property's OWN resolved type (not the return type's printed
+// text), so it never runs into DIRECT_EFFECT_OR_SCHEMA_TYPE_PATTERN's
+// false-positive substring match against a member's nested `Effect.Effect<`
+// signature (see isFactoryReturnType below).
+const isAllMethodMembersObjectType = (type: Type, contextNode: import("ts-morph").Node): boolean => {
+  const properties = type.getProperties();
+  return (
+    !A.isReadonlyArrayEmpty(properties) &&
+    A.isReadonlyArrayEmpty(type.getCallSignatures()) &&
+    A.every(
+      properties,
+      (property) => !A.isReadonlyArrayEmpty(property.getTypeAtLocation(contextNode).getCallSignatures())
+    )
+  );
+};
+
+// R12 diagnosed conjunct: DIRECT_EFFECT_OR_SCHEMA_TYPE_PATTERN.test(typeText)
+// tests the FULL printed text of the return type, which for an object
+// return type includes every member's own signature text. A record whose
+// methods return `Effect.Effect<...>` (e.g. makeChatOperations's
+// ChatOperations return type) therefore matched the pattern via substring
+// and was rejected before ever reaching isStrictObjectLikeType — the fix is
+// isAllMethodMembersObjectType above, checked first and bypassing the
+// textual pattern entirely for that shape.
+const isFactoryReturnType = (type: Type, contextNode: import("ts-morph").Node): boolean => {
+  if (isAllMethodMembersObjectType(type, contextNode)) {
+    return true;
+  }
+
   const typeText = type.getText();
   if (DIRECT_EFFECT_OR_SCHEMA_TYPE_PATTERN.test(typeText)) {
     return false;
@@ -730,7 +757,7 @@ const isLegitimateConstructorFactory = (
 ): boolean =>
   hasJSDocCategory(docNode, "constructors") &&
   hasMultiParameterCallableShape(callableType, parameterOwner) &&
-  A.some(callableType.getCallSignatures(), (signature) => isFactoryReturnType(signature.getReturnType()));
+  A.some(callableType.getCallSignatures(), (signature) => isFactoryReturnType(signature.getReturnType(), docNode));
 
 const isLegitimateConstructorVariableDeclaration = (
   filePath: string,
@@ -807,10 +834,13 @@ const hasObviousWrongFirstParameter = (
       A.some(restParameters, isPipeableParameter)
   );
 
-const collectCandidateDiagnostics = (
-  candidate: PublicApiCandidate
-): ReadonlyArray<typeof DualArityDiagnosticKind.Type> => {
-  let diagnostics = A.empty<typeof DualArityDiagnosticKind.Type>();
+type DualValidity = {
+  readonly dualArity: O.Option<number>;
+  readonly hasMatchingDualArity: boolean;
+  readonly hasValidDualWithCallableThirdParameter: boolean;
+};
+
+const computeDualValidity = (candidate: PublicApiCandidate): DualValidity => {
   const dualCall = candidate.dualCall;
   const dualArity = pipe(
     dualCall,
@@ -820,44 +850,88 @@ const collectCandidateDiagnostics = (
     O.isSome(dualCall) && O.isNone(dualArity) && hasDualSignatures(candidate.callableType, candidate.parameterCount);
   const hasMatchingDualArity =
     O.exists(dualArity, (arity) => arity === candidate.parameterCount) || hasPredicateDualWithPublicDualShape;
+  const hasValidDualWithCallableThirdParameter =
+    O.isSome(dualCall) &&
+    dualCall.value.validSource &&
+    hasMatchingDualArity &&
+    pipe(candidate.thirdParameterType, O.exists(isCallableType));
 
-  if (candidate.parameterCount > 3) {
-    diagnostics = A.append(diagnostics, "too-many-positional-params");
+  return { dualArity, hasMatchingDualArity, hasValidDualWithCallableThirdParameter };
+};
+
+const arityRangeDiagnostics = (
+  candidate: PublicApiCandidate,
+  hasMatchingDualArity: boolean
+): ReadonlyArray<typeof DualArityDiagnosticKind.Type> => {
+  if (candidate.parameterCount < 2 || candidate.parameterCount > 3) {
+    return A.empty();
   }
 
-  if (candidate.parameterCount >= 2 && candidate.parameterCount <= 3) {
-    if (O.isNone(dualCall)) {
-      diagnostics = A.append(diagnostics, "missing-dual");
-    } else {
-      if (!dualCall.value.validSource) {
-        diagnostics = A.append(diagnostics, "invalid-dual-source");
-      }
-      if (!hasMatchingDualArity) {
-        diagnostics = A.append(diagnostics, "invalid-dual-arity");
-      }
-      if (
-        dualCall.value.validSource &&
-        hasMatchingDualArity &&
-        !hasDualSignatures(candidate.callableType, candidate.parameterCount)
-      ) {
-        diagnostics = A.append(diagnostics, "missing-dual-signatures");
-      }
-    }
+  const dualCall = candidate.dualCall;
+  if (O.isNone(dualCall)) {
+    return ["missing-dual"];
   }
 
-  if (candidate.parameterCount > 3 && O.isSome(dualArity) && dualArity.value > 3) {
+  let diagnostics = A.empty<typeof DualArityDiagnosticKind.Type>();
+  if (!dualCall.value.validSource) {
+    diagnostics = A.append(diagnostics, "invalid-dual-source");
+  }
+  if (!hasMatchingDualArity) {
     diagnostics = A.append(diagnostics, "invalid-dual-arity");
   }
+  if (
+    dualCall.value.validSource &&
+    hasMatchingDualArity &&
+    !hasDualSignatures(candidate.callableType, candidate.parameterCount)
+  ) {
+    diagnostics = A.append(diagnostics, "missing-dual-signatures");
+  }
+  return diagnostics;
+};
 
-  if (candidate.parameterCount === 3 && !pipe(candidate.thirdParameterType, O.exists(isStrictObjectLikeType))) {
-    diagnostics = A.append(diagnostics, "third-param-not-object-like");
+const tooManyParamsDiagnostics = (
+  candidate: PublicApiCandidate,
+  dualArity: O.Option<number>
+): ReadonlyArray<typeof DualArityDiagnosticKind.Type> => {
+  if (candidate.parameterCount <= 3) {
+    return A.empty();
   }
 
-  if (hasObviousWrongFirstParameter(candidate.firstParameterName, candidate.restParameters)) {
-    diagnostics = A.append(diagnostics, "obvious-wrong-first-parameter");
+  let diagnostics: ReadonlyArray<typeof DualArityDiagnosticKind.Type> = ["too-many-positional-params"];
+  if (O.isSome(dualArity) && dualArity.value > 3) {
+    diagnostics = A.append(diagnostics, "invalid-dual-arity");
   }
+  return diagnostics;
+};
 
-  return A.dedupe(diagnostics);
+const thirdParameterDiagnostics = (
+  candidate: PublicApiCandidate,
+  hasValidDualWithCallableThirdParameter: boolean
+): ReadonlyArray<typeof DualArityDiagnosticKind.Type> =>
+  candidate.parameterCount === 3 &&
+  !pipe(candidate.thirdParameterType, O.exists(isStrictObjectLikeType)) &&
+  !hasValidDualWithCallableThirdParameter
+    ? ["third-param-not-object-like"]
+    : A.empty();
+
+const wrongFirstParameterDiagnostics = (
+  candidate: PublicApiCandidate
+): ReadonlyArray<typeof DualArityDiagnosticKind.Type> =>
+  hasObviousWrongFirstParameter(candidate.firstParameterName, candidate.restParameters)
+    ? ["obvious-wrong-first-parameter"]
+    : A.empty();
+
+const collectCandidateDiagnostics = (
+  candidate: PublicApiCandidate
+): ReadonlyArray<typeof DualArityDiagnosticKind.Type> => {
+  const { dualArity, hasMatchingDualArity, hasValidDualWithCallableThirdParameter } = computeDualValidity(candidate);
+
+  return A.dedupe([
+    ...arityRangeDiagnostics(candidate, hasMatchingDualArity),
+    ...tooManyParamsDiagnostics(candidate, dualArity),
+    ...thirdParameterDiagnostics(candidate, hasValidDualWithCallableThirdParameter),
+    ...wrongFirstParameterDiagnostics(candidate),
+  ]);
 };
 
 const makeOwnerResolver = Effect.fn("DualArity.makeOwnerResolver")(function* () {
@@ -1088,6 +1162,9 @@ const collectStaticPropertyCandidate = (
   if (P.isUndefined(initializer) && A.isReadonlyArrayEmpty(callableType.getCallSignatures())) {
     return O.none();
   }
+  if (!P.isUndefined(initializer) && isNonHelperCallableValue(initializer, callableType)) {
+    return O.none();
+  }
 
   const dualCall = P.isUndefined(initializer) ? O.none<DualCallInfo>() : getDualCallInfo(initializer, bindings);
   const parameterOwner = P.isUndefined(initializer)
@@ -1206,11 +1283,33 @@ const collectCandidatesForSourceFile = (
   return { candidates, excludedLegitimate };
 };
 
+type PermanentDualArityExclusion = {
+  readonly file: string;
+  readonly qualifiedName: string;
+  readonly reason: string;
+};
+
+// R12: driver-verified holds where a mechanical dual() wrap provably breaks
+// a real call site, baked directly into the detector (stronger than a
+// standards/dual-arity.inventory.jsonc exception record — this file is
+// itself one of ENFORCED_ROOTS) instead of a standing tracked exception.
+const PERMANENT_EXCLUSIONS: ReadonlyArray<PermanentDualArityExclusion> = [
+  {
+    file: "packages/agents/server/src/AssistantTurn/ScanState.ts",
+    qualifiedName: "scanChunk",
+    reason:
+      "Fold-step consumed BY REFERENCE as Stream.mapAccum(() => initialScanState, scanChunk) (AnthropicTurnKernel.ts:143). A dual(2, ...) wrap breaks TypeScript overload resolution when the function is handed to a generic higher-order combinator positionally rather than invoked directly — driver-verified clean-before/broken-after compile diff (ops/reports/P2-audits/p2-d5d8.md, ruling R12).",
+  },
+] as const;
+
+const isPermanentlyExcludedCandidate = (file: string, qualifiedName: string): boolean =>
+  A.some(PERMANENT_EXCLUSIONS, (exclusion) => exclusion.file === file && exclusion.qualifiedName === qualifiedName);
+
 const makeInventoryEntry = (
   candidate: PublicApiCandidate,
   diagnostics: ReadonlyArray<typeof DualArityDiagnosticKind.Type>
 ): O.Option<DualArityInventoryEntry> => {
-  if (A.isReadonlyArrayEmpty(diagnostics)) {
+  if (A.isReadonlyArrayEmpty(diagnostics) || isPermanentlyExcludedCandidate(candidate.file, candidate.qualifiedName)) {
     return O.none();
   }
 
@@ -1231,17 +1330,13 @@ const makeInventoryEntry = (
 };
 
 const readInventoryDocument = Effect.fn(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const absolutePath = path.resolve(process.cwd(), INVENTORY_PATH);
-
-  if (!(yield* fs.exists(absolutePath))) {
+  const content = yield* readExistingRepoFile(INVENTORY_PATH);
+  if (O.isNone(content)) {
     return O.none<DualArityInventoryDocument>();
   }
 
-  const content = yield* fs.readFileString(absolutePath);
   const parseErrors = A.empty<ParseError>();
-  const parsed = parse(content, parseErrors, {
+  const parsed = parse(content.value, parseErrors, {
     allowTrailingComma: true,
     disallowComments: false,
   });

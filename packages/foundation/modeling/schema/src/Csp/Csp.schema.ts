@@ -553,6 +553,22 @@ export const ReportURI = S.Union([...internal.StringOrUrl.members, S.Array(inter
 );
 
 /**
+ * Type-level representation of {@link ReportURI}.
+ *
+ * @example
+ * ```ts
+ * import type { ReportURI } from "@beep/schema/Csp"
+ *
+ * const uri: ReportURI = "/csp-report"
+ * console.log(uri)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ReportURI = typeof ReportURI.Type;
+
+/**
  * Reporting directive fields accepted by Content-Security-Policy.
  *
  * @remarks
@@ -628,16 +644,17 @@ export class ReportingDirective extends S.Class<ReportingDirective>($I`Reporting
  * @category schemas
  * @since 0.0.0
  */
-export const CspDirectives = S.Struct({
-  ...FetchDirective.fields,
-  ...DocumentDirective.fields,
-  ...NavigationDirective.fields,
-  ...ReportingDirective.fields,
-}).pipe(
-  $I.annoteSchema("CspDirectives", {
+export class CspDirectives extends S.Class<CspDirectives>($I`CspDirectives`)(
+  {
+    ...FetchDirective.fields,
+    ...DocumentDirective.fields,
+    ...NavigationDirective.fields,
+    ...ReportingDirective.fields,
+  },
+  $I.annote("CspDirectives", {
     description: "The complete normalized field set for all supported CSP directives.",
   })
-);
+) {}
 
 /**
  * Structured CSP option object accepted before header serialization.
@@ -725,6 +742,39 @@ export const ContentSecurityPolicyOption = S.Union([S.Literal(false), ContentSec
  * @since 0.0.0
  */
 export type ContentSecurityPolicyOption = typeof ContentSecurityPolicyOption.Type;
+
+/**
+ * Concise alias for {@link ContentSecurityPolicyOption}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Option } from "@beep/schema/Csp"
+ *
+ * const option = S.decodeUnknownSync(Option)(false)
+ * console.log(option)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Option = ContentSecurityPolicyOption;
+
+/**
+ * Type-level representation of {@link Option}.
+ *
+ * @example
+ * ```ts
+ * import type { Option } from "@beep/schema/Csp"
+ *
+ * const option: Option = false
+ * console.log(option)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Option = typeof Option.Type;
 
 /**
  * Serialized Content-Security-Policy response-header model.
@@ -956,6 +1006,14 @@ export type ContentSecurityPolicyHeader = typeof ContentSecurityPolicyHeader.Typ
 /**
  * Public aliases for concise namespace roles.
  *
+ * @category schemas
+ * @since 0.0.0
+ */
+export { ContentSecurityPolicyResponseHeader as ResponseHeader };
+
+/**
+ * Concise alias for {@link ContentSecurityPolicyHeader}.
+ *
  * @example
  * ```ts
  * import { Effect } from "effect"
@@ -970,8 +1028,24 @@ export type ContentSecurityPolicyHeader = typeof ContentSecurityPolicyHeader.Typ
  * @category schemas
  * @since 0.0.0
  */
-export {
-  ContentSecurityPolicyHeader as Header,
-  ContentSecurityPolicyOption as Option,
-  ContentSecurityPolicyResponseHeader as ResponseHeader,
-};
+export const Header = ContentSecurityPolicyHeader;
+
+/**
+ * Type-level representation of {@link Header}.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { ContentSecurityPolicyResponseHeader, type Header } from "@beep/schema/Csp"
+ *
+ * const header: Header = new ContentSecurityPolicyResponseHeader({
+ *   name: "Content-Security-Policy",
+ *   value: O.some("default-src 'self'")
+ * })
+ * console.log(header.name)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Header = typeof Header.Type;

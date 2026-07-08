@@ -7,6 +7,7 @@
 import { $LawPracticeDomainId } from "@beep/identity/packages";
 import { NonNegativeInt } from "@beep/schema";
 import { HashMap } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { SegmentMap } from "../SegmentMap/index.js";
@@ -83,7 +84,7 @@ export class Span extends S.Class<Span>($I`Span`)(
    * console.log(span.cleanStart)
    * ```
    *
-   * @category statics
+   * @category constructors
    * @since 0.0.0
    */
   static readonly fromGroupIndex = (
@@ -125,20 +126,34 @@ export class Span extends S.Class<Span>($I`Span`)(
    * @category statics
    * @since 0.0.0
    */
-  static readonly resolveOriginal = (
-    span: { readonly cleanStart: NonNegativeInt; readonly cleanEnd: NonNegativeInt },
-    map: TransformationMap
-  ): { readonly originalStart: NonNegativeInt; readonly originalEnd: NonNegativeInt } =>
-    O.match(map.cleanToOriginalSegments, {
-      onNone: () => ({
-        originalEnd: HashMap.get(map.cleanToOriginal, span.cleanEnd).pipe(O.getOrElse(() => span.cleanEnd)),
-        originalStart: HashMap.get(map.cleanToOriginal, span.cleanStart).pipe(O.getOrElse(() => span.cleanStart)),
-      }),
-      onSome: (segmentMap) => ({
-        originalEnd: NonNegativeInt.make(segmentMap.lookup(span.cleanEnd)),
-        originalStart: NonNegativeInt.make(segmentMap.lookup(span.cleanStart)),
-      }),
-    });
+  static readonly resolveOriginal: {
+    (
+      span: { readonly cleanStart: NonNegativeInt; readonly cleanEnd: NonNegativeInt },
+      map: TransformationMap
+    ): { readonly originalStart: NonNegativeInt; readonly originalEnd: NonNegativeInt };
+    (
+      map: TransformationMap
+    ): (span: { readonly cleanStart: NonNegativeInt; readonly cleanEnd: NonNegativeInt }) => {
+      readonly originalStart: NonNegativeInt;
+      readonly originalEnd: NonNegativeInt;
+    };
+  } = dual(
+    2,
+    (
+      span: { readonly cleanStart: NonNegativeInt; readonly cleanEnd: NonNegativeInt },
+      map: TransformationMap
+    ): { readonly originalStart: NonNegativeInt; readonly originalEnd: NonNegativeInt } =>
+      O.match(map.cleanToOriginalSegments, {
+        onNone: () => ({
+          originalEnd: HashMap.get(map.cleanToOriginal, span.cleanEnd).pipe(O.getOrElse(() => span.cleanEnd)),
+          originalStart: HashMap.get(map.cleanToOriginal, span.cleanStart).pipe(O.getOrElse(() => span.cleanStart)),
+        }),
+        onSome: (segmentMap) => ({
+          originalEnd: NonNegativeInt.make(segmentMap.lookup(span.cleanEnd)),
+          originalStart: NonNegativeInt.make(segmentMap.lookup(span.cleanStart)),
+        }),
+      })
+  );
 }
 
 /**

@@ -11,14 +11,29 @@ import { JsonlLineError, JsonlReadOptions, JsonlStats, JsonlValidationResult } f
 import { PipelineProcessOptions, PipelineResult } from "@beep/nlp-mcp/Streaming/Pipeline";
 import { TextReadOptions, TextStreamOptions, TextStreamStats } from "@beep/nlp-mcp/Streaming/TextStream";
 import {
+  CountJsonlOptions,
+  CountLinesOptions,
   DataOutput,
   DatasetMetaOutput,
+  ExtractMatchesOptions,
   FileInfoOutput,
+  FilterLinesOptions,
   JsonlOutput,
   JsonlStatsOutput,
   LinesOutput,
+  LoadJsonlOptions,
+  LoadJsonOptions,
+  LoadLinesOptions,
+  LoadTextOptions,
   PipelineOutput,
+  ProcessFileOptions,
+  ReadJsonlOptions,
+  ReadLinesOptions,
+  SampleJsonlOptions,
+  SampleLinesOptions,
+  TextStatsOptions,
   TextStatsOutput,
+  ValidateJsonlOptions,
 } from "@beep/nlp-mcp/StreamingTools";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -115,5 +130,46 @@ describe("streaming schema laws", () => {
       location: "https://example.com/data.json",
       message: "failed",
     });
+  });
+
+  it("round-trips tool-parameter option schemas extracted from inline S.Struct (RC-SF)", () => {
+    assertRoundTrip(ReadLinesOptions);
+    assertRoundTrip(TextStatsOptions);
+    assertRoundTrip(SampleLinesOptions);
+    assertRoundTrip(ReadJsonlOptions);
+    assertRoundTrip(ValidateJsonlOptions);
+    assertRoundTrip(SampleJsonlOptions);
+    assertRoundTrip(LoadTextOptions);
+    assertRoundTrip(LoadLinesOptions);
+    assertRoundTrip(LoadJsonlOptions);
+    assertRoundTrip(LoadJsonOptions);
+    assertRoundTrip(ProcessFileOptions);
+    assertRoundTrip(FilterLinesOptions);
+    assertRoundTrip(ExtractMatchesOptions);
+    assertRoundTrip(CountLinesOptions);
+    assertRoundTrip(CountJsonlOptions);
+  });
+
+  it("keeps extracted tool-parameter option wire shape byte-identical to the prior inline S.Struct", () => {
+    // Every field stayed S.optionalKey with no default: an empty call still
+    // encodes to `{}` (no keys materialize), exactly as the inline S.Struct did.
+    expect(encode(ReadLinesOptions, ReadLinesOptions.make({}))).toEqual({});
+    expect(encode(ProcessFileOptions, ProcessFileOptions.make({}))).toEqual({});
+
+    expect(
+      encode(
+        ReadLinesOptions,
+        ReadLinesOptions.make({ encoding: "utf-8", maxLines: 10, skip: 2, skipEmpty: true, tail: 5, trim: true })
+      )
+    ).toEqual({ encoding: "utf-8", maxLines: 10, skip: 2, skipEmpty: true, tail: 5, trim: true });
+
+    expect(encode(ValidateJsonlOptions, ValidateJsonlOptions.make({ maxErrors: 1, maxRecords: 2 }))).toEqual({
+      maxErrors: 1,
+      maxRecords: 2,
+    });
+
+    expect(
+      encode(ProcessFileOptions, ProcessFileOptions.make({ maxLines: 3, skipEmpty: true, stopOnError: false }))
+    ).toEqual({ maxLines: 3, skipEmpty: true, stopOnError: false });
   });
 });

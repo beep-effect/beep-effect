@@ -38,10 +38,7 @@
     "MCP lookup surface",
     "agent effectiveness evaluation loop"
   ],
-  "referencePackets": [
-    "repo-context-topology",
-    "repo-codegraph-jsdoc"
-  ],
+  "referencePackets": ["repo-context-topology", "repo-codegraph-jsdoc"],
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,

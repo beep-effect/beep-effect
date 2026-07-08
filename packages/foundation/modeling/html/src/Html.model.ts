@@ -43,6 +43,14 @@ const taggedUnion = <A, E>(id: string, description: string, members: ReadonlyArr
 /**
  * Recursive list of HTML AST child nodes (any {@link HtmlNode}).
  *
+ * @example
+ * ```ts
+ * import { HtmlChildren } from "@beep/html/Html.model"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HtmlChildren)([])) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -50,7 +58,30 @@ export const HtmlChildren = S.Array(S.suspend((): S.Codec<HtmlNode.Type, HtmlNod
   $I.annoteSchema("HtmlChildren", { description: "Recursive list of HTML AST child nodes." })
 );
 /**
+ * Decoded type of {@link HtmlChildren}.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlChildren } from "@beep/html/Html.model"
+ *
+ * const children: HtmlChildren = []
+ * console.log(children.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HtmlChildren = typeof HtmlChildren.Type;
+/**
  * Companion namespace for {@link HtmlChildren}.
+ *
+ * @example
+ * ```ts
+ * import type { HtmlChildren } from "@beep/html/Html.model"
+ *
+ * const children: HtmlChildren.Type = []
+ * console.log(children.length) // 0
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -65,6 +96,14 @@ export declare namespace HtmlChildren {
 /**
  * A document fragment node (a detached group of children).
  *
+ * @example
+ * ```ts
+ * import { Fragment } from "@beep/html/Html.model"
+ *
+ * const node = Fragment.make({ children: [] })
+ * console.log(node._tag) // "#fragment"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -75,6 +114,14 @@ export class Fragment extends S.TaggedClass<Fragment>($I`Fragment`)(
 ) {}
 /**
  * Companion namespace for {@link Fragment}.
+ *
+ * @example
+ * ```ts
+ * import { Fragment } from "@beep/html/Html.model"
+ *
+ * const encoded: Fragment.Encoded = { _tag: "#fragment", children: [] }
+ * console.log(encoded._tag) // "#fragment"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -89,6 +136,14 @@ export declare namespace Fragment {
 /**
  * A document root node.
  *
+ * @example
+ * ```ts
+ * import { Document } from "@beep/html/Html.model"
+ *
+ * const node = Document.make({ children: [] })
+ * console.log(node._tag) // "#document"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -99,6 +154,14 @@ export class Document extends S.TaggedClass<Document>($I`Document`)(
 ) {}
 /**
  * Companion namespace for {@link Document}.
+ *
+ * @example
+ * ```ts
+ * import { Document } from "@beep/html/Html.model"
+ *
+ * const encoded: Document.Encoded = { _tag: "#document", children: [] }
+ * console.log(encoded._tag) // "#document"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -112,6 +175,14 @@ export declare namespace Document {
 
 /**
  * The <a> element.
+ *
+ * @example
+ * ```ts
+ * import { A } from "@beep/html/Html.model"
+ *
+ * const node = A.make({ children: [] })
+ * console.log(node._tag) // "a"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -160,6 +231,14 @@ export class A extends S.TaggedClass<A>($I`A`)(
 ) {}
 /**
  * Companion namespace for {@link A}.
+ *
+ * @example
+ * ```ts
+ * import { A } from "@beep/html/Html.model"
+ *
+ * const encoded: A.Encoded = { _tag: "a", children: [] }
+ * console.log(encoded._tag) // "a"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -243,6 +322,14 @@ export declare namespace A {
 /**
  * The <abbr> element.
  *
+ * @example
+ * ```ts
+ * import { Abbr } from "@beep/html/Html.model"
+ *
+ * const node = Abbr.make({ children: [] })
+ * console.log(node._tag) // "abbr"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -256,6 +343,14 @@ export class Abbr extends S.TaggedClass<Abbr>($I`Abbr`)(
 ) {}
 /**
  * Companion namespace for {@link Abbr}.
+ *
+ * @example
+ * ```ts
+ * import { Abbr } from "@beep/html/Html.model"
+ *
+ * const encoded: Abbr.Encoded = { _tag: "abbr", children: [] }
+ * console.log(encoded._tag) // "abbr"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -276,6 +371,14 @@ export declare namespace Abbr {
 /**
  * The <acronym> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Acronym } from "@beep/html/Html.model"
+ *
+ * const node = Acronym.make({ children: [] })
+ * console.log(node._tag) // "acronym"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -289,6 +392,14 @@ export class Acronym extends S.TaggedClass<Acronym>($I`Acronym`)(
 ) {}
 /**
  * Companion namespace for {@link Acronym}.
+ *
+ * @example
+ * ```ts
+ * import { Acronym } from "@beep/html/Html.model"
+ *
+ * const encoded: Acronym.Encoded = { _tag: "acronym", children: [] }
+ * console.log(encoded._tag) // "acronym"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -309,6 +420,14 @@ export declare namespace Acronym {
 /**
  * The <address> element.
  *
+ * @example
+ * ```ts
+ * import { Address } from "@beep/html/Html.model"
+ *
+ * const node = Address.make({ children: [] })
+ * console.log(node._tag) // "address"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -322,6 +441,14 @@ export class Address extends S.TaggedClass<Address>($I`Address`)(
 ) {}
 /**
  * Companion namespace for {@link Address}.
+ *
+ * @example
+ * ```ts
+ * import { Address } from "@beep/html/Html.model"
+ *
+ * const encoded: Address.Encoded = { _tag: "address", children: [] }
+ * console.log(encoded._tag) // "address"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -342,6 +469,14 @@ export declare namespace Address {
 /**
  * The <applet> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Applet } from "@beep/html/Html.model"
+ *
+ * const node = Applet.make({ children: [] })
+ * console.log(node._tag) // "applet"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -355,6 +490,14 @@ export class Applet extends S.TaggedClass<Applet>($I`Applet`)(
 ) {}
 /**
  * Companion namespace for {@link Applet}.
+ *
+ * @example
+ * ```ts
+ * import { Applet } from "@beep/html/Html.model"
+ *
+ * const encoded: Applet.Encoded = { _tag: "applet", children: [] }
+ * console.log(encoded._tag) // "applet"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -374,6 +517,14 @@ export declare namespace Applet {
 
 /**
  * The <area> element.
+ *
+ * @example
+ * ```ts
+ * import { Area } from "@beep/html/Html.model"
+ *
+ * const node = Area.make({})
+ * console.log(node._tag) // "area"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -420,6 +571,14 @@ export class Area extends S.TaggedClass<Area>($I`Area`)(
 ) {}
 /**
  * Companion namespace for {@link Area}.
+ *
+ * @example
+ * ```ts
+ * import { Area } from "@beep/html/Html.model"
+ *
+ * const encoded: Area.Encoded = { _tag: "area" }
+ * console.log(encoded._tag) // "area"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -495,6 +654,14 @@ export declare namespace Area {
 /**
  * The <article> element.
  *
+ * @example
+ * ```ts
+ * import { Article } from "@beep/html/Html.model"
+ *
+ * const node = Article.make({ children: [] })
+ * console.log(node._tag) // "article"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -508,6 +675,14 @@ export class Article extends S.TaggedClass<Article>($I`Article`)(
 ) {}
 /**
  * Companion namespace for {@link Article}.
+ *
+ * @example
+ * ```ts
+ * import { Article } from "@beep/html/Html.model"
+ *
+ * const encoded: Article.Encoded = { _tag: "article", children: [] }
+ * console.log(encoded._tag) // "article"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -528,6 +703,14 @@ export declare namespace Article {
 /**
  * The <aside> element.
  *
+ * @example
+ * ```ts
+ * import { Aside } from "@beep/html/Html.model"
+ *
+ * const node = Aside.make({ children: [] })
+ * console.log(node._tag) // "aside"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -541,6 +724,14 @@ export class Aside extends S.TaggedClass<Aside>($I`Aside`)(
 ) {}
 /**
  * Companion namespace for {@link Aside}.
+ *
+ * @example
+ * ```ts
+ * import { Aside } from "@beep/html/Html.model"
+ *
+ * const encoded: Aside.Encoded = { _tag: "aside", children: [] }
+ * console.log(encoded._tag) // "aside"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -560,6 +751,14 @@ export declare namespace Aside {
 
 /**
  * The <audio> element.
+ *
+ * @example
+ * ```ts
+ * import { Audio } from "@beep/html/Html.model"
+ *
+ * const node = Audio.make({ children: [] })
+ * console.log(node._tag) // "audio"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -584,6 +783,14 @@ export class Audio extends S.TaggedClass<Audio>($I`Audio`)(
 ) {}
 /**
  * Companion namespace for {@link Audio}.
+ *
+ * @example
+ * ```ts
+ * import { Audio } from "@beep/html/Html.model"
+ *
+ * const encoded: Audio.Encoded = { _tag: "audio", children: [] }
+ * console.log(encoded._tag) // "audio"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -620,6 +827,14 @@ export declare namespace Audio {
 /**
  * The <b> element.
  *
+ * @example
+ * ```ts
+ * import { B } from "@beep/html/Html.model"
+ *
+ * const node = B.make({ children: [] })
+ * console.log(node._tag) // "b"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -633,6 +848,14 @@ export class B extends S.TaggedClass<B>($I`B`)(
 ) {}
 /**
  * Companion namespace for {@link B}.
+ *
+ * @example
+ * ```ts
+ * import { B } from "@beep/html/Html.model"
+ *
+ * const encoded: B.Encoded = { _tag: "b", children: [] }
+ * console.log(encoded._tag) // "b"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -653,6 +876,14 @@ export declare namespace B {
 /**
  * The <base> element.
  *
+ * @example
+ * ```ts
+ * import { Base } from "@beep/html/Html.model"
+ *
+ * const node = Base.make({})
+ * console.log(node._tag) // "base"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -667,6 +898,14 @@ export class Base extends S.TaggedClass<Base>($I`Base`)(
 ) {}
 /**
  * Companion namespace for {@link Base}.
+ *
+ * @example
+ * ```ts
+ * import { Base } from "@beep/html/Html.model"
+ *
+ * const encoded: Base.Encoded = { _tag: "base" }
+ * console.log(encoded._tag) // "base"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -689,6 +928,14 @@ export declare namespace Base {
 /**
  * The <basefont> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Basefont } from "@beep/html/Html.model"
+ *
+ * const node = Basefont.make({})
+ * console.log(node._tag) // "basefont"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -701,6 +948,14 @@ export class Basefont extends S.TaggedClass<Basefont>($I`Basefont`)(
 ) {}
 /**
  * Companion namespace for {@link Basefont}.
+ *
+ * @example
+ * ```ts
+ * import { Basefont } from "@beep/html/Html.model"
+ *
+ * const encoded: Basefont.Encoded = { _tag: "basefont" }
+ * console.log(encoded._tag) // "basefont"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -719,6 +974,14 @@ export declare namespace Basefont {
 /**
  * The <bdi> element.
  *
+ * @example
+ * ```ts
+ * import { Bdi } from "@beep/html/Html.model"
+ *
+ * const node = Bdi.make({ children: [] })
+ * console.log(node._tag) // "bdi"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -732,6 +995,14 @@ export class Bdi extends S.TaggedClass<Bdi>($I`Bdi`)(
 ) {}
 /**
  * Companion namespace for {@link Bdi}.
+ *
+ * @example
+ * ```ts
+ * import { Bdi } from "@beep/html/Html.model"
+ *
+ * const encoded: Bdi.Encoded = { _tag: "bdi", children: [] }
+ * console.log(encoded._tag) // "bdi"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -752,6 +1023,14 @@ export declare namespace Bdi {
 /**
  * The <bdo> element.
  *
+ * @example
+ * ```ts
+ * import { Bdo } from "@beep/html/Html.model"
+ *
+ * const node = Bdo.make({ children: [] })
+ * console.log(node._tag) // "bdo"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -765,6 +1044,14 @@ export class Bdo extends S.TaggedClass<Bdo>($I`Bdo`)(
 ) {}
 /**
  * Companion namespace for {@link Bdo}.
+ *
+ * @example
+ * ```ts
+ * import { Bdo } from "@beep/html/Html.model"
+ *
+ * const encoded: Bdo.Encoded = { _tag: "bdo", children: [] }
+ * console.log(encoded._tag) // "bdo"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -785,6 +1072,14 @@ export declare namespace Bdo {
 /**
  * The <bgsound> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Bgsound } from "@beep/html/Html.model"
+ *
+ * const node = Bgsound.make({})
+ * console.log(node._tag) // "bgsound"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -797,6 +1092,14 @@ export class Bgsound extends S.TaggedClass<Bgsound>($I`Bgsound`)(
 ) {}
 /**
  * Companion namespace for {@link Bgsound}.
+ *
+ * @example
+ * ```ts
+ * import { Bgsound } from "@beep/html/Html.model"
+ *
+ * const encoded: Bgsound.Encoded = { _tag: "bgsound" }
+ * console.log(encoded._tag) // "bgsound"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -815,6 +1118,14 @@ export declare namespace Bgsound {
 /**
  * The <big> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Big } from "@beep/html/Html.model"
+ *
+ * const node = Big.make({ children: [] })
+ * console.log(node._tag) // "big"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -828,6 +1139,14 @@ export class Big extends S.TaggedClass<Big>($I`Big`)(
 ) {}
 /**
  * Companion namespace for {@link Big}.
+ *
+ * @example
+ * ```ts
+ * import { Big } from "@beep/html/Html.model"
+ *
+ * const encoded: Big.Encoded = { _tag: "big", children: [] }
+ * console.log(encoded._tag) // "big"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -848,6 +1167,14 @@ export declare namespace Big {
 /**
  * The <blink> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Blink } from "@beep/html/Html.model"
+ *
+ * const node = Blink.make({ children: [] })
+ * console.log(node._tag) // "blink"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -861,6 +1188,14 @@ export class Blink extends S.TaggedClass<Blink>($I`Blink`)(
 ) {}
 /**
  * Companion namespace for {@link Blink}.
+ *
+ * @example
+ * ```ts
+ * import { Blink } from "@beep/html/Html.model"
+ *
+ * const encoded: Blink.Encoded = { _tag: "blink", children: [] }
+ * console.log(encoded._tag) // "blink"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -881,6 +1216,14 @@ export declare namespace Blink {
 /**
  * The <blockquote> element.
  *
+ * @example
+ * ```ts
+ * import { Blockquote } from "@beep/html/Html.model"
+ *
+ * const node = Blockquote.make({ children: [] })
+ * console.log(node._tag) // "blockquote"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -895,6 +1238,14 @@ export class Blockquote extends S.TaggedClass<Blockquote>($I`Blockquote`)(
 ) {}
 /**
  * Companion namespace for {@link Blockquote}.
+ *
+ * @example
+ * ```ts
+ * import { Blockquote } from "@beep/html/Html.model"
+ *
+ * const encoded: Blockquote.Encoded = { _tag: "blockquote", children: [] }
+ * console.log(encoded._tag) // "blockquote"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -916,6 +1267,14 @@ export declare namespace Blockquote {
 
 /**
  * The <body> element.
+ *
+ * @example
+ * ```ts
+ * import { Body } from "@beep/html/Html.model"
+ *
+ * const node = Body.make({ children: [] })
+ * console.log(node._tag) // "body"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -941,6 +1300,14 @@ export class Body extends S.TaggedClass<Body>($I`Body`)(
 ) {}
 /**
  * Companion namespace for {@link Body}.
+ *
+ * @example
+ * ```ts
+ * import { Body } from "@beep/html/Html.model"
+ *
+ * const encoded: Body.Encoded = { _tag: "body", children: [] }
+ * console.log(encoded._tag) // "body"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -983,6 +1350,14 @@ export declare namespace Body {
 /**
  * The <br> element.
  *
+ * @example
+ * ```ts
+ * import { Br } from "@beep/html/Html.model"
+ *
+ * const node = Br.make({})
+ * console.log(node._tag) // "br"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -996,6 +1371,14 @@ export class Br extends S.TaggedClass<Br>($I`Br`)(
 ) {}
 /**
  * Companion namespace for {@link Br}.
+ *
+ * @example
+ * ```ts
+ * import { Br } from "@beep/html/Html.model"
+ *
+ * const encoded: Br.Encoded = { _tag: "br" }
+ * console.log(encoded._tag) // "br"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1015,6 +1398,14 @@ export declare namespace Br {
 
 /**
  * The <button> element.
+ *
+ * @example
+ * ```ts
+ * import { Button } from "@beep/html/Html.model"
+ *
+ * const node = Button.make({ children: [] })
+ * console.log(node._tag) // "button"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1116,6 +1507,14 @@ export class Button extends S.TaggedClass<Button>($I`Button`)(
 ) {}
 /**
  * Companion namespace for {@link Button}.
+ *
+ * @example
+ * ```ts
+ * import { Button } from "@beep/html/Html.model"
+ *
+ * const encoded: Button.Encoded = { _tag: "button", children: [] }
+ * console.log(encoded._tag) // "button"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1301,6 +1700,14 @@ export declare namespace Button {
 /**
  * The <canvas> element.
  *
+ * @example
+ * ```ts
+ * import { Canvas } from "@beep/html/Html.model"
+ *
+ * const node = Canvas.make({ children: [] })
+ * console.log(node._tag) // "canvas"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1316,6 +1723,14 @@ export class Canvas extends S.TaggedClass<Canvas>($I`Canvas`)(
 ) {}
 /**
  * Companion namespace for {@link Canvas}.
+ *
+ * @example
+ * ```ts
+ * import { Canvas } from "@beep/html/Html.model"
+ *
+ * const encoded: Canvas.Encoded = { _tag: "canvas", children: [] }
+ * console.log(encoded._tag) // "canvas"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1340,6 +1755,14 @@ export declare namespace Canvas {
 /**
  * The <caption> element.
  *
+ * @example
+ * ```ts
+ * import { Caption } from "@beep/html/Html.model"
+ *
+ * const node = Caption.make({ children: [] })
+ * console.log(node._tag) // "caption"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1354,6 +1777,14 @@ export class Caption extends S.TaggedClass<Caption>($I`Caption`)(
 ) {}
 /**
  * Companion namespace for {@link Caption}.
+ *
+ * @example
+ * ```ts
+ * import { Caption } from "@beep/html/Html.model"
+ *
+ * const encoded: Caption.Encoded = { _tag: "caption", children: [] }
+ * console.log(encoded._tag) // "caption"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1376,6 +1807,14 @@ export declare namespace Caption {
 /**
  * The <center> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Center } from "@beep/html/Html.model"
+ *
+ * const node = Center.make({ children: [] })
+ * console.log(node._tag) // "center"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1389,6 +1828,14 @@ export class Center extends S.TaggedClass<Center>($I`Center`)(
 ) {}
 /**
  * Companion namespace for {@link Center}.
+ *
+ * @example
+ * ```ts
+ * import { Center } from "@beep/html/Html.model"
+ *
+ * const encoded: Center.Encoded = { _tag: "center", children: [] }
+ * console.log(encoded._tag) // "center"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1409,6 +1856,14 @@ export declare namespace Center {
 /**
  * The <cite> element.
  *
+ * @example
+ * ```ts
+ * import { Cite } from "@beep/html/Html.model"
+ *
+ * const node = Cite.make({ children: [] })
+ * console.log(node._tag) // "cite"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1422,6 +1877,14 @@ export class Cite extends S.TaggedClass<Cite>($I`Cite`)(
 ) {}
 /**
  * Companion namespace for {@link Cite}.
+ *
+ * @example
+ * ```ts
+ * import { Cite } from "@beep/html/Html.model"
+ *
+ * const encoded: Cite.Encoded = { _tag: "cite", children: [] }
+ * console.log(encoded._tag) // "cite"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1442,6 +1905,14 @@ export declare namespace Cite {
 /**
  * The <code> element.
  *
+ * @example
+ * ```ts
+ * import { Code } from "@beep/html/Html.model"
+ *
+ * const node = Code.make({ children: [] })
+ * console.log(node._tag) // "code"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1455,6 +1926,14 @@ export class Code extends S.TaggedClass<Code>($I`Code`)(
 ) {}
 /**
  * Companion namespace for {@link Code}.
+ *
+ * @example
+ * ```ts
+ * import { Code } from "@beep/html/Html.model"
+ *
+ * const encoded: Code.Encoded = { _tag: "code", children: [] }
+ * console.log(encoded._tag) // "code"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1475,6 +1954,14 @@ export declare namespace Code {
 /**
  * The <col> element.
  *
+ * @example
+ * ```ts
+ * import { Col } from "@beep/html/Html.model"
+ *
+ * const node = Col.make({})
+ * console.log(node._tag) // "col"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1493,6 +1980,14 @@ export class Col extends S.TaggedClass<Col>($I`Col`)(
 ) {}
 /**
  * Companion namespace for {@link Col}.
+ *
+ * @example
+ * ```ts
+ * import { Col } from "@beep/html/Html.model"
+ *
+ * const encoded: Col.Encoded = { _tag: "col" }
+ * console.log(encoded._tag) // "col"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1523,6 +2018,14 @@ export declare namespace Col {
 /**
  * The <colgroup> element.
  *
+ * @example
+ * ```ts
+ * import { Colgroup } from "@beep/html/Html.model"
+ *
+ * const node = Colgroup.make({ children: [] })
+ * console.log(node._tag) // "colgroup"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1537,6 +2040,14 @@ export class Colgroup extends S.TaggedClass<Colgroup>($I`Colgroup`)(
 ) {}
 /**
  * Companion namespace for {@link Colgroup}.
+ *
+ * @example
+ * ```ts
+ * import { Colgroup } from "@beep/html/Html.model"
+ *
+ * const encoded: Colgroup.Encoded = { _tag: "colgroup", children: [] }
+ * console.log(encoded._tag) // "colgroup"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1559,6 +2070,14 @@ export declare namespace Colgroup {
 /**
  * The <data> element.
  *
+ * @example
+ * ```ts
+ * import { Data } from "@beep/html/Html.model"
+ *
+ * const node = Data.make({ children: [] })
+ * console.log(node._tag) // "data"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1573,6 +2092,14 @@ export class Data extends S.TaggedClass<Data>($I`Data`)(
 ) {}
 /**
  * Companion namespace for {@link Data}.
+ *
+ * @example
+ * ```ts
+ * import { Data } from "@beep/html/Html.model"
+ *
+ * const encoded: Data.Encoded = { _tag: "data", children: [] }
+ * console.log(encoded._tag) // "data"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1595,6 +2122,14 @@ export declare namespace Data {
 /**
  * The <datalist> element.
  *
+ * @example
+ * ```ts
+ * import { Datalist } from "@beep/html/Html.model"
+ *
+ * const node = Datalist.make({ children: [] })
+ * console.log(node._tag) // "datalist"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1608,6 +2143,14 @@ export class Datalist extends S.TaggedClass<Datalist>($I`Datalist`)(
 ) {}
 /**
  * Companion namespace for {@link Datalist}.
+ *
+ * @example
+ * ```ts
+ * import { Datalist } from "@beep/html/Html.model"
+ *
+ * const encoded: Datalist.Encoded = { _tag: "datalist", children: [] }
+ * console.log(encoded._tag) // "datalist"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1628,6 +2171,14 @@ export declare namespace Datalist {
 /**
  * The <dd> element.
  *
+ * @example
+ * ```ts
+ * import { Dd } from "@beep/html/Html.model"
+ *
+ * const node = Dd.make({ children: [] })
+ * console.log(node._tag) // "dd"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1641,6 +2192,14 @@ export class Dd extends S.TaggedClass<Dd>($I`Dd`)(
 ) {}
 /**
  * Companion namespace for {@link Dd}.
+ *
+ * @example
+ * ```ts
+ * import { Dd } from "@beep/html/Html.model"
+ *
+ * const encoded: Dd.Encoded = { _tag: "dd", children: [] }
+ * console.log(encoded._tag) // "dd"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1661,6 +2220,14 @@ export declare namespace Dd {
 /**
  * The <del> element.
  *
+ * @example
+ * ```ts
+ * import { Del } from "@beep/html/Html.model"
+ *
+ * const node = Del.make({ children: [] })
+ * console.log(node._tag) // "del"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1676,6 +2243,14 @@ export class Del extends S.TaggedClass<Del>($I`Del`)(
 ) {}
 /**
  * Companion namespace for {@link Del}.
+ *
+ * @example
+ * ```ts
+ * import { Del } from "@beep/html/Html.model"
+ *
+ * const encoded: Del.Encoded = { _tag: "del", children: [] }
+ * console.log(encoded._tag) // "del"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1700,6 +2275,14 @@ export declare namespace Del {
 /**
  * The <details> element.
  *
+ * @example
+ * ```ts
+ * import { Details } from "@beep/html/Html.model"
+ *
+ * const node = Details.make({ children: [] })
+ * console.log(node._tag) // "details"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1715,6 +2298,14 @@ export class Details extends S.TaggedClass<Details>($I`Details`)(
 ) {}
 /**
  * Companion namespace for {@link Details}.
+ *
+ * @example
+ * ```ts
+ * import { Details } from "@beep/html/Html.model"
+ *
+ * const encoded: Details.Encoded = { _tag: "details", children: [] }
+ * console.log(encoded._tag) // "details"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1739,6 +2330,14 @@ export declare namespace Details {
 /**
  * The <dfn> element.
  *
+ * @example
+ * ```ts
+ * import { Dfn } from "@beep/html/Html.model"
+ *
+ * const node = Dfn.make({ children: [] })
+ * console.log(node._tag) // "dfn"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1752,6 +2351,14 @@ export class Dfn extends S.TaggedClass<Dfn>($I`Dfn`)(
 ) {}
 /**
  * Companion namespace for {@link Dfn}.
+ *
+ * @example
+ * ```ts
+ * import { Dfn } from "@beep/html/Html.model"
+ *
+ * const encoded: Dfn.Encoded = { _tag: "dfn", children: [] }
+ * console.log(encoded._tag) // "dfn"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1772,6 +2379,14 @@ export declare namespace Dfn {
 /**
  * The <dialog> element.
  *
+ * @example
+ * ```ts
+ * import { Dialog } from "@beep/html/Html.model"
+ *
+ * const node = Dialog.make({ children: [] })
+ * console.log(node._tag) // "dialog"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1787,6 +2402,14 @@ export class Dialog extends S.TaggedClass<Dialog>($I`Dialog`)(
 ) {}
 /**
  * Companion namespace for {@link Dialog}.
+ *
+ * @example
+ * ```ts
+ * import { Dialog } from "@beep/html/Html.model"
+ *
+ * const encoded: Dialog.Encoded = { _tag: "dialog", children: [] }
+ * console.log(encoded._tag) // "dialog"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1811,6 +2434,14 @@ export declare namespace Dialog {
 /**
  * The <dir> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { DirElement } from "@beep/html/Html.model"
+ *
+ * const node = DirElement.make({ children: [] })
+ * console.log(node._tag) // "dir"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1824,6 +2455,14 @@ export class DirElement extends S.TaggedClass<DirElement>($I`DirElement`)(
 ) {}
 /**
  * Companion namespace for {@link DirElement}.
+ *
+ * @example
+ * ```ts
+ * import { DirElement } from "@beep/html/Html.model"
+ *
+ * const encoded: DirElement.Encoded = { _tag: "dir", children: [] }
+ * console.log(encoded._tag) // "dir"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1844,6 +2483,14 @@ export declare namespace DirElement {
 /**
  * The <div> element.
  *
+ * @example
+ * ```ts
+ * import { Div } from "@beep/html/Html.model"
+ *
+ * const node = Div.make({ children: [] })
+ * console.log(node._tag) // "div"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1858,6 +2505,14 @@ export class Div extends S.TaggedClass<Div>($I`Div`)(
 ) {}
 /**
  * Companion namespace for {@link Div}.
+ *
+ * @example
+ * ```ts
+ * import { Div } from "@beep/html/Html.model"
+ *
+ * const encoded: Div.Encoded = { _tag: "div", children: [] }
+ * console.log(encoded._tag) // "div"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1880,6 +2535,14 @@ export declare namespace Div {
 /**
  * The <dl> element.
  *
+ * @example
+ * ```ts
+ * import { Dl } from "@beep/html/Html.model"
+ *
+ * const node = Dl.make({ children: [] })
+ * console.log(node._tag) // "dl"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1894,6 +2557,14 @@ export class Dl extends S.TaggedClass<Dl>($I`Dl`)(
 ) {}
 /**
  * Companion namespace for {@link Dl}.
+ *
+ * @example
+ * ```ts
+ * import { Dl } from "@beep/html/Html.model"
+ *
+ * const encoded: Dl.Encoded = { _tag: "dl", children: [] }
+ * console.log(encoded._tag) // "dl"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1916,6 +2587,14 @@ export declare namespace Dl {
 /**
  * The <dt> element.
  *
+ * @example
+ * ```ts
+ * import { Dt } from "@beep/html/Html.model"
+ *
+ * const node = Dt.make({ children: [] })
+ * console.log(node._tag) // "dt"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1929,6 +2608,14 @@ export class Dt extends S.TaggedClass<Dt>($I`Dt`)(
 ) {}
 /**
  * Companion namespace for {@link Dt}.
+ *
+ * @example
+ * ```ts
+ * import { Dt } from "@beep/html/Html.model"
+ *
+ * const encoded: Dt.Encoded = { _tag: "dt", children: [] }
+ * console.log(encoded._tag) // "dt"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1949,6 +2636,14 @@ export declare namespace Dt {
 /**
  * The <em> element.
  *
+ * @example
+ * ```ts
+ * import { Em } from "@beep/html/Html.model"
+ *
+ * const node = Em.make({ children: [] })
+ * console.log(node._tag) // "em"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -1962,6 +2657,14 @@ export class Em extends S.TaggedClass<Em>($I`Em`)(
 ) {}
 /**
  * Companion namespace for {@link Em}.
+ *
+ * @example
+ * ```ts
+ * import { Em } from "@beep/html/Html.model"
+ *
+ * const encoded: Em.Encoded = { _tag: "em", children: [] }
+ * console.log(encoded._tag) // "em"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -1981,6 +2684,14 @@ export declare namespace Em {
 
 /**
  * The <embed> element.
+ *
+ * @example
+ * ```ts
+ * import { Embed } from "@beep/html/Html.model"
+ *
+ * const node = Embed.make({})
+ * console.log(node._tag) // "embed"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2002,6 +2713,14 @@ export class Embed extends S.TaggedClass<Embed>($I`Embed`)(
 ) {}
 /**
  * Companion namespace for {@link Embed}.
+ *
+ * @example
+ * ```ts
+ * import { Embed } from "@beep/html/Html.model"
+ *
+ * const encoded: Embed.Encoded = { _tag: "embed" }
+ * console.log(encoded._tag) // "embed"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2035,6 +2754,14 @@ export declare namespace Embed {
 
 /**
  * The <fieldset> element.
+ *
+ * @example
+ * ```ts
+ * import { Fieldset } from "@beep/html/Html.model"
+ *
+ * const node = Fieldset.make({ children: [] })
+ * console.log(node._tag) // "fieldset"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2120,6 +2847,14 @@ export class Fieldset extends S.TaggedClass<Fieldset>($I`Fieldset`)(
 ) {}
 /**
  * Companion namespace for {@link Fieldset}.
+ *
+ * @example
+ * ```ts
+ * import { Fieldset } from "@beep/html/Html.model"
+ *
+ * const encoded: Fieldset.Encoded = { _tag: "fieldset", children: [] }
+ * console.log(encoded._tag) // "fieldset"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2277,6 +3012,14 @@ export declare namespace Fieldset {
 /**
  * The <figcaption> element.
  *
+ * @example
+ * ```ts
+ * import { Figcaption } from "@beep/html/Html.model"
+ *
+ * const node = Figcaption.make({ children: [] })
+ * console.log(node._tag) // "figcaption"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2290,6 +3033,14 @@ export class Figcaption extends S.TaggedClass<Figcaption>($I`Figcaption`)(
 ) {}
 /**
  * Companion namespace for {@link Figcaption}.
+ *
+ * @example
+ * ```ts
+ * import { Figcaption } from "@beep/html/Html.model"
+ *
+ * const encoded: Figcaption.Encoded = { _tag: "figcaption", children: [] }
+ * console.log(encoded._tag) // "figcaption"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2310,6 +3061,14 @@ export declare namespace Figcaption {
 /**
  * The <figure> element.
  *
+ * @example
+ * ```ts
+ * import { Figure } from "@beep/html/Html.model"
+ *
+ * const node = Figure.make({ children: [] })
+ * console.log(node._tag) // "figure"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2323,6 +3082,14 @@ export class Figure extends S.TaggedClass<Figure>($I`Figure`)(
 ) {}
 /**
  * Companion namespace for {@link Figure}.
+ *
+ * @example
+ * ```ts
+ * import { Figure } from "@beep/html/Html.model"
+ *
+ * const encoded: Figure.Encoded = { _tag: "figure", children: [] }
+ * console.log(encoded._tag) // "figure"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2343,6 +3110,14 @@ export declare namespace Figure {
 /**
  * The <font> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Font } from "@beep/html/Html.model"
+ *
+ * const node = Font.make({ children: [] })
+ * console.log(node._tag) // "font"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2356,6 +3131,14 @@ export class Font extends S.TaggedClass<Font>($I`Font`)(
 ) {}
 /**
  * Companion namespace for {@link Font}.
+ *
+ * @example
+ * ```ts
+ * import { Font } from "@beep/html/Html.model"
+ *
+ * const encoded: Font.Encoded = { _tag: "font", children: [] }
+ * console.log(encoded._tag) // "font"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2376,6 +3159,14 @@ export declare namespace Font {
 /**
  * The <footer> element.
  *
+ * @example
+ * ```ts
+ * import { Footer } from "@beep/html/Html.model"
+ *
+ * const node = Footer.make({ children: [] })
+ * console.log(node._tag) // "footer"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2389,6 +3180,14 @@ export class Footer extends S.TaggedClass<Footer>($I`Footer`)(
 ) {}
 /**
  * Companion namespace for {@link Footer}.
+ *
+ * @example
+ * ```ts
+ * import { Footer } from "@beep/html/Html.model"
+ *
+ * const encoded: Footer.Encoded = { _tag: "footer", children: [] }
+ * console.log(encoded._tag) // "footer"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2408,6 +3207,14 @@ export declare namespace Footer {
 
 /**
  * The <form> element.
+ *
+ * @example
+ * ```ts
+ * import { Form } from "@beep/html/Html.model"
+ *
+ * const node = Form.make({ children: [] })
+ * console.log(node._tag) // "form"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2452,6 +3259,14 @@ export class Form extends S.TaggedClass<Form>($I`Form`)(
 ) {}
 /**
  * Companion namespace for {@link Form}.
+ *
+ * @example
+ * ```ts
+ * import { Form } from "@beep/html/Html.model"
+ *
+ * const encoded: Form.Encoded = { _tag: "form", children: [] }
+ * console.log(encoded._tag) // "form"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2514,6 +3329,14 @@ export declare namespace Form {
 /**
  * The <frame> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Frame } from "@beep/html/Html.model"
+ *
+ * const node = Frame.make({})
+ * console.log(node._tag) // "frame"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2526,6 +3349,14 @@ export class Frame extends S.TaggedClass<Frame>($I`Frame`)(
 ) {}
 /**
  * Companion namespace for {@link Frame}.
+ *
+ * @example
+ * ```ts
+ * import { Frame } from "@beep/html/Html.model"
+ *
+ * const encoded: Frame.Encoded = { _tag: "frame" }
+ * console.log(encoded._tag) // "frame"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2544,6 +3375,14 @@ export declare namespace Frame {
 /**
  * The <frameset> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Frameset } from "@beep/html/Html.model"
+ *
+ * const node = Frameset.make({ children: [] })
+ * console.log(node._tag) // "frameset"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2557,6 +3396,14 @@ export class Frameset extends S.TaggedClass<Frameset>($I`Frameset`)(
 ) {}
 /**
  * Companion namespace for {@link Frameset}.
+ *
+ * @example
+ * ```ts
+ * import { Frameset } from "@beep/html/Html.model"
+ *
+ * const encoded: Frameset.Encoded = { _tag: "frameset", children: [] }
+ * console.log(encoded._tag) // "frameset"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2577,6 +3424,14 @@ export declare namespace Frameset {
 /**
  * The <h1> element.
  *
+ * @example
+ * ```ts
+ * import { H1 } from "@beep/html/Html.model"
+ *
+ * const node = H1.make({ children: [] })
+ * console.log(node._tag) // "h1"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2591,6 +3446,14 @@ export class H1 extends S.TaggedClass<H1>($I`H1`)(
 ) {}
 /**
  * Companion namespace for {@link H1}.
+ *
+ * @example
+ * ```ts
+ * import { H1 } from "@beep/html/Html.model"
+ *
+ * const encoded: H1.Encoded = { _tag: "h1", children: [] }
+ * console.log(encoded._tag) // "h1"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2613,6 +3476,14 @@ export declare namespace H1 {
 /**
  * The <h2> element.
  *
+ * @example
+ * ```ts
+ * import { H2 } from "@beep/html/Html.model"
+ *
+ * const node = H2.make({ children: [] })
+ * console.log(node._tag) // "h2"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2627,6 +3498,14 @@ export class H2 extends S.TaggedClass<H2>($I`H2`)(
 ) {}
 /**
  * Companion namespace for {@link H2}.
+ *
+ * @example
+ * ```ts
+ * import { H2 } from "@beep/html/Html.model"
+ *
+ * const encoded: H2.Encoded = { _tag: "h2", children: [] }
+ * console.log(encoded._tag) // "h2"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2649,6 +3528,14 @@ export declare namespace H2 {
 /**
  * The <h3> element.
  *
+ * @example
+ * ```ts
+ * import { H3 } from "@beep/html/Html.model"
+ *
+ * const node = H3.make({ children: [] })
+ * console.log(node._tag) // "h3"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2663,6 +3550,14 @@ export class H3 extends S.TaggedClass<H3>($I`H3`)(
 ) {}
 /**
  * Companion namespace for {@link H3}.
+ *
+ * @example
+ * ```ts
+ * import { H3 } from "@beep/html/Html.model"
+ *
+ * const encoded: H3.Encoded = { _tag: "h3", children: [] }
+ * console.log(encoded._tag) // "h3"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2685,6 +3580,14 @@ export declare namespace H3 {
 /**
  * The <h4> element.
  *
+ * @example
+ * ```ts
+ * import { H4 } from "@beep/html/Html.model"
+ *
+ * const node = H4.make({ children: [] })
+ * console.log(node._tag) // "h4"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2699,6 +3602,14 @@ export class H4 extends S.TaggedClass<H4>($I`H4`)(
 ) {}
 /**
  * Companion namespace for {@link H4}.
+ *
+ * @example
+ * ```ts
+ * import { H4 } from "@beep/html/Html.model"
+ *
+ * const encoded: H4.Encoded = { _tag: "h4", children: [] }
+ * console.log(encoded._tag) // "h4"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2721,6 +3632,14 @@ export declare namespace H4 {
 /**
  * The <h5> element.
  *
+ * @example
+ * ```ts
+ * import { H5 } from "@beep/html/Html.model"
+ *
+ * const node = H5.make({ children: [] })
+ * console.log(node._tag) // "h5"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2735,6 +3654,14 @@ export class H5 extends S.TaggedClass<H5>($I`H5`)(
 ) {}
 /**
  * Companion namespace for {@link H5}.
+ *
+ * @example
+ * ```ts
+ * import { H5 } from "@beep/html/Html.model"
+ *
+ * const encoded: H5.Encoded = { _tag: "h5", children: [] }
+ * console.log(encoded._tag) // "h5"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2757,6 +3684,14 @@ export declare namespace H5 {
 /**
  * The <h6> element.
  *
+ * @example
+ * ```ts
+ * import { H6 } from "@beep/html/Html.model"
+ *
+ * const node = H6.make({ children: [] })
+ * console.log(node._tag) // "h6"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2771,6 +3706,14 @@ export class H6 extends S.TaggedClass<H6>($I`H6`)(
 ) {}
 /**
  * Companion namespace for {@link H6}.
+ *
+ * @example
+ * ```ts
+ * import { H6 } from "@beep/html/Html.model"
+ *
+ * const encoded: H6.Encoded = { _tag: "h6", children: [] }
+ * console.log(encoded._tag) // "h6"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2793,6 +3736,14 @@ export declare namespace H6 {
 /**
  * The <head> element.
  *
+ * @example
+ * ```ts
+ * import { Head } from "@beep/html/Html.model"
+ *
+ * const node = Head.make({ children: [] })
+ * console.log(node._tag) // "head"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2807,6 +3758,14 @@ export class Head extends S.TaggedClass<Head>($I`Head`)(
 ) {}
 /**
  * Companion namespace for {@link Head}.
+ *
+ * @example
+ * ```ts
+ * import { Head } from "@beep/html/Html.model"
+ *
+ * const encoded: Head.Encoded = { _tag: "head", children: [] }
+ * console.log(encoded._tag) // "head"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2829,6 +3788,14 @@ export declare namespace Head {
 /**
  * The <header> element.
  *
+ * @example
+ * ```ts
+ * import { Header } from "@beep/html/Html.model"
+ *
+ * const node = Header.make({ children: [] })
+ * console.log(node._tag) // "header"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2842,6 +3809,14 @@ export class Header extends S.TaggedClass<Header>($I`Header`)(
 ) {}
 /**
  * Companion namespace for {@link Header}.
+ *
+ * @example
+ * ```ts
+ * import { Header } from "@beep/html/Html.model"
+ *
+ * const encoded: Header.Encoded = { _tag: "header", children: [] }
+ * console.log(encoded._tag) // "header"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2862,6 +3837,14 @@ export declare namespace Header {
 /**
  * The <hgroup> element.
  *
+ * @example
+ * ```ts
+ * import { Hgroup } from "@beep/html/Html.model"
+ *
+ * const node = Hgroup.make({ children: [] })
+ * console.log(node._tag) // "hgroup"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2875,6 +3858,14 @@ export class Hgroup extends S.TaggedClass<Hgroup>($I`Hgroup`)(
 ) {}
 /**
  * Companion namespace for {@link Hgroup}.
+ *
+ * @example
+ * ```ts
+ * import { Hgroup } from "@beep/html/Html.model"
+ *
+ * const encoded: Hgroup.Encoded = { _tag: "hgroup", children: [] }
+ * console.log(encoded._tag) // "hgroup"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2895,6 +3886,14 @@ export declare namespace Hgroup {
 /**
  * The <hr> element.
  *
+ * @example
+ * ```ts
+ * import { Hr } from "@beep/html/Html.model"
+ *
+ * const node = Hr.make({})
+ * console.log(node._tag) // "hr"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2912,6 +3911,14 @@ export class Hr extends S.TaggedClass<Hr>($I`Hr`)(
 ) {}
 /**
  * Companion namespace for {@link Hr}.
+ *
+ * @example
+ * ```ts
+ * import { Hr } from "@beep/html/Html.model"
+ *
+ * const encoded: Hr.Encoded = { _tag: "hr" }
+ * console.log(encoded._tag) // "hr"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2940,6 +3947,14 @@ export declare namespace Hr {
 /**
  * The <html> element.
  *
+ * @example
+ * ```ts
+ * import { Html } from "@beep/html/Html.model"
+ *
+ * const node = Html.make({ children: [] })
+ * console.log(node._tag) // "html"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2955,6 +3970,14 @@ export class Html extends S.TaggedClass<Html>($I`Html`)(
 ) {}
 /**
  * Companion namespace for {@link Html}.
+ *
+ * @example
+ * ```ts
+ * import { Html } from "@beep/html/Html.model"
+ *
+ * const encoded: Html.Encoded = { _tag: "html", children: [] }
+ * console.log(encoded._tag) // "html"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -2979,6 +4002,14 @@ export declare namespace Html {
 /**
  * The <i> element.
  *
+ * @example
+ * ```ts
+ * import { I } from "@beep/html/Html.model"
+ *
+ * const node = I.make({ children: [] })
+ * console.log(node._tag) // "i"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -2992,6 +4023,14 @@ export class I extends S.TaggedClass<I>($I`I`)(
 ) {}
 /**
  * Companion namespace for {@link I}.
+ *
+ * @example
+ * ```ts
+ * import { I } from "@beep/html/Html.model"
+ *
+ * const encoded: I.Encoded = { _tag: "i", children: [] }
+ * console.log(encoded._tag) // "i"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -3011,6 +4050,14 @@ export declare namespace I {
 
 /**
  * The <iframe> element.
+ *
+ * @example
+ * ```ts
+ * import { Iframe } from "@beep/html/Html.model"
+ *
+ * const node = Iframe.make({ children: [] })
+ * console.log(node._tag) // "iframe"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -3061,6 +4108,14 @@ export class Iframe extends S.TaggedClass<Iframe>($I`Iframe`)(
 ) {}
 /**
  * Companion namespace for {@link Iframe}.
+ *
+ * @example
+ * ```ts
+ * import { Iframe } from "@beep/html/Html.model"
+ *
+ * const encoded: Iframe.Encoded = { _tag: "iframe", children: [] }
+ * console.log(encoded._tag) // "iframe"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -3148,6 +4203,14 @@ export declare namespace Iframe {
 /**
  * The <img> element.
  *
+ * @example
+ * ```ts
+ * import { Img } from "@beep/html/Html.model"
+ *
+ * const node = Img.make({})
+ * console.log(node._tag) // "img"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -3183,6 +4246,14 @@ export class Img extends S.TaggedClass<Img>($I`Img`)(
 ) {}
 /**
  * Companion namespace for {@link Img}.
+ *
+ * @example
+ * ```ts
+ * import { Img } from "@beep/html/Html.model"
+ *
+ * const encoded: Img.Encoded = { _tag: "img" }
+ * console.log(encoded._tag) // "img"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -3242,6 +4313,14 @@ export declare namespace Img {
 
 /**
  * The <input> element.
+ *
+ * @example
+ * ```ts
+ * import { Input } from "@beep/html/Html.model"
+ *
+ * const node = Input.make({})
+ * console.log(node._tag) // "input"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -3378,6 +4457,14 @@ export class Input extends S.TaggedClass<Input>($I`Input`)(
 ) {}
 /**
  * Companion namespace for {@link Input}.
+ *
+ * @example
+ * ```ts
+ * import { Input } from "@beep/html/Html.model"
+ *
+ * const encoded: Input.Encoded = { _tag: "input" }
+ * console.log(encoded._tag) // "input"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -3632,6 +4719,14 @@ export declare namespace Input {
 /**
  * The <ins> element.
  *
+ * @example
+ * ```ts
+ * import { Ins } from "@beep/html/Html.model"
+ *
+ * const node = Ins.make({ children: [] })
+ * console.log(node._tag) // "ins"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -3647,6 +4742,14 @@ export class Ins extends S.TaggedClass<Ins>($I`Ins`)(
 ) {}
 /**
  * Companion namespace for {@link Ins}.
+ *
+ * @example
+ * ```ts
+ * import { Ins } from "@beep/html/Html.model"
+ *
+ * const encoded: Ins.Encoded = { _tag: "ins", children: [] }
+ * console.log(encoded._tag) // "ins"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -3671,6 +4774,14 @@ export declare namespace Ins {
 /**
  * The <isindex> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Isindex } from "@beep/html/Html.model"
+ *
+ * const node = Isindex.make({})
+ * console.log(node._tag) // "isindex"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -3683,6 +4794,14 @@ export class Isindex extends S.TaggedClass<Isindex>($I`Isindex`)(
 ) {}
 /**
  * Companion namespace for {@link Isindex}.
+ *
+ * @example
+ * ```ts
+ * import { Isindex } from "@beep/html/Html.model"
+ *
+ * const encoded: Isindex.Encoded = { _tag: "isindex" }
+ * console.log(encoded._tag) // "isindex"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -3701,6 +4820,14 @@ export declare namespace Isindex {
 /**
  * The <kbd> element.
  *
+ * @example
+ * ```ts
+ * import { Kbd } from "@beep/html/Html.model"
+ *
+ * const node = Kbd.make({ children: [] })
+ * console.log(node._tag) // "kbd"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -3714,6 +4841,14 @@ export class Kbd extends S.TaggedClass<Kbd>($I`Kbd`)(
 ) {}
 /**
  * Companion namespace for {@link Kbd}.
+ *
+ * @example
+ * ```ts
+ * import { Kbd } from "@beep/html/Html.model"
+ *
+ * const encoded: Kbd.Encoded = { _tag: "kbd", children: [] }
+ * console.log(encoded._tag) // "kbd"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -3734,6 +4869,14 @@ export declare namespace Kbd {
 /**
  * The <keygen> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Keygen } from "@beep/html/Html.model"
+ *
+ * const node = Keygen.make({})
+ * console.log(node._tag) // "keygen"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -3746,6 +4889,14 @@ export class Keygen extends S.TaggedClass<Keygen>($I`Keygen`)(
 ) {}
 /**
  * Companion namespace for {@link Keygen}.
+ *
+ * @example
+ * ```ts
+ * import { Keygen } from "@beep/html/Html.model"
+ *
+ * const encoded: Keygen.Encoded = { _tag: "keygen" }
+ * console.log(encoded._tag) // "keygen"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -3764,6 +4915,14 @@ export declare namespace Keygen {
 /**
  * The <label> element.
  *
+ * @example
+ * ```ts
+ * import { Label } from "@beep/html/Html.model"
+ *
+ * const node = Label.make({ children: [] })
+ * console.log(node._tag) // "label"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -3778,6 +4937,14 @@ export class Label extends S.TaggedClass<Label>($I`Label`)(
 ) {}
 /**
  * Companion namespace for {@link Label}.
+ *
+ * @example
+ * ```ts
+ * import { Label } from "@beep/html/Html.model"
+ *
+ * const encoded: Label.Encoded = { _tag: "label", children: [] }
+ * console.log(encoded._tag) // "label"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -3800,6 +4967,14 @@ export declare namespace Label {
 /**
  * The <legend> element.
  *
+ * @example
+ * ```ts
+ * import { Legend } from "@beep/html/Html.model"
+ *
+ * const node = Legend.make({ children: [] })
+ * console.log(node._tag) // "legend"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -3814,6 +4989,14 @@ export class Legend extends S.TaggedClass<Legend>($I`Legend`)(
 ) {}
 /**
  * Companion namespace for {@link Legend}.
+ *
+ * @example
+ * ```ts
+ * import { Legend } from "@beep/html/Html.model"
+ *
+ * const encoded: Legend.Encoded = { _tag: "legend", children: [] }
+ * console.log(encoded._tag) // "legend"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -3836,6 +5019,14 @@ export declare namespace Legend {
 /**
  * The <li> element.
  *
+ * @example
+ * ```ts
+ * import { Li } from "@beep/html/Html.model"
+ *
+ * const node = Li.make({ children: [] })
+ * console.log(node._tag) // "li"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -3851,6 +5042,14 @@ export class Li extends S.TaggedClass<Li>($I`Li`)(
 ) {}
 /**
  * Companion namespace for {@link Li}.
+ *
+ * @example
+ * ```ts
+ * import { Li } from "@beep/html/Html.model"
+ *
+ * const encoded: Li.Encoded = { _tag: "li", children: [] }
+ * console.log(encoded._tag) // "li"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -3874,6 +5073,14 @@ export declare namespace Li {
 
 /**
  * The <link> element.
+ *
+ * @example
+ * ```ts
+ * import { Link } from "@beep/html/Html.model"
+ *
+ * const node = Link.make({})
+ * console.log(node._tag) // "link"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -3933,6 +5140,14 @@ export class Link extends S.TaggedClass<Link>($I`Link`)(
 ) {}
 /**
  * Companion namespace for {@link Link}.
+ *
+ * @example
+ * ```ts
+ * import { Link } from "@beep/html/Html.model"
+ *
+ * const encoded: Link.Encoded = { _tag: "link" }
+ * console.log(encoded._tag) // "link"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4034,6 +5249,14 @@ export declare namespace Link {
 /**
  * The <listing> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Listing } from "@beep/html/Html.model"
+ *
+ * const node = Listing.make({ content: "" })
+ * console.log(node._tag) // "listing"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -4047,6 +5270,14 @@ export class Listing extends S.TaggedClass<Listing>($I`Listing`)(
 ) {}
 /**
  * Companion namespace for {@link Listing}.
+ *
+ * @example
+ * ```ts
+ * import { Listing } from "@beep/html/Html.model"
+ *
+ * const encoded: Listing.Encoded = { _tag: "listing", content: "" }
+ * console.log(encoded._tag) // "listing"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4067,6 +5298,14 @@ export declare namespace Listing {
 /**
  * The <main> element.
  *
+ * @example
+ * ```ts
+ * import { Main } from "@beep/html/Html.model"
+ *
+ * const node = Main.make({ children: [] })
+ * console.log(node._tag) // "main"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -4080,6 +5319,14 @@ export class Main extends S.TaggedClass<Main>($I`Main`)(
 ) {}
 /**
  * Companion namespace for {@link Main}.
+ *
+ * @example
+ * ```ts
+ * import { Main } from "@beep/html/Html.model"
+ *
+ * const encoded: Main.Encoded = { _tag: "main", children: [] }
+ * console.log(encoded._tag) // "main"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4100,6 +5347,14 @@ export declare namespace Main {
 /**
  * The <map> element.
  *
+ * @example
+ * ```ts
+ * import { MapElement } from "@beep/html/Html.model"
+ *
+ * const node = MapElement.make({ children: [] })
+ * console.log(node._tag) // "map"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -4114,6 +5369,14 @@ export class MapElement extends S.TaggedClass<MapElement>($I`MapElement`)(
 ) {}
 /**
  * Companion namespace for {@link MapElement}.
+ *
+ * @example
+ * ```ts
+ * import { MapElement } from "@beep/html/Html.model"
+ *
+ * const encoded: MapElement.Encoded = { _tag: "map", children: [] }
+ * console.log(encoded._tag) // "map"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4136,6 +5399,14 @@ export declare namespace MapElement {
 /**
  * The <mark> element.
  *
+ * @example
+ * ```ts
+ * import { Mark } from "@beep/html/Html.model"
+ *
+ * const node = Mark.make({ children: [] })
+ * console.log(node._tag) // "mark"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -4149,6 +5420,14 @@ export class Mark extends S.TaggedClass<Mark>($I`Mark`)(
 ) {}
 /**
  * Companion namespace for {@link Mark}.
+ *
+ * @example
+ * ```ts
+ * import { Mark } from "@beep/html/Html.model"
+ *
+ * const encoded: Mark.Encoded = { _tag: "mark", children: [] }
+ * console.log(encoded._tag) // "mark"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4169,6 +5448,14 @@ export declare namespace Mark {
 /**
  * The <marquee> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Marquee } from "@beep/html/Html.model"
+ *
+ * const node = Marquee.make({ children: [] })
+ * console.log(node._tag) // "marquee"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -4186,6 +5473,14 @@ export class Marquee extends S.TaggedClass<Marquee>($I`Marquee`)(
 ) {}
 /**
  * Companion namespace for {@link Marquee}.
+ *
+ * @example
+ * ```ts
+ * import { Marquee } from "@beep/html/Html.model"
+ *
+ * const encoded: Marquee.Encoded = { _tag: "marquee", children: [] }
+ * console.log(encoded._tag) // "marquee"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4214,6 +5509,14 @@ export declare namespace Marquee {
 /**
  * The <menu> element.
  *
+ * @example
+ * ```ts
+ * import { Menu } from "@beep/html/Html.model"
+ *
+ * const node = Menu.make({ children: [] })
+ * console.log(node._tag) // "menu"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -4230,6 +5533,14 @@ export class Menu extends S.TaggedClass<Menu>($I`Menu`)(
 ) {}
 /**
  * Companion namespace for {@link Menu}.
+ *
+ * @example
+ * ```ts
+ * import { Menu } from "@beep/html/Html.model"
+ *
+ * const encoded: Menu.Encoded = { _tag: "menu", children: [] }
+ * console.log(encoded._tag) // "menu"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4256,6 +5567,14 @@ export declare namespace Menu {
 /**
  * The <menuitem> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Menuitem } from "@beep/html/Html.model"
+ *
+ * const node = Menuitem.make({ children: [] })
+ * console.log(node._tag) // "menuitem"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -4269,6 +5588,14 @@ export class Menuitem extends S.TaggedClass<Menuitem>($I`Menuitem`)(
 ) {}
 /**
  * Companion namespace for {@link Menuitem}.
+ *
+ * @example
+ * ```ts
+ * import { Menuitem } from "@beep/html/Html.model"
+ *
+ * const encoded: Menuitem.Encoded = { _tag: "menuitem", children: [] }
+ * console.log(encoded._tag) // "menuitem"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4288,6 +5615,14 @@ export declare namespace Menuitem {
 
 /**
  * The <meta> element.
+ *
+ * @example
+ * ```ts
+ * import { Meta } from "@beep/html/Html.model"
+ *
+ * const node = Meta.make({})
+ * console.log(node._tag) // "meta"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4328,6 +5663,14 @@ export class Meta extends S.TaggedClass<Meta>($I`Meta`)(
 ) {}
 /**
  * Companion namespace for {@link Meta}.
+ *
+ * @example
+ * ```ts
+ * import { Meta } from "@beep/html/Html.model"
+ *
+ * const encoded: Meta.Encoded = { _tag: "meta" }
+ * console.log(encoded._tag) // "meta"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4390,6 +5733,14 @@ export declare namespace Meta {
 /**
  * The <meter> element.
  *
+ * @example
+ * ```ts
+ * import { Meter } from "@beep/html/Html.model"
+ *
+ * const node = Meter.make({ children: [] })
+ * console.log(node._tag) // "meter"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -4409,6 +5760,14 @@ export class Meter extends S.TaggedClass<Meter>($I`Meter`)(
 ) {}
 /**
  * Companion namespace for {@link Meter}.
+ *
+ * @example
+ * ```ts
+ * import { Meter } from "@beep/html/Html.model"
+ *
+ * const encoded: Meter.Encoded = { _tag: "meter", children: [] }
+ * console.log(encoded._tag) // "meter"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4441,6 +5800,14 @@ export declare namespace Meter {
 /**
  * The <multicol> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Multicol } from "@beep/html/Html.model"
+ *
+ * const node = Multicol.make({ children: [] })
+ * console.log(node._tag) // "multicol"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -4454,6 +5821,14 @@ export class Multicol extends S.TaggedClass<Multicol>($I`Multicol`)(
 ) {}
 /**
  * Companion namespace for {@link Multicol}.
+ *
+ * @example
+ * ```ts
+ * import { Multicol } from "@beep/html/Html.model"
+ *
+ * const encoded: Multicol.Encoded = { _tag: "multicol", children: [] }
+ * console.log(encoded._tag) // "multicol"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4474,6 +5849,14 @@ export declare namespace Multicol {
 /**
  * The <nav> element.
  *
+ * @example
+ * ```ts
+ * import { Nav } from "@beep/html/Html.model"
+ *
+ * const node = Nav.make({ children: [] })
+ * console.log(node._tag) // "nav"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -4487,6 +5870,14 @@ export class Nav extends S.TaggedClass<Nav>($I`Nav`)(
 ) {}
 /**
  * Companion namespace for {@link Nav}.
+ *
+ * @example
+ * ```ts
+ * import { Nav } from "@beep/html/Html.model"
+ *
+ * const encoded: Nav.Encoded = { _tag: "nav", children: [] }
+ * console.log(encoded._tag) // "nav"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4507,6 +5898,14 @@ export declare namespace Nav {
 /**
  * The <nextid> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Nextid } from "@beep/html/Html.model"
+ *
+ * const node = Nextid.make({})
+ * console.log(node._tag) // "nextid"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -4519,6 +5918,14 @@ export class Nextid extends S.TaggedClass<Nextid>($I`Nextid`)(
 ) {}
 /**
  * Companion namespace for {@link Nextid}.
+ *
+ * @example
+ * ```ts
+ * import { Nextid } from "@beep/html/Html.model"
+ *
+ * const encoded: Nextid.Encoded = { _tag: "nextid" }
+ * console.log(encoded._tag) // "nextid"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4537,6 +5944,14 @@ export declare namespace Nextid {
 /**
  * The <nobr> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Nobr } from "@beep/html/Html.model"
+ *
+ * const node = Nobr.make({ children: [] })
+ * console.log(node._tag) // "nobr"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -4550,6 +5965,14 @@ export class Nobr extends S.TaggedClass<Nobr>($I`Nobr`)(
 ) {}
 /**
  * Companion namespace for {@link Nobr}.
+ *
+ * @example
+ * ```ts
+ * import { Nobr } from "@beep/html/Html.model"
+ *
+ * const encoded: Nobr.Encoded = { _tag: "nobr", children: [] }
+ * console.log(encoded._tag) // "nobr"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4570,6 +5993,14 @@ export declare namespace Nobr {
 /**
  * The <noembed> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Noembed } from "@beep/html/Html.model"
+ *
+ * const node = Noembed.make({ children: [] })
+ * console.log(node._tag) // "noembed"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -4583,6 +6014,14 @@ export class Noembed extends S.TaggedClass<Noembed>($I`Noembed`)(
 ) {}
 /**
  * Companion namespace for {@link Noembed}.
+ *
+ * @example
+ * ```ts
+ * import { Noembed } from "@beep/html/Html.model"
+ *
+ * const encoded: Noembed.Encoded = { _tag: "noembed", children: [] }
+ * console.log(encoded._tag) // "noembed"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4603,6 +6042,14 @@ export declare namespace Noembed {
 /**
  * The <noframes> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Noframes } from "@beep/html/Html.model"
+ *
+ * const node = Noframes.make({ children: [] })
+ * console.log(node._tag) // "noframes"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -4616,6 +6063,14 @@ export class Noframes extends S.TaggedClass<Noframes>($I`Noframes`)(
 ) {}
 /**
  * Companion namespace for {@link Noframes}.
+ *
+ * @example
+ * ```ts
+ * import { Noframes } from "@beep/html/Html.model"
+ *
+ * const encoded: Noframes.Encoded = { _tag: "noframes", children: [] }
+ * console.log(encoded._tag) // "noframes"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4636,6 +6091,14 @@ export declare namespace Noframes {
 /**
  * The <noscript> element.
  *
+ * @example
+ * ```ts
+ * import { Noscript } from "@beep/html/Html.model"
+ *
+ * const node = Noscript.make({ children: [] })
+ * console.log(node._tag) // "noscript"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -4649,6 +6112,14 @@ export class Noscript extends S.TaggedClass<Noscript>($I`Noscript`)(
 ) {}
 /**
  * Companion namespace for {@link Noscript}.
+ *
+ * @example
+ * ```ts
+ * import { Noscript } from "@beep/html/Html.model"
+ *
+ * const encoded: Noscript.Encoded = { _tag: "noscript", children: [] }
+ * console.log(encoded._tag) // "noscript"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4668,6 +6139,14 @@ export declare namespace Noscript {
 
 /**
  * The <object> element.
+ *
+ * @example
+ * ```ts
+ * import { ObjectElement } from "@beep/html/Html.model"
+ *
+ * const node = ObjectElement.make({ children: [] })
+ * console.log(node._tag) // "object"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4770,6 +6249,14 @@ export class ObjectElement extends S.TaggedClass<ObjectElement>($I`ObjectElement
 ) {}
 /**
  * Companion namespace for {@link ObjectElement}.
+ *
+ * @example
+ * ```ts
+ * import { ObjectElement } from "@beep/html/Html.model"
+ *
+ * const encoded: ObjectElement.Encoded = { _tag: "object", children: [] }
+ * console.log(encoded._tag) // "object"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -4961,6 +6448,14 @@ export declare namespace ObjectElement {
 /**
  * The <ol> element.
  *
+ * @example
+ * ```ts
+ * import { Ol } from "@beep/html/Html.model"
+ *
+ * const node = Ol.make({ children: [] })
+ * console.log(node._tag) // "ol"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -4978,6 +6473,14 @@ export class Ol extends S.TaggedClass<Ol>($I`Ol`)(
 ) {}
 /**
  * Companion namespace for {@link Ol}.
+ *
+ * @example
+ * ```ts
+ * import { Ol } from "@beep/html/Html.model"
+ *
+ * const encoded: Ol.Encoded = { _tag: "ol", children: [] }
+ * console.log(encoded._tag) // "ol"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5006,6 +6509,14 @@ export declare namespace Ol {
 /**
  * The <optgroup> element.
  *
+ * @example
+ * ```ts
+ * import { Optgroup } from "@beep/html/Html.model"
+ *
+ * const node = Optgroup.make({ children: [] })
+ * console.log(node._tag) // "optgroup"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5021,6 +6532,14 @@ export class Optgroup extends S.TaggedClass<Optgroup>($I`Optgroup`)(
 ) {}
 /**
  * Companion namespace for {@link Optgroup}.
+ *
+ * @example
+ * ```ts
+ * import { Optgroup } from "@beep/html/Html.model"
+ *
+ * const encoded: Optgroup.Encoded = { _tag: "optgroup", children: [] }
+ * console.log(encoded._tag) // "optgroup"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5045,6 +6564,14 @@ export declare namespace Optgroup {
 /**
  * The <option> element.
  *
+ * @example
+ * ```ts
+ * import { Option } from "@beep/html/Html.model"
+ *
+ * const node = Option.make({ children: [] })
+ * console.log(node._tag) // "option"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5063,6 +6590,14 @@ export class Option extends S.TaggedClass<Option>($I`Option`)(
 ) {}
 /**
  * Companion namespace for {@link Option}.
+ *
+ * @example
+ * ```ts
+ * import { Option } from "@beep/html/Html.model"
+ *
+ * const encoded: Option.Encoded = { _tag: "option", children: [] }
+ * console.log(encoded._tag) // "option"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5092,6 +6627,14 @@ export declare namespace Option {
 
 /**
  * The <output> element.
+ *
+ * @example
+ * ```ts
+ * import { Output } from "@beep/html/Html.model"
+ *
+ * const node = Output.make({ children: [] })
+ * console.log(node._tag) // "output"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5178,6 +6721,14 @@ export class Output extends S.TaggedClass<Output>($I`Output`)(
 ) {}
 /**
  * Companion namespace for {@link Output}.
+ *
+ * @example
+ * ```ts
+ * import { Output } from "@beep/html/Html.model"
+ *
+ * const encoded: Output.Encoded = { _tag: "output", children: [] }
+ * console.log(encoded._tag) // "output"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5337,6 +6888,14 @@ export declare namespace Output {
 /**
  * The <p> element.
  *
+ * @example
+ * ```ts
+ * import { P } from "@beep/html/Html.model"
+ *
+ * const node = P.make({ children: [] })
+ * console.log(node._tag) // "p"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5351,6 +6910,14 @@ export class P extends S.TaggedClass<P>($I`P`)(
 ) {}
 /**
  * Companion namespace for {@link P}.
+ *
+ * @example
+ * ```ts
+ * import { P } from "@beep/html/Html.model"
+ *
+ * const encoded: P.Encoded = { _tag: "p", children: [] }
+ * console.log(encoded._tag) // "p"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5373,6 +6940,14 @@ export declare namespace P {
 /**
  * The <param> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Param } from "@beep/html/Html.model"
+ *
+ * const node = Param.make({})
+ * console.log(node._tag) // "param"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5385,6 +6960,14 @@ export class Param extends S.TaggedClass<Param>($I`Param`)(
 ) {}
 /**
  * Companion namespace for {@link Param}.
+ *
+ * @example
+ * ```ts
+ * import { Param } from "@beep/html/Html.model"
+ *
+ * const encoded: Param.Encoded = { _tag: "param" }
+ * console.log(encoded._tag) // "param"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5403,6 +6986,14 @@ export declare namespace Param {
 /**
  * The <picture> element.
  *
+ * @example
+ * ```ts
+ * import { Picture } from "@beep/html/Html.model"
+ *
+ * const node = Picture.make({ children: [] })
+ * console.log(node._tag) // "picture"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5416,6 +7007,14 @@ export class Picture extends S.TaggedClass<Picture>($I`Picture`)(
 ) {}
 /**
  * Companion namespace for {@link Picture}.
+ *
+ * @example
+ * ```ts
+ * import { Picture } from "@beep/html/Html.model"
+ *
+ * const encoded: Picture.Encoded = { _tag: "picture", children: [] }
+ * console.log(encoded._tag) // "picture"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5436,6 +7035,14 @@ export declare namespace Picture {
 /**
  * The <plaintext> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Plaintext } from "@beep/html/Html.model"
+ *
+ * const node = Plaintext.make({ content: "" })
+ * console.log(node._tag) // "plaintext"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5449,6 +7056,14 @@ export class Plaintext extends S.TaggedClass<Plaintext>($I`Plaintext`)(
 ) {}
 /**
  * Companion namespace for {@link Plaintext}.
+ *
+ * @example
+ * ```ts
+ * import { Plaintext } from "@beep/html/Html.model"
+ *
+ * const encoded: Plaintext.Encoded = { _tag: "plaintext", content: "" }
+ * console.log(encoded._tag) // "plaintext"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5469,6 +7084,14 @@ export declare namespace Plaintext {
 /**
  * The <pre> element.
  *
+ * @example
+ * ```ts
+ * import { Pre } from "@beep/html/Html.model"
+ *
+ * const node = Pre.make({ children: [] })
+ * console.log(node._tag) // "pre"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5483,6 +7106,14 @@ export class Pre extends S.TaggedClass<Pre>($I`Pre`)(
 ) {}
 /**
  * Companion namespace for {@link Pre}.
+ *
+ * @example
+ * ```ts
+ * import { Pre } from "@beep/html/Html.model"
+ *
+ * const encoded: Pre.Encoded = { _tag: "pre", children: [] }
+ * console.log(encoded._tag) // "pre"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5505,6 +7136,14 @@ export declare namespace Pre {
 /**
  * The <progress> element.
  *
+ * @example
+ * ```ts
+ * import { Progress } from "@beep/html/Html.model"
+ *
+ * const node = Progress.make({ children: [] })
+ * console.log(node._tag) // "progress"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5520,6 +7159,14 @@ export class Progress extends S.TaggedClass<Progress>($I`Progress`)(
 ) {}
 /**
  * Companion namespace for {@link Progress}.
+ *
+ * @example
+ * ```ts
+ * import { Progress } from "@beep/html/Html.model"
+ *
+ * const encoded: Progress.Encoded = { _tag: "progress", children: [] }
+ * console.log(encoded._tag) // "progress"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5544,6 +7191,14 @@ export declare namespace Progress {
 /**
  * The <q> element.
  *
+ * @example
+ * ```ts
+ * import { Q } from "@beep/html/Html.model"
+ *
+ * const node = Q.make({ children: [] })
+ * console.log(node._tag) // "q"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5558,6 +7213,14 @@ export class Q extends S.TaggedClass<Q>($I`Q`)(
 ) {}
 /**
  * Companion namespace for {@link Q}.
+ *
+ * @example
+ * ```ts
+ * import { Q } from "@beep/html/Html.model"
+ *
+ * const encoded: Q.Encoded = { _tag: "q", children: [] }
+ * console.log(encoded._tag) // "q"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5580,6 +7243,14 @@ export declare namespace Q {
 /**
  * The <rb> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Rb } from "@beep/html/Html.model"
+ *
+ * const node = Rb.make({ children: [] })
+ * console.log(node._tag) // "rb"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5593,6 +7264,14 @@ export class Rb extends S.TaggedClass<Rb>($I`Rb`)(
 ) {}
 /**
  * Companion namespace for {@link Rb}.
+ *
+ * @example
+ * ```ts
+ * import { Rb } from "@beep/html/Html.model"
+ *
+ * const encoded: Rb.Encoded = { _tag: "rb", children: [] }
+ * console.log(encoded._tag) // "rb"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5613,6 +7292,14 @@ export declare namespace Rb {
 /**
  * The <rp> element.
  *
+ * @example
+ * ```ts
+ * import { Rp } from "@beep/html/Html.model"
+ *
+ * const node = Rp.make({ children: [] })
+ * console.log(node._tag) // "rp"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5626,6 +7313,14 @@ export class Rp extends S.TaggedClass<Rp>($I`Rp`)(
 ) {}
 /**
  * Companion namespace for {@link Rp}.
+ *
+ * @example
+ * ```ts
+ * import { Rp } from "@beep/html/Html.model"
+ *
+ * const encoded: Rp.Encoded = { _tag: "rp", children: [] }
+ * console.log(encoded._tag) // "rp"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5646,6 +7341,14 @@ export declare namespace Rp {
 /**
  * The <rt> element.
  *
+ * @example
+ * ```ts
+ * import { Rt } from "@beep/html/Html.model"
+ *
+ * const node = Rt.make({ children: [] })
+ * console.log(node._tag) // "rt"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5659,6 +7362,14 @@ export class Rt extends S.TaggedClass<Rt>($I`Rt`)(
 ) {}
 /**
  * Companion namespace for {@link Rt}.
+ *
+ * @example
+ * ```ts
+ * import { Rt } from "@beep/html/Html.model"
+ *
+ * const encoded: Rt.Encoded = { _tag: "rt", children: [] }
+ * console.log(encoded._tag) // "rt"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5679,6 +7390,14 @@ export declare namespace Rt {
 /**
  * The <rtc> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Rtc } from "@beep/html/Html.model"
+ *
+ * const node = Rtc.make({ children: [] })
+ * console.log(node._tag) // "rtc"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5692,6 +7411,14 @@ export class Rtc extends S.TaggedClass<Rtc>($I`Rtc`)(
 ) {}
 /**
  * Companion namespace for {@link Rtc}.
+ *
+ * @example
+ * ```ts
+ * import { Rtc } from "@beep/html/Html.model"
+ *
+ * const encoded: Rtc.Encoded = { _tag: "rtc", children: [] }
+ * console.log(encoded._tag) // "rtc"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5712,6 +7439,14 @@ export declare namespace Rtc {
 /**
  * The <ruby> element.
  *
+ * @example
+ * ```ts
+ * import { Ruby } from "@beep/html/Html.model"
+ *
+ * const node = Ruby.make({ children: [] })
+ * console.log(node._tag) // "ruby"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5725,6 +7460,14 @@ export class Ruby extends S.TaggedClass<Ruby>($I`Ruby`)(
 ) {}
 /**
  * Companion namespace for {@link Ruby}.
+ *
+ * @example
+ * ```ts
+ * import { Ruby } from "@beep/html/Html.model"
+ *
+ * const encoded: Ruby.Encoded = { _tag: "ruby", children: [] }
+ * console.log(encoded._tag) // "ruby"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5745,6 +7488,14 @@ export declare namespace Ruby {
 /**
  * The <s> element.
  *
+ * @example
+ * ```ts
+ * import { SElement } from "@beep/html/Html.model"
+ *
+ * const node = SElement.make({ children: [] })
+ * console.log(node._tag) // "s"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5758,6 +7509,14 @@ export class SElement extends S.TaggedClass<SElement>($I`SElement`)(
 ) {}
 /**
  * Companion namespace for {@link SElement}.
+ *
+ * @example
+ * ```ts
+ * import { SElement } from "@beep/html/Html.model"
+ *
+ * const encoded: SElement.Encoded = { _tag: "s", children: [] }
+ * console.log(encoded._tag) // "s"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5778,6 +7537,14 @@ export declare namespace SElement {
 /**
  * The <samp> element.
  *
+ * @example
+ * ```ts
+ * import { Samp } from "@beep/html/Html.model"
+ *
+ * const node = Samp.make({ children: [] })
+ * console.log(node._tag) // "samp"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5791,6 +7558,14 @@ export class Samp extends S.TaggedClass<Samp>($I`Samp`)(
 ) {}
 /**
  * Companion namespace for {@link Samp}.
+ *
+ * @example
+ * ```ts
+ * import { Samp } from "@beep/html/Html.model"
+ *
+ * const encoded: Samp.Encoded = { _tag: "samp", children: [] }
+ * console.log(encoded._tag) // "samp"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5810,6 +7585,14 @@ export declare namespace Samp {
 
 /**
  * The <script> element.
+ *
+ * @example
+ * ```ts
+ * import { Script } from "@beep/html/Html.model"
+ *
+ * const node = Script.make({ content: "" })
+ * console.log(node._tag) // "script"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5840,6 +7623,14 @@ export class Script extends S.TaggedClass<Script>($I`Script`)(
 ) {}
 /**
  * Companion namespace for {@link Script}.
+ *
+ * @example
+ * ```ts
+ * import { Script } from "@beep/html/Html.model"
+ *
+ * const encoded: Script.Encoded = { _tag: "script", content: "" }
+ * console.log(encoded._tag) // "script"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5888,6 +7679,14 @@ export declare namespace Script {
 /**
  * The <search> element.
  *
+ * @example
+ * ```ts
+ * import { Search } from "@beep/html/Html.model"
+ *
+ * const node = Search.make({ children: [] })
+ * console.log(node._tag) // "search"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5901,6 +7700,14 @@ export class Search extends S.TaggedClass<Search>($I`Search`)(
 ) {}
 /**
  * Companion namespace for {@link Search}.
+ *
+ * @example
+ * ```ts
+ * import { Search } from "@beep/html/Html.model"
+ *
+ * const encoded: Search.Encoded = { _tag: "search", children: [] }
+ * console.log(encoded._tag) // "search"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5921,6 +7728,14 @@ export declare namespace Search {
 /**
  * The <section> element.
  *
+ * @example
+ * ```ts
+ * import { Section } from "@beep/html/Html.model"
+ *
+ * const node = Section.make({ children: [] })
+ * console.log(node._tag) // "section"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -5934,6 +7749,14 @@ export class Section extends S.TaggedClass<Section>($I`Section`)(
 ) {}
 /**
  * Companion namespace for {@link Section}.
+ *
+ * @example
+ * ```ts
+ * import { Section } from "@beep/html/Html.model"
+ *
+ * const encoded: Section.Encoded = { _tag: "section", children: [] }
+ * console.log(encoded._tag) // "section"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -5953,6 +7776,14 @@ export declare namespace Section {
 
 /**
  * The <select> element.
+ *
+ * @example
+ * ```ts
+ * import { Select } from "@beep/html/Html.model"
+ *
+ * const node = Select.make({ children: [] })
+ * console.log(node._tag) // "select"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6041,6 +7872,14 @@ export class Select extends S.TaggedClass<Select>($I`Select`)(
 ) {}
 /**
  * Companion namespace for {@link Select}.
+ *
+ * @example
+ * ```ts
+ * import { Select } from "@beep/html/Html.model"
+ *
+ * const encoded: Select.Encoded = { _tag: "select", children: [] }
+ * console.log(encoded._tag) // "select"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6204,6 +8043,14 @@ export declare namespace Select {
 /**
  * The <selectedcontent> element.
  *
+ * @example
+ * ```ts
+ * import { Selectedcontent } from "@beep/html/Html.model"
+ *
+ * const node = Selectedcontent.make({ children: [] })
+ * console.log(node._tag) // "selectedcontent"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -6217,6 +8064,14 @@ export class Selectedcontent extends S.TaggedClass<Selectedcontent>($I`Selectedc
 ) {}
 /**
  * Companion namespace for {@link Selectedcontent}.
+ *
+ * @example
+ * ```ts
+ * import { Selectedcontent } from "@beep/html/Html.model"
+ *
+ * const encoded: Selectedcontent.Encoded = { _tag: "selectedcontent", children: [] }
+ * console.log(encoded._tag) // "selectedcontent"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6237,6 +8092,14 @@ export declare namespace Selectedcontent {
 /**
  * The <slot> element.
  *
+ * @example
+ * ```ts
+ * import { Slot } from "@beep/html/Html.model"
+ *
+ * const node = Slot.make({ children: [] })
+ * console.log(node._tag) // "slot"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -6251,6 +8114,14 @@ export class Slot extends S.TaggedClass<Slot>($I`Slot`)(
 ) {}
 /**
  * Companion namespace for {@link Slot}.
+ *
+ * @example
+ * ```ts
+ * import { Slot } from "@beep/html/Html.model"
+ *
+ * const encoded: Slot.Encoded = { _tag: "slot", children: [] }
+ * console.log(encoded._tag) // "slot"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6273,6 +8144,14 @@ export declare namespace Slot {
 /**
  * The <small> element.
  *
+ * @example
+ * ```ts
+ * import { Small } from "@beep/html/Html.model"
+ *
+ * const node = Small.make({ children: [] })
+ * console.log(node._tag) // "small"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -6286,6 +8165,14 @@ export class Small extends S.TaggedClass<Small>($I`Small`)(
 ) {}
 /**
  * Companion namespace for {@link Small}.
+ *
+ * @example
+ * ```ts
+ * import { Small } from "@beep/html/Html.model"
+ *
+ * const encoded: Small.Encoded = { _tag: "small", children: [] }
+ * console.log(encoded._tag) // "small"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6306,6 +8193,14 @@ export declare namespace Small {
 /**
  * The <source> element.
  *
+ * @example
+ * ```ts
+ * import { Source } from "@beep/html/Html.model"
+ *
+ * const node = Source.make({})
+ * console.log(node._tag) // "source"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -6325,6 +8220,14 @@ export class Source extends S.TaggedClass<Source>($I`Source`)(
 ) {}
 /**
  * Companion namespace for {@link Source}.
+ *
+ * @example
+ * ```ts
+ * import { Source } from "@beep/html/Html.model"
+ *
+ * const encoded: Source.Encoded = { _tag: "source" }
+ * console.log(encoded._tag) // "source"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6357,6 +8260,14 @@ export declare namespace Source {
 /**
  * The <spacer> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Spacer } from "@beep/html/Html.model"
+ *
+ * const node = Spacer.make({})
+ * console.log(node._tag) // "spacer"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -6369,6 +8280,14 @@ export class Spacer extends S.TaggedClass<Spacer>($I`Spacer`)(
 ) {}
 /**
  * Companion namespace for {@link Spacer}.
+ *
+ * @example
+ * ```ts
+ * import { Spacer } from "@beep/html/Html.model"
+ *
+ * const encoded: Spacer.Encoded = { _tag: "spacer" }
+ * console.log(encoded._tag) // "spacer"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6387,6 +8306,14 @@ export declare namespace Spacer {
 /**
  * The <span> element.
  *
+ * @example
+ * ```ts
+ * import { Span } from "@beep/html/Html.model"
+ *
+ * const node = Span.make({ children: [] })
+ * console.log(node._tag) // "span"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -6400,6 +8327,14 @@ export class Span extends S.TaggedClass<Span>($I`Span`)(
 ) {}
 /**
  * Companion namespace for {@link Span}.
+ *
+ * @example
+ * ```ts
+ * import { Span } from "@beep/html/Html.model"
+ *
+ * const encoded: Span.Encoded = { _tag: "span", children: [] }
+ * console.log(encoded._tag) // "span"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6420,6 +8355,14 @@ export declare namespace Span {
 /**
  * The <strike> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Strike } from "@beep/html/Html.model"
+ *
+ * const node = Strike.make({ children: [] })
+ * console.log(node._tag) // "strike"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -6433,6 +8376,14 @@ export class Strike extends S.TaggedClass<Strike>($I`Strike`)(
 ) {}
 /**
  * Companion namespace for {@link Strike}.
+ *
+ * @example
+ * ```ts
+ * import { Strike } from "@beep/html/Html.model"
+ *
+ * const encoded: Strike.Encoded = { _tag: "strike", children: [] }
+ * console.log(encoded._tag) // "strike"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6453,6 +8404,14 @@ export declare namespace Strike {
 /**
  * The <strong> element.
  *
+ * @example
+ * ```ts
+ * import { Strong } from "@beep/html/Html.model"
+ *
+ * const node = Strong.make({ children: [] })
+ * console.log(node._tag) // "strong"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -6466,6 +8425,14 @@ export class Strong extends S.TaggedClass<Strong>($I`Strong`)(
 ) {}
 /**
  * Companion namespace for {@link Strong}.
+ *
+ * @example
+ * ```ts
+ * import { Strong } from "@beep/html/Html.model"
+ *
+ * const encoded: Strong.Encoded = { _tag: "strong", children: [] }
+ * console.log(encoded._tag) // "strong"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6486,6 +8453,14 @@ export declare namespace Strong {
 /**
  * The <style> element.
  *
+ * @example
+ * ```ts
+ * import { Style } from "@beep/html/Html.model"
+ *
+ * const node = Style.make({ content: "" })
+ * console.log(node._tag) // "style"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -6502,6 +8477,14 @@ export class Style extends S.TaggedClass<Style>($I`Style`)(
 ) {}
 /**
  * Companion namespace for {@link Style}.
+ *
+ * @example
+ * ```ts
+ * import { Style } from "@beep/html/Html.model"
+ *
+ * const encoded: Style.Encoded = { _tag: "style", content: "" }
+ * console.log(encoded._tag) // "style"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6528,6 +8511,14 @@ export declare namespace Style {
 /**
  * The <sub> element.
  *
+ * @example
+ * ```ts
+ * import { Sub } from "@beep/html/Html.model"
+ *
+ * const node = Sub.make({ children: [] })
+ * console.log(node._tag) // "sub"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -6541,6 +8532,14 @@ export class Sub extends S.TaggedClass<Sub>($I`Sub`)(
 ) {}
 /**
  * Companion namespace for {@link Sub}.
+ *
+ * @example
+ * ```ts
+ * import { Sub } from "@beep/html/Html.model"
+ *
+ * const encoded: Sub.Encoded = { _tag: "sub", children: [] }
+ * console.log(encoded._tag) // "sub"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6561,6 +8560,14 @@ export declare namespace Sub {
 /**
  * The <summary> element.
  *
+ * @example
+ * ```ts
+ * import { Summary } from "@beep/html/Html.model"
+ *
+ * const node = Summary.make({ children: [] })
+ * console.log(node._tag) // "summary"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -6574,6 +8581,14 @@ export class Summary extends S.TaggedClass<Summary>($I`Summary`)(
 ) {}
 /**
  * Companion namespace for {@link Summary}.
+ *
+ * @example
+ * ```ts
+ * import { Summary } from "@beep/html/Html.model"
+ *
+ * const encoded: Summary.Encoded = { _tag: "summary", children: [] }
+ * console.log(encoded._tag) // "summary"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6594,6 +8609,14 @@ export declare namespace Summary {
 /**
  * The <sup> element.
  *
+ * @example
+ * ```ts
+ * import { Sup } from "@beep/html/Html.model"
+ *
+ * const node = Sup.make({ children: [] })
+ * console.log(node._tag) // "sup"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -6607,6 +8630,14 @@ export class Sup extends S.TaggedClass<Sup>($I`Sup`)(
 ) {}
 /**
  * Companion namespace for {@link Sup}.
+ *
+ * @example
+ * ```ts
+ * import { Sup } from "@beep/html/Html.model"
+ *
+ * const encoded: Sup.Encoded = { _tag: "sup", children: [] }
+ * console.log(encoded._tag) // "sup"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6626,6 +8657,14 @@ export declare namespace Sup {
 
 /**
  * The <table> element.
+ *
+ * @example
+ * ```ts
+ * import { Table } from "@beep/html/Html.model"
+ *
+ * const node = Table.make({ children: [] })
+ * console.log(node._tag) // "table"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6652,6 +8691,14 @@ export class Table extends S.TaggedClass<Table>($I`Table`)(
 ) {}
 /**
  * Companion namespace for {@link Table}.
+ *
+ * @example
+ * ```ts
+ * import { Table } from "@beep/html/Html.model"
+ *
+ * const encoded: Table.Encoded = { _tag: "table", children: [] }
+ * console.log(encoded._tag) // "table"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6696,6 +8743,14 @@ export declare namespace Table {
 /**
  * The <tbody> element.
  *
+ * @example
+ * ```ts
+ * import { Tbody } from "@beep/html/Html.model"
+ *
+ * const node = Tbody.make({ children: [] })
+ * console.log(node._tag) // "tbody"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -6714,6 +8769,14 @@ export class Tbody extends S.TaggedClass<Tbody>($I`Tbody`)(
 ) {}
 /**
  * Companion namespace for {@link Tbody}.
+ *
+ * @example
+ * ```ts
+ * import { Tbody } from "@beep/html/Html.model"
+ *
+ * const encoded: Tbody.Encoded = { _tag: "tbody", children: [] }
+ * console.log(encoded._tag) // "tbody"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6744,6 +8807,14 @@ export declare namespace Tbody {
 /**
  * The <td> element.
  *
+ * @example
+ * ```ts
+ * import { Td } from "@beep/html/Html.model"
+ *
+ * const node = Td.make({ children: [] })
+ * console.log(node._tag) // "td"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -6771,6 +8842,14 @@ export class Td extends S.TaggedClass<Td>($I`Td`)(
 ) {}
 /**
  * Companion namespace for {@link Td}.
+ *
+ * @example
+ * ```ts
+ * import { Td } from "@beep/html/Html.model"
+ *
+ * const encoded: Td.Encoded = { _tag: "td", children: [] }
+ * console.log(encoded._tag) // "td"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6819,6 +8898,14 @@ export declare namespace Td {
 /**
  * The <template> element.
  *
+ * @example
+ * ```ts
+ * import { Template } from "@beep/html/Html.model"
+ *
+ * const node = Template.make({ children: [] })
+ * console.log(node._tag) // "template"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -6844,6 +8931,14 @@ export class Template extends S.TaggedClass<Template>($I`Template`)(
 ) {}
 /**
  * Companion namespace for {@link Template}.
+ *
+ * @example
+ * ```ts
+ * import { Template } from "@beep/html/Html.model"
+ *
+ * const encoded: Template.Encoded = { _tag: "template", children: [] }
+ * console.log(encoded._tag) // "template"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6875,6 +8970,14 @@ export declare namespace Template {
 
 /**
  * The <textarea> element.
+ *
+ * @example
+ * ```ts
+ * import { Textarea } from "@beep/html/Html.model"
+ *
+ * const node = Textarea.make({ content: "" })
+ * console.log(node._tag) // "textarea"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -6969,6 +9072,14 @@ export class Textarea extends S.TaggedClass<Textarea>($I`Textarea`)(
 ) {}
 /**
  * Companion namespace for {@link Textarea}.
+ *
+ * @example
+ * ```ts
+ * import { Textarea } from "@beep/html/Html.model"
+ *
+ * const encoded: Textarea.Encoded = { _tag: "textarea", content: "" }
+ * console.log(encoded._tag) // "textarea"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -7144,6 +9255,14 @@ export declare namespace Textarea {
 /**
  * The <tfoot> element.
  *
+ * @example
+ * ```ts
+ * import { Tfoot } from "@beep/html/Html.model"
+ *
+ * const node = Tfoot.make({ children: [] })
+ * console.log(node._tag) // "tfoot"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -7157,6 +9276,14 @@ export class Tfoot extends S.TaggedClass<Tfoot>($I`Tfoot`)(
 ) {}
 /**
  * Companion namespace for {@link Tfoot}.
+ *
+ * @example
+ * ```ts
+ * import { Tfoot } from "@beep/html/Html.model"
+ *
+ * const encoded: Tfoot.Encoded = { _tag: "tfoot", children: [] }
+ * console.log(encoded._tag) // "tfoot"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -7176,6 +9303,14 @@ export declare namespace Tfoot {
 
 /**
  * The <th> element.
+ *
+ * @example
+ * ```ts
+ * import { Th } from "@beep/html/Html.model"
+ *
+ * const node = Th.make({ children: [] })
+ * console.log(node._tag) // "th"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -7206,6 +9341,14 @@ export class Th extends S.TaggedClass<Th>($I`Th`)(
 ) {}
 /**
  * Companion namespace for {@link Th}.
+ *
+ * @example
+ * ```ts
+ * import { Th } from "@beep/html/Html.model"
+ *
+ * const encoded: Th.Encoded = { _tag: "th", children: [] }
+ * console.log(encoded._tag) // "th"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -7254,6 +9397,14 @@ export declare namespace Th {
 /**
  * The <thead> element.
  *
+ * @example
+ * ```ts
+ * import { Thead } from "@beep/html/Html.model"
+ *
+ * const node = Thead.make({ children: [] })
+ * console.log(node._tag) // "thead"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -7267,6 +9418,14 @@ export class Thead extends S.TaggedClass<Thead>($I`Thead`)(
 ) {}
 /**
  * Companion namespace for {@link Thead}.
+ *
+ * @example
+ * ```ts
+ * import { Thead } from "@beep/html/Html.model"
+ *
+ * const encoded: Thead.Encoded = { _tag: "thead", children: [] }
+ * console.log(encoded._tag) // "thead"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -7287,6 +9446,14 @@ export declare namespace Thead {
 /**
  * The <time> element.
  *
+ * @example
+ * ```ts
+ * import { Time } from "@beep/html/Html.model"
+ *
+ * const node = Time.make({ children: [] })
+ * console.log(node._tag) // "time"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -7301,6 +9468,14 @@ export class Time extends S.TaggedClass<Time>($I`Time`)(
 ) {}
 /**
  * Companion namespace for {@link Time}.
+ *
+ * @example
+ * ```ts
+ * import { Time } from "@beep/html/Html.model"
+ *
+ * const encoded: Time.Encoded = { _tag: "time", children: [] }
+ * console.log(encoded._tag) // "time"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -7323,6 +9498,14 @@ export declare namespace Time {
 /**
  * The <title> element.
  *
+ * @example
+ * ```ts
+ * import { Title } from "@beep/html/Html.model"
+ *
+ * const node = Title.make({ content: "" })
+ * console.log(node._tag) // "title"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -7336,6 +9519,14 @@ export class Title extends S.TaggedClass<Title>($I`Title`)(
 ) {}
 /**
  * Companion namespace for {@link Title}.
+ *
+ * @example
+ * ```ts
+ * import { Title } from "@beep/html/Html.model"
+ *
+ * const encoded: Title.Encoded = { _tag: "title", content: "" }
+ * console.log(encoded._tag) // "title"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -7356,6 +9547,14 @@ export declare namespace Title {
 /**
  * The <tr> element.
  *
+ * @example
+ * ```ts
+ * import { Tr } from "@beep/html/Html.model"
+ *
+ * const node = Tr.make({ children: [] })
+ * console.log(node._tag) // "tr"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -7375,6 +9574,14 @@ export class Tr extends S.TaggedClass<Tr>($I`Tr`)(
 ) {}
 /**
  * Companion namespace for {@link Tr}.
+ *
+ * @example
+ * ```ts
+ * import { Tr } from "@beep/html/Html.model"
+ *
+ * const encoded: Tr.Encoded = { _tag: "tr", children: [] }
+ * console.log(encoded._tag) // "tr"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -7407,6 +9614,14 @@ export declare namespace Tr {
 /**
  * The <track> element.
  *
+ * @example
+ * ```ts
+ * import { Track } from "@beep/html/Html.model"
+ *
+ * const node = Track.make({})
+ * console.log(node._tag) // "track"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -7426,6 +9641,14 @@ export class Track extends S.TaggedClass<Track>($I`Track`)(
 ) {}
 /**
  * Companion namespace for {@link Track}.
+ *
+ * @example
+ * ```ts
+ * import { Track } from "@beep/html/Html.model"
+ *
+ * const encoded: Track.Encoded = { _tag: "track" }
+ * console.log(encoded._tag) // "track"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -7454,6 +9677,14 @@ export declare namespace Track {
 /**
  * The <tt> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Tt } from "@beep/html/Html.model"
+ *
+ * const node = Tt.make({ children: [] })
+ * console.log(node._tag) // "tt"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -7467,6 +9698,14 @@ export class Tt extends S.TaggedClass<Tt>($I`Tt`)(
 ) {}
 /**
  * Companion namespace for {@link Tt}.
+ *
+ * @example
+ * ```ts
+ * import { Tt } from "@beep/html/Html.model"
+ *
+ * const encoded: Tt.Encoded = { _tag: "tt", children: [] }
+ * console.log(encoded._tag) // "tt"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -7487,6 +9726,14 @@ export declare namespace Tt {
 /**
  * The <u> element.
  *
+ * @example
+ * ```ts
+ * import { U } from "@beep/html/Html.model"
+ *
+ * const node = U.make({ children: [] })
+ * console.log(node._tag) // "u"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -7500,6 +9747,14 @@ export class U extends S.TaggedClass<U>($I`U`)(
 ) {}
 /**
  * Companion namespace for {@link U}.
+ *
+ * @example
+ * ```ts
+ * import { U } from "@beep/html/Html.model"
+ *
+ * const encoded: U.Encoded = { _tag: "u", children: [] }
+ * console.log(encoded._tag) // "u"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -7520,6 +9775,14 @@ export declare namespace U {
 /**
  * The <ul> element.
  *
+ * @example
+ * ```ts
+ * import { Ul } from "@beep/html/Html.model"
+ *
+ * const node = Ul.make({ children: [] })
+ * console.log(node._tag) // "ul"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -7535,6 +9798,14 @@ export class Ul extends S.TaggedClass<Ul>($I`Ul`)(
 ) {}
 /**
  * Companion namespace for {@link Ul}.
+ *
+ * @example
+ * ```ts
+ * import { Ul } from "@beep/html/Html.model"
+ *
+ * const encoded: Ul.Encoded = { _tag: "ul", children: [] }
+ * console.log(encoded._tag) // "ul"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -7559,6 +9830,14 @@ export declare namespace Ul {
 /**
  * The <var> element.
  *
+ * @example
+ * ```ts
+ * import { Var } from "@beep/html/Html.model"
+ *
+ * const node = Var.make({ children: [] })
+ * console.log(node._tag) // "var"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -7572,6 +9851,14 @@ export class Var extends S.TaggedClass<Var>($I`Var`)(
 ) {}
 /**
  * Companion namespace for {@link Var}.
+ *
+ * @example
+ * ```ts
+ * import { Var } from "@beep/html/Html.model"
+ *
+ * const encoded: Var.Encoded = { _tag: "var", children: [] }
+ * console.log(encoded._tag) // "var"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -7591,6 +9878,14 @@ export declare namespace Var {
 
 /**
  * The <video> element.
+ *
+ * @example
+ * ```ts
+ * import { Video } from "@beep/html/Html.model"
+ *
+ * const node = Video.make({ children: [] })
+ * console.log(node._tag) // "video"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -7619,6 +9914,14 @@ export class Video extends S.TaggedClass<Video>($I`Video`)(
 ) {}
 /**
  * Companion namespace for {@link Video}.
+ *
+ * @example
+ * ```ts
+ * import { Video } from "@beep/html/Html.model"
+ *
+ * const encoded: Video.Encoded = { _tag: "video", children: [] }
+ * console.log(encoded._tag) // "video"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -7663,6 +9966,14 @@ export declare namespace Video {
 /**
  * The <wbr> element.
  *
+ * @example
+ * ```ts
+ * import { Wbr } from "@beep/html/Html.model"
+ *
+ * const node = Wbr.make({})
+ * console.log(node._tag) // "wbr"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -7675,6 +9986,14 @@ export class Wbr extends S.TaggedClass<Wbr>($I`Wbr`)(
 ) {}
 /**
  * Companion namespace for {@link Wbr}.
+ *
+ * @example
+ * ```ts
+ * import { Wbr } from "@beep/html/Html.model"
+ *
+ * const encoded: Wbr.Encoded = { _tag: "wbr" }
+ * console.log(encoded._tag) // "wbr"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -7693,6 +10012,14 @@ export declare namespace Wbr {
 /**
  * The <xmp> element. Obsolete / non-conforming (WHATWG §16.2).
  *
+ * @example
+ * ```ts
+ * import { Xmp } from "@beep/html/Html.model"
+ *
+ * const node = Xmp.make({ content: "" })
+ * console.log(node._tag) // "xmp"
+ * ```
+ *
  * @category elements
  * @since 0.0.0
  */
@@ -7706,6 +10033,14 @@ export class Xmp extends S.TaggedClass<Xmp>($I`Xmp`)(
 ) {}
 /**
  * Companion namespace for {@link Xmp}.
+ *
+ * @example
+ * ```ts
+ * import { Xmp } from "@beep/html/Html.model"
+ *
+ * const encoded: Xmp.Encoded = { _tag: "xmp", content: "" }
+ * console.log(encoded._tag) // "xmp"
+ * ```
  *
  * @category elements
  * @since 0.0.0
@@ -7726,6 +10061,14 @@ export declare namespace Xmp {
 /**
  * Discriminated union of every HTML AST node — all 142 elements plus the
  * text, comment, doctype, document, and fragment node kinds — keyed on `_tag`.
+ *
+ * @example
+ * ```ts
+ * import { A, HtmlNode } from "@beep/html/Html.model"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HtmlNode)(A.make({ children: [] }))) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -7885,6 +10228,15 @@ export const HtmlNode = taggedUnion<HtmlNode.Type, HtmlNode.Encoded>(
 );
 /**
  * Companion namespace for {@link HtmlNode}.
+ *
+ * @example
+ * ```ts
+ * import { A } from "@beep/html/Html.model"
+ * import type { HtmlNode } from "@beep/html/Html.model"
+ *
+ * const node: HtmlNode.Type = A.make({ children: [] })
+ * console.log(node._tag) // "a"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -8194,6 +10546,14 @@ export declare namespace HtmlNode {
  * Advisory sub-union of elements in the "metadata" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
+ * @example
+ * ```ts
+ * import { Base, Metadata } from "@beep/html/Html.model"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(Metadata)(Base.make({}))) // true
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -8212,6 +10572,14 @@ export const Metadata = taggedUnion<
 /**
  * Advisory sub-union of elements in the "flow" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
+ *
+ * @example
+ * ```ts
+ * import { A, Flow } from "@beep/html/Html.model"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(Flow)(A.make({ children: [] }))) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -8479,6 +10847,14 @@ export const Flow = taggedUnion<
  * Advisory sub-union of elements in the "sectioning" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
+ * @example
+ * ```ts
+ * import { Article, Sectioning } from "@beep/html/Html.model"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(Sectioning)(Article.make({ children: [] }))) // true
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -8491,6 +10867,14 @@ export const Sectioning = taggedUnion<
  * Advisory sub-union of elements in the "heading" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
+ * @example
+ * ```ts
+ * import { H1, Heading } from "@beep/html/Html.model"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(Heading)(H1.make({ children: [] }))) // true
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -8502,6 +10886,14 @@ export const Heading = taggedUnion<
 /**
  * Advisory sub-union of elements in the "phrasing" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
+ *
+ * @example
+ * ```ts
+ * import { A, Phrasing } from "@beep/html/Html.model"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(Phrasing)(A.make({ children: [] }))) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -8676,6 +11068,14 @@ export const Phrasing = taggedUnion<
  * Advisory sub-union of elements in the "embedded" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
  *
+ * @example
+ * ```ts
+ * import { Audio, Embedded } from "@beep/html/Html.model"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(Embedded)(Audio.make({ children: [] }))) // true
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -8703,6 +11103,14 @@ export const Embedded = taggedUnion<
 /**
  * Advisory sub-union of elements in the "interactive" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
+ *
+ * @example
+ * ```ts
+ * import { A, Interactive } from "@beep/html/Html.model"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(Interactive)(A.make({ children: [] }))) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -8756,6 +11164,14 @@ export const Interactive = taggedUnion<
 /**
  * Advisory sub-union of elements in the "palpable" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
+ *
+ * @example
+ * ```ts
+ * import { A, Palpable } from "@beep/html/Html.model"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(Palpable)(A.make({ children: [] }))) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -8986,6 +11402,14 @@ export const Palpable = taggedUnion<
 /**
  * Advisory sub-union of elements in the "script-supporting" content category. Non-normative
  * (derived from the WHATWG element index); see `data/SOURCES.md`.
+ *
+ * @example
+ * ```ts
+ * import { Script, ScriptSupporting } from "@beep/html/Html.model"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ScriptSupporting)(Script.make({ content: "" }))) // true
+ * ```
  *
  * @category schemas
  * @since 0.0.0

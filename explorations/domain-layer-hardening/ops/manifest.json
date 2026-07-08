@@ -11,9 +11,7 @@
       "Confirm during epistemic-claim-body shaping: SPO-capable assertion VO shape (deep FOLIO/PROV-O TBox deferred to ip-law-knowledge-graph)."
     ],
     "links": {
-      "goals": [
-        "goals/domain-kernel-hardening"
-      ],
+      "goals": ["goals/domain-kernel-hardening"],
       "docs": [
         "docs/product/prose-to-proof.md",
         "goals/agentic-professional-runtime/SPEC.md",

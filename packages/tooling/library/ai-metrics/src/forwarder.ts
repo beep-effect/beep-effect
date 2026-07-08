@@ -654,7 +654,7 @@ const jsonlSourceFiles = Effect.fn("AiMetrics.forwarder.jsonlSourceFiles")(funct
         excludedByMaxFileBytes: false,
         file: O.some({
           modifiedAtMillis: modifiedAtMillis(info.value),
-          relativePath: normalizedRelativePath(pathApi, root, sourcePath),
+          relativePath: normalizedRelativePath(sourcePath, { pathApi, root }),
           sizeBytes: fileSizeBytes(info.value),
           sourceKind,
           sourcePath,

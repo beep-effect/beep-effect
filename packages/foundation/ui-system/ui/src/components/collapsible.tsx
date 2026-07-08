@@ -1,3 +1,9 @@
+/**
+ * Collapsible primitive: a disclosure root for content that expands and collapses.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Collapsible as CollapsiblePrimitive } from "@base-ui/react/collapsible";

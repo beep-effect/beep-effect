@@ -102,6 +102,25 @@ export const YamlTextToUnknown = S.String.pipe(
 );
 
 /**
+ * {@inheritDoc YamlTextToUnknown}
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { YamlTextToUnknown } from "@beep/schema/Yaml"
+ *
+ * const program = S.decodeUnknownEffect(YamlTextToUnknown)("name: Beep")
+ * const parsed: typeof YamlTextToUnknown.Type = await Effect.runPromise(program)
+ * console.log(parsed)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type YamlTextToUnknown = typeof YamlTextToUnknown.Type;
+
+/**
  * Builds a decoder that parses YAML text and then decodes the result through a
  * target schema.
  *

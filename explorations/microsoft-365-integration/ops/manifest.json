@@ -7,10 +7,7 @@
     "stage": "graduate",
     "openQuestions": [],
     "links": {
-      "goals": [
-        "goals/m365-driver",
-        "goals/m365-mcp"
-      ],
+      "goals": ["goals/m365-driver", "goals/m365-mcp"],
       "docs": [
         "goals/agentic-professional-runtime/docs/product-vision-law-practice.md",
         "docs/product/prose-to-proof.md"

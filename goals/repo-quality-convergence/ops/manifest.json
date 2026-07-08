@@ -29,9 +29,7 @@
     "fresh GitHub Check after landing",
     "fresh GitHub Release after landing"
   ],
-  "consumes": [
-    "goals/repo-quality-acceleration"
-  ],
+  "consumes": ["goals/repo-quality-acceleration"],
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,

@@ -1,3 +1,9 @@
+/**
+ * Toggle primitive: class-variance variants for a single pressed/unpressed button.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Toggle as TogglePrimitive } from "@base-ui/react/toggle";

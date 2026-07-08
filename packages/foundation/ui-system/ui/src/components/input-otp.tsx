@@ -1,3 +1,9 @@
+/**
+ * Input-OTP primitive: a segmented one-time-password input built on input-otp.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { MinusIcon } from "@phosphor-icons/react";

@@ -1,0 +1,102 @@
+{
+  "cluster": "S5-inline",
+  "totalCount": 27,
+  "sampled": [
+    {
+      "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
+      "symbol": "anonymous@316",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/agents-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "CountLinesParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "FilterLinesParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "LoadJsonlParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "LoadTextParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ReadJsonlParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "SampleJsonlParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "TextStatsParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/uspto-mcp/src/UsptoDocumentTiers.ts",
+      "symbol": "usptoDocumentFieldTiers",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/uspto-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+      "symbol": "anonymous@374",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+      "symbol": "anonymous@407",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
+      "symbol": "anonymous@412",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    }
+  ]
+}

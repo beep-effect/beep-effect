@@ -54,6 +54,23 @@ export const CanonicalizationAlgorithm = LiteralKit(["rdfc-1.0", "lexical-sort-v
 );
 
 /**
+ * Type for {@link CanonicalizationAlgorithm}.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { CanonicalizationAlgorithm } from "@beep/semantic-web/services/canonicalization"
+ *
+ * const algorithm: CanonicalizationAlgorithm = "rdfc-1.0"
+ * strictEqual(CanonicalizationAlgorithm.is["rdfc-1.0"](algorithm), true)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type CanonicalizationAlgorithm = typeof CanonicalizationAlgorithm.Type;
+
+/**
  * Canonicalization error reason.
  *
  * @example
@@ -80,6 +97,23 @@ export const CanonicalizationErrorReason = LiteralKit([
     semanticSchemaMetadata: serviceContractMetadata("CanonicalizationErrorReason", "Canonicalization error reason."),
   })
 );
+
+/**
+ * Type for {@link CanonicalizationErrorReason}.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { CanonicalizationErrorReason } from "@beep/semantic-web/services/canonicalization"
+ *
+ * const reason: CanonicalizationErrorReason = "unsupportedAlgorithm"
+ * strictEqual(CanonicalizationErrorReason.is.unsupportedAlgorithm(reason), true)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type CanonicalizationErrorReason = typeof CanonicalizationErrorReason.Type;
 
 /**
  * Typed canonicalization error.

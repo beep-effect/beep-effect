@@ -48,6 +48,15 @@ export const WindowsDriveRoot = S.String.check(
 /**
  * Type for {@link WindowsDriveRoot}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { WindowsDriveRoot } from "@beep/schema/FilePath"
+ *
+ * const value: WindowsDriveRoot = S.decodeUnknownSync(WindowsDriveRoot)("C:\\")
+ * console.log(value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -85,6 +94,15 @@ export const WindowsUncRoot = S.String.check(
 
 /**
  * Type for {@link WindowsUncRoot}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { WindowsUncRoot } from "@beep/schema/FilePath"
+ *
+ * const value: WindowsUncRoot = S.decodeUnknownSync(WindowsUncRoot)("\\\\server\\share")
+ * console.log(value)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -154,6 +172,15 @@ export const HasLeafSegment = S.NonEmptyString.check(
 
 /**
  * Type for {@link HasLeafSegment}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HasLeafSegment } from "@beep/schema/FilePath"
+ *
+ * const value: HasLeafSegment = S.decodeUnknownSync(HasLeafSegment)("src/index.ts")
+ * console.log(value)
+ * ```
  *
  * @since 0.0.0
  * @category models

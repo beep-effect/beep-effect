@@ -1,3 +1,11 @@
+/**
+ * Oxlint rule requiring canonical namespace aliases for `node:` built-in
+ * module imports.
+ *
+ * @packageDocumentation
+ * @since 0.1.0
+ */
+
 import { Str } from "@beep/utils";
 import { defineRule } from "@oxlint/plugins";
 import { HashMap } from "effect";

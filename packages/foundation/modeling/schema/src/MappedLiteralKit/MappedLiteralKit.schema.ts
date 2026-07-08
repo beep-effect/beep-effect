@@ -306,10 +306,11 @@ type MappedLiteralKitBase<M extends MappedPairs> = ForwardDirectionalKit<M> & {
  *
  * @example
  * ```ts
- * import { MappedLiteralKit, type MappedLiteralKit as MappedLiteralKitType } from "@beep/schema/MappedLiteralKit"
+ * import { MappedLiteralKit } from "@beep/schema/MappedLiteralKit"
  *
- * const Status = MappedLiteralKit([["OK", 200], ["NOT_FOUND", 404]] as const)
- * console.log(Status.Pairs.length satisfies MappedLiteralKitType<typeof Status.Pairs>["Pairs"]["length"])
+ * const Status = MappedLiteralKit([["OK", 200], ["NOT_FOUND", 404]])
+ * const pairsLength: MappedLiteralKit<typeof Status.Pairs>["Pairs"]["length"] = Status.Pairs.length
+ * console.log(pairsLength)
  * ```
  *
  * @category schemas
@@ -335,7 +336,7 @@ export interface MappedLiteralKit<M extends MappedPairs> extends MappedLiteralKi
  * const HttpStatus = MappedLiteralKit([
  *   ["OK", "200"],
  *   ["NOT_FOUND", "404"]
- * ] as const)
+ * ])
  *
  * S.decodeSync(HttpStatus)("OK")       // "200"
  * S.encodeSync(HttpStatus)("200")      // "OK"

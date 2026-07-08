@@ -1,0 +1,25 @@
+{
+  "owner": "@beep/langextract",
+  "entries": [
+    {
+      "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
+      "symbol": "stripJsonFence.trim",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-normalization",
+      "line": 421,
+      "owner": "@beep/langextract",
+      "reason": "LLM output fence stripping is trust-boundary text cleanup before schema JSON decoding; the schema owns the decoded payload shape, while this helper only removes Markdown wrapper noise from model text."
+    },
+    {
+      "file": "packages/foundation/capability/langextract/src/Extraction/index.ts",
+      "symbol": "stripJsonFence.trim",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-normalization",
+      "line": 423,
+      "owner": "@beep/langextract",
+      "reason": "LLM output fence stripping is trust-boundary text cleanup before schema JSON decoding; the schema owns the decoded payload shape, while this helper only removes Markdown wrapper noise from model text."
+    }
+  ]
+}

@@ -385,6 +385,14 @@ export const SecureHeaderError = SecureHeader.mapMembers(
 /**
  * Type for all secure-header errors.
  *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import type { SecureHeaderError } from "@beep/schema/SecureHeaderError"
+ *
+ * const handle = (error: SecureHeaderError) => Effect.logError(`secure header error: ${error._tag}`)
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */

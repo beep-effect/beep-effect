@@ -550,6 +550,21 @@ export const StructuralJSDoc = S.Union([
 );
 
 /**
+ * Runtime type for {@link StructuralJSDoc}.
+ *
+ * @example
+ * ```ts
+ * import type { StructuralJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: StructuralJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type StructuralJSDoc = typeof StructuralJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -569,7 +584,7 @@ export declare namespace StructuralJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof StructuralJSDoc.Type;
+  export type Type = StructuralJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -1192,6 +1207,21 @@ export const AccessModifierJSDoc = S.Union([
 ]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("AccessModifierJSDoc"));
 
 /**
+ * Runtime type for {@link AccessModifierJSDoc}.
+ *
+ * @example
+ * ```ts
+ * import type { AccessModifierJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: AccessModifierJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type AccessModifierJSDoc = typeof AccessModifierJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -1211,7 +1241,7 @@ export declare namespace AccessModifierJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof AccessModifierJSDoc.Type;
+  export type Type = AccessModifierJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -1593,6 +1623,21 @@ export const DocumentationContentJSDoc = S.Union([
 ]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("DocumentationContentJSDoc"));
 
 /**
+ * Runtime type for {@link DocumentationContentJSDoc}.
+ *
+ * @example
+ * ```ts
+ * import type { DocumentationContentJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: DocumentationContentJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type DocumentationContentJSDoc = typeof DocumentationContentJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -1612,7 +1657,7 @@ export declare namespace DocumentationContentJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof DocumentationContentJSDoc.Type;
+  export type Type = DocumentationContentJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -2031,6 +2076,21 @@ export const TSDocSpecificJSDoc = S.Union([
 ]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("TSDocSpecificJSDoc"));
 
 /**
+ * Runtime type for {@link TSDocSpecificJSDoc}.
+ *
+ * @example
+ * ```ts
+ * import type { TSDocSpecificJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: TSDocSpecificJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type TSDocSpecificJSDoc = typeof TSDocSpecificJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -2050,7 +2110,7 @@ export declare namespace TSDocSpecificJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof TSDocSpecificJSDoc.Type;
+  export type Type = TSDocSpecificJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -2151,6 +2211,21 @@ export const InlineJSDoc = S.Union([JSDocLink, JSDocInheritDoc]).pipe(
 );
 
 /**
+ * Runtime type for {@link InlineJSDoc}.
+ *
+ * @example
+ * ```ts
+ * import type { InlineJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: InlineJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type InlineJSDoc = typeof InlineJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -2170,7 +2245,7 @@ export declare namespace InlineJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof InlineJSDoc.Type;
+  export type Type = InlineJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -2449,6 +2524,21 @@ export const OrganizationalJSDoc = S.Union([
 ]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("OrganizationalJSDoc"));
 
 /**
+ * Runtime type for {@link OrganizationalJSDoc}.
+ *
+ * @example
+ * ```ts
+ * import type { OrganizationalJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: OrganizationalJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type OrganizationalJSDoc = typeof OrganizationalJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -2468,7 +2558,7 @@ export declare namespace OrganizationalJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof OrganizationalJSDoc.Type;
+  export type Type = OrganizationalJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -2637,6 +2727,21 @@ export const EventDependencyJSDoc = S.Union([JSDocFires, JSDocListens, JSDocEven
 );
 
 /**
+ * Runtime type for {@link EventDependencyJSDoc}.
+ *
+ * @example
+ * ```ts
+ * import type { EventDependencyJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: EventDependencyJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type EventDependencyJSDoc = typeof EventDependencyJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -2656,7 +2761,7 @@ export declare namespace EventDependencyJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof EventDependencyJSDoc.Type;
+  export type Type = EventDependencyJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -3401,6 +3506,21 @@ export const RemainingJSDoc = S.Union([
 ]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("RemainingJSDoc"));
 
 /**
+ * Runtime type for {@link RemainingJSDoc}.
+ *
+ * @example
+ * ```ts
+ * import type { RemainingJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: RemainingJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type RemainingJSDoc = typeof RemainingJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -3420,7 +3540,7 @@ export declare namespace RemainingJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof RemainingJSDoc.Type;
+  export type Type = RemainingJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -3974,6 +4094,21 @@ export const ClosureSpecificJSDoc = S.Union([
 ]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("ClosureSpecificJSDoc"));
 
 /**
+ * Runtime type for {@link ClosureSpecificJSDoc}.
+ *
+ * @example
+ * ```ts
+ * import type { ClosureSpecificJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: ClosureSpecificJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type ClosureSpecificJSDoc = typeof ClosureSpecificJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -3993,7 +4128,7 @@ export declare namespace ClosureSpecificJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof ClosureSpecificJSDoc.Type;
+  export type Type = ClosureSpecificJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -4372,6 +4507,21 @@ export const TypeDocSpecificJSDoc = S.Union([
 ]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("TypeDocSpecificJSDoc"));
 
 /**
+ * Runtime type for {@link TypeDocSpecificJSDoc}.
+ *
+ * @example
+ * ```ts
+ * import type { TypeDocSpecificJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: TypeDocSpecificJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type TypeDocSpecificJSDoc = typeof TypeDocSpecificJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -4391,7 +4541,7 @@ export declare namespace TypeDocSpecificJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof TypeDocSpecificJSDoc.Type;
+  export type Type = TypeDocSpecificJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -4457,6 +4607,21 @@ export const TypeScriptSpecificJSDoc = S.Union([JSDocOverload]).pipe(
 );
 
 /**
+ * Runtime type for {@link TypeScriptSpecificJSDoc}.
+ *
+ * @example
+ * ```ts
+ * import type { TypeScriptSpecificJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: TypeScriptSpecificJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type TypeScriptSpecificJSDoc = typeof TypeScriptSpecificJSDoc.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -4476,7 +4641,7 @@ export declare namespace TypeScriptSpecificJSDoc {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof TypeScriptSpecificJSDoc.Type;
+  export type Type = TypeScriptSpecificJSDoc;
   /**
    * JSDoc tag metadata export.
    *
@@ -4514,6 +4679,21 @@ export const JSDocTag = S.Union([
 ]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("JSDocTag"));
 
 /**
+ * Runtime type for {@link JSDocTag}.
+ *
+ * @example
+ * ```ts
+ * import type { JSDocTag } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: JSDocTag): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type JSDocTag = typeof JSDocTag.Type;
+
+/**
  * JSDoc tag metadata export.
  *
  * @example
@@ -4533,7 +4713,7 @@ export declare namespace JSDocTag {
    * @category models
    * @since 0.0.0
    */
-  export type Type = typeof JSDocTag.Type;
+  export type Type = JSDocTag;
   /**
    * JSDoc tag metadata export.
    *

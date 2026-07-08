@@ -17,6 +17,16 @@ type NativeConnection = {
 /**
  * Close a native DuckDB resource while suppressing close-time failures.
  *
+ * @example
+ * ```ts
+ * import { ignoreNativeClose } from "./DuckDbNative.ts"
+ *
+ * // A throwing close is swallowed instead of propagating during teardown.
+ * ignoreNativeClose(() => {
+ *   throw new Error("close failed")
+ * })
+ * ```
+ *
  * @internal
  * @category utilities
  * @since 0.0.0
@@ -31,6 +41,14 @@ export const ignoreNativeClose = (close: () => void): void => {
 
 /**
  * Release a native DuckDB connection and its owning instance.
+ *
+ * @example
+ * ```ts
+ * import { releaseNativeConnection } from "./DuckDbNative.ts"
+ *
+ * // Effect that closes the connection, then its owning instance, on release.
+ * const release = releaseNativeConnection
+ * ```
  *
  * @internal
  * @category utilities

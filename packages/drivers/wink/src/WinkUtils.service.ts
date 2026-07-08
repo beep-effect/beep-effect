@@ -194,7 +194,7 @@ const makeWinkUtils = Effect.gen(function* () {
   });
 
   const runString = (operation: string, text: string, f: (helpers: StringUtilities) => string) =>
-    Effect.annotateCurrentSpan(textLengthAttribute("text", text)).pipe(
+    Effect.annotateCurrentSpan(textLengthAttribute(text, "text")).pipe(
       Effect.andThen(
         Effect.try({
           try: () => f(utils.string),
@@ -227,7 +227,7 @@ const makeWinkUtils = Effect.gen(function* () {
   ) =>
     Effect.annotateCurrentSpan({
       size,
-      ...textLengthAttribute("text", text),
+      ...textLengthAttribute(text, "text"),
     }).pipe(
       Effect.andThen(
         Effect.try({
@@ -276,7 +276,7 @@ const makeWinkUtils = Effect.gen(function* () {
       return yield* runString("retainAlphaNums", text, (helpers) => helpers.retainAlphaNums(text));
     }),
     sentences: Effect.fn("Wink.WinkUtils.sentences")(function* (text: string) {
-      yield* Effect.annotateCurrentSpan(textLengthAttribute("text", text));
+      yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
       return yield* Effect.try({
         try: () => utils.string.sentences(text),
         catch: WinkUtilsError.fromCause("sentences"),

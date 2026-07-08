@@ -28,6 +28,23 @@ import type { SourceAuthRegistration } from "./SourceAuth.ts";
  * One credential-gated layer entry: a {@link SourceAuth.SourceAuthRegistration}
  * paired with the layer that registers that source's toolkit into the host.
  *
+ * @example
+ * ```ts
+ * import { Layer } from "effect"
+ * import type { GatedLayer } from "@beep/mcp-kit"
+ * import { SourceAuthRegistration } from "@beep/mcp-kit"
+ *
+ * const registration = SourceAuthRegistration.make({
+ *   name: "Example",
+ *   envVar: "MCP_KIT_EXAMPLE_DOES_NOT_EXIST",
+ *   gate: "none"
+ * })
+ *
+ * const entry: GatedLayer<never, never, never> = { layer: Layer.empty, registration }
+ * console.log(entry.registration.name)
+ * // "Example"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

@@ -139,7 +139,24 @@ export const Overridable: {
  * @since 0.0.0
  * @category schemas
  */
-export interface Overrideable<S extends S.Top & S.WithoutConstructorDefault> extends Overridable<S> {}
+export interface Overrideable<S extends S.Top & S.WithoutConstructorDefault>
+  extends S.Bottom<
+    S["Type"] & Brand<"Override">,
+    S["Encoded"],
+    S["DecodingServices"],
+    S["EncodingServices"],
+    S["ast"],
+    Overridable<S>,
+    S["~type.make.in"],
+    (S["Type"] & Brand<"Override">) | undefined,
+    S["~type.parameters"],
+    (S["Type"] & Brand<"Override">) | undefined,
+    S["~type.mutability"],
+    "required",
+    "with-default",
+    S["~encoded.mutability"],
+    S["~encoded.optionality"]
+  > {}
 
 /**
  * Upstream-compatible alias for {@link Overridable}.

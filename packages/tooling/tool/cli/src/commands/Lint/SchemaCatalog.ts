@@ -67,6 +67,21 @@ export const SchemaCatalogEntryKind = LiteralKit([
 );
 
 /**
+ * Static schema declaration kind for one generated schema catalog entry.
+ *
+ * @example
+ * ```ts
+ * import type { SchemaCatalogEntryKind } from "@beep/repo-cli/commands/Lint"
+ *
+ * const kind: SchemaCatalogEntryKind = "schema-class"
+ * console.log(kind)
+ * ```
+ * @category schema
+ * @since 0.0.0
+ */
+export type SchemaCatalogEntryKind = typeof SchemaCatalogEntryKind.Type;
+
+/**
  * Single static schema declaration catalog entry.
  *
  * @example
@@ -295,7 +310,7 @@ const SCHEMA_TRANSFORMATION_MEMBER_NAMES = [
 ] as const;
 
 type SchemaKindRule = {
-  readonly kind: typeof SchemaCatalogEntryKind.Type;
+  readonly kind: SchemaCatalogEntryKind;
   readonly matches: (calls: ReadonlyArray<CallExpression>, node: Node) => boolean;
 };
 
@@ -330,10 +345,7 @@ const SCHEMA_KIND_RULES: ReadonlyArray<SchemaKindRule> = [
   },
 ];
 
-const schemaKindFromCalls = (
-  calls: ReadonlyArray<CallExpression>,
-  node: Node
-): O.Option<typeof SchemaCatalogEntryKind.Type> =>
+const schemaKindFromCalls = (calls: ReadonlyArray<CallExpression>, node: Node): O.Option<SchemaCatalogEntryKind> =>
   pipe(
     A.findFirst(SCHEMA_KIND_RULES, (rule) => rule.matches(calls, node)),
     O.map((rule) => rule.kind)
@@ -360,7 +372,7 @@ const pipeReceiverExpression = (expression: Expression): O.Option<Expression> =>
   return O.some(callTarget.getExpression());
 };
 
-const schemaKindFromExpression = (expression: Expression, depth = 0): O.Option<typeof SchemaCatalogEntryKind.Type> => {
+const schemaKindFromExpression = (expression: Expression, depth = 0): O.Option<SchemaCatalogEntryKind> => {
   const directKind = schemaKindFromCalls(callExpressionsIn(expression), expression);
   if (O.isSome(directKind)) {
     return directKind;
@@ -476,7 +488,7 @@ const metadataFromNode = (node: Node): SchemaCatalogMetadata => {
 const makeCatalogEntry = (
   file: string,
   symbol: string,
-  kind: typeof SchemaCatalogEntryKind.Type,
+  kind: SchemaCatalogEntryKind,
   owner: string,
   node: Node
 ): SchemaCatalogEntry => {

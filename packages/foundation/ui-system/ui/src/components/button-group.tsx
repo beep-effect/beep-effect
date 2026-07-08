@@ -1,3 +1,9 @@
+/**
+ * Button-group primitive: class factory for segmented horizontal or vertical button groups.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { Separator } from "@beep/ui/components/separator";

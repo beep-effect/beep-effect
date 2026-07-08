@@ -34,9 +34,16 @@ const $I = $UsptoId.create("Uspto.service");
  * @example
  * ```ts
  * import type { UsptoShape } from "@beep/uspto"
+ * import { Effect } from "effect"
  *
- * const service = {} as UsptoShape
- * console.log(service)
+ * const service: UsptoShape = {
+ *   downloadDocument: () => Effect.die("not implemented"),
+ *   getApplication: () => Effect.die("not implemented"),
+ *   getContinuity: () => Effect.die("not implemented"),
+ *   getDocuments: () => Effect.die("not implemented"),
+ *   searchApplications: () => Effect.die("not implemented")
+ * }
+ * console.log(typeof service.getApplication)
  * ```
  *
  * @category services

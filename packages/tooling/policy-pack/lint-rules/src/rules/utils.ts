@@ -1,3 +1,11 @@
+/**
+ * Shared AST-node helpers (unwrapping, name resolution, import-binding
+ * classification, path matching) reused by every `@beep/lint-rules` rule.
+ *
+ * @packageDocumentation
+ * @since 0.1.0
+ */
+
 import { HashMap, HashSet } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
@@ -47,25 +55,6 @@ export type AstNode =
  * @since 0.1.0
  */
 export type MaybeNode = AstNode | null | undefined;
-
-/**
- * Narrow the opaque `ESTree.Node` (e.g. a `.parent` slot, which the typed AST
- * exposes only as the empty base node) to the `Expression` union. Type-predicate
- * guard — no `as` assertion.
- *
- * @param node - The opaque AST node to narrow.
- * @returns `true` when `node` carries a `type` discriminant (an expression).
- * @example
- * ```ts
- * import { strictEqual } from "node:assert/strict"
- * import { asExpression } from "../../src/rules/utils"
- *
- * strictEqual(asExpression.name, "asExpression")
- * ```
- * @category utilities
- * @since 0.1.0
- */
-export const asExpression = (node: ESTree.Node): node is ESTree.Expression => "type" in node;
 
 /** Expression wrappers the parser interposes; `unwrapExpression` peels them. */
 type ExpressionWrapper =
@@ -297,6 +286,11 @@ class DefaultImportBinding extends S.Class<DefaultImportBinding>("DefaultImportB
  * @since 0.0.0
  */
 export const ImportBinding = S.Union([NamedImportBinding, NamespaceImportBinding, DefaultImportBinding]).pipe(
+  S.annotate({
+    identifier: "@beep/lint-rules/rules/utils/ImportBinding",
+    title: "ImportBinding",
+    description: "Value (non-type) import specifier classified by how it binds a local name.",
+  }),
   S.toTaggedUnion("kind")
 );
 

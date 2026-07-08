@@ -1,3 +1,9 @@
+/**
+ * Todo-item primitive: a task row with priority, due-date, and subtask styling.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { A, Str } from "@beep/utils";

@@ -69,9 +69,10 @@ export const ApplicationNumber = S.String.check(
  *
  * @example
  * ```ts
- * import type { ApplicationNumber } from "@beep/law-practice-domain"
+ * import { ApplicationNumber } from "@beep/law-practice-domain"
+ * import * as S from "effect/Schema"
  *
- * declare const applicationNumber: ApplicationNumber
+ * const applicationNumber: ApplicationNumber = S.decodeUnknownSync(ApplicationNumber)("102014000345678")
  * console.log(applicationNumber)
  * ```
  *

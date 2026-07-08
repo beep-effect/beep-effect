@@ -112,6 +112,25 @@ export const JsonlTextToUnknown = S.String.pipe(
 );
 
 /**
+ * {@inheritDoc JsonlTextToUnknown}
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { JsonlTextToUnknown } from "@beep/schema/Jsonl"
+ *
+ * const program = S.decodeUnknownEffect(JsonlTextToUnknown)('{"a":1}\n')
+ * const values: typeof JsonlTextToUnknown.Type = await Effect.runPromise(program)
+ * console.log(values.length)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type JsonlTextToUnknown = typeof JsonlTextToUnknown.Type;
+
+/**
  * Builds a decoder that parses JSONL text and then decodes the resulting value
  * array through a target schema.
  *

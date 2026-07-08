@@ -48,6 +48,15 @@ export const DOMHtmlElement = S.declare(isHTMLElement).pipe(
 /**
  * Type for {@link DOMHtmlElement}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { DOMHtmlElement } from "@beep/schema/DomHtmlElement"
+ *
+ * const element: DOMHtmlElement = S.decodeUnknownSync(DOMHtmlElement)(document.createElement("div"))
+ * console.log(element.tagName)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */

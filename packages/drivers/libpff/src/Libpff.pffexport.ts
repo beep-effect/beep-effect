@@ -51,6 +51,14 @@ export const PffexportMode = PffexportModeBase.pipe(
 /**
  * Type for {@link PffexportMode}.
  *
+ * @example
+ * ```ts
+ * import { PffexportMode } from "@beep/libpff"
+ *
+ * const mode: PffexportMode = "items"
+ * console.log(PffexportMode.is.items(mode))
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -77,6 +85,14 @@ export const PffexportFormat = PffexportFormatBase.pipe(
 
 /**
  * Type for {@link PffexportFormat}.
+ *
+ * @example
+ * ```ts
+ * import { PffexportFormat } from "@beep/libpff"
+ *
+ * const format: PffexportFormat = "html"
+ * console.log(PffexportFormat.is.html(format))
+ * ```
  *
  * @category models
  * @since 0.0.0

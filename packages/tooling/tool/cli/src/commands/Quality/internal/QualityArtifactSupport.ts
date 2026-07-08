@@ -471,13 +471,26 @@ const parseTopoSortOutput = (
 /**
  * Read package names from the repository topo-sort command.
  *
+ * `bun run topo-sort` output interleaves real package names with dependency
+ * section headers (`dependencies`, `devDependencies`, `peerDependencies`,
+ * `optionalDependencies`); {@link parseTopoSortOutput} takes the first
+ * whitespace token of every line, so those headers parse as phantom package
+ * names. The parsed names are intersected against
+ * {@link discoverWorkspacePackages} so only real workspace packages survive
+ * (ruling R3-J2).
+ *
  * @category workspaces
  * @since 0.0.0
  */
 export const topoSortPackageNames = Effect.fn("QualityArtifactSupport.topoSortPackageNames")(function* (
   repoRoot: string,
+  path: Path.Path,
   includeLine: (line: string) => boolean = (line) => line.length > 0 && !Str.startsWith("$")(line)
-): Effect.fn.Return<ReadonlyArray<string>, QualityArtifactGeneratorError, ChildProcessSpawner.ChildProcessSpawner> {
+): Effect.fn.Return<
+  ReadonlyArray<string>,
+  QualityArtifactGeneratorError,
+  FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner
+> {
   const command = "bun run topo-sort";
   const result = yield* Effect.scoped(
     Effect.gen(function* () {
@@ -504,7 +517,9 @@ export const topoSortPackageNames = Effect.fn("QualityArtifactSupport.topoSortPa
     });
   }
 
-  return parseTopoSortOutput(result.output, includeLine);
+  const parsedNames = parseTopoSortOutput(result.output, includeLine);
+  const workspacePackages = yield* discoverWorkspacePackages(repoRoot, path);
+  return A.filter(parsedNames, (packageName) => MutableHashMap.has(workspacePackages, packageName));
 });
 
 /**
@@ -684,6 +699,17 @@ export const getDocNode = (node: Node): Node => {
   if (Node.isExportSpecifier(node)) {
     return node.getParent();
   }
+  // `export default <expression>` (the ESLint-rule module shape, ruling R20)
+  // resolves the exported declaration to the expression node itself (for
+  // example the CallExpression in `export default defineRule({...})`), which
+  // is never JSDocable — the doc block lives on the enclosing ExportAssignment
+  // statement instead. A real default-exported declaration (`export default
+  // class Foo {}`) is already JSDocable and its parent is the SourceFile, so
+  // this branch only redirects the expression-export shape.
+  const parent = node.getParent();
+  if (parent !== undefined && Node.isExportAssignment(parent)) {
+    return parent;
+  }
   return node;
 };
 
@@ -700,6 +726,15 @@ export const getJsDocText = (node: Node): string => {
   if (Node.isJSDocable(docNode)) {
     const docs = docNode.getJsDocs();
     return docs.at(-1)?.getText() ?? "";
+  }
+  // Binding elements — names exported via a destructured `const { /** doc */
+  // Class, ... } = VariantSchema.make(...)` — are absent from ts-morph's
+  // `canHaveJSDoc` switch, so `getJsDocs()` never sees the leading `/** */`
+  // block sitting directly above each element. Read the leading comment range
+  // instead and return the last JSDoc-style block (ruling R24).
+  if (Node.isBindingElement(docNode)) {
+    const lastJsDoc = A.findLast(docNode.getLeadingCommentRanges(), (range) => Str.startsWith("/**")(range.getText()));
+    return O.match(lastJsDoc, { onNone: thunkEmptyStr, onSome: (range) => range.getText() });
   }
   return "";
 };

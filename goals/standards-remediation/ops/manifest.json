@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "initiative-manifest/v1",
+  "initiative": {
+    "id": "standards-remediation",
+    "title": "Standards Inventory Zero",
+    "status": "active",
+    "created": "2026-07-07",
+    "updated": "2026-07-07",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/standards-remediation",
+  "lifecycle": "active",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": null,
+    "graduated": "2026-07-07",
+    "note": "Graduated directly from a driver planning session; prior art goals/repo-crispening-orchestration; supersedes the remaining ledger of goals/schema-first-zero-actionables."
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until all five standards files are at zero items, enforcement flips are fixture-proven, and the single umbrella PR on standards-remediation is driven to mergeable and merged via /yeet (repair -> verify -> publish -> monitor).",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/standards-remediation/README.md",
+    "goals/standards-remediation/SPEC.md",
+    "goals/standards-remediation/PLAN.md",
+    "goals/standards-remediation/GOAL.md",
+    "goals/standards-remediation/research/decisions.md"
+  ],
+  "researchReports": ["research/decisions.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/standards-remediation/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Packet + preflight + draft umbrella PR",
+      "status": "in_progress"
+    },
+    {
+      "id": "P1",
+      "name": "Detector bug fixes with fixtures",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Cluster audits + conversion pilots (rulings)",
+      "status": "pending"
+    },
+    { "id": "P3", "name": "Dual-arity waves", "status": "pending" },
+    {
+      "id": "P4",
+      "name": "Schema-first conversion waves",
+      "status": "pending"
+    },
+    { "id": "P5", "name": "JSDoc waves to zero", "status": "pending" },
+    { "id": "P6", "name": "Knip burn-down", "status": "pending" },
+    {
+      "id": "P7",
+      "name": "Effect-laws allowlist challenge",
+      "status": "pending"
+    },
+    {
+      "id": "P8",
+      "name": "Enforcement flips + merge + close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/standards-remediation/GOAL.md)\" -le 4000",
+    "jq . goals/standards-remediation/ops/manifest.json",
+    "jq . goals/standards-remediation/ops/progress.json",
+    "bun run beep laws dual-arity --check",
+    "bun run beep lint schema-first",
+    "bun run beep quality jsdoc-ratchet",
+    "bun run beep quality knip",
+    "bun run beep laws allowlist-check",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "A §5.3 parity proof fails (encoded/wire snapshot not byte-identical).",
+    "A ripple sweep would exceed the assigned lane/wave scope.",
+    "Any SPEC fence would be violated by the proposed change.",
+    "The branch base is red for out-of-scope reasons.",
+    "Verification requires unnamed credentials, cost, or destructive side effects.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

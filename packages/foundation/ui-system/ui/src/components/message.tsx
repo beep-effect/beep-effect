@@ -1,3 +1,9 @@
+/**
+ * Message primitive: a chat-message row layout with avatar and content slots.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { cn } from "@beep/ui/lib/utils";
 import type * as React from "react";
 

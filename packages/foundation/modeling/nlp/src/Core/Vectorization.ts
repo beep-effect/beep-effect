@@ -59,6 +59,14 @@ export const BM25Norm = BM25NormKit.pipe(
 /**
  * Runtime TypeScript union decoded by {@link BM25Norm}.
  *
+ * @example
+ * ```ts
+ * import type { BM25Norm } from "@beep/nlp/Core/Vectorization"
+ *
+ * const norm: BM25Norm = "l2"
+ * console.log(norm)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

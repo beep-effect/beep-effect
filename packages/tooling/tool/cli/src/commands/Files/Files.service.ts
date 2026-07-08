@@ -337,8 +337,21 @@ const resolveTrustedMediaToolPath = Effect.fn("Files.resolveTrustedMediaToolPath
  * @example
  * ```ts
  * import type { FilesCommandServiceShape } from "@beep/repo-cli/commands/Files"
- * const value = {} as FilesCommandServiceShape
- * console.log(value)
+ * import { Effect } from "effect"
+ *
+ * const service: FilesCommandServiceShape = {
+ *   archivePoorCandidates: () => Effect.never,
+ *   createCaptionFiles: () => Effect.never,
+ *   cropBordersFiles: () => Effect.never,
+ *   detectBordersFiles: () => Effect.never,
+ *   detectFacesFiles: () => Effect.never,
+ *   normalizeFiles: () => Effect.never,
+ *   processFiles: () => Effect.never,
+ *   sortAndRenameFiles: () => Effect.never,
+ *   stripMetadataFiles: () => Effect.never
+ * }
+ *
+ * console.log(typeof service.processFiles)
  * ```
  * @category services
  * @since 0.0.0

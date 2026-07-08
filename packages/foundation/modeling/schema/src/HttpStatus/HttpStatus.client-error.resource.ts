@@ -36,6 +36,14 @@ export const Gone = S.Literal(410).pipe(
 /**
  * {@inheritDoc Gone}
  *
+ * @example
+ * ```ts
+ * import type { Gone } from "@beep/schema/HttpStatus"
+ *
+ * const status: Gone = 410
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -66,6 +74,14 @@ export const LengthRequired = S.Literal(411).pipe(
 /**
  * {@inheritDoc LengthRequired}
  *
+ * @example
+ * ```ts
+ * import type { LengthRequired } from "@beep/schema/HttpStatus"
+ *
+ * const status: LengthRequired = 411
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -95,6 +111,14 @@ export const PreconditionFailed = S.Literal(412).pipe(
 
 /**
  * {@inheritDoc PreconditionFailed}
+ *
+ * @example
+ * ```ts
+ * import type { PreconditionFailed } from "@beep/schema/HttpStatus"
+ *
+ * const status: PreconditionFailed = 412
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -130,6 +154,14 @@ export const PayloadTooLarge = S.Literal(413).pipe(
 /**
  * {@inheritDoc PayloadTooLarge}
  *
+ * @example
+ * ```ts
+ * import type { PayloadTooLarge } from "@beep/schema/HttpStatus"
+ *
+ * const status: PayloadTooLarge = 413
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -160,6 +192,14 @@ export const UriTooLong = S.Literal(414).pipe(
 
 /**
  * {@inheritDoc UriTooLong}
+ *
+ * @example
+ * ```ts
+ * import type { UriTooLong } from "@beep/schema/HttpStatus"
+ *
+ * const status: UriTooLong = 414
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -192,6 +232,14 @@ export const UnsupportedMediaType = S.Literal(415).pipe(
 /**
  * {@inheritDoc UnsupportedMediaType}
  *
+ * @example
+ * ```ts
+ * import type { UnsupportedMediaType } from "@beep/schema/HttpStatus"
+ *
+ * const status: UnsupportedMediaType = 415
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -223,6 +271,14 @@ export const RangeNotSatisfiable = S.Literal(416).pipe(
 /**
  * {@inheritDoc RangeNotSatisfiable}
  *
+ * @example
+ * ```ts
+ * import type { RangeNotSatisfiable } from "@beep/schema/HttpStatus"
+ *
+ * const status: RangeNotSatisfiable = 416
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -253,6 +309,14 @@ export const ExpectationFailed = S.Literal(417).pipe(
 /**
  * {@inheritDoc ExpectationFailed}
  *
+ * @example
+ * ```ts
+ * import type { ExpectationFailed } from "@beep/schema/HttpStatus"
+ *
+ * const status: ExpectationFailed = 417
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -282,6 +346,14 @@ export const ImATeapot = S.Literal(418).pipe(
 
 /**
  * {@inheritDoc ImATeapot}
+ *
+ * @example
+ * ```ts
+ * import type { ImATeapot } from "@beep/schema/HttpStatus"
+ *
+ * const status: ImATeapot = 418
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation

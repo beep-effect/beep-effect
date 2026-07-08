@@ -1,3 +1,9 @@
+/**
+ * Progress primitive: a determinate progress bar built on Base UI's progress.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Progress as ProgressPrimitive } from "@base-ui/react/progress";

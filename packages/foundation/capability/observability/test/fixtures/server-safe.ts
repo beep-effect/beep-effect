@@ -56,6 +56,6 @@ void observeWorkflow(
   },
   Effect.void
 );
-void observeHttpApiHandler(httpDescriptor, httpMetrics, Effect.succeed("ok"));
+void observeHttpApiHandler(Effect.succeed("ok"), { descriptor: httpDescriptor, metrics: httpMetrics });
 void injectTraceContextHeaders();
 void Cause.pretty(Cause.fail(new Error("fixture")));

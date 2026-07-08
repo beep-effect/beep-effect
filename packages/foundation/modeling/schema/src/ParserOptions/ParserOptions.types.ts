@@ -38,6 +38,15 @@ export const HeaderArray = pipe(
 /**
  * {@inheritDoc HeaderArray}
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HeaderArray } from "../../src/ParserOptions/ParserOptions.types.ts"
+ *
+ * const headers: HeaderArray = S.decodeUnknownSync(HeaderArray)(["name", null])
+ * console.log(headers.length)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -69,6 +78,14 @@ export const HeaderTransformFunction = Fn({
 
 /**
  * {@inheritDoc HeaderTransformFunction}
+ *
+ * @example
+ * ```ts
+ * import { HeaderTransformFunction } from "../../src/ParserOptions/ParserOptions.types.ts"
+ *
+ * const transform: HeaderTransformFunction = HeaderTransformFunction.implementSync((headers) => headers)
+ * console.log(transform(["name"]).length)
+ * ```
  *
  * @category validation
  * @since 0.0.0

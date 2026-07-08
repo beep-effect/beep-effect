@@ -1,3 +1,9 @@
+/**
+ * Badge primitive: class-variance helper for badge color and emphasis variants.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import * as O from "@beep/utils/Option";

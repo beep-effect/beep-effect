@@ -290,6 +290,29 @@ export const AssistantListType = LiteralKit(["bullet", "number"]).pipe(
 export type AssistantListType = typeof AssistantListType.Type;
 
 /**
+ * A single item within a {@link ListBlock}.
+ *
+ * @example
+ * ```ts
+ * import { ListItem } from "@beep/agents-domain/values/AssistantContent"
+ *
+ * const item = ListItem.make({ children: [{ type: "text", text: "Item" }] })
+ * console.log(item.children.length)
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export class ListItem extends S.Class<ListItem>($I`ListItem`)(
+  {
+    children: S.Array(InlineNode).annotateKey({ description: "Inline content of the item" }),
+  },
+  $I.annote("ListItem", {
+    description: "A single item within a list block.",
+  })
+) {}
+
+/**
  * A flat list of items.
  *
  * @example
@@ -312,11 +335,7 @@ export class ListBlock extends S.Class<ListBlock>($I`ListBlock`)(
   {
     type: S.tag("list"),
     listType: AssistantListType.annotateKey({ description: "Bulleted or numbered list" }),
-    items: S.Array(
-      S.Struct({
-        children: S.Array(InlineNode).annotateKey({ description: "Inline content of the item" }),
-      })
-    ).annotateKey({ description: "List items in order" }),
+    items: S.Array(ListItem).annotateKey({ description: "List items in order" }),
   },
   $I.annote("ListBlock", {
     description: "A flat list of items.",

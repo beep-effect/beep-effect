@@ -13,6 +13,7 @@ import {
   makeProjectScopeId,
   makeSymbol,
   makeSymbolId,
+  ProjectIdentityParts,
   ProjectScopeId,
   ProjectScopeIdParts,
   RepoRootPath,
@@ -20,6 +21,7 @@ import {
   SymbolCategory,
   SymbolFilePath,
   SymbolId,
+  SymbolIdentityParts,
   SymbolIdParts,
   SymbolKind,
   SymbolKindToCategory,
@@ -217,6 +219,32 @@ describe("TSMorph model taxonomy", () => {
           referencePolicy: TsMorphReferencePolicy.Enum.workspaceOnly,
         })
       ).toBe("packages/tooling/library/repo-utils/tsconfig.json::syntax#workspaceOnly");
+    });
+
+    it("round-trips schema-derived project identity parts through the encoded wire shape", () => {
+      fc.assert(
+        fc.property(S.toArbitrary(ProjectIdentityParts), (value) => {
+          const encoded = S.encodeSync(ProjectIdentityParts)(value);
+          const decoded = S.decodeUnknownSync(ProjectIdentityParts)(encoded);
+
+          expect(decoded).toEqual(value);
+          expect(decodeProjectScopeId(makeProjectScopeId(decoded))).toBe(makeProjectScopeId(decoded));
+        }),
+        { numRuns: 20 }
+      );
+    });
+
+    it("round-trips schema-derived symbol identity parts through the encoded wire shape", () => {
+      fc.assert(
+        fc.property(S.toArbitrary(SymbolIdentityParts), (value) => {
+          const encoded = S.encodeSync(SymbolIdentityParts)(value);
+          const decoded = S.decodeUnknownSync(SymbolIdentityParts)(encoded);
+
+          expect(decoded).toEqual(value);
+          expect(decodeSymbolId(makeSymbolId(decoded))).toBe(makeSymbolId(decoded));
+        }),
+        { numRuns: 20 }
+      );
     });
   });
 

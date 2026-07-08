@@ -1,0 +1,10 @@
+{
+  "scope": "packages/drivers/firecrawl/tsconfig.test.json",
+  "findings": [
+    {
+      "kind": "unresolved",
+      "file": "packages/drivers/firecrawl/tsconfig.test.json",
+      "name": "bun-types"
+    }
+  ]
+}

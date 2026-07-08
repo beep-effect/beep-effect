@@ -13,6 +13,13 @@ import * as S from "effect/Schema";
  * @internal
  * @param cause - Schema issue or error reported by an Effect schema decoder.
  * @returns Schema error suitable for Result and decoding boundaries.
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { schemaIssueToError } from "@beep/repo-configs/next/internal"
+ * const error = schemaIssueToError(new S.SchemaError(new S.InvalidValue(undefined, { message: "bad" })))
+ * console.log(error instanceof S.SchemaError)
+ * ```
  * @category utilities
  * @since 0.0.0
  */
@@ -25,6 +32,12 @@ export const schemaIssueToError = (cause: S.SchemaError | S.SchemaError["issue"]
  * @internal
  * @param value - Unknown value to test for callability.
  * @returns Whether the value is a JavaScript function.
+ * @example
+ * ```ts
+ * import { isFunctionValue } from "@beep/repo-configs/next/internal"
+ * console.log(isFunctionValue(() => undefined))
+ * console.log(isFunctionValue("not a function"))
+ * ```
  * @category predicates
  * @since 0.0.0
  */

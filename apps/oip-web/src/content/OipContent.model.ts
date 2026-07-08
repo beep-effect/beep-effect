@@ -95,6 +95,10 @@ export const ReviewStatus = ReviewStatusBase.pipe(
  * @category models
  * @since 0.0.0
  */
+// Required runtime-type-alias companion for the ReviewStatus schema (jsdoc
+// schema-annotation policy); the value export is consumed via ReviewStatus.Enum.*
+// in OipContent.data.ts, so only the type alias reads as unused.
+// fallow-ignore-next-line unused-type
 export type ReviewStatus = typeof ReviewStatus.Type;
 
 /**

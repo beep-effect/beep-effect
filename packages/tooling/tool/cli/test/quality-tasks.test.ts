@@ -665,7 +665,7 @@ describe("quality task adapter", () => {
       "--affected",
       "--summarize",
     ]);
-    expect(A.slice(steps, 1)).toEqual([
+    expect(A.slice(steps, { start: 1 })).toEqual([
       expect.objectContaining({
         label: "check:dtslint:tsgo",
         command: "bun",

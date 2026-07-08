@@ -88,6 +88,14 @@ export const DurationUnit = LiteralKit([
 /**
  * Duration unit string type extracted from {@link DurationUnit}.
  *
+ * @example
+ * ```ts
+ * import type { DurationUnit } from "@beep/schema/Duration"
+ *
+ * const unit: DurationUnit = "hours"
+ * console.log(unit)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -187,6 +195,15 @@ export const DurationInput = S.Union([
 /**
  * Duration input type extracted from {@link DurationInput}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { DurationInput } from "@beep/schema/Duration"
+ *
+ * const fromString: DurationInput = S.decodeUnknownSync(DurationInput)("5 hours")
+ * console.log(fromString)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -244,15 +261,60 @@ export const DurationFromInput = DurationInput.pipe(
 /**
  * Decoded duration type extracted from {@link DurationFromInput}.
  *
+ * @example
+ * ```ts
+ * import { Duration, Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { DurationFromInput } from "@beep/schema/Duration"
+ *
+ * const program = S.decodeUnknownEffect(DurationFromInput)("2 hours")
+ * const duration: Duration.Duration = await Effect.runPromise(program)
+ * console.log(Duration.toMillis(duration)) // 7200000
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
 export type DurationFromInput = typeof DurationFromInput.Type;
 
 /**
- * Public aliases for concise namespace roles.
+ * {@inheritDoc DurationInput}
  *
- * @category schemas
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Input } from "@beep/schema/Duration"
+ *
+ * const decode = S.decodeUnknownSync(Input)
+ * console.log(decode("5 hours"))
+ * ```
+ *
+ * @since 0.0.0
+ * @category constructors
+ */
+export const Input = DurationInput;
+
+/**
+ * {@inheritDoc DurationInput}
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Input } from "@beep/schema/Duration"
+ *
+ * const fromString: Input = S.decodeUnknownSync(Input)("5 hours")
+ * console.log(fromString)
+ * ```
+ *
+ * @category models
  * @since 0.0.0
  */
-export { DurationInput as Input, DurationObject as Object };
+export type Input = DurationInput;
+
+/**
+ * Backwards-compatible alias for {@link DurationObject}.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export { DurationObject as Object };

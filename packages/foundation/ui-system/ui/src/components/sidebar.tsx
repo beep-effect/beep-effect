@@ -1,3 +1,9 @@
+/**
+ * Sidebar primitive: a collapsible application sidebar with responsive mobile behavior.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Str } from "@beep/utils";

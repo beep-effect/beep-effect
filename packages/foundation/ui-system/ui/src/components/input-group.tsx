@@ -1,3 +1,9 @@
+/**
+ * Input-group primitive: composes an input with leading/trailing addons.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Button } from "@beep/ui/components/button";

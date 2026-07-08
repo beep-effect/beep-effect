@@ -863,6 +863,19 @@ const mdBlockToPandoc = (block: Md.Block, path: JsonPath): Effect.Effect<Project
 /**
  * Result of mapping a Pandoc document to `@beep/md`.
  *
+ * @example
+ * ```ts
+ * import * as Md from "@beep/md/Md.model"
+ * import { PandocToDocumentResult } from "@beep/pandoc-ast/Pandoc.mapping"
+ * import { PandocCompatibilityReport } from "@beep/pandoc-ast/Pandoc.report"
+ *
+ * const result = PandocToDocumentResult.make({
+ *   document: Md.Document.make({ children: [] }),
+ *   report: PandocCompatibilityReport.fromIssues([]),
+ * })
+ * console.log(result.report.profile) // "supported"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -882,6 +895,19 @@ export class PandocToDocumentResult extends S.Class<PandocToDocumentResult>($I`P
 
 /**
  * Companion namespace for {@link PandocToDocumentResult}.
+ *
+ * @example
+ * ```ts
+ * import * as Md from "@beep/md/Md.model"
+ * import { PandocToDocumentResult } from "@beep/pandoc-ast/Pandoc.mapping"
+ * import { PandocCompatibilityReport } from "@beep/pandoc-ast/Pandoc.report"
+ *
+ * const result: PandocToDocumentResult.Type = PandocToDocumentResult.make({
+ *   document: Md.Document.make({ children: [] }),
+ *   report: PandocCompatibilityReport.fromIssues([]),
+ * })
+ * console.log(result.report.profile) // "supported"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -907,6 +933,19 @@ export declare namespace PandocToDocumentResult {
 /**
  * Result of mapping an `@beep/md` document to Pandoc.
  *
+ * @example
+ * ```ts
+ * import { DocumentToPandocResult } from "@beep/pandoc-ast/Pandoc.mapping"
+ * import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model"
+ * import { PandocCompatibilityReport } from "@beep/pandoc-ast/Pandoc.report"
+ *
+ * const result = DocumentToPandocResult.make({
+ *   pandoc: PandocDocument.make({ apiVersion: [1, 23, 1], blocks: [], meta: {} }),
+ *   report: PandocCompatibilityReport.fromIssues([]),
+ * })
+ * console.log(result.pandoc.apiVersion[0]) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -926,6 +965,19 @@ export class DocumentToPandocResult extends S.Class<DocumentToPandocResult>($I`D
 
 /**
  * Companion namespace for {@link DocumentToPandocResult}.
+ *
+ * @example
+ * ```ts
+ * import { DocumentToPandocResult } from "@beep/pandoc-ast/Pandoc.mapping"
+ * import { PandocDocument } from "@beep/pandoc-ast/Pandoc.model"
+ * import { PandocCompatibilityReport } from "@beep/pandoc-ast/Pandoc.report"
+ *
+ * const result: DocumentToPandocResult.Type = DocumentToPandocResult.make({
+ *   pandoc: PandocDocument.make({ apiVersion: [1, 23, 1], blocks: [], meta: {} }),
+ *   report: PandocCompatibilityReport.fromIssues([]),
+ * })
+ * console.log(result.pandoc.apiVersion[0]) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0

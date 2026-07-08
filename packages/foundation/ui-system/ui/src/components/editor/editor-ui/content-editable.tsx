@@ -1,3 +1,9 @@
+/**
+ * Content-editable surface for the Lexical editor, sized to match its placeholder overlay.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { $UiId } from "@beep/identity";
 import { ContentEditable as LexicalContentEditable } from "@lexical/react/LexicalContentEditable";
 import * as S from "effect/Schema";

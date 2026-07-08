@@ -1,0 +1,13 @@
+{
+  "owner": "@beep/shared-domain",
+  "entries": [
+    {
+      "file": "packages/shared/domain/src/values/LocalDate/LocalDate.model.ts",
+      "symbol": "LocalDateFields",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/shared-domain",
+      "reason": "Internal S.Struct field block feeds an S.Class constructor and stays tied to the class model."
+    }
+  ]
+}

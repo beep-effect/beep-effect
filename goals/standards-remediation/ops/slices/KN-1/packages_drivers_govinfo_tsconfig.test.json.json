@@ -1,0 +1,10 @@
+{
+  "scope": "packages/drivers/govinfo/tsconfig.test.json",
+  "findings": [
+    {
+      "kind": "unresolved",
+      "file": "packages/drivers/govinfo/tsconfig.test.json",
+      "name": "bun-types"
+    }
+  ]
+}

@@ -13,6 +13,7 @@ import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Effect, Layer } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ResearchCommandError } from "../Research.errors.js";
@@ -53,32 +54,50 @@ const CREATE_TABLES: ReadonlyArray<string> = [
 ];
 
 /**
- * Run catalog work against the research DuckDB database, creating tables on
- * first use.
+ * Location/context options for {@link runWithResearchDb}: the catalog
+ * database file path and the error message used when catalog work fails.
  *
  * @internal
- * @param databasePath - DuckDB database file path.
- * @param message - Error context used when catalog work fails.
+ * @category models
+ */
+type RunWithResearchDbOptions = {
+  readonly databasePath: string;
+  readonly message: string;
+};
+
+/**
+ * Run catalog work against the research DuckDB database, creating tables on
+ * first use. Pipeable: `work.pipe(runWithResearchDb({ databasePath, message }))`.
+ *
+ * @internal
  * @param work - Effect to run after catalog tables are initialized.
+ * @param options - `databasePath` (DuckDB database file path) and `message` (error context used when catalog work fails).
  * @returns The result of the supplied catalog effect.
  * @category utilities
  */
-export const runWithResearchDb = <A, E>(
-  databasePath: string,
-  message: string,
-  work: Effect.Effect<A, E, DuckDb>
-): Effect.Effect<A, ResearchCommandError> =>
-  Effect.scoped(
-    Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))).pipe(
-      Effect.flatMap((context) =>
-        Effect.gen(function* () {
-          const db = yield* DuckDb;
-          yield* db.runMany(CREATE_TABLES);
-          return yield* work;
-        }).pipe(Effect.provide(context))
+export const runWithResearchDb: {
+  (
+    options: RunWithResearchDbOptions
+  ): <A, E>(work: Effect.Effect<A, E, DuckDb>) => Effect.Effect<A, ResearchCommandError>;
+  <A, E>(work: Effect.Effect<A, E, DuckDb>, options: RunWithResearchDbOptions): Effect.Effect<A, ResearchCommandError>;
+} = dual(
+  2,
+  <A, E>(
+    work: Effect.Effect<A, E, DuckDb>,
+    { databasePath, message }: RunWithResearchDbOptions
+  ): Effect.Effect<A, ResearchCommandError> =>
+    Effect.scoped(
+      Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))).pipe(
+        Effect.flatMap((context) =>
+          Effect.gen(function* () {
+            const db = yield* DuckDb;
+            yield* db.runMany(CREATE_TABLES);
+            return yield* work;
+          }).pipe(Effect.provide(context))
+        )
       )
-    )
-  ).pipe(ResearchCommandError.mapError(message));
+    ).pipe(ResearchCommandError.mapError(message))
+);
 
 class CountRow extends S.Class<CountRow>($I`CountRow`)(
   { total: S.Finite },

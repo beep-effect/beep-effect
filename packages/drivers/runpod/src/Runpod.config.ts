@@ -42,6 +42,22 @@ export const RunpodConfigUrl = S.String.pipe(
 );
 
 /**
+ * Type for {@link RunpodConfigUrl}.
+ *
+ * @example
+ * ```ts
+ * import { RunpodConfigUrl } from "@beep/runpod"
+ *
+ * const url: RunpodConfigUrl = RunpodConfigUrl.fromUnknown("https://rest.runpod.io/v1/")
+ * console.log(url)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RunpodConfigUrl = typeof RunpodConfigUrl.Type;
+
+/**
  * Default Runpod REST API v1 base URL.
  *
  * @example

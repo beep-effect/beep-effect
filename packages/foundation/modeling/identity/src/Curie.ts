@@ -7,6 +7,7 @@
 
 import { Effect, pipe, SchemaIssue, SchemaTransformation } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -17,6 +18,22 @@ import { CoreVocab } from "./Vocab.ts";
 import type { Curie, Expand, Predicate, VocabShape } from "./Vocab.ts";
 
 const $I = $IdentityId.create("Curie");
+
+// Internal invariant guard for the literal-preserving `expand`/`contract`
+// overloads: the CURIE/IRI is asserted registered by its literal type, so the
+// unresolved branch is type-level unreachable. Modeled as a TaggedErrorClass
+// (not a native Error) to satisfy the native-runtime law without an allowlist
+// entry; intentionally not exported (never a caught public failure).
+class CurieCodecInvariantError extends S.TaggedErrorClass<CurieCodecInvariantError>(
+  "@beep/identity/errors/CurieCodecInvariantError"
+)(
+  "CurieCodecInvariantError",
+  { value: S.String },
+  $I.annote("@beep/identity/errors/CurieCodecInvariantError", {
+    description:
+      "A CURIE/IRI asserted registered by its literal type failed to resolve (type-level-unreachable invariant).",
+  })
+) {}
 
 type CoreCurie = Curie<typeof CoreVocab>;
 type CoreIri = Expand<CoreCurie, typeof CoreVocab>;
@@ -50,7 +67,7 @@ const parseCurie = (curie: string) =>
     O.map((separator) => [Str.slice(0, separator)(curie), Str.slice(separator + 1)(curie)] as const)
   );
 
-const expandOption = <const V extends VocabShape>(curie: string, vocab: V): O.Option<string> =>
+const expandOptionImpl = <const V extends VocabShape>(curie: string, vocab: V): O.Option<string> =>
   pipe(
     parseCurie(curie),
     O.flatMap(([prefix, term]) =>
@@ -62,7 +79,34 @@ const expandOption = <const V extends VocabShape>(curie: string, vocab: V): O.Op
     )
   );
 
-const contractOption = <const V extends VocabShape>(iri: string, vocab: V): O.Option<Curie<V>> =>
+/**
+ * Expand a possibly-unknown CURIE into its IRI.
+ *
+ * Returns `O.none()` when the CURIE's prefix is unregistered or its term
+ * isn't declared for that prefix, instead of a null/undefined-typed return.
+ * Use {@link expand} instead when the CURIE is statically known to be
+ * registered (it preserves the exact IRI literal type).
+ *
+ * @example
+ * ```ts
+ * import { pipe } from "effect"
+ * import * as O from "effect/Option"
+ * import { CoreVocab, expandOption } from "@beep/identity"
+ *
+ * console.log(O.isSome(expandOption("skos:prefLabel", CoreVocab))) // true
+ * console.log(O.isNone(expandOption("bogus:term", CoreVocab))) // true
+ * console.log(O.isSome(pipe("skos:prefLabel", expandOption(CoreVocab)))) // true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const expandOption: {
+  <const V extends VocabShape>(vocab: V): (curie: string) => O.Option<string>;
+  <const V extends VocabShape>(curie: string, vocab: V): O.Option<string>;
+} = dual(2, expandOptionImpl);
+
+const contractOptionImpl = <const V extends VocabShape>(iri: string, vocab: V): O.Option<Curie<V>> =>
   pipe(
     R.toEntries(vocab),
     A.reduce(O.none<readonly [keyof V & string, V[keyof V & string]["iri"], string]>(), (best, [prefix, entry]) =>
@@ -83,6 +127,34 @@ const contractOption = <const V extends VocabShape>(iri: string, vocab: V): O.Op
     ),
     O.map(([prefix, , term]) => `${prefix}:${term}` as Curie<V>)
   );
+
+/**
+ * Contract a possibly-unknown IRI back to its registered CURIE.
+ *
+ * Returns `O.none()` when the IRI isn't registered under any vocabulary
+ * entry, instead of a null/undefined-typed return. Use {@link contract}
+ * instead when the IRI is statically known to be registered (it preserves
+ * the exact CURIE literal type).
+ *
+ * @example
+ * ```ts
+ * import { pipe } from "effect"
+ * import * as O from "effect/Option"
+ * import { CoreVocab, contractOption } from "@beep/identity"
+ *
+ * const iri = "http://www.w3.org/2004/02/skos/core#prefLabel"
+ * console.log(O.isSome(contractOption(iri, CoreVocab))) // true
+ * console.log(O.isNone(contractOption("http://example.com/nope", CoreVocab))) // true
+ * console.log(O.isSome(pipe(iri, contractOption(CoreVocab)))) // true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const contractOption: {
+  <const V extends VocabShape>(vocab: V): (iri: string) => ReturnType<typeof contractOptionImpl<V>>;
+  <const V extends VocabShape>(iri: string, vocab: V): ReturnType<typeof contractOptionImpl<V>>;
+} = dual(2, contractOptionImpl);
 
 const schemaIssue = (value: string, message: string) => new SchemaIssue.InvalidValue(O.some(value), { message });
 
@@ -162,10 +234,13 @@ const CoreCurieTransformation = SchemaTransformation.transformOrFail({
  */
 export function expand<const C extends Curie<typeof CoreVocab>>(curie: C): Expand<C, typeof CoreVocab>;
 export function expand<const V extends VocabShape, const C extends Curie<V>>(curie: C, vocab: V): Expand<C, V>;
-export function expand(curie: string): string | undefined;
-export function expand(curie: string, vocab: VocabShape): string | undefined;
-export function expand(curie: string, vocab: VocabShape = CoreVocab): string | undefined {
-  return pipe(expandOption(curie, vocab), O.getOrUndefined);
+export function expand(curie: string, vocab: VocabShape = CoreVocab): string {
+  return pipe(
+    expandOption(curie, vocab),
+    O.getOrElse(() => {
+      throw CurieCodecInvariantError.make({ value: curie });
+    })
+  );
 }
 
 /**
@@ -189,10 +264,13 @@ export function contract<const V extends VocabShape, const I extends Expand<Curi
   iri: I,
   vocab: V
 ): Contract<I, V>;
-export function contract(iri: string): string | undefined;
-export function contract(iri: string, vocab: VocabShape): string | undefined;
-export function contract(iri: string, vocab: VocabShape = CoreVocab): string | undefined {
-  return pipe(contractOption(iri, vocab), O.getOrUndefined);
+export function contract(iri: string, vocab: VocabShape = CoreVocab): string {
+  return pipe(
+    contractOption(iri, vocab),
+    O.getOrElse(() => {
+      throw CurieCodecInvariantError.make({ value: iri });
+    })
+  );
 }
 
 /**

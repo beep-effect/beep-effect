@@ -95,7 +95,7 @@ describe("GraphOps filtering & folds", () => {
 
   it("collectTraversal yields nodes in dfs order from roots", () => {
     const g = sample();
-    const order = GraphOps.collectTraversal(g, GraphOps.getRoots(g), "dfs");
+    const order = GraphOps.collectTraversal(g, { start: GraphOps.getRoots(g), order: "dfs" });
     expect(order.length).toBe(4);
     expect(order[0]).toBe("a");
   });
@@ -133,7 +133,7 @@ describe("GraphOps effectful operations", () => {
     "traverseNodesCollect runs an effect per node",
     Effect.fnUntraced(function* () {
       const g = sample();
-      const out = yield* GraphOps.traverseNodesCollect(g, GraphOps.getRoots(g), "bfs", (n) =>
+      const out = yield* GraphOps.traverseNodesCollect(g, { start: GraphOps.getRoots(g), order: "bfs" }, (n) =>
         Effect.succeed(n.toUpperCase())
       );
       expect(out.length).toBe(4);
@@ -158,7 +158,9 @@ describe("GraphOps streaming & merge", () => {
     "streamNodes emits every node",
     Effect.fnUntraced(function* () {
       const g = sample();
-      const collected = yield* Stream.runCollect(GraphOps.streamNodes(g, GraphOps.getRoots(g), "dfs"));
+      const collected = yield* Stream.runCollect(
+        GraphOps.streamNodes(g, { start: GraphOps.getRoots(g), order: "dfs" })
+      );
       expect(collected.length).toBe(4);
     })
   );
@@ -167,7 +169,9 @@ describe("GraphOps streaming & merge", () => {
     "batchNodes groups nodes into fixed-size batches",
     Effect.fnUntraced(function* () {
       const g = sample();
-      const batches = yield* Stream.runCollect(GraphOps.batchNodes(g, GraphOps.getRoots(g), "dfs", 2));
+      const batches = yield* Stream.runCollect(
+        GraphOps.batchNodes(g, { start: GraphOps.getRoots(g), order: "dfs", batchSize: 2 })
+      );
       expect(batches.length).toBe(2);
     })
   );

@@ -1,0 +1,7 @@
+# CI Fix: property timeouts + ui docgen
+
+FIX 1: Exported `fcDeepSweepActive` from `vitest.shared.ts`. Added `vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : <orig>` timeout gating (importing both flags) to the 10 package-local configs: drivers/{acp,duckdb,wink,rdf-canonize}, foundation/capability/semantic-web, foundation/modeling/lexical (merged existing `vitestCoverageRunActive` branch, kept its 60s non-coverage floor), tooling/tool/{docgen,cli}, tooling/library/ai-metrics, tooling/policy-pack/lint-rules. `tooling/library/repo-utils` left untouched (already unconditional 300_000). Verified `BEEP_FC_NUM_RUNS=400 bun run test:property` passes in lexical (26s) and agents/use-cases (154s, no config override — control case); biome clean on all edited files; tsgo clean on lexical; regression pass (no env var) on acp/duckdb.
+
+FIX 2: `bun run beep docgen check --package @beep/ui` (fresh) named 3 exports missing `@category`: `banner.tsx:224`, `dialog.tsx:298`, `dropdown-menu.tsx:469` — combined `export { ... }` statements lacked the doc block every other component file in the package already carries. Added the standard `/** @category components \n @since 0.0.0 */` block above each, matching repo convention (e.g. `alert-dialog.tsx:411`). `docgen check --package @beep/ui` now reports OK (0 missing); regenerated `.beep/docgen/proof.json` via `bun run docgen` in-package so `--reuse-proof-manifest` fast-paths (skips) ui; `turbo run docgen --filter=@beep/ui` green (8/8 tasks).
+
+No commits made.

@@ -6,7 +6,7 @@
  */
 
 import { A, Str } from "@beep/utils";
-import { DateTime, Effect, Match, Order, pipe } from "effect";
+import { DateTime, Effect, Match, MutableHashMap, Order, pipe } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CorpusCommandError } from "./Corpus.errors.js";
@@ -191,16 +191,16 @@ export const pairRecycleBinEntries = (entries: ReadonlyArray<RecycleBinScanEntry
     entries,
     Order.mapInput(Str.Order, (entry: RecycleBinScanEntry) => entry.relativePath)
   );
-  const metadataByKey = new Map<string, RecycleBinScanEntry>();
-  const contentByKey = new Map<string, RecycleBinScanEntry>();
+  const metadataByKey = MutableHashMap.empty<string, RecycleBinScanEntry>();
+  const contentByKey = MutableHashMap.empty<string, RecycleBinScanEntry>();
   const overflow: Array<RecycleBinScanEntry> = [];
 
   for (const entry of sorted) {
     const bucket = entry.kind === "metadata" ? metadataByKey : contentByKey;
-    if (bucket.has(entry.pairKey)) {
+    if (MutableHashMap.has(bucket, entry.pairKey)) {
       overflow.push(entry);
     } else {
-      bucket.set(entry.pairKey, entry);
+      MutableHashMap.set(bucket, entry.pairKey, entry);
     }
   }
 
@@ -209,11 +209,11 @@ export const pairRecycleBinEntries = (entries: ReadonlyArray<RecycleBinScanEntry
   const unmatchedContent: Array<RecycleBinScanEntry> = [];
 
   for (const [pairKey, metadata] of metadataByKey) {
-    const content = contentByKey.get(pairKey);
+    const content = O.getOrUndefined(MutableHashMap.get(contentByKey, pairKey));
     if (content === undefined) {
       unmatchedMetadata.push(metadata);
     } else {
-      contentByKey.delete(pairKey);
+      MutableHashMap.remove(contentByKey, pairKey);
       matched.push(
         RecycleBinPairedEntry.make({
           contentRelativePath: content.relativePath,
@@ -224,7 +224,7 @@ export const pairRecycleBinEntries = (entries: ReadonlyArray<RecycleBinScanEntry
     }
   }
 
-  for (const content of contentByKey.values()) {
+  for (const content of MutableHashMap.values(contentByKey)) {
     unmatchedContent.push(content);
   }
   for (const entry of overflow) {

@@ -1,0 +1,10 @@
+{
+  "scope": "packages/drivers/tika/tsconfig.test.json",
+  "findings": [
+    {
+      "kind": "unresolved",
+      "file": "packages/drivers/tika/tsconfig.test.json",
+      "name": "bun-types"
+    }
+  ]
+}

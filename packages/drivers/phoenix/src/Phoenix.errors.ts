@@ -50,6 +50,15 @@ export const PhoenixOperation = LiteralKit([
 /**
  * Type for {@link PhoenixOperation}.
  *
+ * @example
+ * ```ts
+ * import { PhoenixOperation } from "@beep/phoenix"
+ *
+ * const operation: PhoenixOperation = "createDataset"
+ * console.log(PhoenixOperation.is.createDataset(operation))
+ * // true
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */
@@ -76,6 +85,15 @@ export const PhoenixErrorReason = LiteralKit(["config", "response decoding", "tr
 
 /**
  * Type for {@link PhoenixErrorReason}.
+ *
+ * @example
+ * ```ts
+ * import { PhoenixErrorReason } from "@beep/phoenix"
+ *
+ * const reason: PhoenixErrorReason = "transport"
+ * console.log(PhoenixErrorReason.is.transport(reason))
+ * // true
+ * ```
  *
  * @category errors
  * @since 0.0.0

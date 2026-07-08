@@ -10,10 +10,17 @@
  * @since 0.0.0
  */
 import { $ } from "bun";
+import { Data } from "effect";
+
+class MissingTargetTripleError extends Data.TaggedError("MissingTargetTripleError")<{
+  readonly message: string;
+}> {}
 
 const triple = (await $`rustc -vV`.text()).match(/host: (\S+)/)?.[1];
 if (triple === undefined) {
-  throw new Error("could not determine the target triple from `rustc -vV`");
+  throw new MissingTargetTripleError({
+    message: "could not determine the target triple from `rustc -vV`",
+  });
 }
 
 const outfile = `src-tauri/binaries/sidecar-${triple}`;

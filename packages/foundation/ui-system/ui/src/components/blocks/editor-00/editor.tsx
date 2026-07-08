@@ -1,3 +1,9 @@
+/**
+ * Lexical rich-text editor shell wiring the plugin stack and emitting serialized-state change callbacks.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { TooltipProvider } from "@beep/ui/components/ui/tooltip";

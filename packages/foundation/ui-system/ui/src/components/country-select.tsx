@@ -298,6 +298,22 @@ const CountryCodeBase = LiteralKit([
   "ZM",
   "ZW",
 ]);
+/**
+ * ISO 3166-1 alpha-2 country code schema accepted by country UI primitives.
+ *
+ * @example
+ * ```ts
+ * import { CountryCode } from "@beep/ui/components/country-select"
+ * import * as S from "effect/Schema"
+ *
+ * const isCountryCode = S.is(CountryCode)
+ *
+ * console.log(isCountryCode("US"))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export const CountryCode = CountryCodeBase.pipe(
   $I.annoteSchema("CountryCode", {
     description: "ISO 3166-1 alpha-2 country code accepted by country UI primitives.",
@@ -486,6 +502,15 @@ export const CountryFlag: React.FC<CountryFlagProps> = ({ code, className, ...pr
 
 /**
  * Props for {@link CountryOptionContent}.
+ *
+ * @example
+ * ```ts
+ * import type { CountryOptionContentProps } from "@beep/ui/components/country-select"
+ *
+ * const describe = (props: CountryOptionContentProps): string => props.option.label
+ *
+ * console.log(typeof describe)
+ * ```
  *
  * @category models
  * @since 0.0.0

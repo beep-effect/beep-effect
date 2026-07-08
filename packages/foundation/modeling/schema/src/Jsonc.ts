@@ -103,6 +103,25 @@ export const JsoncTextToUnknown = S.String.pipe(
 );
 
 /**
+ * {@inheritDoc JsoncTextToUnknown}
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { JsoncTextToUnknown } from "@beep/schema/Jsonc"
+ *
+ * const program = S.decodeUnknownEffect(JsoncTextToUnknown)('{ "port": 8080 }')
+ * const parsed: typeof JsoncTextToUnknown.Type = await Effect.runPromise(program)
+ * console.log(parsed)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type JsoncTextToUnknown = typeof JsoncTextToUnknown.Type;
+
+/**
  * Builds a decoder that parses JSONC text and then decodes the result through a
  * target schema.
  *

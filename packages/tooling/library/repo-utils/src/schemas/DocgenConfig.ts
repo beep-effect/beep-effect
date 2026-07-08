@@ -383,6 +383,52 @@ export const toDocgenExamplesCompilerOptionsJson = (
 });
 
 /**
+ * JSON-compatible mirror of {@link CanonicalDocgenConfig}, returned by
+ * {@link toCanonicalDocgenConfigJson}.
+ *
+ * @example
+ * ```ts
+ * import { CanonicalDocgenConfigJsonShape } from "@beep/repo-utils/schemas/DocgenConfig"
+ * const json = CanonicalDocgenConfigJsonShape.make({
+ *   $schema: "../../packages/tooling/tool/docgen/schema.json",
+ *   exclude: [],
+ *   srcLink: "https://github.com/beep-effect/beep-effect/tree/main/packages/example/src/",
+ *   examplesCompilerOptions: {}
+ * })
+ * console.log(json.srcLink.endsWith("/src/")) // true
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class CanonicalDocgenConfigJsonShape extends S.Class<CanonicalDocgenConfigJsonShape>(
+  $I`CanonicalDocgenConfigJsonShape`
+)(
+  {
+    $schema: S.String,
+    exclude: S.Array(S.String),
+    srcLink: S.String,
+    examplesCompilerOptions: S.Record(S.String, S.Unknown),
+  },
+  $I.annote("CanonicalDocgenConfigJsonShape", {
+    description: "JSON-compatible mirror of CanonicalDocgenConfig, returned by toCanonicalDocgenConfigJson.",
+  })
+) {}
+
+/**
+ * Runtime type for {@link CanonicalDocgenConfigJsonShape}.
+ *
+ * @example
+ * ```ts
+ * import type { CanonicalDocgenConfigJson } from "@beep/repo-utils/schemas/DocgenConfig"
+ * const acceptJson = (_value: CanonicalDocgenConfigJson) => undefined
+ * console.log(acceptJson)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type CanonicalDocgenConfigJson = (typeof CanonicalDocgenConfigJsonShape)["Type"];
+
+/**
  * Convert the canonical docgen config model to a plain JSON-compatible object.
  *
  * @param config - Canonical docgen config model to serialize.
@@ -434,14 +480,7 @@ export const toDocgenExamplesCompilerOptionsJson = (
  * @category models
  * @since 0.0.0
  */
-export const toCanonicalDocgenConfigJson = (
-  config: CanonicalDocgenConfig
-): {
-  readonly $schema: string;
-  readonly exclude: ReadonlyArray<string>;
-  readonly srcLink: string;
-  readonly examplesCompilerOptions: Readonly<Record<string, unknown>>;
-} => ({
+export const toCanonicalDocgenConfigJson = (config: CanonicalDocgenConfig): CanonicalDocgenConfigJson => ({
   $schema: config.$schema,
   exclude: cloneStringArray(config.exclude),
   srcLink: config.srcLink,

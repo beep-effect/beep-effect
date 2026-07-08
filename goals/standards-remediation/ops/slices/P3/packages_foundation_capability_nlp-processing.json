@@ -1,0 +1,89 @@
+{
+  "scope": "packages/foundation/capability/nlp-processing",
+  "entries": [
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
+      "qualifiedName": "filterByPOSTag",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/nlp-processing",
+      "reason": "dual must be imported directly or as a namespace from effect/Function.",
+      "line": 741,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["invalid-dual-source"]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/AnnotatedTextGraph.ts",
+      "qualifiedName": "filterEntitiesByType",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/nlp-processing",
+      "reason": "dual must be imported directly or as a namespace from effect/Function.",
+      "line": 716,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["invalid-dual-source"]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
+      "qualifiedName": "makeOperationResult",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/nlp-processing",
+      "reason": "Public helper APIs may not expose more than 3 positional parameters. dual arity must match the public positional arity and may not exceed 3.",
+      "line": 748,
+      "column": 14,
+      "parameterCount": 5,
+      "diagnostics": ["too-many-positional-params", "invalid-dual-arity"]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/Graph/TextGraph.ts",
+      "qualifiedName": "addChildren",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/nlp-processing",
+      "reason": "Public helper APIs may not expose more than 3 positional parameters. dual arity must match the public positional arity and may not exceed 3.",
+      "line": 275,
+      "column": 14,
+      "parameterCount": 4,
+      "diagnostics": ["too-many-positional-params", "invalid-dual-arity"]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/internal/observability.ts",
+      "qualifiedName": "recordNlpBackendFallback",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/nlp-processing",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 207,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/internal/observability.ts",
+      "qualifiedName": "recordNlpCacheLookup",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/nlp-processing",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 176,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    },
+    {
+      "file": "packages/foundation/capability/nlp-processing/src/internal/observability.ts",
+      "qualifiedName": "recordNlpFailure",
+      "kind": "exported-const-function",
+      "status": "candidate",
+      "owner": "@beep/nlp-processing",
+      "reason": "Public 2-3 parameter helper APIs must be implemented with dual from effect/Function.",
+      "line": 246,
+      "column": 14,
+      "parameterCount": 2,
+      "diagnostics": ["missing-dual"]
+    }
+  ]
+}

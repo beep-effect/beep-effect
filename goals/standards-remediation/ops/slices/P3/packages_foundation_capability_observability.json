@@ -1,0 +1,18 @@
+{
+  "scope": "packages/foundation/capability/observability",
+  "entries": [
+    {
+      "file": "packages/foundation/capability/observability/src/server/HttpApiTelemetry.ts",
+      "qualifiedName": "observeHttpApiHandler",
+      "kind": "exported-const-function",
+      "status": "exception",
+      "owner": "@beep/observability",
+      "reason": "Compatibility overload keeps observeHttpApiHandler(descriptor, metrics, effect) available while the canonical Effect plus ObserveHttpApiHandlerOptions overload remains the preferred public API.",
+      "issue": "OBSERVABILITY-HTTP-API-HANDLER-LEGACY-OVERLOAD",
+      "line": 716,
+      "column": 14,
+      "parameterCount": 3,
+      "diagnostics": ["invalid-dual-arity", "third-param-not-object-like"]
+    }
+  ]
+}

@@ -1,3 +1,9 @@
+/**
+ * Table primitive: a styled `<table>` with header, body, row, and cell wrappers.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { cn } from "../lib/index.ts";

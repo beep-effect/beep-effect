@@ -152,6 +152,14 @@ const heroVideoAutoplayAtom = Atom.family((key: string) =>
  * Interval, in milliseconds, between hero background clips when more than one clip
  * is supplied. A single clip never rotates.
  *
+ * @example
+ * ```ts
+ * import { HERO_ROTATE_MS } from "@beep/oip-web/components/HeroVideo"
+ *
+ * console.log(HERO_ROTATE_MS)
+ * // 7000
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */

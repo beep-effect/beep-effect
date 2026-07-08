@@ -97,6 +97,24 @@ type ResearchCommandServiceRequirements =
 /**
  * Service contract for research knowledge-vault operations.
  *
+ * @example
+ * ```ts
+ * import type { ResearchCommandServiceShape } from "@beep/repo-cli/commands/Research"
+ * import { Effect } from "effect"
+ *
+ * const service: ResearchCommandServiceShape = {
+ *   captureUrl: () => Effect.never,
+ *   cognify: () => Effect.never,
+ *   daily: () => Effect.never,
+ *   digest: () => Effect.never,
+ *   historySift: () => Effect.never,
+ *   notionPull: () => Effect.never,
+ *   repoCard: () => Effect.never,
+ *   status: () => Effect.never
+ * }
+ *
+ * console.log(typeof service.daily)
+ * ```
  * @category services
  * @since 0.0.0
  */
@@ -237,13 +255,12 @@ const captureUrlImpl = Effect.fn("Research.captureUrlImpl")(function* (
   const databasePath = yield* catalogDbPath(options.vaultRoot);
 
   const alreadySeen = yield* runWithResearchDb(
-    databasePath,
-    `Failed checking seen URLs in "${databasePath}".`,
     Effect.gen(function* () {
       const db = yield* DuckDb;
       const rows = yield* db.query(SELECT_SEEN_URL, [urlNorm]);
       return yield* singleCount(rows, "seen URLs");
-    })
+    }),
+    { databasePath, message: `Failed checking seen URLs in "${databasePath}".` }
   );
   if (alreadySeen > 0) {
     yield* Console.log(`research capture: already captured "${urlNorm}" (use the vault card; no re-scrape).`);
@@ -278,8 +295,6 @@ const captureUrlImpl = Effect.fn("Research.captureUrlImpl")(function* (
   yield* writeCard(options.vaultRoot, cardRelativePath, renderCard(frontmatter, body));
 
   yield* runWithResearchDb(
-    databasePath,
-    `Failed recording capture in "${databasePath}".`,
     Effect.gen(function* () {
       const db = yield* DuckDb;
       yield* db.run(INSERT_SEEN_URL, [urlNorm, now, "capture"]);
@@ -295,7 +310,8 @@ const captureUrlImpl = Effect.fn("Research.captureUrlImpl")(function* (
         title,
       ]);
       yield* db.run(INSERT_CAPTURE_LOG, [now, "capture", urlNorm, "captured"]);
-    })
+    }),
+    { databasePath, message: `Failed recording capture in "${databasePath}".` }
   );
 
   yield* Console.log(`research capture: wrote "${cardRelativePath}" (${id}).`);
@@ -322,8 +338,6 @@ const persistCards = Effect.fn("Research.persistCards")(function* (
     yield* writeCard(vaultRoot, card.relativePath, renderCard(card.frontmatter, card.body));
   }
   yield* runWithResearchDb(
-    databasePath,
-    `Failed recording ${subcommand} cards in "${databasePath}".`,
     Effect.gen(function* () {
       const db = yield* DuckDb;
       for (const card of cards) {
@@ -344,7 +358,8 @@ const persistCards = Effect.fn("Research.persistCards")(function* (
         ]);
       }
       yield* db.run(INSERT_CAPTURE_LOG, [now, subcommand, `${A.length(cards)} cards`, "written"]);
-    })
+    }),
+    { databasePath, message: `Failed recording ${subcommand} cards in "${databasePath}".` }
   );
 });
 
@@ -361,12 +376,11 @@ const loadSeenUrls = Effect.fn("Research.loadSeenUrls")(function* (
   databasePath: string
 ): Effect.fn.Return<MutableHashSet.MutableHashSet<string>, ResearchCommandError> {
   const rows = yield* runWithResearchDb(
-    databasePath,
-    `Failed loading seen URLs from "${databasePath}".`,
     Effect.gen(function* () {
       const db = yield* DuckDb;
       return yield* db.query('SELECT url_norm AS "urlNorm" FROM research_seen_urls');
-    })
+    }),
+    { databasePath, message: `Failed loading seen URLs from "${databasePath}".` }
   );
   const decoded = yield* decodeSeenUrlRows(rows).pipe(
     ResearchCommandError.mapError("Seen-URL rows failed schema validation.")
@@ -516,7 +530,9 @@ const collectCloneCards = Effect.fnUntraced(function* (
   const selected =
     options.only === undefined
       ? clones
-      : A.filter(clones, (dir) => Str.includes(options.only ?? "")(Str.toLowerCase(path.basename(dir))));
+      : A.filter(clones, (dir) =>
+          Str.includes(Str.toLowerCase(options.only ?? ""))(Str.toLowerCase(path.basename(dir)))
+        );
 
   for (const repoDir of selected) {
     collection.reposScanned += 1;
@@ -720,15 +736,14 @@ const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
   const databasePath = yield* catalogDbPath(options.vaultRoot);
 
   const pendingRows = yield* runWithResearchDb(
-    databasePath,
-    `Failed loading pending cards from "${databasePath}".`,
     Effect.gen(function* () {
       const db = yield* DuckDb;
       return yield* db.query(
         `SELECT id AS "id", path AS "path", source_type AS "sourceType"
          FROM research_cards WHERE cognified_at IS NULL ORDER BY source_type, path`
       );
-    })
+    }),
+    { databasePath, message: `Failed loading pending cards from "${databasePath}".` }
   );
   const pending = yield* decodePendingCardRows(pendingRows).pipe(
     ResearchCommandError.mapError("Pending-card rows failed schema validation.")
@@ -779,8 +794,6 @@ const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
 
   const now = DateTime.formatIso(yield* DateTime.now);
   yield* runWithResearchDb(
-    databasePath,
-    `Failed stamping cognified cards in "${databasePath}".`,
     Effect.gen(function* () {
       const db = yield* DuckDb;
       for (const uploads of MutableHashMap.values(byDataset)) {
@@ -794,7 +807,8 @@ const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
         `${cardsPushed} cards -> ${A.join(datasets, ", ")}`,
         "pushed",
       ]);
-    })
+    }),
+    { databasePath, message: `Failed stamping cognified cards in "${databasePath}".` }
   );
 
   yield* postResearchEpisode(
@@ -840,8 +854,6 @@ const digestImpl = Effect.fn("Research.digestImpl")(function* (
   const cutoffIso = DateTime.formatIso(DateTime.subtract(now, { hours: 24 }));
 
   const { backlogRows, inboxBacklog, newRows, pendingCognify } = yield* runWithResearchDb(
-    databasePath,
-    `Failed querying digest data from "${databasePath}".`,
     Effect.gen(function* () {
       const db = yield* DuckDb;
       const newRows = yield* db.query(
@@ -860,7 +872,8 @@ const digestImpl = Effect.fn("Research.digestImpl")(function* (
         .query("SELECT COUNT(*)::DOUBLE AS total FROM research_cards WHERE cognified_at IS NULL")
         .pipe(Effect.flatMap((rows) => singleCount(rows, "pending cognify")));
       return { backlogRows, inboxBacklog, newRows, pendingCognify };
-    })
+    }),
+    { databasePath, message: `Failed querying digest data from "${databasePath}".` }
   );
   const newCards = yield* decodeDigestCardRows(newRows).pipe(
     ResearchCommandError.mapError("Digest new-card rows failed schema validation.")
@@ -1036,8 +1049,6 @@ const statusImpl = Effect.fn("Research.statusImpl")(function* (
   }
 
   const summary = yield* runWithResearchDb(
-    databasePath,
-    `Failed querying catalog status at "${databasePath}".`,
     Effect.gen(function* () {
       const db = yield* DuckDb;
       const totalCards = yield* db
@@ -1063,7 +1074,8 @@ const statusImpl = Effect.fn("Research.statusImpl")(function* (
         seenUrls,
         totalCards,
       }).pipe(ResearchCommandError.mapError("Catalog status summary failed schema validation."));
-    })
+    }),
+    { databasePath, message: `Failed querying catalog status at "${databasePath}".` }
   );
 
   const perType = A.map(summary.bySourceType, (row) => `${row.sourceType}=${row.cards}`);

@@ -50,7 +50,10 @@ export * from "./Id.ts";
  * ```ts
  * import { prefixedNameOrIri } from "@beep/identity"
  *
- * console.log(prefixedNameOrIri("skos", "prefLabel", "http://www.w3.org/2004/02/skos/core#prefLabel"))
+ * console.log(prefixedNameOrIri("prefLabel", {
+ *   prefix: "skos",
+ *   fullIri: "http://www.w3.org/2004/02/skos/core#prefLabel"
+ * }))
  * ```
  *
  * @category formatting

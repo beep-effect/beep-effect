@@ -1,3 +1,9 @@
+/**
+ * Conversation primitive: a scrollable message list with an empty-state slot for chat UIs.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { ArrowDownIcon } from "@phosphor-icons/react";
@@ -14,8 +20,9 @@ import type { ComponentProps } from "react";
  * ```ts
  * import type { ConversationProps } from "@beep/ui/components/conversation"
  *
- * const value = {} as ConversationProps
- * console.log(value)
+ * const describe = (props: ConversationProps): string => props.className ?? "unstyled"
+ *
+ * console.log(typeof describe)
  * ```
  *
  * @category type-level
@@ -53,8 +60,9 @@ export const Conversation = ({ className, ...props }: ConversationProps) => (
  * ```ts
  * import type { ConversationContentProps } from "@beep/ui/components/conversation"
  *
- * const value = {} as ConversationContentProps
- * console.log(value)
+ * const describe = (props: ConversationContentProps): string => props.className ?? "unstyled"
+ *
+ * console.log(typeof describe)
  * ```
  *
  * @category type-level
@@ -86,8 +94,9 @@ export const ConversationContent = ({ className, ...props }: ConversationContent
  * ```ts
  * import type { ConversationEmptyStateProps } from "@beep/ui/components/conversation"
  *
- * const value = {} as ConversationEmptyStateProps
- * console.log(value)
+ * const describe = (props: ConversationEmptyStateProps): string => props.className ?? "unstyled"
+ *
+ * console.log(describe({}))
  * ```
  *
  * @category type-level
@@ -143,8 +152,10 @@ export const ConversationEmptyState = ({
  * ```ts
  * import type { ConversationScrollButtonProps } from "@beep/ui/components/conversation"
  *
- * const value = {} as ConversationScrollButtonProps
- * console.log(value)
+ * const describe = (props: ConversationScrollButtonProps): string =>
+ *   typeof props.className === "string" ? props.className : "unstyled"
+ *
+ * console.log(describe({}))
  * ```
  *
  * @category type-level

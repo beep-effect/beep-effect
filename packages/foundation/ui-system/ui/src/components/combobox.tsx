@@ -1,3 +1,9 @@
+/**
+ * Combobox primitive: an editable, filterable select root built on Base UI's combobox.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Combobox as ComboboxPrimitive } from "@base-ui/react";

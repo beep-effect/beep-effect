@@ -1,3 +1,9 @@
+/**
+ * Carousel primitive: an Embla-backed carousel root, viewport, and navigation controls.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Button } from "@beep/ui/components/button";

@@ -14,12 +14,8 @@
   },
   "agentEnablement": {
     "codexGoal": "/goal Complete the OIP merge-ready closure for goals/oip-web-launch without stopping until the OIP app proof lane passes, the initiative packet says implementation complete with launch review pending, generated Playwright screenshots are kept out of the commit, and branch oip-web has one focused local commit with a clean working tree. Do not push, do not deploy, do not mark legal/content review gates approved, and do not create new shared/foundation packages.",
-    "mcpServers": [
-      "shadcn"
-    ],
-    "skills": [
-      "shadcn"
-    ]
+    "mcpServers": ["shadcn"],
+    "skills": ["shadcn"]
   },
   "closure": {
     "git": "local-commit-only",

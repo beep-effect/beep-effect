@@ -44,6 +44,14 @@ export class Text extends S.TaggedClass<Text>($I`Text`)(
 /**
  * Companion namespace for {@link Text}.
  *
+ * @example
+ * ```ts
+ * import { Text } from "@beep/html/Html.nodes"
+ *
+ * const encoded: Text.Encoded = { _tag: "#text", value: "Hello" }
+ * console.log(encoded._tag) // "#text"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -59,6 +67,14 @@ export declare namespace Text {
 
 /**
  * An HTML comment node (`<!-- ... -->`).
+ *
+ * @example
+ * ```ts
+ * import { Comment } from "@beep/html/Html.nodes"
+ *
+ * const node = Comment.make({ value: "note" })
+ * console.log(node._tag) // "#comment"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -76,6 +92,14 @@ export class Comment extends S.TaggedClass<Comment>($I`Comment`)(
 /**
  * Companion namespace for {@link Comment}.
  *
+ * @example
+ * ```ts
+ * import { Comment } from "@beep/html/Html.nodes"
+ *
+ * const encoded: Comment.Encoded = { _tag: "#comment", value: "note" }
+ * console.log(encoded._tag) // "#comment"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -91,6 +115,14 @@ export declare namespace Comment {
 
 /**
  * A document type declaration (`<!DOCTYPE html>`).
+ *
+ * @example
+ * ```ts
+ * import { Doctype } from "@beep/html/Html.nodes"
+ *
+ * const node = Doctype.html()
+ * console.log(node._tag) // "#doctype"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -115,6 +147,14 @@ export class Doctype extends S.TaggedClass<Doctype>($I`Doctype`)(
 
 /**
  * Companion namespace for {@link Doctype}.
+ *
+ * @example
+ * ```ts
+ * import { Doctype } from "@beep/html/Html.nodes"
+ *
+ * const encoded: Doctype.Encoded = { _tag: "#doctype", name: "html" }
+ * console.log(encoded._tag) // "#doctype"
+ * ```
  *
  * @category models
  * @since 0.0.0

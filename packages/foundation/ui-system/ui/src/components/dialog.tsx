@@ -1,3 +1,9 @@
+/**
+ * Dialog primitive: a modal root built on Base UI's dialog.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
@@ -250,22 +256,50 @@ function DialogDescription({ className, ...props }: DialogPrimitive.Description.
     />
   );
 }
-Dialog.Close = DialogClose;
-Dialog.Content = DialogContent;
-Dialog.Description = DialogDescription;
-Dialog.Footer = DialogFooter;
-Dialog.Header = DialogHeader;
-Dialog.Overlay = DialogOverlay;
-Dialog.Portal = DialogPortal;
-Dialog.Title = DialogTitle;
-Dialog.Trigger = DialogTrigger;
+/**
+ * Dialog component, composed with its part components via `Dialog.Trigger`,
+ * `Dialog.Portal`, `Dialog.Overlay`, `Dialog.Content`, `Dialog.Header`,
+ * `Dialog.Footer`, `Dialog.Title`, `Dialog.Description`, and `Dialog.Close`.
+ *
+ * @example
+ * ```tsx
+ * import { Dialog } from "@beep/ui/components/dialog"
+ *
+ * export function ConfirmDialog() {
+ *   return (
+ *     <Dialog>
+ *       <Dialog.Trigger>Open</Dialog.Trigger>
+ *       <Dialog.Content>
+ *         <Dialog.Header>
+ *           <Dialog.Title>Delete item</Dialog.Title>
+ *           <Dialog.Description>This cannot be undone.</Dialog.Description>
+ *         </Dialog.Header>
+ *       </Dialog.Content>
+ *     </Dialog>
+ *   )
+ * }
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
+const DialogWithParts = Object.assign(Dialog, {
+  Close: DialogClose,
+  Content: DialogContent,
+  Description: DialogDescription,
+  Footer: DialogFooter,
+  Header: DialogHeader,
+  Overlay: DialogOverlay,
+  Portal: DialogPortal,
+  Title: DialogTitle,
+  Trigger: DialogTrigger,
+});
 
 /**
  * @category components
  * @since 0.0.0
  */
 export {
-  Dialog,
   DialogClose,
   DialogContent,
   DialogDescription,
@@ -275,4 +309,5 @@ export {
   DialogPortal,
   DialogTitle,
   DialogTrigger,
+  DialogWithParts as Dialog,
 };

@@ -68,6 +68,24 @@ export type CollectionSummary = typeof CollectionSummary.Type;
 /**
  * Companion namespace for {@link CollectionSummary} encoded helpers.
  *
+ * @example
+ * ```ts
+ * import { CollectionSummary } from "@beep/govinfo/domain/values/CollectionSummary/CollectionSummary.model";
+ * import type { CollectionSummary as CollectionSummaryValue } from "@beep/govinfo/domain/values/CollectionSummary/CollectionSummary.model";
+ * import * as S from "effect/Schema";
+ *
+ * const summary: CollectionSummaryValue = S.decodeUnknownSync(CollectionSummary)([
+ *   {
+ *     collectionCode: "CREC",
+ *     collectionName: "Congressional Record",
+ *     granuleCount: 1200n,
+ *     packageCount: 450n
+ *   }
+ * ]);
+ *
+ * console.log(summary.length);
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */

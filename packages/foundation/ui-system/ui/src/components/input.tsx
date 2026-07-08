@@ -1,3 +1,9 @@
+/**
+ * Input primitive: a styled text input with invalid-state and file-input handling.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { Input as InputPrimitive } from "@base-ui/react/input";
 import { cn } from "../lib/index.ts";
 import type * as React from "react";

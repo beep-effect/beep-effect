@@ -75,6 +75,23 @@ export const HubSpotBaseUrl = S.String.pipe(
 );
 
 /**
+ * Type for {@link HubSpotBaseUrl}.
+ *
+ * @example
+ * ```ts
+ * import { HubSpotBaseUrl } from "@beep/hubspot"
+ * import * as S from "effect/Schema"
+ *
+ * const url: HubSpotBaseUrl = S.decodeUnknownSync(HubSpotBaseUrl)("https://api.hubapi.com/")
+ * console.log(url) // "https://api.hubapi.com"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HubSpotBaseUrl = typeof HubSpotBaseUrl.Type;
+
+/**
  * Non-empty HubSpot account identifier.
  *
  * @example

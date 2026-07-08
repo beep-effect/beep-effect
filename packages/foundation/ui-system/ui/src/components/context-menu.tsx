@@ -1,3 +1,9 @@
+/**
+ * Context-menu primitive: a right-click menu root built on Base UI's context menu.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { ContextMenu as ContextMenuPrimitive } from "@base-ui/react/context-menu";

@@ -14,6 +14,14 @@ import { LiteralKit } from "../LiteralKit/index.ts";
 /**
  * Internal identity composer.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { $I } from "../../src/Graph/Graph.shared.ts"
+ *
+ * const Labeled = S.String.pipe($I.annoteSchema("GraphLabel", { description: "A graph label." }))
+ * console.log(S.isSchema(Labeled))
+ * ```
  *
  * @internal
  * @category symbols
@@ -23,7 +31,14 @@ export const $I = $SchemaId.create("Graph");
 
 /** @internal */
 /**
- * Public schema module export.
+ * Literal schema for the graph kind discriminator (`"directed"` or `"undirected"`).
+ *
+ * @example
+ * ```ts
+ * import { GraphKindValue } from "../../src/Graph/Graph.shared.ts"
+ *
+ * console.log(GraphKindValue.Options.includes("directed"))
+ * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -37,6 +52,14 @@ export const GraphKindValue = LiteralKit(["directed", "undirected"]).pipe(
 /**
  * Companion type for {@link GraphKindValue}.
  *
+ * @example
+ * ```ts
+ * import { GraphKindValue } from "../../src/Graph/Graph.shared.ts"
+ *
+ * const kind: GraphKindValue = "directed"
+ * console.log(GraphKindValue.Options.includes(kind))
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -44,7 +67,15 @@ export type GraphKindValue = typeof GraphKindValue.Type;
 
 /** @internal */
 /**
- * Public schema module export.
+ * Raw (unvalidated) encoded edge shape prior to node/edge-index schema validation.
+ *
+ * @example
+ * ```ts
+ * import type { RawEdgeEncoded } from "../../src/Graph/Graph.shared.ts"
+ *
+ * const edge: RawEdgeEncoded<string> = { source: 0, target: 1, data: "knows" }
+ * console.log(edge.data)
+ * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -57,7 +88,21 @@ export type RawEdgeEncoded<Data> = Readonly<{
 
 /** @internal */
 /**
- * Public schema module export.
+ * Raw (unvalidated) encoded graph shape prior to node/edge-index schema validation.
+ *
+ * @example
+ * ```ts
+ * import type { RawGraphEncoded } from "../../src/Graph/Graph.shared.ts"
+ *
+ * const graph: RawGraphEncoded<string, string, "directed"> = {
+ *   _tag: "Graph",
+ *   type: "directed",
+ *   nodes: [[0, "Ada"]],
+ *   edges: []
+ * }
+ *
+ * console.log(graph.nodes.length)
+ * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -80,7 +125,16 @@ const edgeEntryOrder = Order.mapInput(Num.Order, (edge: { readonly index: number
 
 /** @internal */
 /**
- * Public schema module export.
+ * Builds a `SchemaIssue.InvalidValue` for a rejected graph value.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { makeInvalidGraphIssue } from "../../src/Graph/Graph.shared.ts"
+ *
+ * const issue = makeInvalidGraphIssue({ nodes: [] }, "Expected at least one node.")
+ * console.log(issue._tag, O.isSome(issue.actual))
+ * ```
  *
  * @category constructors
  * @since 0.0.0
@@ -90,7 +144,16 @@ export const makeInvalidGraphIssue = (actual: unknown, message: string): SchemaI
 
 /** @internal */
 /**
- * Public schema module export.
+ * Builds a `SchemaIssue.InvalidValue` describing a node/edge index mismatch
+ * encountered while reconstructing a graph.
+ *
+ * @example
+ * ```ts
+ * import { makeGraphConstructionIssue } from "../../src/Graph/Graph.shared.ts"
+ *
+ * const issue = makeGraphConstructionIssue({ nodes: [] }, "node", 0, 1)
+ * console.log(issue._tag)
+ * ```
  *
  * @category constructors
  * @since 0.0.0
@@ -104,7 +167,15 @@ export const makeGraphConstructionIssue = (
 
 /** @internal */
 /**
- * Public schema module export.
+ * Sorts raw `[index, node]` entries by ascending node index.
+ *
+ * @example
+ * ```ts
+ * import { sortRawNodeEntries } from "../../src/Graph/Graph.shared.ts"
+ *
+ * const sorted = sortRawNodeEntries([[2, "b"], [1, "a"]])
+ * console.log(sorted.map(([index]) => index))
+ * ```
  *
  * @category symbols
  * @since 0.0.0
@@ -119,7 +190,18 @@ export const sortRawNodeEntries = <Node>(
 
 /** @internal */
 /**
- * Public schema module export.
+ * Sorts raw encoded edge entries by ascending edge index.
+ *
+ * @example
+ * ```ts
+ * import { sortRawEdgeEntries } from "../../src/Graph/Graph.shared.ts"
+ *
+ * const sorted = sortRawEdgeEntries([
+ *   { index: 1, source: 0, target: 1, data: "b" },
+ *   { index: 0, source: 1, target: 0, data: "a" }
+ * ])
+ * console.log(sorted.map((edge) => edge.index))
+ * ```
  *
  * @category symbols
  * @since 0.0.0
@@ -130,7 +212,17 @@ export const sortRawEdgeEntries = <Edge>(
 
 /** @internal */
 /**
- * Public schema module export.
+ * Converts an Effect `Graph.Edge` instance into its raw encoded shape.
+ *
+ * @example
+ * ```ts
+ * import { Graph } from "effect"
+ * import { toRawEdgeEncoded } from "../../src/Graph/Graph.shared.ts"
+ *
+ * const edge = new Graph.Edge({ source: 0, target: 1, data: "knows" })
+ * const raw = toRawEdgeEncoded(edge)
+ * console.log(raw.data)
+ * ```
  *
  * @category symbols
  * @since 0.0.0
@@ -143,7 +235,19 @@ export const toRawEdgeEncoded = <Data>(edge: Graph_.Edge<Data>): RawEdgeEncoded<
 
 /** @internal */
 /**
- * Public schema module export.
+ * Converts an Effect `Graph.Graph` or `Graph.MutableGraph` into its raw encoded shape.
+ *
+ * @example
+ * ```ts
+ * import { Graph } from "effect"
+ * import { toRawGraphEncoded } from "../../src/Graph/Graph.shared.ts"
+ *
+ * const graph = Graph.directed<string, string>((mutable) => {
+ *   Graph.addNode(mutable, "Ada")
+ * })
+ * const raw = toRawGraphEncoded(graph)
+ * console.log(raw.nodes.length)
+ * ```
  *
  * @category symbols
  * @since 0.0.0
@@ -178,7 +282,18 @@ export const toRawGraphEncoded = <Node, Edge, Kind extends GraphKindValue>(
 
 /** @internal */
 /**
- * Public schema module export.
+ * Renders a graph as a human-readable `Graph.<kind>({ nodes: [...], edges: [...] })` string.
+ *
+ * @example
+ * ```ts
+ * import { Graph } from "effect"
+ * import { formatGraph } from "../../src/Graph/Graph.shared.ts"
+ *
+ * const graph = Graph.directed<string, number>((mutable) => {
+ *   Graph.addNode(mutable, "Ada")
+ * })
+ * console.log(formatGraph(graph, { formatNode: (node) => node, formatEdge: (edge) => String(edge) }))
+ * ```
  *
  * @category formatting
  * @since 0.0.0
@@ -222,7 +337,22 @@ export const formatGraph: {
 
 /** @internal */
 /**
- * Public schema module export.
+ * Builds a structural equivalence for two graphs given per-node and per-edge equivalences.
+ *
+ * @example
+ * ```ts
+ * import { Graph } from "effect"
+ * import { makeGraphEquivalence } from "../../src/Graph/Graph.shared.ts"
+ *
+ * const equivalent = makeGraphEquivalence<string, number>(
+ *   (self, that) => self === that,
+ *   (self, that) => self === that
+ * )
+ * const a = Graph.directed<string, number>((mutable) => {
+ *   Graph.addNode(mutable, "Ada")
+ * })
+ * console.log(equivalent(a, a))
+ * ```
  *
  * @category constructors
  * @since 0.0.0
@@ -299,7 +429,16 @@ export const makeGraphEquivalence: {
 
 /** @internal */
 /**
- * Public schema module export.
+ * Type guard for immutable (non-mutable) Effect `Graph.Graph` values.
+ *
+ * @example
+ * ```ts
+ * import { Graph } from "effect"
+ * import { isImmutableGraphValue } from "../../src/Graph/Graph.shared.ts"
+ *
+ * const graph = Graph.directed<string, number>()
+ * console.log(isImmutableGraphValue(graph))
+ * ```
  *
  * @category guards
  * @since 0.0.0
@@ -309,7 +448,16 @@ export const isImmutableGraphValue = <Node, Edge>(value: unknown): value is Grap
 
 /** @internal */
 /**
- * Public schema module export.
+ * Type guard for mutable Effect `Graph.MutableGraph` values.
+ *
+ * @example
+ * ```ts
+ * import { Graph } from "effect"
+ * import { isMutableGraphValue } from "../../src/Graph/Graph.shared.ts"
+ *
+ * const mutable = Graph.beginMutation(Graph.directed<string, number>())
+ * console.log(isMutableGraphValue(mutable))
+ * ```
  *
  * @category guards
  * @since 0.0.0
@@ -321,7 +469,14 @@ export const isMutableGraphValue = <Node, Edge>(
 
 /** @internal */
 /**
- * Public schema module export.
+ * Trims leading and trailing whitespace from a graph description string.
+ *
+ * @example
+ * ```ts
+ * import { trimGraphDescription } from "../../src/Graph/Graph.shared.ts"
+ *
+ * console.log(trimGraphDescription("  a graph  "))
+ * ```
  *
  * @category formatting
  * @since 0.0.0

@@ -46,8 +46,14 @@ type ImageCommandServiceRequirements =
  * @example
  * ```ts
  * import type { ImageCommandServiceShape } from "@beep/repo-cli/commands/Image"
- * const value = {} as ImageCommandServiceShape
- * console.log(value)
+ * import { Effect } from "effect"
+ *
+ * const service: ImageCommandServiceShape = {
+ *   extractFrames: () => Effect.never,
+ *   extractFramesDir: () => Effect.never
+ * }
+ *
+ * console.log(typeof service.extractFrames)
  * ```
  * @category services
  * @since 0.0.0

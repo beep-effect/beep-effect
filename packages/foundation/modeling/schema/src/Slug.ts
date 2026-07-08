@@ -90,6 +90,15 @@ export const Slug = S.NonEmptyString.check(SlugChecks).pipe(
 /**
  * Branded slug string type extracted from {@link Slug}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Slug } from "@beep/schema/Slug"
+ *
+ * const slug: Slug = S.decodeUnknownSync(Slug)("my-post-2")
+ * console.log(slug)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */

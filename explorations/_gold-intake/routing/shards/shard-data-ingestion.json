@@ -7,13 +7,20 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "rag-retrieval-projection",
-    "secondaryTargets": ["packages/foundation/capability/semantic-web", "packages/foundation/capability/langextract", "goals/ip-law-knowledge-graph"],
+    "secondaryTargets": [
+      "packages/foundation/capability/semantic-web",
+      "packages/foundation/capability/langextract",
+      "goals/ip-law-knowledge-graph"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "rag-retrieval-projection",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Hybrid BM25 + dense-vector retrieval & pgvector HNSW projection",
     "rationale": "Hybrid sparse+dense fusion is retrieval-ranking over a rebuildable vector projection; no GraphRAG/retrieval service is built (semantic-web FalkorDB projection is PLANNED), so it seeds the net-new rag-retrieval-projection packet as the simpler 2-channel precursor to RRF fusion.",
-    "cautions": ["LegalEase license unverified - port the alpha-weighted fusion algorithm, do not copy", "keep vectors as projection not authority; attach provenance spans to returned chunks"]
+    "cautions": [
+      "LegalEase license unverified - port the alpha-weighted fusion algorithm, do not copy",
+      "keep vectors as projection not authority; attach provenance spans to returned chunks"
+    ]
   },
   {
     "id": "TalentScore#7",
@@ -23,13 +30,21 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "gov-legal-data-driver-codegen",
-    "secondaryTargets": ["packages/drivers/runpod", "packages/drivers/courtlistener", "packages/drivers/govinfo", "packages/drivers/anthropic"],
+    "secondaryTargets": [
+      "packages/drivers/runpod",
+      "packages/drivers/courtlistener",
+      "packages/drivers/govinfo",
+      "packages/drivers/anthropic"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Declarative gov-data driver base: auth + retry + Retry-After + Redacted",
     "rationale": "The Redacted-auth-header + filterStatusOk + retryTransient + version-pinned-base wrapper is the canonical shared HttpClient driver base; no shared base package exists yet (only per-LLM-driver wrappers), so it is the auth+retry kernel for the new gov-legal-data-driver-codegen shared layer.",
-    "cautions": ["TalentScore is an external private project - port the wrapper pattern, do not copy", "reuse the repo Effect HttpClient idioms (typed errors over try/catch)"]
+    "cautions": [
+      "TalentScore is an external private project - port the wrapper pattern, do not copy",
+      "reuse the repo Effect HttpClient idioms (typed errors over try/catch)"
+    ]
   },
   {
     "id": "courtlistener#11",
@@ -39,13 +54,19 @@
     "primaryTarget": "packages/drivers/courtlistener",
     "targetExists": true,
     "proposedSlug": "gov-legal-data-driver-codegen",
-    "secondaryTargets": ["packages/drivers/uspto", "citation-grounding-hallucination-guard"],
+    "secondaryTargets": [
+      "packages/drivers/uspto",
+      "citation-grounding-hallucination-guard"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Citation-aware rate throttle (parse-once, charge-per-citation)",
     "rationale": "Parse-once cost-metering throttle is a driver-layer resilience concern that lands on the courtlistener driver via the shared rate-limit/cost layer; the eyecite citation parse it reuses is downstream citation-grounding work (secondary), not the core of this nugget.",
-    "cautions": ["courtlistener (Free Law Project) is AGPL - reimplement the throttle/metering from spec, do not copy", "eyecite/HYPERSCAN tokenizer is the AGPL citation parser - keep parsing in the separate citation-grounding packet"]
+    "cautions": [
+      "courtlistener (Free Law Project) is AGPL - reimplement the throttle/metering from spec, do not copy",
+      "eyecite/HYPERSCAN tokenizer is the AGPL citation parser - keep parsing in the separate citation-grounding packet"
+    ]
   },
   {
     "id": "courts-db#6",
@@ -55,13 +76,20 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "court-vocabulary-resolver",
-    "secondaryTargets": ["goals/official-data-sync-foundation", "packages/drivers/courtlistener", "goals/ip-law-knowledge-graph"],
+    "secondaryTargets": [
+      "goals/official-data-sync-foundation",
+      "packages/drivers/courtlistener",
+      "goals/ip-law-knowledge-graph"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "court-vocabulary-resolver",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Deterministic court/jurisdiction reference-data assembly",
     "rationale": "Template-substitution + ordinal-expansion + parent->child field inheritance is the deterministic assembly recipe for the courts-db controlled vocabulary; no court dataset/resolver exists (ip-law-knowledge-graph only defines abstract Court/Jurisdiction nodes), so it seeds the net-new court-vocabulary-resolver, ingested via official-data-sync-foundation.",
-    "cautions": ["courts-db is BSD-2 (permissive, attribution) - dataset/regex vendorable with attribution, resolver logic reimplement-don't-copy", "graph-shape Court/Jurisdiction stays owned by ip-law-knowledge-graph; sync plumbing by official-data-sync-foundation"]
+    "cautions": [
+      "courts-db is BSD-2 (permissive, attribution) - dataset/regex vendorable with attribution, resolver logic reimplement-don't-copy",
+      "graph-shape Court/Jurisdiction stays owned by ip-law-knowledge-graph; sync plumbing by official-data-sync-foundation"
+    ]
   },
   {
     "id": "doc-haus#6",
@@ -71,13 +99,21 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "rag-retrieval-projection",
-    "secondaryTargets": ["packages/foundation/capability/langextract", "packages/foundation/capability/provenance", "deterministic-doc-structure-extraction", "goals/ip-law-knowledge-graph"],
+    "secondaryTargets": [
+      "packages/foundation/capability/langextract",
+      "packages/foundation/capability/provenance",
+      "deterministic-doc-structure-extraction",
+      "goals/ip-law-knowledge-graph"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "rag-retrieval-projection",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Per-matter local index schema (char-span chunks + structure tables + FTS5)",
     "rationale": "The char-span chunk + FTS5 external-content + meta-version-guard INDEX SCHEMA is the rebuildable retrieval projection over PGlite/Drizzle authority (no such projection built); its deterministic structure tables (defined_terms/section_refs/parties) are filled by the separate deterministic-doc-structure-extraction extractor (secondary).",
-    "cautions": ["doc-haus is MIT (safe to study/adapt)", "vectors/FTS index are projection, not authority - authority + provenance spans live in PGlite/Drizzle per beep's split"]
+    "cautions": [
+      "doc-haus is MIT (safe to study/adapt)",
+      "vectors/FTS index are projection, not authority - authority + provenance spans live in PGlite/Drizzle per beep's split"
+    ]
   },
   {
     "id": "doc-haus#11",
@@ -87,13 +123,20 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "rag-retrieval-projection",
-    "secondaryTargets": ["goals/langextract-capability", "packages/foundation/capability/langextract", "deterministic-doc-structure-extraction"],
+    "secondaryTargets": [
+      "goals/langextract-capability",
+      "packages/foundation/capability/langextract",
+      "deterministic-doc-structure-extraction"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "rag-retrieval-projection",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Clause-aware sectionizer + char-offset chunker with breadcrumb embeddings",
     "rationale": "The offset-preserving ~2000-char chunker sitting between @beep/md and @beep/langextract plus the breadcrumb-prefixed embedding strategy are net-new ingestion-pipeline pieces with no home; they belong to rag-retrieval-projection coordinating with langextract (its V1 owns extraction-to-span, not chunk-for-retrieval).",
-    "cautions": ["doc-haus is MIT (safe to study/adapt)", "clause-detection overlaps deterministic-doc-structure-extraction - keep the sectionizer span-bearing and provider-neutral"]
+    "cautions": [
+      "doc-haus is MIT (safe to study/adapt)",
+      "clause-detection overlaps deterministic-doc-structure-extraction - keep the sectionizer span-bearing and provider-neutral"
+    ]
   },
   {
     "id": "doc-haus#14",
@@ -109,7 +152,10 @@
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> CourtListener REST v4 token-auth client",
     "rationale": "packages/drivers/courtlistener is a bare VERSION-only skeleton; this read-only REST search client + token-vs-unauth rate-limit + result-shaping (caseName/citation/court/citeCount/snippet) is exactly the implementation the skeleton needs, owned by gov-legal-data-driver-codegen.",
-    "cautions": ["compare remote-MCP-vs-hand-rolled choice; beep targets a native Effect driver via runpod/acp codegen precedent (not Orval/axios)", "CourtListener V4 enforces 'Authorization: Token <key>' header (not Bearer)"]
+    "cautions": [
+      "compare remote-MCP-vs-hand-rolled choice; beep targets a native Effect driver via runpod/acp codegen precedent (not Orval/axios)",
+      "CourtListener V4 enforces 'Authorization: Token <key>' header (not Bearer)"
+    ]
   },
   {
     "id": "doctor#1",
@@ -119,13 +165,19 @@
     "primaryTarget": "goals/file-processing-capability",
     "targetExists": true,
     "proposedSlug": null,
-    "secondaryTargets": ["packages/foundation/capability/file-processing", "packages/drivers/tika"],
+    "secondaryTargets": [
+      "packages/foundation/capability/file-processing",
+      "packages/drivers/tika"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "file-processing-ocr-pdf-diagnostics",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Layout-aware PDF extraction + OCR-need heuristic + quality gate",
     "rationale": "Layout-preserving extraction with margin crop + skew (transformation-matrix) filtering is the deferred layout-aware PDF strategy the goal explicitly defers (engineMatrix Poppler/Docling laterRole); it extends file-processing-capability as a new OCR/PDF-diagnostics phase, not a new packet, and produces stable char spans for provenance.",
-    "cautions": ["doctor is BSD-2 (permissive, attribution) - adapt with attribution, do not vendor wholesale", "lands as a new strategy phase; do not reopen the completed P1 vertical proof"]
+    "cautions": [
+      "doctor is BSD-2 (permissive, attribution) - adapt with attribution, do not vendor wholesale",
+      "lands as a new strategy phase; do not reopen the completed P1 vertical proof"
+    ]
   },
   {
     "id": "doctor#2",
@@ -141,7 +193,10 @@
     "wedgeHint": "file-processing-ocr-pdf-diagnostics",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Layout-aware PDF extraction + OCR-need heuristic + quality gate",
     "rationale": "page_needs_ocr (empty text / '(cid:' broken fonts / annotations / images / many curves) is the cheap text-vs-OCR gate the file-processing goal defers; the OCR strategy flag + ocr-disabled skip reason already exist, so the heuristic extends them rather than rebuilding.",
-    "cautions": ["doctor is BSD-2 (permissive, attribution)", "critical for local-first cost control - run fast extraction first, fall back to OCR only when gated"]
+    "cautions": [
+      "doctor is BSD-2 (permissive, attribution)",
+      "critical for local-first cost control - run fast extraction first, fall back to OCR only when gated"
+    ]
   },
   {
     "id": "doctor#6",
@@ -157,7 +212,10 @@
     "wedgeHint": "file-processing-ocr-pdf-diagnostics",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Robust MIME/extension detection with magic-byte fallbacks",
     "rationale": "Magika + magic-byte signature fallbacks (WordPerfect/ASF/PDF/FLAC) target the file-processing Artifact MIME-detection layer; MimeType/FileExtension primitives already exist in @beep/schema, so this extends file-processing-capability's detection layer for heterogeneous attorney/court files where extensions lie.",
-    "cautions": ["doctor is BSD-2 (permissive, attribution)", "Magika is an ML model dependency - gate behind the existing strategy boundary"]
+    "cautions": [
+      "doctor is BSD-2 (permissive, attribution)",
+      "Magika is an ML model dependency - gate behind the existing strategy boundary"
+    ]
   },
   {
     "id": "doctor#9",
@@ -173,7 +231,10 @@
     "wedgeHint": "file-processing-ocr-pdf-diagnostics",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Encoding cascade + mojibake repair for legacy court TXT/HTML/PDF",
     "rationale": "The pdfFactory/ca9 mojibake substitution table + 'e absent => corrupt' detector is a court-specific encoding-repair pass extending the file-processing extraction layer; a domain artifact for real Ninth-Circuit opinions, recorded as a reference remediation map.",
-    "cautions": ["doctor is BSD-2 (permissive, attribution)", "court-producer-specific (pdffactory) - keep as an opt-in repair pass, not a default transform"]
+    "cautions": [
+      "doctor is BSD-2 (permissive, attribution)",
+      "court-producer-specific (pdffactory) - keep as an opt-in repair pass, not a default transform"
+    ]
   },
   {
     "id": "doctor#10",
@@ -189,7 +250,10 @@
     "wedgeHint": "file-processing-ocr-pdf-diagnostics",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Encoding cascade + mojibake repair for legacy court TXT/HTML/PDF",
     "rationale": "The ordered encoding cascade (utf-8 -> ISO8859 -> cp1252 -> latin-1) for legacy Windows-produced WPD/DOC court text extends the file-processing extraction text-decoding layer; reusable decode strategy for old filings, sibling to the mojibake pass.",
-    "cautions": ["doctor is BSD-2 (permissive, attribution)", "encoding cascade must record which encoding succeeded for provenance"]
+    "cautions": [
+      "doctor is BSD-2 (permissive, attribution)",
+      "encoding cascade must record which encoding succeeded for provenance"
+    ]
   },
   {
     "id": "google-patents-mcp#3",
@@ -199,13 +263,19 @@
     "primaryTarget": "packages/drivers/anthropic",
     "targetExists": true,
     "proposedSlug": null,
-    "secondaryTargets": ["packages/drivers/openai-compat", "packages/drivers/runpod"],
+    "secondaryTargets": [
+      "packages/drivers/openai-compat",
+      "packages/drivers/runpod"
+    ],
     "disposition": "dup",
     "wave": "P2",
     "wedgeHint": "driver-http-fetch-redaction-dup",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Declarative gov-data driver base: auth + retry + Retry-After + Redacted",
     "rationale": "AbortController timeout + URLSearchParams passthrough + API-key log redaction is exactly the Effect HttpClient driver-wrapper capability the repo already owns in the LLM drivers (Redacted secret handling, typed timeout/error); catalog gapStatus=dup. Reference-only, no packet opens.",
-    "cautions": ["beep expresses timeouts/errors via Effect typed errors, not try/catch + AbortController", "the shared-base extraction itself is tracked by TalentScore#7/us-gov-open-data-mcp#2, not this dup"]
+    "cautions": [
+      "beep expresses timeouts/errors via Effect typed errors, not try/catch + AbortController",
+      "the shared-base extraction itself is tracked by TalentScore#7/us-gov-open-data-mcp#2, not this dup"
+    ]
   },
   {
     "id": "harvest-mcp#4",
@@ -215,13 +285,20 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "gov-legal-data-driver-codegen",
-    "secondaryTargets": ["packages/drivers/courtlistener", "packages/drivers/govinfo", "mcp-auth-gated-registration"],
+    "secondaryTargets": [
+      "packages/drivers/courtlistener",
+      "packages/drivers/govinfo",
+      "mcp-auth-gated-registration"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Auth-analysis domain model (TokenInfo / TokenLifecycle / AuthEndpoint)",
     "rationale": "TokenInfo/TokenLifecycle/AuthenticationEndpoint is a normalized driver auth-descriptor vocabulary feeding the per-driver env-auth matrix in gov-legal-data-driver-codegen; no such shared auth descriptor exists. Cross-links mcp-auth-gated-registration which consumes the descriptor for credential-keyed tool registration.",
-    "cautions": ["harvest-mcp license is unknown/flagged - reimplement the schema shape in effect-Schema, do not copy", "study-grade: a vocabulary, not a build target"]
+    "cautions": [
+      "harvest-mcp license is unknown/flagged - reimplement the schema shape in effect-Schema, do not copy",
+      "study-grade: a vocabulary, not a build target"
+    ]
   },
   {
     "id": "lawyergpt#1",
@@ -231,13 +308,19 @@
     "primaryTarget": "goals/file-processing-capability",
     "targetExists": true,
     "proposedSlug": null,
-    "secondaryTargets": ["packages/foundation/capability/file-processing", "goals/langextract-capability"],
+    "secondaryTargets": [
+      "packages/foundation/capability/file-processing",
+      "goals/langextract-capability"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "file-processing-ocr-pdf-diagnostics",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Layout-aware PDF extraction + OCR-need heuristic + quality gate",
     "rationale": "Extension-switched PDF/DOCX/image ingestion with text-extraction-then-rasterize-to-PNG-then-OCR fallback (and 'empty digital text => OCR' guard) is the text-vs-OCR fallback strategy the file-processing goal defers; extends its OCR strategy boundary for scanned office-action/patent PDFs.",
-    "cautions": ["lawyergpt license is unknown - reimplement the fallback strategy, do not copy Go/gosseract code", "panic-isolation maps to Effect defect-vs-failure boundaries, not deferred recover()"]
+    "cautions": [
+      "lawyergpt license is unknown - reimplement the fallback strategy, do not copy Go/gosseract code",
+      "panic-isolation maps to Effect defect-vs-failure boundaries, not deferred recover()"
+    ]
   },
   {
     "id": "lawyergpt#3",
@@ -247,13 +330,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "rag-retrieval-projection",
-    "secondaryTargets": ["packages/drivers/pglite", "packages/foundation/capability/langextract"],
+    "secondaryTargets": [
+      "packages/drivers/pglite",
+      "packages/foundation/capability/langextract"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "rag-retrieval-projection",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Hybrid BM25 + dense-vector retrieval & pgvector HNSW projection",
     "rationale": "768-dim pgvector column + HNSW vector_cosine_ops index + thresholded (gt 0.25) top-k cosine retrieval is the near-drop-in vector-projection schema for the net-new rag-retrieval-projection packet; beep keeps vectors as rebuildable projection with provenance spans attached.",
-    "cautions": ["lawyergpt is unknown-license and pins Gemini embeddings (embedding-001/text-embedding-004 shut down 2025-2026) - do NOT pin Gemini; beep is provider-neutral/local-first (local ONNX)", "pgvector dimension + HNSW must match the chosen local embedding output dimension"]
+    "cautions": [
+      "lawyergpt is unknown-license and pins Gemini embeddings (embedding-001/text-embedding-004 shut down 2025-2026) - do NOT pin Gemini; beep is provider-neutral/local-first (local ONNX)",
+      "pgvector dimension + HNSW must match the chosen local embedding output dimension"
+    ]
   },
   {
     "id": "lawyergpt#5",
@@ -263,13 +352,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "gov-legal-data-driver-codegen",
-    "secondaryTargets": ["goals/firecrawl-driver", "packages/drivers/firecrawl"],
+    "secondaryTargets": [
+      "goals/firecrawl-driver",
+      "packages/drivers/firecrawl"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Config-driven legal-corpus scraper (CSS selector + batched POST)",
     "rationale": "Env-driven URL list + configurable goquery CSS selector + batched POST is a jurisdiction-specific case-law harvesting variant of the gov/legal data-source driver family; coordinates with the existing firecrawl scraping driver rather than reinventing fetch, recorded as a study reference (serendipitous, P3).",
-    "cautions": ["lawyergpt license is unknown - reimplement the selector/batching pattern, do not copy", "HTML-scrape source (vs structured API) - keep it a distinct strategy from the API drivers; firecrawl may subsume the fetch layer"]
+    "cautions": [
+      "lawyergpt license is unknown - reimplement the selector/batching pattern, do not copy",
+      "HTML-scrape source (vs structured API) - keep it a distinct strategy from the API drivers; firecrawl may subsume the fetch layer"
+    ]
   },
   {
     "id": "legalmind-ai#2",
@@ -285,7 +380,10 @@
     "wedgeHint": "file-processing-ocr-pdf-diagnostics",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Layout-aware PDF extraction + OCR-need heuristic + quality gate",
     "rationale": "pdfjs page-by-page extraction + assessTextQuality (word-count / real-letter-ratio gibberish detection / repeated-char regex) is the PDF-to-text quality gate that decides OCR-need and refuses low-quality input before it becomes a candidate; extends the file-processing quality-gate layer.",
-    "cautions": ["legalmind-ai license is unknown - reimplement the heuristic, do not copy", "CJK-specific letter-ratio regex must generalize to Latin legal text"]
+    "cautions": [
+      "legalmind-ai license is unknown - reimplement the heuristic, do not copy",
+      "CJK-specific letter-ratio regex must generalize to Latin legal text"
+    ]
   },
   {
     "id": "mcp-uspto#1",
@@ -295,13 +393,20 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "gov-legal-data-driver-codegen",
-    "secondaryTargets": ["packages/drivers/uspto", "packages/drivers/courtlistener", "packages/drivers/govinfo"],
+    "secondaryTargets": [
+      "packages/drivers/uspto",
+      "packages/drivers/courtlistener",
+      "packages/drivers/govinfo"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Token-bucket rate limiter (per-source, FIFO-fair) as an Effect primitive",
     "rationale": "The per-tier token-bucket map + per-API-key header fetcher is the shared driver rate-limit/auth kernel needed across uspto + all gov drivers; reimplemented as an Effect Layer in the gov-legal-data-driver-codegen shared base (the USPTO-tier specifics belong to uspto-patent-driver-depth).",
-    "cautions": ["mcp-uspto is MIT (portable) - reimplement the bucket as an Effect primitive, not raw setInterval", "do NOT carry over the patentsview tier (sunset 301->ODP); odp/tsdr only"]
+    "cautions": [
+      "mcp-uspto is MIT (portable) - reimplement the bucket as an Effect primitive, not raw setInterval",
+      "do NOT carry over the patentsview tier (sunset 301->ODP); odp/tsdr only"
+    ]
   },
   {
     "id": "mcp-uspto#5",
@@ -317,7 +422,10 @@
     "wedgeHint": "uspto-patent-driver-depth",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> PatentsView / USPTO query-DSL builder + friendly->API field mapping",
     "rationale": "The _or/_and/_text_any/_begins/_gte/_lte query DSL + field-selection/pagination/sort + CPC filtering is the structured search surface the hand-rolled uspto driver lacks (searchApplications only forwards a raw ?q=); extends packages/drivers/uspto via the uspto-patent-driver-depth packet, built against ODP.",
-    "cautions": ["PatentsView is mid-sunset (api.patentsview.org 301->data.uspto.gov/odp) - target the DSL at ODP, never reintroduce PatentsView", "CPC filtering feeds WIPO-IPC/CPC taxonomy work (ip-law-knowledge-graph)"]
+    "cautions": [
+      "PatentsView is mid-sunset (api.patentsview.org 301->data.uspto.gov/odp) - target the DSL at ODP, never reintroduce PatentsView",
+      "CPC filtering feeds WIPO-IPC/CPC taxonomy work (ip-law-knowledge-graph)"
+    ]
   },
   {
     "id": "mike#11",
@@ -327,13 +435,19 @@
     "primaryTarget": "packages/drivers/courtlistener",
     "targetExists": true,
     "proposedSlug": "gov-legal-data-driver-codegen",
-    "secondaryTargets": ["citation-grounding-hallucination-guard", "packages/drivers/runpod"],
+    "secondaryTargets": [
+      "citation-grounding-hallucination-guard",
+      "packages/drivers/runpod"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> CourtListener citation parser + bulk-first/local-cache fallback",
     "rationale": "The CourtListener V4 client with bulk-data-first then live-API fallback (and 'bulk+api' source-tag merge) is the implementation for the bare courtlistener skeleton, owned by gov-legal-data-driver-codegen; the {volume,reporter,page} citation regex parser is downstream citation-grounding work (secondary).",
-    "cautions": ["mike is unknown/AGPL-adjacent license - reimplement the cache-then-API architecture and parser from spec, do not copy", "keep citation parsing in citation-grounding-hallucination-guard, not duplicated in the driver"]
+    "cautions": [
+      "mike is unknown/AGPL-adjacent license - reimplement the cache-then-API architecture and parser from spec, do not copy",
+      "keep citation parsing in citation-grounding-hallucination-guard, not duplicated in the driver"
+    ]
   },
   {
     "id": "patents-mcp-server#2",
@@ -349,7 +463,11 @@
     "wedgeHint": "uspto-patent-driver-depth",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> New driver: EPO OPS (OAuth2 token cache + INPADOC family/legal-status)",
     "rationale": "EPO Open Patent Services is a complete international patent-family + legal-status source with no driver anywhere in the repo (packages/drivers/epo does NOT exist = fully net-new); its OAuth2 client-credentials token cache + black-traffic-light throttle + force-array XML parsing is built under the uspto-patent-driver-depth wedge as a new sibling driver.",
-    "cautions": ["packages/drivers/epo is net-new (greenfield package); anchor packet is packages/drivers/uspto per the patent-driver-depth wedge", "EPO OPS requires OAuth2 client-credentials secrets - out of scope for offline verification; needs secrets handling", "patents-mcp-server is MIT (portable) - reimplement in Effect/effect-Schema"]
+    "cautions": [
+      "packages/drivers/epo is net-new (greenfield package); anchor packet is packages/drivers/uspto per the patent-driver-depth wedge",
+      "EPO OPS requires OAuth2 client-credentials secrets - out of scope for offline verification; needs secrets handling",
+      "patents-mcp-server is MIT (portable) - reimplement in Effect/effect-Schema"
+    ]
   },
   {
     "id": "patents-mcp-server#10",
@@ -359,13 +477,20 @@
     "primaryTarget": "packages/drivers/uspto",
     "targetExists": true,
     "proposedSlug": "uspto-patent-driver-depth",
-    "secondaryTargets": ["packages/drivers/google-patents", "goals/ip-law-knowledge-graph"],
+    "secondaryTargets": [
+      "packages/drivers/google-patents",
+      "goals/ip-law-knowledge-graph"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "uspto-patent-driver-depth",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> New driver: Google Patents BigQuery (cost-gated full-text + claims extraction)",
     "rationale": "Mandatory dryRun-before-execute cost gating + EXISTS/UNNEST over localized title/abstract structs + citation-network CTE is the cost-governance pattern for a net-new Google Patents BigQuery driver (no BigQuery code anywhere in repo), built under the uspto-patent-driver-depth wedge.",
-    "cautions": ["packages/drivers/google-patents is net-new (greenfield); anchor packet is packages/drivers/uspto", "BigQuery requires GCP credentials + cost controls ($5/TB) - secrets + budget governance out of offline scope", "patents-mcp-server is MIT"]
+    "cautions": [
+      "packages/drivers/google-patents is net-new (greenfield); anchor packet is packages/drivers/uspto",
+      "BigQuery requires GCP credentials + cost controls ($5/TB) - secrets + budget governance out of offline scope",
+      "patents-mcp-server is MIT"
+    ]
   },
   {
     "id": "patents-mcp#1",
@@ -381,7 +506,11 @@
     "wedgeHint": "uspto-patent-driver-depth",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> USPTO ppubs (Public Search) session handshake + request schema",
     "rationale": "The reverse-engineered ppubs.uspto.gov handshake (seed cookies -> POST session with X-Access-Token:null -> caseId/token, 403-refresh, 429-backoff via x-rate-limit-retry-after-seconds) adds full-text search the ODP API does not cover; extends the hand-rolled uspto driver as a new ppubs service module.",
-    "cautions": ["ppubs is an undocumented/reverse-engineered endpoint - brittle, version against breakage", "patents-mcp is MIT (portable); reimplement handshake/retry as Effect with typed errors", "distinct from ODP (data.uspto.gov) - this is the ppubs full-text surface, not File Wrapper"]
+    "cautions": [
+      "ppubs is an undocumented/reverse-engineered endpoint - brittle, version against breakage",
+      "patents-mcp is MIT (portable); reimplement handshake/retry as Effect with typed errors",
+      "distinct from ODP (data.uspto.gov) - this is the ppubs full-text surface, not File Wrapper"
+    ]
   },
   {
     "id": "patents-mcp#2",
@@ -397,7 +526,10 @@
     "wedgeHint": "uspto-patent-driver-depth",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> USPTO ppubs (Public Search) session handshake + request schema",
     "rationale": "The exact ppubs searchWithBeFamily JSON wire format (familyIdFirstPreferred US-PGPUB>USPAT>FPRS, per-database filters, plurals/britishEquivalents, .pn. brs syntax) is hard-to-discover and modeled as a PpubsSearchRequest effect-Schema in the uspto driver; sibling to patents-mcp#1.",
-    "cautions": ["patents-mcp is MIT (portable)", "wire format is tied to the undocumented ppubs endpoint - schema-first decode with typed validation"]
+    "cautions": [
+      "patents-mcp is MIT (portable)",
+      "wire format is tied to the undocumented ppubs endpoint - schema-first decode with typed validation"
+    ]
   },
   {
     "id": "patents-mcp#3",
@@ -407,13 +539,21 @@
     "primaryTarget": "packages/drivers/uspto",
     "targetExists": true,
     "proposedSlug": "uspto-patent-driver-depth",
-    "secondaryTargets": ["packages/drivers/google-patents", "goals/ip-law-knowledge-graph", "goals/law-practice-office-action-extraction-rung"],
+    "secondaryTargets": [
+      "packages/drivers/google-patents",
+      "goals/ip-law-knowledge-graph",
+      "goals/law-practice-office-action-extraction-rung"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "uspto-patent-driver-depth",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> New driver: Google Patents BigQuery (cost-gated full-text + claims extraction)",
     "rationale": "Injection-safe parameterized BigQuery SQL over patents-public-data (full-text/inventor/assignee/CPC + nested claims_localized/description_localized extraction, 90M+ pubs) is the non-USPTO global prior-art source feeding PriorArtReference/CandidateClaim ingestion; same net-new google-patents BigQuery driver as patents-mcp-server#10.",
-    "cautions": ["packages/drivers/google-patents is net-new (greenfield); coordinate with patents-mcp-server#10 to build one BigQuery driver", "claims/descriptions are NESTED in publications (no separate tables)", "patents-mcp is MIT"]
+    "cautions": [
+      "packages/drivers/google-patents is net-new (greenfield); coordinate with patents-mcp-server#10 to build one BigQuery driver",
+      "claims/descriptions are NESTED in publications (no separate tables)",
+      "patents-mcp is MIT"
+    ]
   },
   {
     "id": "patents-mcp#7",
@@ -429,7 +569,11 @@
     "wedgeHint": "uspto-patent-driver-depth",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> USPTO error-shape normalization (tagged-error taxonomy)",
     "rationale": "The ApiError factory enumerating USPTO's varying error JSON variants (error/message/errorCode/errorDetails) is the input spec for extending the existing packages/drivers/uspto/src/Uspto.errors.ts tagged-error taxonomy; reference-grade normalization, owned by uspto-patent-driver-depth.",
-    "cautions": ["beep uses Effect tagged errors, not dict shapes - model the field variants as typed errors", "Uspto.errors.ts already exists - extend it, do not create a parallel error model", "patents-mcp is MIT"]
+    "cautions": [
+      "beep uses Effect tagged errors, not dict shapes - model the field variants as typed errors",
+      "Uspto.errors.ts already exists - extend it, do not create a parallel error model",
+      "patents-mcp is MIT"
+    ]
   },
   {
     "id": "research-squad#9",
@@ -439,13 +583,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "rag-retrieval-projection",
-    "secondaryTargets": ["citation-grounding-hallucination-guard", "court-vocabulary-resolver"],
+    "secondaryTargets": [
+      "citation-grounding-hallucination-guard",
+      "court-vocabulary-resolver"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "rag-retrieval-projection",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Source-authority inference from URL (primary-source taxonomy)",
     "rationale": "inferSourceType/isPrimarySource (.gov/.edu/arxiv/sec.gov => primary) is a small source-classification taxonomy for weighting authority in retrieval ranking; lands in rag-retrieval-projection's ranking layer, extended with legal-specific domains (uspto/courtlistener as primary), cross-linking citation grounding.",
-    "cautions": ["research-squad license unverified - reimplement the heuristic, do not copy", "extend the taxonomy with .gov/court/uspto legal domains as primary authority"]
+    "cautions": [
+      "research-squad license unverified - reimplement the heuristic, do not copy",
+      "extend the taxonomy with .gov/court/uspto legal domains as primary authority"
+    ]
   },
   {
     "id": "seal-rookery#1",
@@ -455,13 +605,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "court-vocabulary-resolver",
-    "secondaryTargets": ["packages/drivers/courtlistener", "goals/official-data-sync-foundation"],
+    "secondaryTargets": [
+      "packages/drivers/courtlistener",
+      "goals/official-data-sync-foundation"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "court-vocabulary-resolver",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> CourtListener court-ID -> full court-name lookup table (365 courts)",
     "rationale": "seals.json (365 CourtListener court-ID -> canonical name) is a ready-made static enrichment dataset for resolving court identifiers in citations/provenance without an API round-trip; lands in the net-new court-vocabulary-resolver alongside the courts-db dataset (courts-db#6).",
-    "cautions": ["seal-rookery is a Free Law Project asset - confirm dataset license/attribution before vendoring", "static lookup table; resolver logic stays in court-vocabulary-resolver"]
+    "cautions": [
+      "seal-rookery is a Free Law Project asset - confirm dataset license/attribution before vendoring",
+      "static lookup table; resolver logic stays in court-vocabulary-resolver"
+    ]
   },
   {
     "id": "us-gov-open-data-mcp#2",
@@ -471,13 +627,23 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "gov-legal-data-driver-codegen",
-    "secondaryTargets": ["packages/drivers/courtlistener", "packages/drivers/ecfr", "packages/drivers/federal-register", "packages/drivers/govinfo", "packages/drivers/dol", "packages/drivers/runpod"],
+    "secondaryTargets": [
+      "packages/drivers/courtlistener",
+      "packages/drivers/ecfr",
+      "packages/drivers/federal-register",
+      "packages/drivers/govinfo",
+      "packages/drivers/dol",
+      "packages/drivers/runpod"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Declarative gov-data driver base: auth + retry + Retry-After + Redacted",
     "rationale": "createClient(config) with declarative auth (query/header/body + envParams) + disk TTL cache + exponential-backoff-with-jitter honoring Retry-After + per-source rate limit is the exact multi-provider resilient-fetch base the bare gov drivers need; the architectural anchor for the gov-legal-data-driver-codegen shared Effect HTTP layer.",
-    "cautions": ["us-gov-open-data-mcp license is unverified - reimplement the auth-config shape + Retry-After parsing in Effect, do not copy", "port the config-object pattern onto Effect HttpApi/effect-Schema, not subclassing"]
+    "cautions": [
+      "us-gov-open-data-mcp license is unverified - reimplement the auth-config shape + Retry-After parsing in Effect, do not copy",
+      "port the config-object pattern onto Effect HttpApi/effect-Schema, not subclassing"
+    ]
   },
   {
     "id": "us-gov-open-data-mcp#3",
@@ -487,13 +653,20 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "gov-legal-data-driver-codegen",
-    "secondaryTargets": ["packages/drivers/courtlistener", "packages/drivers/govinfo", "packages/drivers/dol"],
+    "secondaryTargets": [
+      "packages/drivers/courtlistener",
+      "packages/drivers/govinfo",
+      "packages/drivers/dol"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Token-bucket rate limiter (per-source, FIFO-fair) as an Effect primitive",
     "rationale": "The dependency-free TokenBucket (time-refill, fast-path, FIFO queue drained in one pass to avoid thundering-herd, per-source perSecond/burst) is the cleanest reference for the shared rate-limit Effect primitive in gov-legal-data-driver-codegen; sibling to mcp-uspto#1's per-tier map.",
-    "cautions": ["us-gov-open-data-mcp license is unverified - reimplement as an Effect primitive (Semaphore/Schedule), do not copy", "consolidate with mcp-uspto#1 into one shared rate-limit utility"]
+    "cautions": [
+      "us-gov-open-data-mcp license is unverified - reimplement as an Effect primitive (Semaphore/Schedule), do not copy",
+      "consolidate with mcp-uspto#1 into one shared rate-limit utility"
+    ]
   },
   {
     "id": "us-legal-tools#2",
@@ -509,7 +682,10 @@
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Per-spec driver registration one-liner (orval config)",
     "rationale": "The one-line per-spec config (spec file + base URL) is the near-zero-boilerplate driver registration convention the gov-legal-data-driver-codegen pipeline wants; reference for the registration surface, reimplemented on beep's runpod/acp openapi.json+generate.ts Effect codegen precedent (not Orval).",
-    "cautions": ["us-legal-tools is MIT but the value is the codegen PIPELINE/PATTERN, not the Orval/axios/Zod output - port the architecture onto Effect/HttpApi, do not adopt Orval", "ecfr is a bare skeleton; registration convention applies across all four gov skeletons"]
+    "cautions": [
+      "us-legal-tools is MIT but the value is the codegen PIPELINE/PATTERN, not the Orval/axios/Zod output - port the architecture onto Effect/HttpApi, do not adopt Orval",
+      "ecfr is a bare skeleton; registration convention applies across all four gov skeletons"
+    ]
   },
   {
     "id": "us-legal-tools#3",
@@ -525,7 +701,10 @@
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> CourtListener REST v4 token-auth client",
     "rationale": "The exact CourtListener auth shape (Authorization: Token <env COURTLISTENER_API_TOKEN>, User-Agent, baseURL /api/rest/v4, timeout) is the concrete config/service wiring for the bare courtlistener skeleton; corrects the common Bearer mistake (DRF TokenAuthentication uses 'Token ' prefix).",
-    "cautions": ["us-legal-tools is MIT - reuse the env/header convention, reimplement on Effect HttpClient", "CourtListener V4 ENFORCES auth (anonymous=401); header is literally 'Authorization: Token <key>', target /api/rest/v4 (V3 legacy), do NOT generate deprecated SCOTUS-viz endpoints"]
+    "cautions": [
+      "us-legal-tools is MIT - reuse the env/header convention, reimplement on Effect HttpClient",
+      "CourtListener V4 ENFORCES auth (anonymous=401); header is literally 'Authorization: Token <key>', target /api/rest/v4 (V3 legacy), do NOT generate deprecated SCOTUS-viz endpoints"
+    ]
   },
   {
     "id": "uspto-patents-mcp#1",
@@ -541,7 +720,10 @@
     "wedgeHint": "uspto-patent-driver-depth",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> PatentsView / USPTO query-DSL builder + friendly->API field mapping",
     "rationale": "buildQuery() composing _text_any over title+abstract + nested assignees/inventors field paths + _gte/_lte date clauses under _and is the query-construction layer the raw-?q= uspto driver lacks; extends packages/drivers/uspto search surface (translating attorney prior-art intent to structured queries), built against ODP.",
-    "cautions": ["PatentsView v1 sunset (api.patentsview.org 301->ODP) - build the DSL against data.uspto.gov/odp, never PatentsView", "uspto-patents-mcp is MIT; reimplement the builder natively in Effect"]
+    "cautions": [
+      "PatentsView v1 sunset (api.patentsview.org 301->ODP) - build the DSL against data.uspto.gov/odp, never PatentsView",
+      "uspto-patents-mcp is MIT; reimplement the builder natively in Effect"
+    ]
   },
   {
     "id": "uspto-patents-mcp#3",
@@ -557,7 +739,11 @@
     "wedgeHint": "uspto-patent-driver-depth",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> PatentsView v1 sunset -> ODP migration guard",
     "rationale": "The sunset detector (301-to-HTML => actionable migration error, not cryptic JSON parse fail) is operational intelligence encoded as a UsptoEndpointSunset tagged error + ODP endpoint selection in the existing Uspto.errors.ts; confirms the driver must target data.uspto.gov/odp from the start.",
-    "cautions": ["the hand-rolled uspto driver already targets ODP (api/v1/patent/applications) - this guard hardens against accidental PatentsView reintroduction", "PatentSearch->ODP migration 2026-03-20 with mandatory key reissue; legacy Developer Hub decommissioned 2026-06-05", "uspto-patents-mcp is MIT"]
+    "cautions": [
+      "the hand-rolled uspto driver already targets ODP (api/v1/patent/applications) - this guard hardens against accidental PatentsView reintroduction",
+      "PatentSearch->ODP migration 2026-03-20 with mandatory key reissue; legacy Developer Hub decommissioned 2026-06-05",
+      "uspto-patents-mcp is MIT"
+    ]
   },
   {
     "id": "uspto-patents-mcp#6",
@@ -567,13 +753,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "gov-legal-data-driver-codegen",
-    "secondaryTargets": ["packages/drivers/uspto", "packages/drivers/courtlistener"],
+    "secondaryTargets": [
+      "packages/drivers/uspto",
+      "packages/drivers/courtlistener"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Response cache: KV memoize with TTL jitter + stable cache-key",
     "rationale": "KvCache.memoize (TTL + up-to-10% jitter to avoid stampede, 1.5x expiration) + stableKey() (sorted-key deterministic serialization) is the shared driver response-cache utility for deterministically caching upstream USPTO/CourtListener responses; lands in the gov-legal-data-driver-codegen shared base (with us-gov-open-data-mcp#2's disk cache).",
-    "cautions": ["uspto-patents-mcp is MIT - reimplement memoize as an Effect cache layer", "consolidate with the us-gov-open-data-mcp#2 disk-TTL cache into one cache utility"]
+    "cautions": [
+      "uspto-patents-mcp is MIT - reimplement memoize as an Effect cache layer",
+      "consolidate with the us-gov-open-data-mcp#2 disk-TTL cache into one cache utility"
+    ]
   },
   {
     "id": "uspto_pfw_mcp#2",
@@ -589,7 +781,10 @@
     "wedgeHint": "uspto-patent-driver-depth",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> Lucene query-term escaping with documented safe/unsafe char policy",
     "rationale": "escape_lucene_query_term (escapes metachars but deliberately leaves colon/quotes/brackets/dash/wildcards with documented rationale + 1000-char DoS cap) is the injection-safe escaping the uspto search DSL needs; the rationale comments are the gold. Extends packages/drivers/uspto query builder (also reusable for semantic-web full-text).",
-    "cautions": ["uspto_pfw_mcp is MIT (portable)", "preserve the documented safe/unsafe-char policy rationale verbatim in comments when reimplementing"]
+    "cautions": [
+      "uspto_pfw_mcp is MIT (portable)",
+      "preserve the documented safe/unsafe-char policy rationale verbatim in comments when reimplementing"
+    ]
   },
   {
     "id": "uspto_pfw_mcp#3",
@@ -605,6 +800,9 @@
     "wedgeHint": "uspto-patent-driver-depth",
     "goldSynthesisSection": "Legal/court/patent data ingestion -> PatentsView / USPTO query-DSL builder + friendly->API field mapping",
     "rationale": "map_query_field_names (friendly patentNumber: -> nested applicationMetaData.patentNumber:, pass through already-qualified) gives attorney-facing query vocabulary while targeting the real ODP File-Wrapper schema; the friendly->API field-mapping layer of the uspto-patent-driver-depth search surface.",
-    "cautions": ["uspto_pfw_mcp is MIT (portable)", "map to ODP File-Wrapper field paths (applicationMetaData.*), not legacy PatentsView fields"]
+    "cautions": [
+      "uspto_pfw_mcp is MIT (portable)",
+      "map to ODP File-Wrapper field paths (applicationMetaData.*), not legacy PatentsView fields"
+    ]
   }
 ]

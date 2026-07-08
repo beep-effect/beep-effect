@@ -214,7 +214,7 @@ const makeWinkEngine = Effect.gen(function* () {
     as: Ref.get(stateRef).pipe(Effect.map((state) => state.nlp.as)),
     getRef: Effect.succeed(stateRef),
     getWinkDoc: Effect.fn("Wink.WinkEngine.getWinkDoc")(function* (text: string) {
-      yield* Effect.annotateCurrentSpan(textLengthAttribute("text", text));
+      yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
       const state = yield* Ref.get(stateRef);
       return yield* Effect.try({
         try: () => state.nlp.readDoc(text),
@@ -222,7 +222,7 @@ const makeWinkEngine = Effect.gen(function* () {
       });
     }, observeEngine("get_wink_doc")),
     getWinkTokens: Effect.fn("Wink.WinkEngine.getWinkTokens")(function* (text: string) {
-      yield* Effect.annotateCurrentSpan(textLengthAttribute("text", text));
+      yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
       const state = yield* Ref.get(stateRef);
       return yield* Effect.try({
         try: () => collectTokens(state, text),
@@ -230,7 +230,7 @@ const makeWinkEngine = Effect.gen(function* () {
       });
     }, observeEngine("get_wink_tokens")),
     getWinkTokenCount: Effect.fn("Wink.WinkEngine.getWinkTokenCount")(function* (text: string) {
-      yield* Effect.annotateCurrentSpan(textLengthAttribute("text", text));
+      yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
       const state = yield* Ref.get(stateRef);
       return yield* Effect.try({
         try: () => state.nlp.readDoc(text).tokens().length(),

@@ -1,3 +1,9 @@
+/**
+ * Command primitive: a filterable command-palette list built on cmdk.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@beep/ui/components/dialog";

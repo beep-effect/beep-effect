@@ -99,6 +99,14 @@ export const HttpMethod = HttpMethod_.pipe(
 /**
  * Runtime type for supported HTTP method tokens.
  *
+ * @example
+ * ```ts
+ * import { HttpMethod } from "@beep/schema/HttpMethod"
+ *
+ * const method: HttpMethod = "POST"
+ * console.log(HttpMethod.hasBody(method))
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

@@ -1,3 +1,9 @@
+/**
+ * Link-preview primitive: a hover-triggered tooltip that fetches and renders URL metadata.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { $UiId } from "@beep/identity";

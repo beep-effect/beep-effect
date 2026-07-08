@@ -38,6 +38,14 @@ export const RequestHeaderFieldsTooLargeShopify = S.Literal(430).pipe(
 /**
  * {@inheritDoc RequestHeaderFieldsTooLargeShopify}
  *
+ * @example
+ * ```ts
+ * import type { RequestHeaderFieldsTooLargeShopify } from "@beep/schema/HttpStatus"
+ *
+ * const status: RequestHeaderFieldsTooLargeShopify = 430
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -69,6 +77,14 @@ export const LoginTimeout = S.Literal(440).pipe(
 /**
  * {@inheritDoc LoginTimeout}
  *
+ * @example
+ * ```ts
+ * import type { LoginTimeout } from "@beep/schema/HttpStatus"
+ *
+ * const status: LoginTimeout = 440
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -98,6 +114,14 @@ export const RequestHeaderTooLarge = S.Literal(494).pipe(
 
 /**
  * {@inheritDoc RequestHeaderTooLarge}
+ *
+ * @example
+ * ```ts
+ * import type { RequestHeaderTooLarge } from "@beep/schema/HttpStatus"
+ *
+ * const status: RequestHeaderTooLarge = 494
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -129,6 +153,14 @@ export const SslCertificateError = S.Literal(495).pipe(
 /**
  * {@inheritDoc SslCertificateError}
  *
+ * @example
+ * ```ts
+ * import type { SslCertificateError } from "@beep/schema/HttpStatus"
+ *
+ * const status: SslCertificateError = 495
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -159,6 +191,14 @@ export const SslCertificateRequired = S.Literal(496).pipe(
 /**
  * {@inheritDoc SslCertificateRequired}
  *
+ * @example
+ * ```ts
+ * import type { SslCertificateRequired } from "@beep/schema/HttpStatus"
+ *
+ * const status: SslCertificateRequired = 496
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -188,6 +228,14 @@ export const ClientClosedRequest = S.Literal(499).pipe(
 
 /**
  * {@inheritDoc ClientClosedRequest}
+ *
+ * @example
+ * ```ts
+ * import type { ClientClosedRequest } from "@beep/schema/HttpStatus"
+ *
+ * const status: ClientClosedRequest = 499
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -220,6 +268,14 @@ export const WebServerReturnedAnUnknownError = S.Literal(520).pipe(
 /**
  * {@inheritDoc WebServerReturnedAnUnknownError}
  *
+ * @example
+ * ```ts
+ * import type { WebServerReturnedAnUnknownError } from "@beep/schema/HttpStatus"
+ *
+ * const status: WebServerReturnedAnUnknownError = 520
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -251,6 +307,14 @@ export const WebServerIsDown = S.Literal(521).pipe(
 /**
  * {@inheritDoc WebServerIsDown}
  *
+ * @example
+ * ```ts
+ * import type { WebServerIsDown } from "@beep/schema/HttpStatus"
+ *
+ * const status: WebServerIsDown = 521
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -280,6 +344,14 @@ export const SslHandshakeFailed = S.Literal(525).pipe(
 
 /**
  * {@inheritDoc SslHandshakeFailed}
+ *
+ * @example
+ * ```ts
+ * import type { SslHandshakeFailed } from "@beep/schema/HttpStatus"
+ *
+ * const status: SslHandshakeFailed = 525
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -312,6 +384,14 @@ export const InvalidSslCertificate = S.Literal(526).pipe(
 
 /**
  * {@inheritDoc InvalidSslCertificate}
+ *
+ * @example
+ * ```ts
+ * import type { InvalidSslCertificate } from "@beep/schema/HttpStatus"
+ *
+ * const status: InvalidSslCertificate = 526
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation

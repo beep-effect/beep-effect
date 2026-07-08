@@ -18,7 +18,7 @@ import * as S from "effect/Schema";
 import * as M from "./_generated/Box.models.gen.ts";
 import { BoxError } from "./Box.errors.ts";
 import { BOX_SDK_VERSION } from "./internal/Box.constants.ts";
-import { decodeWith, logDriverFailure } from "./internal/Box.runtime.ts";
+import { acquireSdkCallController, decodeWith, logDriverFailure } from "./internal/Box.runtime.ts";
 import type { BoxMethodName } from "./_generated/Box.models.gen.ts";
 
 const $I = $BoxId.create("Box.streaming");
@@ -862,12 +862,15 @@ const runJsonSdkCall = <Payload, Success>(
   payload: unknown,
   invoke: (decoded: Payload, signal: AbortSignal) => Effect.Effect<unknown, BoxError>
 ): Effect.Effect<Success, BoxError> =>
-  Effect.acquireUseRelease(
-    Effect.sync(() => new AbortController()),
-    (controller) =>
-      decodeWith(methodName, payloadSchema, payload, "request encoding").pipe(
-        Effect.flatMap((decoded) => invoke(decoded, controller.signal)),
-        Effect.flatMap((result) => decodeWith(methodName, successSchema, result, "response decoding")),
+  acquireSdkCallController({
+    methodName,
+    payloadSchema,
+    payload,
+    use: (decoded, controller) =>
+      invoke(decoded, controller.signal).pipe(
+        Effect.flatMap((result) =>
+          decodeWith(successSchema, result, { method: methodName, reason: "response decoding" })
+        ),
         Effect.tapError(logDriverFailure("box.streaming_json_failure")),
         Effect.withSpan(`box.${methodName}`, {
           attributes: {
@@ -876,8 +879,8 @@ const runJsonSdkCall = <Payload, Success>(
           },
         })
       ),
-    (controller) => Effect.sync(() => controller.abort())
-  );
+    release: (controller) => Effect.sync(() => controller.abort()),
+  });
 
 const runByteStreamSdkCall = <Payload>(
   methodName: BoxMethodName,
@@ -886,11 +889,12 @@ const runByteStreamSdkCall = <Payload>(
   invoke: (decoded: Payload, signal: AbortSignal) => Effect.Effect<unknown, BoxError>
 ): BoxByteStream =>
   Stream.unwrap(
-    Effect.acquireUseRelease(
-      Effect.sync(() => new AbortController()),
-      (controller) =>
-        decodeWith(methodName, payloadSchema, payload, "request encoding").pipe(
-          Effect.flatMap((decoded) => invoke(decoded, controller.signal)),
+    acquireSdkCallController({
+      methodName,
+      payloadSchema,
+      payload,
+      use: (decoded, controller) =>
+        invoke(decoded, controller.signal).pipe(
           Effect.map((result) => byteStreamFromSdkValue(methodName, result, controller)),
           Effect.tapError(logDriverFailure("box.streaming_byte_failure")),
           Effect.withSpan(`box.${methodName}`, {
@@ -900,8 +904,8 @@ const runByteStreamSdkCall = <Payload>(
             },
           })
         ),
-      (controller, exit) => (Exit.isSuccess(exit) ? Effect.void : Effect.sync(() => controller.abort()))
-    )
+      release: (controller, exit) => (Exit.isSuccess(exit) ? Effect.void : Effect.sync(() => controller.abort())),
+    })
   ).pipe(
     Stream.withSpan(`box.${methodName}.stream`, {
       attributes: {
@@ -1005,7 +1009,7 @@ const runEventStreamSdkCall = <Payload>(
   invoke: (decoded: Payload) => Effect.Effect<unknown, BoxError>
 ): Stream.Stream<M.Event, BoxError> =>
   Stream.unwrap(
-    decodeWith(methodName, payloadSchema, payload, "request encoding").pipe(
+    decodeWith(payloadSchema, payload, { method: methodName, reason: "request encoding" }).pipe(
       Effect.flatMap(invoke),
       Effect.map((value) => eventStreamFromSdkValue(methodName, value)),
       Effect.tapError(logDriverFailure("box.event_stream_failure")),

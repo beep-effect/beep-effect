@@ -155,11 +155,7 @@
     "markdown",
     "image-metadata"
   ],
-  "knownNonCoreInputs": [
-    "xls",
-    "xlsx",
-    "docm"
-  ],
+  "knownNonCoreInputs": ["xls", "xlsx", "docm"],
   "outOfScopeV1": [
     "ocr-implementation",
     "box-sync",
@@ -283,9 +279,7 @@
     }
   ],
   "nextAction": "Advance P2/P3/P4 as needed: broaden Tika coverage, deepen libpff PST export, and calibrate files process against generated or operator-local corpus inputs. Law-practice can proceed to LLM extraction without reopening P1.",
-  "researchReports": [
-    "research/SOURCES.md"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,

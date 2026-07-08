@@ -47,6 +47,14 @@ export const XSSProtectionMode = XSSProtectionModeBase.pipe(
 /**
  * Type for direct `X-XSS-Protection` policy modes.
  *
+ * @example
+ * ```ts
+ * import type { XSSProtectionMode } from "@beep/schema/XssProtection"
+ *
+ * const mode: XSSProtectionMode = "block-rendering"
+ * console.log(mode)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -102,6 +110,14 @@ export const XSSProtectionReport = S.Tuple([S.Literal("report"), XSSProtectionRe
 /**
  * Type for tuple-based `X-XSS-Protection` report configuration.
  *
+ * @example
+ * ```ts
+ * import { XSSProtectionReportConfig, type XSSProtectionReport } from "@beep/schema/XssProtection"
+ *
+ * const value: XSSProtectionReport = ["report", XSSProtectionReportConfig.make({ uri: "https://example.com/report" })]
+ * console.log(value[0])
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -129,6 +145,14 @@ export const XSSProtectionOption = S.Union([S.Literal(false), XSSProtectionMode,
 
 /**
  * Type for enabled, disabled, or report-mode XSS protection options.
+ *
+ * @example
+ * ```ts
+ * import type { XSSProtectionOption } from "@beep/schema/XssProtection"
+ *
+ * const option: XSSProtectionOption = "sanitize"
+ * console.log(option)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -264,6 +288,15 @@ export const XSSProtectionHeader = S.Union([XSSProtectionOption, S.Undefined]).p
 /**
  * Type for rendered `X-XSS-Protection` response headers.
  *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { XSSProtectionResponseHeader, type XSSProtectionHeader } from "@beep/schema/XssProtection"
+ *
+ * const header: XSSProtectionHeader = XSSProtectionResponseHeader.make({ name: "X-XSS-Protection", value: O.some("1") })
+ * console.log(header.name)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -275,9 +308,70 @@ export type XSSProtectionHeader = typeof XSSProtectionHeader.Type;
  * @category schemas
  * @since 0.0.0
  */
-export {
-  XSSProtectionHeader as Header,
-  XSSProtectionMode as Mode,
-  XSSProtectionOption as Option,
-  XSSProtectionResponseHeader as ResponseHeader,
-};
+export { XSSProtectionMode as Mode, XSSProtectionResponseHeader as ResponseHeader };
+
+/**
+ * Concise alias for {@link XSSProtectionOption}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Option } from "@beep/schema/XssProtection"
+ *
+ * console.log(S.decodeUnknownSync(Option)("sanitize"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Option = XSSProtectionOption;
+
+/**
+ * Type-level representation of {@link Option}.
+ *
+ * @example
+ * ```ts
+ * import type { Option } from "@beep/schema/XssProtection"
+ *
+ * const option: Option = "sanitize"
+ * console.log(option)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Option = typeof Option.Type;
+
+/**
+ * Concise alias for {@link XSSProtectionHeader}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Header } from "@beep/schema/XssProtection"
+ *
+ * const header = S.decodeUnknownSync(Header)("block-rendering")
+ * console.log(header.name)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Header = XSSProtectionHeader;
+
+/**
+ * Type-level representation of {@link Header}.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { XSSProtectionResponseHeader, type Header } from "@beep/schema/XssProtection"
+ *
+ * const header: Header = XSSProtectionResponseHeader.make({ name: "X-XSS-Protection", value: O.some("1") })
+ * console.log(header.name)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Header = typeof Header.Type;

@@ -7,13 +7,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "effect-orchestration-patterns",
-    "secondaryTargets": ["packages/drivers/uspto", "packages/drivers/anthropic"],
+    "secondaryTargets": [
+      "packages/drivers/uspto",
+      "packages/drivers/anthropic"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "effect-orchestration-patterns",
     "goldSynthesisSection": "Governance & ops / Driver resilience stack: circuit breaker + retry budget + cache + per-key quota",
     "rationale": "ripgrep confirms no quota/sliding-window gate exists in any driver or foundation package; a shared Ref-backed per-key quota Effect Layer over HttpClient is net-new orchestration infra that belongs in the proposed effect-orchestration-patterns wedge, not a single driver.",
-    "cautions": ["Pairs with uspto_pfw_mcp#5 circuit-breaker into one shared resilience+quota Layer", "Reimplement in Effect (Ref/Schedule); do not port the raw KV last-8-chars key shape verbatim"]
+    "cautions": [
+      "Pairs with uspto_pfw_mcp#5 circuit-breaker into one shared resilience+quota Layer",
+      "Reimplement in Effect (Ref/Schedule); do not port the raw KV last-8-chars key shape verbatim"
+    ]
   },
   {
     "id": "uspto_pfw_mcp#5",
@@ -23,13 +29,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "effect-orchestration-patterns",
-    "secondaryTargets": ["packages/drivers/anthropic", "packages/drivers/uspto"],
+    "secondaryTargets": [
+      "packages/drivers/anthropic",
+      "packages/drivers/uspto"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "effect-orchestration-patterns",
     "goldSynthesisSection": "Governance & ops / Driver resilience stack: circuit breaker + retry budget + cache + per-key quota",
     "rationale": "No CircuitBreaker exists anywhere in the tree and only packages/drivers/anthropic has inline Schedule.exponential retry; a shared circuit-breaker + retry-budget + cache Effect Layer over HttpClient is the centralizing net-new work the effect-orchestration-patterns wedge owns (DRY-extract the anthropic inline policy).",
-    "cautions": ["CLOSED/OPEN/HALF_OPEN state machine must be re-expressed as Effect (Ref + Schedule + cache), not a Python class port", "Validate Layer.unwrapEffect/ExecutionPlan against the vendored effect-v4 API before adopting"]
+    "cautions": [
+      "CLOSED/OPEN/HALF_OPEN state machine must be re-expressed as Effect (Ref + Schedule + cache), not a Python class port",
+      "Validate Layer.unwrapEffect/ExecutionPlan against the vendored effect-v4 API before adopting"
+    ]
   },
   {
     "id": "doc-haus#5",
@@ -45,7 +57,10 @@
     "wedgeHint": "ingestion-security-secret-governance",
     "goldSynthesisSection": "Governance & ops / Prompt-injection defense for untrusted legal documents (flag-not-block)",
     "rationale": "ripgrep finds no prompt-injection detector anywhere; an instruction-override/concealment heuristic that emits findings WITH char spans belongs at the retrieval boundary in @beep/file-processing before untrusted text reaches @beep/langextract span-grounded extraction.",
-    "cautions": ["doc-haus license unknown — port the PATTERN (regex rule bank + char-span findings), do not copy source", "Flag-not-block semantics: surface findings to the attorney, never silently drop content"]
+    "cautions": [
+      "doc-haus license unknown — port the PATTERN (regex rule bank + char-span findings), do not copy source",
+      "Flag-not-block semantics: surface findings to the attorney, never silently drop content"
+    ]
   },
   {
     "id": "uspto_pfw_mcp#12",
@@ -61,7 +76,10 @@
     "wedgeHint": "ingestion-security-secret-governance",
     "goldSynthesisSection": "Governance & ops / Prompt-injection defense for untrusted legal documents (flag-not-block)",
     "rationale": "The patent-domain instruction-override/examiner-disclosure regex bank extends the same retrieval-boundary injection detector (doc-haus#5) and additionally runs as a pre-commit/CI secret+injection scan; no such detector or CI scan exists in repo.",
-    "cautions": ["Reimplement-don't-copy (port the regex banks as Effect-Schema-validated rules)", "CI-scan strand overlaps repo audit:github/secret-scanning lanes — coordinate, do not duplicate gitleaks"]
+    "cautions": [
+      "Reimplement-don't-copy (port the regex banks as Effect-Schema-validated rules)",
+      "CI-scan strand overlaps repo audit:github/secret-scanning lanes — coordinate, do not duplicate gitleaks"
+    ]
   },
   {
     "id": "uspto_pfw_mcp#6",
@@ -71,13 +89,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "ingestion-security-secret-governance",
-    "secondaryTargets": ["packages/drivers/uspto", "packages/drivers/anthropic"],
+    "secondaryTargets": [
+      "packages/drivers/uspto",
+      "packages/drivers/anthropic"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "ingestion-security-secret-governance",
     "goldSynthesisSection": "Governance & ops / Multi-provider secret / API-key resolution (env-first, vault, placeholder rejection, proxy)",
     "rationale": "Ordered secure-storage->env resolution chain with placeholder-string ('your_..._here'/'placeholder') and too-short-key rejection has no home; @beep/uspto config already uses S.RedactedFromValue env-first (the basics), so the net-new delta is the placeholder-rejection guard as a shared secret-resolution helper.",
-    "cautions": ["@beep/identity is only branded-ID schemas (Id.ts/packages.ts), NOT a secret vault — the resolution layer is greenfield", "Keep secrets as Effect Redacted end-to-end; reject placeholders as missing"]
+    "cautions": [
+      "@beep/identity is only branded-ID schemas (Id.ts/packages.ts), NOT a secret vault — the resolution layer is greenfield",
+      "Keep secrets as Effect Redacted end-to-end; reject placeholders as missing"
+    ]
   },
   {
     "id": "google-patents-mcp#4",
@@ -93,7 +117,10 @@
     "wedgeHint": "ingestion-security-secret-governance",
     "goldSynthesisSection": "Governance & ops / Multi-provider secret / API-key resolution (env-first, vault, placeholder rejection, proxy)",
     "rationale": "Env-first fail-fast secret resolution via Redacted is already owned: packages/drivers/uspto/src/Uspto.config.ts resolves apiKey via S.RedactedFromValue with Effect Config fail-fast. The capability is a dup; the only net-new delta (placeholder rejection) is captured by uspto_pfw_mcp#6.",
-    "cautions": ["recommendation=reference, gapStatus=partial — reference-only, no packet opens", "Cross-link: net-new placeholder-rejection guard lives in uspto_pfw_mcp#6 under ingestion-security-secret-governance"]
+    "cautions": [
+      "recommendation=reference, gapStatus=partial — reference-only, no packet opens",
+      "Cross-link: net-new placeholder-rejection guard lives in uspto_pfw_mcp#6 under ingestion-security-secret-governance"
+    ]
   },
   {
     "id": "mike#9",
@@ -109,7 +136,10 @@
     "wedgeHint": "ingestion-security-secret-governance",
     "goldSynthesisSection": "Governance & ops / Multi-provider secret / API-key resolution (env-first, vault, placeholder rejection, proxy)",
     "rationale": "Per-user AES-256-GCM key vault (scrypt key, random IV, auth tag, source=env|user) has no home — verified @beep/identity is branded-ID schemas only, not a vault, so the encrypted per-user secret store is greenfield within the security-governance wedge.",
-    "cautions": ["recommendation=study; beep is local-first single-attorney, so per-user vault is an optional upgrade over env+onepassword secret-refs", "GOLD finalBeepTarget named @beep/identity but that package does NOT host secrets — do not assume a vault exists there"]
+    "cautions": [
+      "recommendation=study; beep is local-first single-attorney, so per-user vault is an optional upgrade over env+onepassword secret-refs",
+      "GOLD finalBeepTarget named @beep/identity but that package does NOT host secrets — do not assume a vault exists there"
+    ]
   },
   {
     "id": "mike#8",
@@ -125,7 +155,10 @@
     "wedgeHint": "ingestion-security-secret-governance",
     "goldSynthesisSection": "Governance & ops / SSRF guard for remote MCP/connector and ingestion URLs",
     "rationale": "@beep/schema SafeRemoteHost.ts exists (verified) but is allowlist-style; the net-new hardening is DNS-resolution + private/reserved-IP rejection + redirect:'manual' guarded fetch before fetching user-supplied URLs (remote MCP servers, source ingestion). Extend SafeRemoteHost.",
-    "cautions": ["Wrap/extend existing SafeRemoteHost — do not introduce a parallel guard", "DNS-rebinding defense (resolve-then-check) must run at fetch time, not just on the URL string"]
+    "cautions": [
+      "Wrap/extend existing SafeRemoteHost — do not introduce a parallel guard",
+      "DNS-rebinding defense (resolve-then-check) must run at fetch time, not just on the URL string"
+    ]
   },
   {
     "id": "agentmemory#11",
@@ -141,7 +174,10 @@
     "wedgeHint": "ingestion-security-secret-governance",
     "goldSynthesisSection": "Governance & ops / Redaction & confidentiality scrubbing (secret strip, OOXML scrub + audit, bad-redaction x-ray)",
     "rationale": "stripPrivateData (remove <private> blocks + provider-key regex bank -> [REDACTED_SECRET]) before text crosses into projected stores or LLM prompts has no home; it is the secret-scrub half of the confidentiality layer the security-governance wedge owns.",
-    "cautions": ["agentmemory is Apache-2.0 — port-with-attribution; reimplement regex bank in Effect, do not lift TS/Zod", "Scrub must run before persistence AND before any LLM submission (egress + projection boundary)"]
+    "cautions": [
+      "agentmemory is Apache-2.0 — port-with-attribution; reimplement regex bank in Effect, do not lift TS/Zod",
+      "Scrub must run before persistence AND before any LLM submission (egress + projection boundary)"
+    ]
   },
   {
     "id": "mike#12",
@@ -157,7 +193,10 @@
     "wedgeHint": "ingestion-security-secret-governance",
     "goldSynthesisSection": "Governance & ops / Untrusted-HTML sanitizer with tag/attr allowlist + safe-href rewriting",
     "rationale": "A tag/attr-allowlist sanitizer for externally fetched legal HTML (CourtListener opinions) lands in @beep/html (exists) at the render boundary; packages/drivers/courtlistener is a bare skeleton, so this hardens its future output before Lexical rendering.",
-    "cautions": ["AGPL CourtListener server code must NOT be copied — reimplement the allowlist sanitizer", "Render-boundary (egress) sanitizer; keep distinct from ingestion injection-detector but co-located in the same wedge"]
+    "cautions": [
+      "AGPL CourtListener server code must NOT be copied — reimplement the allowlist sanitizer",
+      "Render-boundary (egress) sanitizer; keep distinct from ingestion injection-detector but co-located in the same wedge"
+    ]
   },
   {
     "id": "doc-haus#13",
@@ -173,7 +212,10 @@
     "wedgeHint": "ingestion-security-secret-governance",
     "goldSynthesisSection": "Governance & ops / Redaction & confidentiality scrubbing (secret strip, OOXML scrub + audit, bad-redaction x-ray)",
     "rationale": "OOXML redaction that scrubs every XML escape variant across all parts, records a per-matter audit row, and runs a residue check has no home; @beep/provenance is the natural audit-log home for a redaction-defensibility record.",
-    "cautions": ["Egress/export-side redaction (DOCX/PDF), not the ingestion boundary — may warrant its own redaction-audit sub-slice within the wedge", "study/serendipitous-tier; residue-check must report unreachable binary parts rather than claim clean"]
+    "cautions": [
+      "Egress/export-side redaction (DOCX/PDF), not the ingestion boundary — may warrant its own redaction-audit sub-slice within the wedge",
+      "study/serendipitous-tier; residue-check must report unreachable binary parts rather than claim clean"
+    ]
   },
   {
     "id": "doctor#8",
@@ -189,7 +231,11 @@
     "wedgeHint": "ingestion-security-secret-governance",
     "goldSynthesisSection": "Governance & ops / Redaction & confidentiality scrubbing (secret strip, OOXML scrub + audit, bad-redaction x-ray)",
     "rationale": "An x-ray check detecting recoverable text under failed PDF redaction boxes pre-ingestion is a confidentiality gate with no home; lands at the @beep/file-processing ingestion boundary as a defensibility check.",
-    "cautions": ["doctor is BSD-2 (permissive — adapt with attribution, not vendored wholesale)", "Requires a PDF x-ray capability (future poppler-class driver) — coordinate with file-processing-capability deferred OCR/PDF-diagnostics phase", "recommendation=reference-tier"]
+    "cautions": [
+      "doctor is BSD-2 (permissive — adapt with attribution, not vendored wholesale)",
+      "Requires a PDF x-ray capability (future poppler-class driver) — coordinate with file-processing-capability deferred OCR/PDF-diagnostics phase",
+      "recommendation=reference-tier"
+    ]
   },
   {
     "id": "agentmemory#10",
@@ -199,13 +245,19 @@
     "primaryTarget": "goals/agent-governance-control-plane",
     "targetExists": true,
     "proposedSlug": null,
-    "secondaryTargets": ["goals/agentic-professional-runtime", "packages/epistemic/server"],
+    "secondaryTargets": [
+      "goals/agentic-professional-runtime",
+      "packages/epistemic/server"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "governance-approval-audit-bulk-mutation",
     "goldSynthesisSection": "Governance & ops / Governance bulk-delete with dry-run + filter-gated mutation + audit trail",
     "rationale": "A previewable, filter-gated (>=1 filter for non-dryRun) bulk mutation op with dryRun preview + audit trail over the authoritative graph has no home; add as a dated research note to goals/agent-governance-control-plane (approval/audit scope) without reopening its SPEC.",
-    "cautions": ["agent-governance-control-plane SPEC currently scopes AGENT-PROCESS governance (orchestrators/auditors/phase-gates), not a data-mutation surface — this is net-new deferred scope, a research note only", "ApprovalGate stub already lives in agentic-professional-runtime (ProfessionalRuntime.contracts approvalGates) — cross-link, do not fork the gate"]
+    "cautions": [
+      "agent-governance-control-plane SPEC currently scopes AGENT-PROCESS governance (orchestrators/auditors/phase-gates), not a data-mutation surface — this is net-new deferred scope, a research note only",
+      "ApprovalGate stub already lives in agentic-professional-runtime (ProfessionalRuntime.contracts approvalGates) — cross-link, do not fork the gate"
+    ]
   },
   {
     "id": "research-squad#12",
@@ -221,7 +273,10 @@
     "wedgeHint": "governance-approval-audit-bulk-mutation",
     "goldSynthesisSection": "Governance & ops / Observability: upload-lifecycle tracing + LLM/tool-call audit extractor",
     "rationale": "A tamper-evident agent activity/tool-call audit trace (which LLM/tool calls ran, behind the ethical wall) is a governance-audit concern; attach as deferred audit scope to goals/agent-governance-control-plane with @beep/observability OTel as the tracing substrate.",
-    "cautions": ["HAR/Claude-endpoint matching is a forensic shape — port the audit-replay concept natively (Effect tracing), not the HAR parser", "@beep/observability covers the tracing half (partial); the audit-replay surface is net-new"]
+    "cautions": [
+      "HAR/Claude-endpoint matching is a forensic shape — port the audit-replay concept natively (Effect tracing), not the HAR parser",
+      "@beep/observability covers the tracing half (partial); the audit-replay surface is net-new"
+    ]
   },
   {
     "id": "patent-search-mcp-server#7",
@@ -237,7 +292,10 @@
     "wedgeHint": "professional-runtime-skill-gate",
     "goldSynthesisSection": "Governance & ops / Agent SKILL: cost-tiered tool routing + mandatory not-legal-advice gate",
     "rationale": "packages/agents/domain has a Skill entity (Skill.model.ts) and packages/agents/use-cases ProfessionalRuntime carries approvalGates, but only as name-only stub/fixtures; concretizing a real cost-tiered-routing + not-legal-advice disclaimer Skill definition extends goals/agentic-professional-runtime.",
-    "cautions": ["patent-search-mcp-server is MIT (portable patterns)", "Encode the not-legal-advice disclaimer as a hard governance gate, not a convention; cost-tiered ordering = cheapest sufficient tool first, expensive risk_profile last behind a cost warning"]
+    "cautions": [
+      "patent-search-mcp-server is MIT (portable patterns)",
+      "Encode the not-legal-advice disclaimer as a hard governance gate, not a convention; cost-tiered ordering = cheapest sufficient tool first, expensive risk_profile last behind a cost warning"
+    ]
   },
   {
     "id": "TalentScore#9",
@@ -247,13 +305,20 @@
     "primaryTarget": "goals/agentic-professional-runtime",
     "targetExists": true,
     "proposedSlug": null,
-    "secondaryTargets": ["packages/agents/server", "packages/workspace/server", "packages/law-practice/server"],
+    "secondaryTargets": [
+      "packages/agents/server",
+      "packages/workspace/server",
+      "packages/law-practice/server"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "matter-isolation-ethical-wall",
     "goldSynthesisSection": "Governance & ops / RpcMiddleware-provided CurrentUser identity (ethical-wall / per-tenant seed)",
     "rationale": "ripgrep confirms no shared CurrentUser Context.Tag or RpcMiddleware exists (only m365 auth); ThreadStore hardcodes orgId=1. A DI-injected CurrentUser RpcMiddleware + matter-scoped query filter is the missing identity/ethical-wall foundation the professional runtime depends on — net-new deferred scope.",
-    "cautions": ["Pairs with doc-haus#4's matter-fence; the CurrentUser-middleware + matter-isolation-ethical-wall cluster could warrant its own infra wedge if the runtime SPEC is too narrow", "TalentScore is MIT — port the RpcMiddleware.Tag/CurrentUser shape; apply on ChatRpcs/workspace/law-practice handler groups"]
+    "cautions": [
+      "Pairs with doc-haus#4's matter-fence; the CurrentUser-middleware + matter-isolation-ethical-wall cluster could warrant its own infra wedge if the runtime SPEC is too narrow",
+      "TalentScore is MIT — port the RpcMiddleware.Tag/CurrentUser shape; apply on ChatRpcs/workspace/law-practice handler groups"
+    ]
   },
   {
     "id": "research-squad#6",
@@ -269,7 +334,9 @@
     "wedgeHint": "claim-lifecycle-state-machine",
     "goldSynthesisSection": "Governance & ops / Candidate edit -> human accept/reject gate + validated lifecycle state machine",
     "rationale": "An explicit validTransitions table + canTransitionTo guard is exactly the validated forward-only state machine @beep/epistemic ClaimLifecycle already ships (completed-retained, 11 tests green); the catalog itself marks this dup/reference.",
-    "cautions": ["Reference-only, no packet opens — reuse the shipped ClaimLifecycle/ClaimGate, do not introduce a parallel session state machine"]
+    "cautions": [
+      "Reference-only, no packet opens — reuse the shipped ClaimLifecycle/ClaimGate, do not introduce a parallel session state machine"
+    ]
   },
   {
     "id": "research-squad#13",
@@ -285,7 +352,10 @@
     "wedgeHint": "pre-retrieval-triage-gate",
     "goldSynthesisSection": "Governance & ops / Pre-pipeline research/triage decision gate with clarification path",
     "rationale": "A 'should this even enter the pipeline?' triage (needs_research/requires_clarification/estimated_complexity + action enum) is a COMPLEMENT to ClaimGate, not a dup — it gates whether to invoke retrieval at all and fits the runtime's autonomy/decision policy in goals/agentic-professional-runtime.",
-    "cautions": ["BAML is an external DSL — port the decision SCHEMA shape (Effect-Schema), do not adopt the BAML runtime", "Distinct from @beep/epistemic ClaimGate (which gates admitted claims, not pipeline entry)"]
+    "cautions": [
+      "BAML is an external DSL — port the decision SCHEMA shape (Effect-Schema), do not adopt the BAML runtime",
+      "Distinct from @beep/epistemic ClaimGate (which gates admitted claims, not pipeline entry)"
+    ]
   },
   {
     "id": "doc-haus#4",
@@ -295,13 +365,21 @@
     "primaryTarget": "packages/foundation/capability/langextract",
     "targetExists": true,
     "proposedSlug": "citation-grounding-hallucination-guard",
-    "secondaryTargets": ["packages/foundation/modeling/provenance", "goals/epistemic-claim-lifecycle-gate", "packages/law-practice/server"],
+    "secondaryTargets": [
+      "packages/foundation/modeling/provenance",
+      "goals/epistemic-claim-lifecycle-gate",
+      "packages/law-practice/server"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "citation-grounding-hallucination-guard",
     "goldSynthesisSection": "Governance & ops / Output-side citation re-verification ladder + matter-isolation ethical wall",
     "rationale": "verifyCitation's re-anchor (slice==excerpt -> findQuote nearest occurrence) is a DUP of @beep/langextract Alignment findExact/findLesser; the net-new value is the ground-before-cite hallucination-guard CONTRACT (verified verbatim span required before a citation may be emitted) plus the matter-isolation fence — both owned by the citation-grounding-hallucination-guard wedge.",
-    "cautions": ["AGPL doc-haus/mike — reimplement the contract from spec, do NOT copy source", "Re-anchor/verbatim-verify substrate already exists in langextract Alignment + @beep/provenance TextAnchor (reuse, don't rebuild)", "Matter-fence half coordinates with @beep/law-practice-server (see TalentScore#9 ethical-wall cluster)"]
+    "cautions": [
+      "AGPL doc-haus/mike — reimplement the contract from spec, do NOT copy source",
+      "Re-anchor/verbatim-verify substrate already exists in langextract Alignment + @beep/provenance TextAnchor (reuse, don't rebuild)",
+      "Matter-fence half coordinates with @beep/law-practice-server (see TalentScore#9 ethical-wall cluster)"
+    ]
   },
   {
     "id": "mike#4",
@@ -317,7 +395,10 @@
     "wedgeHint": "agent-memory-tiers-bitemporal-edges",
     "goldSynthesisSection": "Governance & ops / Candidate edit -> human accept/reject gate + validated lifecycle state machine",
     "rationale": "The ClaimLifecycle state machine concept is a dup, but a PERSISTED Drizzle gate table (pending/accepted/rejected status + span anchors + context_before/after + resolved_at) is net-new — @beep/epistemic-tables persists UsageRecord only; the persisted accept/reject edit store is the deferred bitemporal/redline-gate scope the agent-memory-tiers-bitemporal-edges wedge owns.",
-    "cautions": ["epistemic-claim-lifecycle-gate is completed-retained and explicitly DEFERRED persistence/bitemporal store — do NOT reopen its SPEC; this is net-new in the new wedge", "Carry span anchors (startChar/endChar/quote) on the persisted rows, aligning to @beep/provenance TextAnchor"]
+    "cautions": [
+      "epistemic-claim-lifecycle-gate is completed-retained and explicitly DEFERRED persistence/bitemporal store — do NOT reopen its SPEC; this is net-new in the new wedge",
+      "Carry span anchors (startChar/endChar/quote) on the persisted rows, aligning to @beep/provenance TextAnchor"
+    ]
   },
   {
     "id": "stenoai#2",
@@ -327,13 +408,21 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "multi-provider-llm-dispatch-fallback",
-    "secondaryTargets": ["packages/drivers/anthropic", "packages/drivers/openai-compat", "packages/drivers/venice-ai", "packages/drivers/xai"],
+    "secondaryTargets": [
+      "packages/drivers/anthropic",
+      "packages/drivers/openai-compat",
+      "packages/drivers/venice-ai",
+      "packages/drivers/xai"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "multi-provider-llm-dispatch-fallback",
     "goldSynthesisSection": "Governance & ops / Multi-provider secret / API-key resolution (env-first, vault, placeholder rejection, proxy)",
     "rationale": "The local/remote/cloud/adapter provider selection plus the JWT 'adapter' (desktop never holds the provider key; URL+JWT from Electron, real key server-side) has no home; the four LLM drivers exist but no dispatch/fallback layer over them — owned by the multi-provider-llm-dispatch-fallback split.",
-    "cautions": ["study-tier", "Cross-link effect-orchestration-patterns (Layer.unwrapEffect provider selection) — keep secret-proxy adapter here, retry/Schedule there"]
+    "cautions": [
+      "study-tier",
+      "Cross-link effect-orchestration-patterns (Layer.unwrapEffect provider selection) — keep secret-proxy adapter here, retry/Schedule there"
+    ]
   },
   {
     "id": "harvest-mcp#7",
@@ -343,13 +432,19 @@
     "primaryTarget": "goals/file-processing-capability",
     "targetExists": true,
     "proposedSlug": null,
-    "secondaryTargets": ["packages/foundation/capability/file-processing", "packages/foundation/capability/langextract"],
+    "secondaryTargets": [
+      "packages/foundation/capability/file-processing",
+      "packages/foundation/capability/langextract"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "input-quality-gate",
     "goldSynthesisSection": "Governance & ops / Input-quality gate before expensive extraction",
     "rationale": "A typed input-quality gate (score completeness; excellent/good/poor/empty; refuse with a typed error bundling issues+recommendations) before sending a doc into @beep/langextract extends the active goals/file-processing-capability ingestion capability as deferred quality-gate scope.",
-    "cautions": ["assessQuality is HAR-specific — port the gate PATTERN (typed FileProcessing error + recommendations), not the HAR statistics", "Compose with the existing FileProcessingSkipReason model rather than a parallel error type"]
+    "cautions": [
+      "assessQuality is HAR-specific — port the gate PATTERN (typed FileProcessing error + recommendations), not the HAR statistics",
+      "Compose with the existing FileProcessingSkipReason model rather than a parallel error type"
+    ]
   },
   {
     "id": "doctor#12",
@@ -365,7 +460,10 @@
     "wedgeHint": "ingestion-observability",
     "goldSynthesisSection": "Governance & ops / Observability: upload-lifecycle tracing + LLM/tool-call audit extractor",
     "rationale": "request-lifecycle spans around ingestion (request_id, filename, content-type, byte size to catch never-completing/OOM requests) extends the file-processing ingestion pipeline; @beep/observability (OTel, partial) is the tracing substrate.",
-    "cautions": ["adopt-tier minor enhancement", "Re-express the Python decorator as Effect spans (Effect.withSpan) around the ingestion use-case, not a logging wrapper"]
+    "cautions": [
+      "adopt-tier minor enhancement",
+      "Re-express the Python decorator as Effect spans (Effect.withSpan) around the ingestion use-case, not a logging wrapper"
+    ]
   },
   {
     "id": "patents-mcp-server#14",
@@ -375,13 +473,23 @@
     "primaryTarget": "packages/drivers/govinfo",
     "targetExists": true,
     "proposedSlug": "gov-legal-data-driver-codegen",
-    "secondaryTargets": ["packages/drivers/runpod", "packages/drivers/acp", "packages/drivers/courtlistener", "packages/drivers/ecfr", "packages/drivers/dol", "packages/drivers/federal-register"],
+    "secondaryTargets": [
+      "packages/drivers/runpod",
+      "packages/drivers/acp",
+      "packages/drivers/courtlistener",
+      "packages/drivers/ecfr",
+      "packages/drivers/dol",
+      "packages/drivers/federal-register"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "Governance & ops / OpenAPI -> Schema response-validation codegen committed to repo",
     "rationale": "@beep/uspto is hand-written; the bare skeleton gov drivers (courtlistener/ecfr/dol/federal-register) plus the partial govinfo need OpenAPI -> effect/Schema response-validation codegen with committed output for deterministic CI — owned by the gov-legal-data-driver-codegen wedge.",
-    "cautions": ["Do NOT introduce openapi-ts/Hey API/Orval — reuse the repo's Effect codegen precedent in packages/drivers/{runpod,acp} (openapi.json + scripts/generate.ts) targeting effect/Schema", "Coordinates with the gov-legal-data-driver-codegen wedge (data-ingestion shard owns the driver-build half)"]
+    "cautions": [
+      "Do NOT introduce openapi-ts/Hey API/Orval — reuse the repo's Effect codegen precedent in packages/drivers/{runpod,acp} (openapi.json + scripts/generate.ts) targeting effect/Schema",
+      "Coordinates with the gov-legal-data-driver-codegen wedge (data-ingestion shard owns the driver-build half)"
+    ]
   },
   {
     "id": "us-legal-tools#10",
@@ -397,7 +505,10 @@
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "Governance & ops / Deterministic codegen-as-build-step + dual ESM/CJS+d.ts packaging",
     "rationale": "beep has turbo.json but no codegen->build dependency wiring; a cache:false generate step that always re-runs before compile makes the OpenAPI/ontology codegen deterministic-before-build — adopt once the codegen pipeline (patents-mcp-server#14) lands.",
-    "cautions": ["Only relevant once the OpenAPI codegen pipeline exists — sequence after gov-legal-data-driver-codegen scaffolding", "Partial/dup of existing turbo build mechanics — add the cache:false generate wiring, do not rework the pipeline"]
+    "cautions": [
+      "Only relevant once the OpenAPI codegen pipeline exists — sequence after gov-legal-data-driver-codegen scaffolding",
+      "Partial/dup of existing turbo build mechanics — add the cache:false generate wiring, do not rework the pipeline"
+    ]
   },
   {
     "id": "us-legal-tools#11",
@@ -413,7 +524,10 @@
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "Governance & ops / Deterministic codegen-as-build-step + dual ESM/CJS+d.ts packaging",
     "rationale": "Dual library + ./mcp entrypoint packaging is already owned: beep ships Effect-native MCP servers (@beep/nlp-mcp, @beep/m365-mcp) and exposes library+./mcp surfaces via subpath exports; GOLD itself flags this as partial/dup. Reference-only.",
-    "cautions": ["Reference-only, no packet — beep's subpath-export packaging covers the dual-entrypoint capability", "The net-new codegen->build determinism delta lives in us-legal-tools#10"]
+    "cautions": [
+      "Reference-only, no packet — beep's subpath-export packaging covers the dual-entrypoint capability",
+      "The net-new codegen->build determinism delta lives in us-legal-tools#10"
+    ]
   },
   {
     "id": "uspto-patents-mcp#7",
@@ -423,12 +537,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "mcp-auth-gated-registration",
-    "secondaryTargets": ["packages/drivers/nlp-mcp", "packages/drivers/m365-mcp"],
+    "secondaryTargets": [
+      "packages/drivers/nlp-mcp",
+      "packages/drivers/m365-mcp"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "mcp-auth-gated-registration",
     "goldSynthesisSection": "Governance & ops / Hosted-MCP multi-tenant bearer/tier auth with team sub-keys",
     "rationale": "Bearer-key -> tier/owner resolution with team sub-key fallback is a hosted/multi-tenant variant of MCP auth-gating; it has no home and is recorded as a deferred/reference item under the mcp-auth-gated-registration wedge for if beep ever exposes hosted MCP endpoints.",
-    "cautions": ["recommendation=SKIP — out-of-scope for local-first single-attorney; reference-only, do NOT implement now", "@beep/identity is branded-ID schemas only (no multi-tenant key model)", "Keep the active mcp-auth-gated-registration wedge focused on credential-keyed conditional registration; this is a future hosted variant"]
+    "cautions": [
+      "recommendation=SKIP — out-of-scope for local-first single-attorney; reference-only, do NOT implement now",
+      "@beep/identity is branded-ID schemas only (no multi-tenant key model)",
+      "Keep the active mcp-auth-gated-registration wedge focused on credential-keyed conditional registration; this is a future hosted variant"
+    ]
   }
 ]

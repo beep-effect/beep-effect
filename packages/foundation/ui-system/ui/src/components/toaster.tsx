@@ -1,3 +1,9 @@
+/**
+ * Toaster primitive: renders the live toast queue from the toast manager.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import {

@@ -1,0 +1,10 @@
+{
+  "scope": "apps/professional-desktop",
+  "findings": [
+    {
+      "kind": "binaries",
+      "file": "apps/professional-desktop/scripts/build-sidecar.ts",
+      "name": "rustc"
+    }
+  ]
+}

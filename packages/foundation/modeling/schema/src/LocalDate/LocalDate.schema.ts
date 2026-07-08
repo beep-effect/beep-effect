@@ -681,9 +681,11 @@ export const LocalDateFromString = S.String.pipe(
  *
  * @example
  * ```ts
- * import type { LocalDateFromString } from "@beep/schema/LocalDate"
+ * import * as S from "effect/Schema"
+ * import { LocalDateFromString } from "@beep/schema/LocalDate"
  *
- * console.log({} as { date: LocalDateFromString })
+ * const date: LocalDateFromString = S.decodeUnknownSync(LocalDateFromString)("2024-06-15")
+ * console.log(date.year)
  * ```
  *
  * @since 0.0.0
@@ -696,10 +698,12 @@ export type LocalDateFromString = typeof LocalDateFromString.Type;
  *
  * @example
  * ```ts
- * import type { LocalDateFromString } from "@beep/schema/LocalDate"
+ * import * as S from "effect/Schema"
+ * import { LocalDateFromString } from "@beep/schema/LocalDate"
  *
- * type EncodedLocalDate = LocalDateFromString.Encoded
- * console.log({} as { encoded: EncodedLocalDate })
+ * const date = S.decodeUnknownSync(LocalDateFromString)("2024-06-15")
+ * const encoded: LocalDateFromString.Encoded = S.encodeSync(LocalDateFromString)(date)
+ * console.log(encoded) // "2024-06-15"
  * ```
  *
  * @since 0.0.0

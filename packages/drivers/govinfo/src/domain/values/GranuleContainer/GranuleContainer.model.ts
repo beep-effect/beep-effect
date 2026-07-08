@@ -98,6 +98,24 @@ export class GranuleContainer extends S.Class<GranuleContainer>($I`GranuleContai
 /**
  * Companion namespace for {@link GranuleContainer} encoded helpers.
  *
+ * @example
+ * ```ts
+ * import { GranuleContainer } from "@beep/govinfo/domain/values/GranuleContainer/GranuleContainer.model";
+ * import * as S from "effect/Schema";
+ *
+ * const container: GranuleContainer = S.decodeUnknownSync(GranuleContainer)({
+ *   count: 1n,
+ *   granules: [],
+ *   message: "",
+ *   nextPage: "",
+ *   offset: 0,
+ *   pageSize: 100,
+ *   previousPage: ""
+ * });
+ *
+ * console.log(container.pageSize);
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */

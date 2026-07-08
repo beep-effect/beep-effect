@@ -2136,7 +2136,7 @@ describe("files command", { concurrent: false }, () => {
           );
 
           const args = pipe(yield* fs.readFileString(argsPath), Str.split("\n"));
-          expect(A.slice(args, 0, -2)).toEqual([
+          expect(A.slice(args, { start: 0, end: -2 })).toEqual([
             "-hide_banner",
             "-nostdin",
             "-y",

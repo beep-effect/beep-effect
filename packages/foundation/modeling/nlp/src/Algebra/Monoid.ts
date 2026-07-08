@@ -189,7 +189,7 @@ export const StringJoin = (separator: string): Monoid<string> => ({
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
- * const list = Monoid.fold(Monoid.StringDelimited("[", "]", ", "))(["alpha", "beta", "gamma"])
+ * const list = Monoid.fold(Monoid.StringDelimited({ prefix: "[", suffix: "]", separator: ", " }))(["alpha", "beta", "gamma"])
  *
  * console.log(list)
  * // "[alpha, beta, gamma]"
@@ -198,16 +198,23 @@ export const StringJoin = (separator: string): Monoid<string> => ({
  * @since 0.0.0
  * @category combinators
  */
-export const StringDelimited = (prefix: string, suffix: string, separator: string): Monoid<string> => ({
-  empty: "",
-  combine: dual(2, (x, y) => {
-    if (Str.isEmpty(x) && Str.isEmpty(y)) return "";
-    if (Str.isEmpty(x)) return `${prefix}${y}${suffix}`;
-    if (Str.isEmpty(y)) return `${prefix}${x}${suffix}`;
-    const inner = `${Str.slice(prefix.length, -suffix.length)(x)}${separator}${Str.slice(prefix.length, -suffix.length)(y)}`;
-    return `${prefix}${inner}${suffix}`;
-  }),
-});
+export const StringDelimited = (options: {
+  readonly prefix: string;
+  readonly suffix: string;
+  readonly separator: string;
+}): Monoid<string> => {
+  const { prefix, suffix, separator } = options;
+  return {
+    empty: "",
+    combine: dual(2, (x, y) => {
+      if (Str.isEmpty(x) && Str.isEmpty(y)) return "";
+      if (Str.isEmpty(x)) return `${prefix}${y}${suffix}`;
+      if (Str.isEmpty(y)) return `${prefix}${x}${suffix}`;
+      const inner = `${Str.slice(prefix.length, -suffix.length)(x)}${separator}${Str.slice(prefix.length, -suffix.length)(y)}`;
+      return `${prefix}${inner}${suffix}`;
+    }),
+  };
+};
 
 // =============================================================================
 // Numeric Monoids
@@ -522,10 +529,16 @@ export const getAverage = (result: {
  * @since 0.0.0
  * @category combinators
  */
-export const Product = <A, B>(ma: Monoid<A>, mb: Monoid<B>): Monoid<readonly [A, B]> => ({
-  empty: [ma.empty, mb.empty],
-  combine: dual(2, ([xa, xb], [ya, yb]) => [ma.combine(xa, ya), mb.combine(xb, yb)]),
-});
+export const Product: {
+  <A, B>(ma: Monoid<A>, mb: Monoid<B>): Monoid<readonly [A, B]>;
+  <B>(mb: Monoid<B>): <A>(ma: Monoid<A>) => Monoid<readonly [A, B]>;
+} = dual(
+  2,
+  <A, B>(ma: Monoid<A>, mb: Monoid<B>): Monoid<readonly [A, B]> => ({
+    empty: [ma.empty, mb.empty],
+    combine: dual(2, ([xa, xb], [ya, yb]) => [ma.combine(xa, ya), mb.combine(xb, yb)]),
+  })
+);
 
 /**
  * Triple product monoid.
@@ -547,10 +560,16 @@ export const Product = <A, B>(ma: Monoid<A>, mb: Monoid<B>): Monoid<readonly [A,
  * @since 0.0.0
  * @category combinators
  */
-export const Product3 = <A, B, C>(ma: Monoid<A>, mb: Monoid<B>, mc: Monoid<C>): Monoid<readonly [A, B, C]> => ({
-  empty: [ma.empty, mb.empty, mc.empty],
-  combine: dual(2, ([xa, xb, xc], [ya, yb, yc]) => [ma.combine(xa, ya), mb.combine(xb, yb), mc.combine(xc, yc)]),
-});
+export const Product3: {
+  <A, B, C>(ma: Monoid<A>, mb: Monoid<B>, mc: Monoid<C>): Monoid<readonly [A, B, C]>;
+  <B, C>(mb: Monoid<B>, mc: Monoid<C>): <A>(ma: Monoid<A>) => Monoid<readonly [A, B, C]>;
+} = dual(
+  3,
+  <A, B, C>(ma: Monoid<A>, mb: Monoid<B>, mc: Monoid<C>): Monoid<readonly [A, B, C]> => ({
+    empty: [ma.empty, mb.empty, mc.empty],
+    combine: dual(2, ([xa, xb, xc], [ya, yb, yc]) => [ma.combine(xa, ya), mb.combine(xb, yb), mc.combine(xc, yc)]),
+  })
+);
 
 // =============================================================================
 // Functor Monoids
@@ -688,6 +707,17 @@ export const BooleanAny: Monoid<boolean> = {
 // Monoid Laws (for testing)
 // =============================================================================
 
+type IdentityCheckOptions<A> = { readonly x: A; readonly equals?: (a: A, b: A) => boolean };
+
+const checkIdentity = <A>(
+  monoid: Monoid<A>,
+  options: IdentityCheckOptions<A>,
+  combineWithEmpty: (monoid: Monoid<A>, x: A) => A
+): boolean => {
+  const { x, equals = (a: A, b: A) => a === b } = options;
+  return equals(combineWithEmpty(monoid, x), x);
+};
+
 /**
  * Check left identity law: empty ⊕ x = x
  *
@@ -695,7 +725,7 @@ export const BooleanAny: Monoid<boolean> = {
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
- * const valid = Monoid.checkLeftIdentity(Monoid.StringJoin(" "), "token")
+ * const valid = Monoid.checkLeftIdentity(Monoid.StringJoin(" "), { x: "token" })
  *
  * console.log(valid)
  * // true
@@ -704,11 +734,12 @@ export const BooleanAny: Monoid<boolean> = {
  * @since 0.0.0
  * @category predicates
  */
-export const checkLeftIdentity = <A>(
-  monoid: Monoid<A>,
-  x: A,
-  equals: (a: A, b: A) => boolean = (a, b) => a === b
-): boolean => equals(monoid.combine(monoid.empty, x), x);
+export const checkLeftIdentity: {
+  <A>(monoid: Monoid<A>, options: IdentityCheckOptions<A>): boolean;
+  <A>(options: IdentityCheckOptions<A>): (monoid: Monoid<A>) => boolean;
+} = dual(2, <A>(monoid: Monoid<A>, options: IdentityCheckOptions<A>): boolean =>
+  checkIdentity(monoid, options, (m, x) => m.combine(m.empty, x))
+);
 
 /**
  * Check right identity law: x ⊕ empty = x
@@ -717,7 +748,7 @@ export const checkLeftIdentity = <A>(
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
- * const valid = Monoid.checkRightIdentity(Monoid.NumberSum, 42)
+ * const valid = Monoid.checkRightIdentity(Monoid.NumberSum, { x: 42 })
  *
  * console.log(valid)
  * // true
@@ -726,11 +757,12 @@ export const checkLeftIdentity = <A>(
  * @since 0.0.0
  * @category predicates
  */
-export const checkRightIdentity = <A>(
-  monoid: Monoid<A>,
-  x: A,
-  equals: (a: A, b: A) => boolean = (a, b) => a === b
-): boolean => equals(monoid.combine(x, monoid.empty), x);
+export const checkRightIdentity: {
+  <A>(monoid: Monoid<A>, options: IdentityCheckOptions<A>): boolean;
+  <A>(options: IdentityCheckOptions<A>): (monoid: Monoid<A>) => boolean;
+} = dual(2, <A>(monoid: Monoid<A>, options: IdentityCheckOptions<A>): boolean =>
+  checkIdentity(monoid, options, (m, x) => m.combine(x, m.empty))
+);
 
 /**
  * Check associativity law: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)
@@ -739,7 +771,7 @@ export const checkRightIdentity = <A>(
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
- * const valid = Monoid.checkAssociativity(Monoid.NumberProduct, 2, 3, 4)
+ * const valid = Monoid.checkAssociativity({ monoid: Monoid.NumberProduct, x: 2, y: 3, z: 4 })
  *
  * console.log(valid)
  * // true
@@ -748,13 +780,14 @@ export const checkRightIdentity = <A>(
  * @since 0.0.0
  * @category predicates
  */
-export const checkAssociativity = <A>(
-  monoid: Monoid<A>,
-  x: A,
-  y: A,
-  z: A,
-  equals: (a: A, b: A) => boolean = (a, b) => a === b
-): boolean => {
+export const checkAssociativity = <A>(options: {
+  readonly monoid: Monoid<A>;
+  readonly x: A;
+  readonly y: A;
+  readonly z: A;
+  readonly equals?: (a: A, b: A) => boolean;
+}): boolean => {
+  const { monoid, x, y, z, equals = (a, b) => a === b } = options;
   const left = monoid.combine(monoid.combine(x, y), z);
   const right = monoid.combine(x, monoid.combine(y, z));
   return equals(left, right);
@@ -767,7 +800,7 @@ export const checkAssociativity = <A>(
  * ```ts
  * import * as Monoid from "@beep/nlp/Algebra/Monoid"
  *
- * const valid = Monoid.checkLaws(Monoid.NumberSum, [1, 2, 3])
+ * const valid = Monoid.checkLaws(Monoid.NumberSum, { values: [1, 2, 3] })
  *
  * console.log(valid)
  * // true
@@ -776,15 +809,27 @@ export const checkAssociativity = <A>(
  * @since 0.0.0
  * @category predicates
  */
-export const checkLaws = <A>(
-  monoid: Monoid<A>,
-  values: readonly [A, A, A],
-  equals: (a: A, b: A) => boolean = (a, b) => a === b
-): boolean => {
-  const [x, y, z] = values;
-  return (
-    checkLeftIdentity(monoid, x, equals) &&
-    checkRightIdentity(monoid, x, equals) &&
-    checkAssociativity(monoid, x, y, z, equals)
-  );
-};
+export const checkLaws: {
+  <A>(
+    monoid: Monoid<A>,
+    options: { readonly values: readonly [A, A, A]; readonly equals?: (a: A, b: A) => boolean }
+  ): boolean;
+  <A>(options: {
+    readonly values: readonly [A, A, A];
+    readonly equals?: (a: A, b: A) => boolean;
+  }): (monoid: Monoid<A>) => boolean;
+} = dual(
+  2,
+  <A>(
+    monoid: Monoid<A>,
+    options: { readonly values: readonly [A, A, A]; readonly equals?: (a: A, b: A) => boolean }
+  ): boolean => {
+    const { values, equals = (a: A, b: A) => a === b } = options;
+    const [x, y, z] = values;
+    return (
+      checkLeftIdentity(monoid, { x, equals }) &&
+      checkRightIdentity(monoid, { x, equals }) &&
+      checkAssociativity({ monoid, x, y, z, equals })
+    );
+  }
+);

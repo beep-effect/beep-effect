@@ -26,9 +26,7 @@
   },
   "relatedPackets": {
     "productAuthority": "goals/agentic-professional-runtime",
-    "dependsOn": [
-      "goals/epistemic-claim-lifecycle-gate"
-    ],
+    "dependsOn": ["goals/epistemic-claim-lifecycle-gate"],
     "reference": [
       "goals/ip-law-knowledge-graph",
       "goals/oppold-corpus-pipeline"
@@ -92,7 +90,5 @@
     "Verification requires unnamed credentials, cost, destructive side effects, or policy approval.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "researchReports": [
-    "research/SOURCES.md"
-  ]
+  "researchReports": ["research/SOURCES.md"]
 }

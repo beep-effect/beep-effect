@@ -61,6 +61,14 @@ const srgbToLinear = (value: number): number => {
 /**
  * Convert normalized RGB channel values into OKLCH coordinates.
  *
+ * @example
+ * ```ts
+ * import { rgbToOklchValue } from "../../src/Color/Color.oklch.ts"
+ *
+ * const oklch = rgbToOklchValue({ r: 0.2, g: 0.4, b: 1 })
+ * console.log(oklch.l)
+ * ```
+ *
  * @internal
  * @category utilities
  * @since 0.0.0
@@ -94,6 +102,14 @@ export const rgbToOklchValue = ({ r, g, b }: RgbEncoded): OklchEncoded => {
 
 /**
  * Convert OKLCH coordinates into RGB channel values.
+ *
+ * @example
+ * ```ts
+ * import { oklchToRgbValue } from "../../src/Color/Color.oklch.ts"
+ *
+ * const rgb = oklchToRgbValue({ l: 0.72, c: 0.12, h: 240 })
+ * console.log(rgb.r)
+ * ```
  *
  * @internal
  * @category utilities
@@ -147,6 +163,15 @@ export const OklchCoordinate = S.Finite.pipe(
 /**
  * Type for {@link OklchCoordinate}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OklchCoordinate } from "@beep/schema/Color"
+ *
+ * const value: OklchCoordinate = S.decodeUnknownSync(OklchCoordinate)(0.42)
+ * console.log(value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -177,6 +202,15 @@ export const OklchLightness = OklchCoordinate.pipe(
 
 /**
  * Type for {@link OklchLightness}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OklchLightness } from "@beep/schema/Color"
+ *
+ * const value: OklchLightness = S.decodeUnknownSync(OklchLightness)(0.72)
+ * console.log(value)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -209,6 +243,15 @@ export const OklchChroma = OklchCoordinate.pipe(
 /**
  * Type for {@link OklchChroma}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OklchChroma } from "@beep/schema/Color"
+ *
+ * const value: OklchChroma = S.decodeUnknownSync(OklchChroma)(0.12)
+ * console.log(value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -239,6 +282,15 @@ export const OklchHue = OklchCoordinate.pipe(
 
 /**
  * Type for {@link OklchHue}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OklchHue } from "@beep/schema/Color"
+ *
+ * const value: OklchHue = S.decodeUnknownSync(OklchHue)(240)
+ * console.log(value)
+ * ```
  *
  * @since 0.0.0
  * @category models

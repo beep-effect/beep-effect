@@ -41,6 +41,14 @@ export const InternalServerError = S.Literal(500).pipe(
 /**
  * {@inheritDoc InternalServerError}
  *
+ * @example
+ * ```ts
+ * import type { InternalServerError } from "@beep/schema/HttpStatus"
+ *
+ * const status: InternalServerError = 500
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -70,6 +78,14 @@ export const NotImplemented = S.Literal(501).pipe(
 
 /**
  * {@inheritDoc NotImplemented}
+ *
+ * @example
+ * ```ts
+ * import type { NotImplemented } from "@beep/schema/HttpStatus"
+ *
+ * const status: NotImplemented = 501
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -103,6 +119,14 @@ export const BadGateway = S.Literal(502).pipe(
 /**
  * {@inheritDoc BadGateway}
  *
+ * @example
+ * ```ts
+ * import type { BadGateway } from "@beep/schema/HttpStatus"
+ *
+ * const status: BadGateway = 502
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -134,6 +158,14 @@ export const ServiceUnavailable = S.Literal(503).pipe(
 
 /**
  * {@inheritDoc ServiceUnavailable}
+ *
+ * @example
+ * ```ts
+ * import type { ServiceUnavailable } from "@beep/schema/HttpStatus"
+ *
+ * const status: ServiceUnavailable = 503
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -169,6 +201,14 @@ export const GatewayTimeout = S.Literal(504).pipe(
 /**
  * {@inheritDoc GatewayTimeout}
  *
+ * @example
+ * ```ts
+ * import type { GatewayTimeout } from "@beep/schema/HttpStatus"
+ *
+ * const status: GatewayTimeout = 504
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -198,6 +238,14 @@ export const HttpVersionNotSupported = S.Literal(505).pipe(
 
 /**
  * {@inheritDoc HttpVersionNotSupported}
+ *
+ * @example
+ * ```ts
+ * import type { HttpVersionNotSupported } from "@beep/schema/HttpStatus"
+ *
+ * const status: HttpVersionNotSupported = 505
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -232,6 +280,14 @@ export const VariantAlsoNegotiates = S.Literal(506).pipe(
 /**
  * {@inheritDoc VariantAlsoNegotiates}
  *
+ * @example
+ * ```ts
+ * import type { VariantAlsoNegotiates } from "@beep/schema/HttpStatus"
+ *
+ * const status: VariantAlsoNegotiates = 506
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -262,6 +318,14 @@ export const InsufficientStorage = S.Literal(507).pipe(
 /**
  * {@inheritDoc InsufficientStorage}
  *
+ * @example
+ * ```ts
+ * import type { InsufficientStorage } from "@beep/schema/HttpStatus"
+ *
+ * const status: InsufficientStorage = 507
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -290,6 +354,14 @@ export const LoopDetected = S.Literal(508).pipe(
 
 /**
  * {@inheritDoc LoopDetected}
+ *
+ * @example
+ * ```ts
+ * import type { LoopDetected } from "@beep/schema/HttpStatus"
+ *
+ * const status: LoopDetected = 508
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -320,6 +392,14 @@ export const NotExtended = S.Literal(510).pipe(
 
 /**
  * {@inheritDoc NotExtended}
+ *
+ * @example
+ * ```ts
+ * import type { NotExtended } from "@beep/schema/HttpStatus"
+ *
+ * const status: NotExtended = 510
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -352,6 +432,14 @@ export const NetworkAuthenticationRequired = S.Literal(511).pipe(
 
 /**
  * {@inheritDoc NetworkAuthenticationRequired}
+ *
+ * @example
+ * ```ts
+ * import type { NetworkAuthenticationRequired } from "@beep/schema/HttpStatus"
+ *
+ * const status: NetworkAuthenticationRequired = 511
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
