@@ -1,9 +1,0 @@
-[
-  {
-    "op": "append",
-    "target": "",
-    "content_preview": "## Answer Formatting Conventions\n\n- If the question explicitly names a response/output convention (e.g. \"formatted per the beep spike response convention\", \"in <X> format\", \"per the <name> convention\"",
-    "status": "applied_append",
-    "index": 1
-  }
-]

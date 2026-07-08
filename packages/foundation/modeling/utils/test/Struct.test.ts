@@ -355,3 +355,19 @@ describe("@beep/utils Struct.fromEntries", () => {
     expect(result[sym]).toBe(true);
   });
 });
+
+describe("@beep/utils Struct.deepMerge", () => {
+  it("ignores prototype-control keys from JSON patches", () => {
+    const patch = JSON.parse('{"__proto__":{"polluted":true},"constructor":{"polluted":true},"safe":2}') as {
+      readonly safe: number;
+    };
+
+    const result = Struct.deepMerge({ safe: 1 }, patch);
+
+    expect(result).toEqual({ safe: 2 });
+    expect(Object.getPrototypeOf(result)).toBe(Object.prototype);
+    expect(Object.hasOwn(result, "__proto__")).toBe(false);
+    expect(Object.hasOwn(result, "constructor")).toBe(false);
+    expect("polluted" in result).toBe(false);
+  });
+});

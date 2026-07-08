@@ -12,6 +12,8 @@ const PN_LOCAL_ESCAPABLE = "_~.-!$&'()*+,;=/?#@%";
 const HEX = /^[0-9A-Fa-f]$/;
 const SafePnLocalArbitraryValues = ["prefLabel", "a.b", "9lives", "_local", "skos:prefLabel"] as const;
 const EscapedPnLocalArbitraryValues = ["prefLabel", "Ontology.models\\/HttpUrl", "claim\\#1", "a%20b"] as const;
+const SafePnPrefixArbitraryValues = ["skos", "beep", "schema.org", "ns_1"] as const;
+const IriReferenceUnsafeCharacter = /[\u0000-\u0020<>"{}|^`\\]/gu;
 
 const codePointOf = (character: string): number | undefined => character.codePointAt(0);
 
@@ -88,6 +90,33 @@ const isSafeLocalInternal = (local: string): boolean => {
   return characters.slice(1, -1).every(isSafeMiddle);
 };
 
+const isSafePrefixInternal = (prefix: string): boolean => {
+  const characters = [...prefix];
+
+  if (characters.length === 0 || !isPnCharsBase(characters[0] ?? "")) {
+    return false;
+  }
+
+  if (characters.length === 1) {
+    return true;
+  }
+
+  const final = characters.at(-1);
+
+  if (final === undefined || !isPnChars(final)) {
+    return false;
+  }
+
+  return characters.slice(1, -1).every((character) => isPnChars(character) || character === ".");
+};
+
+const percentEncodeCharacter = (character: string): string => {
+  const codePoint = character.codePointAt(0) ?? 0;
+  return `%${codePoint.toString(16).toUpperCase().padStart(2, "0")}`;
+};
+
+const iriReferenceValue = (iri: string): string => iri.replace(IriReferenceUnsafeCharacter, percentEncodeCharacter);
+
 /**
  * Schema for local names that can be emitted as unescaped Turtle PN_LOCAL values.
  *
@@ -135,6 +164,52 @@ export type SafePnLocal = typeof SafePnLocal.Type;
 const isSafePnLocal = S.is(SafePnLocal);
 
 /**
+ * Schema for namespace prefixes that can be emitted as unescaped Turtle PN_PREFIX values.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { SafePnPrefix } from "@beep/identity"
+ *
+ * console.log(S.is(SafePnPrefix)("skos")) // true
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const SafePnPrefix = S.String.check(
+  S.makeFilter(isSafePrefixInternal, {
+    identifier: "@beep/identity/PnLocal/SafePnPrefix",
+    title: "Safe PN_PREFIX",
+    description: "A namespace prefix that can be emitted as an unescaped Turtle PN_PREFIX value.",
+    message: "Expected an unescaped Turtle PN_PREFIX value.",
+  })
+).annotate({
+  identifier: "@beep/identity/PnLocal/SafePnPrefix",
+  title: "Safe PN_PREFIX",
+  description: "A namespace prefix that can be emitted as an unescaped Turtle PN_PREFIX value.",
+  toArbitrary: () => (fc) => fc.constantFrom(...SafePnPrefixArbitraryValues),
+});
+
+/**
+ * Runtime type for {@link SafePnPrefix}.
+ *
+ * @example
+ * ```ts
+ * import type { SafePnPrefix } from "@beep/identity"
+ *
+ * const prefix: SafePnPrefix = "skos"
+ * console.log(prefix)
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export type SafePnPrefix = typeof SafePnPrefix.Type;
+
+const isSafePnPrefix = S.is(SafePnPrefix);
+
+/**
  * Check whether a local name can be emitted as an unescaped Turtle PN_LOCAL.
  *
  * @example
@@ -149,6 +224,22 @@ const isSafePnLocal = S.is(SafePnLocal);
  * @since 0.0.0
  */
 export const isSafeLocal = (local: string): boolean => isSafePnLocal(local);
+
+/**
+ * Check whether a namespace prefix can be emitted as an unescaped Turtle PN_PREFIX.
+ *
+ * @example
+ * ```ts
+ * import { isSafePrefix } from "@beep/identity"
+ *
+ * console.log(isSafePrefix("skos")) // true
+ * console.log(isSafePrefix("bad:prefix")) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isSafePrefix = (prefix: string): boolean => isSafePnPrefix(prefix);
 
 type LocalUnit = { readonly kind: "plx" } | { readonly kind: "raw"; readonly character: string };
 
@@ -323,7 +414,7 @@ export const unescapeLocal = (local: string): string => local.replace(/\\([_~.\-
 export const escapeLocal = (local: string): string => local.replace(/[_~.\-!$&'()*+,;=/?#@%]/g, "\\$&");
 
 /**
- * Emit a prefixed name only when the local part is safe, otherwise emit a full IRI reference.
+ * Emit a prefixed name only when the prefix and local part are safe, otherwise emit a full IRI reference.
  *
  * @example
  * ```ts
@@ -337,4 +428,4 @@ export const escapeLocal = (local: string): string => local.replace(/[_~.\-!$&'(
  * @since 0.0.0
  */
 export const prefixedNameOrIri = (prefix: string, local: string, fullIri: string): string =>
-  isSafeLocal(local) ? `${prefix}:${local}` : `<${fullIri}>`;
+  isSafePrefix(prefix) && isSafeLocal(local) ? `${prefix}:${local}` : `<${iriReferenceValue(fullIri)}>`;

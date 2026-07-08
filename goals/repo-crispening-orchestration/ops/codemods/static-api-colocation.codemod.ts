@@ -87,9 +87,42 @@ const findSameFileClassOwner = (
 /** A relocation target discovered on a non-exported module const. */
 type RelocationTarget = {
   readonly constName: string;
+  readonly declarationStart: number;
   readonly ownerName: string;
   readonly method: string;
+  readonly sourceFilePath: string;
 };
+
+/** Identifier references to `target.constName` that resolve to the exact relocated const. */
+const findUsageIdentifiers = (sourceFile: SourceFile, target: RelocationTarget): ReadonlyArray<Identifier> =>
+  sourceFile.getDescendantsOfKind(SyntaxKind.Identifier).filter((identifier) => {
+    if (identifier.getText() !== target.constName) {
+      return false;
+    }
+    const parent = identifier.getParent();
+    const symbol = Node.isShorthandPropertyAssignment(parent) ? parent.getValueSymbol() : identifier.getSymbol();
+    const resolvesToTarget = symbol
+      ?.getDeclarations()
+      .some(
+        (declaration) =>
+          declaration.getSourceFile().getFilePath() === target.sourceFilePath &&
+          declaration.getStart() === target.declarationStart
+      );
+    if (resolvesToTarget !== true) {
+      return false;
+    }
+    if (Node.isVariableDeclaration(parent) && parent.getNameNode() === identifier) {
+      return false;
+    }
+    // `x.constName` property name, or `{ constName: ... }` key — not a read of our const.
+    if (Node.isPropertyAccessExpression(parent) && parent.getNameNode() === identifier) {
+      return false;
+    }
+    if (Node.isPropertyAssignment(parent) && parent.getNameNode() === identifier) {
+      return false;
+    }
+    return true;
+  });
 
 /**
  * `const <constName> = <S>.<method>(<Owner>)` where the statement is not
@@ -126,7 +159,13 @@ const asRelocationTarget = (
   if (findSameFileClassOwner(sourceFile, ownerName, schemaAlias) === undefined) {
     return undefined;
   }
-  return { constName: declaration.getName(), ownerName, method };
+  return {
+    constName: declaration.getName(),
+    declarationStart: declaration.getStart(),
+    ownerName,
+    method,
+    sourceFilePath: sourceFile.getFilePath(),
+  };
 };
 
 /** True if the class already declares a member named `staticName`. */
@@ -140,23 +179,6 @@ const hasMemberNamed = (owner: ClassDeclaration, staticName: string): boolean =>
       return member.getName() === staticName;
     }
     return false;
-  });
-
-/** Identifier references to `constName` that are real value reads (not the decl, import, or a member name). */
-const findUsageIdentifiers = (sourceFile: SourceFile, constName: string): ReadonlyArray<Identifier> =>
-  sourceFile.getDescendantsOfKind(SyntaxKind.Identifier).filter((identifier) => {
-    if (identifier.getText() !== constName) {
-      return false;
-    }
-    const parent = identifier.getParent();
-    // `x.constName` property name, or `{ constName: ... }` key — not a read of our const.
-    if (Node.isPropertyAccessExpression(parent) && parent.getNameNode() === identifier) {
-      return false;
-    }
-    if (Node.isPropertyAssignment(parent) && parent.getNameNode() === identifier) {
-      return false;
-    }
-    return true;
   });
 
 /**
@@ -196,7 +218,24 @@ export const rewriteStaticApiColocation = (sourceFile: SourceFile): void => {
     return;
   }
 
-  // Phase A: add the in-body statics (query owner by name so earlier edits do
+  // Phase A: rewrite local reads `constName(...)` -> `Owner.method(...)`.
+  // Shorthand object keys (`{ constName }`) cannot hold a member access, so
+  // they expand to full assignments (`{ constName: Owner.method }`) instead.
+  for (const target of targets) {
+    const usageIdentifiers = [...findUsageIdentifiers(sourceFile, target)].sort(
+      (left, right) => right.getStart() - left.getStart()
+    );
+    for (const identifier of usageIdentifiers) {
+      const parent = identifier.getParent();
+      if (Node.isShorthandPropertyAssignment(parent)) {
+        parent.replaceWithText(`${target.constName}: ${target.ownerName}.${target.method}`);
+      } else {
+        identifier.replaceWithText(`${target.ownerName}.${target.method}`);
+      }
+    }
+  }
+
+  // Phase B: add the in-body statics (query owner by name so earlier edits do
   // not invalidate a cached node reference).
   for (const target of targets) {
     const owner = sourceFile.getClass(target.ownerName);
@@ -206,7 +245,7 @@ export const rewriteStaticApiColocation = (sourceFile: SourceFile): void => {
     owner.addMember(`static readonly ${target.method} = ${schemaAlias}.${target.method}(${target.ownerName});`);
   }
 
-  // Phase B: remove the now-relocated module consts.
+  // Phase C: remove the now-relocated module consts.
   for (const target of targets) {
     const declaration = sourceFile.getVariableDeclaration(target.constName);
     if (declaration === undefined) {
@@ -217,25 +256,6 @@ export const rewriteStaticApiColocation = (sourceFile: SourceFile): void => {
       statement.remove();
     } else {
       declaration.remove();
-    }
-  }
-
-  // Phase C: rewrite local reads `constName(...)` -> `Owner.method(...)`.
-  // Shorthand object keys (`{ constName }`) cannot hold a member access, so
-  // they expand to full assignments (`{ constName: Owner.method }`) instead.
-  // Re-find after every replacement: replaceWithText invalidates node handles.
-  for (const target of targets) {
-    for (;;) {
-      const identifier = findUsageIdentifiers(sourceFile, target.constName)[0];
-      if (identifier === undefined) {
-        break;
-      }
-      const parent = identifier.getParent();
-      if (Node.isShorthandPropertyAssignment(parent)) {
-        parent.replaceWithText(`${target.constName}: ${target.ownerName}.${target.method}`);
-      } else {
-        identifier.replaceWithText(`${target.ownerName}.${target.method}`);
-      }
     }
   }
 };

@@ -1,15 +1,16 @@
 ---
 name: onepassword-secret-refs
-description: "Safe 1Password workflows for Claude/Codex: Developer Environment MCP first, op:// secret-reference lookup, .env/.env.example rewrites, BEEP_SECRETS inventory, and auth diagnostics without exposing raw secret values."
+description: "Safe 1Password workflows for Claude/Codex when the user explicitly asks for Developer Environments, op:// secret references, or env-file rewrites."
 metadata:
   short-description: 1Password MCP/op secret refs without raw values
 ---
 
 # 1Password Secret References
 
-Use this skill when a task mentions 1Password, `op://` secret references,
-Developer Environments, `op` CLI, `.env`, `.env.example`, `BEEP_SECRETS`, or
-secret-reference inventory.
+Use this skill only when the user explicitly asks to work with 1Password,
+`op://` secret references, 1Password Developer Environments, `op` CLI, or
+secret-reference-backed env files. Do not activate for ordinary `.env` edits
+unless 1Password or `op://` references are part of the request.
 
 ## Non-Negotiables
 
@@ -20,36 +21,36 @@ secret-reference inventory.
 - If the MCP server is unavailable, insufficient for vault item inspection, or
   blocked by the local approval client, fall back to sanitized `op` CLI metadata
   commands and report that MCP was skipped for that part.
-- When reading 1Password item JSON, pipe through a filter that emits only field
-  labels, section labels, field ids, item/vault names, and `.reference`.
+- Before listing vault/item/field metadata, confirm the user asked for a
+  secret-reference inventory or that the metadata is required to edit the named
+  target files.
+- When reading 1Password item JSON, pipe through a filter that emits only the
+  minimum metadata required for the requested edit. Prefer writing refs directly
+  to the target file over displaying inventory rows in chat.
+- In final/status reports, summarize counts and changed files. Do not repeat
+  vault names, item names, field ids, section labels, account names, or item
+  lists unless the user explicitly requested those exact metadata details.
 - Keep tracked examples commit-safe. `.env.example` should contain placeholders,
   documentation, or secret references only; never real secret values.
 
-## Fast Diagnosis
+## Minimal Diagnosis
 
-Before retrying a failed MCP auth loop, check the live host state:
+Before retrying a failed MCP auth loop, check only the narrow state needed for
+the current operation. Suppress successful command output so account metadata
+does not enter the transcript:
 
 ```bash
-claude mcp list
-codex mcp list
-pgrep -a -f '1Password|onepassword-mcp|op daemon' || true
 op --version
-op whoami
+op whoami >/dev/null
 ```
 
 Interpretation:
 
-- `op whoami` says the account is not signed in: ask the user to unlock/sign in
-  through 1Password desktop, then retry the narrow operation.
-- 1Password desktop is running but MCP auth says the desktop app is not running:
-  treat the MCP approval path as blocked for this session, especially inside
-  nested agent harnesses.
-- `BinaryPermissions` means 1Password does not trust the caller path. Prefer the
-  machine's trusted Claude/Codex path and avoid user-writable Node/NVM launch
-  parents.
-- `no top level process found` or `executable path is missing for caller
-  process` means the nested harness is a poor approval client. Stop repeating
-  the same MCP auth call; use sanitized `op` metadata if it satisfies the task.
+- If `op whoami >/dev/null` fails, ask the user to unlock/sign in through
+  1Password desktop, then retry the narrow operation.
+- If MCP auth reports caller approval or desktop-app problems, stop repeating
+  the same MCP auth call. Use the sanitized CLI fallback only when it satisfies
+  the requested task without exposing raw values or broad metadata.
 
 ## MCP Usage
 
@@ -59,16 +60,19 @@ sanitized failure and use the CLI fallback only when the task can be completed
 without raw secret values.
 
 The current agent 1Password MCP tools may not expose general vault item/field
-inspection. For vault item secret references, use the `op` fallback below.
+inspection. For vault item secret references, use the `op` fallback below only
+after the user has named the intended vault/item or explicitly requested an
+inventory.
 
 ## Secret-Reference Lookup
 
-To find refs for fields in the `BEEP_SECRETS` vault and the `BEEP_SECRETS` item,
-emit only reference metadata:
+To find refs for fields in a user-named vault/item, emit only the requested
+reference metadata. Prefer redirecting to a local scratch file and reporting
+only the number of refs found:
 
 ```bash
-op item get "BEEP_SECRETS" \
-  --vault "BEEP_SECRETS" \
+op item get "<item>" \
+  --vault "<vault>" \
   --format json \
   | jq -r '
       .fields[]
@@ -83,15 +87,17 @@ op item get "BEEP_SECRETS" \
     '
 ```
 
-If item lookup by title is ambiguous, resolve the item id without showing
-values:
+If item lookup by title is ambiguous and the user asked you to resolve it,
+display only the minimum disambiguation needed. Prefer counts first:
 
 ```bash
-op item list --vault "BEEP_SECRETS" --format json \
-  | jq -r '.[] | select(.title == "BEEP_SECRETS") | [.id, .title] | @tsv'
+op item list --vault "<vault>" --format json \
+  | jq -r '[.[] | select(.title == "<item>")] | length'
 ```
 
 Do not run commands that output unfiltered item JSON into chat or tool results.
+Do not paste inventory tables into the final answer unless the user explicitly
+requested inventory display.
 
 ## `.env` And `.env.example`
 
@@ -100,7 +106,8 @@ When redesigning env files:
 - Inventory required variables from scripts, package configs, tests, and docs.
 - Group variables by subsystem with short comments only where useful.
 - Use empty values or placeholder refs in `.env.example`.
-- Use actual `op://BEEP_SECRETS/BEEP_SECRETS/...` references in ignored `.env`.
+- Use actual `op://...` references in ignored `.env` files only when the user
+  requested that file edit.
 - Prefer stable field names over duplicate aliases unless the code requires both.
 - If runtime tooling expects plaintext values, document the wrapper command:
 
@@ -115,5 +122,5 @@ Report:
 - Whether MCP was used successfully or skipped.
 - Whether `op` was signed in.
 - Which files changed.
-- That only secret references were written or displayed.
+- How many secret references were written or displayed.
 - Any remaining user action, such as unlocking 1Password desktop.

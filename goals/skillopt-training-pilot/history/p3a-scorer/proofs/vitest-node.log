@@ -1,5 +1,5 @@
 
- RUN  v4.1.9 /home/elpresidank/YeeBois/projects/beep-effect-worktrees/skillopt-p3-scorer/packages/tooling/tool/cli
+ RUN  v4.1.9 <local-worktree>/packages/tooling/tool/cli
 
 
  Test Files  1 passed (1)

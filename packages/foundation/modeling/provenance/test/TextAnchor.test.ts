@@ -1,4 +1,4 @@
-import { isWellOrdered, TextAnchor } from "@beep/provenance/TextAnchor";
+import { isInternallyConsistent, isWellOrdered, TextAnchor } from "@beep/provenance/TextAnchor";
 import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
@@ -23,6 +23,13 @@ describe("@beep/provenance TextAnchor", () => {
   it("flags an out-of-order anchor via isWellOrdered", () => {
     expect(isWellOrdered({ startChar: 0, endChar: 14 })).toBe(true);
     expect(isWellOrdered({ startChar: 9, endChar: 2 })).toBe(false);
+  });
+
+  it("rejects empty quotes and flags internally inconsistent anchors", () => {
+    expect(S.is(TextAnchor)({ startChar: 0, endChar: 0, quote: "" })).toBe(false);
+    expect(isInternallyConsistent({ startChar: 0, endChar: 4, quote: "fact" })).toBe(true);
+    expect(isInternallyConsistent({ startChar: 0, endChar: 1, quote: "fabricated" })).toBe(false);
+    expect(isInternallyConsistent({ startChar: 4, endChar: 0, quote: "fact" })).toBe(false);
   });
 
   it("round-trips schema-derived anchors through the encoded wire shape", () =>

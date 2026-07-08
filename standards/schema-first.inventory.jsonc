@@ -667,7 +667,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-normalization",
-      "line": 421,
+      "line": 422,
       "owner": "@beep/langextract",
       "reason": "LLM output fence stripping is trust-boundary text cleanup before schema JSON decoding; the schema owns the decoded payload shape, while this helper only removes Markdown wrapper noise from model text."
     },
@@ -677,7 +677,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-normalization",
-      "line": 423,
+      "line": 424,
       "owner": "@beep/langextract",
       "reason": "LLM output fence stripping is trust-boundary text cleanup before schema JSON decoding; the schema owns the decoded payload shape, while this helper only removes Markdown wrapper noise from model text."
     },
@@ -2381,39 +2381,9 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-normalization",
-      "line": 2154,
+      "line": 2171,
       "owner": "@beep/repo-cli",
       "reason": "Exception: attorney-docket extraction is a regex parser over filenames and paths; uppercasing is local parser normalization before returning an Option result."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-      "symbol": "sanitizeSegment.trim",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-normalization",
-      "line": 2161,
-      "owner": "@beep/repo-cli",
-      "reason": "Exception: path-segment sanitizer for generated filesystem names; slash/NUL replacement plus empty fallback is local imperative filename hygiene, not a reusable decoded model."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-      "symbol": "versionStem.toLowerCase",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-normalization",
-      "line": 2174,
-      "owner": "@beep/repo-cli",
-      "reason": "Exception: version grouping key normalization for organized corpus filenames; the normalized string is an ephemeral grouping key, not persisted domain data."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
-      "symbol": "versionStem.trim",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-normalization",
-      "line": 2174,
-      "owner": "@beep/repo-cli",
-      "reason": "Exception: version grouping key normalization for organized corpus filenames; the normalized string is an ephemeral grouping key, not persisted domain data."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts",
@@ -2568,26 +2538,6 @@
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Research/Research.service.ts",
-      "symbol": "selected.toLowerCase",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-normalization",
-      "line": 512,
-      "owner": "@beep/repo-cli",
-      "reason": "Exception: CLI filter matching against clone directory basenames; lowercasing is transient search normalization, not a decoded command model field."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Research/internal/BrowserHistory.ts",
-      "symbol": "canonicalizeForSift.toLowerCase",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-normalization",
-      "line": 259,
-      "owner": "@beep/repo-cli",
-      "reason": "Exception: URL canonicalizer for browser-history sift deduplication; host lowercasing is parser-local key normalization before URL re-emission."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
       "symbol": "SyncDataTarget",
       "kind": "exported-interface",
@@ -2617,13 +2567,13 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 125,
+      "line": 138,
       "owner": "@beep/repo-cli",
       "reason": "Exception: sync-data-to-ts codegen helper that lifts fetched-source metadata into an existing S.Class output; optional extras are generator-local call-site sugar."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/CldrTerritories.ts",
-      "symbol": "anonymous@131",
+      "symbol": "anonymous@132",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/repo-cli",

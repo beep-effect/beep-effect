@@ -1,9 +1,0 @@
-{
-  "name": "datamoat",
-  "version": "2.0.7",
-  "description": "Back up, analyze, and reuse ChatGPT | Claude | Codex | Cursor | DeepSeek | Qwen | Openclaw data + skills + attachments locally",
-  "author": {
-    "name": "max-ng",
-    "url": "https://github.com/max-ng"
-  }
-}

@@ -1,9 +1,0 @@
-[
-  {
-    "op": "insert_after",
-    "target": "  - Use `S.OptionFrom*` when the wire/schema field is optional or nullish. If\n    runtime `Option` values are already being shaped into an object, prefer\n    `O.getSomesStruct({...})` (`@beep/utils`) ",
-    "content_preview": "- When refactoring an existing optional-field compaction site (a `R.getSomes(...)` call, an `as Partial<...>`/mapped-type cast, or any hand-rolled local helper that reimplements shape-preserving compa",
-    "status": "applied_insert_after_fallback_append",
-    "index": 1
-  }
-]

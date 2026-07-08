@@ -304,6 +304,34 @@ const formatJson = (value: unknown): string => {
 
 const normalizeSlashes = (value: string): string => Str.replaceAll("\\", "/")(value);
 
+const isSafeRelativeSkillFilePath = (filePath: string): boolean => {
+  const normalized = normalizeSlashes(filePath);
+  return (
+    Str.isNonEmpty(normalized) &&
+    !normalized.includes("\0") &&
+    !normalized.startsWith("/") &&
+    normalized !== "." &&
+    normalized !== ".." &&
+    !normalized.startsWith("../") &&
+    !normalized.includes("/../")
+  );
+};
+
+const validateSkillFilePath = Effect.fn("Skills.validateSkillFilePath")(function* (
+  filePath: string,
+  skill: string
+): Effect.fn.Return<string, SkillsCommandError> {
+  const normalized = normalizeSlashes(filePath);
+  if (!isSafeRelativeSkillFilePath(normalized)) {
+    return yield* SkillsCommandError.make({
+      message: `Remote skill "${skill}" contains an unsafe file path: ${filePath}`,
+      file: filePath,
+      skill,
+    });
+  }
+  return normalized;
+});
+
 const toSortedRecord = <A>(entries: ReadonlyArray<readonly [string, A]>): Record<string, A> => {
   const sortedEntries = A.sortWith(entries, ([key]) => key, Order.String);
   const record: Record<string, A> = {};
@@ -560,8 +588,9 @@ const fetchRemoteSkillSnapshot = Effect.fn("Skills.fetchRemoteSkillSnapshot")(fu
     Effect.fnUntraced(function* (entry): Effect.fn.Return<SkillFile, SkillsCommandError, HttpClient.HttpClient> {
       const url = `https://raw.githubusercontent.com/${source.source}/${source.ref}/${entry.path}`;
       const bytes = yield* fetchResponseBytes(url);
+      const relativePath = yield* validateSkillFilePath(entry.path.slice(skillRoot.length + 1), source.name);
       return {
-        path: normalizeSlashes(entry.path.slice(skillRoot.length + 1)),
+        path: relativePath,
         bytes,
       };
     }),
@@ -601,13 +630,23 @@ const writeRemoteSkill = Effect.fn("Skills.writeRemoteSkill")(function* (
 ): Effect.fn.Return<void, SkillsCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const skillDir = path.join(repoRoot, CLAUDE_SKILLS_DIR, source.name);
+  const skillDir = path.resolve(repoRoot, CLAUDE_SKILLS_DIR, source.name);
   yield* fs
     .remove(skillDir, { recursive: true, force: true })
     .pipe(SkillsCommandError.mapError(`Failed to remove stale skill directory ${skillDir}.`, skillDir, source.name));
 
   for (const file of snapshot.files) {
-    yield* writeByteFile(path.join(skillDir, file.path), file.bytes);
+    const relativePath = yield* validateSkillFilePath(file.path, source.name);
+    const writePath = path.resolve(skillDir, relativePath);
+    const containmentPath = normalizeSlashes(path.relative(skillDir, writePath));
+    if (!isSafeRelativeSkillFilePath(containmentPath)) {
+      return yield* SkillsCommandError.make({
+        message: `Refusing to write remote skill "${source.name}" outside ${skillDir}: ${file.path}`,
+        file: file.path,
+        skill: source.name,
+      });
+    }
+    yield* writeByteFile(writePath, file.bytes);
   }
 });
 

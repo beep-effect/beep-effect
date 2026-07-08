@@ -1,9 +1,0 @@
-Codex Trace Summary
-- sandbox: workspace-write [workdir, /tmp, $TMPDIR]
-- reasoning: none
-- read task.md: success
-- read SKILL.md: success
-- shell/tool errors: none
-- final answer format: tagged_nonlabel
-- final answer label: (none)
-- tokens used: 22,529

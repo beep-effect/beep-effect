@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-08T09:53:50.264Z
+Generated: 2026-07-08T13:42:54.093Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 78 |
 | publicModules | 1618 |
-| publicExports | 14473 |
+| publicExports | 14483 |
 | openModules | 129 |
 | openExports | 2207 |
 | missingExportExamples | 2013 |
@@ -86,7 +86,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 43 | `@beep/oip-web` | `apps/oip-web` | needs-remediation | 31 | 84 | 1 | 11 |
 | 44 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 45 | `@beep/lexical-schema` | `packages/foundation/modeling/lexical` | needs-remediation | 5 | 103 | 0 | 50 |
-| 46 | `@beep/langextract` | `packages/foundation/capability/langextract` | needs-remediation | 6 | 30 | 0 | 5 |
+| 46 | `@beep/langextract` | `packages/foundation/capability/langextract` | needs-remediation | 6 | 34 | 0 | 5 |
 | 47 | `@beep/shared-tables` | `packages/shared/tables` | needs-remediation | 11 | 14 | 0 | 9 |
 | 48 | `@beep/scratchpad` | `scratchpad` | no-public-src-surface | 0 | 0 | 0 | 0 |
 | 49 | `@beep/md` | `packages/foundation/modeling/md` | needs-remediation | 6 | 170 | 0 | 48 |
@@ -100,7 +100,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 57 | `@beep/libpff` | `packages/drivers/libpff` | needs-remediation | 4 | 19 | 0 | 5 |
 | 58 | `@beep/venice-ai` | `packages/drivers/venice-ai` | clean | 3 | 35 | 0 | 0 |
 | 59 | `@beep/form` | `packages/foundation/ui-system/form` | needs-remediation | 42 | 114 | 0 | 1 |
-| 60 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 6 | 166 | 0 | 21 |
+| 60 | `@beep/identity` | `packages/foundation/modeling/identity` | needs-remediation | 6 | 169 | 0 | 21 |
 | 61 | `@beep/drizzle` | `packages/drivers/drizzle` | needs-remediation | 4 | 17 | 0 | 3 |
 | 62 | `@beep/api-transport` | `packages/foundation/capability/api-transport` | needs-remediation | 2 | 8 | 0 | 1 |
 | 63 | `@beep/box` | `packages/drivers/box` | needs-remediation | 103 | 4497 | 0 | 53 |
@@ -108,7 +108,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 65 | `@beep/nlp-processing` | `packages/foundation/capability/nlp-processing` | needs-remediation | 48 | 311 | 0 | 21 |
 | 66 | `@beep/anthropic` | `packages/drivers/anthropic` | needs-remediation | 5 | 26 | 0 | 4 |
 | 67 | `@beep/professional-desktop` | `apps/professional-desktop` | needs-remediation | 25 | 48 | 2 | 23 |
-| 68 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 22 | 43 | 0 | 0 |
+| 68 | `@beep/epistemic-domain` | `packages/epistemic/domain` | clean | 22 | 44 | 0 | 0 |
 | 69 | `@beep/architecture-lab-use-cases` | `packages/architecture-lab/use-cases` | needs-remediation | 18 | 64 | 0 | 18 |
 | 70 | `@beep/firecrawl` | `packages/drivers/firecrawl` | needs-remediation | 5 | 267 | 0 | 3 |
 | 71 | `@beep/ecfr` | `packages/drivers/ecfr` | needs-remediation | 5 | 23 | 0 | 13 |
@@ -129,7 +129,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 86 | `@beep/duckdb` | `packages/drivers/duckdb` | needs-remediation | 4 | 17 | 0 | 3 |
 | 87 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | needs-remediation | 4 | 54 | 0 | 6 |
 | 88 | `@beep/agents-client` | `packages/agents/client` | needs-remediation | 3 | 24 | 0 | 3 |
-| 89 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | needs-remediation | 7 | 29 | 0 | 15 |
+| 89 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | needs-remediation | 7 | 30 | 0 | 15 |
 | 90 | `@beep/architecture-lab-proof` | `apps/architecture-lab-proof` | clean | 1 | 2 | 0 | 0 |
 | 91 | `@beep/epistemic-use-cases` | `packages/epistemic/use-cases` | needs-remediation | 10 | 19 | 0 | 1 |
 | 92 | `@beep/m365` | `packages/drivers/m365` | needs-remediation | 6 | 74 | 0 | 5 |
@@ -141,7 +141,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 98 | `@beep/wink` | `packages/drivers/wink` | needs-remediation | 14 | 71 | 0 | 13 |
 | 99 | `@beep/postgres` | `packages/drivers/postgres` | needs-remediation | 7 | 36 | 0 | 6 |
 | 100 | `@beep/architecture-lab-domain` | `packages/architecture-lab/domain` | needs-remediation | 15 | 52 | 0 | 18 |
-| 101 | `@beep/provenance` | `packages/foundation/modeling/provenance` | needs-remediation | 2 | 4 | 0 | 1 |
+| 101 | `@beep/provenance` | `packages/foundation/modeling/provenance` | needs-remediation | 2 | 5 | 0 | 1 |
 | 102 | `@beep/epistemic-tables` | `packages/epistemic/tables` | needs-remediation | 6 | 12 | 0 | 1 |
 | 103 | `@beep/federal-register` | `packages/drivers/federal-register` | clean | 1 | 1 | 0 | 0 |
 | 104 | `@beep/sanity` | `packages/drivers/sanity` | needs-remediation | 4 | 16 | 0 | 3 |
@@ -209,8 +209,8 @@ Path: `packages/foundation/capability/mcp-kit`
 
 Export findings:
 - `src/TierGate.ts:211` `ToolCallRequest` (interface) - missing @example
-- `src/TierGate.ts:397` `TierGateDispatchResult` (type) - missing @example
-- `src/TierGate.ts:412` `TierGateDispatchResult` (const) - missing @example
+- `src/TierGate.ts:407` `TierGateDispatchResult` (type) - missing @example
+- `src/TierGate.ts:422` `TierGateDispatchResult` (const) - missing @example
 - `src/ToolkitComposition.ts:34` `GatedLayer` (interface) - missing @example
 - `src/index.ts:23` `export * from "./ApiKeyRequired.ts";` (re-export) - missing @example
 - `src/index.ts:32` `export * from "./FieldTier.ts";` (re-export) - missing @example
@@ -293,7 +293,7 @@ Export findings:
 - `src/commands/Corpus/Corpus.schemas.ts:325` `RecycleBinFormatVersion` (type) - missing @example
 - `src/commands/Corpus/Corpus.schemas.ts:514` `CorpusRestorationRecord` (type) - missing @example
 - `src/commands/Corpus/Corpus.schemas.ts:628` `RecycleBinEntryKind` (type) - missing @example
-- `src/commands/Corpus/Corpus.schemas.ts:955` `CorpusOrganizeCategory` (type) - missing @example
+- `src/commands/Corpus/Corpus.schemas.ts:956` `CorpusOrganizeCategory` (type) - missing @example
 - `src/commands/Corpus/Corpus.service.ts:153` `CorpusCommandServiceShape` (interface) - 1 unsafe example violation(s)
 - `src/commands/Corpus/index.ts:15` `export * from "./Corpus.command.js";` (re-export) - missing @example
 - `src/commands/Corpus/index.ts:22` `export * from "./Corpus.errors.js";` (re-export) - missing @example
@@ -401,8 +401,8 @@ Export findings:
 - `src/commands/Research/index.ts:29` `export * from "./Research.schemas.js";` (re-export) - missing @example
 - `src/commands/Research/index.ts:36` `export * from "./Research.service.js";` (re-export) - missing @example
 - `src/commands/Skills/Skills.command.ts:222` `remoteSkillSources` (const) - missing @example
-- `src/commands/Skills/Skills.command.ts:707` `renderCodexConfigWithSkills` (const) - missing @example
-- `src/commands/Skills/Skills.command.ts:847` `runSkillsUpdate` (const) - missing @example
+- `src/commands/Skills/Skills.command.ts:746` `renderCodexConfigWithSkills` (const) - missing @example
+- `src/commands/Skills/Skills.command.ts:886` `runSkillsUpdate` (const) - missing @example
 - `src/commands/Skills/index.ts:14` `export * from "./Skills.command.js";` (re-export) - missing @example
 - `src/commands/Skills/index.ts:21` `export * from "./Skills.errors.js";` (re-export) - missing @example
 - `src/commands/SyncDataToTs/index.ts:13` `export * from "./SyncDataToTs.command.js";` (re-export) - missing @example
