@@ -7,15 +7,13 @@
  * depth without importing back out of a package that depends on them.
  * `@beep/test-utils` re-exports everything here.
  *
+ * @packageDocumentation
  * @example
  * ```ts
  * import { fcRuns } from "@beep/fc-runs"
- *
  * const options = fcRuns(40)
  * console.log(options.numRuns >= 40) // true; higher when BEEP_FC_NUM_RUNS is set
  * ```
- *
- * @packageDocumentation
  * @since 0.0.0
  */
 
