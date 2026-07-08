@@ -5257,7 +5257,7 @@
       "kind": "schema-class",
       "owner": "@beep/runpod",
       "identity": "RunpodDocsErrorOptions",
-      "description": "Options for configuring RunpodDocsError instances."
+      "description": "Sanitized options for configuring RunpodDocsError instances."
     },
     {
       "file": "packages/drivers/runpod/src/Runpod.errors.ts",
@@ -5281,7 +5281,7 @@
       "kind": "schema-class",
       "owner": "@beep/runpod",
       "identity": "RunpodErrorOptions",
-      "description": "Options for configuring RunpodError instances."
+      "description": "Sanitized options for configuring RunpodError instances."
     },
     {
       "file": "packages/drivers/runpod/src/Runpod.errors.ts",
