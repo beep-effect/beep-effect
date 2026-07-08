@@ -246,11 +246,24 @@ See [`standards/effect-first-development.md`](standards/effect-first-development
 All changes must keep the repo quality commands green and follow the non-negotiable habits below:
 
 - Use `bun run beep architecture` and `bun run beep create-package` for new slice or package work.
-- Search the repo export catalog (`bun run repo-exports:catalog:check`) before introducing new symbols.
+- Search live source and package barrels before introducing new shared symbols.
 - Prefer `bun run docgen:local` for documentation work.
-- Run the quality gates (`bun run lint`, `bun run check`, `bun run test`,
-  `bun run audit`, targeted `bun run beep quality <subcommand>`, etc.) and keep
-  them green.
+- Publish through Yeet: feature branch, reviewed staged changes,
+  `bun run beep yeet publish --message "type(scope): summary"`, PR, green
+  required checks, merge.
+- Never commit `saving`, `wip`, or temporary checkpoint work to shared branches.
+  `main` is PR-only and protected by required hosted checks.
+- Run the quality gates (`bun run beep yeet verify`, targeted
+  `bun run beep ci lane <name>`, etc.) and keep them green.
+- Treat hosted PR checks as the final merge gate. Local
+  `bun run beep yeet verify` replays the full pre-push collector:
+  aggregate build/check/lint/test/docgen quality, Knip, JSDoc Ratchet, Repo
+  Sanity plus changeset status, promoted Fallow, Secret Scanning, Security,
+  SAST, and Nix. The remaining hosted-only residue is event-shaped:
+  Commitlint's pushed range, Security's GitHub dependency-review sub-gate, and
+  path-gated desktop IPC setup. Replay those with `bun run beep ci lane
+  commitlint ...`, `bun run beep ci lane desktop-ipc`, or the PR checks when
+  they are relevant.
 - Follow the rules in [`AGENTS.md`](AGENTS.md) and [`CLAUDE.md`](CLAUDE.md).
 
 ---

@@ -34,10 +34,12 @@
     // the stories glob in apps/storybook/.storybook/main.ts.
     "packages/foundation/ui-system/*/stories/**/*.stories.tsx",
     // Tool-loaded roots: syncpack auto-loads its config, eslint.config.mjs is
-    // profile-selected by the Lint command, and global-cleanup.ts is the
-    // vitest globalSetup for @beep/repo-cli.
+    // profile-selected by the Lint command, Changesets loads its changelog
+    // module from config, and global-cleanup.ts is the vitest globalSetup for
+    // @beep/repo-cli.
     "syncpack.config.ts",
     "eslint.config.mjs",
+    "scripts/changeset-changelog.cjs",
     "packages/tooling/tool/cli/test/global-cleanup.ts"
   ],
   // Approximates dead-code path suppression; Knip remains authoritative for unmigrated workspace/binary policy.
