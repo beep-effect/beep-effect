@@ -215,7 +215,7 @@ class SignaturePositionOptions extends S.Class<SignaturePositionOptions>($I`Sign
  *   tags: {}
  * })
  * const entry = DocEntry.new("Example", doc, {
- *   signature: "declare const Example: string",
+ *   signature: "const Example: string",
  *   position: Position.new(1, 1)
  * })
  * console.log(entry)
@@ -294,7 +294,7 @@ class ClassNewOptions extends S.Class<ClassNewOptions>($I`ClassNewOptions`)(
  *   tags: {}
  * })
  * const model = Class.new("Example", doc, {
- *   signature: "declare class Example",
+ *   signature: "class Example",
  *   position: Position.new(1, 1),
  *   methods: [],
  *   staticMethods: [],
@@ -443,7 +443,7 @@ export class Interface extends S.TaggedClass<Interface>($I`Interface`)(
  *   tags: {}
  * })
  * const model = Function.new("example", doc, {
- *   signature: "declare const example: () => void",
+ *   signature: "const example: () => void",
  *   position: Position.new(1, 1)
  * })
  * console.log(model)
@@ -577,7 +577,7 @@ export class TypeAlias extends S.TaggedClass<TypeAlias>($I`TypeAlias`)(
  *   tags: {}
  * })
  * const model = Constant.new("example", doc, {
- *   signature: "declare const example: string",
+ *   signature: "const example: string",
  *   position: Position.new(1, 1)
  * })
  * console.log(model)

@@ -12,6 +12,7 @@
 
 import { createHash } from "node:crypto";
 import { Config, Effect, FileSystem, Path } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -147,7 +148,10 @@ export const sha256HexOf = (content: string): string => createHash("sha256").upd
  * @returns Filesystem-safe card slug.
  * @category utilities
  */
-export const slugFor = (title: string, urlNorm: string): string => {
+export const slugFor: {
+  (urlNorm: string): (title: string) => string;
+  (title: string, urlNorm: string): string;
+} = dual(2, (title: string, urlNorm: string): string => {
   const base = title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
@@ -156,7 +160,7 @@ export const slugFor = (title: string, urlNorm: string): string => {
     .replace(/-+$/, "");
   const suffix = sha256HexOf(urlNorm).slice(0, 8);
   return Str.isEmpty(base) ? suffix : `${base}--${suffix}`;
-};
+});
 
 /**
  * Render a knowledge card as YAML frontmatter followed by a markdown body.
@@ -167,14 +171,17 @@ export const slugFor = (title: string, urlNorm: string): string => {
  * @returns Complete markdown card content.
  * @category utilities
  */
-export const renderCard = (frontmatter: KnowledgeCardFrontmatter, body: string): string => {
+export const renderCard: {
+  (body: string): (frontmatter: KnowledgeCardFrontmatter) => string;
+  (frontmatter: KnowledgeCardFrontmatter, body: string): string;
+} = dual(2, (frontmatter: KnowledgeCardFrontmatter, body: string): string => {
   const yamlSource: Array<readonly [string, unknown]> = FRONTMATTER_KEYS.flatMap(([prop, key]) => {
     const value = frontmatter[prop];
     return P.isUndefined(value) ? [] : [[key, value] as const];
   });
   const rendered = Yaml.stringify(R.fromEntries(yamlSource), { lineWidth: 0 });
   return `---\n${rendered}---\n\n${body.trimEnd()}\n`;
-};
+});
 
 /**
  * Parse a knowledge card leniently: tolerate missing collection fields and

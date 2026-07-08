@@ -1,3 +1,9 @@
+/**
+ * MUI form-control (`Radio`, `Switch`, `Checkbox`) component theme overrides and size augmentations.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { switchClasses } from "@mui/material/Switch";
 import { styled } from "@mui/material/styles";
 import { jsx } from "react/jsx-runtime";

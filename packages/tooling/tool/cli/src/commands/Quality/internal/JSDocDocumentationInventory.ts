@@ -1,7 +1,8 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, O, Str, thunkFalse } from "@beep/utils";
-import { DateTime, Effect, FileSystem, MutableHashMap, Path } from "effect";
+import { DateTime, Effect, FileSystem, MutableHashMap, MutableHashSet, Path } from "effect";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind } from "ts-morph";
 import { formatJsonc } from "../../../internal/artifacts/index.js";
@@ -342,15 +343,53 @@ const exampleImportViolations = (commentText: string): ReadonlyArray<Documentati
   return violations;
 };
 
+const importStatementTerminatorPattern = /from\s*["'][^"']*["']\s*;?\s*$/;
+const bareImportStatementPattern = /^\s*import\s*["'][^"']*["']\s*;?\s*$/;
+
+// Strips complete import statements — including multi-line named-import
+// blocks (`import {\n  type X as Y,\n} from "mod"`) — rather than only lines
+// that start with `import `, so continuation lines like `type X as Y,` never
+// reach the no-type-assertions scan below (ruling R3-J3).
+const stripImportStatements = (example: string): string => {
+  const lines = Str.split(/\r?\n/)(example);
+  const kept: Array<string> = [];
+  let index = 0;
+
+  while (index < lines.length) {
+    const line = lines[index] ?? "";
+    if (bareImportStatementPattern.test(line)) {
+      index += 1;
+      continue;
+    }
+    if (/^\s*import\b/.test(line)) {
+      let cursor = index;
+      while (cursor < lines.length && !importStatementTerminatorPattern.test(lines[cursor] ?? "")) {
+        cursor += 1;
+      }
+      index = cursor + 1;
+      continue;
+    }
+    A.appendInPlace(kept, Str.trim(line));
+    index += 1;
+  }
+
+  return A.join(kept, "\n");
+};
+
+const stringLiteralPattern = /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g;
+
+// Removes single- and double-quoted string literal bodies before the
+// declare/any/as-assertion scans below run — otherwise ordinary prose quoted
+// inside an example (a fixture string containing the word "declare", a
+// description string reading "... as Effect ...") false-positives as unsafe
+// example content (rulings R20, R21).
+const stripStringLiterals = (example: string): string => Str.replace(stringLiteralPattern, "")(example);
+
 const unsafeExampleViolations = (commentText: string): ReadonlyArray<DocumentationIssue> => {
   const violations: Array<DocumentationIssue> = [];
 
   for (const [exampleIndex, example] of A.entries(extractExamples(commentText))) {
-    const nonImportLines = A.filter(
-      A.map(Str.split(/\r?\n/)(example), (line) => Str.trim(line)),
-      (line) => !Str.startsWith("import ")(line)
-    );
-    const nonImportText = A.join(nonImportLines, "\n");
+    const nonImportText = stripStringLiterals(stripImportStatements(example));
 
     if (/\bdeclare\b/.test(nonImportText)) {
       A.appendInPlace(violations, {
@@ -392,6 +431,8 @@ const categoryViolations = (commentText: string): ReadonlyArray<DocumentationIss
     })
   );
 
+const decodeTrimmedString = S.decodeSync(S.Trim);
+
 const textLooksLikeSchemaExport = (name: string, node: Node): boolean => {
   if (Str.startsWith("$")(name)) {
     return false;
@@ -404,7 +445,7 @@ const textLooksLikeSchemaExport = (name: string, node: Node): boolean => {
     return false;
   }
 
-  const initializer = node.getInitializer()?.getText().trim() ?? "";
+  const initializer = decodeTrimmedString(node.getInitializer()?.getText() ?? "");
   return (
     /^(?:LiteralKit|TaggedErrorClass|DomainModel\.make|Table\.make)\s*\(/.test(initializer) ||
     /^S\.(?:String|Number|Boolean|BigInt|Symbol|Object|Unknown|Any|Never|Void|Null|Undefined|Date|Array|Record|Struct|Union|Literal|TemplateLiteral|Tuple|Class|Enums|OptionFrom|NullOr|TaggedStruct|TaggedError)(?:\s*(?:[({[;,]|$)|\.pipe\s*\()/.test(
@@ -487,6 +528,18 @@ const analyzeModule = (
   };
 };
 
+const declarationLocationOf = (
+  declaration: Node,
+  sourceFile: SourceFile,
+  packagePath: string,
+  repoRoot: string,
+  path: Path.Path
+): { readonly filePath: string; readonly repoPath: string; readonly line: number } => ({
+  filePath: normalizeSlashes(path.relative(packagePath, sourceFile.getFilePath())),
+  repoPath: repoRelative(sourceFile.getFilePath(), repoRoot, path),
+  line: declaration.getStartLineNumber(),
+});
+
 const analyzeExportDeclaration = (
   declaration: Node,
   sourceFile: SourceFile,
@@ -496,16 +549,18 @@ const analyzeExportDeclaration = (
 ): InventoryEntry => {
   const commentText = `${leadingJsDocText(declaration)}\n${declaration.getText()}`;
   const presentTags = tagsFromComment(commentText);
-  const missingTags = missingRequiredTags(presentTags, requiredExportTags);
-  const filePath = normalizeSlashes(path.relative(packagePath, sourceFile.getFilePath()));
-  const repoPath = repoRelative(sourceFile.getFilePath(), repoRoot, path);
-  const line = declaration.getStartLineNumber();
+  const { filePath, repoPath, line } = declarationLocationOf(declaration, sourceFile, packagePath, repoRoot, path);
   const malformedTags = malformedConditionalTags(commentText);
   const importIssues = exampleImportViolations(commentText);
   const unsafeIssues = unsafeExampleViolations(commentText);
   const categoryIssues = categoryViolations(commentText);
   const forbidden = forbiddenTagsIn(presentTags);
-  const missingSummary = O.isNone(summaryFromComment(commentText));
+  // Re-export declarations are graph edges, not symbol-quality subjects
+  // (.patterns/jsdoc-documentation.md:91-96; rulings R2, R5): exempt them from
+  // requiredExportTags and missingSummary entirely instead of demanding fake
+  // examples on a barrel.
+  const missingTags: ReadonlyArray<string> = [];
+  const missingSummary = false;
   const findingCount =
     missingTags.length +
     forbidden.length +
@@ -546,9 +601,7 @@ const analyzeDirectExport = (
   const docText = getJsDocText(declaration);
   const presentTags = tagsFromComment(docText);
   const missingTags = missingRequiredTags(presentTags, requiredExportTags);
-  const filePath = normalizeSlashes(path.relative(packagePath, sourceFile.getFilePath()));
-  const repoPath = repoRelative(sourceFile.getFilePath(), repoRoot, path);
-  const line = declaration.getStartLineNumber();
+  const { filePath, repoPath, line } = declarationLocationOf(declaration, sourceFile, packagePath, repoRoot, path);
   const malformedTags = malformedConditionalTags(docText);
   const importIssues = exampleImportViolations(docText);
   const unsafeIssues = unsafeExampleViolations(docText);
@@ -586,39 +639,154 @@ const analyzeDirectExport = (
   };
 };
 
+// R19: a function-overload group (one or more overload signatures plus the
+// implementation, all sharing one exported name) scores as ONE unit — the
+// group is anchored on whichever signature carries a doc block
+// (conventionally the first; the implementation signature falls back when
+// none does). .patterns/jsdoc-documentation.md is silent on overloads, and
+// scoring every continuation signature and the implementation line
+// independently meant no overload-bearing package could ever reach clean.
+const anchorDeclarationForOverloadGroup = (declarations: A.NonEmptyReadonlyArray<Node>): Node => {
+  const documented = A.filter(declarations, (declaration) => Str.isNonEmpty(getJsDocText(declaration)));
+  return A.isReadonlyArrayNonEmpty(documented) ? A.headNonEmpty(documented) : A.headNonEmpty(declarations);
+};
+
+const analyzeFunctionOverloadGroup = (
+  name: string,
+  declarations: A.NonEmptyReadonlyArray<Node>,
+  sourceFile: SourceFile,
+  packagePath: string,
+  repoRoot: string,
+  path: Path.Path
+): InventoryEntry => {
+  const anchor = anchorDeclarationForOverloadGroup(declarations);
+  const docText = getJsDocText(anchor);
+  const presentTags = tagsFromComment(docText);
+  const missingTags = missingRequiredTags(presentTags, requiredExportTags);
+  const { filePath, repoPath, line } = declarationLocationOf(anchor, sourceFile, packagePath, repoRoot, path);
+  const forbidden = forbiddenTagsIn(presentTags);
+  const missingSummary = O.isNone(summaryFromComment(docText));
+  const schemaGaps = schemaAnnotationGaps(name, anchor, sourceFile);
+
+  // Malformed/forbidden-tag checks apply to any doc block found on any
+  // signature in the group, not only the anchor's — a stray malformed
+  // comment on a non-anchor overload signature must still surface.
+  const groupDocTexts = A.filter(A.map(declarations, getJsDocText), Str.isNonEmpty);
+  const malformedTags = A.flatMap(groupDocTexts, malformedConditionalTags);
+  const importIssues = A.flatMap(groupDocTexts, exampleImportViolations);
+  const unsafeIssues = A.flatMap(groupDocTexts, unsafeExampleViolations);
+  const categoryIssues = A.flatMap(groupDocTexts, categoryViolations);
+  const findingCount =
+    missingTags.length +
+    forbidden.length +
+    malformedTags.length +
+    importIssues.length +
+    unsafeIssues.length +
+    categoryIssues.length +
+    schemaGaps.length +
+    (missingSummary ? 1 : 0);
+
+  return {
+    symbolName: name,
+    exportKind: declarationKind(anchor),
+    filePath,
+    repoPath,
+    line,
+    anchor: markdownAnchor(`${repoPath}-${line}-${name}`),
+    currentTags: presentTags,
+    missingRequiredTags: missingTags,
+    forbiddenTags: forbidden,
+    missingSummary,
+    malformedConditionalTags: malformedTags,
+    exampleImportViolations: importIssues,
+    unsafeExampleViolations: unsafeIssues,
+    schemaAnnotationGaps: schemaGaps,
+    categoryViolations: categoryIssues,
+    remediationStatus: findingCount === 0 ? "resolved" : "open",
+  };
+};
+
+const collectReExportDescriptors = (
+  sourceFile: SourceFile,
+  packagePath: string,
+  repoRoot: string,
+  path: Path.Path,
+  seen: MutableHashSet.MutableHashSet<string>
+): ReadonlyArray<DirectExportDescriptor> => {
+  const descriptors: Array<DirectExportDescriptor> = [];
+  for (const declaration of sourceFile.getDescendantsOfKind(SyntaxKind.ExportDeclaration)) {
+    if (declaration.getModuleSpecifierValue() === undefined) {
+      continue;
+    }
+    const key = `re-export:${declaration.getStart()}`;
+    MutableHashSet.add(seen, key);
+    A.appendInPlace(descriptors, {
+      key,
+      analysis: analyzeExportDeclaration(declaration, sourceFile, packagePath, repoRoot, path),
+    });
+  }
+  return descriptors;
+};
+
+// R19: one exported name can own more than one declaration only as a
+// function-overload group (signatures + implementation) — everything else
+// (a single declaration, or non-function duplicates) keeps the original
+// per-declaration scoring.
+const collectDirectExportDescriptorsForName = (
+  name: string,
+  ownDeclarations: A.NonEmptyReadonlyArray<Node>,
+  sourceFile: SourceFile,
+  packagePath: string,
+  repoRoot: string,
+  path: Path.Path,
+  seen: MutableHashSet.MutableHashSet<string>
+): ReadonlyArray<DirectExportDescriptor> => {
+  if (ownDeclarations.length > 1 && A.every(ownDeclarations, Node.isFunctionDeclaration)) {
+    const key = `${name}:group:${A.headNonEmpty(ownDeclarations).getStart()}`;
+    if (MutableHashSet.has(seen, key)) {
+      return [];
+    }
+    MutableHashSet.add(seen, key);
+    return [
+      {
+        key,
+        analysis: analyzeFunctionOverloadGroup(name, ownDeclarations, sourceFile, packagePath, repoRoot, path),
+      },
+    ];
+  }
+
+  const descriptors: Array<DirectExportDescriptor> = [];
+  for (const declaration of ownDeclarations) {
+    const key = `${name}:${declaration.getStart()}`;
+    if (MutableHashSet.has(seen, key)) {
+      continue;
+    }
+    MutableHashSet.add(seen, key);
+    A.appendInPlace(descriptors, { key, name, declaration });
+  }
+  return descriptors;
+};
+
 const exportedDeclarationsFor = (
   sourceFile: SourceFile,
   packagePath: string,
   repoRoot: string,
   path: Path.Path
 ): ReadonlyArray<DirectExportDescriptor> => {
-  const exports: Array<DirectExportDescriptor> = [];
-  const seen = new Set<string>();
+  const seen = MutableHashSet.empty<string>();
+  const exports: Array<DirectExportDescriptor> = [
+    ...collectReExportDescriptors(sourceFile, packagePath, repoRoot, path, seen),
+  ];
 
-  for (const declaration of sourceFile.getDescendantsOfKind(SyntaxKind.ExportDeclaration)) {
-    if (declaration.getModuleSpecifierValue() === undefined) {
+  for (const [name, declarationsForName] of sourceFile.getExportedDeclarations()) {
+    const ownDeclarations = A.filter(declarationsForName, (declaration) => declaration.getSourceFile() === sourceFile);
+    if (!A.isReadonlyArrayNonEmpty(ownDeclarations)) {
       continue;
     }
-    const key = `re-export:${declaration.getStart()}`;
-    seen.add(key);
-    A.appendInPlace(exports, {
-      key,
-      analysis: analyzeExportDeclaration(declaration, sourceFile, packagePath, repoRoot, path),
-    });
-  }
-
-  for (const [name, declarations] of sourceFile.getExportedDeclarations()) {
-    for (const declaration of declarations) {
-      if (declaration.getSourceFile() !== sourceFile) {
-        continue;
-      }
-      const key = `${name}:${declaration.getStart()}`;
-      if (seen.has(key)) {
-        continue;
-      }
-      seen.add(key);
-      A.appendInPlace(exports, { key, name, declaration });
-    }
+    A.appendAllInPlace(
+      exports,
+      collectDirectExportDescriptorsForName(name, ownDeclarations, sourceFile, packagePath, repoRoot, path, seen)
+    );
   }
 
   return exports;
@@ -864,7 +1032,7 @@ const renderMarkdown = (inventory: Inventory): string => {
   A.appendInPlace(lines, "");
   A.appendInPlace(lines, "| Metric | Count |");
   A.appendInPlace(lines, "|---|---:|");
-  for (const [key, value] of Object.entries(inventory.totals)) {
+  for (const [key, value] of R.toEntries(inventory.totals)) {
     A.appendInPlace(lines, `| ${key} | ${value} |`);
   }
   A.appendInPlace(lines, "");
@@ -942,7 +1110,7 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
   const path = yield* Path.Path;
   const { generatedAt, repoRoot } = yield* resolveJSDocInventoryOptions(options);
   const packageByName = yield* discoverWorkspacePackages(repoRoot, path);
-  const topoNames = yield* topoSortPackageNames(repoRoot);
+  const topoNames = yield* topoSortPackageNames(repoRoot, path);
   const rootPolicy = yield* analyzeRootPolicy(repoRoot, path);
   const packages = yield* Effect.forEach(
     topoNames,

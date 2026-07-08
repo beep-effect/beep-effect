@@ -73,6 +73,14 @@ export const ForceHttpsRedirectEnabled = S.Tuple([S.Literal(true), ForceHttpsRed
 /**
  * Type for tuple-based enabled `Strict-Transport-Security` configuration.
  *
+ * @example
+ * ```ts
+ * import { ForceHttpsRedirectConfig, type ForceHttpsRedirectEnabled } from "@beep/schema/ForceHttpsRedirect"
+ *
+ * const enabled: ForceHttpsRedirectEnabled = [true, ForceHttpsRedirectConfig.make({ includeSubDomains: true })]
+ * console.log(enabled[0])
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -100,6 +108,14 @@ export const ForceHttpsRedirectOption = S.Union([S.Boolean, ForceHttpsRedirectEn
 
 /**
  * Type for enabled or disabled `Strict-Transport-Security` options.
+ *
+ * @example
+ * ```ts
+ * import type { ForceHttpsRedirectOption } from "@beep/schema/ForceHttpsRedirect"
+ *
+ * const option: ForceHttpsRedirectOption = true
+ * console.log(option)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -232,6 +248,18 @@ export const ForceHttpsRedirectHeader = S.Union([ForceHttpsRedirectOption, S.Und
 /**
  * Type for rendered `Strict-Transport-Security` response headers.
  *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { ForceHttpsRedirectResponseHeader, type ForceHttpsRedirectHeader } from "@beep/schema/ForceHttpsRedirect"
+ *
+ * const header: ForceHttpsRedirectHeader = new ForceHttpsRedirectResponseHeader({
+ *   name: "Strict-Transport-Security",
+ *   value: O.some("max-age=31536000"),
+ * })
+ * console.log(header.name)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -243,9 +271,73 @@ export type ForceHttpsRedirectHeader = typeof ForceHttpsRedirectHeader.Type;
  * @category schemas
  * @since 0.0.0
  */
-export {
-  ForceHttpsRedirectConfig as Config,
-  ForceHttpsRedirectHeader as Header,
-  ForceHttpsRedirectOption as Option,
-  ForceHttpsRedirectResponseHeader as ResponseHeader,
-};
+export { ForceHttpsRedirectConfig as Config, ForceHttpsRedirectResponseHeader as ResponseHeader };
+
+/**
+ * Concise alias for {@link ForceHttpsRedirectOption}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Option } from "@beep/schema/ForceHttpsRedirect"
+ *
+ * console.log(S.decodeUnknownSync(Option)(true))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Option = ForceHttpsRedirectOption;
+
+/**
+ * Type-level representation of {@link Option}.
+ *
+ * @example
+ * ```ts
+ * import type { Option } from "@beep/schema/ForceHttpsRedirect"
+ *
+ * const option: Option = true
+ * console.log(option)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Option = typeof Option.Type;
+
+/**
+ * Concise alias for {@link ForceHttpsRedirectHeader}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Header } from "@beep/schema/ForceHttpsRedirect"
+ *
+ * const header = S.decodeUnknownSync(Header)(true)
+ * console.log(header.name)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Header = ForceHttpsRedirectHeader;
+
+/**
+ * Type-level representation of {@link Header}.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { ForceHttpsRedirectResponseHeader, type Header } from "@beep/schema/ForceHttpsRedirect"
+ *
+ * const header: Header = new ForceHttpsRedirectResponseHeader({
+ *   name: "Strict-Transport-Security",
+ *   value: O.some("max-age=31536000"),
+ * })
+ * console.log(header.name)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Header = typeof Header.Type;

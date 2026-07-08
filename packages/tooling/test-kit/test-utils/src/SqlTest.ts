@@ -295,8 +295,8 @@ export class PgliteTestcontainersTestDriverConfig extends S.Class<PgliteTestcont
  * ```ts
  * import type { PgliteTestcontainersTestDriverConfigInput } from "@beep/test-utils/SqlTest"
  *
- * const value = {} as PgliteTestcontainersTestDriverConfigInput
- * console.log(value)
+ * const value: PgliteTestcontainersTestDriverConfigInput = { database: "custom_test_db" }
+ * console.log(value?.database)
  * ```
  * @category models
  * @since 0.0.0
@@ -374,8 +374,10 @@ export class PgExternalTestDriverConfig extends S.Class<PgExternalTestDriverConf
  * ```ts
  * import type { PgExternalTestDriverConfigInput } from "@beep/test-utils/SqlTest"
  *
- * const value = {} as PgExternalTestDriverConfigInput
- * console.log(value)
+ * const value: PgExternalTestDriverConfigInput = {
+ *   connectionUri: "postgres://postgres:postgres@127.0.0.1:5432/postgres"
+ * }
+ * console.log(value?.connectionUri)
  * ```
  * @category models
  * @since 0.0.0
@@ -421,8 +423,9 @@ export type PgliteSqlTestLayerMode = typeof PgliteSqlTestLayerMode.Type;
  * @example
  * ```ts
  * import type { PgliteSqlTestLayerOptions } from "@beep/test-utils/SqlTest"
- * const value = {} as PgliteSqlTestLayerOptions
- * console.log(value)
+ *
+ * const value: PgliteSqlTestLayerOptions = { mode: "auto" }
+ * console.log(value.mode)
  * ```
  * @category models
  * @since 0.0.0
@@ -634,8 +637,10 @@ const makeExternalPgInfo = (connectionUri: string, parsed: URL, schema: O.Option
  * @example
  * ```ts
  * import type { PgliteTestcontainerResource } from "@beep/test-utils"
- * declare const resource: PgliteTestcontainerResource
- * console.log(resource.connectionUri)
+ *
+ * const host: PgliteTestcontainerResource["host"] = "127.0.0.1"
+ * const port: PgliteTestcontainerResource["port"] = 5432
+ * console.log(`${host}:${port}`)
  * ```
  * @category models
  * @since 0.0.0

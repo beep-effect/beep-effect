@@ -68,6 +68,17 @@ export const CryptoTxnHash = S.NonEmptyString.check(CryptoTxnHashChecks).pipe(
 /**
  * Type for {@link CryptoTxnHash}.
  *
+ * @example
+ * ```ts
+ * import { CryptoTxnHash } from "@beep/schema/CryptoTxnHash"
+ * import * as S from "effect/Schema"
+ *
+ * const hash: CryptoTxnHash = S.decodeUnknownSync(CryptoTxnHash)(
+ *   "0x0000000000000000000000000000000000000000000000000000000000000000"
+ * )
+ * console.log(hash)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -101,6 +112,16 @@ export const CryptoTxnHashRedacted = CryptoTxnHash.pipe(
 
 /**
  * Type for {@link CryptoTxnHashRedacted}.
+ *
+ * @example
+ * ```ts
+ * import { CryptoTxnHashRedacted } from "@beep/schema/CryptoTxnHash"
+ *
+ * const hash: CryptoTxnHashRedacted = CryptoTxnHashRedacted.makeRedacted(
+ *   "0x0000000000000000000000000000000000000000000000000000000000000000"
+ * )
+ * console.log(hash)
+ * ```
  *
  * @since 0.0.0
  * @category models

@@ -1,3 +1,9 @@
+/**
+ * Marker primitive: class-variance generator for map/graph marker variants.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { cn } from "@beep/ui/lib/utils";

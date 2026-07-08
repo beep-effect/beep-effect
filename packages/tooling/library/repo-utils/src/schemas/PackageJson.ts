@@ -574,11 +574,9 @@ class DirectoriesShape extends S.Class<DirectoriesShape>($I`Directories`)(
  */
 export const Directories = DirectoriesShape;
 
-const peerDependencyMetaEntryFields = {
+const PeerDependencyMetaEntry = S.Struct({
   optional: S.optionalKey(S.Boolean),
-} as const;
-
-const PeerDependencyMetaEntry = S.Struct(peerDependencyMetaEntryFields).pipe(
+}).pipe(
   $I.annoteSchema("PeerDependencyMetaEntry", {
     title: "Peer Dependency Meta Entry",
     description: "Structured metadata for a peer dependency, including whether it is optional.",
@@ -952,16 +950,14 @@ class WorkspacesObject extends S.Class<WorkspacesObject>($I`WorkspacesObject`)(
   })
 ) {}
 
-const publishConfigBaseFields = {
+const PublishConfigBase = S.Struct({
   access: S.optionalKey(S.Literals(["public", "restricted"] as const)),
   tag: S.optionalKey(S.String),
   registry: S.optionalKey(S.String),
   provenance: S.optionalKey(S.Boolean),
   bin: S.optionalKey(Bin),
   exports: S.optionalKey(PackageExports),
-} as const;
-
-const PublishConfigBase = S.Struct(publishConfigBaseFields).pipe(
+}).pipe(
   $I.annoteSchema("PublishConfigBase", {
     title: "Publish Config Base",
     description:
@@ -1064,8 +1060,6 @@ const npmPackageJsonFields = {
   readme: S.OptionFromOptionalKey(S.String),
 } as const;
 
-const NpmPackageJsonShape = S.Struct(npmPackageJsonFields);
-
 const packageJsonFields = {
   ...npmPackageJsonFields,
   name: RepoPackageName,
@@ -1077,8 +1071,6 @@ const packageJsonFields = {
   beep: S.OptionFromOptionalKey(BeepPackageMetadata),
   "resolutions#": S.OptionFromOptionalKey(NonEmptyStringRecord),
 } as const;
-
-const PackageJsonShape = S.Struct(packageJsonFields);
 
 /**
  * Type-safe schema for npm package.json files.
@@ -1095,7 +1087,7 @@ const PackageJsonShape = S.Struct(packageJsonFields);
  * @since 0.0.0
  */
 export class NpmPackageJson extends S.Class<NpmPackageJson>($I`NpmPackageJson`)(
-  NpmPackageJsonShape,
+  npmPackageJsonFields,
   $I.annote("NpmPackageJson", {
     description: "A strict npm-oriented package.json schema derived from SchemaStore and npm documentation.",
     messageUnexpectedKey: "Unexpected package.json key",
@@ -1117,7 +1109,7 @@ export class NpmPackageJson extends S.Class<NpmPackageJson>($I`NpmPackageJson`)(
  * @since 0.0.0
  */
 export class PackageJson extends S.Class<PackageJson>($I`PackageJson`)(
-  PackageJsonShape,
+  packageJsonFields,
   $I.annote("PackageJson", {
     description: "A strict repo-aware package.json schema that extends the npm surface with monorepo-only metadata.",
     messageUnexpectedKey: "Unexpected package.json key",

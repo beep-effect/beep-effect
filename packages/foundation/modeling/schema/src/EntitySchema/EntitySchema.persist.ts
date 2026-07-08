@@ -443,7 +443,8 @@ export const PersistDescriptor: S.ConstraintDecoder<PersistDescriptor.Any> & Per
  *   readonly storageKind: "text"
  *   readonly valueStrategy: "provided"
  * }>
- * console.log({} as { descriptor: ProvidedText })
+ * const descriptor: ProvidedText = { storageKind: "text", valueStrategy: "provided" }
+ * console.log(descriptor.storageKind)
  * ```
  *
  * @since 0.0.0
@@ -468,7 +469,9 @@ export type PersistDescriptorByValueStrategy<Descriptor extends PersistDescripto
  * ```ts
  * import type { EntityIdLike } from "@beep/schema/EntitySchema"
  *
- * console.log({} as { idSchema: EntityIdLike })
+ * type EntityType = EntityIdLike["entityType"]
+ * const entityType: EntityType = "Account"
+ * console.log(entityType)
  * ```
  *
  * @since 0.0.0
@@ -520,7 +523,8 @@ type PersistDescriptorForEncoded<Encoded> = undefined extends Encoded
  * import type { PersistDescriptorFor } from "@beep/schema/EntitySchema"
  *
  * type TextDescriptor = PersistDescriptorFor<typeof S.String>
- * console.log({} as { descriptor: TextDescriptor })
+ * const descriptor: TextDescriptor = { storageKind: "text", valueStrategy: "provided" }
+ * console.log(descriptor.storageKind)
  * ```
  *
  * @since 0.0.0
@@ -539,10 +543,12 @@ export type PersistDescriptorFor<Schema extends S.Top> = Schema["~encoded.option
  *
  * @example
  * ```ts
- * import type { EntityFieldInput, PersistDescriptorForInput } from "@beep/schema/EntitySchema"
+ * import * as S from "effect/Schema"
+ * import type { PersistDescriptorForInput } from "@beep/schema/EntitySchema"
  *
- * type Descriptor = PersistDescriptorForInput<EntityFieldInput>
- * console.log({} as { descriptor: Descriptor })
+ * type Descriptor = PersistDescriptorForInput<typeof S.String>
+ * const descriptor: Descriptor = { storageKind: "text", valueStrategy: "provided" }
+ * console.log(descriptor.storageKind)
  * ```
  *
  * @since 0.0.0
@@ -555,10 +561,12 @@ export type PersistDescriptorForInput<Field extends EntityFieldInput> = PersistD
  *
  * @example
  * ```ts
- * import type { EntityFieldInputs, PersistedFor } from "@beep/schema/EntitySchema"
+ * import * as S from "effect/Schema"
+ * import type { PersistedFor } from "@beep/schema/EntitySchema"
  *
- * type Persisted = PersistedFor<EntityFieldInputs>
- * console.log({} as { persisted: Persisted })
+ * type Persisted = PersistedFor<{ readonly name: typeof S.String }>
+ * const persisted: Persisted = { name: { storageKind: "text", valueStrategy: "provided" } }
+ * console.log(persisted.name.storageKind)
  * ```
  *
  * @since 0.0.0
@@ -600,10 +608,13 @@ type NoExtraPersistedKeys<FieldMap extends EntityFieldInputs, Persisted extends 
  *
  * @example
  * ```ts
- * import type { CheckedPersistedFor, EntityFieldInputs, PersistedFor } from "@beep/schema/EntitySchema"
+ * import * as S from "effect/Schema"
+ * import type { CheckedPersistedFor, PersistedFor } from "@beep/schema/EntitySchema"
  *
- * type Checked = CheckedPersistedFor<EntityFieldInputs, PersistedFor<EntityFieldInputs>>
- * console.log({} as { checked: Checked })
+ * type FieldMap = { readonly name: typeof S.String }
+ * type Checked = CheckedPersistedFor<FieldMap, PersistedFor<FieldMap>>
+ * const checked: Checked = { name: { storageKind: "text", valueStrategy: "provided" } }
+ * console.log(checked.name.storageKind)
  * ```
  *
  * @since 0.0.0

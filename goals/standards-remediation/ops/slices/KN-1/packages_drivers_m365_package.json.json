@@ -1,0 +1,10 @@
+{
+  "scope": "packages/drivers/m365/package.json",
+  "findings": [
+    {
+      "kind": "devDependencies",
+      "file": "packages/drivers/m365/package.json",
+      "name": "@microsoft/microsoft-graph-types"
+    }
+  ]
+}

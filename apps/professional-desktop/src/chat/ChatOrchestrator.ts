@@ -46,6 +46,15 @@ import type * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace"
  * Project a `@beep/md` {@link Document} to plain text for the turn-kernel
  * history.
  *
+ * @example
+ * ```ts
+ * import { userDocument } from "@/chat/ChatFixtures"
+ * import { documentToPlainText } from "@/chat/ChatOrchestrator"
+ *
+ * const text = documentToPlainText(userDocument("Hello world"))
+ * console.log(text)
+ * ```
+ *
  * @category projections
  * @since 0.0.0
  */
@@ -352,6 +361,22 @@ const titleGuardForEditedTurn = (
  * `<slice>.<concept>.<action>` span (std-12). The app-level contract test drives
  * these directly without the rpc transport, and {@link ChatHandlersLive} adapts
  * them onto {@link ChatRpcs}.
+ *
+ * @example
+ * ```ts
+ * import { AgentTurnKernel } from "@beep/agents-use-cases/public"
+ * import { Thread } from "@beep/workspace-use-cases/server"
+ * import { Effect } from "effect"
+ * import { makeChatOperations } from "@/chat/ChatOrchestrator"
+ * import { UsageRecordSink } from "@/chat/UsageRecordSink"
+ *
+ * const program = Effect.gen(function* () {
+ *   const store = yield* Thread.ThreadStore
+ *   const kernel = yield* AgentTurnKernel
+ *   const usage = yield* UsageRecordSink
+ *   return makeChatOperations(store, kernel, usage)
+ * })
+ * ```
  *
  * @category constructors
  * @since 0.0.0

@@ -52,7 +52,27 @@ const populateMutableGraph = Effect.fn("Schema.Graph.populateMutableGraph")(func
 
 /** @internal */
 /**
- * Public schema module export.
+ * Reconstructs an immutable Effect `Graph.Graph` from an encoded graph payload,
+ * failing when node/edge indices do not match the expected insertion order.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { GraphEncoded } from "@beep/schema/Graph"
+ * import { rebuildImmutableGraph } from "../../src/Graph/Graph.rebuild.ts"
+ *
+ * const Encoded = GraphEncoded(S.String, S.String)
+ * const encoded = S.decodeUnknownSync(Encoded)({
+ *   _tag: "Graph",
+ *   type: "directed",
+ *   nodes: [[0, "Ada"]],
+ *   edges: []
+ * })
+ * const program = rebuildImmutableGraph(encoded, { actual: encoded })
+ * const graph = Effect.runSync(program)
+ * console.log(graph.type)
+ * ```
  *
  * @category constructors
  * @since 0.0.0
@@ -95,7 +115,27 @@ export const rebuildImmutableGraph: {
 
 /** @internal */
 /**
- * Public schema module export.
+ * Reconstructs a mutable Effect `Graph.MutableGraph` from an encoded graph payload,
+ * failing when node/edge indices do not match the expected insertion order.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { GraphEncoded } from "@beep/schema/Graph"
+ * import { rebuildMutableGraph } from "../../src/Graph/Graph.rebuild.ts"
+ *
+ * const Encoded = GraphEncoded(S.String, S.String)
+ * const encoded = S.decodeUnknownSync(Encoded)({
+ *   _tag: "Graph",
+ *   type: "directed",
+ *   nodes: [[0, "Ada"]],
+ *   edges: []
+ * })
+ * const program = rebuildMutableGraph(encoded, { actual: encoded })
+ * const graph = Effect.runSync(program)
+ * console.log(graph.type)
+ * ```
  *
  * @category constructors
  * @since 0.0.0

@@ -1,3 +1,9 @@
+/**
+ * Speech-input primitive: a push-to-talk button that streams a live transcript preview.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Button } from "@beep/ui/components/button";

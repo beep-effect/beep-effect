@@ -214,6 +214,25 @@ export const ExtractFramesDirOutcome = S.Union([ExtractFramesDirSuccess, Extract
 /**
  * Ordered outcome for one `image extract-frames-dir` input video.
  *
+ * @example
+ * ```ts
+ * import { ExtractFramesDirOutcome, ExtractFramesDirSuccess } from "@beep/repo-cli/commands/Image"
+ * import { ExtractFramesResult } from "@beep/ffmpeg"
+ *
+ * const outcome: ExtractFramesDirOutcome = ExtractFramesDirSuccess.make({
+ *   result: ExtractFramesResult.make({
+ *     frameCount: 0,
+ *     frames: [],
+ *     manifestPath: "./videos/clip/extract-frames-manifest.json",
+ *     outDir: "./videos/clip",
+ *     videoPath: "./videos/clip.mp4"
+ *   }),
+ *   sourceName: "clip.mp4",
+ *   sourcePath: "./videos/clip.mp4",
+ *   status: "success"
+ * })
+ * console.log(outcome.status)
+ * ```
  * @category models
  * @since 0.0.0
  */

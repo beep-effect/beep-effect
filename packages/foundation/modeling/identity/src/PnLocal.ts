@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -420,12 +421,21 @@ export const escapeLocal = (local: string): string => local.replace(/[_~.\-!$&'(
  * ```ts
  * import { prefixedNameOrIri } from "@beep/identity"
  *
- * const rendered = prefixedNameOrIri("beep", "Ontology.models/HttpUrl", "https://ns.beep.sh/Ontology.models/HttpUrl")
+ * const rendered = prefixedNameOrIri("Ontology.models/HttpUrl", {
+ *   prefix: "beep",
+ *   fullIri: "https://ns.beep.sh/Ontology.models/HttpUrl"
+ * })
  * console.log(rendered) // "<https://ns.beep.sh/Ontology.models/HttpUrl>"
  * ```
  *
  * @category formatting
  * @since 0.0.0
  */
-export const prefixedNameOrIri = (prefix: string, local: string, fullIri: string): string =>
-  isSafePrefix(prefix) && isSafeLocal(local) ? `${prefix}:${local}` : `<${iriReferenceValue(fullIri)}>`;
+export const prefixedNameOrIri: {
+  (local: string, options: { readonly prefix: string; readonly fullIri: string }): string;
+  (options: { readonly prefix: string; readonly fullIri: string }): (local: string) => string;
+} = dual(2, (local: string, options: { readonly prefix: string; readonly fullIri: string }): string =>
+  isSafePrefix(options.prefix) && isSafeLocal(local)
+    ? `${options.prefix}:${local}`
+    : `<${iriReferenceValue(options.fullIri)}>`
+);

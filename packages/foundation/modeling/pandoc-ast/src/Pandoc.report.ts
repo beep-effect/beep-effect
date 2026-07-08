@@ -35,6 +35,14 @@ export const PandocMappingDirection = LiteralKit(["pandoc-to-md", "md-to-pandoc"
 /**
  * Runtime type for {@link PandocMappingDirection}.
  *
+ * @example
+ * ```ts
+ * import type { PandocMappingDirection } from "@beep/pandoc-ast/Pandoc.report"
+ *
+ * const direction: PandocMappingDirection = "pandoc-to-md"
+ * console.log(direction) // "pandoc-to-md"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -61,6 +69,14 @@ export const PandocMappingSeverity = LiteralKit(["lossy", "unsupported"]).pipe(
 
 /**
  * Runtime type for {@link PandocMappingSeverity}.
+ *
+ * @example
+ * ```ts
+ * import type { PandocMappingSeverity } from "@beep/pandoc-ast/Pandoc.report"
+ *
+ * const severity: PandocMappingSeverity = "lossy"
+ * console.log(severity) // "lossy"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -89,6 +105,14 @@ export const PandocMappingProfile = LiteralKit(["supported", "gap"]).pipe(
 /**
  * Runtime type for {@link PandocMappingProfile}.
  *
+ * @example
+ * ```ts
+ * import type { PandocMappingProfile } from "@beep/pandoc-ast/Pandoc.report"
+ *
+ * const profile: PandocMappingProfile = "supported"
+ * console.log(profile) // "supported"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -116,6 +140,14 @@ export const JsonPathSegment = S.Union([S.String, S.Int.check(S.isGreaterThanOrE
 /**
  * Runtime type for {@link JsonPathSegment}.
  *
+ * @example
+ * ```ts
+ * import type { JsonPathSegment } from "@beep/pandoc-ast/Pandoc.report"
+ *
+ * const segment: JsonPathSegment = "blocks"
+ * console.log(segment) // "blocks"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -129,6 +161,13 @@ const jsonPathToPointer = (path: ReadonlyArray<JsonPathSegment>): string =>
 
 /**
  * Ordered path to a construct inside Pandoc JSON.
+ *
+ * @example
+ * ```ts
+ * import { JsonPath } from "@beep/pandoc-ast/Pandoc.report"
+ *
+ * console.log(JsonPath.toPointer(["blocks", 0]))
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -144,6 +183,14 @@ export const JsonPath = S.Array(JsonPathSegment).pipe(
 
 /**
  * Runtime type for {@link JsonPath}.
+ *
+ * @example
+ * ```ts
+ * import type { JsonPath } from "@beep/pandoc-ast/Pandoc.report"
+ *
+ * const path: JsonPath = ["blocks", 0]
+ * console.log(path.length) // 2
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -220,6 +267,20 @@ export class PandocMappingIssue extends S.Class<PandocMappingIssue>($I`PandocMap
 /**
  * Companion namespace for {@link PandocMappingIssue}.
  *
+ * @example
+ * ```ts
+ * import { PandocMappingIssue } from "@beep/pandoc-ast/Pandoc.report"
+ *
+ * const issue: PandocMappingIssue.Type = PandocMappingIssue.fromPath({
+ *   construct: "Table",
+ *   direction: "pandoc-to-md",
+ *   message: "Tables are outside the v1 Md-core profile.",
+ *   path: ["blocks", 0],
+ *   severity: "unsupported",
+ * })
+ * console.log(issue.pointer) // "/blocks/0"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -292,6 +353,14 @@ export const profileFromIssues = PandocCompatibilityReport.profileFromIssues;
 
 /**
  * Companion namespace for {@link PandocCompatibilityReport}.
+ *
+ * @example
+ * ```ts
+ * import { PandocCompatibilityReport } from "@beep/pandoc-ast/Pandoc.report"
+ *
+ * const report: PandocCompatibilityReport.Type = PandocCompatibilityReport.fromIssues([])
+ * console.log(report.profile) // "supported"
+ * ```
  *
  * @category models
  * @since 0.0.0

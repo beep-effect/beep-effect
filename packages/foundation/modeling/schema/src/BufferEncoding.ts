@@ -51,6 +51,23 @@ export const BuffEncoding = LiteralKit([
  * import * as S from "effect/Schema"
  * import { BuffEncoding } from "@beep/schema/BufferEncoding"
  *
+ * const enc: BuffEncoding = S.decodeUnknownSync(BuffEncoding)("hex")
+ * console.log(enc) // "hex"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type BuffEncoding = typeof BuffEncoding.Type;
+
+/**
+ * {@inheritDoc BuffEncoding}
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { BuffEncoding } from "@beep/schema/BufferEncoding"
+ *
  * const enc: BufferEncoding = S.decodeUnknownSync(BuffEncoding)("hex")
  * console.log(enc) // "hex"
  * ```
@@ -58,4 +75,4 @@ export const BuffEncoding = LiteralKit([
  * @category models
  * @since 0.0.0
  */
-export type BufferEncoding = typeof BuffEncoding.Type;
+export type BufferEncoding = BuffEncoding;

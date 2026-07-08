@@ -33,6 +33,15 @@ export const JsonObject = S.Record(S.String, S.Json).pipe(
 /**
  * Runtime type extracted from the {@link JsonObject} schema.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { JsonObject } from "@beep/schema/Json"
+ *
+ * const decoded: JsonObject = S.decodeUnknownSync(JsonObject)({ name: "Alice" })
+ * console.log(decoded.name)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -61,6 +70,15 @@ export const JsonArray = S.Array(S.Json).pipe(
 
 /**
  * Runtime type extracted from the {@link JsonArray} schema.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { JsonArray } from "@beep/schema/Json"
+ *
+ * const decoded: JsonArray = S.decodeUnknownSync(JsonArray)([1, "two", true, null])
+ * console.log(decoded.length)
+ * ```
  *
  * @category models
  * @since 0.0.0

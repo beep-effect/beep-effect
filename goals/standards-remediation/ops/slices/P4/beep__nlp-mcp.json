@@ -1,0 +1,125 @@
+{
+  "owner": "@beep/nlp-mcp",
+  "entries": [
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "CountJsonlParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "CountLinesParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ExtractMatchesParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "FilterLinesParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "LoadJsonParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "LoadJsonlParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "LoadLinesParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "LoadTextParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ProcessFileParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ReadJsonlParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ReadLinesParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "SampleJsonlParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "SampleLinesParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "TextStatsParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ValidateJsonlParameters",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/nlp-mcp",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    }
+  ]
+}

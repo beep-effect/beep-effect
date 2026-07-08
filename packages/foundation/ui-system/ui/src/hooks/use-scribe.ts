@@ -1,3 +1,9 @@
+/**
+ * React bindings for ElevenLabs Scribe realtime transcription.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 /**
@@ -14,8 +20,9 @@
  * ```ts
  * import type { ScribeStatus } from "@beep/ui/hooks/use-scribe"
  *
- * const value = {} as ScribeStatus
- * console.log(value)
+ * const describe = (status: ScribeStatus): string => status.toUpperCase()
+ *
+ * console.log(describe("connecting"))
  * ```
  *
  * @category hooks
@@ -56,8 +63,9 @@ export { AudioFormat, CommitStrategy };
  * ```ts
  * import type { ScribeStatus } from "@beep/ui/hooks/use-scribe"
  *
- * const value = {} as ScribeStatus
- * console.log(value)
+ * const describe = (status: ScribeStatus): string => status.toUpperCase()
+ *
+ * console.log(describe("connecting"))
  * ```
  *
  * @category type-level

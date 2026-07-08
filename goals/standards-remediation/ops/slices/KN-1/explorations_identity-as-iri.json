@@ -1,0 +1,55 @@
+{
+  "scope": "explorations/identity-as-iri",
+  "findings": [
+    {
+      "kind": "files",
+      "file": "explorations/identity-as-iri/assets/ontology-prototype/src/annotations.ts",
+      "name": "explorations/identity-as-iri/assets/ontology-prototype/src/annotations.ts"
+    },
+    {
+      "kind": "files",
+      "file": "explorations/identity-as-iri/assets/ontology-prototype/src/assembly.ts",
+      "name": "explorations/identity-as-iri/assets/ontology-prototype/src/assembly.ts"
+    },
+    {
+      "kind": "files",
+      "file": "explorations/identity-as-iri/assets/ontology-prototype/src/create.ts",
+      "name": "explorations/identity-as-iri/assets/ontology-prototype/src/create.ts"
+    },
+    {
+      "kind": "files",
+      "file": "explorations/identity-as-iri/assets/ontology-prototype/src/index.ts",
+      "name": "explorations/identity-as-iri/assets/ontology-prototype/src/index.ts"
+    },
+    {
+      "kind": "files",
+      "file": "explorations/identity-as-iri/assets/ontology-prototype/src/model.ts",
+      "name": "explorations/identity-as-iri/assets/ontology-prototype/src/model.ts"
+    },
+    {
+      "kind": "files",
+      "file": "explorations/identity-as-iri/assets/ontology-prototype/src/projections/jsonld.ts",
+      "name": "explorations/identity-as-iri/assets/ontology-prototype/src/projections/jsonld.ts"
+    },
+    {
+      "kind": "files",
+      "file": "explorations/identity-as-iri/assets/ontology-prototype/src/projections/markdown.ts",
+      "name": "explorations/identity-as-iri/assets/ontology-prototype/src/projections/markdown.ts"
+    },
+    {
+      "kind": "files",
+      "file": "explorations/identity-as-iri/assets/ontology-prototype/src/projections/skos.ts",
+      "name": "explorations/identity-as-iri/assets/ontology-prototype/src/projections/skos.ts"
+    },
+    {
+      "kind": "files",
+      "file": "explorations/identity-as-iri/assets/ontology-prototype/src/projections/turtle.ts",
+      "name": "explorations/identity-as-iri/assets/ontology-prototype/src/projections/turtle.ts"
+    },
+    {
+      "kind": "files",
+      "file": "explorations/identity-as-iri/assets/ontology-prototype/src/references.ts",
+      "name": "explorations/identity-as-iri/assets/ontology-prototype/src/references.ts"
+    }
+  ]
+}

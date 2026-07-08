@@ -6,6 +6,6 @@
 
 /**
  * @since 0.0.0
- * @category Configuration
+ * @category configuration
  */
 export * as Ontology from "./Ontology.models.ts";

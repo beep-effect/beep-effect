@@ -116,6 +116,21 @@ export const BracketStringToPOSPatternElement = S.String.pipe(
 );
 
 /**
+ * Runtime type for {@link BracketStringToPOSPatternElement}.
+ *
+ * @example
+ * ```ts
+ * import type { BracketStringToPOSPatternElement } from "@beep/nlp/Core/PatternParsers"
+ *
+ * type Example = BracketStringToPOSPatternElement
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type BracketStringToPOSPatternElement = typeof BracketStringToPOSPatternElement.Type;
+
+/**
  * Decode an entity bracket string into a pattern element.
  *
  * @example
@@ -149,6 +164,21 @@ export const BracketStringToEntityPatternElement = S.String.pipe(
 );
 
 /**
+ * Runtime type for {@link BracketStringToEntityPatternElement}.
+ *
+ * @example
+ * ```ts
+ * import type { BracketStringToEntityPatternElement } from "@beep/nlp/Core/PatternParsers"
+ *
+ * type Example = BracketStringToEntityPatternElement
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type BracketStringToEntityPatternElement = typeof BracketStringToEntityPatternElement.Type;
+
+/**
  * Decode a literal bracket string into a pattern element.
  *
  * @example
@@ -180,6 +210,21 @@ export const BracketStringToLiteralPatternElement = S.String.pipe(
     description: "Decoder for literal bracket strings such as [Apple|Google].",
   })
 );
+
+/**
+ * Runtime type for {@link BracketStringToLiteralPatternElement}.
+ *
+ * @example
+ * ```ts
+ * import type { BracketStringToLiteralPatternElement } from "@beep/nlp/Core/PatternParsers"
+ *
+ * type Example = BracketStringToLiteralPatternElement
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type BracketStringToLiteralPatternElement = typeof BracketStringToLiteralPatternElement.Type;
 
 /**
  * Decode any supported bracket string element.

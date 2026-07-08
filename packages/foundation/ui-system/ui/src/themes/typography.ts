@@ -1,3 +1,9 @@
+/**
+ * Responsive typography scale for the app theme.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 import { unstable_createBreakpoints as createBreakpoints } from "@mui/material/styles";
 import type { ThemeOptions } from "./types.ts";

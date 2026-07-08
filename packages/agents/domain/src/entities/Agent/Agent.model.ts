@@ -61,11 +61,15 @@ export class Agent extends BaseEntity.Class<Agent>($I`Agent`)(
     Agent.fields.mode
       .mapMembers(
         Tuple.evolve([
-          () =>
-            S.Struct({
+          () => {
+            class AgentDeterministicFixtureMember extends S.Class<AgentDeterministicFixtureMember>(
+              $I`AgentDeterministicFixtureMember`
+            )({
               ...Agent.fields,
               mode: S.tag("deterministic_fixture"),
-            }),
+            }) {}
+            return AgentDeterministicFixtureMember;
+          },
         ])
       )
       .pipe(S.toTaggedUnion("mode"));

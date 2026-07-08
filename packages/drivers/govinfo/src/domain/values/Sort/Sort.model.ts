@@ -47,6 +47,15 @@ export class SortBase extends S.Class<SortBase>($I`SortBase`)(
 /**
  * Companion namespace for {@link SortBase} encoded helpers.
  *
+ * @example
+ * ```ts
+ * import { SortBase } from "@beep/govinfo/domain/values/Sort/Sort.model";
+ * import * as S from "effect/Schema";
+ *
+ * const sort: SortBase = S.decodeUnknownSync(SortBase)({ field: "publishdate" });
+ * console.log(sort.field);
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -105,6 +114,15 @@ export class SortASC extends SortBase.extend<SortASC>($I`SortASC`)(
 
 /**
  * Companion namespace for {@link SortASC} encoded helpers.
+ *
+ * @example
+ * ```ts
+ * import { SortASC } from "@beep/govinfo/domain/values/Sort/Sort.model";
+ * import * as S from "effect/Schema";
+ *
+ * const sort: SortASC = S.decodeUnknownSync(SortASC)({ field: "title", sortOrder: "ASC" });
+ * console.log(sort.sortOrder);
+ * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -170,6 +188,15 @@ export class SortDESC extends SortBase.extend<SortDESC>($I`SortDESC`)(
 /**
  * Companion namespace for {@link SortDESC} encoded helpers.
  *
+ * @example
+ * ```ts
+ * import { SortDESC } from "@beep/govinfo/domain/values/Sort/Sort.model";
+ * import * as S from "effect/Schema";
+ *
+ * const sort: SortDESC = S.decodeUnknownSync(SortDESC)({ field: "score", sortOrder: "DESC" });
+ * console.log(sort.field);
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */
@@ -225,7 +252,34 @@ export const Sort = S.Union([SortASC, SortDESC]).pipe(
 );
 
 /**
+ * Type for {@link Sort}.
+ *
+ * @example
+ * ```ts
+ * import { Sort } from "@beep/govinfo/domain/values/Sort/Sort.model";
+ * import * as S from "effect/Schema";
+ *
+ * const sort: Sort = S.decodeUnknownSync(Sort)({ field: "lastModified", sortOrder: "DESC" });
+ * console.log(sort.sortOrder);
+ * ```
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type Sort = typeof Sort.Type;
+
+/**
  * Companion namespace for {@link Sort} encoded helpers.
+ *
+ * @example
+ * ```ts
+ * import { Sort } from "@beep/govinfo/domain/values/Sort/Sort.model";
+ * import type { Sort as SortValue } from "@beep/govinfo/domain/values/Sort/Sort.model";
+ * import * as S from "effect/Schema";
+ *
+ * const sort: SortValue = S.decodeUnknownSync(Sort)({ field: "lastModified", sortOrder: "DESC" });
+ * console.log(sort.sortOrder);
+ * ```
  *
  * @category type-level
  * @since 0.0.0

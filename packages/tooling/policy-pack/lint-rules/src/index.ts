@@ -11,7 +11,11 @@
  * @since 0.1.0
  */
 
+import { make } from "@beep/identity";
 import * as S from "effect/Schema";
+
+const { $LintRulesId } = make("lint-rules");
+const $I = $LintRulesId;
 
 /**
  * Package version for `@beep/lint-rules`.
@@ -151,12 +155,17 @@ type RuleMetadata = S.Schema.Type<typeof RuleMetadataSchema>;
  * @category configuration
  * @since 0.0.0
  */
-export class RuleRegistrySchema extends S.Class<RuleRegistrySchema>("RuleRegistrySchema")({
-  "no-native-error": RuleMetadataSchema,
-  "no-bigint-literals": RuleMetadataSchema,
-  "no-empty-named-blocks": RuleMetadataSchema,
-  "prefer-array-flat-map": RuleMetadataSchema,
-}) {}
+export class RuleRegistrySchema extends S.Class<RuleRegistrySchema>("RuleRegistrySchema")(
+  {
+    "no-native-error": RuleMetadataSchema,
+    "no-bigint-literals": RuleMetadataSchema,
+    "no-empty-named-blocks": RuleMetadataSchema,
+    "prefer-array-flat-map": RuleMetadataSchema,
+  },
+  $I.annote("RuleRegistrySchema", {
+    description: "Schema for the finite rule registry keyed by rule slug.",
+  })
+) {}
 
 /**
  * Canonical registry of GritQL rule metadata, keyed by rule slug.

@@ -69,13 +69,8 @@
     }
   },
   "targets": {
-    "primary": [
-      "macos",
-      "windows"
-    ],
-    "bestEffort": [
-      "linux"
-    ]
+    "primary": ["macos", "windows"],
+    "bestEffort": ["linux"]
   },
   "defaults": {
     "providerAuthMode": "subscription",

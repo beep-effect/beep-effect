@@ -78,7 +78,5 @@
     "The same blocker repeats after reasonable investigation.",
     "PGlite cannot run the existing migration doctrine (extension or type gap)."
   ],
-  "researchReports": [
-    "research/SOURCES.md"
-  ]
+  "researchReports": ["research/SOURCES.md"]
 }

@@ -1,0 +1,10 @@
+{
+  "scope": "packages/drivers/nlp-mcp/tsconfig.test.json",
+  "findings": [
+    {
+      "kind": "unresolved",
+      "file": "packages/drivers/nlp-mcp/tsconfig.test.json",
+      "name": "bun-types"
+    }
+  ]
+}

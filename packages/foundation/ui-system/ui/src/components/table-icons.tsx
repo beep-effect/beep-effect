@@ -1,3 +1,9 @@
+/**
+ * Table-icons primitive: border-style icon set used by table cell/border controls.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import type { IconProps } from "@phosphor-icons/react";

@@ -70,7 +70,18 @@ export type GraphEncoded<Node, Edge, Kind extends GraphKindValue = GraphKindValu
 
 /** @internal */
 /**
- * Public schema module export.
+ * Iso (identity-transformed) representation of a graph edge for a given payload schema.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { NodeIndex, type EdgeIso } from "@beep/schema/Graph"
+ *
+ * const source = S.decodeUnknownSync(NodeIndex)(0)
+ * const target = S.decodeUnknownSync(NodeIndex)(1)
+ * const edge: EdgeIso<typeof S.String> = { source, target, data: "knows" }
+ * console.log(edge.data)
+ * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -83,7 +94,24 @@ export type EdgeIso<Data extends S.Top> = Readonly<{
 
 /** @internal */
 /**
- * Public schema module export.
+ * Iso (identity-transformed) representation of a graph for given node and edge payload schemas.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { NodeIndex, type GraphIso } from "@beep/schema/Graph"
+ *
+ * const nodeIndex = S.decodeUnknownSync(NodeIndex)(0)
+ *
+ * const graph: GraphIso<typeof S.String, typeof S.String, "directed"> = {
+ *   _tag: "Graph",
+ *   type: "directed",
+ *   nodes: [[nodeIndex, "Ada"]],
+ *   edges: []
+ * }
+ *
+ * console.log(graph.nodes.length)
+ * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -103,6 +131,15 @@ export type GraphIso<Node extends S.Top, Edge extends S.Top, Kind extends GraphK
 /**
  * Schema type for encoded graph edges.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { EdgeEncoded, type EdgeEncodedSchema } from "@beep/schema/Graph"
+ *
+ * const schema: EdgeEncodedSchema<typeof S.String> = EdgeEncoded(S.String)
+ * console.log(S.isSchema(schema))
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -119,6 +156,15 @@ export interface EdgeEncodedSchema<Data extends S.Top>
 
 /**
  * Schema type for encoded graphs.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { GraphEncoded, type GraphEncodedSchema } from "@beep/schema/Graph"
+ *
+ * const schema: GraphEncodedSchema<typeof S.String, typeof S.String> = GraphEncoded(S.String, S.String)
+ * console.log(S.isSchema(schema))
+ * ```
  *
  * @since 0.0.0
  * @category validation

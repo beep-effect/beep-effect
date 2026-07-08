@@ -1,3 +1,11 @@
+/**
+ * Oxlint rule reporting instance fields and methods on classes extending
+ * `Schema.Opaque`, keeping opaque schema wrappers data-only.
+ *
+ * @packageDocumentation
+ * @since 0.1.0
+ */
+
 import { defineRule } from "@oxlint/plugins";
 import { HashSet, MutableHashSet } from "effect";
 import * as O from "effect/Option";

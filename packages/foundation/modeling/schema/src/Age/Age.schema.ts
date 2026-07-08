@@ -39,6 +39,15 @@ export const Age = S.Int.check(
 /**
  * {@inheritDoc Age}
  *
+ * @example
+ * ```ts
+ * import { Age } from "@beep/schema/Age"
+ * import * as S from "effect/Schema"
+ *
+ * const age: Age = S.decodeUnknownSync(Age)(42)
+ * console.log(age)
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */

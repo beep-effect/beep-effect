@@ -1,3 +1,9 @@
+/**
+ * Card primitive: a framed content container with standard and compact density.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { cn } from "../lib/index.ts";
 import type * as React from "react";
 

@@ -1,3 +1,9 @@
+/**
+ * Popover primitive: an anchored floating panel built on Base UI's popover.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";

@@ -52,13 +52,18 @@ export type ParsedCsvRecords = Array<ParsedCsvRecord> & {
  * @category models
  * @since 0.0.0
  */
-export interface SyncDataFetchedSource {
-  readonly bytes: Uint8Array;
-  readonly id: string;
-  readonly sha256: string;
-  readonly text: string;
-  readonly url: string;
-}
+export class SyncDataFetchedSource extends S.Class<SyncDataFetchedSource>($I`SyncDataFetchedSource`)(
+  {
+    bytes: S.Uint8Array,
+    id: S.String,
+    sha256: S.String,
+    text: S.String,
+    url: S.String,
+  },
+  $I.annote("SyncDataFetchedSource", {
+    description: "Raw fetched source with stable hash metadata.",
+  })
+) {}
 
 const attachCsvColumns = (rows: ReadonlyArray<ParsedCsvRecord>, columns: ReadonlyArray<string>): ParsedCsvRecords => {
   const records = A.fromIterable(rows);
@@ -137,10 +142,7 @@ export const outputFile = (path: string, content: string): SyncDataOutputFile =>
  */
 export const sourceMetadata = (
   source: SyncDataFetchedSource,
-  extras: {
-    readonly version?: string;
-    readonly published?: string;
-  } = {}
+  extras: Partial<Pick<SyncDataSourceMetadata, "version" | "published">> = {}
 ): SyncDataSourceMetadata =>
   SyncDataSourceMetadata.make({
     id: source.id,

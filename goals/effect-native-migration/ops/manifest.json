@@ -10,10 +10,7 @@
   },
   "mission": "Migrate native JS Map/Set/String/Object/Date/JSON/Array usage in first-party packages/** and apps/** to Effect-native equivalents, preferring @beep/utils wrappers where importable.",
   "scope": {
-    "include": [
-      "packages/**",
-      "apps/**"
-    ],
+    "include": ["packages/**", "apps/**"],
     "exclude": [
       ".repos/**",
       "**/dist/**",
@@ -23,20 +20,8 @@
     ],
     "testsFixtures": "in scope only for JSON and String bans"
   },
-  "categories": [
-    "Map",
-    "Set",
-    "String",
-    "Object",
-    "Date",
-    "JSON",
-    "Array"
-  ],
-  "deferred": [
-    "Number",
-    "schema authoring for unschema'd JSON",
-    "Math.random"
-  ],
+  "categories": ["Map", "Set", "String", "Object", "Date", "JSON", "Array"],
+  "deferred": ["Number", "schema authoring for unschema'd JSON", "Math.random"],
   "ownership": {
     "drivingDoctrine": ".claude/skills/effect-first-development/SKILL.md",
     "utilsPackage": "@beep/utils",

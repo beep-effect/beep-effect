@@ -1,3 +1,9 @@
+/**
+ * Accordion primitive: a vertically stacked, single- or multi-item disclosure group.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Accordion as AccordionPrimitive } from "@base-ui/react/accordion";

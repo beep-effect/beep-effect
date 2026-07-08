@@ -151,6 +151,20 @@ export const HexColorScale12 = S.Array(HexColor)
 /**
  * Type for {@link HexColorScale12}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HexColorScale12 } from "@beep/schema/Color"
+ *
+ * const value: HexColorScale12 = S.decodeUnknownSync(HexColorScale12)([
+ *   "#020617", "#0f172a", "#1e293b", "#334155",
+ *   "#475569", "#64748b", "#94a3b8", "#cbd5e1",
+ *   "#e2e8f0", "#f1f5f9", "#f8fafc", "#ffffff"
+ * ])
+ *
+ * console.log(value.length)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -219,6 +233,15 @@ export const GenerateScale = GenerateScaleInput.pipe(
 /**
  * Type for {@link GenerateScale}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { GenerateScale } from "@beep/schema/Color"
+ *
+ * const value: GenerateScale = S.decodeUnknownSync(GenerateScale)({ seed: "#3b82f6", isDark: false })
+ * console.log(value.length)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -278,6 +301,15 @@ export const GenerateNeutralScale = GenerateNeutralScaleInput.pipe(
 
 /**
  * Type for {@link GenerateNeutralScale}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { GenerateNeutralScale } from "@beep/schema/Color"
+ *
+ * const value: GenerateNeutralScale = S.decodeUnknownSync(GenerateNeutralScale)({ seed: "#64748b", isDark: true })
+ * console.log(value.length)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -354,6 +386,23 @@ export const GenerateAlphaScale = GenerateAlphaScaleInput.pipe(
 
 /**
  * Type for {@link GenerateAlphaScale}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { GenerateAlphaScale } from "@beep/schema/Color"
+ *
+ * const value: GenerateAlphaScale = S.decodeUnknownSync(GenerateAlphaScale)({
+ *   scale: [
+ *     "#020617", "#0f172a", "#1e293b", "#334155",
+ *     "#475569", "#64748b", "#94a3b8", "#cbd5e1",
+ *     "#e2e8f0", "#f1f5f9", "#f8fafc", "#ffffff"
+ *   ],
+ *   isDark: true
+ * })
+ *
+ * console.log(value.length)
+ * ```
  *
  * @since 0.0.0
  * @category models

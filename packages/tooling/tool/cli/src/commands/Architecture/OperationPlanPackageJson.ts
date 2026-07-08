@@ -58,6 +58,27 @@ const packageExportMapFor = (
  * Render a structured package manifest operation.
  *
  * @internal
+ * @example
+ * ```ts
+ * import { renderPackageJsonOperation, WritePackageJsonOperation } from "@beep/repo-cli/commands/Architecture"
+ * import { Effect } from "effect"
+ *
+ * const operation = WritePackageJsonOperation.make({
+ *   kind: "write-package-json",
+ *   role: "domain",
+ *   path: "packages/research-lab/domain/package.json",
+ *   packageName: "@beep/research-lab-domain",
+ *   packageDescription: "Research lab domain package.",
+ *   repositoryDirectory: "packages/research-lab/domain",
+ *   exports: ["."],
+ *   dependencies: {},
+ *   devDependencies: {},
+ *   description: "Write the research-lab domain package manifest.",
+ * })
+ *
+ * const manifestText = Effect.runSync(renderPackageJsonOperation(operation))
+ * console.log(manifestText.includes("@beep/research-lab-domain"))
+ * ```
  * @category utilities
  * @since 0.0.0
  */

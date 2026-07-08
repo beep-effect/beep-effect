@@ -312,7 +312,7 @@ const makeWinkTokenization = Effect.gen(function* () {
     document: Effect.fn("Wink.WinkTokenizer.document")(function* (text: string, id?: DocumentId | string) {
       yield* Effect.annotateCurrentSpan({
         has_document_id: `${!P.isUndefined(id)}`,
-        ...textLengthAttribute("text", text),
+        ...textLengthAttribute(text, "text"),
       });
       const doc = yield* engine.getWinkDoc(text).pipe(Effect.mapError(makeTokenizationError("document")));
       const its = yield* engine.its.pipe(Effect.mapError(makeTokenizationError("document")));
@@ -326,7 +326,7 @@ const makeWinkTokenization = Effect.gen(function* () {
     }, observeTokenizer("document")),
     sentences: Effect.fn("Wink.WinkTokenizer.sentences")(
       function* (text: string) {
-        yield* Effect.annotateCurrentSpan(textLengthAttribute("text", text));
+        yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
         const doc = yield* engine.getWinkDoc(text);
         const its = yield* engine.its;
         const tokens = collectTokens(doc, its);
@@ -335,12 +335,12 @@ const makeWinkTokenization = Effect.gen(function* () {
       (effect) => effect.pipe(Effect.mapError(makeTokenizationError("sentences")), observeTokenizer("sentences"))
     ),
     tokenCount: Effect.fn("Wink.WinkTokenizer.tokenCount")(function* (text: string) {
-      yield* Effect.annotateCurrentSpan(textLengthAttribute("text", text));
+      yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
       return yield* engine.getWinkTokenCount(text).pipe(Effect.mapError(makeTokenizationError("tokenCount")));
     }, observeTokenizer("token_count")),
     tokenize: Effect.fn("Wink.WinkTokenizer.tokenize")(
       function* (text: string) {
-        yield* Effect.annotateCurrentSpan(textLengthAttribute("text", text));
+        yield* Effect.annotateCurrentSpan(textLengthAttribute(text, "text"));
         const doc = yield* engine.getWinkDoc(text);
         const its = yield* engine.its;
         return Chunk.toReadonlyArray(collectTokens(doc, its));

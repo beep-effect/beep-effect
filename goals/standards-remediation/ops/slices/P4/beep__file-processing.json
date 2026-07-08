@@ -1,0 +1,13 @@
+{
+  "owner": "@beep/file-processing",
+  "entries": [
+    {
+      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
+      "symbol": "anonymous@103",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/file-processing",
+      "reason": "Inner S.Struct is load-bearing: S.Class requires the struct form to attach the cross-field TextSpanOffsetOrderCheck filter; the exported surface is the annotated TextSpan S.Class wrapping it."
+    }
+  ]
+}

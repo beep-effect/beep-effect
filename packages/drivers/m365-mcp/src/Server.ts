@@ -20,6 +20,15 @@ const $I = $M365McpId.create("Server");
 /**
  * Configuration for the Microsoft 365 MCP server.
  *
+ * @example
+ * ```ts
+ * import { M365McpServerConfig } from "@beep/m365-mcp"
+ *
+ * const config = M365McpServerConfig.make({ name: "beep-m365", version: "0.1.0" })
+ * console.log(config.name)
+ * // "beep-m365"
+ * ```
+ *
  * @category models
  * @since 0.1.0
  */
@@ -39,6 +48,16 @@ export class M365McpServerConfig extends S.Class<M365McpServerConfig>($I`M365Mcp
 
 /**
  * Builds the stdio MCP server layer.
+ *
+ * @example
+ * ```ts
+ * import { M365McpServerConfig, makeServerLayer } from "@beep/m365-mcp"
+ * import { Layer } from "effect"
+ *
+ * const layer = makeServerLayer(M365McpServerConfig.make({ name: "beep-m365", version: "0.1.0" }))
+ * console.log(Layer.isLayer(layer))
+ * // true
+ * ```
  *
  * @category layers
  * @since 0.1.0

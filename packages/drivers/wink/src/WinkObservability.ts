@@ -127,15 +127,21 @@ type WinkToolObservationOptionsInput = Exclude<(typeof WinkToolObservationOption
  * ```ts
  * import { textLengthAttribute } from "@beep/wink"
  *
- * console.log(textLengthAttribute("query", "refund policy"))
+ * console.log(textLengthAttribute("refund policy", "query"))
  * ```
  *
  * @category observability
  * @since 0.0.0
  */
-export const textLengthAttribute = (name: string, text: string): Record<string, string> => ({
-  [`${name}_length`]: `${Str.length(text)}`,
-});
+export const textLengthAttribute: {
+  (text: string, name: string): Record<string, string>;
+  (name: string): (text: string) => Record<string, string>;
+} = dual(
+  2,
+  (text: string, name: string): Record<string, string> => ({
+    [`${name}_length`]: `${Str.length(text)}`,
+  })
+);
 
 /**
  * Merge extra string attributes into a wink observability attribute record.

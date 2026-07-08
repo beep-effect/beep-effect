@@ -432,7 +432,7 @@ const printNamespace: {
  *   tags: {}
  * })
  * const model = Constant.new("answer", doc, {
- *   signature: "declare const answer: 42",
+ *   signature: "const answer: 42",
  *   position: Position.new(1, 14)
  * })
  * const markdown = Effect.runSync(
@@ -530,7 +530,7 @@ const sortByName: <
  *   tags: {}
  * })
  * const constant = Constant.new("answer", doc, {
- *   signature: "declare const answer: 42",
+ *   signature: "const answer: 42",
  *   position: Position.new(1, 14)
  * })
  * const module = Module.new(source, "example.ts", {

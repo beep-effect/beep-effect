@@ -69,6 +69,22 @@ export const RuntimeCandidateLifecycle = LiteralKit(["candidate"]).annotate(
 );
 
 /**
+ * Runtime type for {@link RuntimeCandidateLifecycle}.
+ *
+ * @example
+ * ```ts
+ * import type { RuntimeCandidateLifecycle } from "@beep/agents-use-cases/public"
+ *
+ * const lifecycle: RuntimeCandidateLifecycle = "candidate"
+ * console.log(lifecycle)
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export type RuntimeCandidateLifecycle = typeof RuntimeCandidateLifecycle.Type;
+
+/**
  * Confidence vocabulary for candidate claims.
  *
  * @example
@@ -88,6 +104,22 @@ export const RuntimeClaimConfidence = LiteralKit(["high", "medium", "low"]).anno
     description: "Confidence vocabulary for candidate claims.",
   })
 );
+
+/**
+ * Runtime type for {@link RuntimeClaimConfidence}.
+ *
+ * @example
+ * ```ts
+ * import type { RuntimeClaimConfidence } from "@beep/agents-use-cases/public"
+ *
+ * const confidence: RuntimeClaimConfidence = "medium"
+ * console.log(confidence)
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export type RuntimeClaimConfidence = typeof RuntimeClaimConfidence.Type;
 
 /**
  * Approval decision vocabulary for candidate approval gates.
@@ -111,6 +143,22 @@ export const RuntimeApprovalDecision = LiteralKit(["pending"]).annotate(
 );
 
 /**
+ * Runtime type for {@link RuntimeApprovalDecision}.
+ *
+ * @example
+ * ```ts
+ * import type { RuntimeApprovalDecision } from "@beep/agents-use-cases/public"
+ *
+ * const decision: RuntimeApprovalDecision = "pending"
+ * console.log(decision)
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export type RuntimeApprovalDecision = typeof RuntimeApprovalDecision.Type;
+
+/**
  * Runtime request kinds represented in context packets.
  *
  * @example
@@ -130,6 +178,22 @@ export const RuntimeRequestKind = LiteralKit(["email_to_candidate_work"]).annota
     description: "Runtime request kinds represented in context packets.",
   })
 );
+
+/**
+ * Runtime type for {@link RuntimeRequestKind}.
+ *
+ * @example
+ * ```ts
+ * import type { RuntimeRequestKind } from "@beep/agents-use-cases/public"
+ *
+ * const kind: RuntimeRequestKind = "email_to_candidate_work"
+ * console.log(kind)
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export type RuntimeRequestKind = typeof RuntimeRequestKind.Type;
 
 /**
  * Source artifact kinds represented in context packets.
@@ -153,6 +217,22 @@ export const RuntimeSourceKind = LiteralKit(["email"]).annotate(
 );
 
 /**
+ * Runtime type for {@link RuntimeSourceKind}.
+ *
+ * @example
+ * ```ts
+ * import type { RuntimeSourceKind } from "@beep/agents-use-cases/public"
+ *
+ * const kind: RuntimeSourceKind = "email"
+ * console.log(kind)
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export type RuntimeSourceKind = typeof RuntimeSourceKind.Type;
+
+/**
  * Activity types emitted by deterministic runtime fixtures.
  *
  * @example
@@ -174,6 +254,22 @@ export const RuntimeActivityType = LiteralKit(["artifact_ingested", "candidate_w
 );
 
 /**
+ * Runtime type for {@link RuntimeActivityType}.
+ *
+ * @example
+ * ```ts
+ * import type { RuntimeActivityType } from "@beep/agents-use-cases/public"
+ *
+ * const activityType: RuntimeActivityType = "candidate_work_proposed"
+ * console.log(activityType)
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export type RuntimeActivityType = typeof RuntimeActivityType.Type;
+
+/**
  * Usage modes emitted by deterministic runtime fixtures.
  *
  * @example
@@ -193,3 +289,19 @@ export const RuntimeUsageMode = LiteralKit(["deterministic_fixture"]).annotate(
     description: "Usage modes emitted by deterministic runtime fixtures.",
   })
 );
+
+/**
+ * Runtime type for {@link RuntimeUsageMode}.
+ *
+ * @example
+ * ```ts
+ * import type { RuntimeUsageMode } from "@beep/agents-use-cases/public"
+ *
+ * const mode: RuntimeUsageMode = "deterministic_fixture"
+ * console.log(mode)
+ * ```
+ *
+ * @category value-objects
+ * @since 0.0.0
+ */
+export type RuntimeUsageMode = typeof RuntimeUsageMode.Type;

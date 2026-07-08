@@ -7,9 +7,7 @@
     "stage": "graduate",
     "openQuestions": [],
     "links": {
-      "goals": [
-        "goals/pandoc-ast-foundation"
-      ],
+      "goals": ["goals/pandoc-ast-foundation"],
       "docs": [],
       "supersededBy": null
     },

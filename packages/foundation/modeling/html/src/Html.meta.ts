@@ -62,6 +62,21 @@ export type HtmlCategory = typeof HtmlCategory.Type;
 /**
  * Schema describing one HTML element kind's metadata.
  *
+ * @example
+ * ```ts
+ * import { HtmlElementMeta } from "@beep/html/Html.meta"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(HtmlElementMeta)({
+ *   tag: "div",
+ *   interface: "HTMLDivElement",
+ *   conformance: "conforming",
+ *   void: false,
+ *   rawText: false,
+ *   categories: ["flow"]
+ * })) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -77,6 +92,21 @@ export const HtmlElementMeta = S.Struct({
 /**
  * Decoded type of {@link HtmlElementMeta}.
  *
+ * @example
+ * ```ts
+ * import type { HtmlElementMeta } from "@beep/html/Html.meta"
+ *
+ * const meta: HtmlElementMeta = {
+ *   tag: "div",
+ *   interface: "HTMLDivElement",
+ *   conformance: "conforming",
+ *   void: false,
+ *   rawText: false,
+ *   categories: ["flow"]
+ * }
+ * console.log(meta.tag) // "div"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -84,6 +114,13 @@ export type HtmlElementMeta = typeof HtmlElementMeta.Type;
 
 /**
  * Metadata for every generated HTML element, keyed by tag name.
+ *
+ * @example
+ * ```ts
+ * import { ELEMENT_META } from "@beep/html/Html.meta"
+ *
+ * console.log(ELEMENT_META.div.interface) // "HTMLDivElement"
+ * ```
  *
  * @category models
  * @since 0.0.0

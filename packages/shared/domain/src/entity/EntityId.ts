@@ -109,9 +109,10 @@ export const EntityIdValue = PosInt.check(
  *
  * @example
  * ```ts
- * import type { EntityIdValue } from "@beep/shared-domain/entity/EntityId"
+ * import { EntityIdValue } from "@beep/shared-domain/entity/EntityId"
+ * import * as S from "effect/Schema"
  *
- * declare const id: EntityIdValue
+ * const id: EntityIdValue = S.decodeUnknownSync(EntityIdValue)(1)
  * console.log(id)
  * ```
  *
@@ -125,9 +126,13 @@ export type EntityIdValue = typeof EntityIdValue.Type;
  *
  * @example
  * ```ts
- * import type { EntityIdValueFor } from "@beep/shared-domain/entity/EntityId"
+ * import { $SharedDomainId } from "@beep/identity/packages"
+ * import * as EntityId from "@beep/shared-domain/entity/EntityId"
+ * import * as S from "effect/Schema"
  *
- * declare const id: EntityIdValueFor<"SharedOrganizationId">
+ * const $I = $SharedDomainId.create("identity/Shared")
+ * const OrganizationId = EntityId.factory("shared", $I)("organization")
+ * const id: EntityId.EntityIdValueFor<"SharedOrganizationId"> = S.decodeUnknownSync(OrganizationId)(1)
  * console.log(id)
  * ```
  *
@@ -296,9 +301,18 @@ type ResolvedBrand<Slice extends string, Name extends string, Overrides> = Overr
  *
  * @example
  * ```ts
- * import { Definition } from "@beep/shared-domain/entity/EntityId"
+ * import { Definition, Options } from "@beep/shared-domain/entity/EntityId"
  *
- * declare const definition: Definition
+ * const definition = Definition.make({
+ *   brand: "SharedOrganizationId",
+ *   description: "SharedOrganization entity identifier.",
+ *   entityType: "SharedOrganization",
+ *   name: "organization",
+ *   overrides: Options.make({}),
+ *   resource: "shared.organization",
+ *   slice: "shared",
+ *   tableName: "shared_organization"
+ * })
  * console.log(definition.tableName)
  * ```
  *
@@ -362,10 +376,12 @@ export type DefinitionFor<
  *
  * @example
  * ```ts
- * import type { EntityId } from "@beep/shared-domain/entity/EntityId"
+ * import { $SharedDomainId } from "@beep/identity/packages"
+ * import * as EntityId from "@beep/shared-domain/entity/EntityId"
  *
- * declare const entityId: EntityId<"shared", "organization">
- * console.log(entityId.tableName)
+ * const $I = $SharedDomainId.create("identity/Shared")
+ * const OrganizationId: EntityId.EntityId<"shared", "organization"> = EntityId.factory("shared", $I)("organization")
+ * console.log(OrganizationId.tableName)
  * ```
  *
  * @since 0.0.0
@@ -408,9 +424,11 @@ const decodeOptionsResult = S.decodeUnknownResult(Options);
  *
  * @example
  * ```ts
- * import type { Any } from "@beep/shared-domain/entity/EntityId"
+ * import { $SharedDomainId } from "@beep/identity/packages"
+ * import * as EntityId from "@beep/shared-domain/entity/EntityId"
  *
- * declare const entityId: Any
+ * const $I = $SharedDomainId.create("identity/Shared")
+ * const entityId: EntityId.Any = EntityId.factory("shared", $I)("organization")
  * console.log(entityId.resource)
  * ```
  *

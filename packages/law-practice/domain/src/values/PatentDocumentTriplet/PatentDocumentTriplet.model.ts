@@ -74,9 +74,10 @@ export const PatentDocumentTriplet = S.TemplateLiteral([
  *
  * @example
  * ```ts
- * import type { PatentDocumentTriplet } from "@beep/law-practice-domain"
+ * import { PatentDocumentTriplet } from "@beep/law-practice-domain"
+ * import * as S from "effect/Schema"
  *
- * declare const triplet: PatentDocumentTriplet
+ * const triplet: PatentDocumentTriplet = S.decodeUnknownSync(PatentDocumentTriplet)("US 7,654,321 B2")
  * console.log(triplet)
  * ```
  *

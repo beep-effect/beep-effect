@@ -59,10 +59,7 @@
       "packages/tooling/tool/cli/src/commands/AgentEffectiveness/index.ts"
     ]
   },
-  "inputPackets": [
-    "goals/ai-metrics-stack",
-    "goals/jsdoc-worker-eval"
-  ],
+  "inputPackets": ["goals/ai-metrics-stack", "goals/jsdoc-worker-eval"],
   "externalReferences": [
     "https://arize.com/docs/phoenix/llms.txt",
     "https://arize.com/docs/phoenix/integrations/developer-tools/coding-agents",

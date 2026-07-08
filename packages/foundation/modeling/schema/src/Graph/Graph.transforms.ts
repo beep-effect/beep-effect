@@ -21,6 +21,15 @@ import type { GraphKindValue } from "./Graph.shared.ts";
 /**
  * Schema for decoding encoded graph payloads into immutable directed graphs.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { DirectedGraph } from "@beep/schema/Graph"
+ *
+ * const GraphSchema = DirectedGraph({ node: S.String, edge: S.Finite })
+ * console.log(S.isSchema(GraphSchema))
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -33,6 +42,15 @@ export interface DirectedGraph<Node extends S.Top, Edge extends S.Top>
 
 /**
  * Schema for decoding encoded graph payloads into immutable undirected graphs.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { UndirectedGraph } from "@beep/schema/Graph"
+ *
+ * const GraphSchema = UndirectedGraph({ node: S.String, edge: S.Finite })
+ * console.log(S.isSchema(GraphSchema))
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -47,6 +65,15 @@ export interface UndirectedGraph<Node extends S.Top, Edge extends S.Top>
 /**
  * Schema for decoding encoded graph payloads into mutable directed graphs.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { MutableDirectedGraph } from "@beep/schema/Graph"
+ *
+ * const GraphSchema = MutableDirectedGraph({ node: S.String, edge: S.Finite })
+ * console.log(S.isSchema(GraphSchema))
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -59,6 +86,15 @@ export interface MutableDirectedGraph<Node extends S.Top, Edge extends S.Top>
 
 /**
  * Schema for decoding encoded graph payloads into mutable undirected graphs.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { MutableUndirectedGraph } from "@beep/schema/Graph"
+ *
+ * const GraphSchema = MutableUndirectedGraph({ node: S.String, edge: S.Finite })
+ * console.log(S.isSchema(GraphSchema))
+ * ```
  *
  * @since 0.0.0
  * @category validation

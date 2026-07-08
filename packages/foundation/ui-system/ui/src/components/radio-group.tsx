@@ -1,3 +1,9 @@
+/**
+ * Radio-group primitive: an accessible single-select radio group.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Radio as RadioPrimitive } from "@base-ui/react/radio";

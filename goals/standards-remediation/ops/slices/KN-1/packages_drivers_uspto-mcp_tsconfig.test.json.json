@@ -1,0 +1,10 @@
+{
+  "scope": "packages/drivers/uspto-mcp/tsconfig.test.json",
+  "findings": [
+    {
+      "kind": "unresolved",
+      "file": "packages/drivers/uspto-mcp/tsconfig.test.json",
+      "name": "bun-types"
+    }
+  ]
+}

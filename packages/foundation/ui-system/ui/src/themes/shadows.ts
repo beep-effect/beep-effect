@@ -1,3 +1,9 @@
+/**
+ * Shared elevation/shadow scale tokens for the app theme.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import type { ThemeOptions } from "./types.ts";
 
 /**

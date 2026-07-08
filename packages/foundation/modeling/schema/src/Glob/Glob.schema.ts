@@ -124,6 +124,15 @@ export const Glob = S.String.check(GlobChecks)
 /**
  * Type for {@link Glob}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Glob } from "@beep/schema/Glob"
+ *
+ * const pattern: Glob = S.decodeUnknownSync(Glob)("src/*.ts")
+ * console.log(pattern)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */

@@ -27,12 +27,8 @@
   },
   "relatedPackets": {
     "productAuthority": "goals/agentic-professional-runtime",
-    "reference": [
-      "goals/epistemic-claim-lifecycle-gate"
-    ],
-    "consumedBy": [
-      "goals/law-practice-office-action-spike"
-    ]
+    "reference": ["goals/epistemic-claim-lifecycle-gate"],
+    "consumedBy": ["goals/law-practice-office-action-spike"]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",

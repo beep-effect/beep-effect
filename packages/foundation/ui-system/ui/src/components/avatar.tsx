@@ -1,3 +1,9 @@
+/**
+ * Avatar primitive: a circular image frame with fallback content.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { useAtomSubscribe, useAtomValue } from "@effect/atom-react";

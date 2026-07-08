@@ -742,10 +742,43 @@ export interface LiteralKit<L extends Literals, M extends EnumMappings<L> | unde
  * @since 0.0.0
  */
 export function LiteralKit<const L extends Literals>(literals: L): LiteralKit<L>;
+/**
+ * Builds a literal schema kit with a custom key mapping for `.Enum`.
+ *
+ * @example
+ * ```ts
+ * import { LiteralKit } from "@beep/schema/LiteralKit"
+ *
+ * const StatusKeys = LiteralKit(
+ *   ["one", "two"],
+ *   [["one", "ONE"], ["two", "TWO"]]
+ * )
+ *
+ * console.log(StatusKeys.Enum.ONE) // "one"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export function LiteralKit<const L extends Literals, const M extends EnumMappings<L>>(
   literals: L,
   enumMapping: M & ValidEnumMapping<L, M>
 ): LiteralKit<L, M>;
+/**
+ * Implementation signature for {@link LiteralKit}; see the overloads above for
+ * the public call shapes.
+ *
+ * @example
+ * ```ts
+ * import { LiteralKit } from "@beep/schema/LiteralKit"
+ *
+ * const Status = LiteralKit(["ready", "blocked"])
+ * console.log(Status.Options.includes("ready"))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export function LiteralKit<const L extends Literals, const M extends EnumMappings<L> | undefined = undefined>(
   literals: L,
   enumMapping?: M extends EnumMappings<L> ? ValidEnumMapping<L, M> : never

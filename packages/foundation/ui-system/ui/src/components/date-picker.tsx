@@ -1,3 +1,9 @@
+/**
+ * Date picker primitive: a single-date picker composed from `Popover` and `Calendar`.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Button } from "@beep/ui/components/button";

@@ -15,6 +15,14 @@ import { $I } from "./Color.shared.ts";
 /**
  * Convert OKLCH coordinates into a canonical hex color.
  *
+ * @example
+ * ```ts
+ * import { oklchToHexValue } from "../../src/Color/Color.transforms.ts"
+ *
+ * const hex = oklchToHexValue({ l: 0.72, c: 0.12, h: 240 })
+ * console.log(hex)
+ * ```
+ *
  * @internal
  * @category utilities
  * @since 0.0.0
@@ -22,6 +30,14 @@ import { $I } from "./Color.shared.ts";
 export const oklchToHexValue = flow(oklchToRgbValue, rgbToHexValue);
 /**
  * Convert a boundary hex color into OKLCH coordinates.
+ *
+ * @example
+ * ```ts
+ * import { hexToOklchValue } from "../../src/Color/Color.transforms.ts"
+ *
+ * const oklch = hexToOklchValue("#3b82f6")
+ * console.log(oklch.h)
+ * ```
  *
  * @internal
  * @category utilities
@@ -60,6 +76,15 @@ export const HexToRgb = NormalizeHexColor.pipe(
 /**
  * Type for {@link HexToRgb}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HexToRgb } from "@beep/schema/Color"
+ *
+ * const value: HexToRgb = S.decodeUnknownSync(HexToRgb)("#3b82f6")
+ * console.log(value.b)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -92,6 +117,15 @@ export const RgbToHex = RgbInput.pipe(
 
 /**
  * Type for {@link RgbToHex}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { RgbToHex } from "@beep/schema/Color"
+ *
+ * const value: RgbToHex = S.decodeUnknownSync(RgbToHex)({ r: 0.23, g: 0.51, b: 0.96 })
+ * console.log(value)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -126,6 +160,15 @@ export const RgbToOklch = Rgb.pipe(
 /**
  * Type for {@link RgbToOklch}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { RgbToOklch } from "@beep/schema/Color"
+ *
+ * const value: RgbToOklch = S.decodeUnknownSync(RgbToOklch)({ r: 0.23, g: 0.51, b: 0.96 })
+ * console.log(value.h)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -158,6 +201,15 @@ export const OklchToRgb = OklchInput.pipe(
 
 /**
  * Type for {@link OklchToRgb}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OklchToRgb } from "@beep/schema/Color"
+ *
+ * const value: OklchToRgb = S.decodeUnknownSync(OklchToRgb)({ l: 0.72, c: 0.12, h: 240 })
+ * console.log(value.r)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -195,6 +247,15 @@ export const HexToOklch = NormalizeHexColor.pipe(
 /**
  * Type for {@link HexToOklch}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HexToOklch } from "@beep/schema/Color"
+ *
+ * const value: HexToOklch = S.decodeUnknownSync(HexToOklch)("#3b82f6")
+ * console.log(value.c)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -227,6 +288,15 @@ export const OklchToHex = OklchInput.pipe(
 
 /**
  * Type for {@link OklchToHex}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { OklchToHex } from "@beep/schema/Color"
+ *
+ * const value: OklchToHex = S.decodeUnknownSync(OklchToHex)({ l: 0.72, c: 0.12, h: 240 })
+ * console.log(value)
+ * ```
  *
  * @since 0.0.0
  * @category models

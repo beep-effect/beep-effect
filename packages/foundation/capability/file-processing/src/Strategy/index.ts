@@ -35,6 +35,14 @@ export const FileProcessingOperationKind = LiteralKit(["detect", "extract", "exp
 /**
  * Type for {@link FileProcessingOperationKind}.
  *
+ * @example
+ * ```ts
+ * import { FileProcessingOperationKind } from "@beep/file-processing/Strategy"
+ *
+ * const kind: FileProcessingOperationKind = "process"
+ * console.log(FileProcessingOperationKind.is.process(kind)) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -61,6 +69,14 @@ export const FileProcessingEngineFamily = LiteralKit(["auto", "tika", "libpff", 
 
 /**
  * Type for {@link FileProcessingEngineFamily}.
+ *
+ * @example
+ * ```ts
+ * import { FileProcessingEngineFamily } from "@beep/file-processing/Strategy"
+ *
+ * const engine: FileProcessingEngineFamily = "tika"
+ * console.log(FileProcessingEngineFamily.is.tika(engine)) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -124,6 +140,14 @@ export const FileFormatFamily = LiteralKit([
 /**
  * Type for {@link FileFormatFamily}.
  *
+ * @example
+ * ```ts
+ * import { FileFormatFamily } from "@beep/file-processing/Strategy"
+ *
+ * const format: FileFormatFamily = "pdf-text-layer"
+ * console.log(FileFormatFamily.is["pdf-text-layer"](format)) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -156,6 +180,14 @@ export const FileProcessingCapability = LiteralKit([
 /**
  * Type for {@link FileProcessingCapability}.
  *
+ * @example
+ * ```ts
+ * import { FileProcessingCapability } from "@beep/file-processing/Strategy"
+ *
+ * const capability: FileProcessingCapability = "export-children"
+ * console.log(FileProcessingCapability.is["export-children"](capability)) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -182,6 +214,14 @@ export const FileProcessingSupportDisposition = LiteralKit(["supported", "deferr
 
 /**
  * Type for {@link FileProcessingSupportDisposition}.
+ *
+ * @example
+ * ```ts
+ * import { FileProcessingSupportDisposition } from "@beep/file-processing/Strategy"
+ *
+ * const disposition: FileProcessingSupportDisposition = "deferred"
+ * console.log(FileProcessingSupportDisposition.is.deferred(disposition)) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -218,6 +258,14 @@ export const FileProcessingSkipReason = LiteralKit([
 
 /**
  * Type for {@link FileProcessingSkipReason}.
+ *
+ * @example
+ * ```ts
+ * import { FileProcessingSkipReason } from "@beep/file-processing/Strategy"
+ *
+ * const reason: FileProcessingSkipReason = "operation-not-required"
+ * console.log(FileProcessingSkipReason.is["operation-not-required"](reason)) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -384,6 +432,26 @@ export const SelectedStrategy = S.Union([
 
 /**
  * Type for {@link SelectedStrategy}.
+ *
+ * @example
+ * ```ts
+ * import { SelectedStrategy } from "@beep/file-processing/Strategy"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const program = Effect.gen(function* () {
+ *   const strategy: SelectedStrategy = yield* S.decodeUnknownEffect(SelectedStrategy)({
+ *     disposition: "deferred",
+ *     engine: "libpff",
+ *     format: "pst",
+ *     operationKind: "export-archive",
+ *     skipReason: "engine-unavailable"
+ *   })
+ *   return strategy.disposition
+ * })
+ *
+ * Effect.runPromise(program).then(console.log) // "deferred"
+ * ```
  *
  * @category models
  * @since 0.0.0

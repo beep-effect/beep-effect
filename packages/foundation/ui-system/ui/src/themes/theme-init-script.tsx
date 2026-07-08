@@ -1,3 +1,9 @@
+/**
+ * Inline script component that applies the persisted color-scheme before first paint.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import type { ComponentProps } from "react";
 

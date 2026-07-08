@@ -44,6 +44,15 @@ export const SupportedPathFamily = SupportedPathFamilyKit.pipe(
 /**
  * Type for {@link SupportedPathFamily}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { SupportedPathFamily } from "@beep/schema/FilePath"
+ *
+ * const value: SupportedPathFamily = S.decodeUnknownSync(SupportedPathFamily)("posixAbsolute")
+ * console.log(value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -152,6 +161,15 @@ export const FilePath = S.String.check(FilePathChecks).pipe(
 
 /**
  * Branded file path string type extracted from {@link FilePath}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { FilePath } from "@beep/schema/FilePath"
+ *
+ * const value: FilePath = S.decodeUnknownSync(FilePath)("src/index.ts")
+ * console.log(value)
+ * ```
  *
  * @since 0.0.0
  * @category models

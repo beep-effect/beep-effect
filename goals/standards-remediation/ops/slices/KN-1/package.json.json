@@ -1,0 +1,35 @@
+{
+  "scope": "package.json",
+  "findings": [
+    {
+      "kind": "binaries",
+      "file": "package.json",
+      "name": "oxlint"
+    },
+    {
+      "kind": "binaries",
+      "file": "package.json",
+      "name": "readlink"
+    },
+    {
+      "kind": "devDependencies",
+      "file": "package.json",
+      "name": "@effect/platform-bun"
+    },
+    {
+      "kind": "devDependencies",
+      "file": "package.json",
+      "name": "@types/geojson"
+    },
+    {
+      "kind": "devDependencies",
+      "file": "package.json",
+      "name": "@typescript-eslint/eslint-plugin"
+    },
+    {
+      "kind": "devDependencies",
+      "file": "package.json",
+      "name": "madge"
+    }
+  ]
+}

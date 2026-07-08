@@ -1,3 +1,9 @@
+/**
+ * Notification-card primitive: status, action-type, and action-style variants for a notification row.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { $UiId } from "@beep/identity";
@@ -25,8 +31,9 @@ const NotificationStatus = LiteralKit(["unread", "read", "archived"]).pipe(
  * ```ts
  * import type { NotificationStatus } from "@beep/ui/components/notification-card"
  *
- * const value = {} as NotificationStatus
- * console.log(value)
+ * const status: NotificationStatus = "unread"
+ *
+ * console.log(status)
  * ```
  *
  * @category type-level
@@ -60,8 +67,9 @@ export const ActionType = LiteralKit(["redirect", "api_call", "workflow", "modal
  * ```ts
  * import type { ActionType } from "@beep/ui/components/notification-card"
  *
- * const value = {} as ActionType
- * console.log(value)
+ * const actionType: ActionType = "redirect"
+ *
+ * console.log(actionType)
  * ```
  *
  * @category type-level
@@ -94,8 +102,9 @@ export const ActionStyle = LiteralKit(["primary", "danger", "default"]).pipe(
  * ```ts
  * import type { ActionStyle } from "@beep/ui/components/notification-card"
  *
- * const value = {} as ActionStyle
- * console.log(value)
+ * const actionStyle: ActionStyle = "primary"
+ *
+ * console.log(actionStyle)
  * ```
  *
  * @category type-level
@@ -168,8 +177,9 @@ export const NotificationAction = ActionType.toTaggedUnion("type")({
  * ```ts
  * import type { NotificationAction } from "@beep/ui/components/notification-card"
  *
- * const value = {} as NotificationAction
- * console.log(value)
+ * const describe = (action: NotificationAction): NotificationAction["type"] => action.type
+ *
+ * console.log(typeof describe)
  * ```
  *
  * @category type-level

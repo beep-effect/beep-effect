@@ -80,7 +80,11 @@ describe("field-tier projector", () => {
 
     assert.isAbove(fullSize, budgetBytes);
 
-    const projected = projectWithinBudget(documentTiers, largeDocumentBagPayload, { budgetBytes, mintFetchableHandle });
+    const projected = projectWithinBudget(largeDocumentBagPayload, {
+      tiers: documentTiers,
+      budgetBytes,
+      mintFetchableHandle,
+    });
 
     assert.strictEqual(projected._tag, "Inline");
     if (projected._tag === "Inline") {
@@ -91,18 +95,19 @@ describe("field-tier projector", () => {
   });
 
   it("projects a single named tier's field set", () => {
-    const projected = projectFieldTier(documentTiers, "balanced", largeDocumentBagPayload);
+    const projected = projectFieldTier(largeDocumentBagPayload, "balanced", documentTiers);
 
     assert.deepStrictEqual(Object.keys(projected).sort(), ["abstractText", "documentId", "title"]);
   });
 
   it("never returns an oversized payload inline when even the minimal tier exceeds the budget", () => {
-    const minimalProjectedSize = estimateJsonSize(projectFieldTier(documentTiers, "minimal", largeDocumentBagPayload));
+    const minimalProjectedSize = estimateJsonSize(projectFieldTier(largeDocumentBagPayload, "minimal", documentTiers));
     const impossibleBudgetBytes = NonNegativeInt.make(1);
 
     assert.isAbove(minimalProjectedSize, impossibleBudgetBytes);
 
-    const projected = projectWithinBudget(documentTiers, largeDocumentBagPayload, {
+    const projected = projectWithinBudget(largeDocumentBagPayload, {
+      tiers: documentTiers,
       budgetBytes: impossibleBudgetBytes,
       mintFetchableHandle,
     });

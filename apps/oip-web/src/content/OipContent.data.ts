@@ -7,19 +7,14 @@
 
 import { Result } from "effect";
 import { decodeOipSiteContentResult, ReviewStatus } from "./OipContent.model.ts";
-import type { OipSiteContent, ReviewStatus as ReviewStatusType } from "./OipContent.model.ts";
+import type { OipSiteContent, ReviewGate } from "./OipContent.model.ts";
 
-type ReviewGateInput = {
-  readonly note: string;
-  readonly status: ReviewStatusType;
-};
-
-const needsReview = (note: string): ReviewGateInput => ({
+const needsReview = (note: string): typeof ReviewGate.Encoded => ({
   note,
   status: ReviewStatus.Enum.needs_review,
 });
 
-const approved = (note: string): ReviewGateInput => ({
+const approved = (note: string): typeof ReviewGate.Encoded => ({
   note,
   status: ReviewStatus.Enum.approved,
 });

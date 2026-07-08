@@ -181,7 +181,7 @@ describe("Utility Functions", () => {
   it("computeTFIDF calculates TF-IDF scores", () => {
     const tf = MutableHashMap.make(["common", 0.5], ["rare", 0.1]);
     const df = MutableHashMap.make(["common", 100], ["rare", 1]);
-    const tfidf = NLP.computeTFIDF(tf, df, 100);
+    const tfidf = NLP.computeTFIDF(tf, { df, totalDocs: 100 });
     expect(lookupNumber(tfidf, "common")).toBeCloseTo(0);
     expect(lookupNumber(tfidf, "rare")).toBeGreaterThan(0);
   });

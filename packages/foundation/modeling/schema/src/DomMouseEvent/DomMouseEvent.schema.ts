@@ -48,6 +48,15 @@ export const DOMMouseEvent = S.declare(isMouseEvent).pipe(
 /**
  * Type for {@link DOMMouseEvent}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { DOMMouseEvent } from "@beep/schema/DomMouseEvent"
+ *
+ * const event: DOMMouseEvent = S.decodeUnknownSync(DOMMouseEvent)(new MouseEvent("click"))
+ * console.log(event.type)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */

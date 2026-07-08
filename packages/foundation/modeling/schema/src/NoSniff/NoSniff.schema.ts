@@ -47,6 +47,14 @@ export const NoSniffValue = NoSniffValueBase.pipe(
 /**
  * Type-level representation of {@link NoSniffValue}.
  *
+ * @example
+ * ```ts
+ * import type { NoSniffValue } from "@beep/schema/NoSniff"
+ *
+ * const value: NoSniffValue = "nosniff"
+ * console.log(value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -79,6 +87,14 @@ export const NoSniffOption = NoSniffOptionBase.pipe(
 /**
  * Type-level representation of {@link NoSniffOption}.
  *
+ * @example
+ * ```ts
+ * import type { NoSniffOption } from "@beep/schema/NoSniff"
+ *
+ * const option: NoSniffOption = false
+ * console.log(option)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -89,10 +105,10 @@ export type NoSniffOption = typeof NoSniffOption.Type;
  *
  * @example
  * ```ts
- * import * as Option from "effect/Option"
+ * import * as O from "effect/Option"
  * import { NoSniffResponseHeader } from "@beep/schema/NoSniff"
  *
- * const header = new NoSniffResponseHeader({ name: "X-Content-Type-Options", value: Option.none() })
+ * const header = new NoSniffResponseHeader({ name: "X-Content-Type-Options", value: O.none() })
  * console.log(header.name)
  * ```
  *
@@ -189,6 +205,15 @@ export const NoSniffHeader = S.Union([NoSniffOption, S.Undefined]).pipe(
 /**
  * Type-level representation of {@link NoSniffHeader}.
  *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { NoSniffResponseHeader, type NoSniffHeader } from "@beep/schema/NoSniff"
+ *
+ * const header: NoSniffHeader = new NoSniffResponseHeader({ name: "X-Content-Type-Options", value: O.none() })
+ * console.log(header.name)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -200,9 +225,39 @@ export type NoSniffHeader = typeof NoSniffHeader.Type;
  * @category schemas
  * @since 0.0.0
  */
-export {
-  NoSniffHeader as Header,
-  NoSniffOption as Option,
-  NoSniffResponseHeader as ResponseHeader,
-  NoSniffValue as Value,
-};
+export { NoSniffOption as Option, NoSniffResponseHeader as ResponseHeader, NoSniffValue as Value };
+
+/**
+ * Concise alias for {@link NoSniffHeader}.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { Header } from "@beep/schema/NoSniff"
+ *
+ * const program = Header.create()
+ * const header = await Effect.runPromise(program)
+ * console.log(header._tag)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Header = NoSniffHeader;
+
+/**
+ * Type-level representation of {@link Header}.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { NoSniffResponseHeader, type Header } from "@beep/schema/NoSniff"
+ *
+ * const header: Header = new NoSniffResponseHeader({ name: "X-Content-Type-Options", value: O.none() })
+ * console.log(header.name)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Header = typeof Header.Type;

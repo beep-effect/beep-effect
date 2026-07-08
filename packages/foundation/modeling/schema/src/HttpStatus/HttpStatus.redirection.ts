@@ -44,6 +44,14 @@ export const MultipleChoices = S.Literal(300).pipe(
 /**
  * {@inheritDoc MultipleChoices}
  *
+ * @example
+ * ```ts
+ * import type { MultipleChoices } from "@beep/schema/HttpStatus"
+ *
+ * const status: MultipleChoices = 300
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -73,6 +81,14 @@ export const MovedPermanently = S.Literal(301).pipe(
 
 /**
  * {@inheritDoc MovedPermanently}
+ *
+ * @example
+ * ```ts
+ * import type { MovedPermanently } from "@beep/schema/HttpStatus"
+ *
+ * const status: MovedPermanently = 301
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -107,6 +123,14 @@ export const Found = S.Literal(302).pipe(
 /**
  * {@inheritDoc Found}
  *
+ * @example
+ * ```ts
+ * import type { Found } from "@beep/schema/HttpStatus"
+ *
+ * const status: Found = 302
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -136,6 +160,14 @@ export const SeeOther = S.Literal(303).pipe(
 
 /**
  * {@inheritDoc SeeOther}
+ *
+ * @example
+ * ```ts
+ * import type { SeeOther } from "@beep/schema/HttpStatus"
+ *
+ * const status: SeeOther = 303
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -169,6 +201,14 @@ export const NotModified = S.Literal(304).pipe(
 /**
  * {@inheritDoc NotModified}
  *
+ * @example
+ * ```ts
+ * import type { NotModified } from "@beep/schema/HttpStatus"
+ *
+ * const status: NotModified = 304
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -199,6 +239,14 @@ export const UseProxy = S.Literal(305).pipe(
 /**
  * {@inheritDoc UseProxy}
  *
+ * @example
+ * ```ts
+ * import type { UseProxy } from "@beep/schema/HttpStatus"
+ *
+ * const status: UseProxy = 305
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -228,6 +276,14 @@ export const SwitchProxy = S.Literal(306).pipe(
 
 /**
  * {@inheritDoc SwitchProxy}
+ *
+ * @example
+ * ```ts
+ * import type { SwitchProxy } from "@beep/schema/HttpStatus"
+ *
+ * const status: SwitchProxy = 306
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -262,6 +318,14 @@ export const TemporaryRedirect = S.Literal(307).pipe(
 /**
  * {@inheritDoc TemporaryRedirect}
  *
+ * @example
+ * ```ts
+ * import type { TemporaryRedirect } from "@beep/schema/HttpStatus"
+ *
+ * const status: TemporaryRedirect = 307
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -293,6 +357,14 @@ export const PermanentRedirect = S.Literal(308).pipe(
 
 /**
  * {@inheritDoc PermanentRedirect}
+ *
+ * @example
+ * ```ts
+ * import type { PermanentRedirect } from "@beep/schema/HttpStatus"
+ *
+ * const status: PermanentRedirect = 308
+ * console.log(status)
+ * ```
  *
  * @since 0.0.0
  * @category validation
@@ -335,6 +407,14 @@ export const HttpStatus3XX = MappedLiteralKit([
 /**
  * {@inheritDoc HttpStatus3XX}
  *
+ * @example
+ * ```ts
+ * import type { HttpStatus3XX } from "@beep/schema/HttpStatus"
+ *
+ * const status: HttpStatus3XX = 300
+ * console.log(status)
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
@@ -342,6 +422,16 @@ export type HttpStatus3XX = typeof HttpStatus3XX.Type;
 
 /**
  * A namespace for {@link HttpStatus3XX} to contain the Encoded type
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HttpStatus3XX } from "@beep/schema/HttpStatus"
+ *
+ * const encoded: HttpStatus3XX.Encoded = "MultipleChoices"
+ * const status = S.decodeUnknownSync(HttpStatus3XX)(encoded)
+ * console.log(status) // 300
+ * ```
  *
  * @category validation
  * @since 0.0.0

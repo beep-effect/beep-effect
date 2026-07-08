@@ -109,6 +109,17 @@ export class NodeSdkServerOptions extends S.Class<NodeSdkServerOptions>($I`NodeS
 /**
  * Constructor input accepted by Node SDK layer builders before schema defaults are resolved.
  *
+ * @example
+ * ```typescript
+ * import { NodeSdkServerOptions } from "@beep/observability/server"
+ * import type { NodeSdkServerOptionsInput } from "@beep/observability/server"
+ *
+ * const input: NodeSdkServerOptionsInput = { loggerMergeWithExisting: false }
+ * const options = NodeSdkServerOptions.make(input)
+ * console.log(options.loggerMergeWithExisting)
+ * // false
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */

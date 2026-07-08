@@ -53,6 +53,15 @@ export const Float64Arr = S.instanceOf<globalThis.Float64ArrayConstructor, globa
 /**
  * Type for {@link Float64Arr}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { Float64Arr } from "@beep/schema/Float64Array";
+ *
+ * const value: Float64Arr = S.decodeUnknownSync(Float64Arr)(new Float64Array([1, 2, 3]));
+ * console.log(value.length); // 3
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -101,6 +110,15 @@ export const Float64ArrayFromArray = S.Finite.pipe(
 /**
  * Type for {@link Float64ArrayFromArray}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema";
+ * import { Float64ArrayFromArray } from "@beep/schema/Float64Array";
+ *
+ * const value: Float64ArrayFromArray = S.decodeUnknownSync(Float64ArrayFromArray)([0.5, 1.25, 2.75]);
+ * console.log(value instanceof Float64Array); // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -108,6 +126,14 @@ export type Float64ArrayFromArray = typeof Float64ArrayFromArray.Type;
 
 /**
  * Namespace members for {@link Float64ArrayFromArray}.
+ *
+ * @example
+ * ```ts
+ * import { type Float64ArrayFromArray } from "@beep/schema/Float64Array";
+ *
+ * const payload: Float64ArrayFromArray.Encoded = [0.5, 1.25, 2.75];
+ * console.log(payload.length); // 3
+ * ```
  *
  * @category models
  * @since 0.0.0

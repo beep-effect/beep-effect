@@ -14,6 +14,7 @@ import { O } from "@beep/utils";
 import { Effect } from "effect";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $LangExtractId.create("Extraction");
 
@@ -419,9 +420,9 @@ type ParsedModelOutput = ReadonlyArray<ExtractionCandidate> | ModelOutputObject;
 const isCandidateArray = (output: ParsedModelOutput): output is ReadonlyArray<ExtractionCandidate> => A.isArray(output);
 
 const stripJsonFence = (text: string): string => {
-  const trimmed = text.trim();
+  const trimmed = Str.trim(text);
   const fenced = /^```(?:json)?\s*([\s\S]*?)\s*```$/iu.exec(trimmed);
-  return fenced?.[1]?.trim() ?? trimmed;
+  return fenced?.[1] === undefined ? trimmed : Str.trim(fenced[1]);
 };
 
 const outputToCandidates = (output: ParsedModelOutput): ReadonlyArray<ExtractionCandidate> =>

@@ -47,6 +47,15 @@ export const PhoenixDoctorStatus = LiteralKit(["passed", "unavailable"]).pipe(
 /**
  * Type for {@link PhoenixDoctorStatus}.
  *
+ * @example
+ * ```ts
+ * import { PhoenixDoctorStatus } from "@beep/phoenix"
+ *
+ * const status: PhoenixDoctorStatus = "passed"
+ * console.log(PhoenixDoctorStatus.is.passed(status))
+ * // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -73,6 +82,15 @@ export const PhoenixDatasetSelectorKind = LiteralKit(["dataset-id", "dataset-nam
 
 /**
  * Type for {@link PhoenixDatasetSelectorKind}.
+ *
+ * @example
+ * ```ts
+ * import { PhoenixDatasetSelectorKind } from "@beep/phoenix"
+ *
+ * const kind: PhoenixDatasetSelectorKind = "dataset-name"
+ * console.log(PhoenixDatasetSelectorKind.is["dataset-name"](kind))
+ * // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -101,6 +119,15 @@ export const PhoenixAnnotationTargetKind = LiteralKit(["span", "session", "trace
 /**
  * Type for {@link PhoenixAnnotationTargetKind}.
  *
+ * @example
+ * ```ts
+ * import { PhoenixAnnotationTargetKind } from "@beep/phoenix"
+ *
+ * const kind: PhoenixAnnotationTargetKind = "trace"
+ * console.log(PhoenixAnnotationTargetKind.is.trace(kind))
+ * // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -127,6 +154,15 @@ export const PhoenixAnnotatorKind = LiteralKit(["CODE", "HUMAN", "LLM"]).pipe(
 
 /**
  * Type for {@link PhoenixAnnotatorKind}.
+ *
+ * @example
+ * ```ts
+ * import { PhoenixAnnotatorKind } from "@beep/phoenix"
+ *
+ * const kind: PhoenixAnnotatorKind = "CODE"
+ * console.log(PhoenixAnnotatorKind.is.CODE(kind))
+ * // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -155,6 +191,16 @@ export const PhoenixAnnotationValue = S.Union([S.Boolean, S.Finite, S.String]).p
 
 /**
  * Type for {@link PhoenixAnnotationValue}.
+ *
+ * @example
+ * ```ts
+ * import { PhoenixAnnotationValue } from "@beep/phoenix"
+ * import * as S from "effect/Schema"
+ *
+ * const value: PhoenixAnnotationValue = S.decodeUnknownSync(PhoenixAnnotationValue)("accurate")
+ * console.log(value)
+ * // "accurate"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -191,6 +237,15 @@ export const PhoenixPromptChatRole = LiteralKit([
 /**
  * Type for {@link PhoenixPromptChatRole}.
  *
+ * @example
+ * ```ts
+ * import { PhoenixPromptChatRole } from "@beep/phoenix"
+ *
+ * const role: PhoenixPromptChatRole = "system"
+ * console.log(PhoenixPromptChatRole.is.system(role))
+ * // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -217,6 +272,15 @@ export const PhoenixPromptTemplateFormat = LiteralKit(["F_STRING", "MUSTACHE"]).
 
 /**
  * Type for {@link PhoenixPromptTemplateFormat}.
+ *
+ * @example
+ * ```ts
+ * import { PhoenixPromptTemplateFormat } from "@beep/phoenix"
+ *
+ * const format: PhoenixPromptTemplateFormat = "MUSTACHE"
+ * console.log(PhoenixPromptTemplateFormat.is.MUSTACHE(format))
+ * // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -252,6 +316,15 @@ export const PhoenixPromptModelProvider = LiteralKit([
 
 /**
  * Type for {@link PhoenixPromptModelProvider}.
+ *
+ * @example
+ * ```ts
+ * import { PhoenixPromptModelProvider } from "@beep/phoenix"
+ *
+ * const provider: PhoenixPromptModelProvider = "GOOGLE"
+ * console.log(PhoenixPromptModelProvider.is.GOOGLE(provider))
+ * // true
+ * ```
  *
  * @category models
  * @since 0.0.0

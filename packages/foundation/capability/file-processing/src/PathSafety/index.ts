@@ -63,6 +63,14 @@ export const PathSafetyViolationReason = LiteralKit([
 /**
  * Type for {@link PathSafetyViolationReason}.
  *
+ * @example
+ * ```ts
+ * import { PathSafetyViolationReason } from "@beep/file-processing/PathSafety"
+ *
+ * const reason: PathSafetyViolationReason = "escapes-root"
+ * console.log(PathSafetyViolationReason.is["escapes-root"](reason)) // true
+ * ```
+ *
  * @category errors
  * @since 0.0.0
  */

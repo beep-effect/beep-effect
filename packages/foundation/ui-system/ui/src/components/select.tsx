@@ -1,3 +1,9 @@
+/**
+ * Select primitive: a listbox-style select built on Base UI's select.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Select as SelectPrimitive } from "@base-ui/react/select";

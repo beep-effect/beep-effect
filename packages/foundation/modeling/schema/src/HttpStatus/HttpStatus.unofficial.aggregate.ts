@@ -57,6 +57,16 @@ export const HttpStatusUnofficial = MappedLiteralKit([
 /**
  * A namespace for {@link HttpStatusUnofficial} to contain the Encoded type
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HttpStatusUnofficial } from "@beep/schema/HttpStatus"
+ *
+ * const encoded: HttpStatusUnofficial.Encoded = "RequestHeaderFieldsTooLargeShopify"
+ * const status = S.decodeUnknownSync(HttpStatusUnofficial)(encoded)
+ * console.log(status) // 430
+ * ```
+ *
  * @category validation
  * @since 0.0.0
  */
@@ -72,6 +82,14 @@ export declare namespace HttpStatusUnofficial {
 
 /**
  * {@inheritDoc HttpStatusUnofficial}
+ *
+ * @example
+ * ```ts
+ * import type { HttpStatusUnofficial } from "@beep/schema/HttpStatus"
+ *
+ * const status: HttpStatusUnofficial = 430
+ * console.log(status)
+ * ```
  *
  * @category validation
  * @since 0.0.0

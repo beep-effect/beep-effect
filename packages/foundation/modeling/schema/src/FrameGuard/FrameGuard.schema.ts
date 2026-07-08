@@ -48,6 +48,14 @@ export const FrameGuardMode = FrameGuardModeBase.pipe(
 /**
  * Type for direct `X-Frame-Options` policy modes.
  *
+ * @example
+ * ```ts
+ * import type { FrameGuardMode } from "@beep/schema/FrameGuard"
+ *
+ * const mode: FrameGuardMode = "deny"
+ * console.log(mode)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -103,6 +111,14 @@ export const FrameGuardAllowFrom = S.Tuple([S.Literal("allow-from"), FrameGuardA
 /**
  * Type for tuple-based `allow-from` frame guard configuration.
  *
+ * @example
+ * ```ts
+ * import { FrameGuardAllowFromConfig, type FrameGuardAllowFrom } from "@beep/schema/FrameGuard"
+ *
+ * const value: FrameGuardAllowFrom = ["allow-from", FrameGuardAllowFromConfig.make({ uri: "https://example.com" })]
+ * console.log(value[0])
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -130,6 +146,14 @@ export const FrameGuardOption = S.Union([S.Literal(false), FrameGuardMode, Frame
 
 /**
  * Type for enabled, disabled, or `allow-from` frame guard options.
+ *
+ * @example
+ * ```ts
+ * import type { FrameGuardOption } from "@beep/schema/FrameGuard"
+ *
+ * const option: FrameGuardOption = "sameorigin"
+ * console.log(option)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -280,6 +304,15 @@ export const FrameGuardHeader = S.Union([FrameGuardOption, S.Undefined]).pipe(
 /**
  * Type for rendered `X-Frame-Options` response headers.
  *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { FrameGuardResponseHeader, type FrameGuardHeader } from "@beep/schema/FrameGuard"
+ *
+ * const header: FrameGuardHeader = FrameGuardResponseHeader.make({ name: "X-Frame-Options", value: O.some("deny") })
+ * console.log(header.name)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -291,9 +324,70 @@ export type FrameGuardHeader = typeof FrameGuardHeader.Type;
  * @category schemas
  * @since 0.0.0
  */
-export {
-  FrameGuardHeader as Header,
-  FrameGuardMode as Mode,
-  FrameGuardOption as Option,
-  FrameGuardResponseHeader as ResponseHeader,
-};
+export { FrameGuardMode as Mode, FrameGuardResponseHeader as ResponseHeader };
+
+/**
+ * Concise alias for {@link FrameGuardOption}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Option } from "@beep/schema/FrameGuard"
+ *
+ * console.log(S.decodeUnknownSync(Option)("sameorigin"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Option = FrameGuardOption;
+
+/**
+ * Type-level representation of {@link Option}.
+ *
+ * @example
+ * ```ts
+ * import type { Option } from "@beep/schema/FrameGuard"
+ *
+ * const option: Option = "sameorigin"
+ * console.log(option)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Option = typeof Option.Type;
+
+/**
+ * Concise alias for {@link FrameGuardHeader}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Header } from "@beep/schema/FrameGuard"
+ *
+ * const header = S.decodeUnknownSync(Header)("deny")
+ * console.log(header.name)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Header = FrameGuardHeader;
+
+/**
+ * Type-level representation of {@link Header}.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { FrameGuardResponseHeader, type Header } from "@beep/schema/FrameGuard"
+ *
+ * const header: Header = FrameGuardResponseHeader.make({ name: "X-Frame-Options", value: O.some("deny") })
+ * console.log(header.name)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Header = typeof Header.Type;

@@ -70,6 +70,23 @@ export const ProvenanceExportProfile = LiteralKit(["prov-core-v1", "prov-core-ex
 );
 
 /**
+ * Type for {@link ProvenanceExportProfile}.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { ProvenanceExportProfile } from "@beep/semantic-web/services/provenance"
+ *
+ * const profile: ProvenanceExportProfile = "prov-core-v1"
+ * strictEqual(ProvenanceExportProfile.is["prov-core-v1"](profile), true)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type ProvenanceExportProfile = typeof ProvenanceExportProfile.Type;
+
+/**
  * Provenance service error reason.
  *
  * @example
@@ -95,6 +112,23 @@ export const ProvenanceServiceErrorReason = LiteralKit([
     semanticSchemaMetadata: serviceContractMetadata("ProvenanceServiceErrorReason", "Provenance service error reason."),
   })
 );
+
+/**
+ * Type for {@link ProvenanceServiceErrorReason}.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { ProvenanceServiceErrorReason } from "@beep/semantic-web/services/provenance"
+ *
+ * const reason: ProvenanceServiceErrorReason = "projectionLimit"
+ * strictEqual(ProvenanceServiceErrorReason.is.projectionLimit(reason), true)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type ProvenanceServiceErrorReason = typeof ProvenanceServiceErrorReason.Type;
 
 /**
  * Provenance projection request.

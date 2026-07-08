@@ -126,6 +126,20 @@ const DocumentsProjectionOutputArbitraryValues = [
  * the caller when even the `minimal` tier's columnar envelope exceeds
  * budget.
  *
+ * @example
+ * ```ts
+ * import { DocumentsProjectionOutput } from "@beep/uspto-mcp/UsptoDocumentTiers"
+ * import * as S from "effect/Schema"
+ *
+ * const result = S.decodeUnknownSync(DocumentsProjectionOutput)({
+ *   _tag: "Inline",
+ *   tier: "minimal",
+ *   envelope: { columns: ["documentIdentifier"], rows: [["doc-1"]] }
+ * })
+ * console.log(result._tag)
+ * // "Inline"
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -141,6 +155,20 @@ export const DocumentsProjectionOutput = DocumentsProjectionOutputBase.annotate(
 
 /**
  * Type for {@link DocumentsProjectionOutput}.
+ *
+ * @example
+ * ```ts
+ * import { DocumentsProjectionOutput } from "@beep/uspto-mcp/UsptoDocumentTiers"
+ * import * as S from "effect/Schema"
+ *
+ * const result: DocumentsProjectionOutput = S.decodeUnknownSync(DocumentsProjectionOutput)({
+ *   _tag: "Inline",
+ *   tier: "minimal",
+ *   envelope: { columns: ["documentIdentifier"], rows: [["doc-1"]] }
+ * })
+ * console.log(result._tag)
+ * // "Inline"
+ * ```
  *
  * @category type-level
  * @since 0.0.0
@@ -291,14 +319,14 @@ export const projectDocumentsWithinBudget: {
   const rows = documents.map(documentToRecord);
 
   for (const tier of TIER_ORDER) {
-    const envelope = toColumnarEnvelope(rows.map((row) => projectFieldTier(usptoDocumentFieldTiers, tier, row)));
+    const envelope = toColumnarEnvelope(rows.map((row) => projectFieldTier(row, tier, usptoDocumentFieldTiers)));
     if (estimateJsonSize(envelope) <= options.budgetBytes) {
       return DocumentsProjectionOutput.make({ _tag: "Inline", tier, envelope });
     }
   }
 
   const minimalEnvelope = toColumnarEnvelope(
-    rows.map((row) => projectFieldTier(usptoDocumentFieldTiers, "minimal", row))
+    rows.map((row) => projectFieldTier(row, "minimal", usptoDocumentFieldTiers))
   );
   const oversized = OversizedFieldProjection.make({
     value: { columns: minimalEnvelope.columns, rows: minimalEnvelope.rows },

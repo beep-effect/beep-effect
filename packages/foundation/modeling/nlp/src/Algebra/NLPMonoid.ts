@@ -721,8 +721,7 @@ export const bagOfWordsToTF = (bow: BagOfWords): TermNumberMap => {
  *
  * const scores = NLPMonoid.computeTFIDF(
  *   MutableHashMap.make(["effect", 0.5], ["schema", 0.5]),
- *   MutableHashMap.make(["effect", 2], ["schema", 1]),
- *   4
+ *   { df: MutableHashMap.make(["effect", 2], ["schema", 1]), totalDocs: 4 }
  * )
  *
  * console.log(Array.from(scores))
@@ -732,7 +731,11 @@ export const bagOfWordsToTF = (bow: BagOfWords): TermNumberMap => {
  * @since 0.0.0
  * @category utilities
  */
-export const computeTFIDF = (tf: TermNumberMap, df: TermNumberMap, totalDocs: number): TermNumberMap => {
+export const computeTFIDF: {
+  (tf: TermNumberMap, options: { readonly df: TermNumberMap; readonly totalDocs: number }): TermNumberMap;
+  (options: { readonly df: TermNumberMap; readonly totalDocs: number }): (tf: TermNumberMap) => TermNumberMap;
+} = dual(2, (tf: TermNumberMap, options: { readonly df: TermNumberMap; readonly totalDocs: number }): TermNumberMap => {
+  const { df, totalDocs } = options;
   const tfidf = MutableHashMap.empty<string, number>();
   MutableHashMap.forEach(tf, (tfScore, term) => {
     const docFreq = O.getOrElse(MutableHashMap.get(df, term), () => 1);
@@ -740,7 +743,7 @@ export const computeTFIDF = (tf: TermNumberMap, df: TermNumberMap, totalDocs: nu
     MutableHashMap.set(tfidf, term, tfScore * idf);
   });
   return tfidf;
-};
+});
 
 // =============================================================================
 // Convenience aggregators

@@ -83,6 +83,22 @@ export class GranuleMetadata extends S.Class<GranuleMetadata>($I`GranuleMetadata
 /**
  * Companion namespace for {@link GranuleMetadata} encoded helpers.
  *
+ * @example
+ * ```ts
+ * import { GranuleMetadata } from "@beep/govinfo/domain/values/GranuleMetadata/GranuleMetadata.model";
+ * import * as S from "effect/Schema";
+ *
+ * const granule: GranuleMetadata = S.decodeUnknownSync(GranuleMetadata)({
+ *   granuleClass: "HOUSE",
+ *   granuleId: "CREC-2024-01-03-pt1-PgH1",
+ *   granuleLink: "https://api.govinfo.gov/packages/CREC-2024-01-03/granules/CREC-2024-01-03-pt1-PgH1/summary",
+ *   md5: "d41d8cd98f00b204e9800998ecf8427e",
+ *   title: "House proceedings"
+ * });
+ *
+ * console.log(granule.title);
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */

@@ -1,0 +1,21 @@
+{
+  "owner": "@beep/utils",
+  "entries": [
+    {
+      "file": "packages/foundation/modeling/utils/src/DrainableWorker.ts",
+      "symbol": "DrainableWorker",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/utils",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/utils/src/Event.ts",
+      "symbol": "makeEventSchema",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/utils",
+      "reason": "S.Struct with non-identifier or spread keys stays tracked as an exception."
+    }
+  ]
+}

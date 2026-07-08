@@ -128,19 +128,19 @@ export const ContactSubmissionPayload = ContactSubmissionFormPayload.pipe(
 export type ContactSubmissionPayload = typeof ContactSubmissionPayload.Type;
 
 /**
- * HttpApi group for OIP contact intake endpoints.
+ * HttpApi group for OIP contact intake endpoints, composed into {@link OipHttpApi}.
  *
  * @example
  * ```ts
- * import { OipContactHttpApiGroup } from "@beep/oip-web/contact"
+ * import { OipHttpApi } from "@beep/oip-web/contact"
  *
- * console.log(OipContactHttpApiGroup.identifier)
+ * console.log(OipHttpApi.groups.contact.identifier)
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const OipContactHttpApiGroup = HttpApiGroup.make("contact").add(
+const OipContactHttpApiGroup = HttpApiGroup.make("contact").add(
   HttpApiEndpoint.post("submit", "/api/contact", {
     payload: ContactSubmissionPayload,
     success: ContactSubmissionAccepted.pipe(HttpApiSchema.status(202)),

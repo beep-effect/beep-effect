@@ -200,6 +200,15 @@ export class LoggingConfig extends S.Class<LoggingConfig>($I`LoggingConfig`)(
 /**
  * Options controlling startup/phase log banner rendering.
  *
+ * @example
+ * ```typescript
+ * import { RenderLogBannerOptions } from "@beep/observability"
+ *
+ * const options = RenderLogBannerOptions.make({ kind: "startup" })
+ * console.log(options.kind)
+ * // "startup"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

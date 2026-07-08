@@ -1,3 +1,9 @@
+/**
+ * Dropdown-menu primitive: a triggered menu root built on Base UI's menu.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";
@@ -412,27 +418,59 @@ function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<"kbd
   );
 }
 
-DropdownMenu.MenuPortal = DropdownMenuPortal;
-DropdownMenu.Trigger = DropdownMenuTrigger;
-DropdownMenu.Content = DropdownMenuContent;
-DropdownMenu.Group = DropdownMenuGroup;
-DropdownMenu.Label = DropdownMenuLabel;
-DropdownMenu.Item = DropdownMenuItem;
-DropdownMenu.CheckboxItem = DropdownMenuCheckboxItem;
-DropdownMenu.RadioGroup = DropdownMenuRadioGroup;
-DropdownMenu.RadioItem = DropdownMenuRadioItem;
-DropdownMenu.Separator = DropdownMenuSeparator;
-DropdownMenu.Shortcut = DropdownMenuShortcut;
-DropdownMenu.Sub = DropdownMenuSub;
-DropdownMenu.SubTrigger = DropdownMenuSubTrigger;
-DropdownMenu.SubContent = DropdownMenuSubContent;
+/**
+ * Dropdown menu component, composed with its part components via
+ * `DropdownMenu.Trigger`, `DropdownMenu.Content`, `DropdownMenu.Item`,
+ * `DropdownMenu.CheckboxItem`, `DropdownMenu.RadioGroup`,
+ * `DropdownMenu.RadioItem`, `DropdownMenu.Label`, `DropdownMenu.Separator`,
+ * `DropdownMenu.Shortcut`, `DropdownMenu.Group`, `DropdownMenu.Sub`,
+ * `DropdownMenu.SubTrigger`, `DropdownMenu.SubContent`, and
+ * `DropdownMenu.MenuPortal`.
+ *
+ * @example
+ * ```tsx
+ * import { DropdownMenu } from "@beep/ui/components/dropdown-menu"
+ *
+ * export function AccountMenu() {
+ *   return (
+ *     <DropdownMenu>
+ *       <DropdownMenu.Trigger>Account</DropdownMenu.Trigger>
+ *       <DropdownMenu.Content>
+ *         <DropdownMenu.Label>My account</DropdownMenu.Label>
+ *         <DropdownMenu.Item>Profile</DropdownMenu.Item>
+ *         <DropdownMenu.Separator />
+ *         <DropdownMenu.Item>Sign out</DropdownMenu.Item>
+ *       </DropdownMenu.Content>
+ *     </DropdownMenu>
+ *   )
+ * }
+ * ```
+ *
+ * @category components
+ * @since 0.0.0
+ */
+const DropdownMenuWithParts = Object.assign(DropdownMenu, {
+  CheckboxItem: DropdownMenuCheckboxItem,
+  Content: DropdownMenuContent,
+  Group: DropdownMenuGroup,
+  Item: DropdownMenuItem,
+  Label: DropdownMenuLabel,
+  MenuPortal: DropdownMenuPortal,
+  RadioGroup: DropdownMenuRadioGroup,
+  RadioItem: DropdownMenuRadioItem,
+  Separator: DropdownMenuSeparator,
+  Shortcut: DropdownMenuShortcut,
+  Sub: DropdownMenuSub,
+  SubContent: DropdownMenuSubContent,
+  SubTrigger: DropdownMenuSubTrigger,
+  Trigger: DropdownMenuTrigger,
+});
 
 /**
  * @category components
  * @since 0.0.0
  */
 export {
-  DropdownMenu,
   DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuGroup,
@@ -447,4 +485,5 @@ export {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
+  DropdownMenuWithParts as DropdownMenu,
 };

@@ -61,10 +61,22 @@ export interface EdgeTransform<Data extends S.Top>
 /**
  * Schema for graph edges.
  *
+ * @example
+ * ```ts
+ * import { Edge } from "@beep/schema/Graph"
+ * import * as S from "effect/Schema"
+ *
+ * const EdgeSchema = Edge(S.String)
+ * console.log(S.isSchema(EdgeSchema))
+ * ```
+ *
  * @since 0.0.0
  * @category validation
  */
-export interface Edge<Data extends S.Top> extends EdgeTransform<Data> {}
+export interface Edge<Data extends S.Top> extends S.decodeTo<EdgeFromSelf<S.toType<Data>>, EdgeEncodedSchema<Data>> {
+  readonly data: Data;
+  readonly Rebuild: this;
+}
 
 /**
  * Schema for validating existing `Graph.Edge` instances while applying the

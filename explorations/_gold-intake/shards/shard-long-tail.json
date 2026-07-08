@@ -7,13 +7,20 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "deterministic-doc-structure-extraction",
-    "secondaryTargets": ["packages/foundation/capability/langextract", "packages/epistemic/domain", "goals/langextract-capability"],
+    "secondaryTargets": [
+      "packages/foundation/capability/langextract",
+      "packages/epistemic/domain",
+      "goals/langextract-capability"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "deterministic-doc-structure-extraction",
     "goldSynthesisSection": "Effect & advanced TypeScript",
     "rationale": "Schema.optionalWith Partial(candidate)-vs-Complete(authoritative) streaming model collides with langextract V1's explicit streaming-deferred lock, so it cannot extend goals/langextract-capability; it seeds the new sibling deterministic-doc-structure-extraction packet alongside the regex extractor. @beep/langextract already has GroundedExtraction schemas to compose against.",
-    "cautions": ["langextract V1 SPEC locks streaming as not-public-API — Partial/Complete gate needs a standards decision, do NOT route as extend-goal", "TalentScore is external private project — port the optionalWith partial-vs-final PATTERN, not code"]
+    "cautions": [
+      "langextract V1 SPEC locks streaming as not-public-API — Partial/Complete gate needs a standards decision, do NOT route as extend-goal",
+      "TalentScore is external private project — port the optionalWith partial-vs-final PATTERN, not code"
+    ]
   },
   {
     "id": "TalentScore#8",
@@ -29,7 +36,9 @@
     "wedgeHint": "jsonb-typed-extraction-roundtrip",
     "goldSynthesisSection": "Effect & advanced TypeScript",
     "rationale": "Repo already owns @effect/sql-style typed-JSONB persistence: packages/workspace/server ThreadStore Drizzle repo plus the EntitySchema.persist.jsonb read-revalidation convention. parseJson schema round-trip is the standing schema-kit pattern. Reference-only.",
-    "cautions": ["catalog gapStatus=dup; recommendation reference-only — no packet opens"]
+    "cautions": [
+      "catalog gapStatus=dup; recommendation reference-only — no packet opens"
+    ]
   },
   {
     "id": "TalentScore#11",
@@ -39,13 +48,18 @@
     "primaryTarget": "packages/agents/use-cases",
     "targetExists": true,
     "proposedSlug": null,
-    "secondaryTargets": ["packages/foundation/capability/observability", "goals/agent-governance-control-plane"],
+    "secondaryTargets": [
+      "packages/foundation/capability/observability",
+      "goals/agent-governance-control-plane"
+    ],
     "disposition": "dup",
     "wave": "P2",
     "wedgeHint": "audit-wrap-middleware",
     "goldSynthesisSection": "Effect & advanced TypeScript",
     "rationale": "Contract-first RPC + OTLP tracing already shipped: packages/agents/use-cases Chat.rpc.ts is the chat RPC contract (chat is on the DUP-SKIP substrate list) and @beep/observability provides OTLP + structured logging. Only the audit wrap-middleware logger is a minor pattern; coordinate it with goals/agent-governance-control-plane rather than rebuilding transport.",
-    "cautions": ["chat/RPC + observability are dup substrate; WebSocket+NDJSON transport is reference-grade only"]
+    "cautions": [
+      "chat/RPC + observability are dup substrate; WebSocket+NDJSON transport is reference-grade only"
+    ]
   },
   {
     "id": "agentmemory#13",
@@ -87,13 +101,20 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "gov-legal-data-driver-codegen",
-    "secondaryTargets": ["packages/drivers/courtlistener", "packages/drivers/ecfr", "packages/drivers/dol", "packages/drivers/federal-register"],
+    "secondaryTargets": [
+      "packages/drivers/courtlistener",
+      "packages/drivers/ecfr",
+      "packages/drivers/dol",
+      "packages/drivers/federal-register"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "Effect & advanced TypeScript",
     "rationale": "Typed error hierarchy with code + structured payload targets the bare skeleton legal drivers' <Name>.errors.ts modules (courtlistener/ecfr/dol/federal-register currently export only VERSION='0.0.0'), so it belongs to the gov-legal-data-driver-codegen wedge that implements them via the runpod/acp codegen precedent.",
-    "cautions": ["harvest-mcp license flagged unknown — reimplement the Schema.TaggedError taxonomy, do not copy"]
+    "cautions": [
+      "harvest-mcp license flagged unknown — reimplement the Schema.TaggedError taxonomy, do not copy"
+    ]
   },
   {
     "id": "lawyergpt#2",
@@ -103,13 +124,18 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "rag-retrieval-projection",
-    "secondaryTargets": ["packages/foundation/capability/langextract", "goals/file-processing-capability"],
+    "secondaryTargets": [
+      "packages/foundation/capability/langextract",
+      "goals/file-processing-capability"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "rag-retrieval-projection",
     "goldSynthesisSection": "Effect & advanced TypeScript",
     "rationale": "Bounded-concurrency semaphore + per-file transaction ingestion is the RAG ingestion workflow the seed routes to rag-retrieval-projection, re-expressed as Effect Stream.mapEffect with bounded parallelism + per-item PGlite/Drizzle txn. EF-27 bounded fan-out is documented but the ingestion projection has no execution home.",
-    "cautions": ["lawyergpt license unknown — reimplement; lawyergpt's un-gated raw-chunk RAG is an anti-pattern beep rejects (outputs must carry CandidateClaim+Evidence)"]
+    "cautions": [
+      "lawyergpt license unknown — reimplement; lawyergpt's un-gated raw-chunk RAG is an anti-pattern beep rejects (outputs must carry CandidateClaim+Evidence)"
+    ]
   },
   {
     "id": "patent-search-mcp-server#6",
@@ -119,13 +145,21 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "gov-legal-data-driver-codegen",
-    "secondaryTargets": ["packages/drivers/govinfo", "packages/drivers/courtlistener", "packages/drivers/ecfr", "packages/drivers/dol", "packages/drivers/federal-register"],
+    "secondaryTargets": [
+      "packages/drivers/govinfo",
+      "packages/drivers/courtlistener",
+      "packages/drivers/ecfr",
+      "packages/drivers/dol",
+      "packages/drivers/federal-register"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "gov-legal-data-driver-codegen",
     "goldSynthesisSection": "Effect & advanced TypeScript",
     "rationale": "HTTP status-code humanization + typed API-error mapping as Schema.TaggedError variants targets exactly the gov drivers (CourtListener/eCFR/Federal-Register/DOL/GovInfo) the gov-legal-data-driver-codegen wedge implements. govinfo is substantial (150 files) and needs the auth/retry/cache client layer; the other four are bare skeletons.",
-    "cautions": ["CourtListener V4 enforces 'Authorization: Token <key>' (DRF, not Bearer); GovInfo/DOL need api.data.gov api_key; eCFR/FedReg keyless"]
+    "cautions": [
+      "CourtListener V4 enforces 'Authorization: Token <key>' (DRF, not Bearer); GovInfo/DOL need api.data.gov api_key; eCFR/FedReg keyless"
+    ]
   },
   {
     "id": "research-squad#2",
@@ -135,13 +169,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "effect-orchestration-patterns",
-    "secondaryTargets": ["packages/drivers/anthropic", "packages/drivers/nlp-mcp", "packages/epistemic/server"],
+    "secondaryTargets": [
+      "packages/drivers/anthropic",
+      "packages/drivers/nlp-mcp",
+      "packages/epistemic/server"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "effect-orchestration-patterns",
     "goldSynthesisSection": "Effect & advanced TypeScript",
     "rationale": "Failure-vs-defect split is documented as law EF-31 and implemented per-driver in anthropic, but the shared decodeOrDie + isDefect/isRetryable foundation helper has no consolidation home; the seed routes this DRY-extraction to effect-orchestration-patterns.",
-    "cautions": ["EF-31 already documented + per-driver impl exists — scope is library consolidation, not greenfield"]
+    "cautions": [
+      "EF-31 already documented + per-driver impl exists — scope is library consolidation, not greenfield"
+    ]
   },
   {
     "id": "research-squad#3",
@@ -151,13 +191,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "effect-orchestration-patterns",
-    "secondaryTargets": ["packages/drivers/anthropic", "packages/drivers/openai-compat", "packages/drivers/nlp-mcp"],
+    "secondaryTargets": [
+      "packages/drivers/anthropic",
+      "packages/drivers/openai-compat",
+      "packages/drivers/nlp-mcp"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "effect-orchestration-patterns",
     "goldSynthesisSection": "Effect & advanced TypeScript",
     "rationale": "Centralized Schedule retry-policy library (llmRetry/networkRetry/databaseRetry) is the seed's headline net-new for effect-orchestration-patterns: retry policies are currently inline-duplicated per-driver (Schedule.exponential in anthropic Anthropic.service.ts:106 / Anthropic.repair.ts:105, openai-compat) with no shared foundation module.",
-    "cautions": ["first-party Effect code, no licensing concern; reuse + DRY-extract existing per-driver Schedule.exponential, do not rebuild EF-25/26"]
+    "cautions": [
+      "first-party Effect code, no licensing concern; reuse + DRY-extract existing per-driver Schedule.exponential, do not rebuild EF-25/26"
+    ]
   },
   {
     "id": "research-squad#5",
@@ -167,13 +213,22 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "effect-orchestration-patterns",
-    "secondaryTargets": ["packages/drivers/anthropic", "packages/drivers/openai-compat", "packages/drivers/xai", "packages/drivers/venice-ai", "multi-provider-llm-dispatch-fallback"],
+    "secondaryTargets": [
+      "packages/drivers/anthropic",
+      "packages/drivers/openai-compat",
+      "packages/drivers/xai",
+      "packages/drivers/venice-ai",
+      "multi-provider-llm-dispatch-fallback"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "effect-orchestration-patterns",
     "goldSynthesisSection": "Effect & advanced TypeScript",
     "rationale": "Layer.unwrapEffect lazy provider selection has zero occurrences anywhere under packages/**/src (provider wiring is static Layer composition today); the seed routes this net-new effectful provider-selection layer over anthropic|openai-compat|xai|venice-ai to effect-orchestration-patterns, cross-linking the multi-provider-llm-dispatch-fallback split.",
-    "cautions": ["validate Layer.unwrapEffect against the vendored effect-v4 API before adopting", "fallback-chain strand overlaps the multi-provider-llm-dispatch-fallback split — coordinate"]
+    "cautions": [
+      "validate Layer.unwrapEffect against the vendored effect-v4 API before adopting",
+      "fallback-chain strand overlaps the multi-provider-llm-dispatch-fallback split — coordinate"
+    ]
   },
   {
     "id": "research-squad#7",
@@ -183,13 +238,18 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "effect-orchestration-patterns",
-    "secondaryTargets": ["packages/drivers/anthropic", "standards/effect-first-development.md"],
+    "secondaryTargets": [
+      "packages/drivers/anthropic",
+      "standards/effect-first-development.md"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "effect-orchestration-patterns",
     "goldSynthesisSection": "Effect & advanced TypeScript",
     "rationale": "Domain error taxonomy with isDefect/isRetryable classification predicates is the same foundation typed-error helper as research-squad#2, to be shared across all slices; consolidates into effect-orchestration-patterns alongside the retry-policy + provider-selection net-new.",
-    "cautions": ["EF-31 + TaggedErrorClass already exist in anthropic — scope is shared-predicate extraction"]
+    "cautions": [
+      "EF-31 + TaggedErrorClass already exist in anthropic — scope is shared-predicate extraction"
+    ]
   },
   {
     "id": "research-squad#11",
@@ -199,13 +259,18 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "effect-orchestration-patterns",
-    "secondaryTargets": ["packages/drivers/nlp-mcp", "packages/agents/use-cases"],
+    "secondaryTargets": [
+      "packages/drivers/nlp-mcp",
+      "packages/agents/use-cases"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "effect-orchestration-patterns",
     "goldSynthesisSection": "Effect & advanced TypeScript",
     "rationale": "Bounded-concurrency subagent fan-out with graceful degradation maps EF-27 (documented) onto concrete @beep/nlp-mcp batch-extraction + agents orchestration via Effect.forEach concurrency + per-item recovery; the orchestration library consolidation is net-new in effect-orchestration-patterns.",
-    "cautions": ["EF-27 bounded fan-out already documented + applied operationally — concretize, don't rebuild the law"]
+    "cautions": [
+      "EF-27 bounded fan-out already documented + applied operationally — concretize, don't rebuild the law"
+    ]
   },
   {
     "id": "courts-db#9",
@@ -215,7 +280,10 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "effect-orchestration-patterns",
-    "secondaryTargets": ["court-vocabulary-resolver", "goals/official-data-sync-foundation"],
+    "secondaryTargets": [
+      "court-vocabulary-resolver",
+      "goals/official-data-sync-foundation"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "effect-orchestration-patterns",
@@ -237,7 +305,9 @@
     "wedgeHint": "uspto-patent-driver-depth",
     "goldSynthesisSection": "Effect & advanced TypeScript",
     "rationale": "Parameter-object pattern with invariant validation for search APIs maps to @beep/uspto + @beep/govinfo Search-request S.Class models (attorney-filter vocabulary, refined bounds). uspto is hand-rolled on ODP and lacks a query-DSL/parameter model; extend it (never restart) under the uspto-patent-driver-depth wedge.",
-    "cautions": ["uspto targets ODP (data.uspto.gov) — never reintroduce PatentsView; searchApplications today only forwards a raw q= string"]
+    "cautions": [
+      "uspto targets ODP (data.uspto.gov) — never reintroduce PatentsView; searchApplications today only forwards a raw q= string"
+    ]
   },
   {
     "id": "LegalEase#4",
@@ -247,13 +317,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "deterministic-doc-structure-extraction",
-    "secondaryTargets": ["packages/foundation/capability/nlp", "packages/epistemic/domain", "goals/trustgraph-port"],
+    "secondaryTargets": [
+      "packages/foundation/capability/nlp",
+      "packages/epistemic/domain",
+      "goals/trustgraph-port"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "deterministic-doc-structure-extraction",
     "goldSynthesisSection": "Knowledge graph, ontology & reasoning",
     "rationale": "Regex entity-and-relationship extraction into a node/link graph is the deterministic doc-structure regex extractor that the seed routes to the new deterministic-doc-structure-extraction sibling (no deterministic legal/contract-structure extractor exists in @beep/nlp); candidates feed @beep/epistemic + the planned FalkorDB projection.",
-    "cautions": ["keep provider-neutral + span-bearing, off the entity-span-lossy AnnotatedDocument envelope; LegalEase license unknown — reimplement"]
+    "cautions": [
+      "keep provider-neutral + span-bearing, off the entity-span-lossy AnnotatedDocument envelope; LegalEase license unknown — reimplement"
+    ]
   },
   {
     "id": "agentmemory#1",
@@ -263,13 +339,20 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "rag-retrieval-projection",
-    "secondaryTargets": ["packages/foundation/capability/semantic-web", "goals/trustgraph-port", "agent-memory-tiers-bitemporal-edges"],
+    "secondaryTargets": [
+      "packages/foundation/capability/semantic-web",
+      "goals/trustgraph-port",
+      "agent-memory-tiers-bitemporal-edges"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "rag-retrieval-projection",
     "goldSynthesisSection": "Knowledge graph, ontology & reasoning",
     "rationale": "Triple-stream BM25+vector+graph hybrid retrieval fused via RRF is the GraphRAG retrieval service that is PLANNED-not-built (docs/BEEPGRAPH_ARCHITECTURE.md); it lands in rag-retrieval-projection over @beep/semantic-web + the planned FalkorDB projection + PGlite vectors, coordinating with trustgraph-port to avoid two retrieval layers.",
-    "cautions": ["RRF k=60 (Cormack 2009): fuse on rank only, do not score-normalize across streams", "overlaps agent-memory-tiers-bitemporal-edges + trustgraph-port — single retrieval layer"]
+    "cautions": [
+      "RRF k=60 (Cormack 2009): fuse on rank only, do not score-normalize across streams",
+      "overlaps agent-memory-tiers-bitemporal-edges + trustgraph-port — single retrieval layer"
+    ]
   },
   {
     "id": "agentmemory#12",
@@ -279,13 +362,18 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "rag-retrieval-projection",
-    "secondaryTargets": ["goals/trustgraph-port", "agent-memory-tiers-bitemporal-edges"],
+    "secondaryTargets": [
+      "goals/trustgraph-port",
+      "agent-memory-tiers-bitemporal-edges"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "rag-retrieval-projection",
     "goldSynthesisSection": "Knowledge graph, ontology & reasoning",
     "rationale": "Scale-driven name-index/edge-key/node-degree side indexes are projection-tier design for the FalkorDB/PGlite BeepGraph projection; this is study-grade index design for the rag-retrieval-projection / trustgraph graph store (zero such index design exists in packages).",
-    "cautions": ["recommendation=study; coordinate the graph-store index design with trustgraph-port (FalkorDB owner)"]
+    "cautions": [
+      "recommendation=study; coordinate the graph-store index design with trustgraph-port (FalkorDB owner)"
+    ]
   },
   {
     "id": "courtlistener#7",
@@ -295,13 +383,21 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "court-vocabulary-resolver",
-    "secondaryTargets": ["packages/foundation/modeling/rdf", "packages/law-practice/domain", "packages/drivers/courtlistener", "goals/official-data-sync-foundation", "goals/ip-law-knowledge-graph"],
+    "secondaryTargets": [
+      "packages/foundation/modeling/rdf",
+      "packages/law-practice/domain",
+      "packages/drivers/courtlistener",
+      "goals/official-data-sync-foundation",
+      "goals/ip-law-knowledge-graph"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "court-vocabulary-resolver",
     "goldSynthesisSection": "Knowledge graph, ontology & reasoning",
     "rationale": "Court jurisdiction taxonomy (federal/state/tribal/territory/military) is a SKOS controlled vocabulary — no SKOS exists in @beep/rdf or semantic-web vocab today (only owl/prov/rdfs/rdf/xsd/oa). The seed routes this cluster to the new court-vocabulary-resolver, seeding a SKOS jurisdiction vocab in @beep/rdf + value vocab on law-practice Matter/OfficeAction; ip-law-kg owns only abstract OWL Court/Jurisdiction nodes.",
-    "cautions": ["courtlistener driver is a bare VERSION-only skeleton; keep graph-shape Court/Jurisdiction nodes owned by ip-law-knowledge-graph"]
+    "cautions": [
+      "courtlistener driver is a bare VERSION-only skeleton; keep graph-shape Court/Jurisdiction nodes owned by ip-law-knowledge-graph"
+    ]
   },
   {
     "id": "courts-db#4",
@@ -311,13 +407,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "agent-memory-tiers-bitemporal-edges",
-    "secondaryTargets": ["court-vocabulary-resolver", "packages/foundation/capability/semantic-web", "goals/epistemic-claim-lifecycle-gate"],
+    "secondaryTargets": [
+      "court-vocabulary-resolver",
+      "packages/foundation/capability/semantic-web",
+      "goals/epistemic-claim-lifecycle-gate"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "agent-memory-tiers-bitemporal-edges",
     "goldSynthesisSection": "Knowledge graph, ontology & reasoning",
     "rationale": "Temporal-validity filtering by date_found generalizes to as-of-date / bitemporal fact scoping over the KG — explicitly DEFERRED by the completed epistemic gate, so it is net-new in agent-memory-tiers-bitemporal-edges (tvalid/tvalidEnd), with the concrete courts-by-date case coordinated to court-vocabulary-resolver.",
-    "cautions": ["bitemporal edge store was deferred from the completed epistemic gate — do not reopen its SPEC; never-overwrite/always-version semantics"]
+    "cautions": [
+      "bitemporal edge store was deferred from the completed epistemic gate — do not reopen its SPEC; never-overwrite/always-version semantics"
+    ]
   },
   {
     "id": "courts-db#5",
@@ -327,13 +429,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "court-vocabulary-resolver",
-    "secondaryTargets": ["packages/foundation/capability/semantic-web", "packages/foundation/modeling/rdf", "packages/foundation/capability/langextract"],
+    "secondaryTargets": [
+      "packages/foundation/capability/semantic-web",
+      "packages/foundation/modeling/rdf",
+      "packages/foundation/capability/langextract"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "court-vocabulary-resolver",
     "goldSynthesisSection": "Knowledge graph, ontology & reasoning",
     "rationale": "Parent/child court disambiguation (most-specific-wins reduction) is the resolver logic of court-vocabulary-resolver — subsumption-aware match reduction over SKOS broader relations; no court-string resolver exists in packages.",
-    "cautions": ["courts-db is BSD-2 (vendor dataset with attribution); reimplement resolver logic, avoid AGPL CourtListener server code"]
+    "cautions": [
+      "courts-db is BSD-2 (vendor dataset with attribution); reimplement resolver logic, avoid AGPL CourtListener server code"
+    ]
   },
   {
     "id": "doc-haus#10",
@@ -343,13 +451,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "agent-memory-tiers-bitemporal-edges",
-    "secondaryTargets": ["goals/trustgraph-port", "goals/epistemic-claim-lifecycle-gate", "packages/epistemic/domain"],
+    "secondaryTargets": [
+      "goals/trustgraph-port",
+      "goals/epistemic-claim-lifecycle-gate",
+      "packages/epistemic/domain"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "agent-memory-tiers-bitemporal-edges",
     "goldSynthesisSection": "Knowledge graph, ontology & reasoning",
     "rationale": "Amendment-chain / transitive supersede resolution maps to the deferred amends/supersedes lineage edges + FRBR/LRM version resolution (supersededBy/isLatest) net-new in agent-memory-tiers-bitemporal-edges, over no-fabrication entity resolution for epistemic candidate claims; FalkorDB lineage edges coordinate with trustgraph-port.",
-    "cautions": ["no conflict/supersede edge store exists; epistemic ClaimLifecycle is forward-only today; doc-haus license unknown — reuse semantics, not code"]
+    "cautions": [
+      "no conflict/supersede edge store exists; epistemic ClaimLifecycle is forward-only today; doc-haus license unknown — reuse semantics, not code"
+    ]
   },
   {
     "id": "patents-mcp-server#7",
@@ -359,13 +473,20 @@
     "primaryTarget": "goals/ip-law-knowledge-graph",
     "targetExists": true,
     "proposedSlug": null,
-    "secondaryTargets": ["packages/foundation/modeling/rdf", "court-vocabulary-resolver", "packages/drivers/uspto", "packages/drivers/nlp-mcp"],
+    "secondaryTargets": [
+      "packages/foundation/modeling/rdf",
+      "court-vocabulary-resolver",
+      "packages/drivers/uspto",
+      "packages/drivers/nlp-mcp"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "cpc-classification-taxonomy",
     "goldSynthesisSection": "Knowledge graph, ontology & reasoning",
     "rationale": "WIPO-IPC/CPC classification taxonomy (section+class maps, hierarchical lookup) is an IP controlled-vocabulary seed; it adds a deferred SKOS-taxonomy scope note to goals/ip-law-knowledge-graph (the IP ontology owner) + @beep/rdf vocab, sharing the resolver pattern with court-vocabulary-resolver.",
-    "cautions": ["non-invasive dated research note — do not reopen ip-law-knowledge-graph SPEC; optional MCP resource via @beep/nlp-mcp"]
+    "cautions": [
+      "non-invasive dated research note — do not reopen ip-law-knowledge-graph SPEC; optional MCP resource via @beep/nlp-mcp"
+    ]
   },
   {
     "id": "uspto-patents-mcp#2",
@@ -375,13 +496,20 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "rag-retrieval-projection",
-    "secondaryTargets": ["packages/drivers/uspto", "packages/law-practice/domain", "goals/trustgraph-port", "goals/ip-law-knowledge-graph"],
+    "secondaryTargets": [
+      "packages/drivers/uspto",
+      "packages/law-practice/domain",
+      "goals/trustgraph-port",
+      "goals/ip-law-knowledge-graph"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "rag-retrieval-projection",
     "goldSynthesisSection": "Knowledge graph, ontology & reasoning",
     "rationale": "Bounded BFS over the patent citation graph (forward/backward/both) is a graph-traversal projection over law-practice PriorArtReference, sourced via @beep/uspto and materialized in the planned FalkorDB citation projection — the graph channel of rag-retrieval-projection, coordinating with trustgraph-port.",
-    "cautions": ["citation data sourced via the hand-rolled uspto ODP driver (extend, not restart); traversal is a projection over rebuildable graph, not authority"]
+    "cautions": [
+      "citation data sourced via the hand-rolled uspto ODP driver (extend, not restart); traversal is a projection over rebuildable graph, not authority"
+    ]
   },
   {
     "id": "LegalEase#7",
@@ -397,7 +525,9 @@
     "wedgeHint": "turn-branch-index",
     "goldSynthesisSection": "Agent memory & learning",
     "rationale": "Conversation branching via parent_id + branch_index adds a branchIndex sibling-ordering variant alongside the existing Turn.parentTurnId; goals/workspace-thread-domain already owns Turn branching ('branching = parent-turn lineage'), so this is a small deferred extend to that goal, not a new packet.",
-    "cautions": ["Turn already has parentTurnId (Option) — branchIndex is sibling ordering only; non-invasive scope note on workspace-thread-domain"]
+    "cautions": [
+      "Turn already has parentTurnId (Option) — branchIndex is sibling ordering only; non-invasive scope note on workspace-thread-domain"
+    ]
   },
   {
     "id": "agentmemory#5",
@@ -407,13 +537,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "agent-memory-tiers-bitemporal-edges",
-    "secondaryTargets": ["packages/agents/use-cases", "packages/epistemic/domain", "standards/memory-architecture"],
+    "secondaryTargets": [
+      "packages/agents/use-cases",
+      "packages/epistemic/domain",
+      "standards/memory-architecture"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "agent-memory-tiers-bitemporal-edges",
     "goldSynthesisSection": "Agent memory & learning",
     "rationale": "Retention scoring (salience x exp temporal decay + reinforcement, hot/warm/cold/evictable tiers) + accessCount/strength is net-new in agent-memory-tiers-bitemporal-edges — no working-memory/decay tier exists in packages; feeds a @beep/agents-use-cases working-set service + epistemic ClaimProjection prioritization.",
-    "cautions": ["agentmemory is Apache-2.0 (port with attribution) but plain TS+Zod — reuse algorithms/shapes, reimplement in Effect-Schema"]
+    "cautions": [
+      "agentmemory is Apache-2.0 (port with attribution) but plain TS+Zod — reuse algorithms/shapes, reimplement in Effect-Schema"
+    ]
   },
   {
     "id": "agentmemory#6",
@@ -423,13 +559,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "agent-memory-tiers-bitemporal-edges",
-    "secondaryTargets": ["packages/epistemic/domain", "standards/memory-architecture", "packages/agents/domain"],
+    "secondaryTargets": [
+      "packages/epistemic/domain",
+      "standards/memory-architecture",
+      "packages/agents/domain"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "agent-memory-tiers-bitemporal-edges",
     "goldSynthesisSection": "Agent memory & learning",
     "rationale": "Four-tier consolidation taxonomy (working/episodic/semantic/procedural) ConsolidationTier enum has zero presence in packages — net-new in agent-memory-tiers-bitemporal-edges extending CandidateClaim; the four-LAYER taxonomy is already a binding decision in standards/memory-architecture/01.",
-    "cautions": ["per-fact confidence (Evidence/EvidenceSpan UnitInterval) + the semantic tier already exist (dup parts) — only ConsolidationTier enum + working tier are net-new"]
+    "cautions": [
+      "per-fact confidence (Evidence/EvidenceSpan UnitInterval) + the semantic tier already exist (dup parts) — only ConsolidationTier enum + working tier are net-new"
+    ]
   },
   {
     "id": "agentmemory#7",
@@ -439,13 +581,18 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "agent-memory-tiers-bitemporal-edges",
-    "secondaryTargets": ["packages/epistemic/domain", "packages/epistemic/use-cases"],
+    "secondaryTargets": [
+      "packages/epistemic/domain",
+      "packages/epistemic/use-cases"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "agent-memory-tiers-bitemporal-edges",
     "goldSynthesisSection": "Agent memory & learning",
     "rationale": "Heuristic confidence scoring for typed memory relations (supersedes/contradicts/extends/derives/related) is the net-new ClaimRelation value + confidence/contradiction service feeding ClaimGate — no conflict detection exists; lands in agent-memory-tiers-bitemporal-edges.",
-    "cautions": ["keep zero IP-law vocabulary in the epistemic/memory slice (federation + no-vocabulary invariants from the completed gate)"]
+    "cautions": [
+      "keep zero IP-law vocabulary in the epistemic/memory slice (federation + no-vocabulary invariants from the completed gate)"
+    ]
   },
   {
     "id": "doc-haus#7",
@@ -455,13 +602,20 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "agent-memory-tiers-bitemporal-edges",
-    "secondaryTargets": ["goals/agent-governance-control-plane", "goals/epistemic-claim-lifecycle-gate", "packages/shared/domain", "packages/epistemic/use-cases"],
+    "secondaryTargets": [
+      "goals/agent-governance-control-plane",
+      "goals/epistemic-claim-lifecycle-gate",
+      "packages/shared/domain",
+      "packages/epistemic/use-cases"
+    ],
     "disposition": "netNew",
     "wave": "P1",
     "wedgeHint": "agent-memory-tiers-bitemporal-edges",
     "goldSynthesisSection": "Agent memory & learning",
     "rationale": "Candidate->approved redline gate adds rejected/superseded ClaimLifecycle STATES (today rejected is only a ClaimGate verdict; ClaimLifecycle is forward-only candidate->shape_valid->consistency_checked->admitted) + a ClaimGate conflict/supersede pass — the deferred epistemic work routes to agent-memory-tiers-bitemporal-edges; the approval-queue/ctx.ask permission strand coordinates with agent-governance-control-plane.",
-    "cautions": ["epistemic gate is completed-retained + deferred these states — do NOT reopen its SPEC; pending-proposal/ctx.ask is governance (agent-governance-control-plane)"]
+    "cautions": [
+      "epistemic gate is completed-retained + deferred these states — do NOT reopen its SPEC; pending-proposal/ctx.ask is governance (agent-governance-control-plane)"
+    ]
   },
   {
     "id": "doc-haus#12",
@@ -471,13 +625,19 @@
     "primaryTarget": "goals/agentic-professional-runtime",
     "targetExists": true,
     "proposedSlug": null,
-    "secondaryTargets": ["packages/agents/domain", "goals/agent-governance-control-plane", "mcp-auth-gated-registration"],
+    "secondaryTargets": [
+      "packages/agents/domain",
+      "goals/agent-governance-control-plane",
+      "mcp-auth-gated-registration"
+    ],
     "disposition": "alreadyCovered",
     "wave": "P2",
     "wedgeHint": "agent-tool-allowlist",
     "goldSynthesisSection": "Agent memory & learning",
     "rationale": "Retrieval-grounded legal agent prompt + per-agent tool allowlist + handoff-not-workaround boundaries maps to packages/agents/domain Agent/Skill (currently stubs); the agent prompt/skill/tool-allowlist surface is within goals/agentic-professional-runtime scope, with tool-gating coordinated to agent-governance-control-plane.",
-    "cautions": ["Agent/Skill entities are stubs; retrieval->logic gating must keep outputs span-grounded through ClaimGate (no raw-chunk RAG)"]
+    "cautions": [
+      "Agent/Skill entities are stubs; retrieval->logic gating must keep outputs span-grounded through ClaimGate (no raw-chunk RAG)"
+    ]
   },
   {
     "id": "research-squad#10",
@@ -487,13 +647,18 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "agent-memory-tiers-bitemporal-edges",
-    "secondaryTargets": ["packages/agents/use-cases", "packages/workspace/domain"],
+    "secondaryTargets": [
+      "packages/agents/use-cases",
+      "packages/workspace/domain"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "agent-memory-tiers-bitemporal-edges",
     "goldSynthesisSection": "Agent memory & learning",
     "rationale": "Agent-memory compression/snapshot/restore prompt suite is a memory-management capability (new @beep/agents-use-cases MemorySnapshot schema + Thread context-reduction process) belonging to the agent-memory-tiers-bitemporal-edges wedge; no snapshot/restore exists.",
-    "cautions": ["prompt-suite is provider-neutral pattern only; context reduction must preserve span-grounded provenance"]
+    "cautions": [
+      "prompt-suite is provider-neutral pattern only; context reduction must preserve span-grounded provenance"
+    ]
   },
   {
     "id": "screenpipe#3",
@@ -509,7 +674,9 @@
     "wedgeHint": "agent-memory-tiers-bitemporal-edges",
     "goldSynthesisSection": "Agent memory & learning",
     "rationale": "Namespaced tag linking across heterogeneous content types is a reference-grade cross-slice memory-tagging + related-context retrieval model (not built); folds into agent-memory-tiers-bitemporal-edges as a low-priority coordinate.",
-    "cautions": ["recommendation=reference, P3 — not built; screenpipe license flagged unknown (reimplement-don't-copy)"]
+    "cautions": [
+      "recommendation=reference, P3 — not built; screenpipe license flagged unknown (reimplement-don't-copy)"
+    ]
   },
   {
     "id": "TalentScore#10",
@@ -519,13 +686,19 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "local-first-projection-sync",
-    "secondaryTargets": ["packages/workspace/server", "apps/professional-desktop", "goals/desktop-chat-surface"],
+    "secondaryTargets": [
+      "packages/workspace/server",
+      "apps/professional-desktop",
+      "goals/desktop-chat-surface"
+    ],
     "disposition": "netNew",
     "wave": "P2",
     "wedgeHint": "local-first-projection-sync",
     "goldSynthesisSection": "Desktop & document portal",
     "rationale": "Per-user live connection hub for real-time projection sync — a @beep/workspace-server EventStreamHub service that refreshes projections after an authority write — does not exist (verified: zero EventStreamHub hits); it is broader than the desktop-chat-surface stream and needs its own wedge consumed by the apps/professional-desktop transport.",
-    "cautions": ["EventStreamHub is net-new; overlaps desktop-chat-surface streamed turns — coordinate to avoid two push channels"]
+    "cautions": [
+      "EventStreamHub is net-new; overlaps desktop-chat-surface streamed turns — coordinate to avoid two push channels"
+    ]
   },
   {
     "id": "patents-mcp-server#11",
@@ -541,7 +714,9 @@
     "wedgeHint": "secure-doc-download-proxy",
     "goldSynthesisSection": "Desktop & document portal",
     "rationale": "Edge-gated resource route with strict-UUID guard serving private no-store PDFs is the desktop-sidecar secure resource route + @beep/uspto File-Wrapper document download proxy (UUID/TTL-gated); pairs with uspto_pfw_mcp#11 into a new secure-document-download-proxy wedge over apps/professional-desktop/server.",
-    "cautions": ["uspto driver already has File-Wrapper download (extend); patents-mcp-server is MIT (portable patterns)"]
+    "cautions": [
+      "uspto driver already has File-Wrapper download (extend); patents-mcp-server is MIT (portable patterns)"
+    ]
   },
   {
     "id": "uspto_pfw_mcp#11",
@@ -557,7 +732,9 @@
     "wedgeHint": "secure-doc-download-proxy",
     "goldSynthesisSection": "Desktop & document portal",
     "rationale": "Secure local download proxy with encrypted opaque links (Fernet/DPAPI analog) is the same secure-document-download-proxy wedge as patents-mcp-server#11 — opaque TTL-gated links over the desktop sidecar + @beep/uspto document download.",
-    "cautions": ["reimplement opaque-link crypto with platform-native secret handling; uspto_pfw_mcp is MIT (portable)"]
+    "cautions": [
+      "reimplement opaque-link crypto with platform-native secret handling; uspto_pfw_mcp is MIT (portable)"
+    ]
   },
   {
     "id": "seal-rookery#2",
@@ -573,7 +750,9 @@
     "wedgeHint": "court-vocabulary-resolver",
     "goldSynthesisSection": "Desktop & document portal",
     "rationale": "Court seal image URL resolver (court id -> seal asset) is court-metadata-adjacent and folds into court-vocabulary-resolver as an optional desktop-portal display helper; reference-grade only.",
-    "cautions": ["recommendation=reference, P3 — optional UI helper; seal-rookery is a freelawproject asset (license/attribution check)"]
+    "cautions": [
+      "recommendation=reference, P3 — optional UI helper; seal-rookery is a freelawproject asset (license/attribution check)"
+    ]
   },
   {
     "id": "us-legal-tools#12",
@@ -583,13 +762,18 @@
     "primaryTarget": "-",
     "targetExists": false,
     "proposedSlug": "gov-legal-data-driver-codegen",
-    "secondaryTargets": ["apps/professional-desktop", "packages/drivers/govinfo"],
+    "secondaryTargets": [
+      "apps/professional-desktop",
+      "packages/drivers/govinfo"
+    ],
     "disposition": "netNew",
     "wave": "P3",
     "wedgeHint": "openapi-docs-portal",
     "goldSynthesisSection": "Desktop & document portal",
     "rationale": "Scalar + Hono aggregated OpenAPI docs portal surfaces the gov drivers' generated HttpApi specs — a deferred/optional downstream feature of the gov-legal-data-driver-codegen wedge (the codegen produces the specs), Tauri-adjacent in apps/professional-desktop.",
-    "cautions": ["recommendation=study, P3 — optional; us-legal-tools is MIT but port the portal architecture onto Effect/HttpApi, not the generated output"]
+    "cautions": [
+      "recommendation=study, P3 — optional; us-legal-tools is MIT but port the portal architecture onto Effect/HttpApi, not the generated output"
+    ]
   },
   {
     "id": "TalentScore#5",
@@ -599,12 +783,17 @@
     "primaryTarget": "goals/epistemic-claim-lifecycle-gate",
     "targetExists": true,
     "proposedSlug": null,
-    "secondaryTargets": ["packages/epistemic/use-cases", "deterministic-doc-structure-extraction"],
+    "secondaryTargets": [
+      "packages/epistemic/use-cases",
+      "deterministic-doc-structure-extraction"
+    ],
     "disposition": "alreadyCovered",
     "wave": "P3",
     "wedgeHint": "claimgate-deterministic-scoring",
     "goldSynthesisSection": "Serendipity — out-of-scope finds worth noting",
     "rationale": "Deterministic weighted scoring with dealbreaker rules over LLM-extracted typed facts (RETRIEVAL/LOGIC split) targets packages/epistemic/use-cases/ClaimGate, which already owns the deterministic gate substrate; per the routing rule ClaimGate/lifecycle items are dup/already-covered, so this attaches as an explainable-scoring rule layer rather than a new packet.",
-    "cautions": ["ClaimGate substrate exists (mostly covered); serendipity/P3 study-grade — explainable weighted-scoring would be a deterministic rule layer over typed langextract/IrToLaw facts"]
+    "cautions": [
+      "ClaimGate substrate exists (mostly covered); serendipity/P3 study-grade — explainable weighted-scoring would be a deterministic rule layer over typed langextract/IrToLaw facts"
+    ]
   }
 ]

@@ -52,6 +52,8 @@ ND = "ND"
 Som = "Som"
 HPE = "HPE"
 BA = "BA"
+# GES: Ant Group's Graph Engine Service algorithm library (docs/graphs/graph-databases.md), not a typo.
+GES = "GES"
 PN = "PN"
 mis = "mis"
 

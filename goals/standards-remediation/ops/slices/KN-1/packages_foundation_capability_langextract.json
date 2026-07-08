@@ -1,0 +1,10 @@
+{
+  "scope": "packages/foundation/capability/langextract",
+  "findings": [
+    {
+      "kind": "unresolved",
+      "file": "packages/foundation/capability/langextract/tsconfig.test.json",
+      "name": "bun-types"
+    }
+  ]
+}

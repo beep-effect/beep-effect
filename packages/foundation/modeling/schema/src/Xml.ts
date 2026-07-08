@@ -96,6 +96,25 @@ export const XmlTextToUnknown = S.String.pipe(
 );
 
 /**
+ * {@inheritDoc XmlTextToUnknown}
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ * import { XmlTextToUnknown } from "@beep/schema/Xml"
+ *
+ * const program = S.decodeUnknownEffect(XmlTextToUnknown)("<root><name>Beep</name></root>")
+ * const parsed: typeof XmlTextToUnknown.Type = await Effect.runPromise(program)
+ * console.log(parsed)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type XmlTextToUnknown = typeof XmlTextToUnknown.Type;
+
+/**
  * Builds a decoder that parses XML text and then decodes the result through a
  * target schema.
  *

@@ -87,6 +87,15 @@ export const WindowsDrivePath = S.NonEmptyString.check(
 /**
  * Type for {@link WindowsDrivePath}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { WindowsDrivePath } from "@beep/schema/FilePath"
+ *
+ * const value: WindowsDrivePath = S.decodeUnknownSync(WindowsDrivePath)("C:\\Users\\Ada")
+ * console.log(value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -158,6 +167,15 @@ export const WindowsUncPath = S.NonEmptyString.check(
 
 /**
  * Type for {@link WindowsUncPath}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { WindowsUncPath } from "@beep/schema/FilePath"
+ *
+ * const value: WindowsUncPath = S.decodeUnknownSync(WindowsUncPath)("\\\\server\\share\\folder")
+ * console.log(value)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -242,6 +260,15 @@ export const WindowsRelativePath = S.NonEmptyString.check(
 
 /**
  * Type for {@link WindowsRelativePath}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { WindowsRelativePath } from "@beep/schema/FilePath"
+ *
+ * const value: WindowsRelativePath = S.decodeUnknownSync(WindowsRelativePath)("Users\\Ada")
+ * console.log(value)
+ * ```
  *
  * @since 0.0.0
  * @category models

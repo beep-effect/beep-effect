@@ -1,3 +1,9 @@
+/**
+ * MUI `Progress` (linear/circular) component theme overrides.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import type { ThemeComponents } from "../types.ts";
 
 /**

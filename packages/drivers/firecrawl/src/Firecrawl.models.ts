@@ -430,6 +430,13 @@ export type FirecrawlWatcherEventType = typeof FirecrawlWatcherEventType.Type;
 /**
  * Opaque Firecrawl scrape options accepted by the SDK.
  *
+ * @example
+ * ```ts
+ * import { FirecrawlScrapeOptions } from "@beep/firecrawl"
+ *
+ * console.log(FirecrawlScrapeOptions)
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -456,6 +463,13 @@ export type FirecrawlScrapeOptions = typeof FirecrawlScrapeOptions.Type;
 /**
  * Opaque Firecrawl parse file accepted by the SDK.
  *
+ * @example
+ * ```ts
+ * import { FirecrawlParseFile } from "@beep/firecrawl"
+ *
+ * console.log(FirecrawlParseFile)
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -481,6 +495,13 @@ export type FirecrawlParseFile = typeof FirecrawlParseFile.Type;
 
 /**
  * Opaque Firecrawl parse options accepted by the SDK.
+ *
+ * @example
+ * ```ts
+ * import { FirecrawlParseOptions } from "@beep/firecrawl"
+ *
+ * console.log(FirecrawlParseOptions)
+ * ```
  *
  * @category schemas
  * @since 0.0.0

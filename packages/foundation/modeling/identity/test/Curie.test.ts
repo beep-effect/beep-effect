@@ -1,4 +1,4 @@
-import { CoreVocab, CurieFromIri, contract, expand, expandPredicate } from "@beep/identity";
+import { CoreVocab, CurieFromIri, contractOption, expand, expandOption, expandPredicate } from "@beep/identity";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as Equal from "effect/Equal";
@@ -27,11 +27,11 @@ describe("CURIE codec", () => {
 
   it("round-trips every CoreVocab term", () => {
     for (const current of coreCurieCases) {
-      const iri = expand(current.curie);
+      const iri = expandOption(current.curie, CoreVocab);
 
-      expect(iri, current.curie).toBe(current.iri);
-      if (iri !== undefined) {
-        expect(contract(iri), current.iri).toBe(current.curie);
+      expect(O.getOrUndefined(iri), current.curie).toBe(current.iri);
+      if (O.isSome(iri)) {
+        expect(O.getOrUndefined(contractOption(iri.value, CoreVocab)), current.iri).toBe(current.curie);
       }
     }
   });
@@ -40,11 +40,11 @@ describe("CURIE codec", () => {
     fc.assert(
       fc.property(fc.constant(coreCurieCases), (cases) => {
         for (const current of cases) {
-          const iri = expand(current.curie);
+          const iri = expandOption(current.curie, CoreVocab);
 
-          expect(iri, current.curie).toBe(current.iri);
-          if (iri !== undefined) {
-            expect(contract(iri), current.iri).toBe(current.curie);
+          expect(O.getOrUndefined(iri), current.curie).toBe(current.iri);
+          if (O.isSome(iri)) {
+            expect(O.getOrUndefined(contractOption(iri.value, CoreVocab)), current.iri).toBe(current.curie);
           }
         }
       })

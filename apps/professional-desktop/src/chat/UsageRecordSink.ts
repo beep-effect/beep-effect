@@ -21,6 +21,17 @@ import type { UsageRecord } from "@beep/epistemic-domain";
  * Service shape of the usage-record sink: append a single {@link UsageRecord}.
  * Appends are total — the sink never fails the calling turn pipeline.
  *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import type { UsageRecordSinkShape } from "@/chat/UsageRecordSink"
+ *
+ * const sink: UsageRecordSinkShape = {
+ *   append: () => Effect.void
+ * }
+ * console.log(typeof sink.append)
+ * ```
+ *
  * @category services
  * @since 0.0.0
  */
@@ -31,6 +42,17 @@ export interface UsageRecordSinkShape {
 /**
  * Append-only usage-record sink the chat orchestration handler writes finalized
  * turn usage to.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { UsageRecordSink } from "@/chat/UsageRecordSink"
+ *
+ * const program = Effect.gen(function* () {
+ *   const sink = yield* UsageRecordSink
+ *   return sink
+ * })
+ * ```
  *
  * @category services
  * @since 0.0.0
@@ -44,6 +66,17 @@ export class UsageRecordSink extends Context.Service<UsageRecordSink, UsageRecor
  * shared `Ref` is returned alongside the {@link UsageRecordSink} port so the
  * app-level contract test can assert exactly which {@link UsageRecord}s were
  * appended by reading the `Ref` directly.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { makeInMemoryUsageRecordSink } from "@/chat/UsageRecordSink"
+ *
+ * const program = Effect.gen(function* () {
+ *   const { ref, sink } = yield* makeInMemoryUsageRecordSink
+ *   return { ref, sink }
+ * })
+ * ```
  *
  * @category constructors
  * @since 0.0.0
@@ -65,6 +98,17 @@ export const makeInMemoryUsageRecordSink: Effect.Effect<{
  * TODO(live sidecar): replace with a PGlite-backed sink that encodes the
  * {@link UsageRecord} and persists it into the `usage_record` table once the
  * usage-record migration and the PGlite-socket runtime land.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { UsageRecordSink, UsageRecordSinkInMemory } from "@/chat/UsageRecordSink"
+ *
+ * const program = Effect.gen(function* () {
+ *   const sink = yield* UsageRecordSink
+ *   return sink
+ * }).pipe(Effect.provide(UsageRecordSinkInMemory))
+ * ```
  *
  * @category layers
  * @since 0.0.0
@@ -118,6 +162,13 @@ const makeDrizzleUsageRecordSink: Effect.Effect<UsageRecordSinkShape, never, Pos
 /**
  * Drizzle-backed {@link UsageRecordSink} layer that persists finalized turn usage
  * into the epistemic `epistemic_usage_record` table through {@link PostgresDrizzle}.
+ *
+ * @example
+ * ```ts
+ * import { UsageRecordSinkDrizzle } from "@/chat/UsageRecordSink"
+ *
+ * console.log(UsageRecordSinkDrizzle)
+ * ```
  *
  * @category layers
  * @since 0.0.0

@@ -44,9 +44,17 @@ class SelectedRowFieldShapeError extends TaggedErrorClass<SelectedRowFieldShapeE
   })
 ) {}
 
-/** @internal */
 /**
- * Public schema module export.
+ * Raised when an entity field input fails validation while building an
+ * entity schema class.
+ *
+ * @example
+ * ```ts
+ * import { EntityFieldInputError } from "../../src/EntitySchema/EntitySchema.shape.ts"
+ *
+ * const error = EntityFieldInputError.make({ field: "name", message: "must be a schema" })
+ * console.log(error.field)
+ * ```
  *
  * @category errors
  * @since 0.0.0
@@ -62,9 +70,19 @@ export class EntityFieldInputError extends TaggedErrorClass<EntityFieldInputErro
   })
 ) {}
 
-/** @internal */
 /**
- * Public schema module export.
+ * Raised when EntitySchema definition metadata fails to attach to a schema
+ * class.
+ *
+ * @example
+ * ```ts
+ * import { EntitySchemaAttachmentError } from "../../src/EntitySchema/EntitySchema.shape.ts"
+ *
+ * const error = EntitySchemaAttachmentError.make({
+ *   message: "Failed to attach EntitySchema definition metadata."
+ * })
+ * console.log(error.message)
+ * ```
  *
  * @category errors
  * @since 0.0.0
@@ -182,6 +200,22 @@ export const EncodedFieldShape = EncodedAbsenceKindSchema.mapMembers((members) =
 
 /**
  * Runtime type for encoded field shape metadata.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { EncodedFieldShape } from "@beep/schema/EntitySchema"
+ *
+ * const value: EncodedFieldShape = S.decodeUnknownSync(EncodedFieldShape)({
+ *   absenceKind: "required",
+ *   allowsNull: false,
+ *   allowsUndefined: false,
+ *   isAmbiguous: false,
+ *   isOptional: false
+ * })
+ *
+ * console.log(value.absenceKind)
+ * ```
  *
  * @since 0.0.0
  * @category models

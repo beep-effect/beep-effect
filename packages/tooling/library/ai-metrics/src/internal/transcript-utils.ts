@@ -6,6 +6,7 @@
 
 import { A, Str } from "@beep/utils";
 import { flow, pipe } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { AiMetricsTranscriptSource } from "../models.ts";
 import type { Path } from "effect";
@@ -76,8 +77,12 @@ export const repoPathToClaudeProjectName: (repoRoot: string) => string = Str.rep
  * @category utilities
  * @since 0.0.0
  */
-export const normalizedRelativePath = (pathApi: Path.Path, root: string, filePath: string): string =>
-  pipe(pathApi.relative(root, filePath), Str.replace(/\\/gu, "/"));
+export const normalizedRelativePath: {
+  (filePath: string, options: { readonly pathApi: Path.Path; readonly root: string }): string;
+  (options: { readonly pathApi: Path.Path; readonly root: string }): (filePath: string) => string;
+} = dual(2, (filePath: string, options: { readonly pathApi: Path.Path; readonly root: string }): string =>
+  pipe(options.pathApi.relative(options.root, filePath), Str.replace(/\\/gu, "/"))
+);
 
 /**
  * Build an optional timestamp object for schema class constructors.

@@ -1,3 +1,10 @@
+/**
+ * Oxlint plugin registry aggregating the repo-local `beep` policy-pack rules.
+ *
+ * @packageDocumentation
+ * @since 0.1.0
+ */
+
 import { definePlugin } from "@oxlint/plugins";
 import namespaceNodeImports from "./namespace-node-imports.ts";
 import noGlobalProcessRuntime from "./no-global-process-runtime.ts";

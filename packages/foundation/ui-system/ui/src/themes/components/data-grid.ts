@@ -1,3 +1,9 @@
+/**
+ * MUI X `DataGrid` component theme overrides.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import type {} from "@mui/x-data-grid/themeAugmentation";
 import type { ThemeComponents } from "../types.ts";
 

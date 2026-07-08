@@ -44,6 +44,14 @@ import type { AgentTurnKernel } from "@beep/agents-use-cases/public";
  * (`AgentTurnKernel | ThreadStore | UsageRecordSink`) are satisfied here, so the
  * remaining requirement is whatever rpc/http transport the sidecar adds on top.
  *
+ * @example
+ * ```ts
+ * import type { ChatHandlersLayer } from "@/runtime/Layer"
+ * import type { RuntimeLive } from "@/runtime/Layer"
+ *
+ * type Check = typeof RuntimeLive extends ChatHandlersLayer ? true : false
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -76,6 +84,13 @@ const TurnKernelLive: Layer.Layer<AgentTurnKernel> = Layer.unwrap(
  * This is the thing the sidecar launches; its only remaining requirement is the
  * rpc/http transport the sidecar provides on top.
  *
+ * @example
+ * ```ts
+ * import { RuntimeLive } from "@/runtime/Layer"
+ *
+ * console.log(RuntimeLive)
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */
@@ -90,6 +105,13 @@ export const RuntimeLive: ChatHandlersLayer = ChatHandlersLive.pipe(
  * {@link FixtureTurnKernel}, the in-memory ThreadStore, and the in-memory
  * usage-record sink — no database, no API key, no external dependency. Mirrors
  * the wiring exercised by the app-level chat contract test.
+ *
+ * @example
+ * ```ts
+ * import { RuntimeTest } from "@/runtime/Layer"
+ *
+ * console.log(RuntimeTest)
+ * ```
  *
  * @category layers
  * @since 0.0.0

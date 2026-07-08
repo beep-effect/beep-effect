@@ -77,6 +77,23 @@ export class PackageInfo extends S.Class<PackageInfo>($I`PackageInfo`)(
 /**
  * Companion namespace for {@link PackageInfo} encoded helpers.
  *
+ * @example
+ * ```ts
+ * import { PackageInfo } from "@beep/govinfo/domain/values/PackageInfo/PackageInfo.model";
+ * import * as S from "effect/Schema";
+ *
+ * const info: PackageInfo = S.decodeUnknownSync(PackageInfo)({
+ *   congress: "118",
+ *   dateIssued: "2024-01-03T00:00:00Z",
+ *   docClass: "CREC",
+ *   lastModified: "2024-01-04T12:00:00Z",
+ *   packageLink: "https://api.govinfo.gov/packages/CREC-2024-01-03/summary",
+ *   title: "Congressional Record, January 3, 2024"
+ * });
+ *
+ * console.log(info.title);
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */

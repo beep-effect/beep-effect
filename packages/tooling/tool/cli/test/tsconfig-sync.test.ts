@@ -9,6 +9,7 @@ import * as NodePath from "@effect/platform-node/NodePath";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { Effect, FileSystem, Layer, Order, Path } from "effect";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 import { Command } from "effect/unstable/cli";
 import * as jsonc from "jsonc-parser";
 import { describe, expect, it } from "vitest";
@@ -43,6 +44,11 @@ const TstycheConfig = S.Struct({
 const decodeTsconfigReferences = S.decodeUnknownSync(TsconfigReferences);
 const decodeTsconfigPaths = S.decodeUnknownSync(TsconfigPaths);
 const decodeTstycheConfig = S.decodeUnknownSync(TstycheConfig);
+
+const expectTsconfigReferencesRoundTrip = (value: typeof TsconfigReferences.Type): void => {
+  const encoded = S.encodeUnknownSync(TsconfigReferences)(value);
+  expect(decodeTsconfigReferences(encoded)).toEqual(value);
+};
 
 const withTempRepo = <A, E, R>(use: Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(
@@ -195,6 +201,13 @@ const bootstrapWorkspace = Effect.fn(function* (
 });
 
 describe("tsconfig-sync", () => {
+  it("round-trips arbitrary tsconfig reference documents", () => {
+    fc.assert(
+      fc.property(S.toArbitrary(TsconfigReferences), (value) => expectTsconfigReferencesRoundTrip(value)),
+      { numRuns: 25 }
+    );
+  });
+
   it(
     "accepts --write as explicit sync mode",
     () =>

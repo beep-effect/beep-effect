@@ -70,7 +70,8 @@
     "@beep/test-utils": "workspace:^",
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
-    "@types/node": "catalog:"
+    "@types/node": "catalog:",
+    "bun-types": "catalog:"
   },
   "beep": {
     "family": "foundation",

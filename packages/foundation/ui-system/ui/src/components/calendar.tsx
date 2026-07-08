@@ -1,3 +1,9 @@
+/**
+ * Calendar primitive: a styled DayPicker calendar using the shared button variants.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Button, buttonVariants } from "@beep/ui/components/button";

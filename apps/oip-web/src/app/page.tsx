@@ -30,6 +30,14 @@ const safeJsonScript = (value: unknown) =>
  * errors (`blocking-prerender-dynamic`). Consumed by the framework, not by
  * application imports.
  *
+ * @example
+ * ```ts
+ * import { instant } from "@beep/oip-web/app/page"
+ *
+ * console.log(instant)
+ * // false
+ * ```
+ *
  * @category configuration
  * @since 0.0.0
  */

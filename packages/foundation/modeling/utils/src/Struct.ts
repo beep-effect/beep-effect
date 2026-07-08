@@ -779,7 +779,7 @@ export const reverse: {
  *
  * @typeParam T - The original type for which a recursive partial should be constructed.
  * @since 0.0.0
- * @category Utility
+ * @category utilities
  */
 export type DeepPartial<T> = T extends readonly (infer U)[]
   ? readonly DeepPartial<U>[]

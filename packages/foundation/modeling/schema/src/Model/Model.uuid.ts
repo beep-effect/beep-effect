@@ -14,10 +14,10 @@ import type * as VariantSchema from "../VariantSchema/index.ts";
  *
  * @example
  * ```ts
- * import * as Schema from "effect/Schema"
+ * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
  *
- * const BlobId = Model.Uint8Array.pipe(Schema.brand("BlobId"))
+ * const BlobId = Model.Uint8Array.pipe(S.brand("BlobId"))
  * const field: Model.UuidV4Insert<"BlobId"> = Model.UuidV4Insert(BlobId)
  *
  * console.log(field)
@@ -56,10 +56,10 @@ export const Uint8Array: S.instanceOf<Uint8Array<ArrayBuffer>> = S.Uint8Array as
  *
  * @example
  * ```ts
- * import * as Schema from "effect/Schema"
+ * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
  *
- * const BlobId = Model.Uint8Array.pipe(Schema.brand("BlobId"))
+ * const BlobId = Model.Uint8Array.pipe(S.brand("BlobId"))
  * const overridable = Model.UuidV4WithGenerate(BlobId)
  *
  * console.log(overridable)
@@ -80,14 +80,16 @@ export const UuidV4WithGenerate = <B extends string>(
  *
  * @example
  * ```ts
- * import * as Schema from "effect/Schema"
+ * import * as S from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
  *
- * const BlobId = Model.Uint8Array.pipe(Schema.brand("BlobId"))
+ * const BlobId = Model.Uint8Array.pipe(S.brand("BlobId"))
  *
- * class Blob extends Model.Class<Blob>("Blob")({}) {}
+ * class Blob extends Model.Class<Blob>("Blob")({
+ *   id: Model.UuidV4Insert(BlobId)
+ * }) {}
  *
- * console.log(Blob)
+ * console.log(Blob.fields.id)
  * ```
  *
  * @since 0.0.0

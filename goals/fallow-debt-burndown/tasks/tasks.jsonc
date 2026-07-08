@@ -149,21 +149,12 @@
       "phase": "P4",
       "title": "Retire duplication cleanup lane",
       "summary": "Leave duplication cleanup out of this Fallow debt packet now that the repo-owned duplication check has been removed.",
-      "implementationScope": [
-        "apps",
-        "packages"
-      ],
-      "proofCommands": [
-        "git diff --check -- goals/fallow-debt-burndown"
-      ],
-      "acceptanceCommands": [
-        "git diff --check -- goals/fallow-debt-burndown"
-      ],
+      "implementationScope": ["apps", "packages"],
+      "proofCommands": ["git diff --check -- goals/fallow-debt-burndown"],
+      "acceptanceCommands": ["git diff --check -- goals/fallow-debt-burndown"],
       "dependencies": ["fdb-001"],
       "rollbackPlan": "Reintroduce an explicit duplication cleanup packet only if a future tool path is selected.",
-      "evidenceRefs": [
-        "goals/fallow-debt-burndown/PLAN.md"
-      ],
+      "evidenceRefs": ["goals/fallow-debt-burndown/PLAN.md"],
       "owner": "@beep-team",
       "riskLevel": "medium",
       "decisionGate": {

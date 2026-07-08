@@ -222,6 +222,41 @@ layer(testLayer)("dual arity laws", (it) => {
     )
   );
 
+  it.effect("ignores static schema-codec callables while tracking plain static function properties", () =>
+    withTempWorkingDirectory(
+      Effect.gen(function* () {
+        yield* writeProjectScaffold;
+        yield* writeProjectFile(
+          "packages/demo/src/index.ts",
+          A.join(
+            [
+              'import * as S from "effect/Schema";',
+              "",
+              "export class Codec extends S.asClass(S.String) {",
+              "  static readonly decodeUnknownSync = S.decodeUnknownSync(this);",
+              "}",
+              "",
+              "export class Plain {",
+              "  static readonly combine: (a: string, b: string) => string = (a: string, b: string): string =>",
+              "    `${a}:${b}`;",
+              "}",
+              "",
+            ],
+            "\n"
+          )
+        );
+
+        const summary = yield* runLaw();
+        const diagnostics = A.join(summary.diagnostics, "\n");
+
+        expect(summary.liveEntries).toBe(1);
+        expect(diagnostics).not.toContain("Codec.decodeUnknownSync");
+        expect(diagnostics).toContain("Plain.combine");
+        expect(diagnostics).toContain("missing-dual");
+      })
+    )
+  );
+
   it.effect("defers optional-trailing and variadic public shapes", () =>
     withTempWorkingDirectory(
       Effect.gen(function* () {
@@ -437,10 +472,23 @@ layer(testLayer)("dual arity laws", (it) => {
               "  (label: string, options: readonly [string, string]): (self: string) => string",
               "} = dual(3, (self: string, label: string, options: readonly [string, string]): string => `${self}:${label}:${options[0]}`);",
               "",
-              "export const functionBad: {",
+              "export const functionCallableOk: {",
               "  (self: string, label: string, options: () => string): string",
               "  (label: string, options: () => string): (self: string) => string",
               "} = dual(3, (self: string, label: string, options: () => string): string => `${self}:${label}:${options()}`);",
+              "",
+              "export const stringBad: {",
+              "  (self: string, label: string, options: string): string",
+              "  (label: string, options: string): (self: string) => string",
+              "} = dual(3, (self: string, label: string, options: string): string => `${self}:${label}:${options}`);",
+              "",
+              "export function nonDualFunctionThirdParam(",
+              "  self: string,",
+              "  label: string,",
+              "  transform: (value: string) => string",
+              "): string {",
+              "  return transform(`${self}:${label}`);",
+              "}",
               "",
               "export const effectBad: {",
               "  (self: string, label: string, options: EffectOptions): string",
@@ -480,10 +528,12 @@ layer(testLayer)("dual arity laws", (it) => {
         const summary = yield* runLaw();
         const diagnostics = A.join(summary.diagnostics, "\n");
 
-        expect(summary.liveEntries).toBe(9);
+        expect(summary.liveEntries).toBe(10);
         expect(diagnostics).toContain("arrayBad");
         expect(diagnostics).toContain("tupleBad");
-        expect(diagnostics).toContain("functionBad");
+        expect(diagnostics).toContain("stringBad");
+        expect(diagnostics).toContain("nonDualFunctionThirdParam");
+        expect(diagnostics).toContain("missing-dual");
         expect(diagnostics).toContain("effectBad");
         expect(diagnostics).toContain("schemaBad");
         expect(diagnostics).toContain("promiseBad");
@@ -496,6 +546,7 @@ layer(testLayer)("dual arity laws", (it) => {
         expect(diagnostics).not.toContain("classOk");
         expect(diagnostics).not.toContain("recordOk");
         expect(diagnostics).not.toContain("constrainedGenericOk");
+        expect(diagnostics).not.toContain("functionCallableOk");
       })
     )
   );
@@ -675,5 +726,106 @@ layer(testLayer)("dual arity laws", (it) => {
         expect(A.join(staleSummary.diagnostics, "\n")).toContain("[stale]");
       })
     )
+  );
+
+  // R12: PERMANENT_EXCLUSIONS is an in-code, driver-verified hold — stronger
+  // than a standards/dual-arity.inventory.jsonc exception record. scanChunk
+  // is consumed BY REFERENCE as a Stream.mapAccum fold step
+  // (AnthropicTurnKernel.ts:143); wrapping it with dual() breaks overload
+  // resolution (ops/reports/P2-audits/p2-d5d8.md). A sibling 2-param export
+  // NOT registered in PERMANENT_EXCLUSIONS must still fire.
+  it.effect(
+    "R12: permanently excludes the registered scanChunk fold-step while an unregistered sibling still fires",
+    () =>
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeProjectScaffold;
+          yield* writeProjectFile(
+            "packages/agents/server/src/AssistantTurn/ScanState.ts",
+            A.join(
+              [
+                "export interface ScanState { readonly buffer: string }",
+                "export const scanChunk = (state: ScanState, text: string): [ScanState, Array<string>] => {",
+                "  return [state, [text]];",
+                "};",
+                "",
+              ],
+              "\n"
+            )
+          );
+          yield* writeProjectFile(
+            "packages/demo/src/index.ts",
+            A.join(
+              [
+                "export function otherHelper(self: string, label: string): string {",
+                "  return `${self}:${label}`;",
+                "}",
+                "",
+              ],
+              "\n"
+            )
+          );
+
+          const summary = yield* runLaw();
+          const diagnostics = A.join(summary.diagnostics, "\n");
+
+          expect(diagnostics).not.toContain("scanChunk");
+          expect(diagnostics).toContain("otherHelper");
+          expect(summary.liveEntries).toBe(1);
+        })
+      )
+  );
+
+  // R12: isLegitimateConstructorFactory's failing conjunct was
+  // isFactoryReturnType — its DIRECT_EFFECT_OR_SCHEMA_TYPE_PATTERN check
+  // tests the full printed text of the return type, which for an
+  // all-methods-record return type includes every method's own
+  // `Effect.Effect<...>` signature text, so it rejected the shape before
+  // ever reaching isStrictObjectLikeType. isAllMethodMembersObjectType now
+  // accepts an object-like return whose every member resolves to a callable
+  // type, checked via each property's own resolved type instead of the
+  // return type's printed text.
+  it.effect(
+    "R12: silently excludes an all-methods-record @category constructors factory while the identical untagged shape still fires",
+    () =>
+      withTempWorkingDirectory(
+        Effect.gen(function* () {
+          yield* writeProjectScaffold;
+          yield* writeProjectFile(
+            "packages/demo/src/index.ts",
+            A.join(
+              [
+                "interface Store { readonly id: string }",
+                "interface Kernel { readonly id: string }",
+                "interface Usage { readonly id: string }",
+                "",
+                "/**",
+                " * @category constructors",
+                " */",
+                "export const makeTaggedOperations = (store: Store, kernel: Kernel, usage: Usage) => ({",
+                "  listThreads: (workspaceId: string): string => workspaceId,",
+                "  createThread: (name: string): string => name,",
+                "  sendMessage: (body: string): string => body,",
+                "});",
+                "",
+                "export const makeUntaggedOperations = (store: Store, kernel: Kernel, usage: Usage) => ({",
+                "  listThreads: (workspaceId: string): string => workspaceId,",
+                "  createThread: (name: string): string => name,",
+                "  sendMessage: (body: string): string => body,",
+                "});",
+                "",
+              ],
+              "\n"
+            )
+          );
+
+          const summary = yield* runLaw();
+          const diagnostics = A.join(summary.diagnostics, "\n");
+
+          expect(diagnostics).not.toContain("makeTaggedOperations");
+          expect(diagnostics).toContain("makeUntaggedOperations");
+          expect(diagnostics).toContain("missing-dual");
+        })
+      )
   );
 });

@@ -3,15 +3,8 @@
   "status": "local_hardening_and_oip_s3_rename_applied_provider_dns_gates_remaining",
   "owner": "@beep-team",
   "app": "@beep/oip-web",
-  "dependsOn": [
-    "oip-web-launch"
-  ],
-  "packages": [
-    "@beep/oip-web",
-    "@beep/sanity",
-    "@beep/hubspot",
-    "@beep/infra"
-  ],
+  "dependsOn": ["oip-web-launch"],
+  "packages": ["@beep/oip-web", "@beep/sanity", "@beep/hubspot", "@beep/infra"],
   "providers": {
     "cms": "sanity",
     "crm": "hubspot",

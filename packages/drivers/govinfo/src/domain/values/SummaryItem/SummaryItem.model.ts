@@ -67,6 +67,21 @@ export class SummaryItem extends S.Class<SummaryItem>($I`SummaryItem`)(
 /**
  * Companion namespace for {@link SummaryItem} encoded helpers.
  *
+ * @example
+ * ```ts
+ * import { SummaryItem } from "@beep/govinfo/domain/values/SummaryItem/SummaryItem.model";
+ * import * as S from "effect/Schema";
+ *
+ * const item: SummaryItem = S.decodeUnknownSync(SummaryItem)({
+ *   collectionCode: "FR",
+ *   collectionName: "Federal Register",
+ *   granuleCount: 10000n,
+ *   packageCount: 2500n
+ * });
+ *
+ * console.log(item.collectionName);
+ * ```
+ *
  * @category type-level
  * @since 0.0.0
  */

@@ -254,6 +254,15 @@ const toBlockRepairFailed = (message: string): BlockRepairFailed => BlockRepairF
 /**
  * Base schema fields shared by every summarized JSON Patch operation, carrying the redacted JSON Pointer path.
  *
+ * @example
+ * ```ts
+ * import { PatchOpSummaryBase } from "@beep/agents-server/AssistantTurn"
+ *
+ * const base = PatchOpSummaryBase.make({ path: "/content" })
+ * console.log(base.path)
+ * // "/content"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -271,6 +280,16 @@ export class PatchOpSummaryBase extends S.Class<PatchOpSummaryBase>($I`PatchOpSu
 /**
  * Summary of a JSON Patch add operation, tagged with the `add` op discriminant.
  *
+ * @example
+ * ```ts
+ * import { AddPatchOpSummary } from "@beep/agents-server/AssistantTurn"
+ * import * as S from "effect/Schema"
+ *
+ * const summary = S.decodeUnknownSync(AddPatchOpSummary)({ op: "add", path: "/content" })
+ * console.log(summary.op)
+ * // "add"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -285,6 +304,16 @@ export class AddPatchOpSummary extends PatchOpSummaryBase.extend<AddPatchOpSumma
 
 /**
  * Summary of a JSON Patch remove operation, tagged with the `remove` op discriminant.
+ *
+ * @example
+ * ```ts
+ * import { RemovePatchOpSummary } from "@beep/agents-server/AssistantTurn"
+ * import * as S from "effect/Schema"
+ *
+ * const summary = S.decodeUnknownSync(RemovePatchOpSummary)({ op: "remove", path: "/content" })
+ * console.log(summary.op)
+ * // "remove"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -301,6 +330,16 @@ export class RemovePatchOpSummary extends PatchOpSummaryBase.extend<RemovePatchO
 /**
  * Summary of a JSON Patch replace operation, tagged with the `replace` op discriminant.
  *
+ * @example
+ * ```ts
+ * import { ReplacePatchOpSummary } from "@beep/agents-server/AssistantTurn"
+ * import * as S from "effect/Schema"
+ *
+ * const summary = S.decodeUnknownSync(ReplacePatchOpSummary)({ op: "replace", path: "/content" })
+ * console.log(summary.op)
+ * // "replace"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -316,6 +355,16 @@ export class ReplacePatchOpSummary extends PatchOpSummaryBase.extend<ReplacePatc
 /**
  * Tagged union of summarized JSON Patch operations discriminated on the `op` field.
  *
+ * @example
+ * ```ts
+ * import { PatchOpSummary } from "@beep/agents-server/AssistantTurn"
+ * import * as S from "effect/Schema"
+ *
+ * const summary = S.decodeUnknownSync(PatchOpSummary)({ op: "add", path: "/content" })
+ * console.log(summary.op)
+ * // "add"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -328,6 +377,16 @@ export const PatchOpSummary = S.Union([AddPatchOpSummary, RemovePatchOpSummary, 
 
 /**
  * Runtime type of the {@link PatchOpSummary} tagged union of JSON Patch operation summaries.
+ *
+ * @example
+ * ```ts
+ * import { PatchOpSummary } from "@beep/agents-server/AssistantTurn"
+ * import * as S from "effect/Schema"
+ *
+ * const summary: PatchOpSummary = S.decodeUnknownSync(PatchOpSummary)({ op: "remove", path: "/content" })
+ * console.log(summary.op)
+ * // "remove"
+ * ```
  *
  * @category models
  * @since 0.0.0

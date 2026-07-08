@@ -16,11 +16,7 @@
     "beep docgen quality-worker-eval-runpod"
   ],
   "providerPath": {
-    "supportedProviders": [
-      "codex",
-      "ollama",
-      "lmstudio"
-    ],
+    "supportedProviders": ["codex", "ollama", "lmstudio"],
     "providerArgumentRequired": true,
     "modelArgumentRequired": true,
     "codexSdkBaseUrlFlag": "--base-url",

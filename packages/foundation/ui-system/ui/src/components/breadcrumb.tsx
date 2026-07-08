@@ -1,3 +1,9 @@
+/**
+ * Breadcrumb primitive: a navigation landmark rendering a hierarchical page trail.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { CaretRightIcon, DotsThreeIcon } from "@phosphor-icons/react";

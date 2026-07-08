@@ -1,3 +1,9 @@
+/**
+ * Checkbox primitive: an accessible checkbox control with checked and invalid styling.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox";

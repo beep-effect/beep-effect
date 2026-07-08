@@ -53,9 +53,7 @@
       ],
       "dependencies": ["far-001"],
       "rollbackPlan": "Restore the removed duplication ratchet only if Fallow cannot cover the desired duplication review workflow.",
-      "evidenceRefs": [
-        "packages/tooling/tool/cli/test/quality-tasks.test.ts"
-      ],
+      "evidenceRefs": ["packages/tooling/tool/cli/test/quality-tasks.test.ts"],
       "owner": "@beep-team",
       "riskLevel": "medium",
       "decisionGate": {

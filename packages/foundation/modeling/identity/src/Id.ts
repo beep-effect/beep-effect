@@ -87,6 +87,25 @@ const preserveSchemaStatics = <Schema extends S.Top>(
 };
 
 /**
+ * Bootstrap identity annotation helper for schemas defined before `make` exists.
+ *
+ * The real `IdentityComposer` (`$I`, as used throughout the rest of the
+ * workspace) is produced by calling `make`, which itself throws
+ * {@link IdentityInterpolationError} and {@link IdentitySegmentCountError} --
+ * so those two classes cannot depend on a composer derived from `make`. This
+ * shim mirrors `IdentityComposer#annote`'s call shape (and adds the same
+ * interned `schemaId` symbol) using only primitives already available at
+ * this point in module evaluation.
+ */
+const $I = {
+  annote: <const Extras extends Record<string, unknown>>(identifier: string, extras: Extras) => ({
+    schemaId: Symbol.for(identifier),
+    identifier,
+    ...extras,
+  }),
+};
+
+/**
  * Error thrown when an identity template tag receives interpolation values.
  *
  * Identity template tags must be called with a single static string literal,
@@ -115,10 +134,10 @@ export class IdentityInterpolationError extends S.TaggedErrorClass<IdentityInter
 )(
   "IdentityInterpolationError",
   {},
-  {
+  $I.annote("@beep/identity/errors/IdentityInterpolationError", {
     title: "Identity Interpolation Error",
     description: "Identity template tags do not allow interpolations.",
-  }
+  })
 ) {
   override get message() {
     return "Identity template tags do not allow interpolations.";
@@ -146,10 +165,10 @@ export class IdentitySegmentCountError extends S.TaggedErrorClass<IdentitySegmen
 )(
   "IdentitySegmentCountError",
   {},
-  {
+  $I.annote("@beep/identity/errors/IdentitySegmentCountError", {
     title: "Identity Segment Count Error",
     description: "Identity template tags must use a single literal segment.",
-  }
+  })
 ) {
   /**
    * Human-readable error message.
@@ -484,9 +503,12 @@ export type TaggedAccessor<S extends TString.NonEmpty> = `$${ModuleAccessor<S>}`
  *
  * @example
  * ```ts
+ * import { make } from "@beep/identity"
  * import type { IdentityString } from "@beep/identity"
  *
- * declare const id: IdentityString<"@beep/utils/Service">
+ * const { $UtilsId } = make("utils")
+ * const id: IdentityString<string> = $UtilsId.string()
+ * console.log(id)// "@beep/utils"
  * ```
  *
  * @since 0.0.0
@@ -501,9 +523,12 @@ export type IdentityString<Value extends string> = Value & {
  *
  * @example
  * ```ts
+ * import { make } from "@beep/identity"
  * import type { IdentitySymbol } from "@beep/identity"
  *
- * declare const sym: IdentitySymbol<"@beep/utils">
+ * const { $UtilsId } = make("utils")
+ * const sym: IdentitySymbol<string> = $UtilsId.symbol()
+ * console.log(sym.description)// "@beep/utils"
  * ```
  *
  * @since 0.0.0

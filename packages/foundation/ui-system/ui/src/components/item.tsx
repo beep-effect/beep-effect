@@ -1,3 +1,9 @@
+/**
+ * Item primitive: a list-row layout with media, content, and action slots.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { Separator } from "@beep/ui/components/separator";

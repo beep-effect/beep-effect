@@ -128,6 +128,23 @@ export const JsonLdStreamSerializeErrorReason = LiteralKit(["serializeFailure", 
 );
 
 /**
+ * Type for {@link JsonLdStreamSerializeErrorReason}.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { JsonLdStreamSerializeErrorReason } from "@beep/semantic-web/services/jsonld-stream-serialize"
+ *
+ * const reason: JsonLdStreamSerializeErrorReason = "invalidChunkSize"
+ * strictEqual(JsonLdStreamSerializeErrorReason.is.invalidChunkSize(reason), true)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type JsonLdStreamSerializeErrorReason = typeof JsonLdStreamSerializeErrorReason.Type;
+
+/**
  * Typed streaming serialize error.
  *
  * @example

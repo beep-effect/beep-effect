@@ -14,7 +14,7 @@ import { BoxConfig, BoxConfigLayer } from "./Box.config.ts";
 import { BoxError } from "./Box.errors.ts";
 import { makeStreamingOperations } from "./Box.streaming.ts";
 import { BOX_SDK_VERSION } from "./internal/Box.constants.ts";
-import { decodeWith, logDriverFailure } from "./internal/Box.runtime.ts";
+import { acquireSdkCallController, decodeWith, logDriverFailure } from "./internal/Box.runtime.ts";
 import type { BoxGeneratedOperations, BoxRunSdkCall } from "./_generated/Box.operations.gen.ts";
 import type { BoxCcgConfig, BoxDeveloperTokenConfig } from "./Box.config.ts";
 import type { BoxStreamingOperations } from "./Box.streaming.ts";
@@ -37,17 +37,18 @@ const $I = $BoxId.create("Box.service");
 export type BoxShape = BoxGeneratedOperations & BoxStreamingOperations;
 
 const runSdkCall: BoxRunSdkCall = (manager, method, methodName, payloadSchema, successSchema, payload, invoke) =>
-  Effect.acquireUseRelease(
-    Effect.sync(() => new AbortController()),
-    (controller) =>
-      decodeWith(methodName, payloadSchema, payload, "request encoding").pipe(
-        Effect.flatMap((decoded) =>
-          Effect.tryPromise({
-            try: () => invoke(decoded, controller.signal),
-            catch: (cause) => BoxError.fromUnknown(methodName, cause),
-          })
+  acquireSdkCallController({
+    methodName,
+    payloadSchema,
+    payload,
+    use: (decoded, controller) =>
+      Effect.tryPromise({
+        try: () => invoke(decoded, controller.signal),
+        catch: (cause) => BoxError.fromUnknown(methodName, cause),
+      }).pipe(
+        Effect.flatMap((result) =>
+          decodeWith(successSchema, result, { method: methodName, reason: "response decoding" })
         ),
-        Effect.flatMap((result) => decodeWith(methodName, successSchema, result, "response decoding")),
         Effect.tapError(logDriverFailure("box.driver_failure")),
         Effect.withSpan(`box.${manager}.${method}`, {
           attributes: {
@@ -57,8 +58,8 @@ const runSdkCall: BoxRunSdkCall = (manager, method, methodName, payloadSchema, s
           },
         })
       ),
-    (controller) => Effect.sync(() => controller.abort())
-  );
+    release: (controller) => Effect.sync(() => controller.abort()),
+  });
 
 const makeService = (client: unknown): BoxShape => {
   const generated = makeGeneratedOperations(client, runSdkCall);

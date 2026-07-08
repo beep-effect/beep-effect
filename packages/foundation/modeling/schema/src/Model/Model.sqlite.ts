@@ -37,12 +37,13 @@ export interface BooleanSqlite
  *
  * @example
  * ```ts
- * import * as Schema from "effect/Schema"
  * import * as Model from "@beep/schema/Model"
  *
- * class Task extends Model.Class<Task>("Task")({}) {}
+ * class Task extends Model.Class<Task>("Task")({
+ *   done: Model.BooleanSqlite
+ * }) {}
  *
- * console.log(Task)
+ * console.log(Task.fields.done)
  * ```
  *
  * @since 0.0.0

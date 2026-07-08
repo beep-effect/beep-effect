@@ -1,3 +1,9 @@
+/**
+ * Lexical node classes registered by the editor-00 block.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 // cspell:ignore Klass
 
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";

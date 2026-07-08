@@ -69,12 +69,13 @@ const readContactFormPayload = Effect.fn("OipContact.readContactFormPayload")(fu
  * @example
  * ```ts
  * import { Effect } from "effect"
+ * import { ContactSubmissionResponse } from "@beep/oip-web/contact"
  * import {
  *   contactRequestResponseWithSubmit,
  * } from "@beep/oip-web/app/api/contact/ContactRouteResponse"
  *
  * const request = new Request("https://oip.law/api/contact", { method: "POST" })
- * const submit = () => Effect.succeed({ message: "Received.", status: "accepted" as const })
+ * const submit = () => Effect.succeed(ContactSubmissionResponse.make({ message: "Received.", status: "accepted" }))
  * const program = contactRequestResponseWithSubmit(request, submit)
  *
  * Effect.runPromise(program)

@@ -1,0 +1,253 @@
+{
+  "owner": "@beep/repo-cli",
+  "entries": [
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+      "symbol": "extensionOf.toLowerCase",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-normalization",
+      "line": 878,
+      "owner": "@beep/repo-cli",
+      "reason": "Exception: filename-extension parser helper for filesystem input; normalization is local classifier glue before optional inclusion in output records, not a standalone schema boundary."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+      "symbol": "pipeDocket.toUpperCase",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-normalization",
+      "line": 2154,
+      "owner": "@beep/repo-cli",
+      "reason": "Exception: attorney-docket extraction is a regex parser over filenames and paths; uppercasing is local parser normalization before returning an Option result."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+      "symbol": "sanitizeSegment.trim",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-normalization",
+      "line": 2161,
+      "owner": "@beep/repo-cli",
+      "reason": "Exception: path-segment sanitizer for generated filesystem names; slash/NUL replacement plus empty fallback is local imperative filename hygiene, not a reusable decoded model."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+      "symbol": "versionStem.toLowerCase",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-normalization",
+      "line": 2174,
+      "owner": "@beep/repo-cli",
+      "reason": "Exception: version grouping key normalization for organized corpus filenames; the normalized string is an ephemeral grouping key, not persisted domain data."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+      "symbol": "versionStem.trim",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-normalization",
+      "line": 2174,
+      "owner": "@beep/repo-cli",
+      "reason": "Exception: version grouping key normalization for organized corpus filenames; the normalized string is an ephemeral grouping key, not persisted domain data."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerRunpodEval.ts",
+      "symbol": "makeQualityWorkerRunpodEvalPodCreateInput",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 443,
+      "owner": "@beep/repo-cli",
+      "reason": "Exception: Runpod API body builder with defaults for an external service request; PodCreateInput is already schema-modeled at the output boundary."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyOps.ts",
+      "symbol": "shouldInstallProxyServiceForTesting",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 387,
+      "owner": "@beep/repo-cli",
+      "reason": "Exception: exported testing seam for pure systemd-unit drift checks; inline input keeps the test helper lightweight and avoids promoting test-only data to a public schema."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyOps.ts",
+      "symbol": "shouldRecoverGraphitiStackForTesting",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 1293,
+      "owner": "@beep/repo-cli",
+      "reason": "Exception: exported testing seam for pure recovery-branch decisions; inline input keeps the test helper lightweight and avoids promoting test-only data to a public schema."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "symbol": "AuditDuplicationCloneGroups",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Internal lenient decoder for fallow audit JSON (clone-group source classification); a tool-output boundary shape, not a domain model."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "symbol": "FallowAuditRawReport",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "S.Struct with non-identifier or spread keys stays tracked as an exception."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "symbol": "FallowDeadCodeRawReport",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "S.Struct with non-identifier or spread keys stays tracked as an exception."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "symbol": "FallowFlagsRawReport",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "S.Struct with non-identifier or spread keys stays tracked as an exception."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "symbol": "FallowHealthRawReport",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "S.Struct with non-identifier or spread keys stays tracked as an exception."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "symbol": "anonymous@319",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
+      "symbol": "textLooksLikeSchemaExport.trim",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-normalization",
+      "line": 442,
+      "owner": "@beep/repo-cli",
+      "reason": "Exception: ts-morph initializer text parser for generated JSDoc inventory; trim is local AST-source inspection before regex classification, not schema data normalization."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/internal/KnipRatchet.ts",
+      "symbol": "anonymous@200",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Research/Research.service.ts",
+      "symbol": "selected.toLowerCase",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-normalization",
+      "line": 512,
+      "owner": "@beep/repo-cli",
+      "reason": "Exception: CLI filter matching against clone directory basenames; lowercasing is transient search normalization, not a decoded command model field."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Research/internal/BrowserHistory.ts",
+      "symbol": "canonicalizeForSift.toLowerCase",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-normalization",
+      "line": 259,
+      "owner": "@beep/repo-cli",
+      "reason": "Exception: URL canonicalizer for browser-history sift deduplication; host lowercasing is parser-local key normalization before URL re-emission."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+      "symbol": "SyncDataTarget",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+      "symbol": "SyncDataTargetResult",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Internal sync-data-to-ts CLI result aggregate that carries a JsonPatch runtime value (canonicalPatch) produced by effect Differ; used only for command reporting, not a decode/persistence boundary, so it stays tracked as an exception."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Source.ts",
+      "symbol": "SyncDataFetchedSource",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Source.ts",
+      "symbol": "sourceMetadata",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 125,
+      "owner": "@beep/repo-cli",
+      "reason": "Exception: sync-data-to-ts codegen helper that lifts fetched-source metadata into an existing S.Class output; optional extras are generator-local call-site sugar."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/CldrTerritories.ts",
+      "symbol": "anonymous@131",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
+      "symbol": "closeoutGateStatesForTesting",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 890,
+      "owner": "@beep/repo-cli",
+      "reason": "Exception: exported testing seam that adapts simplified test inputs into closeout gate states; inline shape avoids promoting test-only fixtures to schema models."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+      "symbol": "buildYeetRunPlanForTesting",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 2825,
+      "owner": "@beep/repo-cli",
+      "reason": "Exception: exported testing seam for yeet plan construction; inline option bag mirrors CLI flags and avoids promoting test-only fixture data to a public schema."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Verdict.ts",
+      "symbol": "buildYeetVerdict",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 265,
+      "owner": "@beep/repo-cli",
+      "reason": "Exception: internal verdict assembler from already schema-modeled RepoRun and Yeet pieces; YeetVerdict is the durable schema boundary, while this input bag is construction glue."
+    },
+    {
+      "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 23,
+      "owner": "@beep/repo-cli",
+      "reason": "Exception: CLI tsconfig-sync command-behavior test; Schema codecs are incidental JSON-boundary plumbing for tsconfig fixtures and CLI output, not schema-value laws."
+    }
+  ]
+}

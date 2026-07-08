@@ -1,3 +1,9 @@
+/**
+ * MUI X `TreeView` component theme overrides.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import type {} from "@mui/x-tree-view/themeAugmentation";
 import type { ThemeComponents } from "../types.ts";
 

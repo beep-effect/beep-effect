@@ -102,6 +102,15 @@ export const RgbaColorString = S.String.check(RgbaColorStringChecks).pipe(
 /**
  * Type for {@link RgbaColorString}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { RgbaColorString } from "@beep/schema/Color"
+ *
+ * const value: RgbaColorString = S.decodeUnknownSync(RgbaColorString)("rgba(255, 255, 255, 1)")
+ * console.log(value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -140,6 +149,15 @@ export const ColorAmount = S.Finite.check(
 
 /**
  * Type for {@link ColorAmount}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ColorAmount } from "@beep/schema/Color"
+ *
+ * const value: ColorAmount = S.decodeUnknownSync(ColorAmount)(0.25)
+ * console.log(value)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -200,6 +218,15 @@ export const MixColors = MixColorsInput.pipe(
 /**
  * Type for {@link MixColors}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { MixColors } from "@beep/schema/Color"
+ *
+ * const value: MixColors = S.decodeUnknownSync(MixColors)({ color1: "#000000", color2: "#ffffff", amount: 0.5 })
+ * console.log(value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -257,6 +284,15 @@ export const Lighten = LightenInput.pipe(
 
 /**
  * Type for {@link Lighten}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Lighten } from "@beep/schema/Color"
+ *
+ * const value: Lighten = S.decodeUnknownSync(Lighten)({ color: "#336699", amount: 0.1 })
+ * console.log(value)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -316,6 +352,15 @@ export const Darken = DarkenInput.pipe(
 /**
  * Type for {@link Darken}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Darken } from "@beep/schema/Color"
+ *
+ * const value: Darken = S.decodeUnknownSync(Darken)({ color: "#336699", amount: 0.1 })
+ * console.log(value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -373,6 +418,15 @@ export const WithAlpha = WithAlphaInput.pipe(
 
 /**
  * Type for {@link WithAlpha}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { WithAlpha } from "@beep/schema/Color"
+ *
+ * const value: WithAlpha = S.decodeUnknownSync(WithAlpha)({ color: "#336699", alpha: 0.5 })
+ * console.log(value)
+ * ```
  *
  * @since 0.0.0
  * @category models

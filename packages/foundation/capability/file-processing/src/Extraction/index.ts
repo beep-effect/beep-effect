@@ -18,6 +18,17 @@ import type * as AST from "effect/SchemaAST";
 
 const $I = $FileProcessingId.create("Extraction");
 
+class TextSpanBase extends S.Class<TextSpanBase>($I`TextSpan`)(
+  {
+    endOffset: NonNegativeInt,
+    startOffset: NonNegativeInt,
+    text: S.String,
+  },
+  $I.annote("TextSpan", {
+    description: "Extracted text span with byte or character offsets supplied by the engine.",
+  })
+) {}
+
 type JsonEncodeEffect<Input> = {
   (options: AST.ParseOptions): (input: Input) => Effect.Effect<string, S.SchemaError>;
   (input: Input, options?: AST.ParseOptions): Effect.Effect<string, S.SchemaError>;
@@ -44,6 +55,14 @@ export const SourceProcessingStatus = LiteralKit(["succeeded", "skipped", "faile
 
 /**
  * Type for {@link SourceProcessingStatus}.
+ *
+ * @example
+ * ```ts
+ * import { SourceProcessingStatus } from "@beep/file-processing/Extraction"
+ *
+ * const status: SourceProcessingStatus = "succeeded"
+ * console.log(SourceProcessingStatus.is.succeeded(status)) // true
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -99,23 +118,31 @@ export class TextArtifactReference extends S.Class<TextArtifactReference>($I`Tex
  * @category models
  * @since 0.0.0
  */
-export class TextSpan extends S.Class<TextSpan>($I`TextSpan`)(
-  S.Struct({
-    endOffset: NonNegativeInt,
-    startOffset: NonNegativeInt,
-    text: S.String,
-  }).check(
-    S.makeFilter(({ endOffset, startOffset }) => endOffset >= startOffset, {
-      identifier: $I`TextSpanOffsetOrderCheck`,
-      title: "Text Span Offset Order",
-      description: "Checks that a text span's end offset is greater than or equal to its start offset.",
-      message: "Expected endOffset to be greater than or equal to startOffset.",
-    })
-  ),
-  $I.annote("TextSpan", {
-    description: "Extracted text span with byte or character offsets supplied by the engine.",
+export const TextSpan = TextSpanBase.check(
+  S.makeFilter(({ endOffset, startOffset }) => endOffset >= startOffset, {
+    identifier: $I`TextSpanOffsetOrderCheck`,
+    title: "Text Span Offset Order",
+    description: "Checks that a text span's end offset is greater than or equal to its start offset.",
+    message: "Expected endOffset to be greater than or equal to startOffset.",
   })
-) {}
+);
+
+/**
+ * Type for {@link TextSpan}.
+ *
+ * @example
+ * ```ts
+ * import { TextSpan } from "@beep/file-processing/Extraction"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const span: TextSpan = TextSpan.make({ endOffset: NonNegativeInt.make(5), startOffset: NonNegativeInt.make(0), text: "hello" })
+ * console.log(span.text) // "hello"
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type TextSpan = InstanceType<typeof TextSpanBase>;
 
 /**
  * Text and metadata extraction result.
@@ -397,6 +424,28 @@ export const ProcessFileResult = S.Union([
 /**
  * Type for {@link ProcessFileResult}.
  *
+ * @example
+ * ```ts
+ * import { ProcessFileResult } from "@beep/file-processing/Extraction"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const program = Effect.gen(function* () {
+ *   const result: ProcessFileResult = yield* S.decodeUnknownEffect(ProcessFileResult)({
+ *     engine: "beep-test",
+ *     format: "xls",
+ *     operationId: "operation:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *     resultKind: "skipped",
+ *     skipReason: "format-out-of-scope",
+ *     sourceArtifactId: "artifact:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *     warnings: []
+ *   })
+ *   return result.resultKind
+ * })
+ *
+ * Effect.runPromise(program).then(console.log) // "skipped"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -618,6 +667,28 @@ export const SourceProcessingRecord = S.Union([
 /**
  * Type for {@link SourceProcessingRecord}.
  *
+ * @example
+ * ```ts
+ * import { SourceProcessingRecord } from "@beep/file-processing/Extraction"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const program = Effect.gen(function* () {
+ *   const record: SourceProcessingRecord = yield* S.decodeUnknownEffect(SourceProcessingRecord)({
+ *     artifactId: "artifact:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *     digest: "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *     format: "markdown",
+ *     operationId: "operation:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *     relativePath: "README.md",
+ *     sizeBytes: 11,
+ *     status: "succeeded"
+ *   })
+ *   return record.status
+ * })
+ *
+ * Effect.runPromise(program).then(console.log) // "succeeded"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -649,6 +720,22 @@ export const FileProcessingFailureReason = S.Union([FileProcessingOperationError
 
 /**
  * Type for {@link FileProcessingFailureReason}.
+ *
+ * @example
+ * ```ts
+ * import { FileProcessingFailureReason } from "@beep/file-processing/Extraction"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const program = Effect.gen(function* () {
+ *   const reason: FileProcessingFailureReason = yield* S.decodeUnknownEffect(FileProcessingFailureReason)(
+ *     "format-out-of-scope"
+ *   )
+ *   return reason
+ * })
+ *
+ * Effect.runPromise(program).then(console.log) // "format-out-of-scope"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -790,6 +877,28 @@ export const FileProcessingFailureRecord = S.Union([
 
 /**
  * Type for {@link FileProcessingFailureRecord}.
+ *
+ * @example
+ * ```ts
+ * import { FileProcessingFailureRecord } from "@beep/file-processing/Extraction"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
+ *
+ * const program = Effect.gen(function* () {
+ *   const record: FileProcessingFailureRecord = yield* S.decodeUnknownEffect(FileProcessingFailureRecord)({
+ *     artifactId: "artifact:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *     format: "unknown",
+ *     message: "No engine could classify the source.",
+ *     operationId: "operation:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+ *     reason: "unsupported-file-format",
+ *     relativePath: "mystery.bin",
+ *     status: "failed"
+ *   })
+ *   return record.status
+ * })
+ *
+ * Effect.runPromise(program).then(console.log) // "failed"
+ * ```
  *
  * @category models
  * @since 0.0.0

@@ -49,6 +49,14 @@ export const ChunkId = S.String.pipe(
 /**
  * Runtime type of {@link ChunkId}.
  *
+ * @example
+ * ```ts
+ * import { ChunkId } from "@beep/nlp/Handoff/Contract"
+ *
+ * const id: ChunkId = ChunkId.make("chunk-1")
+ * console.log(id)
+ * ```
+ *
  * @since 0.0.0
  * @category identifiers
  */
@@ -75,6 +83,14 @@ export const MentionId = S.String.pipe(
 
 /**
  * Runtime type of {@link MentionId}.
+ *
+ * @example
+ * ```ts
+ * import { MentionId } from "@beep/nlp/Handoff/Contract"
+ *
+ * const id: MentionId = MentionId.make("mention-1")
+ * console.log(id)
+ * ```
  *
  * @since 0.0.0
  * @category identifiers
@@ -103,6 +119,14 @@ export const EntityId = S.String.pipe(
 /**
  * Runtime type of {@link EntityId}.
  *
+ * @example
+ * ```ts
+ * import { EntityId } from "@beep/nlp/Handoff/Contract"
+ *
+ * const id: EntityId = EntityId.make("entity-1")
+ * console.log(id)
+ * ```
+ *
  * @since 0.0.0
  * @category identifiers
  */
@@ -130,6 +154,14 @@ export const RelationId = S.String.pipe(
 /**
  * Runtime type of {@link RelationId}.
  *
+ * @example
+ * ```ts
+ * import { RelationId } from "@beep/nlp/Handoff/Contract"
+ *
+ * const id: RelationId = RelationId.make("relation-1")
+ * console.log(id)
+ * ```
+ *
  * @since 0.0.0
  * @category identifiers
  */
@@ -151,6 +183,22 @@ export type RelationId = typeof RelationId.Type;
 export const ChunkKind = LiteralKit(["document", "paragraph", "sentence", "token"]).annotate(
   $I.annote("ChunkKind", { description: "Granularity of a text chunk (document/paragraph/sentence/token)." })
 );
+
+/**
+ * Runtime TypeScript union decoded by {@link ChunkKind}.
+ *
+ * @example
+ * ```ts
+ * import type { ChunkKind } from "@beep/nlp/Handoff/Contract"
+ *
+ * const kind: ChunkKind = "sentence"
+ * console.log(kind)
+ * ```
+ *
+ * @since 0.0.0
+ * @category type-level
+ */
+export type ChunkKind = typeof ChunkKind.Type;
 
 class SpanFields extends S.Class<SpanFields>($I`SpanFields`)(
   {
@@ -204,6 +252,15 @@ export const Span = SpanFields.check(
 
 /**
  * Runtime type of {@link Span}.
+ *
+ * @example
+ * ```ts
+ * import { NonNegativeInt } from "@beep/schema"
+ * import { Span } from "@beep/nlp/Handoff/Contract"
+ *
+ * const span: Span = Span.make({ start: NonNegativeInt.make(0), end: NonNegativeInt.make(5) })
+ * console.log(span.end - span.start) // 5
+ * ```
  *
  * @since 0.0.0
  * @category models

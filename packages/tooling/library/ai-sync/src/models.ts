@@ -8,6 +8,7 @@
 import { $AiSyncId } from "@beep/identity/packages";
 import { Fn, LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 
 const $I = $AiSyncId.create("models");
@@ -459,11 +460,15 @@ export class AiSyncSourceMetadata extends S.Class<AiSyncSourceMetadata>($I`AiSyn
       driftMechanism: source.driftMechanism,
     });
 
-  static readonly hasSameIdentity = (left: AiSyncSourceMetadata, right: AiSyncSourceMetadata): boolean =>
+  static readonly hasSameIdentity: {
+    (self: AiSyncSourceMetadata, that: AiSyncSourceMetadata): boolean;
+    (that: AiSyncSourceMetadata): (self: AiSyncSourceMetadata) => boolean;
+  } = dual(2, (self: AiSyncSourceMetadata, that: AiSyncSourceMetadata): boolean =>
     AiSyncSourceMetadata.identityEquivalence(
-      AiSyncSourceMetadata.toIdentity(left),
-      AiSyncSourceMetadata.toIdentity(right)
-    );
+      AiSyncSourceMetadata.toIdentity(self),
+      AiSyncSourceMetadata.toIdentity(that)
+    )
+  );
 }
 
 /**

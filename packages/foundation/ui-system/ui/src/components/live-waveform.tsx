@@ -1,3 +1,9 @@
+/**
+ * Live-waveform primitive: renders a real-time audio amplitude waveform.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { A } from "@beep/utils";
@@ -13,8 +19,9 @@ import type { HTMLAttributes } from "react";
  * ```ts
  * import type { LiveWaveformProps } from "@beep/ui/components/live-waveform"
  *
- * const value = {} as LiveWaveformProps
- * console.log(value)
+ * const props: LiveWaveformProps = { active: true, mode: "scrolling" }
+ *
+ * console.log(props.mode)
  * ```
  *
  * @category type-level

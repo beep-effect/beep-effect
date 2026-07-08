@@ -1,3 +1,9 @@
+/**
+ * Tabs primitive: a tabbed panel root built on Base UI's tabs.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Tabs as TabsPrimitive } from "@base-ui/react/tabs";

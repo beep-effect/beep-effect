@@ -22,7 +22,7 @@ import type React from "react";
  *
  * const props = {
  *   label: "Reminder time",
- *   description: "Stores the selected time as Effect DateTime.",
+ *   description: "Stores the selected time using Effect DateTime.",
  *   ampm: true,
  * } satisfies TimeFieldProps
  *

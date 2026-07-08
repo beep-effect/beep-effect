@@ -58,6 +58,14 @@ const parseHexChannel = (hexBody: string, start: number): number =>
 /**
  * Decode a boundary hex color into normalized RGB channel values.
  *
+ * @example
+ * ```ts
+ * import { hexToRgbValue } from "../../src/Color/Color.hex.ts"
+ *
+ * const rgb = hexToRgbValue("#3366ff")
+ * console.log(rgb.r)
+ * ```
+ *
  * @internal
  * @category utilities
  * @since 0.0.0
@@ -86,6 +94,14 @@ const toHexChannel = (value: number): string =>
 
 /**
  * Encode RGB channel values into a canonical hex color.
+ *
+ * @example
+ * ```ts
+ * import { rgbToHexValue } from "../../src/Color/Color.hex.ts"
+ *
+ * const hex = rgbToHexValue({ r: 0.2, g: 0.4, b: 1 })
+ * console.log(hex)
+ * ```
  *
  * @internal
  * @category utilities
@@ -121,6 +137,15 @@ export const HexColorInput = S.String.check(HexColorInputChecks).pipe(
 /**
  * Type for {@link HexColorInput}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HexColorInput } from "@beep/schema/Color"
+ *
+ * const value: HexColorInput = S.decodeUnknownSync(HexColorInput)("#3bf")
+ * console.log(value)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -153,6 +178,15 @@ export const HexColor = S.String.check(HexColorChecks).pipe(
 
 /**
  * Type for {@link HexColor}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HexColor } from "@beep/schema/Color"
+ *
+ * const value: HexColor = S.decodeUnknownSync(HexColor)("#33bbff")
+ * console.log(value)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -189,6 +223,15 @@ export const NormalizeHexColor = HexColorInput.pipe(
 
 /**
  * Type for {@link NormalizeHexColor}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { NormalizeHexColor } from "@beep/schema/Color"
+ *
+ * const value: NormalizeHexColor = S.decodeUnknownSync(NormalizeHexColor)("#3bf")
+ * console.log(value)
+ * ```
  *
  * @since 0.0.0
  * @category models

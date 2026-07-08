@@ -366,7 +366,7 @@ export const StreamingToolkitHandlersLive: Layer.Layer<
           if (options?.tail !== undefined) {
             // The tail window returns the last `tail` lines by design; the
             // result is never a truncated prefix of the file, so report `false`.
-            const lines = yield* TextStream.tail(path, options.tail, readOptions);
+            const lines = yield* TextStream.tail(path, { ...readOptions, n: options.tail });
             yield* Effect.annotateCurrentSpan(countAttribute("count", lines.length));
             return { count: lines.length, lines, truncated: false };
           }

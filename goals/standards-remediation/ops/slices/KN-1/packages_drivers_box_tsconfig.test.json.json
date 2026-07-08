@@ -1,0 +1,10 @@
+{
+  "scope": "packages/drivers/box/tsconfig.test.json",
+  "findings": [
+    {
+      "kind": "unresolved",
+      "file": "packages/drivers/box/tsconfig.test.json",
+      "name": "bun-types"
+    }
+  ]
+}

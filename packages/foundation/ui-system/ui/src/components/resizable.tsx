@@ -1,3 +1,9 @@
+/**
+ * Resizable primitive: a resizable panel group built on react-resizable-panels.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Group, Panel, Separator } from "react-resizable-panels";

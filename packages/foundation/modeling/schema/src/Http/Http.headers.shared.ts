@@ -39,6 +39,14 @@ export const ArrayOfStrOrStr = S.Union([S.String, S.Array(S.String)]).pipe(
 /**
  * Type for a single string header value or repeated string values.
  *
+ * @example
+ * ```ts
+ * import type { ArrayOfStrOrStr } from "../../src/Http/Http.headers.shared.ts"
+ *
+ * const values: ArrayOfStrOrStr = ["a", "b"]
+ * console.log(values.length)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -66,6 +74,14 @@ export const StringOrUrl = S.Union([S.String, S.URL]).pipe(
 
 /**
  * Type for values accepted where a URL-like header value is expected.
+ *
+ * @example
+ * ```ts
+ * import type { StringOrUrl } from "../../src/Http/Http.headers.shared.ts"
+ *
+ * const value: StringOrUrl = "https://example.com"
+ * console.log(value)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -95,6 +111,16 @@ export const HeaderMaxAgeSeconds = S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe
 
 /**
  * Type for non-negative integer HTTP `max-age` values.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HeaderMaxAgeSeconds } from "../../src/Http/Http.headers.shared.ts"
+ * import type { HeaderMaxAgeSeconds as HeaderMaxAgeSecondsType } from "../../src/Http/Http.headers.shared.ts"
+ *
+ * const seconds: HeaderMaxAgeSecondsType = S.decodeUnknownSync(HeaderMaxAgeSeconds)(86400)
+ * console.log(seconds)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -142,6 +168,18 @@ export const EncodedStrictURIFromStrOrURL = StringOrUrl.pipe(
 /**
  * Type for encoded absolute URL strings.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { EncodedStrictURIFromStrOrURL } from "../../src/Http/Http.headers.shared.ts"
+ * import type { EncodedStrictURIFromStrOrURL as EncodedStrictURIFromStrOrURLType } from "../../src/Http/Http.headers.shared.ts"
+ *
+ * const uri: EncodedStrictURIFromStrOrURLType = S.decodeUnknownSync(EncodedStrictURIFromStrOrURL)(
+ *   "https://example.com/docs"
+ * )
+ * console.log(uri)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -187,10 +225,10 @@ export const wrapArray = <T>(value: T | ReadonlyArray<T>): readonly T[] =>
  *
  * @example
  * ```ts
- * import * as Option from "effect/Option"
+ * import * as O from "effect/Option"
  * import { ResponseHeader } from "../../src/Http/Http.headers.shared.ts"
  *
- * const header = ResponseHeader.make({ name: "X-Test", value: Option.some("ok") })
+ * const header = ResponseHeader.make({ name: "X-Test", value: O.some("ok") })
  * console.log(header.name)
  * ```
  *
@@ -252,11 +290,11 @@ const makeResponseHeader: {
  *
  * @example
  * ```ts
- * import * as Option from "effect/Option"
+ * import * as O from "effect/Option"
  * import { makeResponseHeaderOption } from "../../src/Http/Http.headers.shared.ts"
  *
- * const header = makeResponseHeaderOption("X-Test", Option.some("ok"))
- * console.log(Option.isSome(header))
+ * const header = makeResponseHeaderOption("X-Test", O.some("ok"))
+ * console.log(O.isSome(header))
  * ```
  *
  * @category constructors

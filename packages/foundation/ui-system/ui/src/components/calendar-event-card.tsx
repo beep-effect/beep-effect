@@ -1,3 +1,9 @@
+/**
+ * Calendar event card: status, variant, and action styling for a single calendar event.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { CheckIcon, SpinnerGapIcon } from "@phosphor-icons/react";

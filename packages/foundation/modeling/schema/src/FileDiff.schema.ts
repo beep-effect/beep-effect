@@ -174,6 +174,15 @@ export type Info = typeof Info.Type;
 /**
  * Encoded companion types for {@link Info}.
  *
+ * @example
+ * ```ts
+ * import type { FileDiff } from "@beep/schema"
+ *
+ * type EncodedInfo = FileDiff.Info.Encoded
+ * const describe = (info: EncodedInfo): string => `${info.status}: ${info.file}`
+ * console.log(describe.length)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

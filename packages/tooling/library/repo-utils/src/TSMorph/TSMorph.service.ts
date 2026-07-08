@@ -282,7 +282,12 @@ export const TSMorphServiceError = S.Union([
   TsMorphSymbolNotFoundError,
   TsMorphUnsupportedFileError,
   TsMorphServiceUnavailableError,
-]).pipe(S.toTaggedUnion("_tag"));
+]).pipe(
+  $I.annoteSchema("TSMorphServiceError", {
+    description: "Tagged union of all recoverable service errors emitted by TSMorphService.",
+  }),
+  S.toTaggedUnion("_tag")
+);
 
 /**
  * Tagged union type for all ts-morph service errors.

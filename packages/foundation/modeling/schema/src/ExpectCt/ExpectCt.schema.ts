@@ -70,6 +70,14 @@ export const ExpectCTEnabled = S.Tuple([S.Literal(true), ExpectCTConfig]).pipe(
 /**
  * Type for tuple-based enabled `Expect-CT` configuration.
  *
+ * @example
+ * ```ts
+ * import { ExpectCTConfig, type ExpectCTEnabled } from "@beep/schema/ExpectCt"
+ *
+ * const enabled: ExpectCTEnabled = [true, ExpectCTConfig.make({ enforce: true })]
+ * console.log(enabled[0])
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -97,6 +105,14 @@ export const ExpectCTOption = S.Union([S.Boolean, ExpectCTEnabled]).pipe(
 
 /**
  * Type for enabled or disabled `Expect-CT` options.
+ *
+ * @example
+ * ```ts
+ * import type { ExpectCTOption } from "@beep/schema/ExpectCt"
+ *
+ * const option: ExpectCTOption = true
+ * console.log(option)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -262,6 +278,18 @@ export const ExpectCTHeader = S.Union([ExpectCTOption, S.Undefined]).pipe(
 /**
  * Type for rendered `Expect-CT` response headers.
  *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { ExpectCTResponseHeader, type ExpectCTHeader } from "@beep/schema/ExpectCt"
+ *
+ * const header: ExpectCTHeader = new ExpectCTResponseHeader({
+ *   name: "Expect-CT",
+ *   value: O.some("max-age=86400"),
+ * })
+ * console.log(header.name)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -273,9 +301,73 @@ export type ExpectCTHeader = typeof ExpectCTHeader.Type;
  * @category schemas
  * @since 0.0.0
  */
-export {
-  ExpectCTConfig as Config,
-  ExpectCTHeader as Header,
-  ExpectCTOption as Option,
-  ExpectCTResponseHeader as ResponseHeader,
-};
+export { ExpectCTConfig as Config, ExpectCTResponseHeader as ResponseHeader };
+
+/**
+ * Concise alias for {@link ExpectCTOption}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Option } from "@beep/schema/ExpectCt"
+ *
+ * console.log(S.decodeUnknownSync(Option)(true))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Option = ExpectCTOption;
+
+/**
+ * Type-level representation of {@link Option}.
+ *
+ * @example
+ * ```ts
+ * import type { Option } from "@beep/schema/ExpectCt"
+ *
+ * const option: Option = true
+ * console.log(option)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Option = typeof Option.Type;
+
+/**
+ * Concise alias for {@link ExpectCTHeader}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Header } from "@beep/schema/ExpectCt"
+ *
+ * const header = S.decodeUnknownSync(Header)(true)
+ * console.log(header.name)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Header = ExpectCTHeader;
+
+/**
+ * Type-level representation of {@link Header}.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { ExpectCTResponseHeader, type Header } from "@beep/schema/ExpectCt"
+ *
+ * const header: Header = new ExpectCTResponseHeader({
+ *   name: "Expect-CT",
+ *   value: O.some("max-age=86400"),
+ * })
+ * console.log(header.name)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Header = typeof Header.Type;

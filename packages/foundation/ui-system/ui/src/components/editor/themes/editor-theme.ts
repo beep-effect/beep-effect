@@ -1,3 +1,9 @@
+/**
+ * Lexical theme class map shared by the editor block.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 /* cspell:ignore atrule Resizer */
 /// <reference path="../../../css.d.ts" />
 

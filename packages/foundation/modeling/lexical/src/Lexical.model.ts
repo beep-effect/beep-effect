@@ -77,6 +77,15 @@ const YouTubeVideoIdFromLegacyInput = S.String.pipe(
 /**
  * Serialized Lexical node version accepted by this package.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { LexicalNodeVersion } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const version = S.decodeUnknownSync(LexicalNodeVersion)(1)
+ * console.log(version) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -88,6 +97,14 @@ export const LexicalNodeVersion = S.Literal(1).pipe(
 
 /**
  * Type for {@link LexicalNodeVersion}.
+ *
+ * @example
+ * ```ts
+ * import type { LexicalNodeVersion } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const version: LexicalNodeVersion = 1
+ * console.log(version) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -111,6 +128,13 @@ const TextFormatBitMapping = MappedLiteralKit([
 /**
  * Lexical TextFormatType flag values.
  *
+ * @example
+ * ```ts
+ * import { TextFormatBits } from "@beep/lexical-schema/Lexical.model"
+ *
+ * console.log(TextFormatBits.bold) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -118,6 +142,13 @@ export const TextFormatBits = TextFormatBitMapping.From.Enum;
 
 /**
  * Reusable literal domain for individual Lexical text format bits.
+ *
+ * @example
+ * ```ts
+ * import { TextFormatBit } from "@beep/lexical-schema/Lexical.model"
+ *
+ * console.log(TextFormatBit.Options[0]) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -131,6 +162,14 @@ export const TextFormatBit = LiteralKit(TextFormatBitMapping.To.Options).pipe(
 /**
  * Type for {@link TextFormatBit}.
  *
+ * @example
+ * ```ts
+ * import type { TextFormatBit } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const bit: TextFormatBit = 1
+ * console.log(bit) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -138,6 +177,13 @@ export type TextFormatBit = typeof TextFormatBit.Type;
 
 /**
  * Bitwise union of every known Lexical text-format bit.
+ *
+ * @example
+ * ```ts
+ * import { TEXT_FORMAT_MASK_ALL } from "@beep/lexical-schema/Lexical.model"
+ *
+ * console.log(TEXT_FORMAT_MASK_ALL) // 2047
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -161,6 +207,15 @@ const TextFormatMaskBase = NonNegativeInt.check(
 /**
  * Branded Lexical TextFormatType bitmask.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TextFormatMask } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const mask = S.decodeUnknownSync(TextFormatMask)(3)
+ * console.log(mask) // 3
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -169,6 +224,14 @@ export const TextFormatMask = TextFormatMaskBase;
 /**
  * Type for {@link TextFormatMask}.
  *
+ * @example
+ * ```ts
+ * import type { TextFormatMask } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const accept = (mask: TextFormatMask) => mask
+ * console.log(accept)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -176,6 +239,15 @@ export type TextFormatMask = typeof TextFormatMask.Type;
 
 /**
  * Returns whether a Lexical text-format mask contains a specific flag.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { hasTextFormat, TextFormatMask } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const mask = S.decodeUnknownSync(TextFormatMask)(3)
+ * console.log(hasTextFormat(mask, 1)) // true
+ * ```
  *
  * @category predicates
  * @since 0.0.0
@@ -187,6 +259,15 @@ export const hasTextFormat: {
 
 /**
  * Adds a Lexical text-format bit and rebrands the resulting valid mask.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { withTextFormat, TextFormatMask } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const mask = S.decodeUnknownSync(TextFormatMask)(1)
+ * console.log(withTextFormat(mask, 2)) // 3
+ * ```
  *
  * @category constructors
  * @since 0.0.0
@@ -204,6 +285,13 @@ const TextDetailBitMapping = MappedLiteralKit([
 /**
  * Lexical TextDetailType flag values.
  *
+ * @example
+ * ```ts
+ * import { TextDetailBits } from "@beep/lexical-schema/Lexical.model"
+ *
+ * console.log(TextDetailBits.directionless) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -211,6 +299,13 @@ export const TextDetailBits = TextDetailBitMapping.From.Enum;
 
 /**
  * Reusable literal domain for individual Lexical text detail bits.
+ *
+ * @example
+ * ```ts
+ * import { TextDetailBit } from "@beep/lexical-schema/Lexical.model"
+ *
+ * console.log(TextDetailBit.Options[0]) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -224,6 +319,14 @@ export const TextDetailBit = LiteralKit(TextDetailBitMapping.To.Options).pipe(
 /**
  * Type for {@link TextDetailBit}.
  *
+ * @example
+ * ```ts
+ * import type { TextDetailBit } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const bit: TextDetailBit = 1
+ * console.log(bit) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -231,6 +334,13 @@ export type TextDetailBit = typeof TextDetailBit.Type;
 
 /**
  * Bitwise union of every known Lexical text-detail bit.
+ *
+ * @example
+ * ```ts
+ * import { TEXT_DETAIL_MASK_ALL } from "@beep/lexical-schema/Lexical.model"
+ *
+ * console.log(TEXT_DETAIL_MASK_ALL) // 3
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -254,6 +364,15 @@ const TextDetailMaskBase = NonNegativeInt.check(
 /**
  * Branded Lexical TextDetailType bitmask.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TextDetailMask } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const mask = S.decodeUnknownSync(TextDetailMask)(1)
+ * console.log(mask) // 1
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -262,6 +381,14 @@ export const TextDetailMask = TextDetailMaskBase;
 /**
  * Type for {@link TextDetailMask}.
  *
+ * @example
+ * ```ts
+ * import type { TextDetailMask } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const accept = (mask: TextDetailMask) => mask
+ * console.log(accept)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -269,6 +396,15 @@ export type TextDetailMask = typeof TextDetailMask.Type;
 
 /**
  * Non-negative Lexical indentation depth.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { LexicalIndentDepth } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const depth = S.decodeUnknownSync(LexicalIndentDepth)(2)
+ * console.log(depth) // 2
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -283,6 +419,14 @@ export const LexicalIndentDepth = NonNegativeInt.pipe(
 /**
  * Type for {@link LexicalIndentDepth}.
  *
+ * @example
+ * ```ts
+ * import type { LexicalIndentDepth } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const accept = (depth: LexicalIndentDepth) => depth
+ * console.log(accept)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -290,6 +434,13 @@ export type LexicalIndentDepth = typeof LexicalIndentDepth.Type;
 
 /**
  * Lexical table cell header-state bitmask.
+ *
+ * @example
+ * ```ts
+ * import { TableCellHeaderState } from "@beep/lexical-schema/Lexical.model"
+ *
+ * console.log(TableCellHeaderState.Options) // [0, 1, 2, 3]
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -303,6 +454,14 @@ export const TableCellHeaderState = LiteralKit([0, 1, 2, 3]).pipe(
 /**
  * Type for {@link TableCellHeaderState}.
  *
+ * @example
+ * ```ts
+ * import type { TableCellHeaderState } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const state: TableCellHeaderState = 3
+ * console.log(state) // 3
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -310,6 +469,15 @@ export type TableCellHeaderState = typeof TableCellHeaderState.Type;
 
 /**
  * Positive span count for merged Lexical table cells.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TableCellSpan } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const span = S.decodeUnknownSync(TableCellSpan)(2)
+ * console.log(span) // 2
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -324,6 +492,14 @@ export const TableCellSpan = PosInt.pipe(
 /**
  * Type for {@link TableCellSpan}.
  *
+ * @example
+ * ```ts
+ * import type { TableCellSpan } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const accept = (span: TableCellSpan) => span
+ * console.log(accept)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -331,6 +507,15 @@ export type TableCellSpan = typeof TableCellSpan.Type;
 
 /**
  * Non-negative pixel-like table dimension emitted by Lexical table nodes.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TableDimension } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const width = S.decodeUnknownSync(TableDimension)(120)
+ * console.log(width) // 120
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -345,6 +530,14 @@ export const TableDimension = NonNegativeInt.pipe(
 /**
  * Type for {@link TableDimension}.
  *
+ * @example
+ * ```ts
+ * import type { TableDimension } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const accept = (dimension: TableDimension) => dimension
+ * console.log(accept)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -352,6 +545,13 @@ export type TableDimension = typeof TableDimension.Type;
 
 /**
  * Package-owned artifact reference id used by `artifact-ref` decorator nodes.
+ *
+ * @example
+ * ```ts
+ * import { ArtifactRefId } from "@beep/lexical-schema/Lexical.model"
+ *
+ * console.log(ArtifactRefId.fromUnknown("artifact-123"))
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -373,6 +573,14 @@ export const ArtifactRefId = S.NonEmptyString.check(
 
 /**
  * Type for {@link ArtifactRefId}.
+ *
+ * @example
+ * ```ts
+ * import type { ArtifactRefId } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const accept = (id: ArtifactRefId) => id
+ * console.log(accept)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -624,6 +832,22 @@ export const SafeInlineStyle: S.decodeTo<S.toType<S.String>, S.String> = S.Strin
 );
 
 /**
+ * Type for {@link SafeInlineStyle}.
+ *
+ * @example
+ * ```ts
+ * import type { SafeInlineStyle } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const accept = (style: SafeInlineStyle) => style
+ * console.log(accept)
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export type SafeInlineStyle = typeof SafeInlineStyle.Type;
+
+/**
  * Serialized Lexical single CSS value (table cell `backgroundColor` /
  * `verticalAlign`) sanitized at the schema boundary so the bare-value sink
  * cannot smuggle extra declarations or URL/function constructs into the DOM.
@@ -653,6 +877,22 @@ export const SafeStyleValue: S.decodeTo<S.toType<S.String>, S.String> = S.String
     toArbitrary: () => (fc) => fc.string().map(sanitizeStyleValue),
   })
 );
+
+/**
+ * Type for {@link SafeStyleValue}.
+ *
+ * @example
+ * ```ts
+ * import type { SafeStyleValue } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const accept = (value: SafeStyleValue) => value
+ * console.log(accept)
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export type SafeStyleValue = typeof SafeStyleValue.Type;
 
 /**
  * Serialized Lexical link URL sanitized at the schema boundary before an
@@ -736,6 +976,15 @@ export class BaseNode extends S.Class<BaseNode>($I`BaseNode`)(
 
 /**
  * Companion namespace for {@link BaseNode}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { BaseNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: BaseNode.Type = S.decodeUnknownSync(BaseNode)({ version: 1 })
+ * console.log(node.version) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -837,6 +1086,15 @@ export class ElementNode extends BaseNode.extend<ElementNode>($I`ElementNode`)(
 /**
  * Companion namespace for {@link ElementNode}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ElementNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: ElementNode.Type = S.decodeUnknownSync(ElementNode)({ version: 1, children: [] })
+ * console.log(node.children.length) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -906,6 +1164,17 @@ export class TextBase extends BaseNode.extend<TextBase>($I`TextBase`)(
 /**
  * Companion namespace for {@link TextBase}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TextBase } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: TextBase.Type = S.decodeUnknownSync(TextBase)({
+ *   version: 1, detail: 0, format: 0, mode: "normal", style: "", text: "hi"
+ * })
+ * console.log(node.text) // "hi"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -966,6 +1235,17 @@ export class TextNode extends TextBase.extend<TextNode>($I`TextNode`)(
 /**
  * Companion namespace for {@link TextNode}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TextNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: TextNode.Type = S.decodeUnknownSync(TextNode)({
+ *   type: "text", version: 1, detail: 0, format: 0, mode: "normal", style: "", text: "Hello"
+ * })
+ * console.log(node.text) // "Hello"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1018,6 +1298,17 @@ export class TabNode extends TextBase.extend<TabNode>($I`TabNode`)(
 /**
  * Companion namespace for {@link TabNode}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TabNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: TabNode.Type = S.decodeUnknownSync(TabNode)({
+ *   type: "tab", version: 1, detail: 0, format: 0, mode: "normal", style: "", text: "\t"
+ * })
+ * console.log(node.type) // "tab"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1068,6 +1359,15 @@ export class LineBreakNode extends BaseNode.extend<LineBreakNode>($I`LineBreakNo
 /**
  * Companion namespace for {@link LineBreakNode}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { LineBreakNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: LineBreakNode.Type = S.decodeUnknownSync(LineBreakNode)({ type: "linebreak", version: 1 })
+ * console.log(node.type) // "linebreak"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1116,6 +1416,15 @@ export class RootNode extends ElementNode.extend<RootNode>($I`RootNode`)(
 /**
  * Companion namespace for {@link RootNode}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { RootNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: RootNode.Type = S.decodeUnknownSync(RootNode)({ type: "root", version: 1, children: [] })
+ * console.log(node.type) // "root"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1163,6 +1472,15 @@ export class ParagraphNode extends ElementNode.extend<ParagraphNode>($I`Paragrap
 
 /**
  * Companion namespace for {@link ParagraphNode}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ParagraphNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: ParagraphNode.Type = S.decodeUnknownSync(ParagraphNode)({ type: "paragraph", version: 1, children: [] })
+ * console.log(node.type) // "paragraph"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1213,6 +1531,17 @@ export class HeadingNode extends ElementNode.extend<HeadingNode>($I`HeadingNode`
 /**
  * Companion namespace for {@link HeadingNode}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { HeadingNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: HeadingNode.Type = S.decodeUnknownSync(HeadingNode)({
+ *   type: "heading", version: 1, children: [], tag: "h1"
+ * })
+ * console.log(node.tag) // "h1"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1262,6 +1591,15 @@ export class QuoteNode extends ElementNode.extend<QuoteNode>($I`QuoteNode`)(
 
 /**
  * Companion namespace for {@link QuoteNode}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { QuoteNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: QuoteNode.Type = S.decodeUnknownSync(QuoteNode)({ type: "quote", version: 1, children: [] })
+ * console.log(node.type) // "quote"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1321,6 +1659,17 @@ export class ListNode extends ElementNode.extend<ListNode>($I`ListNode`)(
 
 /**
  * Companion namespace for {@link ListNode}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ListNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: ListNode.Type = S.decodeUnknownSync(ListNode)({
+ *   type: "list", version: 1, children: [], listType: "bullet", start: 1, tag: "ul"
+ * })
+ * console.log(node.tag) // "ul"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1383,6 +1732,17 @@ export class ListItemNode extends ElementNode.extend<ListItemNode>($I`ListItemNo
 
 /**
  * Companion namespace for {@link ListItemNode}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ListItemNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: ListItemNode.Type = S.decodeUnknownSync(ListItemNode)({
+ *   type: "listitem", version: 1, children: [], value: 1
+ * })
+ * console.log(node.value) // 1
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1448,6 +1808,17 @@ export class LinkNode extends ElementNode.extend<LinkNode>($I`LinkNode`)(
 
 /**
  * Companion namespace for {@link LinkNode}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { LinkNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: LinkNode.Type = S.decodeUnknownSync(LinkNode)({
+ *   type: "link", version: 1, children: [], url: "https://example.com"
+ * })
+ * console.log(node.url) // "https://example.com"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1516,6 +1887,15 @@ export class CodeNode extends ElementNode.extend<CodeNode>($I`CodeNode`)(
 /**
  * Companion namespace for {@link CodeNode}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CodeNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: CodeNode.Type = S.decodeUnknownSync(CodeNode)({ type: "code", version: 1, children: [] })
+ * console.log(node.type) // "code"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1580,6 +1960,17 @@ export class ArtifactRefNode extends BaseNode.extend<ArtifactRefNode>($I`Artifac
 
 /**
  * Companion namespace for {@link ArtifactRefNode}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ArtifactRefNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: ArtifactRefNode.Type = S.decodeUnknownSync(ArtifactRefNode)({
+ *   type: "artifact-ref", version: 1, artifactId: "artifact-123"
+ * })
+ * console.log(node.artifactId) // "artifact-123"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1646,6 +2037,17 @@ export class YouTubeNode extends BaseNode.extend<YouTubeNode>($I`YouTubeNode`)(
 
 /**
  * Companion namespace for {@link YouTubeNode}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { YouTubeNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: YouTubeNode.Type = S.decodeUnknownSync(YouTubeNode)({
+ *   type: "youtube", version: 1, videoID: "dQw4w9WgXcQ", format: ""
+ * })
+ * console.log(node.videoID)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -1739,6 +2141,17 @@ export class TableCellNode extends ElementNode.extend<TableCellNode>($I`TableCel
 /**
  * Companion namespace for {@link TableCellNode}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TableCellNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: TableCellNode.Type = S.decodeUnknownSync(TableCellNode)({
+ *   type: "tablecell", version: 1, children: [], headerState: 0
+ * })
+ * console.log(node.headerState) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1812,6 +2225,15 @@ export class TableRowNode extends ElementNode.extend<TableRowNode>($I`TableRowNo
 /**
  * Companion namespace for {@link TableRowNode}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TableRowNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: TableRowNode.Type = S.decodeUnknownSync(TableRowNode)({ type: "tablerow", version: 1, children: [] })
+ * console.log(node.type) // "tablerow"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1882,6 +2304,15 @@ export class TableNode extends ElementNode.extend<TableNode>($I`TableNode`)(
 /**
  * Companion namespace for {@link TableNode}.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TableNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: TableNode.Type = S.decodeUnknownSync(TableNode)({ type: "table", version: 1, children: [] })
+ * console.log(node.type) // "table"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -1950,7 +2381,13 @@ export const LexicalNode = S.Union([
   TableNode,
   TableRowNode,
   TableCellNode,
-]).pipe(S.toTaggedUnion("type"), SchemaUtils.withCodecStatics);
+]).pipe(
+  S.toTaggedUnion("type"),
+  $I.annoteSchema("LexicalNode", {
+    description: "The tagged union of all v1 serialized Lexical nodes, discriminated by Lexical's own type key.",
+  }),
+  SchemaUtils.withCodecStatics
+);
 
 /**
  * {@inheritDoc LexicalNode}
@@ -1970,6 +2407,15 @@ export type LexicalNode = typeof LexicalNode.Type;
 
 /**
  * Companion namespace for {@link LexicalNode}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { LexicalNode } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const node: LexicalNode.Type = S.decodeUnknownSync(LexicalNode)({ type: "linebreak", version: 1 })
+ * console.log(node.type) // "linebreak"
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -2074,6 +2520,17 @@ export class SerializedEditorState extends S.Class<SerializedEditorState>($I`Ser
 
 /**
  * Companion namespace for {@link SerializedEditorState}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { SerializedEditorState } from "@beep/lexical-schema/Lexical.model"
+ *
+ * const state: SerializedEditorState.Type = S.decodeUnknownSync(SerializedEditorState)({
+ *   root: { type: "root", version: 1, children: [], direction: null, format: "", indent: 0 }
+ * })
+ * console.log(state.root.type) // "root"
+ * ```
  *
  * @category models
  * @since 0.0.0

@@ -1,3 +1,9 @@
+/**
+ * Drawer primitive: an edge-anchored sliding panel built on Vaul.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Drawer as DrawerPrimitive } from "vaul";

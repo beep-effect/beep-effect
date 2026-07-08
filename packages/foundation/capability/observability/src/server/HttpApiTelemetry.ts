@@ -25,6 +25,16 @@ const resolveHttpApiStatus = SchemaAST.resolveAt<number>("httpApiStatus");
 /**
  * HTTP status code in the standard 100-599 range.
  *
+ * @example
+ * ```typescript
+ * import { HttpStatusCode } from "@beep/observability/server"
+ * import * as S from "effect/Schema"
+ *
+ * const status = S.decodeUnknownSync(HttpStatusCode)(404)
+ * console.log(status)
+ * // 404
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -37,6 +47,16 @@ export const HttpStatusCode = NonNegativeInt.check(S.isBetween({ minimum: 100, m
 
 /**
  * HTTP status code in the standard 100-599 range.
+ *
+ * @example
+ * ```typescript
+ * import { HttpStatusCode } from "@beep/observability/server"
+ * import * as S from "effect/Schema"
+ *
+ * const status: HttpStatusCode = S.decodeUnknownSync(HttpStatusCode)(404)
+ * console.log(status)
+ * // 404
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -129,26 +149,11 @@ const isHttpApiMetricSet = (value: unknown): value is HttpApiMetricSet =>
 const isObserveHttpApiEffectOptions = (value: unknown): value is ObserveHttpApiEffectOptions =>
   P.hasProperty(value, "descriptor") && P.hasProperty(value, "endpoint") && P.hasProperty(value, "metrics");
 
-const isObserveHttpApiHandlerOptions = (value: unknown): value is ObserveHttpApiHandlerOptions =>
-  P.hasProperty(value, "descriptor") && P.hasProperty(value, "metrics");
-
 const isObserveHttpApiEffectDataFirst = (args: IArguments): boolean => Effect.isEffect(args[0]) || args.length >= 4;
-
-const isObserveHttpApiHandlerDataFirst = (args: IArguments): boolean => Effect.isEffect(args[0]) || args.length >= 3;
 
 const isHttpServerResponseEffect = <E, R>(
   value: unknown
 ): value is Effect.Effect<HttpServerResponse.HttpServerResponse, E, R> => Effect.isEffect(value);
-
-const isHttpApiHandlerEffect = <
-  A,
-  E extends {
-    readonly status: number;
-  },
-  R,
->(
-  value: unknown
-): value is Effect.Effect<A, E, R> => Effect.isEffect(value);
 
 const isHttpApiSuccessStatusDataFirst = (args: IArguments): boolean => args.length >= 2 || S.isSchema(args[0]);
 
@@ -631,7 +636,7 @@ export const layerHttpApiTelemetryMiddleware = (
  * })
  * const metrics = makeHttpApiMetrics("todox_api")
  * const handler = Effect.succeed({ status: 200 })
- * const observed = observeHttpApiHandler(descriptor, metrics, handler)
+ * const observed = observeHttpApiHandler(handler, { descriptor, metrics })
  * console.log(Effect.runSync(observed).status) // 200
  * ```
  *
@@ -701,9 +706,8 @@ const observeHttpApiHandlerImpl = Effect.fn("observeHttpApiHandlerImpl")(functio
  * })
  * const metrics = makeHttpApiMetrics("todo_api")
  * const observed = observeHttpApiHandler(
- *   descriptor,
- *   metrics,
- *   Effect.succeed({ status: 200 })
+ *   Effect.succeed({ status: 200 }),
+ *   { descriptor, metrics }
  * )
  * console.log(Effect.runPromise(observed))
  * ```
@@ -735,46 +739,4 @@ export const observeHttpApiHandler: {
   >(
     effect: Effect.Effect<A, E, R>
   ) => Effect.Effect<A, E, R>;
-  <
-    A,
-    E extends {
-      readonly status: number;
-    },
-    R,
-  >(
-    descriptor: HttpApiTelemetryDescriptor,
-    metrics: HttpApiMetricSet,
-    effect: Effect.Effect<A, E, R>
-  ): Effect.Effect<A, E, R>;
-} = dual(
-  isObserveHttpApiHandlerDataFirst,
-  Effect.fn(function* <
-    A,
-    E extends {
-      readonly status: number;
-    },
-    R,
-  >(
-    effect: Effect.Effect<A, E, R> | HttpApiTelemetryDescriptor,
-    options: ObserveHttpApiHandlerOptions | HttpApiMetricSet
-  ): Effect.fn.Return<A, E, R> {
-    if (Effect.isEffect(effect) && isObserveHttpApiHandlerOptions(options)) {
-      return yield* observeHttpApiHandlerImpl(effect, options);
-    }
-
-    const legacyEffect: unknown = arguments[2];
-
-    if (
-      !Effect.isEffect(effect) &&
-      !isObserveHttpApiHandlerOptions(options) &&
-      isHttpApiHandlerEffect<A, E, R>(legacyEffect)
-    ) {
-      return yield* observeHttpApiHandlerImpl(legacyEffect, {
-        descriptor: effect,
-        metrics: options,
-      });
-    }
-
-    return yield* Effect.die("Invalid observeHttpApiHandler arguments");
-  })
-);
+} = dual(2, observeHttpApiHandlerImpl);

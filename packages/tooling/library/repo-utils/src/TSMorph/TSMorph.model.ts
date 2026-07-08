@@ -425,7 +425,11 @@ export type SymbolQualifiedName = typeof SymbolQualifiedName.Type;
  * @category models
  * @since 0.0.0
  */
-export const SymbolKind = LiteralKit(symbolKindOptions);
+export const SymbolKind = LiteralKit(symbolKindOptions).pipe(
+  $I.annoteSchema("SymbolKind", {
+    description: "Supported TypeScript declaration kinds for normalized symbols.",
+  })
+);
 
 /**
  * Literal union of supported TypeScript declaration kinds.
@@ -452,7 +456,11 @@ export type SymbolKind = typeof SymbolKind.Type;
  * @category models
  * @since 0.0.0
  */
-export const SymbolCategory = LiteralKit(["function", "class", "member", "type"]);
+export const SymbolCategory = LiteralKit(["function", "class", "member", "type"]).pipe(
+  $I.annoteSchema("SymbolCategory", {
+    description: "Coarse symbol categories used by the TSMorph models.",
+  })
+);
 
 /**
  * Literal union of coarse TSMorph symbol categories.
@@ -741,7 +749,11 @@ export type ContentHash = typeof ContentHash.Type;
  * @category models
  * @since 0.0.0
  */
-export const TsMorphScopeMode = LiteralKit(["syntax", "semantic"]);
+export const TsMorphScopeMode = LiteralKit(["syntax", "semantic"]).pipe(
+  $I.annoteSchema("TsMorphScopeMode", {
+    description: "Supported ts-morph project scope modes.",
+  })
+);
 
 /**
  * Literal union of ts-morph project scope modes.
@@ -768,7 +780,11 @@ export type TsMorphScopeMode = typeof TsMorphScopeMode.Type;
  * @category models
  * @since 0.0.0
  */
-export const TsMorphReferencePolicy = LiteralKit(["workspaceOnly", "followReferences"]);
+export const TsMorphReferencePolicy = LiteralKit(["workspaceOnly", "followReferences"]).pipe(
+  $I.annoteSchema("TsMorphReferencePolicy", {
+    description: "Reference traversal policies for ts-morph scope resolution.",
+  })
+);
 
 /**
  * Literal union of ts-morph reference traversal policies.
@@ -791,11 +807,29 @@ const resolvedProjectIdentity = S.TemplateLiteral([
   TsMorphReferencePolicy,
 ]);
 
-type ProjectIdentityParts = {
-  readonly tsConfigPath: TsConfigFilePath;
-  readonly mode: TsMorphScopeMode;
-  readonly referencePolicy: TsMorphReferencePolicy;
-};
+/**
+ * Structural identity parts for a resolved ts-morph project scope or cache
+ * key: tsconfig path, scope mode, and reference policy.
+ *
+ * @example
+ * ```ts
+ * import { ProjectIdentityParts } from "@beep/repo-utils"
+ * const identifier = ProjectIdentityParts.ast.annotations?.identifier
+ * console.log(identifier)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class ProjectIdentityParts extends S.Class<ProjectIdentityParts>($I`ProjectIdentityParts`)(
+  {
+    tsConfigPath: TsConfigFilePath,
+    mode: TsMorphScopeMode,
+    referencePolicy: TsMorphReferencePolicy,
+  },
+  $I.annote("ProjectIdentityParts", {
+    description: "Structural identity parts for a resolved ts-morph project scope or cache key.",
+  })
+) {}
 
 const renderProjectIdentity = (parts: ProjectIdentityParts): string =>
   `${parts.tsConfigPath}::${parts.mode}#${parts.referencePolicy}`;
@@ -969,6 +1003,30 @@ export const SymbolIdParts = S.TemplateLiteralParser([SymbolFilePath, "::", Symb
     description: "Parsed symbol id parts for file path, qualified name, and exact kind.",
   })
 );
+
+/**
+ * Structural identity parts for a stable `SymbolId`: file path, qualified
+ * name, and declaration kind.
+ *
+ * @example
+ * ```ts
+ * import { SymbolIdentityParts } from "@beep/repo-utils"
+ * const identifier = SymbolIdentityParts.ast.annotations?.identifier
+ * console.log(identifier)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class SymbolIdentityParts extends S.Class<SymbolIdentityParts>($I`SymbolIdentityParts`)(
+  {
+    filePath: SymbolFilePath,
+    qualifiedName: SymbolQualifiedName,
+    kind: SymbolKind,
+  },
+  $I.annote("SymbolIdentityParts", {
+    description: "Structural identity parts for a stable symbol identity.",
+  })
+) {}
 
 /**
  * Schema transformation from a generic file path to a `TsConfigFilePath`.
@@ -1374,11 +1432,7 @@ export class SymbolInit extends S.Class<SymbolInit>($I`SymbolInit`)(
  * @category utilities
  * @since 0.0.0
  */
-export const makeSymbolId = (parts: {
-  readonly filePath: SymbolFilePath;
-  readonly qualifiedName: SymbolQualifiedName;
-  readonly kind: SymbolKind;
-}): SymbolId => SymbolId.fromParts(parts);
+export const makeSymbolId = (parts: SymbolIdentityParts): SymbolId => SymbolId.fromParts(parts);
 
 /**
  * Builds a stable `ProjectScopeId` from validated scope identity parts.
@@ -1401,11 +1455,7 @@ export const makeSymbolId = (parts: {
  * @category utilities
  * @since 0.0.0
  */
-export const makeProjectScopeId = (parts: {
-  readonly tsConfigPath: TsConfigFilePath;
-  readonly mode: TsMorphScopeMode;
-  readonly referencePolicy: TsMorphReferencePolicy;
-}): ProjectScopeId => ProjectScopeId.fromParts(parts);
+export const makeProjectScopeId = (parts: ProjectIdentityParts): ProjectScopeId => ProjectScopeId.fromParts(parts);
 
 /**
  * Builds a stable `ProjectCacheKey` from validated scope identity parts.
@@ -1428,11 +1478,7 @@ export const makeProjectScopeId = (parts: {
  * @category utilities
  * @since 0.0.0
  */
-export const makeProjectCacheKey = (parts: {
-  readonly tsConfigPath: TsConfigFilePath;
-  readonly mode: TsMorphScopeMode;
-  readonly referencePolicy: TsMorphReferencePolicy;
-}): ProjectCacheKey => ProjectCacheKey.fromParts(parts);
+export const makeProjectCacheKey = (parts: ProjectIdentityParts): ProjectCacheKey => ProjectCacheKey.fromParts(parts);
 
 /**
  * Normalizes symbol input by deriving missing identity and category fields.
@@ -1943,7 +1989,11 @@ export class TsMorphSymbolSourceResult extends S.Class<TsMorphSymbolSourceResult
  * @category models
  * @since 0.0.0
  */
-export const TsMorphDiagnosticCategory = LiteralKit(["error", "warning", "suggestion", "message"]);
+export const TsMorphDiagnosticCategory = LiteralKit(["error", "warning", "suggestion", "message"]).pipe(
+  $I.annoteSchema("TsMorphDiagnosticCategory", {
+    description: "Supported normalized diagnostic categories.",
+  })
+);
 
 /**
  * Literal union of normalized diagnostic categories.

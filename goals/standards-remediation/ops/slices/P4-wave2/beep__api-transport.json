@@ -1,0 +1,21 @@
+{
+  "owner": "@beep/api-transport",
+  "entries": [
+    {
+      "file": "packages/foundation/capability/api-transport/src/Transport.ts",
+      "symbol": "ApiTransport",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/api-transport",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/foundation/capability/api-transport/src/Transport.ts",
+      "symbol": "ApiTransportOptions",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/api-transport",
+      "reason": "Constructor-options bag for makeApiTransport with effect-native members: an ApiAuth Data.TaggedEnum carrying Redacted secrets and a Duration.Input timing input, not a decode-from-wire boundary model."
+    }
+  ]
+}

@@ -1,3 +1,9 @@
+/**
+ * Alert dialog primitive: a modal confirmation root for destructive or high-friction actions.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { AlertDialog as AlertDialogPrimitive } from "@base-ui/react/alert-dialog";

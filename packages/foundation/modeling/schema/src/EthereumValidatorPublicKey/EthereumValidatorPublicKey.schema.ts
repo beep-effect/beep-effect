@@ -63,6 +63,17 @@ export const EthereumValidatorPublicKey = S.String.check(EthereumValidatorPublic
 /**
  * Type for {@link EthereumValidatorPublicKey}.
  *
+ * @example
+ * ```ts
+ * import { EthereumValidatorPublicKey } from "@beep/schema/EthereumValidatorPublicKey"
+ * import * as S from "effect/Schema"
+ *
+ * const key: EthereumValidatorPublicKey = S.decodeUnknownSync(EthereumValidatorPublicKey)(
+ *   "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+ * )
+ * console.log(key)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -96,6 +107,16 @@ export const EthereumValidatorPublicKeyRedacted = EthereumValidatorPublicKey.pip
 
 /**
  * Type for {@link EthereumValidatorPublicKeyRedacted}.
+ *
+ * @example
+ * ```ts
+ * import { EthereumValidatorPublicKeyRedacted } from "@beep/schema/EthereumValidatorPublicKey"
+ *
+ * const key: EthereumValidatorPublicKeyRedacted = EthereumValidatorPublicKeyRedacted.makeRedacted(
+ *   "0x000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+ * )
+ * console.log(key)
+ * ```
  *
  * @since 0.0.0
  * @category models

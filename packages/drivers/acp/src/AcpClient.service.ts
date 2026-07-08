@@ -422,7 +422,7 @@ export const make = Effect.fn($I`AcpClient_make`)(function* (
       if (registration.handlers.length === 0 || registration.pending.length === 0) {
         return Effect.void;
       }
-      const pending = A.spliceInPlace(registration.pending, 0, A.length(registration.pending));
+      const pending = A.spliceInPlace(registration.pending, { start: 0, deleteCount: A.length(registration.pending) });
       return Effect.forEach(pending, (notification) => runNotificationHandlers(method, registration, notification), {
         discard: true,
       });

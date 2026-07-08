@@ -1,4 +1,10 @@
 /**
+ * Server-side observability barrel — configuration, DevTools, diagnostics, errors, and layers.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+/**
  * @category configuration
  * @since 0.0.0
  */

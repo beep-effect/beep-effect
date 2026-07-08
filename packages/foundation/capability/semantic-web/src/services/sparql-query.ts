@@ -48,6 +48,23 @@ export const SparqlQueryProfile = LiteralKit(["select", "ask", "construct"]).pip
 );
 
 /**
+ * Type for {@link SparqlQueryProfile}.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { SparqlQueryProfile } from "@beep/semantic-web/services/sparql-query"
+ *
+ * const profile: SparqlQueryProfile = "ask"
+ * strictEqual(SparqlQueryProfile.is.ask(profile), true)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type SparqlQueryProfile = typeof SparqlQueryProfile.Type;
+
+/**
  * SPARQL query request.
  *
  * @example
@@ -223,6 +240,23 @@ export const SparqlQueryErrorReason = LiteralKit(["unsupportedProfile", "unimple
     semanticSchemaMetadata: serviceContractMetadata("SparqlQueryErrorReason", "SPARQL query error reason."),
   })
 );
+
+/**
+ * Type for {@link SparqlQueryErrorReason}.
+ *
+ * @example
+ * ```ts
+ * import { strictEqual } from "node:assert"
+ * import { SparqlQueryErrorReason } from "@beep/semantic-web/services/sparql-query"
+ *
+ * const reason: SparqlQueryErrorReason = "unsupportedProfile"
+ * strictEqual(SparqlQueryErrorReason.is.unsupportedProfile(reason), true)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export type SparqlQueryErrorReason = typeof SparqlQueryErrorReason.Type;
 
 /**
  * Typed SPARQL query error.

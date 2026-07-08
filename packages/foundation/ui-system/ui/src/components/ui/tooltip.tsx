@@ -1,3 +1,9 @@
+/**
+ * Tooltip primitive: a provider that supplies shared tooltip open/close timing defaults.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";

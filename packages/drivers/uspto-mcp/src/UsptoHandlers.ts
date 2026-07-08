@@ -80,6 +80,21 @@ const makeDiagnosticFetchableHandleMinter = Effect.fn("UsptoMcp.makeDiagnosticFe
 /**
  * Live handler layer for the USPTO MCP toolkit.
  *
+ * @example
+ * ```ts
+ * import { UsptoToolkitHandlersLive } from "@beep/uspto-mcp/UsptoHandlers"
+ * import { Uspto, UsptoConfigInput } from "@beep/uspto"
+ * import { Layer, Redacted } from "effect"
+ * import { FetchHttpClient } from "effect/unstable/http"
+ *
+ * const layer = UsptoToolkitHandlersLive.pipe(
+ *   Layer.provide(Uspto.makeLayer(UsptoConfigInput.make({ apiKey: Redacted.make("test-key") }))),
+ *   Layer.provide(FetchHttpClient.layer)
+ * )
+ * console.log(Layer.isLayer(layer))
+ * // true
+ * ```
+ *
  * @category layers
  * @since 0.0.0
  */

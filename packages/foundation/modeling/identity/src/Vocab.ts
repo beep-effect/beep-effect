@@ -5,7 +5,12 @@
  * @since 0.0.0
  */
 
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { make } from "./Id.ts";
+
+const { $IdentityId } = make("identity");
+const $I = $IdentityId.create("Vocab");
 
 /**
  * Registry shape consumed by identity CURIE type helpers and codecs.
@@ -19,7 +24,7 @@ import * as S from "effect/Schema";
  *     iri: "https://example.test/ns#",
  *     terms: ["Thing"],
  *   },
- * } as const satisfies VocabShape
+ * } satisfies VocabShape
  *
  * console.log(vocab.ex.iri)
  * ```
@@ -57,10 +62,9 @@ export class VocabEntry extends S.Class<VocabEntry>("@beep/identity/Vocab/VocabE
     iri: S.String,
     terms: S.Array(S.String),
   },
-  {
-    title: "Vocabulary Entry",
+  $I.annote("VocabEntry", {
     description: "One namespace IRI and term list inside an identity vocabulary registry.",
-  }
+  })
 ) {}
 
 /**
@@ -403,6 +407,15 @@ export type Expand<C extends string, V extends VocabShape> = C extends `${infer 
     : never
   : never;
 
+const mergeVocabImpl = <const Base extends VocabShape, const Extension extends VocabShape>(
+  base: Base,
+  extension: Extension
+) =>
+  ({
+    ...base,
+    ...extension,
+  }) satisfies VocabShape;
+
 /**
  * Merge a base registry with literal-preserving extension vocabulary data.
  *
@@ -415,7 +428,7 @@ export type Expand<C extends string, V extends VocabShape> = C extends `${infer 
  *     iri: "https://example.test/ns#",
  *     terms: ["Thing"],
  *   },
- * } as const)
+ * })
  *
  * console.log(vocab.ex.terms[0]) // "Thing"
  * ```
@@ -423,11 +436,12 @@ export type Expand<C extends string, V extends VocabShape> = C extends `${infer 
  * @category combinators
  * @since 0.0.0
  */
-export const mergeVocab = <const Base extends VocabShape, const Extension extends VocabShape>(
-  base: Base,
-  extension: Extension
-) =>
-  ({
-    ...base,
-    ...extension,
-  }) satisfies VocabShape;
+export const mergeVocab: {
+  <const Base extends VocabShape, const Extension extends VocabShape>(
+    base: Base,
+    extension: Extension
+  ): ReturnType<typeof mergeVocabImpl<Base, Extension>>;
+  <const Extension extends VocabShape>(
+    extension: Extension
+  ): <const Base extends VocabShape>(base: Base) => ReturnType<typeof mergeVocabImpl<Base, Extension>>;
+} = dual(2, mergeVocabImpl);

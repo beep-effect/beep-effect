@@ -1,3 +1,11 @@
+/**
+ * Oxlint rule reporting Effect Schema decoder/encoder compiler calls created
+ * inside function bodies instead of hoisted module constants.
+ *
+ * @packageDocumentation
+ * @since 0.1.0
+ */
+
 import { defineRule } from "@oxlint/plugins";
 import { HashSet, MutableHashSet } from "effect";
 import * as O from "effect/Option";

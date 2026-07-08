@@ -49,8 +49,9 @@ export const AllowedDevOrigin = S.Trim.check(
  *
  * @example
  * ```ts
- * import type { AllowedDevOrigin } from "@beep/repo-configs/next"
- * const origin = "local-origin.dev" as AllowedDevOrigin
+ * import * as S from "effect/Schema"
+ * import { AllowedDevOrigin } from "@beep/repo-configs/next"
+ * const origin: AllowedDevOrigin = S.decodeSync(AllowedDevOrigin)("local-origin.dev")
  * console.log(origin)
  * ```
  * @category models

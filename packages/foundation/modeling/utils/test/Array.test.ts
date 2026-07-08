@@ -101,7 +101,7 @@ describe("@beep/utils Array.indexOf", () => {
   });
 
   it("supports data-last usage and native fromIndex semantics", () => {
-    expect(pipe(["a", "b", "a"], A.indexOf("a", 1))).toEqual(O.some(2));
+    expect(pipe(["a", "b", "a"], A.indexOf("a", { fromIndex: 1 }))).toEqual(O.some(2));
   });
 
   it("returns None when absent", () => {
@@ -115,7 +115,7 @@ describe("@beep/utils Array.lastIndexOf", () => {
   });
 
   it("supports data-last usage and native fromIndex semantics", () => {
-    expect(pipe(["a", "b", "a"], A.lastIndexOf("a", 1))).toEqual(O.some(0));
+    expect(pipe(["a", "b", "a"], A.lastIndexOf("a", { fromIndex: 1 }))).toEqual(O.some(0));
   });
 
   it("returns None when absent", () => {
@@ -133,7 +133,7 @@ describe("@beep/utils Array.slice", () => {
   });
 
   it("supports data-last range selection", () => {
-    expect(pipe([1, 2, 3, 4], A.slice(1, 3))).toEqual([2, 3]);
+    expect(pipe([1, 2, 3, 4], A.slice({ start: 1, end: 3 }))).toEqual([2, 3]);
   });
 });
 
@@ -185,7 +185,7 @@ describe("@beep/utils Array mutation helpers", () => {
 
   it("spliceInPlace returns removed values and mutates the input", () => {
     const input = ["a", "b", "c"];
-    const removed = A.spliceInPlace(input, 1, 1, "x");
+    const removed = A.spliceInPlace(input, { start: 1, deleteCount: 1, items: ["x"] });
 
     expect(removed).toEqual(["b"]);
     expect(input).toEqual(["a", "x", "c"]);

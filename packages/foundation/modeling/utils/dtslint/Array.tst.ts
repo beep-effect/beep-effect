@@ -100,11 +100,11 @@ describe("lastIndexOf", () => {
 
 describe("slice", () => {
   it("data-first returns Array", () => {
-    expect(A.slice(["a", "b"], 0, 1)).type.toBe<Array<string>>();
+    expect(A.slice(["a", "b"], { start: 0, end: 1 })).type.toBe<Array<string>>();
   });
 
   it("data-last returns Array", () => {
-    expect(pipe(["a", "b"], A.slice(0, 1))).type.toBe<Array<string>>();
+    expect(pipe(["a", "b"], A.slice({ start: 0, end: 1 }))).type.toBe<Array<string>>();
   });
 });
 
@@ -139,7 +139,7 @@ describe("mutation helpers", () => {
   });
 
   it("spliceInPlace returns removed values", () => {
-    expect(A.spliceInPlace(["a", "b"], 1, 1, "x")).type.toBe<Array<string>>();
-    expect(pipe(["a", "b"], A.spliceInPlace(1, 1, "x"))).type.toBe<Array<string>>();
+    expect(A.spliceInPlace(["a", "b"], { start: 1, deleteCount: 1, items: ["x"] })).type.toBe<Array<string>>();
+    expect(pipe(["a", "b"], A.spliceInPlace({ start: 1, deleteCount: 1, items: ["x"] }))).type.toBe<Array<string>>();
   });
 });

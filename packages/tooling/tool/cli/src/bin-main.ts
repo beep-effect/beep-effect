@@ -115,7 +115,7 @@ const P = await import("effect/Predicate");
  */
 const BaseLayers = Layer.mergeAll(BunServices.layer, BunHttpClient.layer, BunCrypto.layer);
 
-const argv = A.slice(process.argv, 2);
+const argv = A.slice(process.argv, { start: 2 });
 
 const renderCliFailure = (exit: import("effect").Exit.Exit<unknown, unknown>) => {
   if (Exit.isSuccess(exit)) {

@@ -1,3 +1,9 @@
+/**
+ * Scroll-area primitive: a custom-scrollbar viewport built on Base UI's scroll area.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";

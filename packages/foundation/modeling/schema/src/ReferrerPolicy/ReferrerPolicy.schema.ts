@@ -55,6 +55,14 @@ export const ReferrerPolicyValue = ReferrerPolicyValueBase.pipe(
 /**
  * Type for allowed `Referrer-Policy` values.
  *
+ * @example
+ * ```ts
+ * import type { ReferrerPolicyValue } from "@beep/schema/ReferrerPolicy"
+ *
+ * const value: ReferrerPolicyValue = "strict-origin"
+ * console.log(value)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -84,6 +92,14 @@ export const ReferrerPolicyValueList = S.Array(ReferrerPolicyValue).pipe(
 /**
  * Type for fallback lists of `Referrer-Policy` values.
  *
+ * @example
+ * ```ts
+ * import type { ReferrerPolicyValueList } from "@beep/schema/ReferrerPolicy"
+ *
+ * const values: ReferrerPolicyValueList = ["origin", "strict-origin"]
+ * console.log(values.length)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -111,6 +127,14 @@ export const ReferrerPolicyOption = S.Union([S.Literal(false), ReferrerPolicyVal
 
 /**
  * Type for enabled or disabled `Referrer-Policy` options.
+ *
+ * @example
+ * ```ts
+ * import type { ReferrerPolicyOption } from "@beep/schema/ReferrerPolicy"
+ *
+ * const option: ReferrerPolicyOption = "no-referrer"
+ * console.log(option)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -248,6 +272,18 @@ export const ReferrerPolicyHeader = S.Union([ReferrerPolicyOption, S.Undefined])
 /**
  * Type for rendered `Referrer-Policy` response headers.
  *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { ReferrerPolicyResponseHeader, type ReferrerPolicyHeader } from "@beep/schema/ReferrerPolicy"
+ *
+ * const header: ReferrerPolicyHeader = ReferrerPolicyResponseHeader.make({
+ *   name: "Referrer-Policy",
+ *   value: O.some("no-referrer"),
+ * })
+ * console.log(header.name)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -259,9 +295,73 @@ export type ReferrerPolicyHeader = typeof ReferrerPolicyHeader.Type;
  * @category schemas
  * @since 0.0.0
  */
-export {
-  ReferrerPolicyHeader as Header,
-  ReferrerPolicyOption as Option,
-  ReferrerPolicyResponseHeader as ResponseHeader,
-  ReferrerPolicyValue as Value,
-};
+export { ReferrerPolicyResponseHeader as ResponseHeader, ReferrerPolicyValue as Value };
+
+/**
+ * Concise alias for {@link ReferrerPolicyOption}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Option } from "@beep/schema/ReferrerPolicy"
+ *
+ * console.log(S.decodeUnknownSync(Option)("no-referrer"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Option = ReferrerPolicyOption;
+
+/**
+ * Type-level representation of {@link Option}.
+ *
+ * @example
+ * ```ts
+ * import type { Option } from "@beep/schema/ReferrerPolicy"
+ *
+ * const option: Option = "no-referrer"
+ * console.log(option)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Option = typeof Option.Type;
+
+/**
+ * Concise alias for {@link ReferrerPolicyHeader}.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Header } from "@beep/schema/ReferrerPolicy"
+ *
+ * const header = S.decodeUnknownSync(Header)("no-referrer")
+ * console.log(header.name)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Header = ReferrerPolicyHeader;
+
+/**
+ * Type-level representation of {@link Header}.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { ReferrerPolicyResponseHeader, type Header } from "@beep/schema/ReferrerPolicy"
+ *
+ * const header: Header = ReferrerPolicyResponseHeader.make({
+ *   name: "Referrer-Policy",
+ *   value: O.some("no-referrer"),
+ * })
+ * console.log(header.name)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Header = typeof Header.Type;
