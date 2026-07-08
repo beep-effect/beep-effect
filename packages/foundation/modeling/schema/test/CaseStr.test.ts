@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { KebabCaseStr, PascalCaseStr, SnakeCaseStr } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
@@ -25,7 +26,7 @@ describe("KebabCaseStr", () => {
         expect(decode(value)).toBe(value);
         expect(value).toMatch(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });
@@ -52,7 +53,7 @@ describe("PascalCaseStr", () => {
         expect(decode(value)).toBe(value);
         expect(value).toMatch(/^[A-Z][a-z0-9]*(?:[A-Z][a-z0-9]*)*$/);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });
@@ -77,7 +78,7 @@ describe("SnakeCaseStr", () => {
         expect(decode(value)).toBe(value);
         expect(value).toMatch(/^[a-z][a-z0-9]*(_[a-z0-9]+)*$/);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });

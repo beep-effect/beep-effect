@@ -126,15 +126,15 @@ Recommendation: define a v4 service whose local layer indexes identity, IRI, CUR
 
 # 8. Sources
 
-- /home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/research/repos/dxos-semantic-index.md
-- /home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/research/repos/effect-ontology.md
-- /home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/research/repos/n3.md
-- /home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/research/repos/n3-types.md
-- /home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/research/repos/ontograph-core.md
-- /home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/research/repos/ontology-master.md
-- /home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/research/repos/ontorite.md
-- /home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/research/repos/ontosphere.md
-- /home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/research/repos/owl-fol-translator.md
-- /home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/research/repos/rdfjs-types.md
-- /home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/research/repos/rdflib-js.md
-- /home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/research/repos/skygest.md
+- <repo-root>/explorations/identity-as-iri/research/repos/dxos-semantic-index.md
+- <repo-root>/explorations/identity-as-iri/research/repos/effect-ontology.md
+- <repo-root>/explorations/identity-as-iri/research/repos/n3.md
+- <repo-root>/explorations/identity-as-iri/research/repos/n3-types.md
+- <repo-root>/explorations/identity-as-iri/research/repos/ontograph-core.md
+- <repo-root>/explorations/identity-as-iri/research/repos/ontology-master.md
+- <repo-root>/explorations/identity-as-iri/research/repos/ontorite.md
+- <repo-root>/explorations/identity-as-iri/research/repos/ontosphere.md
+- <repo-root>/explorations/identity-as-iri/research/repos/owl-fol-translator.md
+- <repo-root>/explorations/identity-as-iri/research/repos/rdfjs-types.md
+- <repo-root>/explorations/identity-as-iri/research/repos/rdflib-js.md
+- <repo-root>/explorations/identity-as-iri/research/repos/skygest.md

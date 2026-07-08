@@ -2,6 +2,7 @@ import { syncDataToTsCommand } from "@beep/repo-cli/commands/SyncDataToTs";
 import {
   fetchSource,
   formatJson,
+  formatTsDocCommentValue,
   ISO3166_AUTH_HEADER_ENV,
   ISO3166_PART1_CSV_URL_ENV,
   ISO3166_PART2_CSV_URL_ENV,
@@ -294,6 +295,14 @@ const csvTarget: SyncDataTarget = {
 };
 
 describe("sync-data-to-ts", { concurrent: false }, () => {
+  it("escapes generated JSDoc comment metadata", () => {
+    const formatted = formatTsDocCommentValue("2026-01-01 */\nexport const injected = true;");
+
+    expect(formatted).toBe("2026-01-01 * / export const injected = true;");
+    expect(formatted).not.toContain("*/");
+    expect(formatted).not.toContain("\n");
+  });
+
   it("writes the generated ISO 4217 module in write mode", () =>
     Effect.runPromise(
       Effect.gen(function* () {

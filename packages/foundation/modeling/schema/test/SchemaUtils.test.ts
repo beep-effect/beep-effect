@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { $SchemaId } from "@beep/identity/packages";
 import * as SchemaUtils from "@beep/schema/SchemaUtils/index";
 import { optional } from "@beep/schema/SchemaUtils/optional";
@@ -220,7 +221,7 @@ describe("withCodecStatics", () => {
         expect(Slug.fromUnknown(sampled)).toBe(sampled);
         expect(O.isSome(Slug.decodeOption(sampled))).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 

@@ -1,9 +1,0 @@
-[
-  {
-    "op": "insert_after",
-    "target": "5. Verify before finishing.",
-    "content_preview": "- Read the Task Manifest JSON referenced in the task prompt (`## Task Manifest`) before writing code, and re-read it before finishing. It contains the deterministic scorer's exact required/forbidden r",
-    "status": "applied_insert_after",
-    "index": 1
-  }
-]

@@ -35,6 +35,12 @@
       "@beep/utils/*": [
         "../../../../packages/foundation/modeling/utils/src/*.ts"
       ],
+      "@beep/fc-runs": [
+        "../../../../packages/tooling/test-kit/fc-runs/src/index.ts"
+      ],
+      "@beep/fc-runs/*": [
+        "../../../../packages/tooling/test-kit/fc-runs/src/*.ts"
+      ],
       "@beep/identity": [
         "../../../../packages/foundation/modeling/identity/src/index.ts"
       ],

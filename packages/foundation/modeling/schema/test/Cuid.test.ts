@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { Cuid, CuidSeed, CuidState, cuid, sha512 } from "@beep/schema/Cuid";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
@@ -35,7 +36,7 @@ describe("Cuid", () => {
         expect(Cuid.is(id)).toBe(true);
         expect(S.encodeSync(Cuid)(id)).toBe(id);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 

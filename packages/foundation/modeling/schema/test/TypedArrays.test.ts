@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { Float16Arr, Float16ArrayFromArray } from "@beep/schema/Float16Array";
 import { Float32Arr, Float32ArrayFromArray } from "@beep/schema/Float32Array";
 import { Float64Arr, Float64ArrayFromArray } from "@beep/schema/Float64Array";
@@ -32,7 +33,7 @@ describe("Float16Array schemas", () => {
         expect(value).toBeInstanceOf(Float16Array);
         expect(decode(encode(value))).toBeInstanceOf(Float16Array);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 });
@@ -63,7 +64,7 @@ describe("Float32Array schemas", () => {
         expect(value).toBeInstanceOf(Float32Array);
         expect(decode(encode(value))).toBeInstanceOf(Float32Array);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 });
@@ -94,7 +95,7 @@ describe("Float64Array schemas", () => {
         expect(value).toBeInstanceOf(Float64Array);
         expect(decode(encode(value))).toBeInstanceOf(Float64Array);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 });

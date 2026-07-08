@@ -1,6 +1,6 @@
 # P3B-ADAPTER Lane Summary
 
-Worktree: `/home/elpresidank/YeeBois/projects/beep-effect-worktrees/skillopt-p3-adapter`
+Worktree: `<local-worktree>`
 
 ## Deliverables
 
@@ -48,20 +48,20 @@ Worktree: `/home/elpresidank/YeeBois/projects/beep-effect-worktrees/skillopt-p3-
 
 ## Verification Results
 
-- `env UV_CACHE_DIR=/tmp/uv-cache-skillopt uv lock --project tools/skillopt --offline`
+- `env UV_CACHE_DIR=<tmp-uv-cache> uv lock --project tools/skillopt --offline`
   - Failed. Log: `.proofs-adapter/uv-lock-offline.log`.
-  - Cause: `skillopt==0.2.0` was not present in `/tmp/uv-cache-skillopt`, and network is disabled for this lane.
-- `env UV_CACHE_DIR=/tmp/uv-cache-skillopt uv sync --project tools/skillopt --offline`
+  - Cause: `skillopt==0.2.0` was not present in `<tmp-uv-cache>`, and network is disabled for this lane.
+- `env UV_CACHE_DIR=<tmp-uv-cache> uv sync --project tools/skillopt --offline`
   - Failed. Log: `.proofs-adapter/uv-sync-offline.log`.
   - Same missing-cache cause.
-- `env UV_CACHE_DIR=/tmp/uv-cache-skillopt uv run --project tools/skillopt beep-skillopt-train --help`
+- `env UV_CACHE_DIR=<tmp-uv-cache> uv run --project tools/skillopt beep-skillopt-train --help`
   - Failed. Log: `.proofs-adapter/uv-run-help.log`.
   - Cause: this non-offline form attempted PyPI and DNS/network is blocked.
-- `env UV_CACHE_DIR=/tmp/uv-cache-skillopt uv run --project tools/skillopt --offline beep-skillopt-train --help`
+- `env UV_CACHE_DIR=<tmp-uv-cache> uv run --project tools/skillopt --offline beep-skillopt-train --help`
   - Failed. Log: `.proofs-adapter/uv-run-help-offline.log`.
   - Same missing-cache cause as lock/sync.
 - Fallback import check against the installed P1 Spike SkillOpt 0.2.0 venv:
-  - Command used `PYTHONPATH=tools/skillopt/src` with `/home/elpresidank/YeeBois/projects/beep-effect-worktrees/skillopt-p1-spike/tools/skillopt/.venv/bin/python`.
+  - Command used `PYTHONPATH=tools/skillopt/src` with `<local-worktree>/tools/skillopt/.venv/bin/python`.
   - Passed: `import-ok`.
   - Log: `.proofs-adapter/python-import-fallback.log`.
 - Inline stub-scorer dry validation:
@@ -73,7 +73,7 @@ Worktree: `/home/elpresidank/YeeBois/projects/beep-effect-worktrees/skillopt-p3-
   - Passed: `stub-ok`.
   - Log: `.proofs-adapter/test-adapter-stub.log`.
 - Compile check:
-  - `/home/elpresidank/YeeBois/projects/beep-effect-worktrees/skillopt-p1-spike/tools/skillopt/.venv/bin/python -m compileall -f tools/skillopt/src/beep_skillopt`
+  - `<local-worktree>/tools/skillopt/.venv/bin/python -m compileall -f tools/skillopt/src/beep_skillopt`
   - Passed for `__init__.py`, `adapter.py`, and `train.py`.
   - Log: `.proofs-adapter/compileall.log`.
 
@@ -82,7 +82,7 @@ Worktree: `/home/elpresidank/YeeBois/projects/beep-effect-worktrees/skillopt-p3-
 Run from the worktree root after the orchestrator has network/cache available for `uv sync`:
 
 ```sh
-env UV_CACHE_DIR=/tmp/uv-cache-skillopt \
+env UV_CACHE_DIR=<tmp-uv-cache> \
   uv run --project tools/skillopt \
   beep-skillopt-train \
   --config tools/skillopt/configs/beeplaw.template.yaml \

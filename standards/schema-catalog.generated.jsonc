@@ -19913,7 +19913,7 @@
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "CorpusExtractOptions",
-      "description": "Validated options used by corpus extract."
+      "description": "Validated options used by corpus extract. outLabel, when supplied, must be one staging directory name."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/Extract.schemas.ts",

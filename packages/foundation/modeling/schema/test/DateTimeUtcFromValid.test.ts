@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import {
   applyTimezone,
   createDateTimeWithTimezone,
@@ -247,7 +248,7 @@ describe("DateTimeUtcFromValid", () => {
         expect(Equal.equals(encode(roundTripped), encoded)).toBe(true);
         expect(DateTime.toEpochMillis(roundTripped)).toBe(DateTime.toEpochMillis(utc));
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });

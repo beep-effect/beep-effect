@@ -16,6 +16,7 @@
 import { $PacerId } from "@beep/identity";
 import { Context, Duration, Effect, Layer, pipe, Redacted, Ref } from "effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
@@ -64,17 +65,22 @@ const logAuthWarning = (operation: "login" | "logout", description: O.Option<str
     })
   );
 
+const encodeAuthRequest = S.encodeEffect(CsoAuthRequest);
+const encodeLogoutRequest = S.encodeEffect(CsoLogoutRequest);
+
 const makeService = (client: HttpClient.HttpClient, cfg: PacerConfig): PacerAuthShape => {
   const login: Effect.Effect<NextGenCsoToken, PacerAuthError> = Effect.gen(function* () {
-    const requestBody = CsoAuthRequest.make({
-      loginId: Redacted.value(cfg.loginId),
-      password: Redacted.value(cfg.password),
-      clientCode: cfg.clientCode,
-      otpCode: O.map(cfg.otpCode, Redacted.value),
-      // Filers (e-filing accounts) must attest redaction compliance; PACER returns
-      // loginResult "1" if a filer omits it. Search-only accounts leave it off.
-      redactFlag: O.flatMap(cfg.isFiler, (isFiler) => (isFiler ? O.some("1") : O.none<string>())),
-    });
+    const requestBody = yield* encodeAuthRequest(
+      CsoAuthRequest.make({
+        loginId: Redacted.value(cfg.loginId),
+        password: Redacted.value(cfg.password),
+        clientCode: cfg.clientCode,
+        otpCode: O.map(cfg.otpCode, Redacted.value),
+        // Filers (e-filing accounts) must attest redaction compliance; PACER returns
+        // loginResult "1" if a filer omits it. Search-only accounts leave it off.
+        redactFlag: O.flatMap(cfg.isFiler, (isFiler) => (isFiler ? O.some("1") : O.none<string>())),
+      })
+    ).pipe(Effect.mapError(transport));
     const baseRequest = HttpClientRequest.post(`${cfg.authBaseUrl}/services/cso-auth`).pipe(
       HttpClientRequest.accept("application/json")
     );
@@ -93,9 +99,10 @@ const makeService = (client: HttpClient.HttpClient, cfg: PacerConfig): PacerAuth
     const baseRequest = HttpClientRequest.post(`${cfg.authBaseUrl}/services/cso-logout`).pipe(
       HttpClientRequest.accept("application/json")
     );
-    const request = yield* HttpClientRequest.bodyJson(baseRequest, CsoLogoutRequest.make({ nextGenCSO: token })).pipe(
+    const requestBody = yield* encodeLogoutRequest(CsoLogoutRequest.make({ nextGenCSO: token })).pipe(
       Effect.mapError(transport)
     );
+    const request = yield* HttpClientRequest.bodyJson(baseRequest, requestBody).pipe(Effect.mapError(transport));
     const body = yield* executeAuthRequest(client, request, HttpClientResponse.schemaBodyJson(CsoLogoutResponse));
     const loginResult = O.getOrElse(body.loginResult, () => "0");
     if (loginResult !== "0") {

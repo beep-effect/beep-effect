@@ -34,49 +34,17 @@
  * @since 0.0.0
  */
 import * as MutableHashMap from "effect/MutableHashMap";
-import * as S from "effect/Schema";
-import {$ScratchpadId} from "@beep/identity";
-import {Fn, MutableHashMapFromSelf, SchemaUtils} from "@beep/schema";
 import type { ClassTable } from "./parseTtl.ts";
-import { R, O, Str, A, dual, flow, identity, pipe } from "@beep/utils";
+import { R, O, Str, A, flow, pipe } from "@beep/utils";
 
-const $I = $ScratchpadId.create("ontology/emitIrisModule");
+type IriTerms = MutableHashMap.MutableHashMap<string, string>;
 
-const IriTermsSchema = MutableHashMapFromSelf({key: S.String, value: S.String}).pipe(
-  $I.annoteSchema("IriTerms", {
-    description: "Mutable map from generated TypeScript term key to full ontology IRI.",
-  })
-);
-type IriTerms = typeof IriTermsSchema.Type;
-
-const IriKeep = Fn({input: S.String, output: S.Boolean}).pipe(
-  SchemaUtils.withStatics((schema) => ({
-    acceptAll: schema.implementSync(() => true),
-  }))
-);
-const IriKey = Fn({input: S.String, output: S.String}).pipe(
-  SchemaUtils.withStatics((schema) => ({
-    identity: schema.implementSync(identity<string>),
-  }))
-);
-
-/**
- * Namespace bucket configuration for generated ontology IRI constants.
- *
- * @category schemas
- * @since 0.0.0
- */
-class IriBucket extends S.Class<IriBucket>($I`IriBucket`)({
-  terms: IriTermsSchema,
-  prefix: S.String,
-  keep: S.OptionFromOptionalKey(IriKeep),
-  key: S.OptionFromOptionalKey(IriKey),
-}, $I.annote("IriBucket", {
-  description: "Namespace bucket configuration for generated ontology IRI constants.",
-})) {
-}
-
-const decodeIriBucket = S.decodeSync(IriBucket);
+type IriBucket = {
+  readonly terms: IriTerms;
+  readonly prefix: string;
+  readonly keep?: (term: string) => boolean;
+  readonly key?: (term: string) => string;
+};
 
 const NS_EI = "https://w3id.org/energy-intel/";
 const NS_BFO = "http://purl.obolibrary.org/obo/";
@@ -129,27 +97,33 @@ const stripPrefix = (iri: string, prefix: string): O.Option<string> =>
     O.map(Str.slice(prefix.length))
   );
 
+const TypeScriptIdentifierName = /^[A-Za-z_$][0-9A-Za-z_$]*$/u;
+
+const renderPropertyKey = (term: string): string =>
+  TypeScriptIdentifierName.test(term) ? term : JSON.stringify(term);
+
+const renderStringLiteral = (value: string): string => JSON.stringify(value);
+
 const renderEntry = (term: string, fullIri: string): string =>
-  `  ${term}: namedNode("${fullIri}"),`;
+  `  ${renderPropertyKey(term)}: namedNode(${renderStringLiteral(fullIri)}),`;
 
 const bfoAlias = (term: string): string => pipe(
   R.get(BFO_ALIASES, term),
   O.getOrElse(() => term)
 );
 
-const bucketIri: {
-  (bucket: IriBucket): (iri: string) => void;
-  (iri: string, bucket: IriBucket): void;
-} = dual(2, (iri: string, bucket: IriBucket): void => {
-  const keep = pipe(bucket.keep, O.getOrElse(() => IriKeep.acceptAll));
-  const key = pipe(bucket.key, O.getOrElse(() => IriKey.identity));
-  pipe(
-    stripPrefix(iri, bucket.prefix),
-    O.filter(keep),
-    O.map((tail) => MutableHashMap.set(bucket.terms, key(tail), iri)),
-    O.asVoid
-  );
-});
+const bucketIri =
+  (bucket: IriBucket) =>
+  (iri: string): void => {
+    const keep = bucket.keep ?? (() => true);
+    const key = bucket.key ?? ((term: string) => term);
+    pipe(
+      stripPrefix(iri, bucket.prefix),
+      O.filter(keep),
+      O.map((tail) => MutableHashMap.set(bucket.terms, key(tail), iri)),
+      O.asVoid
+    );
+  };
 
 const sortedTermKeys: (terms: IriTerms) => ReadonlyArray<string> = flow(
   MutableHashMap.keys,
@@ -208,14 +182,14 @@ export const emitIrisModule = (table: ClassTable): string => {
   const bfo = MutableHashMap.empty<string, string>();
   const foaf = MutableHashMap.empty<string, string>();
   const iao = MutableHashMap.fromIterable(R.toEntries(IAO_TERMS));
-  const bucketEi = bucketIri(decodeIriBucket({terms: ei, prefix: NS_EI}));
-  const bucketBfo = bucketIri(decodeIriBucket({
+  const bucketEi = bucketIri({terms: ei, prefix: NS_EI});
+  const bucketBfo = bucketIri({
     terms: bfo,
     prefix: NS_BFO,
     keep: Str.startsWith("BFO_"),
     key: bfoAlias,
-  }));
-  const bucketFoaf = bucketIri(decodeIriBucket({terms: foaf, prefix: NS_FOAF}));
+  });
+  const bucketFoaf = bucketIri({terms: foaf, prefix: NS_FOAF});
 
   for (const propertyIri of table.declaredProperties) {
     pipe(propertyIri, bucketEi);

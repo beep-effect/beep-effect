@@ -57,6 +57,10 @@ describe("@beep/ui schema parity", () => {
               Result.getOrThrow(S.encodeResult(ReactContextInvariantError)(invariantError))
             )
           );
+          const encodedInvariantError = Result.getOrThrow(S.encodeResult(ReactContextInvariantError)(invariantError));
+          const encodedRoundTrippedInvariantError = Result.getOrThrow(
+            S.encodeResult(ReactContextInvariantError)(roundTrippedInvariantError)
+          );
 
           expect(Equal.equals(roundTrippedBoundary, boundary)).toBe(true);
           expect(Equal.equals(roundTrippedSpin, spin)).toBe(true);
@@ -64,7 +68,7 @@ describe("@beep/ui schema parity", () => {
           expect(Equal.equals(roundTrippedAction, action)).toBe(true);
           expect(Equal.equals(roundTrippedToast, toast)).toBe(true);
           expect(Equal.equals(roundTrippedInvariantOptions, invariantOptions)).toBe(true);
-          expect(Equal.equals(roundTrippedInvariantError, invariantError)).toBe(true);
+          expect(encodedRoundTrippedInvariantError).toEqual(encodedInvariantError);
         }
       ),
       fcRuns(50)

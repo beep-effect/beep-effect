@@ -39,7 +39,7 @@ const collectCloneCards = Effect.fnUntraced(function* (
   const selected =
     options.only === undefined
       ? clones
-      : A.filter(clones, (dir) => Str.includes(options.only ?? "")(path.basename(dir).toLowerCase()));
+      : A.filter(clones, (dir) => Str.includes(options.only ?? "")(Str.toLowerCase(path.basename(dir))));
 
   for (const repoDir of selected) {
     collection.reposScanned += 1;

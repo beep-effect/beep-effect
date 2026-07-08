@@ -16,7 +16,8 @@ import {
 } from "@beep/langextract/Extraction";
 import { toAnnotatedDocument } from "@beep/langextract/Handoff";
 import { NonNegativeInt } from "@beep/schema";
-import { Clock, Context, Duration, Effect, Layer } from "effect";
+import { Clock, Config, Context, Duration, Effect, Layer } from "effect";
+import * as O from "effect/Option";
 import * as LanguageModel from "effect/unstable/ai/LanguageModel";
 import type { LangExtractRequest } from "@beep/langextract/Extraction";
 
@@ -26,6 +27,10 @@ const GENERATE_TEXT_TIMEOUT = Duration.seconds(30);
 
 interface LangExtractServiceShape {
   readonly extract: (request: LangExtractRequest) => Effect.Effect<LangExtractResult, LangExtractError>;
+}
+
+interface LangExtractRemotePolicyShape {
+  readonly allowRemoteExtraction: (request: LangExtractRequest) => Effect.Effect<boolean>;
 }
 
 /**
@@ -95,6 +100,112 @@ export class LangExtractService extends Context.Service<LangExtractService, Lang
   $I`LangExtractService`
 ) {}
 
+/**
+ * Policy service consulted before source text is sent to the injected language
+ * model. Absence of this service denies remote extraction by default.
+ *
+ * @example
+ * ```ts
+ * import { LangExtractRemotePolicy, allowRemoteExtractionPolicy } from "@beep/langextract/Service"
+ * import { Layer } from "effect"
+ *
+ * const PolicyLayer = Layer.succeed(LangExtractRemotePolicy, allowRemoteExtractionPolicy)
+ * console.log(PolicyLayer)
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class LangExtractRemotePolicy extends Context.Service<LangExtractRemotePolicy, LangExtractRemotePolicyShape>()(
+  $I`LangExtractRemotePolicy`
+) {}
+
+/**
+ * Policy instance that permits remote LangExtract generation.
+ *
+ * @example
+ * ```ts
+ * import { LangExtractRequest } from "@beep/langextract/Extraction"
+ * import { allowRemoteExtractionPolicy } from "@beep/langextract/Service"
+ * import { ExtractionTarget } from "@beep/langextract/Target"
+ * import { DocumentId } from "@beep/nlp/Core"
+ * import { Effect } from "effect"
+ *
+ * const request = LangExtractRequest.make({
+ *   documentId: DocumentId.make("doc-1"),
+ *   targets: [ExtractionTarget.make({ kind: "entity", name: "person" })],
+ *   text: "Ada Lovelace wrote notes."
+ * })
+ *
+ * Effect.runPromise(allowRemoteExtractionPolicy.allowRemoteExtraction(request)).then(console.log)
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const allowRemoteExtractionPolicy = LangExtractRemotePolicy.of({
+  allowRemoteExtraction: Effect.fn("LangExtractRemotePolicy.allowRemoteExtraction.allow")(function* () {
+    return true;
+  }),
+});
+
+/**
+ * Layer that permits remote LangExtract generation.
+ *
+ * @example
+ * ```ts
+ * import { allowRemoteExtractionPolicyLayer } from "@beep/langextract/Service"
+ *
+ * console.log(allowRemoteExtractionPolicyLayer)
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const allowRemoteExtractionPolicyLayer = Layer.succeed(LangExtractRemotePolicy, allowRemoteExtractionPolicy);
+
+/**
+ * Config-driven policy layer. `BEEP_LANGEXTRACT_ALLOW_REMOTE=true` is required
+ * before request text may be sent to the injected language model.
+ *
+ * @example
+ * ```ts
+ * import { remoteExtractionPolicyFromConfig } from "@beep/langextract/Service"
+ *
+ * console.log(remoteExtractionPolicyFromConfig)
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const remoteExtractionPolicyFromConfig = Layer.effect(
+  LangExtractRemotePolicy,
+  Effect.map(Config.boolean("BEEP_LANGEXTRACT_ALLOW_REMOTE").pipe(Config.withDefault(false)), (allowRemote) =>
+    LangExtractRemotePolicy.of({
+      allowRemoteExtraction: Effect.fn("LangExtractRemotePolicy.allowRemoteExtraction.config")(function* () {
+        return allowRemote;
+      }),
+    })
+  )
+);
+
+const ensureRemoteExtractionAllowed = Effect.fn("LangExtractService.ensureRemoteExtractionAllowed")(function* (
+  policy: O.Option<LangExtractRemotePolicyShape>,
+  request: LangExtractRequest
+): Effect.fn.Return<void, LangExtractError> {
+  const allowed = yield* O.match(policy, {
+    onNone: () => Effect.succeed(false),
+    onSome: (remotePolicy) => remotePolicy.allowRemoteExtraction(request),
+  });
+
+  if (!allowed) {
+    return yield* LangExtractError.fromReason("remote-policy-denied", {
+      details: { documentId: String(request.documentId) },
+      message: "Remote LangExtract generation denied by policy.",
+    });
+  }
+});
+
 const renderTarget = (target: LangExtractRequest["targets"][number]): string => {
   const attributes =
     target.attributes === undefined || target.attributes.length === 0
@@ -163,9 +274,11 @@ ${request.text}`;
  */
 export const make = Effect.fn("LangExtractService.make")(function* () {
   const languageModel = yield* LanguageModel.LanguageModel;
+  const remotePolicy = yield* Effect.serviceOption(LangExtractRemotePolicy);
 
   return LangExtractService.of({
     extract: Effect.fn("LangExtractService.extract")(function* (request) {
+      yield* ensureRemoteExtractionAllowed(remotePolicy, request);
       const prompt = buildPrompt(request);
       const response = yield* languageModel.generateText({ prompt }).pipe(
         Effect.mapError(() =>

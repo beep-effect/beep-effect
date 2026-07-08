@@ -46,7 +46,8 @@ export class CorpusExtractOptions extends S.Class<CorpusExtractOptions>($I`Corpu
     tikaJarPath: S.String,
   },
   $I.annote("CorpusExtractOptions", {
-    description: "Validated options used by corpus extract.",
+    description:
+      "Validated options used by corpus extract. outLabel, when supplied, must be one staging directory name.",
   })
 ) {}
 

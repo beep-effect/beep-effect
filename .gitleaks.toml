@@ -34,6 +34,7 @@ paths = [
 
 [[allowlists]]
 description = "Gold-intake provenance ledgers (research/SOURCES.md under explorations/ and goals/) curate mined code snippets and crypto/token-format references (Fernet, PASETO, iron-webcrypto, @noble/ciphers, etc.). Long technical identifiers in these curated reference lists trip the generic-api-key entropy heuristic but are not secrets. Anchored at the repo root (with an optional /repo/ CI-mount prefix) so a nested attacker-controlled path cannot inherit the allowlist. Path/rule allowlist (survives squash-merge), replacing the earlier commit-fingerprint entry."
+targetRules = ["generic-api-key"]
 paths = [
   '''^(?:/repo/)?explorations/[^/]+/research/SOURCES\.md$''',
   '''^(?:/repo/)?goals/[^/]+/research/SOURCES\.md$''',

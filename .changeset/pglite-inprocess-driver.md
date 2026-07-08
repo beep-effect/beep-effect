@@ -1,5 +1,4 @@
 ---
-"@beep/pglite": patch
 "@beep/professional-desktop": patch
 "@beep/db-admin": patch
 "@beep/test-utils": patch

@@ -31,6 +31,12 @@
     "paths": {
       "@beep/pglite": ["../../../packages/drivers/pglite/src/index.ts"],
       "@beep/pglite/*": ["../../../packages/drivers/pglite/src/*.ts"],
+      "@beep/fc-runs": [
+        "../../../packages/tooling/test-kit/fc-runs/src/index.ts"
+      ],
+      "@beep/fc-runs/*": [
+        "../../../packages/tooling/test-kit/fc-runs/src/*.ts"
+      ],
       "@beep/identity": [
         "../../../packages/foundation/modeling/identity/src/index.ts"
       ],

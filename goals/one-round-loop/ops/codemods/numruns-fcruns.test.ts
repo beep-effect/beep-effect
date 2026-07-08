@@ -116,12 +116,14 @@ layer(TestLayer, { timeout: 300_000 })("numruns-fcruns codemod", (it) => {
     );
   });
 
-  describe("closure carve-out", () => {
+  describe("closure routing", () => {
     // The subject is the SAME fixture the golden test rewrites; placing it under
-    // a `@beep/test-utils` closure path (/drivers/pglite/) must make the codemod
-    // skip it — proving `changed: false` is the guard, not an empty diff.
+    // a `@beep/test-utils` closure path (/drivers/pglite/) must still rewrite it
+    // — but route the `fcRuns` import to the upstream leaf `@beep/fc-runs`, never
+    // back out of `@beep/test-utils` (which depends on this package), so the
+    // migration never forms a package cycle.
     it.effect(
-      "skips files inside @beep/test-utils' dependency closure (would-be cyclic import)",
+      "routes closure files to the @beep/fc-runs leaf import (no cyclic @beep/test-utils import)",
       Effect.fn(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -137,9 +139,15 @@ layer(TestLayer, { timeout: 300_000 })("numruns-fcruns codemod", (it) => {
         yield* Effect.ensuring(
           Effect.gen(function* () {
             const results = yield* runNumRunsFcRunsCodemod([subjectPath]);
-            expect(results).toEqual([{ filePath: subjectPath, changed: false }]);
+            expect(results).toEqual([{ filePath: subjectPath, changed: true }]);
             const actual = yield* fs.readFileString(subjectPath);
-            expect(actual).toBe(before);
+            // The literal numRuns options were rewritten to the helper...
+            expect(actual).toContain("fcRuns(40)");
+            expect(actual).toContain("{ ...fcRuns(25), endOnFailure: true }");
+            // ...importing `fcRuns` from the upstream leaf, and never importing
+            // it out of `@beep/test-utils` (which depends on this package).
+            expect(actual).toContain('import { fcRuns } from "@beep/fc-runs"');
+            expect(actual).not.toContain('fcRuns } from "@beep/test-utils"');
           }),
           fs.remove(dir, { recursive: true }).pipe(Effect.orElseSucceed(() => undefined))
         );

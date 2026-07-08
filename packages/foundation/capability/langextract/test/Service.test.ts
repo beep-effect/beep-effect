@@ -1,5 +1,9 @@
 import { LangExtractError, LangExtractOptions, LangExtractRequest } from "@beep/langextract/Extraction";
-import { layer as LangExtractLayer, LangExtractService } from "@beep/langextract/Service";
+import {
+  allowRemoteExtractionPolicyLayer,
+  layer as LangExtractLayer,
+  LangExtractService,
+} from "@beep/langextract/Service";
 import { ExtractionTarget } from "@beep/langextract/Target";
 import { DocumentId } from "@beep/nlp/Core";
 import { NonNegativeInt } from "@beep/schema";
@@ -36,8 +40,11 @@ describe("LangExtractService", () => {
   layer(
     LangExtractLayer.pipe(
       Layer.provide(
-        makeLanguageModelLayer(
-          `{"extractions":[{"label":"person","text":"Alice"},{"label":"organization","text":"Acme"}]}`
+        Layer.mergeAll(
+          allowRemoteExtractionPolicyLayer,
+          makeLanguageModelLayer(
+            `{"extractions":[{"label":"person","text":"Alice"},{"label":"organization","text":"Acme"}]}`
+          )
         )
       )
     )
@@ -81,11 +88,39 @@ describe("LangExtractService", () => {
     );
   });
 
-  layer(LangExtractLayer.pipe(Layer.provide(makeLanguageModelLayerFromEffect(Effect.never))))(
-    "with a stalled fake language model",
+  layer(
+    LangExtractLayer.pipe(
+      Layer.provide(Layer.mergeAll(allowRemoteExtractionPolicyLayer, makeLanguageModelLayerFromEffect(Effect.never)))
+    )
+  )("with a stalled fake language model", (it) => {
+    it.effect(
+      "times out model generation",
+      Effect.fnUntraced(function* () {
+        const request = LangExtractRequest.make({
+          documentId: DocumentId.make("doc-1"),
+          targets: [ExtractionTarget.make({ kind: "entity", name: "person" })],
+          text: "Alice founded Acme.",
+        });
+
+        const service = yield* LangExtractService;
+        const fiber = yield* service.extract(request).pipe(Effect.flip, Effect.forkChild);
+
+        yield* TestClock.adjust(Duration.seconds(30));
+
+        const error = yield* Fiber.join(fiber);
+
+        expect(error).toBeInstanceOf(LangExtractError);
+        expect(error.reason).toBe("model-generation-timeout");
+        expect(error.details?.cause).toBe("language-model-generate-text-timeout");
+      })
+    );
+  });
+
+  layer(LangExtractLayer.pipe(Layer.provide(makeLanguageModelLayer(`{"extractions":[]}`))))(
+    "without an explicit remote policy",
     (it) => {
       it.effect(
-        "times out model generation",
+        "denies model generation before request text reaches the provider",
         Effect.fnUntraced(function* () {
           const request = LangExtractRequest.make({
             documentId: DocumentId.make("doc-1"),
@@ -94,15 +129,10 @@ describe("LangExtractService", () => {
           });
 
           const service = yield* LangExtractService;
-          const fiber = yield* service.extract(request).pipe(Effect.flip, Effect.forkChild);
-
-          yield* TestClock.adjust(Duration.seconds(30));
-
-          const error = yield* Fiber.join(fiber);
+          const error = yield* service.extract(request).pipe(Effect.flip);
 
           expect(error).toBeInstanceOf(LangExtractError);
-          expect(error.reason).toBe("model-generation-timeout");
-          expect(error.details?.cause).toBe("language-model-generate-text-timeout");
+          expect(error.reason).toBe("remote-policy-denied");
         })
       );
     }

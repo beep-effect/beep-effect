@@ -14,7 +14,7 @@ For our mining angle, the important modeling surface is the structured `OWLOntol
 
 License status: `port-with-attribution`, because the verified license file is MIT (`LICENSE:1-13`).
 
-Verified by reading `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/LICENSE` directly; the file begins with "MIT License" (`LICENSE:1-3`).
+Verified by reading `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/LICENSE` directly; the file begins with "MIT License" (`LICENSE:1-3`).
 
 The relevant grant says, "Permission is hereby granted, free of charge" and allows use, copy, modification, merge, publish, distribution, sublicensing, and sale subject to including the copyright and permission notice (`LICENSE:5-13`).
 
@@ -177,39 +177,39 @@ const chainRPs = result.newRecoveryPayloads.filter(
 
 Baseline:
 
-- `/home/elpresidank/YeeBois/projects/beep-effect/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md`
-- `/home/elpresidank/YeeBois/projects/beep-effect/scratchpad/identity/README.md`
+- `<repo-root>/explorations/identity-as-iri/assets/identity-iri-fibration-handoff.md`
+- `<repo-root>/scratchpad/identity/README.md`
 
 Mined repository:
 
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/LICENSE`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/README.md`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/package.json`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/docs/ARCHITECTURE.md`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/project/OFBT_API_v0.1.7.md`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/src/index.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/src/kernel/index.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/src/kernel/owl-types.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/src/kernel/fol-types.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/src/kernel/lifter.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/src/kernel/projector.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/src/kernel/round-trip.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/src/kernel/iri.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/src/kernel/transform.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/src/kernel/arc-types.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/src/kernel/arc-validation.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/src/kernel/arc-vocabulary.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/src/kernel/arc-axiom-emitter.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/src/kernel/arc-module-registry.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/src/composition/session.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/tests/lifter-phase1.test.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/tests/projector-phase2.test.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/tests/determinism-100-run.test.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/tests/evaluate-phase3-step4.test.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/tests/regularity-check-phase4-step6.test.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/tests/session.test.ts`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/tests/corpus/p1_restrictions_object_value.fixture.js`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/tests/corpus/p1_restrictions_cardinality.fixture.js`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/tests/corpus/p1_prov_domain_range.fixture.js`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/tests/corpus/p2_property_chain_realization_simplified.fixture.js`
-- `/home/elpresidank/YeeBois/research/ontology_research/ontology_repos/OWL-FOL-Bidirectional-Translator/arc/core/bfo-2020.json`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/LICENSE`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/README.md`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/package.json`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/docs/ARCHITECTURE.md`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/project/OFBT_API_v0.1.7.md`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/src/index.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/src/kernel/index.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/src/kernel/owl-types.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/src/kernel/fol-types.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/src/kernel/lifter.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/src/kernel/projector.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/src/kernel/round-trip.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/src/kernel/iri.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/src/kernel/transform.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/src/kernel/arc-types.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/src/kernel/arc-validation.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/src/kernel/arc-vocabulary.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/src/kernel/arc-axiom-emitter.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/src/kernel/arc-module-registry.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/src/composition/session.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/tests/lifter-phase1.test.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/tests/projector-phase2.test.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/tests/determinism-100-run.test.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/tests/evaluate-phase3-step4.test.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/tests/regularity-check-phase4-step6.test.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/tests/session.test.ts`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/tests/corpus/p1_restrictions_object_value.fixture.js`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/tests/corpus/p1_restrictions_cardinality.fixture.js`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/tests/corpus/p1_prov_domain_range.fixture.js`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/tests/corpus/p2_property_chain_realization_simplified.fixture.js`
+- `<local-research-checkout>/OWL-FOL-Bidirectional-Translator/arc/core/bfo-2020.json`
