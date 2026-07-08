@@ -355,12 +355,21 @@
           "test-integration: Postgres.pglite hook timeout \u2014 KNOWN flake class per crispening reflection, package untouched by any lane; re-rolled by this push"
         ],
         "resolution": "biome --write + full TURBO_FORCE lint verified green across 98 packages before push"
+      },
+      {
+        "round": 5,
+        "failures": [
+          "lint-policy: reflection-artifacts \u2014 schema-first-zero-actionables marked complete in P0 without closeout reflection (latent since first push)"
+        ],
+        "resolution": "closeout reflection authored + validated (0 blocking), pushed 5a7a964bf5",
+        "lesson": "run `beep lint policy` (incl. reflection-artifacts) pre-push whenever any goals/*/ops/manifest.json lifecycle changes; local typos failures on untracked user files are local-only noise (CI sees tracked files)"
       }
     ]
   },
   "landingChecklist": [
     "bun run beep lint schema-catalog --write (new S.Class exports from SF-1 lanes)",
     "bun run changeset:status:since-main (pre-push, after any changeset edit)",
-    "TURBO_FORCE=1 lint on touched packages pre-push"
+    "TURBO_FORCE=1 lint on touched packages pre-push",
+    "beep lint policy pre-push when packet manifests change lifecycle"
   ]
 }
