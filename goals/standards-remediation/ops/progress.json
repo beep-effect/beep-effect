@@ -1,0 +1,122 @@
+{
+  "schemaVersion": "standards-remediation-progress/v1",
+  "_note": "Driver-owned resumable state. Lane record shape: { lane, scope (package or file-set), entries, status: pending|dispatched|collected|challenged|done|blocked, report, blocker }. Counters are snapshotted after every driver regen; the inventories themselves are the source of truth for slices.",
+  "updated": "2026-07-07",
+  "branch": "standards-remediation",
+  "umbrellaPr": null,
+  "phases": {
+    "P0": "in_progress",
+    "P1": "pending",
+    "P2": "pending",
+    "P3": "pending",
+    "P4": "pending",
+    "P5": "pending",
+    "P6": "pending",
+    "P7": "pending",
+    "P8": "pending"
+  },
+  "rulings": {
+    "file": "research/decisions.md",
+    "locked": ["R1", "R2"],
+    "pending": ["R3", "R4"]
+  },
+  "counters": {
+    "checkpoint": "2026-07-07 baseline",
+    "dualArity": { "candidates": 107, "exceptions": 13 },
+    "schemaFirst": { "entries": 326 },
+    "jsdoc": {
+      "packagesNeedingRemediation": 78,
+      "missingExportExamples": 2012,
+      "missingExportCategories": 91,
+      "missingExportSince": 91,
+      "unsafeExampleFindings": 71,
+      "schemaAnnotationFindings": 127,
+      "exampleImportFindings": 24,
+      "forbiddenTagFindings": 2
+    },
+    "knip": { "findings": 73 },
+    "allowlist": { "entries": 17 }
+  },
+  "waves": {
+    "P1-detectors": {
+      "status": "pending",
+      "inventory": "detectors",
+      "lanes": {}
+    },
+    "P2-audits": { "status": "pending", "inventory": "rulings", "lanes": {} },
+    "DA-1": {
+      "status": "pending",
+      "inventory": "dual-arity",
+      "note": "foundation/modeling pilot — slice after P1 regen",
+      "lanes": {}
+    },
+    "DA-2": { "status": "pending", "inventory": "dual-arity", "lanes": {} },
+    "DA-3": { "status": "pending", "inventory": "dual-arity", "lanes": {} },
+    "DA-4": { "status": "pending", "inventory": "dual-arity", "lanes": {} },
+    "SF-1": {
+      "status": "pending",
+      "inventory": "schema-first",
+      "note": "slice after P2 rulings",
+      "lanes": {}
+    },
+    "SF-2": { "status": "pending", "inventory": "schema-first", "lanes": {} },
+    "SF-3": { "status": "pending", "inventory": "schema-first", "lanes": {} },
+    "SF-4": { "status": "pending", "inventory": "schema-first", "lanes": {} },
+    "JD-1": {
+      "status": "pending",
+      "inventory": "jsdoc",
+      "note": "pilot @beep/md + @beep/govinfo",
+      "lanes": {}
+    },
+    "JD-2": {
+      "status": "pending",
+      "inventory": "jsdoc",
+      "note": "@beep/schema shard 1",
+      "lanes": {}
+    },
+    "JD-3": {
+      "status": "pending",
+      "inventory": "jsdoc",
+      "note": "@beep/schema shard 2",
+      "lanes": {}
+    },
+    "JD-4": {
+      "status": "pending",
+      "inventory": "jsdoc",
+      "note": "@beep/html after generator fix",
+      "lanes": {}
+    },
+    "JD-5": {
+      "status": "pending",
+      "inventory": "jsdoc",
+      "note": "tooling",
+      "lanes": {}
+    },
+    "JD-6": {
+      "status": "pending",
+      "inventory": "jsdoc",
+      "note": "ui-system + capability",
+      "lanes": {}
+    },
+    "JD-7": {
+      "status": "pending",
+      "inventory": "jsdoc",
+      "note": "modeling rest",
+      "lanes": {}
+    },
+    "JD-8": {
+      "status": "pending",
+      "inventory": "jsdoc",
+      "note": "drivers",
+      "lanes": {}
+    },
+    "JD-9": {
+      "status": "pending",
+      "inventory": "jsdoc",
+      "note": "apps + slices",
+      "lanes": {}
+    },
+    "KN-1": { "status": "pending", "inventory": "knip", "lanes": {} },
+    "AL-1": { "status": "pending", "inventory": "allowlist", "lanes": {} }
+  }
+}
