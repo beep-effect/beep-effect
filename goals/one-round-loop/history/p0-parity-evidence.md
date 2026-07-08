@@ -246,3 +246,23 @@ went red on two jobs — neither a code defect:
 | [#321](https://github.com/beep-effect/beep-effect/pull/321) (PR A) | lane CLI + shadow | full battery (2 local rounds; round 1 caught 4 classes) | **1** ✔ (plus 2 infra-cancel reruns, not gate rounds) |
 | [#323](https://github.com/beep-effect/beep-effect/pull/323) (PR B → P0 branch) | thinning + evidence | `--fast --affected` 16/16 | n/a (merged into P0 branch; no main CI) |
 | [#324](https://github.com/beep-effect/beep-effect/pull/324) (PR C) | thinning → main | same content as PR B (16/16) | _pending_ |
+
+## 7. Thinning contract-test finding (PR C round 1)
+
+PR C's first CI round failed Test Unit + Coverage Regression on ONE
+root cause: `test/quality-tasks.test.ts` pinned the OLD check.yml
+fallow bash script's internal structure (a contract test the thinning
+legitimately broke). Rewritten to pin the new contract (the
+`beep ci lane fallow` dispatch line + validate/upload step ordering +
+the lane's own deferred-exit step plan).
+
+**Structural finding (cache-input gap):** the PR B `--fast --affected`
+dogfood reported test-unit green in 6.5s — a TURBO CACHE HIT from
+before the check.yml edit. The test reads `.github/workflows/check.yml`
+at runtime, but workflow files are not part of the repo-cli test task's
+turbo hash → stale false-green on any PR that only changes workflow
+files a test asserts against. Remediation candidates for closeout:
+declare `.github/workflows/**` in the relevant turbo task `inputs` (or
+globalDependencies), or move workflow-contract tests behind a
+non-cached lane. Until then: workflow-touching PRs should run the
+affected test lane with `--force` locally.
