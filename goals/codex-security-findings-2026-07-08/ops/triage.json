@@ -1659,7 +1659,7 @@
       "remediation": {
         "status": "complete pending merge",
         "completedAt": "2026-07-08T12:18:00.000Z",
-        "summary": "Validated server report IDs before cleanup and prevented DELETE calls for invalid or fractional IDs.",
+        "summary": "Decoded report IDs before poll/download and restricted cleanup DELETEs to encoded single path segments, so malformed server-issued string IDs can still be cleaned up without reshaping the URL.",
         "changedFiles": [
           "packages/drivers/pacer/src/PclClient.service.ts",
           "packages/drivers/pacer/test/Pacer.test.ts"
@@ -1673,7 +1673,7 @@
         "closedAt": null,
         "reason": null
       },
-      "remediationHint": "Decode report ID immediately after start, never cleanup using an untrusted raw value, and update tests so invalid IDs fail without cleanup."
+      "remediationHint": "Decode report ID before poll/download, format cleanup IDs as encoded single path segments, and keep fractional numeric IDs from triggering cleanup."
     },
     {
       "id": "CSF-030",

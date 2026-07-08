@@ -323,14 +323,31 @@ describe("PACER end-to-end (mock transport)", () => {
     "invalid report id cleanup",
     (it) =>
       it.effect(
-        "downloadCases rejects invalid report ids before delete cleanup",
+        "downloadCases rejects invalid report ids after best-effort delete cleanup",
         Effect.fnUntraced(function* () {
           const pcl = yield* Pacer.PclClient;
           const error = yield* Effect.flip(pcl.downloadCases(Pacer.CourtCaseSearchDto.make({})));
           expect(error._tag).toBe("PacerPclError");
           expect(error.reason).toBe("server-error");
           expect(error.cause).toBe("invalid reportId from server");
-          expect(yield* Ref.get(invalidReportDeletedSegments)).toEqual([]);
+          expect(yield* Ref.get(invalidReportDeletedSegments)).toEqual(["abc"]);
+        })
+      )
+  );
+
+  const pathReportDeletedSegments = Ref.makeUnsafe<ReadonlyArray<string>>([]);
+  it.layer(mockLayer({ reportId: "../abc?token=value", deletedReportPathSegments: pathReportDeletedSegments }))(
+    "path-shaped report id cleanup",
+    (it) =>
+      it.effect(
+        "downloadCases encodes cleanup report ids as a single path segment",
+        Effect.fnUntraced(function* () {
+          const pcl = yield* Pacer.PclClient;
+          const error = yield* Effect.flip(pcl.downloadCases(Pacer.CourtCaseSearchDto.make({})));
+          expect(error._tag).toBe("PacerPclError");
+          expect(error.reason).toBe("server-error");
+          expect(error.cause).toBe("invalid reportId from server");
+          expect(yield* Ref.get(pathReportDeletedSegments)).toEqual(["..%2Fabc%3Ftoken%3Dvalue"]);
         })
       )
   );
