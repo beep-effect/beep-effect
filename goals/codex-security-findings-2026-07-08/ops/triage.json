@@ -1659,7 +1659,7 @@
       "remediation": {
         "status": "complete pending merge",
         "completedAt": "2026-07-08T12:18:00.000Z",
-        "summary": "Decoded report IDs before poll/download and restricted cleanup DELETEs to encoded single path segments, so malformed server-issued string IDs can still be cleaned up without reshaping the URL.",
+        "summary": "Decoded report IDs before poll/download and restricted cleanup DELETEs to encoded single path segments, so malformed server-issued string or finite numeric IDs can still be cleaned up without reshaping the URL.",
         "changedFiles": [
           "packages/drivers/pacer/src/PclClient.service.ts",
           "packages/drivers/pacer/test/Pacer.test.ts"
@@ -1673,7 +1673,7 @@
         "closedAt": null,
         "reason": null
       },
-      "remediationHint": "Decode report ID before poll/download, format cleanup IDs as encoded single path segments, and keep fractional numeric IDs from triggering cleanup."
+      "remediationHint": "Decode report ID before poll/download, format cleanup IDs as encoded single path segments, and keep finite server-issued cleanup IDs from reshaping the URL."
     },
     {
       "id": "CSF-030",

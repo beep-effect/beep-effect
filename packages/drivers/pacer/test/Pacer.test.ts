@@ -357,14 +357,14 @@ describe("PACER end-to-end (mock transport)", () => {
     "fractional report id cleanup",
     (it) =>
       it.effect(
-        "downloadCases rejects fractional server report ids before delete cleanup",
+        "downloadCases rejects fractional server report ids after best-effort delete cleanup",
         Effect.fnUntraced(function* () {
           const pcl = yield* Pacer.PclClient;
           const error = yield* Effect.flip(pcl.downloadCases(Pacer.CourtCaseSearchDto.make({})));
           expect(error._tag).toBe("PacerPclError");
           expect(error.reason).toBe("server-error");
           expect(error.cause).toBe("invalid reportId from server");
-          expect(yield* Ref.get(invalidNumberReportDeletedSegments)).toEqual([]);
+          expect(yield* Ref.get(invalidNumberReportDeletedSegments)).toEqual(["3.14"]);
         })
       )
   );
