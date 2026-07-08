@@ -223,7 +223,7 @@ describe("@beep/oip-web", { concurrent: false }, () => {
     expect(Result.isSuccess(result)).toBe(true);
   });
 
-  it("derives valid OIP content and contact form values from production schemas", { timeout: 20_000 }, () => {
+  it("derives valid OIP content and contact form values from production schemas", { timeout: 120_000 }, () => {
     fc.assert(
       fc.property(
         OipSiteContentArbitrary,

@@ -55,6 +55,14 @@
 "@beep/uspto-mcp": patch
 "@beep/utils": patch
 "@beep/wink": patch
+"@beep/epistemic-tables": patch
+"@beep/chalk": patch
+"@beep/rdf": patch
+"@beep/workspace-tables": patch
+"@beep/pacer": patch
+"@beep/pglite": patch
+"@beep/colors": patch
+"@beep/architecture-lab-client": patch
 ---
 
 Standards remediation: drove every violation-enumerating standards inventory to zero or verified-documented-exception — dual-arity inventory emptied, schema-first exception ledger dissolved into fixture-backed detector rules plus a handful of evidence-backed exceptions, ~1,600 compiling JSDoc examples and module docs added across the workspace, knip findings to zero, and the effect-laws allowlist reduced to three benchmark-verified native-runtime survivors. Includes ~24 detector corrections (false-positive fixes with regression fixtures) in the repo CLI.
