@@ -156,11 +156,11 @@ goes after its dependencies are battle-tested.
 
 ## Phase 8 - Config-Sync Family (Wave 8)
 
-- [ ] TsconfigSync (1784): schemas/plan/render/service split.
-- [ ] CreatePackage: `Handler.ts` (1496) -> command/schemas/render +
+- [x] TsconfigSync (1784): schemas/plan/render/service split.
+- [x] CreatePackage: `Handler.ts` (1496) -> command/schemas/render +
   internals; rewrite `create-package-identity-template.test.ts` against the
   extracted identity-registration module.
-- [ ] VersionSync + SyncDataToTs: `Models.ts` -> `.schemas.ts` renames,
+- [x] VersionSync + SyncDataToTs: `Models.ts` -> `.schemas.ts` renames,
   render/service promotion, RunMode-kit adoption.
 
 ## Phase 9 - Long Tail + Closing Sweep (Wave 9)

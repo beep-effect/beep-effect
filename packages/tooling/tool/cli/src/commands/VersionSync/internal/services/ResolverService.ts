@@ -14,7 +14,7 @@ import {
   VersionSyncReport,
   VersionSyncResolution,
   VersionSyncUpdateLocation,
-} from "../Models.js";
+} from "../../VersionSync.schemas.js";
 import { BiomeSchemaState, buildBiomeReport, resolveBiomeSchema } from "../resolvers/BiomeResolver.js";
 import { BunVersionState, buildBunReport, resolveBunVersions } from "../resolvers/BunResolver.js";
 import { buildDockerReport, DockerImageState, resolveDockerImages } from "../resolvers/DockerResolver.js";
@@ -23,7 +23,7 @@ import { buildNodeReport, resolveNodeVersions } from "../resolvers/NodeResolver.
 import { CategorySelectionService } from "./CategorySelectionService.js";
 import type { FileSystem, Path } from "effect";
 import type { HttpClient } from "effect/unstable/http";
-import type { VersionCategoryReport, VersionSyncError, VersionSyncOptions } from "../Models.js";
+import type { VersionCategoryReport, VersionSyncError, VersionSyncOptions } from "../../VersionSync.schemas.js";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/services/ResolverService");
 const versionCategoryStatusEquivalence = S.toEquivalence(VersionCategoryStatus);

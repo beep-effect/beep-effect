@@ -18,3 +18,17 @@ export * from "./TsconfigSync.command.js";
  * @since 0.0.0
  */
 export * from "./TsconfigSync.errors.js";
+/**
+ * Public tsconfig-sync schemas export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./TsconfigSync.schemas.js";
+/**
+ * Public tsconfig-sync service export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./TsconfigSync.service.js";

@@ -2586,7 +2586,7 @@
       "reason": "Exception: URL canonicalizer for browser-history sift deduplication; host lowercasing is parser-local key normalization before URL re-emission."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.schemas.ts",
       "symbol": "SyncDataTarget",
       "kind": "exported-interface",
       "status": "exception",
@@ -2594,7 +2594,7 @@
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.schemas.ts",
       "symbol": "SyncDataTargetResult",
       "kind": "exported-interface",
       "status": "exception",
@@ -2628,16 +2628,16 @@
       "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/CategorySelectionService.ts",
-      "symbol": "CategorySelectionServiceShape",
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.render.ts",
+      "symbol": "ReportRendererServiceShape",
       "kind": "exported-type-literal",
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Type alias contains non-schema signals such as function members or runtime handles."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/ReportRendererService.ts",
-      "symbol": "ReportRendererServiceShape",
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/services/CategorySelectionService.ts",
+      "symbol": "CategorySelectionServiceShape",
       "kind": "exported-type-literal",
       "status": "exception",
       "owner": "@beep/repo-cli",

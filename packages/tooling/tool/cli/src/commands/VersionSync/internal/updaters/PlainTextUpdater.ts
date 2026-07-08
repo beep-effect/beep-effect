@@ -8,7 +8,7 @@
 import { Str } from "@beep/utils";
 import { Effect, FileSystem } from "effect";
 import { dual } from "effect/Function";
-import { VersionSyncError } from "../Models.js";
+import { VersionSyncError } from "../../VersionSync.schemas.js";
 
 /**
  * Update a plain text version file (e.g. `.bun-version`).

@@ -17,7 +17,12 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { VersionCategoryReport, VersionCategoryStatusThunk, VersionDriftItem, VersionSyncError } from "../Models.js";
+import {
+  VersionCategoryReport,
+  VersionCategoryStatusThunk,
+  VersionDriftItem,
+  VersionSyncError,
+} from "../../VersionSync.schemas.js";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/resolvers/NodeResolver");
 // ── Types ───────────────────────────────────────────────────────────────────

@@ -13,7 +13,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { SyncDataTargetProjection, SyncDataToTsError } from "../internal/Models.js";
 import {
   fetchSource,
   formatJson,
@@ -22,7 +21,8 @@ import {
   parseXmlSource,
   sourceMetadata,
 } from "../internal/Source.js";
-import type { SyncDataTarget } from "../internal/Models.js";
+import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.js";
+import type { SyncDataTarget } from "../SyncDataToTs.schemas.js";
 
 const $I = $RepoCliId.create("commands/SyncDataToTs/targets/Iso4217");
 const targetId = "iso4217" as const;

@@ -5,18 +5,12 @@
  * @since 0.0.0
  */
 
-import { Console, Effect, pipe } from "effect";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
+import { Console, Effect } from "effect";
 import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
+import { resolveRunMode } from "../../internal/cli/RunMode.js";
 import { handleVersionSync } from "./internal/Handler.js";
-import type { VersionSyncMode } from "./internal/Models.js";
-
-type VersionSyncModeFlags = readonly [write: boolean, dryRun: boolean];
-
-const isDryRunModeFlags = P.Tuple([P.isTruthy, P.isTruthy]);
-const isWriteModeFlags = P.Tuple([P.isTruthy, P.not(P.isTruthy)]);
+import type { VersionSyncMode } from "./VersionSync.schemas.js";
 
 /**
  * Resolve command mode from flags.
@@ -27,18 +21,14 @@ const isWriteModeFlags = P.Tuple([P.isTruthy, P.not(P.isTruthy)]);
  * @category utilities
  * @since 0.0.0
  */
-const resolveMode = (write: boolean, dryRun: boolean): VersionSyncMode => {
-  const flags = [write, dryRun] satisfies VersionSyncModeFlags;
-
-  return pipe(
+const resolveMode = (write: boolean, dryRun: boolean): VersionSyncMode =>
+  resolveRunMode(
     [
-      pipe(flags, O.liftPredicate(isDryRunModeFlags), O.as("dry-run" as const)),
-      pipe(flags, O.liftPredicate(isWriteModeFlags), O.as("write" as const)),
-    ] satisfies ReadonlyArray<O.Option<VersionSyncMode>>,
-    O.firstSomeOf,
-    O.getOrElse((): VersionSyncMode => "check")
+      [write && dryRun, "dry-run"],
+      [write && !dryRun, "write"],
+    ],
+    "check"
   );
-};
 
 /**
  * CLI command for synchronizing version pins across the monorepo.

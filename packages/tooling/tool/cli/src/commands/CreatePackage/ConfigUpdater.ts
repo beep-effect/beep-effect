@@ -13,7 +13,6 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { DomainError } from "@beep/repo-utils";
 import { buildCanonicalAliasTargets } from "@beep/repo-utils/schemas/TsconfigAliasTargets";
 import { SchemaUtils } from "@beep/schema";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Str, thunkNegative1 } from "@beep/utils";
 import { Effect, FileSystem, flow, HashMap, Order, Path, pipe, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
@@ -21,7 +20,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as jsonc from "jsonc-parser";
+import { applyJsoncModification as applySharedJsoncModification, decodeJsoncTextAs } from "../../internal/cli/Jsonc.js";
 
 const $I = $RepoCliId.create("commands/CreatePackage/ConfigUpdater");
 
@@ -128,11 +127,6 @@ export class ConfigUpdateBatchResult extends S.Class<ConfigUpdateBatchResult>($I
 ) {}
 
 // ── Internal helpers ─────────────────────────────────────────────────────────
-
-const FORMATTING_OPTIONS: jsonc.FormattingOptions = {
-  tabSize: 2,
-  insertSpaces: true,
-};
 
 const PACKAGE_PATH_PATTERN = /^[a-z0-9][a-z0-9/_-]*$/;
 const TSTYCHE_TEST_FILE_MATCH_PATTERN = /\/dtslint\/\*\*\/\*\.tst\.\*$/;
@@ -262,17 +256,16 @@ const aliasTargetsForTarget = (target: ConfigUpdateTarget) => ({
 
 const applyJsoncModification = (
   content: string,
-  path: jsonc.JSONPath,
+  path: ReadonlyArray<string | number>,
   value: unknown,
-  options?: jsonc.ModificationOptions
+  options?: { readonly isArrayInsertion?: boolean }
 ): string =>
-  jsonc.applyEdits(
+  applySharedJsoncModification({
     content,
-    jsonc.modify(content, path, value, {
-      formattingOptions: FORMATTING_OPTIONS,
-      ...options,
-    })
-  );
+    path,
+    value,
+    ...(options?.isArrayInsertion === true ? { isArrayInsertion: true } : {}),
+  });
 
 /**
  * Read → transform → write-if-changed. Returns `true` when the file was

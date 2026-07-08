@@ -8,15 +8,15 @@
 import { findRepoRoot } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import { Console, Effect, Layer, Number as Num } from "effect";
-import { VersionSyncDriftError, VersionSyncModeMatch } from "./Models.js";
+import { ReportRendererService, ReportRendererServiceLive } from "../VersionSync.render.js";
+import { VersionSyncDriftError, VersionSyncModeMatch } from "../VersionSync.schemas.js";
 import { CategorySelectionServiceLive } from "./services/CategorySelectionService.js";
-import { ReportRendererService, ReportRendererServiceLive } from "./services/ReportRendererService.js";
 import { ResolverService, ResolverServiceLive } from "./services/ResolverService.js";
 import { UpdateApplierService, UpdateApplierServiceLive } from "./services/UpdateApplierService.js";
 import type { NoSuchFileError } from "@beep/repo-utils";
 import type { FileSystem, Path } from "effect";
 import type { HttpClient } from "effect/unstable/http";
-import type { VersionSyncError, VersionSyncOptions } from "./Models.js";
+import type { VersionSyncError, VersionSyncOptions } from "../VersionSync.schemas.js";
 
 const VersionSyncServicesLive = Layer.mergeAll(
   CategorySelectionServiceLive,

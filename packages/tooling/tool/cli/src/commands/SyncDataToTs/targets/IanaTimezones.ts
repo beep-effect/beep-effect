@@ -9,10 +9,10 @@ import { A, dual, O, P, Str } from "@beep/utils";
 import { Effect, flow, HashSet, Order, pipe } from "effect";
 import * as R from "effect/Record";
 import { Parser } from "tar";
-import { SyncDataTargetProjection, SyncDataToTsError } from "../internal/Models.js";
 import { fetchSource, formatJson, formatTsLiteral, outputFile, sourceMetadata } from "../internal/Source.js";
+import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.js";
 import type { ReadEntry } from "tar";
-import type { SyncDataTarget } from "../internal/Models.js";
+import type { SyncDataTarget } from "../SyncDataToTs.schemas.js";
 
 const targetId = "iana-timezones" as const;
 const outputPath = "packages/foundation/primitive/data/src/generated/iana-timezones.ts" as const;

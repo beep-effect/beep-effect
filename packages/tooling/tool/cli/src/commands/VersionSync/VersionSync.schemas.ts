@@ -11,6 +11,8 @@ import { A } from "@beep/utils";
 import { Effect, Tuple } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { RunMode, RunModeMatch } from "../../internal/cli/RunMode.js";
+import type { RunMode as RunModeValue } from "../../internal/cli/RunMode.js";
 
 /**
  * Public version-sync error exports.
@@ -18,9 +20,9 @@ import * as S from "effect/Schema";
  * @category errors
  * @since 0.0.0
  */
-export { NetworkUnavailableError, VersionSyncDriftError, VersionSyncError } from "../VersionSync.errors.js";
+export { NetworkUnavailableError, VersionSyncDriftError, VersionSyncError } from "./VersionSync.errors.js";
 
-const $I = $RepoCliId.create("commands/VersionSync/internal/Models");
+const $I = $RepoCliId.create("commands/VersionSync/VersionSync.schemas");
 
 // ── Errors ──────────────────────────────────────────────────────────────────
 
@@ -255,25 +257,15 @@ export class VersionSyncReport extends S.Class<VersionSyncReport>($I`VersionSync
  * @category models
  * @since 0.0.0
  */
-const VersionSyncModeKit = LiteralKit(["check", "write", "dry-run"]);
-/**
- * Command execution mode.
- *
- * @category models
- * @since 0.0.0
- */
-export const VersionSyncMode = VersionSyncModeKit.pipe(
-  $I.annoteSchema("VersionSyncMode", {
-    description: "Command execution mode for version sync operations",
-  })
-);
+export const VersionSyncMode = RunMode;
+
 /**
  * Pattern-matching helper for version-sync mode literals.
  *
  * @category models
  * @since 0.0.0
  */
-export const VersionSyncModeMatch = VersionSyncModeKit.$match;
+export const VersionSyncModeMatch = RunModeMatch;
 
 /**
  * Command execution mode.
@@ -281,7 +273,7 @@ export const VersionSyncModeMatch = VersionSyncModeKit.$match;
  * @category models
  * @since 0.0.0
  */
-export type VersionSyncMode = typeof VersionSyncMode.Type;
+export type VersionSyncMode = RunModeValue;
 
 const DefaultedVersionSyncFlag = S.Boolean.pipe(
   S.withConstructorDefault(Effect.succeed(false)),

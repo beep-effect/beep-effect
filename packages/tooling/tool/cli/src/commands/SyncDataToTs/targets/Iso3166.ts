@@ -12,7 +12,6 @@ import { Config, Effect, flow, MutableHashMap, Order, pipe, Redacted } from "eff
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { SyncDataTargetProjection, SyncDataToTsError } from "../internal/Models.js";
 import {
   fetchSource,
   formatJson,
@@ -21,8 +20,9 @@ import {
   parseCsvSource,
   sourceMetadata,
 } from "../internal/Source.js";
-import type { SyncDataSourceMetadata, SyncDataTarget } from "../internal/Models.js";
+import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.js";
 import type { ParsedCsvRecords } from "../internal/Source.js";
+import type { SyncDataSourceMetadata, SyncDataTarget } from "../SyncDataToTs.schemas.js";
 
 const $I = $RepoCliId.create("commands/SyncDataToTs/targets/Iso3166");
 const targetId = "iso3166" as const;

@@ -20116,6 +20116,14 @@
       "description": "Per-target config update summary."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+      "symbol": "TemplateContext",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "TemplateContext",
+      "description": "Variables passed into every template during package scaffolding."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts",
       "symbol": "FileGenerationExecutionResult",
       "kind": "schema-class",
@@ -20170,14 +20178,6 @@
       "owner": "@beep/repo-cli",
       "identity": "PlannedSymlink",
       "description": "A symlink operation."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
-      "symbol": "TemplateContext",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "TemplateContext",
-      "description": "Variables passed into every template during package scaffolding."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/CreatePackage/TemplateService.ts",
@@ -22596,7 +22596,7 @@
       "description": "Failed to fetch, decode, normalize, render, or write synced data."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.schemas.ts",
       "symbol": "SyncDataFileResult",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -22604,7 +22604,7 @@
       "description": "Per-file sync result after diffing or writing."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.schemas.ts",
       "symbol": "SyncDataOutputFile",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -22612,15 +22612,7 @@
       "description": "Generated file content with its repo-relative output path."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
-      "symbol": "SyncDataRunMode",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "SyncDataRunMode",
-      "description": "Command execution mode for sync-data-to-ts."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.schemas.ts",
       "symbol": "SyncDataSourceFormat",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -22628,7 +22620,7 @@
       "description": "Supported source formats for sync-data-to-ts helpers."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.schemas.ts",
       "symbol": "SyncDataSourceMetadata",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -22636,7 +22628,7 @@
       "description": "Stable metadata for one upstream source used by a sync target."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.schemas.ts",
       "symbol": "SyncDataTargetAccess",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -22644,84 +22636,12 @@
       "description": "Whether a sync target can be fetched publicly or requires configured authenticated source access."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Models.ts",
+      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/SyncDataToTs.schemas.ts",
       "symbol": "SyncDataTargetProjection",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "SyncDataTargetProjection",
       "description": "Rendered target projection ready to compare or write to disk."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
-      "symbol": "PlannedFileChange",
-      "kind": "tagged-union",
-      "owner": "@beep/repo-cli",
-      "identity": "TsconfigSyncChange",
-      "description": "A single planned file change for tsconfig-sync."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
-      "symbol": "TsconfigSyncChange",
-      "kind": "tagged-union",
-      "owner": "@beep/repo-cli",
-      "identity": "TsconfigSyncChange",
-      "description": "A single planned file change for tsconfig-sync."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
-      "symbol": "TsconfigSyncMode",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "TsconfigSyncMode",
-      "description": "Command execution mode for tsconfig-sync."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
-      "symbol": "TsconfigSyncResult",
-      "kind": "tagged-union",
-      "owner": "@beep/repo-cli",
-      "identity": "TsconfigSyncResult",
-      "description": "Result emitted after a sync run."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
-      "symbol": "TsconfigSyncRunOptions",
-      "kind": "tagged-union",
-      "owner": "@beep/repo-cli",
-      "identity": "TsconfigSyncRunOptions",
-      "description": "Runtime options for executing tsconfig sync at a repo root."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
-      "symbol": "TsconfigSyncSection",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "TsconfigSyncSection",
-      "description": "Sync change section categories for tsconfig-sync."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
-      "symbol": "TsconfigWithPaths",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "TsconfigWithPaths",
-      "description": "A class representing a tsconfig.json file with compilerOptions.paths property."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
-      "symbol": "TsconfigWithReferences",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "TsconfigWithReferences",
-      "description": "A class representing a tsconfig.json file with references property."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.command.ts",
-      "symbol": "WorkspaceDescriptor",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "WorkspaceDescriptor",
-      "description": "A workspace package descriptor with metadata for tsconfig synchronization."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.errors.ts",
@@ -22748,6 +22668,118 @@
       "description": "Raised when tsconfig-sync filter does not match any workspace package name or path."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "symbol": "BeepScopedPackageName",
+      "kind": "brand",
+      "owner": "@beep/repo-cli",
+      "identity": "BeepScopedPackageName",
+      "description": "Package name under the @beep scope."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "symbol": "CanonicalAliasKey",
+      "kind": "brand",
+      "owner": "@beep/repo-cli",
+      "identity": "CanonicalAliasKey",
+      "description": "Canonical @beep path alias key in root tsconfig paths."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "symbol": "JsonObject",
+      "kind": "schema-const",
+      "owner": "@beep/repo-cli",
+      "identity": "JsonObject",
+      "description": "Generic JSON object document used for parsed docgen configs."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "symbol": "PlannedFileChange",
+      "kind": "tagged-union",
+      "owner": "@beep/repo-cli",
+      "identity": "TsconfigSyncChange",
+      "description": "A single planned file change for tsconfig-sync."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "symbol": "RootDepIndexKey",
+      "kind": "schema-const",
+      "owner": "@beep/repo-cli",
+      "identity": "RootDepIndexKey",
+      "description": "Synthetic root dependency index key from repo-utils dependency maps."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "symbol": "StringArray",
+      "kind": "schema-const",
+      "owner": "@beep/repo-cli",
+      "identity": "StringArray",
+      "description": "Reusable schema for arrays of strings."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "symbol": "TsconfigSyncChange",
+      "kind": "tagged-union",
+      "owner": "@beep/repo-cli",
+      "identity": "TsconfigSyncChange",
+      "description": "A single planned file change for tsconfig-sync."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "symbol": "TsconfigSyncMode",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "TsconfigSyncMode",
+      "description": "Command execution mode for tsconfig-sync."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "symbol": "TsconfigSyncResult",
+      "kind": "tagged-union",
+      "owner": "@beep/repo-cli",
+      "identity": "TsconfigSyncResult",
+      "description": "Result emitted after a sync run."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "symbol": "TsconfigSyncRunOptions",
+      "kind": "tagged-union",
+      "owner": "@beep/repo-cli",
+      "identity": "TsconfigSyncRunOptions",
+      "description": "Runtime options for executing tsconfig sync at a repo root."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "symbol": "TsconfigSyncSection",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "TsconfigSyncSection",
+      "description": "Sync change section categories for tsconfig-sync."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "symbol": "TsconfigWithPaths",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "TsconfigWithPaths",
+      "description": "A class representing a tsconfig.json file with compilerOptions.paths property."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "symbol": "TsconfigWithReferences",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "TsconfigWithReferences",
+      "description": "A class representing a tsconfig.json file with references property."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/TsconfigSync/TsconfigSync.schemas.ts",
+      "symbol": "WorkspaceDescriptor",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "WorkspaceDescriptor",
+      "description": "A workspace package descriptor with metadata for tsconfig synchronization."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.errors.ts",
       "symbol": "NetworkUnavailableError",
       "kind": "tagged-error",
@@ -22772,7 +22804,7 @@
       "description": "Failed to read, resolve, or update a version pin"
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/Models.ts",
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
       "symbol": "VersionCategory",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -22780,7 +22812,7 @@
       "description": "Version category for grouping drift items"
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/Models.ts",
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
       "symbol": "VersionCategoryReport",
       "kind": "tagged-union",
       "owner": "@beep/repo-cli",
@@ -22788,7 +22820,7 @@
       "description": "Report for a single version category, including its status, items, and error"
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/Models.ts",
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
       "symbol": "VersionCategoryStatus",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -22796,7 +22828,7 @@
       "description": "Status of a version category"
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/Models.ts",
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
       "symbol": "VersionDriftItem",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -22804,15 +22836,7 @@
       "description": "A single version pin location with its current and expected values"
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/Models.ts",
-      "symbol": "VersionSyncMode",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "VersionSyncMode",
-      "description": "Command execution mode for version sync operations"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/Models.ts",
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
       "symbol": "VersionSyncOptions",
       "kind": "tagged-union",
       "owner": "@beep/repo-cli",
@@ -22820,7 +22844,7 @@
       "description": "Resolved command options after flag parsing."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/Models.ts",
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
       "symbol": "VersionSyncReport",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -22828,7 +22852,7 @@
       "description": "Full version sync report across all categories, including their statuses and errors"
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/Models.ts",
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
       "symbol": "VersionSyncResolution",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -22836,7 +22860,7 @@
       "description": "Resolver output consumed by reporting and write-mode services."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/VersionSync/internal/Models.ts",
+      "file": "packages/tooling/tool/cli/src/commands/VersionSync/VersionSync.schemas.ts",
       "symbol": "VersionSyncUpdateLocation",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
