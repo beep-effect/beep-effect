@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "initiative-manifest/v1",
+  "initiative": {
+    "id": "legal-document-intake",
+    "title": "Legal Document Intake",
+    "status": "active",
+    "created": "2026-07-08",
+    "updated": "2026-07-08",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/legal-document-intake",
+  "lifecycle": "active",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "designSession": "2026-07-08 grilled design session (grill-with-docs) backed by exploration workflow wf_87d11a69-2ac; brain-dump origin, no explorations/ packet",
+    "graduated": "2026-07-08"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor). Each PLAN.md phase is its own PR under this gate.",
+    "grandfathered": false
+  },
+  "dependencies": [
+    "goals/box-driver",
+    "goals/m365-driver",
+    "goals/ip-law-knowledge-graph",
+    "goals/trustgraph-port",
+    "goals/file-processing-capability",
+    "goals/agentic-professional-runtime",
+    "goals/mcp-kit",
+    "goals/mcp-host-retrofit"
+  ],
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/legal-document-intake/README.md",
+    "goals/legal-document-intake/SPEC.md",
+    "goals/legal-document-intake/PLAN.md",
+    "goals/legal-document-intake/GOAL.md",
+    "goals/legal-document-intake/research/SOURCES.md"
+  ],
+  "researchReports": [
+    "research/SOURCES.md",
+    "research/exploration-findings.md"
+  ],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/legal-document-intake/GOAL.md"
+    }
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "complete"
+    },
+    {
+      "id": "P1",
+      "name": "Vault + deterministic intake",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "LLM filing agent",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Box sync",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Extraction to KG loop",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Retrieval + viewer",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "M365 write + dual DMS",
+      "status": "pending"
+    },
+    {
+      "id": "P7",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/legal-document-intake/GOAL.md)\" -le 4000",
+    "jq . goals/legal-document-intake/ops/manifest.json",
+    "rg -n \"legal-document-intake|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/legal-document-intake",
+    "git diff --check -- goals/legal-document-intake",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "The implementation would exceed named scope (bidirectional sync, OCR, graph DB, local LLM, skills substrate).",
+    "Verification requires unnamed credentials, cost, destructive side effects, or policy approval (Box/M365 test tenants must be pre-arranged for P3/P6).",
+    "A dependency packet blocks a phase (e.g. mcp-kit for skills support).",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
