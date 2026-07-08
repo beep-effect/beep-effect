@@ -154,6 +154,44 @@ export class CapturedStreams extends S.Class<CapturedStreams>($I`CapturedStreams
 ) {}
 
 /**
+ * Planned subprocess invocation shared by repo-quality command families.
+ *
+ * @remarks
+ * This is the sanctioned home for the quality step model. Quality task
+ * adapters, GitHub-check lanes, and operational helpers may still render their
+ * own labels and errors, but they all describe child processes with this shape
+ * so cross-group consumers do not deep-import `commands/Quality/Tasks`.
+ *
+ * @example
+ * ```ts
+ * import { QualityTaskStep } from "@beep/repo-cli/internal/process"
+ *
+ * const step = QualityTaskStep.make({
+ *   label: "check",
+ *   command: "bunx",
+ *   args: ["turbo", "run", "check"],
+ *   cwd: "/repo"
+ * })
+ * console.log(step.label)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class QualityTaskStep extends S.Class<QualityTaskStep>($I`QualityTaskStep`)(
+  {
+    label: S.String,
+    command: S.String,
+    args: S.Array(S.String),
+    cwd: S.String,
+    env: S.optionalKey(S.Record(S.String, S.Union([S.String, S.Undefined]))),
+    useLocalEnv: S.optionalKey(S.Boolean),
+  },
+  $I.annote("QualityTaskStep", {
+    description: "Planned subprocess invocation shared by repo-quality command families.",
+  })
+) {}
+
+/**
  * Empty bounded-output accumulator seed.
  *
  * @example
@@ -293,7 +331,7 @@ export const collectBoundedText =
  * @category streams
  * @since 0.0.0
  */
-export const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
+export const collectText = <E, R>(stream: Stream.Stream<Uint8Array, E, R>): Effect.Effect<string, E, R> =>
   stream.pipe(
     Stream.decodeText(),
     Stream.runFold(thunkEmptyStr, (acc, chunk) => `${acc}${chunk}`)

@@ -3,14 +3,15 @@ import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { TaggedErrorClass } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { A, Err, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
+import { A, Err, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, FileSystem, MutableHashMap, MutableHashSet, Order, Path, Result, SchemaGetter, Stream } from "effect";
+import { Effect, FileSystem, MutableHashMap, MutableHashSet, Order, Path, Result } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
 import { Node } from "ts-morph";
+import { collectText } from "../../../internal/process/index.js";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/QualityArtifactSupport");
@@ -128,7 +129,6 @@ export class WorkspacePackageInfo extends S.Class<WorkspacePackageInfo>($I`Works
 
 const decodePackageJsonResult = S.decodeUnknownResult(PackageJson);
 const decodeJsoncRecord = decodeJsoncTextAs(JsonRecord);
-const stringifyJsonPretty = SchemaGetter.stringifyJson({ space: 2 });
 
 /**
  * Repository root resolved relative to the Quality command internals.
@@ -182,23 +182,6 @@ export const readJsonc = Effect.fn("QualityArtifactSupport.readJsonc")(function*
   return yield* decodeJsoncRecord(text).pipe(
     QualityArtifactGeneratorError.mapError(`Failed to parse JSONC document ${filePath}.`, { filePath })
   );
-});
-
-/**
- * Format a JSON-compatible value as deterministic JSONC text.
- *
- * @param value - JSON-compatible value to render.
- * @returns Deterministically formatted JSONC text with a trailing newline.
- * @category rendering
- * @since 0.0.0
- */
-export const formatJsonc = Effect.fn("QualityArtifactSupport.formatJsonc")(function* (
-  value: unknown
-): Effect.fn.Return<string, QualityArtifactGeneratorError> {
-  const rendered = yield* stringifyJsonPretty
-    .run(O.some(value), {})
-    .pipe(QualityArtifactGeneratorError.mapError("Failed to format generated JSONC artifact.", {}));
-  return `${O.getOrElse(rendered, thunkEmptyStr)}\n`;
 });
 
 /**
@@ -486,10 +469,7 @@ export const topoSortPackageNames = Effect.fn("QualityArtifactSupport.topoSortPa
         stdout: "pipe",
         stderr: "pipe",
       });
-      const output = yield* handle.all.pipe(
-        Stream.decodeText(),
-        Stream.runFold(thunkEmptyStr, (acc, chunk) => acc + chunk)
-      );
+      const output = yield* collectText(handle.all);
       const exitCode = yield* handle.exitCode;
       return { exitCode, output };
     })
@@ -736,18 +716,3 @@ export const declarationKind = (node: Node): string => {
   }
   return node.getKindName();
 };
-
-/**
- * Fold a byte stream into its decoded text.
- *
- * @param stream - Byte stream to decode and concatenate.
- * @returns Effect yielding the accumulated text.
- * @category streams
- * @since 0.0.0
- */
-// fallow-ignore-next-line code-duplication
-export const collectText = <E>(stream: Stream.Stream<Uint8Array, E>): Effect.Effect<string, E> =>
-  stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(thunkEmptyStr, (acc, chunk) => `${acc}${chunk}`)
-  );

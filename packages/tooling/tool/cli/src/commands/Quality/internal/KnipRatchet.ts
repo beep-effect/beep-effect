@@ -4,9 +4,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-
 import { $RepoCliId } from "@beep/identity/packages";
-import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
+import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { Console, Effect, FileSystem, Order, Path, pipe } from "effect";
 import * as A from "effect/Array";
@@ -15,8 +14,10 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ChildProcess } from "effect/unstable/process";
 import { parse } from "jsonc-parser";
+import { formatJsonc, renderTruncatedLines, writeArtifact } from "../../../internal/artifacts/index.js";
+import { collectText } from "../../../internal/process/index.js";
+import { diffMembership, enforceRatchet } from "../../../internal/ratchet/index.js";
 import { QualityScriptCommandError } from "../Quality.errors.js";
-import { collectText } from "./QualityArtifactSupport.js";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ParseError } from "jsonc-parser";
 
@@ -364,20 +365,18 @@ const writeBaseline = Effect.fn("KnipRatchet.writeBaseline")(function* (
   baselinePath: string,
   baseline: KnipRegressionBaseline
 ): Effect.fn.Return<void, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const absolutePath = path.resolve(repoRoot, baselinePath);
-  const json = yield* jsonStringifyPretty(baseline).pipe(
-    // fallow-ignore-next-line code-duplication
+  const json = yield* formatJsonc(baseline).pipe(
     QualityScriptCommandError.mapError(`Failed to encode ${baselinePath}.`)
   );
 
-  yield* fs
-    .makeDirectory(path.dirname(absolutePath), { recursive: true })
-    .pipe(QualityScriptCommandError.mapError(`Failed to create ${path.dirname(absolutePath)}.`));
-  yield* fs
-    .writeFileString(absolutePath, `${baselineHeader}${json}\n`)
-    .pipe(QualityScriptCommandError.mapError(`Failed to write ${baselinePath}.`));
+  yield* writeArtifact({
+    path: absolutePath,
+    header: baselineHeader,
+    body: json,
+    onError: (cause) => QualityScriptCommandError.new(cause, `Failed to write ${baselinePath}.`),
+  });
 });
 
 type KnipProcessResult = {
@@ -428,82 +427,52 @@ const decodeCurrentFindings = (result: KnipProcessResult) =>
     )
   );
 
-const includesFinding = (findings: ReadonlyArray<KnipFinding>, finding: KnipFinding): boolean =>
-  A.some(findings, (candidate) => sameKnipFinding(candidate, finding));
-
-const findingsMissingFrom = (
-  source: ReadonlyArray<KnipFinding>,
-  target: ReadonlyArray<KnipFinding>
-): ReadonlyArray<KnipFinding> =>
-  pipe(
-    source,
-    A.filter((finding) => !includesFinding(target, finding)),
-    A.sort(findingOrder)
-  );
-
 const compareFindings = (current: ReadonlyArray<KnipFinding>, baseline: ReadonlyArray<KnipFinding>): KnipComparison =>
-  KnipComparison.make({
-    current_count: A.length(current),
-    baseline_count: A.length(baseline),
-    introduced: findingsMissingFrom(current, baseline),
-    resolved: findingsMissingFrom(baseline, current),
-  });
+  pipe(diffMembership({ current, baseline, equivalence: sameKnipFinding, order: findingOrder }), (diff) =>
+    KnipComparison.make({
+      current_count: diff.currentCount,
+      baseline_count: diff.baselineCount,
+      introduced: diff.introduced,
+      resolved: diff.resolved,
+    })
+  );
 
 const renderFinding = (finding: KnipFinding): string => `${finding.kind}: ${finding.file}#${finding.name}`;
 
-const renderFindingLines = (findings: ReadonlyArray<KnipFinding>, limit: number): ReadonlyArray<string> => {
-  const shown = A.take(findings, limit);
-  const omittedCount = A.length(findings) - A.length(shown);
-  return [
-    // fallow-ignore-next-line code-duplication
-    ...A.map(shown, (finding) => `  - ${renderFinding(finding)}`),
-    ...pipe(
-      omittedCount,
-      O.liftPredicate((count) => count > 0),
-      O.map((count) => A.of(`  - ... ${count} more`)),
-      O.getOrElse(A.empty<string>)
-    ),
-  ];
-};
+const renderFindingLines = (findings: ReadonlyArray<KnipFinding>, limit: number): ReadonlyArray<string> =>
+  renderTruncatedLines({ items: findings, render: (finding) => `  - ${renderFinding(finding)}`, limit });
 
 const enforceComparison = Effect.fn("KnipRatchet.enforceComparison")(function* (
   comparison: KnipComparison,
   baselinePath: string
 ): Effect.fn.Return<void, QualityScriptCommandError> {
-  if (A.isReadonlyArrayNonEmpty(comparison.introduced)) {
-    yield* Console.error(
-      A.join(
-        [
+  return yield* enforceRatchet({
+    regressions: [
+      {
+        present: A.isReadonlyArrayNonEmpty(comparison.introduced),
+        lines: [
           `[knip] regression: ${A.length(comparison.introduced)} finding(s) are not present in ${baselinePath}`,
           ...renderFindingLines(comparison.introduced, 25),
           `[knip] fix the finding(s), or regenerate with: ${regenerationCommand}`,
         ],
-        "\n"
-      )
-    );
-    return yield* QualityScriptCommandError.make({
-      message: "Knip regression baseline grew.",
-      command: knipCommand,
-      exitCode: 1,
-    });
-  }
-
-  yield* Console.log(
-    `[knip] ok: current=${comparison.current_count} baseline=${comparison.baseline_count} introduced=0`
-  );
-
-  if (A.isReadonlyArrayNonEmpty(comparison.resolved)) {
-    yield* Console.log(
-      A.join(
-        [
-          `[knip] tighten-baseline: ${A.length(comparison.resolved)} baseline finding(s) are no longer present`,
-          ...renderFindingLines(comparison.resolved, 25),
-          `[knip] regenerate with: ${regenerationCommand}`,
-        ],
-        "\n"
-      )
-    );
-  }
+        error: QualityScriptCommandError.make({
+          message: "Knip regression baseline grew.",
+          command: knipCommand,
+          exitCode: 1,
+        }),
+      },
+    ],
+    okLine: `[knip] ok: current=${comparison.current_count} baseline=${comparison.baseline_count} introduced=0`,
+    tighten: pipe(
+      comparison.resolved,
+      O.liftPredicate(A.isReadonlyArrayNonEmpty),
+      O.map((resolved) => [
+        `[knip] tighten-baseline: ${A.length(resolved)} baseline finding(s) are no longer present`,
+        ...renderFindingLines(resolved, 25),
+        `[knip] regenerate with: ${regenerationCommand}`,
+      ])
+    ),
+  });
 });
 
 /**

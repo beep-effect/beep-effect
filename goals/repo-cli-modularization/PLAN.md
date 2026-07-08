@@ -106,15 +106,15 @@ Docgen: 4000-line test via test-kit).
 
 Largest offender (13k LOC, four 1000+ files) and the package dependency hub.
 
-- [ ] `Quality/Tasks.ts` -> `Quality.schemas.ts` + internal modules; step
+- [x] `Quality/Tasks.ts` -> `Quality.schemas.ts` + internal modules; step
   runner delegates to `StepExec`.
-- [ ] Migrate `QualityTaskStep` consumers (Graphiti `ProxyOps`, Lint root
+- [x] Migrate `QualityTaskStep` consumers (Graphiti `ProxyOps`, Lint root
   policy) onto `internal/process`; update Quality test-kit star-exports.
-- [ ] `Quality.command.ts` (2901) -> schemas/plan/render + semantic internals.
-- [ ] `FallowQuality.command.ts` (2347) -> internal modules, `$match` tables
+- [x] `Quality.command.ts` (2901) -> schemas/plan/render + semantic internals.
+- [x] `FallowQuality.command.ts` (2347) -> internal modules, `$match` tables
   colocated; propose (not decide) Fallow group extraction in the commit
   message.
-- [ ] Ratchet internals (`JSDocRatchet`, `KnipRatchet`, `CoverageRegression`,
+- [x] Ratchet internals (`JSDocRatchet`, `KnipRatchet`, `CoverageRegression`,
   `JSDocDocumentationInventory`) adopt `internal/ratchet` + `ArtifactIo`;
   baselines byte-stable except where regeneration rule applies.
 

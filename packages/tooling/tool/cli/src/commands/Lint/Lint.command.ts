@@ -18,7 +18,7 @@ import { ChildProcess } from "effect/unstable/process";
 import madge from "madge";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
 import { printLines } from "../../internal/cli/Printer.js";
-import { runRootLintPolicyTask } from "../Quality/Tasks.js";
+import { runRootLintPolicyTask } from "../Quality/index.js";
 import { LintCircularAnalysisError, LintFileDiscoveryError } from "./Lint.errors.js";
 import { lintPackageTestImportsCommand } from "./PackageTestImports.js";
 import { lintReflectionArtifactsCommand } from "./ReflectionArtifact.ts";

@@ -16,7 +16,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
-import { QualityTaskStep } from "../../Quality/Tasks.js";
+import { QualityTaskStep } from "../../../internal/process/index.js";
 import { GraphitiProxyOpsError } from "../Graphiti.errors.js";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 

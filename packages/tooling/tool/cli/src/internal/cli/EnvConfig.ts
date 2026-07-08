@@ -50,6 +50,31 @@ export const configStringOptionSync = (name: string): O.Option<string> =>
   Effect.runSync(Config.option(Config.string(name)));
 
 /**
+ * Check whether an optional string config value equals an expected value.
+ *
+ * @param name - Config key to read.
+ * @param expected - String value required for a match.
+ * @returns Whether the configured value equals `expected`.
+ * @example
+ * ```ts
+ * import { configStringEqualsSync } from "@beep/repo-cli/internal/cli/EnvConfig"
+ *
+ * console.log(configStringEqualsSync("CI", "true"))
+ * ```
+ * @category configuration
+ * @since 0.0.0
+ */
+export const configStringEqualsSync: {
+  (expected: string): (name: string) => boolean;
+  (name: string, expected: string): boolean;
+} = dual(2, (name: string, expected: string): boolean =>
+  pipe(
+    configStringOptionSync(name),
+    O.exists((value) => value === expected)
+  )
+);
+
+/**
  * Read an optional string config value inside an Effect workflow, succeeding
  * with `None` instead of failing when the value is absent or malformed.
  *

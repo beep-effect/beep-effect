@@ -25,12 +25,7 @@ export * from "./internal/TurboConfigProof.js";
  * @category cli-commands
  * @since 0.0.0
  */
-export {
-  QualityHardwareProfile,
-  QualityProfileConfig,
-  QualityProfileDetection,
-  qualityCommand,
-} from "./Quality.command.js";
+export { qualityCommand } from "./Quality.command.js";
 /**
  * Public command module export.
  *
@@ -38,3 +33,24 @@ export {
  * @since 0.0.0
  */
 export * from "./Quality.errors.js";
+/**
+ * Public quality profile planning helpers.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export { detectQualityProfileForTesting, qualityProfileConfigForTesting } from "./Quality.plan.js";
+/**
+ * Public Quality schema role exports.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Quality.schemas.js";
+/**
+ * Root lint policy task used by the Lint command facade.
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export { runRootLintPolicyTask } from "./Tasks.js";

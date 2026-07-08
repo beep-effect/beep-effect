@@ -9,12 +9,13 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { LiteralKit, normalizePath } from "@beep/schema";
-import { A, Str, thunkEmptyStr } from "@beep/utils";
-import { Clock, Console, Effect, FileSystem, HashMap, Order, Path, pipe, Stream } from "effect";
+import { A, Str } from "@beep/utils";
+import { Clock, Console, Effect, FileSystem, HashMap, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
+import { collectText } from "../../../internal/process/index.js";
 import { QualityScriptCommandError } from "../Quality.errors.js";
 import type { DomainError, FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -198,12 +199,6 @@ const byWorkspacePathLengthDescending = Order.flip(
 
 // fallow-ignore-next-line code-duplication
 const commandText = (command: string, args: ReadonlyArray<string>): string => A.join([command, ...args], " ");
-
-const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
-  stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(thunkEmptyStr, (acc, chunk) => `${acc}${chunk}`)
-  );
 
 const linesFromText = (text: string): ReadonlyArray<string> =>
   pipe(Str.split(/\r?\n/)(text), A.map(Str.trim), A.filter(Str.isNonEmpty));

@@ -4,12 +4,12 @@ import { DateTime, Effect, FileSystem, MutableHashMap, Path } from "effect";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
+import { formatJsonc } from "../../../internal/artifacts/index.js";
 import {
   declarationKind,
   defaultRepoRoot,
   discoverWorkspacePackages,
   escapeRegExp,
-  formatJsonc,
   getDocNode,
   getJsDocText,
   JsonRecord,
@@ -1012,7 +1012,9 @@ export const writeJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
       filePath: outputJsonPath,
     })
   );
-  const jsonContent = yield* formatJsonc(inventory);
+  const jsonContent = yield* formatJsonc(inventory).pipe(
+    QualityArtifactGeneratorError.mapError("Failed to format generated JSONC artifact.", {})
+  );
   yield* fs
     .writeFileString(outputJsonPath, jsonContent)
     .pipe(QualityArtifactGeneratorError.mapError(`Failed to write ${outputJsonPath}.`, { filePath: outputJsonPath }));

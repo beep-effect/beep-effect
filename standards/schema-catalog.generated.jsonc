@@ -21430,54 +21430,6 @@
       "description": "Aggregate result emitted by the changeset package graph guard."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-      "symbol": "GithubCheckLaneSpec",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "GithubCheckLaneSpec",
-      "description": "Executable lane specification for GitHub check collectors."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-      "symbol": "GithubCheckLaneStage",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "GithubCheckLaneStage",
-      "description": "Stage label for a GitHub check collector lane."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-      "symbol": "GithubChecksFallowFeatureMatrix",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "GithubChecksFallowFeatureMatrix",
-      "description": "Minimal Fallow feature matrix used by GitHub check plan contract validation."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-      "symbol": "QualityHardwareProfile",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "QualityHardwareProfile",
-      "description": "Named local hardware profile for quality scheduling guidance."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-      "symbol": "QualityProfileConfig",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "QualityProfileConfig",
-      "description": "Static quality scheduling settings for a hardware profile."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
-      "symbol": "QualityProfileDetection",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "QualityProfileDetection",
-      "description": "Detected quality profile plus host facts."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.errors.ts",
       "symbol": "ChangesetGraphError",
       "kind": "tagged-error",
@@ -21526,7 +21478,87 @@
       "description": "Unexpected quality task failure preserved for the process runtime boundary."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "symbol": "FallowQualityCiMode",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "FallowQualityCiMode",
+      "description": "CI posture for a Fallow feature-family matrix row."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "symbol": "FallowQualityFeatureFamily",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "FallowQualityFeatureFamily",
+      "description": "Fallow feature family row tracked by the quality-enforcement matrix."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "symbol": "FallowQualityPromotionStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "FallowQualityPromotionStatus",
+      "description": "Promotion posture for a Fallow feature-family matrix row."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "symbol": "GithubCheckLaneSpec",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GithubCheckLaneSpec",
+      "description": "Executable lane specification for GitHub check collectors."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "symbol": "GithubCheckLaneStage",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "GithubCheckLaneStage",
+      "description": "Stage label for a GitHub check collector lane."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "symbol": "GithubChecksFallowFeatureMatrix",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GithubChecksFallowFeatureMatrix",
+      "description": "Minimal Fallow feature matrix used by GitHub check plan contract validation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "symbol": "GithubChecksFallowFeatureMatrixRow",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GithubChecksFallowFeatureMatrixRow",
+      "description": "Minimal Fallow feature-matrix row used by GitHub check plan contract validation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "symbol": "LintPolicySubcommand",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "LintPolicySubcommand",
+      "description": "Lint policy subcommands that remain owned by the full command tree."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "symbol": "PackageJsonDocument",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "PackageJsonDocument",
+      "description": "Minimal package.json shape used by quality task resolution."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "symbol": "PackageJsonWorkspacesDocument",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "PackageJsonWorkspacesDocument",
+      "description": "Object-form package.json workspaces entry used by quality task resolution."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
       "symbol": "PackageTaskProfile",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -21534,7 +21566,47 @@
       "description": "Package-local script profile used by the quality task adapter."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "symbol": "QualityHardwareProfile",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "QualityHardwareProfile",
+      "description": "Named local hardware profile for quality scheduling guidance."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "symbol": "QualityProfileConfig",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "QualityProfileConfig",
+      "description": "Static quality scheduling settings for a hardware profile."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "symbol": "QualityProfileDetection",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "QualityProfileDetection",
+      "description": "Detected quality profile plus host facts."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "symbol": "QualityProfileDetectionInput",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "QualityProfileDetectionInput",
+      "description": "Host facts used when selecting a quality profile."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "symbol": "QualityTaskBypassArgName",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "QualityTaskBypassArgName",
+      "description": "Root CLI flag names that must bypass the quality task fast path."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
       "symbol": "QualityTaskInvocation",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -21542,7 +21614,7 @@
       "description": "Result of parsing a quality command invocation."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
       "symbol": "QualityTaskName",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -21550,12 +21622,18 @@
       "description": "Canonical quality task name handled by beep-cli."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Quality/Tasks.ts",
-      "symbol": "QualityTaskStep",
-      "kind": "schema-class",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "symbol": "RootAuditMode",
+      "kind": "literal-kit",
       "owner": "@beep/repo-cli",
-      "identity": "QualityTaskStep",
-      "description": "Planned subprocess invocation for a quality task."
+      "identity": "RootAuditMode",
+      "description": "Root audit mode names supported by the quality task adapter."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Quality/Quality.schemas.ts",
+      "symbol": "decodePackageJsonDocument",
+      "kind": "codec",
+      "owner": "@beep/repo-cli"
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/CoverageRegression.ts",
@@ -22938,6 +23016,14 @@
       "owner": "@beep/repo-cli",
       "identity": "OutputBound",
       "description": "Character cap and the notice appended once captured subprocess output overflows it."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "symbol": "QualityTaskStep",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "QualityTaskStep",
+      "description": "Planned subprocess invocation shared by repo-quality command families."
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/quality/SchemaFirstPolicyFinding.ts",
