@@ -88,6 +88,9 @@
   // workspace's story files, invisible to knip's per-workspace import scan of apps/storybook.
   // emojibase-data: referenced by path string in apps/storybook/.storybook/main.ts `staticDirs`,
   // not a static import.
+  // inspeffct: intentionally exposed as a root developer CLI via `bun run inspeffct*` scripts;
+  // knip sees the package script command as binary usage but does not count that as satisfying
+  // the root devDependency.
   // @microsoft/microsoft-graph-types + @lexical/code, @lexical/link, @lexical/list,
   // @lexical/rich-text, lexical: dtslint (packages/drivers/m365/dtslint/M365.tst.ts,
   // packages/foundation/modeling/lexical/dtslint/Lexical.tst.ts) is a wired `type-test` turbo
@@ -121,6 +124,7 @@
     "lexical",
     "@beep/form",
     "emojibase-data",
+    "inspeffct",
     // Mirrored from .fallowrc.jsonc (goals/fallow-zero-dead-code): MUI runtime
     // peers, type-only themeAugmentation imports, shared-Next-config plugin
     // loads, and scratchpad-only usage.
@@ -140,7 +144,14 @@
   // rustc is the Rust toolchain compiler, invoked via subprocess (`$`rustc -vV``) by
   // apps/professional-desktop/scripts/build-sidecar.ts to read the host target triple —
   // a system toolchain binary, not an npm-installable dependency.
-  "ignoreBinaries": ["op", "beep-cli", "portless", "readlink", "rustc"],
+  "ignoreBinaries": [
+    "op",
+    "beep-cli",
+    "portless",
+    "readlink",
+    "rustc",
+    "inspeffct"
+  ],
   // Scratchpad is a private experiment workspace kept in the root install graph
   // for dependency/TS trials but excluded from Knip's package graph. Scaffolded
   // test fixtures are likewise deliberately outside dependency-drift review.
