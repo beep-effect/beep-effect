@@ -1,3 +1,4 @@
+import { CiLaneRunOptions, ciLaneStepsForTesting } from "@beep/repo-cli/commands/Ci";
 import { fallowCiUploadDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command";
 import {
   CoveragePackageBaseline,
@@ -503,26 +504,47 @@ describe("quality task adapter", () => {
         const path = yield* Path.Path;
         const repoRoot = yield* findRepoRoot();
         const workflowText = yield* fs.readFileString(path.join(repoRoot, ".github/workflows/check.yml"));
-        const fallowStepText = Str.slice(
-          workflowText.indexOf("          run_blocking_fallow()"),
-          workflowText.indexOf("      - name: Validate Fallow envelopes")
-        )(workflowText);
-        const allLaneLoopIndex = fallowStepText.indexOf(
-          "          for lane in health boundaries flags security fix-preview; do"
-        );
-        const promotedLaneCheckIndex = fallowStepText.indexOf(
-          "          for lane in audit dead-code; do",
-          allLaneLoopIndex + 1
-        );
-        const outputWriteIndex = fallowStepText.indexOf('          } >> "$GITHUB_OUTPUT"');
-        const deferredExitIndex = fallowStepText.indexOf("          if (( blocking_status != 0 )); then");
 
-        expect(fallowStepText).toContain("          blocking_status=0");
-        expect(fallowStepText).toContain('            if run_blocking_fallow "$lane"; then');
-        expect(allLaneLoopIndex).toBeGreaterThan(-1);
-        expect(promotedLaneCheckIndex).toBeGreaterThan(allLaneLoopIndex);
-        expect(outputWriteIndex).toBeGreaterThan(promotedLaneCheckIndex);
-        expect(deferredExitIndex).toBeGreaterThan(outputWriteIndex);
+        // The fallow lane body lives in the beep CLI (one-round-loop P0
+        // inversion): check.yml dispatches `beep ci lane fallow`, and the
+        // deferred-exit ordering (blocking lanes run first, advisory lanes
+        // still execute, envelope existence is checked, THEN blocking
+        // status fails the lane) is owned by runCiFallowLane and pinned by
+        // the ci-lane step-plan tests. Here we pin the workflow contract:
+        // the dispatch line, and envelope validation as a separate
+        // always()-guarded step after the run step.
+        const dispatchIndex = workflowText.indexOf(
+          'bun run beep ci lane fallow --base "${{ steps.base.outputs.base_ref }}"'
+        );
+        const validateStepIndex = workflowText.indexOf("      - name: Validate Fallow envelopes", dispatchIndex);
+        const uploadStepIndex = workflowText.indexOf("      - name: Upload Fallow envelopes", validateStepIndex);
+
+        expect(dispatchIndex).toBeGreaterThan(-1);
+        expect(workflowText).not.toContain("run_blocking_fallow()");
+        expect(validateStepIndex).toBeGreaterThan(dispatchIndex);
+        expect(uploadStepIndex).toBeGreaterThan(validateStepIndex);
+
+        // Deferred-exit ordering, from the lane's own step plan: both
+        // blocking lanes precede every advisory lane, and envelope
+        // validation steps come last when replayed locally.
+        const plan = ciLaneStepsForTesting(
+          "/repo",
+          "fallow",
+          CiLaneRunOptions.make({
+            affected: false,
+            base: "origin/main",
+            head: "HEAD",
+            summarize: false,
+            mode: "affected",
+            to: "HEAD",
+            last: false,
+            changesetStatus: false,
+            validateEnvelopes: true,
+          })
+        );
+        const labels = A.map(plan, (step) => step.label);
+        expect(A.take(labels, 2)).toEqual(["ci:fallow:audit", "ci:fallow:dead-code"]);
+        expect(labels).toContain("ci:fallow:envelope-check:dead-code");
       }).pipe(provideScopedLayer(FileSystemLayer))
     ));
 

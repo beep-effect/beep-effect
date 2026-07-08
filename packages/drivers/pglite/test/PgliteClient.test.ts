@@ -34,17 +34,20 @@ describe("PgliteError", () => {
 });
 
 describe("PgliteClient layer lifecycle", () => {
-  it.effect("closes the managed PGlite instance when the layer scope closes", () =>
-    Effect.gen(function* () {
-      const scope = yield* Scope.make();
-      const context = yield* Layer.buildWithScope(makeLayer(), scope);
-      const client = Context.get(context, PgliteClient);
+  it.effect(
+    "closes the managed PGlite instance when the layer scope closes",
+    () =>
+      Effect.gen(function* () {
+        const scope = yield* Scope.make();
+        const context = yield* Layer.buildWithScope(makeLayer(), scope);
+        const client = Context.get(context, PgliteClient);
 
-      yield* Scope.close(scope, Exit.void);
+        yield* Scope.close(scope, Exit.void);
 
-      const queryAfterClose = yield* Effect.exit(Effect.tryPromise(() => client.pglite.query("SELECT 1")));
-      expect(queryAfterClose._tag).toBe("Failure");
-    })
+        const queryAfterClose = yield* Effect.exit(Effect.tryPromise(() => client.pglite.query("SELECT 1")));
+        expect(queryAfterClose._tag).toBe("Failure");
+      }),
+    { timeout: 90_000 }
   );
 });
 

@@ -16,6 +16,7 @@ import { Argument, Command } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
 import { formatDurationSeconds, makeTaggedLogger, printLines } from "../../internal/cli/Printer.js";
 import { CiCommandError } from "./Ci.errors.js";
+import { ciLaneCommand, ciLocalCommand } from "./CiLane.js";
 
 const $I = $RepoCliId.create("commands/Ci/Ci.command");
 
@@ -316,8 +317,13 @@ const appendTurboSummaryCommand = Command.make(
  * @since 0.0.0
  */
 export const ciCommand = Command.make("ci", {}, () =>
-  printLines(["CI commands:", "- bun run beep ci append-turbo-summary"])
+  printLines([
+    "CI commands:",
+    "- bun run beep ci append-turbo-summary",
+    "- bun run beep ci lane <id> [flags] (or --list)",
+    "- bun run beep ci local [--lanes ids] [--fast] [--affected]",
+  ])
 ).pipe(
   Command.withDescription("Continuous integration helper commands"),
-  Command.withSubcommands([appendTurboSummaryCommand])
+  Command.withSubcommands([appendTurboSummaryCommand, ciLaneCommand, ciLocalCommand])
 );

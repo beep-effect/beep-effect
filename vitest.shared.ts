@@ -22,7 +22,9 @@ const configStringEqualsSync = (name: string, expected: string): boolean =>
 export const vitestCoverageReportOnly = configStringEqualsSync("VITEST_COVERAGE_REPORT_ONLY", "1");
 // Env flags do not survive every spawn chain (root script -> turbo ->
 // package script -> vitest); the vitest process's own argv is authoritative.
-const vitestCoverageRunActive =
+// Exported so per-package configs can honor the same coverage-aware timeout
+// policy instead of clamping it back to a coverage-unaware constant.
+export const vitestCoverageRunActive =
   vitestCoverageReportOnly ||
   configStringEqualsSync("VITEST_COVERAGE_RATCHET", "1") ||
   process.argv.includes("--coverage");

@@ -1,0 +1,156 @@
+// One-Round Loop task graph. Ordering: P0 first (the dogfood rule in
+// SPEC.md §DoD.2 requires `beep ci local` before any other packet PR),
+// then P1, then P2 items in any order, then P3 stretch, then P4 close.
+{
+  "schemaVersion": "one-round-loop/tasks/v1",
+  "updated": "2026-07-07",
+  "rankingMethod": "P0 enables the dogfood rule and therefore ranks first; P1 is the second-highest-leverage item from the crispening reflection; P2 items are independent of each other; P3 stretch items may close wont_fix with rationale (D6); P4 closes.",
+  "tasks": [
+    {
+      "id": "orl-001",
+      "rank": 1,
+      "phase": "P0",
+      "status": "done",
+      "title": "beep ci lane <id> — lane definitions in the CLI",
+      "detail": "Add `lane` subcommand beside append-turbo-summary in commands/Ci/. FIRST deliverable: the lane-by-lane parity table classifying every check.yml lane as cli-runnable / workflow-gated / ci-native (D2) — early research's 5-lane delta understates it (pre-push also differs in SHAPE: full vs affected/summarized, and Security has sub-gates). Then express every cli-runnable/workflow-gated lane body as GithubCheckLaneSpec-style steps reusing QualityTaskStep + the Tasks.ts runners; GitHub-context orchestration (docgen lane-gate, desktop-IPC path filter, fallow envelope-validation/artifacts, commitlint range, base-pinned gitleaks config) STAYS in YAML and passes results as flags (--base, --mode, --affected, --summarize). Machine-readable --list with per-lane class (Verification Matrix row 3; no equivalents accepted). Extend the bin-main fast path to the ci verb."
+    },
+    {
+      "id": "orl-002",
+      "rank": 2,
+      "phase": "P0",
+      "status": "done",
+      "blockedBy": ["orl-001"],
+      "title": "beep ci local — faithful local battery",
+      "detail": "Runs all locally-runnable lanes from the same definitions: github-checks pre-push coverage PLUS the delta (Coverage Regression, Codegen Drift, Commitlint, Desktop IPC). --lanes selection, --fast preset (skip coverage/test-integration/nix), --affected. dependency-review documented as CI-only. Local verdict parity fixture proof (Verification Matrix row 2)."
+    },
+    {
+      "id": "orl-003",
+      "rank": 3,
+      "phase": "P0",
+      "status": "done",
+      "blockedBy": ["orl-001", "orl-002"],
+      "title": "Thin check.yml to lane dispatch",
+      "detail": "Blocked on BOTH the lane definitions and `beep ci local` — thinning never precedes the faithful local battery. Matrix case-block and cli-runnable standalone jobs become `bun run beep ci lane <id> [flags]`; workflow-gated orchestration stays in YAML; ci-native jobs (gitleaks image, OSV action, dependency-review) keep workflow bodies, marked CI-native in --list. FENCE: 17 required-check context names unchanged (ruleset 10240248) or same-change gh api update. Parity proof per D9: temporary workflow_dispatch shadow workflow dispatching every lane via `beep ci lane` on the SAME head SHA as the unmodified check.yml run; lane set + CLI-echoed commands + verdicts must match; run IDs recorded in history/ BEFORE the thinning commit replaces check.yml bodies. This PR itself dogfoods: `beep ci local` from its own branch before push (D4)."
+    },
+    {
+      "id": "orl-010",
+      "rank": 4,
+      "phase": "P1",
+      "status": "pending",
+      "blockedBy": ["orl-003"],
+      "title": "Env-max property options helper + configureGlobal floor",
+      "detail": "@beep/test-utils helper: effective numRuns = max(BEEP_FC_NUM_RUNS, inline ?? default); model on assertSchemaArbitraryDecodesToSelf. fc.configureGlobal floor in vitest.setup.ts for options-less asserts. Existing inline values are floors (fence 3)."
+    },
+    {
+      "id": "orl-011",
+      "rank": 5,
+      "phase": "P1",
+      "status": "pending",
+      "blockedBy": ["orl-010"],
+      "title": "numRuns codemod sweep (~278 sites, ~157 files)",
+      "detail": "ts-morph codemod in ops/codemods/ with golden-diff test, following the crispening codemod harness. Scope from a FRESH rg inventory at execution time (2026-07-07 live: 287 numRuns lines / 161 files, 264 fc.assert sites, 53 assertSchemaArbitraryDecodesToSelf calls) and MUST include it.prop/test.prop sites (e.g. drivers/pacer) whose fastCheck params also override globals — migrate or explicitly ledger each. Codex-lane friendly (mechanical). Post-sweep proof: every migrated site's effective runs >= previous inline value."
+    },
+    {
+      "id": "orl-012",
+      "rank": 6,
+      "phase": "P1",
+      "status": "pending",
+      "blockedBy": ["orl-011"],
+      "title": "PR-affected property lane + nightly full sweep",
+      "detail": "A DEDICATED turbo task (own cache key: BEEP_FC_NUM_RUNS in task env, NOT passThroughEnv — otherwise low-run cached results satisfy the lane; never reuse the regular test task cache); CI lane at 400 runs, --affected, with a FROZEN context name (lands non-required; required flip is a P4 criterion per D3); nightly workflow with schedule + workflow_dispatch and issues:write permission at 1000+ over all suites, opening/updating ONE tracking issue (stable title key, label property-laws-nightly); verify the nightly via manual dispatch, not by waiting for cron. Seeded non-round-tripping fixture proof (Verification Matrix row 4)."
+    },
+    {
+      "id": "orl-020",
+      "rank": 7,
+      "phase": "P2",
+      "status": "pending",
+      "blockedBy": ["orl-003"],
+      "title": "Coverage baseline v2 — raw counts + denominator deltas + auto-add",
+      "detail": "CoveragePackageBaseline gains covered/total per metric (already decoded at CoverageRegression.ts:103, discarded at :223); schema_version 2; regenerate baseline; failure renderer reports count deltas; missing-package warning path becomes auto-add on write (resolves @beep/pacer)."
+    },
+    {
+      "id": "orl-021",
+      "rank": 8,
+      "phase": "P2",
+      "status": "pending",
+      "blockedBy": ["orl-003"],
+      "title": "beep cwd-independence — chdir + escape hatch + shim",
+      "detail": "Lightweight sync root-walk + process.chdir at the VERY TOP of bin.ts — before the fast lint-fix no-op path (bin.ts:17-46) that itself runs before the bin-main import; stash BEEP_INVOCATION_CWD defensively (audit: no consumer today — Worktree re-derives from git worktree list, Yeet passes explicit cwd); `beep` shim ships WITH or AFTER the chdir (never before). Verify: subdir invocations of several commands match root invocations."
+    },
+    {
+      "id": "orl-022",
+      "rank": 9,
+      "phase": "P2",
+      "status": "pending",
+      "blockedBy": ["orl-003"],
+      "title": "beep quality regen-generated + conflict recipe",
+      "detail": "An ORDERED per-artifact manifest (artifact path(s) -> exact regen command -> idempotency check), not a generic wrapper: write mechanisms differ (jsdoc-inventory writes directly; jsdoc-ratchet + knip use --write-baseline flags; coverage baseline is a root script; fallow dead-code baseline is a fallow subcommand). Scope per decisions-locked R3; effect-laws allowlist EXCLUDED (validation input, no writer exists); must preserve hand-curated ledger entries (exception statuses). Document the merge-conflict recipe (checkout --ours on generated paths -> regen -> continue) where agents will find it; optional local merge-driver bootstrap."
+    },
+    {
+      "id": "orl-023",
+      "rank": 10,
+      "phase": "P2",
+      "status": "pending",
+      "blockedBy": ["orl-003"],
+      "title": "SchemaUtils.withNormalizedCheck + migrations",
+      "detail": "New file SchemaUtils/withNormalizedCheck.ts + alphabetized barrel entry (style reference: withConstructorDefaults.ts, home of withConstantDefault/withNoneDefault; first check-based combinator). Options bag with caller-supplied identifier/title/description/message + optional equivalence (default from the schema). dtslint + arbitrary round-trip law. Migrate venice-ai (VeniceAI.service.ts:75-95), phoenix (Phoenix.config.ts:16-36), m365 (M365.config.ts:139-159) wire-identically; uspto (Uspto.config.ts:30-41) optional — adds the missing guard, needs its own parity note (fence 4). TSConfigJsonKey is NOT a target."
+    },
+    {
+      "id": "orl-030",
+      "rank": 11,
+      "phase": "P3",
+      "status": "pending",
+      "blockedBy": ["orl-003"],
+      "title": "S1 Fallow envelope file/line/symbol",
+      "detail": "FallowEnvelope.schema.ts findings gain OPTIONAL file/line/symbol (cheap); real work: rewrite the normalize* builders in FallowQuality.command.ts to map over the already-decoded raw arrays instead of unfolding integer counts (raw location data is decoded then discarded today). Audit lane is counts-only — only duplication instances[].file (+ unparsed start_line) liftable. Closable wont_fix with rationale."
+    },
+    {
+      "id": "orl-031",
+      "rank": 12,
+      "phase": "P3",
+      "status": "pending",
+      "blockedBy": ["orl-003"],
+      "title": "S2 yeet publish committed-branch mode",
+      "detail": "Reuse the existing skipCommit fork (Handler.ts:2314 via shouldSkipCommitForReusablePublish) without the --reuse-verified durable-state requirement: branch-ahead + clean tree -> skip stage/commit, KEEP proofStep+pushStep+ensurePullRequest+monitorSteps; relax the pre-dispatch --message requirement (Handler.ts:2135). Closable wont_fix with rationale."
+    },
+    {
+      "id": "orl-032",
+      "rank": 13,
+      "phase": "P3",
+      "status": "pending",
+      "blockedBy": ["orl-003"],
+      "title": "S3 worktree agent-lane adoption",
+      "detail": "Measure `beep worktree new` end-to-end (already bun-installs, Worktree.command.ts:716); close agent-lane adoption gaps (candidates: branch-from-base, list subcommand, --delete-branch on remove); document as THE parallel-agent-lane path. SEAM: coordinate with explorations/agent-pipeline-velocity + standards/git-worktrees.md — do not fork worktree doctrine. Closable wont_fix with rationale."
+    },
+    {
+      "id": "orl-033",
+      "rank": 14,
+      "phase": "P3",
+      "status": "pending",
+      "blockedBy": ["orl-003"],
+      "title": "S4 CI cancel-rerun + required-check quarantine",
+      "detail": "First classify recent 'operation was canceled' events (benign cancel-in-progress supersession vs infra). Then rerun automation + a quarantine convention for known-red-on-main required checks, or close wont_fix with the classification data. Closable wont_fix with rationale."
+    },
+    {
+      "id": "orl-040",
+      "rank": 15,
+      "phase": "P4",
+      "status": "pending",
+      "blockedBy": [
+        "orl-002",
+        "orl-003",
+        "orl-012",
+        "orl-020",
+        "orl-021",
+        "orl-022",
+        "orl-023",
+        "orl-030",
+        "orl-031",
+        "orl-032",
+        "orl-033"
+      ],
+      "title": "Close: DoD + dogfood ledger + required flip + reflection",
+      "detail": "Verification Matrix green; property-lane required-check flip executed and recorded (D3, admin gh api step); dogfood ledger table in history/ (CI rounds per packet PR; every >1-round PR shows root-cause AND local-catch evidence per DoD.2); stretch blockedBy entries accept done OR wont_fix-with-rationale as terminal; /reflect closeout; lint reflection-artifacts green; README + manifest statuses."
+    }
+  ]
+}

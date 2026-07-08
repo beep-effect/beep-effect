@@ -94,6 +94,8 @@ const hasRootCliGlobalFlag = (argv: ReadonlyArray<string>): boolean => argv.some
 const canUseQualityTaskFastPath = (argv: ReadonlyArray<string>): boolean =>
   isQualityTaskName(argv[0]) && !hasRootCliGlobalFlag(argv) && !(argv[0] === "lint" && isLintPolicySubcommand(argv[1]));
 
+const canUseCiFastPath = (argv: ReadonlyArray<string>): boolean => argv[0] === "ci" && !hasRootCliGlobalFlag(argv);
+
 const { BunChildProcessSpawner, BunCrypto, BunHttpClient, BunRuntime, BunServices } = await import(
   "@effect/platform-bun"
 );
@@ -201,7 +203,32 @@ if (canUseQualityTaskFastPath(argv)) {
   }
 }
 
-if (!handledByQualityFastPath) {
+let handledByCiFastPath = false;
+
+if (!handledByQualityFastPath && canUseCiFastPath(argv)) {
+  handledByCiFastPath = true;
+  const [{ ciCommand }, { Command }] = await Promise.all([
+    import("./commands/Ci/index.js"),
+    import("effect/unstable/cli"),
+  ]);
+  const CiLayers = Layer.mergeAll(BunChildProcessSpawner.layer).pipe(Layer.provideMerge(BaseLayers));
+  const ciRootCommand = Command.make("beep-cli").pipe(
+    Command.withDescription("CLI tool for managing beep-effect monorepo packages"),
+    Command.withSubcommands([ciCommand])
+  );
+  const ciProgram = Effect.scoped(
+    Layer.build(CiLayers).pipe(
+      Effect.flatMap(
+        Effect.fnUntraced(function* (context) {
+          return yield* Command.run(ciRootCommand, { version: "0.0.0" }).pipe(Effect.provide(context));
+        })
+      )
+    )
+  );
+  runRepoCliMain(ciProgram);
+}
+
+if (!handledByQualityFastPath && !handledByCiFastPath) {
   const [{ FsUtilsLive, TSMorphServiceLive }, { Command }, { rootCommand }] = await Promise.all([
     import("@beep/repo-utils"),
     import("effect/unstable/cli"),

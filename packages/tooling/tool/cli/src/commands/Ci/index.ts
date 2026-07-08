@@ -18,3 +18,10 @@ export * from "./Ci.command.js";
  * @since 0.0.0
  */
 export * from "./Ci.errors.js";
+/**
+ * Public CI lane definitions export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiLane.js";
