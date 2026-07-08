@@ -3,13 +3,13 @@
   "initiative": {
     "id": "standards-remediation",
     "title": "Standards Inventory Zero",
-    "status": "active",
+    "status": "complete",
     "created": "2026-07-07",
-    "updated": "2026-07-07",
+    "updated": "2026-07-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/standards-remediation",
-  "lifecycle": "active",
+  "lifecycle": "complete",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -33,7 +33,9 @@
     "goals/standards-remediation/GOAL.md",
     "goals/standards-remediation/research/decisions.md"
   ],
-  "researchReports": ["research/decisions.md"],
+  "researchReports": [
+    "research/decisions.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -47,35 +49,47 @@
     {
       "id": "P0",
       "name": "Packet + preflight + draft umbrella PR",
-      "status": "in_progress"
+      "status": "done"
     },
     {
       "id": "P1",
       "name": "Detector bug fixes with fixtures",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "P2",
       "name": "Cluster audits + conversion pilots (rulings)",
-      "status": "pending"
+      "status": "done"
     },
-    { "id": "P3", "name": "Dual-arity waves", "status": "pending" },
+    {
+      "id": "P3",
+      "name": "Dual-arity waves",
+      "status": "done"
+    },
     {
       "id": "P4",
       "name": "Schema-first conversion waves",
-      "status": "pending"
+      "status": "done"
     },
-    { "id": "P5", "name": "JSDoc waves to zero", "status": "pending" },
-    { "id": "P6", "name": "Knip burn-down", "status": "pending" },
+    {
+      "id": "P5",
+      "name": "JSDoc waves to zero",
+      "status": "done"
+    },
+    {
+      "id": "P6",
+      "name": "Knip burn-down",
+      "status": "done"
+    },
     {
       "id": "P7",
       "name": "Effect-laws allowlist challenge",
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "P8",
       "name": "Enforcement flips + merge + close",
-      "status": "pending"
+      "status": "done"
     }
   ],
   "verificationCommands": [
@@ -90,7 +104,7 @@
     "bun run beep lint reflection-artifacts"
   ],
   "stopConditions": [
-    "A §5.3 parity proof fails (encoded/wire snapshot not byte-identical).",
+    "A \u00a75.3 parity proof fails (encoded/wire snapshot not byte-identical).",
     "A ripple sweep would exceed the assigned lane/wave scope.",
     "Any SPEC fence would be violated by the proposed change.",
     "The branch base is red for out-of-scope reasons.",
