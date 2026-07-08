@@ -2438,16 +2438,6 @@
       "reason": "Type alias contains non-schema signals such as function members or runtime handles."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerRunpodEval.ts",
-      "symbol": "makeQualityWorkerRunpodEvalPodCreateInput",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-fn-schema",
-      "line": 443,
-      "owner": "@beep/repo-cli",
-      "reason": "Exception: Runpod API body builder with defaults for an external service request; PodCreateInput is already schema-modeled at the output boundary."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Files/Files.service.ts",
       "symbol": "FilesCommandServiceShape",
       "kind": "exported-interface",

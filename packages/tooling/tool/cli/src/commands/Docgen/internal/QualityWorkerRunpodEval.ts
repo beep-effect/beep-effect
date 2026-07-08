@@ -11,7 +11,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { layerNodeSdkServerTraces, ServerObservabilityConfig } from "@beep/observability/server";
-import { hashPublicTextSha256 } from "@beep/repo-ai-metrics";
+import { hashPublicTextSha256, shellQuote } from "@beep/repo-ai-metrics";
 import { DomainError } from "@beep/repo-utils";
 import {
   CreatePodRequest,
@@ -25,14 +25,18 @@ import {
 } from "@beep/runpod";
 import { LiteralKit } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { Console, DateTime, Duration, Effect, flow, Layer, Order, pipe, Ref, Result, Schedule } from "effect";
+import { Console, Duration, Effect, flow, Layer, Order, pipe, Ref, Result, Schedule } from "effect";
 import * as A from "effect/Array";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import * as jsonc from "jsonc-parser";
+import {
+  DEFAULT_JSON_PRETTY_MAX_LENGTH,
+  encodeCommandJson,
+  renderPrettyCommandJson,
+} from "../../../internal/cli/Json.js";
+import { errorMessage as cliErrorMessage, durationMsSince, timestampIso } from "../../../internal/cli/Timing.js";
 import { DocgenQualityReport } from "./Quality.js";
 import {
   analyzeDocgenQualityWorkerEval,
@@ -54,7 +58,6 @@ const OLLAMA_PORT = 11434;
 const OLLAMA_PORT_MAPPING = "11434/http";
 const RUNPOD_PYTORCH_IMAGE = "runpod/pytorch:2.8.0-py3.11-cuda12.8.1-cudnn-devel-ubuntu22.04";
 const OLLAMA_INSTALL_SCRIPT_SHA256 = "25f64b810b947145095956533e1bdf56eacea2673c55a7e586be4515fc882c9f";
-const JSON_FORMAT_MAX_LENGTH = 500_000;
 
 class OllamaTagsModel extends S.Class<OllamaTagsModel>($I`OllamaTagsModel`)(
   {
@@ -91,8 +94,6 @@ const VerifiedGpuTypeIds24Gb = [
   "NVIDIA GeForce RTX 3090",
   "NVIDIA GeForce RTX 3090 Ti",
 ] as const;
-
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
 
 const DocgenQualityWorkerRunpodEvalTemplateStrategy = LiteralKit([
   "explicit-template",
@@ -300,36 +301,17 @@ type AcquiredRunpodPod = {
   readonly template: DocgenQualityWorkerRunpodEvalTemplate;
 };
 
-const timestampIso = (): string => DateTime.formatIso(DateTime.nowUnsafe());
-
-const durationMsSince = (startedAtMs: number): number =>
-  Math.max(0, Math.round(globalThis.performance.now() - startedAtMs));
-
-const errorMessage = (error: unknown): string =>
-  P.isObject(error) && P.hasProperty(error, "message") && P.isString(error.message)
-    ? error.message
-    : "Unknown Runpod worker eval failure.";
+const errorMessage = (error: unknown): string => cliErrorMessage(error, "Unknown Runpod worker eval failure.");
 
 const renderJson = Effect.fn("DocgenQualityWorkerRunpodEval.renderJson")(function* (value: unknown) {
-  const encoded = yield* encodeJson(value).pipe(
+  const encoded = yield* encodeCommandJson(value).pipe(
     Effect.mapError(DomainError.newCause("Failed to encode docgen Runpod worker eval JSON."))
   );
-
-  if (encoded.length > JSON_FORMAT_MAX_LENGTH) {
-    return `${encoded}\n`;
-  }
-
-  const edits = jsonc.format(encoded, undefined, {
-    tabSize: 2,
-    insertSpaces: true,
-  });
-  return `${jsonc.applyEdits(encoded, edits)}\n`;
+  return renderPrettyCommandJson(encoded, { maxLength: DEFAULT_JSON_PRETTY_MAX_LENGTH });
 });
 
 const hashPublicIdentifier = (value: string): Effect.Effect<string, DomainError> =>
   hashPublicTextSha256(value).pipe(Effect.mapError(DomainError.newCause("Failed to hash Runpod eval metadata.")));
-
-const shellQuote = (value: string): string => `'${Str.replaceAll("'", "'\"'\"'")(value)}'`;
 
 const ollamaBootstrapCommand = (model: string): ReadonlyArray<string> => {
   // TODO(effect-native-migration): model schema
@@ -420,6 +402,22 @@ const gpuTypeIdsFor = ({
 
 const minRamPerGpuFor = (allow24GbFallback: boolean): number => (allow24GbFallback ? 24 : 48);
 
+class QualityWorkerRunpodEvalPodCreateInputOptions extends S.Class<QualityWorkerRunpodEvalPodCreateInputOptions>(
+  $I`QualityWorkerRunpodEvalPodCreateInputOptions`
+)(
+  {
+    gpuTypeIds: S.Array(S.String),
+    imageName: S.optionalKey(S.String),
+    minRamPerGpuGb: S.Finite,
+    model: S.String,
+    podName: S.String,
+    templateId: S.optionalKey(S.String),
+  },
+  $I.annote("QualityWorkerRunpodEvalPodCreateInputOptions", {
+    description: "Input options for building a Runpod worker eval create-pod request.",
+  })
+) {}
+
 /**
  * Build the Runpod create-pod body for an Ollama worker eval host.
  *
@@ -447,14 +445,7 @@ export const makeQualityWorkerRunpodEvalPodCreateInput = ({
   model,
   podName,
   templateId,
-}: {
-  readonly gpuTypeIds: ReadonlyArray<string>;
-  readonly imageName?: string;
-  readonly minRamPerGpuGb: number;
-  readonly model: string;
-  readonly podName: string;
-  readonly templateId?: string;
-}): PodCreateInput =>
+}: QualityWorkerRunpodEvalPodCreateInputOptions): PodCreateInput =>
   PodCreateInput.make({
     cloudType: "COMMUNITY",
     computeType: "GPU",

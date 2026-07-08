@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 
-export * from "@beep/repo-cli/commands/Docgen/index";
-export * from "@beep/repo-cli/commands/Docgen/internal/Local";
-export * from "@beep/repo-cli/commands/Docgen/internal/Operations";
-export * from "@beep/repo-cli/commands/Docgen/internal/Quality";
-export * from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval";
-export * from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval";
+export * from "../commands/Docgen/index.js";
+export * from "../commands/Docgen/internal/Local.js";
+export * from "../commands/Docgen/internal/Operations.js";
+export * from "../commands/Docgen/internal/Quality.js";
+export * from "../commands/Docgen/internal/QualityWorkerEval.js";
+export * from "../commands/Docgen/internal/QualityWorkerRunpodEval.js";

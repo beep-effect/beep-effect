@@ -20026,6 +20026,94 @@
       "description": "Supported AST mutation categories required by create-package."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
+      "symbol": "DocgenAggregateResult",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenAggregateResult",
+      "description": "Per-package aggregated docs result."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
+      "symbol": "DocgenAnalysisSummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenAnalysisSummary",
+      "description": "Summary counts for a package analysis run."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
+      "symbol": "DocgenConfigDocument",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenConfigDocument",
+      "description": "Parsed docgen.json document used by the command suite."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
+      "symbol": "DocgenExportAnalysis",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenExportAnalysis",
+      "description": "Analysis finding for a single export or module-level doc requirement."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
+      "symbol": "DocgenExportKind",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenExportKind",
+      "description": "Export kind surfaced by analysis."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
+      "symbol": "DocgenGenerationResult",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenGenerationResult",
+      "description": "Per-package docgen generation result."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
+      "symbol": "DocgenIssuePriority",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenIssuePriority",
+      "description": "Issue priority used by analysis findings."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
+      "symbol": "DocgenPackageAnalysis",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenPackageAnalysis",
+      "description": "Package-level analysis document written by docgen analyze."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
+      "symbol": "DocgenPackageStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenPackageStatus",
+      "description": "Workspace docgen status derived from config and generated output presence."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
+      "symbol": "DocgenWorkspacePackage",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenWorkspacePackage",
+      "description": "Workspace package metadata used by docgen commands."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/Docgen.schemas.ts",
+      "symbol": "ResolveDocgenWorkspacePackageOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ResolveDocgenWorkspacePackageOptions",
+      "description": "Resolved workspace package options for docgen"
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Local.ts",
       "symbol": "DocgenLocalFullReason",
       "kind": "schema-class",
@@ -20064,134 +20152,6 @@
       "owner": "@beep/repo-cli",
       "identity": "DocgenLocalTurboTask",
       "description": "Turbo dry-run package summary used by local docgen."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
-      "symbol": "DocgenAggregateResult",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DocgenAggregateResult",
-      "description": "Per-package aggregated docs result."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
-      "symbol": "DocgenAnalysisSummary",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DocgenAnalysisSummary",
-      "description": "Summary counts for a package analysis run."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
-      "symbol": "DocgenConfigDocument",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DocgenConfigDocument",
-      "description": "Parsed docgen.json document used by the command suite."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
-      "symbol": "DocgenExportAnalysis",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DocgenExportAnalysis",
-      "description": "Analysis finding for a single export or module-level doc requirement."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
-      "symbol": "DocgenExportKind",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "DocgenExportKind",
-      "description": "Export kind surfaced by analysis."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
-      "symbol": "DocgenGenerationResult",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DocgenGenerationResult",
-      "description": "Per-package docgen generation result."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
-      "symbol": "DocgenIssuePriority",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "DocgenIssuePriority",
-      "description": "Issue priority used by analysis findings."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
-      "symbol": "DocgenPackageAnalysis",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DocgenPackageAnalysis",
-      "description": "Package-level analysis document written by docgen analyze."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
-      "symbol": "DocgenPackageStatus",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "DocgenPackageStatus",
-      "description": "Workspace docgen status derived from config and generated output presence."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Operations.ts",
-      "symbol": "DocgenWorkspacePackage",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DocgenWorkspacePackage",
-      "description": "Workspace package metadata used by docgen commands."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Quality.ts",
-      "symbol": "DocgenQualityFindingCode",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "DocgenQualityFindingCode",
-      "description": "Typed finding code emitted by the v1 quality rubric."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Quality.ts",
-      "symbol": "DocgenQualityReport",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DocgenQualityReport",
-      "description": "Consolidated report emitted by beep docgen quality."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Quality.ts",
-      "symbol": "DocgenQualityScopeMode",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "DocgenQualityScopeMode",
-      "description": "Scope mode supported by docgen quality."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Quality.ts",
-      "symbol": "DocgenQualityScoreMode",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "DocgenQualityScoreMode",
-      "description": "Optional advisory scoring mode for docgen quality."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Quality.ts",
-      "symbol": "DocgenQualitySubject",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DocgenQualitySubject",
-      "description": "Stable evidence packet for one exported-symbol JSDoc quality review."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Quality.ts",
-      "symbol": "DocgenQualityTier",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "DocgenQualityTier",
-      "description": "Quality tier assigned to a JSDoc review subject."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/QualityWorkerEval.ts",
@@ -20298,6 +20258,142 @@
       "description": "Options used to create an ephemeral Runpod pod and execute a read-only worker eval."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts",
+      "symbol": "DocgenQualityDiagnostic",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenQualityDiagnostic",
+      "description": "Nearby TypeScript diagnostic carried as quality-review evidence."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts",
+      "symbol": "DocgenQualityFinding",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenQualityFinding",
+      "description": "Single typed quality finding for one JSDoc subject."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts",
+      "symbol": "DocgenQualityFindingCode",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenQualityFindingCode",
+      "description": "Typed finding code emitted by the v1 quality rubric."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts",
+      "symbol": "DocgenQualityPackageReport",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenQualityPackageReport",
+      "description": "Package-scoped JSDoc quality report."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts",
+      "symbol": "DocgenQualityPackageStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenQualityPackageStatus",
+      "description": "Completion status for a package-local docgen quality analysis."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts",
+      "symbol": "DocgenQualityRemediationPacket",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenQualityRemediationPacket",
+      "description": "Bounded advisory packet for future Codex remediation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts",
+      "symbol": "DocgenQualityReport",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenQualityReport",
+      "description": "Consolidated report emitted by beep docgen quality."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts",
+      "symbol": "DocgenQualityReview",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenQualityReview",
+      "description": "Rubric outcome for one JSDoc quality subject."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts",
+      "symbol": "DocgenQualityScopeMode",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenQualityScopeMode",
+      "description": "Scope mode supported by docgen quality."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts",
+      "symbol": "DocgenQualityScoreMode",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenQualityScoreMode",
+      "description": "Optional advisory scoring mode for docgen quality."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts",
+      "symbol": "DocgenQualitySubject",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenQualitySubject",
+      "description": "Stable evidence packet for one exported-symbol JSDoc quality review."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts",
+      "symbol": "DocgenQualitySubjectCandidate",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenQualitySubjectCandidate",
+      "description": "Subject candidate for docgen quality analysis"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts",
+      "symbol": "DocgenQualitySummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenQualitySummary",
+      "description": "Aggregate summary for a JSDoc quality run."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts",
+      "symbol": "DocgenQualityTier",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenQualityTier",
+      "description": "Quality tier assigned to a JSDoc review subject."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.schemas.ts",
+      "symbol": "DocgenRelatedSymbol",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DocgenRelatedSymbol",
+      "description": "Nearby exported symbol carried as review context."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.subjects.ts",
+      "symbol": "PackageSubjectCandidateResult",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "PackageSubjectCandidateResult",
+      "description": "Result of collecting package subject candidates for docgen quality analysis"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.subjects.ts",
+      "symbol": "QualityRuntimeBudget",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "QualityRuntimeBudget",
+      "description": "Wall-clock budget used while collecting package quality subjects."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Docs/Docs.command.ts",
       "symbol": "DocsSection",
       "kind": "tagged-union",
@@ -20314,7 +20410,7 @@
       "description": "A failure raised while preparing or applying a file curation operation."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ArchivePoorCandidates.schemas.ts",
       "symbol": "ArchivePoorCandidatesEntry",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20322,7 +20418,7 @@
       "description": "Image candidate assessed by files archive-poor-candidates."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ArchivePoorCandidates.schemas.ts",
       "symbol": "ArchivePoorCandidatesManifest",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20330,7 +20426,7 @@
       "description": "JSON manifest of image candidates archived by files archive-poor-candidates."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ArchivePoorCandidates.schemas.ts",
       "symbol": "ArchivePoorCandidatesManifestOptions",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20338,7 +20434,7 @@
       "description": "JSON-safe options recorded by files archive-poor-candidates."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ArchivePoorCandidates.schemas.ts",
       "symbol": "ArchivePoorCandidatesManifestSummary",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20346,7 +20442,7 @@
       "description": "JSON-safe summary counts recorded by files archive-poor-candidates."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ArchivePoorCandidates.schemas.ts",
       "symbol": "ArchivePoorCandidatesOptions",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20354,7 +20450,7 @@
       "description": "Validated options used by files archive-poor-candidates."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ArchivePoorCandidates.schemas.ts",
       "symbol": "ArchivePoorCandidatesPlan",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20362,7 +20458,7 @@
       "description": "Planned image candidate archival entries plus skipped source entries."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ArchivePoorCandidates.schemas.ts",
       "symbol": "ArchivePoorCandidatesSkippedEntry",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20370,7 +20466,7 @@
       "description": "A direct source entry skipped by files archive-poor-candidates with a machine-readable reason."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ArchivePoorCandidates.schemas.ts",
       "symbol": "ArchivePoorCandidatesSkippedReason",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -20378,7 +20474,7 @@
       "description": "Reason a source entry was not assessed for candidate-quality archival."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ArchivePoorCandidates.schemas.ts",
       "symbol": "ArchivePoorCandidatesSummary",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20386,7 +20482,7 @@
       "description": "Summary counts returned by files archive-poor-candidates."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ArchivePoorCandidates.schemas.ts",
       "symbol": "ArchivedSidecarEntry",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20394,23 +20490,7 @@
       "description": "A same-stem sidecar file moved with an archived poor image candidate."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "BorderDetectionKind",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "BorderDetectionKind",
-      "description": "Detected solid-border layout for a dataset image."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "BorderSide",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "BorderSide",
-      "description": "Image side scanned by the border detection operation."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ArchivePoorCandidates.schemas.ts",
       "symbol": "CandidateAssessmentDecision",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -20418,7 +20498,7 @@
       "description": "Whether an assessed image should be kept in place or archived as a poor candidate."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ArchivePoorCandidates.schemas.ts",
       "symbol": "CandidateAssessmentMetrics",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20426,7 +20506,7 @@
       "description": "Resolution-derived metrics used to classify image training-data candidates."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ArchivePoorCandidates.schemas.ts",
       "symbol": "CandidateAssessmentProfile",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -20434,7 +20514,7 @@
       "description": "Dataset-quality assessment profile for files archive-poor-candidates."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/ArchivePoorCandidates.schemas.ts",
       "symbol": "CandidateAssessmentReason",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -20442,55 +20522,23 @@
       "description": "Machine-readable hard-threshold reason for archiving a poor image candidate."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "CreateCaptionFilesOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "CreateCaptionFilesOptions",
-      "description": "Validated options used by files create-captions."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "CreateCaptionFilesPlan",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "CreateCaptionFilesPlan",
-      "description": "Planned caption sidecar entries plus skipped source entries."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "CreateCaptionFilesPlanEntry",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "CreateCaptionFilesPlanEntry",
-      "description": "A same-stem caption sidecar planned for an image file."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "CreateCaptionFilesSkippedEntry",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "CreateCaptionFilesSkippedEntry",
-      "description": "A direct source entry skipped by files create-captions with a machine-readable reason."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "CreateCaptionFilesSkippedReason",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Borders.schemas.ts",
+      "symbol": "BorderDetectionKind",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
-      "identity": "CreateCaptionFilesSkippedReason",
-      "description": "Reason a source entry was not selected for caption sidecar creation."
+      "identity": "BorderDetectionKind",
+      "description": "Detected solid-border layout for a dataset image."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "CreateCaptionFilesSummary",
-      "kind": "schema-class",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Borders.schemas.ts",
+      "symbol": "BorderSide",
+      "kind": "literal-kit",
       "owner": "@beep/repo-cli",
-      "identity": "CreateCaptionFilesSummary",
-      "description": "Summary counts returned by files create-captions."
+      "identity": "BorderSide",
+      "description": "Image side scanned by the border detection operation."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Borders.schemas.ts",
       "symbol": "CropBordersOptions",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20498,7 +20546,7 @@
       "description": "Validated options used by the solid-border crop operation."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Borders.schemas.ts",
       "symbol": "CropBordersPlan",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20506,7 +20554,7 @@
       "description": "Planned in-place crops for image files with detected near-solid borders."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Borders.schemas.ts",
       "symbol": "CropBordersPlanEntry",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20514,7 +20562,7 @@
       "description": "Image crop planned from detected near-solid border measurements."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Borders.schemas.ts",
       "symbol": "CropBordersSummary",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20522,7 +20570,7 @@
       "description": "Summary counts returned by files crop-borders."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Borders.schemas.ts",
       "symbol": "DetectBorderSideMeasurement",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20530,7 +20578,7 @@
       "description": "Measured near-solid border width and sampled edge color for one image side."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Borders.schemas.ts",
       "symbol": "DetectBordersEntry",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20538,7 +20586,7 @@
       "description": "Image file analyzed for solid or near-solid canvas borders."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Borders.schemas.ts",
       "symbol": "DetectBordersOptions",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20546,7 +20594,7 @@
       "description": "Validated options used by the solid-border detection operation."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Borders.schemas.ts",
       "symbol": "DetectBordersReport",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20554,7 +20602,7 @@
       "description": "JSON-safe report of solid-border detection results."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Borders.schemas.ts",
       "symbol": "DetectBordersSkippedEntry",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20562,7 +20610,7 @@
       "description": "A direct source entry skipped by files detect-borders with a machine-readable reason."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Borders.schemas.ts",
       "symbol": "DetectBordersSkippedReason",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -20570,7 +20618,7 @@
       "description": "Reason a source entry was not analyzed for solid borders."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Borders.schemas.ts",
       "symbol": "DetectBordersSummary",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20578,247 +20626,7 @@
       "description": "Summary counts returned by files detect-borders."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "DetectFacesEntry",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DetectFacesEntry",
-      "description": "Image file analyzed for detectable human faces."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "DetectFacesFlag",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "DetectFacesFlag",
-      "description": "Machine-readable face triage flag emitted for an analyzed image."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "DetectFacesOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DetectFacesOptions",
-      "description": "Validated options used by the face detection operation."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "DetectFacesReport",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DetectFacesReport",
-      "description": "JSON-safe report of face detection results."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "DetectFacesReportOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DetectFacesReportOptions",
-      "description": "JSON-safe options recorded by files detect-faces."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "DetectFacesSkippedEntry",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DetectFacesSkippedEntry",
-      "description": "A direct source entry skipped by files detect-faces with a machine-readable reason."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "DetectFacesSkippedReason",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "DetectFacesSkippedReason",
-      "description": "Reason a source entry was not selected for face detection."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "DetectFacesSummary",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DetectFacesSummary",
-      "description": "Summary counts returned by files detect-faces."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "FfprobeOutput",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "FfprobeOutput",
-      "description": "JSON document emitted by ffprobe stream probing."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "FfprobeSideData",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "FfprobeSideData",
-      "description": "Side-data entry returned by ffprobe for a video stream."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "FfprobeStream",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "FfprobeStream",
-      "description": "Video stream metadata returned by ffprobe."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "ImageSizeMetadata",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "ImageSizeMetadata",
-      "description": "Dimension metadata returned by the image-size package."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "MediaDimensions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "MediaDimensions",
-      "description": "Pixel dimensions discovered from an image or video file."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "MediaKind",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "MediaKind",
-      "description": "The media probing strategy used for a selected file."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "NormalizeFilesOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "NormalizeFilesOptions",
-      "description": "Validated options used by the image normalization operation."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "NormalizeImageFormat",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "NormalizeImageFormat",
-      "description": "Canonical image output format emitted by the normalize command."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "NormalizeImageFormatInput",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "NormalizeImageFormatInput",
-      "description": "Image output format accepted by the normalize command."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "NormalizeManifest",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "NormalizeManifest",
-      "description": "JSON manifest of source-to-output transforms produced by files normalize."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "NormalizeManifestOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "NormalizeManifestOptions",
-      "description": "JSON-safe options recorded in the normalize manifest."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "NormalizeManifestSummary",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "NormalizeManifestSummary",
-      "description": "JSON-safe summary counts recorded by files normalize."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "NormalizePlan",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "NormalizePlan",
-      "description": "Planned image normalization entries plus skipped source entries."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "NormalizePlanEntry",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "NormalizePlanEntry",
-      "description": "A source-to-output image transform planned by files normalize."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "NormalizeSkippedEntry",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "NormalizeSkippedEntry",
-      "description": "A direct source entry skipped by files normalize with a machine-readable reason."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "NormalizeSkippedReason",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "NormalizeSkippedReason",
-      "description": "Reason a source entry was not selected for image normalization."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "NormalizeSummary",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "NormalizeSummary",
-      "description": "Summary counts returned by files normalize."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "ProcessFilesFailurePolicy",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "ProcessFilesFailurePolicy",
-      "description": "Controls whether files process returns a failing exit code when source processing records fail."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "ProcessFilesOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "ProcessFilesOptions",
-      "description": "Validated options used by files process."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "ProcessFilesSummary",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "ProcessFilesSummary",
-      "description": "Summary counts returned by files process."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "RenamePlan",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "RenamePlan",
-      "description": "Planned rename entries plus direct regular files skipped before planning."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "RenamePlanEntry",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "RenamePlanEntry",
-      "description": "A single source-to-target file rename planned by a files operation."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Borders.schemas.ts",
       "symbol": "RgbColor",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20826,7 +20634,307 @@
       "description": "RGB color sampled from an image border."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/CreateCaptions.schemas.ts",
+      "symbol": "CreateCaptionFilesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CreateCaptionFilesOptions",
+      "description": "Validated options used by files create-captions."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/CreateCaptions.schemas.ts",
+      "symbol": "CreateCaptionFilesPlan",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CreateCaptionFilesPlan",
+      "description": "Planned caption sidecar entries plus skipped source entries."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/CreateCaptions.schemas.ts",
+      "symbol": "CreateCaptionFilesPlanEntry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CreateCaptionFilesPlanEntry",
+      "description": "A same-stem caption sidecar planned for an image file."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/CreateCaptions.schemas.ts",
+      "symbol": "CreateCaptionFilesSkippedEntry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CreateCaptionFilesSkippedEntry",
+      "description": "A direct source entry skipped by files create-captions with a machine-readable reason."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/CreateCaptions.schemas.ts",
+      "symbol": "CreateCaptionFilesSkippedReason",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "CreateCaptionFilesSkippedReason",
+      "description": "Reason a source entry was not selected for caption sidecar creation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/CreateCaptions.schemas.ts",
+      "symbol": "CreateCaptionFilesSummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CreateCaptionFilesSummary",
+      "description": "Summary counts returned by files create-captions."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/DetectFaces.schemas.ts",
+      "symbol": "DetectFacesEntry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DetectFacesEntry",
+      "description": "Image file analyzed for detectable human faces."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/DetectFaces.schemas.ts",
+      "symbol": "DetectFacesFlag",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DetectFacesFlag",
+      "description": "Machine-readable face triage flag emitted for an analyzed image."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/DetectFaces.schemas.ts",
+      "symbol": "DetectFacesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DetectFacesOptions",
+      "description": "Validated options used by the face detection operation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/DetectFaces.schemas.ts",
+      "symbol": "DetectFacesReport",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DetectFacesReport",
+      "description": "JSON-safe report of face detection results."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/DetectFaces.schemas.ts",
+      "symbol": "DetectFacesReportOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DetectFacesReportOptions",
+      "description": "JSON-safe options recorded by files detect-faces."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/DetectFaces.schemas.ts",
+      "symbol": "DetectFacesSkippedEntry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DetectFacesSkippedEntry",
+      "description": "A direct source entry skipped by files detect-faces with a machine-readable reason."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/DetectFaces.schemas.ts",
+      "symbol": "DetectFacesSkippedReason",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DetectFacesSkippedReason",
+      "description": "Reason a source entry was not selected for face detection."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/DetectFaces.schemas.ts",
+      "symbol": "DetectFacesSummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DetectFacesSummary",
+      "description": "Summary counts returned by files detect-faces."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Media.schemas.ts",
+      "symbol": "FfprobeOutput",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "FfprobeOutput",
+      "description": "JSON document emitted by ffprobe stream probing."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Media.schemas.ts",
+      "symbol": "FfprobeSideData",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "FfprobeSideData",
+      "description": "Side-data entry returned by ffprobe for a video stream."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Media.schemas.ts",
+      "symbol": "FfprobeStream",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "FfprobeStream",
+      "description": "Video stream metadata returned by ffprobe."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Media.schemas.ts",
+      "symbol": "ImageSizeMetadata",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ImageSizeMetadata",
+      "description": "Dimension metadata returned by the image-size package."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Media.schemas.ts",
+      "symbol": "MediaDimensions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "MediaDimensions",
+      "description": "Pixel dimensions discovered from an image or video file."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Media.schemas.ts",
+      "symbol": "MediaKind",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "MediaKind",
+      "description": "The media probing strategy used for a selected file."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Media.schemas.ts",
+      "symbol": "decodeFfprobeOutputJson",
+      "kind": "codec",
+      "owner": "@beep/repo-cli"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Media.schemas.ts",
+      "symbol": "decodeRotationNumber",
+      "kind": "union",
+      "owner": "@beep/repo-cli"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Normalize.schemas.ts",
+      "symbol": "NormalizeFilesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "NormalizeFilesOptions",
+      "description": "Validated options used by the image normalization operation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Normalize.schemas.ts",
+      "symbol": "NormalizeImageFormat",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "NormalizeImageFormat",
+      "description": "Canonical image output format emitted by the normalize command."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Normalize.schemas.ts",
+      "symbol": "NormalizeImageFormatInput",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "NormalizeImageFormatInput",
+      "description": "Image output format accepted by the normalize command."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Normalize.schemas.ts",
+      "symbol": "NormalizeManifest",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "NormalizeManifest",
+      "description": "JSON manifest of source-to-output transforms produced by files normalize."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Normalize.schemas.ts",
+      "symbol": "NormalizeManifestOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "NormalizeManifestOptions",
+      "description": "JSON-safe options recorded in the normalize manifest."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Normalize.schemas.ts",
+      "symbol": "NormalizeManifestSummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "NormalizeManifestSummary",
+      "description": "JSON-safe summary counts recorded by files normalize."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Normalize.schemas.ts",
+      "symbol": "NormalizePlan",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "NormalizePlan",
+      "description": "Planned image normalization entries plus skipped source entries."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Normalize.schemas.ts",
+      "symbol": "NormalizePlanEntry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "NormalizePlanEntry",
+      "description": "A source-to-output image transform planned by files normalize."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Normalize.schemas.ts",
+      "symbol": "NormalizeSkippedEntry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "NormalizeSkippedEntry",
+      "description": "A direct source entry skipped by files normalize with a machine-readable reason."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Normalize.schemas.ts",
+      "symbol": "NormalizeSkippedReason",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "NormalizeSkippedReason",
+      "description": "Reason a source entry was not selected for image normalization."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Normalize.schemas.ts",
+      "symbol": "NormalizeSummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "NormalizeSummary",
+      "description": "Summary counts returned by files normalize."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Process.schemas.ts",
+      "symbol": "ProcessFilesFailurePolicy",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "ProcessFilesFailurePolicy",
+      "description": "Controls whether files process returns a failing exit code when source processing records fail."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Process.schemas.ts",
+      "symbol": "ProcessFilesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ProcessFilesOptions",
+      "description": "Validated options used by files process."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/Process.schemas.ts",
+      "symbol": "ProcessFilesSummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ProcessFilesSummary",
+      "description": "Summary counts returned by files process."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/SortAndRename.schemas.ts",
+      "symbol": "RenamePlan",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RenamePlan",
+      "description": "Planned rename entries plus direct regular files skipped before planning."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/SortAndRename.schemas.ts",
+      "symbol": "RenamePlanEntry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RenamePlanEntry",
+      "description": "A single source-to-target file rename planned by a files operation."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/SortAndRename.schemas.ts",
       "symbol": "SortAndRenameSummary",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20834,7 +20942,7 @@
       "description": "Summary counts for a sort-and-rename file curation run."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/SortAndRename.schemas.ts",
       "symbol": "SortableFile",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20842,7 +20950,7 @@
       "description": "A direct regular file selected for size-based rename planning."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/SortAndRename.schemas.ts",
       "symbol": "SortableFileCollection",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20850,7 +20958,7 @@
       "description": "Files selected for rename planning plus direct regular files skipped by media filtering."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/StripMetadata.schemas.ts",
       "symbol": "StripMetadataPlan",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20858,7 +20966,7 @@
       "description": "Planned metadata stripping entries plus direct media files skipped before processing."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/StripMetadata.schemas.ts",
       "symbol": "StripMetadataPlanEntry",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20866,7 +20974,7 @@
       "description": "A direct media file selected for metadata stripping."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/StripMetadata.schemas.ts",
       "symbol": "StripMetadataSummary",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -20874,24 +20982,12 @@
       "description": "Summary counts for an image and video metadata stripping run."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Files/internal/StripMetadata.schemas.ts",
       "symbol": "SupportedMetadataImageExtension",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
       "identity": "SupportedMetadataImageExtension",
       "description": "Image file extensions that the metadata-strip command normalizes through sharp."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "decodeFfprobeOutputJson",
-      "kind": "codec",
-      "owner": "@beep/repo-cli"
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Files/Files.schemas.ts",
-      "symbol": "decodeRotationNumber",
-      "kind": "union",
-      "owner": "@beep/repo-cli"
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.errors.ts",

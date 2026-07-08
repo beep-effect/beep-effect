@@ -93,14 +93,14 @@ Purely additive modules inside `@beep/repo-cli`; no group files move.
 Strongest safety nets (Files: vitest + the package's only dtslint file;
 Docgen: 4000-line test via test-kit).
 
-- [ ] Files: split `Files.service.ts` (5680) into service +
+- [x] Files: split `Files.service.ts` (5680) into service +
   `Files.plan.ts`/`Files.render.ts` + semantic `internal/` modules;
   `Files.schemas.ts` (2486) into concept-grouped schema modules;
   `Files.media.ts` consolidation onto shared helpers.
-- [ ] Docgen: `internal/Operations.ts` and `internal/Quality.ts` re-seamed;
+- [x] Docgen: `internal/Operations.ts` and `internal/Quality.ts` re-seamed;
   worker evals adopt shared JSON/exec helpers; `Docgen.command.ts` thinned to
   wiring; tests migrate to facade/test-kit imports (SPEC test policy).
-- [ ] Playbook writeup in `ops/` if any step deviates from SPEC assumptions.
+- [x] Playbook writeup in `ops/` if any step deviates from SPEC assumptions.
 
 ## Phase 4 - Quality Family (Wave 4)
 

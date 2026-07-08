@@ -17,7 +17,7 @@ import {
   ProcessFilesOptions,
   processFiles,
   renderFilesProgressBar,
-} from "@beep/repo-cli/commands/Files";
+} from "@beep/repo-cli/test/Files";
 import { A, O, Str } from "@beep/utils";
 import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
 import { Cause, ConfigProvider, Data, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";

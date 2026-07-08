@@ -10,7 +10,7 @@
   },
   "mission": "Modularize the ~92k-LOC repo CLI: split the 27 files >=1000 LOC along natural seams into canonical role files, extract a shared internal substrate (subprocess, git, JSON/JSONC, ratchet, gh, schema kits), bring touched command groups to full topology compliance, and raise JSDoc on touched files to the .patterns rubric.",
   "currentSourceOfTruth": "SPEC.md",
-  "currentTargetPhase": "P3",
+  "currentTargetPhase": "P4",
   "package": {
     "name": "@beep/repo-cli",
     "path": "packages/tooling/tool/cli",
@@ -72,7 +72,7 @@
     {
       "id": "P3",
       "name": "Pilot groups Files + Docgen",
-      "status": "pending",
+      "status": "completed",
       "exitCriteriaSummary": "Both groups fully role-compliant, tests migrated to facades/test-kits, playbook proven."
     },
     {

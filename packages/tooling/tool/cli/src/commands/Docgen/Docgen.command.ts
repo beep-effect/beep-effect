@@ -8,29 +8,34 @@
  * @since 0.0.0
  */
 
-import { verifyDocgenProofManifest } from "@beep/repo-docgen/ProofManifest";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { renderBiomeJson } from "@beep/repo-utils/schemas/BiomeJson";
 import { Runpod, RunpodConfigInput } from "@beep/runpod";
-import { A, Str } from "@beep/utils";
+import { A, Str, Text } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Config, Console, Effect, FileSystem, flow, Layer, Match, Path, pipe } from "effect";
 import * as R from "effect/Record";
-import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
-import * as jsonc from "jsonc-parser";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
 import { jsonFlag } from "../../internal/cli/Flags.js";
 import { printLines } from "../../internal/cli/Printer.js";
+import { reportDocgenCommandError } from "./Docgen.errors.js";
+import {
+  defaultAnalysisPath,
+  defaultQualityPath,
+  generateAnalysisJson,
+  generateAnalysisReport,
+  logAggregateResults,
+  logGenerationResults,
+  printDocgenIndex,
+  renderDocgenJson,
+} from "./Docgen.render.js";
 import { runDocgenLocal } from "./internal/Local.js";
 import {
   aggregateGeneratedDocs,
   analyzePackageDocumentation,
-  assertNoOrphanDocgenConfigPaths,
   createDocgenConfigDocument,
   discoverDocgenWorkspacePackages,
-  generateAnalysisJson,
-  generateAnalysisReport,
   loadDocgenConfigDocument,
   resolveDocgenWorkspacePackage,
   runDocgenForPackage,
@@ -43,11 +48,9 @@ import {
 } from "./internal/Quality.js";
 import {
   analyzeDocgenQualityWorkerEval,
-  decodeDocgenQualityReportForWorkerEval,
   defaultQualityWorkerEvalPacketLimit,
   defaultQualityWorkerEvalReasoningEffort,
   generateQualityWorkerEvalJson,
-  qualityWorkerEvalSourcePacketLimit,
 } from "./internal/QualityWorkerEval.js";
 import {
   defaultQualityWorkerRunpodEvalOtlpBaseUrl,
@@ -58,7 +61,16 @@ import {
   requiredQualityWorkerRunpodEvalModel,
   runDocgenQualityWorkerRunpodEval,
 } from "./internal/QualityWorkerRunpodEval.js";
-import type { DocgenAggregateResult, DocgenGenerationResult } from "./internal/Operations.js";
+import {
+  includePatternsFromFlag,
+  qualityReportHasBlockingFindings,
+  resolveAnalyzeTargets,
+  resolveGenerateTargets,
+  resolvePackageSelector,
+  resolveQualityWorkerEvalSource,
+  targetHasCurrentDocgenProofManifest,
+  verifyDocgenCheckProofManifests,
+} from "./internal/Targets.js";
 
 const packageFlag = Flag.string("package").pipe(
   Flag.withAlias("p"),
@@ -214,183 +226,6 @@ const localParallelFlag = Flag.integer("parallel").pipe(
   Flag.withDescription("Maximum number of local docgen packages to process concurrently")
 );
 
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
-const renderJson: (value: unknown) => Effect.Effect<string, DomainError> = Effect.fn(function* (value) {
-  const encoded = yield* encodeJson(value).pipe(
-    Effect.mapError(DomainError.newCause("Failed to encode docgen JSON output."))
-  );
-  const edits = jsonc.format(encoded, undefined, {
-    tabSize: 2,
-    insertSpaces: true,
-  });
-  return `${jsonc.applyEdits(encoded, edits)}\n`;
-});
-
-const defaultAnalysisPath = (packagePath: string, json: boolean, path: Path.Path): string =>
-  path.join(packagePath, json ? "JSDOC_ANALYSIS.json" : "JSDOC_ANALYSIS.md");
-const defaultQualityPath = (packagePath: string, json: boolean, path: Path.Path): string =>
-  path.join(packagePath, json ? "JSDOC_QUALITY.json" : "JSDOC_QUALITY.md");
-
-const reportDocgenCommandError = Effect.fn(function* (error: { readonly message: string }) {
-  yield* Console.error(`docgen: ${error.message}`);
-  return yield* failWithReportedExit(`docgen: ${error.message}`);
-});
-
-const logGenerationResults = Effect.fn(function* (results: ReadonlyArray<DocgenGenerationResult>) {
-  const failures = A.filter(results, (result) => !result.success);
-  const successes = A.filter(results, (result) => result.success);
-
-  for (const result of successes) {
-    const suffix = result.moduleCount === undefined ? "" : ` (${result.moduleCount} module file(s))`;
-    yield* Console.log(`docgen: generated ${result.packagePath}${suffix}`);
-  }
-
-  for (const result of failures) {
-    yield* Console.error(`docgen: failed ${result.packagePath}: ${result.error ?? "unknown error"}`);
-    if (result.output !== undefined && Str.trim(result.output).length > 0) {
-      yield* Console.error(result.output);
-    }
-  }
-
-  return failures.length;
-});
-
-const logAggregateResults = Effect.fn(function* (results: ReadonlyArray<DocgenAggregateResult>) {
-  if (results.length === 0) {
-    yield* Console.log("docgen: no generated package docs found to aggregate");
-    return;
-  }
-
-  for (const result of results) {
-    yield* Console.log(`docgen: aggregated ${result.packagePath} -> docs/generated/${result.docsOutputPath}`);
-  }
-});
-
-const resolveGenerateTargets = Effect.fn("Docgen.resolveGenerateTargets")(function* (selector: O.Option<string>) {
-  yield* assertNoOrphanDocgenConfigPaths();
-
-  if (O.isSome(selector)) {
-    const target = yield* resolveDocgenWorkspacePackage(selector.value);
-    if (!target.hasDocgenConfig) {
-      return yield* DomainError.make({
-        message: `${target.relativePath} is missing docgen.json. Run "bun run beep docgen init -p ${target.relativePath}" first.`,
-      });
-    }
-    return [target] as const;
-  }
-
-  return yield* discoverDocgenWorkspacePackages().pipe(Effect.map(A.filter((pkg) => pkg.hasDocgenConfig)));
-});
-
-const resolveAnalyzeTargets = Effect.fn("Docgen.resolveAnalyzeTargets")(function* (selector: O.Option<string>) {
-  yield* assertNoOrphanDocgenConfigPaths();
-
-  if (O.isSome(selector)) {
-    return [yield* resolveDocgenWorkspacePackage(selector.value)] as const;
-  }
-
-  return yield* discoverDocgenWorkspacePackages().pipe(Effect.map(A.filter((pkg) => pkg.hasDocgenConfig)));
-});
-
-const resolvePackageSelector = Effect.fn("Docgen.resolvePackageSelector")(function* (
-  packageSelector: O.Option<string>,
-  filterSelector: O.Option<string>
-) {
-  if (O.isSome(packageSelector) && O.isSome(filterSelector) && packageSelector.value !== filterSelector.value) {
-    return yield* DomainError.make({
-      message: `Received conflicting selectors --package=${packageSelector.value} and --filter=${filterSelector.value}.`,
-    });
-  }
-
-  return O.isSome(packageSelector) ? packageSelector : filterSelector;
-});
-
-const splitCommaSeparatedFlag: (value: string) => ReadonlyArray<string> = flow(
-  Str.split(","),
-  A.map(Str.trim),
-  A.filter(Str.isNonEmpty)
-);
-
-const includePatternsFromFlag: (include: O.Option<string>) => ReadonlyArray<string> = flow(
-  O.map(splitCommaSeparatedFlag),
-  O.getOrElse(A.empty<string>)
-);
-
-const qualityReportHasBlockingFindings = (report: {
-  readonly summary: { readonly failures: number; readonly warnings: number };
-  readonly packages: ReadonlyArray<{ readonly status: string }>;
-}): boolean =>
-  report.summary.failures > 0 ||
-  report.summary.warnings > 0 ||
-  A.some(report.packages, (pkg) => pkg.status !== "completed");
-
-const verifyDocgenCheckProofManifests = Effect.fn("Docgen.verifyDocgenCheckProofManifests")(function* (
-  targets: ReadonlyArray<{ readonly absolutePath: string; readonly name: string; readonly relativePath: string }>
-) {
-  return yield* Effect.forEach(
-    targets,
-    (target) =>
-      verifyDocgenProofManifest(target.absolutePath, target.name).pipe(
-        Effect.mapError(DomainError.newCause(`Failed to verify docgen proof manifest for ${target.relativePath}.`))
-      ),
-    { concurrency: 4 }
-  );
-});
-
-const targetHasCurrentDocgenProofManifest = (
-  verifications: ReadonlyArray<{ readonly packagePath: string; readonly status: string }>,
-  target: { readonly absolutePath: string }
-): boolean =>
-  A.some(
-    verifications,
-    (verification) => verification.packagePath === target.absolutePath && verification.status === "current"
-  );
-
-const resolveQualityWorkerEvalSource = Effect.fn("Docgen.resolveQualityWorkerEvalSource")(function* ({
-  all,
-  input,
-  packageSelector,
-  packetLimit,
-}: {
-  readonly all: boolean;
-  readonly input: O.Option<string>;
-  readonly packageSelector: O.Option<string>;
-  readonly packetLimit: number;
-}) {
-  const fs = yield* FileSystem.FileSystem;
-
-  if (O.isSome(input)) {
-    return {
-      report: yield* fs.readFileString(input.value).pipe(Effect.flatMap(decodeDocgenQualityReportForWorkerEval)),
-      scope: "input" as const,
-      sourceQualityReport: input.value,
-    };
-  }
-
-  const { scope, targets } = yield* resolveDocgenQualityTargets({
-    all,
-    changedFiles: false,
-    packageSelector,
-  });
-
-  if (targets.length === 0) {
-    return yield* DomainError.make({
-      message: "No packages selected for docgen quality worker eval.",
-    });
-  }
-
-  return {
-    report: yield* analyzeDocgenQuality({
-      packetLimit: qualityWorkerEvalSourcePacketLimit(packetLimit),
-      scope,
-      scoreMode: "codex",
-      targets,
-    }),
-    scope: scope === "all" ? ("all" as const) : ("package" as const),
-    sourceQualityReport: `generated:${scope}`,
-  };
-});
-
 const docgenInitCommand = Command.make(
   "init",
   {
@@ -446,7 +281,7 @@ const docgenStatusCommand = Command.make(
 
       if (json) {
         yield* Console.log(
-          yield* renderJson({
+          yield* renderDocgenJson({
             packages,
             summary: {
               total: packages.length,
@@ -530,7 +365,7 @@ const docgenGenerateCommand = Command.make(
       );
 
       if (json) {
-        yield* Console.log(yield* renderJson(results));
+        yield* Console.log(yield* renderDocgenJson(results));
         if (A.some(results, (result) => !result.success)) {
           return yield* failWithReportedExit("docgen: generation failed for one or more package(s).");
         }
@@ -694,13 +529,16 @@ const docgenAnalyzeCommand = Command.make(
 
       if (json) {
         if (O.isSome(output)) {
-          const content = analyses.length === 1 ? generateAnalysisJson(analyses[0]!) : yield* renderJson(analyses);
+          const content =
+            analyses.length === 1 ? generateAnalysisJson(analyses[0]!) : yield* renderDocgenJson(analyses);
           yield* fs.writeFileString(output.value, content);
           yield* Console.log(`docgen: wrote ${output.value}`);
           return;
         }
 
-        yield* Console.log(analyses.length === 1 ? generateAnalysisJson(analyses[0]!) : yield* renderJson(analyses));
+        yield* Console.log(
+          analyses.length === 1 ? generateAnalysisJson(analyses[0]!) : yield* renderDocgenJson(analyses)
+        );
         return;
       }
 
@@ -765,7 +603,7 @@ const docgenCheckCommand = Command.make(
 
       if (json) {
         yield* Console.log(
-          yield* renderJson({
+          yield* renderDocgenJson({
             analyses,
             proofManifests,
             summary: {
@@ -1102,7 +940,7 @@ const docgenQualityWorkerRunpodEvalCommand = Command.make(
       });
       const resolvedGpuTypeIds = pipe(
         gpuTypeIds,
-        O.map(splitCommaSeparatedFlag),
+        O.map(Text.splitCommaSeparatedTrimmed),
         O.filter((values) => A.length(values) > 0),
         O.getOrUndefined
       );
@@ -1155,9 +993,6 @@ const docgenQualityWorkerRunpodEvalCommand = Command.make(
   )
 ).pipe(Command.withDescription("Run read-only JSDoc worker evaluation on an ephemeral Runpod Ollama GPU pod"));
 
-const printDocgenIndex = () =>
-  printLines(['Run "bun run beep docgen --help" to see the available docgen commands and flags.']);
-
 /**
  * Human-first docgen command suite.
  *
@@ -1177,7 +1012,7 @@ const printDocgenIndex = () =>
  * @category cli-commands
  * @since 0.0.0
  */
-export const docgenCommand = Command.make("docgen", {}, printDocgenIndex).pipe(
+export const docgenCommand = Command.make("docgen", {}, () => printDocgenIndex).pipe(
   Command.withDescription("Documentation generation, analysis, and report-only quality review utilities"),
   Command.withSubcommands([
     docgenStatusCommand,

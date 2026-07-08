@@ -7,14 +7,20 @@
 
 import defaultChalk from "@beep/chalk";
 import defaultColors from "@beep/colors";
-import { A, Str } from "@beep/utils";
+import { A } from "@beep/utils";
 import { Effect, Ref, Semaphore, Terminal } from "effect";
 import { dual } from "effect/Function";
+import {
+  clearLine,
+  isProgressEnabled,
+  progressFraction,
+  progressPercent,
+  renderProgressBar,
+} from "../../internal/cli/Progress.js";
 import type { Chalk } from "@beep/chalk";
 import type { Colors } from "@beep/colors";
 
 const defaultBarWidth = 28;
-const clearCurrentLine = "\r\x1b[2K";
 
 /**
  * Shared concurrency caps for Files command phases.
@@ -22,7 +28,8 @@ const clearCurrentLine = "\r\x1b[2K";
  * @example
  * ```ts
  * import { FilesConcurrency } from "@beep/repo-cli/commands/Files"
- * console.log(FilesConcurrency)
+ *
+ * const example: typeof FilesConcurrency = FilesConcurrency
  * ```
  * @category constants
  * @since 0.0.0
@@ -61,13 +68,8 @@ interface FilesProgressRunOptions {
   readonly label: string;
 }
 
-const boundedCount = (value: number): number => Math.max(0, Math.floor(value));
-
 const progressConcurrency = (total: number, concurrency: number): number =>
   Math.max(1, Math.min(Math.max(1, Math.floor(concurrency)), Math.max(1, total)));
-
-const progressPercent = (completed: number, total: number): string =>
-  total <= 0 ? "100.0" : ((completed / total) * 100).toFixed(1);
 
 /**
  * Return true when live Files progress should be rendered.
@@ -77,12 +79,13 @@ const progressPercent = (completed: number, total: number): string =>
  * @example
  * ```ts
  * import { isFilesProgressEnabled } from "@beep/repo-cli/commands/Files"
- * console.log(isFilesProgressEnabled)
+ *
+ * const example: typeof isFilesProgressEnabled = isFilesProgressEnabled
  * ```
  * @category utilities
  * @since 0.0.0
  */
-export const isFilesProgressEnabled = (enabled = true): boolean => enabled && process.stdout.isTTY === true;
+export const isFilesProgressEnabled = isProgressEnabled;
 
 /**
  * Render a single-line ASCII progress bar.
@@ -92,19 +95,22 @@ export const isFilesProgressEnabled = (enabled = true): boolean => enabled && pr
  * @example
  * ```ts
  * import { renderFilesProgressBar } from "@beep/repo-cli/commands/Files"
- * console.log(renderFilesProgressBar)
+ *
+ * const example: typeof renderFilesProgressBar = renderFilesProgressBar
  * ```
  * @category utilities
  * @since 0.0.0
  */
 export const renderFilesProgressBar = (options: FilesProgressRenderOptions): string => {
   const { chalk = defaultChalk, colors = defaultColors, completed, label, total, width = defaultBarWidth } = options;
-  const safeTotal = boundedCount(total);
-  const safeCompleted = Math.min(boundedCount(completed), safeTotal);
-  const safeWidth = Math.max(1, Math.floor(width));
-  const filled = safeTotal === 0 ? safeWidth : Math.round((safeCompleted / safeTotal) * safeWidth);
-  const empty = safeWidth - filled;
-  const bar = `${colors.greenBright(Str.repeat(filled)("#"))}${colors.gray(Str.repeat(empty)("-"))}`;
+  const safeTotal = Math.max(0, Math.floor(total));
+  const safeCompleted = Math.min(Math.max(0, Math.floor(completed)), safeTotal);
+  const bar = renderProgressBar({
+    colorEmpty: colors.gray,
+    colorFilled: colors.greenBright,
+    fraction: progressFraction(safeCompleted, safeTotal),
+    width,
+  });
   const title = chalk.cyan.bold(`files ${label}`);
   const count = chalk.gray(`${safeCompleted}/${safeTotal}`);
   const percent = colors.yellow(`${progressPercent(safeCompleted, safeTotal)}%`);
@@ -118,7 +124,8 @@ export const renderFilesProgressBar = (options: FilesProgressRenderOptions): str
  * @example
  * ```ts
  * import { runFilesProgressAll } from "@beep/repo-cli/commands/Files"
- * console.log(runFilesProgressAll)
+ *
+ * const example: typeof runFilesProgressAll = runFilesProgressAll
  * ```
  * @category utilities
  * @since 0.0.0
@@ -150,7 +157,7 @@ export const runFilesProgressAll: {
     const renderAt = (completed: number, newline: boolean) =>
       terminal
         .display(
-          `${clearCurrentLine}${renderFilesProgressBar({
+          `${clearLine}${renderFilesProgressBar({
             completed,
             label: options.label,
             total,
@@ -191,7 +198,8 @@ export const runFilesProgressAll: {
  * @example
  * ```ts
  * import { runFilesProgressForEach } from "@beep/repo-cli/commands/Files"
- * console.log(runFilesProgressForEach)
+ *
+ * const example: typeof runFilesProgressForEach = runFilesProgressForEach
  * ```
  * @category utilities
  * @since 0.0.0

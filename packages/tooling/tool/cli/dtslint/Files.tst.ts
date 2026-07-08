@@ -9,7 +9,7 @@ import {
   detectBordersFiles,
   NormalizeFilesOptions,
   normalizeFiles,
-} from "@beep/repo-cli/commands/Files";
+} from "@beep/repo-cli/test/Files";
 import * as O from "effect/Option";
 import { describe, expect, it } from "tstyche";
 import type {
@@ -35,7 +35,7 @@ import type {
   NormalizePlanEntry,
   NormalizeSkippedEntry,
   NormalizeSummary,
-} from "@beep/repo-cli/commands/Files";
+} from "@beep/repo-cli/test/Files";
 import type { Effect } from "effect";
 
 describe("Files command", () => {

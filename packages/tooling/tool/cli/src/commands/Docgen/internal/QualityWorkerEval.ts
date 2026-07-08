@@ -14,13 +14,17 @@ import { DomainError } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { DateTime, Duration, Effect, FileSystem, Match, Order, Path, pipe, Result } from "effect";
+import { Duration, Effect, FileSystem, Match, Order, Path, pipe, Result } from "effect";
 import { dual, flow } from "effect/Function";
-import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as jsonc from "jsonc-parser";
+import {
+  DEFAULT_JSON_PRETTY_MAX_LENGTH,
+  encodeCommandJson,
+  renderPrettyCommandJson,
+} from "../../../internal/cli/Json.js";
+import { errorMessage as cliErrorMessage, durationMsSince, timestampIso } from "../../../internal/cli/Timing.js";
 import { DocgenQualityFindingCode, DocgenQualityReport } from "./Quality.js";
 import type { DocgenQualityFindingCode as DocgenQualityFindingCodeValue } from "./Quality.js";
 
@@ -30,9 +34,7 @@ const QUALITY_WORKER_EVAL_SCHEMA_VERSION = 1 as const;
 const DEFAULT_WORKER_EVAL_PACKET_LIMIT = 5;
 const DEFAULT_WORKER_EVAL_TIMEOUT = Duration.seconds(180);
 const DEFAULT_SOURCE_PACKET_LIMIT = 25;
-const JSON_FORMAT_MAX_LENGTH = 500_000;
 
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
 const decodeQualityReportJson = S.decodeUnknownEffect(S.fromJsonString(DocgenQualityReport));
 
 const DocgenQualityWorkerEvalLocalScore = S.Finite.check(
@@ -537,15 +539,7 @@ export class AnalyzeDocgenQualityWorkerEvalOptions extends S.Class<AnalyzeDocgen
   })
 ) {}
 
-const timestampIso = (): string => DateTime.formatIso(DateTime.nowUnsafe());
-
-const durationMsSince = (startedAtMs: number): number =>
-  Math.max(0, Math.round(globalThis.performance.now() - startedAtMs));
-
-const errorMessage = (error: unknown): string =>
-  P.isObject(error) && P.hasProperty(error, "message") && P.isString(error.message)
-    ? error.message
-    : "Unknown worker eval failure.";
+const errorMessage = (error: unknown): string => cliErrorMessage(error, "Unknown worker eval failure.");
 
 const fileUrlPath = (value: string): string => decodeURIComponent(new URL(value).pathname);
 
@@ -563,19 +557,10 @@ const providerHint = (provider: DocgenQualityWorkerEvalProvider): string =>
   );
 
 const renderJson = Effect.fn("DocgenQualityWorkerEval.renderJson")(function* (value: unknown) {
-  const encoded = yield* encodeJson(value).pipe(
+  const encoded = yield* encodeCommandJson(value).pipe(
     Effect.mapError(DomainError.newCause("Failed to encode docgen worker eval JSON."))
   );
-
-  if (encoded.length > JSON_FORMAT_MAX_LENGTH) {
-    return `${encoded}\n`;
-  }
-
-  const edits = jsonc.format(encoded, undefined, {
-    tabSize: 2,
-    insertSpaces: true,
-  });
-  return `${jsonc.applyEdits(encoded, edits)}\n`;
+  return renderPrettyCommandJson(encoded, { maxLength: DEFAULT_JSON_PRETTY_MAX_LENGTH });
 });
 
 const qualityWorkerEvalWorkerOutputJsonSchema = {
