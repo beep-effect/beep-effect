@@ -8,7 +8,11 @@
   "new_package_handling": "New packages are covered by knip.jsonc workspace discovery. Keep new packages free of Knip findings; if an intentional finding is unavoidable, regenerate this baseline in the same PR and document the rationale for review.",
   "normalization": {
     "ordering": "kind,file,name",
-    "omitted_fields": ["line", "col", "pos"]
+    "omitted_fields": [
+      "line",
+      "col",
+      "pos"
+    ]
   },
   "check": {
     "total_findings": 0,

@@ -1,7 +1,11 @@
 {
   "version": 1,
   "generatedOn": "2026-07-08",
-  "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
+  "scope": [
+    "apps/**/*.{ts,tsx}",
+    "packages/**/*.{ts,tsx}",
+    "infra/**/*.ts"
+  ],
   "entries": [
     {
       "file": "packages/drivers/m365/src/M365.schemas.ts",
@@ -28,6 +32,14 @@
       "line": 144,
       "owner": "@beep/uspto",
       "reason": "R.getSomes is correct here (Law 20/47 dynamic-key carve-out): optionalField's `key` is a plain `string` called from 13 spread sites with differing keys, and O.getSomesStruct returns Partial<Record> incompatible with the Record<string,string> contract (verified against effect v4 + all call sites, FINAL-B). Homogeneous dynamic-key dictionary, not a literal Option-struct."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/TaggedErrorClass/TaggedErrorClass.errors.ts",
+      "symbol": "fieldsStruct",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
     },
     {
       "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",

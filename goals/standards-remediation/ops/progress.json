@@ -42,7 +42,9 @@
       "R24",
       "R25"
     ],
-    "pending": ["R9"]
+    "pending": [
+      "R9"
+    ]
   },
   "counters": {
     "checkpoint": "2026-07-08 wave-3 consolidated (Opus driver, lanes stopped)",
@@ -547,5 +549,12 @@
   "blockedOn": "FINAL-C final steps (file-processing TextSpan + lint-rules RuleRegistrySchema); identity already stable",
   "detectorTestsGreen": "jsdoc 11/11, dual-arity+schema-first 72/72 (R24 fixture + fixed R20 test)",
   "allLanesComplete": true,
-  "finalCNote": "Model.variants 8 handled by R24 (no source change); identity/lint-rules/file-processing schemaAnnotation fixed (repaired FINAL-B annote regression; lint-rules gained @beep/identity devDep + composer); TextSpan @example added"
+  "finalCNote": "Model.variants 8 handled by R24 (no source change); identity/lint-rules/file-processing schemaAnnotation fixed (repaired FINAL-B annote regression; lint-rules gained @beep/identity devDep + composer); TextSpan @example added",
+  "consolidationPush": {
+    "sha": "8bca70da81",
+    "supersedes": "a89de2bae9 (broken auto-push)",
+    "files": 247,
+    "localGatesGreen": "dual-arity/schema-first/jsdoc-ratchet/knip/allowlist/biome/reflection/fallow-audit/fallow-dead-code/turbo-check all PASS",
+    "baselinesZeroed": "jsdoc-totals all 6 = 0"
+  }
 }
