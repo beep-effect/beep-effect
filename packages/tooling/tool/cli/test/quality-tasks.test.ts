@@ -524,9 +524,9 @@ describe("quality task adapter", () => {
         expect(validateStepIndex).toBeGreaterThan(dispatchIndex);
         expect(uploadStepIndex).toBeGreaterThan(validateStepIndex);
 
-        // Deferred-exit ordering, from the lane's own step plan: both
-        // blocking lanes precede every advisory lane, and envelope
-        // validation steps come last when replayed locally.
+        // Deferred-exit ordering, from the lane's own step plan: promoted
+        // blocking lanes precede advisory lanes, and envelope validation
+        // steps come last when replayed locally.
         const plan = ciLaneStepsForTesting(
           "/repo",
           "fallow",
@@ -543,7 +543,7 @@ describe("quality task adapter", () => {
           })
         );
         const labels = A.map(plan, (step) => step.label);
-        expect(A.take(labels, 2)).toEqual(["ci:fallow:audit", "ci:fallow:dead-code"]);
+        expect(A.take(labels, 2)).toEqual(["ci:fallow:dead-code", "ci:fallow:audit"]);
         expect(labels).toContain("ci:fallow:envelope-check:dead-code");
       }).pipe(provideScopedLayer(FileSystemLayer))
     ));
