@@ -118,6 +118,7 @@
     "babel": "babel dist --plugins annotate-pure-calls --out-dir dist --source-maps",
     "check": "bun run beep:check",
     "test": "bun run beep:test",
+    "test:property": "bun run beep:test",
     "type-test": "cd ../../../.. && bunx tstyche",
     "test:watch": "vitest",
     "coverage": "bunx vitest run --coverage",

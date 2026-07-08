@@ -9,6 +9,7 @@ import {
   SanityQueryRequest,
   SanityQueryResponse,
 } from "@beep/sanity";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { describe, expect, it, layer } from "@effect/vitest";
@@ -227,7 +228,7 @@ describe("@beep/sanity", () => {
           expectRoundTrip(SanityError, error);
         }
       ),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   layer(TestLayer)((it) => {

@@ -16,7 +16,7 @@ import {
   UsageRecord,
 } from "@beep/epistemic-domain";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
-import { baseEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
+import { baseEntityFixtureInput, fcRuns, systemPrincipal } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as O from "effect/Option";
@@ -60,7 +60,7 @@ const assertSchemaArbitraryRoundTrip = <Schema extends S.Codec<unknown>>(
 
       return equivalent(decoded, value);
     }),
-    { numRuns: options?.numRuns ?? 50 }
+    fcRuns(options?.numRuns ?? 50)
   );
 };
 

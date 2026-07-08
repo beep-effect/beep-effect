@@ -6,6 +6,7 @@ import { ExtractKeywords } from "@beep/nlp-processing/Tools/ExtractKeywords";
 import { NlpToolkit } from "@beep/nlp-processing/Tools/NlpToolkit";
 import { TextSimilarity } from "@beep/nlp-processing/Tools/TextSimilarity";
 import { TverskySimilarity } from "@beep/nlp-processing/Tools/TverskySimilarity";
+import { fcRuns } from "@beep/test-utils";
 import {
   CorpusManagerError,
   CustomEntityExample,
@@ -41,7 +42,7 @@ const assertRoundTrip = <SchemaT extends Schema.ConstraintCodec<unknown, unknown
     fc.property(Schema.toArbitrary(schema), (value) => {
       expect(Equal.equals(decode(encode(value)), value)).toBe(true);
     }),
-    { numRuns: 25 }
+    fcRuns(25)
   );
 };
 

@@ -12,6 +12,7 @@ import {
   SassOptions,
   SizeLimit,
 } from "@beep/repo-configs/next";
+import { fcRuns } from "@beep/test-utils";
 import { Effect, Exit, Result } from "effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
@@ -61,15 +62,11 @@ describe("Next shared schemas", () => {
   it("round-trips schema-derived primitive values", () => {
     fc.assert(
       fc.property(S.toArbitrary(FileSizeSuffix), (value) => expectRoundTrip(FileSizeSuffix, value)),
-      {
-        numRuns: 25,
-      }
+      fcRuns(25)
     );
     fc.assert(
       fc.property(S.toArbitrary(SizeLimit), (value) => expectRoundTrip(SizeLimit, value)),
-      {
-        numRuns: 25,
-      }
+      fcRuns(25)
     );
   });
 });
@@ -136,37 +133,29 @@ describe("Next route schemas", () => {
 
         expect(decoded).toEqual(predicate);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 
   it("round-trips redirect status-code values", () => {
     fc.assert(
       fc.property(S.toArbitrary(RedirectStatusCodeValue), (value) => expectRoundTrip(RedirectStatusCodeValue, value)),
-      {
-        numRuns: 25,
-      }
+      fcRuns(25)
     );
   });
 
   it("round-trips route object schemas that do not contain never fields", () => {
     fc.assert(
       fc.property(S.toArbitrary(Rewrite), (value) => expectRoundTrip(Rewrite, value)),
-      {
-        numRuns: 25,
-      }
+      fcRuns(25)
     );
     fc.assert(
       fc.property(S.toArbitrary(Header), (value) => expectRoundTrip(Header, value)),
-      {
-        numRuns: 25,
-      }
+      fcRuns(25)
     );
     fc.assert(
       fc.property(S.toArbitrary(Middleware), (value) => expectRoundTrip(Middleware, value)),
-      {
-        numRuns: 25,
-      }
+      fcRuns(25)
     );
   });
 
@@ -213,18 +202,14 @@ describe("Next image schemas", () => {
   it("round-trips schema-derived complete image configs", () => {
     fc.assert(
       fc.property(S.toArbitrary(ImageConfigComplete), (value) => expectRoundTrip(ImageConfigComplete, value)),
-      {
-        numRuns: 25,
-      }
+      fcRuns(25)
     );
   });
 
   it("round-trips schema-derived partial image configs", () => {
     fc.assert(
       fc.property(S.toArbitrary(ImageConfig), (value) => expectRoundTrip(ImageConfig, value)),
-      {
-        numRuns: 25,
-      }
+      fcRuns(25)
     );
   });
 

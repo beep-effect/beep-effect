@@ -11,6 +11,7 @@ import {
   SecureHeadersConfig,
   withSecureHeaders,
 } from "@beep/repo-configs/next";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
@@ -173,21 +174,15 @@ describe("Shared Next.js config preset", () => {
   it("round-trips defaulted shared feature schemas", () => {
     fc.assert(
       fc.property(S.toArbitrary(BeepNextMdxConfig), (value) => expectRoundTrip(BeepNextMdxConfig, value)),
-      {
-        numRuns: 25,
-      }
+      fcRuns(25)
     );
     fc.assert(
       fc.property(S.toArbitrary(BeepNextPwaConfig), (value) => expectRoundTrip(BeepNextPwaConfig, value)),
-      {
-        numRuns: 25,
-      }
+      fcRuns(25)
     );
     fc.assert(
       fc.property(S.toArbitrary(SecureHeadersConfig), (value) => expectRoundTrip(SecureHeadersConfig, value)),
-      {
-        numRuns: 25,
-      }
+      fcRuns(25)
     );
   });
 

@@ -59,6 +59,9 @@
     },
     {
       "path": "../../packages/tooling/policy-pack/repo-configs/tsconfig.json"
+    },
+    {
+      "path": "../../packages/tooling/test-kit/test-utils/tsconfig.json"
     }
   ]
 }

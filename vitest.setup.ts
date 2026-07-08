@@ -13,6 +13,7 @@ import { createServer } from "node:http";
 import { join } from "node:path";
 import { P } from "@beep/utils";
 import { addEqualityTesters } from "@effect/vitest";
+import { FastCheck } from "effect/testing";
 import { micromark } from "micromark";
 import { gfm, gfmHtml } from "micromark-extension-gfm";
 import picomatch from "picomatch";
@@ -20,6 +21,29 @@ import * as Toml from "toml";
 import type { ServerResponse } from "node:http";
 
 addEqualityTesters();
+
+// one-round-loop P1: env-raisable fast-check floor. Inline numRuns
+// overrides this global, so migrated sites use fcRuns() from
+// @beep/test-utils; this floor covers options-less fc.assert calls.
+// BEEP_FC_NUM_RUNS never lowers anything: 100 is fast-check's default.
+//
+// BEEP_FC_SEED (one-round-loop P1): when set, pins the global fast-check
+// seed so the per-PR property lane is DETERMINISTIC — a local `beep ci lane
+// property` and the CI Property Laws lane run the SAME command and inject a
+// fixed seed, so they test identical inputs and a local green predicts a CI
+// green. Left unset by ordinary test runs and by the nightly sweep, which
+// rotate seeds for breadth. Inline options override numRuns but not seed, so
+// pinned/reverted sites inherit the deterministic seed too.
+{
+  const rawFcFloor = process.env.BEEP_FC_NUM_RUNS;
+  const parsedFcFloor = rawFcFloor === undefined ? 0 : Number(rawFcFloor);
+  const rawFcSeed = process.env.BEEP_FC_SEED;
+  const parsedFcSeed = rawFcSeed === undefined ? Number.NaN : Number(rawFcSeed);
+  FastCheck.configureGlobal({
+    numRuns: Math.max(100, Number.isInteger(parsedFcFloor) && parsedFcFloor > 0 ? parsedFcFloor : 0),
+    ...(Number.isInteger(parsedFcSeed) ? { seed: parsedFcSeed } : {}),
+  });
+}
 
 type BunFileShim = {
   readonly arrayBuffer: () => Promise<ArrayBuffer>;

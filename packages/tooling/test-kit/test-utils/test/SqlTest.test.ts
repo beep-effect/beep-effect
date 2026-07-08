@@ -1,6 +1,7 @@
 import {
   assertSchemaArbitraryDecodesToSelf,
   BunSqliteTestDriver,
+  fcRuns,
   makePgliteIntegrationGate,
   makePgliteSqlTestLayer,
   makeSqlTestLayer,
@@ -36,29 +37,6 @@ const localSqliteIt = it.effect.skipIf(isCoverageRatchetRun && !isBunRuntime);
 const nodeRuntimeIt = it.skipIf(isBunRuntime);
 const nodeRuntimeEffectIt = it.effect.skipIf(isBunRuntime);
 const expectedDriver = isBunRuntime ? "bun-sqlite" : "node-sqlite";
-
-const withBunEnv = <A>(env: Record<string, string | undefined>, run: () => A): A => {
-  const hadBun = Reflect.has(globalThis, "Bun");
-  const originalBun = Reflect.get(globalThis, "Bun");
-
-  Reflect.defineProperty(globalThis, "Bun", {
-    configurable: true,
-    value: { env },
-  });
-
-  try {
-    return run();
-  } finally {
-    if (hadBun) {
-      Reflect.defineProperty(globalThis, "Bun", {
-        configurable: true,
-        value: originalBun,
-      });
-    } else {
-      Reflect.deleteProperty(globalThis, "Bun");
-    }
-  }
-};
 
 const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
   schema: Schema,
@@ -441,36 +419,33 @@ describe("SqlTest", () => {
         expect(SqlTestHarnessError.is(decoded)).toBe(true);
         expect(Effect.runSync(encode(decoded))).toEqual(encoded);
       }),
-      { numRuns: 10 }
+      fcRuns(10)
     );
   });
 
   nodeRuntimeIt("selects PGLite integration gate branches from environment", () => {
-    withBunEnv({}, () => {
-      const gate = makePgliteIntegrationGate();
+    const emptyGate = makePgliteIntegrationGate({ databaseDriver: undefined, databaseUrl: undefined });
+    expect(O.isNone(emptyGate.sharedConnectionUri)).toBe(true);
+    expect(emptyGate.shouldRunPgliteIntegration).toBe(true);
+    expect(emptyGate.shouldUseTestcontainers).toBe(false);
+    expect(emptyGate.makePgliteLayer()).toBeDefined();
+    expect(emptyGate.makePgliteLayer({ migrate: Effect.void })).toBeDefined();
 
-      expect(O.isNone(gate.sharedConnectionUri)).toBe(true);
-      expect(gate.shouldRunPgliteIntegration).toBe(true);
-      expect(gate.shouldUseTestcontainers).toBe(false);
-      expect(gate.makePgliteLayer()).toBeDefined();
-      expect(gate.makePgliteLayer({ migrate: Effect.void })).toBeDefined();
+    const externalGate = makePgliteIntegrationGate({
+      databaseDriver: undefined,
+      databaseUrl: "postgres://user:pass@localhost:5432/db",
     });
+    expect(O.isSome(externalGate.sharedConnectionUri)).toBe(true);
+    expect(externalGate.makePgliteLayer()).toBeDefined();
+    expect(externalGate.makePgliteLayer({ seed: Effect.void })).toBeDefined();
 
-    withBunEnv({ BEEP_TEST_DATABASE_URL: "postgres://user:pass@localhost:5432/db" }, () => {
-      const gate = makePgliteIntegrationGate();
-
-      expect(O.isSome(gate.sharedConnectionUri)).toBe(true);
-      expect(gate.makePgliteLayer()).toBeDefined();
-      expect(gate.makePgliteLayer({ seed: Effect.void })).toBeDefined();
+    const testcontainersGate = makePgliteIntegrationGate({
+      databaseDriver: "pglite-testcontainers",
+      databaseUrl: undefined,
     });
-
-    withBunEnv({ BEEP_TEST_DATABASE_DRIVER: "pglite-testcontainers" }, () => {
-      const gate = makePgliteIntegrationGate();
-
-      expect(gate.shouldUseTestcontainers).toBe(true);
-      expect(gate.makePgliteLayer()).toBeDefined();
-      expect(gate.makePgliteLayer({ migrate: Effect.void })).toBeDefined();
-    });
+    expect(testcontainersGate.shouldUseTestcontainers).toBe(true);
+    expect(testcontainersGate.makePgliteLayer()).toBeDefined();
+    expect(testcontainersGate.makePgliteLayer({ migrate: Effect.void })).toBeDefined();
   });
 
   nodeRuntimeEffectIt(

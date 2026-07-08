@@ -1,4 +1,5 @@
 import { AllowedDevOrigin } from "@beep/repo-configs/next/models/AllowedDevOrigin.schema";
+import { fcRuns } from "@beep/test-utils";
 import { Effect, Result } from "effect";
 import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
@@ -33,8 +34,6 @@ describe("AllowedDevOrigin", () => {
   });
 
   it("round-trips schema-derived allowed origins", () => {
-    fc.assert(fc.property(S.toArbitrary(AllowedDevOrigin), expectRoundTrip), {
-      numRuns: 25,
-    });
+    fc.assert(fc.property(S.toArbitrary(AllowedDevOrigin), expectRoundTrip), fcRuns(25));
   });
 });

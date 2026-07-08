@@ -21,6 +21,7 @@ import {
   UnsupportedSparqlQueryServiceLive,
 } from "@beep/semantic-web/services/sparql-query";
 import { RDF_TYPE } from "@beep/semantic-web/vocab/rdf";
+import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Order, pipe } from "effect";
@@ -120,7 +121,7 @@ describe("Services and Surface", () => {
             expect(reencodedFingerprintRequest).toEqual(encodedFingerprintRequest);
           }
         ),
-        { numRuns: 5 }
+        fcRuns(5)
       )
   );
 

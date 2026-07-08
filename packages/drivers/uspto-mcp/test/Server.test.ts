@@ -11,7 +11,7 @@
 
 import { composeGatedLayers, FetchableHandle, gatedLayer, sanitizedToolkit } from "@beep/mcp-kit";
 import { PosInt } from "@beep/schema";
-import { assertSchemaArbitraryDecodesToSelf, provideScopedLayer } from "@beep/test-utils";
+import { assertSchemaArbitraryDecodesToSelf, fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { Uspto, UsptoApplicationMetadata, UsptoConfigInput, UsptoDocumentReference } from "@beep/uspto";
 import {
   DocumentsProjectionOutput,
@@ -134,7 +134,7 @@ const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(
       const decoded = Effect.runSync(decode(encoded));
       return Equal.equals(decoded, value);
     }),
-    { numRuns: options?.numRuns ?? 20 }
+    fcRuns(options?.numRuns ?? 20)
   );
 };
 

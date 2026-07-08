@@ -1,5 +1,6 @@
 import { Document } from "@beep/md";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { fcRuns } from "@beep/test-utils";
 import { Thread } from "@beep/workspace-use-cases/public";
 import { Thread as ServerThread } from "@beep/workspace-use-cases/server";
 import { describe, expect, it } from "@effect/vitest";
@@ -132,7 +133,7 @@ describe("ThreadTimeline", () => {
       const equivalent = S.toEquivalence(schema);
       fc.assert(
         fc.property(S.toArbitrary(schema), (value) => equivalent(decode(encode(value)), value)),
-        { numRuns: 5 }
+        fcRuns(5)
       );
     }
   });

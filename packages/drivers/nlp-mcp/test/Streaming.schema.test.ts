@@ -20,6 +20,7 @@ import {
   PipelineOutput,
   TextStatsOutput,
 } from "@beep/nlp-mcp/StreamingTools";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
@@ -40,7 +41,7 @@ const assertRoundTrip = <Sch extends S.Top & S.ConstraintDecoder<unknown> & S.Co
     fc.property(S.toArbitrary(schema), (value) => {
       expect(Eq.equals(decode(schema, encode(schema, value)), value)).toBe(true);
     }),
-    { numRuns: 25 }
+    fcRuns(25)
   );
 
 describe("streaming schema laws", () => {

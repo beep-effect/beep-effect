@@ -6,6 +6,7 @@ import {
   CanonicalizationService,
   CanonicalizeDatasetRequest,
 } from "@beep/semantic-web/services/canonicalization";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
 import * as S from "effect/Schema";
@@ -170,7 +171,7 @@ describe("Canonicalization security hardening", () => {
       fc.property(arbitrary, (result) => {
         expectEncodedRoundTrip(CanonicalDatasetResult, result);
       }),
-      { numRuns: 5 }
+      fcRuns(5)
     );
   });
 
@@ -195,7 +196,7 @@ describe("Canonicalization security hardening", () => {
 
         expect(encode(decode(encoded))).toEqual(encoded);
       }),
-      { numRuns: 5 }
+      fcRuns(5)
     );
   });
 });

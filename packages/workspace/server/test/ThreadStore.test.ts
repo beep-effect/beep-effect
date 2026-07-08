@@ -1,6 +1,7 @@
 import { Document, P, Text } from "@beep/md";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { fcRuns } from "@beep/test-utils";
 import { makeInMemoryThreadStore } from "@beep/workspace-server/aggregates/Thread";
 import { ThreadStoreRepoTestSchemas } from "@beep/workspace-server/test";
 import { SetThreadTitleIfEmptyInput } from "@beep/workspace-use-cases/aggregates/Thread/server";
@@ -175,27 +176,19 @@ describe("ThreadStore in-memory", () => {
   it("round-trips crispened construction schemas from derived arbitraries", () => {
     fc.assert(
       fc.property(ThreadEntityInputArbitrary, (value) => schemaRoundTrips(ThreadEntityInput, value)),
-      {
-        numRuns: 25,
-      }
+      fcRuns(25)
     );
     fc.assert(
       fc.property(TurnEntityInputArbitrary, (value) => schemaRoundTrips(TurnEntityInput, value)),
-      {
-        numRuns: 25,
-      }
+      fcRuns(25)
     );
     fc.assert(
       fc.property(MessageEntityInputArbitrary, (value) => schemaRoundTrips(MessageEntityInput, value)),
-      {
-        numRuns: 25,
-      }
+      fcRuns(25)
     );
     fc.assert(
       fc.property(InMemoryStateArbitrary, (value) => schemaRoundTrips(InMemoryState, value)),
-      {
-        numRuns: 25,
-      }
+      fcRuns(25)
     );
   });
 

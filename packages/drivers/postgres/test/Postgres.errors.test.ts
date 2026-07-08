@@ -14,6 +14,7 @@ import {
   PostgresError,
   PostgresErrorContext,
 } from "@beep/postgres";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Equal, Layer, Result } from "effect";
@@ -112,7 +113,7 @@ const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
     fc.property(arbitrary, (value) => {
       expectRoundTrip(schema, value);
     }),
-    { numRuns: 25 }
+    fcRuns(25)
   );
 };
 

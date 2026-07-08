@@ -10,6 +10,7 @@ import {
   WorkItemSecretConfig,
   WorkItemServerConfig,
 } from "@beep/architecture-lab-config/aggregates/WorkItem";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, Layer } from "effect";
 import * as S from "effect/Schema";
@@ -79,7 +80,7 @@ describe("WorkItem configuration", () => {
           Equal.equals(decodeSecretConfig(encodeSecretConfig(secretConfig)), secretConfig) &&
           Equal.equals(decodeConfigValue(encodeConfigValue(configValue)), configValue)
       ),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 });

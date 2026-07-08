@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as O from "effect/Option";
@@ -29,7 +30,7 @@ const assertSchemaEncodeDecodeRoundTrip = <Schema extends S.Codec<unknown>>(
         })
       )
     ),
-    { numRuns: options?.numRuns ?? 50 }
+    fcRuns(options?.numRuns ?? 50)
   );
 };
 

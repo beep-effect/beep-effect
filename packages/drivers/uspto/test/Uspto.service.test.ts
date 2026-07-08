@@ -1,5 +1,5 @@
 import { NonNegativeInt } from "@beep/schema";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import {
   normalizeUsptoApplicationNumber,
   normalizeUsptoPatentNumber,
@@ -280,6 +280,6 @@ describe("Uspto schema parity", () => {
           expectEncodedRoundTrip(UsptoError, error);
         }
       ),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 });

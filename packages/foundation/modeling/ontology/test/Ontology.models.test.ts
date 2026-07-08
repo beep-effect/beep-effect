@@ -10,6 +10,7 @@ import {
   OWLSearchResults,
   OWLSearchScore,
 } from "@beep/ontology/Ontology.models";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as S from "effect/Schema";
@@ -138,7 +139,7 @@ describe("@beep/ontology models", () => {
           expectRoundTrip(HTTPValidationError, error);
         }
       ),
-      { numRuns: 25 }
+      fcRuns(25)
     ));
 
   it("round-trips schema-derived URL and search-score primitives", () =>
@@ -147,7 +148,7 @@ describe("@beep/ontology models", () => {
         expectRoundTrip(HttpUrl, url);
         expectRoundTrip(OWLSearchScore, score);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it("rejects malformed values for the absorbed precision invariants", () => {

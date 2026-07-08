@@ -8,6 +8,7 @@ import {
 import { ExtractFileOperation } from "@beep/file-processing/Operation";
 import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { fcRuns } from "@beep/test-utils";
 import { TikaError, TikaErrorOptions, TikaErrorReason, TikaFileProcessingEngine } from "@beep/tika";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Result } from "effect";
@@ -121,7 +122,7 @@ describe("@beep/tika", () => {
           expectRoundTrip(TikaError, error);
         }
       ),
-      { numRuns: 25 }
+      fcRuns(25)
     ));
 
   it.effect("extracts text for a P1 text fixture", () =>

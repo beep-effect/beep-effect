@@ -1,11 +1,7 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-07",
-  "scope": [
-    "apps/**/*.{ts,tsx}",
-    "packages/**/*.{ts,tsx}",
-    "infra/**/*.ts"
-  ],
+  "generatedOn": "2026-07-08",
+  "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
       "file": "apps/oip-web/src/components/HeroVideo.tsx",
@@ -2342,6 +2338,16 @@
       "status": "exception",
       "owner": "@beep/test-utils",
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
+      "symbol": "makePgliteIntegrationGate",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-fn-schema",
+      "line": 1449,
+      "owner": "@beep/test-utils",
+      "reason": "Test-harness factory: the optional env override is a two-field selection bag ({ databaseUrl?, databaseDriver? }) passed only by the gate-branch test to exercise each driver branch without mutating the process environment; real usage omits it and reads via Config. An Fn/S.Class schema is disproportionate for an internal test-harness parameter. Added by one-round-loop P1."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",

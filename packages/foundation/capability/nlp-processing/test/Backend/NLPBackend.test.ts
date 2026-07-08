@@ -8,6 +8,7 @@
  */
 
 import * as Backend from "@beep/nlp-processing/Backend/NLPBackend";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -23,7 +24,7 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, n
     fc.property(arbitrary, (value) => {
       expect(equals(decode(encode(value)), value)).toBe(true);
     }),
-    { numRuns: 50 }
+    fcRuns(50)
   );
 };
 

@@ -1,4 +1,5 @@
 import { isWellOrdered, TextAnchor } from "@beep/provenance/TextAnchor";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -37,7 +38,7 @@ describe("@beep/provenance TextAnchor", () => {
         });
         expect(TextAnchorEquivalence(decoded, anchor)).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it("colocated well-ordered predicate agrees with ordered offset pairs", () =>
@@ -48,6 +49,6 @@ describe("@beep/provenance TextAnchor", () => {
         expect(TextAnchor.isWellOrdered({ startChar, endChar })).toBe(true);
         expect(isWellOrdered({ startChar: endChar + 1, endChar: startChar })).toBe(false);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 });

@@ -9,6 +9,7 @@ import { ExtractionTarget } from "@beep/langextract/Target";
 import { DocumentId } from "@beep/nlp/Core";
 import { Contract, UnitInterval } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as S from "effect/Schema";
@@ -66,7 +67,7 @@ describe("parseModelOutput", () => {
         expect(ExtractionCandidatesEquivalence(fromArray, candidates)).toBe(true);
         expect(ExtractionCandidatesEquivalence(fromEnvelope, candidates)).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it.effect(

@@ -23,6 +23,7 @@ import {
   PhoenixPromptSelector,
   PhoenixPromptWriteResult,
 } from "@beep/phoenix";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, pipe, Result } from "effect";
 import * as A from "effect/Array";
@@ -176,7 +177,7 @@ describe("@beep/phoenix", () => {
         fc.property(S.toArbitrary(schema), (value) => {
           expectEncodedRoundTrip(schema, value);
         }),
-        { numRuns: 5 }
+        fcRuns(5)
       );
     }
   });

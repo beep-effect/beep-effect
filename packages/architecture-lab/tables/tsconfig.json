@@ -13,6 +13,9 @@
     },
     {
       "path": "../../drivers/drizzle/tsconfig.json"
+    },
+    {
+      "path": "../../tooling/test-kit/test-utils/tsconfig.json"
     }
   ]
 }

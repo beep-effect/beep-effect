@@ -121,6 +121,12 @@
       ],
       "@beep/architecture-lab-use-cases/entities/Worker/server": [
         "../../packages/architecture-lab/use-cases/src/entities/Worker/server.ts"
+      ],
+      "@beep/test-utils": [
+        "../../packages/tooling/test-kit/test-utils/src/index.ts"
+      ],
+      "@beep/test-utils/*": [
+        "../../packages/tooling/test-kit/test-utils/src/*.ts"
       ]
     }
   }

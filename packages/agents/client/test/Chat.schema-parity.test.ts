@@ -9,6 +9,7 @@ import {
 import { ParagraphBlock, TextInline } from "@beep/agents-domain/values/AssistantContent";
 import { Document, P, Text } from "@beep/md/Md.model";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as Equal from "effect/Equal";
@@ -104,7 +105,7 @@ describe("@beep/agents-client schema parity", () => {
     for (const schema of schemas) {
       fc.assert(
         fc.property(S.toArbitrary(schema), (value) => roundTrip(schema, value)),
-        { numRuns: 10 }
+        fcRuns(10)
       );
     }
   });

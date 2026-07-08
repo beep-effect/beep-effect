@@ -63,7 +63,7 @@ import {
   yeetStatusNextCommandForTesting,
 } from "@beep/repo-cli/test/Yeet";
 import { NonNegativeInt } from "@beep/schema";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
@@ -1744,7 +1744,7 @@ describe("yeet publish scope helpers", () => {
         expect(decoded.lanes.length).toBe(verdict.lanes.length);
         expect(decoded.outcome).toBe(verdict.outcome);
       }),
-      { numRuns: 32 }
+      fcRuns(32)
     );
   });
 

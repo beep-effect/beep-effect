@@ -8,6 +8,7 @@ import {
   SerializedEditorState,
 } from "@beep/lexical-schema";
 import * as MdModel from "@beep/md/Md.model";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -105,7 +106,7 @@ describe("Lexical.codec", () => {
         expect(ArtifactUri.is(uri)).toBe(true);
         expect(S.decodeUnknownSync(ArtifactUri)(S.encodeSync(ArtifactUri)(uri))).toBe(uri);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 
@@ -301,7 +302,7 @@ describe("Lexical.codec", () => {
         // Option; decoding the encoded form confirms the projection is valid.
         expect(S.decodeUnknownSync(MdModel.Document)(S.encodeSync(MdModel.Document)(document))).toEqual(document);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 
@@ -316,7 +317,7 @@ describe("Lexical.codec", () => {
         const once = roundTrip(document);
         expect(roundTrip(once)).toEqual(once);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 

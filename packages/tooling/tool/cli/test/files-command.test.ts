@@ -18,6 +18,7 @@ import {
   processFiles,
   renderFilesProgressBar,
 } from "@beep/repo-cli/commands/Files";
+import { fcRuns } from "@beep/test-utils";
 import { A, O, Str } from "@beep/utils";
 import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
 import { Cause, ConfigProvider, Data, Effect, Exit, FileSystem, Layer, Order, Path, pipe } from "effect";
@@ -488,7 +489,7 @@ describe("files command", { concurrent: false }, () => {
           );
         }
       ),
-      { numRuns: 25 }
+      fcRuns(25)
     ));
 
   it("renders a plain ascii files progress bar when colors are disabled", () => {

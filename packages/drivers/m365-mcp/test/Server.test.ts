@@ -25,6 +25,7 @@ import {
   M365ToolkitHandlersLive,
   makeServerLayer,
 } from "@beep/m365-mcp";
+import { fcRuns } from "@beep/test-utils";
 import { assert, describe, it, layer } from "@effect/vitest";
 import { Result } from "effect";
 import * as A from "effect/Array";
@@ -223,7 +224,7 @@ describe("M365 MCP server", () => {
           )
         );
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it("exposes the supported read-only Microsoft 365 tools", () => {
