@@ -4932,14 +4932,6 @@
       "description": "PCL batch report job metadata."
     },
     {
-      "file": "packages/drivers/pglite/src/Pglite.errors.ts",
-      "symbol": "PgliteError",
-      "kind": "tagged-error",
-      "owner": "@beep/pglite",
-      "identity": "PgliteError",
-      "description": "Technical PGlite driver failure scoped to a driver operation."
-    },
-    {
       "file": "packages/drivers/phoenix/src/Phoenix.config.ts",
       "symbol": "PhoenixConfigInput",
       "kind": "schema-class",

@@ -49,12 +49,12 @@
   },
   "dependencies": {
     "@beep/identity": "workspace:^",
-    "@beep/pglite": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/utils": "workspace:^",
     "@effect/platform-bun": "catalog:",
     "@effect/platform-node": "catalog:",
     "@effect/sql-pg": "catalog:",
+    "@effect/sql-pglite": "catalog:",
     "@effect/sql-sqlite-bun": "catalog:",
     "@effect/sql-sqlite-node": "catalog:",
     "effect": "catalog:",
