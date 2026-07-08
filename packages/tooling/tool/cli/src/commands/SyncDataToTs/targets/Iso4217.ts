@@ -13,7 +13,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { SyncDataTargetProjection, SyncDataToTsError } from "../internal/Models.js";
 import {
   fetchSource,
   formatJson,
@@ -23,7 +22,8 @@ import {
   parseXmlSource,
   sourceMetadata,
 } from "../internal/Source.js";
-import type { SyncDataTarget } from "../internal/Models.js";
+import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.js";
+import type { SyncDataTarget } from "../SyncDataToTs.schemas.js";
 
 const $I = $RepoCliId.create("commands/SyncDataToTs/targets/Iso4217");
 const targetId = "iso4217" as const;
@@ -33,11 +33,6 @@ const canonicalPath = "packages/foundation/primitive/data/src/generated/iso4217.
 /**
  * Official SIX XML source for ISO 4217 List One.
  *
- * @example
- * ```ts
- * import { ISO4217_SOURCE_URL } from "@beep/repo-cli/commands/SyncDataToTs"
- * console.log(ISO4217_SOURCE_URL)
- * ```
  * @category configuration
  * @since 0.0.0
  */
@@ -433,7 +428,8 @@ const acquireIso4217Projection = Effect.fn("SyncDataToTs.Iso4217.acquire")(funct
  * @example
  * ```ts
  * import { iso4217Target } from "@beep/repo-cli/commands/SyncDataToTs"
- * console.log(iso4217Target)
+ *
+ * console.log(iso4217Target.access) // "public"
  * ```
  * @category configuration
  * @since 0.0.0

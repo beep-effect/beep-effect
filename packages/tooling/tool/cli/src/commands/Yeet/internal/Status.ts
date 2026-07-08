@@ -232,8 +232,20 @@ const pathListFromNulOutput: (output: string) => ReadonlyArray<string> = flow(St
  * @example
  * ```ts
  * import { yeetStatusPathForTesting } from "@beep/repo-cli/test/Yeet"
+ * import { RepoRunContext } from "@beep/repo-cli/internal/repo-run"
+ * import { Effect } from "effect"
  *
- * console.log(yeetStatusPathForTesting)
+ * const context = RepoRunContext.make({
+ *   base: "origin/main",
+ *   branch: "feature/status-work",
+ *   cwd: "/repo",
+ *   head: "HEAD",
+ *   originalArgv: [],
+ *   packetDir: ".beep/yeet",
+ *   repoRoot: "/repo",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * console.log(Effect.isEffect(yeetStatusPathForTesting(context))) // true
  * ```
  * @category testing
  * @since 0.0.0
@@ -491,8 +503,10 @@ const nextCommandForStatus = (
  * @example
  * ```ts
  * import { collectYeetStatus } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
  *
- * console.log(collectYeetStatus)
+ * const program = Effect.succeed(collectYeetStatus)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category diagnostics
  * @since 0.0.0
@@ -557,7 +571,7 @@ export const collectYeetStatus = Effect.fn("YeetStatus.collectYeetStatus")(funct
  *   verdict: YeetStatusArtifact.make({ detail: "missing", path: "verdict.json", state: "missing" }),
  *   worktree: YeetStatusWorktree.make({ clean: true, staged: 0, unstaged: 0, untracked: 0 }),
  * }))
- * console.log(text)
+ * console.log(text) // example value
  * ```
  * @category formatting
  * @since 0.0.0
@@ -591,8 +605,10 @@ export const renderYeetStatusSummary = (snapshot: YeetStatusSnapshot): string =>
  * @example
  * ```ts
  * import { writeYeetStatusSnapshot } from "@beep/repo-cli/test/Yeet"
+ * import { Effect } from "effect"
  *
- * console.log(writeYeetStatusSnapshot)
+ * const program = Effect.succeed(writeYeetStatusSnapshot)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category diagnostics
  * @since 0.0.0

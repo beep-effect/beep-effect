@@ -6,8 +6,8 @@
  */
 
 export * from "@beep/repo-cli/commands/SyncDataToTs/index";
-export * from "@beep/repo-cli/commands/SyncDataToTs/internal/Models";
 export * from "@beep/repo-cli/commands/SyncDataToTs/internal/Source";
+export * from "@beep/repo-cli/commands/SyncDataToTs/SyncDataToTs.schemas";
 export * from "@beep/repo-cli/commands/SyncDataToTs/targets/CldrTerritories";
 export * from "@beep/repo-cli/commands/SyncDataToTs/targets/IanaMediaTypes";
 export * from "@beep/repo-cli/commands/SyncDataToTs/targets/IanaTimezones";

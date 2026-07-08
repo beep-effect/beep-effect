@@ -66,6 +66,18 @@ export * from "./config-snapshot.ts";
  */
 export * from "./derived-storage.ts";
 /**
+ * Derived-store path and scoped DuckDB provider helpers.
+ *
+ * @example
+ * ```ts
+ * import { aiMetricsDerivedDuckDbPath } from "@beep/repo-ai-metrics"
+ * console.log(aiMetricsDerivedDuckDbPath(".beep/ai-metrics"))
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+export * from "./duckdb.ts";
+/**
  * Durable forwarder workflow.
  *
  * @example

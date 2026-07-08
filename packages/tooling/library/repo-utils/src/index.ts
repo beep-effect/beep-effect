@@ -107,6 +107,43 @@ export { GlobOptions } from "./FsUtils.js";
  */
 export {
   /**
+   * @category predicates
+   * @since 0.0.0
+   */
+  exists,
+  /**
+   * @category utilities
+   * @since 0.0.0
+   */
+  findNearestPackageDir,
+  /**
+   * @category utilities
+   * @since 0.0.0
+   */
+  walkFiles,
+} from "./FsUtils.js";
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type {
+  /**
+   * @category models
+   * @since 0.0.0
+   */
+  WalkFilesOptions,
+  /**
+   * @category models
+   * @since 0.0.0
+   */
+  WalkFilesSymlinkGuard,
+} from "./FsUtils.js";
+/**
+ * @category utilities
+ * @since 0.0.0
+ */
+export {
+  /**
    * @category utilities
    * @since 0.0.0
    */
@@ -240,6 +277,11 @@ export {
    * @since 0.0.0
    */
   PackageJson,
+  /**
+   * @category parsing
+   * @since 0.0.0
+   */
+  readPackageJsonFile,
 } from "./schemas/PackageJson.js";
 /**
  * @category schemas
@@ -448,4 +490,19 @@ export {
    * @since 0.0.0
    */
   resolveWorkspaceDirs,
+  /**
+   * @category utilities
+   * @since 0.0.0
+   */
+  resolveWorkspacePackages,
+  /**
+   * @category models
+   * @since 0.0.0
+   */
+  WorkspacePackage,
+  /**
+   * @category utilities
+   * @since 0.0.0
+   */
+  workspaceGlobsFrom,
 } from "./Workspaces.js";

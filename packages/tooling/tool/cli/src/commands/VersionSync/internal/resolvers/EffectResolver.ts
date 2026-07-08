@@ -21,7 +21,7 @@ import {
   VersionCategoryStatusThunk,
   VersionDriftItem,
   VersionSyncError,
-} from "../Models.js";
+} from "../../VersionSync.schemas.js";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/resolvers/EffectResolver");
 const VERSION_SPECIFIER_PATTERN = /^([~^<>=\s]*)(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$/;

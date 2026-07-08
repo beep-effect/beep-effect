@@ -14,6 +14,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { csvValues } from "../../../internal/cli/Flags.js";
 import { commandTextForStep, RepoRunPlan } from "../../../internal/repo-run/index.js";
 import {
   FallowFeatureFamily,
@@ -130,7 +131,7 @@ export const FallowFeedbackAllowedRoot: Context.Reference<O.Option<string>> = Co
  * ```ts
  * import { layerFallowFeedbackAllowedRoot } from "@beep/repo-cli/commands/Yeet/internal/FallowFeedback"
  * const OutputRoot = layerFallowFeedbackAllowedRoot("/tmp/fallow-output")
- * console.log(OutputRoot)
+ * console.log(OutputRoot) // example value
  * ```
  * @category guards
  * @since 0.0.0
@@ -351,9 +352,6 @@ const envelopePaths = Effect.fn("YeetFallowFeedback.envelopePaths")(function* (
     A.sort(Order.String)
   );
 });
-
-const csvValues = (value: string): ReadonlyArray<string> =>
-  pipe(Str.split(value, ","), A.map(Str.trim), A.filter(Str.isNonEmpty));
 
 const spaceValues = (value: string): ReadonlyArray<string> =>
   pipe(Str.split(value, " "), A.map(Str.trim), A.filter(Str.isNonEmpty));

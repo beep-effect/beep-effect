@@ -5,9 +5,22 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import {
+  AiMetricsArchiveError,
+  AiMetricsConfigSnapshotError,
+  AiMetricsForwarderError,
+  AiMetricsIngestError,
+  AiMetricsInstallConfigurationError,
+  AiMetricsMirrorError,
+  AiMetricsOtlpExportError,
+  AiMetricsPrivacyError,
+  AiMetricsRetentionError,
+  AiMetricsScorecardError,
+  AiMetricsSourceDiscoveryError,
+} from "@beep/repo-ai-metrics";
 import { CauseTaggedError, TaggedErrorClass } from "@beep/schema";
 import { Err } from "@beep/utils";
-import { Runtime } from "effect";
+import { Effect, Runtime } from "effect";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/AIMetrics/AIMetrics.errors");
@@ -17,8 +30,13 @@ const $I = $RepoCliId.create("commands/AIMetrics/AIMetrics.errors");
  *
  * @example
  * ```ts
- * import { aiMetricsCommand } from "@beep/repo-cli/commands/AIMetrics/index"
- * console.log(aiMetricsCommand)
+ * import { AiMetricsCommandError } from "@beep/repo-cli/commands/AIMetrics/AIMetrics.errors"
+ *
+ * const error = AiMetricsCommandError.make({
+ *   cause: new Error("archive unavailable"),
+ *   message: "AI metrics archive unavailable"
+ * })
+ * console.log(error._tag === "AiMetricsCommandError") // true
  * ```
  * @category errors
  * @since 0.0.0
@@ -63,3 +81,73 @@ export class AiMetricsStatusExit extends TaggedErrorClass<AiMetricsStatusExit>($
 
   static readonly mapError = Err.mapToError(this.new);
 }
+
+/**
+ * Unified typed failure channel for AI metrics command programs.
+ *
+ * @example
+ * ```ts
+ * import { AiMetricsProgramError } from "@beep/repo-cli/commands/AIMetrics/AIMetrics.errors"
+ * import * as S from "effect/Schema"
+ *
+ * const isProgramError = S.is(AiMetricsProgramError)
+ * console.log(isProgramError({ _tag: "not-an-ai-metrics-error" })) // false
+ * ```
+ * @category errors
+ * @since 0.0.0
+ */
+export const AiMetricsProgramError = S.Union([
+  AiMetricsArchiveError,
+  AiMetricsCommandError,
+  AiMetricsConfigSnapshotError,
+  AiMetricsForwarderError,
+  AiMetricsIngestError,
+  AiMetricsInstallConfigurationError,
+  AiMetricsMirrorError,
+  AiMetricsOtlpExportError,
+  AiMetricsPrivacyError,
+  AiMetricsRetentionError,
+  AiMetricsScorecardError,
+  AiMetricsSourceDiscoveryError,
+  AiMetricsStatusExit,
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("AiMetricsProgramError", {
+    description: "Unified typed failure channel for AI metrics command programs.",
+  })
+);
+
+/**
+ * Unified typed failure channel for AI metrics command programs.
+ *
+ * @example
+ * ```ts
+ * import type { AiMetricsProgramError } from "@beep/repo-cli/commands/AIMetrics/AIMetrics.errors"
+ *
+ * const error: AiMetricsProgramError | undefined = undefined
+ * console.log(error === undefined) // true
+ * ```
+ * @category errors
+ * @since 0.0.0
+ */
+export type AiMetricsProgramError = typeof AiMetricsProgramError.Type;
+
+/**
+ * Adapt an AI metrics command program to the CLI command runtime shape.
+ *
+ * @param effect - AI metrics command effect after the command handler has built its typed program.
+ * @returns A command-runtime effect that preserves the original error and requirement channels while discarding success data.
+ * @example
+ * ```ts
+ * import { runAiMetricsProgram } from "@beep/repo-cli/commands/AIMetrics/AIMetrics.errors"
+ * import { Effect } from "effect"
+ *
+ * const program = runAiMetricsProgram(Effect.succeed("rendered"))
+ * console.log(program.pipe !== undefined) // true
+ * ```
+ * @category errors
+ * @since 0.0.0
+ */
+export const runAiMetricsProgram = <A, R>(
+  effect: Effect.Effect<A, AiMetricsProgramError, R>
+): Effect.Effect<void, AiMetricsProgramError, R> => effect.pipe(Effect.asVoid);

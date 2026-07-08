@@ -40,8 +40,19 @@ const artifactNameHash = (value: string): string => createHash("sha256").update(
  * @example
  * ```ts
  * import { runIdForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
+ * import { RepoRunContext } from "@beep/repo-cli/internal/repo-run"
  *
- * console.log(runIdForContext)
+ * const context = RepoRunContext.make({
+ *   base: "origin/main",
+ *   branch: "feature/status-work",
+ *   cwd: "/repo",
+ *   head: "HEAD",
+ *   originalArgv: [],
+ *   packetDir: ".beep/yeet",
+ *   repoRoot: "/repo",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * console.log(runIdForContext(context)) // e.g. "feature-status-work-1a2b3c4d"
  * ```
  * @category utilities
  * @since 0.0.0
@@ -57,8 +68,10 @@ export const runIdForContext = (context: RepoRunContext): string =>
  * @example
  * ```ts
  * import { artifactDirForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
+ * import { Effect } from "effect"
  *
- * console.log(artifactDirForContext)
+ * const program = Effect.succeed(artifactDirForContext)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -79,8 +92,10 @@ export const artifactDirForContext = Effect.fn("Yeet.artifactDirForContext")(fun
  * @example
  * ```ts
  * import { runArtifactPathForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
+ * import { Effect } from "effect"
  *
- * console.log(runArtifactPathForContext)
+ * const program = Effect.succeed(runArtifactPathForContext)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -102,8 +117,10 @@ export const runArtifactPathForContext = Effect.fn("Yeet.runArtifactPathForConte
  * @example
  * ```ts
  * import { runStatePathForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
+ * import { Effect } from "effect"
  *
- * console.log(runStatePathForContext)
+ * const program = Effect.succeed(runStatePathForContext)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0

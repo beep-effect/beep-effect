@@ -13,7 +13,6 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { DomainError } from "@beep/repo-utils";
 import { buildCanonicalAliasTargets } from "@beep/repo-utils/schemas/TsconfigAliasTargets";
 import { SchemaUtils } from "@beep/schema";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Str, thunkNegative1 } from "@beep/utils";
 import { Effect, FileSystem, flow, HashMap, Order, Path, pipe, SchemaTransformation } from "effect";
 import { dual } from "effect/Function";
@@ -21,7 +20,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as jsonc from "jsonc-parser";
+import { applyJsoncModification as applySharedJsoncModification, decodeJsoncTextAs } from "../../internal/cli/Jsonc.js";
 
 const $I = $RepoCliId.create("commands/CreatePackage/ConfigUpdater");
 
@@ -36,7 +35,10 @@ const $I = $RepoCliId.create("commands/CreatePackage/ConfigUpdater");
  * @example
  * ```ts
  * import { ConfigUpdateResult } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(ConfigUpdateResult)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { path: "tsconfig.json", updated: false }
+ * console.log(S.is(ConfigUpdateResult)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -58,8 +60,10 @@ export class ConfigUpdateResult extends S.Class<ConfigUpdateResult>($I`ConfigUpd
  * @example
  * ```ts
  * import { ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
+ * import * as S from "effect/Schema"
  *
- * console.log(ConfigUpdateTarget)
+ * const candidate = { packageName: "@beep/example", packagePath: "packages/example" }
+ * console.log(S.is(ConfigUpdateTarget)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -82,7 +86,10 @@ export class ConfigUpdateTarget extends S.Class<ConfigUpdateTarget>($I`ConfigUpd
  * @example
  * ```ts
  * import { ConfigUpdateTargetResult } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(ConfigUpdateTargetResult)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { packageName: "@beep/example", packagePath: "packages/example", updated: false }
+ * console.log(S.is(ConfigUpdateTargetResult)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -110,7 +117,10 @@ const DefaultedConfigUpdateTargetResults = S.Array(ConfigUpdateTargetResult).pip
  * @example
  * ```ts
  * import { ConfigUpdateBatchResult } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(ConfigUpdateBatchResult)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { results: [], updated: false }
+ * console.log(S.is(ConfigUpdateBatchResult)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -128,11 +138,6 @@ export class ConfigUpdateBatchResult extends S.Class<ConfigUpdateBatchResult>($I
 ) {}
 
 // ── Internal helpers ─────────────────────────────────────────────────────────
-
-const FORMATTING_OPTIONS: jsonc.FormattingOptions = {
-  tabSize: 2,
-  insertSpaces: true,
-};
 
 const PACKAGE_PATH_PATTERN = /^[a-z0-9][a-z0-9/_-]*$/;
 const TSTYCHE_TEST_FILE_MATCH_PATTERN = /\/dtslint\/\*\*\/\*\.tst\.\*$/;
@@ -262,17 +267,16 @@ const aliasTargetsForTarget = (target: ConfigUpdateTarget) => ({
 
 const applyJsoncModification = (
   content: string,
-  path: jsonc.JSONPath,
+  path: ReadonlyArray<string | number>,
   value: unknown,
-  options?: jsonc.ModificationOptions
+  options?: { readonly isArrayInsertion?: boolean }
 ): string =>
-  jsonc.applyEdits(
+  applySharedJsoncModification({
     content,
-    jsonc.modify(content, path, value, {
-      formattingOptions: FORMATTING_OPTIONS,
-      ...options,
-    })
-  );
+    path,
+    value,
+    ...(options?.isArrayInsertion === true ? { isArrayInsertion: true } : {}),
+  });
 
 /**
  * Read → transform → write-if-changed. Returns `true` when the file was
@@ -316,7 +320,9 @@ const modifyFileString: {
  * @example
  * ```ts
  * import { updateTsconfigPackages } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(updateTsconfigPackages)
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(updateTsconfigPackages("/repo", "packages/schema"))) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -361,8 +367,11 @@ export const updateTsconfigPackages: {
  * @depends FileSystem, Path
  * @example
  * ```ts
- * import { updateTsconfigPaths } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(updateTsconfigPaths)
+ * import { updateTsconfigPaths, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
+ * import { Effect } from "effect"
+ *
+ * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
+ * console.log(Effect.isEffect(updateTsconfigPaths("/repo", target))) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -421,7 +430,9 @@ export const updateTsconfigPaths: {
  * @example
  * ```ts
  * import { updateTstycheConfig } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(updateTstycheConfig)
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(updateTstycheConfig("/repo", "packages/schema"))) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -535,8 +546,11 @@ const checkConfigNeedsUpdateForTarget: {
  * @depends FileSystem, Path
  * @example
  * ```ts
- * import { updateRootConfigsForTargets } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(updateRootConfigsForTargets)
+ * import { updateRootConfigsForTargets, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
+ * import { Effect } from "effect"
+ *
+ * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
+ * console.log(Effect.isEffect(updateRootConfigsForTargets("/repo", [target]))) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -580,8 +594,11 @@ export const updateRootConfigsForTargets: {
  * @depends FileSystem, Path
  * @example
  * ```ts
- * import { checkConfigNeedsUpdateForTargets } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(checkConfigNeedsUpdateForTargets)
+ * import { checkConfigNeedsUpdateForTargets, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
+ * import { Effect } from "effect"
+ *
+ * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
+ * console.log(Effect.isEffect(checkConfigNeedsUpdateForTargets("/repo", [target]))) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -627,9 +644,11 @@ export const checkConfigNeedsUpdateForTargets: {
  * @depends FileSystem, Path
  * @example
  * ```ts
- * import { updateRootConfigs } from "@beep/repo-cli/commands/CreatePackage"
+ * import { updateRootConfigs, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
+ * import { Effect } from "effect"
  *
- * console.log(updateRootConfigs)
+ * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
+ * console.log(Effect.isEffect(updateRootConfigs("/repo", target))) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -661,9 +680,11 @@ export const updateRootConfigs: {
  * @depends FileSystem, Path
  * @example
  * ```ts
- * import { checkConfigNeedsUpdate } from "@beep/repo-cli/commands/CreatePackage"
+ * import { checkConfigNeedsUpdate, ConfigUpdateTarget } from "@beep/repo-cli/commands/CreatePackage"
+ * import { Effect } from "effect"
  *
- * console.log(checkConfigNeedsUpdate)
+ * const target = ConfigUpdateTarget.make({ packageName: "@beep/schema", packagePath: "packages/schema" })
+ * console.log(Effect.isEffect(checkConfigNeedsUpdate("/repo", target))) // true
  * ```
  * @category utilities
  * @since 0.0.0

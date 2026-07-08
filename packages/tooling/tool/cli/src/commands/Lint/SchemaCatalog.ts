@@ -41,8 +41,10 @@ const stringifyJsonPretty = SchemaGetter.stringifyJson({ space: 2 });
  * @example
  * ```ts
  * import { SchemaCatalogEntryKind } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
  *
- * console.log(SchemaCatalogEntryKind)
+ * const value = "schema-class"
+ * console.log(S.is(SchemaCatalogEntryKind)(value)) // true
  * ```
  * @category schema
  * @since 0.0.0
@@ -87,8 +89,10 @@ export type SchemaCatalogEntryKind = typeof SchemaCatalogEntryKind.Type;
  * @example
  * ```ts
  * import { SchemaCatalogEntry } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
  *
- * console.log(SchemaCatalogEntry)
+ * const candidate = { file: "packages/example/src/Foo.ts", name: "Foo", kind: "class" }
+ * console.log(S.is(SchemaCatalogEntry)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -113,8 +117,10 @@ export class SchemaCatalogEntry extends S.Class<SchemaCatalogEntry>($I`SchemaCat
  * @example
  * ```ts
  * import { SchemaCatalogDocument } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
  *
- * console.log(SchemaCatalogDocument)
+ * const candidate = { entries: [] }
+ * console.log(S.is(SchemaCatalogDocument)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -136,8 +142,10 @@ export class SchemaCatalogDocument extends S.Class<SchemaCatalogDocument>($I`Sch
  * @example
  * ```ts
  * import { SchemaCatalogOptions } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
  *
- * console.log(SchemaCatalogOptions)
+ * const candidate = { check: true, write: false }
+ * console.log(S.is(SchemaCatalogOptions)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -160,8 +168,10 @@ export class SchemaCatalogOptions extends S.Class<SchemaCatalogOptions>($I`Schem
  * @example
  * ```ts
  * import { SchemaCatalogSummary } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
  *
- * console.log(SchemaCatalogSummary)
+ * const candidate = { entryCount: 1, written: false }
+ * console.log(S.is(SchemaCatalogSummary)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -576,8 +586,10 @@ const collectCatalogEntriesFromSourceFile = (
  * @example
  * ```ts
  * import { generateSchemaCatalogDocument } from "@beep/repo-cli/commands/Lint"
+ * import { Effect } from "effect"
  *
- * console.log(generateSchemaCatalogDocument)
+ * const program = Effect.succeed(generateSchemaCatalogDocument)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -628,8 +640,10 @@ export const generateSchemaCatalogDocument = Effect.fn("SchemaCatalog.generateDo
  * @example
  * ```ts
  * import { renderSchemaCatalogDocument } from "@beep/repo-cli/commands/Lint"
+ * import { Effect } from "effect"
  *
- * console.log(renderSchemaCatalogDocument)
+ * const program = Effect.succeed(renderSchemaCatalogDocument)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category formatting
  * @since 0.0.0
@@ -649,8 +663,10 @@ export const renderSchemaCatalogDocument = Effect.fn("SchemaCatalog.renderDocume
  * @example
  * ```ts
  * import { generateSchemaCatalogText } from "@beep/repo-cli/commands/Lint"
+ * import { Effect } from "effect"
  *
- * console.log(generateSchemaCatalogText)
+ * const program = Effect.succeed(generateSchemaCatalogText)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -701,8 +717,10 @@ const checkSchemaCatalog = Effect.fn("SchemaCatalog.check")(function* (content: 
  * @example
  * ```ts
  * import { runSchemaCatalog } from "@beep/repo-cli/commands/Lint"
+ * import { Effect } from "effect"
  *
- * console.log(runSchemaCatalog)
+ * const program = Effect.succeed(runSchemaCatalog)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -735,8 +753,11 @@ export const runSchemaCatalog = Effect.fn("SchemaCatalog.run")(function* (option
  * @example
  * ```ts
  * import { lintSchemaCatalogCommand } from "@beep/repo-cli/commands/Lint"
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
  *
- * console.log(lintSchemaCatalogCommand)
+ * const run = Command.run(lintSchemaCatalogCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category cli-commands
  * @since 0.0.0

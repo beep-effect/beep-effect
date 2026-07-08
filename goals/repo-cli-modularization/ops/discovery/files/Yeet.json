@@ -1,0 +1,584 @@
+[
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+    "summary": "Handler.ts is the entire yeet execution engine: it defines the public run option/result schemas, Turbo/gh JSON schemas and decoders, git/gh/turbo subprocess wrappers, publish-scope safety (intent, stash, base freshness), durable proof state and locking, issue-artifact writing, and the per-mode orchestration (runYeet + repair/verify/publish/monitor/closeout/status/pre-push-hook) in one 2897-line module.",
+    "concerns": [
+      {
+        "name": "Turbo query schemas + snapshot collection",
+        "description": "Schema classes for `turbo query affected`/`turbo query ls` JSON, their decoders, subprocess invocation, and mapping into TurboPlanSnapshot/TurboPlanTask. Includes the O(n) balanced-brace JSON extractor for mixed subprocess output.",
+        "keySymbols": [
+          "TurboQueryAffectedDocument",
+          "TurboQueryLsDocument",
+          "runTurboQueryJson",
+          "collectTurboPlanSnapshot",
+          "collectAffectedFeedbackTasks",
+          "turboPlanTasksFromQueryDocuments"
+        ],
+        "locEstimate": 340
+      },
+      {
+        "name": "Public command data schemas",
+        "description": "The facade-exported option/result models plus the publish-intent value object, with large @example doc blocks. These are the only Handler symbols re-exported by commands/Yeet/index.ts.",
+        "keySymbols": [
+          "YeetRunOptions",
+          "YeetRunResult",
+          "YeetPublishIntent",
+          "defaultYeetRunOptions"
+        ],
+        "locEstimate": 220
+      },
+      {
+        "name": "Pure publish-scope path domain logic",
+        "description": "Pure functions over git path lists: NUL-output parsing, pre-push SHA extraction/mismatch, intent-diff computations, partial-stage/overlap detection, path summarization, and refname safety, each with a *ForTesting alias.",
+        "keySymbols": [
+          "sortedUniquePaths",
+          "gitPathListFromNulOutput",
+          "prePushLocalShasFromStdin",
+          "prePushShaMismatches",
+          "publishPathsOutsideIntent",
+          "publishRestagePaths"
+        ],
+        "locEstimate": 320
+      },
+      {
+        "name": "Git/gh subprocess wrappers",
+        "description": "Effectful wrappers over runRepoCommandCapture for git and gh: output capture with exit/truncation checks, path-list collection, base-ref refresh with injection guarding, upstream inspection, lockfile change detection.",
+        "keySymbols": [
+          "runGitOutput",
+          "runGitPathList",
+          "collectStagedPublishPaths",
+          "collectUnstagedTrackedPaths",
+          "collectUntrackedPaths",
+          "refreshBaseRef"
+        ],
+        "locEstimate": 230
+      },
+      {
+        "name": "GitHub PR lifecycle",
+        "description": "gh pr view/create integration: PR metadata schema, open-PR discovery, PR body rendering from commit log + lane summary, idempotent PR creation, and monitor PR validation.",
+        "keySymbols": [
+          "GhPullRequestView",
+          "runGhPullRequestView",
+          "findOpenPullRequest",
+          "buildPrBody",
+          "ensurePullRequest",
+          "recordPrCreateLane"
+        ],
+        "locEstimate": 140
+      },
+      {
+        "name": "Flag-combination guard validation",
+        "description": "A long conditional wall validating mode/flag combinations (--fast, --start-pr-early, --push-only, --staged-only, --amend, --no-edit, --pr) plus commit-message presence and commitlint execution.",
+        "keySymbols": [
+          "validateMonitorGuards",
+          "validateMonitorBranch",
+          "validateRequiredMessage",
+          "validateCommitMessage",
+          "shouldMonitorChecks"
+        ],
+        "locEstimate": 230
+      },
+      {
+        "name": "Publish intent + staged-only stash safety",
+        "description": "Collecting the reviewed publish intent, re-validating it after quality lanes, restaging, post-commit worktree drift checks, and the marked-stash park/restore for --staged-only, all failing through packet-writing errors.",
+        "keySymbols": [
+          "collectPublishIntent",
+          "validatePublishIntentStillSafe",
+          "stageReviewedPublishIntent",
+          "validatePostCommitProofDidNotChangeWorktree",
+          "failPublishScopeWithPacket",
+          "stashUnstagedWorktree"
+        ],
+        "locEstimate": 400
+      },
+      {
+        "name": "Durable proof state, fingerprint, and lock",
+        "description": "SHA-256 diff fingerprinting via git diff --output into guarded artifact paths, YeetRunState/YeetLaneProofState/YeetProofLockState schemas, exclusive O_EXCL lock claim with stale-pid disposition, and verified-state write/load/reuse assertions.",
+        "keySymbols": [
+          "YeetRunState",
+          "YeetLaneProofState",
+          "YeetProofLockState",
+          "collectDiffFingerprint",
+          "collectGitDiffBytes",
+          "acquireFullProofLock"
+        ],
+        "locEstimate": 420
+      },
+      {
+        "name": "Artifact + issue packet writing",
+        "description": "Filesystem helpers (mkdir+write), JSON rendering, quality-issue index + per-package markdown packet emission, step log paths, and failure paths that write packets before raising YeetCommandError.",
+        "keySymbols": [
+          "writeTextFile",
+          "renderJson",
+          "writeIssueArtifacts",
+          "issuesFromResults",
+          "failWithIssueArtifacts",
+          "executeStepWithArtifacts"
+        ],
+        "locEstimate": 220
+      },
+      {
+        "name": "Mode orchestration and entrypoint",
+        "description": "Phase execution over the plan (prepare/feedback/commit/full/publish/monitor), the seven YeetRunMode branches, verdict writing on success/failure, plan rendering, context hydration, and the exported runYeet entrypoint.",
+        "keySymbols": [
+          "runYeet",
+          "hydrateYeetRunContext",
+          "runPlanExecution",
+          "runPublishMode",
+          "runVerifyMode",
+          "runPrePushHookMode"
+        ],
+        "locEstimate": 700
+      }
+    ],
+    "proposedSplit": [
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
+        "role": "schemas",
+        "contents": "YeetRunOptions, YeetRunResult, YeetPublishIntent, and defaultYeetRunOptions (the constructor-with-defaults test helper belongs beside the schema). index.ts re-exports YeetRunOptions/YeetRunResult from here instead of internal/Handler.js.",
+        "targetFileNote": ""
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/TurboQuery.ts",
+        "role": "internal",
+        "contents": "TurboQuery* schema classes and decoders, runTurboQueryJson, collectTurboVersion, collectAffectedFeedbackTasks, collectTurboPlanSnapshot, turboPlanTasksFromQueryDocuments, shouldCollectAffectedFeedbackTasks, plus balancedTopLevelObjectSpans/isEscapedQuote/jsonObjectTextFromMixedOutput and the jsonObjectTextFromMixedOutputForTesting/decodeTurboPlanTasksFromQueryJsonForTesting aliases."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/GitExec.ts",
+        "role": "internal",
+        "contents": "runGitOutput, runGitPathList, collectStagedPublishPaths/collectUnstagedTrackedPaths/collectUntrackedPaths, currentCommitSha, refreshBaseRef, originBranchFromBase, isSafeOriginBranch, safeOriginBranchFromBaseForTesting, collectCurrentUpstreamBranch, lockfileChangedSinceBase, commandFailure, optionFromNonEmpty."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/PublishScope.ts",
+        "role": "internal",
+        "contents": "Pure path domain logic (sortedUniquePaths, gitPathListFromNulOutput, prePush*, publishPathsOutsideIntent, publishRestagePaths, partiallyStagedPaths, overlappingBasePaths, summarizePublishPaths, publishUpstreamMismatchWarning) plus the effectful intent safety chain: failPublishScopeWithPacket, collectPublishIntent, validatePublishIntentStillSafe, stageReviewedPublishIntent, validatePostCommitProofDidNotChangeWorktree, assessBaseFreshness, enforceBaseFreshness, stash park/restore, and all their *ForTesting aliases."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/ProofState.ts",
+        "role": "internal",
+        "contents": "YeetRunState, YeetLaneProofState, YeetProofLockState schemas; collectDiffFingerprint/collectGitDiffBytes/hashText/laneProofStateForStep/proofCommandForSteps; lock machinery (isPidAlive, proofLockDisposition, tryClaimProofLockExclusive, acquireFullProofLock, releaseProofLock, proofLockPathForContext); writeVerifiedState, loadVerifiedState, legacyRunStatePathForContext, assertReusableVerifiedState; ForTesting aliases (collectDiffFingerprintForTesting, proofLockDispositionForTesting, loadVerifiedStateForTesting, YeetProofLockStateForTesting)."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/PullRequest.ts",
+        "role": "internal",
+        "contents": "GhPullRequestView schema + decoder, runGhPullRequestView, findOpenPullRequest, buildPrBody, recordPrCreateLane, ensurePullRequest, validateOpenPullRequest."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Guards.ts",
+        "role": "internal",
+        "contents": "validateMonitorGuards (the flag-combination wall), validateMonitorBranch, blockedMonitorBranches, shouldMonitorChecks, validateRequiredMessage, validateCommitMessage, commitMessagePathForContext."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueArtifacts.ts",
+        "role": "internal",
+        "contents": "writeTextFile, renderJson/encodeJson, writeIssueArtifacts, issuesFromResults, failWithIssueArtifacts, executeStepWithArtifacts, rawOutputPathForStep, publishResult, emptyPlanResult. Sits above ArtifactPaths.ts and below every mode module; breaks the current failPublishScopeWithPacket -> writeIssueArtifacts forward reference."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Handler.ts",
+        "role": "command",
+        "contents": "Remains the orchestrator (~600-700 LOC): runYeet, hydrateYeetRunContext, runPlanExecution, runPhase/runProofPhase/runRequiredPhase, runVerifyMode/runPublishMode/runMonitorMode/runStatusMode/runCloseoutMode/runPrePushHookMode/readPrePushHookStdin, shouldSkipCommitForReusablePublish(+ForTesting), writeRunVerdict, YeetVerdictExtras, renderPlan, printOperatorStatusSummary, buildYeetRunPlanForTesting."
+      }
+    ],
+    "sharedCandidates": [
+      {
+        "helper": "runGitOutput / runGitPathList",
+        "description": "Generic capture-with-exit/truncation-check wrappers over runRepoCommandCapture for git. Worktree.command.ts already hand-rolls its own runGitCapture (line 389); belongs in src/internal/repo-run alongside runRepoCommandCapture.",
+        "alsoUsefulFor": ["Worktree", "Ci", "Quality", "VersionSync"]
+      },
+      {
+        "helper": "jsonObjectTextFromMixedOutput + balancedTopLevelObjectSpans",
+        "description": "Provider-agnostic extraction of the last decodable top-level JSON object from noisy subprocess output (the O(n) hang-fix scanner). Nothing about it is yeet- or turbo-specific.",
+        "alsoUsefulFor": ["Quality", "Corpus", "Codegen", "AgentEffectiveness"]
+      },
+      {
+        "helper": "writeTextFile",
+        "description": "mkdir-recursive + writeFileString with a tagged error; the same pattern is re-implemented in several command internals that emit artifacts. Only the error constructor is command-specific, so a shared version would take an error mapper.",
+        "alsoUsefulFor": ["Quality", "Docgen", "Corpus", "Research"]
+      },
+      {
+        "helper": "isPidAlive + tryClaimProofLockExclusive + proofLockDisposition",
+        "description": "Generic O_EXCL file-lock claim with stale-owner-pid detection and replace/refuse disposition. Useful for any long-running CLI lane that must serialize (only the YeetProofLockState payload is command-specific).",
+        "alsoUsefulFor": ["Corpus", "Graphiti", "Docgen"]
+      },
+      {
+        "helper": "isSafeOriginBranch / originBranchFromBase",
+        "description": "Git refname safety validation (rejects option-like, refspec, and glob metacharacters) complementing guardLiteralArg in @beep/repo-utils; any command that fetches or checks out user-supplied refs needs it.",
+        "alsoUsefulFor": ["Worktree", "Ci"]
+      },
+      {
+        "helper": "GhPullRequestView + findOpenPullRequest / runGhPullRequestView",
+        "description": "gh pr view JSON schema and open-PR discovery; Closeout.ts in the same group and any CI-facing command duplicate gh JSON plumbing.",
+        "alsoUsefulFor": ["Ci", "Quality"]
+      },
+      {
+        "helper": "sortedUniquePaths / gitPathListFromNulOutput",
+        "description": "Pure NUL-delimited git output parsing and dedupe/sort; generic to any git path listing.",
+        "alsoUsefulFor": ["Worktree", "Quality", "Files"]
+      },
+      {
+        "helper": "optionFromNonEmpty",
+        "description": "trim + non-empty -> Option<string>; a two-line generic helper that likely already has (or deserves) a home in @beep/repo-utils or a shared string module rather than per-command copies.",
+        "alsoUsefulFor": ["all command groups"]
+      }
+    ],
+    "risks": [
+      "Facade breakage: commands/Yeet/index.ts re-exports YeetRunOptions/YeetRunResult from ./internal/Handler.js and Yeet.command.ts deep-imports runYeet + YeetRunOptions from internal/Handler.js; both import sites must be updated in the same change.",
+      "Test-kit star-export collisions: src/test/Yeet.test-kit.ts does `export * from \"../commands/Yeet/internal/Handler.js\"` and test/yeet.test.ts imports ~40 symbols (many *ForTesting aliases) through @beep/repo-cli/test/Yeet; every new internal module must be added to the test-kit, and if Handler re-exports moved symbols while the test-kit also stars the new module, duplicate-export errors or ambiguity will surface.",
+      "Schema identity churn: schema classes use $I = $RepoCliId.create(\"commands/Yeet/internal/Handler\"), so moving YeetRunOptions/YeetRunState/Turbo* classes changes their identifier strings and the generated, tracked P3 schema catalog must be regenerated (structural JSON decode of persisted state.json/quality-lock is unaffected, but catalog diffs will gate).",
+      "Effect ordering/state coupling: runProofPhase wraps runPhase in acquireUseRelease of the proof lock, stash restore rides Effect.ensuring around runPostCommitPhases, and the recorder/extras Refs are threaded through every phase \u2014 the split must preserve exact effect ordering (park stash BEFORE commit, validate intent twice around git add, verdict write in tapError/tap) or publish safety guarantees silently weaken.",
+      "Docgen gates: moved exports carry @example blocks that import from @beep/repo-cli/commands/Yeet and @beep/repo-cli/test/Yeet; examples must stay compilable from the new files and every new file needs @packageDocumentation/@since to pass `bun run docgen`.",
+      "Layering to avoid cycles: failPublishScopeWithPacket (PublishScope) needs writeIssueArtifacts (IssueArtifacts) which needs QualityIssueIndex/PacketRenderer; GitExec must not import PublishScope; enforce GitExec -> PublishScope -> IssueArtifacts -> Handler direction or the split reintroduces the current forward-reference tangle as import cycles."
+    ]
+  },
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
+    "summary": "Implements the `yeet closeout` mode end-to-end: it shells out to `gh` (pr/repo view, paginated GraphQL queries, thread reply/resolve mutations), decodes the GitHub payloads into ~30 schema classes, derives Greptile/bot review signal, computes closeout gate states and QualityIssues, optionally performs explicit review-thread write actions, and emits the durable PrCloseoutReport consumed by Handler.ts and Status.ts.",
+    "concerns": [
+      {
+        "name": "GitHub GraphQL response schemas",
+        "description": "Approximately 25 S.Class wrappers mirroring gh GraphQL payload shapes (actor, page info, comments, review threads, reviews, plus per-query Repository/Data/Document envelope triples). Pure data modeling with zero behavior.",
+        "keySymbols": [
+          "GhActor",
+          "GhPageInfo",
+          "GhPrView",
+          "GhComment",
+          "GhReviewThread",
+          "GhReview"
+        ],
+        "locEstimate": 280
+      },
+      {
+        "name": "Closeout domain schemas (public)",
+        "description": "The command's own data models: gate options, Greptile summary, durable gate state (LiteralKit name/status), write action, and the versioned PrCloseoutReport persisted as a run artifact and re-decoded by Status.ts.",
+        "keySymbols": [
+          "PrCloseoutOptions",
+          "GreptileSummary",
+          "PrCloseoutGateName",
+          "PrCloseoutGateStatus",
+          "PrCloseoutGateState",
+          "PrCloseoutWriteAction"
+        ],
+        "locEstimate": 150
+      },
+      {
+        "name": "GraphQL query documents + JSON decoders",
+        "description": "Three inline GraphQL page query strings, two thread mutations, and five S.decodeUnknownEffect(S.fromJsonString(...)) decoders binding queries to schemas.",
+        "keySymbols": [
+          "commentsPageQuery",
+          "reviewThreadsPageQuery",
+          "reviewsPageQuery",
+          "REPLY_THREAD_MUTATION",
+          "RESOLVE_THREAD_MUTATION",
+          "decodeGhPrView"
+        ],
+        "locEstimate": 75
+      },
+      {
+        "name": "gh process execution wrapper",
+        "description": "ghOutput runs runRepoCommandCapture(\"gh\", ...) and maps nonzero exit / truncated capture into YeetCommandError. Single generic helper reused by every gh call in the file.",
+        "keySymbols": ["ghOutput"],
+        "locEstimate": 25
+      },
+      {
+        "name": "Pure Greptile/bot signal parsing",
+        "description": "Regex-based parsing of Greptile score/issue-count from comment bodies, bot-token matching, and fail-closed issue-count inference; entirely pure with two ForTesting exports that wrap internals.",
+        "keySymbols": [
+          "parseScore",
+          "parseIssueCount",
+          "latestGreptileSummary",
+          "inferGreptileIssueCount",
+          "isBotComment",
+          "isGreptileComment"
+        ],
+        "locEstimate": 145
+      },
+      {
+        "name": "Gate-state and QualityIssue derivation",
+        "description": "Pure functions building QualityIssue records (via QualityIssueIndex constructors) and the five PrCloseoutGateState values (review-threads, greptile, coderabbit, chatgpt, hosted-checks) from options + parsed signal.",
+        "keySymbols": [
+          "closeoutIssue",
+          "reviewThreadIssue",
+          "gateIssues",
+          "greptileGateState",
+          "threadBotGateState",
+          "closeoutGateStates"
+        ],
+        "locEstimate": 205
+      },
+      {
+        "name": "GraphQL pagination collectors (effectful)",
+        "description": "Cursor plumbing (nextCursor, cursorArgs) and three while-loop page collectors plus collectPrCloseoutPayload composing gh pr view + repo view + all three collectors; logs warnings on >100 nested comments.",
+        "keySymbols": [
+          "nextCursor",
+          "cursorArgs",
+          "ghGraphqlPage",
+          "collectCommentPages",
+          "collectReviewThreadPages",
+          "collectReviewPages"
+        ],
+        "locEstimate": 190
+      },
+      {
+        "name": "Write-action planning (pure) and execution",
+        "description": "closeoutWritePlan validates --reply-thread/--reply-body/--resolve-threads flags against known thread ids into typed intents (pure); performCloseoutWriteActions executes them serially via gh GraphQL mutations.",
+        "keySymbols": [
+          "closeoutWritePlan",
+          "closeoutWritePlanForTesting",
+          "CloseoutWriteIntent",
+          "performCloseoutWriteActions",
+          "caseSensitiveTokens",
+          "CLOSEOUT_REPLY_BODY_MAX_CHARS"
+        ],
+        "locEstimate": 110
+      },
+      {
+        "name": "Closeout orchestrator",
+        "description": "runPrCloseout wires everything: fetch payload, optionally plan+perform writes then refetch (mutable let rebinding), derive bot comments/signal/issues/gate states, optionally post the Greptile retrigger comment, and construct PrCloseoutReport.",
+        "keySymbols": [
+          "runPrCloseout",
+          "greptileRetriggerCommentForTesting",
+          "GREPTILE_RETRIGGER_COMMENT"
+        ],
+        "locEstimate": 100
+      }
+    ],
+    "proposedSplit": [
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gh.schemas.ts",
+        "role": "schemas",
+        "contents": "All ~25 Gh* GraphQL response S.Class wrappers (GhActor through GhReviewsDocument, GhPrView, GhRepoView) plus the five decodeGh* decoders and the three page query strings they decode. Self-contained cluster with no dependency on the rest of the file."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Closeout.schemas.ts",
+        "role": "schemas",
+        "contents": "Public domain models: PrCloseoutOptions, GreptileSummary, PrCloseoutGateName/PrCloseoutGateStatus LiteralKits, PrCloseoutGateState, PrCloseoutWriteAction, PrCloseoutReport (depends only on QualityIssueIndex and Gh.schemas is not needed)."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GreptileSignal.ts",
+        "role": "internal",
+        "contents": "Pure signal parsing: normalizedTokens, authorLogin, textMatchesAnyToken, isBotComment, isGreptileComment, score/issue-count regexes and parsers, latestGreptileSummary(+ForTesting), bot/greptile thread counters, hasGreptileEvidence, inferGreptileIssueCount(+ForTesting)."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/Gates.ts",
+        "role": "plan",
+        "contents": "Pure gate/issue derivation: issueRouting, closeoutIssue, reviewThreadIssue, greptileIssueLimitExceeded(+ForTesting), gateIssues, greptileGateState, threadBotGateState, closeoutGateStates(+ForTesting)."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/GhCollect.ts",
+        "role": "internal",
+        "contents": "Effectful gh execution: ghOutput, cursorArgs, nextCursor, closedPageInfo, ghGraphqlPage, the three collect*Pages loops, collectPrCloseoutPayload, and performCloseoutWriteActions with the two mutation constants."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/closeout/WritePlan.ts",
+        "role": "plan",
+        "contents": "Pure write planning: CloseoutWriteIntent type, caseSensitiveTokens, CLOSEOUT_REPLY_BODY_MAX_CHARS, closeoutWritePlan(+ForTesting) flag validation against known thread ids."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/Closeout.ts",
+        "role": "internal",
+        "contents": "Shrinks to the runPrCloseout orchestrator, GREPTILE_RETRIGGER_COMMENT(+ForTesting), and a re-export barrel of the public/ForTesting symbols so Handler.ts, Status.ts, and src/test/Yeet.test-kit.ts keep working unchanged."
+      }
+    ],
+    "sharedCandidates": [
+      {
+        "helper": "ghOutput",
+        "description": "Generic 'run gh, map nonzero exit and truncated capture to YeetCommandError' wrapper. Handler.ts (runGhPullRequestView, findOpenPullRequest ~line 623+) and Status.ts (collectRemoteChecks/collectRemoteStatus ~line 382+) hand-roll the identical exitCode/truncated dance; a parameterized runGhCapture in src/internal/repo-run/ would collapse all three (error type would need to be caller-supplied or a shared repo-run error).",
+        "alsoUsefulFor": [
+          "Yeet/Handler",
+          "Yeet/Status",
+          "Research (RepoCards.ts runs gh)"
+        ]
+      },
+      {
+        "helper": "GhPageInfo + nextCursor + cursorArgs + ghGraphqlPage",
+        "description": "Generic GitHub GraphQL cursor-pagination machinery, not closeout-specific. Any future gh GraphQL consumer (Research repo cards, AIMetrics PR data) needs exactly this loop.",
+        "alsoUsefulFor": ["Research", "AIMetrics"]
+      },
+      {
+        "helper": "GhActor / GhComment / GhPrView schemas",
+        "description": "Generic GitHub payload shapes; GhPrView (number,headRefName,state,url,headRefOid,isDraft) is a superset duplicate of Handler.ts's GhPullRequestView (number,headRefName,state) decoded from the same gh pr view command. A shared internal/github schema module would deduplicate.",
+        "alsoUsefulFor": ["Yeet/Handler", "Yeet/Status", "Research"]
+      },
+      {
+        "helper": "normalizedTokens / caseSensitiveTokens",
+        "description": "Comma-separated CLI flag tokenizers (trim, drop empties, optional lowercase); generic flag-parsing utilities useful to any command group accepting CSV flags.",
+        "alsoUsefulFor": ["Corpus", "Fallow", "AIMetrics"]
+      }
+    ],
+    "risks": [
+      "src/test/Yeet.test-kit.ts does `export * from \"../commands/Yeet/internal/Closeout.js\"` and test/yeet.test.ts consumes PrCloseoutOptions, PrCloseoutReport, GreptileSummary, and five *ForTesting helpers through it \u2014 the barrel at internal/Closeout.ts must keep re-exporting everything (or test-kit must re-export each new module, risking export* name collisions).",
+      "$I keys embed the module path (`$RepoCliId.create(\"commands/Yeet/internal/Closeout\")`); moving S.Class declarations to new files changes schema identifiers/annotations unless each new file keeps or deliberately re-derives its $I path \u2014 affects docgen output and any identifier-sensitive tooling (PrCloseoutReport JSON round-trip via Status.ts decodePrCloseoutReport is structural and safe, but keep the \"yeet-pr-closeout/v1\" literal).",
+      "Deep imports to update: Handler.ts imports { PrCloseoutOptions, runPrCloseout } and Status.ts imports { PrCloseoutReport } from ./Closeout.js \u2014 keep them working via the barrel or rewrite both.",
+      "runPrCloseout has strict ordering with mutable rebinding: collect payload -> plan/perform writes -> re-collect payload -> derive gates from refreshed data -> post Greptile retrigger comment LAST (so the retrigger comment never feeds the same run's gate evaluation); a split must not let the orchestrator compute gates from the pre-write payload or reorder the retrigger.",
+      "JSDoc @example blocks reference facade paths (\"@beep/repo-cli/commands/Yeet\", \"@beep/repo-cli/test/Yeet\") that docgen compiles; note PrCloseoutGateState's example imports from commands/Yeet whose index.ts does not actually export it \u2014 a pre-existing inconsistency a refactor could trip over.",
+      "test/schema-first.test.ts is already modified in the working tree and lints schema layout; distributing S.Class declarations across new files may change its counts/expectations and the crispening ratchet."
+    ]
+  },
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/QualityIssueIndex.ts",
+    "summary": "Schema-first domain model plus the entire normalization pipeline for yeet quality findings: it defines the QualityIssue* schema family, parses raw failed-step output (TS diagnostics, schema-first JSON lines, known sub-lane heuristics) into QualityIssue values, resolves package/turbo attribution from RepoRunContext, and aggregates issues into a deterministic QualityIssueIndex.",
+    "concerns": [
+      {
+        "name": "Public quality-issue schema models",
+        "description": "LiteralKit domains and S.Class models that form the yeet packet wire format; all eight are re-exported through commands/Yeet/index.ts.",
+        "keySymbols": [
+          "QualityIssueCategory",
+          "QualityIssueSeverity",
+          "QualityIssueConfidence",
+          "QualityIssueAttribution",
+          "QualityIssueRouting",
+          "QualityIssue"
+        ],
+        "locEstimate": 285
+      },
+      {
+        "name": "Schema-first policy wire decoding",
+        "description": "Private duplicate of the '[schema-first:issue] ' JSON-line protocol emitted by Lint/SchemaFirst.ts, decoded via S.fromJsonString. The same schema+prefix is independently re-declared in AgentEffectiveness/internal/EvalScorer.ts (SchemaFirstPolicyIssue).",
+        "keySymbols": [
+          "SchemaFirstPolicyOutput",
+          "decodeSchemaFirstPolicyOutput",
+          "schemaFirstPolicyIssuePrefix",
+          "schemaFirstPolicyIssueFromLine"
+        ],
+        "locEstimate": 60
+      },
+      {
+        "name": "Raw-output text normalization",
+        "description": "Generic subprocess-output text utilities: ANSI stripping, line splitting/trimming, excerpt truncation. Nothing yeet-specific; bin-main.ts hand-rolls its own nonEmptyLines.",
+        "keySymbols": [
+          "ansiPattern",
+          "stripAnsi",
+          "normalizeOutput",
+          "nonEmptyLines",
+          "truncateExcerpt",
+          "MAX_RAW_EXCERPT_CHARS"
+        ],
+        "locEstimate": 20
+      },
+      {
+        "name": "Category classification and specialist routing heuristics",
+        "description": "Step-label to category mapping, the knownSubLaneHints needle table with remediation text, failure-window scanning over output tails, and category-to-skill routing. Pure functions plus one export consumed by Verdict.ts and tests.",
+        "keySymbols": [
+          "routeForCategory",
+          "categoryForStep",
+          "knownSubLaneHints",
+          "knownSubLaneHintFromOutput",
+          "outputFailureHintSlices",
+          "knownSubLaneRemediationFromOutput"
+        ],
+        "locEstimate": 200
+      },
+      {
+        "name": "Turbo/workspace context resolution",
+        "description": "Pure lookups over RepoRunContext/TurboPlanTask: workspace package catalog merge, file-to-package attribution, package-path and turbo-task resolution, --filter= arg extraction. Only depends on internal/repo-run types, not on QualityIssue.",
+        "keySymbols": [
+          "workspacePackagesForContext",
+          "packageNameForFile",
+          "packagePathForPackageName",
+          "turboTaskForPackageName",
+          "turboWorkspacePackageFromTask",
+          "filteredPackageNamesForStep"
+        ],
+        "locEstimate": 80
+      },
+      {
+        "name": "Issue construction and step-result parsing",
+        "description": "Stable issue-id derivation, the large issueBase spread (turbo hash/cache attribution via optionalProp), TS-diagnostic line parsing, fallback raw issues per filtered package, and the dual-arity qualityIssuesFromStepResult entry point.",
+        "keySymbols": [
+          "issueId",
+          "issueBase",
+          "diagnosticIssueFromLine",
+          "fallbackIssueFromResult",
+          "fallbackIssuesFromResult",
+          "qualityIssuesFromStepResult"
+        ],
+        "locEstimate": 240
+      },
+      {
+        "name": "Index aggregation and deterministic grouping",
+        "description": "Order instances, the NUL-separated packageKey, per-package report construction, and buildQualityIssueIndex producing the sorted, deduped index consumed by Handler and FallowFeedback.",
+        "keySymbols": [
+          "issueOrder",
+          "packageReportOrder",
+          "packageKey",
+          "packageReportForKey",
+          "buildQualityIssueIndex",
+          "issuePackageName"
+        ],
+        "locEstimate": 110
+      }
+    ],
+    "proposedSplit": [
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/Yeet.schemas.ts",
+        "role": "schemas",
+        "contents": "The eight public schema symbols (QualityIssueCategory/Severity/Confidence/Attribution, QualityIssueRouting, QualityIssue, PackageQualityReport, QualityIssueIndex) plus their LiteralKit domains. index.ts facade re-exports from here instead of the internal file."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueClassification.ts",
+        "role": "internal",
+        "contents": "categoryForStep, routeForCategory, knownSubLaneHints table, failure-window scanning (outputFailureHintSlices, lineIndicatesFailure, knownSubLaneHintFromText/FromFailureSlices/FromOutput), and the exported knownSubLaneRemediationFromOutput used by Verdict.ts and yeet.test.ts. Depends only on Yeet.schemas.ts and RepoPlanStep."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/IssueParser.ts",
+        "role": "internal",
+        "contents": "issueId, issueBase, diagnosticIssueFromLine (tsDiagnosticPattern, severityForLine, lineIndicatesEffectDiagnostic), schemaFirstPolicyIssueFromLine, fallbackIssueFromResult(s), and the dual-arity qualityIssuesFromStepResult. Imports schemas, IssueClassification, workspace resolution, and the shared schema-first wire module."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Yeet/internal/QualityIssueIndex.ts",
+        "role": "internal",
+        "contents": "Retained as the aggregation module: issueOrder, packageReportOrder, packageKey, packageReportForKey, buildQualityIssueIndex. Optionally re-exports the moved symbols one release to soften churn for Handler/FallowFeedback/Closeout/PacketRenderer imports."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.workspace.ts",
+        "role": "shared",
+        "contents": "Pure RepoRunContext lookups: workspacePackagesForContext, packageNameForFile, packagePathForPackageName, turboTaskForPackageName, turboWorkspacePackageFromTask, filteredPackageNamesForStep, packageNameFromFilterArg, optionalStringFromStep. These operate solely on repo-run types and belong next to them, exported via internal/repo-run/index.ts."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/internal/schema-first/SchemaFirstIssueWire.ts",
+        "role": "shared",
+        "contents": "Single source of truth for the '[schema-first:issue] ' prefix and the SchemaFirstPolicyOutput wire class + JSON-line decoder, currently triplicated in Lint/SchemaFirst.ts (emitter, line 451), AgentEffectiveness/internal/EvalScorer.ts (SchemaFirstPolicyIssue, line 306), and this file."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/internal/cli/TextOutput.ts",
+        "role": "shared",
+        "contents": "stripAnsi, normalizeOutput, nonEmptyLines, truncateExcerpt (parameterized max chars), optionalNumberFromString. Generic subprocess-output text helpers; bin-main.ts already duplicates nonEmptyLines."
+      }
+    ],
+    "sharedCandidates": [
+      {
+        "helper": "SchemaFirstPolicyOutput + schemaFirstPolicyIssuePrefix",
+        "description": "The '[schema-first:issue] ' JSON-line wire format is declared three times: emitter in Lint/SchemaFirst.ts, this decoder, and AgentEffectiveness/internal/EvalScorer.ts SchemaFirstPolicyIssue. One shared wire schema prevents drift when fields change.",
+        "alsoUsefulFor": ["Lint", "AgentEffectiveness"]
+      },
+      {
+        "helper": "stripAnsi / nonEmptyLines / normalizeOutput / truncateExcerpt",
+        "description": "Generic ANSI-stripping and line-normalization for captured subprocess output; src/bin-main.ts:37 hand-rolls its own nonEmptyLines today.",
+        "alsoUsefulFor": ["Quality", "AgentEffectiveness", "Fallow", "bin-main"]
+      },
+      {
+        "helper": "workspacePackagesForContext / packageNameForFile / packagePathForPackageName / turboTaskForPackageName",
+        "description": "Pure attribution lookups over RepoRunContext and TurboPlanTask with no QualityIssue dependency; any command that runs repo-run plans and needs package attribution can reuse them.",
+        "alsoUsefulFor": ["Quality", "Fallow"]
+      },
+      {
+        "helper": "tsDiagnosticPattern + diagnosticIssueFromLine core",
+        "description": "TypeScript 'file:line:col error TSxxxx: message' line parsing is tool-agnostic; the regex-plus-groups extraction (minus QualityIssue wrapping) would serve any group that surfaces tsc/tsgo output.",
+        "alsoUsefulFor": ["Quality", "Lint", "AgentEffectiveness"]
+      },
+      {
+        "helper": "optionalNumberFromString / optionalStringFromStep",
+        "description": "Tiny Option lifts (parseInt-to-Option, non-empty-string-to-Option) with zero yeet coupling; likely re-derived elsewhere and worth one home in internal/cli.",
+        "alsoUsefulFor": ["Files", "Corpus", "AIMetrics"]
+      }
+    ],
+    "risks": [
+      "Public facade breakage: commands/Yeet/index.ts re-exports 8 model symbols from ./internal/QualityIssueIndex.js; moving them to Yeet.schemas.ts must update the facade in the same change or @beep/repo-cli/commands/Yeet consumers break.",
+      "Test-kit star export: src/test/Yeet.test-kit.ts does `export * from \"../commands/Yeet/internal/QualityIssueIndex.js\"` and test/yeet.test.ts imports qualityIssuesFromStepResult, buildQualityIssueIndex, knownSubLaneRemediationFromOutput via @beep/repo-cli/test/Yeet \u2014 every new file must be added to the star exports or ~20 test references fail.",
+      "Verdict.ts imports with a bare .ts specifier (`from \"./QualityIssueIndex.ts\"` at line 18) unlike the .js specifiers used by Handler/FallowFeedback/Closeout/PacketRenderer \u2014 easy to miss when rewiring imports.",
+      "$I identity path: $RepoCliId.create(\"commands/Yeet/internal/QualityIssueIndex\") is baked into every S.Class identifier; moving schemas changes identity keys, which diffs the tracked generated schema catalog (p3) and any serialized annotations \u2014 catalog must be regenerated deterministically, though the schemaVersion literal 'yeet-quality-issue-index/v1' itself stays stable.",
+      "Docgen gate: every exported symbol carries @example blocks importing from \"@beep/repo-cli/commands/Yeet\" or \"@beep/repo-cli/test/Yeet\"; moved symbols must keep those import paths compiling or the docgen-jsdoc-quality lane blocks.",
+      "Determinism coupling: issueOrder, packageReportOrder, and the NUL-separated packageKey underpin order-invariance assertions (yeet.test.ts:1270-1291) and stable issue ids consumed by FallowFeedback merge logic \u2014 keep them colocated with buildQualityIssueIndex and do not alter matching semantics (lastIndexOf/tail-window logic in knownSubLaneHintFromOutput) while moving."
+    ]
+  }
+]

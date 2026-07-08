@@ -31,7 +31,9 @@ const causeMessage = (cause: unknown): string => {
  * @example
  * ```ts
  * import { SyncDataToTsError } from "@beep/repo-cli/commands/SyncDataToTs"
- * console.log(SyncDataToTsError)
+ *
+ * const error = SyncDataToTsError.make({ message: "Repository quality check failed" })
+ * console.log(error.message.includes("failed")) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -87,7 +89,9 @@ export class SyncDataToTsError extends TaggedErrorClass<SyncDataToTsError>($I`Sy
  * @example
  * ```ts
  * import { SyncDataToTsDriftError } from "@beep/repo-cli/commands/SyncDataToTs"
- * console.log(SyncDataToTsDriftError)
+ *
+ * const error = SyncDataToTsDriftError.make({ driftCount: 2, message: "Repository quality check failed" })
+ * console.log(error.message.includes("failed")) // true
  * ```
  * @category utilities
  * @since 0.0.0

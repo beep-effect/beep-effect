@@ -14,7 +14,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Argument, Command } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { printLines } from "../../internal/cli/Printer.js";
+import { formatDurationSeconds, makeTaggedLogger, printLines } from "../../internal/cli/Printer.js";
 import { CiCommandError } from "./Ci.errors.js";
 import { ciLaneCommand, ciLocalCommand } from "./CiLane.js";
 
@@ -110,7 +110,9 @@ class LongestTask extends S.Class<LongestTask>($I`LongestTask`)(
   })
 ) {}
 
-const formatDuration = (durationMs: number): string => `${(durationMs / 1000).toFixed(2)}s`;
+const formatDuration = (durationMs: number): string => formatDurationSeconds(durationMs, 2);
+
+const logTurboSummary = makeTaggedLogger("turbo-summary");
 
 const optionNumber = (value: number | undefined): number => value ?? 0;
 
@@ -268,13 +270,13 @@ export const appendTurboSummary = Effect.fn("Ci.appendTurboSummary")(function* (
   const summaryPath = yield* resolveSummaryPath(repoRoot, explicitPath);
 
   if (O.isNone(summaryPath)) {
-    yield* Console.log("[turbo-summary] No run summary file found.");
+    yield* logTurboSummary("No run summary file found.");
     return;
   }
 
   const exists = yield* fs.exists(summaryPath.value).pipe(Effect.orElseSucceed(thunkFalse));
   if (!exists) {
-    yield* Console.log("[turbo-summary] No run summary file found.");
+    yield* logTurboSummary("No run summary file found.");
     return;
   }
 

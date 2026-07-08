@@ -8,7 +8,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { NonNegativeInt } from "@beep/schema";
-import { Console, DateTime, Effect, FileSystem, flow, Path, pipe, Stream } from "effect";
+import { Console, DateTime, Effect, FileSystem, flow, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -18,6 +18,8 @@ import * as Str from "effect/String";
 import { Argument, Command, Flag } from "effect/unstable/cli";
 import { ChildProcess } from "effect/unstable/process";
 import { parseDocument } from "yaml";
+import { collectText } from "../../internal/process/index.js";
+import { fallowCiContractDiagnostics } from "./internal/FallowCiContract.js";
 import {
   FallowAttributionKinds,
   FallowEnvelopeStatus,
@@ -205,20 +207,21 @@ class FallowEntryPointsRawReport extends S.Class<FallowEntryPointsRawReport>($I`
     description: "Raw Fallow entry point summary emitted by dead-code JSON output.",
   })
 ) {}
-class FallowAuditSummary extends S.Class<FallowAuditSummary>($I`FallowAuditSummary`)(
-  {
+const FallowAuditRawReport = S.Struct({
+  kind: S.Literal("audit"),
+  ...FallowVersionedRawFields,
+  command: S.Literal("audit"),
+  verdict: S.String,
+  changed_files_count: S.Finite,
+  base_ref: S.String,
+  summary: S.Struct({
     dead_code_issues: S.Finite,
     dead_code_has_errors: S.Boolean,
     complexity_findings: S.Finite,
     max_cyclomatic: S.NullOr(S.Finite),
     duplication_clone_groups: S.Finite,
-  },
-  $I.annote("FallowAuditSummary", {
-    description: "Raw Fallow audit summary counts nested in the audit JSON shape.",
-  })
-) {}
-class FallowAuditAttribution extends S.Class<FallowAuditAttribution>($I`FallowAuditAttribution`)(
-  {
+  }),
+  attribution: S.Struct({
     gate: S.String,
     dead_code_introduced: S.Finite,
     dead_code_inherited: S.Finite,
@@ -226,63 +229,51 @@ class FallowAuditAttribution extends S.Class<FallowAuditAttribution>($I`FallowAu
     complexity_inherited: S.Finite,
     duplication_introduced: S.Finite,
     duplication_inherited: S.Finite,
-  },
-  $I.annote("FallowAuditAttribution", {
-    description: "Raw Fallow audit attribution counts nested in the audit JSON shape.",
-  })
-) {}
-class FallowAuditRawReport extends S.Class<FallowAuditRawReport>($I`FallowAuditRawReport`)(
-  {
-    kind: S.Literal("audit"),
-    ...FallowVersionedRawFields,
-    command: S.Literal("audit"),
-    verdict: S.String,
-    changed_files_count: S.Finite,
-    base_ref: S.String,
-    summary: FallowAuditSummary,
-    attribution: FallowAuditAttribution,
-  },
-  $I.annote("FallowAuditRawReport", {
+  }),
+}).pipe(
+  $I.annoteSchema("FallowAuditRawReport", {
     description: "Raw Fallow audit JSON shape accepted by the P1 wrapper.",
   })
-) {}
-class FallowDeadCodeRawReport extends S.Class<FallowDeadCodeRawReport>($I`FallowDeadCodeRawReport`)(
-  {
-    kind: S.Literal("dead-code"),
-    ...FallowVersionedRawFields,
-    total_issues: S.Finite,
-    entry_points: FallowEntryPointsRawReport,
-    summary: FallowDeadCodeSummaryRawReport,
-    unused_files: FallowIssueArray,
-    unused_exports: FallowIssueArray,
-    unused_types: FallowIssueArray,
-    private_type_leaks: FallowIssueArray,
-    unused_dependencies: FallowIssueArray,
-    unused_dev_dependencies: FallowIssueArray,
-    unused_optional_dependencies: FallowIssueArray,
-    unused_enum_members: FallowIssueArray,
-    unused_class_members: FallowIssueArray,
-    unresolved_imports: FallowIssueArray,
-    unlisted_dependencies: FallowIssueArray,
-    duplicate_exports: FallowIssueArray,
-    type_only_dependencies: FallowIssueArray,
-    test_only_dependencies: FallowIssueArray,
-    circular_dependencies: FallowIssueArray,
-    re_export_cycles: FallowIssueArray,
-    boundary_violations: FallowIssueArray,
-    stale_suppressions: FallowIssueArray,
-    unused_catalog_entries: FallowIssueArray,
-    empty_catalog_groups: FallowIssueArray,
-    unresolved_catalog_references: FallowIssueArray,
-    unused_dependency_overrides: FallowIssueArray,
-    misconfigured_dependency_overrides: FallowIssueArray,
-  },
-  $I.annote("FallowDeadCodeRawReport", {
+);
+const FallowDeadCodeRawReport = S.Struct({
+  kind: S.Literal("dead-code"),
+  ...FallowVersionedRawFields,
+  total_issues: S.Finite,
+  entry_points: FallowEntryPointsRawReport,
+  summary: FallowDeadCodeSummaryRawReport,
+  unused_files: FallowIssueArray,
+  unused_exports: FallowIssueArray,
+  unused_types: FallowIssueArray,
+  private_type_leaks: FallowIssueArray,
+  unused_dependencies: FallowIssueArray,
+  unused_dev_dependencies: FallowIssueArray,
+  unused_optional_dependencies: FallowIssueArray,
+  unused_enum_members: FallowIssueArray,
+  unused_class_members: FallowIssueArray,
+  unresolved_imports: FallowIssueArray,
+  unlisted_dependencies: FallowIssueArray,
+  duplicate_exports: FallowIssueArray,
+  type_only_dependencies: FallowIssueArray,
+  test_only_dependencies: FallowIssueArray,
+  circular_dependencies: FallowIssueArray,
+  re_export_cycles: FallowIssueArray,
+  boundary_violations: FallowIssueArray,
+  stale_suppressions: FallowIssueArray,
+  unused_catalog_entries: FallowIssueArray,
+  empty_catalog_groups: FallowIssueArray,
+  unresolved_catalog_references: FallowIssueArray,
+  unused_dependency_overrides: FallowIssueArray,
+  misconfigured_dependency_overrides: FallowIssueArray,
+}).pipe(
+  $I.annoteSchema("FallowDeadCodeRawReport", {
     description: "Raw Fallow dead-code JSON shape accepted by dead-code and boundary lanes.",
   })
-) {}
-class FallowHealthSummary extends S.Class<FallowHealthSummary>($I`FallowHealthSummary`)(
-  {
+);
+const FallowHealthRawReport = S.Struct({
+  kind: S.Literal("health"),
+  ...FallowVersionedRawFields,
+  findings: S.Array(FallowHealthFinding),
+  summary: S.Struct({
     files_analyzed: S.Finite,
     functions_analyzed: S.Finite,
     functions_above_threshold: S.Finite,
@@ -290,32 +281,21 @@ class FallowHealthSummary extends S.Class<FallowHealthSummary>($I`FallowHealthSu
     severity_critical_count: S.Finite,
     severity_high_count: S.Finite,
     severity_moderate_count: S.Finite,
-  },
-  $I.annote("FallowHealthSummary", {
-    description: "Raw Fallow health summary counts nested in the health JSON shape.",
-  })
-) {}
-class FallowHealthRawReport extends S.Class<FallowHealthRawReport>($I`FallowHealthRawReport`)(
-  {
-    kind: S.Literal("health"),
-    ...FallowVersionedRawFields,
-    findings: S.Array(FallowHealthFinding),
-    summary: FallowHealthSummary,
-  },
-  $I.annote("FallowHealthRawReport", {
+  }),
+}).pipe(
+  $I.annoteSchema("FallowHealthRawReport", {
     description: "Raw Fallow health JSON shape accepted by the P1 wrapper.",
   })
-) {}
-class FallowFlagsRawReport extends S.Class<FallowFlagsRawReport>($I`FallowFlagsRawReport`)(
-  {
-    ...FallowVersionedRawFields,
-    feature_flags: S.Array(FallowFeatureFlagFinding),
-    total_flags: S.Finite,
-  },
-  $I.annote("FallowFlagsRawReport", {
+);
+const FallowFlagsRawReport = S.Struct({
+  ...FallowVersionedRawFields,
+  feature_flags: S.Array(FallowFeatureFlagFinding),
+  total_flags: S.Finite,
+}).pipe(
+  $I.annoteSchema("FallowFlagsRawReport", {
     description: "Raw Fallow flags JSON shape accepted by the P1 wrapper.",
   })
-) {}
+);
 class FallowSecurityDetailedRawReport extends S.Class<FallowSecurityDetailedRawReport>(
   $I`FallowSecurityDetailedRawReport`
 )(
@@ -330,16 +310,6 @@ class FallowSecurityDetailedRawReport extends S.Class<FallowSecurityDetailedRawR
     description: "Detailed raw Fallow security JSON shape accepted by the P1 wrapper.",
   })
 ) {}
-class FallowSecuritySummaryCounts extends S.Class<FallowSecuritySummaryCounts>($I`FallowSecuritySummaryCounts`)(
-  {
-    security_findings: S.Finite,
-    unresolved_edge_files: S.Finite,
-    unresolved_callee_sites: S.Finite,
-  },
-  $I.annote("FallowSecuritySummaryCounts", {
-    description: "Raw Fallow security summary counts nested in the summary security JSON shape.",
-  })
-) {}
 class FallowSecuritySummaryRawReport extends S.Class<FallowSecuritySummaryRawReport>(
   $I`FallowSecuritySummaryRawReport`
 )(
@@ -348,12 +318,26 @@ class FallowSecuritySummaryRawReport extends S.Class<FallowSecuritySummaryRawRep
     schema_version: S.Union([S.Finite, S.String]),
     version: S.String,
     elapsed_ms: S.Finite,
-    summary: FallowSecuritySummaryCounts,
+
+    summary: S.Struct({
+      security_findings: S.Finite,
+      unresolved_edge_files: S.Finite,
+      unresolved_callee_sites: S.Finite,
+    }),
   },
   $I.annote("FallowSecuritySummaryRawReport", {
     description: "Summary raw Fallow security JSON shape accepted by the P1 wrapper.",
   })
 ) {}
+
+/**
+ * Legacy Fallow CI upload diagnostic test helper.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export { fallowCiUploadDiagnosticsForTesting } from "./internal/FallowCiContract.js";
+
 const FallowSecurityRawReport = S.Union([FallowSecurityDetailedRawReport, FallowSecuritySummaryRawReport]).pipe(
   $I.annoteSchema("FallowSecurityRawReport", {
     description: "Raw Fallow security JSON shapes accepted by the P1 wrapper.",
@@ -425,21 +409,8 @@ const unknownRecordProperty = (value: unknown, key: string): O.Option<unknown> =
     O.flatMap((record) => O.fromUndefinedOr(record[key]))
   );
 
-const unknownStringProperty = (value: unknown, key: string): O.Option<string> =>
-  pipe(unknownRecordProperty(value, key), O.filter(P.isString));
-
 const unknownNumberProperty = (value: unknown, key: string): O.Option<number> =>
   pipe(unknownRecordProperty(value, key), O.flatMap(decodeNumberOption));
-
-const unknownArrayProperty = (value: unknown, key: string): O.Option<ReadonlyArray<unknown>> =>
-  pipe(unknownRecordProperty(value, key), O.flatMap(decodeUnknownArrayOption));
-
-const nonCommentLines = (text: string): ReadonlyArray<string> =>
-  pipe(
-    Str.split(text, "\n"),
-    A.map(Str.trim),
-    A.filter((line) => Str.isNonEmpty(line) && !Str.startsWith("#")(line))
-  );
 
 const yamlDocumentValue = Effect.fn("FallowQuality.yamlDocumentValue")(function* (
   filePath: string,
@@ -565,31 +536,14 @@ const auditFindingsForCount = (
 // boilerplate that fallow cannot selectively ignore; it is reported advisory
 // (inherited-adjacent) rather than blocking, while real source-code duplication
 // still blocks. See goals/desktop-chat-surface/history/2026-06-14-fallow-audit-investigation.md.
-class CloneGroupInstance extends S.Class<CloneGroupInstance>($I`CloneGroupInstance`)(
-  {
-    file: S.String,
-  },
-  $I.annote("CloneGroupInstance", {
-    description: "One file instance within a raw Fallow duplication clone group.",
-  })
-) {}
-class CloneGroupEntry extends S.Class<CloneGroupEntry>($I`CloneGroupEntry`)(
-  {
-    introduced: S.optionalKey(S.Boolean),
-    instances: S.Array(CloneGroupInstance),
-  },
-  $I.annote("CloneGroupEntry", {
-    description: "One raw Fallow duplication clone group with its file instances.",
-  })
-) {}
-class AuditDuplicationCloneGroups extends S.Class<AuditDuplicationCloneGroups>($I`AuditDuplicationCloneGroups`)(
-  {
-    clone_groups: S.Array(CloneGroupEntry),
-  },
-  $I.annote("AuditDuplicationCloneGroups", {
-    description: "Internal lenient decoder for fallow audit JSON clone-group source classification.",
-  })
-) {}
+const AuditDuplicationCloneGroups = S.Struct({
+  clone_groups: S.Array(
+    S.Struct({
+      introduced: S.optionalKey(S.Boolean),
+      instances: S.Array(S.Struct({ file: S.String })),
+    })
+  ),
+});
 const decodeAuditDuplicationOption = S.decodeUnknownOption(AuditDuplicationCloneGroups);
 
 const cloneGroupTouchesSource = (group: { readonly instances: ReadonlyArray<{ readonly file: string }> }): boolean =>
@@ -800,15 +754,6 @@ const stderrExcerpt = (output: string): string => {
 
 const combineProcessOutput = (stdout: string, stderr: string): string =>
   pipe([Str.trim(stdout), Str.trim(stderr)], A.filter(Str.isNonEmpty), A.join("\n"));
-
-const collectText = <E, R>(stream: Stream.Stream<Uint8Array, E, R>): Effect.Effect<string, E, R> =>
-  stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(
-      () => "",
-      (acc, chunk) => acc + chunk
-    )
-  );
 
 const formatEpochMillis = (millis: number): string =>
   Number.isFinite(millis) && millis >= 0 ? DateTime.formatIso(DateTime.makeUnsafe(millis)) : "unknown";
@@ -1548,11 +1493,7 @@ const checkPublicDispatchEnvelope = Effect.fn("FallowQuality.checkPublicDispatch
     O.map((mtime) => mtime.getTime()),
     O.getOrElse(() => -1)
   );
-  const envelopeGeneratedAtMillis = pipe(
-    DateTime.make(envelope.generatedAt),
-    O.map(DateTime.toEpochMillis),
-    O.getOrElse(() => Number.NaN)
-  );
+  const envelopeGeneratedAtMillis = Date.parse(envelope.generatedAt);
   const expectedCommand = renderWrapperCommand(feature, options, paths.relative);
   const rawOutputText = yield* fs.readFileString(rawOutputPath).pipe(Effect.option);
   const rawJsonText = pipe(rawOutputText, O.flatMap(extractJsonDocumentText), O.getOrUndefined);
@@ -2030,170 +1971,6 @@ const runCommandContractCheck = Effect.fn("FallowQuality.runCommandContractCheck
   yield* Console.log("[fallow] command contract ok");
 });
 
-const stepStringValues = (steps: ReadonlyArray<unknown>, key: string): ReadonlyArray<string> =>
-  pipe(
-    steps,
-    A.flatMap((step) => O.toArray(unknownStringProperty(step, key)))
-  );
-
-const uploadWithString = (step: unknown, key: string): O.Option<string> =>
-  pipe(
-    unknownRecordProperty(step, "with"),
-    O.flatMap((withRecord) => unknownStringProperty(withRecord, key))
-  );
-
-const uploadWithStringEquals = (step: unknown, key: string, expected: string): boolean =>
-  pipe(
-    uploadWithString(step, key),
-    O.match({
-      onNone: () => false,
-      onSome: (actual) => Str.Equivalence(actual, expected),
-    })
-  );
-
-const missingDiagnostic = (condition: boolean, diagnostic: string): ReadonlyArray<string> =>
-  condition ? A.empty() : A.of(diagnostic);
-
-const presentDiagnostic = (condition: boolean, diagnostic: string): ReadonlyArray<string> =>
-  condition ? A.of(diagnostic) : A.empty();
-
-const repeatedLineDiagnostics = (
-  jobRunLines: ReadonlyArray<string>,
-  expectedLine: string,
-  diagnostic: string
-): ReadonlyArray<string> =>
-  missingDiagnostic(A.length(A.filter(jobRunLines, (line) => Str.Equivalence(line, expectedLine))) >= 2, diagnostic);
-
-const laneEnvelopeDiagnostics = (
-  lanes: ReadonlyArray<string>,
-  expectOutDir: string,
-  jobRunBody: string,
-  hasLaneEnvelopeTemplate: boolean,
-  message: (lane: string) => string
-): ReadonlyArray<string> =>
-  A.flatMap(lanes, (lane) =>
-    missingDiagnostic(
-      hasLaneEnvelopeTemplate || Str.includes(`${expectOutDir}/${lane}.json`)(jobRunBody),
-      message(lane)
-    )
-  );
-
-const laneNameDiagnostics = (
-  lanes: ReadonlyArray<string>,
-  jobRunBody: string,
-  message: (lane: string) => string
-): ReadonlyArray<string> =>
-  A.flatMap(lanes, (lane) => missingDiagnostic(Str.includes(lane)(jobRunBody), message(lane)));
-
-const fallowCiRequiredTextDiagnostics = (
-  jobRunBody: string,
-  blockingLanes: ReadonlyArray<string>,
-  advisory: boolean
-): ReadonlyArray<string> => [
-  ...missingDiagnostic(
-    Str.includes("bun run beep quality fallow")(jobRunBody),
-    "missing repo-cli Fallow envelope invocation"
-  ),
-  ...presentDiagnostic(
-    Str.includes("bun run fallow:audit")(jobRunBody),
-    "CI must not use raw fallow:audit pilot command"
-  ),
-  ...missingDiagnostic(
-    Str.includes("beep quality fallow envelope-check")(jobRunBody),
-    "missing hard envelope-check validation step"
-  ),
-  ...missingDiagnostic(Str.includes("--expect-subcommand")(jobRunBody), "missing envelope-check subcommand assertion"),
-  ...missingDiagnostic(Str.includes("--expect-report-path")(jobRunBody), "missing envelope-check reportPath assertion"),
-  ...missingDiagnostic(Str.includes("--require-raw-output")(jobRunBody), "missing envelope-check raw output proof"),
-  ...missingDiagnostic(
-    Str.includes("|| fetch_status=$?")(jobRunBody) && Str.includes("base_fetch_status")(jobRunBody),
-    "base fetch must be best-effort so Fallow wrappers can emit base-resolution envelopes"
-  ),
-  ...missingDiagnostic(
-    A.isReadonlyArrayEmpty(blockingLanes) || Str.includes("--check")(jobRunBody),
-    "missing blocking Fallow --check invocation"
-  ),
-  ...missingDiagnostic(!advisory || Str.includes("--advisory")(jobRunBody), "missing advisory Fallow invocation"),
-];
-
-const fallowCiUploadDiagnostics = (
-  requireUpload: boolean,
-  jobUsesValues: ReadonlyArray<string>,
-  uploadArtifactSteps: ReadonlyArray<unknown>,
-  expectOutDir: string,
-  ifNoFilesFound: string
-): ReadonlyArray<string> => [
-  ...missingDiagnostic(
-    !requireUpload || A.some(uploadArtifactSteps, (step) => uploadWithStringEquals(step, "path", `${expectOutDir}/**`)),
-    `missing upload of complete Fallow output tree: ${expectOutDir}/**`
-  ),
-  ...presentDiagnostic(
-    requireUpload && !A.some(jobUsesValues, Str.includes("actions/upload-artifact")),
-    "missing actions/upload-artifact step"
-  ),
-  ...presentDiagnostic(
-    requireUpload &&
-      !A.some(uploadArtifactSteps, (step) => uploadWithStringEquals(step, "if-no-files-found", ifNoFilesFound)),
-    `missing if-no-files-found: ${ifNoFilesFound}`
-  ),
-];
-
-/**
- * Return Fallow CI upload diagnostics for contract tests.
- *
- * @example
- * ```ts
- * import { fallowCiUploadDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
- *
- * const diagnostics = fallowCiUploadDiagnosticsForTesting(false, [], [], ".beep/fallow", "error")
- * console.log(diagnostics)
- * ```
- * @category testing
- * @since 0.0.0
- */
-export const fallowCiUploadDiagnosticsForTesting = fallowCiUploadDiagnostics;
-
-const fallowCiLaneDiagnostics = (
-  lanes: ReadonlyArray<string>,
-  blockingLanes: ReadonlyArray<string>,
-  expectOutDir: string,
-  jobRunBody: string,
-  jobRunLines: ReadonlyArray<string>,
-  hasLaneEnvelopeTemplate: boolean
-): ReadonlyArray<string> => {
-  const expectedLaneLoop = `for lane in ${A.join(lanes, " ")}; do`;
-  const expectedBlockingLaneLoop = `for lane in ${A.join(blockingLanes, " ")}; do`;
-
-  return [
-    ...repeatedLineDiagnostics(
-      jobRunLines,
-      expectedLaneLoop,
-      `missing run and validation loops over expected Fallow lanes: ${expectedLaneLoop}`
-    ),
-    ...missingDiagnostic(
-      A.isReadonlyArrayEmpty(blockingLanes) ||
-        A.length(A.filter(jobRunLines, (line) => Str.Equivalence(line, expectedBlockingLaneLoop))) >= 2,
-      `missing run and validation loops over expected promoted blocking Fallow lanes: ${expectedBlockingLaneLoop}`
-    ),
-    ...laneEnvelopeDiagnostics(
-      lanes,
-      expectOutDir,
-      jobRunBody,
-      hasLaneEnvelopeTemplate,
-      (lane) => `missing CI envelope path for ${lane}: ${expectOutDir}/${lane}.json`
-    ),
-    ...laneEnvelopeDiagnostics(
-      blockingLanes,
-      expectOutDir,
-      jobRunBody,
-      hasLaneEnvelopeTemplate,
-      (lane) => `missing CI envelope path for promoted blocking lane ${lane}: ${expectOutDir}/${lane}.json`
-    ),
-    ...laneNameDiagnostics(lanes, jobRunBody, (lane) => `missing CI advisory lane name ${lane}`),
-    ...laneNameDiagnostics(blockingLanes, jobRunBody, (lane) => `missing promoted blocking CI lane name ${lane}`),
-  ];
-};
-
 const runCiContractCheck = Effect.fn("FallowQuality.runCiContractCheck")(function* (
   workflowPath: string,
   expectLanes: string,
@@ -2211,33 +1988,14 @@ const runCiContractCheck = Effect.fn("FallowQuality.runCiContractCheck")(functio
     .readFileString(absolutePath)
     .pipe(QualityScriptCommandError.mapError(`Failed to read ${absolutePath}.`));
   const workflow = yield* yamlDocumentValue(workflowPath, text);
-  const fallowJob = pipe(
-    unknownRecordProperty(workflow, "jobs"),
-    O.flatMap((jobs) => unknownRecordProperty(jobs, "fallow-advisory"))
-  );
-  const fallowSteps = pipe(
-    fallowJob,
-    O.flatMap((job) => unknownArrayProperty(job, "steps")),
-    O.getOrElse(A.empty<unknown>)
-  );
-  const jobRunText = A.join(stepStringValues(fallowSteps, "run"), "\n");
-  const jobRunLines = nonCommentLines(jobRunText);
-  const jobRunBody = A.join(jobRunLines, "\n");
-  const jobUsesValues = stepStringValues(fallowSteps, "uses");
-  const uploadArtifactSteps = A.filter(fallowSteps, (step) => {
-    const uses = unknownStringProperty(step, "uses");
-    return O.isSome(uses) && Str.includes("actions/upload-artifact")(uses.value);
+  const diagnostics = fallowCiContractDiagnostics(workflow, {
+    expectLanes,
+    expectBlockingLanes,
+    expectOutDir,
+    requireUpload,
+    ifNoFilesFound,
+    advisory,
   });
-  const lanes = csvValues(expectLanes);
-  const blockingLanes = csvValues(expectBlockingLanes);
-  const hasLaneEnvelopeTemplate =
-    Str.includes(`${expectOutDir}/\${lane}.json`)(jobRunBody) || Str.includes(`${expectOutDir}/$lane.json`)(jobRunBody);
-  const diagnostics = [
-    ...missingDiagnostic(O.isSome(fallowJob), "missing fallow-advisory workflow job id"),
-    ...fallowCiLaneDiagnostics(lanes, blockingLanes, expectOutDir, jobRunBody, jobRunLines, hasLaneEnvelopeTemplate),
-    ...fallowCiRequiredTextDiagnostics(jobRunBody, blockingLanes, advisory),
-    ...fallowCiUploadDiagnostics(requireUpload, jobUsesValues, uploadArtifactSteps, expectOutDir, ifNoFilesFound),
-  ];
 
   yield* failWithDiagnostics("fallow ci-contract-check", diagnostics);
   yield* Console.log(`[fallow] CI contract ok: ${workflowPath}`);
@@ -2367,8 +2125,11 @@ const fallowFixPreviewCommand = makeFallowFeatureCommand("fix-preview");
  * @example
  * ```ts
  * import { qualityFallowCommand } from "@beep/repo-cli/commands/Quality"
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
  *
- * console.log(qualityFallowCommand)
+ * const run = Command.run(qualityFallowCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category cli-commands
  * @since 0.0.0

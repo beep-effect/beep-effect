@@ -8,14 +8,15 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { Console, DateTime, Effect, FileSystem, Order, Path, pipe } from "effect";
+import { Console, DateTime, Effect, Path, pipe } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { formatJsonc, readArtifact, renderTruncatedLines, writeArtifact } from "../../../internal/artifacts/index.js";
+import { diffTotals, enforceRatchet } from "../../../internal/ratchet/index.js";
 import { QualityScriptCommandError } from "../Quality.errors.js";
-import { formatJsonc } from "./QualityArtifactSupport.js";
+import type { FileSystem } from "effect";
 
 const $I = $RepoCliId.create("commands/Quality/internal/JSDocRatchet");
 
@@ -39,7 +40,8 @@ const JSDocRatchetedTotalName = LiteralKit([
  * ```ts
  * import { defaultJSDocInventoryPath } from "@beep/repo-cli/test/Quality"
  *
- * console.log(defaultJSDocInventoryPath)
+ * const result = defaultJSDocInventoryPath === "standards/jsdoc-documentation.inventory.jsonc"
+ * console.log(result) // rendered command output
  * ```
  * @category constants
  * @since 0.0.0
@@ -53,7 +55,8 @@ export const defaultJSDocInventoryPath = "standards/jsdoc-documentation.inventor
  * ```ts
  * import { defaultJSDocTotalsBaselinePath } from "@beep/repo-cli/test/Quality"
  *
- * console.log(defaultJSDocTotalsBaselinePath)
+ * const result = defaultJSDocTotalsBaselinePath === "standards/jsdoc-totals.regression-baseline.jsonc"
+ * console.log(result) // rendered command output
  * ```
  * @category constants
  * @since 0.0.0
@@ -67,7 +70,8 @@ export const defaultJSDocTotalsBaselinePath = "standards/jsdoc-totals.regression
  * ```ts
  * import { jsdocInventoryRegenerationCommand } from "@beep/repo-cli/test/Quality"
  *
- * console.log(jsdocInventoryRegenerationCommand)
+ * const result = jsdocInventoryRegenerationCommand.includes("jsdoc-inventory")
+ * console.log(result) // rendered command output
  * ```
  * @category constants
  * @since 0.0.0
@@ -81,7 +85,8 @@ export const jsdocInventoryRegenerationCommand = "bun run beep quality jsdoc-inv
  * ```ts
  * import { jsdocTotalsSnapshotCommand } from "@beep/repo-cli/test/Quality"
  *
- * console.log(jsdocTotalsSnapshotCommand)
+ * const result = jsdocTotalsSnapshotCommand.includes("write-baseline")
+ * console.log(result) // rendered command output
  * ```
  * @category constants
  * @since 0.0.0
@@ -205,30 +210,17 @@ export class JSDocTotalsComparison extends S.Class<JSDocTotalsComparison>($I`JSD
   })
 ) {}
 
-const decodeJSDocInventoryTotalsDocument = decodeJsoncTextAs(JSDocInventoryTotalsDocument);
-const decodeJSDocTotalsRegressionBaseline = decodeJsoncTextAs(JSDocTotalsRegressionBaseline);
-const deltaOrder = Order.mapInput(Order.String, (delta: JSDocTotalDelta) => delta.metric);
-
-const readJsoncFile = Effect.fn("JSDocRatchet.readJsoncFile")(function* (
-  repoRoot: string,
-  relativePath: string
-): Effect.fn.Return<string, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-
-  return yield* fs
-    .readFileString(path.resolve(repoRoot, relativePath))
-    .pipe(QualityScriptCommandError.mapError(`Failed to read ${relativePath}.`));
-});
-
 const readCurrentInventoryTotals = Effect.fn("JSDocRatchet.readCurrentInventoryTotals")(function* (
   repoRoot: string,
   inventoryPath: string
 ): Effect.fn.Return<JSDocTrackedTotals, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
-  const text = yield* readJsoncFile(repoRoot, inventoryPath);
-  const document = yield* decodeJSDocInventoryTotalsDocument(text).pipe(
-    QualityScriptCommandError.mapError(`Failed to decode ${inventoryPath}.`)
-  );
+  const path = yield* Path.Path;
+  const document = yield* readArtifact({
+    path: path.resolve(repoRoot, inventoryPath),
+    schema: JSDocInventoryTotalsDocument,
+    onReadError: (cause) => QualityScriptCommandError.new(cause, `Failed to read ${inventoryPath}.`),
+    onDecodeError: (cause) => QualityScriptCommandError.new(cause, `Failed to decode ${inventoryPath}.`),
+  });
 
   return document.totals;
 });
@@ -237,63 +229,32 @@ const readBaseline = Effect.fn("JSDocRatchet.readBaseline")(function* (
   repoRoot: string,
   baselinePath: string
 ): Effect.fn.Return<JSDocTotalsRegressionBaseline, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
-  const text = yield* readJsoncFile(repoRoot, baselinePath);
-
-  return yield* decodeJSDocTotalsRegressionBaseline(text).pipe(
-    QualityScriptCommandError.mapError(`Failed to decode ${baselinePath}.`)
-  );
+  const path = yield* Path.Path;
+  return yield* readArtifact({
+    path: path.resolve(repoRoot, baselinePath),
+    schema: JSDocTotalsRegressionBaseline,
+    onReadError: (cause) => QualityScriptCommandError.new(cause, `Failed to read ${baselinePath}.`),
+    onDecodeError: (cause) => QualityScriptCommandError.new(cause, `Failed to decode ${baselinePath}.`),
+  });
 });
-
-const metricDelta = (
-  metric: string,
-  currentTotals: JSDocTrackedTotals,
-  baselineTotals: JSDocTrackedTotals
-): O.Option<JSDocTotalDelta> =>
-  pipe(
-    R.get(currentTotals, metric),
-    O.map((current) => {
-      const baseline = pipe(
-        R.get(baselineTotals, metric),
-        O.getOrElse(() => 0)
-      );
-      return JSDocTotalDelta.make({
-        metric,
-        baseline,
-        current,
-        delta: current - baseline,
-      });
-    })
-  );
 
 const compareTotals = (
   currentTotals: JSDocTrackedTotals,
   baselineTotals: JSDocTrackedTotals
 ): JSDocTotalsComparison => {
-  const baselineMetricNames = pipe(R.keys(baselineTotals), A.sort(Order.String));
-  const deltas = pipe(
-    baselineMetricNames,
-    A.map((metric) => metricDelta(metric, currentTotals, baselineTotals)),
-    A.getSomes,
-    A.sort(deltaOrder)
-  );
-
+  const diff = diffTotals({ current: currentTotals, baseline: baselineTotals });
+  const toJSDocDelta = (delta: {
+    readonly metric: string;
+    readonly baseline: number;
+    readonly current: number;
+    readonly delta: number;
+  }) => JSDocTotalDelta.make(delta);
   return JSDocTotalsComparison.make({
-    current_total_count: A.length(R.keys(currentTotals)),
-    baseline_total_count: A.length(baselineMetricNames),
-    increased: pipe(
-      deltas,
-      A.filter((delta) => delta.delta > 0),
-      A.sort(deltaOrder)
-    ),
-    decreased: pipe(
-      deltas,
-      A.filter((delta) => delta.delta < 0),
-      A.sort(deltaOrder)
-    ),
-    missing_current_metrics: pipe(
-      baselineMetricNames,
-      A.filter((metric) => pipe(R.get(currentTotals, metric), O.isNone))
-    ),
+    current_total_count: diff.currentTotalCount,
+    baseline_total_count: diff.baselineTotalCount,
+    increased: A.map(diff.increased, toJSDocDelta),
+    decreased: A.map(diff.decreased, toJSDocDelta),
+    missing_current_metrics: diff.missing,
   });
 };
 
@@ -318,77 +279,53 @@ const renderDeltaLines = (
   deltas: ReadonlyArray<JSDocTotalDelta>,
   render: (delta: JSDocTotalDelta) => string,
   limit: number
-): ReadonlyArray<string> => {
-  const shown = A.take(deltas, limit);
-  const omittedCount = A.length(deltas) - A.length(shown);
-  return [
-    ...A.map(shown, render),
-    ...pipe(
-      omittedCount,
-      O.liftPredicate((count) => count > 0),
-      O.map((count) => A.of(`  - ... ${count} more`)),
-      O.getOrElse(A.empty<string>)
-    ),
-  ];
-};
+): ReadonlyArray<string> => renderTruncatedLines({ items: deltas, render, limit });
 
 const enforceComparison = Effect.fn("JSDocRatchet.enforceComparison")(function* (
   comparison: JSDocTotalsComparison,
   baselinePath: string
 ): Effect.fn.Return<void, QualityScriptCommandError> {
-  if (A.isReadonlyArrayNonEmpty(comparison.missing_current_metrics)) {
-    yield* Console.error(
-      A.join(
-        [
+  return yield* enforceRatchet({
+    regressions: [
+      {
+        present: A.isReadonlyArrayNonEmpty(comparison.missing_current_metrics),
+        lines: [
           `[jsdoc-ratchet] generated inventory is missing baseline metric(s) from ${baselinePath}:`,
           ...A.map(comparison.missing_current_metrics, (metric) => `  - ${metric}`),
           `[jsdoc-ratchet] regenerate the inventory with: ${jsdocInventoryRegenerationCommand}`,
         ],
-        "\n"
-      )
-    );
-    return yield* QualityScriptCommandError.make({
-      message: "JSDoc inventory totals are missing baseline metrics.",
-      command: "bun run beep quality jsdoc-ratchet",
-      exitCode: 1,
-    });
-  }
-
-  if (A.isReadonlyArrayNonEmpty(comparison.increased)) {
-    yield* Console.error(
-      A.join(
-        [
+        error: QualityScriptCommandError.make({
+          message: "JSDoc inventory totals are missing baseline metrics.",
+          command: "bun run beep quality jsdoc-ratchet",
+          exitCode: 1,
+        }),
+      },
+      {
+        present: A.isReadonlyArrayNonEmpty(comparison.increased),
+        lines: [
           `[jsdoc-ratchet] regression: ${A.length(comparison.increased)} tracked total(s) increased versus ${baselinePath}`,
           ...renderDeltaLines(comparison.increased, renderIncreaseLine, 25),
           "[jsdoc-ratchet] fix the added JSDoc findings; this ratchet only tightens on decreases.",
         ],
-        "\n"
-      )
-    );
-    return yield* QualityScriptCommandError.make({
-      message: "JSDoc totals regression baseline grew.",
-      command: "bun run beep quality jsdoc-ratchet",
-      exitCode: 1,
-    });
-  }
-
-  yield* Console.log(
-    `[jsdoc-ratchet] ok: tracked=${comparison.baseline_total_count} increased=0 current_totals=${comparison.current_total_count}`
-  );
-
-  if (A.isReadonlyArrayNonEmpty(comparison.decreased)) {
-    yield* Console.log(
-      A.join(
-        [
-          `[jsdoc-ratchet] tighten-baseline: ${A.length(comparison.decreased)} tracked total(s) decreased`,
-          ...renderDeltaLines(comparison.decreased, renderDecreaseLine, 25),
-          `[jsdoc-ratchet] regenerate inventory with: ${jsdocInventoryRegenerationCommand}`,
-          `[jsdoc-ratchet] then refresh totals with: ${jsdocTotalsSnapshotCommand}`,
-        ],
-        "\n"
-      )
-    );
-  }
+        error: QualityScriptCommandError.make({
+          message: "JSDoc totals regression baseline grew.",
+          command: "bun run beep quality jsdoc-ratchet",
+          exitCode: 1,
+        }),
+      },
+    ],
+    okLine: `[jsdoc-ratchet] ok: tracked=${comparison.baseline_total_count} increased=0 current_totals=${comparison.current_total_count}`,
+    tighten: pipe(
+      comparison.decreased,
+      O.liftPredicate(A.isReadonlyArrayNonEmpty),
+      O.map((decreased) => [
+        `[jsdoc-ratchet] tighten-baseline: ${A.length(decreased)} tracked total(s) decreased`,
+        ...renderDeltaLines(decreased, renderDecreaseLine, 25),
+        `[jsdoc-ratchet] regenerate inventory with: ${jsdocInventoryRegenerationCommand}`,
+        `[jsdoc-ratchet] then refresh totals with: ${jsdocTotalsSnapshotCommand}`,
+      ])
+    ),
+  });
 });
 
 const makeBaseline = Effect.fn("JSDocRatchet.makeBaseline")(function* (
@@ -428,17 +365,15 @@ const writeBaseline = Effect.fn("JSDocRatchet.writeBaseline")(function* (
   baselinePath: string,
   baseline: JSDocTotalsRegressionBaseline
 ): Effect.fn.Return<void, QualityScriptCommandError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const content = yield* formatBaseline(baseline);
   const absolutePath = path.resolve(repoRoot, baselinePath);
 
-  yield* fs
-    .makeDirectory(path.dirname(absolutePath), { recursive: true })
-    .pipe(QualityScriptCommandError.mapError(`Failed to create ${path.dirname(absolutePath)}.`));
-  yield* fs
-    .writeFileString(absolutePath, `${content}\n`)
-    .pipe(QualityScriptCommandError.mapError(`Failed to write ${baselinePath}.`));
+  yield* writeArtifact({
+    path: absolutePath,
+    body: `${content}\n`,
+    onError: (cause) => QualityScriptCommandError.new(cause, `Failed to write ${baselinePath}.`),
+  });
 });
 
 /**
@@ -483,7 +418,7 @@ export class RunJSDocRatchetOptions extends S.Class<RunJSDocRatchetOptions>($I`R
  *   inventoryPath: "standards/jsdoc-documentation.inventory.jsonc",
  *   writeBaseline: false
  * })
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category use-cases
  * @since 0.0.0

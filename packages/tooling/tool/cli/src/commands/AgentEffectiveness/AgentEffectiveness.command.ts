@@ -6,6 +6,7 @@
  */
 
 import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
+import { $RepoCliId } from "@beep/identity";
 import { Phoenix, PhoenixConfigInput } from "@beep/phoenix";
 import {
   AGENT_EFFECTIVENESS_PHOENIX_WRITE_CONFIRMATION,
@@ -34,6 +35,7 @@ import { A } from "@beep/utils";
 import { Config, Console, DateTime, Effect, flow, Layer, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { FetchHttpClient } from "effect/unstable/http";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
@@ -52,6 +54,8 @@ import type {
 } from "@beep/repo-ai-metrics";
 import type { Scope } from "effect";
 import type { HttpClient } from "effect/unstable/http";
+
+const $I = $RepoCliId.create("commands/AgentEffectiveness/AgentEffectiveness.command");
 
 const defaultAgentEffectivenessDataRoot = ".beep/ai-metrics";
 const agentEffectivenessPhoenixBaseUrlEnvVar = "BEEP_AGENT_EFFECTIVENESS_PHOENIX_BASE_URL";
@@ -314,6 +318,20 @@ const renderPhoenixSyncResult: {
   })
 );
 
+class MakeDoctorProgramOptions extends S.Class<MakeDoctorProgramOptions>($I`MakeDoctorProgramOptions`)(
+  {
+    dataRoot: S.String,
+    json: S.Boolean,
+    noPhoenix: S.Boolean,
+    phoenixBaseUrl: S.String,
+    target: AiMetricsDeployTarget,
+    workerEvalReportPath: S.String,
+  },
+  $I.annote("MakeDoctorProgramOptions", {
+    description: "Options for making an agent effectiveness doctor program.",
+  })
+) {}
+
 const makeDoctorProgram = Effect.fn("AgentEffectiveness.makeDoctorProgram")(function* ({
   dataRoot,
   json,
@@ -321,14 +339,7 @@ const makeDoctorProgram = Effect.fn("AgentEffectiveness.makeDoctorProgram")(func
   phoenixBaseUrl,
   target,
   workerEvalReportPath,
-}: {
-  readonly dataRoot: string;
-  readonly json: boolean;
-  readonly noPhoenix: boolean;
-  readonly phoenixBaseUrl: string;
-  readonly target: AiMetricsDeployTarget;
-  readonly workerEvalReportPath: string;
-}) {
+}: MakeDoctorProgramOptions) {
   return yield* pipe(
     AgentEffectivenessDoctorInput.make({
       dataRoot,
@@ -350,14 +361,7 @@ const makeAnnotationPlanProgram = Effect.fn("AgentEffectiveness.makeAnnotationPl
   phoenixBaseUrl,
   target,
   workerEvalReportPath,
-}: {
-  readonly dataRoot: string;
-  readonly json: boolean;
-  readonly noPhoenix: boolean;
-  readonly phoenixBaseUrl: string;
-  readonly target: AiMetricsDeployTarget;
-  readonly workerEvalReportPath: string;
-}) {
+}: MakeDoctorProgramOptions) {
   return yield* pipe(
     AgentEffectivenessDoctorInput.make({
       dataRoot,
@@ -380,14 +384,7 @@ const makeAnnotationCheckProgram = Effect.fn("AgentEffectiveness.makeAnnotationC
   phoenixBaseUrl,
   target,
   workerEvalReportPath,
-}: {
-  readonly dataRoot: string;
-  readonly json: boolean;
-  readonly noPhoenix: boolean;
-  readonly phoenixBaseUrl: string;
-  readonly target: AiMetricsDeployTarget;
-  readonly workerEvalReportPath: string;
-}) {
+}: MakeDoctorProgramOptions) {
   return yield* pipe(
     AgentEffectivenessDoctorInput.make({
       dataRoot,
@@ -416,14 +413,7 @@ const makeDatasetBundleProgram = Effect.fn("AgentEffectiveness.makeDatasetBundle
   phoenixBaseUrl,
   target,
   workerEvalReportPath,
-}: {
-  readonly dataRoot: string;
-  readonly json: boolean;
-  readonly noPhoenix: boolean;
-  readonly phoenixBaseUrl: string;
-  readonly target: AiMetricsDeployTarget;
-  readonly workerEvalReportPath: string;
-}) {
+}: MakeDoctorProgramOptions) {
   return yield* pipe(
     AgentEffectivenessDoctorInput.make({
       dataRoot,
@@ -439,14 +429,9 @@ const makeDatasetBundleProgram = Effect.fn("AgentEffectiveness.makeDatasetBundle
   );
 });
 
-const makePromptBundleProgram = Effect.fn("AgentEffectiveness.makePromptBundleProgram")(function* (params: {
-  readonly dataRoot: string;
-  readonly json: boolean;
-  readonly noPhoenix: boolean;
-  readonly phoenixBaseUrl: string;
-  readonly target: AiMetricsDeployTarget;
-  readonly workerEvalReportPath: string;
-}) {
+const makePromptBundleProgram = Effect.fn("AgentEffectiveness.makePromptBundleProgram")(function* (
+  params: MakeDoctorProgramOptions
+) {
   return yield* pipe(
     DateTime.now,
     Effect.map(DateTime.formatIso),
@@ -454,19 +439,12 @@ const makePromptBundleProgram = Effect.fn("AgentEffectiveness.makePromptBundlePr
     Effect.flatMap(renderPromptBundle(params.json))
   );
 });
-type MakeExperimentBundleProgramOptions = {
-  readonly dataRoot: string;
-  readonly json: boolean;
-  readonly noPhoenix: boolean;
-  readonly phoenixBaseUrl: string;
-  readonly target: AiMetricsDeployTarget;
-  readonly workerEvalReportPath: string;
-};
+
 const makeExperimentBundleProgram = Effect.fn("AgentEffectiveness.makeExperimentBundleProgram")(function* ({
   dataRoot,
   json,
   ...rest
-}: MakeExperimentBundleProgramOptions) {
+}: MakeDoctorProgramOptions) {
   return yield* pipe(
     AgentEffectivenessDoctorInput.make({
       dataRoot,
@@ -480,6 +458,18 @@ const makeExperimentBundleProgram = Effect.fn("AgentEffectiveness.makeExperiment
   );
 });
 
+class MakePhoenixSyncProgramOptions extends MakeDoctorProgramOptions.extend<MakePhoenixSyncProgramOptions>(
+  $I`MakePhoenixSyncProgramOptions`
+)(
+  {
+    confirmPhoenixWrite: S.Option(S.String),
+    write: S.Boolean,
+  },
+  $I.annote("MakePhoenixSyncProgramOptions", {
+    description: "Options for the AgentEffectiveness.makePhoenixSyncProgram function",
+  })
+) {}
+
 const makePhoenixSyncProgram = Effect.fn("AgentEffectiveness.makePhoenixSyncProgram")(function* ({
   confirmPhoenixWrite,
   dataRoot,
@@ -489,16 +479,7 @@ const makePhoenixSyncProgram = Effect.fn("AgentEffectiveness.makePhoenixSyncProg
   target,
   workerEvalReportPath,
   write,
-}: {
-  readonly confirmPhoenixWrite: O.Option<string>;
-  readonly dataRoot: string;
-  readonly json: boolean;
-  readonly noPhoenix: boolean;
-  readonly phoenixBaseUrl: string;
-  readonly target: AiMetricsDeployTarget;
-  readonly workerEvalReportPath: string;
-  readonly write: boolean;
-}) {
+}: MakePhoenixSyncProgramOptions) {
   const makePhoenixSyncInput = pipe(
     confirmPhoenixWrite,
     O.match({
@@ -675,7 +656,11 @@ const evalsCommand = Command.make("evals", {}, () =>
  * @example
  * ```ts
  * import { agentEffectivenessCommand } from "@beep/repo-cli/commands/AgentEffectiveness/index"
- * console.log(agentEffectivenessCommand)
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
+ *
+ * const run = Command.run(agentEffectivenessCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category commands
  * @since 0.0.0

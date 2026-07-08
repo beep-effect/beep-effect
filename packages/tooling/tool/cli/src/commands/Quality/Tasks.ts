@@ -5,31 +5,53 @@
  * @since 0.0.0
  */
 
-import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
-import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Console, Duration, Effect, FileSystem, flow, Inspectable, Match, Order, Path, pipe, Stream } from "effect";
+import { Console, Duration, Effect, FileSystem, flow, Inspectable, Match, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
-import { GithubCheckMode } from "../../internal/repo-run/index.js";
-import { configStringEqualsSync, configStringOption } from "./internal/Config.js";
+import {
+  canUseLocalEnv,
+  configStringEqualsSync,
+  configStringOption,
+  isUnresolvedSecretReference,
+  turboEnvOverrides,
+} from "../../internal/cli/EnvConfig.js";
+import {
+  collectText,
+  formatCommandLine,
+  QualityTaskStep,
+  qualityStepOutputBound,
+  runCaptured,
+  runToExit,
+} from "../../internal/process/index.js";
 import {
   cleanCoverageRegressionOutputs,
   compareCoverageRegressionBaseline,
   writeCoverageRegressionBaseline,
 } from "./internal/CoverageRegression.js";
-import { collectText } from "./internal/QualityArtifactSupport.js";
 import { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Quality.errors.js";
+import {
+  decodePackageJsonDocument,
+  GithubCheckMode,
+  LintPolicySubcommand,
+  PackageTaskProfile,
+  QualityTaskBypassArgName,
+  QualityTaskInvocation,
+  QualityTaskName,
+  RootAuditMode,
+} from "./Quality.schemas.js";
 import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type { Scope } from "effect";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { UnexpectedQualityTaskFailure } from "./Quality.errors.js";
+import type { PackageJsonDocument, PackageJsonWorkspacesDocument } from "./Quality.schemas.js";
 
+export { QualityTaskStep } from "../../internal/process/index.js";
 /**
  * Public quality task error exports.
  *
@@ -43,9 +65,6 @@ export {
   UnexpectedQualityTaskFailure,
 } from "./Quality.errors.js";
 
-const $I = $RepoCliId.create("commands/Quality/Tasks");
-
-const GROUPED_STEP_OUTPUT_MAX_CHARS = 256 * 1024;
 const CHANGED_PATH_DIFF_FILTER = ["A", "C", "M", "R", "T", "U", "X", "B"].join("");
 const LOCAL_BIOME_BIN = "./node_modules/.bin/biome";
 const BIOME_FIX_CHANGED_ARGS = ["check", "--write", "--files-ignore-unknown=true", "--no-errors-on-unmatched"] as const;
@@ -59,167 +78,6 @@ const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 // CPU-heavy members (turbo-lint, tsgo-rules, eslint) against memory
 // (rqt-012, goals/agent-pipeline-velocity D4).
 const LINT_POLICY_STEP_CONCURRENCY = 6;
-const groupedStepOutputTruncatedNotice = `\n[beep-cli] output truncated after ${GROUPED_STEP_OUTPUT_MAX_CHARS} characters`;
-
-/**
- * Canonical quality task name.
- *
- * @example
- * ```ts
- * import { QualityTaskName } from "@beep/repo-cli/commands/Quality/Tasks"
- * const isLint = QualityTaskName.is.lint("lint")
- * ```
- * @category models
- * @since 0.0.0
- */
-export const QualityTaskName = LiteralKit(["build", "check", "test", "lint", "audit", "coverage"]).pipe(
-  $I.annoteSchema("QualityTaskName", {
-    description: "Canonical quality task name handled by beep-cli.",
-  })
-);
-
-/**
- * Canonical quality task name.
- *
- * @example
- * ```ts
- * import type { QualityTaskName } from "@beep/repo-cli/commands/Quality/Tasks"
- * const task: QualityTaskName = "check"
- * ```
- * @category models
- * @since 0.0.0
- */
-export type QualityTaskName = typeof QualityTaskName.Type;
-
-const QualityTaskBypassArgName = LiteralKit(["--completions", "--help", "--log-level", "--version", "-h", "-v"]).pipe(
-  $I.annoteSchema("QualityTaskBypassArgName", {
-    description: "Root CLI flag names that must bypass the quality task fast path.",
-  })
-);
-
-const LintPolicySubcommand = LiteralKit([
-  "circular",
-  "deprecated-apis",
-  "package-test-imports",
-  "policy",
-  "reflection-artifacts",
-  "schema-first",
-  "schema-topology",
-  "tooling-schema-first",
-]).pipe(
-  $I.annoteSchema("LintPolicySubcommand", {
-    description: "Lint policy subcommands that remain owned by the full command tree.",
-  })
-);
-
-const RootAuditMode = LiteralKit(["packages", "github"]).pipe(
-  $I.annoteSchema("RootAuditMode", {
-    description: "Root audit mode names supported by the quality task adapter.",
-  })
-);
-
-/**
- * Package-local script profile used by the quality task adapter.
- *
- * @example
- * ```ts
- * import { PackageTaskProfile } from "@beep/repo-cli/commands/Quality/Tasks"
- * const profile = PackageTaskProfile.make({
- *   task: "lint",
- *   script: "beep:lint",
- *   fixScript: "beep:lint:fix"
- * })
- * ```
- * @category models
- * @since 0.0.0
- */
-export class PackageTaskProfile extends S.Class<PackageTaskProfile>($I`PackageTaskProfile`)(
-  {
-    task: QualityTaskName,
-    script: S.String,
-    fixScript: S.optionalKey(S.String),
-  },
-  $I.annote("PackageTaskProfile", {
-    description: "Package-local script profile used by the quality task adapter.",
-  })
-) {}
-
-/**
- * Planned subprocess invocation.
- *
- * @example
- * ```ts
- * import { QualityTaskStep } from "@beep/repo-cli/commands/Quality/Tasks"
- * const step = QualityTaskStep.make({
- *   label: "lint",
- *   command: "bunx",
- *   args: ["turbo", "run", "lint"],
- *   cwd: "/repo"
- * })
- * ```
- * @category models
- * @since 0.0.0
- */
-export class QualityTaskStep extends S.Class<QualityTaskStep>($I`QualityTaskStep`)(
-  {
-    label: S.String,
-    command: S.String,
-    args: S.Array(S.String),
-    cwd: S.String,
-    env: S.optionalKey(S.Record(S.String, S.Union([S.String, S.Undefined]))),
-    useLocalEnv: S.optionalKey(S.Boolean),
-  },
-  $I.annote("QualityTaskStep", {
-    description: "Planned subprocess invocation for a quality task.",
-  })
-) {}
-
-/**
- * Result of parsing a quality command invocation.
- *
- * @example
- * ```ts
- * import { QualityTaskInvocation } from "@beep/repo-cli/commands/Quality/Tasks"
- * const invocation = QualityTaskInvocation.make({
- *   task: "lint",
- *   args: ["--filter=@beep/repo-cli"],
- *   fix: false
- * })
- * ```
- * @category models
- * @since 0.0.0
- */
-export class QualityTaskInvocation extends S.Class<QualityTaskInvocation>($I`QualityTaskInvocation`)(
-  {
-    task: QualityTaskName,
-    args: S.Array(S.String),
-    fix: S.Boolean,
-  },
-  $I.annote("QualityTaskInvocation", {
-    description: "Result of parsing a quality command invocation.",
-  })
-) {}
-
-class PackageJsonWorkspacesDocument extends S.Class<PackageJsonWorkspacesDocument>($I`PackageJsonWorkspacesDocument`)(
-  {
-    packages: S.Array(S.String),
-  },
-  $I.annote("PackageJsonWorkspacesDocument", {
-    description: "Object-form package.json workspaces entry used by quality task resolution.",
-  })
-) {}
-
-class PackageJsonDocument extends S.Class<PackageJsonDocument>($I`PackageJsonDocument`)(
-  {
-    name: S.optionalKey(S.String),
-    scripts: S.optionalKey(S.Record(S.String, S.String)),
-    workspaces: S.optionalKey(S.Union([S.Array(S.String), PackageJsonWorkspacesDocument])),
-  },
-  $I.annote("PackageJsonDocument", {
-    description: "Minimal package.json shape used by quality task resolution.",
-  })
-) {}
-const decodePackageJsonDocument = S.decodeUnknownEffect(S.fromJsonString(PackageJsonDocument));
 
 type QualityTaskEnvironment = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
 
@@ -240,11 +98,6 @@ type QualityTaskStepOutput = {
   readonly step: QualityTaskStep;
 };
 
-type BoundedStepOutputState = {
-  readonly text: string;
-  readonly truncated: boolean;
-};
-
 type ParsedFixArgsState = {
   readonly fix: boolean;
   readonly args: ReadonlyArray<string>;
@@ -263,7 +116,6 @@ type WorkspaceTaskOwner = {
   readonly scripts: Readonly<Record<string, string>>;
 };
 
-type RootAuditMode = typeof RootAuditMode.Type;
 type RootAuditSelectionState = {
   readonly mode: RootAuditMode;
   readonly args: ReadonlyArray<string>;
@@ -546,14 +398,16 @@ const workspaceTaskArgs = Effect.fn("QualityTasks.workspaceTaskArgs")(function* 
  * @example
  * ```ts
  * import { workspaceTaskFiltersForTesting } from "@beep/repo-cli/test/Quality"
- * console.log(workspaceTaskFiltersForTesting)
+ *
+ * const result = workspaceTaskFiltersForTesting("@beep/repo-cli")
+ * console.log(result) // rendered command output
  * ```
  * @category utilities
  * @since 0.0.0
  */
 export const workspaceTaskFiltersForTesting = workspaceTaskFilters;
 
-const commandText = (command: string, args: ReadonlyArray<string>): string => A.join([command, ...args], " ");
+const commandText = formatCommandLine;
 
 const isTurboCacheControlArg = (arg: string): boolean =>
   arg === "--no-cache" ||
@@ -702,9 +556,6 @@ const lintFixChangedStep = (repoRoot: string, files: ReadonlyArray<string>) =>
     cwd: repoRoot,
   });
 
-const isUnresolvedSecretReference = (value: string | undefined): boolean =>
-  value !== undefined && Str.startsWith("op://")(value);
-
 const usableSqlConnectionUri = (value: string | undefined): O.Option<string> =>
   pipe(
     O.fromUndefinedOr(value),
@@ -714,76 +565,6 @@ const usableSqlConnectionUri = (value: string | undefined): O.Option<string> =>
 
 const sqlIntegrationConnectionUriFromEnv = (env: Record<string, string | undefined>): O.Option<string> =>
   usableSqlConnectionUri(env.BEEP_TEST_DATABASE_URL);
-
-const turboEnvOverrides = Effect.fn("QualityTasks.turboEnvOverrides")(function* (
-  command: string,
-  args: ReadonlyArray<string>
-) {
-  if (
-    command !== "bunx" ||
-    !pipe(
-      A.head(args),
-      O.exists((arg) => arg === "turbo")
-    )
-  ) {
-    return {};
-  }
-
-  const turboToken = yield* configStringOption("TURBO_TOKEN");
-  const turboTeam = yield* configStringOption("TURBO_TEAM");
-  const turboTokenValue = pipe(turboToken, O.getOrUndefined);
-  const turboTeamValue = pipe(turboTeam, O.getOrUndefined);
-  return {
-    // Spawned turbo inherits the parent TTY; its interactive TUI enables
-    // crossterm mouse capture (DECSET ?1000/?1002/?1003/?1006) and, when a
-    // failed task tears the run down, the child is killed before it can restore
-    // the terminal — leaving it emitting mouse-motion reports and swallowing
-    // Ctrl-C. Force turbo's stream renderer so it never enables mouse capture.
-    TURBO_UI: "false",
-    ...(isUnresolvedSecretReference(turboTokenValue) ? { TURBO_TOKEN: undefined } : {}),
-    ...(isUnresolvedSecretReference(turboTeamValue) ? { TURBO_TEAM: undefined } : {}),
-  };
-});
-
-const runExitCode = Effect.fn("QualityTasks.runExitCode")(function* (
-  command: string,
-  args: ReadonlyArray<string>,
-  cwd: string
-) {
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(command, [...args], {
-        cwd,
-        stdout: "ignore",
-        stderr: "ignore",
-      });
-      return yield* handle.exitCode;
-    })
-  );
-});
-
-const canUseLocalEnv = Effect.fn("QualityTasks.canUseLocalEnv")(function* (
-  repoRoot: string
-): Effect.fn.Return<boolean, never, FileSystem.FileSystem | ChildProcessSpawner.ChildProcessSpawner> {
-  const ci = yield* configStringOption("CI");
-  if (
-    pipe(
-      ci,
-      O.exists((value) => value === "true")
-    )
-  ) {
-    return false;
-  }
-
-  const fs = yield* FileSystem.FileSystem;
-  const hasEnv = yield* fs.exists(`${repoRoot}/.env`).pipe(Effect.orElseSucceed(thunkFalse));
-  if (!hasEnv) {
-    return false;
-  }
-
-  const exitCode = yield* runExitCode("op", ["whoami"], repoRoot).pipe(Effect.orElseSucceed(() => 1));
-  return exitCode === 0;
-});
 
 const withLocalEnv = Effect.fn("QualityTasks.withLocalEnv")(function* (step: QualityTaskStep) {
   if (step.useLocalEnv !== true) {
@@ -807,31 +588,22 @@ const runStep = Effect.fn("QualityTasks.runStep")(function* (step: QualityTaskSt
   const resolved = yield* withLocalEnv(step);
   const envOverrides = yield* turboEnvOverrides(resolved.command, resolved.args);
   yield* Console.log(`[beep-cli] ${resolved.label}: ${commandText(resolved.command, resolved.args)}`);
-  const exitCode = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(resolved.command, [...resolved.args], {
-        cwd: resolved.cwd,
-        env: {
-          ...envOverrides,
-          ...(resolved.env ?? {}),
-        },
-        extendEnv: true,
-        stdin: "inherit",
-        stdout: "inherit",
-        stderr: "inherit",
-      });
-      return yield* handle.exitCode;
-    })
-  ).pipe(QualityTaskConfigurationError.mapError(`Failed to spawn ${commandText(resolved.command, resolved.args)}`));
+  const exitCode = yield* runToExit({
+    command: resolved.command,
+    args: resolved.args,
+    cwd: resolved.cwd,
+    env: {
+      ...envOverrides,
+      ...(resolved.env ?? {}),
+    },
+    extendEnv: true,
+    stdin: "inherit",
+    stdio: "inherit",
+  }).pipe(QualityTaskConfigurationError.mapError(`Failed to spawn ${commandText(resolved.command, resolved.args)}`));
 
   if (exitCode !== 0) {
     return yield* QualityTaskFailed.new(exitCode, resolved.label, commandText(resolved.command, resolved.args));
   }
-});
-
-const emptyBoundedStepOutputState = (): BoundedStepOutputState => ({
-  text: "",
-  truncated: false,
 });
 
 const renderFailureSummary = (label: string, failures: ReadonlyArray<QualityTaskFailed>): string =>
@@ -902,62 +674,25 @@ const runStreamingStepGroup = Effect.fn("QualityTasks.runStreamingStepGroup")(fu
   yield* failQualityTaskFailures(label, failures);
 });
 
-const appendBoundedStepOutput = (state: BoundedStepOutputState, chunk: string): BoundedStepOutputState => {
-  if (state.truncated) {
-    return state;
-  }
-
-  const remaining = GROUPED_STEP_OUTPUT_MAX_CHARS - Str.length(state.text);
-
-  if (remaining <= 0) {
-    return {
-      text: `${state.text}${groupedStepOutputTruncatedNotice}`,
-      truncated: true,
-    };
-  }
-
-  if (Str.length(chunk) <= remaining) {
-    return {
-      text: `${state.text}${chunk}`,
-      truncated: false,
-    };
-  }
-
-  return {
-    text: `${state.text}${Str.slice(0, remaining)(chunk)}${groupedStepOutputTruncatedNotice}`,
-    truncated: true,
-  };
-};
-
 const collectResolvedStepOutput = Effect.fn("QualityTasks.collectResolvedStepOutput")(function* (
   step: QualityTaskStep
 ): Effect.fn.Return<QualityTaskStepOutput, QualityTaskConfigurationError, ChildProcessSpawner.ChildProcessSpawner> {
   const command = commandText(step.command, step.args);
   const envOverrides = yield* turboEnvOverrides(step.command, step.args);
-  const result = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(step.command, [...step.args], {
-        cwd: step.cwd,
-        env: {
-          ...envOverrides,
-          ...(step.env ?? {}),
-        },
-        extendEnv: true,
-        stdin: "inherit",
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const outputState = yield* handle.all.pipe(
-        Stream.decodeText(),
-        Stream.runFold(emptyBoundedStepOutputState, appendBoundedStepOutput)
-      );
-      const exitCode = yield* handle.exitCode;
-      return {
-        output: Str.trim(outputState.text),
-        exitCode,
-      };
-    })
-  ).pipe(QualityTaskConfigurationError.mapError(`Failed to spawn ${command}`));
+  const result = yield* runCaptured({
+    command: step.command,
+    args: step.args,
+    cwd: step.cwd,
+    env: {
+      ...envOverrides,
+      ...(step.env ?? {}),
+    },
+    extendEnv: true,
+    stdin: "inherit",
+    source: "all",
+    bound: qualityStepOutputBound,
+    trim: true,
+  }).pipe(QualityTaskConfigurationError.mapError(`Failed to spawn ${command}`));
 
   return {
     command,
@@ -1184,7 +919,11 @@ type SqlIntegrationStepForTestingOptions = {
  * @example
  * ```ts
  * import { sqlIntegrationStepForTesting } from "@beep/repo-cli/commands/Quality"
- * console.log(sqlIntegrationStepForTesting)
+ *
+ * const step = sqlIntegrationStepForTesting("/repo", ["--filter", "@beep/db"], {
+ *   connectionUri: "postgres://localhost:5432/test"
+ * })
+ * console.log(step.label) // "test:integration"
  * ```
  * @category utilities
  * @since 0.0.0
@@ -1203,7 +942,14 @@ export const sqlIntegrationStepForTesting: {
  * @example
  * ```ts
  * import { runSqlIntegrationTestLaneForTesting } from "@beep/repo-cli/commands/Quality"
- * console.log(runSqlIntegrationTestLaneForTesting)
+ * import { Effect } from "effect"
+ *
+ * const program = runSqlIntegrationTestLaneForTesting({
+ *   acquireResource: Effect.die("provide a real SQL resource acquisition"),
+ *   args: [],
+ *   repoRoot: "/repo"
+ * })
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -1217,7 +963,9 @@ export const runSqlIntegrationTestLaneForTesting = runSqlIntegrationTestLane;
  * @example
  * ```ts
  * import { sqlIntegrationConnectionUriFromEnvForTesting } from "@beep/repo-cli/commands/Quality"
- * console.log(sqlIntegrationConnectionUriFromEnvForTesting)
+ *
+ * const result = sqlIntegrationConnectionUriFromEnvForTesting({ DATABASE_URL: "postgres://localhost/beep" })
+ * console.log(result) // rendered command output
  * ```
  * @category utilities
  * @since 0.0.0
@@ -1327,8 +1075,10 @@ export const rootLintPolicyStepsForTesting = (repoRoot: string): ReadonlyArray<Q
  * @example
  * ```ts
  * import { runRootLintPolicyTask } from "@beep/repo-cli/commands/Quality"
+ * import { Effect } from "effect"
  *
- * console.log(runRootLintPolicyTask)
+ * const program = Effect.succeed(runRootLintPolicyTask)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -1442,7 +1192,13 @@ const rootStepsFor = (repoRoot: string, invocation: QualityTaskInvocation): Read
  * @example
  * ```ts
  * import { rootQualityStepsForTesting } from "@beep/repo-cli/commands/Quality"
- * console.log(rootQualityStepsForTesting)
+ * import { QualityTaskInvocation } from "@beep/repo-cli/commands/Quality/Tasks"
+ *
+ * const steps = rootQualityStepsForTesting(
+ *   "/repo",
+ *   QualityTaskInvocation.make({ task: "check", args: [], fix: false })
+ * )
+ * console.log(steps.length > 0) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -1717,7 +1473,9 @@ export const collectStepOutput = (step: QualityTaskStep) =>
  * @example
  * ```ts
  * import { runQualityTaskStepGroup } from "@beep/repo-cli/commands/Quality"
- * console.log(runQualityTaskStepGroup)
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(runQualityTaskStepGroup("lint", [], 1))) // true
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -1733,7 +1491,9 @@ export const runQualityTaskStepGroup = runStepGroup;
  * @example
  * ```ts
  * import { runQualityTaskStreamingStepGroup } from "@beep/repo-cli/commands/Quality"
- * console.log(runQualityTaskStreamingStepGroup)
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(runQualityTaskStreamingStepGroup("lint", []))) // true
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -1749,7 +1509,9 @@ export const runQualityTaskStreamingStepGroup = runStreamingStepGroup;
  * @example
  * ```ts
  * import { runQualityTaskStepGroupForTesting } from "@beep/repo-cli/commands/Quality"
- * console.log(runQualityTaskStepGroupForTesting)
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(runQualityTaskStepGroupForTesting("lint", [], 1))) // true
  * ```
  * @category testing
  * @since 0.0.0
@@ -1765,7 +1527,9 @@ export const runQualityTaskStepGroupForTesting = runQualityTaskStepGroup;
  * @example
  * ```ts
  * import { runQualityTaskStreamingStepGroupForTesting } from "@beep/repo-cli/commands/Quality"
- * console.log(runQualityTaskStreamingStepGroupForTesting)
+ * import { Effect } from "effect"
+ *
+ * console.log(Effect.isEffect(runQualityTaskStreamingStepGroupForTesting("lint", []))) // true
  * ```
  * @category testing
  * @since 0.0.0
@@ -1779,7 +1543,9 @@ export const runQualityTaskStreamingStepGroupForTesting = runQualityTaskStreamin
  * @example
  * ```ts
  * import { collectLintFixChangedFilesForTesting } from "@beep/repo-cli/commands/Quality"
- * console.log(collectLintFixChangedFilesForTesting)
+ *
+ * const result = collectLintFixChangedFilesForTesting
+ * console.log(result) // rendered command output
  * ```
  * @category utilities
  * @since 0.0.0

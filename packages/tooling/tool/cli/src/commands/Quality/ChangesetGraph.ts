@@ -533,7 +533,7 @@ export const makeChangesetGraphSummary = makeSummary;
  * import { runChangesetGraphCheck } from "@beep/repo-cli/commands/Quality/ChangesetGraph"
  *
  * const program = runChangesetGraphCheck(process.cwd())
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category utilities
  * @since 0.0.0

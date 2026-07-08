@@ -7,15 +7,16 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
 import { A, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
-import { Console, DateTime, Effect, FileSystem, MutableHashMap, Order, Path, pipe, Stream } from "effect";
+import { Console, DateTime, Effect, FileSystem, Inspectable, MutableHashMap, Order, Path, pipe, Stream } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
+import { formatJsonc, readArtifact, writeArtifact } from "../../../internal/artifacts/index.js";
+import { enforceRatchet } from "../../../internal/ratchet/index.js";
 import { QualityTaskConfigurationError, QualityTaskFailed } from "../Quality.errors.js";
-import { discoverWorkspacePackages, formatJsonc, repoRelative } from "./QualityArtifactSupport.js";
+import { discoverWorkspacePackages, repoRelative } from "./QualityArtifactSupport.js";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { WorkspacePackageInfo } from "./QualityArtifactSupport.js";
 
@@ -207,7 +208,6 @@ export class CoverageComparisonResult extends S.Class<CoverageComparisonResult>(
   })
 ) {}
 
-const decodeCoverageRegressionBaseline = decodeJsoncTextAs(CoverageRegressionBaseline);
 const decodeVitestCoverageSummary = S.decodeUnknownEffect(S.fromJsonString(VitestCoverageSummary));
 
 const metricNames = CoverageMetricName.Options;
@@ -373,16 +373,20 @@ const baselineDocumentFromSnapshot = Effect.fn("CoverageRegression.baselineDocum
 const readBaseline = Effect.fn("CoverageRegression.readBaseline")(function* (
   repoRoot: string
 ): Effect.fn.Return<CoverageRegressionBaseline, QualityTaskConfigurationError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const baselinePath = path.join(repoRoot, coverageRegressionBaselinePath);
-  const text = yield* fs
-    .readFileString(baselinePath)
-    .pipe(QualityTaskConfigurationError.mapError(`Failed to read ${coverageRegressionBaselinePath}.`));
-
-  return yield* decodeCoverageRegressionBaseline(text).pipe(
-    QualityTaskConfigurationError.mapError(`Failed to parse ${coverageRegressionBaselinePath}.`)
-  );
+  return yield* readArtifact({
+    path: baselinePath,
+    schema: CoverageRegressionBaseline,
+    onReadError: (cause) =>
+      QualityTaskConfigurationError.new(
+        `Failed to read ${coverageRegressionBaselinePath}.: ${Inspectable.toStringUnknown(cause, 0)}`
+      ),
+    onDecodeError: (cause) =>
+      QualityTaskConfigurationError.new(
+        `Failed to parse ${coverageRegressionBaselinePath}.: ${Inspectable.toStringUnknown(cause, 0)}`
+      ),
+  });
 });
 
 const formatBaseline = Effect.fn("CoverageRegression.formatBaseline")(function* (
@@ -414,7 +418,6 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
     QualityTaskConfigurationError,
     FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
   > {
-    const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const entries = yield* collectCoverageSnapshot(repoRoot);
     if (A.isReadonlyArrayEmpty(entries)) {
@@ -423,9 +426,14 @@ export const writeCoverageRegressionBaseline = Effect.fn("CoverageRegression.wri
 
     const baseline = yield* baselineDocumentFromSnapshot(repoRoot, entries);
     const content = yield* formatBaseline(baseline);
-    yield* fs
-      .writeFileString(path.join(repoRoot, coverageRegressionBaselinePath), content)
-      .pipe(QualityTaskConfigurationError.mapError(`Failed to write ${coverageRegressionBaselinePath}.`));
+    yield* writeArtifact({
+      path: path.join(repoRoot, coverageRegressionBaselinePath),
+      body: content,
+      onError: (cause) =>
+        QualityTaskConfigurationError.new(
+          `Failed to write ${coverageRegressionBaselinePath}.: ${Inspectable.toStringUnknown(cause, 0)}`
+        ),
+    });
     yield* Console.log(
       `[coverage-ratchet] wrote ${coverageRegressionBaselinePath} with ${A.length(entries)} package(s)`
     );
@@ -517,9 +525,7 @@ const renderNewPackageWarnings = (packages: ReadonlyArray<CoverageSnapshotEntry>
       `  - ${entry.packageName} (${entry.baseline.path}) is missing from ${coverageRegressionBaselinePath}; run ${coverageRegressionRegenerationCommand} and review the baseline diff.`
   );
 
-const failComparison = Effect.fn("CoverageRegression.failComparison")(function* (
-  result: CoverageComparisonResult
-): Effect.fn.Return<void, QualityTaskFailed> {
+const regressionLines = (result: CoverageComparisonResult): ReadonlyArray<string> => {
   const sections = [
     ...A.match(result.failures, {
       onEmpty: A.empty<string>,
@@ -536,9 +542,8 @@ const failComparison = Effect.fn("CoverageRegression.failComparison")(function* 
       ],
     }),
   ];
-  yield* Console.error(A.join(sections, "\n"));
-  return yield* QualityTaskFailed.new(1, "coverage:ratchet", "beep-cli coverage");
-});
+  return sections;
+};
 
 /**
  * Compare generated package coverage summaries against the committed baseline.
@@ -569,13 +574,16 @@ export const compareCoverageRegressionBaseline = Effect.fn("CoverageRegression.c
       );
     }
 
-    if (A.isReadonlyArrayNonEmpty(result.failures) || A.isReadonlyArrayNonEmpty(result.missingActuals)) {
-      yield* failComparison(result);
-      return;
-    }
-
-    yield* Console.log(
-      `[coverage-ratchet] ok: compared ${result.comparedCount} package(s) with epsilon ${baseline.epsilon}`
-    );
+    yield* enforceRatchet({
+      regressions: [
+        {
+          present: A.isReadonlyArrayNonEmpty(result.failures) || A.isReadonlyArrayNonEmpty(result.missingActuals),
+          lines: regressionLines(result),
+          error: QualityTaskFailed.new(1, "coverage:ratchet", "beep-cli coverage"),
+        },
+      ],
+      okLine: `[coverage-ratchet] ok: compared ${result.comparedCount} package(s) with epsilon ${baseline.epsilon}`,
+      tighten: O.none(),
+    });
   }
 );

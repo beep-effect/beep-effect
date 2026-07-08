@@ -11,7 +11,6 @@ import { Effect, MutableHashMap, Order, pipe } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { SyncDataTargetProjection, SyncDataToTsError } from "../internal/Models.js";
 import {
   fetchSource,
   formatJson,
@@ -21,7 +20,8 @@ import {
   parseJsonSource,
   sourceMetadata,
 } from "../internal/Source.js";
-import type { SyncDataSourceMetadata, SyncDataTarget } from "../internal/Models.js";
+import { SyncDataTargetProjection, SyncDataToTsError } from "../SyncDataToTs.schemas.js";
+import type { SyncDataSourceMetadata, SyncDataTarget } from "../SyncDataToTs.schemas.js";
 
 const $I = $RepoCliId.create("commands/SyncDataToTs/targets/CldrTerritories");
 const targetId = "cldr-territories" as const;

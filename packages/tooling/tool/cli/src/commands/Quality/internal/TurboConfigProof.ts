@@ -7,13 +7,14 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
-import { A, Str, thunkEmptyStr } from "@beep/utils";
+import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Effect, Order, pipe, Stream } from "effect";
+import { Effect, Order, pipe } from "effect";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
+import { collectText } from "../../../internal/process/index.js";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 
 const $I = $RepoCliId.create("commands/Quality/internal/TurboConfigProof");
@@ -402,12 +403,6 @@ export const summarizeTurboDryRunOutput = Effect.fn("TurboConfigProof.summarizeT
   );
 });
 
-const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
-  stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(thunkEmptyStr, (acc, chunk) => `${acc}${chunk}`)
-  );
-
 const commandText = (command: string, args: ReadonlyArray<string>): string => A.join([command, ...args], " ");
 
 const runCommandOutput = Effect.fn("TurboConfigProof.runCommandOutput")(function* (
@@ -504,7 +499,7 @@ export const runTurboConfigProof = Effect.fn("TurboConfigProof.runTurboConfigPro
  *
  * @param report - Proof report to encode.
  * @returns JSON report text.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderTurboConfigProofReportJson = (
@@ -529,7 +524,7 @@ const countRecordSummary = (record: Readonly<Record<string, number>>): string =>
  *
  * @param report - Proof report to render.
  * @returns Human-readable summary text.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderTurboConfigProofReport = (report: TurboConfigProofReport): string =>

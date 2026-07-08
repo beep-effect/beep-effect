@@ -14,6 +14,7 @@ import { Argument, Command, Flag } from "effect/unstable/cli";
 import { installResearchTimers } from "./internal/Timers.js";
 import { resolveVaultRoot } from "./internal/Vault.js";
 import { ResearchCommandError } from "./Research.errors.js";
+import { printResearchIndex } from "./Research.render.js";
 import {
   ResearchCaptureOptions,
   ResearchCognifyOptions,
@@ -27,7 +28,6 @@ import {
 import {
   captureResearchUrl,
   cognifyResearchCards,
-  printResearchIndex,
   pullResearchNotionLinks,
   ResearchCommandServiceLive,
   researchStatus,

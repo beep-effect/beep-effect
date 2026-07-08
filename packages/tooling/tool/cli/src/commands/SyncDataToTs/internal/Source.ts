@@ -19,7 +19,7 @@ import * as S from "effect/Schema";
 import { HttpClient, HttpClientResponse } from "effect/unstable/http";
 import * as jsonc from "jsonc-parser";
 import { SyncDataToTsError } from "../SyncDataToTs.errors.js";
-import { SyncDataOutputFile, SyncDataSourceMetadata } from "./Models.js";
+import { SyncDataOutputFile, SyncDataSourceMetadata } from "../SyncDataToTs.schemas.js";
 
 const $I = $RepoCliId.create("commands/SyncDataToTs/internal/Source");
 

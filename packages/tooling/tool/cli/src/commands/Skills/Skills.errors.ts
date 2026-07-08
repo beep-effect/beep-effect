@@ -51,7 +51,9 @@ const makeSkillsCommandError = (cause: unknown, message: string, file?: string, 
  * @example
  * ```ts
  * import { SkillsCommandError } from "@beep/repo-cli/commands/Skills"
- * console.log(SkillsCommandError)
+ *
+ * const error = SkillsCommandError.make({ message: "Repository quality check failed" })
+ * console.log(error.message.includes("failed")) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -94,7 +96,9 @@ export class SkillsCommandError extends TaggedErrorClass<SkillsCommandError>($I`
  * @example
  * ```ts
  * import { SkillsDriftError } from "@beep/repo-cli/commands/Skills"
- * console.log(SkillsDriftError)
+ *
+ * const error = SkillsDriftError.make({ driftCount: 2, message: "Repository quality check failed" })
+ * console.log(error.message.includes("failed")) // true
  * ```
  * @category utilities
  * @since 0.0.0

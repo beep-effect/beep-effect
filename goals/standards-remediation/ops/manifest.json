@@ -33,9 +33,7 @@
     "goals/standards-remediation/GOAL.md",
     "goals/standards-remediation/research/decisions.md"
   ],
-  "researchReports": [
-    "research/decisions.md"
-  ],
+  "researchReports": ["research/decisions.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

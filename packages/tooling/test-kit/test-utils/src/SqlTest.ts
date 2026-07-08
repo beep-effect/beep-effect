@@ -28,7 +28,19 @@ const PgliteHealthCheckCommand =
 const PgliteHealthCheckIntervalMs = 1_000;
 const PgExternalClientEndTimeout = Duration.seconds(5);
 const PgExternalSchemaDropTimeout = Duration.seconds(10);
+const PgliteHostReadinessTimeout = Duration.seconds(45);
+const PgliteHostProbeTimeoutMs = 5_000;
 let pgliteImageBuild = O.none<Promise<GenericContainer>>();
+
+class PgliteIntegrationGateEnv extends S.Class<PgliteIntegrationGateEnv>($I`PgliteIntegrationGateEnv`)(
+  {
+    databaseDriver: S.optionalKey(S.String.pipe(S.UndefinedOr)),
+    databaseUrl: S.optionalKey(S.String.pipe(S.UndefinedOr)),
+  },
+  $I.annote("PgliteIntegrationGateEnv", {
+    description: "Optional environment override for reusable PGLite integration-test gate selection.",
+  })
+) {}
 
 const SqlTestHarnessPhase = LiteralKit(["provision", "migrate", "seed", "teardown"]).pipe(
   $I.annoteSchema("SqlTestHarnessPhase", {
@@ -879,6 +891,51 @@ const startPgliteContainer = Effect.fn("SqlTest.startPgliteContainer")(function*
   return yield* Effect.acquireRelease(startBridgeContainer, (started) => releasePgliteContainer(started.container));
 });
 
+const waitForPgliteHostReadiness = Effect.fn("SqlTest.waitForPgliteHostReadiness")(function* (connectionUri: string) {
+  const PgNative = yield* loadPgModule;
+  const probe = Effect.acquireRelease(
+    Effect.tryPromise({
+      try: () => {
+        const client = new PgNative.Client({
+          connectionString: connectionUri,
+          connectionTimeoutMillis: PgliteHostProbeTimeoutMs,
+          query_timeout: PgliteHostProbeTimeoutMs,
+          ssl: false,
+        });
+        return client
+          .connect()
+          .then(() => client.query("SELECT 1"))
+          .then(() => client);
+      },
+      catch: (cause) =>
+        toHarnessError(
+          "pglite-testcontainers",
+          "provision",
+          "PGLite Testcontainers host PostgreSQL port was not ready.",
+          cause
+        ),
+    }),
+    (client) => Effect.promise(() => client.end()).pipe(Effect.timeoutOption(PgExternalClientEndTimeout), Effect.asVoid)
+  );
+  const readiness = Effect.scoped(
+    probe.pipe(Effect.asVoid, Effect.retry(PgConnectRetryPolicy), Effect.timeoutOption(PgliteHostReadinessTimeout))
+  );
+
+  yield* readiness.pipe(
+    Effect.flatMap(
+      O.match({
+        onNone: () =>
+          toHarnessError(
+            "pglite-testcontainers",
+            "provision",
+            "Timed out waiting for the PGLite Testcontainers host PostgreSQL port."
+          ),
+        onSome: () => Effect.void,
+      })
+    )
+  );
+});
+
 /**
  * Start a scoped PGLite Testcontainers PostgreSQL wire-protocol resource.
  *
@@ -904,6 +961,7 @@ export const makePgliteTestcontainerResource = Effect.fn("SqlTest.makePgliteTest
   const host = started.host;
   const port = started.port;
   const connectionUri = makePgliteConnectionUri(host, port, config);
+  yield* waitForPgliteHostReadiness(connectionUri);
 
   return {
     config,
@@ -1448,10 +1506,7 @@ const makeConfiguredSqlTestLayer = <Config, Services, SqlService extends Service
  * @category constructors
  * @since 0.0.0
  */
-export const makePgliteIntegrationGate = (env?: {
-  readonly databaseUrl?: string | undefined;
-  readonly databaseDriver?: string | undefined;
-}) => {
+export const makePgliteIntegrationGate = (env?: PgliteIntegrationGateEnv) => {
   // Real usage reads the selection from the environment via Config (Node-safe,
   // law-clean; CI exports these before the process starts, so the boot snapshot
   // is exactly right). Tests pass `env` explicitly to exercise each branch

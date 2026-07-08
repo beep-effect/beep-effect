@@ -7,18 +7,19 @@
 
 import { Md } from "@beep/md";
 import { findRepoRoot } from "@beep/repo-utils";
-import { A, P, Str, Struct, thunkEffectVoid, thunkTrue } from "@beep/utils";
+import { A, Str, Struct, thunkEffectVoid, thunkTrue } from "@beep/utils";
 import { Console, Effect, FileSystem, flow, JsonPointer, Match, Path, pipe, Result } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
-import { SyncDataRunMode, SyncDataToTsDriftError, SyncDataToTsError } from "./internal/Models.js";
+import { resolveRunMode as resolveSharedRunMode, runModeFlagsConflict } from "../../internal/cli/RunMode.js";
 import { formatJson } from "./internal/Source.js";
+import { SyncDataRunMode, SyncDataToTsDriftError, SyncDataToTsError } from "./SyncDataToTs.schemas.js";
 import { syncDataTargets } from "./targets/index.js";
 import type { Crypto, JsonPatch } from "effect";
 import type { HttpClient } from "effect/unstable/http";
-import type { SyncDataFileResult, SyncDataTarget, SyncDataTargetResult } from "./internal/Models.js";
+import type { SyncDataFileResult, SyncDataTarget, SyncDataTargetResult } from "./SyncDataToTs.schemas.js";
 
 const targetFlag = Flag.string("target").pipe(
   Flag.withAlias("t"),
@@ -46,41 +47,29 @@ const reportDirFlag = Flag.string("report-dir").pipe(
 const syncDataCanonicalDiffer = S.toDifferJsonPatch(S.Json);
 const decodeJsonText = S.decodeUnknownEffect(S.fromJsonString(S.Json));
 
-const SyncDataRunModeFlags = S.Tuple([S.Boolean, S.Boolean]);
-type SyncDataRunModeFlags = typeof SyncDataRunModeFlags.Type;
-
 class SyncDataTargetSelection extends S.Class<SyncDataTargetSelection>("SyncDataTargetSelection")({
   targetId: S.Option(S.String),
   all: S.Boolean,
   includeAuthenticated: S.Boolean,
 }) {}
 
-const makeRunModeFlags = (check: boolean, dryRun: boolean): SyncDataRunModeFlags => [check, dryRun];
-
-const isRunModeFlagConflict = P.Tuple([P.isTruthy, P.isTruthy]);
-
-const runModeFlag = <Mode extends SyncDataRunMode>(mode: Mode) => flow(O.liftPredicate(P.isTruthy), O.as(mode));
-
-const resolveEnabledRunMode = ([check, dryRun]: SyncDataRunModeFlags): SyncDataRunMode =>
-  pipe(
-    [runModeFlag("check")(check), runModeFlag("dry-run")(dryRun)] satisfies ReadonlyArray<O.Option<SyncDataRunMode>>,
-    O.firstSomeOf,
-    O.getOrElse(SyncDataRunMode.thunk.write)
-  );
-
 const runModeFlagConflictError = () =>
   SyncDataToTsError.make({
     message: "The --check and --dry-run flags are mutually exclusive.",
   });
 
-const resolveRunModeFlags: (flags: SyncDataRunModeFlags) => Effect.Effect<SyncDataRunMode, SyncDataToTsError> =
-  Match.type<SyncDataRunModeFlags>().pipe(
-    Match.when(isRunModeFlagConflict, () => Effect.fail(runModeFlagConflictError())),
-    Match.orElse((flags) => Effect.succeed(resolveEnabledRunMode(flags)))
-  );
-
 const resolveRunMode = (check: boolean, dryRun: boolean): Effect.Effect<SyncDataRunMode, SyncDataToTsError> =>
-  resolveRunModeFlags(makeRunModeFlags(check, dryRun));
+  runModeFlagsConflict(check, dryRun)
+    ? Effect.fail(runModeFlagConflictError())
+    : Effect.succeed(
+        resolveSharedRunMode(
+          [
+            [check, "check"],
+            [dryRun, "dry-run"],
+          ],
+          "write"
+        )
+      );
 
 const targetSelectionConflictError = () =>
   SyncDataToTsError.make({
@@ -513,7 +502,11 @@ const renderSyncDataError = (error: SyncDataToTsError): string =>
  * @example
  * ```ts
  * import { syncDataToTsCommand } from "@beep/repo-cli/commands/SyncDataToTs"
- * console.log(syncDataToTsCommand)
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
+ *
+ * const run = Command.run(syncDataToTsCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category use-cases
  * @since 0.0.0

@@ -18,3 +18,10 @@ export * from "./SyncDataToTs.command.js";
  * @since 0.0.0
  */
 export * from "./SyncDataToTs.errors.js";
+/**
+ * Public sync-data-to-ts schemas export.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./SyncDataToTs.schemas.js";

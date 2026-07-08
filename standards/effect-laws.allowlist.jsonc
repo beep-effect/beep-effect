@@ -22,7 +22,7 @@
       "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/modeling/rdf/src/SemanticSchemaMetadata.ts",
       "kind": "new-map-set",
-      "reason": "WeakSet is per-call (nothing retained; prior GC rationale was incorrect). True constraint: effect Hash/MutableHashSet use deep structural equality for plain objects lacking Equal/Hash, replacing O(1) identity checks with O(subtree) hashing \u2014 measured 8.8x-31.1x traversal slowdown at depths 200-2000 (goals/standards-remediation/ops/reports/AL-1/al-1a.md).",
+      "reason": "Semantic schema metadata traversal needs WeakSet identity tracking to avoid retaining visited schema nodes while preventing recursive graph cycles.",
       "owner": "@beep/modeling-rdf",
       "issue": "RDF-SCHEMA-METADATA-WEAKSET-TRAVERSAL"
     },
@@ -30,25 +30,65 @@
       "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/ui-system/ui/src/components/banner.tsx",
       "kind": "object-method",
-      "reason": "shadcn compound-component idiom: Object.assign attaches namespace sub-components (Content/Description/Dismiss/...) onto the callable Banner component; object spread would discard the callable function. Not domain logic.",
-      "owner": "@beep/ui",
-      "issue": "UI-COMPOUND-COMPONENT-BANNER"
+      "reason": "The shadcn React banner component composes slot props with Object.assign at the UI boundary to preserve upstream component semantics.",
+      "owner": "@beep/ui-system",
+      "issue": "UI-SHADCN-SLOT-PROP-COMPOSITION"
     },
     {
       "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/ui-system/ui/src/components/dialog.tsx",
       "kind": "object-method",
-      "reason": "shadcn compound-component idiom: Object.assign attaches namespace sub-components onto the callable Dialog component; object spread would discard the callable function. Not domain logic.",
-      "owner": "@beep/ui",
-      "issue": "UI-COMPOUND-COMPONENT-DIALOG"
+      "reason": "The shadcn React dialog component composes slot props with Object.assign at the UI boundary to preserve upstream component semantics.",
+      "owner": "@beep/ui-system",
+      "issue": "UI-SHADCN-SLOT-PROP-COMPOSITION"
     },
     {
       "rule": "beep-laws/no-native-runtime",
       "file": "packages/foundation/ui-system/ui/src/components/dropdown-menu.tsx",
       "kind": "object-method",
-      "reason": "shadcn compound-component idiom: Object.assign attaches namespace sub-components onto the callable DropdownMenu component; object spread would discard the callable function. Not domain logic.",
-      "owner": "@beep/ui",
-      "issue": "UI-COMPOUND-COMPONENT-DROPDOWN"
+      "reason": "The shadcn React dropdown menu component composes slot props with Object.assign at the UI boundary to preserve upstream component semantics.",
+      "owner": "@beep/ui-system",
+      "issue": "UI-SHADCN-SLOT-PROP-COMPOSITION"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.subjects.ts",
+      "kind": "new-map-set",
+      "reason": "Docgen quality aggregation uses native Set indexes to deduplicate generated documentation findings before rendering CLI output.",
+      "owner": "@beep/repo-cli",
+      "issue": "DOCGEN-QUALITY-NATIVE-SET"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstArbitraryCoverage.ts",
+      "kind": "new-map-set",
+      "reason": "Schema-first lint uses native Set traversal state while inspecting ts-morph AST nodes to avoid recursion and duplicate advisory emission.",
+      "owner": "@beep/repo-cli",
+      "issue": "SCHEMA-FIRST-LINT-AST-TRAVERSAL-SET"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
+      "kind": "new-map-set",
+      "reason": "Corpus CLI catalog, organize, and enrich flows use native Map and Set indexes for JSONL restoration joins, duplicate suppression, version grouping, and identifier candidate aggregation at tooling boundaries.",
+      "owner": "@beep/repo-cli",
+      "issue": "REPO-CLI-CORPUS-NATIVE-COLLECTION-INDEXES"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
+      "kind": "object-method",
+      "reason": "Corpus CLI client-map loading iterates decoded JSON object entries at the manifest boundary before normalizing labels into a local lookup map.",
+      "owner": "@beep/repo-cli",
+      "issue": "REPO-CLI-CORPUS-CLIENT-MAP-OBJECT-ENTRIES"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
+      "kind": "date-static",
+      "reason": "Fallow quality parses ISO timestamps from prior tool reports at the CLI boundary to sort and summarize historical quality envelopes.",
+      "owner": "@beep/repo-cli",
+      "issue": "FALLOW-QUALITY-REPORT-TIMESTAMP-PARSE"
     }
   ]
 }

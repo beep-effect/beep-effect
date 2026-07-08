@@ -14,8 +14,9 @@ import {
   runYeetFallowFixtureCheck,
   runYeetPlanContractCheck,
 } from "./internal/FallowFeedback.js";
-import { runYeet, YeetRunOptions } from "./internal/Handler.js";
+import { runYeet } from "./internal/Handler.js";
 import { DEFAULT_YEET_PACKET_DIR, YeetProofTier } from "./internal/Planner.js";
+import { YeetRunOptions } from "./Yeet.schemas.js";
 import type { YeetRunMode } from "./internal/Planner.js";
 
 const $I = $RepoCliId.create("commands/Yeet/Yeet.command");
@@ -371,8 +372,11 @@ const yeetPlanContractCheckCommand = Command.make(
  * @example
  * ```ts
  * import { yeetCommand } from "@beep/repo-cli/commands/Yeet"
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
  *
- * console.log(yeetCommand)
+ * const run = Command.run(yeetCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category cli-commands
  * @since 0.0.0

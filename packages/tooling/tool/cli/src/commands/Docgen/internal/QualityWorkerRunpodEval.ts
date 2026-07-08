@@ -11,7 +11,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { layerNodeSdkServerTraces, ServerObservabilityConfig } from "@beep/observability/server";
-import { hashPublicTextSha256 } from "@beep/repo-ai-metrics";
+import { hashPublicTextSha256, shellQuote } from "@beep/repo-ai-metrics";
 import { DomainError } from "@beep/repo-utils";
 import {
   CreatePodRequest,
@@ -25,14 +25,18 @@ import {
 } from "@beep/runpod";
 import { LiteralKit } from "@beep/schema";
 import * as O from "@beep/utils/Option";
-import { Console, DateTime, Duration, Effect, flow, Layer, Order, pipe, Ref, Result, Schedule } from "effect";
+import { Console, Duration, Effect, flow, Layer, Order, pipe, Ref, Result, Schedule } from "effect";
 import * as A from "effect/Array";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as HttpClient from "effect/unstable/http/HttpClient";
 import * as HttpClientRequest from "effect/unstable/http/HttpClientRequest";
-import * as jsonc from "jsonc-parser";
+import {
+  DEFAULT_JSON_PRETTY_MAX_LENGTH,
+  encodeCommandJson,
+  renderPrettyCommandJson,
+} from "../../../internal/cli/Json.js";
+import { errorMessage as cliErrorMessage, durationMsSince, timestampIso } from "../../../internal/cli/Timing.js";
 import { DocgenQualityReport } from "./Quality.js";
 import {
   analyzeDocgenQualityWorkerEval,
@@ -54,7 +58,6 @@ const OLLAMA_PORT = 11434;
 const OLLAMA_PORT_MAPPING = "11434/http";
 const RUNPOD_PYTORCH_IMAGE = "runpod/pytorch:2.8.0-py3.11-cuda12.8.1-cudnn-devel-ubuntu22.04";
 const OLLAMA_INSTALL_SCRIPT_SHA256 = "25f64b810b947145095956533e1bdf56eacea2673c55a7e586be4515fc882c9f";
-const JSON_FORMAT_MAX_LENGTH = 500_000;
 
 class OllamaTagsModel extends S.Class<OllamaTagsModel>($I`OllamaTagsModel`)(
   {
@@ -91,8 +94,6 @@ const VerifiedGpuTypeIds24Gb = [
   "NVIDIA GeForce RTX 3090",
   "NVIDIA GeForce RTX 3090 Ti",
 ] as const;
-
-const encodeJson = S.encodeUnknownEffect(S.UnknownFromJsonString);
 
 const DocgenQualityWorkerRunpodEvalTemplateStrategy = LiteralKit([
   "explicit-template",
@@ -300,36 +301,17 @@ type AcquiredRunpodPod = {
   readonly template: DocgenQualityWorkerRunpodEvalTemplate;
 };
 
-const timestampIso = (): string => DateTime.formatIso(DateTime.nowUnsafe());
-
-const durationMsSince = (startedAtMs: number): number =>
-  Math.max(0, Math.round(globalThis.performance.now() - startedAtMs));
-
-const errorMessage = (error: unknown): string =>
-  P.isObject(error) && P.hasProperty(error, "message") && P.isString(error.message)
-    ? error.message
-    : "Unknown Runpod worker eval failure.";
+const errorMessage = (error: unknown): string => cliErrorMessage(error, "Unknown Runpod worker eval failure.");
 
 const renderJson = Effect.fn("DocgenQualityWorkerRunpodEval.renderJson")(function* (value: unknown) {
-  const encoded = yield* encodeJson(value).pipe(
+  const encoded = yield* encodeCommandJson(value).pipe(
     Effect.mapError(DomainError.newCause("Failed to encode docgen Runpod worker eval JSON."))
   );
-
-  if (encoded.length > JSON_FORMAT_MAX_LENGTH) {
-    return `${encoded}\n`;
-  }
-
-  const edits = jsonc.format(encoded, undefined, {
-    tabSize: 2,
-    insertSpaces: true,
-  });
-  return `${jsonc.applyEdits(encoded, edits)}\n`;
+  return renderPrettyCommandJson(encoded, { maxLength: DEFAULT_JSON_PRETTY_MAX_LENGTH });
 });
 
 const hashPublicIdentifier = (value: string): Effect.Effect<string, DomainError> =>
   hashPublicTextSha256(value).pipe(Effect.mapError(DomainError.newCause("Failed to hash Runpod eval metadata.")));
-
-const shellQuote = (value: string): string => `'${Str.replaceAll("'", "'\"'\"'")(value)}'`;
 
 const ollamaBootstrapCommand = (model: string): ReadonlyArray<string> => {
   // TODO(effect-native-migration): model schema
@@ -420,14 +402,8 @@ const gpuTypeIdsFor = ({
 
 const minRamPerGpuFor = (allow24GbFallback: boolean): number => (allow24GbFallback ? 24 : 48);
 
-/**
- * Options for {@link makeQualityWorkerRunpodEvalPodCreateInput}.
- *
- * @category models
- * @since 0.0.0
- */
-export class QualityWorkerRunpodEvalPodCreateOptions extends S.Class<QualityWorkerRunpodEvalPodCreateOptions>(
-  $I`QualityWorkerRunpodEvalPodCreateOptions`
+class QualityWorkerRunpodEvalPodCreateInputOptions extends S.Class<QualityWorkerRunpodEvalPodCreateInputOptions>(
+  $I`QualityWorkerRunpodEvalPodCreateInputOptions`
 )(
   {
     gpuTypeIds: S.Array(S.String),
@@ -437,15 +413,15 @@ export class QualityWorkerRunpodEvalPodCreateOptions extends S.Class<QualityWork
     podName: S.String,
     templateId: S.optionalKey(S.String),
   },
-  $I.annote("QualityWorkerRunpodEvalPodCreateOptions", {
-    description: "Pod image, template, GPU, and model selection for a Runpod create-pod body.",
+  $I.annote("QualityWorkerRunpodEvalPodCreateInputOptions", {
+    description: "Input options for building a Runpod worker eval create-pod request.",
   })
 ) {}
 
 /**
  * Build the Runpod create-pod body for an Ollama worker eval host.
  *
- * @param options - Pod image, template, GPU, and model selection.
+ * @param input - Pod image, template, GPU, and model selection.
  * @returns The typed Runpod create-pod input.
  * @example
  * ```ts
@@ -462,24 +438,27 @@ export class QualityWorkerRunpodEvalPodCreateOptions extends S.Class<QualityWork
  * @category constructors
  * @since 0.0.0
  */
-export const makeQualityWorkerRunpodEvalPodCreateInput = (
-  options: QualityWorkerRunpodEvalPodCreateOptions
-): PodCreateInput =>
+export const makeQualityWorkerRunpodEvalPodCreateInput = ({
+  gpuTypeIds,
+  imageName = RUNPOD_PYTORCH_IMAGE,
+  minRamPerGpuGb,
+  model,
+  podName,
+  templateId,
+}: QualityWorkerRunpodEvalPodCreateInputOptions): PodCreateInput =>
   PodCreateInput.make({
     cloudType: "COMMUNITY",
     computeType: "GPU",
     containerDiskInGb: 100,
-    dockerStartCmd: ollamaBootstrapCommand(options.model),
+    dockerStartCmd: ollamaBootstrapCommand(model),
     globalNetworking: true,
     gpuCount: 1,
-    gpuTypeIds: options.gpuTypeIds,
+    gpuTypeIds,
     gpuTypePriority: "availability",
-    ...(options.templateId === undefined
-      ? { imageName: options.imageName ?? RUNPOD_PYTORCH_IMAGE }
-      : { templateId: options.templateId }),
+    ...(templateId === undefined ? { imageName } : { templateId }),
     interruptible: false,
-    minRAMPerGPU: options.minRamPerGpuGb,
-    name: options.podName,
+    minRAMPerGPU: minRamPerGpuGb,
+    name: podName,
     ports: [OLLAMA_PORT_MAPPING],
     supportPublicIp: true,
     volumeInGb: 0,
@@ -991,7 +970,7 @@ const recommendationFor = (
  * ```ts
  * import { requiredQualityWorkerRunpodEvalModel } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
- * console.log(requiredQualityWorkerRunpodEvalModel())
+ * console.log(requiredQualityWorkerRunpodEvalModel()) // "qwen3-coder:30b"
  * ```
  * @category constants
  * @since 0.0.0
@@ -1006,7 +985,7 @@ export const requiredQualityWorkerRunpodEvalModel = (): string => REQUIRED_RUNPO
  * ```ts
  * import { defaultQualityWorkerRunpodEvalPacketLimit } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
- * console.log(defaultQualityWorkerRunpodEvalPacketLimit())
+ * console.log(defaultQualityWorkerRunpodEvalPacketLimit()) // 10
  * ```
  * @category constants
  * @since 0.0.0
@@ -1021,7 +1000,7 @@ export const defaultQualityWorkerRunpodEvalPacketLimit = (): number => DEFAULT_R
  * ```ts
  * import { defaultQualityWorkerRunpodEvalOtlpBaseUrl } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
- * console.log(defaultQualityWorkerRunpodEvalOtlpBaseUrl())
+ * console.log(defaultQualityWorkerRunpodEvalOtlpBaseUrl()) // "http://localhost:6006"
  * ```
  * @category constants
  * @since 0.0.0
@@ -1036,7 +1015,7 @@ export const defaultQualityWorkerRunpodEvalOtlpBaseUrl = (): string => DEFAULT_R
  * ```ts
  * import { defaultQualityWorkerRunpodEvalOtlpProject } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
- * console.log(defaultQualityWorkerRunpodEvalOtlpProject())
+ * console.log(defaultQualityWorkerRunpodEvalOtlpProject()) // "beep-jsdoc-worker-eval"
  * ```
  * @category constants
  * @since 0.0.0
@@ -1051,7 +1030,7 @@ export const defaultQualityWorkerRunpodEvalOtlpProject = (): string => DEFAULT_R
  * ```ts
  * import { defaultQualityWorkerRunpodEvalReadinessTimeoutMs } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
- * console.log(defaultQualityWorkerRunpodEvalReadinessTimeoutMs())
+ * console.log(defaultQualityWorkerRunpodEvalReadinessTimeoutMs()) // 1_800_000
  * ```
  * @category constants
  * @since 0.0.0
@@ -1069,11 +1048,9 @@ export const defaultQualityWorkerRunpodEvalReadinessTimeoutMs = (): number =>
  * - Optionally emits sanitized summary and hashed packet spans to Phoenix OTLP.
  * @example
  * ```ts
- * import {
- *   requiredQualityWorkerRunpodEvalModel,
- *   runDocgenQualityWorkerRunpodEval
- * } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
+ * import { requiredQualityWorkerRunpodEvalModel } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerRunpodEval"
  *
+ * // `runDocgenQualityWorkerRunpodEval` backs this CLI subcommand:
  * const model = requiredQualityWorkerRunpodEvalModel()
  * const command = [
  *   "bun",
@@ -1087,8 +1064,8 @@ export const defaultQualityWorkerRunpodEvalReadinessTimeoutMs = (): number =>
  *   "--model",
  *   model
  * ]
+ * // "bun run beep docgen quality-worker-eval-runpod --confirm-runpod-eval --provider ollama --model qwen3-coder:30b"
  * console.log(command.join(" "))
- * console.log(typeof runDocgenQualityWorkerRunpodEval)
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -1281,7 +1258,7 @@ export const runDocgenQualityWorkerRunpodEval = Effect.fn(
  *     Effect.map((json) => json.includes("\"recommendation\""))
  *   )
  * )
- * console.log(hasRecommendation)
+ * console.log(hasRecommendation) // example value
  * ```
  * @category formatting
  * @since 0.0.0

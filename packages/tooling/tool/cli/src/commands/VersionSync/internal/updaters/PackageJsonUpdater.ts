@@ -5,22 +5,10 @@
  * @since 0.0.0
  */
 
-import { A } from "@beep/utils";
 import { Effect, FileSystem } from "effect";
 import { dual } from "effect/Function";
-import * as jsonc from "jsonc-parser";
-import { VersionSyncError } from "../Models.js";
-
-/**
- * Formatting options matching the project standard.
- *
- * @category configuration
- * @since 0.0.0
- */
-const FORMATTING_OPTIONS: jsonc.FormattingOptions = {
-  tabSize: 2,
-  insertSpaces: true,
-};
+import { applyJsoncModification } from "../../../../internal/cli/Jsonc.js";
+import { VersionSyncError } from "../../VersionSync.schemas.js";
 
 type UpdateCatalogEntryOptions = {
   readonly versionSpecifier: string;
@@ -49,15 +37,7 @@ export const updatePackageManagerField: {
 
     const newValue = `bun@${version}`;
 
-    const edits = jsonc.modify(original, ["packageManager"], newValue, {
-      formattingOptions: FORMATTING_OPTIONS,
-    });
-
-    if (A.isReadonlyArrayEmpty(edits)) {
-      return false;
-    }
-
-    const updated = jsonc.applyEdits(original, edits);
+    const updated = applyJsoncModification({ content: original, path: ["packageManager"], value: newValue });
 
     if (updated === original) {
       return false;
@@ -98,15 +78,11 @@ export const updateCatalogEntry: {
       .readFileString(filePath)
       .pipe(VersionSyncError.mapError(`Failed to read ${filePath}`, filePath));
 
-    const edits = jsonc.modify(original, ["catalog", dependencyName], options.versionSpecifier, {
-      formattingOptions: FORMATTING_OPTIONS,
+    const updated = applyJsoncModification({
+      content: original,
+      path: ["catalog", dependencyName],
+      value: options.versionSpecifier,
     });
-
-    if (A.isReadonlyArrayEmpty(edits)) {
-      return false;
-    }
-
-    const updated = jsonc.applyEdits(original, edits);
 
     if (updated === original) {
       return false;

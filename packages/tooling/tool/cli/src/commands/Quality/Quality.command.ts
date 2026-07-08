@@ -5,26 +5,37 @@
  * @since 0.0.0
  */
 
-import { cpus, totalmem } from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
-import { LiteralKit } from "@beep/schema";
-import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
-import { Console, DateTime, Effect, FileSystem, flow, Match, Order, Path, pipe, Stream } from "effect";
+import { A, Str, thunkFalse } from "@beep/utils";
+import { Console, DateTime, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { Argument, Command, Flag } from "effect/unstable/cli";
-import { ChildProcess } from "effect/unstable/process";
 import { XMLParser } from "fast-xml-parser";
 import { parse } from "jsonc-parser";
+import { configStringEqualsSync } from "../../internal/cli/EnvConfig.js";
 import { printLines } from "../../internal/cli/Printer.js";
-import { GITHUB_CHECK_MODE_VALUES, GithubCheckMode as GithubCheckModeSchema } from "../../internal/repo-run/index.js";
+import { formatCommandLine, QualityTaskStep, runCaptured, runToExit } from "../../internal/process/index.js";
+import { GITHUB_CHECK_MODE_VALUES } from "../../internal/repo-run/index.js";
 import { runChangesetGraphCheck } from "./ChangesetGraph.js";
 import { qualityFallowCommand } from "./FallowQuality.command.js";
-import { configStringEqualsSync } from "./internal/Config.js";
+import {
+  githubCheckFallowLanes,
+  githubCheckLanePlan,
+  githubCheckLanesForModeForTesting as githubCheckLanesForModeForTestingImpl,
+  githubCheckPrePushExternalLanes,
+  githubCheckPrePushExternalLanesForTesting as githubCheckPrePushExternalLanesForTestingImpl,
+  githubCheckPromotedFallowLaneDiagnosticsForTesting as githubCheckPromotedFallowLaneDiagnosticsForTestingImpl,
+  githubCheckQualityLanes,
+  githubCheckQualityLanesForTesting as githubCheckQualityLanesForTestingImpl,
+  githubCheckRepoSanityLanes,
+  githubCheckRepoSanityLanesForTesting as githubCheckRepoSanityLanesForTestingImpl,
+  promotedFallowGithubCheckLaneIdsForTesting as promotedFallowGithubCheckLaneIdsForTestingImpl,
+} from "./internal/GithubChecks.js";
 import { writeJSDocDocumentationInventory } from "./internal/JSDocDocumentationInventory.js";
 import { defaultJSDocInventoryPath, defaultJSDocTotalsBaselinePath, runJSDocRatchet } from "./internal/JSDocRatchet.js";
 import { defaultKnipBaselinePath, runKnipRatchet } from "./internal/KnipRatchet.js";
@@ -36,10 +47,30 @@ import {
   runTurboConfigProof,
 } from "./internal/TurboConfigProof.js";
 import { QualityScriptCommandError } from "./Quality.errors.js";
-import { QualityTaskStep, runQualityTaskStreamingStepGroup } from "./Tasks.js";
+import {
+  activeOsvIgnoreIdsForTesting as activeOsvIgnoreIdsForTestingImpl,
+  selectOsvIgnoreIdsForAudit,
+} from "./Quality.osv-ignore.js";
+import {
+  detectQualityProfile,
+  detectQualityProfileForTesting as detectQualityProfileForTestingImpl,
+  qualityProfileConfigForTesting as qualityProfileConfigForTestingImpl,
+} from "./Quality.plan.js";
+import { printQualityProfileConfig, printQualityProfileDetection } from "./Quality.render.js";
+import {
+  decodeGithubChecksFallowFeatureMatrix,
+  GithubCheckMode,
+  githubCheckModeFlagChoices,
+  QualityHardwareProfile,
+} from "./Quality.schemas.js";
+import { runQualityTaskStreamingStepGroup } from "./Tasks.js";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { ParseError } from "jsonc-parser";
-import type { GithubCheckMode as GithubCheckModeType } from "../../internal/repo-run/index.js";
+import type {
+  GithubCheckLaneSpec,
+  GithubChecksFallowFeatureMatrix,
+  QualityProfileDetectionInput as QualityProfileDetectionInputType,
+} from "./Quality.schemas.js";
 import type { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroupFailed } from "./Tasks.js";
 
 /**
@@ -49,8 +80,165 @@ import type { QualityTaskConfigurationError, QualityTaskFailed, QualityTaskGroup
  * @since 0.0.0
  */
 export { QualityScriptCommandError } from "./Quality.errors.js";
+/**
+ * Public Quality schemas retained at the legacy command-module specifier.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export {
+  GithubCheckLaneSpec,
+  GithubCheckLaneStage,
+  GithubCheckMode,
+  GithubChecksFallowFeatureMatrix,
+  QualityHardwareProfile,
+  QualityProfileConfig,
+  QualityProfileDetection,
+} from "./Quality.schemas.js";
+/**
+ * Host facts used when selecting a quality profile.
+ *
+ * @example
+ * ```ts
+ * import type { QualityProfileDetectionInput } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * const example: QualityProfileDetectionInput | undefined = undefined
+ * console.log(example === undefined) // true
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type QualityProfileDetectionInput = QualityProfileDetectionInputType;
+
+/**
+ * Return the static GitHub check collector lanes for a mode.
+ *
+ * @example
+ * ```ts
+ * import { githubCheckLanesForModeForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof githubCheckLanesForModeForTesting !== "undefined") // true
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const githubCheckLanesForModeForTesting = githubCheckLanesForModeForTestingImpl;
+
+/**
+ * Build the external pre-push diagnostic lanes used by GitHub check collectors.
+ *
+ * @example
+ * ```ts
+ * import { githubCheckPrePushExternalLanesForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof githubCheckPrePushExternalLanesForTesting !== "undefined") // true
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const githubCheckPrePushExternalLanesForTesting = githubCheckPrePushExternalLanesForTestingImpl;
+
+/**
+ * Compare promoted Fallow matrix rows against static GitHub check lanes.
+ *
+ * @example
+ * ```ts
+ * import { githubCheckPromotedFallowLaneDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof githubCheckPromotedFallowLaneDiagnosticsForTesting !== "undefined") // true
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const githubCheckPromotedFallowLaneDiagnosticsForTesting =
+  githubCheckPromotedFallowLaneDiagnosticsForTestingImpl;
+
+/**
+ * Build the repo-quality diagnostic lanes used by GitHub check collectors.
+ *
+ * @example
+ * ```ts
+ * import { githubCheckQualityLanesForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof githubCheckQualityLanesForTesting !== "undefined") // true
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const githubCheckQualityLanesForTesting = githubCheckQualityLanesForTestingImpl;
+
+/**
+ * Build the repo-sanity diagnostic lanes used by GitHub check collectors.
+ *
+ * @example
+ * ```ts
+ * import { githubCheckRepoSanityLanesForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof githubCheckRepoSanityLanesForTesting !== "undefined") // true
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const githubCheckRepoSanityLanesForTesting = githubCheckRepoSanityLanesForTestingImpl;
+
+/**
+ * Derive GitHub check lane ids required by promoted Fallow matrix rows.
+ *
+ * @example
+ * ```ts
+ * import { promotedFallowGithubCheckLaneIdsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof promotedFallowGithubCheckLaneIdsForTesting !== "undefined") // true
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const promotedFallowGithubCheckLaneIdsForTesting = promotedFallowGithubCheckLaneIdsForTestingImpl;
+
+/**
+ * Detect the quality hardware profile from host facts.
+ *
+ * @example
+ * ```ts
+ * import { detectQualityProfileForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof detectQualityProfileForTesting !== "undefined") // true
+ * ```
+ * @category configuration
+ * @since 0.0.0
+ */
+export const detectQualityProfileForTesting = detectQualityProfileForTestingImpl;
+
+/**
+ * Return static quality scheduling settings for a hardware profile.
+ *
+ * @example
+ * ```ts
+ * import { qualityProfileConfigForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof qualityProfileConfigForTesting !== "undefined") // true
+ * ```
+ * @category configuration
+ * @since 0.0.0
+ */
+export const qualityProfileConfigForTesting = qualityProfileConfigForTestingImpl;
+
+/**
+ * Select OSV advisory ids that may still be suppressed at a given time.
+ *
+ * @example
+ * ```ts
+ * import { activeOsvIgnoreIdsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof activeOsvIgnoreIdsForTesting !== "undefined") // true
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const activeOsvIgnoreIdsForTesting = activeOsvIgnoreIdsForTestingImpl;
 
 const $I = $RepoCliId.create("commands/Quality/ScriptCommands");
+const { bunRunLane, githubCheckLane, githubCheckLaneSteps } = githubCheckLanePlan;
 
 const ignoredTestDirectoryNames = ["node_modules", "dist", "coverage", "tmp"] as const;
 const ignoredTestPathSegments = ["/test/fixtures/"] as const;
@@ -68,209 +256,10 @@ const effectDiagnosticsOffDirectivePattern = new RegExp(`${effectDiagnosticsDire
 const effectTsgoDiagnosticPattern = /\b(?:error|warning) TS\d+: .* effect\([^)]+\)/u;
 const decodeUnknownRecordOption = S.decodeUnknownOption(S.Record(S.String, S.Unknown));
 const decodeUnknownArrayOption = S.decodeUnknownOption(S.Array(S.Unknown));
-const QUALITY_PROFILE_NAMES = ["current", "workstation", "ci"] as const;
 const effectTsgoReadmeParser = new XMLParser({
   ignoreAttributes: false,
   trimValues: true,
 });
-
-/**
- * Explicit machine profile used to tune future quality scheduling.
- *
- * @example
- * ```ts
- * import { QualityHardwareProfile } from "@beep/repo-cli/commands/Quality"
- *
- * console.log(QualityHardwareProfile.is.workstation("workstation"))
- * ```
- * @category models
- * @since 0.0.0
- */
-export const QualityHardwareProfile = LiteralKit(QUALITY_PROFILE_NAMES).pipe(
-  $I.annoteSchema("QualityHardwareProfile", {
-    description: "Named local hardware profile for quality scheduling guidance.",
-  })
-);
-
-/**
- * Explicit machine profile used to tune future quality scheduling.
- *
- * @example
- * ```ts
- * import type { QualityHardwareProfile } from "@beep/repo-cli/commands/Quality"
- *
- * const profile: QualityHardwareProfile = "current"
- * console.log(profile)
- * ```
- * @category models
- * @since 0.0.0
- */
-export type QualityHardwareProfile = typeof QualityHardwareProfile.Type;
-
-/**
- * Static quality scheduling settings for a hardware profile.
- *
- * @example
- * ```ts
- * import { QualityProfileConfig } from "@beep/repo-cli/commands/Quality"
- *
- * const config = QualityProfileConfig.make({
- *   profile: "current",
- *   turboConcurrency: 3,
- *   docgenParallel: 3,
- *   fullProofSlots: 1,
- *   reviewFixSlots: 1,
- *   notes: []
- * })
- * console.log(config.profile)
- * ```
- * @category models
- * @since 0.0.0
- */
-export class QualityProfileConfig extends S.Class<QualityProfileConfig>($I`QualityProfileConfig`)(
-  {
-    profile: QualityHardwareProfile,
-    turboConcurrency: S.Finite,
-    docgenParallel: S.Finite,
-    fullProofSlots: S.Finite,
-    reviewFixSlots: S.Finite,
-    notes: S.Array(S.String),
-  },
-  $I.annote("QualityProfileConfig", {
-    description: "Static quality scheduling settings for a hardware profile.",
-  })
-) {}
-
-/**
- * Detected quality profile plus host facts.
- *
- * @example
- * ```ts
- * import { QualityProfileDetection } from "@beep/repo-cli/commands/Quality"
- *
- * const detection = QualityProfileDetection.make({
- *   profile: "current",
- *   cpuCount: 8,
- *   memoryGiB: 16,
- *   config: {
- *     profile: "current",
- *     turboConcurrency: 3,
- *     docgenParallel: 3,
- *     fullProofSlots: 1,
- *     reviewFixSlots: 1,
- *     notes: []
- *   }
- * })
- * console.log(detection.profile)
- * ```
- * @category models
- * @since 0.0.0
- */
-export class QualityProfileDetection extends S.Class<QualityProfileDetection>($I`QualityProfileDetection`)(
-  {
-    profile: QualityHardwareProfile,
-    cpuCount: S.Finite,
-    memoryGiB: S.Finite,
-    config: QualityProfileConfig,
-  },
-  $I.annote("QualityProfileDetection", {
-    description: "Detected quality profile plus host facts.",
-  })
-) {}
-
-type QualityProfileDetectionInput = {
-  readonly ci: boolean;
-  readonly cpuCount: number;
-  readonly totalMemoryBytes: number;
-};
-
-const gibibytes = (bytes: number): number => Math.round((bytes / 1024 / 1024 / 1024) * 10) / 10;
-
-/**
- * Return static quality scheduling settings for a hardware profile.
- *
- * @param profile - Quality hardware profile to map to scheduling settings.
- * @returns Static quality scheduling configuration for the profile.
- * @example
- * ```ts
- * import { qualityProfileConfigForTesting } from "@beep/repo-cli/test/Quality"
- *
- * console.log(qualityProfileConfigForTesting("workstation").reviewFixSlots)
- * ```
- * @category configuration
- * @since 0.0.0
- */
-export const qualityProfileConfigForTesting = (profile: QualityHardwareProfile): QualityProfileConfig =>
-  QualityHardwareProfile.$match(profile, {
-    ci: () =>
-      QualityProfileConfig.make({
-        profile,
-        turboConcurrency: 3,
-        docgenParallel: 3,
-        fullProofSlots: 1,
-        reviewFixSlots: 1,
-        notes: ["CI keeps conservative parallelism and relies on hosted job sharding."],
-      }),
-    current: () =>
-      QualityProfileConfig.make({
-        profile,
-        turboConcurrency: 3,
-        docgenParallel: 3,
-        fullProofSlots: 1,
-        reviewFixSlots: 1,
-        notes: ["Current local profile keeps one heavyweight proof active at a time."],
-      }),
-    workstation: () =>
-      QualityProfileConfig.make({
-        profile,
-        turboConcurrency: 8,
-        docgenParallel: 6,
-        fullProofSlots: 1,
-        reviewFixSlots: 3,
-        notes: ["Workstation profile allows parallel review-fix loops while keeping full proofs serialized."],
-      }),
-  });
-
-/**
- * Detect the quality hardware profile from host facts.
- *
- * @param input - Host and CI facts used for profile detection.
- * @returns Detected quality profile with derived scheduling configuration.
- * @example
- * ```ts
- * import { detectQualityProfileForTesting } from "@beep/repo-cli/test/Quality"
- *
- * const profile = detectQualityProfileForTesting({
- *   ci: false,
- *   cpuCount: 64,
- *   totalMemoryBytes: 128 * 1024 * 1024 * 1024
- * })
- * console.log(profile.profile)
- * ```
- * @category configuration
- * @since 0.0.0
- */
-export const detectQualityProfileForTesting = (input: QualityProfileDetectionInput): QualityProfileDetection => {
-  const profile: QualityHardwareProfile = input.ci
-    ? "ci"
-    : input.cpuCount >= 32 && input.totalMemoryBytes >= 64 * 1024 * 1024 * 1024
-      ? "workstation"
-      : "current";
-
-  return QualityProfileDetection.make({
-    profile,
-    cpuCount: input.cpuCount,
-    memoryGiB: gibibytes(input.totalMemoryBytes),
-    config: qualityProfileConfigForTesting(profile),
-  });
-};
-
-const detectQualityProfile = (): QualityProfileDetection =>
-  detectQualityProfileForTesting({
-    ci: Str.isNonEmpty(Bun.env.CI ?? ""),
-    cpuCount: cpus().length,
-    totalMemoryBytes: totalmem(),
-  });
 
 class EffectTsgoRuleCell extends S.Class<EffectTsgoRuleCell>($I`EffectTsgoRuleCell`)(
   {
@@ -346,113 +335,7 @@ type TsgoDiagnosticOutput = {
   readonly output: string;
 };
 
-/**
- * GitHub check mode handled by `beep quality github-checks`.
- *
- * @example
- * ```ts
- * import { GithubCheckMode } from "@beep/repo-cli/commands/Quality/Quality.command"
- * const mode: GithubCheckMode = "repo-sanity"
- * ```
- * @category models
- * @since 0.0.0
- */
-export const GithubCheckMode = GithubCheckModeSchema;
-
-/**
- * GitHub check mode handled by `beep quality github-checks`.
- *
- * @example
- * ```ts
- * import type { GithubCheckMode } from "@beep/repo-cli/commands/Quality/Quality.command"
- * const mode: GithubCheckMode = "quality"
- * ```
- * @category models
- * @since 0.0.0
- */
-export type GithubCheckMode = GithubCheckModeType;
-
-const githubCheckModeFlagChoices: ReadonlyArray<readonly [GithubCheckMode, GithubCheckMode]> = A.map(
-  GITHUB_CHECK_MODE_VALUES,
-  (mode) => [mode, mode] as const
-);
-
-const FallowQualityFeatureFamily = LiteralKit([
-  "audit",
-  "dead-code",
-  "health",
-  "boundaries",
-  "flags",
-  "security",
-  "fix-preview",
-  "runtime-coverage",
-  "editor-mcp-hooks",
-]).pipe(
-  $I.annoteSchema("FallowQualityFeatureFamily", {
-    description: "Fallow feature family row tracked by the quality-enforcement matrix.",
-  })
-);
-
-type FallowQualityFeatureFamily = typeof FallowQualityFeatureFamily.Type;
-
-const FallowQualityCiMode = LiteralKit(["none", "advisory-artifact", "warning-check", "blocking-check"]).pipe(
-  $I.annoteSchema("FallowQualityCiMode", {
-    description: "CI posture for a Fallow feature-family matrix row.",
-  })
-);
-
-const FallowQualityPromotionStatus = LiteralKit([
-  "research",
-  "advisory",
-  "candidate-blocking",
-  "blocking",
-  "deferred",
-  "rejected",
-]).pipe(
-  $I.annoteSchema("FallowQualityPromotionStatus", {
-    description: "Promotion posture for a Fallow feature-family matrix row.",
-  })
-);
-
-class GithubChecksFallowFeatureMatrixRow extends S.Class<GithubChecksFallowFeatureMatrixRow>(
-  $I`GithubChecksFallowFeatureMatrixRow`
-)(
-  {
-    featureFamily: FallowQualityFeatureFamily,
-    ciMode: FallowQualityCiMode,
-    promotionStatus: FallowQualityPromotionStatus,
-  },
-  $I.annote("GithubChecksFallowFeatureMatrixRow", {
-    description: "Minimal Fallow feature-matrix row used by GitHub check plan contract validation.",
-  })
-) {}
-
-/**
- * Minimal Fallow feature matrix used by GitHub check plan contract validation.
- *
- * @example
- * ```ts
- * import { GithubChecksFallowFeatureMatrix } from "@beep/repo-cli/commands/Quality/Quality.command"
- * const matrix = GithubChecksFallowFeatureMatrix.make({ features: [] })
- * console.log(matrix.features.length)
- * ```
- * @category models
- * @since 0.0.0
- */
-export class GithubChecksFallowFeatureMatrix extends S.Class<GithubChecksFallowFeatureMatrix>(
-  $I`GithubChecksFallowFeatureMatrix`
-)(
-  {
-    features: S.Array(GithubChecksFallowFeatureMatrixRow),
-  },
-  $I.annote("GithubChecksFallowFeatureMatrix", {
-    description: "Minimal Fallow feature matrix used by GitHub check plan contract validation.",
-  })
-) {}
-
-const decodeGithubChecksFallowFeatureMatrix = S.decodeUnknownEffect(GithubChecksFallowFeatureMatrix);
-
-const commandText = (command: string, args: ReadonlyArray<string>) => A.join([command, ...args], " ");
+const commandText = formatCommandLine;
 
 const normalizeExtraArgs = (args: unknown): ReadonlyArray<string> => {
   if (P.isUndefined(args)) {
@@ -477,19 +360,15 @@ const runStep = Effect.fn("QualityScriptCommands.runStep")(function* (
   step: QualityTaskStep
 ): Effect.fn.Return<void, QualityScriptCommandError, ChildProcessSpawner.ChildProcessSpawner> {
   yield* Console.log(`[beep-cli] ${step.label}: ${commandText(step.command, step.args)}`);
-  const exitCode = yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(step.command, [...step.args], {
-        cwd: step.cwd,
-        env: step.env,
-        extendEnv: true,
-        stdin: "inherit",
-        stdout: "inherit",
-        stderr: "inherit",
-      });
-      return yield* handle.exitCode;
-    })
-  ).pipe(
+  const exitCode = yield* runToExit({
+    command: step.command,
+    args: step.args,
+    cwd: step.cwd,
+    env: step.env,
+    extendEnv: true,
+    stdin: "inherit",
+    stdio: "inherit",
+  }).pipe(
     QualityScriptCommandError.mapError(`Failed to spawn ${commandText(step.command, step.args)}.`, {
       command: commandText(step.command, step.args),
     })
@@ -536,102 +415,6 @@ const runFixedStep = (repoRoot: string, label: string, command: string, args: Re
     })
   );
 
-/**
- * Stage label for a GitHub check collector lane.
- *
- * @example
- * ```ts
- * import { GithubCheckLaneStage } from "@beep/repo-cli/commands/Quality/Quality.command"
- * const stage = GithubCheckLaneStage
- * console.log(stage)
- * ```
- * @category models
- * @since 0.0.0
- */
-export const GithubCheckLaneStage = LiteralKit(["repo-quality", "repo-sanity", "diff-security", "environment"]).pipe(
-  $I.annoteSchema("GithubCheckLaneStage", {
-    description: "Stage label for a GitHub check collector lane.",
-  })
-);
-
-/**
- * Stage label for a GitHub check collector lane.
- *
- * @example
- * ```ts
- * import type { GithubCheckLaneStage } from "@beep/repo-cli/commands/Quality/Quality.command"
- * const stage: GithubCheckLaneStage = "repo-quality"
- * ```
- * @category type-level
- * @since 0.0.0
- */
-export type GithubCheckLaneStage = typeof GithubCheckLaneStage.Type;
-
-/**
- * Executable lane specification for GitHub check collectors.
- *
- * @example
- * ```ts
- * import { GithubCheckLaneSpec } from "@beep/repo-cli/commands/Quality/Quality.command"
- * import { QualityTaskStep } from "@beep/repo-cli/commands/Quality/Tasks"
- * const lane = GithubCheckLaneSpec.make({
- *   id: "quality:build",
- *   stage: "repo-quality",
- *   blockedBy: [],
- *   step: QualityTaskStep.make({ label: "build", command: "bun", args: ["run", "build"], cwd: "/repo" })
- * })
- * console.log(lane.id)
- * ```
- * @category models
- * @since 0.0.0
- */
-export class GithubCheckLaneSpec extends S.Class<GithubCheckLaneSpec>($I`GithubCheckLaneSpec`)(
-  {
-    id: S.String,
-    stage: GithubCheckLaneStage,
-    blockedBy: S.Array(S.String),
-    step: QualityTaskStep,
-  },
-  $I.annote("GithubCheckLaneSpec", {
-    description: "Executable lane specification for GitHub check collectors.",
-  })
-) {}
-
-const bunRunLane = (repoRoot: string, label: string, args: ReadonlyArray<string>): QualityTaskStep =>
-  QualityTaskStep.make({
-    label,
-    command: "bun",
-    args: ["run", ...args],
-    cwd: repoRoot,
-  });
-
-const bunxLane = (repoRoot: string, label: string, args: ReadonlyArray<string>): QualityTaskStep =>
-  QualityTaskStep.make({
-    label,
-    command: "bunx",
-    args,
-    cwd: repoRoot,
-  });
-
-const repoCliLane = (repoRoot: string, label: string, args: ReadonlyArray<string>): QualityTaskStep =>
-  bunRunLane(repoRoot, label, ["beep", "quality", ...args]);
-
-const githubCheckLane = (
-  id: string,
-  stage: GithubCheckLaneStage,
-  step: QualityTaskStep,
-  blockedBy: ReadonlyArray<string> = A.empty<string>()
-): GithubCheckLaneSpec =>
-  GithubCheckLaneSpec.make({
-    id,
-    stage,
-    blockedBy,
-    step,
-  });
-
-const githubCheckLaneSteps = (lanes: ReadonlyArray<GithubCheckLaneSpec>): ReadonlyArray<QualityTaskStep> =>
-  A.map(lanes, (lane) => lane.step);
-
 const runGithubCheckLaneGroup = (
   label: string,
   lanes: ReadonlyArray<GithubCheckLaneSpec>
@@ -648,33 +431,24 @@ const collectOutput = Effect.fn("QualityScriptCommands.collectOutput")(function*
   QualityScriptCommandError,
   ChildProcessSpawner.ChildProcessSpawner
 > {
-  return yield* Effect.scoped(
-    Effect.gen(function* () {
-      const handle = yield* ChildProcess.make(step.command, [...step.args], {
-        cwd: step.cwd,
-        env: step.env,
-        extendEnv: true,
-        stdout: "pipe",
-        stderr: "pipe",
-      });
-      const output = yield* handle.all.pipe(
-        Stream.decodeText(),
-        Stream.runFold(
-          () => "",
-          (acc, chunk) => acc + chunk
-        )
-      );
-      const exitCode = yield* handle.exitCode;
-      return {
-        output: Str.trim(output),
-        exitCode,
-      };
-    })
-  ).pipe(
+  const result = yield* runCaptured({
+    command: step.command,
+    args: step.args,
+    cwd: step.cwd,
+    env: step.env,
+    extendEnv: true,
+    source: "all",
+    trim: true,
+  }).pipe(
     QualityScriptCommandError.mapError(`Failed to collect output from ${commandText(step.command, step.args)}.`, {
       command: commandText(step.command, step.args),
     })
   );
+
+  return {
+    output: result.output,
+    exitCode: result.exitCode,
+  };
 });
 
 const collectSuccessfulOutput = Effect.fn("QualityScriptCommands.collectSuccessfulOutput")(function* (
@@ -764,96 +538,6 @@ const githubCheckChangesetStatusLanes = Effect.fn("QualityScriptCommands.githubC
 // `[[IgnoredVulns]]` table header delimiting one OSV ignore entry in
 // osv-scanner.toml. Splitting the config on this header yields one chunk per
 // ignore block (plus a leading comment/preamble chunk).
-const OSV_IGNORED_VULNS_HEADER = "[[IgnoredVulns]]";
-// Per-block field patterns. The `m` flag anchors `^`/`$` to each physical line
-// inside a multi-line block chunk; `ignoreUntil` is a bare RFC-3339 TOML
-// datetime (optionally quoted) such as `2026-09-13T00:00:00Z`.
-const osvIgnoreIdPattern = /^\s*id\s*=\s*"(.+)"\s*$/mu;
-const osvIgnoreUntilPattern = /^\s*ignoreUntil\s*=\s*"?([^"#\s]+)"?\s*$/mu;
-
-type OsvIgnoreEntry = {
-  readonly id: string;
-  // `O.none` when the block declares no expiry; `O.some` with the parsed
-  // instant when `ignoreUntil` is present and parseable. A present-but-
-  // unparseable `ignoreUntil` is reported via `expiryMalformed` so the entry
-  // fails closed (it is not allowed to suppress the advisory).
-  readonly ignoreUntil: O.Option<DateTime.DateTime>;
-  readonly expiryMalformed: boolean;
-};
-
-const parseOsvIgnoreBlock = (block: string): O.Option<OsvIgnoreEntry> =>
-  pipe(
-    O.fromNullishOr(osvIgnoreIdPattern.exec(block)),
-    O.flatMap((match) => O.fromNullishOr(match[1])),
-    O.map((id) => {
-      const rawIgnoreUntil = pipe(
-        O.fromNullishOr(osvIgnoreUntilPattern.exec(block)),
-        O.flatMap((match) => O.fromNullishOr(match[1]))
-      );
-      const ignoreUntil = O.flatMap(rawIgnoreUntil, DateTime.make);
-      return {
-        id,
-        ignoreUntil,
-        expiryMalformed: O.isSome(rawIgnoreUntil) && O.isNone(ignoreUntil),
-      };
-    })
-  );
-
-const parseOsvIgnoreEntries = (configText: string): ReadonlyArray<OsvIgnoreEntry> =>
-  pipe(Str.split(configText, OSV_IGNORED_VULNS_HEADER), A.drop(1), A.map(parseOsvIgnoreBlock), A.getSomes);
-
-const osvIgnoreEntryIsActive = (now: DateTime.DateTime): ((entry: OsvIgnoreEntry) => boolean) =>
-  flow(
-    O.liftPredicate((entry: OsvIgnoreEntry) => !entry.expiryMalformed),
-    // Keep when there is no expiry, or the expiry is still in the future
-    // (`ignoreUntil >= now`); drop malformed or expired ignores so the audit
-    // fails closed and re-flags the advisory.
-    O.map((entry) =>
-      O.match(entry.ignoreUntil, {
-        onNone: thunkTrue,
-        onSome: Order.isGreaterThanOrEqualTo(DateTime.Order)(now),
-      })
-    ),
-    O.getOrElse(thunkFalse)
-  );
-
-/**
- * Select the OSV advisory ids that may still be suppressed at `now`.
- *
- * Entries whose `ignoreUntil` has passed, or whose `ignoreUntil` is present but
- * unparseable, are dropped so the Bun audit lane stops mirroring expired
- * ignores and fails closed once the configured expiry elapses.
- *
- * @param configText - Raw `osv-scanner.toml` contents.
- * @param now - Current instant used to compare against each `ignoreUntil`.
- * @returns Active advisory ids in config order.
- * @example
- * ```ts
- * import { DateTime } from "effect"
- * import { activeOsvIgnoreIdsForTesting } from "@beep/repo-cli/test/Quality"
- *
- * const ids = activeOsvIgnoreIdsForTesting(
- *   '[[IgnoredVulns]]\nid = "GHSA-x"\nignoreUntil = 2999-01-01T00:00:00Z\n',
- *   DateTime.makeUnsafe("2026-06-17T00:00:00Z")
- * )
- * console.log(ids)
- * ```
- * @category testing
- * @since 0.0.0
- */
-export const activeOsvIgnoreIdsForTesting: {
-  (configText: string, now: DateTime.DateTime): ReadonlyArray<string>;
-  (now: DateTime.DateTime): (configText: string) => ReadonlyArray<string>;
-} = dual(
-  2,
-  (configText: string, now: DateTime.DateTime): ReadonlyArray<string> =>
-    pipe(
-      parseOsvIgnoreEntries(configText),
-      A.filter(osvIgnoreEntryIsActive(now)),
-      A.map((entry) => entry.id)
-    )
-);
-
 /**
  * Run Bun's high-severity package audit with OSV ignores mirrored from config.
  *
@@ -885,276 +569,20 @@ export const runBunAudit = Effect.fn("QualityScriptCommands.runBunAudit")(functi
     .readFileString(configPath)
     .pipe(QualityScriptCommandError.mapError(`Failed to read ${configPath}.`));
   const now = yield* DateTime.now;
-  const entries = parseOsvIgnoreEntries(configText);
-  const isActive = osvIgnoreEntryIsActive(now);
-  const ignoredIds = pipe(
-    entries,
-    A.filter(isActive),
-    A.map((entry) => entry.id)
-  );
-  const droppedIds = pipe(
-    entries,
-    A.filter((entry) => !isActive(entry)),
-    A.map((entry) => entry.id)
-  );
+  const selection = selectOsvIgnoreIdsForAudit(configText, now);
 
-  if (A.isArrayNonEmpty(droppedIds)) {
+  if (A.isArrayNonEmpty(selection.droppedIds)) {
     yield* Console.log(
-      `[github-checks] repo-sanity:bun-audit: dropping expired/malformed OSV ignore(s): ${A.join(droppedIds, ", ")}`
+      `[github-checks] repo-sanity:bun-audit: dropping expired/malformed OSV ignore(s): ${A.join(selection.droppedIds, ", ")}`
     );
   }
 
   yield* runFixedStep(repoRoot, "repo-sanity:bun-audit", "bun", [
     "audit",
     "--audit-level=high",
-    ...A.map(ignoredIds, (id) => `--ignore=${id}`),
+    ...A.map(selection.activeIds, (id) => `--ignore=${id}`),
   ]);
 });
-
-const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubCheckLaneSpec> => [
-  githubCheckLane("quality:build", "repo-quality", bunRunLane(repoRoot, "quality:build", ["build"])),
-  githubCheckLane("quality:check", "repo-quality", bunRunLane(repoRoot, "quality:check", ["check"])),
-  githubCheckLane("quality:knip", "repo-quality", repoCliLane(repoRoot, "quality:knip", ["knip"])),
-  githubCheckLane(
-    "quality:jsdoc-ratchet",
-    "repo-quality",
-    repoCliLane(repoRoot, "quality:jsdoc-ratchet", ["jsdoc-ratchet"])
-  ),
-  githubCheckLane("quality:lint", "repo-quality", bunRunLane(repoRoot, "quality:lint", ["lint"])),
-  githubCheckLane("quality:docgen", "repo-quality", bunRunLane(repoRoot, "quality:docgen", ["docgen"])),
-  githubCheckLane("quality:test", "repo-quality", bunRunLane(repoRoot, "quality:test", ["test"])),
-];
-
-const githubCheckRepoSanityLanes = (repoRoot: string): ReadonlyArray<GithubCheckLaneSpec> => [
-  githubCheckLane(
-    "repo-sanity:changeset-graph",
-    "repo-sanity",
-    repoCliLane(repoRoot, "repo-sanity:changeset-graph", ["changeset-graph"])
-  ),
-  githubCheckLane(
-    "repo-sanity:tsconfig-sync",
-    "repo-sanity",
-    bunRunLane(repoRoot, "repo-sanity:tsconfig-sync", ["config-sync:check"])
-  ),
-  githubCheckLane(
-    "repo-sanity:fallow-boundaries-config",
-    "repo-sanity",
-    repoCliLane(repoRoot, "repo-sanity:fallow-boundaries-config", ["fallow", "boundaries", "config-check", "--check"])
-  ),
-  githubCheckLane(
-    "repo-sanity:versions",
-    "repo-sanity",
-    bunRunLane(repoRoot, "repo-sanity:versions", ["version-sync", "--skip-network"])
-  ),
-  githubCheckLane(
-    "repo-sanity:syncpack",
-    "repo-sanity",
-    bunxLane(repoRoot, "repo-sanity:syncpack", ["syncpack", "lint"])
-  ),
-  githubCheckLane(
-    "repo-sanity:sherif",
-    "repo-sanity",
-    bunxLane(repoRoot, "repo-sanity:sherif", ["sherif@1.10.0", "-r", "non-existent-packages"])
-  ),
-  githubCheckLane(
-    "repo-sanity:bun-audit",
-    "repo-sanity",
-    repoCliLane(repoRoot, "repo-sanity:bun-audit", ["bun-audit"])
-  ),
-];
-
-const githubCheckPrePushExternalLanes = (repoRoot: string): ReadonlyArray<GithubCheckLaneSpec> => [
-  githubCheckLane(
-    "pre-push:secrets",
-    "diff-security",
-    repoCliLane(repoRoot, "pre-push:secrets", ["github-checks", "secrets"])
-  ),
-  githubCheckLane(
-    "pre-push:security",
-    "diff-security",
-    repoCliLane(repoRoot, "pre-push:security", ["github-checks", "security"])
-  ),
-  githubCheckLane("pre-push:sast", "diff-security", repoCliLane(repoRoot, "pre-push:sast", ["github-checks", "sast"])),
-  githubCheckLane("pre-push:nix", "environment", repoCliLane(repoRoot, "pre-push:nix", ["github-checks", "nix"])),
-];
-
-const fallowGithubCheckLaneId = (featureFamily: FallowQualityFeatureFamily): string => `fallow:${featureFamily}`;
-
-// Promoted blocking Fallow lanes (goals/fallow-quality-enforcement feature
-// matrix rows with promotionStatus blocking). The dead-code lane holds the
-// zero regression baseline. The audit lane (complexity/duplication smells) is
-// advisory-only and is no longer wired here.
-const githubCheckFallowLanes = (repoRoot: string): ReadonlyArray<GithubCheckLaneSpec> => [
-  githubCheckLane(
-    "fallow:dead-code",
-    "repo-quality",
-    repoCliLane(repoRoot, "fallow:dead-code", ["fallow", "dead-code", "--check", "--quiet"])
-  ),
-];
-
-const isBlockingFallowMatrixRow = (row: GithubChecksFallowFeatureMatrixRow): boolean =>
-  row.promotionStatus === "candidate-blocking" || row.promotionStatus === "blocking" || row.ciMode === "blocking-check";
-
-/**
- * Derive the GitHub check lane ids required by currently promoted Fallow matrix rows.
- *
- * @param matrix - Minimal Fallow feature matrix.
- * @returns Sorted lane ids for feature families marked as blocking.
- * @example
- * ```ts
- * import { GithubChecksFallowFeatureMatrix, promotedFallowGithubCheckLaneIdsForTesting } from "@beep/repo-cli/test/Quality"
- *
- * const matrix = GithubChecksFallowFeatureMatrix.make({ features: [] })
- * console.log(promotedFallowGithubCheckLaneIdsForTesting(matrix))
- * ```
- * @category testing
- * @since 0.0.0
- */
-export const promotedFallowGithubCheckLaneIdsForTesting = (
-  matrix: GithubChecksFallowFeatureMatrix
-): ReadonlyArray<string> =>
-  pipe(
-    matrix.features,
-    A.filter(isBlockingFallowMatrixRow),
-    A.map((row) => fallowGithubCheckLaneId(row.featureFamily)),
-    A.dedupe,
-    A.sort(Order.String)
-  );
-
-/**
- * Return the static GitHub check collector lanes for a mode.
- *
- * @param repoRoot - Repository root used for subprocess working directories.
- * @param mode - GitHub check mode.
- * @returns Static lane specs owned by the mode.
- * @example
- * ```ts
- * import { githubCheckLanesForModeForTesting } from "@beep/repo-cli/test/Quality"
- *
- * console.log(githubCheckLanesForModeForTesting("/repo", "pre-push").map((lane) => lane.id))
- * ```
- * @category testing
- * @since 0.0.0
- */
-export const githubCheckLanesForModeForTesting: {
-  (repoRoot: string, mode: GithubCheckMode): ReadonlyArray<GithubCheckLaneSpec>;
-  (mode: GithubCheckMode): (repoRoot: string) => ReadonlyArray<GithubCheckLaneSpec>;
-} = dual(2, (repoRoot: string, mode: GithubCheckMode): ReadonlyArray<GithubCheckLaneSpec> => {
-  const externalLanes = githubCheckPrePushExternalLanes(repoRoot);
-  const externalLane = (id: string): ReadonlyArray<GithubCheckLaneSpec> =>
-    pipe(
-      externalLanes,
-      A.findFirst((lane) => lane.id === id),
-      O.match({
-        onNone: A.empty<GithubCheckLaneSpec>,
-        onSome: A.of,
-      })
-    );
-
-  return pipe(
-    Match.value(mode),
-    Match.when("quality", () => [...githubCheckQualityLanes(repoRoot), ...githubCheckRepoSanityLanes(repoRoot)]),
-    Match.when("repo-sanity", () => githubCheckRepoSanityLanes(repoRoot)),
-    Match.when("secrets", () => externalLane("pre-push:secrets")),
-    Match.when("security", () => externalLane("pre-push:security")),
-    Match.when("sast", () => externalLane("pre-push:sast")),
-    Match.when("nix", () => externalLane("pre-push:nix")),
-    Match.when("pre-push", () => [
-      ...githubCheckQualityLanes(repoRoot),
-      ...githubCheckFallowLanes(repoRoot),
-      ...githubCheckRepoSanityLanes(repoRoot),
-      ...githubCheckPrePushExternalLanes(repoRoot),
-    ]),
-    Match.when("review-fix", A.empty<GithubCheckLaneSpec>),
-    Match.exhaustive
-  );
-});
-
-/**
- * Compare promoted Fallow matrix rows against static GitHub check lanes.
- *
- * @param repoRoot - Repository root used for lane construction.
- * @param mode - GitHub check mode to inspect.
- * @param matrix - Minimal Fallow feature matrix.
- * @returns Diagnostics explaining missing or premature Fallow pre-push lanes.
- * @example
- * ```ts
- * import { GithubChecksFallowFeatureMatrix, githubCheckPromotedFallowLaneDiagnosticsForTesting } from "@beep/repo-cli/test/Quality"
- *
- * const matrix = GithubChecksFallowFeatureMatrix.make({ features: [] })
- * console.log(githubCheckPromotedFallowLaneDiagnosticsForTesting("/repo", "pre-push", matrix))
- * ```
- * @category testing
- * @since 0.0.0
- */
-export const githubCheckPromotedFallowLaneDiagnosticsForTesting: {
-  (repoRoot: string, mode: GithubCheckMode, matrix: GithubChecksFallowFeatureMatrix): ReadonlyArray<string>;
-  (mode: GithubCheckMode, matrix: GithubChecksFallowFeatureMatrix): (repoRoot: string) => ReadonlyArray<string>;
-} = dual(
-  3,
-  (repoRoot: string, mode: GithubCheckMode, matrix: GithubChecksFallowFeatureMatrix): ReadonlyArray<string> => {
-    const promotedLaneIds = promotedFallowGithubCheckLaneIdsForTesting(matrix);
-    const actualLaneIds = pipe(
-      githubCheckLanesForModeForTesting(repoRoot, mode),
-      A.map((lane) => lane.id),
-      A.dedupe,
-      A.sort(Order.String)
-    );
-    const actualFallowLaneIds = A.filter(actualLaneIds, Str.startsWith("fallow:"));
-    const missingPromotedLaneIds = A.filter(promotedLaneIds, (laneId) => !A.contains(actualLaneIds, laneId));
-    const unpromotedLaneIds = A.filter(actualFallowLaneIds, (laneId) => !A.contains(promotedLaneIds, laneId));
-
-    return [
-      ...A.map(missingPromotedLaneIds, (laneId) => `missing promoted Fallow GitHub check lane ${laneId}`),
-      ...A.map(unpromotedLaneIds, (laneId) => `unpromoted Fallow GitHub check lane is wired: ${laneId}`),
-    ];
-  }
-);
-
-/**
- * Build the repo-quality diagnostic lanes used by GitHub check collectors.
- *
- * @param repoRoot - Repository root path used as every subprocess working directory.
- * @returns Ordered repo-quality lane specifications.
- * @example
- * ```ts
- * import { githubCheckQualityLanesForTesting } from "@beep/repo-cli/test/Quality"
- * console.log(githubCheckQualityLanesForTesting("/repo"))
- * ```
- * @category testing
- * @since 0.0.0
- */
-export const githubCheckQualityLanesForTesting = githubCheckQualityLanes;
-
-/**
- * Build the repo-sanity diagnostic lanes used by GitHub check collectors.
- *
- * @param repoRoot - Repository root path used as every subprocess working directory.
- * @returns Ordered repo-sanity lane specifications.
- * @example
- * ```ts
- * import { githubCheckRepoSanityLanesForTesting } from "@beep/repo-cli/test/Quality"
- * console.log(githubCheckRepoSanityLanesForTesting("/repo"))
- * ```
- * @category testing
- * @since 0.0.0
- */
-export const githubCheckRepoSanityLanesForTesting = githubCheckRepoSanityLanes;
-
-/**
- * Build the external pre-push diagnostic lanes used by GitHub check collectors.
- *
- * @param repoRoot - Repository root path used as every subprocess working directory.
- * @returns Ordered pre-push lane specifications for secrets, security, SAST, and Nix.
- * @example
- * ```ts
- * import { githubCheckPrePushExternalLanesForTesting } from "@beep/repo-cli/test/Quality"
- * console.log(githubCheckPrePushExternalLanesForTesting("/repo"))
- * ```
- * @category testing
- * @since 0.0.0
- */
-export const githubCheckPrePushExternalLanesForTesting = githubCheckPrePushExternalLanes;
 
 const runRepoSanity = Effect.fn("QualityScriptCommands.runRepoSanity")(function* (
   repoRoot: string
@@ -1224,7 +652,7 @@ type DevQualityStepOptions = { readonly base: string; readonly head: string; rea
  *   }),
  *   A.map((step) => step.label)
  * )
- * console.log(labels)
+ * console.log(labels) // example value
  * ```
  * @category testing
  * @since 0.0.0
@@ -2513,7 +1941,7 @@ export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInvent
  * import { runJSDocQuality } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * const program = runJSDocQuality()
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -2541,42 +1969,6 @@ const runQualityProgram = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effe
   effect.pipe(Effect.asVoid);
 
 const variadicStrings: (values: ReadonlyArray<unknown>) => ReadonlyArray<string> = A.filter(P.isString);
-
-const renderQualityProfileConfigLines = (config: QualityProfileConfig): ReadonlyArray<string> => [
-  `profile=${config.profile}`,
-  `turbo_concurrency=${config.turboConcurrency}`,
-  `docgen_parallel=${config.docgenParallel}`,
-  `full_proof_slots=${config.fullProofSlots}`,
-  `review_fix_slots=${config.reviewFixSlots}`,
-  ...A.map(config.notes, (note) => `note=${note}`),
-];
-
-const printQualityProfileConfig = (
-  config: QualityProfileConfig,
-  json: boolean
-): Effect.Effect<void, QualityScriptCommandError> =>
-  json
-    ? jsonStringifyPretty(config).pipe(
-        QualityScriptCommandError.mapError("Failed to encode quality profile config."),
-        Effect.flatMap(Console.log)
-      )
-    : printLines(renderQualityProfileConfigLines(config));
-
-const printQualityProfileDetection = (
-  detection: QualityProfileDetection,
-  json: boolean
-): Effect.Effect<void, QualityScriptCommandError> =>
-  json
-    ? jsonStringifyPretty(detection).pipe(
-        QualityScriptCommandError.mapError("Failed to encode quality profile detection."),
-        Effect.flatMap(Console.log)
-      )
-    : printLines([
-        `profile=${detection.profile}`,
-        `cpu_count=${detection.cpuCount}`,
-        `memory_gib=${detection.memoryGiB}`,
-        ...renderQualityProfileConfigLines(detection.config),
-      ]);
 
 const githubChecksCommand = Command.make(
   "github-checks",
@@ -2826,7 +2218,7 @@ const qualityProfileConfigCommand = Command.make(
   "config",
   {
     json: Flag.boolean("json").pipe(Flag.withDescription("Print the profile config as JSON")),
-    profile: Argument.choice("profile", QUALITY_PROFILE_NAMES).pipe(
+    profile: Argument.choice("profile", QualityHardwareProfile.Options).pipe(
       Argument.withDescription("Quality hardware profile to inspect")
     ),
   },

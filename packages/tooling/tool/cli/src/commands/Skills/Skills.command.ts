@@ -94,7 +94,10 @@ export class RemoteSkillSource extends S.Class<RemoteSkillSource>($I`RemoteSkill
  * @example
  * ```ts
  * import { SkillLockEntry } from "@beep/repo-cli/commands/Skills"
- * console.log(SkillLockEntry)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { name: "jsdoc-annotation-specialist", source: "repo", version: "0.2.0" }
+ * console.log(S.is(SkillLockEntry)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -119,7 +122,10 @@ export class SkillLockEntry extends S.Class<SkillLockEntry>($I`SkillLockEntry`)(
  * @example
  * ```ts
  * import { SkillLockFile } from "@beep/repo-cli/commands/Skills"
- * console.log(SkillLockFile)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { skills: [] }
+ * console.log(S.is(SkillLockFile)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -1008,7 +1014,11 @@ const skillsUpdateCommand = Command.make(
  * @example
  * ```ts
  * import { skillsCommand } from "@beep/repo-cli/commands/Skills"
- * console.log(skillsCommand)
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
+ *
+ * const run = Command.run(skillsCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category use-cases
  * @since 0.0.0

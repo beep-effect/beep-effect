@@ -16,7 +16,7 @@ import { updateCatalogEntry, updatePackageManagerField } from "../updaters/Packa
 import { updatePlainTextFile } from "../updaters/PlainTextUpdater.js";
 import { replaceNodeVersionWithFile, updateYamlValue } from "../updaters/YamlFileUpdater.js";
 import type { FileSystem } from "effect";
-import type { VersionCategoryReport, VersionSyncError, VersionSyncResolution } from "../Models.js";
+import type { VersionCategoryReport, VersionSyncError, VersionSyncResolution } from "../../VersionSync.schemas.js";
 
 const $I = $RepoCliId.create("commands/VersionSync/internal/services/UpdateApplierService");
 const VersionCategoryName = LiteralKit(["bun", "node", "docker", "biome", "effect"]).pipe(

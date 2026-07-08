@@ -46,14 +46,9 @@ type ImageCommandServiceRequirements =
  * @example
  * ```ts
  * import type { ImageCommandServiceShape } from "@beep/repo-cli/commands/Image"
- * import { Effect } from "effect"
  *
- * const service: ImageCommandServiceShape = {
- *   extractFrames: () => Effect.never,
- *   extractFramesDir: () => Effect.never
- * }
- *
- * console.log(typeof service.extractFrames)
+ * const methodNames: ReadonlyArray<keyof ImageCommandServiceShape> = ["extractFrames", "extractFramesDir"]
+ * console.log(methodNames.length) // 2
  * ```
  * @category services
  * @since 0.0.0
@@ -84,7 +79,10 @@ export interface ImageCommandServiceShape {
  * @example
  * ```ts
  * import { ImageCommandService } from "@beep/repo-cli/commands/Image"
- * console.log(ImageCommandService)
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.service(ImageCommandService)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category services
  * @since 0.0.0
@@ -291,7 +289,9 @@ const makeImageCommandService = Effect.fn("ImageCommandService.make")(function* 
  * @example
  * ```ts
  * import { ImageCommandServiceLive } from "@beep/repo-cli/commands/Image"
- * console.log(ImageCommandServiceLive)
+ * import { Layer } from "effect"
+ *
+ * console.log(Layer.isLayer(ImageCommandServiceLive)) // true
  * ```
  * @category layers
  * @since 0.0.0
@@ -307,7 +307,10 @@ export const ImageCommandServiceLive: Layer.Layer<ImageCommandService, never, Im
  * @example
  * ```ts
  * import { extractFrames } from "@beep/repo-cli/commands/Image"
- * console.log(extractFrames)
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.succeed(extractFrames)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -327,7 +330,10 @@ export const extractFrames = Effect.fn("Image.extractFrames")(function* (
  * @example
  * ```ts
  * import { extractFramesDir } from "@beep/repo-cli/commands/Image"
- * console.log(extractFramesDir)
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.succeed(extractFramesDir)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category use-cases
  * @since 0.0.0

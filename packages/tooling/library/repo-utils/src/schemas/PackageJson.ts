@@ -11,11 +11,12 @@
 
 import { $RepoUtilsId } from "@beep/identity/packages";
 import { EmailString, LiteralKit, SchemaUtils } from "@beep/schema";
-import { Effect, pipe, Result, Tuple } from "effect";
+import { Effect, FileSystem, pipe, Result, Tuple } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { NoSuchFileError } from "../errors/index.js";
 import { jsonStringifyPretty } from "../JsonUtils.js";
 import type { Exit } from "effect";
 import type { DomainError } from "../errors/index.js";
@@ -1722,3 +1723,44 @@ export const encodePackageJsonPrettyEffect: (input: unknown) => Effect.Effect<st
     const validated = yield* encodePackageJsonEffect(input);
     return yield* jsonStringifyPretty(validated);
   });
+
+const decodeUnknownFromJsonString = S.decodeUnknownEffect(S.UnknownFromJsonString);
+
+/**
+ * Read a `package.json` file from disk and decode it into a strict `PackageJson`.
+ *
+ * @remarks
+ * Composes `FileSystem.readFileString` with the existing strict
+ * {@link decodePackageJsonEffect}, collapsing the read-then-parse-then-decode
+ * pattern duplicated across repo tooling into one helper. A read failure (for
+ * example a missing file) surfaces as {@link NoSuchFileError}; malformed JSON and
+ * any schema violation — including excess top-level keys, which the strict decode
+ * rejects — surface as `S.SchemaError`.
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import { readPackageJsonFile } from "@beep/repo-utils/schemas/PackageJson"
+ *
+ * const program = readPackageJsonFile("packages/example/package.json")
+ * const name = Effect.map(program, (manifest) => manifest.name)
+ * console.log(name)
+ * ```
+ * @category parsing
+ * @since 0.0.0
+ */
+export const readPackageJsonFile: (
+  filePath: string
+) => Effect.Effect<PackageJson.Type, NoSuchFileError | S.SchemaError, FileSystem.FileSystem> = Effect.fn(
+  function* (filePath) {
+    const fs = yield* FileSystem.FileSystem;
+    const content = yield* fs
+      .readFileString(filePath)
+      .pipe(
+        Effect.mapError((error) =>
+          NoSuchFileError.make({ path: filePath, message: `Failed to read package.json: ${error.message}` })
+        )
+      );
+    const parsed = yield* decodeUnknownFromJsonString(content);
+    return yield* decodePackageJsonEffect(parsed);
+  }
+);

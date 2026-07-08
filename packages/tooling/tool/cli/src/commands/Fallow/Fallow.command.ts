@@ -271,7 +271,7 @@ const makeBoundaryConfig = Effect.fn("Fallow.makeBoundaryConfig")(function* (
     })
   );
 
-  const config = {
+  return {
     $schema: FALLOW_CONFIG_SCHEMA_URL,
     extends: [rootConfigExtendsPath],
     boundaries: {
@@ -282,8 +282,6 @@ const makeBoundaryConfig = Effect.fn("Fallow.makeBoundaryConfig")(function* (
       "boundary-violation": "warn",
     },
   } satisfies FallowBoundaryConfig;
-
-  return config;
 });
 
 const renderBoundaryConfig = Effect.fn("Fallow.renderBoundaryConfig")(function* (repoRoot: string, outputPath: string) {
@@ -521,8 +519,11 @@ const boundariesCommand = Command.make(
  * @example
  * ```ts
  * import { fallowCommand } from "@beep/repo-cli/commands/Fallow"
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
  *
- * console.log(fallowCommand)
+ * const run = Command.run(fallowCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category cli-commands
  * @since 0.0.0

@@ -1,0 +1,186 @@
+[
+  {
+    "file": "packages/tooling/tool/cli/src/commands/CreatePackage/Handler.ts",
+    "summary": "Implements the entire `create-package` CLI command in one file: literal-kit schemas for package type/family/kind, static template+file catalogs for library/tool/nextjs/tauri scaffolds, the Command.make flag tree with a ~370-line validation-and-orchestration handler, root package.json workspace registration via jsonc-parser, @beep/identity registration via ts-morph, bun lockfile refresh via ChildProcess, and package.json manifest generation. The sibling CreatePackage.command.ts is only a re-export shim of Handler's createPackageCommand.",
+    "concerns": [
+      {
+        "name": "Template directory resolution (fs probing)",
+        "description": "Resolves src-vs-dist template directory candidates and probes the filesystem for the first existing one.",
+        "keySymbols": [
+          "templateDirCandidates",
+          "resolveCreatePackageTemplateDir"
+        ],
+        "locEstimate": 55
+      },
+      {
+        "name": "Command data schemas & literal domains",
+        "description": "LiteralKit domains, branded string schemas, decode-with-DomainError helpers, equivalences, and the TemplateContext / BeepPackageMetadata S.Class models. Pure schema-role content per the topology.",
+        "keySymbols": [
+          "PackageType",
+          "AppKind",
+          "PackageFamily",
+          "FoundationKind",
+          "ToolingKind",
+          "PackageKind"
+        ],
+        "locEstimate": 190
+      },
+      {
+        "name": "Scaffold catalogs & app-kind selection",
+        "description": "Static TemplateSpec arrays and file/directory listings for package/nextjs/tauri scaffolds plus the O.match selectors keyed on appKind and withStoriesTsconfig, and appKind predicates.",
+        "keySymbols": [
+          "PACKAGE_TEMPLATE_SPECS",
+          "NEXTJS_APP_TEMPLATE_SPECS",
+          "TAURI_APP_TEMPLATE_SPECS",
+          "templateSpecsFor",
+          "filesFor",
+          "directoriesFor"
+        ],
+        "locEstimate": 290
+      },
+      {
+        "name": "Root workspace registration (jsonc mutation)",
+        "description": "Reads/parses root package.json, matches workspace glob patterns segment-wise, and appends workspace entries via jsonc.modify/applyEdits, plus the dry-run needed-check.",
+        "keySymbols": [
+          "parseJsonDocument",
+          "readRootPackageJsonDocument",
+          "workspacePatternsFromPackageJson",
+          "matchesWorkspacePattern",
+          "isPathCoveredByWorkspacePatterns",
+          "applyJsoncModification"
+        ],
+        "locEstimate": 160
+      },
+      {
+        "name": "Identity registration (ts-morph mutation)",
+        "description": "Generates the $XxxId accessor source block and edits @beep/identity's packages.ts through TSMorphService, plus a string-scan needed-check for dry-run.",
+        "keySymbols": [
+          "toIdentityAccessorName",
+          "typedIdentityExportBlock",
+          "resolveIdentityPackagesFilePath",
+          "ensureIdentityPackageRegistration",
+          "identityPackageRegistrationNeeded"
+        ],
+        "locEstimate": 80
+      },
+      {
+        "name": "Process execution (bun lockfile)",
+        "description": "Spawns `bun install --lockfile-only` through effect/unstable/process ChildProcess with inherit stdio and exit-code handling.",
+        "keySymbols": ["refreshBunLockfile"],
+        "locEstimate": 25
+      },
+      {
+        "name": "package.json manifest generation",
+        "description": "Builds nextjs/tauri/library-tool manifest objects (scripts, exports, publishConfig, catalog deps) and encodes them through encodePackageJsonCanonicalPrettyEffect.",
+        "keySymbols": ["generatePackageJson", "toRootRelative"],
+        "locEstimate": 210
+      },
+      {
+        "name": "Command tree & handler orchestration",
+        "description": "Command.make with 11 flags/args and a monolithic handler doing a ~130-line flag validation/inference cascade (family/kind/appKind interplay) then sequencing template render, plan execute, workspace+identity registration, tsconfig sync, and lockfile refresh. Carries a fallow-ignore complexity waiver.",
+        "keySymbols": ["createPackageCommand"],
+        "locEstimate": 370
+      },
+      {
+        "name": "Rendering (dry-run preview + summary)",
+        "description": "Console/printLines output blocks: dry-run file/bootstrap preview, post-create summary of registrations and sync changes, and per-app-kind next-steps text, all inlined in the handler.",
+        "keySymbols": ["printLines usage", "nextSteps"],
+        "locEstimate": 90
+      },
+      {
+        "name": "Module-level wiring & constants",
+        "description": "Import-time instantiation of templateService/fileGenerationPlanService singletons plus FORMATTING_OPTIONS and IDENTITY_* constants shared across the concerns above.",
+        "keySymbols": [
+          "templateService",
+          "fileGenerationPlanService",
+          "FORMATTING_OPTIONS",
+          "IDENTITY_PACKAGE_NAME"
+        ],
+        "locEstimate": 20
+      }
+    ],
+    "proposedSplit": [
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts",
+        "role": "command",
+        "contents": "Replace the current re-export shim with the real Command.make flag tree and orchestration handler (validation cascade delegating to schema decoders, then render/plan/execute/register/sync/lockfile sequencing). Handler.ts is deleted once emptied.",
+        "locEstimate": 400
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.schemas.ts",
+        "role": "schemas",
+        "contents": "PackageType/AppKind/PackageFamily/FoundationKind/ToolingKind/PackageKind LiteralKits with guards, equivalences and decode*Effect helpers; ParentDir/PackageName branded schemas; BeepPackageMetadata and TemplateContext S.Class models."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.render.ts",
+        "role": "render",
+        "contents": "Dry-run preview line builders, post-create summary lines (workspace/identity/lockfile/sync changes), and per-app-kind next-steps text, returned as string arrays for printLines."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/CreatePackage/internal/TemplateCatalog.ts",
+        "role": "internal",
+        "contents": "PACKAGE/STORIES/NEXTJS/TAURI TemplateSpec catalogs, PACKAGE_FILES/DIRECTORIES listings, templateSpecsFor/filesFor/directoriesFor/gitkeepFilesFor selectors, appKindIs/isRealAppKind/shouldRegisterIdentityFor predicates, templateDirCandidates + resolveCreatePackageTemplateDir."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/CreatePackage/internal/PackageManifest.ts",
+        "role": "internal",
+        "contents": "generatePackageJson (nextjs/tauri/library-tool manifest variants) and toRootRelative."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/CreatePackage/internal/WorkspaceRegistration.ts",
+        "role": "internal",
+        "contents": "readRootPackageJsonDocument, workspacePatternsFromPackageJson, pathSegments, matchesWorkspacePattern, isPathCoveredByWorkspacePatterns, applyJsoncModification, appendWorkspaceEntry, ensureRootWorkspaceEntry, rootWorkspaceEntryNeeded, FORMATTING_OPTIONS."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityRegistration.ts",
+        "role": "internal",
+        "contents": "IDENTITY_PACKAGE_NAME/IDENTITY_PACKAGES_EXPORT_PATH, toIdentityAccessorName, typedIdentityExportBlock, resolveIdentityPackagesFilePath, ensureIdentityPackageRegistration, identityPackageRegistrationNeeded (ts-morph machinery)."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/CreatePackage/internal/Lockfile.ts",
+        "role": "internal",
+        "contents": "refreshBunLockfile ChildProcess spawn; alternatively drop the file and reuse src/internal/repo-run/RepoRun.executor.ts helpers (runRepoCommandStreamingCapture already exists)."
+      }
+    ],
+    "sharedCandidates": [
+      {
+        "helper": "matchesWorkspacePattern / workspacePatternsFromPackageJson / isPathCoveredByWorkspacePatterns",
+        "description": "Segment-wise bun workspace glob matching against root package.json workspaces (array or {packages} form). Nothing CreatePackage-specific; naturally belongs in @beep/repo-utils next to getWorkspaceDir/decodePackageJsonEffect.",
+        "alsoUsefulFor": [
+          "TsconfigSync",
+          "Architecture",
+          "VersionSync",
+          "TopoSort"
+        ]
+      },
+      {
+        "helper": "applyJsoncModification",
+        "description": "jsonc.modify + applyEdits wrapper with shared FormattingOptions. The same pattern is hand-rolled in CreatePackage/ConfigUpdater.ts and VersionSync internal updaters (PackageJsonUpdater, BiomeResolver); a shared jsonc-edit helper (src/internal/cli or @beep/schema/Jsonc side) would deduplicate.",
+        "alsoUsefulFor": ["VersionSync", "TsconfigSync", "Quality", "Fallow"]
+      },
+      {
+        "helper": "parseJsonDocument",
+        "description": "Generic decode of a JSON string via S.fromJsonString(S.Unknown) with a DomainError file-path message. Overlaps existing src/internal/cli/Json.ts and @beep/schema/Jsonc decodeJsoncTextAs; should converge on one shared parser rather than gaining a new home.",
+        "alsoUsefulFor": ["VersionSync", "Skills", "Quality"]
+      },
+      {
+        "helper": "refreshBunLockfile (ChildProcess spawn pattern)",
+        "description": "Spawn-with-inherit-stdio-and-exit-code is re-implemented across ~15 command groups; src/internal/repo-run/RepoRun.executor.ts already exposes runRepoCommandCapture/Streaming variants. Route through that instead of promoting a new helper.",
+        "alsoUsefulFor": ["Yeet", "Quality", "Docgen", "Graphiti", "Research"]
+      },
+      {
+        "helper": "toRootRelative",
+        "description": "Computes '../' repetitions from a repo-relative package path back to root; generic path arithmetic useful anywhere per-package config referencing root-relative bins is generated.",
+        "alsoUsefulFor": ["Architecture", "TsconfigSync"]
+      }
+    ],
+    "risks": [
+      "test/create-package-identity-template.test.ts reads Handler.ts by literal path ('../src/commands/CreatePackage/Handler.ts') and asserts exact source strings (the toIdentityAccessorName one-liner, IDENTITY_PACKAGE_NAME const, typedIdentityExportBlock template literals, the generatedComposers ?? composers fallback). Moving identity code out of Handler.ts breaks it unless the test's path and expectations move to internal/IdentityRegistration.ts.",
+      "Facade chain must stay intact: src/index.ts and commands/Root.ts import createPackageCommand via commands/CreatePackage/index.js -> CreatePackage.command.js; test/create-package.test.ts imports @beep/repo-cli/commands/CreatePackage. Making CreatePackage.command.ts the real command (same exported name) keeps all three green; deleting Handler.ts must not orphan the shim import.",
+      "src/test/CreatePackage.test-kit.ts deep-imports @beep/repo-cli/commands/CreatePackage/ConfigUpdater and /FileGenerationPlanService; those sibling files' paths must not move as collateral. Note the package exports map nulls only './internal/*' at package root, so commands/CreatePackage/internal/* stays importable for the test kit if needed.",
+      "Handler.ts JSDoc @example blocks claim imports of resolveCreatePackageTemplateDir and TemplateContext from '@beep/repo-cli/commands/CreatePackage' although the facade does not export them; relocating these symbols requires fixing or re-homing the examples to keep docgen green (docgen.json covers this package).",
+      "The 'fallow-ignore-next-line complexity' waiver sits on the handler Effect.fn; moving the handler into CreatePackage.command.ts re-enters it into the fallow audit diff, so the validation cascade must genuinely shrink (delegate to schema decoders) or the waiver must move with it.",
+      "templateService/fileGenerationPlanService are module-level singletons created at import time; keep them module-local in the new command file (or thread them explicitly) so instantiation order and the dry-run path (which never touches them) stay behaviorally identical."
+    ]
+  }
+]

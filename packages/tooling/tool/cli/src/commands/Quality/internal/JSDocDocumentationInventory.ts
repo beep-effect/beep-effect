@@ -4,13 +4,14 @@ import { DateTime, Effect, FileSystem, MutableHashMap, MutableHashSet, Path } fr
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { Node, Project, SyntaxKind } from "ts-morph";
+import { Node, SyntaxKind } from "ts-morph";
+import { formatJsonc } from "../../../internal/artifacts/index.js";
+import { createInMemoryTsMorphProject, leadingJsDocText, topFileoverview } from "../../../internal/tsmorph/index.js";
 import {
   declarationKind,
   defaultRepoRoot,
   discoverWorkspacePackages,
   escapeRegExp,
-  formatJsonc,
   getDocNode,
   getJsDocText,
   JsonRecord,
@@ -254,13 +255,6 @@ const extractExamples = (commentText: string): ReadonlyArray<string> => {
   return examples;
 };
 
-const leadingJsDocText = (node: Node): string =>
-  node
-    .getLeadingCommentRanges()
-    .map((range) => range.getText())
-    .filter((text: string) => Str.startsWith("/**")(text))
-    .at(-1) ?? "";
-
 const missingRequiredTags = (
   presentTags: ReadonlyArray<string>,
   requiredTags: ReadonlyArray<string>
@@ -487,12 +481,6 @@ const schemaAnnotationGaps = (name: string, node: Node, sourceFile: SourceFile):
   return gaps;
 };
 
-const topFileoverview = (sourceFile: SourceFile): string | undefined => {
-  const text = sourceFile.getFullText();
-  const match = /^(?:#![^\n]*\n)?\s*(\/\*\*[\s\S]*?\*\/)/.exec(text);
-  return match === null ? undefined : match[1];
-};
-
 const analyzeModule = (
   sourceFile: SourceFile,
   packagePath: string,
@@ -502,7 +490,7 @@ const analyzeModule = (
 ): InventoryEntry => {
   const filePath = repoRelative(sourceFile.getFilePath(), repoRoot, path);
   const relativeFilePath = normalizeSlashes(path.relative(packagePath, sourceFile.getFilePath()));
-  const fileoverview = topFileoverview(sourceFile);
+  const fileoverview = O.getOrUndefined(topFileoverview(sourceFile));
   const presentTags = fileoverview === undefined ? [] : tagsFromComment(fileoverview);
   const missingTags = exportCount === 0 ? [] : missingRequiredTags(presentTags, requiredModuleTags);
   const forbidden = forbiddenTagsIn(presentTags);
@@ -824,7 +812,7 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
         packageSourceMatchesExclude(packageInfo.absolutePath, srcDir, sourceFilePath, pattern, path)
       )
   );
-  const project = new Project({ skipAddingFilesFromTsConfig: true });
+  const project = createInMemoryTsMorphProject();
   const modules: Array<InventoryEntry> = [];
   const exports: Array<InventoryEntry> = [];
 
@@ -1180,7 +1168,9 @@ export const writeJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
       filePath: outputJsonPath,
     })
   );
-  const jsonContent = yield* formatJsonc(inventory);
+  const jsonContent = yield* formatJsonc(inventory).pipe(
+    QualityArtifactGeneratorError.mapError("Failed to format generated JSONC artifact.", {})
+  );
   yield* fs
     .writeFileString(outputJsonPath, jsonContent)
     .pipe(QualityArtifactGeneratorError.mapError(`Failed to write ${outputJsonPath}.`, { filePath: outputJsonPath }));

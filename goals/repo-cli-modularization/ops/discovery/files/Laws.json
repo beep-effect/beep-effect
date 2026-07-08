@@ -1,0 +1,182 @@
+[
+  {
+    "file": "packages/tooling/tool/cli/src/commands/Laws/DualArity.ts",
+    "summary": "Implements the repo-wide public-API dual-arity law: a ts-morph scan of apps/packages/infra that finds exported 2-3-positional-parameter helpers, checks they use `dual` from effect/Function (plus ObjectLike third-param and first-param heuristics), reconciles findings against the committed standards/dual-arity.inventory.jsonc baseline, and reports/writes a summary consumed by lawsDualArityCommand in Laws.command.ts.",
+    "concerns": [
+      {
+        "name": "Heuristic configuration constants",
+        "description": "Inline policy knobs: inventory path, scan globs, enforced roots, non-pipeable first-parameter names, pipeable-name/Effect-Schema-type/React-name regexes, schema-callable-factory pattern, dual-mapper factory names.",
+        "keySymbols": [
+          "INVENTORY_PATH",
+          "INCLUDED_GLOBS",
+          "ENFORCED_ROOTS",
+          "NON_PIPEABLE_FIRST_PARAMETER_NAMES",
+          "PIPEABLE_PARAMETER_NAME_PATTERN",
+          "DIRECT_EFFECT_OR_SCHEMA_TYPE_PATTERN"
+        ],
+        "locEstimate": 30
+      },
+      {
+        "name": "Schemas and codecs",
+        "description": "LiteralKit domains and S.Class models for inventory entries, the committed document, runtime options, and the run summary, plus derived decode/encode codecs. DualArityInventoryEntry class is file-private but its declare-namespace (Encoded type) is exported; Options/Summary are public.",
+        "keySymbols": [
+          "DualArityEntryKind",
+          "DualArityEntryStatus",
+          "DualArityDiagnosticKind",
+          "DualArityInventoryEntry",
+          "DualArityInventoryDocument",
+          "DualArityRulesOptions"
+        ],
+        "locEstimate": 215
+      },
+      {
+        "name": "Pure inventory-domain helpers",
+        "description": "Entry keys, ordering, sorting, date stamping, and file/name exclusion + enforcement predicates over the inventory document.",
+        "keySymbols": [
+          "makeEntryKey",
+          "byEntryKeyAscending",
+          "sortEntries",
+          "todayYmd",
+          "isExcludedPublicApiName",
+          "isExcludedFile"
+        ],
+        "locEstimate": 60
+      },
+      {
+        "name": "ts-morph AST analysis primitives",
+        "description": "Pure ts-morph machinery: dual-import binding index, dual()/Effect.fn call detection, expression unwrapping, call-signature arity/dual-shape checks, strict-ObjectLike type predicates, tagged-template filtering, and the legitimate-constructor-factory exemption gates.",
+        "keySymbols": [
+          "collectDualBindings",
+          "getDualCallInfo",
+          "unwrapExpression",
+          "isParameterOwner",
+          "getEffectFnImplementation",
+          "hasDualSignatures"
+        ],
+        "locEstimate": 470
+      },
+      {
+        "name": "Candidate collection and diagnosis",
+        "description": "Walks each SourceFile's exported functions, variable statements, and public static class members into PublicApiCandidate records, then derives per-candidate DualArityDiagnosticKind lists and inventory entries.",
+        "keySymbols": [
+          "PublicApiCandidate",
+          "collectFunctionCandidate",
+          "collectVariableCandidate",
+          "collectStaticMethodCandidate",
+          "collectStaticPropertyCandidate",
+          "collectCandidatesForSourceFile"
+        ],
+        "locEstimate": 400
+      },
+      {
+        "name": "Workspace owner resolution",
+        "description": "Effectful factory resolving an absolute file path to its owning @beep/* workspace via resolveWorkspaceDirs with hardcoded fallbacks; SchemaFirst.ts explicitly mirrors it.",
+        "keySymbols": ["makeOwnerResolver", "byWorkspacePathLengthDescending"],
+        "locEstimate": 40
+      },
+      {
+        "name": "Inventory persistence I/O",
+        "description": "FileSystem/Path effects: jsonc-parser read + schema decode with DualArityInventoryReadError on parse failure, and encode + renderBiomeJson write of the baseline document.",
+        "keySymbols": ["readInventoryDocument", "writeInventoryDocument"],
+        "locEstimate": 45
+      },
+      {
+        "name": "Diagnostic message rendering",
+        "description": "Match-based human messages per diagnostic kind and the [missing]/[stale]/[enforced]/[invalid-exception] line formatters, plus the Console.log/Console.error reporting block inside runDualArityRules.",
+        "keySymbols": [
+          "diagnosticMessage",
+          "makeReason",
+          "makeMissingDiagnostics",
+          "makeStaleDiagnostics",
+          "makeEnforcedDiagnostics",
+          "makeInvalidExceptionDiagnostics"
+        ],
+        "locEstimate": 110
+      },
+      {
+        "name": "Scan orchestration and verification entry",
+        "description": "TSMorphService project inspection wiring, live-vs-tracked merge preserving status/owner/reason/issue, missing/stale/enforced/invalid-exception set computation, strict-failure policy, and summary construction \u2014 the only effectful public entrypoint.",
+        "keySymbols": [
+          "scanDualArityInventory",
+          "mergeInventory",
+          "runDualArityRules",
+          "DualArityScanResult",
+          "decodeProjectInspectionRequest"
+        ],
+        "locEstimate": 240
+      }
+    ],
+    "proposedSplit": [
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Laws/DualArity.ts",
+        "role": "command",
+        "contents": "Keeps its exact path (it is a committed enforcedRoot in standards/dual-arity.inventory.jsonc) and remains the law entrypoint: runDualArityRules, scanDualArityInventory, mergeInventory, strict-failure policy, plus re-exports of DualArityRulesOptions/DualArityRulesSummary/DualArityInventoryEntry namespace so Laws.command.ts and the Laws.test-kit star-export keep working unchanged."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Laws/internal/DualArity.schemas.ts",
+        "role": "schemas",
+        "contents": "DualArityEntryKind/Status/DiagnosticKind LiteralKits, DualArityInventoryEntry (+Encoded namespace), DualArityInventoryDocument, DualArityRulesOptions, DualArityRulesSummary, decode/encode codecs, and the INVENTORY_PATH/INCLUDED_GLOBS/ENFORCED_ROOTS constants the document defaults depend on. Keep the $I key string 'commands/Laws/DualArity' to preserve schema identifiers."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Laws/internal/DualArity.ast.ts",
+        "role": "internal",
+        "contents": "Pure ts-morph primitives: collectDualBindings, getDualCallInfo, unwrapExpression, isParameterOwner, getEffectFnImplementation, getInitializerParameterOwner, signature/arity helpers (hasDualSignatures, getNonTemplateCallSignatures, isTaggedTemplateSignature, getThirdParameterType, getCallableParameterCount), type predicates (isStrictObjectLikeType, isPrimitiveType), the legitimate-constructor-factory gates, isPipeableParameter/hasObviousWrongFirstParameter, and the heuristic regex constants."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Laws/internal/DualArity.collect.ts",
+        "role": "internal",
+        "contents": "PublicApiCandidate/DualBindingIndex/DualCallInfo types, the four collect*Candidate walkers, collectCandidatesForSourceFile, collectCandidateDiagnostics, makeInventoryEntry, isExcludedPublicApiName, and makeOwnerResolver."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Laws/internal/DualArity.inventory.ts",
+        "role": "internal",
+        "contents": "Baseline persistence and bookkeeping: readInventoryDocument (jsonc parse + DualArityInventoryReadError), writeInventoryDocument (renderBiomeJson), makeEntryKey, sortEntries/orders, todayYmd, isExcludedFile, isEnforcedFile, getInvalidExceptions."
+      },
+      {
+        "targetFile": "packages/tooling/tool/cli/src/commands/Laws/internal/DualArity.render.ts",
+        "role": "render",
+        "contents": "diagnosticMessage Match table, makeReason, the four make*Diagnostics line formatters, and a reportDualAritySummary helper absorbing the Console.log/Console.error block currently inlined in runDualArityRules."
+      }
+    ],
+    "sharedCandidates": [
+      {
+        "helper": "todayYmd",
+        "description": "UTC YYYY-MM-DD stamp via DateTime; duplicated verbatim at src/commands/Lint/SchemaFirst.ts:521. Belongs in a shared cli util or @beep/repo-utils.",
+        "alsoUsefulFor": ["Lint", "Corpus", "AIMetrics"]
+      },
+      {
+        "helper": "makeOwnerResolver",
+        "description": "File-path -> owning @beep/* workspace resolver built on resolveWorkspaceDirs with longest-path-first matching; SchemaFirst.ts:581 explicitly says its makeSchemaFirstOwnerResolver mirrors this by design. Promote once to @beep/repo-utils/Workspaces or a shared cli helper.",
+        "alsoUsefulFor": ["Lint", "Quality", "Docgen", "Fallow"]
+      },
+      {
+        "helper": "inventory baseline lifecycle (readInventoryDocument/writeInventoryDocument/mergeInventory/missing-stale computation)",
+        "description": "The jsonc-read + schema-decode + key-merge-preserving-status/owner/reason + renderBiomeJson-write pattern is structurally duplicated by Lint/SchemaFirst.ts (inventoryEntriesByKey, inventoryEntriesAbsentFrom, its own read/write against standards/schema-first.inventory.jsonc). A generic helper parameterized by entry schema + key function would serve both.",
+        "alsoUsefulFor": ["Lint", "Laws (other inventory-backed laws)"]
+      },
+      {
+        "helper": "unwrapExpression",
+        "description": "Peels parenthesized/as/satisfies/non-null wrappers from ts-morph nodes; TerseEffect.ts:452 has a narrower unwrapParenthesizedExpression variant. Generic ts-morph utility, candidate for @beep/repo-utils/TSMorph.",
+        "alsoUsefulFor": ["Laws/TerseEffect", "Laws/EffectFn", "Lint"]
+      },
+      {
+        "helper": "isStrictObjectLikeType / isPrimitiveType / isTaggedTemplateSignature / getNonTemplateCallSignatures",
+        "description": "Provider-agnostic ts-morph Type/Signature predicates with no dual-arity semantics; useful to any ts-morph-based law or lint. Candidate for @beep/repo-utils/TSMorph.",
+        "alsoUsefulFor": [
+          "Laws/TerseEffect",
+          "Laws/EffectFn",
+          "Laws/NoNativeRuntime",
+          "Lint"
+        ]
+      }
+    ],
+    "risks": [
+      "Self-enforcement feedback loop: ENFORCED_ROOTS and the committed standards/dual-arity.inventory.jsonc enforcedRoots (line 6) name the exact path .../Laws/DualArity.ts, and mergeInventory prefers the committed enforcedRoots \u2014 the entry file must keep its path, or both the constant and the baseline must be updated together.",
+      "Helpers promoted from file-private const to module export in internal/ files become live scan candidates of the law itself (the scan covers packages/**/*.ts and checks module-level isExported, not package facades); multi-positional-parameter collectors (e.g. collectStaticPropertyCandidate with 6 params) would surface as new missing entries and fail --check strict mode until the inventory is regenerated with --write or the internal/ paths are excluded.",
+      "src/test/Laws.test-kit.ts star-exports DualArity and test/dual-arity.test.ts consumes DualArityRulesOptions/runDualArityRules through @beep/repo-cli/test/Laws \u2014 the facade must re-export them, and adding more star-exports risks duplicate-name collisions across the kit's seven star-exports.",
+      "$I = $RepoCliId.create(\"commands/Laws/DualArity\") is baked into schema identifiers and the S.Class keys; moving schemas to internal/DualArity.schemas.ts must keep the same $I string or the identifiers of DualArityInventoryEntry/Document change (affects decode error messages and any identity-based tooling).",
+      "DualArityInventoryEntry is a non-exported class merged with an exported declare-namespace (Encoded type); the pair must move together and encoded field shape must stay byte-compatible with the committed jsonc baseline (renderBiomeJson output is committed and diffed).",
+      "Docgen/JSDoc lint gates: every new file needs a @packageDocumentation header and exported symbols need @example/@category/@since annotations (repo runs docgen + jsdoc lint); also the cli package facade rules treat deep role files as private, so index.ts must not export the new internal/ modules."
+    ]
+  }
+]

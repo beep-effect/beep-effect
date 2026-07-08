@@ -9,12 +9,13 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot, resolveWorkspaceDirs } from "@beep/repo-utils";
 import { LiteralKit, normalizePath } from "@beep/schema";
-import { A, Str, thunkEmptyStr } from "@beep/utils";
-import { Clock, Console, Effect, FileSystem, HashMap, Order, Path, pipe, Stream } from "effect";
+import { A, Str } from "@beep/utils";
+import { Clock, Console, Effect, FileSystem, HashMap, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ChildProcess } from "effect/unstable/process";
+import { collectText } from "../../../internal/process/index.js";
 import { QualityScriptCommandError } from "../Quality.errors.js";
 import type { DomainError, FsUtils, NoSuchFileError } from "@beep/repo-utils";
 import type { ChildProcessSpawner } from "effect/unstable/process";
@@ -33,7 +34,7 @@ const VERIFY_STEP_NAMES = ["lint", "check", "test"] as const;
  * import { PackageVerifyStepName } from "@beep/repo-cli/test/Quality"
  *
  * const isLint = PackageVerifyStepName.is.lint("lint")
- * console.log(isLint)
+ * console.log(isLint) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -52,7 +53,7 @@ export const PackageVerifyStepName = LiteralKit(VERIFY_STEP_NAMES).pipe(
  * import type { PackageVerifyStepName } from "@beep/repo-cli/test/Quality"
  *
  * const step: PackageVerifyStepName = "check"
- * console.log(step)
+ * console.log(step) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -199,12 +200,6 @@ const byWorkspacePathLengthDescending = Order.flip(
 // fallow-ignore-next-line code-duplication
 const commandText = (command: string, args: ReadonlyArray<string>): string => A.join([command, ...args], " ");
 
-const collectText = <E>(stream: Stream.Stream<Uint8Array, E>) =>
-  stream.pipe(
-    Stream.decodeText(),
-    Stream.runFold(thunkEmptyStr, (acc, chunk) => `${acc}${chunk}`)
-  );
-
 const linesFromText = (text: string): ReadonlyArray<string> =>
   pipe(Str.split(/\r?\n/)(text), A.map(Str.trim), A.filter(Str.isNonEmpty));
 
@@ -314,7 +309,7 @@ const packageVerifyStepSpecs = (quick: boolean): ReadonlyArray<PackageVerifyStep
  *     PackageVerifyWorkspace.make({ name: "@beep/demo", dir: "/repo/packages/demo", scripts: {} })
  *   ]
  * })
- * console.log(selected)
+ * console.log(selected) // example value
  * ```
  * @category utilities
  * @since 0.0.0
@@ -492,7 +487,7 @@ const runPackageVerifyStep = Effect.fn("PackageVerify.runPackageVerifyStep")(fun
  *   packageName: O.some("@beep/repo-cli"),
  *   quick: true
  * })
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -550,9 +545,9 @@ const fmtSecs = (ms: number): string => `${(ms / 1000).toFixed(1)}s`;
  *     results: []
  *   })
  * )
- * console.log(lines)
+ * console.log(lines) // example value
  * ```
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderPackageVerifyReportForTesting = (report: PackageVerifyReport): ReadonlyArray<string> => {
@@ -590,7 +585,7 @@ export const renderPackageVerifyReportForTesting = (report: PackageVerifyReport)
  *   packageArgs: ["@beep/repo-cli"],
  *   quick: true
  * })
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -631,7 +626,7 @@ export const runPackageVerifyCli = Effect.fn("PackageVerify.runPackageVerifyCli"
  * import { packageVerifyStepSpecsForTesting } from "@beep/repo-cli/test/Quality"
  *
  * const specs = packageVerifyStepSpecsForTesting(true)
- * console.log(specs)
+ * console.log(specs) // example value
  * ```
  * @category utilities
  * @since 0.0.0
@@ -646,7 +641,7 @@ export const packageVerifyStepSpecsForTesting = packageVerifyStepSpecs;
  * import { collectPackageVerifyChangedFilesForTesting } from "@beep/repo-cli/test/Quality"
  *
  * const program = collectPackageVerifyChangedFilesForTesting("/repo")
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category utilities
  * @since 0.0.0

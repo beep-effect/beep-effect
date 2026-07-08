@@ -1,4 +1,4 @@
-import { collectSchemaTopologyViolations } from "@beep/repo-cli/commands/Lint";
+import { collectSchemaTopologyViolations } from "@beep/repo-cli/test/Lint";
 import { NodeServices } from "@effect/platform-node";
 import { layer } from "@effect/vitest";
 import { Effect } from "effect";

@@ -43,8 +43,14 @@ const formatStandardIssue = (diagnostic: StandardIssueDiagnostic): string =>
  * @example
  * ```ts
  * import { formatSchemaDiagnostics } from "@beep/repo-cli/commands/Laws/SchemaDiagnostics"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
  *
- * console.log(formatSchemaDiagnostics)
+ * const result = S.decodeUnknownResult(S.Struct({ token: S.Literal("expected-token") }))({ token: "sk-test-secret" })
+ * if (Result.isFailure(result)) {
+ *   // Unredacted diagnostics keep the offending value.
+ *   console.log(formatSchemaDiagnostics(result.failure).some((line) => line.includes("sk-test-secret"))) // true
+ * }
  * ```
  * @category utilities
  * @since 0.0.0
@@ -60,8 +66,14 @@ export const formatSchemaDiagnostics = (errorOrIssue: S.SchemaError | SchemaIssu
  * @example
  * ```ts
  * import { formatRedactedSchemaDiagnostics } from "@beep/repo-cli/commands/Laws/SchemaDiagnostics"
+ * import { Result } from "effect"
+ * import * as S from "effect/Schema"
  *
- * console.log(formatRedactedSchemaDiagnostics)
+ * const result = S.decodeUnknownResult(S.Struct({ token: S.Literal("expected-token") }))({ token: "sk-test-secret" })
+ * if (Result.isFailure(result)) {
+ *   // Redacted diagnostics strip the offending value while keeping the path.
+ *   console.log(formatRedactedSchemaDiagnostics(result.failure).some((line) => line.includes("sk-test-secret"))) // false
+ * }
  * ```
  * @category utilities
  * @since 0.0.0

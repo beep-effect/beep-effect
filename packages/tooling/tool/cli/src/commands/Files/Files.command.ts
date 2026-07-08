@@ -493,7 +493,11 @@ const filesStripMetadataCommand = Command.make(
  * @example
  * ```ts
  * import { filesCommand } from "@beep/repo-cli/commands/Files"
- * console.log(filesCommand)
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
+ *
+ * const run = Command.run(filesCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category use-cases
  * @since 0.0.0

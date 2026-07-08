@@ -18,7 +18,7 @@ import { ChildProcess } from "effect/unstable/process";
 import madge from "madge";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
 import { printLines } from "../../internal/cli/Printer.js";
-import { runRootLintPolicyTask } from "../Quality/Tasks.js";
+import { runRootLintPolicyTask } from "../Quality/index.js";
 import { LintCircularAnalysisError, LintFileDiscoveryError } from "./Lint.errors.js";
 import { lintPackageTestImportsCommand } from "./PackageTestImports.js";
 import { lintReflectionArtifactsCommand } from "./ReflectionArtifact.ts";
@@ -38,6 +38,12 @@ const FOCUS_RUNTIME_FILES = HashSet.fromIterable([
   "packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts",
   "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyConfig.ts",
   "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyServices.ts",
+  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
+  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyResponses.ts",
+  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyBody.ts",
+  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyDependencyHealth.ts",
+  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyForwarder.ts",
+  "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyQueue.ts",
   "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyRuntime.ts",
 ]);
 const ALLOWED_NON_PASCAL_FILENAMES = HashSet.fromIterable(["index", "bin"]);
