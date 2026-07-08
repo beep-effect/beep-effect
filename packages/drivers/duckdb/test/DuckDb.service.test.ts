@@ -267,6 +267,46 @@ describe("@beep/duckdb", { concurrent: false }, () => {
   );
 
   it.effect(
+    "rejects legacy parquet export inside transactions",
+    Effect.fnUntraced(function* () {
+      yield* withTempDirectory(
+        Effect.fnUntraced(function* (tmpDir) {
+          const path = yield* Path.Path;
+          const fs = yield* FileSystem.FileSystem;
+          const databasePath = path.join(tmpDir, "legacy-transaction-export.duckdb");
+          const parquetPath = path.join(tmpDir, "exports", "transaction_events.parquet");
+          yield* fs.makeDirectory(path.dirname(parquetPath), { recursive: true });
+
+          yield* Effect.gen(function* () {
+            const duckdb = yield* DuckDb;
+            yield* duckdb.run("CREATE TABLE transaction_export_events (id VARCHAR)");
+
+            const exit = yield* duckdb
+              .withTransaction(
+                Effect.fnUntraced(function* (transaction) {
+                  yield* transaction.run("INSERT INTO transaction_export_events VALUES ('rolled-back')");
+                  yield* transaction.copyTableToParquet(
+                    DuckDbParquetExport.make({
+                      filePath: parquetPath,
+                      tableName: "transaction_export_events",
+                    })
+                  );
+                })
+              )
+              .pipe(Effect.exit);
+
+            expect(Exit.isFailure(exit)).toBe(true);
+            expect(yield* fs.exists(parquetPath)).toBe(false);
+
+            const rows = yield* duckdb.query("SELECT id FROM transaction_export_events ORDER BY id");
+            expect(rows).toEqual([]);
+          }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath }))));
+        })
+      ).pipe(provideScopedLayer(NodeServices.layer));
+    })
+  );
+
+  it.effect(
     "preserves in-memory state across client operations",
     Effect.fnUntraced(function* () {
       yield* Effect.gen(function* () {
@@ -1025,7 +1065,7 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
   );
 
   it.effect(
-    "exports parquet through the DuckDbSqlClient-specific method",
+    "exports parquet outside transactions and rejects transaction-scoped exports",
     Effect.fnUntraced(function* () {
       yield* withTempDirectory(
         Effect.fnUntraced(function* (tmpDir) {
@@ -1056,15 +1096,15 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
 
             expect(yield* fs.exists(parquetPath)).toBe(true);
 
+            yield* sql`
+              CREATE TABLE transaction_parquet_events (
+                id VARCHAR,
+                value INTEGER
+              )
+            `;
             const transactionExport = yield* sql
               .withTransaction(
                 Effect.gen(function* () {
-                  yield* sql`
-                    CREATE TABLE transaction_parquet_events (
-                      id VARCHAR,
-                      value INTEGER
-                    )
-                  `;
                   yield* sql`INSERT INTO transaction_parquet_events VALUES (${"transaction-parquet-1"}, ${1})`;
                   yield* client.copyTableToParquet(
                     DuckDbParquetExport.make({
@@ -1074,10 +1114,17 @@ describe("DuckDbSqlClient", { concurrent: false }, () => {
                   );
                 })
               )
-              .pipe(Effect.timeoutOption("1 second"));
+              .pipe(Effect.exit);
 
-            expect(O.isSome(transactionExport)).toBe(true);
-            expect(yield* fs.exists(transactionParquetPath)).toBe(true);
+            expect(Exit.isFailure(transactionExport)).toBe(true);
+            expect(yield* fs.exists(transactionParquetPath)).toBe(false);
+
+            const transactionRows = yield* sql<{ readonly id: string }>`
+              SELECT id
+              FROM transaction_parquet_events
+              ORDER BY id
+            `;
+            expect(transactionRows).toEqual([]);
           }).pipe(provideScopedLayer(DuckDbSqlClient.makeLayer({ databasePath })));
         })
       ).pipe(provideScopedLayer(NodeServices.layer));

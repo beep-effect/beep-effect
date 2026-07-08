@@ -14,6 +14,10 @@
  * so a failed nested transaction marks the outer transaction rollback-only
  * instead of pretending savepoint isolation exists.
  *
+ * `copyTableToParquet` is intentionally rejected inside active transactions
+ * because DuckDB writes the Parquet file outside the database transaction and
+ * cannot roll that filesystem side effect back.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -135,6 +139,13 @@ const sqlConnectionError = (operation: string, message: string, cause: unknown):
 
 const classifyExecutionError = (operation: string, cause: unknown): SqlError =>
   sqlUnknownError(operation, "DuckDB SQL operation failed.", cause);
+
+const transactionalParquetExportError = (): SqlError =>
+  sqlUnknownError(
+    "copyTableToParquet",
+    "DuckDB Parquet export cannot run inside an active transaction because filesystem writes are not rolled back with database changes.",
+    "active transaction"
+  );
 
 const toBlobValue = (value: Int8Array | Uint8Array): DuckDBValue =>
   blobValue(value instanceof Uint8Array ? value : new Uint8Array(value.buffer, value.byteOffset, value.byteLength));
@@ -432,7 +443,7 @@ const makeClientFromConnection = Effect.fn("DuckDbSqlClient.makeClientFromConnec
     (activeTransaction) =>
       O.match(activeTransaction, {
         onNone: () => acquirer,
-        onSome: ([activeConnection]) => Effect.succeed(activeConnection),
+        onSome: () => Effect.fail(transactionalParquetExportError()),
       })
   );
 

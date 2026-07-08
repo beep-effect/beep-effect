@@ -80,6 +80,11 @@ export interface DuckDbClient {
   /**
    * Export a table through DuckDB's Parquet writer.
    *
+   * @remarks
+   * Native implementations reject calls made from a transaction-scoped client
+   * because DuckDB writes the Parquet file outside the database transaction and
+   * cannot roll that filesystem side effect back.
+   *
    * @effects
    * Requests DuckDB to write a Parquet file at `request.filePath`.
    *
@@ -320,7 +325,18 @@ const makeConnectionClient = (
 
   const copyTableToParquet = Effect.fn("DuckDb.copyTableToParquet")(
     (request: DuckDbParquetExport): Effect.Effect<void, DuckDbError> =>
-      run(copyStatement(request)).pipe(
+      (transactionScoped
+        ? Effect.fail(
+            DuckDbError.make({
+              databasePath: O.some(options.databasePath),
+              message:
+                "DuckDB Parquet export cannot run inside an active transaction because filesystem writes are not rolled back with database changes.",
+              operation: "copyTableToParquet",
+              statement: O.some(copyStatement(request)),
+            })
+          )
+        : run(copyStatement(request))
+      ).pipe(
         Effect.withSpan("db.export", {
           attributes: {
             "db.operation": "copy_table_to_parquet",
