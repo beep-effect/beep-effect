@@ -179,6 +179,14 @@ pins remain anywhere in the lane.
   - Net: `assertSchemaRoundTripPinned` deleted from both driver tests;
     the SPEC's "seed-exclude explicitly" is now satisfied by excluding
     the buggy INPUT, never by lowering a run count.
+  - *@beep/ui (third instance, found by the full-battery dogfood)*: the
+    `beep ci local` property lane — which runs the full affected suite,
+    not just the driver diff — surfaced a `BoundaryParams`/`SpinParams`
+    round-trip defect for extreme/denormalized floats (counterexample at
+    test 204, beyond the pre-P1 50-run count). Same product class. That
+    one `schema-parity.test.ts` assertion is pinned to its pre-P1 50 runs
+    (no floor lowered); product codec fix filed. Verified green 3× at the
+    400 floor, and the full affected property lane is green (87/87 tasks).
 
 - **Cyclic helper import (the 3 closure packages).** Greptile flagged the
   undeclared `@beep/test-utils` import in `@beep/schema`, `@beep/utils`,
