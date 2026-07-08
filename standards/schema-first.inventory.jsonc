@@ -2377,51 +2377,51 @@
       "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
       "symbol": "extensionOf.toLowerCase",
       "kind": "schema-policy-advisory",
-      "status": "exception",
+      "status": "advisory",
       "ruleId": "SFV4-normalization",
-      "line": 878,
+      "line": 874,
       "owner": "@beep/repo-cli",
-      "reason": "Exception: filename-extension parser helper for filesystem input; normalization is local classifier glue before optional inclusion in output records, not a standalone schema boundary."
+      "reason": "Normalization call \".toLowerCase()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
       "symbol": "pipeDocket.toUpperCase",
       "kind": "schema-policy-advisory",
-      "status": "exception",
+      "status": "advisory",
       "ruleId": "SFV4-normalization",
-      "line": 2154,
+      "line": 2146,
       "owner": "@beep/repo-cli",
-      "reason": "Exception: attorney-docket extraction is a regex parser over filenames and paths; uppercasing is local parser normalization before returning an Option result."
+      "reason": "Normalization call \".toUpperCase()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
       "symbol": "sanitizeSegment.trim",
       "kind": "schema-policy-advisory",
-      "status": "exception",
+      "status": "advisory",
       "ruleId": "SFV4-normalization",
-      "line": 2161,
+      "line": 2153,
       "owner": "@beep/repo-cli",
-      "reason": "Exception: path-segment sanitizer for generated filesystem names; slash/NUL replacement plus empty fallback is local imperative filename hygiene, not a reusable decoded model."
+      "reason": "Normalization call \".trim()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
       "symbol": "versionStem.toLowerCase",
       "kind": "schema-policy-advisory",
-      "status": "exception",
+      "status": "advisory",
       "ruleId": "SFV4-normalization",
-      "line": 2174,
+      "line": 2166,
       "owner": "@beep/repo-cli",
-      "reason": "Exception: version grouping key normalization for organized corpus filenames; the normalized string is an ephemeral grouping key, not persisted domain data."
+      "reason": "Normalization call \".toLowerCase()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
       "symbol": "versionStem.trim",
       "kind": "schema-policy-advisory",
-      "status": "exception",
+      "status": "advisory",
       "ruleId": "SFV4-normalization",
-      "line": 2174,
+      "line": 2166,
       "owner": "@beep/repo-cli",
-      "reason": "Exception: version grouping key normalization for organized corpus filenames; the normalized string is an ephemeral grouping key, not persisted domain data."
+      "reason": "Normalization call \".trim()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts",
