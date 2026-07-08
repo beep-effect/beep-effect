@@ -46,13 +46,34 @@ rules:
         - https://cwe.mitre.org/data/definitions/78.html
     patterns:
       - pattern-either:
+          # Named import: import { exec, execSync } from "node:child_process".
           - pattern: exec($CMD, ...)
           - pattern: execSync($CMD, ...)
+          # Namespace/default import: cp.exec(...), childProcess.execSync(...).
+          # Scoped to a child_process binding so RegExp.prototype.exec and other
+          # unrelated `.exec` method calls do not match.
+          - patterns:
+              - pattern-either:
+                  - pattern: $CP.exec($CMD, ...)
+                  - pattern: $CP.execSync($CMD, ...)
+              - pattern-either:
+                  - pattern-inside: |
+                      import * as $CP from "$MOD"
+                      ...
+                  - pattern-inside: |
+                      import $CP from "$MOD"
+                      ...
+                  - pattern-inside: |
+                      const $CP = require("$MOD")
+                      ...
+              - metavariable-regex:
+                  metavariable: $MOD
+                  regex: ^(node:)?child_process$
       # Constant string commands are safe; only dynamic arguments are flagged.
       - pattern-not: exec("...", ...)
       - pattern-not: execSync("...", ...)
-      # RegExp.prototype.exec and other method calls are not child_process.
-      - pattern-not: $OBJ.exec($CMD, ...)
+      - pattern-not: $X.exec("...", ...)
+      - pattern-not: $X.execSync("...", ...)
 
   - id: beep-hardcoded-private-key
     languages: [typescript, javascript]
@@ -65,4 +86,4 @@ rules:
       owner: beep-effect
       references:
         - https://cwe.mitre.org/data/definitions/798.html
-    pattern-regex: "-----BEGIN (RSA |EC |OPENSSH |DSA |PGP )?PRIVATE KEY-----"
+    pattern-regex: "-----BEGIN (RSA |EC |OPENSSH |DSA |PGP |ENCRYPTED )?PRIVATE KEY-----"
