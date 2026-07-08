@@ -87,6 +87,56 @@
   {thresholds:...}`; global floors retired — baseline compare is sole judge.
 - Versions: vitest ^4.1.9, @effect/vitest 4.0.0-beta.93, coverage-v8 ^4.1.9.
 
+### Coverage-timeout class ≠ property-law class (main-red incident, 2026-07-08)
+
+- Incident: main RED on the **required** Coverage Regression check across
+  many consecutive push runs (e.g. run `28901536716`, head `ae39301d8f`;
+  earlier runs too). Failing test: `@beep/lexical-schema`
+  `test/Lexical.model.test.ts` → "decodes the fixture editor state and
+  captures nullish wire values as Options". Failure mode: **`Error: Test
+  timed out in 60000ms.`** — a timeout, NOT an assertion/round-trip
+  failure.
+- **This is the adjacent class the property-law lane does NOT catch, not
+  the class it exists to catch.** The property lane targets *seeded
+  non-round-tripping fixtures* (SPEC row: "A seeded non-round-tripping
+  schema fixture" → lane FAILS, removing the seed passes). The failing
+  test decodes a **fixed fixture** with **zero fast-check** in its body —
+  no seed, fully deterministic. Re-running it at higher `numRuns` would
+  make it *worse* (more work → more likely to time out), never surface a
+  seed. Do not conflate coverage-instrumentation timeouts with property
+  seed-dependence when scoping the P1 lane.
+- Root cause: first-touch compile+decode of the large recursive
+  `SerializedEditorState`/`LexicalNode` tagged union is the one-time cost
+  paid by whichever test runs first (test #1 here took 75.8s on CI;
+  siblings reusing the compiled decoder dropped to ~0.6s). Under v8
+  coverage instrumentation this decode is 10x+ slower (documented at
+  `vitest.shared.ts:109-111`), and the full-monorepo `sequence.concurrent`
+  coverage lane saturates the 4-vCPU Blacksmith runner (6 jobs/host
+  observed), starving it further. Local isolated coverage: ~5s. CI under
+  contention: 75.8s → over the 60s clamp.
+- The clamp: `vitest.shared.ts:112` deliberately grants coverage runs
+  **180s** (`vitestCoverageRunActive ? 180_000 : 30_000`) for exactly this
+  reason — but two coverage-**unaware** overrides clamped it back to 60s:
+  (a) the package `vitest.config.ts` set `testTimeout: 60_000`
+  unconditionally; (b) an inline `it(..., 60_000)` on the failing test
+  forced 60s regardless of config. Fix (this branch): exported
+  `vitestCoverageRunActive`, made the package config
+  `vitestCoverageRunActive ? 180_000 : 60_000`, removed the inline clamp.
+- **Systemic latent risk (flagged, NOT auto-fixed — packet owns
+  test-timeout policy):** 10 other `packages/**/vitest.config.ts` set a
+  constant `testTimeout`, clamping the shared coverage-aware 180s ceiling.
+  Several sit at 30_000 (< the 60s that just failed lexical):
+  tooling/tool/docgen (15s), tooling/tool/cli (30s),
+  tooling/policy-pack/lint-rules (30s), drivers/acp (30s), drivers/wink
+  (20s), drivers/duckdb (20s), drivers/rdf-canonize (30s),
+  foundation/capability/semantic-web (30s), tooling/library/ai-metrics
+  (30s); tooling/library/repo-utils sets 300s (intentional, above shared).
+  Only schema/property-heavy suites under coverage+contention actually
+  trip. Candidate P1 guard: a lint/policy that flags a constant
+  `testTimeout` in a package vitest config (require coverage-aware form or
+  a ledgered rationale) so the shared 180s coverage ceiling is never
+  silently clamped.
+
 ## CLI/tooling bucket (direct probes, 2026-07-07)
 
 - `process.cwd()`: 38 sites across ~12 CLI command files (SchemaFirst x7,

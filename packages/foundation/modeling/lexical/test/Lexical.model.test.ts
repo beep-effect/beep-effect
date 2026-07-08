@@ -222,7 +222,7 @@ describe("Lexical.model", () => {
       children: [{ checked: O.some(true) }, { checked: O.none() }],
     });
     expect(state.root.children[7]).toMatchObject({ artifactId: "artifact-123", label: O.some("Quarterly report") });
-  }, 60_000);
+  });
 
   it("round-trips the fixture through decode/encode without wire drift", () => {
     const state = S.decodeUnknownSync(SerializedEditorState)(fixture);
