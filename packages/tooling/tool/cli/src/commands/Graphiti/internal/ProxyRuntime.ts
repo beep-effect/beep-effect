@@ -10,17 +10,17 @@ import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import { Console, Deferred, Effect, Fiber, Layer, Ref } from "effect";
 import * as HttpRouter from "effect/unstable/http/HttpRouter";
 import { loadGraphitiProxyConfig } from "./ProxyConfig.js";
+import { makeGraphitiDependencyHealthService } from "./ProxyDependencyHealth.js";
+import { makeGraphitiProxyForwarderService } from "./ProxyForwarder.js";
+import { makeGraphitiProxyQueueService } from "./ProxyQueue.js";
+import { proxyHealthResponse } from "./ProxyResponses.js";
+import { ProxyHealthPayload } from "./ProxySchemas.js";
 import {
   GraphitiDependencyHealthService,
   GraphitiProxyForwarderService,
   GraphitiProxyQueueService,
-  makeGraphitiDependencyHealthService,
-  makeGraphitiProxyForwarderService,
-  makeGraphitiProxyQueueService,
-  ProxyHealthPayload,
-  proxyHealthResponse,
 } from "./ProxyServices.js";
-import type { DependencyHealthSnapshot } from "./ProxyServices.js";
+import type { DependencyHealthSnapshot } from "./ProxySchemas.js";
 
 const toHealthStatus = (snapshot: DependencyHealthSnapshot): "ok" | "degraded" =>
   snapshot.status === "ok" ? "ok" : "degraded";

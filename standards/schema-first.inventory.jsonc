@@ -2464,26 +2464,6 @@
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyOps.ts",
-      "symbol": "shouldInstallProxyServiceForTesting",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-fn-schema",
-      "line": 387,
-      "owner": "@beep/repo-cli",
-      "reason": "Exception: exported testing seam for pure systemd-unit drift checks; inline input keeps the test helper lightweight and avoids promoting test-only data to a public schema."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyOps.ts",
-      "symbol": "shouldRecoverGraphitiStackForTesting",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-fn-schema",
-      "line": 1293,
-      "owner": "@beep/repo-cli",
-      "reason": "Exception: exported testing seam for pure recovery-branch decisions; inline input keeps the test helper lightweight and avoids promoting test-only data to a public schema."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Image/Image.service.ts",
       "symbol": "ImageCommandServiceShape",
       "kind": "exported-interface",
@@ -2564,16 +2544,6 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Research/Research.service.ts",
-      "symbol": "selected.toLowerCase",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-normalization",
-      "line": 512,
-      "owner": "@beep/repo-cli",
-      "reason": "Exception: CLI filter matching against clone directory basenames; lowercasing is transient search normalization, not a decoded command model field."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Research/internal/BrowserHistory.ts",

@@ -9,15 +9,16 @@ import { Effect, flow, pipe } from "effect";
 import * as O from "effect/Option";
 import { Command, Flag } from "effect/unstable/cli";
 import { printLines } from "../../internal/cli/Printer.js";
+import { GraphitiProxyServiceInstallOptions, GraphitiRestoreOptions } from "./Graphiti.schemas.js";
 import {
   ensureGraphitiProxy,
   installGraphitiProxyService,
   recoverGraphitiStack,
   restoreGraphitiStack,
   verifyGraphitiStack,
-} from "./internal/ProxyOps.js";
+} from "./Graphiti.service.js";
 import { runGraphitiProxy } from "./internal/ProxyRuntime.js";
-import type { GraphitiProxyOpsError } from "./internal/ProxyOps.js";
+import type { GraphitiProxyOpsError } from "./Graphiti.errors.js";
 
 /**
  * Graphiti queue proxy subcommand.
@@ -42,7 +43,9 @@ const graphitiProxyEnsureCommand = pipe(
 );
 
 const graphitiProxyServiceInstallCommand = pipe(
-  Command.make("install", {}, flow(installGraphitiProxyService, runProxyOpsProgram)),
+  Command.make("install", {}, () =>
+    runProxyOpsProgram(installGraphitiProxyService(GraphitiProxyServiceInstallOptions.make({})))
+  ),
   Command.withDescription("Install and start the Graphiti proxy user service")
 );
 
@@ -91,12 +94,14 @@ const graphitiRestoreCommand = pipe(
     },
     ({ backup, dryRun, force, stackDir }) =>
       runProxyOpsProgram(
-        restoreGraphitiStack({
-          backup,
-          dryRun,
-          force,
-          stackDir: O.getOrUndefined(stackDir),
-        })
+        restoreGraphitiStack(
+          GraphitiRestoreOptions.make({
+            backup,
+            dryRun,
+            force,
+            stackDir: O.getOrUndefined(stackDir),
+          })
+        )
       )
   ),
   Command.withDescription("Restore and verify the local Graphiti memory runtime")
@@ -110,9 +115,11 @@ const graphitiVerifyCommand = pipe(
     },
     ({ stackDir }) =>
       runProxyOpsProgram(
-        verifyGraphitiStack({
-          stackDir: O.getOrUndefined(stackDir),
-        })
+        verifyGraphitiStack(
+          GraphitiRestoreOptions.make({
+            stackDir: O.getOrUndefined(stackDir),
+          })
+        )
       )
   ),
   Command.withDescription("Verify the local Graphiti stack, persisted graph, and MCP proxy")

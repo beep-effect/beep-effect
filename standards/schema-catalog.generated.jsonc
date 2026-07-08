@@ -21216,6 +21216,46 @@
       "description": "Failure raised while managing the local Graphiti proxy."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.schemas.ts",
+      "symbol": "GraphitiProxyServiceInstallOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GraphitiProxyServiceInstallOptions",
+      "description": "Optional CLI flags used when installing the Graphiti proxy user service."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.schemas.ts",
+      "symbol": "GraphitiRestoreConfig",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GraphitiRestoreConfig",
+      "description": "Resolved filesystem, container, and endpoint configuration for Graphiti stack restoration."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.schemas.ts",
+      "symbol": "GraphitiRestoreOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GraphitiRestoreOptions",
+      "description": "Optional CLI flags used by Graphiti restore and verify operations."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.schemas.ts",
+      "symbol": "ProxyEnsureConfig",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ProxyEnsureConfig",
+      "description": "Configuration for ensuring the Graphiti proxy service is running."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/Graphiti.schemas.ts",
+      "symbol": "ProxyServiceConfig",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ProxyServiceConfig",
+      "description": "Configuration for managing the Graphiti proxy service."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyConfig.ts",
       "symbol": "GraphitiProxyConfig",
       "kind": "schema-class",
@@ -21224,23 +21264,7 @@
       "description": "Runtime configuration for Graphiti queue proxy command."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyOps.ts",
-      "symbol": "GraphitiRestoreConfig",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "GraphitiRestoreConfig",
-      "description": "Resolved filesystem, container, and endpoint configuration for Graphiti stack restoration."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyOps.ts",
-      "symbol": "ProxyServiceConfig",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "ProxyServiceConfig",
-      "description": "Configuration for managing the Graphiti proxy service."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyServices.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
       "symbol": "ContainerHealthState",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -21248,7 +21272,15 @@
       "description": "Container health status as reported by docker inspect."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyServices.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
+      "symbol": "DependencyHealthDetails",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DependencyHealthDetails",
+      "description": "Dependency-level container health details."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
       "symbol": "DependencyHealthSnapshot",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -21256,7 +21288,7 @@
       "description": "Cached dependency health snapshot."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyServices.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
       "symbol": "DependencyHealthState",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
@@ -21264,7 +21296,55 @@
       "description": "Dependency health status used by graphiti proxy."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyServices.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
+      "symbol": "GraphitiMcpJsonRpcRequest",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GraphitiMcpJsonRpcRequest",
+      "description": "Subset of a JSON-RPC MCP request needed for Graphiti proxy lane selection."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
+      "symbol": "GraphitiMcpToolCallParams",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GraphitiMcpToolCallParams",
+      "description": "Subset of MCP tools/call params needed for proxy lane selection."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
+      "symbol": "GraphitiProxyFastMcpMethod",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "GraphitiProxyFastMcpMethod",
+      "description": "Cheap MCP methods allowed to bypass serialized Graphiti memory work."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
+      "symbol": "GraphitiProxyFastMcpToolName",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "GraphitiProxyFastMcpToolName",
+      "description": "Cheap Graphiti MCP tools allowed to bypass serialized Graphiti memory work."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
+      "symbol": "ProxyErrorKind",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "ProxyErrorKind",
+      "description": "Structured graphiti proxy error identifiers."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
+      "symbol": "ProxyErrorPayload",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "ProxyErrorPayload",
+      "description": "Structured proxy error payload."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
       "symbol": "ProxyHealthPayload",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
@@ -21272,12 +21352,42 @@
       "description": "JSON payload returned by /healthz and /metrics routes."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxyServices.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
+      "symbol": "ProxyHealthStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "ProxyHealthStatus",
+      "description": "Health endpoint status values."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
+      "symbol": "ProxyLane",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "ProxyLane",
+      "description": "Graphiti proxy forwarding lanes."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
       "symbol": "ProxyQueueStats",
       "kind": "schema-class",
       "owner": "@beep/repo-cli",
       "identity": "ProxyQueueStats",
       "description": "Queue and throughput counters for graphiti proxy."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
+      "symbol": "decodeGraphitiMcpJsonRpcRequest",
+      "kind": "codec",
+      "owner": "@beep/repo-cli"
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Graphiti/internal/ProxySchemas.ts",
+      "symbol": "urlSearchParamsSchema",
+      "kind": "codec",
+      "owner": "@beep/repo-cli",
+      "identity": "UrlSearchParamsToUrlParams",
+      "description": "Schema transformation from URLSearchParams into Effect UrlParams."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Image/Image.errors.ts",
@@ -22506,6 +22616,14 @@
       "owner": "@beep/repo-cli",
       "identity": "HistoryUrlRow",
       "description": "One browser history URL row surviving the configured time cutoff."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Research/internal/CatalogOps.ts",
+      "symbol": "CardPersistRow",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CardPersistRow",
+      "description": "Research card payload staged for vault file writing and DuckDB catalog persistence."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Research/internal/CogneeClient.ts",

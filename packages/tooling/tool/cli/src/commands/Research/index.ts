@@ -21,6 +21,13 @@ export * from "./Research.command.js";
  */
 export * from "./Research.errors.js";
 /**
+ * Public Research render export.
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
+export * from "./Research.render.js";
+/**
  * Schema models for research knowledge-vault commands.
  *
  * @category schemas
