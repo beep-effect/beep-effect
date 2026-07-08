@@ -6,7 +6,7 @@
  */
 
 import { $BoxId } from "@beep/identity";
-import { LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
+import { JsonObject, LiteralKit, SchemaUtils, TaggedErrorClass } from "@beep/schema";
 import * as O from "@beep/utils/Option";
 import { pipe, Result } from "effect";
 import * as P from "effect/Predicate";
@@ -94,10 +94,14 @@ export type BoxErrorReason = typeof BoxErrorReason.Type;
  */
 export class BoxApiFailureContext extends S.Class<BoxApiFailureContext>($I`BoxApiFailureContext`)(
   {
-    values: S.Unknown,
+    // JSON-only so the sanitized context round-trips deterministically across the
+    // driver boundary. `S.Unknown` here let arbitrary non-serializable values
+    // (Errors, functions, symbols) leak into a wire-crossing error, whose
+    // encode/decode equivalence depended on host-sensitive structural `Equal`.
+    values: JsonObject,
   },
   $I.annote("BoxApiFailureContext", {
-    description: "Sanitized key-value context copied from a Box API failure.",
+    description: "Sanitized JSON key-value context copied from a Box API failure.",
   })
 ) {}
 
@@ -311,11 +315,14 @@ const readHttpStatusCode =
 
 const responseInfoFromUnknown = (cause: unknown): O.Option<unknown> => readProperty("responseInfo")(cause);
 
+const decodeApiFailureContext = S.decodeUnknownOption(BoxApiFailureContext);
+
 const readContextInfo = (value: unknown): O.Option<BoxApiFailureContext> =>
   pipe(
     readProperty("contextInfo")(value),
     O.filter(P.isObject),
-    O.map((contextInfo) => BoxApiFailureContext.make({ values: contextInfo }))
+    // Total: non-JSON contextInfo sanitizes to `None` rather than throwing on the error path.
+    O.flatMap((contextInfo) => decodeApiFailureContext({ values: contextInfo }))
   );
 
 // shared driver boundary idiom; no in-family home; future foundation capability candidate.

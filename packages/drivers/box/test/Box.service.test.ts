@@ -240,6 +240,28 @@ describe("@beep/box", () => {
     ).toBe(true);
   });
 
+  it("keeps sanitized JSON context round-trippable and rejects non-JSON context", () => {
+    const withContext = B.BoxError.fromReason("response status", {
+      context: B.BoxApiFailureContext.make({
+        values: { code: "rate_limit", nested: { retries: 3, hints: ["slow down", null] } },
+      }),
+    });
+
+    // Round-trip must preserve equivalence for the JSON-typed context.
+    expectRoundTrip(B.BoxError, withContext);
+
+    // Non-JSON SDK contextInfo sanitizes to `None` instead of throwing on the error path.
+    const nonJson = B.BoxError.fromUnknown("users.getUserMe", {
+      responseInfo: {
+        contextInfo: { retry: () => undefined },
+        statusCode: 429,
+      },
+    });
+
+    expect(nonJson.context).toEqual(O.none());
+    expect(nonJson.status).toEqual(O.some(429));
+  });
+
   it("drops invalid SDK status codes from sanitized errors", () => {
     const error = B.BoxError.fromUnknown("users.getUserMe", {
       responseInfo: {
