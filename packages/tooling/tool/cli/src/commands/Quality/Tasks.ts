@@ -78,10 +78,10 @@ const COVERAGE_WRITE_BASELINE_ARG = "--write-baseline";
 const ROOT_LINT_STEP_CONCURRENCY = 3;
 // Lint-policy steps are independent read-only tools (cspell, markdownlint,
 // oxlint, eslint-jsdoc, law checks, madge...). Running them grouped-concurrent
-// converts the lane from sum-of-steps to max-of-steps; 6 balances the
-// policy-only lane's CPU-heavy members (tsgo-rules, eslint) against memory
-// (rqt-012, goals/agent-pipeline-velocity D4).
-const LINT_POLICY_STEP_CONCURRENCY = 6;
+// converts the lane from sum-of-steps to max-of-steps; keep it at the same
+// hosted-stable cap as full root lint so policy-only checks do not overload
+// constrained runners.
+const LINT_POLICY_STEP_CONCURRENCY = 3;
 
 type QualityTaskEnvironment = FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner;
 
