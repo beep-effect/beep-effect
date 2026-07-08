@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { FileName } from "@beep/schema/FileName";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
@@ -71,7 +72,7 @@ describe("FileName", () => {
         expect(isFileName(name)).toBe(true);
         expect(decode(name)).toBe(name);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });

@@ -1,4 +1,4 @@
-import { DEFAULT_FC_NUM_RUNS, fcRuns, parseFcNumRunsFloor } from "@beep/test-utils";
+import { DEFAULT_FC_NUM_RUNS, fcRuns, parseFcNumRunsFloor } from "@beep/fc-runs";
 import { FastCheck as fc } from "effect/testing";
 import { describe, expect, it } from "vitest";
 
@@ -32,7 +32,7 @@ describe("fcRuns (one-round-loop P1 env-max helper)", () => {
     // starts), so the end-to-end raise/never-lower semantics need a fresh
     // subprocess with the variable present at spawn.
     const probe = [
-      'const { fcRuns } = await import("@beep/test-utils");',
+      'const { fcRuns } = await import("@beep/fc-runs");',
       "const raised = fcRuns(40).numRuns;",
       "const floored = fcRuns(9000).numRuns;",
       "process.stdout.write(`${raised}/${floored}`);",

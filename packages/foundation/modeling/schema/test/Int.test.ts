@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { Int64, Int64FromString, isInt64 } from "@beep/schema/Int";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit } from "effect";
@@ -56,7 +57,7 @@ describe("Int64", () => {
         expect(value >= int64Minimum).toBe(true);
         expect(value <= int64Maximum).toBe(true);
       }),
-      { numRuns: 100 }
+      fcRuns(100)
     );
   });
 });

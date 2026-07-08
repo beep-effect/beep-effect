@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import {
   addDays,
   addMonths,
@@ -556,7 +557,7 @@ describe("LocalDate", () => {
           expect(decoded).toBeInstanceOf(LocalDate);
           expect(equals(decoded, date)).toBe(true);
         }),
-        { numRuns: 50 }
+        fcRuns(50)
       ));
 
     it.effect(

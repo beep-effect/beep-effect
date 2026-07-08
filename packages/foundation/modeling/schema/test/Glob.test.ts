@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import * as GlobModule from "@beep/schema/Glob";
 import { Glob } from "@beep/schema/Glob";
 import { describe, expect, it } from "@effect/vitest";
@@ -54,7 +55,7 @@ describe("Glob", () => {
         expect(isGlob(pattern)).toBe(true);
         expect(decode(pattern)).toBe(pattern);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 

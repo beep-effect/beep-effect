@@ -280,6 +280,9 @@
       "path": "packages/tooling/policy-pack/repo-configs"
     },
     {
+      "path": "packages/tooling/test-kit/fc-runs"
+    },
+    {
       "path": "packages/tooling/test-kit/test-utils"
     },
     {

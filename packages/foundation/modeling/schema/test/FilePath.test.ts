@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import * as FilePathSchema from "@beep/schema/FilePath";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
@@ -60,7 +61,7 @@ describe("FilePath part schemas", () => {
         expect(decode(value)).toBe(value);
         expect(value).toMatch(/^[A-Za-z]:[\\/]?$/);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 

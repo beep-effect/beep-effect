@@ -1,18 +1,19 @@
 {
-  "name": "@beep/pglite",
+  "name": "@beep/fc-runs",
   "version": "0.0.0",
-  "description": "Driver-level PGlite (embedded PostgreSQL) runtime via @effect/sql-pglite.",
+  "description": "Env-max fast-check run-count helpers (property-law lane floor)",
   "license": "MIT",
   "private": true,
   "type": "module",
-  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/packages/drivers/pglite",
+  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/packages/tooling/test-kit/fc-runs",
   "repository": {
     "type": "git",
     "url": "git@github.com:beep-effect/beep-effect.git",
-    "directory": "packages/drivers/pglite"
+    "directory": "packages/tooling/test-kit/fc-runs"
   },
   "beep": {
-    "family": "drivers"
+    "family": "tooling",
+    "kind": "test-kit"
   },
   "scripts": {
     "audit": "bun run --if-present beep:audit",
@@ -28,11 +29,10 @@
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
-    "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
+    "docgen": "bun run ../../../../packages/tooling/tool/docgen/src/bin.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
-    "test:property": "bun run beep:test",
     "test:integration": "bun run beep:test:integration"
   },
   "exports": {
@@ -53,25 +53,17 @@
     "access": "public",
     "provenance": true,
     "exports": {
-      ".": "./dist/index.js",
+      ".": "./dist/index.ts",
       "./*": "./dist/*.js",
       "./internal/*": null,
       "./package.json": "./package.json"
     }
   },
   "dependencies": {
-    "@beep/identity": "workspace:^",
-    "@beep/schema": "workspace:^",
-    "@beep/utils": "workspace:^",
-    "@effect/sql-pg": "catalog:",
-    "@effect/sql-pglite": "catalog:",
     "effect": "catalog:"
   },
   "devDependencies": {
-    "@beep/fc-runs": "workspace:^",
-    "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
-    "@types/node": "catalog:",
-    "drizzle-orm": "catalog:"
+    "@types/node": "catalog:"
   }
 }

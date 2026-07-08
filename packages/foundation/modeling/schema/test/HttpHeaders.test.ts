@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import {
   CrossOriginEmbedderPolicyHeader,
   CrossOriginEmbedderPolicyOption,
@@ -121,7 +122,7 @@ describe("Secure header schemas", () => {
           P.isString(option) ? option : undefined
         );
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 
@@ -150,7 +151,7 @@ describe("Secure header schemas", () => {
           fc.property(testCase.optionArbitrary, (option) => {
             expectHeader(testCase.decodeOption(option), testCase.headerName, P.isString(option) ? option : undefined);
           }),
-          { numRuns: 25 }
+          fcRuns(25)
         );
       });
 
