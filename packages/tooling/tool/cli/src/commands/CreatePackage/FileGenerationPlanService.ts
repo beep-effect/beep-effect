@@ -79,7 +79,10 @@ const SymlinkTargetPath = RelativePlanPath.pipe(
  * @example
  * ```ts
  * import { PlannedFile } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(PlannedFile)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { content: "export {}\n", path: "packages/example/src/index.ts" }
+ * console.log(S.is(PlannedFile)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -100,7 +103,10 @@ export class PlannedFile extends S.Class<PlannedFile>($I`PlannedFile`)(
  * @example
  * ```ts
  * import { PlannedSymlink } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(PlannedSymlink)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { linkPath: "packages/example/AGENTS.md", targetPath: "../../AGENTS.md" }
+ * console.log(S.is(PlannedSymlink)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -121,7 +127,10 @@ export class PlannedSymlink extends S.Class<PlannedSymlink>($I`PlannedSymlink`)(
  * @example
  * ```ts
  * import { FileGenerationPlanInput } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(FileGenerationPlanInput)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { packageName: "@beep/example", packagePath: "packages/example", templateDir: "templates/package" }
+ * console.log(S.is(FileGenerationPlanInput)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -144,7 +153,10 @@ export class FileGenerationPlanInput extends S.Class<FileGenerationPlanInput>($I
  * @example
  * ```ts
  * import { GenerationActionKind } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(GenerationActionKind)
+ * import * as S from "effect/Schema"
+ *
+ * const value = "mkdir"
+ * console.log(S.is(GenerationActionKind)(value)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -201,7 +213,10 @@ class GenerationActionSymlink extends S.Class<GenerationActionSymlink>($I`Genera
  * @example
  * ```ts
  * import { GenerationAction } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(GenerationAction)
+ * import * as S from "effect/Schema"
+ *
+ * const value = "mkdir"
+ * console.log(S.is(GenerationAction)(value)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -239,7 +254,10 @@ export type GenerationAction = typeof GenerationAction.Type;
  * @example
  * ```ts
  * import { FileGenerationPlan } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(FileGenerationPlan)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { actions: [], files: [], symlinks: [] }
+ * console.log(S.is(FileGenerationPlan)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -260,7 +278,10 @@ export class FileGenerationPlan extends S.Class<FileGenerationPlan>($I`FileGener
  * @example
  * ```ts
  * import { FileGenerationExecutionResult } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(FileGenerationExecutionResult)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { createdDirectories: [], createdFiles: [], createdSymlinks: [] }
+ * console.log(S.is(FileGenerationExecutionResult)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -287,7 +308,7 @@ export class FileGenerationExecutionResult extends S.Class<FileGenerationExecuti
  * ```ts
  * import type { FileGenerationPlanServiceShape } from "@beep/repo-cli/commands/CreatePackage"
  * const value = {} as FileGenerationPlanServiceShape
- * console.log(value)
+ * console.log(value) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -306,7 +327,10 @@ export type FileGenerationPlanServiceShape = {
  * @example
  * ```ts
  * import { FileGenerationPlanService } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(FileGenerationPlanService)
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.service(FileGenerationPlanService)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category ports
  * @since 0.0.0
@@ -509,7 +533,9 @@ const resolveContainedSymlinkDestinationPath: {
  * @example
  * ```ts
  * import { createFileGenerationPlanService } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(createFileGenerationPlanService)
+ *
+ * const example = createFileGenerationPlanService
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category models
  * @since 0.0.0

@@ -102,7 +102,7 @@ export const DocgenQualityWorkerEvalProvider = LiteralKit(["codex", "ollama", "l
  * import type { DocgenQualityWorkerEvalProvider } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const provider: DocgenQualityWorkerEvalProvider = "codex"
- * console.log(provider)
+ * console.log(provider) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -135,7 +135,7 @@ export const DocgenQualityWorkerEvalReasoningEffort = LiteralKit(["minimal", "lo
  * import type { DocgenQualityWorkerEvalReasoningEffort } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const effort: DocgenQualityWorkerEvalReasoningEffort = "low"
- * console.log(effort)
+ * console.log(effort) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -168,7 +168,7 @@ export const DocgenQualityWorkerEvalScope = LiteralKit(["input", "package", "all
  * import type { DocgenQualityWorkerEvalScope } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const scope: DocgenQualityWorkerEvalScope = "package"
- * console.log(scope)
+ * console.log(scope) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -201,7 +201,7 @@ export const DocgenQualityWorkerEvalPacketStatus = LiteralKit(["completed", "fai
  * import type { DocgenQualityWorkerEvalPacketStatus } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const status: DocgenQualityWorkerEvalPacketStatus = "failed"
- * console.log(status)
+ * console.log(status) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -234,7 +234,7 @@ export const DocgenQualityWorkerEvalReviewDisposition = LiteralKit(["candidate",
  * import type { DocgenQualityWorkerEvalReviewDisposition } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const disposition: DocgenQualityWorkerEvalReviewDisposition = "needs-human-review"
- * console.log(disposition)
+ * console.log(disposition) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -279,7 +279,7 @@ export const DocgenQualityWorkerEvalPolicyViolationCode = LiteralKit([
  * import type { DocgenQualityWorkerEvalPolicyViolationCode } from "@beep/repo-cli/commands/Docgen/internal/QualityWorkerEval"
  *
  * const code: DocgenQualityWorkerEvalPolicyViolationCode = "wrong-import-alias"
- * console.log(code)
+ * console.log(code) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -1108,7 +1108,7 @@ const recommendationForSummary = (summary: DocgenQualityWorkerEvalSummary): stri
  * const subjectCount = Effect.runSync(
  *   decodeDocgenQualityReportForWorkerEval(qualityReportJson).pipe(Effect.map((report) => report.summary.subjects))
  * )
- * console.log(subjectCount)
+ * console.log(subjectCount) // example value
  * ```
  * @category decoding
  * @since 0.0.0
@@ -1205,7 +1205,7 @@ export const defaultQualityWorkerEvalReasoningEffort = (): DocgenQualityWorkerEv
  *   ),
  *   Effect.map((report) => report.summary.selectedPackets)
  * )
- * console.log(selectedPacketCount)
+ * console.log(selectedPacketCount) // example value
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -1324,7 +1324,7 @@ export const analyzeDocgenQualityWorkerEval = Effect.fn("DocgenQualityWorkerEval
  *   Effect.flatMap(generateQualityWorkerEvalJson),
  *   Effect.map((json) => json.includes("\"schemaVersion\": 1"))
  * )
- * console.log(hasSchemaVersion)
+ * console.log(hasSchemaVersion) // example value
  * ```
  * @category formatting
  * @since 0.0.0

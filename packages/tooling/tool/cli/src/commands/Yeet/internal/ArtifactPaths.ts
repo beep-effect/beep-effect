@@ -41,7 +41,8 @@ const artifactNameHash = (value: string): string => createHash("sha256").update(
  * ```ts
  * import { runIdForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
  *
- * console.log(runIdForContext)
+ * const example = runIdForContext
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -57,8 +58,10 @@ export const runIdForContext = (context: RepoRunContext): string =>
  * @example
  * ```ts
  * import { artifactDirForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
+ * import { Effect } from "effect"
  *
- * console.log(artifactDirForContext)
+ * const program = Effect.succeed(artifactDirForContext)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -79,8 +82,10 @@ export const artifactDirForContext = Effect.fn("Yeet.artifactDirForContext")(fun
  * @example
  * ```ts
  * import { runArtifactPathForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
+ * import { Effect } from "effect"
  *
- * console.log(runArtifactPathForContext)
+ * const program = Effect.succeed(runArtifactPathForContext)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -102,8 +107,10 @@ export const runArtifactPathForContext = Effect.fn("Yeet.runArtifactPathForConte
  * @example
  * ```ts
  * import { runStatePathForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
+ * import { Effect } from "effect"
  *
- * console.log(runStatePathForContext)
+ * const program = Effect.succeed(runStatePathForContext)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0

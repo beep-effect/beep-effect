@@ -44,7 +44,8 @@ const formatStandardIssue = (diagnostic: StandardIssueDiagnostic): string =>
  * ```ts
  * import { formatSchemaDiagnostics } from "@beep/repo-cli/commands/Laws/SchemaDiagnostics"
  *
- * console.log(formatSchemaDiagnostics)
+ * const example = formatSchemaDiagnostics
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -61,7 +62,8 @@ export const formatSchemaDiagnostics = (errorOrIssue: S.SchemaError | SchemaIssu
  * ```ts
  * import { formatRedactedSchemaDiagnostics } from "@beep/repo-cli/commands/Laws/SchemaDiagnostics"
  *
- * console.log(formatRedactedSchemaDiagnostics)
+ * const example = formatRedactedSchemaDiagnostics
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0

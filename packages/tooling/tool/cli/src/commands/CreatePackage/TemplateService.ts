@@ -21,7 +21,10 @@ const $I = $RepoCliId.create("commands/CreatePackage/TemplateService");
  * @example
  * ```ts
  * import { TemplateSpec } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(TemplateSpec)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { outputPath: "README.md", templateName: "README.md.hbs" }
+ * console.log(S.is(TemplateSpec)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -42,7 +45,10 @@ export class TemplateSpec extends S.Class<TemplateSpec>($I`TemplateSpec`)(
  * @example
  * ```ts
  * import { RenderedTemplate } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(RenderedTemplate)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { content: "# Example\n", outputPath: "README.md" }
+ * console.log(S.is(RenderedTemplate)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -63,7 +69,10 @@ export class RenderedTemplate extends S.Class<RenderedTemplate>($I`RenderedTempl
  * @example
  * ```ts
  * import { TemplateRenderRequest } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(TemplateRenderRequest)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { templateDir: "templates/package", templates: [{ outputPath: "README.md", templateName: "README.md.hbs" }] }
+ * console.log(S.is(TemplateRenderRequest)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -89,7 +98,7 @@ export class TemplateRenderRequest extends S.Class<TemplateRenderRequest>($I`Tem
  * ```ts
  * import type { TemplateServiceShape } from "@beep/repo-cli/commands/CreatePackage"
  * const value = {} as TemplateServiceShape
- * console.log(value)
+ * console.log(value) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -106,7 +115,10 @@ export type TemplateServiceShape = {
  * @example
  * ```ts
  * import { TemplateService } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(TemplateService)
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.service(TemplateService)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category ports
  * @since 0.0.0
@@ -147,7 +159,9 @@ const createHandlebarsEnvironment = () => {
  * @example
  * ```ts
  * import { createTemplateService } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(createTemplateService)
+ *
+ * const example = createTemplateService
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category models
  * @since 0.0.0

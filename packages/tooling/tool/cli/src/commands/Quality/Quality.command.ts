@@ -591,7 +591,7 @@ type DevQualityStepOptions = { readonly base: string; readonly head: string; rea
  *   }),
  *   A.map((step) => step.label)
  * )
- * console.log(labels)
+ * console.log(labels) // example value
  * ```
  * @category testing
  * @since 0.0.0
@@ -1880,7 +1880,7 @@ export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInvent
  * import { runJSDocQuality } from "@beep/repo-cli/commands/Quality/Quality.command"
  *
  * const program = runJSDocQuality()
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category use-cases
  * @since 0.0.0

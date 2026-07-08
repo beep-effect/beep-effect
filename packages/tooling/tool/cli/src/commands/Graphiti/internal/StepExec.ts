@@ -143,8 +143,10 @@ export const runInheritedStep = Effect.fn("GraphitiProxyOps.runInheritedStep")(f
  * @example
  * ```ts
  * import { checkProxyHealth } from "@beep/repo-cli/commands/Graphiti/internal/StepExec"
+ * import { Effect } from "effect"
  *
- * console.log(checkProxyHealth)
+ * const program = Effect.succeed(checkProxyHealth)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category execution
  * @since 0.0.0

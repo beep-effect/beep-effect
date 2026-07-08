@@ -30,8 +30,13 @@ const $I = $RepoCliId.create("commands/AIMetrics/AIMetrics.errors");
  *
  * @example
  * ```ts
- * import { aiMetricsCommand } from "@beep/repo-cli/commands/AIMetrics/index"
- * console.log(aiMetricsCommand)
+ * import { AiMetricsCommandError } from "@beep/repo-cli/commands/AIMetrics/AIMetrics.errors"
+ *
+ * const error = AiMetricsCommandError.make({
+ *   cause: new Error("archive unavailable"),
+ *   message: "AI metrics archive unavailable"
+ * })
+ * console.log(error._tag === "AiMetricsCommandError") // true
  * ```
  * @category errors
  * @since 0.0.0

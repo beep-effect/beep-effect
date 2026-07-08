@@ -2649,7 +2649,7 @@ export const sortAndRenameFiles = Effect.fn("Files.sortAndRenameFiles")(function
  * import { stripMetadataFiles } from "@beep/repo-cli/commands/Files/index"
  *
  * const program = stripMetadataFiles("./tmp", true)
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category use-cases
  * @since 0.0.0

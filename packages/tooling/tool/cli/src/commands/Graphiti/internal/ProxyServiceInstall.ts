@@ -207,7 +207,7 @@ const renderServiceUnit = (repoRoot: string, bunBin: string, config: ProxyServic
  *     upstreamMcpUrl: "http://127.0.0.1:9000/mcp"
  *   })
  * )
- * console.log(unit)
+ * console.log(unit) // example value
  * ```
  * @category testing
  * @since 0.0.0

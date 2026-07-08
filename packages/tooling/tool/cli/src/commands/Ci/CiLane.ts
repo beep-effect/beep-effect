@@ -71,7 +71,7 @@ export const CiLaneClass = LiteralKit(CI_LANE_CLASS_VALUES).pipe(
  * import type { CiLaneClass } from "@beep/repo-cli/commands/Ci"
  *
  * const laneClass: CiLaneClass = "cli-runnable"
- * console.log(laneClass)
+ * console.log(laneClass) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -118,7 +118,7 @@ export const CiLaneReplay = LiteralKit(CI_LANE_REPLAY_VALUES).pipe(
  * import type { CiLaneReplay } from "@beep/repo-cli/commands/Ci"
  *
  * const replay: CiLaneReplay = "exact"
- * console.log(replay)
+ * console.log(replay) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -186,7 +186,7 @@ export const CiLaneId = LiteralKit(CI_LANE_ID_VALUES).pipe(
  * import type { CiLaneId } from "@beep/repo-cli/commands/Ci"
  *
  * const lane: CiLaneId = "lint"
- * console.log(lane)
+ * console.log(lane) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -235,7 +235,7 @@ export const DocgenLaneMode = LiteralKit(DOCGEN_LANE_MODE_VALUES).pipe(
  * import type { DocgenLaneMode } from "@beep/repo-cli/commands/Ci"
  *
  * const mode: DocgenLaneMode = "affected"
- * console.log(mode)
+ * console.log(mode) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -979,8 +979,11 @@ const reportCiCommandError = (error: CiCommandError) =>
  * @example
  * ```ts
  * import { ciLaneCommand } from "@beep/repo-cli/commands/Ci"
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
  *
- * console.log(ciLaneCommand)
+ * const run = Command.run(ciLaneCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category cli-commands
  * @since 0.0.0
@@ -1286,8 +1289,11 @@ export const runCiLocal = Effect.fn("CiLane.runCiLocal")(function* (
  * @example
  * ```ts
  * import { ciLocalCommand } from "@beep/repo-cli/commands/Ci"
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
  *
- * console.log(ciLocalCommand)
+ * const run = Command.run(ciLocalCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category cli-commands
  * @since 0.0.0

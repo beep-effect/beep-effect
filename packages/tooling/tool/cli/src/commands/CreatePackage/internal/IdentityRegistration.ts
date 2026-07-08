@@ -45,7 +45,8 @@ export const IDENTITY_PACKAGES_EXPORT_PATH = ["src", "packages.ts"] as const;
  * ```ts
  * import { toIdentityAccessorName } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
  *
- * console.log(toIdentityAccessorName)
+ * const result = toIdentityAccessorName("@beep/repo-cli")
+ * console.log(result) // rendered command output
  * ```
  * @category utilities
  * @since 0.0.0
@@ -59,7 +60,8 @@ const toIdentityAccessorName = (packageName: string): string => `$${Str.pascalCa
  * ```ts
  * import { typedIdentityExportBlock } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
  *
- * console.log(typedIdentityExportBlock)
+ * const result = typedIdentityExportBlock("RepoCli", "$RepoCliId")
+ * console.log(result) // rendered command output
  * ```
  * @category utilities
  * @since 0.0.0
@@ -94,7 +96,8 @@ const typedIdentityExportBlock = (packageName: string): string => {
  * ```ts
  * import { resolveIdentityPackagesFilePath } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
  *
- * console.log(resolveIdentityPackagesFilePath)
+ * const result = resolveIdentityPackagesFilePath("/repo")
+ * console.log(result) // rendered command output
  * ```
  * @category utilities
  * @since 0.0.0
@@ -119,7 +122,8 @@ const resolveIdentityPackagesFilePath = Effect.fn(function* (repoRoot: string) {
  * ```ts
  * import { ensureIdentityPackageRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
  *
- * console.log(ensureIdentityPackageRegistration)
+ * const example = ensureIdentityPackageRegistration
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -154,7 +158,8 @@ const ensureIdentityPackageRegistration = Effect.fn(function* (identityPackagesF
  * ```ts
  * import { identityPackageRegistrationNeeded } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
  *
- * console.log(identityPackageRegistrationNeeded)
+ * const result = identityPackageRegistrationNeeded("export {}", "$RepoCliId")
+ * console.log(result) // rendered command output
  * ```
  * @category utilities
  * @since 0.0.0

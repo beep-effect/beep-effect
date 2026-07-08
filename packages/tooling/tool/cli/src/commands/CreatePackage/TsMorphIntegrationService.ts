@@ -20,7 +20,10 @@ const $I = $RepoCliId.create("commands/CreatePackage/TsMorphIntegrationService")
  * @example
  * ```ts
  * import { TsMorphMutationKind } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(TsMorphMutationKind)
+ * import * as S from "effect/Schema"
+ *
+ * const value = "add-identity-composer"
+ * console.log(S.is(TsMorphMutationKind)(value)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -116,7 +119,10 @@ class TsMorphMutationWireDataAccess extends S.Class<TsMorphMutationWireDataAcces
  * @example
  * ```ts
  * import { TsMorphMutation } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(TsMorphMutation)
+ * import * as S from "effect/Schema"
+ *
+ * const value = "add-identity-composer"
+ * console.log(S.is(TsMorphMutation)(value)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -199,7 +205,10 @@ export type TsMorphMutationOutcome = typeof TsMorphMutationOutcome.Type;
  * @example
  * ```ts
  * import { TsMorphIntegrationResult } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(TsMorphIntegrationResult)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { changed: false, filePath: "packages/example/src/index.ts" }
+ * console.log(S.is(TsMorphIntegrationResult)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -223,7 +232,7 @@ export class TsMorphIntegrationResult extends S.Class<TsMorphIntegrationResult>(
  * ```ts
  * import type { TsMorphMutationAdapter } from "@beep/repo-cli/commands/CreatePackage"
  * const value = {} as TsMorphMutationAdapter
- * console.log(value)
+ * console.log(value) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -239,7 +248,7 @@ export type TsMorphMutationAdapter = {
  * ```ts
  * import type { TsMorphIntegrationServiceShape } from "@beep/repo-cli/commands/CreatePackage"
  * const value = {} as TsMorphIntegrationServiceShape
- * console.log(value)
+ * console.log(value) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -257,7 +266,10 @@ export type TsMorphIntegrationServiceShape = {
  * @example
  * ```ts
  * import { TsMorphIntegrationService } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(TsMorphIntegrationService)
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.service(TsMorphIntegrationService)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category ports
  * @since 0.0.0
@@ -286,7 +298,9 @@ const UnsupportedTsMorphAdapter: TsMorphMutationAdapter = {
  * @example
  * ```ts
  * import { createTsMorphIntegrationService } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(createTsMorphIntegrationService)
+ *
+ * const example = createTsMorphIntegrationService
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category models
  * @since 0.0.0

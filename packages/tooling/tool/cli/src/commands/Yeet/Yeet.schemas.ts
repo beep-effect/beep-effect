@@ -56,7 +56,7 @@ export const QualityIssueCategory = LiteralKit([
  * import type { QualityIssueCategory } from "@beep/repo-cli/commands/Yeet"
  *
  * const category: QualityIssueCategory = "typecheck"
- * console.log(category)
+ * console.log(category) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -89,7 +89,7 @@ export const QualityIssueSeverity = LiteralKit(["info", "warning", "error", "fat
  * import type { QualityIssueSeverity } from "@beep/repo-cli/commands/Yeet"
  *
  * const severity: QualityIssueSeverity = "error"
- * console.log(severity)
+ * console.log(severity) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -122,7 +122,7 @@ export const QualityIssueConfidence = LiteralKit(["structured", "partial", "raw"
  * import type { QualityIssueConfidence } from "@beep/repo-cli/commands/Yeet"
  *
  * const confidence: QualityIssueConfidence = "structured"
- * console.log(confidence)
+ * console.log(confidence) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -155,7 +155,7 @@ export const QualityIssueAttribution = LiteralKit(["introduced", "inherited-adja
  * import type { QualityIssueAttribution } from "@beep/repo-cli/commands/Yeet"
  *
  * const attribution: QualityIssueAttribution = "introduced"
- * console.log(attribution)
+ * console.log(attribution) // example value
  * ```
  * @category models
  * @since 0.0.0

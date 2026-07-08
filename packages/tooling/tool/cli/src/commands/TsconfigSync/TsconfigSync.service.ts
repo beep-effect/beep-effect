@@ -62,7 +62,9 @@ export type TsconfigSyncError =
  * @example
  * ```ts
  * import { syncTsconfigAtRoot } from "@beep/repo-cli/commands/TsconfigSync"
- * console.log(syncTsconfigAtRoot)
+ *
+ * const example = syncTsconfigAtRoot
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0

@@ -2125,8 +2125,11 @@ const fallowFixPreviewCommand = makeFallowFeatureCommand("fix-preview");
  * @example
  * ```ts
  * import { qualityFallowCommand } from "@beep/repo-cli/commands/Quality"
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
  *
- * console.log(qualityFallowCommand)
+ * const run = Command.run(qualityFallowCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category cli-commands
  * @since 0.0.0

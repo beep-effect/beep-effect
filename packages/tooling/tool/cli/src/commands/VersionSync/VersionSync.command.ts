@@ -36,7 +36,11 @@ const resolveMode = (write: boolean, dryRun: boolean): VersionSyncMode =>
  * @example
  * ```ts
  * import { versionSyncCommand } from "@beep/repo-cli/commands/VersionSync"
- * console.log(versionSyncCommand)
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
+ *
+ * const run = Command.run(versionSyncCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category use-cases
  * @since 0.0.0

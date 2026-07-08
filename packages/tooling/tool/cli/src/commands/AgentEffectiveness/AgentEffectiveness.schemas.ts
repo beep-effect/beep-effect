@@ -40,7 +40,7 @@ export const AgentEffectivenessEvalViolationSource = LiteralKit(["schema-first",
  * import type { AgentEffectivenessEvalViolationSource } from "@beep/repo-cli/commands/AgentEffectiveness"
  *
  * const source: AgentEffectivenessEvalViolationSource = "completion"
- * console.log(source)
+ * console.log(source) // example value
  * ```
  * @category type-level
  * @since 0.0.0

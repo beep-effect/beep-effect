@@ -42,7 +42,7 @@ export const CorpusCopyMode = LiteralKit(["copied", "provenance-only"]).pipe(
  * import type { CorpusCopyMode } from "@beep/repo-cli/commands/Corpus"
  *
  * const mode: CorpusCopyMode = "copied"
- * console.log(mode)
+ * console.log(mode) // example value
  * ```
  * @category models
  * @since 0.0.0

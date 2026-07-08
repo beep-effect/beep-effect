@@ -19,7 +19,8 @@ const { relativeFromRoot } = TsconfigSyncPlan;
  * ```ts
  * import { renderChanges } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.render"
  *
- * console.log(renderChanges)
+ * const result = renderChanges([{ file: "tsconfig.json", section: "references", status: "changed" }])
+ * console.log(result) // rendered command output
  * ```
  * @category utilities
  * @since 0.0.0

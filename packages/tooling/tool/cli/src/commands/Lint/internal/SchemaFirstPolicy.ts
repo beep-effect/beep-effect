@@ -123,7 +123,7 @@ const resolveSchemaCrispeningPolicyBlocking = (
  * import * as O from "effect/Option"
  *
  * const exemptWithoutPolicy = isSchemaCrispeningPolicyExempt(O.none())
- * console.log(exemptWithoutPolicy)
+ * console.log(exemptWithoutPolicy) // example value
  * ```
  * @category utilities
  * @since 0.0.0

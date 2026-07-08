@@ -159,7 +159,7 @@ export const DocgenLocalMode = LiteralKit(["scoped", "full", "full-required", "n
  * import type { DocgenLocalMode } from "@beep/repo-cli/commands/Docgen/internal/Local"
  *
  * const mode: DocgenLocalMode = "scoped"
- * console.log(mode)
+ * console.log(mode) // example value
  * ```
  * @category type-level
  * @since 0.0.0

@@ -67,8 +67,10 @@ const proxyPortFromUrl = (healthUrl: string): string => {
  * @example
  * ```ts
  * import { proxyEnsureConfig } from "@beep/repo-cli/commands/Graphiti/Graphiti.config"
+ * import { Effect, Path } from "effect"
  *
- * console.log(proxyEnsureConfig)
+ * const program = Effect.map(Path.Path, proxyEnsureConfig)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category configuration
  * @since 0.0.0
@@ -105,8 +107,10 @@ export const proxyEnsureConfig = (path: Path.Path): ProxyEnsureConfig => {
  * @example
  * ```ts
  * import { proxyServiceConfig } from "@beep/repo-cli/commands/Graphiti/Graphiti.config"
+ * import { Effect, Path } from "effect"
  *
- * console.log(proxyServiceConfig)
+ * const program = Effect.map(Path.Path, (path) => proxyServiceConfig(path))
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category configuration
  * @since 0.0.0
@@ -175,8 +179,10 @@ export const resolveGraphitiStackDirForTesting: {
  * @example
  * ```ts
  * import { graphitiRestoreConfig } from "@beep/repo-cli/commands/Graphiti/Graphiti.config"
+ * import { Effect, Path } from "effect"
  *
- * console.log(graphitiRestoreConfig)
+ * const program = Effect.map(Path.Path, (path) => graphitiRestoreConfig(path))
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category configuration
  * @since 0.0.0

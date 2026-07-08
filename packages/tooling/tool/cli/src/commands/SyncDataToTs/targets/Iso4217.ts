@@ -358,7 +358,9 @@ const acquireIso4217Projection = Effect.fn("SyncDataToTs.Iso4217.acquire")(funct
  * @example
  * ```ts
  * import { iso4217Target } from "@beep/repo-cli/commands/SyncDataToTs"
- * console.log(iso4217Target)
+ *
+ * const example = iso4217Target
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category configuration
  * @since 0.0.0

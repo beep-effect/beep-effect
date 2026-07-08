@@ -65,7 +65,7 @@ export const DocgenPackageStatus = LiteralKit([
  * ```ts
  * import type { DocgenPackageStatus } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  * const status: DocgenPackageStatus = "configured-not-generated"
- * console.log(status)
+ * console.log(status) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -176,7 +176,7 @@ export const DocgenIssuePriority = LiteralKit(["high", "medium", "low"]).pipe(
  * ```ts
  * import type { DocgenIssuePriority } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  * const priority: DocgenIssuePriority = "medium"
- * console.log(priority)
+ * console.log(priority) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -216,7 +216,7 @@ export const DocgenExportKind = LiteralKit([
  * ```ts
  * import type { DocgenExportKind } from "@beep/repo-cli/commands/Docgen/Docgen.schemas"
  * const kind: DocgenExportKind = "class"
- * console.log(kind)
+ * console.log(kind) // example value
  * ```
  * @category type-level
  * @since 0.0.0

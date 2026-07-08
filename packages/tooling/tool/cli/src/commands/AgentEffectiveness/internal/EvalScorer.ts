@@ -96,7 +96,7 @@ export const buildAgentEffectivenessEvalScoreReport = (
  * import { scoreAgentEffectivenessEval } from "@beep/repo-cli/test/AgentEffectiveness"
  *
  * const program = scoreAgentEffectivenessEval({ dir: "fixtures/task", taskPath: "fixtures/task.json" })
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category services
  * @since 0.0.0
@@ -186,7 +186,7 @@ class RunAgentEffectivenessEvalScoreCommandOptions extends S.Class<RunAgentEffec
  *   record: false,
  *   taskPath: "fixtures/task.json"
  * })
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category command-adapters
  * @since 0.0.0

@@ -40,7 +40,8 @@ const JSDocRatchetedTotalName = LiteralKit([
  * ```ts
  * import { defaultJSDocInventoryPath } from "@beep/repo-cli/test/Quality"
  *
- * console.log(defaultJSDocInventoryPath)
+ * const result = defaultJSDocInventoryPath === "standards/jsdoc-documentation.inventory.jsonc"
+ * console.log(result) // rendered command output
  * ```
  * @category constants
  * @since 0.0.0
@@ -54,7 +55,8 @@ export const defaultJSDocInventoryPath = "standards/jsdoc-documentation.inventor
  * ```ts
  * import { defaultJSDocTotalsBaselinePath } from "@beep/repo-cli/test/Quality"
  *
- * console.log(defaultJSDocTotalsBaselinePath)
+ * const result = defaultJSDocTotalsBaselinePath === "standards/jsdoc-totals.regression-baseline.jsonc"
+ * console.log(result) // rendered command output
  * ```
  * @category constants
  * @since 0.0.0
@@ -68,7 +70,8 @@ export const defaultJSDocTotalsBaselinePath = "standards/jsdoc-totals.regression
  * ```ts
  * import { jsdocInventoryRegenerationCommand } from "@beep/repo-cli/test/Quality"
  *
- * console.log(jsdocInventoryRegenerationCommand)
+ * const result = jsdocInventoryRegenerationCommand.includes("jsdoc-inventory")
+ * console.log(result) // rendered command output
  * ```
  * @category constants
  * @since 0.0.0
@@ -82,7 +85,8 @@ export const jsdocInventoryRegenerationCommand = "bun run beep quality jsdoc-inv
  * ```ts
  * import { jsdocTotalsSnapshotCommand } from "@beep/repo-cli/test/Quality"
  *
- * console.log(jsdocTotalsSnapshotCommand)
+ * const result = jsdocTotalsSnapshotCommand.includes("write-baseline")
+ * console.log(result) // rendered command output
  * ```
  * @category constants
  * @since 0.0.0
@@ -414,7 +418,7 @@ export class RunJSDocRatchetOptions extends S.Class<RunJSDocRatchetOptions>($I`R
  *   inventoryPath: "standards/jsdoc-documentation.inventory.jsonc",
  *   writeBaseline: false
  * })
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category use-cases
  * @since 0.0.0

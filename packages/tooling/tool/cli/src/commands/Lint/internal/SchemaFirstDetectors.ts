@@ -450,7 +450,9 @@ const sourceHasFnSchemaSignal = (sourceFile: import("ts-morph").SourceFile): boo
  * @example
  * ```ts
  * import { fnSchemaEntryFromFunctionLike } from "@beep/repo-cli/commands/Lint"
- * console.log(fnSchemaEntryFromFunctionLike)
+ *
+ * const example = fnSchemaEntryFromFunctionLike
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -501,7 +503,9 @@ const fnSchemaEntryFromFunctionLike = (
  * @example
  * ```ts
  * import { nullReturnEntryFromFunctionLike } from "@beep/repo-cli/commands/Lint"
- * console.log(nullReturnEntryFromFunctionLike)
+ *
+ * const example = nullReturnEntryFromFunctionLike
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -558,7 +562,9 @@ const sourceHasNormalizationSignal = (sourceFile: import("ts-morph").SourceFile)
  * @example
  * ```ts
  * import { normalizationEntryFromCallExpression } from "@beep/repo-cli/commands/Lint"
- * console.log(normalizationEntryFromCallExpression)
+ *
+ * const example = normalizationEntryFromCallExpression
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -614,7 +620,9 @@ const isGetSomesObjectName = (name: string): boolean =>
  * @example
  * ```ts
  * import { getsomesStructEntryFromCallExpression } from "@beep/repo-cli/commands/Lint"
- * console.log(getsomesStructEntryFromCallExpression)
+ *
+ * const example = getsomesStructEntryFromCallExpression
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0

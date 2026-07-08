@@ -16,8 +16,10 @@ import { SchemaFirstSourceFileGlobs } from "../Lint.schemas.js";
  * @example
  * ```ts
  * import { makeSchemaFirstOwnerResolver } from "@beep/repo-cli/commands/Lint"
+ * import { Effect } from "effect"
  *
- * console.log(makeSchemaFirstOwnerResolver)
+ * const program = Effect.succeed(makeSchemaFirstOwnerResolver)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -39,8 +41,10 @@ export const makeSchemaFirstOwnerResolver = Effect.fn("makeSchemaFirstOwnerResol
  * @example
  * ```ts
  * import { makeSchemaFirstProject } from "@beep/repo-cli/commands/Lint"
+ * import { Effect } from "effect"
  *
- * console.log(makeSchemaFirstProject)
+ * const program = Effect.succeed(makeSchemaFirstProject)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0

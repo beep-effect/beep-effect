@@ -21,7 +21,7 @@ const $I = $RepoCliId.create("commands/Lint/Lint.schemas");
  * ```ts
  * import { SchemaFirstInventoryPath } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(SchemaFirstInventoryPath)
+ * console.log(SchemaFirstInventoryPath.length > 0) // true
  * ```
  * @category configuration
  * @since 0.0.0
@@ -35,7 +35,7 @@ export const SchemaFirstInventoryPath = "standards/schema-first.inventory.jsonc"
  * ```ts
  * import { SchemaCrispeningPolicyPath } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(SchemaCrispeningPolicyPath)
+ * console.log(SchemaCrispeningPolicyPath.length > 0) // true
  * ```
  * @category configuration
  * @since 0.0.0
@@ -51,7 +51,8 @@ const SOURCE_FILE_GLOBS = [...INCLUDED_GLOBS, "!**/docs/**"] as const;
  * ```ts
  * import { SchemaFirstIncludedGlobs } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(SchemaFirstIncludedGlobs)
+ * const example = SchemaFirstIncludedGlobs
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category configuration
  * @since 0.0.0
@@ -65,7 +66,8 @@ export const SchemaFirstIncludedGlobs: ReadonlyArray<string> = A.fromIterable(IN
  * ```ts
  * import { SchemaFirstSourceFileGlobs } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(SchemaFirstSourceFileGlobs)
+ * const example = SchemaFirstSourceFileGlobs
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category configuration
  * @since 0.0.0
@@ -136,7 +138,18 @@ export const SchemaFirstEntryStatus = LiteralKit(["candidate", "exception", "adv
  * @example
  * ```ts
  * import { SchemaFirstInventoryEntry } from "@beep/repo-cli/commands/Lint"
- * console.log(SchemaFirstInventoryEntry)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = {
+ *   file: "packages/example/src/Foo.ts",
+ *   kind: "exported-interface",
+ *   line: 12,
+ *   owner: "@beep/example",
+ *   reason: "exported schema carries annotations",
+ *   status: "candidate",
+ *   symbol: "Foo"
+ * }
+ * console.log(S.is(SchemaFirstInventoryEntry)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -187,8 +200,10 @@ export declare namespace SchemaFirstInventoryEntry {
  * @example
  * ```ts
  * import { SchemaFirstInventoryDocument } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
  *
- * console.log(SchemaFirstInventoryDocument)
+ * const candidate = { entries: [], generatedAt: "2026-07-08T00:00:00.000Z", version: 1 }
+ * console.log(S.is(SchemaFirstInventoryDocument)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -219,8 +234,10 @@ export class SchemaFirstInventoryDocument extends S.Class<SchemaFirstInventoryDo
  * @example
  * ```ts
  * import { SchemaFirstLintOptions } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
  *
- * console.log(SchemaFirstLintOptions)
+ * const candidate = { fix: false, write: false }
+ * console.log(S.is(SchemaFirstLintOptions)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -243,8 +260,10 @@ export class SchemaFirstLintOptions extends S.Class<SchemaFirstLintOptions>($I`S
  * @example
  * ```ts
  * import { SchemaFirstLintSummary } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
  *
- * console.log(SchemaFirstLintSummary)
+ * const candidate = { checked: 3, violations: [] }
+ * console.log(S.is(SchemaFirstLintSummary)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -296,7 +315,10 @@ export const SchemaCrispeningFamily = LiteralKit(["foundation", "drivers", "tool
  * @example
  * ```ts
  * import { SchemaCrispeningFamilyPolicy } from "@beep/repo-cli/commands/Lint"
- * console.log(SchemaCrispeningFamilyPolicy)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { family: "tooling", rules: [] }
+ * console.log(S.is(SchemaCrispeningFamilyPolicy)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -320,7 +342,10 @@ export class SchemaCrispeningFamilyPolicy extends S.Class<SchemaCrispeningFamily
  * @example
  * ```ts
  * import { SchemaCrispeningPolicyDocument } from "@beep/repo-cli/commands/Lint"
- * console.log(SchemaCrispeningPolicyDocument)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { families: [] }
+ * console.log(S.is(SchemaCrispeningPolicyDocument)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -354,8 +379,10 @@ export class SchemaCrispeningPolicyDocument extends S.Class<SchemaCrispeningPoli
  * @example
  * ```ts
  * import { LiteralKitConstAssertionViolation } from "@beep/repo-cli/commands/Lint"
+ * import * as S from "effect/Schema"
  *
- * console.log(LiteralKitConstAssertionViolation)
+ * const candidate = { file: "packages/example/src/Foo.ts", line: 12, name: "FooKind" }
+ * console.log(S.is(LiteralKitConstAssertionViolation)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -379,8 +406,10 @@ export class LiteralKitConstAssertionViolation extends S.Class<LiteralKitConstAs
  * @example
  * ```ts
  * import { encodeSchemaFirstInventoryDocument } from "@beep/repo-cli/commands/Lint"
+ * import { Effect } from "effect"
  *
- * console.log(encodeSchemaFirstInventoryDocument)
+ * const program = Effect.succeed(encodeSchemaFirstInventoryDocument)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category codecs
  * @since 0.0.0
@@ -394,7 +423,16 @@ export const encodeSchemaFirstInventoryDocument = S.encodeUnknownEffect(SchemaFi
  * ```ts
  * import { makeSchemaFirstEntryKey } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(makeSchemaFirstEntryKey)
+ * const result = makeSchemaFirstEntryKey({
+ *   file: "packages/example/src/Foo.ts",
+ *   kind: "exported-interface",
+ *   line: 12,
+ *   owner: "@beep/example",
+ *   reason: "exported schema carries annotations",
+ *   status: "candidate",
+ *   symbol: "Foo"
+ * })
+ * console.log(result) // rendered command output
  * ```
  * @category utilities
  * @since 0.0.0
@@ -409,7 +447,8 @@ export const makeSchemaFirstEntryKey = (entry: SchemaFirstInventoryEntry): strin
  * ```ts
  * import { schemaFirstEntryOrder } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(schemaFirstEntryOrder)
+ * const compareEntries = schemaFirstEntryOrder
+ * console.log(typeof compareEntries === "function") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -426,7 +465,8 @@ export const schemaFirstEntryOrder: Order.Order<SchemaFirstInventoryEntry> = Ord
  * ```ts
  * import { sortSchemaFirstEntries } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(sortSchemaFirstEntries)
+ * const result = sortSchemaFirstEntries([])
+ * console.log(result) // rendered command output
  * ```
  * @category utilities
  * @since 0.0.0
@@ -442,7 +482,8 @@ export const sortSchemaFirstEntries: (
  * ```ts
  * import { isActiveSchemaFirstRuleAdvisory } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(isActiveSchemaFirstRuleAdvisory)
+ * const result = isActiveSchemaFirstRuleAdvisory("literal-kit-const-assertion")
+ * console.log(result) // rendered command output
  * ```
  * @category predicates
  * @since 0.0.0

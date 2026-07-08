@@ -35,7 +35,11 @@ const resolveMode = (check: boolean, dryRun: boolean, write: boolean): TsconfigS
  * @example
  * ```ts
  * import { tsconfigSyncCommand } from "@beep/repo-cli/commands/TsconfigSync"
- * console.log(tsconfigSyncCommand)
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
+ *
+ * const run = Command.run(tsconfigSyncCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category use-cases
  * @since 0.0.0

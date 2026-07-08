@@ -96,7 +96,7 @@ const makeGraphitiCommandService = Effect.fn("GraphitiCommandService.make")(func
  * import { GraphitiCommandServiceLive } from "@beep/repo-cli/commands/Graphiti"
  *
  * const layer = GraphitiCommandServiceLive
- * console.log(layer)
+ * console.log(layer) // example value
  * ```
  * @category layers
  * @since 0.0.0

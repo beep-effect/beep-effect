@@ -138,7 +138,7 @@ export const selectOsvIgnoreIdsForAudit: {
  *   '[[IgnoredVulns]]\nid = "GHSA-x"\nignoreUntil = 2999-01-01T00:00:00Z\n',
  *   DateTime.makeUnsafe("2026-06-17T00:00:00Z")
  * )
- * console.log(ids)
+ * console.log(ids) // example value
  * ```
  * @category testing
  * @since 0.0.0
