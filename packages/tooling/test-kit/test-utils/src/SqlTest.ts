@@ -1417,24 +1417,6 @@ const makeConfiguredSqlTestLayer = <Config, Services, SqlService extends Service
       });
 
 /**
- * Explicit environment selection for {@link makePgliteIntegrationGate}.
- *
- * @example
- * ```ts
- * import type { PgliteIntegrationGateEnv } from "@beep/test-utils"
- *
- * const env: PgliteIntegrationGateEnv = { databaseDriver: "pglite-testcontainers", databaseUrl: undefined }
- * console.log(env.databaseDriver)
- * ```
- * @category models
- * @since 0.0.0
- */
-export type PgliteIntegrationGateEnv = {
-  readonly databaseUrl?: string | undefined;
-  readonly databaseDriver?: string | undefined;
-};
-
-/**
  * Pre-computed gate values for PGLite integration tests.
  *
  * Encapsulates the shared connection-URI resolution, testcontainers flag,
@@ -1446,6 +1428,9 @@ export type PgliteIntegrationGateEnv = {
  * returns a fresh scoped {@link makePgliteSqlTestLayer} layer using whichever
  * driver the environment selects.
  *
+ * @param env - Optional explicit driver/URL selection. Omitted in real usage
+ * (read from the environment via `Config`); tests pass it to exercise each
+ * gate branch without mutating the process environment.
  * @returns The run-gate predicate, the integration timeout constant, the
  * resolved connection-URI/testcontainers flags, and a `makePgliteLayer` factory.
  * @example
@@ -1461,12 +1446,15 @@ export type PgliteIntegrationGateEnv = {
  * @category constructors
  * @since 0.0.0
  */
-export const makePgliteIntegrationGate = (env?: PgliteIntegrationGateEnv) => {
+export const makePgliteIntegrationGate = (env?: {
+  readonly databaseUrl?: string | undefined;
+  readonly databaseDriver?: string | undefined;
+}) => {
   // Real usage reads the selection from the environment via Config (Node-safe,
   // law-clean; CI exports these before the process starts, so the boot snapshot
   // is exactly right). Tests pass `env` explicitly to exercise each branch
   // without mutating the process environment.
-  const resolved: PgliteIntegrationGateEnv = env ?? {
+  const resolved = env ?? {
     databaseDriver: O.getOrUndefined(Effect.runSync(Config.option(Config.string("BEEP_TEST_DATABASE_DRIVER")))),
     databaseUrl: O.getOrUndefined(Effect.runSync(Config.option(Config.string("BEEP_TEST_DATABASE_URL")))),
   };
