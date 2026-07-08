@@ -188,11 +188,11 @@ describe("ciLaneStepsForTesting", () => {
     expect(A.map(withFlag, (step) => step.label)).toEqual(["ci:repo-sanity", "ci:repo-sanity:changeset-status"]);
   });
 
-  it("plans the fallow lane as blocking, advisory, then optional validation", () => {
+  it("plans the fallow lane as promoted blocking, advisory, then optional validation", () => {
     const runPhase = A.map(ciLaneStepsForTesting(REPO_ROOT, "fallow", baseOptions), (step) => step.label);
     expect(runPhase).toEqual([
-      "ci:fallow:audit",
       "ci:fallow:dead-code",
+      "ci:fallow:audit",
       "ci:fallow:health",
       "ci:fallow:boundaries",
       "ci:fallow:flags",

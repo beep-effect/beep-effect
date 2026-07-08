@@ -623,8 +623,8 @@ const docgenLaneSteps = (repoRoot: string, options: CiLaneRunOptions): ReadonlyA
     full: () => [rootScriptStep(repoRoot, "ci:docgen", "docgen", A.empty<string>())],
   });
 
-const FALLOW_BLOCKING_LANES = ["audit", "dead-code"] as const;
-const FALLOW_ADVISORY_LANES = ["health", "boundaries", "flags", "security", "fix-preview"] as const;
+const FALLOW_BLOCKING_LANES = ["dead-code"] as const;
+const FALLOW_ADVISORY_LANES = ["audit", "health", "boundaries", "flags", "security", "fix-preview"] as const;
 const FALLOW_ENVELOPE_REQUIRED_FIELDS = "schemaVersion,status,command,exitStatus,baseRef,rawOutputRef";
 
 const fallowReportPath = (lane: string): string => `.beep/fallow/${lane}.json`;
