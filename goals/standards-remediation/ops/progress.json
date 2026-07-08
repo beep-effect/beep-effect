@@ -363,6 +363,14 @@
         ],
         "resolution": "closeout reflection authored + validated (0 blocking), pushed 5a7a964bf5",
         "lesson": "run `beep lint policy` (incl. reflection-artifacts) pre-push whenever any goals/*/ops/manifest.json lifecycle changes; local typos failures on untracked user files are local-only noise (CI sees tracked files)"
+      },
+      {
+        "round": 6,
+        "failures": [
+          "lint-policy: typos on docs/graphs/*.md \u2014 user scratch files accidentally committed in b55729a5bc despite unstage attempt"
+        ],
+        "resolution": "git rm -r --cached docs/graphs (files preserved untracked), pushed ea2e954a11",
+        "lesson": "verify staging exclusions actually held (git ls-tree HEAD <path> after commit) \u2014 a restore --staged followed by any later git add -A in another call silently re-sweeps; prefer explicit pathspec staging for wave commits"
       }
     ]
   },
