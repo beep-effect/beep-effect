@@ -37,12 +37,6 @@ export const DEFAULT_JSON_FORMATTING_OPTIONS: jsonc.FormattingOptions = {
  * newline instead of being handed to `jsonc.format`, which degrades badly on
  * very large documents.
  *
- * @example
- * ```ts
- * import { DEFAULT_JSON_PRETTY_MAX_LENGTH } from "@beep/repo-cli/internal/cli/Json"
- *
- * console.log(DEFAULT_JSON_PRETTY_MAX_LENGTH) // 500000
- * ```
  * @category constants
  * @since 0.0.0
  */
@@ -88,7 +82,7 @@ export class CliJsonError extends CauseTaggedError<CliJsonError>($I`CliJsonError
  *
  * console.log(encoded) // {"ok":true}
  * ```
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const encodeCommandJson = Effect.fn("RepoCli.Json.encodeCommandJson")(function* (
@@ -117,15 +111,14 @@ export const encodeCommandJson = Effect.fn("RepoCli.Json.encodeCommandJson")(fun
  * ```
  * @example
  * ```ts
- * import { DEFAULT_JSON_PRETTY_MAX_LENGTH, renderPrettyCommandJson } from "@beep/repo-cli/internal/cli/Json"
+ * import { renderPrettyCommandJson } from "@beep/repo-cli/internal/cli/Json"
  *
  * const encoded = `{"ok":true}`
  * const capped = renderPrettyCommandJson(encoded, { maxLength: 1 })
  *
  * console.log(capped === `${encoded}\n`) // true, over the cap so left single-line
- * console.log(DEFAULT_JSON_PRETTY_MAX_LENGTH) // 500000
  * ```
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderPrettyCommandJson = (
@@ -154,7 +147,7 @@ export const renderPrettyCommandJson = (
  *
  * console.log(program)
  * ```
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const printCommandJson = Effect.fn("RepoCli.Json.printCommandJson")(function* (

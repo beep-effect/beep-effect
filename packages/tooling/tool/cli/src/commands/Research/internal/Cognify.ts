@@ -49,10 +49,12 @@ interface CognifyUpload {
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { cognifyImpl } from "@beep/repo-cli/commands/Research/internal/Cognify"
+ * import { ResearchCognifyOptions } from "@beep/repo-cli/commands/Research"
  *
- * const operation = cognifyImpl
- * console.log(typeof operation === "function")
+ * const program = cognifyImpl(ResearchCognifyOptions.make({ dryRun: true, vaultRoot: "/repo/.research" }))
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category use-cases
  * @since 0.0.0

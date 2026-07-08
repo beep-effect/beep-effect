@@ -25,7 +25,6 @@ import {
  * A missing inventory file yields `Option.none` (fresh repo); a malformed one
  * fails loudly — the sanctioned replacement for the former silent
  * parse-swallow.
- *
  * @category utilities
  * @since 0.0.0
  */

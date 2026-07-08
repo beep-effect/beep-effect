@@ -26,10 +26,14 @@ const decodeNotionPullSummary = S.decodeUnknownEffect(ResearchNotionPullSummary)
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { notionPullImpl } from "@beep/repo-cli/commands/Research/internal/NotionPullRun"
+ * import { ResearchNotionPullOptions } from "@beep/repo-cli/commands/Research"
  *
- * const operation = notionPullImpl
- * console.log(typeof operation === "function")
+ * const program = notionPullImpl(
+ *   ResearchNotionPullOptions.make({ database: "Reading List", vaultRoot: "/repo/.research" })
+ * )
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category use-cases
  * @since 0.0.0

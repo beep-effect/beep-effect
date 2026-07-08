@@ -264,8 +264,13 @@ const arbitraryTestsEntryFromSourceFile = (
  * @example
  * ```ts
  * import { SchemaFirstArbitraryCoverage } from "@beep/repo-cli/test/Lint"
+ * import * as O from "effect/Option"
+ * import { Project } from "ts-morph"
  *
- * console.log(typeof SchemaFirstArbitraryCoverage.arbitraryTestsEntryFromSourceFile)
+ * const project = new Project({ useInMemoryFileSystem: true })
+ * const sourceFile = project.createSourceFile("fixture.ts", "export const x = 1")
+ * const entry = SchemaFirstArbitraryCoverage.arbitraryTestsEntryFromSourceFile(sourceFile, "fixture.ts", "@beep/test")
+ * console.log(O.isOption(entry)) // true
  * ```
  * @category utilities
  * @since 0.0.0

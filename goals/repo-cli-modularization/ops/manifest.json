@@ -5,7 +5,7 @@
     "title": "@beep/repo-cli Modularization",
     "status": "active",
     "created": "2026-07-07",
-    "updated": "2026-07-07",
+    "updated": "2026-07-08",
     "packetAnchorDocument": "SPEC.md"
   },
   "mission": "Modularize the ~92k-LOC repo CLI: split the 27 files >=1000 LOC along natural seams into canonical role files, extract a shared internal substrate (subprocess, git, JSON/JSONC, ratchet, gh, schema kits), bring touched command groups to full topology compliance, and raise JSDoc on touched files to the .patterns rubric.",
@@ -108,8 +108,8 @@
     {
       "id": "P9",
       "name": "Long tail + closing sweep",
-      "status": "pending",
-      "exitCriteriaSummary": "Remaining groups compliant; schema-primitives sweep done; PR published and mergeable; reflection recorded."
+      "status": "in_progress",
+      "exitCriteriaSummary": "Splits landed; JSDoc quality sweep complete; campaign quality debt closed (yeet verify green: check, tests, docgen, effect-laws, schema-first, knip, changeset). Remaining: schema-primitives sweep deferred (opt-in); PR published, driven mergeable, and merged; reflection recorded."
     }
   ],
   "verification": [

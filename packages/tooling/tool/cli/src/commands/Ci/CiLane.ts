@@ -38,7 +38,7 @@ type CiLaneEnvironment = FileSystem.FileSystem | Path.Path | ChildProcessSpawner
  * ```ts
  * import { CI_LANE_CLASS_VALUES } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(CI_LANE_CLASS_VALUES)
+ * console.log(CI_LANE_CLASS_VALUES.includes("ci-native")) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -85,7 +85,7 @@ export type CiLaneClass = typeof CiLaneClass.Type;
  * ```ts
  * import { CI_LANE_REPLAY_VALUES } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(CI_LANE_REPLAY_VALUES)
+ * console.log(CI_LANE_REPLAY_VALUES.includes("exact")) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -132,7 +132,7 @@ export type CiLaneReplay = typeof CiLaneReplay.Type;
  * ```ts
  * import { CI_LANE_ID_VALUES } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(CI_LANE_ID_VALUES)
+ * console.log(CI_LANE_ID_VALUES.includes("check")) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -202,7 +202,7 @@ const isCiLaneId = S.is(CiLaneId);
  * ```ts
  * import { DOCGEN_LANE_MODE_VALUES } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(DOCGEN_LANE_MODE_VALUES)
+ * console.log(DOCGEN_LANE_MODE_VALUES.includes("affected")) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -923,6 +923,7 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
  * @example
  * ```ts
  * import { CiLaneRunOptions, runCiLane } from "@beep/repo-cli/commands/Ci"
+ * import { Effect } from "effect"
  *
  * const program = runCiLane("knip", CiLaneRunOptions.make({
  *   affected: false,
@@ -935,7 +936,7 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
  *   changesetStatus: false,
  *   validateEnvelopes: false
  * }))
- * console.log(typeof program)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -1251,6 +1252,7 @@ export const ciLocalStepsForTesting: {
  * @example
  * ```ts
  * import { runCiLocal } from "@beep/repo-cli/commands/Ci"
+ * import { Effect } from "effect"
  * import * as O from "effect/Option"
  *
  * const program = runCiLocal({
@@ -1259,7 +1261,7 @@ export const ciLocalStepsForTesting: {
  *   fast: true,
  *   lanes: O.none()
  * })
- * console.log(typeof program)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category use-cases
  * @since 0.0.0

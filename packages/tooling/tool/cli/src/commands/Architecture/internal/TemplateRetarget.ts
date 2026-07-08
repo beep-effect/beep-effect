@@ -67,6 +67,8 @@ const isPackageIndexFile = (sourcePath: string): boolean =>
 /**
  * Tests whether an accepted proof path is package-level scaffold.
  *
+ * @param sourcePath - Accepted proof-file path being classified.
+ * @returns `true` when the path is package scaffold or a package index file.
  * @example
  * ```ts
  * import { isPackageLevelFile } from "@beep/repo-cli/commands/Architecture/internal/TemplateRetarget"
@@ -82,6 +84,9 @@ export const isPackageLevelFile = (sourcePath: string): boolean =>
 /**
  * Tests whether an accepted proof file belongs to a target domain-kind.
  *
+ * @param target - Plan target whose domain kind the file is matched against.
+ * @param file - Accepted proof file being tested.
+ * @returns `true` when the file is package-level or its inferred domain kind matches the target.
  * @example
  * ```ts
  * import { defaultArchitecturePlanTarget } from "@beep/repo-cli/commands/Architecture"
@@ -112,6 +117,9 @@ const sourceConceptPathFor = (sourcePath: string): string =>
 /**
  * Retargets an accepted proof path to a requested bounded context and concept.
  *
+ * @param sourcePath - Accepted proof-file path from the architecture-lab template.
+ * @param target - Plan target whose bounded context and concept replace the source tokens.
+ * @returns The retargeted path for the requested context and concept.
  * @example
  * ```ts
  * import { ArchitecturePlanTarget } from "@beep/repo-cli/commands/Architecture"
@@ -204,6 +212,10 @@ const replacementPairs = (
 /**
  * Retargets accepted proof-file content for a requested bounded context and concept.
  *
+ * @param content - Raw accepted-template file content to rewrite.
+ * @param target - Plan target whose context and concept replace the source tokens.
+ * @param sourcePath - Source path used to infer the source concept for replacement.
+ * @returns The content with architecture-lab tokens retargeted, or the original when targeting the default.
  * @example
  * ```ts
  * import { ArchitecturePlanTarget } from "@beep/repo-cli/commands/Architecture"
@@ -226,6 +238,8 @@ const renderAcceptedTemplate = (content: string, target: ArchitecturePlanTarget,
 /**
  * Retargets accepted proof-file content from an object input.
  *
+ * @param input - Object bundling the template `content`, its `sourcePath`, and the plan `target`.
+ * @returns The retargeted file content for the requested plan.
  * @example
  * ```ts
  * import { ArchitecturePlanTarget } from "@beep/repo-cli/commands/Architecture"

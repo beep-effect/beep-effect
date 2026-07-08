@@ -547,7 +547,7 @@ const fmtSecs = (ms: number): string => `${(ms / 1000).toFixed(1)}s`;
  * )
  * console.log(lines) // example value
  * ```
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderPackageVerifyReportForTesting = (report: PackageVerifyReport): ReadonlyArray<string> => {

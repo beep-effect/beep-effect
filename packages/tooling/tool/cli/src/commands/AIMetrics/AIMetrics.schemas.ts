@@ -5,6 +5,12 @@
  * @since 0.0.0
  */
 
+/**
+ * Shared schema-adjacent constants for AI metrics command internals.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
 export {
   defaultP7MirrorRemoteRoot,
   defaultP7MirrorSshHost,

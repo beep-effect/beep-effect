@@ -920,8 +920,10 @@ type SqlIntegrationStepForTestingOptions = {
  * ```ts
  * import { sqlIntegrationStepForTesting } from "@beep/repo-cli/commands/Quality"
  *
- * const example = sqlIntegrationStepForTesting
- * console.log(typeof example !== "undefined") // true
+ * const step = sqlIntegrationStepForTesting("/repo", ["--filter", "@beep/db"], {
+ *   connectionUri: "postgres://localhost:5432/test"
+ * })
+ * console.log(step.label) // "test:integration"
  * ```
  * @category utilities
  * @since 0.0.0
@@ -940,9 +942,14 @@ export const sqlIntegrationStepForTesting: {
  * @example
  * ```ts
  * import { runSqlIntegrationTestLaneForTesting } from "@beep/repo-cli/commands/Quality"
+ * import { Effect } from "effect"
  *
- * const example = runSqlIntegrationTestLaneForTesting
- * console.log(typeof example !== "undefined") // true
+ * const program = runSqlIntegrationTestLaneForTesting({
+ *   acquireResource: Effect.die("provide a real SQL resource acquisition"),
+ *   args: [],
+ *   repoRoot: "/repo"
+ * })
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -1185,9 +1192,13 @@ const rootStepsFor = (repoRoot: string, invocation: QualityTaskInvocation): Read
  * @example
  * ```ts
  * import { rootQualityStepsForTesting } from "@beep/repo-cli/commands/Quality"
+ * import { QualityTaskInvocation } from "@beep/repo-cli/commands/Quality/Tasks"
  *
- * const example = rootQualityStepsForTesting
- * console.log(typeof example !== "undefined") // true
+ * const steps = rootQualityStepsForTesting(
+ *   "/repo",
+ *   QualityTaskInvocation.make({ task: "check", args: [], fix: false })
+ * )
+ * console.log(steps.length > 0) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -1462,9 +1473,9 @@ export const collectStepOutput = (step: QualityTaskStep) =>
  * @example
  * ```ts
  * import { runQualityTaskStepGroup } from "@beep/repo-cli/commands/Quality"
+ * import { Effect } from "effect"
  *
- * const example = runQualityTaskStepGroup
- * console.log(typeof example !== "undefined") // true
+ * console.log(Effect.isEffect(runQualityTaskStepGroup("lint", [], 1))) // true
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -1480,9 +1491,9 @@ export const runQualityTaskStepGroup = runStepGroup;
  * @example
  * ```ts
  * import { runQualityTaskStreamingStepGroup } from "@beep/repo-cli/commands/Quality"
+ * import { Effect } from "effect"
  *
- * const example = runQualityTaskStreamingStepGroup
- * console.log(typeof example !== "undefined") // true
+ * console.log(Effect.isEffect(runQualityTaskStreamingStepGroup("lint", []))) // true
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -1498,9 +1509,9 @@ export const runQualityTaskStreamingStepGroup = runStreamingStepGroup;
  * @example
  * ```ts
  * import { runQualityTaskStepGroupForTesting } from "@beep/repo-cli/commands/Quality"
+ * import { Effect } from "effect"
  *
- * const example = runQualityTaskStepGroupForTesting
- * console.log(typeof example !== "undefined") // true
+ * console.log(Effect.isEffect(runQualityTaskStepGroupForTesting("lint", [], 1))) // true
  * ```
  * @category testing
  * @since 0.0.0
@@ -1516,9 +1527,9 @@ export const runQualityTaskStepGroupForTesting = runQualityTaskStepGroup;
  * @example
  * ```ts
  * import { runQualityTaskStreamingStepGroupForTesting } from "@beep/repo-cli/commands/Quality"
+ * import { Effect } from "effect"
  *
- * const example = runQualityTaskStreamingStepGroupForTesting
- * console.log(typeof example !== "undefined") // true
+ * console.log(Effect.isEffect(runQualityTaskStreamingStepGroupForTesting("lint", []))) // true
  * ```
  * @category testing
  * @since 0.0.0

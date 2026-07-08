@@ -22,6 +22,8 @@ import type * as R from "effect/Record";
 /**
  * Builds the synthetic target used for shell-only package plans.
  *
+ * @param boundedContext - Slug of the slice the shell package belongs to.
+ * @returns A synthetic plan target pinned to the `PackageShell` concept.
  * @example
  * ```ts
  * import { packageShellTargetFor } from "@beep/repo-cli/commands/Architecture/internal/PackageShell"
@@ -70,6 +72,9 @@ const packageShellExportsForRole = ArchitecturePackageRole.$match({
 /**
  * Builds role metadata for a shell-only package plan.
  *
+ * @param target - Plan target describing the slice being scaffolded.
+ * @param role - Package role whose name, path, and exports are resolved.
+ * @returns Role plan metadata for the shell-only package.
  * @example
  * ```ts
  * import { packageShellRolePlanFor, packageShellTargetFor } from "@beep/repo-cli/commands/Architecture/internal/PackageShell"
@@ -183,6 +188,9 @@ const packageShellDevDependenciesForRole = (role: ArchitecturePackageRole): R.Re
 /**
  * Builds the package.json operation for a shell-only role package.
  *
+ * @param target - Plan target describing the slice being scaffolded.
+ * @param role - Package role whose manifest fields are derived.
+ * @returns A write-package-json operation for the shell role package.
  * @example
  * ```ts
  * import { packageShellTargetFor, shellPackageJsonOperationFor } from "@beep/repo-cli/commands/Architecture/internal/PackageShell"
@@ -412,6 +420,9 @@ export type DbSchema = typeof DbSchema;
 /**
  * Builds file operations for a shell-only role package.
  *
+ * @param target - Plan target describing the slice being scaffolded.
+ * @param role - Package role whose file set is emitted.
+ * @returns The ordered write-file operations that materialize the role package.
  * @example
  * ```ts
  * import { packageShellFileOperationsFor, packageShellTargetFor } from "@beep/repo-cli/commands/Architecture/internal/PackageShell"

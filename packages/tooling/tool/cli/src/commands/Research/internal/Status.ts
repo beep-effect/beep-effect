@@ -23,10 +23,13 @@ const decodeStatusSummary = S.decodeUnknownEffect(ResearchStatusSummary);
  *
  * @example
  * ```ts
+ * import { Effect } from "effect"
  * import { statusImpl } from "@beep/repo-cli/commands/Research/internal/Status"
+ * import { ResearchStatusOptions } from "@beep/repo-cli/commands/Research"
  *
- * const operation = statusImpl
- * console.log(typeof operation === "function")
+ * // Build the status effect; provide the research services to run it.
+ * const program = statusImpl(ResearchStatusOptions.make({ vaultRoot: "/repo/.research" }))
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category queries
  * @since 0.0.0

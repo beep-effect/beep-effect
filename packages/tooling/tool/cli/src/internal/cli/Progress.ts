@@ -131,7 +131,7 @@ export interface ProgressBarOptions {
  *
  * console.log(renderProgressBar({ fraction: 0.5, width: 4 }))
  * ```
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderProgressBar = (options: ProgressBarOptions): string => {

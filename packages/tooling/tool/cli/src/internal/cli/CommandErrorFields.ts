@@ -19,7 +19,6 @@
 import { Console, Effect } from "effect";
 import * as S from "effect/Schema";
 import { failWithReportedExit } from "./ExitCodeError.js";
-import type { CliReportedExit } from "./ExitCodeError.js";
 
 /**
  * Schema fields shared by repo-cli command-suite error classes.
@@ -95,11 +94,9 @@ export const resolveCommandExitCode = (exitCode: number | undefined): number => 
  * @category runtime
  * @since 0.0.0
  */
-export const reportCommandError =
-  (prefix: string) =>
-  (error: { readonly message: string }): Effect.Effect<never, CliReportedExit> =>
-    Effect.gen(function* () {
-      const line = `${prefix}: ${error.message}`;
-      yield* Console.error(line);
-      return yield* failWithReportedExit(line);
-    });
+export const reportCommandError = (prefix: string) =>
+  Effect.fnUntraced(function* (error: { readonly message: string }) {
+    const line = `${prefix}: ${error.message}`;
+    yield* Console.error(line);
+    return yield* failWithReportedExit(line);
+  });

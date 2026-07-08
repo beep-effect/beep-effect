@@ -294,7 +294,7 @@ export const renderCropBordersPlanEntry = (entry: CropBordersPlanEntry): string 
  * @param manifestPath - Destination manifest path used for formatter context.
  * @param manifest - Manifest to encode and render.
  * @returns Formatted JSON text.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderNormalizeManifest = Effect.fn("Files.renderNormalizeManifest")(function* (
@@ -315,7 +315,7 @@ export const renderNormalizeManifest = Effect.fn("Files.renderNormalizeManifest"
  *
  * @param entries - Candidate assessment entries.
  * @returns Entries whose decision is `archive`.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const archivedEntries = (
@@ -327,7 +327,7 @@ export const archivedEntries = (
  *
  * @param entries - Candidate assessment entries.
  * @returns Total moved sidecar count.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const countMovedSidecars = (entries: ReadonlyArray<ArchivePoorCandidatesEntry>): number =>
@@ -338,7 +338,7 @@ export const countMovedSidecars = (entries: ReadonlyArray<ArchivePoorCandidatesE
  *
  * @param plan - Candidate archive plan.
  * @returns Versioned archive manifest.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const makeArchivePoorCandidatesManifest = (
@@ -367,7 +367,7 @@ export const makeArchivePoorCandidatesManifest = (
  * @param manifestPath - Destination manifest path used for formatter context.
  * @param manifest - Manifest to encode and render.
  * @returns Formatted JSON text.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderArchivePoorCandidatesManifest = Effect.fn("Files.renderArchivePoorCandidatesManifest")(function* (
@@ -388,7 +388,7 @@ export const renderArchivePoorCandidatesManifest = Effect.fn("Files.renderArchiv
  *
  * @param report - Detect-borders report to encode.
  * @returns Formatted JSON text.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderDetectBordersReportJson = Effect.fn("Files.renderDetectBordersReportJson")(function* (
@@ -409,7 +409,7 @@ export const renderDetectBordersReportJson = Effect.fn("Files.renderDetectBorder
  * @param report - Detect-faces report to encode.
  * @param outputPath - Output path used for formatter context.
  * @returns Formatted JSON text.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const renderDetectFacesReportJson = Effect.fn("Files.renderDetectFacesReportJson")(function* (
@@ -429,7 +429,7 @@ export const renderDetectFacesReportJson = Effect.fn("Files.renderDetectFacesRep
  * Write a detect-faces manifest report to disk.
  *
  * @param report - Detect-faces report with manifest path.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const writeDetectFacesManifest = Effect.fn("Files.writeDetectFacesManifest")(function* (
@@ -463,7 +463,7 @@ export const writeDetectFacesManifest = Effect.fn("Files.writeDetectFacesManifes
  * Log a rename plan line by line.
  *
  * @param plan - Rename plan entries.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const logRenamePlan = Effect.fn("Files.logRenamePlan")(function* (plan: ReadonlyArray<RenamePlanEntry>) {
@@ -476,7 +476,7 @@ export const logRenamePlan = Effect.fn("Files.logRenamePlan")(function* (plan: R
  * Log a metadata strip plan line by line.
  *
  * @param plan - Metadata strip plan entries.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const logStripMetadataPlan = Effect.fn("Files.logStripMetadataPlan")(function* (
@@ -491,7 +491,7 @@ export const logStripMetadataPlan = Effect.fn("Files.logStripMetadataPlan")(func
  * Log normalize plan and skipped entries line by line.
  *
  * @param plan - Plan whose entries are rendered one console line each.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const logNormalizePlan = Effect.fn("Files.logNormalizePlan")(function* (plan: NormalizePlan) {
@@ -507,7 +507,7 @@ export const logNormalizePlan = Effect.fn("Files.logNormalizePlan")(function* (p
  * Log caption plan and skipped entries line by line.
  *
  * @param plan - Caption creation plan.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const logCreateCaptionFilesPlan = Effect.fn("Files.logCreateCaptionFilesPlan")(function* (
@@ -525,7 +525,7 @@ export const logCreateCaptionFilesPlan = Effect.fn("Files.logCreateCaptionFilesP
  * Log archive-candidate plan and skipped entries line by line.
  *
  * @param plan - Candidate archive plan.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const logArchivePoorCandidatesPlan = Effect.fn("Files.logArchivePoorCandidatesPlan")(function* (
@@ -543,7 +543,7 @@ export const logArchivePoorCandidatesPlan = Effect.fn("Files.logArchivePoorCandi
  * Log only positive border-detection entries line by line.
  *
  * @param entries - Border detection entries.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const logDetectBordersEntries = Effect.fn("Files.logDetectBordersEntries")(function* (
@@ -560,7 +560,7 @@ export const logDetectBordersEntries = Effect.fn("Files.logDetectBordersEntries"
  *
  * @param entries - Face detection entries.
  * @param skipped - Skipped face-detection entries.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const logDetectFacesEntries = Effect.fn("Files.logDetectFacesEntries")(function* (
@@ -579,7 +579,7 @@ export const logDetectFacesEntries = Effect.fn("Files.logDetectFacesEntries")(fu
  * Log border crop plan entries line by line.
  *
  * @param plan - Border crop plan entries.
- * @category rendering
+ * @category formatting
  * @since 0.0.0
  */
 export const logCropBordersPlan = Effect.fn("Files.logCropBordersPlan")(function* (

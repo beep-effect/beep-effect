@@ -61,10 +61,14 @@ export type TsconfigSyncError =
  * @returns Summary of planned/applied changes.
  * @example
  * ```ts
- * import { syncTsconfigAtRoot } from "@beep/repo-cli/commands/TsconfigSync"
+ * import { syncTsconfigAtRoot, TsconfigSyncRunOptions } from "@beep/repo-cli/commands/TsconfigSync"
+ * import { Effect } from "effect"
+ * import * as S from "effect/Schema"
  *
- * const example = syncTsconfigAtRoot
- * console.log(typeof example !== "undefined") // true
+ * const options = S.decodeUnknownSync(TsconfigSyncRunOptions)({ mode: "check", verbose: false })
+ * // Build the sync effect for a repo root; provide FileSystem/Path/FsUtils to run it.
+ * const program = syncTsconfigAtRoot("/repo", options)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category utilities
  * @since 0.0.0

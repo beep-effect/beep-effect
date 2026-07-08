@@ -5,6 +5,12 @@
  * @since 0.0.0
  */
 
+/**
+ * Effect Config-backed AI metrics resolution helpers.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
 export {
   readOptionalConfigString,
   readOptionalRedactedConfigString,

@@ -17,12 +17,6 @@ const $I = $RepoCliId.create("commands/Docgen/internal/quality/Quality.schemas")
 /**
  * Schema version emitted by `beep docgen quality` reports.
  *
- * @example
- * ```ts
- * import { QUALITY_SCHEMA_VERSION } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
- *
- * console.log(QUALITY_SCHEMA_VERSION)
- * ```
  * @category constants
  * @since 0.0.0
  */
@@ -31,12 +25,6 @@ export const QUALITY_SCHEMA_VERSION = 2 as const;
 /**
  * Deterministic rubric version used by the local quality scorer.
  *
- * @example
- * ```ts
- * import { QUALITY_RUBRIC_VERSION } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
- *
- * console.log(QUALITY_RUBRIC_VERSION)
- * ```
  * @category constants
  * @since 0.0.0
  */

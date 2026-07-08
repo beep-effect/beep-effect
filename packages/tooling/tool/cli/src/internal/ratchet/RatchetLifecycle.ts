@@ -60,7 +60,7 @@ import { Console, Effect } from "effect";
  * @category enforcement
  * @since 0.0.0
  */
-export const enforceRatchet = <E>(input: {
+export const enforceRatchet = Effect.fn("RatchetLifecycle.enforceRatchet")(function* <E>(input: {
   readonly regressions: ReadonlyArray<{
     readonly present: boolean;
     readonly lines: ReadonlyArray<string>;
@@ -68,21 +68,20 @@ export const enforceRatchet = <E>(input: {
   }>;
   readonly okLine: string;
   readonly tighten: O.Option<ReadonlyArray<string>>;
-}): Effect.Effect<void, E> =>
-  Effect.gen(function* () {
-    const firstRegression = A.findFirst(input.regressions, (regression) => regression.present);
-    if (O.isSome(firstRegression)) {
-      yield* Console.error(A.join(firstRegression.value.lines, "\n"));
-      return yield* Effect.fail(firstRegression.value.error);
-    }
+}) {
+  const firstRegression = A.findFirst(input.regressions, (regression) => regression.present);
+  if (O.isSome(firstRegression)) {
+    yield* Console.error(A.join(firstRegression.value.lines, "\n"));
+    return yield* Effect.fail(firstRegression.value.error);
+  }
 
-    yield* Console.log(input.okLine);
+  yield* Console.log(input.okLine);
 
-    yield* pipe(
-      input.tighten,
-      O.match({
-        onNone: () => Effect.void,
-        onSome: (lines) => Console.log(A.join(lines, "\n")),
-      })
-    );
-  });
+  yield* pipe(
+    input.tighten,
+    O.match({
+      onNone: () => Effect.void,
+      onSome: (lines) => Console.log(A.join(lines, "\n")),
+    })
+  );
+});

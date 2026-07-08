@@ -68,7 +68,7 @@
     },
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/Quality.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Docgen/internal/quality/Quality.subjects.ts",
       "kind": "new-map-set",
       "reason": "Docgen quality aggregation uses native Set indexes to deduplicate generated documentation findings before rendering CLI output.",
       "owner": "@beep/repo-cli",
@@ -76,7 +76,7 @@
     },
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstArbitraryCoverage.ts",
       "kind": "new-map-set",
       "reason": "Schema-first lint uses native Set traversal state while inspecting ts-morph AST nodes to avoid recursion and duplicate advisory emission.",
       "owner": "@beep/repo-cli",
@@ -92,7 +92,7 @@
     },
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
       "kind": "new-map-set",
       "reason": "Corpus CLI catalog, organize, and enrich flows use native Map and Set indexes for JSONL restoration joins, duplicate suppression, version grouping, and identifier candidate aggregation at tooling boundaries.",
       "owner": "@beep/repo-cli",
@@ -100,7 +100,7 @@
     },
     {
       "rule": "beep-laws/no-native-runtime",
-      "file": "packages/tooling/tool/cli/src/commands/Corpus/Corpus.service.ts",
+      "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
       "kind": "object-method",
       "reason": "Corpus CLI client-map loading iterates decoded JSON object entries at the manifest boundary before normalizing labels into a local lookup map.",
       "owner": "@beep/repo-cli",

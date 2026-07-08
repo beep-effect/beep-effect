@@ -56,9 +56,11 @@ export const shouldInstallProxyServiceForTesting = (options: {
  * @example
  * ```ts
  * import { readProxyServiceUnit } from "@beep/repo-cli/commands/Graphiti/internal/ProxyServiceInstall"
+ * import { Effect } from "effect"
  *
- * const operation = readProxyServiceUnit
- * console.log(typeof operation === "function")
+ * // Provide ChildProcessSpawner to run the effect.
+ * const program = readProxyServiceUnit("/repo", "beep-graphiti-proxy")
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category processes
  * @since 0.0.0
@@ -84,9 +86,10 @@ export const readProxyServiceUnit = Effect.fn("GraphitiProxyOps.readProxyService
  * @example
  * ```ts
  * import { proxyServiceIsActive } from "@beep/repo-cli/commands/Graphiti/internal/ProxyServiceInstall"
+ * import { Effect } from "effect"
  *
- * const operation = proxyServiceIsActive
- * console.log(typeof operation === "function")
+ * const program = proxyServiceIsActive("/repo", "beep-graphiti-proxy")
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category processes
  * @since 0.0.0
@@ -112,9 +115,14 @@ export const proxyServiceIsActive = Effect.fn("GraphitiProxyOps.proxyServiceIsAc
  * @example
  * ```ts
  * import { ensureProxyServiceForRestore } from "@beep/repo-cli/commands/Graphiti/internal/ProxyServiceInstall"
+ * import { graphitiRestoreConfig } from "@beep/repo-cli/commands/Graphiti/Graphiti.config"
+ * import { Effect, Path } from "effect"
  *
- * const operation = ensureProxyServiceForRestore
- * console.log(typeof operation === "function")
+ * const program = Effect.gen(function* () {
+ *   const path = yield* Path.Path
+ *   return yield* ensureProxyServiceForRestore("/repo", graphitiRestoreConfig(path))
+ * })
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category processes
  * @since 0.0.0

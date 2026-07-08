@@ -40,9 +40,19 @@ const artifactNameHash = (value: string): string => createHash("sha256").update(
  * @example
  * ```ts
  * import { runIdForContext } from "@beep/repo-cli/commands/Yeet/internal/ArtifactPaths"
+ * import { RepoRunContext } from "@beep/repo-cli/internal/repo-run"
  *
- * const example = runIdForContext
- * console.log(typeof example !== "undefined") // true
+ * const context = RepoRunContext.make({
+ *   base: "origin/main",
+ *   branch: "feature/status-work",
+ *   cwd: "/repo",
+ *   head: "HEAD",
+ *   originalArgv: [],
+ *   packetDir: ".beep/yeet",
+ *   repoRoot: "/repo",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * console.log(runIdForContext(context)) // e.g. "feature-status-work-1a2b3c4d"
  * ```
  * @category utilities
  * @since 0.0.0

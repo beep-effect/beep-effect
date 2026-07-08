@@ -16,14 +16,13 @@ const withTempDirectory = <A, E, R>(use: (tmpDir: string) => Effect.Effect<A, E,
     (tmpDir) => Effect.flatMap(FileSystem.FileSystem, (fs) => fs.remove(tmpDir, { recursive: true, force: true }))
   );
 
-const makeDerivedDuckDbPath = (tmpDir: string) =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const dbPath = aiMetricsDerivedDuckDbPath(path.join(tmpDir, "metrics"));
-    yield* fs.makeDirectory(path.dirname(dbPath), { recursive: true });
-    return dbPath;
-  });
+const makeDerivedDuckDbPath = Effect.fn("makeDerivedDuckDbPath")(function* (tmpDir: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const dbPath = aiMetricsDerivedDuckDbPath(path.join(tmpDir, "metrics"));
+  yield* fs.makeDirectory(path.dirname(dbPath), { recursive: true });
+  return dbPath;
+});
 
 describe("@beep/repo-ai-metrics duckdb helpers", () => {
   it("resolves the derived-store path under a data root", () => {

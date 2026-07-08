@@ -72,19 +72,18 @@ export const assertExclusiveModeFlags = <E, R>(input: {
  * @category filesystem
  * @since 0.0.0
  */
-export const writeGeneratedFile = <E, R>(input: {
+export const writeGeneratedFile = Effect.fn("GeneratedFileDrift.writeGeneratedFile")(function* <E, R>(input: {
   readonly path: string;
   readonly content: string;
   readonly onWrote: Effect.Effect<void, E, R>;
   readonly onError: (cause: unknown) => E;
-}): Effect.Effect<void, E, FileSystem.FileSystem | Path.Path | R> =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    yield* fs.makeDirectory(path.dirname(input.path), { recursive: true }).pipe(Effect.mapError(input.onError));
-    yield* fs.writeFileString(input.path, input.content).pipe(Effect.mapError(input.onError));
-    yield* input.onWrote;
-  });
+}) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  yield* fs.makeDirectory(path.dirname(input.path), { recursive: true }).pipe(Effect.mapError(input.onError));
+  yield* fs.writeFileString(input.path, input.content).pipe(Effect.mapError(input.onError));
+  yield* input.onWrote;
+});
 
 /**
  * Compare a committed generated file against freshly rendered content and route
@@ -113,28 +112,27 @@ export const writeGeneratedFile = <E, R>(input: {
  * @category filesystem
  * @since 0.0.0
  */
-export const checkGeneratedFile = <E, R>(input: {
+export const checkGeneratedFile = Effect.fn("GeneratedFileDrift.checkGeneratedFile")(function* <E, R>(input: {
   readonly path: string;
   readonly content: string;
   readonly onMissing: Effect.Effect<never, E, R>;
   readonly onStale: Effect.Effect<never, E, R>;
   readonly onCurrent: Effect.Effect<void, E, R>;
   readonly onError: (cause: unknown) => E;
-}): Effect.Effect<void, E, FileSystem.FileSystem | R> =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const exists = yield* fs.exists(input.path).pipe(Effect.mapError(input.onError));
-    if (!exists) {
-      return yield* input.onMissing;
-    }
+}) {
+  const fs = yield* FileSystem.FileSystem;
+  const exists = yield* fs.exists(input.path).pipe(Effect.mapError(input.onError));
+  if (!exists) {
+    return yield* input.onMissing;
+  }
 
-    const current = yield* fs.readFileString(input.path).pipe(Effect.mapError(input.onError));
-    if (current !== input.content) {
-      return yield* input.onStale;
-    }
+  const current = yield* fs.readFileString(input.path).pipe(Effect.mapError(input.onError));
+  if (current !== input.content) {
+    return yield* input.onStale;
+  }
 
-    return yield* input.onCurrent;
-  });
+  return yield* input.onCurrent;
+});
 
 /**
  * Dispatch a single generated file to {@link writeGeneratedFile} in write mode

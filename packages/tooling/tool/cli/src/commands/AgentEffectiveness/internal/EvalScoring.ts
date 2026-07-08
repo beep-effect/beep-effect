@@ -71,6 +71,8 @@ export class LawEvaluation extends S.Class<LawEvaluation>($I`LawEvaluation`)(
  * Resolve the primary rule id for a skill-opt task, falling back to
  * `"completion"` when the task declares no rule ids.
  *
+ * @param task - The skill-opt task manifest whose declared `ruleIds` are inspected.
+ * @returns The first declared rule id, or `"completion"` when the task lists none.
  * @example
  * ```ts
  * import { firstRuleId } from "@beep/repo-cli/commands/AgentEffectiveness/internal/EvalScoring"
@@ -91,6 +93,8 @@ export const firstRuleId = (task: SkillOptTaskManifest): string =>
 /**
  * Round a raw score to the report's fixed six-digit precision.
  *
+ * @param value - The raw, unrounded score to normalize for the report.
+ * @returns The score rounded to the report's fixed six-digit precision.
  * @example
  * ```ts
  * import { roundScore } from "@beep/repo-cli/commands/AgentEffectiveness/internal/EvalScoring"

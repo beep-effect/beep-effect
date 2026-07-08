@@ -1,10 +1,12 @@
 import { renderTruncatedLines } from "@beep/repo-cli/test/Artifacts";
 import { diffMembership, diffTotals, enforceRatchet, RatchetTotalsDiff } from "@beep/repo-cli/test/Ratchet";
-import { Effect, Exit, Order } from "effect";
+import { describe, expect, it } from "@effect/vitest";
+import { Data, Effect, Exit, Order } from "effect";
 import * as O from "effect/Option";
-import { describe, expect, it } from "vitest";
 
 const stringEquivalence = (left: string, right: string): boolean => left === right;
+
+class RatchetTestError extends Data.TaggedError("RatchetTestError")<{ readonly message: string }> {}
 
 describe("internal/ratchet/RatchetDiff diffMembership", () => {
   it("classifies introduced and resolved findings against the baseline", () => {
@@ -82,36 +84,40 @@ describe("internal/ratchet/RatchetDiff diffTotals", () => {
 });
 
 describe("internal/ratchet/RatchetLifecycle enforceRatchet", () => {
-  it("fails with the first present regression's error", async () => {
-    const error = new Error("baseline grew");
-    const exit = await Effect.runPromiseExit(
-      enforceRatchet({
-        regressions: [
-          { present: false, lines: ["skipped"], error: new Error("not this one") },
-          { present: true, lines: ["[demo] regression: 1 finding(s)"], error },
-        ],
-        okLine: "[demo] ok",
-        tighten: O.none(),
-      })
-    );
+  it.effect("fails with the first present regression's error", () =>
+    Effect.gen(function* () {
+      const error = new RatchetTestError({ message: "baseline grew" });
+      const exit = yield* Effect.exit(
+        enforceRatchet({
+          regressions: [
+            { present: false, lines: ["skipped"], error: new RatchetTestError({ message: "not this one" }) },
+            { present: true, lines: ["[demo] regression: 1 finding(s)"], error },
+          ],
+          okLine: "[demo] ok",
+          tighten: O.none(),
+        })
+      );
 
-    expect(Exit.isFailure(exit)).toBe(true);
-    if (Exit.isFailure(exit)) {
-      expect(exit.cause.toString()).toContain("baseline grew");
-    }
-  });
+      expect(Exit.isFailure(exit)).toBe(true);
+      if (Exit.isFailure(exit)) {
+        expect(exit.cause.toString()).toContain("baseline grew");
+      }
+    })
+  );
 
-  it("succeeds and emits the ok line when no regression is present", async () => {
-    const exit = await Effect.runPromiseExit(
-      enforceRatchet({
-        regressions: [{ present: false, lines: ["skipped"], error: new Error("unused") }],
-        okLine: "[demo] ok: current=0 baseline=0 introduced=0",
-        tighten: O.some(["[demo] tighten-baseline: 1 finding(s) are no longer present"]),
-      })
-    );
+  it.effect("succeeds and emits the ok line when no regression is present", () =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        enforceRatchet({
+          regressions: [{ present: false, lines: ["skipped"], error: new RatchetTestError({ message: "unused" }) }],
+          okLine: "[demo] ok: current=0 baseline=0 introduced=0",
+          tighten: O.some(["[demo] tighten-baseline: 1 finding(s) are no longer present"]),
+        })
+      );
 
-    expect(Exit.isSuccess(exit)).toBe(true);
-  });
+      expect(Exit.isSuccess(exit)).toBe(true);
+    })
+  );
 });
 
 describe("internal/artifacts/ArtifactIo renderTruncatedLines", () => {

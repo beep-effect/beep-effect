@@ -165,12 +165,20 @@ goes after its dependencies are battle-tested.
 
 ## Phase 9 - Long Tail + Closing Sweep (Wave 9)
 
-- [ ] Graphiti (`ProxyOps` 1454, `ProxyServices` 1090), Research
-  (`Research.service.ts` 1385), Skills (960), Worktree (875), Architecture
-  (`OperationPlan.ts` 2764 -> schemas/plan + internal manifests), Ci/Codegen
-  minor role extractions.
-- [ ] Closing sweep: schema-primitives adoption (`withKeyDefaults`, `ISOStr`,
-  `NonNegativeInt`, path normalization) where behavior-identical.
+- [x] Graphiti (`ProxyOps` 1454, `ProxyServices` 1090), Research
+  (`Research.service.ts` 1385), Architecture (`OperationPlan.ts` 2764 ->
+  schemas/plan + internal manifests) splits (commits `5206dd14e5`,
+  `29f536c3a1`). Skills (960), Worktree (875), Ci/Codegen are <1000 LOC —
+  cleanup-on-touch only, not required.
+- [x] JSDoc quality sweep: replace every low-value placeholder `@example`
+  (bare `console.log(fn)`, `typeof X !== "undefined"` existence checks, bare
+  constant dumps) across the touched surface with realistic observable-result
+  examples or remove where a scalar has no meaningful demo; escape `**/` glob
+  hazards that close JSDoc comments. Verified comment-only (no runtime change),
+  census 0 low-value remaining, examples compile.
+- [~] Closing sweep: schema-primitives adoption (`withKeyDefaults`, `ISOStr`,
+  `NonNegativeInt`, path normalization) — opt-in per SPEC; deferred, not
+  pursued this campaign (behavior-preserving scope kept tight).
 - [ ] Final: full `bun run beep yeet verify`, changeset review,
   `bun run beep yeet publish --message`, PR monitor to mergeable.
 - [ ] `/reflect repo-cli-modularization`.

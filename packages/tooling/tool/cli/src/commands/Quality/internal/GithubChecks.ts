@@ -32,7 +32,7 @@ import type {
  *
  * console.log(bunRunLane("/repo", "quality:check", ["check"]).args)
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 const bunRunLane = (repoRoot: string, label: string, args: ReadonlyArray<string>): QualityTaskStep =>
@@ -56,7 +56,7 @@ const bunRunLane = (repoRoot: string, label: string, args: ReadonlyArray<string>
  *
  * console.log(bunxLane("/repo", "repo-sanity:syncpack", ["syncpack", "lint"]).command)
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 const bunxLane = (repoRoot: string, label: string, args: ReadonlyArray<string>): QualityTaskStep =>
@@ -80,7 +80,7 @@ const bunxLane = (repoRoot: string, label: string, args: ReadonlyArray<string>):
  *
  * console.log(repoCliLane("/repo", "quality:knip", ["knip"]).args)
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 const repoCliLane = (repoRoot: string, label: string, args: ReadonlyArray<string>): QualityTaskStep =>
@@ -100,7 +100,7 @@ const repoCliLane = (repoRoot: string, label: string, args: ReadonlyArray<string
  *
  * console.log(githubCheckLane("quality:check", "repo-quality", bunRunLane("/repo", "quality:check", ["check"])).id)
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 const githubCheckLane = (
@@ -127,7 +127,7 @@ const githubCheckLane = (
  *
  * console.log(githubCheckLaneSteps([]))
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 const githubCheckLaneSteps = (lanes: ReadonlyArray<GithubCheckLaneSpec>): ReadonlyArray<QualityTaskStep> =>
@@ -142,7 +142,7 @@ const githubCheckLaneSteps = (lanes: ReadonlyArray<GithubCheckLaneSpec>): Readon
  *
  * console.log(githubCheckLanePlan.bunRunLane("/repo", "quality:check", ["check"]).label)
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 export const githubCheckLanePlan = {
@@ -163,7 +163,7 @@ export const githubCheckLanePlan = {
  *
  * console.log(githubCheckQualityLanes("/repo"))
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubCheckLaneSpec> => [
@@ -191,7 +191,7 @@ export const githubCheckQualityLanes = (repoRoot: string): ReadonlyArray<GithubC
  *
  * console.log(githubCheckRepoSanityLanes("/repo"))
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 export const githubCheckRepoSanityLanes = (repoRoot: string): ReadonlyArray<GithubCheckLaneSpec> => [
@@ -243,7 +243,7 @@ export const githubCheckRepoSanityLanes = (repoRoot: string): ReadonlyArray<Gith
  *
  * console.log(githubCheckPrePushExternalLanes("/repo"))
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 export const githubCheckPrePushExternalLanes = (repoRoot: string): ReadonlyArray<GithubCheckLaneSpec> => [
@@ -278,7 +278,7 @@ const fallowGithubCheckLaneId = (featureFamily: FallowQualityFeatureFamily): str
  *
  * console.log(githubCheckFallowLanes("/repo"))
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 export const githubCheckFallowLanes = (repoRoot: string): ReadonlyArray<GithubCheckLaneSpec> => [

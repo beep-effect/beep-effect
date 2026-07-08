@@ -2377,51 +2377,51 @@
       "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
       "symbol": "extensionOf.toLowerCase",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-normalization",
       "line": 783,
       "owner": "@beep/repo-cli",
-      "reason": "Normalization call \".toLowerCase()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
+      "reason": "CLI-local filesystem naming: derives a lowercase file-extension token from a filename for corpus catalog grouping at a tooling boundary; not schema-bearing domain state."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
       "symbol": "pipeDocket.toUpperCase",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-normalization",
       "line": 2055,
       "owner": "@beep/repo-cli",
-      "reason": "Normalization call \".toUpperCase()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
+      "reason": "CLI-local identifier derivation: uppercases a raw docket token when composing a corpus pipe identifier; generator naming, not schema-bearing domain normalization."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
       "symbol": "sanitizeSegment.trim",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-normalization",
       "line": 2062,
       "owner": "@beep/repo-cli",
-      "reason": "Normalization call \".trim()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
+      "reason": "CLI-local filesystem safety: trims a path segment after replacing path-unsafe characters when writing corpus artifacts; boundary sanitization, not schema-bearing domain state."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
       "symbol": "versionStem.toLowerCase",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-normalization",
       "line": 2075,
       "owner": "@beep/repo-cli",
-      "reason": "Normalization call \".toLowerCase()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
+      "reason": "CLI-local lookup-key derivation: lowercases a version stem to build a case-insensitive corpus grouping key; not schema-bearing domain state."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Corpus/internal/ServicePrograms.ts",
       "symbol": "versionStem.trim",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-normalization",
       "line": 2075,
       "owner": "@beep/repo-cli",
-      "reason": "Normalization call \".trim()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
+      "reason": "CLI-local lookup-key derivation: trims a version stem while building a corpus grouping key; boundary normalization, not schema-bearing domain state."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/CreatePackage/FileGenerationPlanService.ts",

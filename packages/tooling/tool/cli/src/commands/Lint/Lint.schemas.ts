@@ -51,8 +51,7 @@ const SOURCE_FILE_GLOBS = [...INCLUDED_GLOBS, "!**/docs/**"] as const;
  * ```ts
  * import { SchemaFirstIncludedGlobs } from "@beep/repo-cli/commands/Lint"
  *
- * const example = SchemaFirstIncludedGlobs
- * console.log(typeof example !== "undefined") // true
+ * console.log(SchemaFirstIncludedGlobs.includes("packages/**\/*.{ts,tsx}")) // true
  * ```
  * @category configuration
  * @since 0.0.0
@@ -66,8 +65,7 @@ export const SchemaFirstIncludedGlobs: ReadonlyArray<string> = A.fromIterable(IN
  * ```ts
  * import { SchemaFirstSourceFileGlobs } from "@beep/repo-cli/commands/Lint"
  *
- * const example = SchemaFirstSourceFileGlobs
- * console.log(typeof example !== "undefined") // true
+ * console.log(SchemaFirstSourceFileGlobs.includes("!**\/docs/**")) // true
  * ```
  * @category configuration
  * @since 0.0.0
@@ -419,6 +417,8 @@ export const encodeSchemaFirstInventoryDocument = S.encodeUnknownEffect(SchemaFi
 /**
  * Stable key used to reconcile live schema-first scan results with the baseline.
  *
+ * @param entry - The schema-first inventory entry to derive a reconciliation key for.
+ * @returns A stable string key combining the entry's file, symbol, kind, rule id, and line.
  * @example
  * ```ts
  * import { makeSchemaFirstEntryKey } from "@beep/repo-cli/commands/Lint"
@@ -445,10 +445,18 @@ export const makeSchemaFirstEntryKey = (entry: SchemaFirstInventoryEntry): strin
  *
  * @example
  * ```ts
- * import { schemaFirstEntryOrder } from "@beep/repo-cli/commands/Lint"
+ * import { schemaFirstEntryOrder, SchemaFirstInventoryEntry } from "@beep/repo-cli/commands/Lint"
  *
- * const compareEntries = schemaFirstEntryOrder
- * console.log(typeof compareEntries === "function") // true
+ * const entry = SchemaFirstInventoryEntry.make({
+ *   file: "packages/example/src/Foo.ts",
+ *   kind: "exported-interface",
+ *   line: 12,
+ *   owner: "@beep/example",
+ *   reason: "exported schema carries annotations",
+ *   status: "candidate",
+ *   symbol: "Foo"
+ * })
+ * console.log(schemaFirstEntryOrder(entry, entry)) // 0
  * ```
  * @category utilities
  * @since 0.0.0
@@ -478,6 +486,8 @@ export const sortSchemaFirstEntries: (
 /**
  * Test whether an inventory entry is an active advisory for the supplied schema-first rule.
  *
+ * @param ruleId - The schema-first policy rule id to match advisories against.
+ * @returns A predicate that reports whether an entry is an active advisory for that rule id.
  * @example
  * ```ts
  * import { isActiveSchemaFirstRuleAdvisory } from "@beep/repo-cli/commands/Lint"

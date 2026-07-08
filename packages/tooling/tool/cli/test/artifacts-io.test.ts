@@ -10,16 +10,14 @@ import {
 import { provideScopedLayer } from "@beep/test-utils";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { Effect, Exit, FileSystem, Layer, Path } from "effect";
+import { describe, expect, it } from "@effect/vitest";
+import { Cause, Data, Effect, Exit, FileSystem, Layer, Option, Path } from "effect";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
 
 const PlatformLayer = Layer.mergeAll(NodeFileSystem.layer, NodePath.layer);
 
-class ArtifactTestError extends Error {
-  readonly _tag = "ArtifactTestError";
-}
-const toArtifactError = (cause: unknown): ArtifactTestError => new ArtifactTestError(String(cause));
+class ArtifactTestError extends Data.TaggedError("ArtifactTestError")<{ readonly message: string }> {}
+const toArtifactError = (cause: unknown): ArtifactTestError => new ArtifactTestError({ message: String(cause) });
 
 const withTempDir = <A, E, R>(use: (dir: string) => Effect.Effect<A, E, R>) =>
   Effect.acquireUseRelease(
@@ -31,10 +29,12 @@ const withTempDir = <A, E, R>(use: (dir: string) => Effect.Effect<A, E, R>) =>
 const ExampleDocument = S.Struct({ schema_version: S.Literal(1), total: S.Finite });
 
 describe("internal/artifacts/ArtifactIo formatJsonc", () => {
-  it("renders deterministic two-space JSONC ending in a single newline", async () => {
-    const text = await Effect.runPromise(formatJsonc({ schema_version: 1, total: 3 }));
-    expect(text).toBe(`{\n  "schema_version": 1,\n  "total": 3\n}\n`);
-  });
+  it.effect("renders deterministic two-space JSONC ending in a single newline", () =>
+    Effect.gen(function* () {
+      const text = yield* formatJsonc({ schema_version: 1, total: 3 });
+      expect(text).toBe(`{\n  "schema_version": 1,\n  "total": 3\n}\n`);
+    })
+  );
 });
 
 describe("internal/artifacts/ArtifactIo readArtifact / writeArtifact", () => {
@@ -81,8 +81,11 @@ describe("internal/artifacts/ArtifactIo readArtifact / writeArtifact", () => {
           }).pipe(Effect.exit);
 
           expect(Exit.isFailure(exit)).toBe(true);
-          if (Exit.isFailure(exit) && exit.cause._tag === "Fail") {
-            expect(exit.cause.error).toBeInstanceOf(ArtifactTestError);
+          if (Exit.isFailure(exit)) {
+            const failure = Cause.findErrorOption(exit.cause);
+            if (Option.isSome(failure)) {
+              expect(failure.value).toBeInstanceOf(ArtifactTestError);
+            }
           }
         })
       )
@@ -90,18 +93,24 @@ describe("internal/artifacts/ArtifactIo readArtifact / writeArtifact", () => {
 });
 
 describe("internal/artifacts/GeneratedFileDrift", () => {
-  it("rejects the mutually-exclusive --write/--check combination", async () => {
-    const conflict = Effect.fail(new ArtifactTestError("conflict"));
-    const bothExit = await Effect.runPromiseExit(
-      assertExclusiveModeFlags({ write: true, check: true, onConflict: conflict })
-    );
-    expect(Exit.isFailure(bothExit)).toBe(true);
+  it.effect("rejects the mutually-exclusive --write/--check combination", () =>
+    Effect.gen(function* () {
+      const conflict = Effect.fail(new ArtifactTestError({ message: "conflict" }));
+      const bothExit = yield* assertExclusiveModeFlags({
+        write: true,
+        check: true,
+        onConflict: conflict,
+      }).pipe(Effect.exit);
+      expect(Exit.isFailure(bothExit)).toBe(true);
 
-    const okExit = await Effect.runPromiseExit(
-      assertExclusiveModeFlags({ write: true, check: false, onConflict: conflict })
-    );
-    expect(Exit.isSuccess(okExit)).toBe(true);
-  });
+      const okExit = yield* assertExclusiveModeFlags({
+        write: true,
+        check: false,
+        onConflict: conflict,
+      }).pipe(Effect.exit);
+      expect(Exit.isSuccess(okExit)).toBe(true);
+    })
+  );
 
   it("writes rendered content and runs the post-write effect", () =>
     Effect.runPromise(
@@ -135,8 +144,8 @@ describe("internal/artifacts/GeneratedFileDrift", () => {
           const missing = yield* checkGeneratedFile({
             path: filePath,
             content,
-            onMissing: Effect.fail(new ArtifactTestError("missing")),
-            onStale: Effect.fail(new ArtifactTestError("stale")),
+            onMissing: Effect.fail(new ArtifactTestError({ message: "missing" })),
+            onStale: Effect.fail(new ArtifactTestError({ message: "stale" })),
             onCurrent: Effect.void,
             onError: toArtifactError,
           }).pipe(Effect.flip);
@@ -146,8 +155,8 @@ describe("internal/artifacts/GeneratedFileDrift", () => {
           const stale = yield* checkGeneratedFile({
             path: filePath,
             content,
-            onMissing: Effect.fail(new ArtifactTestError("missing")),
-            onStale: Effect.fail(new ArtifactTestError("stale")),
+            onMissing: Effect.fail(new ArtifactTestError({ message: "missing" })),
+            onStale: Effect.fail(new ArtifactTestError({ message: "stale" })),
             onCurrent: Effect.void,
             onError: toArtifactError,
           }).pipe(Effect.flip);
@@ -157,8 +166,8 @@ describe("internal/artifacts/GeneratedFileDrift", () => {
           const current = yield* checkGeneratedFile({
             path: filePath,
             content,
-            onMissing: Effect.fail(new ArtifactTestError("missing")),
-            onStale: Effect.fail(new ArtifactTestError("stale")),
+            onMissing: Effect.fail(new ArtifactTestError({ message: "missing" })),
+            onStale: Effect.fail(new ArtifactTestError({ message: "stale" })),
             onCurrent: Effect.succeed("current"),
             onError: toArtifactError,
           });
@@ -180,8 +189,8 @@ describe("internal/artifacts/GeneratedFileDrift", () => {
             path: filePath,
             content: "{}\n",
             onWrote: Effect.void,
-            onMissing: Effect.fail(new ArtifactTestError("missing")),
-            onStale: Effect.fail(new ArtifactTestError("stale")),
+            onMissing: Effect.fail(new ArtifactTestError({ message: "missing" })),
+            onStale: Effect.fail(new ArtifactTestError({ message: "stale" })),
             onCurrent: Effect.void,
             onError: toArtifactError,
           });

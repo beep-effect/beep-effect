@@ -299,8 +299,8 @@ const UnsupportedTsMorphAdapter: TsMorphMutationAdapter = {
  * ```ts
  * import { createTsMorphIntegrationService } from "@beep/repo-cli/commands/CreatePackage"
  *
- * const example = createTsMorphIntegrationService
- * console.log(typeof example !== "undefined") // true
+ * const service = createTsMorphIntegrationService()
+ * console.log(service.previewMutations([])) // []
  * ```
  * @category models
  * @since 0.0.0

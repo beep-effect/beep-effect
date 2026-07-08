@@ -232,9 +232,20 @@ const pathListFromNulOutput: (output: string) => ReadonlyArray<string> = flow(St
  * @example
  * ```ts
  * import { yeetStatusPathForTesting } from "@beep/repo-cli/test/Yeet"
+ * import { RepoRunContext } from "@beep/repo-cli/internal/repo-run"
+ * import { Effect } from "effect"
  *
- * const example = yeetStatusPathForTesting
- * console.log(typeof example !== "undefined") // true
+ * const context = RepoRunContext.make({
+ *   base: "origin/main",
+ *   branch: "feature/status-work",
+ *   cwd: "/repo",
+ *   head: "HEAD",
+ *   originalArgv: [],
+ *   packetDir: ".beep/yeet",
+ *   repoRoot: "/repo",
+ *   turbo: { graphHealthStatus: "ok", graphHealthWarnings: [], tasks: [] }
+ * })
+ * console.log(Effect.isEffect(yeetStatusPathForTesting(context))) // true
  * ```
  * @category testing
  * @since 0.0.0

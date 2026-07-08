@@ -15,12 +15,6 @@
 /**
  * Agent-effectiveness evidence command group.
  *
- * @example
- * ```ts
- * import { agentEffectivenessCommand } from "@beep/repo-cli"
- *
- * console.log(agentEffectivenessCommand)
- * ```
  * @category cli-commands
  * @since 0.0.0
  */
@@ -28,12 +22,6 @@ export {
   /**
    * Agent-effectiveness evidence command group.
    *
-   * @example
-   * ```ts
-   * import { agentEffectivenessCommand } from "@beep/repo-cli"
-   *
-   * console.log(agentEffectivenessCommand)
-   * ```
    * @category cli-commands
    * @since 0.0.0
    */
@@ -42,12 +30,6 @@ export {
 /**
  * CI helper command group.
  *
- * @example
- * ```ts
- * import { ciCommand } from "@beep/repo-cli"
- *
- * console.log(ciCommand)
- * ```
  * @category cli-commands
  * @since 0.0.0
  */
@@ -55,12 +37,6 @@ export {
   /**
    * CI helper command group.
    *
-   * @example
-   * ```ts
-   * import { ciCommand } from "@beep/repo-cli"
-   *
-   * console.log(ciCommand)
-   * ```
    * @category cli-commands
    * @since 0.0.0
    */
@@ -84,12 +60,6 @@ export {
 /**
  * Codex helper command group.
  *
- * @example
- * ```ts
- * import { codexCommand } from "@beep/repo-cli"
- *
- * console.log(codexCommand)
- * ```
  * @category cli-commands
  * @since 0.0.0
  */
@@ -97,12 +67,6 @@ export {
   /**
    * Codex helper command group.
    *
-   * @example
-   * ```ts
-   * import { codexCommand } from "@beep/repo-cli"
-   *
-   * console.log(codexCommand)
-   * ```
    * @category cli-commands
    * @since 0.0.0
    */
@@ -118,12 +82,6 @@ export {
   /**
    * Corpus curation command group.
    *
-   * @example
-   * ```ts
-   * import { corpusCommand } from "@beep/repo-cli"
-   *
-   * console.log(corpusCommand)
-   * ```
    * @category cli-commands
    * @since 0.0.0
    */
@@ -282,12 +240,6 @@ export {
 /**
  * Repository operational quality command group.
  *
- * @example
- * ```ts
- * import { qualityCommand } from "@beep/repo-cli"
- *
- * console.log(qualityCommand)
- * ```
  * @category cli-commands
  * @since 0.0.0
  */
@@ -295,12 +247,6 @@ export {
   /**
    * Repository operational quality command group.
    *
-   * @example
-   * ```ts
-   * import { qualityCommand } from "@beep/repo-cli"
-   *
-   * console.log(qualityCommand)
-   * ```
    * @category cli-commands
    * @since 0.0.0
    */

@@ -10,7 +10,6 @@
  * {@link withAiMetricsDuckDb} owns the scoping idiom so call sites stop
  * re-deriving either. Callers keep their own error surface by mapping the
  * failure channel after the wrapper.
- *
  * @packageDocumentation
  * @since 0.0.0
  */
@@ -60,19 +59,16 @@ export const aiMetricsDerivedDuckDbPath = (dataRoot: string): string => `${dataR
  * `effect` completes. The `DuckDb` requirement is removed from the returned
  * effect; every other requirement, and the error channel, pass through
  * unchanged so callers keep their own typed failure by mapping afterwards.
- *
  * @example
  * ```ts
  * import { aiMetricsDerivedDuckDbPath, withAiMetricsDuckDb } from "@beep/repo-ai-metrics"
  * import { DuckDb } from "@beep/duckdb"
  * import { Effect } from "effect"
- *
  * const rowCount = Effect.gen(function* () {
  *   const duckdb = yield* DuckDb
  *   const rows = yield* duckdb.query("SELECT count(*) AS n FROM ai_metrics_ingest_runs")
  *   return rows.length
  * })
- *
  * const program = withAiMetricsDuckDb(rowCount, aiMetricsDerivedDuckDbPath(".beep/ai-metrics"))
  * console.log(program)
  * ```

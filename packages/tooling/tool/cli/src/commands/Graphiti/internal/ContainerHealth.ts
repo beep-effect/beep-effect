@@ -88,9 +88,14 @@ export const containerHealth: {
  * @example
  * ```ts
  * import { waitForHealthyContainers } from "@beep/repo-cli/commands/Graphiti/internal/ContainerHealth"
+ * import { proxyEnsureConfig } from "@beep/repo-cli/commands/Graphiti/Graphiti.config"
+ * import { Effect, Path } from "effect"
  *
- * const example = waitForHealthyContainers
- * console.log(typeof example !== "undefined") // true
+ * const program = Effect.gen(function* () {
+ *   const path = yield* Path.Path
+ *   return yield* waitForHealthyContainers("/repo", proxyEnsureConfig(path))
+ * })
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category processes
  * @since 0.0.0

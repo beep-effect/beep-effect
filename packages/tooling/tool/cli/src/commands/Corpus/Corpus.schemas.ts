@@ -5,6 +5,12 @@
  * @since 0.0.0
  */
 
+/**
+ * Archive-move schema exports for corpus curation commands.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
 export * from "./internal/ArchiveMove.schemas.js";
 /**
  * Catalog schema exports for corpus curation commands.

@@ -1,13 +1,16 @@
-// Effect's default ConfigProvider snapshots process.env once, at the first
-// config read in this (isolated) test file. Set the values the synchronous
-// readers observe before any test triggers that first read.
-process.env.BEEP_SI_STR = "value";
-process.env.BEEP_SI_INT_POS = "42";
-process.env.BEEP_SI_INT_NEG = "-5";
-process.env.BEEP_SI_INT_BAD = "notnum";
-process.env.BEEP_SI_BOOL_NO = "no";
-process.env.BEEP_SI_BOOL_YES = "YES";
-process.env.BEEP_SI_BOOL_BAD = "maybe";
+// Effect's default ConfigProvider snapshots the ambient environment once, at
+// the first config read in this (isolated) test file. Set the values the
+// synchronous readers observe before any test triggers that first read.
+// `Bun.env` is the same live object the default `ConfigProvider.fromEnv()`
+// reads, so seeding it here preserves the snapshot behaviour these readers rely
+// on without touching `process.env` directly.
+Bun.env.BEEP_SI_STR = "value";
+Bun.env.BEEP_SI_INT_POS = "42";
+Bun.env.BEEP_SI_INT_NEG = "-5";
+Bun.env.BEEP_SI_INT_BAD = "notnum";
+Bun.env.BEEP_SI_BOOL_NO = "no";
+Bun.env.BEEP_SI_BOOL_YES = "YES";
+Bun.env.BEEP_SI_BOOL_BAD = "maybe";
 
 import {
   applyJsoncModification,
@@ -36,10 +39,19 @@ import {
   SchemaFirstPolicyIssuePrefix,
   SchemaFirstPolicySeverity,
 } from "@beep/repo-cli/test/SharedInternals";
-import { ConfigProvider, Effect } from "effect";
+import { describe, expect, it } from "@effect/vitest";
+import { ConfigProvider, Data, Effect, Layer } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { describe, expect, it } from "vitest";
+
+const provideScopedLayer =
+  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
+    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
+
+class SharedInternalsTestError extends Data.TaggedError("SharedInternalsTestError")<{
+  readonly message: string;
+}> {}
 
 describe("SchemaFirstPolicyFinding wire contract", () => {
   const line = (finding: SchemaFirstPolicyFinding): string =>
@@ -146,7 +158,7 @@ describe("JsonStringCodec", () => {
   });
 
   it("decodeOrFail maps schema errors to a domain error", () => {
-    const decode = decodeOrFail(Point, (error) => new Error(`bad: ${error._tag}`));
+    const decode = decodeOrFail(Point, (error) => new SharedInternalsTestError({ message: `bad: ${error._tag}` }));
     const exit = Effect.runSyncExit(decode("not json"));
     expect(exit._tag).toBe("Failure");
     expect(Effect.runSync(decode('{"x":3,"y":4}'))).toEqual({ x: 3, y: 4 });
@@ -224,17 +236,20 @@ describe("EnvConfig readers", () => {
     expect(booleanEnvValue(UNSET, false)).toBe(false);
   });
 
-  it("Effect readers re-read the ambient provider on each call (no module-load capture)", () => {
-    const withProvider = (value: string) =>
-      Effect.provide(
-        readOptionalConfigString("TOKEN"),
-        ConfigProvider.layer(ConfigProvider.fromUnknown({ TOKEN: value }))
+  it.effect("Effect readers re-read the ambient provider on each call (no module-load capture)", () =>
+    Effect.gen(function* () {
+      const withProvider = (value: string) =>
+        provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({ TOKEN: value })))(
+          readOptionalConfigString("TOKEN")
+        );
+      expect(yield* withProvider("first")).toEqual(O.some("first"));
+      expect(yield* withProvider("second")).toEqual(O.some("second"));
+      const missing = provideScopedLayer(ConfigProvider.layer(ConfigProvider.fromUnknown({})))(
+        configStringOption("TOKEN")
       );
-    expect(Effect.runSync(withProvider("first"))).toEqual(O.some("first"));
-    expect(Effect.runSync(withProvider("second"))).toEqual(O.some("second"));
-    const missing = Effect.provide(configStringOption("TOKEN"), ConfigProvider.layer(ConfigProvider.fromUnknown({})));
-    expect(O.isNone(Effect.runSync(missing))).toBe(true);
-  });
+      expect(O.isNone(yield* missing)).toBe(true);
+    })
+  );
 
   it("classifies unresolved op:// secret references", () => {
     expect(isUnresolvedSecretReference("op://vault/item/field")).toBe(true);
@@ -288,7 +303,7 @@ describe("Github plumbing", () => {
       nextCursor({
         pageInfo: GhPageInfo.make({ endCursor: null, hasNextPage: false }),
         label: "comments",
-        onMissingCursor: (label) => new Error(label),
+        onMissingCursor: (label) => new SharedInternalsTestError({ message: label }),
       })
     );
     expect(O.isNone(result)).toBe(true);
@@ -299,7 +314,7 @@ describe("Github plumbing", () => {
       nextCursor({
         pageInfo: GhPageInfo.make({ endCursor: "next", hasNextPage: true }),
         label: "comments",
-        onMissingCursor: (label) => new Error(label),
+        onMissingCursor: (label) => new SharedInternalsTestError({ message: label }),
       })
     );
     expect(result).toEqual(O.some("next"));
@@ -310,7 +325,7 @@ describe("Github plumbing", () => {
       nextCursor({
         pageInfo: GhPageInfo.make({ endCursor: null, hasNextPage: true }),
         label: "comments",
-        onMissingCursor: (label) => new Error(`${label} missing cursor`),
+        onMissingCursor: (label) => new SharedInternalsTestError({ message: `${label} missing cursor` }),
       })
     );
     expect(exit._tag).toBe("Failure");

@@ -350,7 +350,7 @@ export const decodeTurboPlanTasksFromQueryJsonForTesting = decodeTurboPlanTasksF
  *
  * console.log(collectTurboPlanSnapshot(".", defaultYeetRunOptions()))
  * ```
- * @category planning
+ * @category utilities
  * @since 0.0.0
  */
 export const collectTurboPlanSnapshot = Effect.fn("Yeet.collectTurboPlanSnapshot")(function* (
