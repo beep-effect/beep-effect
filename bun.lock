@@ -32,6 +32,7 @@
         "eslint-plugin-jsdoc": "catalog:",
         "eslint-plugin-tsdoc": "catalog:",
         "fallow": "catalog:",
+        "inspeffct": "catalog:",
         "knip": "catalog:",
         "lefthook": "catalog:",
         "markdownlint-cli2": "catalog:",
@@ -1940,6 +1941,7 @@
     },
   },
   "overrides": {
+    "@effect/platform-node-shared": "catalog:",
     "@opentelemetry/exporter-trace-otlp-proto": "catalog:",
   },
   "catalog": {
@@ -2121,6 +2123,7 @@
     "i18next": "^26.3.4",
     "image-size": "^2.0.2",
     "input-otp": "^1.4.2",
+    "inspeffct": "^1.1.0",
     "jsdom": "^29.1.1",
     "jsonc-parser": "^3.3.1",
     "jsonld": "^9.0.0",
@@ -4898,6 +4901,8 @@
 
     "input-otp": ["input-otp@1.4.2", "", { "peerDependencies": { "react": "^16.8 || ^17.0 || ^18.0 || ^19.0.0 || ^19.0.0-rc", "react-dom": "^16.8 || ^17.0 || ^18.0 || ^19.0.0 || ^19.0.0-rc" } }, "sha512-l3jWwYNvrEa6NTCt7BECfCm48GvwuZzkoeG3gBL2w4CHeOXW3eKFmf9UNYkNfYc3mxMrthMnxjIE07MT0zLBQA=="],
 
+    "inspeffct": ["inspeffct@1.1.0", "", { "dependencies": { "@effect/platform-node-shared": "https://pkg.pr.new/Effect-TS/effect-smol/@effect/platform-node-shared@51f6d19", "@effect/sql-sqlite-bun": "https://pkg.pr.new/Effect-TS/effect-smol/@effect/sql-sqlite-bun@51f6d19", "@effect/sql-sqlite-node": "https://pkg.pr.new/Effect-TS/effect-smol/@effect/sql-sqlite-node@51f6d19", "effect": "https://pkg.pr.new/Effect-TS/effect-smol/effect@51f6d19" }, "bin": { "inspeffct": "dist/bin.js" } }, "sha512-qljJAHR+3JJWuuKb1cACiyHp5dNPrxC1PjX4HJOZ7leFWlxhNH4JEJHOcLWgYLKNm3SGud70SIQdld2II86fiQ=="],
+
     "internmap": ["internmap@2.0.3", "", {}, "sha512-5Hh7Y1wQbvY5ooGgPbDaL5iYLAPzMTUrjMulskHLH6wnv/A+1q5rgEaiuqEjB+oxGXIVZs1FF+R/KPN3ZSQYYg=="],
 
     "ioredis": ["ioredis@5.11.1", "", { "dependencies": { "@ioredis/commands": "1.10.0", "cluster-key-slot": "1.1.1", "debug": "4.4.3", "denque": "2.1.0", "redis-errors": "1.2.0", "redis-parser": "3.0.0", "standard-as-callback": "2.1.0" } }, "sha512-ehuGcf94bQXhfagULNXrJdfnWO38v070jxSx/qE87Kjzmu2fU7ro5EFAb+OPituLqgfyuQaym5DlrNydW2sJ9A=="],
@@ -6770,6 +6775,12 @@
 
     "hoist-non-react-statics/react-is": ["react-is@16.13.1", "", {}, "sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ=="],
 
+    "inspeffct/@effect/sql-sqlite-bun": ["@effect/sql-sqlite-bun@https://pkg.pr.new/Effect-TS/effect-smol/@effect/sql-sqlite-bun@51f6d19", { "peerDependencies": { "effect": "^4.0.0-beta.93" } }, "sha512-L+VptQXm6N422PUY/9wY3gOB8t1KUEklQm+rF0eraxDMEeVBPwLvbJoASzX6w6U68eZ9NjbMSq7nwwFZgcwpEA=="],
+
+    "inspeffct/@effect/sql-sqlite-node": ["@effect/sql-sqlite-node@https://pkg.pr.new/Effect-TS/effect-smol/@effect/sql-sqlite-node@51f6d19", { "peerDependencies": { "effect": "^4.0.0-beta.93" } }, "sha512-kN6XV2vNfW8SMV0nMf7hvxSff/grC6BeUOdqPoY6qnf6q7EpubVKszFIZyfqDQOhcMyuADEDBpNUwPYoUPV6+A=="],
+
+    "inspeffct/effect": ["effect@https://pkg.pr.new/Effect-TS/effect-smol/effect@51f6d19", { "dependencies": { "@standard-schema/spec": "^1.1.0", "fast-check": "^4.8.0", "find-my-way-ts": "^0.1.6", "ini": "^7.0.0", "kubernetes-types": "^1.30.0", "msgpackr": "^2.0.1", "multipasta": "^0.2.7", "toml": "^4.1.1", "uuid": "^14.0.0", "yaml": "^2.9.0" } }, "sha512-OAP75RBZIjcgS77pH0mBUnAHxhKLfpxj0U4P7hfmklqjG1mwu+nqMfViuZEpeiMB+ELAHcklJzDpxUmyfHo0qw=="],
+
     "is-extendable/is-plain-object": ["is-plain-object@2.0.4", "", { "dependencies": { "isobject": "^3.0.1" } }, "sha512-h5PpgXkWitc38BBMYawTYMWJHFZJVnBquFE57xFpjB8pJFiF6gZ+bU+WyI/yqXiFR5mdLsgYNaPe8uao6Uv9Og=="],
 
     "is-number/kind-of": ["kind-of@3.2.2", "", { "dependencies": { "is-buffer": "^1.1.5" } }, "sha512-NOW9QQXMoZGg/oqnVNoNTTIFEIid1627WCffUBJEdMxYApq7mNE7CpzucIPc+ZQg25Phej7IJSmX3hO+oblOtQ=="],
@@ -7426,6 +7437,10 @@
 
     "gray-matter/js-yaml/argparse": ["argparse@1.0.10", "", { "dependencies": { "sprintf-js": "~1.0.2" } }, "sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg=="],
 
+    "inspeffct/@effect/sql-sqlite-bun/effect": ["effect@4.0.0-beta.93", "", { "dependencies": { "@standard-schema/spec": "^1.1.0", "fast-check": "^4.8.0", "find-my-way-ts": "^0.1.6", "ini": "^7.0.0", "kubernetes-types": "^1.30.0", "msgpackr": "^2.0.1", "multipasta": "^0.2.7", "toml": "^4.1.1", "uuid": "^14.0.0", "yaml": "^2.9.0" } }, "sha512-wNS5MKFa3C42uBfIDik2oJ78lhpoYz2hN4oBR0229BeeDCIrkg/FiOvoiPGdCVlWa7MEKxEL5I0f8AILVHSD9A=="],
+
+    "inspeffct/@effect/sql-sqlite-node/effect": ["effect@4.0.0-beta.93", "", { "dependencies": { "@standard-schema/spec": "^1.1.0", "fast-check": "^4.8.0", "find-my-way-ts": "^0.1.6", "ini": "^7.0.0", "kubernetes-types": "^1.30.0", "msgpackr": "^2.0.1", "multipasta": "^0.2.7", "toml": "^4.1.1", "uuid": "^14.0.0", "yaml": "^2.9.0" } }, "sha512-wNS5MKFa3C42uBfIDik2oJ78lhpoYz2hN4oBR0229BeeDCIrkg/FiOvoiPGdCVlWa7MEKxEL5I0f8AILVHSD9A=="],
+
     "lazystream/readable-stream/string_decoder": ["string_decoder@1.1.1", "", { "dependencies": { "safe-buffer": "~5.1.0" } }, "sha512-n/ShnvDi6FHbbVfviro+WojiFzv+s8MPMHBczVePfUpDJLwoLT0ht1l4YwBCbi8pJAveEEdnkHyPyTP/mzRfwg=="],
 
     "log-symbols/chalk/ansi-styles": ["ansi-styles@4.3.0", "", { "dependencies": { "color-convert": "^2.0.1" } }, "sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg=="],
@@ -7989,6 +8004,10 @@
     "dockerode/@grpc/proto-loader/yargs/yargs-parser": ["yargs-parser@21.1.1", "", {}, "sha512-tVpsJW7DdjecAiFpbIB1e3qxIQsE6NoPc5/eTdrbbIC4h0LVsWhnoa3g+m2HclBIujHzsxZ4VJVA+GUuc2/LBw=="],
 
     "dockerode/tar-fs/tar-stream/readable-stream": ["readable-stream@3.6.2", "", { "dependencies": { "inherits": "^2.0.3", "string_decoder": "^1.1.1", "util-deprecate": "^1.0.1" } }, "sha512-9u/sniCrY3D5WdsERHzHE4G2YCXqoG5FTHUiCC4SIbr6XcLZBY05ya9EKjYek9O5xOAwjGq+1JdGBAS7Q9ScoA=="],
+
+    "inspeffct/@effect/sql-sqlite-bun/effect/toml": ["toml@4.1.1", "", {}, "sha512-EBJnVBr3dTXdA89WVFoAIPUqkBjxPMwRqsfuo1r240tKFHXv3zgca4+NJib/h6TyvGF7vOawz0jGuryJCdNHrw=="],
+
+    "inspeffct/@effect/sql-sqlite-node/effect/toml": ["toml@4.1.1", "", {}, "sha512-EBJnVBr3dTXdA89WVFoAIPUqkBjxPMwRqsfuo1r240tKFHXv3zgca4+NJib/h6TyvGF7vOawz0jGuryJCdNHrw=="],
 
     "node-source-walk/@babel/parser/@babel/types/@babel/helper-string-parser": ["@babel/helper-string-parser@7.29.7", "", {}, "sha512-Pb5ijPrZ89GDH8223L4UP8i6QApWxs04RbPQJTeWDV0/keR2E36MeKnyr6LYmUUvqRRI+Iv87SuF1W6ErINzYw=="],
 
