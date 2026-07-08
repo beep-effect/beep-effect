@@ -4,18 +4,22 @@ const fallbackModule = require("@changesets/cli/changelog");
 const githubChangelog = githubModule.default ?? githubModule;
 const fallbackChangelog = fallbackModule.default ?? fallbackModule;
 
+const transientGitHubErrorMessages = [
+  "Timeout on validation of query",
+  "An error occurred when fetching data from GitHub",
+  "Failed to parse data from GitHub",
+  "GITHUB_TOKEN",
+];
+
+const errorMessage = (error) => (error instanceof Error ? error.message : String(error));
+
 const transientGitHubError = (error) => {
-  const message = error instanceof Error ? error.message : String(error);
-  return (
-    message.includes("Timeout on validation of query") ||
-    message.includes("An error occurred when fetching data from GitHub") ||
-    message.includes("Failed to parse data from GitHub") ||
-    message.includes("GITHUB_TOKEN")
-  );
+  const message = errorMessage(error);
+  return transientGitHubErrorMessages.some((transientMessage) => message.includes(transientMessage));
 };
 
 const fallbackWithWarning = async (operation, error, fallback) => {
-  const message = error instanceof Error ? error.message : String(error);
+  const message = errorMessage(error);
   if (!transientGitHubError(error)) {
     throw error;
   }
