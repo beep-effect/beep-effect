@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { CryptoTxnHashRedacted } from "@beep/schema/CryptoTxnHash";
 import { CryptoWalletAddressRedacted } from "@beep/schema/CryptoWalletAddress";
 import {
@@ -41,7 +42,7 @@ describe("blockchain redacted schemas", () => {
       fc.property(validatorPublicKeyArbitrary, (value) => {
         expect(decodeValidatorPublicKey(value)).toBe(value);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });

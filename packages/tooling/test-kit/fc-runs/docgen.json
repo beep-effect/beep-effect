@@ -1,7 +1,7 @@
 {
   "$schema": "../../../../packages/tooling/tool/docgen/schema.json",
   "exclude": ["src/internal/**/*.ts"],
-  "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/modeling/utils/src/",
+  "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/tooling/test-kit/fc-runs/src/",
   "examplesCompilerOptions": {
     "noEmit": true,
     "strict": true,
@@ -26,35 +26,14 @@
     "noFallthroughCasesInSwitch": true,
     "stripInternal": false,
     "noErrorTruncation": true,
-    "types": ["node", "bun"],
+    "types": [],
     "jsx": "react-jsx",
     "paths": {
-      "@beep/utils": [
-        "../../../../packages/foundation/modeling/utils/src/index.ts"
-      ],
-      "@beep/utils/*": [
-        "../../../../packages/foundation/modeling/utils/src/*.ts"
-      ],
       "@beep/fc-runs": [
         "../../../../packages/tooling/test-kit/fc-runs/src/index.ts"
       ],
       "@beep/fc-runs/*": [
         "../../../../packages/tooling/test-kit/fc-runs/src/*.ts"
-      ],
-      "@beep/identity": [
-        "../../../../packages/foundation/modeling/identity/src/index.ts"
-      ],
-      "@beep/identity/*": [
-        "../../../../packages/foundation/modeling/identity/src/*.ts"
-      ],
-      "@beep/identity/packages": [
-        "../../../../packages/foundation/modeling/identity/src/packages.ts"
-      ],
-      "@beep/types": [
-        "../../../../packages/foundation/primitive/types/src/index.ts"
-      ],
-      "@beep/types/*": [
-        "../../../../packages/foundation/primitive/types/src/*.ts"
       ]
     }
   }

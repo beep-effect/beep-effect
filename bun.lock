@@ -780,6 +780,7 @@
         "effect": "catalog:",
       },
       "devDependencies": {
+        "@beep/fc-runs": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
         "@types/node": "catalog:",
@@ -1342,6 +1343,7 @@
         "yaml": "catalog:",
       },
       "devDependencies": {
+        "@beep/fc-runs": "workspace:^",
         "@beep/types": "workspace:^",
         "@effect/platform-bun": "catalog:",
         "@effect/vitest": "catalog:",
@@ -1358,6 +1360,7 @@
         "picomatch": "catalog:",
       },
       "devDependencies": {
+        "@beep/fc-runs": "workspace:^",
         "@beep/types": "workspace:^",
         "@effect/platform-node": "catalog:",
         "@effect/vitest": "catalog:",
@@ -1710,10 +1713,22 @@
         "next": "catalog:",
       },
     },
+    "packages/tooling/test-kit/fc-runs": {
+      "name": "@beep/fc-runs",
+      "version": "0.0.0",
+      "dependencies": {
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+      },
+    },
     "packages/tooling/test-kit/test-utils": {
       "name": "@beep/test-utils",
       "version": "0.0.2",
       "dependencies": {
+        "@beep/fc-runs": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/utils": "workspace:^",
@@ -2325,6 +2340,8 @@
     "@beep/epistemic-use-cases": ["@beep/epistemic-use-cases@workspace:packages/epistemic/use-cases"],
 
     "@beep/face-detection": ["@beep/face-detection@workspace:packages/drivers/face-detection"],
+
+    "@beep/fc-runs": ["@beep/fc-runs@workspace:packages/tooling/test-kit/fc-runs"],
 
     "@beep/federal-register": ["@beep/federal-register@workspace:packages/drivers/federal-register"],
 

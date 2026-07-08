@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { isMutableHashMap, MutableHashMap, MutableHashMapFromSelf } from "@beep/schema/MutableHashMap";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
@@ -126,7 +127,7 @@ describe("MutableHashMap", () => {
         const decoded = decode(encoded);
         expect(equivalence(decoded, value)).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });

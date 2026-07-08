@@ -1,3 +1,4 @@
+import { fcRuns } from "@beep/fc-runs";
 import { AtUri } from "@beep/schema/AtURI";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
@@ -84,7 +85,7 @@ describe("AtUri", () => {
         expect(pathSegments.length).toBeLessThanOrEqual(3);
         expect(pathSegments.every((segment) => segment.length > 0)).toBe(true);
       }),
-      { numRuns: 100 }
+      fcRuns(100)
     );
   });
 });
