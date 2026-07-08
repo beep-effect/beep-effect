@@ -101,38 +101,6 @@ const RunpodRawRequestArbitrary = S.toArbitrary(RunpodRawRequest).map((request) 
   })
 );
 
-const RunpodErrorOptionsArbitrary = S.toArbitrary(RunpodErrorOptions).map((options) =>
-  RunpodErrorOptions.make(options.status === undefined ? {} : { status: options.status })
-);
-
-const RunpodErrorArbitrary = S.toArbitrary(RunpodError).map((error) =>
-  RunpodError.make({
-    cause: O.none(),
-    method: error.method,
-    methodName: error.methodName,
-    operationId: error.operationId,
-    path: error.path,
-    reason: error.reason,
-    status: error.status,
-  })
-);
-
-const RunpodDocsErrorOptionsArbitrary = S.toArbitrary(RunpodDocsErrorOptions).map((options) =>
-  RunpodDocsErrorOptions.make({
-    ...(options.status === undefined ? {} : { status: options.status }),
-    ...(options.url === undefined ? {} : { url: options.url }),
-  })
-);
-
-const RunpodDocsErrorArbitrary = S.toArbitrary(RunpodDocsError).map((error) =>
-  RunpodDocsError.make({
-    cause: O.none(),
-    reason: error.reason,
-    status: error.status,
-    url: error.url,
-  })
-);
-
 const makeJsonResponse = (body: unknown, status = 200) =>
   Response.json(body, {
     headers: {
@@ -460,10 +428,10 @@ describe("@beep/runpod", () => {
       });
       assertSchemaRoundTrip(RunpodRawRequest, RunpodRawRequestArbitrary);
       assertSchemaRoundTrip(RunpodRawResponse);
-      assertSchemaRoundTrip(RunpodErrorOptions, RunpodErrorOptionsArbitrary);
-      assertSchemaRoundTrip(RunpodError, RunpodErrorArbitrary);
-      assertSchemaRoundTrip(RunpodDocsErrorOptions, RunpodDocsErrorOptionsArbitrary);
-      assertSchemaRoundTrip(RunpodDocsError, RunpodDocsErrorArbitrary);
+      assertSchemaRoundTrip(RunpodErrorOptions);
+      assertSchemaRoundTrip(RunpodError);
+      assertSchemaRoundTrip(RunpodDocsErrorOptions);
+      assertSchemaRoundTrip(RunpodDocsError);
       assertSchemaRoundTrip(RunpodDocsIndexEntry);
       assertSchemaRoundTrip(RunpodDocsIndex);
     })
