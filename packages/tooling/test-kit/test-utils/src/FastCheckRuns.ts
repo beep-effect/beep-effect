@@ -11,6 +11,7 @@
  * @since 0.0.0
  */
 
+import { Config, Effect } from "effect";
 import * as O from "effect/Option";
 
 /**
@@ -22,10 +23,35 @@ import * as O from "effect/Option";
  *
  * console.log(DEFAULT_FC_NUM_RUNS) // 100
  * ```
- * @category fast-check
+ * @category testing
  * @since 0.0.0
  */
 export const DEFAULT_FC_NUM_RUNS = 100;
+
+/**
+ * Parse a raw `BEEP_FC_NUM_RUNS` value into a usable floor.
+ *
+ * Non-integers, non-positives, and absent values collapse to 0 so the
+ * result can feed the environment side of a `max()` directly.
+ *
+ * @param raw - Raw environment value, if any.
+ * @returns The parsed positive-integer floor, or 0.
+ * @example
+ * ```ts
+ * import { parseFcNumRunsFloor } from "@beep/test-utils"
+ *
+ * console.log(parseFcNumRunsFloor("400")) // 400
+ * console.log(parseFcNumRunsFloor("2.5")) // 0
+ * console.log(parseFcNumRunsFloor(undefined)) // 0
+ * ```
+ * @category testing
+ * @since 0.0.0
+ */
+export const parseFcNumRunsFloor = (raw: string | undefined): number =>
+  O.match(O.flatMap(O.fromNullishOr(raw), parsePositiveInteger), {
+    onNone: () => 0,
+    onSome: (floor) => floor,
+  });
 
 const parsePositiveInteger = (raw: string): O.Option<number> => {
   const parsed = Number(raw);
@@ -46,14 +72,15 @@ const parsePositiveInteger = (raw: string): O.Option<number> => {
  * const floor = envFcNumRunsFloor()
  * console.log(floor >= 0) // true
  * ```
- * @category fast-check
+ * @category testing
  * @since 0.0.0
  */
-export const envFcNumRunsFloor = (): number =>
-  O.match(O.flatMap(O.fromNullishOr(process.env.BEEP_FC_NUM_RUNS), parsePositiveInteger), {
-    onNone: () => 0,
-    onSome: (floor) => floor,
-  });
+// Effect's default ConfigProvider snapshots the environment at process
+// boot — exactly the lane semantics (CI exports BEEP_FC_NUM_RUNS before
+// vitest starts). Runtime mutation is deliberately NOT observed.
+const fcNumRunsConfig = Config.option(Config.string("BEEP_FC_NUM_RUNS"));
+
+export const envFcNumRunsFloor = (): number => parseFcNumRunsFloor(O.getOrUndefined(Effect.runSync(fcNumRunsConfig)));
 
 /**
  * Build fast-check run options whose effective `numRuns` is
@@ -73,7 +100,7 @@ export const envFcNumRunsFloor = (): number =>
  * const options = fcRuns(40)
  * console.log(options.numRuns >= 40) // true; higher when BEEP_FC_NUM_RUNS is set
  * ```
- * @category fast-check
+ * @category testing
  * @since 0.0.0
  */
 export const fcRuns = (inline?: number): { readonly numRuns: number } => ({

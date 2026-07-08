@@ -1392,7 +1392,9 @@ const shouldUseExternalPgliteLayer = (mode: PgliteSqlTestLayerMode, config: PgEx
 
 const shouldUseTestcontainersPgliteLayer = (mode: PgliteSqlTestLayerMode): boolean =>
   PgliteSqlTestLayerMode.$match(mode, {
-    auto: () => Bun.env.BEEP_TEST_DATABASE_DRIVER === "pglite-testcontainers",
+    auto: () =>
+      O.getOrUndefined(Effect.runSync(Config.option(Config.string("BEEP_TEST_DATABASE_DRIVER")))) ===
+      "pglite-testcontainers",
     external: () => false,
     "in-process": () => false,
     testcontainers: () => true,
@@ -1442,8 +1444,13 @@ const makeConfiguredSqlTestLayer = <Config, Services, SqlService extends Service
  * @since 0.0.0
  */
 export const makePgliteIntegrationGate = () => {
-  const sharedConnectionUri = pipe(Bun.env.BEEP_TEST_DATABASE_URL, O.fromUndefinedOr, O.filter(Str.isNonEmpty));
-  const shouldUseTestcontainers = Bun.env.BEEP_TEST_DATABASE_DRIVER === "pglite-testcontainers";
+  const sharedConnectionUri = pipe(
+    Effect.runSync(Config.option(Config.string("BEEP_TEST_DATABASE_URL"))),
+    O.filter(Str.isNonEmpty)
+  );
+  const shouldUseTestcontainers =
+    O.getOrUndefined(Effect.runSync(Config.option(Config.string("BEEP_TEST_DATABASE_DRIVER")))) ===
+    "pglite-testcontainers";
   // The in-process @beep/pglite driver is the docker-free default, so the pglite
   // integration suites always run. `BEEP_TEST_DATABASE_URL` (external) and
   // `BEEP_TEST_DATABASE_DRIVER=pglite-testcontainers` remain opt-in fallbacks.

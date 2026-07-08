@@ -17,7 +17,7 @@ export * from "./Entity.js";
 /**
  * Fast-check run-count helper exports.
  *
- * @category fast-check
+ * @category testing
  * @since 0.0.0
  */
 export * from "./FastCheckRuns.js";

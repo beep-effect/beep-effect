@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-07-07T22:43:42.401Z",
+  "generatedAt": "2026-07-08T02:22:53.170Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -65,11 +65,11 @@
     "cleanPackages": 19,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 78,
-    "publicModules": 1617,
-    "publicExports": 14468,
+    "publicModules": 1618,
+    "publicExports": 14472,
     "openModules": 129,
-    "openExports": 2206,
-    "missingExportExamples": 2012,
+    "openExports": 2207,
+    "missingExportExamples": 2013,
     "missingExportCategories": 91,
     "missingExportSince": 91,
     "forbiddenTagFindings": 2,
@@ -19790,8 +19790,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 174,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-174-cilaneid",
+          "line": 175,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-175-cilaneid",
           "currentTags": [
             "@example",
             "@category",
@@ -19812,8 +19812,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 193,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-193-cilaneid",
+          "line": 194,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-194-cilaneid",
           "currentTags": [
             "@example",
             "@category",
@@ -19834,8 +19834,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 209,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-209-docgen-lane-mode-values",
+          "line": 210,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-210-docgen-lane-mode-values",
           "currentTags": [
             "@example",
             "@category",
@@ -19856,8 +19856,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 223,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-223-docgenlanemode",
+          "line": 224,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-224-docgenlanemode",
           "currentTags": [
             "@example",
             "@category",
@@ -19878,8 +19878,8 @@
           "exportKind": "type",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 242,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-242-docgenlanemode",
+          "line": 243,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-243-docgenlanemode",
           "currentTags": [
             "@example",
             "@category",
@@ -19900,8 +19900,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 264,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-264-cilanedescriptor",
+          "line": 265,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-265-cilanedescriptor",
           "currentTags": [
             "@example",
             "@category",
@@ -19922,8 +19922,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 297,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-297-ci-lane-descriptors",
+          "line": 298,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-298-ci-lane-descriptors",
           "currentTags": [
             "@example",
             "@category",
@@ -19944,8 +19944,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 505,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-505-cilanerunoptions",
+          "line": 516,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-516-cilanerunoptions",
           "currentTags": [
             "@example",
             "@category",
@@ -19966,8 +19966,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 670,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-670-cilanestepsfortesting",
+          "line": 682,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-682-cilanestepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -19990,8 +19990,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 885,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-885-runcilane",
+          "line": 909,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-909-runcilane",
           "currentTags": [
             "@param",
             "@returns",
@@ -20014,8 +20014,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 930,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-930-cilanecommand",
+          "line": 954,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-954-cilanecommand",
           "currentTags": [
             "@example",
             "@category",
@@ -20036,8 +20036,8 @@
           "exportKind": "class",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1083,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1083-cilocalstepplan",
+          "line": 1113,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1113-cilocalstepplan",
           "currentTags": [
             "@example",
             "@category",
@@ -20058,8 +20058,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1142,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1142-cilocalstepsfortesting",
+          "line": 1173,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1173-cilocalstepsfortesting",
           "currentTags": [
             "@param",
             "@returns",
@@ -20082,8 +20082,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1179,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1179-runcilocal",
+          "line": 1210,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1210-runcilocal",
           "currentTags": [
             "@param",
             "@returns",
@@ -20106,8 +20106,8 @@
           "exportKind": "const",
           "filePath": "src/commands/Ci/CiLane.ts",
           "repoPath": "packages/tooling/tool/cli/src/commands/Ci/CiLane.ts",
-          "line": 1210,
-          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1210-cilocalcommand",
+          "line": 1241,
+          "anchor": "packages-tooling-tool-cli-src-commands-ci-cilane-ts-1241-cilocalcommand",
           "currentTags": [
             "@example",
             "@category",
@@ -58617,9 +58617,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 5,
-        "publicModuleCount": 5,
-        "publicExportCount": 32
+        "sourceFileCount": 6,
+        "publicModuleCount": 6,
+        "publicExportCount": 36
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -58629,8 +58629,8 @@
       },
       "counts": {
         "openModules": 0,
-        "openExports": 8,
-        "missingExportExamples": 4,
+        "openExports": 9,
+        "missingExportExamples": 5,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
@@ -58660,6 +58660,27 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/FastCheckRuns.ts",
+          "repoPath": "packages/tooling/test-kit/test-utils/src/FastCheckRuns.ts",
+          "line": 1,
+          "anchor": "packages-tooling-test-kit-test-utils-src-fastcheckruns-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 3,
           "remediationStatus": "resolved"
         },
         {
@@ -58744,7 +58765,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 4,
+          "exportCount": 5,
           "remediationStatus": "resolved"
         }
       ],
@@ -58795,6 +58816,75 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "DEFAULT_FC_NUM_RUNS",
+          "exportKind": "const",
+          "filePath": "src/FastCheckRuns.ts",
+          "repoPath": "packages/tooling/test-kit/test-utils/src/FastCheckRuns.ts",
+          "line": 28,
+          "anchor": "packages-tooling-test-kit-test-utils-src-fastcheckruns-ts-28-default-fc-num-runs",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "envFcNumRunsFloor",
+          "exportKind": "const",
+          "filePath": "src/FastCheckRuns.ts",
+          "repoPath": "packages/tooling/test-kit/test-utils/src/FastCheckRuns.ts",
+          "line": 52,
+          "anchor": "packages-tooling-test-kit-test-utils-src-fastcheckruns-ts-52-envfcnumrunsfloor",
+          "currentTags": [
+            "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "fcRuns",
+          "exportKind": "const",
+          "filePath": "src/FastCheckRuns.ts",
+          "repoPath": "packages/tooling/test-kit/test-utils/src/FastCheckRuns.ts",
+          "line": 79,
+          "anchor": "packages-tooling-test-kit-test-utils-src-fastcheckruns-ts-79-fcruns",
+          "currentTags": [
+            "@param",
+            "@returns",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "provideScopedLayer",
           "exportKind": "const",
           "filePath": "src/Layer.ts",
@@ -58823,8 +58913,8 @@
           "exportKind": "const",
           "filePath": "src/Schema.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/Schema.ts",
-          "line": 29,
-          "anchor": "packages-tooling-test-kit-test-utils-src-schema-ts-29-assertschemaarbitrarydecodestoself",
+          "line": 30,
+          "anchor": "packages-tooling-test-kit-test-utils-src-schema-ts-30-assertschemaarbitrarydecodestoself",
           "currentTags": [
             "@param",
             "@example",
@@ -59424,12 +59514,35 @@
           "remediationStatus": "open"
         },
         {
-          "symbolName": "export * from \"./Layer.js\";",
+          "symbolName": "export * from \"./FastCheckRuns.js\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/index.ts",
           "line": 23,
-          "anchor": "packages-tooling-test-kit-test-utils-src-index-ts-23-export-from-layer-js",
+          "anchor": "packages-tooling-test-kit-test-utils-src-index-ts-23-export-from-fastcheckruns-js",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [
+            "@example"
+          ],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "export * from \"./Layer.js\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/tooling/test-kit/test-utils/src/index.ts",
+          "line": 30,
+          "anchor": "packages-tooling-test-kit-test-utils-src-index-ts-30-export-from-layer-js",
           "currentTags": [
             "@category",
             "@since"
@@ -59451,8 +59564,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/index.ts",
-          "line": 30,
-          "anchor": "packages-tooling-test-kit-test-utils-src-index-ts-30-export-from-schema-js",
+          "line": 37,
+          "anchor": "packages-tooling-test-kit-test-utils-src-index-ts-37-export-from-schema-js",
           "currentTags": [
             "@category",
             "@since"
@@ -59474,8 +59587,8 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/index.ts",
-          "line": 37,
-          "anchor": "packages-tooling-test-kit-test-utils-src-index-ts-37-export-from-sqltest-js",
+          "line": 44,
+          "anchor": "packages-tooling-test-kit-test-utils-src-index-ts-44-export-from-sqltest-js",
           "currentTags": [
             "@category",
             "@since"
