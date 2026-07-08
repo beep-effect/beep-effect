@@ -1,3 +1,9 @@
+/**
+ * Numeric-input hook: schema-validated parsing, stepping, and boundary clamping for a number field.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { $UiId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { A, O, Str } from "@beep/utils";

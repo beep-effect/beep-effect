@@ -727,6 +727,15 @@ export const getJsDocText = (node: Node): string => {
     const docs = docNode.getJsDocs();
     return docs.at(-1)?.getText() ?? "";
   }
+  // Binding elements — names exported via a destructured `const { /** doc */
+  // Class, ... } = VariantSchema.make(...)` — are absent from ts-morph's
+  // `canHaveJSDoc` switch, so `getJsDocs()` never sees the leading `/** */`
+  // block sitting directly above each element. Read the leading comment range
+  // instead and return the last JSDoc-style block (ruling R24).
+  if (Node.isBindingElement(docNode)) {
+    const lastJsDoc = A.findLast(docNode.getLeadingCommentRanges(), (range) => Str.startsWith("/**")(range.getText()));
+    return O.match(lastJsDoc, { onNone: thunkEmptyStr, onSome: (range) => range.getText() });
+  }
   return "";
 };
 

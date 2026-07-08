@@ -1,3 +1,9 @@
+/**
+ * Rich-text plugin stack composed for the editor-00 block.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ContentEditable } from "../../editor/editor-ui/content-editable.js";

@@ -1,3 +1,9 @@
+/**
+ * Notification-card primitive: status, action-type, and action-style variants for a notification row.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { $UiId } from "@beep/identity";

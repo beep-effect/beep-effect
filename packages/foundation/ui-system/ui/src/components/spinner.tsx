@@ -1,3 +1,9 @@
+/**
+ * Spinner primitive: an indeterminate loading indicator.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { SpinnerGapIcon } from "@phosphor-icons/react";
 import { cn } from "../lib/index.ts";
 import type { IconProps } from "@phosphor-icons/react";

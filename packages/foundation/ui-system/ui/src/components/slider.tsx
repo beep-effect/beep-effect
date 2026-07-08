@@ -1,3 +1,9 @@
+/**
+ * Slider primitive: a range input built on Base UI's slider.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Slider as SliderPrimitive } from "@base-ui/react/slider";

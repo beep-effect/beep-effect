@@ -92,9 +92,7 @@
   ],
   "openQuestions": [],
   "nextAction": "Execute P0 and formalize the repo-wide law canon in history/outputs/p0-foundation-and-law-canon.md.",
-  "researchReports": [
-    "research/SOURCES.md"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,

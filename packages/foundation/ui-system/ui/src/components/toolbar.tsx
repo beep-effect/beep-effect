@@ -1,3 +1,9 @@
+/**
+ * Toolbar primitive: a toolbar root with toggle groups, links, and separators built on Base UI.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Toggle } from "@base-ui/react/toggle";

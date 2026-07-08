@@ -358,8 +358,10 @@
     {
       "file": "packages/agents/client/src/Chat.atoms.ts",
       "symbol": "CreateThreadAtomInput",
-      "kind": "struct-const",
-      "owner": "@beep/agents-client"
+      "kind": "schema-class",
+      "owner": "@beep/agents-client",
+      "identity": "CreateThreadAtomInput",
+      "description": "Write payload for the client thread-creation atom."
     },
     {
       "file": "packages/agents/client/src/Chat.atoms.ts",
@@ -480,6 +482,14 @@
       "owner": "@beep/agents-domain",
       "identity": "ListBlock",
       "description": "A flat list of items."
+    },
+    {
+      "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
+      "symbol": "ListItem",
+      "kind": "schema-class",
+      "owner": "@beep/agents-domain",
+      "identity": "ListItem",
+      "description": "A single item within a list block."
     },
     {
       "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
@@ -5381,7 +5391,7 @@
       "kind": "schema-class",
       "owner": "@beep/runpod",
       "identity": "RunpodDocsErrorOptions",
-      "description": "Options for configuring RunpodDocsError instances."
+      "description": "Sanitized options for configuring RunpodDocsError instances."
     },
     {
       "file": "packages/drivers/runpod/src/Runpod.errors.ts",
@@ -5405,7 +5415,7 @@
       "kind": "schema-class",
       "owner": "@beep/runpod",
       "identity": "RunpodErrorOptions",
-      "description": "Options for configuring RunpodError instances."
+      "description": "Sanitized options for configuring RunpodError instances."
     },
     {
       "file": "packages/drivers/runpod/src/Runpod.errors.ts",
@@ -6538,14 +6548,6 @@
       "owner": "@beep/file-processing",
       "identity": "TextArtifactReference",
       "description": "Reference to a text artifact emitted for one extraction operation."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-      "symbol": "TextSpan",
-      "kind": "schema-class",
-      "owner": "@beep/file-processing",
-      "identity": "TextSpan",
-      "description": "Extracted text span with byte or character offsets supplied by the engine."
     },
     {
       "file": "packages/foundation/capability/file-processing/src/Operation/index.ts",
@@ -9537,19 +9539,25 @@
       "file": "packages/foundation/modeling/identity/src/Id.ts",
       "symbol": "IdentityInterpolationError",
       "kind": "tagged-error",
-      "owner": "@beep/identity"
+      "owner": "@beep/identity",
+      "identity": "@beep/identity/errors/IdentityInterpolationError",
+      "description": "Identity template tags do not allow interpolations."
     },
     {
       "file": "packages/foundation/modeling/identity/src/Id.ts",
       "symbol": "IdentitySegmentCountError",
       "kind": "tagged-error",
-      "owner": "@beep/identity"
+      "owner": "@beep/identity",
+      "identity": "@beep/identity/errors/IdentitySegmentCountError",
+      "description": "Identity template tags must use a single literal segment."
     },
     {
       "file": "packages/foundation/modeling/identity/src/Vocab.ts",
       "symbol": "VocabEntry",
       "kind": "schema-class",
-      "owner": "@beep/identity"
+      "owner": "@beep/identity",
+      "identity": "VocabEntry",
+      "description": "One namespace IRI and term list inside an identity vocabulary registry."
     },
     {
       "file": "packages/foundation/modeling/identity/src/Vocab.ts",
@@ -19024,7 +19032,9 @@
       "file": "packages/tooling/policy-pack/lint-rules/src/index.ts",
       "symbol": "RuleRegistrySchema",
       "kind": "schema-class",
-      "owner": "@beep/lint-rules"
+      "owner": "@beep/lint-rules",
+      "identity": "RuleRegistrySchema",
+      "description": "Schema for the finite rule registry keyed by rule slug."
     },
     {
       "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
@@ -19634,7 +19644,9 @@
       "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",
       "symbol": "ArchitectureOperation",
       "kind": "union",
-      "owner": "@beep/repo-cli"
+      "owner": "@beep/repo-cli",
+      "identity": "ArchitectureOperation",
+      "description": "Union of every canonical architecture operation-plan operation kind."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Architecture/OperationPlan.ts",

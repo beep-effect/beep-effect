@@ -1,3 +1,9 @@
+/**
+ * Orb-background primitive: an animated glow backdrop with hue-family variants.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { cn } from "../lib/index.ts";

@@ -31,11 +31,7 @@
       "summary": "Registered nlp-mcp in .mcp.json (nlp stdio server); verified 42 tools live over stdio via a JSON-RPC tools/list probe. Green across @beep/nlp, @beep/wink, @beep/nlp-mcp: check/test/test:integration/lint/build (TURBO_FORCE) + docgen + repo-exports:catalog:check. READMEs/CLAUDE.md surface maps + changeset added."
     }
   },
-  "root_files": [
-    "README.md",
-    "SPEC.md",
-    "history/reflection-log.md"
-  ],
+  "root_files": ["README.md", "SPEC.md", "history/reflection-log.md"],
   "references": {
     "plan": "~/.claude/plans/wondrous-pondering-dragonfly.md",
     "adjunct_source": "~/YeeBois/dev/adjunct/src/Mcp",

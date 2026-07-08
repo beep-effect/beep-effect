@@ -1,3 +1,9 @@
+/**
+ * Pagination primitive: page-link controls composed from the shared button variants.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { Button } from "@beep/ui/components/button";
 import { CaretLeftIcon, CaretRightIcon, DotsThreeIcon } from "@phosphor-icons/react";
 import { cn } from "../lib/index.ts";

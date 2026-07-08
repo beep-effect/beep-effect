@@ -1,3 +1,9 @@
+/**
+ * Hover-card primitive: a pointer-triggered preview card built on Base UI's hover card.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { PreviewCard as PreviewCardPrimitive } from "@base-ui/react/preview-card";

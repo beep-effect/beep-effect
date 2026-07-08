@@ -130,6 +130,15 @@ export const TextSpan = TextSpanBase.check(
 /**
  * Type for {@link TextSpan}.
  *
+ * @example
+ * ```ts
+ * import { TextSpan } from "@beep/file-processing/Extraction"
+ * import { NonNegativeInt } from "@beep/schema"
+ *
+ * const span: TextSpan = TextSpan.make({ endOffset: NonNegativeInt.make(5), startOffset: NonNegativeInt.make(0), text: "hello" })
+ * console.log(span.text) // "hello"
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */

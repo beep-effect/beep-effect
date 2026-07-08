@@ -1,3 +1,9 @@
+/**
+ * Navigation-menu primitive: a top-level site navigation root built on Base UI's navigation menu.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { NavigationMenu as NavigationMenuPrimitive } from "@base-ui/react/navigation-menu";
 import { CaretDownIcon } from "@phosphor-icons/react";
 import { cva } from "class-variance-authority";

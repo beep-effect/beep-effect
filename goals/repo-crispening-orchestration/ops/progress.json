@@ -2,17 +2,8 @@
   "schemaVersion": "repo-crispening-progress/v1",
   "generatedOn": "2026-07-05",
   "legend": {
-    "phaseStatus": [
-      "pending",
-      "in_progress",
-      "blocked",
-      "done"
-    ],
-    "packageDiscoveryStatus": [
-      "pending",
-      "in_progress",
-      "done"
-    ],
+    "phaseStatus": ["pending", "in_progress", "blocked", "done"],
+    "packageDiscoveryStatus": ["pending", "in_progress", "done"],
     "packageRemediationStatus": [
       "pending",
       "in_progress",
@@ -71,12 +62,7 @@
     "entries": 4119,
     "evidence": "#318"
   },
-  "waveOrder": [
-    "foundation",
-    "drivers",
-    "tooling",
-    "apps-slices"
-  ],
+  "waveOrder": ["foundation", "drivers", "tooling", "apps-slices"],
   "sharedAssignment": {
     "family": "apps-slices",
     "decidedOn": "2026-07-05",

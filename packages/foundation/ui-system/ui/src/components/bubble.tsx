@@ -1,3 +1,9 @@
+/**
+ * Bubble primitive: a vertical stack layout for chat bubbles or message fragments.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { cn } from "@beep/ui/lib/utils";

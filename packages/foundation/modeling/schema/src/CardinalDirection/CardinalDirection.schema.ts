@@ -98,6 +98,14 @@ export const Schema = CardinalDirection;
 /**
  * {@inheritDoc CardinalDirection}
  *
+ * @example
+ * ```ts
+ * import type { Schema } from "@beep/schema/CardinalDirection"
+ *
+ * const direction: Schema = "north"
+ * console.log(direction)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -120,6 +128,14 @@ export const Abbrev = CardinalDirectionAbbrev;
 
 /**
  * {@inheritDoc CardinalDirectionAbbrev}
+ *
+ * @example
+ * ```ts
+ * import type { Abbrev } from "@beep/schema/CardinalDirection"
+ *
+ * const abbrev: Abbrev = "N"
+ * console.log(abbrev)
+ * ```
  *
  * @category models
  * @since 0.0.0

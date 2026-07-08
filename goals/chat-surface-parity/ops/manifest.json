@@ -24,9 +24,7 @@
     "grandfathered": true,
     "grandfatheredNote": "Completion predates the 2026-06-30 PR-mergeable gate; not reopened."
   },
-  "dependsOn": [
-    "goals/desktop-chat-surface"
-  ],
+  "dependsOn": ["goals/desktop-chat-surface"],
   "currentSourceOfTruth": [
     "AGENTS.md",
     "CLAUDE.md",

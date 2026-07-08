@@ -27,11 +27,7 @@
     "longDescription": "Notion workflows for turning specs into implementation plans, synthesizing research into structured documentation, preparing meeting materials with workspace context, and capturing decisions or conversations into durable knowledge pages.",
     "developerName": "OpenAI",
     "category": "Productivity",
-    "capabilities": [
-      "Interactive",
-      "Read",
-      "Write"
-    ],
+    "capabilities": ["Interactive", "Read", "Write"],
     "websiteURL": "https://www.notion.so/",
     "privacyPolicyURL": "https://www.notion.com/help/privacy",
     "termsOfServiceURL": "https://www.notion.so/legal/terms-of-use",

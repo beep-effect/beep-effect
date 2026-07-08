@@ -1,3 +1,9 @@
+/**
+ * Alert primitive: a status message container with default and destructive variants.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { cva } from "class-variance-authority";
 import { cn } from "../lib/index.ts";
 import type { VariantProps } from "class-variance-authority";

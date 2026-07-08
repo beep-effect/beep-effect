@@ -7,6 +7,10 @@
 
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { make } from "./Id.ts";
+
+const { $IdentityId } = make("identity");
+const $I = $IdentityId.create("Vocab");
 
 /**
  * Registry shape consumed by identity CURIE type helpers and codecs.
@@ -58,11 +62,9 @@ export class VocabEntry extends S.Class<VocabEntry>("@beep/identity/Vocab/VocabE
     iri: S.String,
     terms: S.Array(S.String),
   },
-  {
-    identifier: "@beep/identity/Vocab/VocabEntry",
-    title: "Vocabulary Entry",
+  $I.annote("VocabEntry", {
     description: "One namespace IRI and term list inside an identity vocabulary registry.",
-  }
+  })
 ) {}
 
 /**

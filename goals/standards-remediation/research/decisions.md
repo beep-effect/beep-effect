@@ -509,3 +509,48 @@ against established classes:
   (default-export attribution + string-literal stripping before unsafe-example
   regexes), and the R9 namespaced-barrel scan closure (scan `export * as`
   targets as owning modules; expected +~192 findings absorbed by FINAL-B/C).
+
+## R23 — FINAL-lane corrections (LOCKED, driver-verified 2026-07-08)
+
+Two R22 assumptions were corrected by the FINAL lanes with evidence; both accepted:
+
+1. **R9 namespaced-barrel gap does NOT reproduce** (FINAL-A, 3 independent
+   verifications: ts-morph trace, live fixture through real
+   writeJSDocDocumentationInventory showing namespaced-target exports already
+   flagged, full-repo cross-ref with zero unexplained gaps). The p2-j5-html
+   hypothesis was never re-derived before citing. **R9 closes as
+   verified-non-issue — NO +192 findings expected at regen, NO detector change.**
+   A permanent regression-guard fixture pair was still added.
+
+2. **uspto Uspto.service.ts:144 R.getSomes STAYS** (FINAL-B: O.getSomesStruct
+   returns Partial<Record> incompatible with the `Record<string,string>`
+   contract; optionalField's key param is a plain `string` called from 13
+   spread sites — the exact "homogeneous dynamic-key dictionary" carve-out the
+   Law 20/47 amendment reserves for R.getSomes). The SFV4-getsomes-struct
+   advisory must be moved to a documented **exception**, not converted.
+
+Git-state note: automated "chore: saving/continue/sync" tooling committed +
+pushed lane work incrementally and merged origin/main (HEAD=origin, all on PR
+#326). Shared-tree file-reversion collisions occurred twice (identity, uspto)
+but were caught+reapplied by the affected lanes; `fix(uspto): restore
+R.getSomes` at HEAD confirms the correct final uspto state. Detector files
+(SchemaFirst.ts curated entries + R20 fixes) verified present in committed tree.
+
+## R24 — jsdoc BindingElement doc-attribution gap (LOCKED 2026-07-08)
+
+The 8 Model.variants.ts findings are a STRUCTURAL detector gap: destructured
+`const { /** doc */ Class, ... } = VariantSchema.make(...)` exports resolve to
+BindingElement nodes, which ts-morph's canHaveJSDoc excludes, so getJsDocs()
+returns nothing regardless of placement. Docs already exist as leading /** */
+blocks (jd-s2). **Detector fix**: getJsDocText now reads getLeadingCommentRanges()
+for BindingElement docNodes, returning the last /**-prefixed block. Fixture
+pair. Clears all 8 at regen, zero source edits.
+
+## R25 — final consolidation (Opus driver, lanes stopped)
+
+Auto-tooling pushed a BROKEN mid-work snapshot to PR #326 (5 red). Local
+coherent-tree fixes: Check (R9 test .filePath -> .repoPath endsWith); Fallow
+(ecfr complexity present); JSDoc-Ratchet/Lint-Policy (stale inventories ->
+local regen green); Property Laws (ecfr test:property exit-130 CI kill;
+passes locally 3/3 -> flake, re-run on clean push). Consolidation commits the
+coherent tree over the broken HEAD.

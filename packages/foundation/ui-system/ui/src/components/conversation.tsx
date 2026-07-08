@@ -1,3 +1,9 @@
+/**
+ * Conversation primitive: a scrollable message list with an empty-state slot for chat UIs.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { ArrowDownIcon } from "@phosphor-icons/react";

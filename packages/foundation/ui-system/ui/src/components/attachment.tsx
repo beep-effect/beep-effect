@@ -1,3 +1,9 @@
+/**
+ * Attachment primitive: a file-attachment shell with state, size, and orientation styling hooks.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { mergeProps } from "@base-ui/react/merge-props";
 import { useRender } from "@base-ui/react/use-render";
 import { Button } from "@beep/ui/components/button";

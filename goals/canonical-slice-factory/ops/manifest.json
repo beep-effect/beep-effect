@@ -8,9 +8,7 @@
     "updated": "2026-05-14",
     "packetAnchorDocument": "SPEC.md"
   },
-  "supersedes": [
-    "repo-architecture-automation"
-  ],
+  "supersedes": ["repo-architecture-automation"],
   "handoffPrompt": "ops/codex-handoff-prompt.md",
   "proofTarget": {
     "boundedContext": "architecture-lab",

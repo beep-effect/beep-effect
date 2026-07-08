@@ -1,3 +1,9 @@
+/**
+ * Shared type surface for theme options and component override maps.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import type { createTheme } from "@mui/material/styles";
 
 /**

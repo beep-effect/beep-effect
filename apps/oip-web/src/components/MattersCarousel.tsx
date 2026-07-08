@@ -1,3 +1,9 @@
+/**
+ * Auto-advancing carousel of selected matters for the OIP public home page.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 // fallow-ignore-file unused-file
 /**
  * Selected-matters carousel for the OIP public home page.

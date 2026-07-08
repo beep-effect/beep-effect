@@ -1,3 +1,9 @@
+/**
+ * MUI X date/time picker component theme overrides.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { CONTROL_HEIGHTS, CONTROL_TOUCH_HEIGHTS, TOUCH_MEDIA_QUERY } from "../scales.ts";
 import type {} from "@mui/x-date-pickers/themeAugmentation";
 import type {} from "@mui/x-date-pickers-pro/themeAugmentation";

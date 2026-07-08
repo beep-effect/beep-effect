@@ -1,3 +1,9 @@
+/**
+ * Sheet primitive: an edge-anchored modal panel built on Base UI's dialog.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Dialog as SheetPrimitive } from "@base-ui/react/dialog";

@@ -6,9 +6,7 @@
     "status": "active",
     "stage": "capture",
     "openQuestions": [],
-    "sources": [
-      "research/SOURCES.md"
-    ],
+    "sources": ["research/SOURCES.md"],
     "links": {
       "goals": [],
       "docs": [],

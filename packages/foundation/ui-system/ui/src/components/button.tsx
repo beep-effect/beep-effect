@@ -1,3 +1,9 @@
+/**
+ * Button primitive with shared visual variants, sizes, and an `asChild` slot.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { cva } from "class-variance-authority";

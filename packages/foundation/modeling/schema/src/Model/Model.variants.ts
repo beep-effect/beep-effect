@@ -304,41 +304,127 @@ export type ClassShape<
 // on the destructured binding element bound from `VariantSchema.make(...)`.
 export {
   /**
+   * A base class used for creating domain model schemas.
+   *
+   * @example
+   * ```ts
+   * import * as Model from "@beep/schema/Model"
+   *
+   * export class Group extends Model.Class<Group>("Group")({}) {}
+   * console.log(Group.insert)
+   * ```
+   *
    * @category constructors
    * @since 0.0.0
    */
   Class,
   /**
+   * Extract the schema for a specific variant from a variant struct.
+   *
+   * @example
+   * ```ts
+   * import * as Model from "@beep/schema/Model"
+   *
+   * const fields = Model.Struct({})
+   * const InsertSchema = Model.extract(fields, "insert")
+   * console.log(InsertSchema)
+   * ```
+   *
    * @category getters
    * @since 0.0.0
    */
   extract,
   /**
+   * Define a variant-aware field by supplying a schema per variant key.
+   *
+   * @example
+   * ```ts
+   * import * as Model from "@beep/schema/Model"
+   *
+   * const status = Model.Field({})
+   * console.log(status)
+   * ```
+   *
    * @category constructors
    * @since 0.0.0
    */
   Field,
   /**
+   * Create a field present on every variant except the listed ones.
+   *
+   * @example
+   * ```ts
+   * import * as S from "effect/Schema"
+   * import * as Model from "@beep/schema/Model"
+   *
+   * const readOnly = Model.FieldExcept(["insert", "update"])(S.String)
+   * console.log(readOnly)
+   * ```
+   *
    * @category constructors
    * @since 0.0.0
    */
   FieldExcept,
   /**
+   * Create a field present only on the listed variants.
+   *
+   * @example
+   * ```ts
+   * import * as S from "effect/Schema"
+   * import * as Model from "@beep/schema/Model"
+   *
+   * const jsonOnly = Model.FieldOnly(["json", "jsonCreate"])(S.String)
+   * console.log(jsonOnly)
+   * ```
+   *
    * @category constructors
    * @since 0.0.0
    */
   FieldOnly,
   /**
+   * Transform variant schemas inside an existing field using per-variant mappers.
+   *
+   * @example
+   * ```ts
+   * import * as Model from "@beep/schema/Model"
+   *
+   * const makeOptional = Model.fieldEvolve({})
+   * console.log(makeOptional)
+   * ```
+   *
    * @category mapping
    * @since 0.0.0
    */
   fieldEvolve,
   /**
+   * Create a raw variant struct without producing a class.
+   *
+   * @example
+   * ```ts
+   * import * as Model from "@beep/schema/Model"
+   *
+   * const groupFields = Model.Struct({})
+   * console.log(groupFields)
+   * ```
+   *
    * @category constructors
    * @since 0.0.0
    */
   Struct,
   /**
+   * Create a discriminated union of variant structs with per-variant accessors.
+   *
+   * @example
+   * ```ts
+   * import * as S from "effect/Schema"
+   * import * as Model from "@beep/schema/Model"
+   *
+   * const a = Model.Struct({ _tag: S.tag("A"), value: S.String })
+   * const b = Model.Struct({ _tag: S.tag("B"), count: S.Finite })
+   * const AB = Model.Union([a, b])
+   * console.log(AB)
+   * ```
+   *
    * @category constructors
    * @since 0.0.0
    */

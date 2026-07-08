@@ -18,10 +18,7 @@
     "kind": "modeling"
   },
   "canonicalImport": "import * as Duration from \"@beep/schema/Duration\"",
-  "pilotConcepts": [
-    "Duration",
-    "Glob"
-  ],
+  "pilotConcepts": ["Duration", "Glob"],
   "migratedTopicalConcepts": [
     "Age",
     "CardinalDirection",

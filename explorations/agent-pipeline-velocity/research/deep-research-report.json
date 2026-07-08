@@ -47,9 +47,7 @@
       {
         "claim": "Layered instruction-file architecture is natively supported and cheap: Claude Code loads the working directory's CLAUDE.md plus all ancestors at launch, and loads per-subdirectory CLAUDE.md files lazily only when it reads files there — so a root file with repo-wide rules plus per-package files costs zero context for packages a task never touches. Directly adoptable in a 92-package monorepo: put slice-specific conventions (e.g. Effect service patterns, schema-first rules per slice) in per-package files rather than the root.",
         "confidence": "high",
-        "sources": [
-          "https://code.claude.com/docs/en/large-codebases"
-        ],
+        "sources": ["https://code.claude.com/docs/en/large-codebases"],
         "evidence": "Verified verbatim against Anthropic's large-codebases doc, including a worked example (starting from packages/api/ loads root + api files with nothing from packages/web/). Caveat: two GitHub issues (#2571, #24987) report on-demand loading failing in specific clients (VS Code extension/WSL2); verify lazy injection fires in your harness before relying on per-package files for correctness-critical rules — though even under that bug, untouched packages still cost nothing.",
         "vote": "3-0"
       },
@@ -66,18 +64,14 @@
       {
         "claim": "Instruction-file size and file-splitting architecture are not compliance levers: across 1,650 controlled Claude Code sessions, CLAUDE.md length (25–500 lines) produced no detectable compliance effect with affirmative Bayesian null support (BF10=0.096), and single CLAUDE.md vs +AGENTS.md vs +two nested per-directory files showed no detectable difference (ICR 67.7%/68.2%/61.7%, p=0.19; effects >~6pp ruled out; the nested condition actually trended worst). Splitting instructions into per-package files is not supported as a compliance remediation — do it for context-cost reasons (lazy loading), not adherence reasons.",
         "confidence": "medium",
-        "sources": [
-          "https://arxiv.org/pdf/2605.10039"
-        ],
+        "sources": ["https://arxiv.org/pdf/2605.10039"],
         "evidence": "Two unanimous 3-0 claims, all figures verified against the full PDF (McMillan, HxAI Australia, May 2026). Downgraded from high because it is a single-author non-peer-reviewed preprint, compliance was operationalized as one trivial syntactic marker (// @tracked), tested on two TypeScript codebases with Claude Code only — transfer to demanding multi-rule instruction sets and Codex is untested. The architecture null is failure-to-reject (no Bayes support), unlike the size null. Note the paper explicitly frames the size finding as 'in tension with practitioner advice' to keep files compact — the compactness rationale that survives is token cost (see context-rot finding), not adherence.",
         "vote": "3-0 (x2 claims)"
       },
       {
         "claim": "The dominant compliance failure mode is within-session decay, and the remedy is machine enforcement, not prose: each additional function generated in a session correlated with ~5.6% lower odds of following a CLAUDE.md instruction (OR=0.944, p≈1e-49), median first omission at the 4th generated function — the largest effect the factorial study measured. Author's recommendation, aligned with the file-architecture nulls: for rules that must hold across long sessions, use agent hooks that re-surface rules mid-session (PreToolUse/PostToolUse/Stop), linters, and CI checks rather than tuning instruction-file structure. Maps directly onto machine-enforced-rules-over-prose: lint policies, tsgo diagnostics, and yeet-style gates are the reliable channel; CLAUDE.md prose is the unreliable one.",
         "confidence": "medium",
-        "sources": [
-          "https://arxiv.org/pdf/2605.10039"
-        ],
+        "sources": ["https://arxiv.org/pdf/2605.10039"],
         "evidence": "3-0 vote; all statistics verified against the primary PDF including the non-monotonicity qualifier. Caveats: the decay finding was identified post-hoc and the paper itself says it 'warrants independent replication'; detectable on only 2 of 3 multi-function tasks (per-task ORs 1.005/0.955/0.831), so the pooled figure averages heterogeneity; single preprint, Claude Code only.",
         "vote": "3-0"
       },
@@ -104,18 +98,14 @@
       {
         "claim": "Headroom (github.com/headroomlabs-ai/headroom; ~57k stars, v0.30.0 released 2026-07-03) is the leading OSS context-compression layer: vendor-published claim of 60–95% fewer input tokens on tool outputs, logs, files, RAG chunks, and conversation history 'same answers', with concrete per-workload numbers — code search 17,765→1,408 tokens (92%), SRE incident debugging 65,694→5,118 (92%), GitHub issue triage 54,174→14,761 (73%), codebase exploration 78,502→41,254 (47%) — plus self-run accuracy-preservation evals (GSM8K/TruthfulQA/SQuAD v2/BFCL, deltas ±0.000 to +0.030) and a published reproduction command. Deployable as library, proxy, or MCP server.",
         "confidence": "medium",
-        "sources": [
-          "https://github.com/headroomlabs-ai/headroom"
-        ],
+        "sources": ["https://github.com/headroomlabs-ai/headroom"],
         "evidence": "Two unanimous 3-0 claims verified verbatim against the repo README/description. Confidence capped at medium for real-world applicability: all figures are vendor self-reported benchmark ceilings, not independent replications; third-party review notes gains are heavily content-type-dependent (top-of-range rows are structured JSON/code/logs via SmartCrusher/CodeCompressor; plain-prose gains much smaller). Treat as 'Headroom's published numbers', pilot-measure on your own tool-output mix before counting savings.",
         "vote": "3-0 (x2 claims)"
       },
       {
         "claim": "A measured design point for compaction tooling: on a 50-task long-horizon GPT-5 tool-use benchmark, adding automated summarization of evicted history (summary window 3) on top of recency pruning raised complete task success from 79.0% to 91.6% at only 3.4% token overhead over pruning alone — i.e., cheap summarization of what you evict recovers most of the accuracy risk of aggressive pruning. Importantly, the companion claim that pruning ALONE improved accuracy was refuted in verification — do not take 'aggressive truncation is free' as the lesson; the survivor is 'prune + summarize evictions'.",
         "confidence": "medium",
-        "sources": [
-          "https://arxiv.org/html/2606.10209"
-        ],
+        "sources": ["https://arxiv.org/html/2606.10209"],
         "evidence": "3-0 vote; all numbers verified against the primary preprint (Lodha et al., Microsoft, June 2026; 5-run averages with CIs). Major caveat: the benchmark is enterprise expense-itemization via MCP in Dynamics 365 — not coding — so this is a design-point datum for compaction architecture, not a transferable coding-agent number. ~1-month-old unreviewed preprint, no replications yet.",
         "vote": "3-0"
       },
@@ -144,9 +134,7 @@
       {
         "claim": "CI runner economics for agent-driven PR volume: Blacksmith bills Ubuntu x64 runners at $0.004/min (2 vCPU base; larger sizes bill proportionally; 3,000 free min/mo), framing 'up to 67% total cost savings' vs GitHub-hosted — decomposed by the vendor as 2x faster runtime plus 33% cheaper per-minute. The analytical point for time-to-mergeable-PR: the speed multiplier, not the rate, drives ~75% of the advertised savings and ALL of the cycle-time reduction — so runner selection should be evaluated on measured wall-clock speedup for your workload, with the per-minute rate as a secondary tiebreaker.",
         "confidence": "medium",
-        "sources": [
-          "https://www.blacksmith.sh/pricing"
-        ],
+        "sources": ["https://www.blacksmith.sh/pricing"],
         "evidence": "Two unanimous 3-0 claims; pricing and framing verified verbatim on the live pricing page (2026-07-05) and repeated by independent 2026 comparisons (BetterStack, jmduke) without dispute; RunsOn benchmarks place Blacksmith among top single-thread x64 managed runners. Medium because the 2x/67% figures are vendor marketing, not independent measurement — real speedups vary by workload (vendor case studies claim 2.3x–5.9x); the $0.004/min rate itself is high-confidence.",
         "vote": "3-0 (x2 claims)"
       }

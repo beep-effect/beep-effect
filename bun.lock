@@ -1685,6 +1685,7 @@
       "name": "@beep/lint-rules",
       "version": "0.1.0",
       "devDependencies": {
+        "@beep/identity": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@beep/utils": "workspace:^",
         "@biomejs/biome": "catalog:",

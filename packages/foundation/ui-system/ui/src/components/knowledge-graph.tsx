@@ -1,3 +1,9 @@
+/**
+ * Knowledge-graph primitive: a force-directed node/link graph view with an imperative handle.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { A, Str } from "@beep/utils";

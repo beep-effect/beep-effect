@@ -107,9 +107,7 @@
     "research/gold-intake-anti-inference-prompt-mode.md",
     "research/SOURCES.md"
   ],
-  "proposalReviewReports": [
-    "research/reports/proposal-review-round-1.md"
-  ],
+  "proposalReviewReports": ["research/reports/proposal-review-round-1.md"],
   "proposalReviewLoop": {
     "zeroGate": "zero required improvement items",
     "loopBudget": 3,

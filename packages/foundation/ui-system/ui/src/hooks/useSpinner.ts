@@ -1,3 +1,9 @@
+/**
+ * Spinner hook: press-and-hold repeat firing for increment/decrement controls.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { $UiId } from "@beep/identity";
 import { NonNegativeInt } from "@beep/schema";
 import { useAtomMount, useAtomSet } from "@effect/atom-react";

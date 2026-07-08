@@ -41,10 +41,7 @@
       "id": "fallow-quality-enforcement",
       "path": "goals/fallow-quality-enforcement",
       "relationship": "completes-seeded-tasks",
-      "tasks": [
-        "fqe-005",
-        "fqe-006"
-      ]
+      "tasks": ["fqe-005", "fqe-006"]
     }
   ],
   "requiredArtifacts": [

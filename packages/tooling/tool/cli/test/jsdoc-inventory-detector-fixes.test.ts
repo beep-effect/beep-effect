@@ -55,6 +55,7 @@ const tsdocPolicy = {
 type ExportFinding = {
   readonly symbolName?: string;
   readonly exportKind: string;
+  readonly repoPath: string;
   readonly missingRequiredTags: ReadonlyArray<string>;
   readonly missingSummary: boolean;
   readonly remediationStatus: string;
@@ -646,8 +647,8 @@ export function parseValue(value: string, radix?: number): number {
  * @since 0.0.0
  */
 
-export * from "./documentedRule.ts";
-export * from "./undocumentedRule.ts";
+export { default as documentedRule } from "./documentedRule.ts";
+export { default as undocumentedRule } from "./undocumentedRule.ts";
 `,
                 ],
                 [
@@ -686,12 +687,78 @@ export default defineRule({
           const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
           expect(pkg).toBeDefined();
 
-          const documented = pkg?.exports.find((entry) => entry.filePath === "src/documentedRule.ts");
+          const documented = pkg?.exports.find((entry) => entry.repoPath.endsWith("/documentedRule.ts"));
           expect(documented).toBeDefined();
           expect(documented?.missingRequiredTags).toEqual([]);
           expect(documented?.remediationStatus).toBe("resolved");
 
-          const undocumented = pkg?.exports.find((entry) => entry.filePath === "src/undocumentedRule.ts");
+          const undocumented = pkg?.exports.find((entry) => entry.repoPath.endsWith("/undocumentedRule.ts"));
+          expect(undocumented).toBeDefined();
+          expect(undocumented?.missingRequiredTags).toEqual(
+            expect.arrayContaining(["@example", "@category", "@since"])
+          );
+          expect(undocumented?.remediationStatus).toBe("open");
+        })
+      )
+    ));
+
+  it("reads leading-comment JSDoc on destructured BindingElement exports (R24)", () =>
+    Effect.runPromise(
+      withFixtureRepo(
+        {
+          topoSortScript: "printf '@beep/demo\\n'",
+          packages: [
+            {
+              name: "@beep/demo",
+              dir: "demo",
+              files: [
+                [
+                  "src/index.ts",
+                  `/**
+ * Demo package documentation.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+
+const factory = () => ({ documentedMember: 1 as const, undocumentedMember: 2 as const });
+
+export const {
+  /**
+   * A documented member exported via destructuring.
+   *
+   * @example
+   * \`\`\`ts
+   * import { documentedMember } from "@beep/demo"
+   *
+   * console.log(documentedMember)
+   * \`\`\`
+   * @category models
+   * @since 0.0.0
+   */
+  documentedMember,
+  undocumentedMember,
+} = factory();
+`,
+                ],
+              ],
+            },
+          ],
+        },
+        Effect.fnUntraced(function* (repoRoot) {
+          const inventory = yield* buildInventory(repoRoot);
+          const pkg = inventory.packages.find((entry) => entry.packageName === "@beep/demo");
+          expect(pkg).toBeDefined();
+
+          // Documented binding element: the /** */ block sits in its leading
+          // comment range (ts-morph's getJsDocs cannot see it) — R24 reads it.
+          const documented = pkg?.exports.find((entry) => entry.symbolName === "documentedMember");
+          expect(documented).toBeDefined();
+          expect(documented?.missingRequiredTags).toEqual([]);
+          expect(documented?.remediationStatus).toBe("resolved");
+
+          // Undocumented binding element still fires.
+          const undocumented = pkg?.exports.find((entry) => entry.symbolName === "undocumentedMember");
           expect(undocumented).toBeDefined();
           expect(undocumented?.missingRequiredTags).toEqual(
             expect.arrayContaining(["@example", "@category", "@since"])

@@ -1,4 +1,10 @@
 /**
+ * Web/browser observability barrel — configuration and runtime layers.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+/**
  * @category configuration
  * @since 0.0.0
  */

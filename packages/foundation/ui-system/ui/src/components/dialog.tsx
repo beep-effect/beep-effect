@@ -1,3 +1,9 @@
+/**
+ * Dialog primitive: a modal root built on Base UI's dialog.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";

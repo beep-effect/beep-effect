@@ -1,3 +1,9 @@
+/**
+ * Tour primitive: a step-by-step guided-tour overlay with popover-anchored callouts.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Button } from "@beep/ui/components/button";

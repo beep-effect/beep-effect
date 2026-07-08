@@ -11,7 +11,7 @@
  * `Search` endpoint contract (`POST /search` request and response schemas).
  *
  * @since 0.0.0
- * @category Models
+ * @category models
  */
 export * from "./contracts/index.ts";
 /**

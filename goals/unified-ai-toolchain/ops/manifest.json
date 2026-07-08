@@ -77,9 +77,7 @@
   "v2Completion": {
     "status": "active",
     "activeGate": "V2.1 Operator CLI",
-    "closedGates": [
-      "V2/V3 packet bootstrap"
-    ],
+    "closedGates": ["V2/V3 packet bootstrap"],
     "remainingGates": [
       "root beep ai-sync command group",
       "all registered repo agent config files validated during normal checks",

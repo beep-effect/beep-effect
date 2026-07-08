@@ -61,6 +61,14 @@ export const Schema = Sex;
 /**
  * {@inheritDoc Sex}
  *
+ * @example
+ * ```ts
+ * import type { Schema } from "@beep/schema/Sex"
+ *
+ * const sex: Schema = "female"
+ * console.log(sex)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

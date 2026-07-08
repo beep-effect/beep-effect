@@ -1,3 +1,9 @@
+/**
+ * Live-waveform primitive: renders a real-time audio amplitude waveform.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { A } from "@beep/utils";

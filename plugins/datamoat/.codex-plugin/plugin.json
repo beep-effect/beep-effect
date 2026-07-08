@@ -25,10 +25,7 @@
     "longDescription": "Back up, analyze, and reuse ChatGPT | Claude | Codex | Cursor | DeepSeek | Qwen | Openclaw data + skills + attachments locally.",
     "developerName": "max-ng",
     "category": "Productivity",
-    "capabilities": [
-      "Read",
-      "Write"
-    ],
+    "capabilities": ["Read", "Write"],
     "websiteURL": "https://datamoat.org",
     "defaultPrompt": [
       "Install DataMoat on this machine.",

@@ -37,31 +37,36 @@
       "R19",
       "R20",
       "R21",
-      "R22"
+      "R22",
+      "R23",
+      "R24",
+      "R25"
     ],
     "pending": ["R9"]
   },
   "counters": {
-    "checkpoint": "2026-07-08 wave-3 regen",
+    "checkpoint": "2026-07-08 wave-3 consolidated (Opus driver, lanes stopped)",
     "dualArity": {
-      "entries": 3,
-      "note": "FINAL-B"
+      "entries": 0,
+      "status": "ZERO (empty inventory)"
     },
     "schemaFirst": {
-      "entries": 27,
-      "note": "6 convert + 13 curate + 5 cand + 3 adv -> FINAL lanes"
+      "entries": 4,
+      "status": "4 documented exceptions, gate GREEN",
+      "detail": "GraphCollection, usptoDocumentFieldTiers (FINAL-B unconvertible), makePgliteIntegrationGate (test infra), uspto R.getSomes (Law 20/47) \u2014 R23"
     },
     "jsdoc": {
-      "open": 121,
-      "note": "FINAL lanes + R9 surfaces ~192 after"
+      "exportLevel": "~25 open -> FINAL-C",
+      "moduleLevel": "~117 @since -> FINAL-D",
+      "ratchetGate": "PASSES (at/below baseline)"
     },
     "knip": {
-      "findings": 0,
-      "baseline": "written at 0"
+      "entries": 0,
+      "status": "ZERO (empty baseline written)"
     },
     "allowlist": {
       "entries": 3,
-      "note": "verified survivors; in-code migration at P8"
+      "status": "verified survivors (chalk/wink/rdf) -> P8 in-code migration"
     }
   },
   "waves": {
@@ -437,7 +442,7 @@
       }
     },
     "FINAL": {
-      "status": "in_progress",
+      "status": "done",
       "lanes": {
         "final-a-repocli": {
           "scope": "R20 x2 + R9 detector closures + 13 curated additions + repo-cli 58 jsdoc",
@@ -448,6 +453,17 @@
           "scope": "13-package sequential: 3 dual-arity + 11 SF converts + 3 advisories + ~60 jsdoc",
           "status": "dispatched",
           "report": "ops/reports/FINAL/final-b.md"
+        },
+        "final-c-exports": {
+          "scope": "~25 export-level jsdoc (Model.variants 8, identity 3, misc)",
+          "status": "done",
+          "report": "ops/reports/FINAL/final-c.md"
+        },
+        "final-d-modules": {
+          "scope": "~117 module-level @since (ui 113 + oip-web + desktop)",
+          "status": "done",
+          "report": "ops/reports/FINAL/final-d.md",
+          "note": "openModules 120->4 (116 module docs); 4 residual (3 observability @since + 1 ui summary) -> driver mop-up"
         }
       }
     }
@@ -526,5 +542,10 @@
       "@beep/lexical-schema": 50
     },
     "note": "JD-schema (460, sharded x3-4) waits for sf2-taila to free the package; ui 110 waits for sf2-tailb; repo-cli 58 waits for sf2-repocli; desktop 35 + ecfr 9 wait for al1a; long tail after."
-  }
+  },
+  "gitState": "HEAD=origin/standards-remediation (all pushed); auto-tooling committed lane work + merged origin/main; 7 uncommitted jsdoc-example files + reports remain; detector work verified present",
+  "blockedOn": "FINAL-C final steps (file-processing TextSpan + lint-rules RuleRegistrySchema); identity already stable",
+  "detectorTestsGreen": "jsdoc 11/11, dual-arity+schema-first 72/72 (R24 fixture + fixed R20 test)",
+  "allLanesComplete": true,
+  "finalCNote": "Model.variants 8 handled by R24 (no source change); identity/lint-rules/file-processing schemaAnnotation fixed (repaired FINAL-B annote regression; lint-rules gained @beep/identity devDep + composer); TextSpan @example added"
 }

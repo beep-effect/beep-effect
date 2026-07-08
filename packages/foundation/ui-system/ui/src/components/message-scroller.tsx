@@ -1,3 +1,9 @@
+/**
+ * Message-scroller primitive: a provider that keeps a message list pinned to the newest entry.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Button } from "@beep/ui/components/button";

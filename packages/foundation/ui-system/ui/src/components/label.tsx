@@ -1,3 +1,9 @@
+/**
+ * Label primitive: an accessible form label built on Base UI's field label.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { cn } from "../lib/index.ts";

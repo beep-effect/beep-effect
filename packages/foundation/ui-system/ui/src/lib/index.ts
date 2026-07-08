@@ -1,4 +1,10 @@
 /**
+ * Shared UI library utilities — date-time, URL, and class-name helpers.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+/**
  * @category utilities
  * @since 0.0.0
  */

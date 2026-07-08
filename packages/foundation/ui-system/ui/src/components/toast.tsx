@@ -1,3 +1,9 @@
+/**
+ * Toast primitive: variant styling and rendering for a single toast notification.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Toast as ToastPrimitive } from "@base-ui/react/toast";

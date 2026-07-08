@@ -1,3 +1,9 @@
+/**
+ * React bindings for ElevenLabs Scribe realtime transcription.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 /**

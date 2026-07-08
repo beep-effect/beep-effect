@@ -32,9 +32,7 @@
     "goals/<slug>/GOAL.md",
     "goals/<slug>/research/SOURCES.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

@@ -1,8 +1,7 @@
-/// <reference path="../assets.d.ts" />
-// cspell:words initdb
-
 /**
  * In-process PGlite database provisioning for the desktop chat sidecar.
+ *
+ * cspell:words initdb
  *
  * Boots a file-backed {@link https://pglite.dev | PGlite} instance in-process via
  * the `@beep/pglite` driver (which wraps `@effect/sql-pglite` and aliases the
@@ -26,6 +25,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+/// <reference path="../assets.d.ts" />
 
 import { fileURLToPath } from "node:url";
 import * as Pglite from "@beep/pglite";

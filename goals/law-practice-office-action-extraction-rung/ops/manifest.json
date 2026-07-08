@@ -121,7 +121,5 @@
     "The implementation would exceed named scope before service-backed extraction is green.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "researchReports": [
-    "research/SOURCES.md"
-  ]
+  "researchReports": ["research/SOURCES.md"]
 }

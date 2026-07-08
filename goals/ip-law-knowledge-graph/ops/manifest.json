@@ -68,9 +68,7 @@
     "ops/handoffs/P3_ORCHESTRATOR_PROMPT.md",
     "ops/handoffs/P4_ORCHESTRATOR_PROMPT.md"
   ],
-  "researchReports": [
-    "research/SOURCES.md"
-  ],
+  "researchReports": ["research/SOURCES.md"],
   "completionGate": {
     "operator": "yeet",
     "requiresPullRequest": true,

@@ -1,3 +1,9 @@
+/**
+ * Empty-state primitive: an icon, title, and description layout for zero-data views.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { cva } from "class-variance-authority";
 import { cn } from "../lib/index.ts";
 import type { VariantProps } from "class-variance-authority";

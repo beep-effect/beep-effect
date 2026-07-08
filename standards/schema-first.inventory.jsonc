@@ -4,68 +4,6 @@
   "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
-      "file": "apps/oip-web/src/content/OipSeo.ts",
-      "symbol": "oipTwitterHandle",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-null-return",
-      "line": 94,
-      "owner": "@beep/oip-web",
-      "reason": "Next.js Metadata twitter fields accept undefined for omitted handles, so this helper is a React framework boundary adapter that preserves the required shape."
-    },
-    {
-      "file": "packages/agents/client/src/Chat.atoms.ts",
-      "symbol": "CreateThreadAtomInput",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/agents-client",
-      "reason": "Structural S.Struct preserves the public atom write payload consumed by app callers; converting to S.Class would change public form and requires the family-close consumer sweep."
-    },
-    {
-      "file": "packages/agents/domain/src/entities/Agent/Agent.model.ts",
-      "symbol": "anonymous@65",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/agents-domain",
-      "reason": "S.Struct with non-identifier or spread keys stays tracked as an exception."
-    },
-    {
-      "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
-      "symbol": "anonymous@316",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/agents-domain",
-      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/drivers/box/src/Box.config.ts",
-      "symbol": "BoxCcgConfigShape",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/box",
-      "reason": "Internal S.Struct field block feeds an S.Class constructor and stays tied to the class model."
-    },
-    {
-      "file": "packages/drivers/ecfr/scripts/generate.ts",
-      "symbol": "operationsOf.toUpperCase",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-normalization",
-      "line": 217,
-      "owner": "@beep/ecfr",
-      "reason": "Normalization call \".toUpperCase()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
-    },
-    {
-      "file": "packages/drivers/hubspot/src/HubSpot.errors.ts",
-      "symbol": "HubSpotErrorOptions.email",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-precision-audit",
-      "line": 194,
-      "owner": "@beep/hubspot",
-      "reason": "Diagnostic error options intentionally preserve raw submitted email text from request-encoding failures, including values rejected before contact email normalization."
-    },
-    {
       "file": "packages/drivers/m365/src/M365.schemas.ts",
       "symbol": "GraphCollection",
       "kind": "object-struct-schema",
@@ -85,161 +23,21 @@
       "file": "packages/drivers/uspto/src/Uspto.service.ts",
       "symbol": "optionalField.R.getSomes",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-getsomes-struct",
       "line": 144,
       "owner": "@beep/uspto",
-      "reason": "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05)."
-    },
-    {
-      "file": "packages/drivers/wink/src/Wink.service.ts",
-      "symbol": "WinkEngineRuntimeState",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/wink",
-      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/capability/file-processing/src/Extraction/index.ts",
-      "symbol": "anonymous@111",
-      "kind": "object-struct-schema",
-      "status": "candidate",
-      "owner": "@beep/file-processing",
-      "reason": "Object schema should prefer an annotated S.Class over S.Struct."
-    },
-    {
-      "file": "packages/foundation/modeling/html/scripts/generate.ts",
-      "symbol": "className.toUpperCase",
-      "kind": "schema-policy-advisory",
-      "status": "advisory",
-      "ruleId": "SFV4-normalization",
-      "line": 105,
-      "owner": "@beep/html",
-      "reason": "Normalization call \".toUpperCase()\" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data."
-    },
-    {
-      "file": "packages/foundation/modeling/html/src/Html.attributes.ts",
-      "symbol": "GlobalAttributesStruct",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/html",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/html/src/Html.meta.ts",
-      "symbol": "HtmlElementMeta",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/html",
-      "reason": "Generated metadata-lookup schema for the ELEMENT_META table (not a domain entity); an annotated S.Struct with a derived type is intentional over S.Class."
-    },
-    {
-      "file": "packages/foundation/modeling/identity/src/Id.ts",
-      "symbol": "anonymous@117",
-      "kind": "object-struct-schema",
-      "status": "candidate",
-      "owner": "@beep/identity",
-      "reason": "Object schema should prefer an annotated S.Class over S.Struct."
-    },
-    {
-      "file": "packages/foundation/modeling/identity/src/Id.ts",
-      "symbol": "anonymous@148",
-      "kind": "object-struct-schema",
-      "status": "candidate",
-      "owner": "@beep/identity",
-      "reason": "Object schema should prefer an annotated S.Class over S.Struct."
-    },
-    {
-      "file": "packages/foundation/modeling/identity/src/Vocab.ts",
-      "symbol": "anonymous@57",
-      "kind": "object-struct-schema",
-      "status": "candidate",
-      "owner": "@beep/identity",
-      "reason": "Object schema should prefer an annotated S.Class over S.Struct."
-    },
-    {
-      "file": "packages/foundation/ui-system/ui/src/components/tour.tsx",
-      "symbol": "Step",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ui",
-      "reason": "React tour step configuration carries ReactNode values and component prop slices, so it is a render contract rather than a pure schema model."
-    },
-    {
-      "file": "packages/foundation/ui-system/ui/src/components/tour.tsx",
-      "symbol": "Tour",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/ui",
-      "reason": "React tour configuration is coupled to Step render contracts containing ReactNode values, so it stays tracked as a UI boundary exception."
-    },
-    {
-      "file": "packages/law-practice/server/test/fixture.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 51,
-      "owner": "@beep/law-practice-server",
-      "reason": "Synthetic golden fixture helper decodes branded file-processing IDs and PosixPath values for one deterministic office-action source artifact; property coverage belongs in the file-processing package schemas."
-    },
-    {
-      "file": "packages/law-practice/use-cases/src/OfficeActionReview/OfficeActionReview.service.ts",
-      "symbol": "OfficeActionReviewDeps",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/law-practice-use-cases",
-      "reason": "Dependency-injection container of Effect service shapes (FileProcessingService/ClaimGate/IrToLaw/ClaimTransition); a wiring bundle of function-bearing services, not serializable data."
-    },
-    {
-      "file": "packages/shared/domain/src/values/LocalDate/LocalDate.model.ts",
-      "symbol": "LocalDateFields",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/shared-domain",
-      "reason": "Internal S.Struct field block feeds an S.Class constructor and stays tied to the class model."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-      "symbol": "PeerDependencyMetaEntry",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-utils",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-      "symbol": "PublishConfigBase",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-utils",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
-    },
-    {
-      "file": "packages/tooling/policy-pack/lint-rules/src/index.ts",
-      "symbol": "anonymous@155",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/lint-rules",
-      "reason": "S.Struct with non-identifier or spread keys stays tracked as an exception."
-    },
-    {
-      "file": "packages/tooling/policy-pack/lint-rules/src/rules/utils.ts",
-      "symbol": "MemberAccess",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/lint-rules",
-      "reason": "Type alias holds non-schema runtime handles (Option<AstNode> plus the raw ESTree property node from oxlint member-access traversal); it is an internal AST-visitor return shape, not decodable domain data."
+      "reason": "R.getSomes is correct here (Law 20/47 dynamic-key carve-out): optionalField's `key` is a plain `string` called from 13 spread sites with differing keys, and O.getSomesStruct returns Partial<Record> incompatible with the Record<string,string> contract (verified against effect v4 + all call sites, FINAL-B). Homogeneous dynamic-key dictionary, not a literal Option-struct."
     },
     {
       "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
       "symbol": "makePgliteIntegrationGate",
       "kind": "schema-policy-advisory",
-      "status": "advisory",
+      "status": "exception",
       "ruleId": "SFV4-fn-schema",
       "line": 1454,
       "owner": "@beep/test-utils",
-      "reason": "Exported function \"makePgliteIntegrationGate\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+      "reason": "Test-infrastructure gate: the optional `env` override reads driver/URL selection from Config at boot; it is a test-only branch-exercise bag (tests pass env to hit each path without mutating process env), not a persisted data contract. Fn({input,output})/S.Class modeling adds ceremony without executable value."
     }
   ]
 }

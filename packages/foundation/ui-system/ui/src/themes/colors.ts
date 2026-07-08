@@ -1,3 +1,9 @@
+/**
+ * Shared color palette tokens for the app theme.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import type { CssVarsThemeOptions } from "@mui/material/styles";
 
 // Augment the palette to include custom 'text' property

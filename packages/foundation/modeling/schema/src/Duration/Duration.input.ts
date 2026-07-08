@@ -297,6 +297,15 @@ export const Input = DurationInput;
 /**
  * {@inheritDoc DurationInput}
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { Input } from "@beep/schema/Duration"
+ *
+ * const fromString: Input = S.decodeUnknownSync(Input)("5 hours")
+ * console.log(fromString)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

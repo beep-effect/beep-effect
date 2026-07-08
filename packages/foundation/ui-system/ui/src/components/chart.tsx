@@ -1,3 +1,9 @@
+/**
+ * Chart primitive: Recharts container wiring shared theme colors and tooltip/legend styling to a `ChartConfig`.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { cn } from "@beep/ui/lib/utils";

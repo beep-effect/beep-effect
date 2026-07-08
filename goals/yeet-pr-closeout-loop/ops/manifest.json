@@ -23,16 +23,9 @@
   "supersededNote": "2026-07-05: absorbed into agent-pipeline-velocity (ledger-surgery decision, explorations/agent-pipeline-velocity/DECISIONS.md) — closeout-gate lineup changes (greptile-only default) land there as Phase B1; stale repo-exports-catalog verificationCommands retire with it.",
   "ownership": {
     "family": "tooling",
-    "primaryPackages": [
-      "@beep/repo-cli"
-    ],
-    "primaryPaths": [
-      "packages/tooling/tool/cli"
-    ],
-    "docsPaths": [
-      ".claude/skills/yeet/SKILL.md",
-      "goals/yeet-pr-closeout-loop"
-    ]
+    "primaryPackages": ["@beep/repo-cli"],
+    "primaryPaths": ["packages/tooling/tool/cli"],
+    "docsPaths": [".claude/skills/yeet/SKILL.md", "goals/yeet-pr-closeout-loop"]
   },
   "agentLaunchers": [
     {

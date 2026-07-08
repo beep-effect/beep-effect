@@ -1,6 +1,7 @@
 ---
 "@beep/acp": patch
 "@beep/agents-client": patch
+"@beep/agents-domain": patch
 "@beep/agents-server": patch
 "@beep/agents-use-cases": patch
 "@beep/ai-sync": patch
@@ -56,8 +57,4 @@
 "@beep/wink": patch
 ---
 
-Standards remediation waves 1-3: detector corrections and classification framework
-in the repo CLI (21 rulings), dual-arity inventory to zero, schema-first exception
-ledger dissolved into verified silent rules + curated exclusions, ~1,400 compiling
-JSDoc examples added across the workspace, knip findings to zero, and effect-laws
-allowlist reduced to three benchmark-verified survivors.
+Standards remediation: drove every violation-enumerating standards inventory to zero or verified-documented-exception — dual-arity inventory emptied, schema-first exception ledger dissolved into fixture-backed detector rules plus a handful of evidence-backed exceptions, ~1,600 compiling JSDoc examples and module docs added across the workspace, knip findings to zero, and the effect-laws allowlist reduced to three benchmark-verified native-runtime survivors. Includes ~24 detector corrections (false-positive fixes with regression fixtures) in the repo CLI.

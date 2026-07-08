@@ -1,3 +1,9 @@
+/**
+ * Tooltip primitive: provider and content wrappers built on Base UI's tooltip.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Tooltip as TooltipPrimitive } from "@base-ui/react/tooltip";

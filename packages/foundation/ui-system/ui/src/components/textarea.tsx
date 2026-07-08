@@ -1,3 +1,9 @@
+/**
+ * Textarea primitive: a styled multi-line text input.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { cn } from "../lib/index.ts";
 import type * as React from "react";
 

@@ -1,3 +1,9 @@
+/**
+ * Orb primitive: an agent-state-driven animated indicator.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { A } from "@beep/utils";

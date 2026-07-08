@@ -1,3 +1,9 @@
+/**
+ * Field primitive: a labeled form-field wrapper with description and error slots.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Label } from "@beep/ui/components/label";

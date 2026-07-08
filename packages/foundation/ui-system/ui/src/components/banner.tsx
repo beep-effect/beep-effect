@@ -1,3 +1,9 @@
+/**
+ * Banner primitive: class-variance helper for banner tone variants.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { CheckCircleIcon, InfoIcon, SpinnerGapIcon, WarningCircleIcon, XIcon } from "@phosphor-icons/react";
 import { cva } from "class-variance-authority";
 import { cn } from "../lib/index.ts";

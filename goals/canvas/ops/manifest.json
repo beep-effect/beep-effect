@@ -35,14 +35,8 @@
     }
   },
   "targets": {
-    "primary": [
-      "desktop"
-    ],
-    "bestEffort": [
-      "linux",
-      "macos",
-      "windows"
-    ]
+    "primary": ["desktop"],
+    "bestEffort": ["linux", "macos", "windows"]
   },
   "defaults": {
     "platform": "cross-platform",

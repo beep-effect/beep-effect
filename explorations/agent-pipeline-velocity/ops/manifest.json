@@ -6,13 +6,9 @@
     "status": "graduated",
     "stage": "graduate",
     "openQuestions": [],
-    "sources": [
-      "research/SOURCES.md"
-    ],
+    "sources": ["research/SOURCES.md"],
     "links": {
-      "goals": [
-        "goals/agent-pipeline-velocity"
-      ],
+      "goals": ["goals/agent-pipeline-velocity"],
       "docs": [],
       "supersededBy": null
     },

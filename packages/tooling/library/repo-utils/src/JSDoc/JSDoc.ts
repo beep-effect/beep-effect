@@ -552,6 +552,13 @@ export const StructuralJSDoc = S.Union([
 /**
  * Runtime type for {@link StructuralJSDoc}.
  *
+ * @example
+ * ```ts
+ * import type { StructuralJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: StructuralJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -1202,6 +1209,13 @@ export const AccessModifierJSDoc = S.Union([
 /**
  * Runtime type for {@link AccessModifierJSDoc}.
  *
+ * @example
+ * ```ts
+ * import type { AccessModifierJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: AccessModifierJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -1611,6 +1625,13 @@ export const DocumentationContentJSDoc = S.Union([
 /**
  * Runtime type for {@link DocumentationContentJSDoc}.
  *
+ * @example
+ * ```ts
+ * import type { DocumentationContentJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: DocumentationContentJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -2057,6 +2078,13 @@ export const TSDocSpecificJSDoc = S.Union([
 /**
  * Runtime type for {@link TSDocSpecificJSDoc}.
  *
+ * @example
+ * ```ts
+ * import type { TSDocSpecificJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: TSDocSpecificJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -2185,6 +2213,13 @@ export const InlineJSDoc = S.Union([JSDocLink, JSDocInheritDoc]).pipe(
 /**
  * Runtime type for {@link InlineJSDoc}.
  *
+ * @example
+ * ```ts
+ * import type { InlineJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: InlineJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -2491,6 +2526,13 @@ export const OrganizationalJSDoc = S.Union([
 /**
  * Runtime type for {@link OrganizationalJSDoc}.
  *
+ * @example
+ * ```ts
+ * import type { OrganizationalJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: OrganizationalJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -2687,6 +2729,13 @@ export const EventDependencyJSDoc = S.Union([JSDocFires, JSDocListens, JSDocEven
 /**
  * Runtime type for {@link EventDependencyJSDoc}.
  *
+ * @example
+ * ```ts
+ * import type { EventDependencyJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: EventDependencyJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -3459,6 +3508,13 @@ export const RemainingJSDoc = S.Union([
 /**
  * Runtime type for {@link RemainingJSDoc}.
  *
+ * @example
+ * ```ts
+ * import type { RemainingJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: RemainingJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -4040,6 +4096,13 @@ export const ClosureSpecificJSDoc = S.Union([
 /**
  * Runtime type for {@link ClosureSpecificJSDoc}.
  *
+ * @example
+ * ```ts
+ * import type { ClosureSpecificJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: ClosureSpecificJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -4446,6 +4509,13 @@ export const TypeDocSpecificJSDoc = S.Union([
 /**
  * Runtime type for {@link TypeDocSpecificJSDoc}.
  *
+ * @example
+ * ```ts
+ * import type { TypeDocSpecificJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: TypeDocSpecificJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -4539,6 +4609,13 @@ export const TypeScriptSpecificJSDoc = S.Union([JSDocOverload]).pipe(
 /**
  * Runtime type for {@link TypeScriptSpecificJSDoc}.
  *
+ * @example
+ * ```ts
+ * import type { TypeScriptSpecificJSDoc } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: TypeScriptSpecificJSDoc): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -4604,6 +4681,13 @@ export const JSDocTag = S.Union([
 /**
  * Runtime type for {@link JSDocTag}.
  *
+ * @example
+ * ```ts
+ * import type { JSDocTag } from "@beep/repo-utils/JSDoc/JSDoc"
+ *
+ * const tagName = (tag: JSDocTag): string => tag._tag
+ * console.log(typeof tagName)
+ * ```
  * @category models
  * @since 0.0.0
  */

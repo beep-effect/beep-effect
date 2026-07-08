@@ -1,3 +1,9 @@
+/**
+ * Dropdown-menu primitive: a triggered menu root built on Base UI's menu.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 "use client";
 
 import { Menu as MenuPrimitive } from "@base-ui/react/menu";

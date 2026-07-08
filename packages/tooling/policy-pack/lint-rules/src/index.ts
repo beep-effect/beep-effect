@@ -11,7 +11,11 @@
  * @since 0.1.0
  */
 
+import { make } from "@beep/identity";
 import * as S from "effect/Schema";
+
+const { $LintRulesId } = make("lint-rules");
+const $I = $LintRulesId;
 
 /**
  * Package version for `@beep/lint-rules`.
@@ -158,11 +162,9 @@ export class RuleRegistrySchema extends S.Class<RuleRegistrySchema>("RuleRegistr
     "no-empty-named-blocks": RuleMetadataSchema,
     "prefer-array-flat-map": RuleMetadataSchema,
   },
-  {
-    identifier: "@beep/lint-rules/RuleRegistrySchema",
-    title: "RuleRegistrySchema",
+  $I.annote("RuleRegistrySchema", {
     description: "Schema for the finite rule registry keyed by rule slug.",
-  }
+  })
 ) {}
 
 /**

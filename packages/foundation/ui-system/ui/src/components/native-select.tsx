@@ -1,3 +1,9 @@
+/**
+ * Native-select primitive: a styled wrapper around the native `<select>` element with a trailing caret.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
 import { cn } from "@beep/ui/lib/utils";
 import { CaretDownIcon } from "@phosphor-icons/react";
 import type * as React from "react";

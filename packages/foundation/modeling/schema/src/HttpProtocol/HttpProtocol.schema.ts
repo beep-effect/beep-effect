@@ -62,6 +62,14 @@ export const Schema = HttpProtocol;
 /**
  * {@inheritDoc HttpProtocol}
  *
+ * @example
+ * ```ts
+ * import type { Schema } from "@beep/schema/HttpProtocol"
+ *
+ * const protocol: Schema = "https"
+ * console.log(protocol)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
