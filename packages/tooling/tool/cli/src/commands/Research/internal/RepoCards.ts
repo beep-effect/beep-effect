@@ -13,6 +13,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { Effect, FileSystem, Path, Stream } from "effect";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -190,14 +191,18 @@ export const remoteToHttpsUrl = (remote: string): string => {
  * @returns Owner and repository slug parts.
  * @category utilities
  */
-export const slugPartsOf = (remoteUrl: O.Option<string>, localDirname: string): readonly [string, string] =>
+export const slugPartsOf: {
+  (localDirname: string): (remoteUrl: O.Option<string>) => readonly [string, string];
+  (remoteUrl: O.Option<string>, localDirname: string): readonly [string, string];
+} = dual(2, (remoteUrl: O.Option<string>, localDirname: string): readonly [string, string] =>
   remoteUrl.pipe(
     O.flatMap((url) => {
       const match = remoteToHttpsUrl(url).match(/^https?:\/\/[^/]+\/([^/]+)\/([^/?#]+)/);
       return P.isNull(match) ? O.none() : O.some([match[1] ?? "unknown", match[2] ?? localDirname] as const);
     }),
     O.getOrElse(() => ["local", localDirname] as const)
-  );
+  )
+);
 
 /**
  * Gather remote, README, license, and last-commit facts for one clone.

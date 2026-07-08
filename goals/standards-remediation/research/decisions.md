@@ -260,3 +260,73 @@ The makeChatOperations conjunct diagnosis (isFactoryReturnType substring
 false-positive on printed structural text) is ratified; the identical latent
 bug in isStrictObjectLikeType is deliberately deferred (orthogonal law,
 noted for P8 review).
+
+## R14 — categorical-generic family end-state (LOCKED, driver-verified 2026-07-08)
+
+The R6-3 pilot (lane sf1-graphnode, full-refactor authority; report:
+`ops/reports/SF-1/sf-1-graphnode.md`) produced fresh evidence beyond the S1
+probe, driver-verified directly: `Monoid.Endo = <A>(): Monoid<(a: A) => A>`
+(`Monoid.ts:630`) and `ap(opFn: TextOperation<A, (b: B) => C>, ...)`
+(`TypeClass.ts:672-674`) — the type parameters are INSTANTIATED WITH FUNCTION
+TYPES in the public API. No schema can represent these; conversion probes
+cascade 104/96 errors. Zero concrete schema consumers exist for the family.
+
+Rulings:
+1. **Curated in-code exclusion list in SchemaFirst.ts** (mirror of DualArity's
+   PERMANENT_EXCLUSIONS): file::symbol + reason entries for the verified
+   categorical-generic family (~11 across @beep/nlp-processing and @beep/nlp,
+   per the pilot's per-entry table). Fixture pair: registered symbol silent;
+   unregistered `Box<A> { value: A }` still flagged. Explicit, reviewable,
+   driver-owned — NOT a blanket structural exemption.
+2. **Factory-derived generic aliases silent** (TypedText pattern): generic
+   type-alias whose type node is an `S.Schema.Type<...>` TypeReference is
+   schema-DERIVED — flagging it is a category error. Fixture pair per the
+   lane's recommendation. (TypedText itself was genuinely converted to derive
+   from TypedTextSchema — the one convertible entry, landed.)
+3. **GraphOperation/OperationDefinition descriptor/behavior split**: viable
+   but public-contract-breaking at every call site — DEFERRED to a follow-up
+   goal packet; their curated-list reasons must cite the deferred redesign.
+
+Implementation goes to the SchemaFirst.ts owner lane after da2-repocli frees
+the package (fence 11 fixtures mandatory).
+
+## R15 — R6-implementation gaps + @beep/schema residue (LOCKED, driver-verified 2026-07-08)
+
+Lane sf1-schema (report: `ops/reports/SF-1/sf-1-schema.md`) fixed 2 with parity
+proofs and REPRODUCED regressions for 2 unconvertibles (LiteralKit `union`:
+S.Class members break `S.toTaggedUnion` guards — `S.is` requires instanceof;
+VariantSchema `extract`: 12 failures, public `Extract` type promises
+`S.Struct`). Driver verified the four detector-implementation gaps directly
+(`SchemaFirst.ts:71-72`, `:873`, `:1072` placement):
+
+1. **Pattern additions**: `S.Codec`, `S.Union`, `VariantSchema.Overridable`
+   join `SCHEMA_INFRASTRUCTURE_EXTENDS_PATTERN` (covers 4+1 entries).
+2. **Wire the schema-infra + isEmptyOrMetaOnlyOwnBody check into the GENERIC
+   branch** of detectInterfaceReason (generics short-circuit before :1072
+   today; covers 8 empty-body schema-meta generics like JsonFromString,
+   Model.fields Overridable family).
+3. **Apply one-level local-alias resolution to extends-clause targets** before
+   the pattern test (R11-6 helper exists; covers 5: Edge, LiteralKit,
+   MappedLiteralKit, Overrideable ×2).
+4. **Curated exclusion entries** (R14 mechanism) with validated reasons for:
+   LiteralKit.schema.ts `union` + VariantSchema.core.ts `extract` (reproduced
+   regressions), VariantSchema.core.ts `Class`/`Field`/`Struct`/`Union`
+   (foundational toolkit self-definitions; keep as positive-control fixtures
+   where feasible), EntitySchema DSL type-literals
+   (AssignedEntityParts/ClassInput/PersistOptions — S.Top-valued compile-time
+   plumbing), and the 6 SFV4-arbitrary-tests advisories (reasons re-validated
+   by the lane: finite enumerations / meta-tests / lossy transform).
+Fixture pairs per change (fence 11). Implementation: SchemaFirst.ts owner lane.
+
+### R15 addendum (driver-accepted 2026-07-08)
+
+Lane sf1-repoutils (report: `ops/reports/SF-1/sf-1-repoutils.md`): 15/17 fixed
+including two verified-safe dual-use Shape→Class reorders. 3 residue entries
+(`TSConfig.ts` `makeTypeStruct`/`makeEncodedStruct`/`strict` in
+`makeLooseJsonObject`) join the R15 curated exclusion list: S.Class cannot be
+constructed inside a function generic over abstract `Fields extends
+S.Struct.Fields` ("Missing Self generic", TS2509 — reproduced in two forms),
+and Class `.ast: Declaration` is incompatible with StructWithRest's
+`ast: Objects` constraint (independently reproduced by BOTH sf1-schema and
+sf1-repoutils). A wider makeLooseJsonObject redesign is out of initiative
+scope; the exclusion reasons cite it.

@@ -2,6 +2,7 @@ import { CauseTaggedError } from "@beep/schema/CauseTaggedError";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, pipe } from "effect";
 import * as S from "effect/Schema";
+import { FastCheck as fc } from "effect/testing";
 
 class DomainError extends CauseTaggedError<DomainError>("DomainError")("DomainError") {}
 
@@ -159,5 +160,17 @@ describe("CauseTaggedError", () => {
     expect(error.cause).toBe(cause);
     expect(error.operation).toBe("load-profile");
     expect(error.resource).toBe("profile");
+  });
+
+  it("round-trips arbitrary extras through the class-backed extras shape check unchanged", () => {
+    const cause = new Error("kapow");
+
+    fc.assert(
+      fc.property(S.toArbitrary(S.String), (operation) => {
+        const error = OperationError.new(cause, "boom", { operation });
+        expect(error.operation).toBe(operation);
+      }),
+      { numRuns: 25 }
+    );
   });
 });

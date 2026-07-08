@@ -8,8 +8,8 @@
     "P0": "done",
     "P1": "done",
     "P2": "done",
-    "P3": "wave-1-done",
-    "P4": "pending",
+    "P3": "done",
+    "P4": "wave-1-done",
     "P5": "pending",
     "P6": "pending",
     "P7": "pending",
@@ -28,18 +28,23 @@
       "R8",
       "R10",
       "R11",
-      "R12"
+      "R12",
+      "R14",
+      "R15"
     ],
-    "pending": ["R9"]
+    "pending": [
+      "R9"
+    ]
   },
   "counters": {
-    "checkpoint": "2026-07-08 wave-2 landed",
+    "checkpoint": "2026-07-08 round-2 final",
     "dualArity": {
-      "candidates": 9,
-      "exceptions": 4
+      "candidates": 0,
+      "exceptions": 0,
+      "entries": 0
     },
     "schemaFirst": {
-      "entries": 163
+      "entries": 90
     },
     "jsdoc": {
       "packagesNeedingRemediation": 45,
@@ -47,9 +52,7 @@
       "missingExportCategories": 91,
       "missingExportSince": 91,
       "unsafeExampleFindings": 68,
-      "schemaAnnotationFindings": 127,
-      "exampleImportFindings": 24,
-      "forbiddenTagFindings": 2
+      "schemaAnnotationFindings": 126
     },
     "knip": {
       "findings": 73
@@ -152,7 +155,7 @@
           "status": "done",
           "report": "ops/reports/DA-1/da-1-nlp.md",
           "blocker": null,
-          "note": "19/19 + TraversalStart S.Class conversion (structural compat verified, 166/166, turbo 25/25 incl 296 docgen examples)."
+          "note": "19/19 + TraversalStart S.Class + Monoid fallow extraction (checkIdentity helper); 166/166; zero introduced findings reference nlp (raw-JSON verified); pre-existing inherited clone left alone."
         },
         "da-1-nlpproc": {
           "lane": "da-1",
@@ -168,7 +171,7 @@
           "status": "done",
           "report": "ops/reports/DA-1/da-1-utils.md",
           "blocker": null,
-          "note": "3/4 fixed verified (157/157 utils, 120/120 cli, 15/15 acp, 20/20 repo-utils); spliceInPlace options diff DRIVER-ACCEPTED (rest-param loss theoretical, no call site uses it). Cross-pkg sweeps: cli bin-main + 3 tests, acp AcpClient."
+          "note": "4/4 + fallow extraction done (shared IndexLookup helpers; lastIndexOf ECMA-262 argument-presence semantics preserved); 157/157; fallow introduced findings 7->3 at its re-scan."
         },
         "da-1-batch": {
           "lane": "da-1",
@@ -181,10 +184,22 @@
       }
     },
     "DA-2": {
-      "status": "pending",
+      "status": "done",
       "inventory": "dual-arity",
-      "note": "follow-up: @beep/repo-cli 6 candidates + rco-001..004 conversions (after p25 frees package); AgentEffectivenessPhoenixSyncInput.new (ai-metrics+repo-cli pair); projectFieldTier (mcp-kit+uspto-mcp pair)",
-      "lanes": {}
+      "lanes": {
+        "da-2-repocli": {
+          "scope": "@beep/repo-cli 6 cand + 4 rco exc; granted ai-metrics (Phoenix ripple)",
+          "status": "done",
+          "report": "ops/reports/DA-2/da-2-repocli.md",
+          "note": "Everything done: dual-arity 10/10 + Phoenix + fallow trio + R14 + R15 (+40 entries silenced, 602/602, fallow introduced=0). Round-2: Str.toLowerCase (fixed a real asymmetric-filter bug) + JSDoc reattached; 0 live advisories."
+        },
+        "da-2-ripples": {
+          "scope": "mcp-kit projectFieldTier + uspto-mcp sweep; box decodeWith dual",
+          "status": "done",
+          "report": "ops/reports/DA-2/da-2-ripples.md",
+          "note": "3/3 dual-arity + box fallow extraction (acquireSdkCallController); introduced findings 6->2 dups (+1 cplx), all remaining in repo-cli. turbo 19/19."
+        }
+      }
     },
     "DA-3": {
       "status": "pending",
@@ -197,10 +212,34 @@
       "lanes": {}
     },
     "SF-1": {
-      "status": "pending",
+      "status": "done",
       "inventory": "schema-first",
-      "note": "slice after P2 rulings",
-      "lanes": {}
+      "lanes": {
+        "sf-1-schema": {
+          "scope": "@beep/schema 35 (LiteralKit union high-risk flagged)",
+          "status": "done",
+          "report": "ops/reports/SF-1/sf-1-schema.md",
+          "note": "2 fixed w/ parity; 2 unconvertible w/ reproduced regressions; 4 detector gaps driver-verified -> R15; 617 tests green."
+        },
+        "sf-1-repoutils": {
+          "scope": "@beep/repo-utils 17 (audit prior art)",
+          "status": "done",
+          "report": "ops/reports/SF-1/sf-1-repoutils.md",
+          "note": "15/17 fixed (187/187, turbo 19/19, cross-pkg docgen verified); 3 residue -> R15 curated list (generic-Fields Self blocker + StructWithRest ast constraint, twice-reproduced). Follow-up: CanonicalDocgenConfigJson -> schema-derived type (187/187, cross-pkg clean)."
+        },
+        "sf-1-nlpmcp": {
+          "scope": "@beep/nlp-mcp 15",
+          "status": "done",
+          "report": "ops/reports/SF-1/sf-1-nlpmcp.md",
+          "note": "15/15 conversions + 15 type-alias @examples (docgen 97->112 exactly); all suites green."
+        },
+        "sf-1-graphnode": {
+          "scope": "R6-3 pilot: nlp-processing + nlp categorical generics, full refactor authority",
+          "status": "done",
+          "report": "ops/reports/SF-1/sf-1-graphnode.md",
+          "note": "Pilot verdict driver-verified: 11/12 unconvertible (function-instantiated type params); TypedText converted; R14 locked \u2014 curated exclusion list + factory-derived rule queued for SchemaFirst.ts owner."
+        }
+      }
     },
     "SF-2": {
       "status": "pending",
@@ -281,5 +320,21 @@
       "inventory": "allowlist",
       "lanes": {}
     }
-  }
+  },
+  "ciRounds": {
+    "wave-2": [
+      {
+        "round": 1,
+        "failures": [
+          "fallow-advisory-envelopes: 1 introduced complexity (collectCandidateDiagnostics cyclomatic 23) + 6 introduced duplication groups",
+          "repo-sanity: changeset missing"
+        ],
+        "note": "neither caught by ci local --fast \u2014 lane-parity gap (fallow audit --check + changeset:status not in fast battery); record for one-round-loop",
+        "resolution": "changeset written; all 7 fallow introduced findings extracted (audit exits 0, introduced=0); readExistingRepoFile orElseSucceed behavior change driver-reviewed and accepted"
+      }
+    ]
+  },
+  "landingChecklist": [
+    "bun run beep lint schema-catalog --write (new S.Class exports from SF-1 lanes)"
+  ]
 }

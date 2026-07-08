@@ -12,12 +12,14 @@ import { TSMorphService, TsMorphProjectInspectionRequest } from "@beep/repo-util
 import { resolveWorkspaceDirs } from "@beep/repo-utils/Workspaces";
 import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
-import { Console, DateTime, Effect, FileSystem, HashMap, Match, MutableHashSet, Order, Path, pipe } from "effect";
+import { Console, Effect, FileSystem, HashMap, Match, MutableHashSet, Order, Path, pipe } from "effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { parse, printParseErrorCode } from "jsonc-parser";
 import { Node, SyntaxKind } from "ts-morph";
+import { todayYmd } from "../../internal/cli/DateStamp.js";
+import { readExistingRepoFile } from "../../internal/cli/RepoFile.js";
 import { DualArityInventoryReadError } from "./Laws.errors.js";
 import type { ParseError } from "jsonc-parser";
 import type {
@@ -260,14 +262,6 @@ const byWorkspacePathLengthDescending: Order.Order<readonly [string, string]> = 
 
 const sortEntries = (entries: ReadonlyArray<DualArityInventoryEntry>): ReadonlyArray<DualArityInventoryEntry> =>
   A.sort(entries, byEntryKeyAscending);
-
-const todayYmd = (): string => {
-  const now = DateTime.nowUnsafe();
-  const year = `${DateTime.getPartUtc(now, "year")}`;
-  const month = Str.padStart(2, "0")(`${DateTime.getPartUtc(now, "month")}`);
-  const day = Str.padStart(2, "0")(`${DateTime.getPartUtc(now, "day")}`);
-  return `${year}-${month}-${day}`;
-};
 
 const isExcludedPublicApiName = (filePath: string, qualifiedName: string): boolean => {
   const name = pipe(
@@ -840,10 +834,13 @@ const hasObviousWrongFirstParameter = (
       A.some(restParameters, isPipeableParameter)
   );
 
-const collectCandidateDiagnostics = (
-  candidate: PublicApiCandidate
-): ReadonlyArray<typeof DualArityDiagnosticKind.Type> => {
-  let diagnostics = A.empty<typeof DualArityDiagnosticKind.Type>();
+type DualValidity = {
+  readonly dualArity: O.Option<number>;
+  readonly hasMatchingDualArity: boolean;
+  readonly hasValidDualWithCallableThirdParameter: boolean;
+};
+
+const computeDualValidity = (candidate: PublicApiCandidate): DualValidity => {
   const dualCall = candidate.dualCall;
   const dualArity = pipe(
     dualCall,
@@ -853,54 +850,88 @@ const collectCandidateDiagnostics = (
     O.isSome(dualCall) && O.isNone(dualArity) && hasDualSignatures(candidate.callableType, candidate.parameterCount);
   const hasMatchingDualArity =
     O.exists(dualArity, (arity) => arity === candidate.parameterCount) || hasPredicateDualWithPublicDualShape;
-
-  if (candidate.parameterCount > 3) {
-    diagnostics = A.append(diagnostics, "too-many-positional-params");
-  }
-
-  if (candidate.parameterCount >= 2 && candidate.parameterCount <= 3) {
-    if (O.isNone(dualCall)) {
-      diagnostics = A.append(diagnostics, "missing-dual");
-    } else {
-      if (!dualCall.value.validSource) {
-        diagnostics = A.append(diagnostics, "invalid-dual-source");
-      }
-      if (!hasMatchingDualArity) {
-        diagnostics = A.append(diagnostics, "invalid-dual-arity");
-      }
-      if (
-        dualCall.value.validSource &&
-        hasMatchingDualArity &&
-        !hasDualSignatures(candidate.callableType, candidate.parameterCount)
-      ) {
-        diagnostics = A.append(diagnostics, "missing-dual-signatures");
-      }
-    }
-  }
-
-  if (candidate.parameterCount > 3 && O.isSome(dualArity) && dualArity.value > 3) {
-    diagnostics = A.append(diagnostics, "invalid-dual-arity");
-  }
-
   const hasValidDualWithCallableThirdParameter =
     O.isSome(dualCall) &&
     dualCall.value.validSource &&
     hasMatchingDualArity &&
     pipe(candidate.thirdParameterType, O.exists(isCallableType));
 
+  return { dualArity, hasMatchingDualArity, hasValidDualWithCallableThirdParameter };
+};
+
+const arityRangeDiagnostics = (
+  candidate: PublicApiCandidate,
+  hasMatchingDualArity: boolean
+): ReadonlyArray<typeof DualArityDiagnosticKind.Type> => {
+  if (candidate.parameterCount < 2 || candidate.parameterCount > 3) {
+    return A.empty();
+  }
+
+  const dualCall = candidate.dualCall;
+  if (O.isNone(dualCall)) {
+    return ["missing-dual"];
+  }
+
+  let diagnostics = A.empty<typeof DualArityDiagnosticKind.Type>();
+  if (!dualCall.value.validSource) {
+    diagnostics = A.append(diagnostics, "invalid-dual-source");
+  }
+  if (!hasMatchingDualArity) {
+    diagnostics = A.append(diagnostics, "invalid-dual-arity");
+  }
   if (
-    candidate.parameterCount === 3 &&
-    !pipe(candidate.thirdParameterType, O.exists(isStrictObjectLikeType)) &&
-    !hasValidDualWithCallableThirdParameter
+    dualCall.value.validSource &&
+    hasMatchingDualArity &&
+    !hasDualSignatures(candidate.callableType, candidate.parameterCount)
   ) {
-    diagnostics = A.append(diagnostics, "third-param-not-object-like");
+    diagnostics = A.append(diagnostics, "missing-dual-signatures");
+  }
+  return diagnostics;
+};
+
+const tooManyParamsDiagnostics = (
+  candidate: PublicApiCandidate,
+  dualArity: O.Option<number>
+): ReadonlyArray<typeof DualArityDiagnosticKind.Type> => {
+  if (candidate.parameterCount <= 3) {
+    return A.empty();
   }
 
-  if (hasObviousWrongFirstParameter(candidate.firstParameterName, candidate.restParameters)) {
-    diagnostics = A.append(diagnostics, "obvious-wrong-first-parameter");
+  let diagnostics: ReadonlyArray<typeof DualArityDiagnosticKind.Type> = ["too-many-positional-params"];
+  if (O.isSome(dualArity) && dualArity.value > 3) {
+    diagnostics = A.append(diagnostics, "invalid-dual-arity");
   }
+  return diagnostics;
+};
 
-  return A.dedupe(diagnostics);
+const thirdParameterDiagnostics = (
+  candidate: PublicApiCandidate,
+  hasValidDualWithCallableThirdParameter: boolean
+): ReadonlyArray<typeof DualArityDiagnosticKind.Type> =>
+  candidate.parameterCount === 3 &&
+  !pipe(candidate.thirdParameterType, O.exists(isStrictObjectLikeType)) &&
+  !hasValidDualWithCallableThirdParameter
+    ? ["third-param-not-object-like"]
+    : A.empty();
+
+const wrongFirstParameterDiagnostics = (
+  candidate: PublicApiCandidate
+): ReadonlyArray<typeof DualArityDiagnosticKind.Type> =>
+  hasObviousWrongFirstParameter(candidate.firstParameterName, candidate.restParameters)
+    ? ["obvious-wrong-first-parameter"]
+    : A.empty();
+
+const collectCandidateDiagnostics = (
+  candidate: PublicApiCandidate
+): ReadonlyArray<typeof DualArityDiagnosticKind.Type> => {
+  const { dualArity, hasMatchingDualArity, hasValidDualWithCallableThirdParameter } = computeDualValidity(candidate);
+
+  return A.dedupe([
+    ...arityRangeDiagnostics(candidate, hasMatchingDualArity),
+    ...tooManyParamsDiagnostics(candidate, dualArity),
+    ...thirdParameterDiagnostics(candidate, hasValidDualWithCallableThirdParameter),
+    ...wrongFirstParameterDiagnostics(candidate),
+  ]);
 };
 
 const makeOwnerResolver = Effect.fn("DualArity.makeOwnerResolver")(function* () {
@@ -1299,17 +1330,13 @@ const makeInventoryEntry = (
 };
 
 const readInventoryDocument = Effect.fn(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const absolutePath = path.resolve(process.cwd(), INVENTORY_PATH);
-
-  if (!(yield* fs.exists(absolutePath))) {
+  const content = yield* readExistingRepoFile(INVENTORY_PATH);
+  if (O.isNone(content)) {
     return O.none<DualArityInventoryDocument>();
   }
 
-  const content = yield* fs.readFileString(absolutePath);
   const parseErrors = A.empty<ParseError>();
-  const parsed = parse(content, parseErrors, {
+  const parsed = parse(content.value, parseErrors, {
     allowTrailingComma: true,
     disallowComments: false,
   });

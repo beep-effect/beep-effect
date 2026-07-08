@@ -1,0 +1,297 @@
+{
+  "owner": "@beep/schema",
+  "entries": [
+    {
+      "file": "packages/foundation/modeling/schema/src/CauseTaggedError/CauseTaggedError.errors.ts",
+      "symbol": "isExtras",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Csp/Csp.schema.ts",
+      "symbol": "CspDirectives",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "S.Struct with non-identifier or spread keys stays tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.definition.ts",
+      "symbol": "AssignedEntityParts",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic type alias requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.definition.ts",
+      "symbol": "ClassInput",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic type alias requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.persist.ts",
+      "symbol": "PersistOptions",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic type alias requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Fn/Fn.schema.ts",
+      "symbol": "FnSchemaNoArg",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Fn/Fn.schema.ts",
+      "symbol": "FnSchemaUnary",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Graph/Graph.edge.ts",
+      "symbol": "Edge",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Graph/Graph.encoded.ts",
+      "symbol": "EdgeEncodedSchema",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Graph/Graph.encoded.ts",
+      "symbol": "GraphEncodedSchema",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "symbol": "LiteralKit",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+      "symbol": "union",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "S.Struct with non-identifier or spread keys stays tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
+      "symbol": "MappedLiteralKit",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Model/Model.codecs.ts",
+      "symbol": "JsonFromString",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Model/Model.fields.ts",
+      "symbol": "FieldOption",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Model/Model.fields.ts",
+      "symbol": "Generated",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Model/Model.fields.ts",
+      "symbol": "GeneratedByApp",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Model/Model.fields.ts",
+      "symbol": "Sensitive",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Model/Model.fields.ts",
+      "symbol": "optionalOption",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Model/Model.uuid.ts",
+      "symbol": "UuidV4Insert",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Model/Model.variants.ts",
+      "symbol": "Overridable",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Model/Model.variants.ts",
+      "symbol": "Overrideable",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts",
+      "symbol": "Class",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts",
+      "symbol": "Field",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts",
+      "symbol": "Struct",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts",
+      "symbol": "Union",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts",
+      "symbol": "extract",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.overridable.ts",
+      "symbol": "Overridable",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.overridable.ts",
+      "symbol": "Overrideable",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/CurrencyCode.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 7,
+      "owner": "@beep/schema",
+      "reason": "Exception: CurrencyCode/CurrencyName are LiteralKit unions over the generated ISO 4217 enumeration; example-based assertions cover representative decode/reject and `.Options` membership, and S.toArbitrary over a finite literal union only re-samples already-enumerated members, so schema-derived property coverage would be vacuous."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Fn.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 33,
+      "owner": "@beep/schema",
+      "reason": "Exception: meta-test of the Fn/ThunkOf/AnyFn schema combinator over function values (declareConstructor with self-identity equivalence); no structural data for S.toArbitrary to generate or round-trip."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/PromiseSchema.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 10,
+      "owner": "@beep/schema",
+      "reason": "Exception: PromiseSchema is a pure S.declare<globalThis.Promise<unknown>> identity declaration (Type === Encoded === a native Promise, no codec transform). S.toArbitrary throws 'Unsupported AST Declaration', and a Promise cannot be meaningfully round-tripped (decode/encode are identity, equivalence is reference equality), so any property law would be vacuous. Cross-realm acceptance and thenable-impostor rejection are covered by example-based unit tests."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/TerritoryCode.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 10,
+      "owner": "@beep/schema",
+      "reason": "Exception: TerritoryCode/TerritoryName and their code<->name MappedLiteralKit codecs are finite literal-union schemas over the generated CLDR enumeration; representative decode/encode and reversible-mapping cases are covered by example assertions, and S.toArbitrary over the finite enumeration adds no coverage beyond the enumerated members."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Timezone.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 7,
+      "owner": "@beep/schema",
+      "reason": "Exception: Timezone is a LiteralKit union over the generated IANA tzdb enumeration; example-based assertions cover representative decode and rejection, and property sampling over a finite literal union only re-picks already-enumerated members, so schema-derived property coverage would be vacuous."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/test/Transformations.test.ts",
+      "symbol": "schema-codec-tests",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-arbitrary-tests",
+      "line": 9,
+      "owner": "@beep/schema",
+      "reason": "Exception: meta-test of the destructiveTransform combinator using test-local illustrative schemas; lossy decode + passthrough encode has no round-trip law and no domain source schema."
+    }
+  ]
+}

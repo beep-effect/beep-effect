@@ -1,0 +1,21 @@
+{
+  "owner": "@beep/agents-domain",
+  "entries": [
+    {
+      "file": "packages/agents/domain/src/entities/Agent/Agent.model.ts",
+      "symbol": "anonymous@65",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/agents-domain",
+      "reason": "S.Struct with non-identifier or spread keys stays tracked as an exception."
+    },
+    {
+      "file": "packages/agents/domain/src/values/AssistantContent/AssistantContent.model.ts",
+      "symbol": "anonymous@316",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/agents-domain",
+      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
+    }
+  ]
+}

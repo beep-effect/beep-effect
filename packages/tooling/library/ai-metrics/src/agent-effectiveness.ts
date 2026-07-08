@@ -1198,6 +1198,18 @@ export class AgentEffectivenessExperimentBundle extends S.Class<AgentEffectivene
 ) {}
 
 /**
+ * `dryRun`/`confirmToken` options bundle for
+ * {@link AgentEffectivenessPhoenixSyncInput.new}'s data-first/data-last dual.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+type AgentEffectivenessPhoenixSyncNewOptions = {
+  readonly dryRun: boolean;
+  readonly confirmToken?: string | undefined;
+};
+
+/**
  * Input for syncing agent-effectiveness evidence to Phoenix.
  *
  * @example
@@ -1232,14 +1244,12 @@ export class AgentEffectivenessPhoenixSyncInput extends S.Class<AgentEffectivene
   static readonly new: {
     (
       annotationPlan: AgentEffectivenessAnnotationPlanInput,
-      dryRun: boolean,
-      confirmToken?: undefined | string
+      options: AgentEffectivenessPhoenixSyncNewOptions
     ): AgentEffectivenessPhoenixSyncInput;
     (
-      dryRun: boolean,
-      confirmToken?: undefined | string
+      options: AgentEffectivenessPhoenixSyncNewOptions
     ): (annotationPlan: AgentEffectivenessAnnotationPlanInput) => AgentEffectivenessPhoenixSyncInput;
-  } = dual(3, (annotationPlan, dryRun, confirmToken) =>
+  } = dual(2, (annotationPlan, { confirmToken, dryRun }) =>
     AgentEffectivenessPhoenixSyncInput.make({
       annotationPlan,
       dryRun,

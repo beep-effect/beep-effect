@@ -88,6 +88,36 @@ range usage, `spliceInPlace` usage) and `dtslint/Array.tst.ts` (4 call sites:
 now that the positional shape no longer matches native `Array.prototype`
 methods); `indexOf`/`lastIndexOf` docs gained a `fromIndex`-options example.
 
+## Follow-up: Fallow duplication fix (hosted CI round-1 blocker)
+
+The Fallow audit gate flagged an introduced 8-line/57-token clone pair in
+`packages/foundation/modeling/utils/src/Array.ts` between `indexOf`
+(`:284-290`) and `lastIndexOf` (`:318-325`): the options-object conversion
+gave both helpers a byte-identical dual call-signature block and dual
+predicate, plus a near-identical `index === -1 ? O.none() : O.some(index)`
+tail — that combination is what the detector matched (`fingerprint:
+dup:67c716a6`, `suggested_name: "fromIndex"`).
+
+Fix: extracted the shared surface into three private, file-local bindings
+placed just above `indexOf`, all in `packages/foundation/modeling/utils/src/Array.ts`:
+
+- `interface IndexLookupOptions { readonly fromIndex?: number }` — shared options shape.
+- `type IndexLookupSignature` — the shared dual call-signature, now typed once and assigned as `indexOf`'s and `lastIndexOf`'s export type instead of being repeated inline.
+- `const hasArrayAndValueArgs = (args: IArguments): boolean => args.length >= 2 && A.isArray(args[0])` — shared dual predicate.
+- `const optionFromNativeIndex = (index: number): O.Option<number> => (index === -1 ? O.none() : O.some(index))` — shared `-1`-sentinel → `Option` normalization.
+
+`indexOf`/`lastIndexOf` bodies now read as a single `optionFromNativeIndex(self.indexOf(...))` / `optionFromNativeIndex(<lastIndexOf special-case>)` expression each. The `lastIndexOf`-specific `options?.fromIndex === undefined ? self.lastIndexOf(value) : self.lastIndexOf(value, options.fromIndex)` branch was preserved as-is (not merged into `optionFromNativeIndex`) — it exists because `Array.prototype.lastIndexOf(value, undefined)` treats an explicitly-passed `undefined` as "search from index 0" per the ECMA-262 argument-presence rule, not "search from the end" (the omitted-argument default); collapsing that branch into the shared helper would have silently changed `lastIndexOf`'s default-direction behavior.
+
+I did not use a `fallow-ignore` suppression — extraction was straightforward and the driver's instruction was to prefer it.
+
+Initial typecheck attempt failed: `hasArrayAndValueArgs` needed the parameter typed `IArguments` (not `ReadonlyArray<unknown>`) to match `dual`'s expected predicate signature — fixed and reverified.
+
+Verification after the fix:
+- `npx tsgo -b tsconfig.json` in `packages/foundation/modeling/utils` — 0 errors.
+- `npx vitest run` in `packages/foundation/modeling/utils` — 13 files, **157/157 pass** (unchanged from before the extraction — pure refactor, no behavior change).
+- `bun run docgen` in `packages/foundation/modeling/utils` — succeeded, 201 examples typecheck.
+- `bun run beep quality fallow audit --check --base origin/main --out .beep/fallow/audit.json --quiet` — re-ran before/after: before, `packages/foundation/modeling/utils/src/Array.ts` appeared as a clone-group file (grep hits at raw-output lines 522, 530, 2078, 2084, 2092, 2124, 2138); after, zero hits for `Array.ts` anywhere in `.beep/fallow/raw/audit.combined.txt`. The gate's overall `exitStatus` is still `1` and `introduced` count is nonzero (3, was 7), but the remaining introduced findings (1 complexity, 2 duplication) are in files this lane never touched (confirmed by grepping every `"files"` block in the raw output — the only cluster mentioning `packages/drivers/acp` is a pre-existing 84-line `AcpAgent.service.ts`/`AcpClient.service.ts` duplication at lines 353-397 of `AcpClient.service.ts`, nowhere near this lane's one-line edit at `:425`; no cluster mentions `bin-main.ts` or any other file this lane touched). Those findings belong to other concurrent lanes' packages and are out of this lane's scope.
+
 ## Files touched
 
 In-package:

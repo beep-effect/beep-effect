@@ -528,6 +528,18 @@ const analyzeModule = (
   };
 };
 
+const declarationLocationOf = (
+  declaration: Node,
+  sourceFile: SourceFile,
+  packagePath: string,
+  repoRoot: string,
+  path: Path.Path
+): { readonly filePath: string; readonly repoPath: string; readonly line: number } => ({
+  filePath: normalizeSlashes(path.relative(packagePath, sourceFile.getFilePath())),
+  repoPath: repoRelative(sourceFile.getFilePath(), repoRoot, path),
+  line: declaration.getStartLineNumber(),
+});
+
 const analyzeExportDeclaration = (
   declaration: Node,
   sourceFile: SourceFile,
@@ -537,9 +549,7 @@ const analyzeExportDeclaration = (
 ): InventoryEntry => {
   const commentText = `${leadingJsDocText(declaration)}\n${declaration.getText()}`;
   const presentTags = tagsFromComment(commentText);
-  const filePath = normalizeSlashes(path.relative(packagePath, sourceFile.getFilePath()));
-  const repoPath = repoRelative(sourceFile.getFilePath(), repoRoot, path);
-  const line = declaration.getStartLineNumber();
+  const { filePath, repoPath, line } = declarationLocationOf(declaration, sourceFile, packagePath, repoRoot, path);
   const malformedTags = malformedConditionalTags(commentText);
   const importIssues = exampleImportViolations(commentText);
   const unsafeIssues = unsafeExampleViolations(commentText);
@@ -591,9 +601,7 @@ const analyzeDirectExport = (
   const docText = getJsDocText(declaration);
   const presentTags = tagsFromComment(docText);
   const missingTags = missingRequiredTags(presentTags, requiredExportTags);
-  const filePath = normalizeSlashes(path.relative(packagePath, sourceFile.getFilePath()));
-  const repoPath = repoRelative(sourceFile.getFilePath(), repoRoot, path);
-  const line = declaration.getStartLineNumber();
+  const { filePath, repoPath, line } = declarationLocationOf(declaration, sourceFile, packagePath, repoRoot, path);
   const malformedTags = malformedConditionalTags(docText);
   const importIssues = exampleImportViolations(docText);
   const unsafeIssues = unsafeExampleViolations(docText);

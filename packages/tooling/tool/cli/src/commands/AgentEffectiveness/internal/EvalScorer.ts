@@ -19,6 +19,7 @@ import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import { A } from "@beep/utils";
 import { Clock, Console, Effect, FileSystem, flow, Layer, Order, Path, pipe, Stream } from "effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -617,20 +618,31 @@ export const evaluateSkillOptCompletion = Effect.fn("AgentEffectivenessEvalScore
 export const lawComponentScore = (violationCount: number): number => roundScore(1 / (1 + violationCount));
 
 /**
+ * Component law scores {@link aggregateLawFraction} collapses into one mean
+ * law fraction.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+type LawFractionComponents = {
+  readonly schemaFirst: number;
+  readonly tsgo: number;
+  readonly biome: number;
+};
+
+/**
  * Aggregate law components by arithmetic mean.
  *
  * Schema-first lint, tsgo diagnostics, and biome diagnostics each first use
  * {@link lawComponentScore}; `law_frac` is the deterministic arithmetic mean
  * of those three component scores.
  *
- * @param schemaFirst - Schema-first lint component score.
- * @param tsgo - tsgo diagnostics component score.
- * @param biome - Biome diagnostics component score.
+ * @param components - `schemaFirst`, `tsgo`, and `biome` component scores.
  * @returns Mean law fraction in `[0, 1]`.
  * @category scoring
  * @since 0.0.0
  */
-export const aggregateLawFraction = (schemaFirst: number, tsgo: number, biome: number): number =>
+export const aggregateLawFraction = ({ biome, schemaFirst, tsgo }: LawFractionComponents): number =>
   roundScore((schemaFirst + tsgo + biome) / 3);
 
 const runSubprocess = Effect.fn("AgentEffectivenessEvalScorer.runSubprocess")(function* (
@@ -1007,6 +1019,8 @@ const evaluateLaw = Effect.fn("AgentEffectivenessEvalScorer.evaluateLaw")(functi
  * `law_frac` is the arithmetic mean of schema-first, tsgo, and biome
  * component scores, where each component is `1 / (1 + violations)`.
  *
+ * Data-last usable via `.pipe`: `task.pipe(buildAgentEffectivenessEvalScoreReport(completion, law))`.
+ *
  * @param task - Task manifest the fixture was scored against.
  * @param completion - Completion-check outcome for the fixture.
  * @param law - Law-component violation sets for the fixture.
@@ -1014,28 +1028,30 @@ const evaluateLaw = Effect.fn("AgentEffectivenessEvalScorer.evaluateLaw")(functi
  * @category scoring
  * @since 0.0.0
  */
-export const buildAgentEffectivenessEvalScoreReport = (
-  task: SkillOptTaskManifest,
-  completion: CompletionResult,
-  law: LawEvaluation
-): AgentEffectivenessEvalScoreReport => {
-  const schemaFirst = lawComponentScore(A.length(law.schemaFirst));
-  const tsgo = lawComponentScore(A.length(law.tsgo));
-  const biome = lawComponentScore(A.length(law.biome));
-  const lawFraction = aggregateLawFraction(schemaFirst, tsgo, biome);
-  const violations = sortViolations([...completion.violations, ...law.schemaFirst, ...law.tsgo, ...law.biome]);
-  return AgentEffectivenessEvalScoreReport.make({
-    taskId: task.id,
-    score: roundScore(completion.fraction * lawFraction),
-    breakdown: AgentEffectivenessEvalScoreBreakdown.make({
-      completion: completion.fraction,
-      schemaFirst,
-      tsgo,
-      biome,
-    }),
-    violations,
-  });
-};
+export const buildAgentEffectivenessEvalScoreReport: {
+  (completion: CompletionResult, law: LawEvaluation): (task: SkillOptTaskManifest) => AgentEffectivenessEvalScoreReport;
+  (task: SkillOptTaskManifest, completion: CompletionResult, law: LawEvaluation): AgentEffectivenessEvalScoreReport;
+} = dual(
+  3,
+  (task: SkillOptTaskManifest, completion: CompletionResult, law: LawEvaluation): AgentEffectivenessEvalScoreReport => {
+    const schemaFirst = lawComponentScore(A.length(law.schemaFirst));
+    const tsgo = lawComponentScore(A.length(law.tsgo));
+    const biome = lawComponentScore(A.length(law.biome));
+    const lawFraction = aggregateLawFraction({ schemaFirst, tsgo, biome });
+    const violations = sortViolations([...completion.violations, ...law.schemaFirst, ...law.tsgo, ...law.biome]);
+    return AgentEffectivenessEvalScoreReport.make({
+      taskId: task.id,
+      score: roundScore(completion.fraction * lawFraction),
+      breakdown: AgentEffectivenessEvalScoreBreakdown.make({
+        completion: completion.fraction,
+        schemaFirst,
+        tsgo,
+        biome,
+      }),
+      violations,
+    });
+  }
+);
 
 /**
  * Score one SkillOpt eval fixture directory.

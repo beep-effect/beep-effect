@@ -24,6 +24,19 @@ const decodeJsonPointerSegment = (segment: string): string => segment.replaceAll
 const PackageJsonNameArbitrary = S.toArbitrary(PackageJson.fields.name);
 const PackageJsonDependenciesArbitrary = S.toArbitrary(PackageJson.fields.dependencies);
 const NpmPackageJsonPeerDependenciesMetaArbitrary = S.toArbitrary(NpmPackageJson.fields.peerDependenciesMeta);
+// `PublishConfig`'s `exports` field is a recursive suspend()-based schema
+// without a finite arbitrary generation path (pre-existing, unrelated to the
+// `PublishConfigBase` field-literal conversion below); this arbitrary covers
+// PublishConfigBase's non-recursive fields to exercise the StructWithRest
+// composition round-trip.
+const PublishConfigCoreArbitrary = S.toArbitrary(
+  S.Struct({
+    access: S.optionalKey(S.Literals(["public", "restricted"] as const)),
+    tag: S.optionalKey(S.String),
+    registry: S.optionalKey(S.String),
+    provenance: S.optionalKey(S.Boolean),
+  })
+);
 
 describe("PackageJson schema", () => {
   describe("valid structures", () => {
@@ -56,6 +69,19 @@ describe("PackageJson schema", () => {
         fc.property(NpmPackageJsonPeerDependenciesMetaArbitrary.filter(O.isSome), (value) => {
           const encoded = S.encodeSync(NpmPackageJson.fields.peerDependenciesMeta)(value);
           const decoded = S.decodeUnknownSync(NpmPackageJson.fields.peerDependenciesMeta)(encoded);
+
+          expect(decoded).toEqual(value);
+        }),
+        { numRuns: 20 }
+      );
+    });
+
+    it("round-trips schema-derived package.json publishConfig through the encoded wire shape", () => {
+      fc.assert(
+        fc.property(PublishConfigCoreArbitrary, (core) => {
+          const value = O.some(core);
+          const encoded = S.encodeSync(PackageJson.fields.publishConfig)(value);
+          const decoded = S.decodeUnknownSync(PackageJson.fields.publishConfig)(encoded);
 
           expect(decoded).toEqual(value);
         }),

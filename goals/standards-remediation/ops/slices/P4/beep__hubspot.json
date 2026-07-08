@@ -1,0 +1,15 @@
+{
+  "owner": "@beep/hubspot",
+  "entries": [
+    {
+      "file": "packages/drivers/hubspot/src/HubSpot.errors.ts",
+      "symbol": "HubSpotErrorOptions.email",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-precision-audit",
+      "line": 194,
+      "owner": "@beep/hubspot",
+      "reason": "Diagnostic error options intentionally preserve raw submitted email text from request-encoding failures, including values rejected before contact email normalization."
+    }
+  ]
+}

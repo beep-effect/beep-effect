@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-08T04:14:17.501Z
+Generated: 2026-07-08T05:54:02.624Z
 
 ## Scope
 
@@ -15,9 +15,9 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 45 |
 | publicModules | 1617 |
-| publicExports | 14471 |
+| publicExports | 14506 |
 | openModules | 129 |
-| openExports | 1408 |
+| openExports | 1407 |
 | missingExportExamples | 1215 |
 | missingExportCategories | 91 |
 | missingExportSince | 91 |
@@ -25,7 +25,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | malformedConditionalTagFindings | 0 |
 | exampleImportFindings | 24 |
 | unsafeExampleFindings | 68 |
-| schemaAnnotationFindings | 127 |
+| schemaAnnotationFindings | 126 |
 | rootPolicyOpen | 0 |
 
 ## Root Policy
@@ -64,7 +64,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 21 | `@beep/courtlistener` | `packages/drivers/courtlistener` | clean | 1 | 1 | 0 | 0 |
 | 22 | `@beep/workspace-use-cases` | `packages/workspace/use-cases` | clean | 8 | 25 | 0 | 0 |
 | 23 | `@beep/editor` | `packages/foundation/ui-system/editor` | clean | 21 | 86 | 0 | 0 |
-| 24 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 93 | 0 | 8 |
+| 24 | `@beep/nlp-mcp` | `packages/drivers/nlp-mcp` | needs-remediation | 9 | 123 | 0 | 8 |
 | 25 | `@beep/law-practice-domain` | `packages/law-practice/domain` | needs-remediation | 50 | 122 | 0 | 3 |
 | 26 | `@beep/repo-docgen` | `packages/tooling/tool/docgen` | needs-remediation | 9 | 82 | 0 | 9 |
 | 27 | `@beep/file-processing` | `packages/foundation/capability/file-processing` | needs-remediation | 8 | 94 | 0 | 18 |
@@ -112,8 +112,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 69 | `@beep/nlp` | `packages/foundation/modeling/nlp` | needs-remediation | 28 | 313 | 0 | 25 |
 | 70 | `@beep/infra` | `infra` | clean | 5 | 34 | 0 | 0 |
 | 71 | `@beep/runpod` | `packages/drivers/runpod` | needs-remediation | 6 | 178 | 0 | 2 |
-| 72 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 649 | 2 | 18 |
-| 73 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 241 | 1566 | 0 | 439 |
+| 72 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | needs-remediation | 63 | 654 | 2 | 18 |
+| 73 | `@beep/schema` | `packages/foundation/modeling/schema` | needs-remediation | 241 | 1566 | 0 | 438 |
 | 74 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 2 | 3 | 0 | 0 |
 | 75 | `@beep/rdf` | `packages/foundation/modeling/rdf` | clean | 17 | 208 | 0 | 0 |
 | 76 | `@beep/onepassword-cli` | `packages/drivers/onepassword-cli` | needs-remediation | 4 | 16 | 0 | 2 |
@@ -225,10 +225,10 @@ Export findings:
 - `src/commands/Image/Image.schemas.ts:217` `ExtractFramesDirOutcome` (type) - missing @example
 - `src/commands/Image/Image.service.ts:55` `ImageCommandServiceShape` (interface) - 1 unsafe example violation(s)
 - `src/commands/Lint/SchemaCatalog.ts:50` `SchemaCatalogEntryKind` (const) - 1 schema annotation/type-alias gap(s)
-- `src/commands/Lint/SchemaFirst.ts:167` `SchemaFirstPolicyRuleId` (const) - missing @example; 1 schema annotation/type-alias gap(s)
-- `src/commands/Lint/SchemaFirst.ts:200` `SchemaFirstEntryKind` (const) - missing @example; 1 schema annotation/type-alias gap(s)
-- `src/commands/Lint/SchemaFirst.ts:218` `SchemaFirstEntryStatus` (const) - missing @example; 1 schema annotation/type-alias gap(s)
-- `src/commands/Lint/SchemaFirst.ts:356` `SchemaCrispeningFamily` (const) - missing @example; 1 schema annotation/type-alias gap(s)
+- `src/commands/Lint/SchemaFirst.ts:172` `SchemaFirstPolicyRuleId` (const) - missing @example; 1 schema annotation/type-alias gap(s)
+- `src/commands/Lint/SchemaFirst.ts:205` `SchemaFirstEntryKind` (const) - missing @example; 1 schema annotation/type-alias gap(s)
+- `src/commands/Lint/SchemaFirst.ts:223` `SchemaFirstEntryStatus` (const) - missing @example; 1 schema annotation/type-alias gap(s)
+- `src/commands/Lint/SchemaFirst.ts:361` `SchemaCrispeningFamily` (const) - missing @example; 1 schema annotation/type-alias gap(s)
 - `src/commands/Research/Research.service.ts:103` `ResearchCommandServiceShape` (interface) - missing @example
 - `src/commands/Skills/Skills.command.ts:222` `remoteSkillSources` (const) - missing @example
 - `src/commands/Skills/Skills.command.ts:707` `renderCodexConfigWithSkills` (const) - missing @example
@@ -555,7 +555,7 @@ Export findings:
 Path: `packages/foundation/modeling/utils`
 
 Export findings:
-- `src/Array.ts:631` `emptyReadonly` (const) - missing @example
+- `src/Array.ts:641` `emptyReadonly` (const) - missing @example
 - `src/Errors.ts:163` `mapToError` (function) - missing summary; missing @example, @category, @since
 - `src/Errors.ts:166` `mapToError` (function) - missing summary; missing @example, @category, @since
 - `src/FileSystem.ts:386` `readdirSync` (function) - missing summary; missing @example, @category, @since
@@ -764,7 +764,7 @@ Export findings:
 - `src/TSMorph/TSMorph.model.ts:455` `SymbolCategory` (const) - 1 schema annotation/type-alias gap(s)
 - `src/TSMorph/TSMorph.model.ts:744` `TsMorphScopeMode` (const) - 1 schema annotation/type-alias gap(s)
 - `src/TSMorph/TSMorph.model.ts:771` `TsMorphReferencePolicy` (const) - 1 schema annotation/type-alias gap(s)
-- `src/TSMorph/TSMorph.model.ts:1946` `TsMorphDiagnosticCategory` (const) - 1 schema annotation/type-alias gap(s)
+- `src/TSMorph/TSMorph.model.ts:1976` `TsMorphDiagnosticCategory` (const) - 1 schema annotation/type-alias gap(s)
 - `src/TSMorph/TSMorph.service.ts:278` `TSMorphServiceError` (const) - 1 schema annotation/type-alias gap(s)
 
 ### @beep/schema
@@ -853,9 +853,8 @@ Export findings:
 - `src/CryptoWalletAddress/CryptoWalletAddress.schema.ts:148` `Schema` (type) - missing @example
 - `src/CryptoWalletAddress/CryptoWalletAddress.schema.ts:180` `Redacted` (type) - missing @example
 - `src/Csp/Csp.schema.ts:549` `ReportURI` (const) - 1 schema annotation/type-alias gap(s)
-- `src/Csp/Csp.schema.ts:631` `CspDirectives` (const) - 1 schema annotation/type-alias gap(s)
-- `src/Csp/Csp.schema.ts:875` `Header` (const) - 1 schema annotation/type-alias gap(s)
-- `src/Csp/Csp.schema.ts:707` `Option` (const) - 1 schema annotation/type-alias gap(s)
+- `src/Csp/Csp.schema.ts:876` `Header` (const) - 1 schema annotation/type-alias gap(s)
+- `src/Csp/Csp.schema.ts:708` `Option` (const) - 1 schema annotation/type-alias gap(s)
 - `src/Csv/Csv.schema.ts:337` `CsvText` (type) - missing @example
 - `src/DomDragEvent/DomDragEvent.schema.ts:54` `DOMDragEvent` (type) - missing @example
 - `src/DomDragEvent/DomDragEvent.schema.ts:54` `DomDragEvent` (type) - missing @example

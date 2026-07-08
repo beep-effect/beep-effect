@@ -1157,7 +1157,9 @@ const tsConfigCompilerOptionsFields = {
   ),
 } as const;
 
-const TSConfigCompilerOptionsShape = S.Struct(tsConfigCompilerOptionsFields);
+class TSConfigCompilerOptionsShape extends S.Class<TSConfigCompilerOptionsShape>($I`TSConfigCompilerOptionsShape`)(
+  tsConfigCompilerOptionsFields
+) {}
 
 type TSConfigCompilerOptionsShapeType = S.Schema.Type<typeof TSConfigCompilerOptionsShape>;
 
@@ -1251,13 +1253,26 @@ const TSNodeCompilerOptions = makeLooseJsonObject(
  * @category validation
  * @since 0.0.0
  */
-export class TSConfigCompilerOptions extends S.Class<TSConfigCompilerOptions>($I`TSConfigCompilerOptions`)(
-  TSConfigCompilerOptionsSemantic,
-  $I.annote("TSConfigCompilerOptions", {
+export const TSConfigCompilerOptions = TSConfigCompilerOptionsSemantic.pipe(
+  $I.annoteSchema("TSConfigCompilerOptions", {
     description: "Strict TypeScript compilerOptions section derived from the official SchemaStore tsconfig schema.",
     messageUnexpectedKey: "Unexpected compilerOptions key",
   })
-) {}
+);
+
+/**
+ * Runtime type for {@link TSConfigCompilerOptions}.
+ *
+ * @example
+ * ```ts
+ * import type { TSConfigCompilerOptions } from "@beep/repo-utils/schemas/TSConfig"
+ * const acceptCompilerOptions = (_value: TSConfigCompilerOptions) => undefined
+ * console.log(acceptCompilerOptions)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export type TSConfigCompilerOptions = (typeof TSConfigCompilerOptions)["Type"];
 
 const tsConfigWatchOptionsFields = {
   force: nullableOptionalField(
@@ -1297,8 +1312,6 @@ const tsConfigWatchOptionsFields = {
   ),
 } as const;
 
-const TSConfigWatchOptionsShape = S.Struct(tsConfigWatchOptionsFields);
-
 /**
  * Strict TypeScript watchOptions section.
  *
@@ -1312,7 +1325,7 @@ const TSConfigWatchOptionsShape = S.Struct(tsConfigWatchOptionsFields);
  * @since 0.0.0
  */
 export class TSConfigWatchOptions extends S.Class<TSConfigWatchOptions>($I`TSConfigWatchOptions`)(
-  TSConfigWatchOptionsShape,
+  tsConfigWatchOptionsFields,
   $I.annote("TSConfigWatchOptions", {
     description: "Strict TypeScript watchOptions section derived from the official SchemaStore tsconfig schema.",
     messageUnexpectedKey: "Unexpected watchOptions key",
@@ -1344,8 +1357,6 @@ const tsConfigBuildOptionsFields = {
   ),
 } as const;
 
-const TSConfigBuildOptionsShape = S.Struct(tsConfigBuildOptionsFields);
-
 /**
  * Strict TypeScript buildOptions section.
  *
@@ -1359,7 +1370,7 @@ const TSConfigBuildOptionsShape = S.Struct(tsConfigBuildOptionsFields);
  * @since 0.0.0
  */
 export class TSConfigBuildOptions extends S.Class<TSConfigBuildOptions>($I`TSConfigBuildOptions`)(
-  TSConfigBuildOptionsShape,
+  tsConfigBuildOptionsFields,
   $I.annote("TSConfigBuildOptions", {
     description: "Strict TypeScript buildOptions section derived from the official SchemaStore tsconfig schema.",
     messageUnexpectedKey: "Unexpected buildOptions key",
@@ -1380,8 +1391,6 @@ const tsConfigTypeAcquisitionFields = {
   ),
 } as const;
 
-const TSConfigTypeAcquisitionShape = S.Struct(tsConfigTypeAcquisitionFields);
-
 /**
  * Strict TypeScript typeAcquisition section.
  *
@@ -1395,7 +1404,7 @@ const TSConfigTypeAcquisitionShape = S.Struct(tsConfigTypeAcquisitionFields);
  * @since 0.0.0
  */
 export class TSConfigTypeAcquisition extends S.Class<TSConfigTypeAcquisition>($I`TSConfigTypeAcquisition`)(
-  TSConfigTypeAcquisitionShape,
+  tsConfigTypeAcquisitionFields,
   $I.annote("TSConfigTypeAcquisition", {
     description: "Strict TypeScript typeAcquisition section derived from the official SchemaStore tsconfig schema.",
     messageUnexpectedKey: "Unexpected typeAcquisition key",
@@ -1484,8 +1493,6 @@ const tsNodeFields = {
   ),
 } as const;
 
-const TSNodeConfigShape = S.Struct(tsNodeFields);
-
 /**
  * Strict ts-node config section stored under `ts-node`.
  *
@@ -1499,7 +1506,7 @@ const TSNodeConfigShape = S.Struct(tsNodeFields);
  * @since 0.0.0
  */
 export class TSNodeConfig extends S.Class<TSNodeConfig>($I`TSNodeConfig`)(
-  TSNodeConfigShape,
+  tsNodeFields,
   $I.annote("TSNodeConfig", {
     description: "Strict ts-node config section stored under the `ts-node` key in tsconfig documents.",
     messageUnexpectedKey: "Unexpected ts-node key",
@@ -1553,51 +1560,6 @@ const tsConfigFields = {
   "ts-node": nullableOptionalField(TSNodeConfig, "TSConfigTsNodeField", tsNodeDescription),
 } as const;
 
-const TSConfigShape = S.Struct(tsConfigFields);
-
-type TSConfigShapeType = S.Schema.Type<typeof TSConfigShape>;
-
-const getCompilerTarget = (config: TSConfigShapeType): (typeof TARGET_VALUES)[number] =>
-  pipe(
-    toOptionalValue(config.compilerOptions),
-    O.flatMap((compilerOptions) => toOptionalValue(compilerOptions.target)),
-    O.getOrElse(() => TARGET_VALUES[0])
-  );
-
-const TSConfigSemanticChecks = S.makeFilterGroup(
-  [
-    S.makeFilter(
-      (config: TSConfigShapeType) =>
-        pipe(
-          toOptionalValue(config["ts-node"]),
-          O.flatMap((tsNode) => toOptionalValue(tsNode.experimentalReplAwait)),
-          O.match({
-            onNone: () => true,
-            onSome: (enabled) => enabled === false || isTargetAtLeast(getCompilerTarget(config), "es2018"),
-          })
-        ),
-      {
-        identifier: $I`TSConfigExperimentalReplAwaitTargetCheck`,
-        title: "TSConfig experimentalReplAwait",
-        description: "ts-node experimentalReplAwait requires compilerOptions.target to be at least ES2018.",
-        message:
-          "`ts-node`.experimentalReplAwait requires compilerOptions.target to be ES2018 or newer when it is enabled.",
-      }
-    ),
-  ],
-  {
-    identifier: $I`TSConfigSemanticChecks`,
-    title: "TSConfig Semantic Checks",
-    description: "Cross-field semantic checks for strict tsconfig decode helpers.",
-  }
-);
-
-const TSConfigSemantic = TSConfigShape.check(TSConfigSemanticChecks).pipe(
-  $I.annoteSchema("TSConfigSemantic", {
-    description: "Strict tsconfig shape with cross-field semantic checks used by the decode helpers.",
-  })
-);
-
 /**
  * Strict TypeScript tsconfig document schema.
  *
@@ -1613,7 +1575,7 @@ const TSConfigSemantic = TSConfigShape.check(TSConfigSemanticChecks).pipe(
  * @since 0.0.0
  */
 export class TSConfig extends S.Class<TSConfig>($I`TSConfig`)(
-  TSConfigShape,
+  tsConfigFields,
   $I.annote("TSConfig", {
     description:
       "A strict TypeScript tsconfig document schema derived from the official SchemaStore definition, with JSONC-aware decode helpers.",
@@ -1766,6 +1728,49 @@ export declare namespace TSConfig {
    */
   export type Encoded = S.Codec.Encoded<typeof TSConfig>;
 }
+
+type TSConfigShapeType = S.Schema.Type<typeof TSConfig>;
+
+const getCompilerTarget = (config: TSConfigShapeType): (typeof TARGET_VALUES)[number] =>
+  pipe(
+    toOptionalValue(config.compilerOptions),
+    O.flatMap((compilerOptions) => toOptionalValue(compilerOptions.target)),
+    O.getOrElse(() => TARGET_VALUES[0])
+  );
+
+const TSConfigSemanticChecks = S.makeFilterGroup(
+  [
+    S.makeFilter(
+      (config: TSConfigShapeType) =>
+        pipe(
+          toOptionalValue(config["ts-node"]),
+          O.flatMap((tsNode) => toOptionalValue(tsNode.experimentalReplAwait)),
+          O.match({
+            onNone: () => true,
+            onSome: (enabled) => enabled === false || isTargetAtLeast(getCompilerTarget(config), "es2018"),
+          })
+        ),
+      {
+        identifier: $I`TSConfigExperimentalReplAwaitTargetCheck`,
+        title: "TSConfig experimentalReplAwait",
+        description: "ts-node experimentalReplAwait requires compilerOptions.target to be at least ES2018.",
+        message:
+          "`ts-node`.experimentalReplAwait requires compilerOptions.target to be ES2018 or newer when it is enabled.",
+      }
+    ),
+  ],
+  {
+    identifier: $I`TSConfigSemanticChecks`,
+    title: "TSConfig Semantic Checks",
+    description: "Cross-field semantic checks for strict tsconfig decode helpers.",
+  }
+);
+
+const TSConfigSemantic = TSConfig.check(TSConfigSemanticChecks).pipe(
+  $I.annoteSchema("TSConfigSemantic", {
+    description: "Strict tsconfig shape with cross-field semantic checks used by the decode helpers.",
+  })
+);
 
 const decodeJsoncUnknownTextExit = S.decodeUnknownExit(JsoncTextToUnknown);
 const decodeJsoncUnknownText = (input: string): Effect.Effect<unknown, S.SchemaError> => {

@@ -131,7 +131,7 @@ describe("agent-effectiveness eval scorer", () => {
     expect(lawComponentScore(0)).toBe(1);
     expect(lawComponentScore(1)).toBe(0.5);
     expect(lawComponentScore(2)).toBe(0.333333);
-    expect(aggregateLawFraction(1, 0.5, 0.25)).toBe(0.583333);
+    expect(aggregateLawFraction({ schemaFirst: 1, tsgo: 0.5, biome: 0.25 })).toBe(0.583333);
   });
 
   it.effect("renders byte-identical reports for the same fixed fixture", () =>

@@ -10,7 +10,7 @@ import { isExcludedTypeScriptSourcePath, toPosixPath } from "@beep/repo-utils/sc
 import { resolveWorkspaceDirs } from "@beep/repo-utils/Workspaces";
 import { LiteralKit } from "@beep/schema";
 import { A, Str, thunkEmptyStr } from "@beep/utils";
-import { Console, DateTime, Effect, FileSystem, flow, HashMap, Order, Path, pipe, SchemaGetter } from "effect";
+import { Console, Effect, FileSystem, flow, HashMap, Order, Path, pipe, SchemaGetter } from "effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -18,8 +18,10 @@ import * as S from "effect/Schema";
 import { Command, Flag } from "effect/unstable/cli";
 import { parse } from "jsonc-parser";
 import { Node, Project, SyntaxKind } from "ts-morph";
+import { todayYmd } from "../../internal/cli/DateStamp.js";
 import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
 import { optionalProp } from "../../internal/cli/OptionRecord.js";
+import { readExistingRepoFile } from "../../internal/cli/RepoFile.js";
 import type { TypeElementTypes } from "ts-morph";
 
 const $I = $RepoCliId.create("commands/Lint/SchemaFirst");
@@ -67,8 +69,11 @@ const NON_SCHEMA_SIGNAL_PATTERN =
 // that extends one of these (the qualified `S.`/`Schema.` access forms
 // actually used in this repo) is a schema-combinator type, not decodable
 // data — see ops/reports/P2-audits/p2-s1-generic.md and p2-s3-extends.md.
+// R15: S.Codec/S.Union/VariantSchema.Overridable join the pattern —
+// SchemaFirst.ts:71-72 (fresh detector-gap evidence:
+// ops/reports/SF-1/sf-1-schema.md, gaps #1/#4).
 const SCHEMA_INFRASTRUCTURE_EXTENDS_PATTERN =
-  /\b(?:S|Schema)\.(?:declareConstructor|decodeTo|Bottom)\b|\bVariantSchema\.Field\b/;
+  /\b(?:S|Schema)\.(?:declareConstructor|decodeTo|Bottom|Codec|Union)\b|\bVariantSchema\.(?:Field|Overridable)\b/;
 const SCHEMA_FIELDS_CALL_PATTERN = /\bS\.(?:Class|Struct|TaggedClass|TaggedStruct|ErrorClass|TaggedErrorClass)\b/;
 const SCHEMA_CLASS_FIELDS_CALL_PATTERN = /\bS\.(?:Class|TaggedClass|ErrorClass|TaggedErrorClass)\b/;
 const NUMERIC_DOMAIN_TOKENS = ["timeout", "count", "size", "rate", "limit", "ms", "seconds"] as const;
@@ -528,38 +533,22 @@ const logPolicyFinding = Effect.fn("logPolicyFinding")(function* (finding: Schem
   yield* Console.error(yield* renderPolicyFindingLine(finding));
 });
 
-const todayYmd = (): string => {
-  const now = DateTime.nowUnsafe();
-  const year = `${DateTime.getPartUtc(now, "year")}`;
-  const month = Str.padStart(2, "0")(`${DateTime.getPartUtc(now, "month")}`);
-  const day = Str.padStart(2, "0")(`${DateTime.getPartUtc(now, "day")}`);
-  return `${year}-${month}-${day}`;
-};
-
 const readInventoryDocument = Effect.fn(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const absolutePath = path.resolve(process.cwd(), INVENTORY_PATH);
-
-  if (!(yield* fs.exists(absolutePath))) {
+  const content = yield* readExistingRepoFile(INVENTORY_PATH);
+  if (O.isNone(content)) {
     return O.none<SchemaFirstInventoryDocument>();
   }
 
-  const content = yield* fs.readFileString(absolutePath);
-  return yield* decodeInventoryDocument(parse(content)).pipe(Effect.option);
+  return yield* decodeInventoryDocument(parse(content.value)).pipe(Effect.option);
 });
 
 const readCrispeningPolicyDocument = Effect.fn(function* () {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const absolutePath = path.resolve(process.cwd(), POLICY_PATH);
-
-  if (!(yield* fs.exists(absolutePath))) {
+  const content = yield* readExistingRepoFile(POLICY_PATH);
+  if (O.isNone(content)) {
     return O.none<SchemaCrispeningPolicyDocument>();
   }
 
-  const content = yield* fs.readFileString(absolutePath);
-  return yield* decodeCrispeningPolicyDocument(parse(content)).pipe(Effect.option);
+  return yield* decodeCrispeningPolicyDocument(parse(content.value)).pipe(Effect.option);
 });
 
 const writeInventoryDocument = Effect.fn("writeInventoryDocument")(function* (document: SchemaFirstInventoryDocument) {
@@ -732,6 +721,15 @@ export const isSchemaCrispeningPolicyExempt =
       O.getOrElse(() => false)
     );
 
+// Shared by resolveOneLevelLocalTypeAlias below and R15's extends-clause
+// target resolution: given a symbol's declarations, find a local
+// type-alias declaration among them and return its own type node.
+const resolveLocalTypeAliasTypeNode = (declarations: ReadonlyArray<Node>): O.Option<Node> =>
+  pipe(
+    A.findFirst(declarations, Node.isTypeAliasDeclaration),
+    O.flatMap((declaration) => O.fromNullishOr(declaration.getTypeNode()))
+  );
+
 // R11-6: resolve one level of a local type-alias indirection before running
 // the structural/textual member-safety tests below — hiding a function type
 // (or a curated runtime-handle type) behind a named alias identifier must
@@ -744,8 +742,7 @@ const resolveOneLevelLocalTypeAlias = (typeNode: Node): Node => {
   }
   const declarations = typeNode.getTypeName().getSymbol()?.getDeclarations() ?? [];
   return pipe(
-    A.findFirst(declarations, Node.isTypeAliasDeclaration),
-    O.flatMap((declaration) => O.fromNullishOr(declaration.getTypeNode())),
+    resolveLocalTypeAliasTypeNode(declarations),
     O.getOrElse(() => typeNode)
   );
 };
@@ -871,9 +868,26 @@ const allExtendsClausesResolveExternal = (
   extendsClauses: ReadonlyArray<import("ts-morph").ExpressionWithTypeArguments>
 ): boolean => A.every(extendsClauses, extendsClauseResolvesExternal);
 
+// R15: resolve one level of local alias/interface indirection on the
+// extends-clause target before the pattern test — an extends target that is
+// itself a local alias of a schema-infrastructure base (e.g. `extends
+// EdgeTransform<Data>` where `EdgeTransform<Data> = S.decodeTo<Data,
+// string>`) must not escape the pattern match just because the alias name
+// itself doesn't textually match (ops/reports/SF-1/sf-1-schema.md, gap #3).
+// Falls back to the clause's own text when it isn't a local type-alias.
+const resolveExtendsClauseTargetText = (clause: import("ts-morph").ExpressionWithTypeArguments): string => {
+  const declarations = clause.getExpression().getSymbol()?.getDeclarations() ?? [];
+  return pipe(
+    resolveLocalTypeAliasTypeNode(declarations),
+    O.map((typeNode) => typeNode.getText()),
+    O.getOrElse(() => clause.getText())
+  );
+};
+
 const extendsSchemaInfrastructureBase = (
   extendsClauses: ReadonlyArray<import("ts-morph").ExpressionWithTypeArguments>
-): boolean => A.some(extendsClauses, (clause) => SCHEMA_INFRASTRUCTURE_EXTENDS_PATTERN.test(clause.getText()));
+): boolean =>
+  A.some(extendsClauses, (clause) => SCHEMA_INFRASTRUCTURE_EXTENDS_PATTERN.test(resolveExtendsClauseTargetText(clause)));
 
 // R7: compose the interface's own members with the OWN (non-transitive)
 // members of every extends target that resolves to a repo-local
@@ -1009,6 +1023,272 @@ const classifyComposedMembers = (
   return candidateClassification;
 };
 
+type PermanentSchemaFirstExclusion = {
+  readonly file: string;
+  readonly symbol: string;
+  readonly reason: string;
+};
+
+// R14/R15: driver-verified holds where the schema-first detector's generic
+// heuristics cannot recognize a real non-schema shape, baked directly into
+// the detector (stronger than a standards/schema-first.inventory.jsonc
+// exception record) instead of a standing tracked exception — mirrors
+// DualArity.ts's PERMANENT_EXCLUSIONS mechanism. Explicit, reviewable,
+// driver-owned entries only; NOT a blanket structural exemption.
+const PERMANENT_SCHEMA_FIRST_EXCLUSIONS: ReadonlyArray<PermanentSchemaFirstExclusion> = [
+  // R14: categorical-generic family (ops/reports/SF-1/sf-1-graphnode.md) —
+  // free type parameters driver-verified (via TypeClass.ts's `ap` /
+  // Monoid.ts's `Endo`) to be instantiated with function types; no schema
+  // can represent them, and zero concrete schema consumers exist anywhere
+  // in either package.
+  {
+    file: "packages/foundation/capability/nlp-processing/src/Graph/EffectGraph.ts",
+    symbol: "GraphNode",
+    reason:
+      "Free type parameter A proven (via TextOperation's ap, TypeClass.ts:672-674) to range over function types; zero concrete schema consumers repo-wide.",
+  },
+  {
+    file: "packages/foundation/capability/nlp-processing/src/Graph/EffectGraph.ts",
+    symbol: "EffectGraph",
+    reason: "Direct container of GraphNode<A>; inherits its disqualification.",
+  },
+  {
+    file: "packages/foundation/capability/nlp-processing/src/Graph/TypeClass.ts",
+    symbol: "Composable",
+    reason:
+      "identity: TextOperation<A, A> field is itself the unconvertible categorical-generic type; compose is function-typed.",
+  },
+  {
+    file: "packages/foundation/capability/nlp-processing/src/Graph/TypeClass.ts",
+    symbol: "ForgetfulOperation",
+    reason:
+      "apply is a function field over GraphNode<A>/GraphNode<B>; the only other member (name: string) is too thin to justify a public-contract-breaking split.",
+  },
+  {
+    file: "packages/foundation/capability/nlp-processing/src/Graph/TypeClass.ts",
+    symbol: "TextOperation",
+    reason:
+      "Driver-verified: constraining A/B to S.Top produces 104 tsgo errors from one line; ap's (b: B) => C instantiation is a hard S.Top violation.",
+  },
+  {
+    file: "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Operation.ts",
+    symbol: "GraphOperation",
+    reason:
+      "apply/estimateCost/validate are function fields over GraphNode<A>/GraphNode<B>. A descriptor/behavior split (category/description/name vs. the function bundle) is theoretically viable per the R11-4 ExportedTool precedent but breaks every operation.X call site in Executor.ts — DEFERRED to a follow-up goal packet, not attempted here.",
+  },
+  {
+    file: "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
+    symbol: "OperationResult",
+    reason:
+      "newNodes: ReadonlyArray<GraphNode<B>> for free B inherits GraphNode's disqualification; originalGraph: unknown is intentionally opaque.",
+  },
+  {
+    file: "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/ResultStore.ts",
+    symbol: "StoredResult",
+    reason:
+      "Non-generic itself, but result: AnyOperationResult = OperationResult<unknown, unknown> inherits the disqualification transitively.",
+  },
+  {
+    file: "packages/foundation/modeling/nlp/src/Algebra/Monoid.ts",
+    symbol: "Monoid",
+    reason:
+      'Driver-verified: constraining A to S.Top produces 96 tsgo errors from one line; every real instance is over a plain value type, several (Endo: Monoid<(a: A) => A>) over function types — the abstract-algebra carrier-type sense of "generic" is incompatible with S.Top.',
+  },
+  {
+    file: "packages/foundation/modeling/nlp/src/Graph/GraphOps.ts",
+    symbol: "SearchIndex",
+    reason:
+      "keyFn: (node: A) => ReadonlyArray<K> is a stored function (behavior); index: HashMap.HashMap<K, ReadonlyArray<NodeIndex>> is a plain-value HashMap keyed by free K with no schema counterpart.",
+  },
+  {
+    file: "packages/foundation/modeling/nlp/src/Operations/Definition.ts",
+    symbol: "OperationDefinition",
+    reason:
+      "inputSchema: S.Schema<A>/outputSchema: S.Schema<B> are fields whose VALUE is itself a Schema instance (S.toArbitrary/encodeSync fail on this shape); implementation is a behavior field. A descriptor/behavior split (name/description/metadata) is theoretically viable per the R11-4 ExportedTool precedent but breaks every definition.X call site — DEFERRED to a follow-up goal packet, not attempted here.",
+  },
+  // R15: @beep/schema residue (ops/reports/SF-1/sf-1-schema.md).
+  {
+    file: "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
+    symbol: "union",
+    reason:
+      "Driver-verified regression reproduced: converting the per-member S.Struct to an S.Class breaks S.toTaggedUnion's generated .guards.<case> predicates (S.is requires instanceof once members are classes) — every plain-object call site (~12 across 8+ packages) would fail its guard.",
+  },
+  {
+    file: "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts",
+    symbol: "extract",
+    reason:
+      "Driver-verified regression reproduced: an S.Class-backed Extract<V,A,IsDefault> breaks field enumeration and rejects plain-object encode/decode input across 12 tests in 3 files; Extract<V,A,IsDefault>'s S.Struct<...> return type is consumed by name throughout Model.variants.ts and every entity in the repo — blocked: ripple.",
+  },
+  {
+    file: "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts",
+    symbol: "Class",
+    reason:
+      "Foundational VariantSchema toolkit self-definition: extends S.Bottom<...> but has substantial non-empty schema-infra own members (extend/fields/make/mapFields/new) with no Rebuild: this — positive control for the R6 generic-interface family, not a conversion target.",
+  },
+  {
+    file: "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts",
+    symbol: "Field",
+    reason:
+      "Foundational VariantSchema toolkit self-definition: extends Pipeable (not a schema base by design), a plain tagged carrier — positive control, not a conversion target.",
+  },
+  {
+    file: "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts",
+    symbol: "Struct",
+    reason:
+      "Foundational VariantSchema toolkit self-definition: extends Pipeable (not a schema base by design), a plain tagged carrier — positive control, not a conversion target.",
+  },
+  {
+    file: "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts",
+    symbol: "Union",
+    reason:
+      "Foundational VariantSchema toolkit self-definition: extends S.Union<{...}> with no Rebuild: this — positive control for the R6 generic-interface family, not a conversion target.",
+  },
+  {
+    file: "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.definition.ts",
+    symbol: "AssignedEntityParts",
+    reason:
+      "Pure compile-time entity-builder-DSL plumbing: fields' values are S.Top schema instances (a map of schemas, not schema-describable JSON data); assignEntityParts's body returns a plain object with no S.Class/S.Struct wrapper — no schema value exists to convert.",
+  },
+  {
+    file: "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.definition.ts",
+    symbol: "ClassInput",
+    reason: "Same DSL-input-descriptor shape as AssignedEntityParts: compile-time builder plumbing, no schema instance backing it.",
+  },
+  {
+    file: "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.persist.ts",
+    symbol: "PersistOptions",
+    reason:
+      "Same DSL-input-descriptor shape: .persisted's values are PersistDescriptor shape descriptors, not schema-describable data.",
+  },
+  {
+    file: "packages/foundation/modeling/schema/test/CurrencyCode.test.ts",
+    symbol: "schema-codec-tests",
+    reason:
+      "Finite LiteralKit enumeration generated from ISO-4217 data — S.toArbitrary over a closed literal union only re-samples already-enumerated members; example-based assertions are the correct test shape.",
+  },
+  {
+    file: "packages/foundation/modeling/schema/test/TerritoryCode.test.ts",
+    symbol: "schema-codec-tests",
+    reason: "Finite MappedLiteralKit enumeration generated from CLDR data — same reasoning as CurrencyCode.test.ts.",
+  },
+  {
+    file: "packages/foundation/modeling/schema/test/Timezone.test.ts",
+    symbol: "schema-codec-tests",
+    reason: "Finite LiteralKit enumeration generated from IANA data — same reasoning as CurrencyCode.test.ts.",
+  },
+  {
+    file: "packages/foundation/modeling/schema/test/Fn.test.ts",
+    symbol: "schema-codec-tests",
+    reason:
+      "Meta-test of the Fn/ThunkOf/AnyFn function-value combinator (declareConstructor + self-identity equivalence) — no structural data to arbitrary-generate.",
+  },
+  {
+    file: "packages/foundation/modeling/schema/test/PromiseSchema.test.ts",
+    symbol: "schema-codec-tests",
+    reason:
+      'S.declare<Promise<unknown>> identity declaration; S.toArbitrary throws "Unsupported AST Declaration" on this exact schema and a native Promise has no meaningful round-trip law.',
+  },
+  {
+    file: "packages/foundation/modeling/schema/test/Transformations.test.ts",
+    symbol: "schema-codec-tests",
+    reason:
+      "Meta-test of destructiveTransform using test-local illustrative schemas; lossy decode + passthrough encode, no round-trip law, no domain source schema.",
+  },
+  // R15 addendum (ops/reports/SF-1/sf-1-repoutils.md): 3 residue entries live
+  // in generic factories parameterized by an abstract Fields extends
+  // S.Struct.Fields type parameter (not a concrete schema type argument, so
+  // the TypedTextSchema precedent doesn't apply). Driver-reproduced, two
+  // independent real TS-level blockers: S.Class cannot be constructed inside
+  // a function generic over an abstract Fields param ("Missing Self
+  // generic", TS2509 in the class-extends form), and Class's `.ast:
+  // Declaration` is incompatible with StructWithRest's `ast: Objects`
+  // constraint (independently reproduced by both sf1-schema and
+  // sf1-repoutils). A wider makeLooseJsonObject redesign is out of
+  // initiative scope.
+  {
+    file: "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
+    symbol: "makeTypeStruct",
+    reason:
+      'S.Class<S.Schema.Type<S.Struct<Fields>>>(...) fails "Missing Self generic" (Self can\'t resolve from the generic Fields param), and even past that the result feeds S.StructWithRest(...).ast at the call site, which fails TS2345 (Class.ast: Declaration vs. StructWithRest.Objects). Reproduced via tsgo, reverted; makeLooseJsonObject redesign deferred out of initiative scope.',
+  },
+  {
+    file: "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
+    symbol: "makeEncodedStruct",
+    reason: "Same generic-Fields/StructWithRest.ast blockers as makeTypeStruct — same factory, same reproduced failures.",
+  },
+  {
+    file: "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
+    symbol: "strict",
+    reason:
+      "Inside makeLooseJsonObject: both a class-extends form (TS2509, generic Fields base unresolvable) and a non-extends S.Class<Self>(id)(fields) form (same \"Missing Self generic\" failure as makeTypeStruct) were reproduced via tsgo and reverted; strict is a leaf S.decodeUnknownEffect/S.encodeEffect use with no StructWithRest composition, so only the generic-Self limitation blocks it.",
+  },
+] as const;
+
+const isPermanentlyExcludedSchemaFirstEntry = (file: string, symbol: string): boolean =>
+  A.some(PERMANENT_SCHEMA_FIRST_EXCLUSIONS, (exclusion) => exclusion.file === file && exclusion.symbol === symbol);
+
+// R6-1/R6-2/R15: classification for an exported GENERIC interface — the
+// only two outcomes are silent (schema-infra escape hatches) or the tracked
+// GENERIC_INTERFACE_EXCEPTION_REASON exception; generics never reach member
+// composition below.
+const classifyGenericInterface = (
+  node: import("ts-morph").InterfaceDeclaration,
+  extendsClauses: ReadonlyArray<import("ts-morph").ExpressionWithTypeArguments>
+): SchemaFirstMemberClassification => {
+  // R6-1: schema-infrastructure generic (extends declareConstructor/
+  // decodeTo/Bottom/Codec/Union/VariantSchema.Field|Overridable AND
+  // declares Rebuild: this OR has an empty/meta-only own body — R15's
+  // isEmptyOrMetaOnlyOwnBody carve-out now reaches the generic branch too
+  // (previously non-generic-extends-only; ops/reports/SF-1/sf-1-schema.md
+  // gap #2).
+  if (
+    extendsSchemaInfrastructureBase(extendsClauses) &&
+    (hasRebuildThisMember(node.getMembers()) || isEmptyOrMetaOnlyOwnBody(node.getMembers()))
+  ) {
+    return silentClassification;
+  }
+  // R6-2: all-function-member generic (no data fields).
+  if (isSilentMemberShape(node.getMembers())) {
+    return silentClassification;
+  }
+  return exceptionClassification(GENERIC_INTERFACE_EXCEPTION_REASON);
+};
+
+// R7/R13: classification for an exported non-generic interface that has at
+// least one extends clause — resolves the extends targets, then either
+// silently skips or composes own+inherited members for member-safety
+// classification.
+const classifyExtendsInterface = (
+  node: import("ts-morph").InterfaceDeclaration,
+  sourceFile: import("ts-morph").SourceFile,
+  filePath: string,
+  extendsClauses: ReadonlyArray<import("ts-morph").ExpressionWithTypeArguments>
+): SchemaFirstMemberClassification => {
+  // R7: resolve extends targets before classifying.
+  if (allExtendsClausesResolveExternal(extendsClauses)) {
+    return silentClassification;
+  }
+  if (extendsSchemaInfrastructureBase(extendsClauses) && isEmptyOrMetaOnlyOwnBody(node.getMembers())) {
+    // R13 (driver-verified against DateTimeInsert, Model.datetime.ts:133):
+    // schema-meta "named generic instantiation" idiom (e.g. `DateTimeInsert
+    // extends VariantSchema.Field<{...}> {}`) with an empty (or
+    // meta-only) own body exists solely for the schema-authoring
+    // type/value dual-binding — silent, not a tracked exception. An
+    // extends of the same base WITH an added data member still falls
+    // through to member-safety composition below.
+    return silentClassification;
+  }
+  if (hasOwnCallSignatureMember(node.getMembers())) {
+    return silentClassification;
+  }
+  return classifyComposedMembers(
+    sourceFile,
+    filePath,
+    node.getName(),
+    composeOwnAndLocalExtendsMembers(node, extendsClauses)
+  );
+};
+
 /**
  * Input for {@link detectInterfaceReason}: the exported interface
  * declaration under inspection plus its owning source file context.
@@ -1052,49 +1332,32 @@ type DetectInterfaceReasonInput = {
  */
 export const detectInterfaceReason = (input: DetectInterfaceReasonInput): SchemaFirstMemberClassification => {
   const { node, sourceFile, filePath } = input;
+  if (isPermanentlyExcludedSchemaFirstEntry(filePath, node.getName())) {
+    return silentClassification;
+  }
   const extendsClauses = node.getExtends();
 
   if (node.getTypeParameters().length > 0) {
-    // R6-1: schema-infrastructure generic (extends declareConstructor/
-    // decodeTo/Bottom/VariantSchema.Field AND declares Rebuild: this).
-    if (extendsSchemaInfrastructureBase(extendsClauses) && hasRebuildThisMember(node.getMembers())) {
-      return silentClassification;
-    }
-    // R6-2: all-function-member generic (no data fields).
-    if (isSilentMemberShape(node.getMembers())) {
-      return silentClassification;
-    }
-    return exceptionClassification(GENERIC_INTERFACE_EXCEPTION_REASON);
+    return classifyGenericInterface(node, extendsClauses);
   }
 
   if (!A.isReadonlyArrayEmpty(extendsClauses)) {
-    // R7: resolve extends targets before classifying.
-    if (allExtendsClausesResolveExternal(extendsClauses)) {
-      return silentClassification;
-    }
-    if (extendsSchemaInfrastructureBase(extendsClauses) && isEmptyOrMetaOnlyOwnBody(node.getMembers())) {
-      // R13 (driver-verified against DateTimeInsert, Model.datetime.ts:133):
-      // schema-meta "named generic instantiation" idiom (e.g. `DateTimeInsert
-      // extends VariantSchema.Field<{...}> {}`) with an empty (or
-      // meta-only) own body exists solely for the schema-authoring
-      // type/value dual-binding — silent, not a tracked exception. An
-      // extends of the same base WITH an added data member still falls
-      // through to member-safety composition below.
-      return silentClassification;
-    }
-    if (hasOwnCallSignatureMember(node.getMembers())) {
-      return silentClassification;
-    }
-    return classifyComposedMembers(
-      sourceFile,
-      filePath,
-      node.getName(),
-      composeOwnAndLocalExtendsMembers(node, extendsClauses)
-    );
+    return classifyExtendsInterface(node, sourceFile, filePath, extendsClauses);
   }
 
   return classifyComposedMembers(sourceFile, filePath, node.getName(), node.getMembers());
 };
+
+// R14: a generic type alias whose type node is an `S.Schema.Type<...>`
+// TypeReference is schema-DERIVED (the TypedText pattern,
+// ops/reports/SF-1/sf-1-graphnode.md) — its shape comes from a same-file
+// schema factory's `.Type`, so flagging it as undecoded pure data is a
+// category error. Textual/structural check only (does not verify the
+// referenced factory's own body).
+const isSchemaDerivedGenericAliasTypeNode = (typeNode: Node | undefined): boolean =>
+  typeNode !== undefined &&
+  Node.isTypeReference(typeNode) &&
+  /\b(?:S|Schema)\.Schema\.Type\b/.test(typeNode.getTypeName().getText());
 
 /**
  * Input for {@link detectTypeAliasReason}: the exported type-alias
@@ -1138,9 +1401,15 @@ type DetectTypeAliasReasonInput = {
  */
 export const detectTypeAliasReason = (input: DetectTypeAliasReasonInput): SchemaFirstMemberClassification => {
   const { node, sourceFile, filePath } = input;
+  if (isPermanentlyExcludedSchemaFirstEntry(filePath, node.getName())) {
+    return silentClassification;
+  }
   const typeNode = node.getTypeNode();
 
   if (node.getTypeParameters().length > 0) {
+    if (isSchemaDerivedGenericAliasTypeNode(typeNode)) {
+      return silentClassification;
+    }
     const isSchemaInfrastructureAliasBase =
       typeNode !== undefined && SCHEMA_INFRASTRUCTURE_EXTENDS_PATTERN.test(typeNode.getText());
     const members = Node.isTypeLiteral(typeNode) ? typeNode.getMembers() : A.empty<TypeElementTypes>();
@@ -1485,13 +1754,27 @@ const sourceHasFnSchemaSignal = (sourceFile: import("ts-morph").SourceFile): boo
 };
 
 /**
+ * Shared repo-relative file path and resolved owning package passed to the
+ * schema-first AST detectors below. `filePath`/`owner` are loop-scoped
+ * closures bound once per source file inside `scanSchemaFirstInventory`'s
+ * scan loop, so every real call site is always data-first; the type exists
+ * so the trailing pair collapses into one strict object-like parameter.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+type SchemaFirstDetectorLocation = {
+  readonly file: string;
+  readonly owner: string;
+};
+
+/**
  * Detect an exported function or arrow function whose parameter or return
  * contract is an inline object type literal rather than a schema, within a
  * schema-modeled file. Generic declarations are conservatively skipped.
  *
  * @param node - Exported `FunctionDeclaration` or `ArrowFunction` candidate.
- * @param file - Repo-relative posix path of the source file.
- * @param owner - Resolved owning package for the finding.
+ * @param location - `file` (repo-relative posix path) and `owner` (resolved owning package) for the finding.
  * @returns `O.some` with the advisory entry when an inline object contract is found, `O.none` otherwise.
  * @example
  * ```ts
@@ -1501,37 +1784,39 @@ const sourceHasFnSchemaSignal = (sourceFile: import("ts-morph").SourceFile): boo
  * @category utilities
  * @since 0.0.0
  */
-export const fnSchemaEntryFromFunctionLike = (
-  node: FunctionLikeDeclarationNode,
-  file: string,
-  owner: string
-): O.Option<SchemaFirstInventoryEntry> => {
-  if (node.getTypeParameters().length > 0) {
-    return O.none();
-  }
+export const fnSchemaEntryFromFunctionLike: {
+  (location: SchemaFirstDetectorLocation): (node: FunctionLikeDeclarationNode) => O.Option<SchemaFirstInventoryEntry>;
+  (node: FunctionLikeDeclarationNode, location: SchemaFirstDetectorLocation): O.Option<SchemaFirstInventoryEntry>;
+} = dual(
+  2,
+  (node: FunctionLikeDeclarationNode, { file, owner }: SchemaFirstDetectorLocation): O.Option<SchemaFirstInventoryEntry> => {
+    if (node.getTypeParameters().length > 0) {
+      return O.none();
+    }
 
-  const hasInlineParameterTypeLiteral = A.some(node.getParameters(), (parameter) =>
-    isInlineTypeLiteralNode(parameter.getTypeNode())
-  );
-  const hasInlineReturnTypeLiteral = isInlineTypeLiteralNode(node.getReturnTypeNode());
-  if (!hasInlineParameterTypeLiteral && !hasInlineReturnTypeLiteral) {
-    return O.none();
-  }
+    const hasInlineParameterTypeLiteral = A.some(node.getParameters(), (parameter) =>
+      isInlineTypeLiteralNode(parameter.getTypeNode())
+    );
+    const hasInlineReturnTypeLiteral = isInlineTypeLiteralNode(node.getReturnTypeNode());
+    if (!hasInlineParameterTypeLiteral && !hasInlineReturnTypeLiteral) {
+      return O.none();
+    }
 
-  const name = functionLikeSymbolName(node);
-  return O.some(
-    SchemaFirstInventoryEntry.make({
-      file,
-      symbol: name,
-      kind: "schema-policy-advisory",
-      status: "advisory",
-      ruleId: "SFV4-fn-schema",
-      line: node.getSourceFile().getLineAndColumnAtPos(node.getStart()).line,
-      owner,
-      reason: `Exported function "${name}" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable.`,
-    })
-  );
-};
+    const name = functionLikeSymbolName(node);
+    return O.some(
+      SchemaFirstInventoryEntry.make({
+        file,
+        symbol: name,
+        kind: "schema-policy-advisory",
+        status: "advisory",
+        ruleId: "SFV4-fn-schema",
+        line: node.getSourceFile().getLineAndColumnAtPos(node.getStart()).line,
+        owner,
+        reason: `Exported function "${name}" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable.`,
+      })
+    );
+  }
+);
 
 /**
  * Detect an exported function or arrow function whose explicit return type
@@ -1541,8 +1826,7 @@ export const fnSchemaEntryFromFunctionLike = (
  * `.tsx` react boundary files are conservatively skipped by callers.
  *
  * @param node - Exported `FunctionDeclaration` or `ArrowFunction` candidate.
- * @param file - Repo-relative posix path of the source file.
- * @param owner - Resolved owning package for the finding.
+ * @param location - `file` (repo-relative posix path) and `owner` (resolved owning package) for the finding.
  * @returns `O.some` with the advisory entry when a null/undefined return annotation is found, `O.none` otherwise.
  * @example
  * ```ts
@@ -1552,34 +1836,36 @@ export const fnSchemaEntryFromFunctionLike = (
  * @category utilities
  * @since 0.0.0
  */
-export const nullReturnEntryFromFunctionLike = (
-  node: FunctionLikeDeclarationNode,
-  file: string,
-  owner: string
-): O.Option<SchemaFirstInventoryEntry> => {
-  if (node.getTypeParameters().length > 0) {
-    return O.none();
-  }
+export const nullReturnEntryFromFunctionLike: {
+  (location: SchemaFirstDetectorLocation): (node: FunctionLikeDeclarationNode) => O.Option<SchemaFirstInventoryEntry>;
+  (node: FunctionLikeDeclarationNode, location: SchemaFirstDetectorLocation): O.Option<SchemaFirstInventoryEntry>;
+} = dual(
+  2,
+  (node: FunctionLikeDeclarationNode, { file, owner }: SchemaFirstDetectorLocation): O.Option<SchemaFirstInventoryEntry> => {
+    if (node.getTypeParameters().length > 0) {
+      return O.none();
+    }
 
-  const returnTypeNode = node.getReturnTypeNode();
-  if (returnTypeNode === undefined || !NULL_UNDEFINED_RETURN_PATTERN.test(returnTypeNode.getText())) {
-    return O.none();
-  }
+    const returnTypeNode = node.getReturnTypeNode();
+    if (returnTypeNode === undefined || !NULL_UNDEFINED_RETURN_PATTERN.test(returnTypeNode.getText())) {
+      return O.none();
+    }
 
-  const name = functionLikeSymbolName(node);
-  return O.some(
-    SchemaFirstInventoryEntry.make({
-      file,
-      symbol: name,
-      kind: "schema-policy-advisory",
-      status: "advisory",
-      ruleId: "SFV4-null-return",
-      line: node.getSourceFile().getLineAndColumnAtPos(node.getStart()).line,
-      owner,
-      reason: `Exported helper "${name}" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions).`,
-    })
-  );
-};
+    const name = functionLikeSymbolName(node);
+    return O.some(
+      SchemaFirstInventoryEntry.make({
+        file,
+        symbol: name,
+        kind: "schema-policy-advisory",
+        status: "advisory",
+        ruleId: "SFV4-null-return",
+        line: node.getSourceFile().getLineAndColumnAtPos(node.getStart()).line,
+        owner,
+        reason: `Exported helper "${name}" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions).`,
+      })
+    );
+  }
+);
 
 const isNullReturnEligibleFilePath = (filePath: string): boolean => !Str.endsWith(".tsx")(filePath);
 
@@ -1598,8 +1884,7 @@ const sourceHasNormalizationSignal = (sourceFile: import("ts-morph").SourceFile)
  * living in ad hoc imperative code.
  *
  * @param callExpression - Candidate call expression to inspect.
- * @param file - Repo-relative posix path of the source file.
- * @param owner - Resolved owning package for the finding.
+ * @param location - `file` (repo-relative posix path) and `owner` (resolved owning package) for the finding.
  * @returns `O.some` with the advisory entry when a function-local normalization call is found, `O.none` otherwise.
  * @example
  * ```ts
@@ -1609,36 +1894,46 @@ const sourceHasNormalizationSignal = (sourceFile: import("ts-morph").SourceFile)
  * @category utilities
  * @since 0.0.0
  */
-export const normalizationEntryFromCallExpression = (
-  callExpression: import("ts-morph").CallExpression,
-  file: string,
-  owner: string
-): O.Option<SchemaFirstInventoryEntry> => {
-  const expression = callExpression.getExpression();
-  if (
-    !Node.isPropertyAccessExpression(expression) ||
-    !isNormalizationMethodName(expression.getName()) ||
-    callExpression.getArguments().length > 0 ||
-    !isFunctionLocalNode(callExpression)
-  ) {
-    return O.none();
-  }
+export const normalizationEntryFromCallExpression: {
+  (
+    location: SchemaFirstDetectorLocation
+  ): (callExpression: import("ts-morph").CallExpression) => O.Option<SchemaFirstInventoryEntry>;
+  (
+    callExpression: import("ts-morph").CallExpression,
+    location: SchemaFirstDetectorLocation
+  ): O.Option<SchemaFirstInventoryEntry>;
+} = dual(
+  2,
+  (
+    callExpression: import("ts-morph").CallExpression,
+    { file, owner }: SchemaFirstDetectorLocation
+  ): O.Option<SchemaFirstInventoryEntry> => {
+    const expression = callExpression.getExpression();
+    if (
+      !Node.isPropertyAccessExpression(expression) ||
+      !isNormalizationMethodName(expression.getName()) ||
+      callExpression.getArguments().length > 0 ||
+      !isFunctionLocalNode(callExpression)
+    ) {
+      return O.none();
+    }
 
-  const methodName = expression.getName();
-  const container = inferExecutableContainerSymbol(callExpression);
-  return O.some(
-    SchemaFirstInventoryEntry.make({
-      file,
-      symbol: `${container}.${methodName}`,
-      kind: "schema-policy-advisory",
-      status: "advisory",
-      ruleId: "SFV4-normalization",
-      line: callExpression.getSourceFile().getLineAndColumnAtPos(callExpression.getStart()).line,
-      owner,
-      reason: `Normalization call ".${methodName}()" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data.`,
-    })
-  );
-};
+    const methodName = expression.getName();
+    const container = inferExecutableContainerSymbol(callExpression);
+    return O.some(
+      SchemaFirstInventoryEntry.make({
+        file,
+        symbol: `${container}.${methodName}`,
+        kind: "schema-policy-advisory",
+        status: "advisory",
+        ruleId: "SFV4-normalization",
+        line: callExpression.getSourceFile().getLineAndColumnAtPos(callExpression.getStart()).line,
+        owner,
+        reason: `Normalization call ".${methodName}()" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data.`,
+      })
+    );
+  }
+);
 
 const sourceHasGetSomesSignal = (sourceFile: import("ts-morph").SourceFile): boolean =>
   GETSOMES_CALL_SIGNAL_PATTERN.test(sourceFile.getFullText());
@@ -1654,8 +1949,7 @@ const isGetSomesObjectName = (name: string): boolean =>
  * homogeneous dynamic-key dictionary case) are left alone.
  *
  * @param callExpression - Candidate call expression to inspect.
- * @param file - Repo-relative posix path of the source file.
- * @param owner - Resolved owning package for the finding.
+ * @param location - `file` (repo-relative posix path) and `owner` (resolved owning package) for the finding.
  * @returns `O.some` with the advisory entry when an inline Option-struct literal is spread through `getSomes`, `O.none` otherwise.
  * @example
  * ```ts
@@ -1665,37 +1959,47 @@ const isGetSomesObjectName = (name: string): boolean =>
  * @category utilities
  * @since 0.0.0
  */
-export const getsomesStructEntryFromCallExpression = (
-  callExpression: import("ts-morph").CallExpression,
-  file: string,
-  owner: string
-): O.Option<SchemaFirstInventoryEntry> => {
-  const expression = callExpression.getExpression();
-  if (!Node.isPropertyAccessExpression(expression) || expression.getName() !== "getSomes") {
-    return O.none();
-  }
-  if (!isGetSomesObjectName(expression.getExpression().getText())) {
-    return O.none();
-  }
-  const firstArgument = callExpression.getArguments()[0];
-  if (firstArgument === undefined || !Node.isObjectLiteralExpression(firstArgument)) {
-    return O.none();
-  }
+export const getsomesStructEntryFromCallExpression: {
+  (
+    location: SchemaFirstDetectorLocation
+  ): (callExpression: import("ts-morph").CallExpression) => O.Option<SchemaFirstInventoryEntry>;
+  (
+    callExpression: import("ts-morph").CallExpression,
+    location: SchemaFirstDetectorLocation
+  ): O.Option<SchemaFirstInventoryEntry>;
+} = dual(
+  2,
+  (
+    callExpression: import("ts-morph").CallExpression,
+    { file, owner }: SchemaFirstDetectorLocation
+  ): O.Option<SchemaFirstInventoryEntry> => {
+    const expression = callExpression.getExpression();
+    if (!Node.isPropertyAccessExpression(expression) || expression.getName() !== "getSomes") {
+      return O.none();
+    }
+    if (!isGetSomesObjectName(expression.getExpression().getText())) {
+      return O.none();
+    }
+    const firstArgument = callExpression.getArguments()[0];
+    if (firstArgument === undefined || !Node.isObjectLiteralExpression(firstArgument)) {
+      return O.none();
+    }
 
-  return O.some(
-    SchemaFirstInventoryEntry.make({
-      file,
-      symbol: `${inferExecutableContainerSymbol(callExpression)}.R.getSomes`,
-      kind: "schema-policy-advisory",
-      status: "advisory",
-      ruleId: "SFV4-getsomes-struct",
-      line: callExpression.getSourceFile().getLineAndColumnAtPos(callExpression.getStart()).line,
-      owner,
-      reason:
-        "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05).",
-    })
-  );
-};
+    return O.some(
+      SchemaFirstInventoryEntry.make({
+        file,
+        symbol: `${inferExecutableContainerSymbol(callExpression)}.R.getSomes`,
+        kind: "schema-policy-advisory",
+        status: "advisory",
+        ruleId: "SFV4-getsomes-struct",
+        line: callExpression.getSourceFile().getLineAndColumnAtPos(callExpression.getStart()).line,
+        owner,
+        reason:
+          "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05).",
+      })
+    );
+  }
+);
 
 const sourceHasDefaultsSchemaSignal = (sourceFile: import("ts-morph").SourceFile): boolean =>
   DEFAULTS_SCHEMA_SIGNAL_PATTERN.test(sourceFile.getFullText());
@@ -1946,7 +2250,11 @@ const arbitraryTestsEntryFromSourceFile = (
   file: string,
   owner: string
 ): O.Option<SchemaFirstInventoryEntry> => {
-  if (!isSchemaFirstTestFile(file) || sourceHasSchemaArbitraryPropertyCoverage(sourceFile)) {
+  if (
+    !isSchemaFirstTestFile(file) ||
+    sourceHasSchemaArbitraryPropertyCoverage(sourceFile) ||
+    isPermanentlyExcludedSchemaFirstEntry(file, "schema-codec-tests")
+  ) {
     return O.none();
   }
 
@@ -2110,13 +2418,13 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
 
     for (const callExpression of sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression)) {
       if (hasNormalizationSignal) {
-        const normalizationEntry = normalizationEntryFromCallExpression(callExpression, filePath, owner);
+        const normalizationEntry = normalizationEntryFromCallExpression(callExpression, { file: filePath, owner });
         if (O.isSome(normalizationEntry)) {
           A.appendInPlace(entries, normalizationEntry.value);
         }
       }
       if (hasGetSomesSignal) {
-        const getsomesEntry = getsomesStructEntryFromCallExpression(callExpression, filePath, owner);
+        const getsomesEntry = getsomesStructEntryFromCallExpression(callExpression, { file: filePath, owner });
         if (O.isSome(getsomesEntry)) {
           A.appendInPlace(entries, getsomesEntry.value);
         }
@@ -2128,10 +2436,17 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
         }
         continue;
       }
+      const structSymbol = inferStructSymbol(callExpression);
+      // R15: driver-verified permanent exclusions (e.g. LiteralKit.schema.ts
+      // `union`, VariantSchema.core.ts `extract`) skip entirely rather than
+      // stay a tracked exception — ops/reports/SF-1/sf-1-schema.md.
+      if (isPermanentlyExcludedSchemaFirstEntry(filePath, structSymbol)) {
+        continue;
+      }
       const reasonOption = detectStructReason(callExpression);
       pushEntry(
         filePath,
-        inferStructSymbol(callExpression),
+        structSymbol,
         "object-struct-schema",
         O.match(reasonOption, {
           onNone: thunkCandidate,
@@ -2151,13 +2466,13 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
 
     for (const functionLike of functionLikeCandidates) {
       if (hasFnSchemaSignal) {
-        const fnSchemaEntry = fnSchemaEntryFromFunctionLike(functionLike, filePath, owner);
+        const fnSchemaEntry = fnSchemaEntryFromFunctionLike(functionLike, { file: filePath, owner });
         if (O.isSome(fnSchemaEntry)) {
           A.appendInPlace(entries, fnSchemaEntry.value);
         }
       }
       if (isNullReturnEligible) {
-        const nullReturnEntry = nullReturnEntryFromFunctionLike(functionLike, filePath, owner);
+        const nullReturnEntry = nullReturnEntryFromFunctionLike(functionLike, { file: filePath, owner });
         if (O.isSome(nullReturnEntry)) {
           A.appendInPlace(entries, nullReturnEntry.value);
         }

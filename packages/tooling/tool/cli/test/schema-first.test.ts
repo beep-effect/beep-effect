@@ -300,7 +300,7 @@ describe("fnSchemaEntryFromFunctionLike", () => {
       "export function updateWidget(input: { id: string; name: string }): void {}"
     );
     const [functionDeclaration] = sourceFile.getFunctions();
-    const entry = fnSchemaEntryFromFunctionLike(functionDeclaration, "fixture.ts", "@beep/test");
+    const entry = fnSchemaEntryFromFunctionLike(functionDeclaration, { file: "fixture.ts", owner: "@beep/test" });
 
     expect(O.isSome(entry)).toBe(true);
     expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-fn-schema"));
@@ -315,7 +315,7 @@ describe("fnSchemaEntryFromFunctionLike", () => {
       ["export function identity<T>(input: { value: T }): T {", "  return input.value;", "}"].join("\n")
     );
     const [functionDeclaration] = sourceFile.getFunctions();
-    const entry = fnSchemaEntryFromFunctionLike(functionDeclaration, "fixture.ts", "@beep/test");
+    const entry = fnSchemaEntryFromFunctionLike(functionDeclaration, { file: "fixture.ts", owner: "@beep/test" });
 
     expect(O.isNone(entry)).toBe(true);
   });
@@ -329,7 +329,7 @@ describe("normalizationEntryFromCallExpression", () => {
       ["export function normalizeName(name: string): string {", "  return name.trim();", "}"].join("\n")
     );
     const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
-    const entry = normalizationEntryFromCallExpression(callExpression, "fixture.ts", "@beep/test");
+    const entry = normalizationEntryFromCallExpression(callExpression, { file: "fixture.ts", owner: "@beep/test" });
 
     expect(O.isSome(entry)).toBe(true);
     expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-normalization"));
@@ -340,7 +340,7 @@ describe("normalizationEntryFromCallExpression", () => {
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile("fixture.ts", 'const trimmed = "  hi  ".trim();');
     const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
-    const entry = normalizationEntryFromCallExpression(callExpression, "fixture.ts", "@beep/test");
+    const entry = normalizationEntryFromCallExpression(callExpression, { file: "fixture.ts", owner: "@beep/test" });
 
     expect(O.isNone(entry)).toBe(true);
   });
@@ -354,7 +354,7 @@ describe("nullReturnEntryFromFunctionLike", () => {
       ["export function findUser(id: string): string | null {", "  return null;", "}"].join("\n")
     );
     const [functionDeclaration] = sourceFile.getFunctions();
-    const entry = nullReturnEntryFromFunctionLike(functionDeclaration, "fixture.ts", "@beep/test");
+    const entry = nullReturnEntryFromFunctionLike(functionDeclaration, { file: "fixture.ts", owner: "@beep/test" });
 
     expect(O.isSome(entry)).toBe(true);
     expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-null-return"));
@@ -368,7 +368,7 @@ describe("nullReturnEntryFromFunctionLike", () => {
       ["export function findUser(id: string) {", "  return null;", "}"].join("\n")
     );
     const [functionDeclaration] = sourceFile.getFunctions();
-    const entry = nullReturnEntryFromFunctionLike(functionDeclaration, "fixture.ts", "@beep/test");
+    const entry = nullReturnEntryFromFunctionLike(functionDeclaration, { file: "fixture.ts", owner: "@beep/test" });
 
     expect(O.isNone(entry)).toBe(true);
   });
@@ -382,7 +382,7 @@ describe("getsomesStructEntryFromCallExpression", () => {
       ["export function pickSomes() {", "  return R.getSomes({ a: 1, b: 2 });", "}"].join("\n")
     );
     const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
-    const entry = getsomesStructEntryFromCallExpression(callExpression, "fixture.ts", "@beep/test");
+    const entry = getsomesStructEntryFromCallExpression(callExpression, { file: "fixture.ts", owner: "@beep/test" });
 
     expect(O.isSome(entry)).toBe(true);
     expect(O.map(entry, (found) => found.ruleId)).toEqual(O.some("SFV4-getsomes-struct"));
@@ -396,7 +396,7 @@ describe("getsomesStructEntryFromCallExpression", () => {
       ["export function pickSomes(dict: Record<string, number>) {", "  return R.getSomes(dict);", "}"].join("\n")
     );
     const [callExpression] = sourceFile.getDescendantsOfKind(SyntaxKind.CallExpression);
-    const entry = getsomesStructEntryFromCallExpression(callExpression, "fixture.ts", "@beep/test");
+    const entry = getsomesStructEntryFromCallExpression(callExpression, { file: "fixture.ts", owner: "@beep/test" });
 
     expect(O.isNone(entry)).toBe(true);
   });
@@ -420,7 +420,7 @@ describe("G4 foundation family-flip regression fixture", () => {
       "export function updateWidget(input: { id: string; name: string }): void {}"
     );
     const [functionDeclaration] = sourceFile.getFunctions();
-    return O.getOrThrow(fnSchemaEntryFromFunctionLike(functionDeclaration, file, "@beep/fixture"));
+    return O.getOrThrow(fnSchemaEntryFromFunctionLike(functionDeclaration, { file, owner: "@beep/fixture" }));
   };
 
   const foundationFile = "packages/foundation/modeling/schema/src/Fixture.ts";
@@ -767,5 +767,183 @@ describe("R11-6: alias-indirection fix", () => {
     // and thus a candidate; with the fix both members are function-like, so
     // the whole interface goes silent.
     expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("silent");
+  });
+});
+
+// R14: curated in-code exclusion list (mirror of DualArity's
+// PERMANENT_EXCLUSIONS) for the verified categorical-generic family
+// (ops/reports/SF-1/sf-1-graphnode.md) — explicit, reviewable, driver-owned
+// entries, not a blanket structural exemption.
+describe("R14: categorical-generic family curated exclusion", () => {
+  it("silently skips a curated categorical-generic exclusion by file+symbol", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const filePath = "packages/foundation/capability/nlp-processing/src/Graph/EffectGraph.ts";
+    const sourceFile = project.createSourceFile(
+      filePath,
+      ["export interface GraphNode<A> {", "  readonly value: A;", "}"].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath })._tag).toBe("silent");
+  });
+
+  it("still flags an unregistered generic interface with the identical pure-data shape", () => {
+    // Same shape as GraphNode<A> above (one free-typed data field), but
+    // neither the file path nor the symbol name is in
+    // PERMANENT_SCHEMA_FIRST_EXCLUSIONS.
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export interface Box<A> {", "  readonly value: A;", "}"].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("exception");
+  });
+});
+
+// R14: factory-derived generic aliases (the TypedText pattern) — a generic
+// type alias whose type node is an `S.Schema.Type<...>` TypeReference is
+// schema-DERIVED, so flagging it as undecoded pure data is a category error.
+describe("R14: factory-derived generic type alias silent skip", () => {
+  it("silently skips a generic type alias whose type node is S.Schema.Type<...>", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      [
+        "const FooSchema = <K extends string>(kind: S.Schema<K>) => S.Struct({ kind });",
+        "export type Foo<K extends string> = S.Schema.Type<ReturnType<typeof FooSchema<K>>>;",
+      ].join("\n")
+    );
+    const [declaration] = sourceFile.getTypeAliases();
+
+    expect(detectTypeAliasReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("silent");
+  });
+
+  it("still flags a plain pure-data generic type alias (no factory indirection)", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile("fixture.ts", "export type Box<A> = { readonly value: A };");
+    const [declaration] = sourceFile.getTypeAliases();
+
+    expect(detectTypeAliasReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("exception");
+  });
+});
+
+// R15-1: S.Codec/S.Union/VariantSchema.Overridable join
+// SCHEMA_INFRASTRUCTURE_EXTENDS_PATTERN (ops/reports/SF-1/sf-1-schema.md gap
+// #1/#4).
+describe("R15-1: S.Codec/S.Union/VariantSchema.Overridable join the schema-infrastructure pattern", () => {
+  it("silently skips a generic interface extending S.Codec with Rebuild: this", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export interface FooCodec<A, I> extends S.Codec<A, I> {", "  readonly Rebuild: this;", "}"].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("silent");
+  });
+
+  it("silently skips a generic interface extending VariantSchema.Overridable with Rebuild: this", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export interface FooOverridable<S> extends VariantSchema.Overridable<S> {", "  readonly Rebuild: this;", "}"].join(
+        "\n"
+      )
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("silent");
+  });
+
+  it("still flags a generic interface extending an unrelated base with Rebuild: this", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      [
+        "export interface FooUnrelated<A> extends SomeOtherBase<A> {",
+        "  readonly Rebuild: this;",
+        "  readonly value: A;",
+        "}",
+      ].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("exception");
+  });
+});
+
+// R15-2: R13's isEmptyOrMetaOnlyOwnBody carve-out now also runs in the
+// GENERIC branch of detectInterfaceReason (previously non-generic-extends
+// only; ops/reports/SF-1/sf-1-schema.md gap #2).
+describe("R15-2: empty-body carve-out reaches the generic branch", () => {
+  it("silently skips a generic interface with an empty own body extending a schema-infra base (no Rebuild: this)", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      ["export interface JsonFromStringLike<A> extends S.decodeTo<A, string> {}"].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("silent");
+  });
+
+  it("still flags the same generic empty-body base with an added data member", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      [
+        "export interface JsonFromStringWithExtra<A> extends S.decodeTo<A, string> {",
+        "  readonly extra: string;",
+        "}",
+      ].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    // Unlike the non-generic branch (which falls through to member
+    // composition and can land on "candidate"), the generic branch's only
+    // non-silent outcome is the tracked GENERIC_INTERFACE_EXCEPTION_REASON
+    // exception — a real added data member keeps it there, it just isn't
+    // silenced by the empty-body carve-out anymore.
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("exception");
+  });
+});
+
+// R15-3: extends-clause target resolution now walks one level of local
+// alias/interface indirection before the schema-infrastructure pattern test
+// (ops/reports/SF-1/sf-1-schema.md gap #3).
+describe("R15-3: one-level local-alias resolution for extends-clause targets", () => {
+  it("silently skips a generic interface extending a local alias of a schema-infra base with Rebuild: this", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      [
+        "type EdgeTransform<Data> = S.decodeTo<Data, string>;",
+        "export interface Edge<Data> extends EdgeTransform<Data> {",
+        "  readonly Rebuild: this;",
+        "}",
+      ].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("silent");
+  });
+
+  it("still flags a generic interface extending a local alias of an unrelated base with Rebuild: this", () => {
+    const project = new Project({ useInMemoryFileSystem: true });
+    const sourceFile = project.createSourceFile(
+      "fixture.ts",
+      [
+        "type PlainAlias<Data> = { readonly data: Data };",
+        "export interface PlainViaAlias<Data> extends PlainAlias<Data> {",
+        "  readonly Rebuild: this;",
+        "  readonly value: Data;",
+        "}",
+      ].join("\n")
+    );
+    const [declaration] = sourceFile.getInterfaces();
+
+    expect(detectInterfaceReason({ node: declaration, sourceFile, filePath: "fixture.ts" })._tag).toBe("exception");
   });
 });

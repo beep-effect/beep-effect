@@ -1,0 +1,15 @@
+{
+  "owner": "@beep/uspto",
+  "entries": [
+    {
+      "file": "packages/drivers/uspto/src/Uspto.service.ts",
+      "symbol": "optionalField.R.getSomes",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-getsomes-struct",
+      "line": 137,
+      "owner": "@beep/uspto",
+      "reason": "Record is built with a computed dynamic key ({ [key]: ... }) \u2014 a homogeneous dictionary, exactly the R.getSomes form Law 20/47 (as amended) keeps; O.getSomesStruct requires fixed literal keys."
+    }
+  ]
+}

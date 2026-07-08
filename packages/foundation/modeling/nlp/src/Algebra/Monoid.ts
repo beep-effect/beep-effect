@@ -707,6 +707,17 @@ export const BooleanAny: Monoid<boolean> = {
 // Monoid Laws (for testing)
 // =============================================================================
 
+type IdentityCheckOptions<A> = { readonly x: A; readonly equals?: (a: A, b: A) => boolean };
+
+const checkIdentity = <A>(
+  monoid: Monoid<A>,
+  options: IdentityCheckOptions<A>,
+  combineWithEmpty: (monoid: Monoid<A>, x: A) => A
+): boolean => {
+  const { x, equals = (a: A, b: A) => a === b } = options;
+  return equals(combineWithEmpty(monoid, x), x);
+};
+
 /**
  * Check left identity law: empty ⊕ x = x
  *
@@ -724,12 +735,11 @@ export const BooleanAny: Monoid<boolean> = {
  * @category predicates
  */
 export const checkLeftIdentity: {
-  <A>(monoid: Monoid<A>, options: { readonly x: A; readonly equals?: (a: A, b: A) => boolean }): boolean;
-  <A>(options: { readonly x: A; readonly equals?: (a: A, b: A) => boolean }): (monoid: Monoid<A>) => boolean;
-} = dual(2, <A>(monoid: Monoid<A>, options: { readonly x: A; readonly equals?: (a: A, b: A) => boolean }): boolean => {
-  const { x, equals = (a: A, b: A) => a === b } = options;
-  return equals(monoid.combine(monoid.empty, x), x);
-});
+  <A>(monoid: Monoid<A>, options: IdentityCheckOptions<A>): boolean;
+  <A>(options: IdentityCheckOptions<A>): (monoid: Monoid<A>) => boolean;
+} = dual(2, <A>(monoid: Monoid<A>, options: IdentityCheckOptions<A>): boolean =>
+  checkIdentity(monoid, options, (m, x) => m.combine(m.empty, x))
+);
 
 /**
  * Check right identity law: x ⊕ empty = x
@@ -748,12 +758,11 @@ export const checkLeftIdentity: {
  * @category predicates
  */
 export const checkRightIdentity: {
-  <A>(monoid: Monoid<A>, options: { readonly x: A; readonly equals?: (a: A, b: A) => boolean }): boolean;
-  <A>(options: { readonly x: A; readonly equals?: (a: A, b: A) => boolean }): (monoid: Monoid<A>) => boolean;
-} = dual(2, <A>(monoid: Monoid<A>, options: { readonly x: A; readonly equals?: (a: A, b: A) => boolean }): boolean => {
-  const { x, equals = (a: A, b: A) => a === b } = options;
-  return equals(monoid.combine(x, monoid.empty), x);
-});
+  <A>(monoid: Monoid<A>, options: IdentityCheckOptions<A>): boolean;
+  <A>(options: IdentityCheckOptions<A>): (monoid: Monoid<A>) => boolean;
+} = dual(2, <A>(monoid: Monoid<A>, options: IdentityCheckOptions<A>): boolean =>
+  checkIdentity(monoid, options, (m, x) => m.combine(x, m.empty))
+);
 
 /**
  * Check associativity law: (x ⊕ y) ⊕ z = x ⊕ (y ⊕ z)

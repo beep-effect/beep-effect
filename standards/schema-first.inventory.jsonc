@@ -1,7 +1,11 @@
 {
   "version": 1,
   "generatedOn": "2026-07-08",
-  "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
+  "scope": [
+    "apps/**/*.{ts,tsx}",
+    "packages/**/*.{ts,tsx}",
+    "infra/**/*.ts"
+  ],
   "entries": [
     {
       "file": "apps/oip-web/src/components/HeroVideo.tsx",
@@ -124,126 +128,6 @@
       "reason": "S.Struct with non-identifier or spread keys stays tracked as an exception."
     },
     {
-      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
-      "symbol": "CountJsonlParameters",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/nlp-mcp",
-      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
-      "symbol": "CountLinesParameters",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/nlp-mcp",
-      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
-      "symbol": "ExtractMatchesParameters",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/nlp-mcp",
-      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
-      "symbol": "FilterLinesParameters",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/nlp-mcp",
-      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
-      "symbol": "LoadJsonParameters",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/nlp-mcp",
-      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
-      "symbol": "LoadJsonlParameters",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/nlp-mcp",
-      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
-      "symbol": "LoadLinesParameters",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/nlp-mcp",
-      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
-      "symbol": "LoadTextParameters",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/nlp-mcp",
-      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
-      "symbol": "ProcessFileParameters",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/nlp-mcp",
-      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
-      "symbol": "ReadJsonlParameters",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/nlp-mcp",
-      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
-      "symbol": "ReadLinesParameters",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/nlp-mcp",
-      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
-      "symbol": "SampleJsonlParameters",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/nlp-mcp",
-      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
-      "symbol": "SampleLinesParameters",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/nlp-mcp",
-      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
-      "symbol": "TextStatsParameters",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/nlp-mcp",
-      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
-      "symbol": "ValidateJsonlParameters",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/nlp-mcp",
-      "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
       "file": "packages/drivers/uspto-mcp/src/UsptoDocumentTiers.ts",
       "symbol": "usptoDocumentFieldTiers",
       "kind": "object-struct-schema",
@@ -338,70 +222,6 @@
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
     },
     {
-      "file": "packages/foundation/capability/nlp-processing/src/Graph/EffectGraph.ts",
-      "symbol": "EffectGraph",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp-processing",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/capability/nlp-processing/src/Graph/EffectGraph.ts",
-      "symbol": "GraphNode",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp-processing",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Operation.ts",
-      "symbol": "GraphOperation",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp-processing",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/ResultStore.ts",
-      "symbol": "StoredResult",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp-processing",
-      "reason": "Interface contains non-schema signals such as function members or runtime handles."
-    },
-    {
-      "file": "packages/foundation/capability/nlp-processing/src/Graph/GraphOperations/Types.ts",
-      "symbol": "OperationResult",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp-processing",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/capability/nlp-processing/src/Graph/TypeClass.ts",
-      "symbol": "Composable",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp-processing",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/capability/nlp-processing/src/Graph/TypeClass.ts",
-      "symbol": "ForgetfulOperation",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp-processing",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/capability/nlp-processing/src/Graph/TypeClass.ts",
-      "symbol": "TextOperation",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp-processing",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
       "file": "packages/foundation/modeling/html/scripts/generate.ts",
       "symbol": "className.toUpperCase",
       "kind": "schema-policy-advisory",
@@ -472,22 +292,6 @@
       "reason": "Generic render adapter interface contains function members and stays tracked as a runtime-boundary exception."
     },
     {
-      "file": "packages/foundation/modeling/nlp/src/Algebra/Monoid.ts",
-      "symbol": "Monoid",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/nlp/src/Graph/GraphOps.ts",
-      "symbol": "SearchIndex",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
       "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
       "symbol": "anonymous@313",
       "kind": "object-struct-schema",
@@ -545,14 +349,6 @@
     },
     {
       "file": "packages/foundation/modeling/nlp/src/Ontology/Kind.ts",
-      "symbol": "TypedText",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/nlp/src/Ontology/Kind.ts",
       "symbol": "TypedTextSchema",
       "kind": "object-struct-schema",
       "status": "exception",
@@ -560,88 +356,8 @@
       "reason": "Function-local S.Struct wrappers used for transient decode envelopes stay tracked as exceptions."
     },
     {
-      "file": "packages/foundation/modeling/nlp/src/Operations/Definition.ts",
-      "symbol": "OperationDefinition",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/nlp",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/CauseTaggedError/CauseTaggedError.errors.ts",
-      "symbol": "isExtras",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Csp/Csp.schema.ts",
-      "symbol": "CspDirectives",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "S.Struct with non-identifier or spread keys stays tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.definition.ts",
-      "symbol": "AssignedEntityParts",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic type alias requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.definition.ts",
-      "symbol": "ClassInput",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic type alias requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.persist.ts",
-      "symbol": "PersistOptions",
-      "kind": "exported-type-literal",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic type alias requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Fn/Fn.schema.ts",
-      "symbol": "FnSchemaNoArg",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Fn/Fn.schema.ts",
-      "symbol": "FnSchemaUnary",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/Graph/Graph.edge.ts",
       "symbol": "Edge",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.encoded.ts",
-      "symbol": "EdgeEncodedSchema",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Graph/Graph.encoded.ts",
-      "symbol": "GraphEncodedSchema",
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/schema",
@@ -656,14 +372,6 @@
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/LiteralKit/LiteralKit.schema.ts",
-      "symbol": "union",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "S.Struct with non-identifier or spread keys stays tracked as an exception."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/MappedLiteralKit/MappedLiteralKit.schema.ts",
       "symbol": "MappedLiteralKit",
       "kind": "exported-interface",
@@ -672,120 +380,8 @@
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
     },
     {
-      "file": "packages/foundation/modeling/schema/src/Model/Model.codecs.ts",
-      "symbol": "JsonFromString",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Model/Model.fields.ts",
-      "symbol": "FieldOption",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Model/Model.fields.ts",
-      "symbol": "Generated",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Model/Model.fields.ts",
-      "symbol": "GeneratedByApp",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Model/Model.fields.ts",
-      "symbol": "Sensitive",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Model/Model.fields.ts",
-      "symbol": "optionalOption",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Model/Model.uuid.ts",
-      "symbol": "UuidV4Insert",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/Model/Model.variants.ts",
-      "symbol": "Overridable",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
       "file": "packages/foundation/modeling/schema/src/Model/Model.variants.ts",
       "symbol": "Overrideable",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts",
-      "symbol": "Class",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts",
-      "symbol": "Field",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts",
-      "symbol": "Struct",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts",
-      "symbol": "Union",
-      "kind": "exported-interface",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts",
-      "symbol": "extract",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/schema",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.overridable.ts",
-      "symbol": "Overridable",
       "kind": "exported-interface",
       "status": "exception",
       "owner": "@beep/schema",
@@ -798,66 +394,6 @@
       "status": "exception",
       "owner": "@beep/schema",
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/test/CurrencyCode.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 7,
-      "owner": "@beep/schema",
-      "reason": "Exception: CurrencyCode/CurrencyName are LiteralKit unions over the generated ISO 4217 enumeration; example-based assertions cover representative decode/reject and `.Options` membership, and S.toArbitrary over a finite literal union only re-samples already-enumerated members, so schema-derived property coverage would be vacuous."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/test/Fn.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 33,
-      "owner": "@beep/schema",
-      "reason": "Exception: meta-test of the Fn/ThunkOf/AnyFn schema combinator over function values (declareConstructor with self-identity equivalence); no structural data for S.toArbitrary to generate or round-trip."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/test/PromiseSchema.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 10,
-      "owner": "@beep/schema",
-      "reason": "Exception: PromiseSchema is a pure S.declare<globalThis.Promise<unknown>> identity declaration (Type === Encoded === a native Promise, no codec transform). S.toArbitrary throws 'Unsupported AST Declaration', and a Promise cannot be meaningfully round-tripped (decode/encode are identity, equivalence is reference equality), so any property law would be vacuous. Cross-realm acceptance and thenable-impostor rejection are covered by example-based unit tests."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/test/TerritoryCode.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 10,
-      "owner": "@beep/schema",
-      "reason": "Exception: TerritoryCode/TerritoryName and their code<->name MappedLiteralKit codecs are finite literal-union schemas over the generated CLDR enumeration; representative decode/encode and reversible-mapping cases are covered by example assertions, and S.toArbitrary over the finite enumeration adds no coverage beyond the enumerated members."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/test/Timezone.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 7,
-      "owner": "@beep/schema",
-      "reason": "Exception: Timezone is a LiteralKit union over the generated IANA tzdb enumeration; example-based assertions cover representative decode and rejection, and property sampling over a finite literal union only re-picks already-enumerated members, so schema-derived property coverage would be vacuous."
-    },
-    {
-      "file": "packages/foundation/modeling/schema/test/Transformations.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 9,
-      "owner": "@beep/schema",
-      "reason": "Exception: meta-test of the destructiveTransform combinator using test-local illustrative schemas; lossy decode + passthrough encode has no round-trip law and no domain source schema."
     },
     {
       "file": "packages/foundation/modeling/utils/src/DrainableWorker.ts",
@@ -956,62 +492,6 @@
       "reason": "Internal S.Struct field block feeds an S.Class constructor and stays tied to the class model."
     },
     {
-      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-      "symbol": "makeProjectCacheKey",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-fn-schema",
-      "line": 1431,
-      "owner": "@beep/repo-utils",
-      "reason": "Exception: thin branded-id constructor over already schema-validated TsMorph scope parts; wrapping this utility in Fn/S.Class would add no boundary validation."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-      "symbol": "makeProjectScopeId",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-fn-schema",
-      "line": 1404,
-      "owner": "@beep/repo-utils",
-      "reason": "Exception: thin branded-id constructor over already schema-validated TsMorph scope parts; wrapping this utility in Fn/S.Class would add no boundary validation."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
-      "symbol": "makeSymbolId",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-fn-schema",
-      "line": 1377,
-      "owner": "@beep/repo-utils",
-      "reason": "Exception: thin branded-id constructor over already schema-validated symbol identity parts; wrapping this utility in Fn/S.Class would add no boundary validation."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
-      "symbol": "toCanonicalDocgenConfigJson",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-fn-schema",
-      "line": 437,
-      "owner": "@beep/repo-utils",
-      "reason": "Exception: JSON serializer adapter from the canonical DocgenConfig S.Class to a config-file wire object; the return shape is command-output formatting, not a reusable domain contract."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-      "symbol": "NpmPackageJsonShape",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-utils",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
-      "symbol": "PackageJsonShape",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-utils",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
-    },
-    {
       "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
       "symbol": "PeerDependencyMetaEntry",
       "kind": "object-struct-schema",
@@ -1022,78 +502,6 @@
     {
       "file": "packages/tooling/library/repo-utils/src/schemas/PackageJson.ts",
       "symbol": "PublishConfigBase",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-utils",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-      "symbol": "TSConfigBuildOptionsShape",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-utils",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-      "symbol": "TSConfigCompilerOptionsShape",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-utils",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-      "symbol": "TSConfigShape",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-utils",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-      "symbol": "TSConfigTypeAcquisitionShape",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-utils",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-      "symbol": "TSConfigWatchOptionsShape",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-utils",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-      "symbol": "TSNodeConfigShape",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-utils",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-      "symbol": "makeEncodedStruct",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-utils",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-      "symbol": "makeTypeStruct",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/repo-utils",
-      "reason": "S.Struct usage without a plain object literal stays tracked as an exception."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-      "symbol": "strict",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/repo-utils",
@@ -1284,16 +692,6 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Inline nested S.Struct boundary shapes stay tracked until a dedicated class extraction pass."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Research/Research.service.ts",
-      "symbol": "selected.toLowerCase",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-normalization",
-      "line": 512,
-      "owner": "@beep/repo-cli",
-      "reason": "Exception: CLI filter matching against clone directory basenames; lowercasing is transient search normalization, not a decoded command model field."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Research/internal/BrowserHistory.ts",

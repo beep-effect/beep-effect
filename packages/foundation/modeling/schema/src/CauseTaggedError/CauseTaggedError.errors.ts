@@ -275,11 +275,12 @@ const decodeCauseTaggedErrorMessage = (input: unknown) =>
 const makeCauseTaggedErrorExtrasDecoder = <Fields extends CauseTaggedErrorFields>(
   fields: Fields
 ): ((input: unknown) => CauseTaggedErrorExtrasInput<Fields>) => {
-  const isExtras = S.is(S.Struct(fields));
+  class ExtrasShape extends S.Class<ExtrasShape>("CauseTaggedErrorExtras")(fields as S.Struct.Fields) {}
+  const isExtras = S.is(ExtrasShape);
 
   return (input) => {
     if (isExtras(input)) {
-      return input;
+      return input as CauseTaggedErrorExtrasInput<Fields>;
     }
 
     return input as CauseTaggedErrorExtrasInput<Fields>;

@@ -1,0 +1,13 @@
+{
+  "owner": "@beep/wink",
+  "entries": [
+    {
+      "file": "packages/drivers/wink/src/Wink.service.ts",
+      "symbol": "WinkEngineRuntimeState",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/wink",
+      "reason": "Type alias contains non-schema signals such as function members or runtime handles."
+    }
+  ]
+}

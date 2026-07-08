@@ -169,7 +169,7 @@ const pickFields = (value: Record<string, unknown>, fields: ReadonlyArray<string
  *   complete: S.Struct({ id: S.String, summary: S.String, body: S.String })
  * })
  *
- * const projected = projectFieldTier(tiers, "minimal", { id: "doc-1", summary: "s", body: "b" })
+ * const projected = projectFieldTier({ id: "doc-1", summary: "s", body: "b" }, "minimal", tiers)
  * console.log(projected)
  * // { id: "doc-1" }
  * ```
@@ -177,11 +177,24 @@ const pickFields = (value: Record<string, unknown>, fields: ReadonlyArray<string
  * @category combinators
  * @since 0.0.0
  */
-export const projectFieldTier = (
-  tiers: FieldTierSet<S.Struct.Fields, S.Struct.Fields, S.Struct.Fields>,
-  tier: FieldTierName,
-  value: Record<string, unknown>
-): Record<string, unknown> => stripNulls(pickFields(value, fieldNamesOf(tiers[tier])));
+export const projectFieldTier: {
+  (
+    tier: FieldTierName,
+    tiers: FieldTierSet<S.Struct.Fields, S.Struct.Fields, S.Struct.Fields>
+  ): (value: Record<string, unknown>) => Record<string, unknown>;
+  (
+    value: Record<string, unknown>,
+    tier: FieldTierName,
+    tiers: FieldTierSet<S.Struct.Fields, S.Struct.Fields, S.Struct.Fields>
+  ): Record<string, unknown>;
+} = dual(
+  3,
+  (
+    value: Record<string, unknown>,
+    tier: FieldTierName,
+    tiers: FieldTierSet<S.Struct.Fields, S.Struct.Fields, S.Struct.Fields>
+  ): Record<string, unknown> => stripNulls(pickFields(value, fieldNamesOf(tiers[tier])))
+);
 
 /**
  * Estimates a value's serialized JSON size in bytes/characters, used as a
@@ -428,12 +441,12 @@ export const projectWithinBudget: {
     options: ProjectWithinBudgetOptions
   ): FieldProjectionOutcome => {
     for (const tier of TIER_ORDER) {
-      const projected = projectFieldTier(tiers, tier, value);
+      const projected = projectFieldTier(value, tier, tiers);
       if (estimateJsonSize(projected) <= options.budgetBytes) {
         return FieldProjectionOutcome.make({ _tag: "Inline", tier, value: projected });
       }
     }
-    const minimalProjected = projectFieldTier(tiers, "minimal", value);
+    const minimalProjected = projectFieldTier(value, "minimal", tiers);
     const oversized = OversizedFieldProjection.make({
       value: minimalProjected,
       sizeBytes: NonNegativeInt.make(estimateJsonSize(minimalProjected)),

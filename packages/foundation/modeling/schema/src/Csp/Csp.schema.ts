@@ -628,16 +628,17 @@ export class ReportingDirective extends S.Class<ReportingDirective>($I`Reporting
  * @category schemas
  * @since 0.0.0
  */
-export const CspDirectives = S.Struct({
-  ...FetchDirective.fields,
-  ...DocumentDirective.fields,
-  ...NavigationDirective.fields,
-  ...ReportingDirective.fields,
-}).pipe(
-  $I.annoteSchema("CspDirectives", {
+export class CspDirectives extends S.Class<CspDirectives>($I`CspDirectives`)(
+  {
+    ...FetchDirective.fields,
+    ...DocumentDirective.fields,
+    ...NavigationDirective.fields,
+    ...ReportingDirective.fields,
+  },
+  $I.annote("CspDirectives", {
     description: "The complete normalized field set for all supported CSP directives.",
   })
-);
+) {}
 
 /**
  * Structured CSP option object accepted before header serialization.

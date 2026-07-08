@@ -259,6 +259,25 @@ export const flatMapNonEmptyReadonly: {
 );
 
 /**
+ * Options accepted by the `fromIndex`-taking element-lookup helpers
+ * (`indexOf`, `lastIndexOf`).
+ */
+interface IndexLookupOptions {
+  readonly fromIndex?: number;
+}
+
+/** Shared dual call-signature for `indexOf`/`lastIndexOf`. */
+type IndexLookupSignature = {
+  <T>(value: T, options?: IndexLookupOptions): (self: ReadonlyArray<T>) => O.Option<number>;
+  <T>(self: ReadonlyArray<T>, value: T, options?: IndexLookupOptions): O.Option<number>;
+};
+
+const hasArrayAndValueArgs = (args: IArguments): boolean => args.length >= 2 && A.isArray(args[0]);
+
+/** Wraps a native `-1`-sentinel index lookup result as an `Option`. */
+const optionFromNativeIndex = (index: number): O.Option<number> => (index === -1 ? O.none() : O.some(index));
+
+/**
  * Finds the first index where `value` appears in `self`.
  *
  * Returns `Option.none()` when the value is absent instead of leaking the
@@ -281,15 +300,10 @@ export const flatMapNonEmptyReadonly: {
  * @category elements
  * @since 0.0.0
  */
-export const indexOf: {
-  <T>(value: T, options?: { readonly fromIndex?: number }): (self: ReadonlyArray<T>) => O.Option<number>;
-  <T>(self: ReadonlyArray<T>, value: T, options?: { readonly fromIndex?: number }): O.Option<number>;
-} = dual(
-  (args) => args.length >= 2 && A.isArray(args[0]),
-  <T>(self: ReadonlyArray<T>, value: T, options?: { readonly fromIndex?: number }): O.Option<number> => {
-    const index = self.indexOf(value, options?.fromIndex);
-    return index === -1 ? O.none() : O.some(index);
-  }
+export const indexOf: IndexLookupSignature = dual(
+  hasArrayAndValueArgs,
+  <T>(self: ReadonlyArray<T>, value: T, options?: IndexLookupOptions): O.Option<number> =>
+    optionFromNativeIndex(self.indexOf(value, options?.fromIndex))
 );
 
 /**
@@ -315,16 +329,12 @@ export const indexOf: {
  * @category elements
  * @since 0.0.0
  */
-export const lastIndexOf: {
-  <T>(value: T, options?: { readonly fromIndex?: number }): (self: ReadonlyArray<T>) => O.Option<number>;
-  <T>(self: ReadonlyArray<T>, value: T, options?: { readonly fromIndex?: number }): O.Option<number>;
-} = dual(
-  (args) => args.length >= 2 && A.isArray(args[0]),
-  <T>(self: ReadonlyArray<T>, value: T, options?: { readonly fromIndex?: number }): O.Option<number> => {
-    const index =
-      options?.fromIndex === undefined ? self.lastIndexOf(value) : self.lastIndexOf(value, options.fromIndex);
-    return index === -1 ? O.none() : O.some(index);
-  }
+export const lastIndexOf: IndexLookupSignature = dual(
+  hasArrayAndValueArgs,
+  <T>(self: ReadonlyArray<T>, value: T, options?: IndexLookupOptions): O.Option<number> =>
+    optionFromNativeIndex(
+      options?.fromIndex === undefined ? self.lastIndexOf(value) : self.lastIndexOf(value, options.fromIndex)
+    )
 );
 
 /**

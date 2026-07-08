@@ -1,0 +1,33 @@
+{
+  "owner": "@beep/identity",
+  "entries": [
+    {
+      "file": "packages/foundation/modeling/identity/src/Curie.ts",
+      "symbol": "contract",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-null-return",
+      "line": 194,
+      "owner": "@beep/identity",
+      "reason": "Internal lookup helpers and schema codecs already use Option and SchemaTransformation; this exported wrapper preserves the existing literal-preserving string-or-undefined compatibility API for unknown user-supplied IRIs."
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/Curie.ts",
+      "symbol": "expand",
+      "kind": "schema-policy-advisory",
+      "status": "exception",
+      "ruleId": "SFV4-null-return",
+      "line": 167,
+      "owner": "@beep/identity",
+      "reason": "Internal lookup helpers and schema codecs already use Option and SchemaTransformation; this exported wrapper preserves the existing literal-preserving string-or-undefined compatibility API for unknown user-supplied CURIEs."
+    },
+    {
+      "file": "packages/foundation/modeling/identity/src/Id.ts",
+      "symbol": "IdentityComposer",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/identity",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    }
+  ]
+}

@@ -27,7 +27,11 @@ Counters snapshot after every regen (source of truth: `ops/progress.json`).
 | 2026-07-07 baseline | 107 | 13 |
 | 2026-07-08 after P1 | 46 | 11 |
 | 2026-07-08 after DA-1+P2.5 | 9 | 4 |
+| 2026-07-08 after DA-2+R14/R15 | 2* | 0 |
 | target | 0 | 0 |
+
+(*both are latent findings from our own wave fixes; convergence-tail lanes in
+flight.)
 
 (Residue = DA-2 scope: 6 @beep/repo-cli candidates, box decodeWith dual wrap,
 2 ripple pairs, 4 rco helper exceptions.)
@@ -38,6 +42,7 @@ Counters snapshot after every regen (source of truth: `ops/progress.json`).
 |---|---|
 | 2026-07-07 baseline | 326 |
 | 2026-07-08 after P2.5 detector framework | 163 |
+| 2026-07-08 after SF-1 + R14/R15 | 95 (93 curated exceptions + 2 in-flight) |
 | target | 0 |
 
 (163 = 59 object-struct + 58 interface + 40 advisory + 6 type-literal → P4.)

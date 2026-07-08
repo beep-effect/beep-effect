@@ -124,3 +124,75 @@ from "effect/Schema"`, the `NodeIndexSchema` const, and the class body);
 - `git status --short packages/foundation/modeling/nlp` → only `src/Graph/GraphOps.ts` newly modified beyond the original 7-file diff
 
 Not committed — driver owns commit/push/inventory regen per SPEC fence 10.
+
+## Follow-up 2 — Fallow duplication fix in `Monoid.ts` (hosted CI round-1 blocker)
+
+Driver flagged a Fallow-audit-introduced 6-line duplication x2 at
+`src/Algebra/Monoid.ts:726` vs `:750` — the two near-identical dual-wrapped
+type signatures + destructure line that `checkLeftIdentity`/
+`checkRightIdentity` picked up from the earlier options-object restructure.
+
+Extracted the shared shape into one private type alias and one private
+implementation helper, then had both public functions delegate to it with
+only the combine order differing:
+
+```ts
+type IdentityCheckOptions<A> = { readonly x: A; readonly equals?: (a: A, b: A) => boolean };
+
+const checkIdentity = <A>(
+  monoid: Monoid<A>,
+  options: IdentityCheckOptions<A>,
+  combineWithEmpty: (monoid: Monoid<A>, x: A) => A
+): boolean => {
+  const { x, equals = (a: A, b: A) => a === b } = options;
+  return equals(combineWithEmpty(monoid, x), x);
+};
+
+export const checkLeftIdentity: {
+  <A>(monoid: Monoid<A>, options: IdentityCheckOptions<A>): boolean;
+  <A>(options: IdentityCheckOptions<A>): (monoid: Monoid<A>) => boolean;
+} = dual(2, <A>(monoid: Monoid<A>, options: IdentityCheckOptions<A>): boolean =>
+  checkIdentity(monoid, options, (m, x) => m.combine(m.empty, x))
+);
+
+export const checkRightIdentity: {
+  <A>(monoid: Monoid<A>, options: IdentityCheckOptions<A>): boolean;
+  <A>(options: IdentityCheckOptions<A>): (monoid: Monoid<A>) => boolean;
+} = dual(2, <A>(monoid: Monoid<A>, options: IdentityCheckOptions<A>): boolean =>
+  checkIdentity(monoid, options, (m, x) => m.combine(x, m.empty))
+);
+```
+
+Extraction over fallow-ignore suppression, per the driver's preference and
+SPEC fence 13 (never weaken a detector/gate to make a finding pass).
+
+**Verified, not assumed, that this closed the gate for the file:** ran
+`bun run beep quality fallow audit --check --base origin/main --out ... --quiet`
+twice. Because this is a repo-wide audit against `origin/main` (368 changed
+files across every concurrent lane), the total "introduced" finding counts
+shifted between runs (other lanes landing changes concurrently) — so raw
+top-line counts alone aren't a reliable per-file signal. Instead, parsed the
+tool's raw JSON output (`duplication.clone_groups[].introduced` boolean +
+`instances[].file`) directly: across both runs, **zero** introduced
+(blocking) duplication-clone-group instances reference
+`packages/foundation/modeling/nlp/**` — the two/five introduced groups seen
+across runs all resolve to
+`packages/tooling/tool/cli/src/commands/{Laws/DualArity.ts,Lint/SchemaFirst.ts,Quality/internal/JSDocDocumentationInventory.ts}`,
+and the one introduced complexity finding is `collectCandidateDiagnostics` in
+`packages/tooling/tool/cli/src/commands/Laws/DualArity.ts` — all belonging to
+other lanes' detector work, not this one. `grep` for
+`checkLeftIdentity|checkRightIdentity|checkIdentity` across the raw audit
+output returns nothing at all (the duplicate is gone, not merely
+reclassified). The one duplication clone group that still appears inside
+`Monoid.ts` (`SetIntersection`'s and `Option`'s shared `if (O.isNone(x)) ...`
+shape, lines ~419 and ~596) is **pre-existing** — confirmed via
+`git show origin/main:packages/foundation/modeling/nlp/src/Algebra/Monoid.ts`,
+which has the identical pattern at the same lines on `origin/main` — so it is
+correctly attributed `inherited-adjacent` (non-blocking), not introduced by
+this lane, and out of scope for this fix.
+
+Re-verified `npx tsgo -b tsconfig.json` (0 errors) and `npx vitest run`
+(166/166 pass, unchanged) after the extraction. Only `src/Algebra/Monoid.ts`
+changed for this follow-up.
+
+Not committed — driver owns commit/push/inventory regen per SPEC fence 10.

@@ -4349,6 +4349,22 @@
     },
     {
       "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "CountJsonlOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "CountJsonlOptions",
+      "description": "Optional controls for counting JSONL records in a file."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "CountLinesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "CountLinesOptions",
+      "description": "Optional controls for counting lines in a file."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
       "symbol": "DataOutput",
       "kind": "schema-class",
       "owner": "@beep/nlp-mcp",
@@ -4357,11 +4373,27 @@
     },
     {
       "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ExtractMatchesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "ExtractMatchesOptions",
+      "description": "Optional controls for extracting regex matches from a file."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
       "symbol": "FileInfoOutput",
       "kind": "schema-class",
       "owner": "@beep/nlp-mcp",
       "identity": "FileInfoOutput",
       "description": "File existence with optional line count and byte size."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "FilterLinesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "FilterLinesOptions",
+      "description": "Optional controls for filtering lines by a regex pattern."
     },
     {
       "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
@@ -4381,11 +4413,99 @@
     },
     {
       "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "LoadJsonOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "LoadJsonOptions",
+      "description": "Optional controls for loading JSON from a file or URL."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "LoadJsonlOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "LoadJsonlOptions",
+      "description": "Optional controls for loading JSONL from a file or URL."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "LoadLinesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "LoadLinesOptions",
+      "description": "Optional controls for loading lines from a file or URL."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "LoadTextOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "LoadTextOptions",
+      "description": "Optional controls for loading text from a file or URL."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
       "symbol": "PipelineOutput",
       "kind": "schema-const",
       "owner": "@beep/nlp-mcp",
       "identity": "PipelineOutput",
       "description": "Result of running a line-transform pipeline over a file."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ProcessFileOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "ProcessFileOptions",
+      "description": "Optional controls for running a line-transform pipeline."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ReadJsonlOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "ReadJsonlOptions",
+      "description": "Optional controls for reading JSONL records."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ReadLinesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "ReadLinesOptions",
+      "description": "Optional windowing, encoding, and trimming controls for reading lines."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "SampleJsonlOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "SampleJsonlOptions",
+      "description": "Optional controls for sampling JSONL records."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "SampleLinesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "SampleLinesOptions",
+      "description": "Optional line-normalization controls for sampling text lines."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "TextStatsOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "TextStatsOptions",
+      "description": "Optional line-normalization controls for computing text statistics."
+    },
+    {
+      "file": "packages/drivers/nlp-mcp/src/StreamingTools.ts",
+      "symbol": "ValidateJsonlOptions",
+      "kind": "schema-class",
+      "owner": "@beep/nlp-mcp",
+      "identity": "ValidateJsonlOptions",
+      "description": "Optional caps for validating a JSONL file."
     },
     {
       "file": "packages/drivers/onepassword-cli/src/OnePasswordCli.errors.ts",
@@ -10259,6 +10379,14 @@
       "description": "Graph traversal order for ordered folds and walkers."
     },
     {
+      "file": "packages/foundation/modeling/nlp/src/Graph/GraphOps.ts",
+      "symbol": "TraversalStart",
+      "kind": "schema-class",
+      "owner": "@beep/nlp",
+      "identity": "TraversalStart",
+      "description": "Traversal-start options shared by graph-walking helpers: which node indices to begin from and which traversal order to use."
+    },
+    {
       "file": "packages/foundation/modeling/nlp/src/Graph/Schema.ts",
       "symbol": "DependencyNode",
       "kind": "schema-class",
@@ -12274,7 +12402,7 @@
     {
       "file": "packages/foundation/modeling/schema/src/Csp/Csp.schema.ts",
       "symbol": "CspDirectives",
-      "kind": "struct-const",
+      "kind": "schema-class",
       "owner": "@beep/schema",
       "identity": "CspDirectives",
       "description": "The complete normalized field set for all supported CSP directives."
@@ -17983,6 +18111,14 @@
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
+      "symbol": "ProjectIdentityParts",
+      "kind": "schema-class",
+      "owner": "@beep/repo-utils",
+      "identity": "ProjectIdentityParts",
+      "description": "Structural identity parts for a resolved ts-morph project scope or cache key."
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
       "symbol": "ProjectScopeId",
       "kind": "brand",
       "owner": "@beep/repo-utils",
@@ -18034,6 +18170,14 @@
       "owner": "@beep/repo-utils",
       "identity": "SymbolId",
       "description": "Stable TypeScript symbol identity string: file::qualifiedName#kind"
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
+      "symbol": "SymbolIdentityParts",
+      "kind": "schema-class",
+      "owner": "@beep/repo-utils",
+      "identity": "SymbolIdentityParts",
+      "description": "Structural identity parts for a stable symbol identity."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
@@ -18409,6 +18553,14 @@
     },
     {
       "file": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
+      "symbol": "CanonicalDocgenConfigJsonShape",
+      "kind": "schema-class",
+      "owner": "@beep/repo-utils",
+      "identity": "CanonicalDocgenConfigJsonShape",
+      "description": "JSON-compatible mirror of CanonicalDocgenConfig, returned by toCanonicalDocgenConfigJson."
+    },
+    {
+      "file": "packages/tooling/library/repo-utils/src/schemas/DocgenConfig.ts",
       "symbol": "CanonicalDocgenExamplesCompilerOptions",
       "kind": "schema-class",
       "owner": "@beep/repo-utils",
@@ -18622,14 +18774,6 @@
       "owner": "@beep/repo-utils",
       "identity": "TSConfigBuildOptions",
       "description": "Strict TypeScript buildOptions section derived from the official SchemaStore tsconfig schema."
-    },
-    {
-      "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
-      "symbol": "TSConfigCompilerOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-utils",
-      "identity": "TSConfigCompilerOptions",
-      "description": "Strict TypeScript compilerOptions section derived from the official SchemaStore tsconfig schema."
     },
     {
       "file": "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",

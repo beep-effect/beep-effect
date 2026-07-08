@@ -1,0 +1,37 @@
+{
+  "owner": "@beep/acp",
+  "entries": [
+    {
+      "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "symbol": "AcpPatchedProtocol",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/acp",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpProtocol.service.ts",
+      "symbol": "AcpPatchedProtocolOptions",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/acp",
+      "reason": "Derived interface with extends clauses is tracked as an exception."
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpTerminal.models.ts",
+      "symbol": "AcpTerminal",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/acp",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/drivers/acp/src/AcpTerminal.models.ts",
+      "symbol": "MakeTerminalOptions",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/acp",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    }
+  ]
+}

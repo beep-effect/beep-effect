@@ -109,30 +109,6 @@ export const TextKindSchema: S.Schema<TextKind> = TextKind.pipe(
 // =============================================================================
 
 /**
- * Text content tagged with its ontological kind.
- *
- * Pairs raw content with its position in the categorical hierarchy, enabling
- * type-level enforcement of valid operations.
- *
- * @typeParam K - The ontological kind (position in the category).
- * @example
- * ```ts
- * import type { TypedText } from "@beep/nlp/Ontology/Kind"
- *
- * const doc: TypedText<"Document"> = { kind: "Document", content: "hello" }
- * console.log(doc.kind)
- * ```
- *
- * @since 0.0.0
- * @category models
- */
-export interface TypedText<K extends TextKind> {
-  readonly content: string;
-  readonly kind: K;
-  readonly metadata?: Readonly<Record<string, unknown>>;
-}
-
-/**
  * Build a schema for text payloads constrained to one ontology kind schema.
  *
  * @example
@@ -158,6 +134,28 @@ export const TypedTextSchema = <K extends TextKind>(kind: S.Schema<K>) =>
       description: "Generic schema for text content tagged with a supplied ontology kind.",
     })
   );
+
+/**
+ * Text content tagged with its ontological kind.
+ *
+ * Pairs raw content with its position in the categorical hierarchy, enabling
+ * type-level enforcement of valid operations. Derived from {@link TypedTextSchema}
+ * (bounded to the finite {@link TextKind} literal domain) rather than hand-declared,
+ * so the schema factory is the single source of truth for the shape.
+ *
+ * @typeParam K - The ontological kind (position in the category).
+ * @example
+ * ```ts
+ * import type { TypedText } from "@beep/nlp/Ontology/Kind"
+ *
+ * const doc: TypedText<"Document"> = { kind: "Document", content: "hello" }
+ * console.log(doc.kind)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type TypedText<K extends TextKind> = S.Schema.Type<ReturnType<typeof TypedTextSchema<K>>>;
 
 // =============================================================================
 // Smart Constructors

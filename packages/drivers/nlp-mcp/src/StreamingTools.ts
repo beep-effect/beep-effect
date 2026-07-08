@@ -439,18 +439,69 @@ const CountWithErrorsOutput = S.Class<{ readonly count: number; readonly errors?
     })
   );
 
-const ReadLinesParameters = S.Class<{ readonly options?: unknown; readonly path: string }>($I`ReadLinesParameters`)(
+/**
+ * Optional windowing, encoding, and trimming controls for {@link ReadLines}.
+ *
+ * @example
+ * ```ts
+ * import { ReadLinesOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const options = ReadLinesOptions.make({ maxLines: 10 })
+ * console.log(options.maxLines)
+ * ```
+ *
+ * @since 0.0.0
+ * @category schemas
+ */
+export const ReadLinesOptions = S.Class<{
+  readonly encoding?: TextEncoding | undefined;
+  readonly maxLines?: number | undefined;
+  readonly skip?: number | undefined;
+  readonly skipEmpty?: boolean | undefined;
+  readonly tail?: number | undefined;
+  readonly trim?: boolean | undefined;
+}>($I`ReadLinesOptions`)(
   {
-    options: S.optionalKey(
-      S.Struct({
-        encoding: S.optionalKey(TextEncoding),
-        maxLines: S.optionalKey(PositiveInteger),
-        skip: S.optionalKey(NonNegativeInteger),
-        skipEmpty: S.optionalKey(S.Boolean),
-        tail: S.optionalKey(PositiveInteger),
-        trim: S.optionalKey(S.Boolean),
-      })
-    ),
+    encoding: S.optionalKey(TextEncoding),
+    maxLines: S.optionalKey(PositiveInteger),
+    skip: S.optionalKey(NonNegativeInteger),
+    skipEmpty: S.optionalKey(S.Boolean),
+    tail: S.optionalKey(PositiveInteger),
+    trim: S.optionalKey(S.Boolean),
+  },
+  $I.annote("ReadLinesOptions", {
+    description: "Optional windowing, encoding, and trimming controls for reading lines.",
+  })
+)
+  .mapFields((fields) => fields)
+  .pipe(
+    $I.annoteSchema("ReadLinesOptions", {
+      description: "Optional windowing, encoding, and trimming controls for reading lines.",
+    })
+  );
+
+/**
+ * Type for {@link ReadLinesOptions}.
+ *
+ * @example
+ * ```ts
+ * import type { ReadLinesOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const windowed: ReadLinesOptions = { maxLines: 10, trim: true }
+ * console.log(windowed.maxLines)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type ReadLinesOptions = typeof ReadLinesOptions.Type;
+
+const ReadLinesParameters = S.Class<{
+  readonly options?: ReadLinesOptions | undefined;
+  readonly path: string;
+}>($I`ReadLinesParameters`)(
+  {
+    options: S.optionalKey(ReadLinesOptions),
     path: S.String.check(S.isMinLength(1)),
   },
   $I.annote("ReadLinesParameters", { description: "Inputs for reading lines from a text file." })
@@ -467,14 +518,59 @@ const FileInfoParameters = S.Class<{ readonly path: string }>($I`FileInfoParamet
   .mapFields((fields) => fields)
   .pipe($I.annoteSchema("FileInfoParameters", { description: "Inputs for inspecting a text file." }));
 
-const TextStatsParameters = S.Class<{ readonly options?: unknown; readonly path: string }>($I`TextStatsParameters`)(
+/**
+ * Optional line-normalization controls for {@link TextStats}.
+ *
+ * @example
+ * ```ts
+ * import { TextStatsOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const options = TextStatsOptions.make({ trim: true })
+ * console.log(options.trim)
+ * ```
+ *
+ * @since 0.0.0
+ * @category schemas
+ */
+export const TextStatsOptions = S.Class<{
+  readonly skipEmpty?: boolean | undefined;
+  readonly trim?: boolean | undefined;
+}>($I`TextStatsOptions`)(
   {
-    options: S.optionalKey(
-      S.Struct({
-        skipEmpty: S.optionalKey(S.Boolean),
-        trim: S.optionalKey(S.Boolean),
-      })
-    ),
+    skipEmpty: S.optionalKey(S.Boolean),
+    trim: S.optionalKey(S.Boolean),
+  },
+  $I.annote("TextStatsOptions", { description: "Optional line-normalization controls for computing text statistics." })
+)
+  .mapFields((fields) => fields)
+  .pipe(
+    $I.annoteSchema("TextStatsOptions", {
+      description: "Optional line-normalization controls for computing text statistics.",
+    })
+  );
+
+/**
+ * Type for {@link TextStatsOptions}.
+ *
+ * @example
+ * ```ts
+ * import type { TextStatsOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const normalized: TextStatsOptions = { trim: true }
+ * console.log(normalized.trim)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type TextStatsOptions = typeof TextStatsOptions.Type;
+
+const TextStatsParameters = S.Class<{
+  readonly options?: TextStatsOptions | undefined;
+  readonly path: string;
+}>($I`TextStatsParameters`)(
+  {
+    options: S.optionalKey(TextStatsOptions),
     path: S.String.check(S.isMinLength(1)),
   },
   $I.annote("TextStatsParameters", { description: "Inputs for computing text statistics." })
@@ -482,18 +578,60 @@ const TextStatsParameters = S.Class<{ readonly options?: unknown; readonly path:
   .mapFields((fields) => fields)
   .pipe($I.annoteSchema("TextStatsParameters", { description: "Inputs for computing text statistics." }));
 
+/**
+ * Optional line-normalization controls for {@link SampleLines}.
+ *
+ * @example
+ * ```ts
+ * import { SampleLinesOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const options = SampleLinesOptions.make({ trim: true })
+ * console.log(options.trim)
+ * ```
+ *
+ * @since 0.0.0
+ * @category schemas
+ */
+export const SampleLinesOptions = S.Class<{
+  readonly skipEmpty?: boolean | undefined;
+  readonly trim?: boolean | undefined;
+}>($I`SampleLinesOptions`)(
+  {
+    skipEmpty: S.optionalKey(S.Boolean),
+    trim: S.optionalKey(S.Boolean),
+  },
+  $I.annote("SampleLinesOptions", { description: "Optional line-normalization controls for sampling text lines." })
+)
+  .mapFields((fields) => fields)
+  .pipe(
+    $I.annoteSchema("SampleLinesOptions", {
+      description: "Optional line-normalization controls for sampling text lines.",
+    })
+  );
+
+/**
+ * Type for {@link SampleLinesOptions}.
+ *
+ * @example
+ * ```ts
+ * import type { SampleLinesOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const sampled: SampleLinesOptions = { trim: true }
+ * console.log(sampled.trim)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type SampleLinesOptions = typeof SampleLinesOptions.Type;
+
 const SampleLinesParameters = S.Class<{
-  readonly options?: unknown;
+  readonly options?: SampleLinesOptions | undefined;
   readonly path: string;
   readonly sampleSize: number;
 }>($I`SampleLinesParameters`)(
   {
-    options: S.optionalKey(
-      S.Struct({
-        skipEmpty: S.optionalKey(S.Boolean),
-        trim: S.optionalKey(S.Boolean),
-      })
-    ),
+    options: S.optionalKey(SampleLinesOptions),
     path: S.String.check(S.isMinLength(1)),
     sampleSize: PositiveInteger.check(S.isLessThanOrEqualTo(10_000)),
   },
@@ -502,15 +640,57 @@ const SampleLinesParameters = S.Class<{
   .mapFields((fields) => fields)
   .pipe($I.annoteSchema("SampleLinesParameters", { description: "Inputs for randomly sampling text lines." }));
 
-const ReadJsonlParameters = S.Class<{ readonly options?: unknown; readonly path: string }>($I`ReadJsonlParameters`)(
+/**
+ * Optional controls for {@link ReadJsonl}.
+ *
+ * @example
+ * ```ts
+ * import { ReadJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const options = ReadJsonlOptions.make({ skipInvalid: true })
+ * console.log(options.skipInvalid)
+ * ```
+ *
+ * @since 0.0.0
+ * @category schemas
+ */
+export const ReadJsonlOptions = S.Class<{
+  readonly collectErrors?: boolean | undefined;
+  readonly maxRecords?: number | undefined;
+  readonly skipInvalid?: boolean | undefined;
+}>($I`ReadJsonlOptions`)(
   {
-    options: S.optionalKey(
-      S.Struct({
-        collectErrors: S.optionalKey(S.Boolean),
-        maxRecords: S.optionalKey(PositiveInteger),
-        skipInvalid: S.optionalKey(S.Boolean),
-      })
-    ),
+    collectErrors: S.optionalKey(S.Boolean),
+    maxRecords: S.optionalKey(PositiveInteger),
+    skipInvalid: S.optionalKey(S.Boolean),
+  },
+  $I.annote("ReadJsonlOptions", { description: "Optional controls for reading JSONL records." })
+)
+  .mapFields((fields) => fields)
+  .pipe($I.annoteSchema("ReadJsonlOptions", { description: "Optional controls for reading JSONL records." }));
+
+/**
+ * Type for {@link ReadJsonlOptions}.
+ *
+ * @example
+ * ```ts
+ * import type { ReadJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const lenient: ReadJsonlOptions = { skipInvalid: true }
+ * console.log(lenient.skipInvalid)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type ReadJsonlOptions = typeof ReadJsonlOptions.Type;
+
+const ReadJsonlParameters = S.Class<{
+  readonly options?: ReadJsonlOptions | undefined;
+  readonly path: string;
+}>($I`ReadJsonlParameters`)(
+  {
+    options: S.optionalKey(ReadJsonlOptions),
     path: S.String.check(S.isMinLength(1)),
   },
   $I.annote("ReadJsonlParameters", { description: "Inputs for reading JSONL records." })
@@ -527,16 +707,55 @@ const JsonlStatsParameters = S.Class<{ readonly path: string }>($I`JsonlStatsPar
   .mapFields((fields) => fields)
   .pipe($I.annoteSchema("JsonlStatsParameters", { description: "Inputs for computing JSONL statistics." }));
 
-const ValidateJsonlParameters = S.Class<{ readonly options?: unknown; readonly path: string }>(
-  $I`ValidateJsonlParameters`
-)(
+/**
+ * Optional caps for {@link ValidateJsonl}.
+ *
+ * @example
+ * ```ts
+ * import { ValidateJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const options = ValidateJsonlOptions.make({ maxErrors: 10 })
+ * console.log(options.maxErrors)
+ * ```
+ *
+ * @since 0.0.0
+ * @category schemas
+ */
+export const ValidateJsonlOptions = S.Class<{
+  readonly maxErrors?: number | undefined;
+  readonly maxRecords?: number | undefined;
+}>($I`ValidateJsonlOptions`)(
   {
-    options: S.optionalKey(
-      S.Struct({
-        maxErrors: S.optionalKey(PositiveInteger),
-        maxRecords: S.optionalKey(PositiveInteger),
-      })
-    ),
+    maxErrors: S.optionalKey(PositiveInteger),
+    maxRecords: S.optionalKey(PositiveInteger),
+  },
+  $I.annote("ValidateJsonlOptions", { description: "Optional caps for validating a JSONL file." })
+)
+  .mapFields((fields) => fields)
+  .pipe($I.annoteSchema("ValidateJsonlOptions", { description: "Optional caps for validating a JSONL file." }));
+
+/**
+ * Type for {@link ValidateJsonlOptions}.
+ *
+ * @example
+ * ```ts
+ * import type { ValidateJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const capped: ValidateJsonlOptions = { maxErrors: 10 }
+ * console.log(capped.maxErrors)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type ValidateJsonlOptions = typeof ValidateJsonlOptions.Type;
+
+const ValidateJsonlParameters = S.Class<{
+  readonly options?: ValidateJsonlOptions | undefined;
+  readonly path: string;
+}>($I`ValidateJsonlParameters`)(
+  {
+    options: S.optionalKey(ValidateJsonlOptions),
     path: S.String.check(S.isMinLength(1)),
   },
   $I.annote("ValidateJsonlParameters", { description: "Inputs for validating a JSONL file." })
@@ -544,17 +763,54 @@ const ValidateJsonlParameters = S.Class<{ readonly options?: unknown; readonly p
   .mapFields((fields) => fields)
   .pipe($I.annoteSchema("ValidateJsonlParameters", { description: "Inputs for validating a JSONL file." }));
 
+/**
+ * Optional controls for {@link SampleJsonl}.
+ *
+ * @example
+ * ```ts
+ * import { SampleJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const options = SampleJsonlOptions.make({ skipInvalid: true })
+ * console.log(options.skipInvalid)
+ * ```
+ *
+ * @since 0.0.0
+ * @category schemas
+ */
+export const SampleJsonlOptions = S.Class<{
+  readonly skipInvalid?: boolean | undefined;
+}>($I`SampleJsonlOptions`)(
+  {
+    skipInvalid: S.optionalKey(S.Boolean),
+  },
+  $I.annote("SampleJsonlOptions", { description: "Optional controls for sampling JSONL records." })
+)
+  .mapFields((fields) => fields)
+  .pipe($I.annoteSchema("SampleJsonlOptions", { description: "Optional controls for sampling JSONL records." }));
+
+/**
+ * Type for {@link SampleJsonlOptions}.
+ *
+ * @example
+ * ```ts
+ * import type { SampleJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const sampled: SampleJsonlOptions = { skipInvalid: true }
+ * console.log(sampled.skipInvalid)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type SampleJsonlOptions = typeof SampleJsonlOptions.Type;
+
 const SampleJsonlParameters = S.Class<{
-  readonly options?: unknown;
+  readonly options?: SampleJsonlOptions | undefined;
   readonly path: string;
   readonly sampleSize: number;
 }>($I`SampleJsonlParameters`)(
   {
-    options: S.optionalKey(
-      S.Struct({
-        skipInvalid: S.optionalKey(S.Boolean),
-      })
-    ),
+    options: S.optionalKey(SampleJsonlOptions),
     path: S.String.check(S.isMinLength(1)),
     sampleSize: PositiveInteger.check(S.isLessThanOrEqualTo(10_000)),
   },
@@ -563,82 +819,295 @@ const SampleJsonlParameters = S.Class<{
   .mapFields((fields) => fields)
   .pipe($I.annoteSchema("SampleJsonlParameters", { description: "Inputs for randomly sampling JSONL records." }));
 
-const LoadTextParameters = S.Class<{ readonly location: string; readonly options?: unknown }>($I`LoadTextParameters`)(
+/**
+ * Optional controls for {@link LoadText}.
+ *
+ * @example
+ * ```ts
+ * import { LoadTextOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const options = LoadTextOptions.make({ encoding: "utf-8" })
+ * console.log(options.encoding)
+ * ```
+ *
+ * @since 0.0.0
+ * @category schemas
+ */
+export const LoadTextOptions = S.Class<{
+  readonly encoding?: TextEncoding | undefined;
+  readonly timeout?: number | undefined;
+}>($I`LoadTextOptions`)(
+  {
+    encoding: S.optionalKey(TextEncoding),
+    timeout: S.optionalKey(PositiveInteger),
+  },
+  $I.annote("LoadTextOptions", { description: "Optional controls for loading text from a file or URL." })
+)
+  .mapFields((fields) => fields)
+  .pipe($I.annoteSchema("LoadTextOptions", { description: "Optional controls for loading text from a file or URL." }));
+
+/**
+ * Type for {@link LoadTextOptions}.
+ *
+ * @example
+ * ```ts
+ * import type { LoadTextOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const loaded: LoadTextOptions = { encoding: "utf-8" }
+ * console.log(loaded.encoding)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type LoadTextOptions = typeof LoadTextOptions.Type;
+
+const LoadTextParameters = S.Class<{
+  readonly location: string;
+  readonly options?: LoadTextOptions | undefined;
+}>($I`LoadTextParameters`)(
   {
     location: S.String.check(S.isMinLength(1)),
-    options: S.optionalKey(
-      S.Struct({
-        encoding: S.optionalKey(TextEncoding),
-        timeout: S.optionalKey(PositiveInteger),
-      })
-    ),
+    options: S.optionalKey(LoadTextOptions),
   },
   $I.annote("LoadTextParameters", { description: "Inputs for loading text from a file or URL." })
 )
   .mapFields((fields) => fields)
   .pipe($I.annoteSchema("LoadTextParameters", { description: "Inputs for loading text from a file or URL." }));
 
-const LoadLinesParameters = S.Class<{ readonly location: string; readonly options?: unknown }>($I`LoadLinesParameters`)(
+/**
+ * Optional controls for {@link LoadLines}.
+ *
+ * @example
+ * ```ts
+ * import { LoadLinesOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const options = LoadLinesOptions.make({ skipEmpty: true })
+ * console.log(options.skipEmpty)
+ * ```
+ *
+ * @since 0.0.0
+ * @category schemas
+ */
+export const LoadLinesOptions = S.Class<{
+  readonly maxLines?: number | undefined;
+  readonly skipEmpty?: boolean | undefined;
+  readonly timeout?: number | undefined;
+  readonly trim?: boolean | undefined;
+}>($I`LoadLinesOptions`)(
+  {
+    maxLines: S.optionalKey(PositiveInteger),
+    skipEmpty: S.optionalKey(S.Boolean),
+    timeout: S.optionalKey(PositiveInteger),
+    trim: S.optionalKey(S.Boolean),
+  },
+  $I.annote("LoadLinesOptions", { description: "Optional controls for loading lines from a file or URL." })
+)
+  .mapFields((fields) => fields)
+  .pipe(
+    $I.annoteSchema("LoadLinesOptions", { description: "Optional controls for loading lines from a file or URL." })
+  );
+
+/**
+ * Type for {@link LoadLinesOptions}.
+ *
+ * @example
+ * ```ts
+ * import type { LoadLinesOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const loaded: LoadLinesOptions = { skipEmpty: true }
+ * console.log(loaded.skipEmpty)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type LoadLinesOptions = typeof LoadLinesOptions.Type;
+
+const LoadLinesParameters = S.Class<{
+  readonly location: string;
+  readonly options?: LoadLinesOptions | undefined;
+}>($I`LoadLinesParameters`)(
   {
     location: S.String.check(S.isMinLength(1)),
-    options: S.optionalKey(
-      S.Struct({
-        maxLines: S.optionalKey(PositiveInteger),
-        skipEmpty: S.optionalKey(S.Boolean),
-        timeout: S.optionalKey(PositiveInteger),
-        trim: S.optionalKey(S.Boolean),
-      })
-    ),
+    options: S.optionalKey(LoadLinesOptions),
   },
   $I.annote("LoadLinesParameters", { description: "Inputs for loading lines from a file or URL." })
 )
   .mapFields((fields) => fields)
   .pipe($I.annoteSchema("LoadLinesParameters", { description: "Inputs for loading lines from a file or URL." }));
 
-const LoadJsonlParameters = S.Class<{ readonly location: string; readonly options?: unknown }>($I`LoadJsonlParameters`)(
+/**
+ * Optional controls for {@link LoadJsonl}.
+ *
+ * @example
+ * ```ts
+ * import { LoadJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const options = LoadJsonlOptions.make({ skipInvalid: true })
+ * console.log(options.skipInvalid)
+ * ```
+ *
+ * @since 0.0.0
+ * @category schemas
+ */
+export const LoadJsonlOptions = S.Class<{
+  readonly maxRecords?: number | undefined;
+  readonly skipInvalid?: boolean | undefined;
+  readonly timeout?: number | undefined;
+}>($I`LoadJsonlOptions`)(
+  {
+    maxRecords: S.optionalKey(PositiveInteger),
+    skipInvalid: S.optionalKey(S.Boolean),
+    timeout: S.optionalKey(PositiveInteger),
+  },
+  $I.annote("LoadJsonlOptions", { description: "Optional controls for loading JSONL from a file or URL." })
+)
+  .mapFields((fields) => fields)
+  .pipe(
+    $I.annoteSchema("LoadJsonlOptions", { description: "Optional controls for loading JSONL from a file or URL." })
+  );
+
+/**
+ * Type for {@link LoadJsonlOptions}.
+ *
+ * @example
+ * ```ts
+ * import type { LoadJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const loaded: LoadJsonlOptions = { skipInvalid: true }
+ * console.log(loaded.skipInvalid)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type LoadJsonlOptions = typeof LoadJsonlOptions.Type;
+
+const LoadJsonlParameters = S.Class<{
+  readonly location: string;
+  readonly options?: LoadJsonlOptions | undefined;
+}>($I`LoadJsonlParameters`)(
   {
     location: S.String.check(S.isMinLength(1)),
-    options: S.optionalKey(
-      S.Struct({
-        maxRecords: S.optionalKey(PositiveInteger),
-        skipInvalid: S.optionalKey(S.Boolean),
-        timeout: S.optionalKey(PositiveInteger),
-      })
-    ),
+    options: S.optionalKey(LoadJsonlOptions),
   },
   $I.annote("LoadJsonlParameters", { description: "Inputs for loading JSONL from a file or URL." })
 )
   .mapFields((fields) => fields)
   .pipe($I.annoteSchema("LoadJsonlParameters", { description: "Inputs for loading JSONL from a file or URL." }));
 
-const LoadJsonParameters = S.Class<{ readonly location: string; readonly options?: unknown }>($I`LoadJsonParameters`)(
+/**
+ * Optional controls for {@link LoadJson}.
+ *
+ * @example
+ * ```ts
+ * import { LoadJsonOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const options = LoadJsonOptions.make({ timeout: 5000 })
+ * console.log(options.timeout)
+ * ```
+ *
+ * @since 0.0.0
+ * @category schemas
+ */
+export const LoadJsonOptions = S.Class<{
+  readonly timeout?: number | undefined;
+}>($I`LoadJsonOptions`)(
+  {
+    timeout: S.optionalKey(PositiveInteger),
+  },
+  $I.annote("LoadJsonOptions", { description: "Optional controls for loading JSON from a file or URL." })
+)
+  .mapFields((fields) => fields)
+  .pipe($I.annoteSchema("LoadJsonOptions", { description: "Optional controls for loading JSON from a file or URL." }));
+
+/**
+ * Type for {@link LoadJsonOptions}.
+ *
+ * @example
+ * ```ts
+ * import type { LoadJsonOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const loaded: LoadJsonOptions = { timeout: 5000 }
+ * console.log(loaded.timeout)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type LoadJsonOptions = typeof LoadJsonOptions.Type;
+
+const LoadJsonParameters = S.Class<{
+  readonly location: string;
+  readonly options?: LoadJsonOptions | undefined;
+}>($I`LoadJsonParameters`)(
   {
     location: S.String.check(S.isMinLength(1)),
-    options: S.optionalKey(
-      S.Struct({
-        timeout: S.optionalKey(PositiveInteger),
-      })
-    ),
+    options: S.optionalKey(LoadJsonOptions),
   },
   $I.annote("LoadJsonParameters", { description: "Inputs for loading JSON from a file or URL." })
 )
   .mapFields((fields) => fields)
   .pipe($I.annoteSchema("LoadJsonParameters", { description: "Inputs for loading JSON from a file or URL." }));
 
-const ProcessFileParameters = S.Class<{ readonly options?: unknown; readonly path: string; readonly stages: unknown }>(
-  $I`ProcessFileParameters`
-)(
+/**
+ * Optional controls for {@link ProcessFile}.
+ *
+ * @example
+ * ```ts
+ * import { ProcessFileOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const options = ProcessFileOptions.make({ skipEmpty: true })
+ * console.log(options.skipEmpty)
+ * ```
+ *
+ * @since 0.0.0
+ * @category schemas
+ */
+export const ProcessFileOptions = S.Class<{
+  readonly maxLines?: number | undefined;
+  readonly skipEmpty?: boolean | undefined;
+  readonly stopOnError?: boolean | undefined;
+}>($I`ProcessFileOptions`)(
   {
-    options: S.optionalKey(
-      S.Struct({
-        maxLines: S.optionalKey(PositiveInteger),
-        skipEmpty: S.optionalKey(S.Boolean),
-        stopOnError: S.optionalKey(S.Boolean).annotateKey({
-          description:
-            "Reserved for future custom stages. The built-in transform stages are total and never fail, so this option currently has no effect.",
-        }),
-      })
-    ),
+    maxLines: S.optionalKey(PositiveInteger),
+    skipEmpty: S.optionalKey(S.Boolean),
+    stopOnError: S.optionalKey(S.Boolean).annotateKey({
+      description:
+        "Reserved for future custom stages. The built-in transform stages are total and never fail, so this option currently has no effect.",
+    }),
+  },
+  $I.annote("ProcessFileOptions", { description: "Optional controls for running a line-transform pipeline." })
+)
+  .mapFields((fields) => fields)
+  .pipe(
+    $I.annoteSchema("ProcessFileOptions", { description: "Optional controls for running a line-transform pipeline." })
+  );
+
+/**
+ * Type for {@link ProcessFileOptions}.
+ *
+ * @example
+ * ```ts
+ * import type { ProcessFileOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const pipeline: ProcessFileOptions = { skipEmpty: true }
+ * console.log(pipeline.skipEmpty)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type ProcessFileOptions = typeof ProcessFileOptions.Type;
+
+const ProcessFileParameters = S.Class<{
+  readonly options?: ProcessFileOptions | undefined;
+  readonly path: string;
+  readonly stages: unknown;
+}>($I`ProcessFileParameters`)(
+  {
+    options: S.optionalKey(ProcessFileOptions),
     path: S.String.check(S.isMinLength(1)),
     stages: S.NonEmptyArray(PipelineStage),
   },
@@ -647,17 +1116,60 @@ const ProcessFileParameters = S.Class<{ readonly options?: unknown; readonly pat
   .mapFields((fields) => fields)
   .pipe($I.annoteSchema("ProcessFileParameters", { description: "Inputs for running a line-transform pipeline." }));
 
-const FilterLinesParameters = S.Class<{ readonly options?: unknown; readonly path: string; readonly pattern: string }>(
-  $I`FilterLinesParameters`
-)(
+/**
+ * Optional controls for {@link FilterLines}.
+ *
+ * @example
+ * ```ts
+ * import { FilterLinesOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const options = FilterLinesOptions.make({ invert: true })
+ * console.log(options.invert)
+ * ```
+ *
+ * @since 0.0.0
+ * @category schemas
+ */
+export const FilterLinesOptions = S.Class<{
+  readonly caseInsensitive?: boolean | undefined;
+  readonly invert?: boolean | undefined;
+  readonly maxLines?: number | undefined;
+}>($I`FilterLinesOptions`)(
   {
-    options: S.optionalKey(
-      S.Struct({
-        caseInsensitive: S.optionalKey(S.Boolean),
-        invert: S.optionalKey(S.Boolean),
-        maxLines: S.optionalKey(PositiveInteger),
-      })
-    ),
+    caseInsensitive: S.optionalKey(S.Boolean),
+    invert: S.optionalKey(S.Boolean),
+    maxLines: S.optionalKey(PositiveInteger),
+  },
+  $I.annote("FilterLinesOptions", { description: "Optional controls for filtering lines by a regex pattern." })
+)
+  .mapFields((fields) => fields)
+  .pipe(
+    $I.annoteSchema("FilterLinesOptions", { description: "Optional controls for filtering lines by a regex pattern." })
+  );
+
+/**
+ * Type for {@link FilterLinesOptions}.
+ *
+ * @example
+ * ```ts
+ * import type { FilterLinesOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const filtered: FilterLinesOptions = { invert: true }
+ * console.log(filtered.invert)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type FilterLinesOptions = typeof FilterLinesOptions.Type;
+
+const FilterLinesParameters = S.Class<{
+  readonly options?: FilterLinesOptions | undefined;
+  readonly path: string;
+  readonly pattern: string;
+}>($I`FilterLinesParameters`)(
+  {
+    options: S.optionalKey(FilterLinesOptions),
     path: S.String.check(S.isMinLength(1)),
     pattern: S.String.check(S.isMinLength(1)),
   },
@@ -666,19 +1178,62 @@ const FilterLinesParameters = S.Class<{ readonly options?: unknown; readonly pat
   .mapFields((fields) => fields)
   .pipe($I.annoteSchema("FilterLinesParameters", { description: "Inputs for filtering lines by a regex pattern." }));
 
+/**
+ * Optional controls for {@link ExtractMatches}.
+ *
+ * @example
+ * ```ts
+ * import { ExtractMatchesOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const options = ExtractMatchesOptions.make({ fullLines: true })
+ * console.log(options.fullLines)
+ * ```
+ *
+ * @since 0.0.0
+ * @category schemas
+ */
+export const ExtractMatchesOptions = S.Class<{
+  readonly caseInsensitive?: boolean | undefined;
+  readonly fullLines?: boolean | undefined;
+  readonly maxMatches?: number | undefined;
+}>($I`ExtractMatchesOptions`)(
+  {
+    caseInsensitive: S.optionalKey(S.Boolean),
+    fullLines: S.optionalKey(S.Boolean),
+    maxMatches: S.optionalKey(PositiveInteger),
+  },
+  $I.annote("ExtractMatchesOptions", { description: "Optional controls for extracting regex matches from a file." })
+)
+  .mapFields((fields) => fields)
+  .pipe(
+    $I.annoteSchema("ExtractMatchesOptions", {
+      description: "Optional controls for extracting regex matches from a file.",
+    })
+  );
+
+/**
+ * Type for {@link ExtractMatchesOptions}.
+ *
+ * @example
+ * ```ts
+ * import type { ExtractMatchesOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const extracted: ExtractMatchesOptions = { fullLines: true }
+ * console.log(extracted.fullLines)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type ExtractMatchesOptions = typeof ExtractMatchesOptions.Type;
+
 const ExtractMatchesParameters = S.Class<{
-  readonly options?: unknown;
+  readonly options?: ExtractMatchesOptions | undefined;
   readonly path: string;
   readonly pattern: string;
 }>($I`ExtractMatchesParameters`)(
   {
-    options: S.optionalKey(
-      S.Struct({
-        caseInsensitive: S.optionalKey(S.Boolean),
-        fullLines: S.optionalKey(S.Boolean),
-        maxMatches: S.optionalKey(PositiveInteger),
-      })
-    ),
+    options: S.optionalKey(ExtractMatchesOptions),
     path: S.String.check(S.isMinLength(1)),
     pattern: S.String.check(S.isMinLength(1)),
   },
@@ -689,13 +1244,53 @@ const ExtractMatchesParameters = S.Class<{
     $I.annoteSchema("ExtractMatchesParameters", { description: "Inputs for extracting regex matches from a file." })
   );
 
-const CountLinesParameters = S.Class<{ readonly options?: unknown; readonly path: string }>($I`CountLinesParameters`)(
+/**
+ * Optional controls for {@link CountLines}.
+ *
+ * @example
+ * ```ts
+ * import { CountLinesOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const options = CountLinesOptions.make({ skipEmpty: true })
+ * console.log(options.skipEmpty)
+ * ```
+ *
+ * @since 0.0.0
+ * @category schemas
+ */
+export const CountLinesOptions = S.Class<{
+  readonly skipEmpty?: boolean | undefined;
+}>($I`CountLinesOptions`)(
   {
-    options: S.optionalKey(
-      S.Struct({
-        skipEmpty: S.optionalKey(S.Boolean),
-      })
-    ),
+    skipEmpty: S.optionalKey(S.Boolean),
+  },
+  $I.annote("CountLinesOptions", { description: "Optional controls for counting lines in a file." })
+)
+  .mapFields((fields) => fields)
+  .pipe($I.annoteSchema("CountLinesOptions", { description: "Optional controls for counting lines in a file." }));
+
+/**
+ * Type for {@link CountLinesOptions}.
+ *
+ * @example
+ * ```ts
+ * import type { CountLinesOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const counted: CountLinesOptions = { skipEmpty: true }
+ * console.log(counted.skipEmpty)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type CountLinesOptions = typeof CountLinesOptions.Type;
+
+const CountLinesParameters = S.Class<{
+  readonly options?: CountLinesOptions | undefined;
+  readonly path: string;
+}>($I`CountLinesParameters`)(
+  {
+    options: S.optionalKey(CountLinesOptions),
     path: S.String.check(S.isMinLength(1)),
   },
   $I.annote("CountLinesParameters", { description: "Inputs for counting lines in a file." })
@@ -703,13 +1298,55 @@ const CountLinesParameters = S.Class<{ readonly options?: unknown; readonly path
   .mapFields((fields) => fields)
   .pipe($I.annoteSchema("CountLinesParameters", { description: "Inputs for counting lines in a file." }));
 
-const CountJsonlParameters = S.Class<{ readonly options?: unknown; readonly path: string }>($I`CountJsonlParameters`)(
+/**
+ * Optional controls for {@link CountJsonl}.
+ *
+ * @example
+ * ```ts
+ * import { CountJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const options = CountJsonlOptions.make({ skipInvalid: true })
+ * console.log(options.skipInvalid)
+ * ```
+ *
+ * @since 0.0.0
+ * @category schemas
+ */
+export const CountJsonlOptions = S.Class<{
+  readonly skipInvalid?: boolean | undefined;
+}>($I`CountJsonlOptions`)(
   {
-    options: S.optionalKey(
-      S.Struct({
-        skipInvalid: S.optionalKey(S.Boolean),
-      })
-    ),
+    skipInvalid: S.optionalKey(S.Boolean),
+  },
+  $I.annote("CountJsonlOptions", { description: "Optional controls for counting JSONL records in a file." })
+)
+  .mapFields((fields) => fields)
+  .pipe(
+    $I.annoteSchema("CountJsonlOptions", { description: "Optional controls for counting JSONL records in a file." })
+  );
+
+/**
+ * Type for {@link CountJsonlOptions}.
+ *
+ * @example
+ * ```ts
+ * import type { CountJsonlOptions } from "@beep/nlp-mcp/StreamingTools"
+ *
+ * const counted: CountJsonlOptions = { skipInvalid: true }
+ * console.log(counted.skipInvalid)
+ * ```
+ *
+ * @since 0.0.0
+ * @category models
+ */
+export type CountJsonlOptions = typeof CountJsonlOptions.Type;
+
+const CountJsonlParameters = S.Class<{
+  readonly options?: CountJsonlOptions | undefined;
+  readonly path: string;
+}>($I`CountJsonlParameters`)(
+  {
+    options: S.optionalKey(CountJsonlOptions),
     path: S.String.check(S.isMinLength(1)),
   },
   $I.annote("CountJsonlParameters", { description: "Inputs for counting JSONL records in a file." })
