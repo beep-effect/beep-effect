@@ -781,6 +781,10 @@ jobs:
 
       - name: Run SAST
         run: |
-          # Keep Semgrep parity with the previous semgrep-action packs:
-          # p/typescript, p/javascript, p/security-audit, and p/secrets.
+          # Semgrep runs the four registry packs (p/typescript, p/javascript,
+          # p/security-audit, p/secrets) plus the vendored, offline rules in
+          # .semgrep/first-party.yml, with --error so findings fail the lane.
+          # Config is byte-identical to the local replay (`beep ci lane sast`)
+          # — no SEMGREP_APP_TOKEN, which would only exist in CI and break that
+          # parity. See goals/one-round-loop/history/p0-parity-evidence.md §2.
           bun run beep ci lane sast
