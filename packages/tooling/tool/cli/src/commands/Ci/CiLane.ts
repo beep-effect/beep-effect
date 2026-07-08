@@ -537,6 +537,21 @@ const turboShapeArgs = (options: CiLaneRunOptions): ReadonlyArray<string> => [
   ...(options.summarize ? ["--summarize"] : A.empty<string>()),
 ];
 
+// Default BEEP_FC_NUM_RUNS floor for the property lane. A blank or
+// whitespace-only `--runs` (e.g. `--runs ""`) would otherwise reach the
+// lane as `BEEP_FC_NUM_RUNS=""`, which the parsers treat as absent — the
+// sweep would silently drop to fast-check's 100-run default. Normalize
+// blank input back to the intended floor.
+const DEFAULT_PROPERTY_LANE_RUNS = "400";
+
+const resolvePropertyLaneRuns = (runs: string | undefined): string =>
+  pipe(
+    O.fromNullishOr(runs),
+    O.map(Str.trim),
+    O.filter(Str.isNonEmpty),
+    O.getOrElse(() => DEFAULT_PROPERTY_LANE_RUNS)
+  );
+
 const rootScriptStep = (
   repoRoot: string,
   label: string,
@@ -767,7 +782,7 @@ export const ciLaneStepsForTesting: {
           args: ["turbo", "run", "test:property", ...turboShapeArgs(options)],
           cwd: repoRoot,
           env: {
-            BEEP_FC_NUM_RUNS: options.runs ?? "400",
+            BEEP_FC_NUM_RUNS: resolvePropertyLaneRuns(options.runs),
             ...(options.affected ? { TURBO_SCM_BASE: options.base } : {}),
           },
         }),

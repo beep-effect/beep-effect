@@ -71,6 +71,7 @@
     "ws": "catalog:"
   },
   "devDependencies": {
+    "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",
     "@types/ws": "catalog:",

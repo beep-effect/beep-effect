@@ -72,6 +72,7 @@
     "@azure/msal-node-extensions": "catalog:"
   },
   "devDependencies": {
+    "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@microsoft/microsoft-graph-types": "catalog:",
     "@types/node": "catalog:"

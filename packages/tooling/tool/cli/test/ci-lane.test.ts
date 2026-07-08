@@ -220,6 +220,16 @@ describe("ciLaneStepsForTesting", () => {
       ciLaneStepsForTesting(REPO_ROOT, "property", CiLaneRunOptions.make({ ...baseOptions, runs: "1000" }))
     );
     expect(deep.env).toEqual({ BEEP_FC_NUM_RUNS: "1000" });
+
+    // A blank or whitespace-only --runs must fall back to the 400 floor,
+    // never reach the lane as BEEP_FC_NUM_RUNS="" (which parsers read as
+    // absent, silently dropping to fast-check's 100-run default).
+    for (const blank of ["", "   "]) {
+      const step = firstOf(
+        ciLaneStepsForTesting(REPO_ROOT, "property", CiLaneRunOptions.make({ ...baseOptions, runs: blank }))
+      );
+      expect(step.env).toEqual({ BEEP_FC_NUM_RUNS: "400" });
+    }
   });
 
   it("keeps the build lane's --summarize flag-driven", () => {
