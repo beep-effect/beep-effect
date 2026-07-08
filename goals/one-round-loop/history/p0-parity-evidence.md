@@ -182,3 +182,31 @@ battery had no coverage lane at all and would have shown green), the
 red is demonstrably pre-existing and out of packet scope, and the
 PR-shape gate is green. Proceeding to push with this note as the
 ledger entry.
+
+## 5. Post-merge findings (PR A → main, 2026-07-07T23:40Z)
+
+PR [#321](https://github.com/beep-effect/beep-effect/pull/321) merged
+green in ONE CI round. Main's post-merge PUSH run (on 3709c435f3) then
+went red on two jobs — neither a code defect:
+
+1. **Commitlint / squash-subject class (NEW).** The squash-merge
+   subject comes from the PR TITLE — validated by NO gate anywhere
+   (branch commits pass the commit-msg hook and the PR Commitlint
+   check; the title is checked only when it detonates on the main push
+   run). PR A's title used sentence-case "P0 CI-lane inversion" →
+   `subject-case` violation on main. Remediation adopted immediately:
+   conventional-lowercase PR titles (PR C, #324). Candidate durable
+   fix for the closeout: title linting in `yeet publish --pr` /
+   `ensurePullRequest`.
+2. **Lint / third infra cancellation (S4).** exit 130, "operation was
+   canceled" mid-lane with no superseding run — same class as the two
+   D9 attempt-1 cancels.
+
+## 6. Dogfood ledger (running)
+
+| PR | Content | Local proof | CI rounds |
+|---|---|---|---|
+| [#319](https://github.com/beep-effect/beep-effect/pull/319) | packet authoring (docs) | pre-P0: hygiene + typos | **1** ✔ |
+| [#321](https://github.com/beep-effect/beep-effect/pull/321) (PR A) | lane CLI + shadow | full battery (2 local rounds; round 1 caught 4 classes) | **1** ✔ (plus 2 infra-cancel reruns, not gate rounds) |
+| [#323](https://github.com/beep-effect/beep-effect/pull/323) (PR B → P0 branch) | thinning + evidence | `--fast --affected` 16/16 | n/a (merged into P0 branch; no main CI) |
+| [#324](https://github.com/beep-effect/beep-effect/pull/324) (PR C) | thinning → main | same content as PR B (16/16) | _pending_ |

@@ -13,28 +13,73 @@
     "P4_close": "pending"
   },
   "coreItems": {
-    "C1_ci_lane_inversion": { "status": "in_progress" },
-    "C2_property_law_lane": { "status": "pending" },
-    "C3_coverage_baseline_v2": { "status": "pending" },
-    "C4_cwd_independence": { "status": "pending" },
-    "C5_regen_generated": { "status": "pending" },
-    "C6_with_normalized_check": { "status": "pending" }
+    "C1_ci_lane_inversion": {
+      "status": "in_progress"
+    },
+    "C2_property_law_lane": {
+      "status": "pending"
+    },
+    "C3_coverage_baseline_v2": {
+      "status": "pending"
+    },
+    "C4_cwd_independence": {
+      "status": "pending"
+    },
+    "C5_regen_generated": {
+      "status": "pending"
+    },
+    "C6_with_normalized_check": {
+      "status": "pending"
+    }
   },
   "stretchItems": {
-    "S1_fallow_envelope_locations": { "status": "pending", "rationale": null },
-    "S2_yeet_committed_branch": { "status": "pending", "rationale": null },
-    "S3_worktree_lane_adoption": { "status": "pending", "rationale": null },
-    "S4_cancel_rerun_quarantine": { "status": "pending", "rationale": null }
+    "S1_fallow_envelope_locations": {
+      "status": "pending",
+      "rationale": null
+    },
+    "S2_yeet_committed_branch": {
+      "status": "pending",
+      "rationale": null
+    },
+    "S3_worktree_lane_adoption": {
+      "status": "pending",
+      "rationale": null
+    },
+    "S4_cancel_rerun_quarantine": {
+      "status": "pending",
+      "rationale": null
+    }
   },
   "dogfoodLedger": {
     "activeFrom": "2026-07-07",
     "prRounds": [
       {
         "pr": 319,
-        "title": "docs(one-round-loop): author follow-up goal packet",
+        "title": "docs: packet authoring",
         "ciRounds": 1,
-        "localProof": "pre-P0 (beep ci local did not exist): packet hygiene checks + typos clean; docs-only per D8",
+        "localProof": "pre-P0: packet hygiene + typos (docs-only per D8)",
         "outcome": "merged"
+      },
+      {
+        "pr": 321,
+        "title": "feat: p0 lane CLI + shadow (PR A)",
+        "ciRounds": 1,
+        "localProof": "full beep ci local (round 1 caught 4 classes locally; round 2 18/19 green, coverage pre-existing red documented)",
+        "outcome": "merged; post-merge push red on squash-title commitlint (new class, ledgered) + infra cancel"
+      },
+      {
+        "pr": 323,
+        "title": "ci: p0 thinning (PR B, into P0 branch)",
+        "ciRounds": 0,
+        "localProof": "beep ci local --fast --affected 16/16",
+        "outcome": "merged into P0 branch"
+      },
+      {
+        "pr": 324,
+        "title": "ci: p0 thinning to main (PR C)",
+        "ciRounds": null,
+        "localProof": "same content as PR 323 (16/16)",
+        "outcome": "open"
       }
     ]
   }
