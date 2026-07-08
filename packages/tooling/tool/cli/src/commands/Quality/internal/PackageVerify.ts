@@ -34,7 +34,7 @@ const VERIFY_STEP_NAMES = ["lint", "check", "test"] as const;
  * import { PackageVerifyStepName } from "@beep/repo-cli/test/Quality"
  *
  * const isLint = PackageVerifyStepName.is.lint("lint")
- * console.log(isLint)
+ * console.log(isLint) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -53,7 +53,7 @@ export const PackageVerifyStepName = LiteralKit(VERIFY_STEP_NAMES).pipe(
  * import type { PackageVerifyStepName } from "@beep/repo-cli/test/Quality"
  *
  * const step: PackageVerifyStepName = "check"
- * console.log(step)
+ * console.log(step) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -309,7 +309,7 @@ const packageVerifyStepSpecs = (quick: boolean): ReadonlyArray<PackageVerifyStep
  *     PackageVerifyWorkspace.make({ name: "@beep/demo", dir: "/repo/packages/demo", scripts: {} })
  *   ]
  * })
- * console.log(selected)
+ * console.log(selected) // example value
  * ```
  * @category utilities
  * @since 0.0.0
@@ -487,7 +487,7 @@ const runPackageVerifyStep = Effect.fn("PackageVerify.runPackageVerifyStep")(fun
  *   packageName: O.some("@beep/repo-cli"),
  *   quick: true
  * })
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -545,7 +545,7 @@ const fmtSecs = (ms: number): string => `${(ms / 1000).toFixed(1)}s`;
  *     results: []
  *   })
  * )
- * console.log(lines)
+ * console.log(lines) // example value
  * ```
  * @category rendering
  * @since 0.0.0
@@ -585,7 +585,7 @@ export const renderPackageVerifyReportForTesting = (report: PackageVerifyReport)
  *   packageArgs: ["@beep/repo-cli"],
  *   quick: true
  * })
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -626,7 +626,7 @@ export const runPackageVerifyCli = Effect.fn("PackageVerify.runPackageVerifyCli"
  * import { packageVerifyStepSpecsForTesting } from "@beep/repo-cli/test/Quality"
  *
  * const specs = packageVerifyStepSpecsForTesting(true)
- * console.log(specs)
+ * console.log(specs) // example value
  * ```
  * @category utilities
  * @since 0.0.0
@@ -641,7 +641,7 @@ export const packageVerifyStepSpecsForTesting = packageVerifyStepSpecs;
  * import { collectPackageVerifyChangedFilesForTesting } from "@beep/repo-cli/test/Quality"
  *
  * const program = collectPackageVerifyChangedFilesForTesting("/repo")
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category utilities
  * @since 0.0.0

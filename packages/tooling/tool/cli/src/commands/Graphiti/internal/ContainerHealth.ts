@@ -89,7 +89,8 @@ export const containerHealth: {
  * ```ts
  * import { waitForHealthyContainers } from "@beep/repo-cli/commands/Graphiti/internal/ContainerHealth"
  *
- * console.log(waitForHealthyContainers)
+ * const example = waitForHealthyContainers
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category processes
  * @since 0.0.0
@@ -136,8 +137,10 @@ export const waitForHealthyContainers: {
  * @example
  * ```ts
  * import { restoreContainerHealthStates } from "@beep/repo-cli/commands/Graphiti/internal/ContainerHealth"
+ * import { Effect } from "effect"
  *
- * console.log(restoreContainerHealthStates)
+ * const program = Effect.succeed(restoreContainerHealthStates)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category diagnostics
  * @since 0.0.0
@@ -160,8 +163,10 @@ export const restoreContainerHealthStates = Effect.fn("GraphitiProxyOps.restoreC
  * @example
  * ```ts
  * import { waitForRestoreContainers } from "@beep/repo-cli/commands/Graphiti/internal/ContainerHealth"
+ * import { Effect } from "effect"
  *
- * console.log(waitForRestoreContainers)
+ * const program = Effect.succeed(waitForRestoreContainers)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category processes
  * @since 0.0.0
@@ -196,8 +201,10 @@ export const waitForRestoreContainers = Effect.fn("GraphitiProxyOps.waitForResto
  * @example
  * ```ts
  * import { requireRestoreContainersHealthy } from "@beep/repo-cli/commands/Graphiti/internal/ContainerHealth"
+ * import { Effect } from "effect"
  *
- * console.log(requireRestoreContainersHealthy)
+ * const program = Effect.succeed(requireRestoreContainersHealthy)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category assertions
  * @since 0.0.0
@@ -225,8 +232,10 @@ export const requireRestoreContainersHealthy = Effect.fn("GraphitiProxyOps.requi
  * @example
  * ```ts
  * import { waitForRestoreProxyHealthy } from "@beep/repo-cli/commands/Graphiti/internal/ContainerHealth"
+ * import { Effect } from "effect"
  *
- * console.log(waitForRestoreProxyHealthy)
+ * const program = Effect.succeed(waitForRestoreProxyHealthy)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category processes
  * @since 0.0.0

@@ -18,7 +18,9 @@ const $I = $RepoCliId.create("commands/TsconfigSync/TsconfigSync.errors");
  * @example
  * ```ts
  * import { TsconfigSyncDriftError } from "@beep/repo-cli/commands/TsconfigSync"
- * console.log(TsconfigSyncDriftError)
+ *
+ * const error = TsconfigSyncDriftError.make({ fileCount: 2, summary: "2 config files need updates" })
+ * console.log(error.summary.includes("updates")) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -62,7 +64,9 @@ export class TsconfigSyncDriftError extends TaggedErrorClass<TsconfigSyncDriftEr
  * @example
  * ```ts
  * import { TsconfigSyncCycleError } from "@beep/repo-cli/commands/TsconfigSync"
- * console.log(TsconfigSyncCycleError)
+ *
+ * const error = TsconfigSyncCycleError.make({ cycles: [["@beep/a", "@beep/b"]], message: "Workspace cycle detected" })
+ * console.log(error.message.includes("failed")) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -106,7 +110,9 @@ export class TsconfigSyncCycleError extends TaggedErrorClass<TsconfigSyncCycleEr
  * @example
  * ```ts
  * import { TsconfigSyncFilterError } from "@beep/repo-cli/commands/TsconfigSync"
- * console.log(TsconfigSyncFilterError)
+ *
+ * const error = TsconfigSyncFilterError.make({ filter: "@beep/missing", message: "No workspace matched filter" })
+ * console.log(error.filter === "@beep/missing") // true
  * ```
  * @category utilities
  * @since 0.0.0

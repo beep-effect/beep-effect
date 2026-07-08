@@ -68,7 +68,7 @@ export const DocgenQualityScopeMode = LiteralKit(["affected", "package", "change
  * import type { DocgenQualityScopeMode } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
  * const mode: DocgenQualityScopeMode = "affected"
- * console.log(mode)
+ * console.log(mode) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -101,7 +101,7 @@ export const DocgenQualityScoreMode = LiteralKit(["none", "rubric", "codex"]).pi
  * import type { DocgenQualityScoreMode } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
  * const mode: DocgenQualityScoreMode = "rubric"
- * console.log(mode)
+ * console.log(mode) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -134,7 +134,7 @@ export const DocgenQualityTier = LiteralKit(["pass", "warn", "fail"]).pipe(
  * import type { DocgenQualityTier } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
  * const tier: DocgenQualityTier = "warn"
- * console.log(tier)
+ * console.log(tier) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -167,7 +167,7 @@ export const DocgenQualityPackageStatus = LiteralKit(["completed", "partial", "f
  * import type { DocgenQualityPackageStatus } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
  * const status: DocgenQualityPackageStatus = "completed"
- * console.log(status)
+ * console.log(status) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -216,7 +216,7 @@ export const DocgenQualityFindingCode = LiteralKit([
  * import type { DocgenQualityFindingCode } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
  *
  * const code: DocgenQualityFindingCode = "missing-example"
- * console.log(code)
+ * console.log(code) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -577,8 +577,9 @@ export class DocgenQualitySubjectCandidate extends S.Class<DocgenQualitySubjectC
  * @example
  * ```ts
  * import { byPackagePathAscending } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
+ * import { Order } from "effect"
  *
- * console.log(byPackagePathAscending)
+ * console.log(Order.lessThan(byPackagePathAscending)("a", "b")) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -594,8 +595,9 @@ export const byPackagePathAscending: Order.Order<DocgenWorkspacePackage> = Order
  * @example
  * ```ts
  * import { bySubjectIdentityAscending } from "@beep/repo-cli/commands/Docgen/internal/quality/Quality.schemas"
+ * import { Order } from "effect"
  *
- * console.log(bySubjectIdentityAscending)
+ * console.log(Order.lessThan(bySubjectIdentityAscending)("a", "b")) // true
  * ```
  * @category utilities
  * @since 0.0.0

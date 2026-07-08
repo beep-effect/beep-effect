@@ -41,7 +41,7 @@ export const CorpusDuplicateScope = LiteralKit(["intra-run", "cross-run"]).pipe(
  * import type { CorpusDuplicateScope } from "@beep/repo-cli/commands/Corpus"
  *
  * const scope: CorpusDuplicateScope = "cross-run"
- * console.log(scope)
+ * console.log(scope) // example value
  * ```
  * @category models
  * @since 0.0.0

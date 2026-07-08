@@ -16,7 +16,7 @@ import { failWithReportedExit } from "../../internal/cli/ExitCodeError.js";
  * import { reportDocgenCommandError } from "@beep/repo-cli/commands/Docgen/Docgen.errors"
  *
  * const program = reportDocgenCommandError({ message: "invalid package" })
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category errors
  * @since 0.0.0

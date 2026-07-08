@@ -225,7 +225,7 @@ type FallowCiContractDiagnosticOptions = {
  * import { fallowCiUploadDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
  *
  * const diagnostics = fallowCiUploadDiagnosticsForTesting(false, [], [], ".beep/fallow", "error")
- * console.log(diagnostics)
+ * console.log(diagnostics) // example value
  * ```
  * @category testing
  * @since 0.0.0

@@ -383,7 +383,7 @@ const collectEffectFnDiagnostics = (
  *   (summary) => summary.violationCount,
  * )
  *
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category utilities
  * @since 0.0.0

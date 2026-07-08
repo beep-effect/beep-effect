@@ -21,7 +21,7 @@ const $I = $RepoCliId.create("commands/Laws/DualArity");
  * ```ts
  * import { DualArityInventoryPath } from "@beep/repo-cli/commands/Laws/DualArity"
  *
- * console.log(DualArityInventoryPath)
+ * console.log(DualArityInventoryPath.length > 0) // true
  * ```
  * @category configuration
  * @since 0.0.0
@@ -35,7 +35,8 @@ export const DualArityInventoryPath = "standards/dual-arity.inventory.jsonc";
  * ```ts
  * import { DualArityIncludedGlobs } from "@beep/repo-cli/commands/Laws/DualArity"
  *
- * console.log(DualArityIncludedGlobs)
+ * const example = DualArityIncludedGlobs
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category configuration
  * @since 0.0.0
@@ -53,7 +54,8 @@ export const DualArityIncludedGlobs: ReadonlyArray<string> = [
  * ```ts
  * import { DualArityEnforcedRoots } from "@beep/repo-cli/commands/Laws/DualArity"
  *
- * console.log(DualArityEnforcedRoots)
+ * const example = DualArityEnforcedRoots
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category configuration
  * @since 0.0.0
@@ -122,8 +124,21 @@ export const DualArityDiagnosticKind = LiteralKit([
  * @example
  * ```ts
  * import { DualArityInventoryEntry } from "@beep/repo-cli/commands/Laws/DualArity"
+ * import * as S from "effect/Schema"
  *
- * console.log(DualArityInventoryEntry)
+ * const candidate = {
+ *   column: 3,
+ *   diagnostics: [],
+ *   file: "packages/example/src/Foo.ts",
+ *   kind: "exported-function",
+ *   line: 12,
+ *   owner: "@beep/example",
+ *   parameterCount: 2,
+ *   qualifiedName: "mapFoo",
+ *   reason: "dual helper",
+ *   status: "candidate"
+ * }
+ * console.log(S.is(DualArityInventoryEntry)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -177,8 +192,10 @@ export declare namespace DualArityInventoryEntry {
  * @example
  * ```ts
  * import { DualArityInventoryDocument } from "@beep/repo-cli/commands/Laws/DualArity"
+ * import * as S from "effect/Schema"
  *
- * console.log(DualArityInventoryDocument)
+ * const candidate = { entries: [], generatedAt: "2026-07-08T00:00:00.000Z", version: 1 }
+ * console.log(S.is(DualArityInventoryDocument)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -272,8 +289,10 @@ export class DualArityRulesSummary extends S.Class<DualArityRulesSummary>($I`Dua
  * @example
  * ```ts
  * import { encodeDualArityInventoryDocument } from "@beep/repo-cli/commands/Laws/DualArity"
+ * import { Effect } from "effect"
  *
- * console.log(encodeDualArityInventoryDocument)
+ * const program = Effect.succeed(encodeDualArityInventoryDocument)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category codecs
  * @since 0.0.0
@@ -286,8 +305,10 @@ export const encodeDualArityInventoryDocument = S.encodeUnknownEffect(DualArityI
  * @example
  * ```ts
  * import { decodeDualArityProjectInspectionRequest } from "@beep/repo-cli/commands/Laws/DualArity"
+ * import { Effect } from "effect"
  *
- * console.log(decodeDualArityProjectInspectionRequest)
+ * const program = Effect.succeed(decodeDualArityProjectInspectionRequest)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category codecs
  * @since 0.0.0
@@ -301,7 +322,19 @@ export const decodeDualArityProjectInspectionRequest = S.decodeUnknownEffect(TsM
  * ```ts
  * import { makeDualArityEntryKey } from "@beep/repo-cli/commands/Laws/DualArity"
  *
- * console.log(makeDualArityEntryKey)
+ * const result = makeDualArityEntryKey({
+ *   column: 3,
+ *   diagnostics: [],
+ *   file: "packages/example/src/Foo.ts",
+ *   kind: "exported-function",
+ *   line: 12,
+ *   owner: "@beep/example",
+ *   parameterCount: 2,
+ *   qualifiedName: "mapFoo",
+ *   reason: "dual helper",
+ *   status: "candidate"
+ * })
+ * console.log(result) // rendered command output
  * ```
  * @category utilities
  * @since 0.0.0
@@ -316,7 +349,8 @@ export const makeDualArityEntryKey = (entry: DualArityInventoryEntry): string =>
  * ```ts
  * import { dualArityEntryOrder } from "@beep/repo-cli/commands/Laws/DualArity"
  *
- * console.log(dualArityEntryOrder)
+ * const compareEntries = dualArityEntryOrder
+ * console.log(typeof compareEntries === "function") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -333,7 +367,8 @@ export const dualArityEntryOrder: Order.Order<DualArityInventoryEntry> = Order.m
  * ```ts
  * import { sortDualArityEntries } from "@beep/repo-cli/commands/Laws/DualArity"
  *
- * console.log(sortDualArityEntries)
+ * const result = sortDualArityEntries([])
+ * console.log(result) // rendered command output
  * ```
  * @category utilities
  * @since 0.0.0

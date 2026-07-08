@@ -857,8 +857,11 @@ const worktreeDoctorCommand = Command.make(
  * @example
  * ```ts
  * import { worktreeCommand } from "@beep/repo-cli/commands/Worktree"
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
  *
- * console.log(worktreeCommand)
+ * const run = Command.run(worktreeCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category cli-commands
  * @since 0.0.0

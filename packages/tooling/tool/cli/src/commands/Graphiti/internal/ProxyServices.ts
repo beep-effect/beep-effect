@@ -26,7 +26,7 @@ type GraphitiDependencyHealthServiceShape = {
  * import type { RequestTargetRejection } from "@beep/repo-cli/commands/Graphiti/internal/ProxyServices"
  *
  * const rejection: RequestTargetRejection = { response: new Response("blocked") as never }
- * console.log(rejection)
+ * console.log(rejection) // example value
  * ```
  * @category models
  * @since 0.0.0

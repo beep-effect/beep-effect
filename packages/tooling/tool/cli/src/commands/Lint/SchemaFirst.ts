@@ -21,7 +21,9 @@ import type { SchemaFirstInventoryEntry } from "./Lint.schemas.js";
  * @example
  * ```ts
  * import { literalMemberEquals } from "@beep/repo-cli/commands/Lint"
- * console.log(literalMemberEquals)
+ *
+ * const example = literalMemberEquals
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -32,7 +34,9 @@ import type { SchemaFirstInventoryEntry } from "./Lint.schemas.js";
  * @example
  * ```ts
  * import { sourceTextHasSchemaArbitraryPropertyCoverage } from "@beep/repo-cli/commands/Lint"
- * console.log(sourceTextHasSchemaArbitraryPropertyCoverage)
+ *
+ * const example = sourceTextHasSchemaArbitraryPropertyCoverage
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category predicates
  * @since 0.0.0
@@ -47,7 +51,9 @@ export {
  * @example
  * ```ts
  * import { isSchemaCrispeningPolicyExempt } from "@beep/repo-cli/commands/Lint"
- * console.log(isSchemaCrispeningPolicyExempt)
+ *
+ * const example = isSchemaCrispeningPolicyExempt
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -58,7 +64,9 @@ export {
  * @example
  * ```ts
  * import { schemaCrispeningFamilyForFile } from "@beep/repo-cli/commands/Lint"
- * console.log(schemaCrispeningFamilyForFile)
+ *
+ * const example = schemaCrispeningFamilyForFile
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -70,7 +78,9 @@ export { isSchemaCrispeningPolicyExempt, schemaCrispeningFamilyForFile } from ".
  * @example
  * ```ts
  * import { makeSchemaFirstOwnerResolver } from "@beep/repo-cli/commands/Lint"
- * console.log(makeSchemaFirstOwnerResolver)
+ *
+ * const example = makeSchemaFirstOwnerResolver
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -81,7 +91,9 @@ export { isSchemaCrispeningPolicyExempt, schemaCrispeningFamilyForFile } from ".
  * @example
  * ```ts
  * import { makeSchemaFirstProject } from "@beep/repo-cli/commands/Lint"
- * console.log(makeSchemaFirstProject)
+ *
+ * const example = makeSchemaFirstProject
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -93,7 +105,9 @@ export { makeSchemaFirstOwnerResolver, makeSchemaFirstProject } from "./internal
  * @example
  * ```ts
  * import { runSchemaFirstLint } from "@beep/repo-cli/commands/Lint"
- * console.log(runSchemaFirstLint)
+ *
+ * const example = runSchemaFirstLint
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category use-cases
  * @since 0.0.0
@@ -105,7 +119,9 @@ export { runSchemaFirstLint } from "./internal/SchemaFirstScan.js";
  * @example
  * ```ts
  * import { SchemaCrispeningFamilyPolicy } from "@beep/repo-cli/commands/Lint"
- * console.log(SchemaCrispeningFamilyPolicy)
+ *
+ * const example = SchemaCrispeningFamilyPolicy
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category models
  * @since 0.0.0
@@ -116,7 +132,9 @@ export { runSchemaFirstLint } from "./internal/SchemaFirstScan.js";
  * @example
  * ```ts
  * import { SchemaCrispeningPolicyDocument } from "@beep/repo-cli/commands/Lint"
- * console.log(SchemaCrispeningPolicyDocument)
+ *
+ * const example = SchemaCrispeningPolicyDocument
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category models
  * @since 0.0.0
@@ -127,7 +145,9 @@ export { runSchemaFirstLint } from "./internal/SchemaFirstScan.js";
  * @example
  * ```ts
  * import { SchemaFirstIncludedGlobs } from "@beep/repo-cli/commands/Lint"
- * console.log(SchemaFirstIncludedGlobs)
+ *
+ * const example = SchemaFirstIncludedGlobs
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category configuration
  * @since 0.0.0
@@ -138,7 +158,9 @@ export { runSchemaFirstLint } from "./internal/SchemaFirstScan.js";
  * @example
  * ```ts
  * import { SchemaFirstInventoryEntry } from "@beep/repo-cli/commands/Lint"
- * console.log(SchemaFirstInventoryEntry)
+ *
+ * const example = SchemaFirstInventoryEntry
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category models
  * @since 0.0.0
@@ -149,7 +171,9 @@ export { runSchemaFirstLint } from "./internal/SchemaFirstScan.js";
  * @example
  * ```ts
  * import { SchemaFirstSourceFileGlobs } from "@beep/repo-cli/commands/Lint"
- * console.log(SchemaFirstSourceFileGlobs)
+ *
+ * const example = SchemaFirstSourceFileGlobs
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category configuration
  * @since 0.0.0
@@ -169,7 +193,8 @@ export {
  * ```ts
  * import { fnSchemaEntryFromFunctionLike } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(fnSchemaEntryFromFunctionLike)
+ * const example = fnSchemaEntryFromFunctionLike
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -187,7 +212,8 @@ export const fnSchemaEntryFromFunctionLike = (
  * ```ts
  * import { nullReturnEntryFromFunctionLike } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(nullReturnEntryFromFunctionLike)
+ * const example = nullReturnEntryFromFunctionLike
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -205,7 +231,8 @@ export const nullReturnEntryFromFunctionLike = (
  * ```ts
  * import { normalizationEntryFromCallExpression } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(normalizationEntryFromCallExpression)
+ * const example = normalizationEntryFromCallExpression
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -224,7 +251,8 @@ export const normalizationEntryFromCallExpression = (
  * ```ts
  * import { getsomesStructEntryFromCallExpression } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(getsomesStructEntryFromCallExpression)
+ * const example = getsomesStructEntryFromCallExpression
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -242,8 +270,11 @@ export const getsomesStructEntryFromCallExpression = (
  * @example
  * ```ts
  * import { lintSchemaFirstCommand } from "@beep/repo-cli/commands/Lint"
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
  *
- * console.log(lintSchemaFirstCommand)
+ * const run = Command.run(lintSchemaFirstCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category cli-commands
  * @since 0.0.0

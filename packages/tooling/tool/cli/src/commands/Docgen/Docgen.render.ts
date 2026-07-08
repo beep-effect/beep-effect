@@ -36,7 +36,7 @@ const jsonText = (value: unknown): string => pipe(encodeJsonResult(value), Resul
  * import { renderDocgenJson } from "@beep/repo-cli/commands/Docgen/Docgen.render"
  *
  * const program = renderDocgenJson({ ok: true })
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category serialization
  * @since 0.0.0
@@ -98,7 +98,7 @@ export const defaultQualityPath: {
  * import { logGenerationResults } from "@beep/repo-cli/commands/Docgen/Docgen.render"
  *
  * const program = logGenerationResults([])
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category formatting
  * @since 0.0.0
@@ -130,7 +130,7 @@ export const logGenerationResults = Effect.fn(function* (results: ReadonlyArray<
  * import { logAggregateResults } from "@beep/repo-cli/commands/Docgen/Docgen.render"
  *
  * const program = logAggregateResults([])
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category formatting
  * @since 0.0.0
@@ -154,7 +154,7 @@ export const logAggregateResults = Effect.fn(function* (results: ReadonlyArray<D
  * import { printDocgenIndex } from "@beep/repo-cli/commands/Docgen/Docgen.render"
  *
  * const program = printDocgenIndex
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category formatting
  * @since 0.0.0

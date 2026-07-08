@@ -82,7 +82,7 @@ export { defaultYeetRunOptions } from "../Yeet.schemas.js";
  * import { defaultYeetRunOptions, hydrateYeetRunContext } from "@beep/repo-cli/test/Yeet"
  *
  * const context = hydrateYeetRunContext(defaultYeetRunOptions({ plan: true }))
- * console.log(context)
+ * console.log(context) // example value
  * ```
  * @category utilities
  * @since 0.0.0
@@ -731,7 +731,7 @@ const renderPlan = Effect.fn("Yeet.renderPlan")(function* (
  * import { defaultYeetRunOptions, runYeet } from "@beep/repo-cli/test/Yeet"
  *
  * const result = runYeet(defaultYeetRunOptions({ plan: true }))
- * console.log(result)
+ * console.log(result) // example value
  * ```
  * @category use-cases
  * @since 0.0.0

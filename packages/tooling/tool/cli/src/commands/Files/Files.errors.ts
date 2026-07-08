@@ -69,7 +69,9 @@ export class FilesCommandError extends TaggedErrorClass<FilesCommandError>($I`Fi
  * @example
  * ```ts
  * import { formatPlatformError } from "@beep/repo-cli/commands/Files"
- * console.log(formatPlatformError)
+ *
+ * const error = formatPlatformError("rename", "/tmp/source.txt", { cause: new Error("EACCES") })
+ * console.log(error.message.includes("/tmp/source.txt")) // true
  * ```
  * @category error-handling
  * @since 0.0.0
@@ -94,7 +96,10 @@ export const formatPlatformError: {
  * @example
  * ```ts
  * import { failOnExtensionlessFile } from "@beep/repo-cli/commands/Files"
- * console.log(failOnExtensionlessFile)
+ * import { Effect } from "effect"
+ *
+ * const program = failOnExtensionlessFile("/tmp/README")
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category error-handling
  * @since 0.0.0

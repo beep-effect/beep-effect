@@ -21,7 +21,9 @@ import type { Terminal } from "effect";
  * @example
  * ```ts
  * import { renderExtractFramesEvent } from "@beep/repo-cli/commands/Image"
- * console.log(renderExtractFramesEvent)
+ *
+ * const result = renderExtractFramesEvent("clip.mp4", { frameCount: 12, percent: 50 })
+ * console.log(result) // rendered command output
  * ```
  * @category utilities
  * @since 0.0.0
@@ -55,7 +57,9 @@ export const renderExtractFramesEvent: {
  * @example
  * ```ts
  * import { makeExtractFramesEvents } from "@beep/repo-cli/commands/Image"
- * console.log(makeExtractFramesEvents)
+ *
+ * const result = makeExtractFramesEvents("clip.mp4", [{ frameCount: 12, percent: 50 }])
+ * console.log(result) // rendered command output
  * ```
  * @category utilities
  * @since 0.0.0

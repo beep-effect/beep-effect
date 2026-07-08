@@ -502,7 +502,11 @@ const renderSyncDataError = (error: SyncDataToTsError): string =>
  * @example
  * ```ts
  * import { syncDataToTsCommand } from "@beep/repo-cli/commands/SyncDataToTs"
- * console.log(syncDataToTsCommand)
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
+ *
+ * const run = Command.run(syncDataToTsCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category use-cases
  * @since 0.0.0

@@ -131,7 +131,7 @@ export const FallowFeedbackAllowedRoot: Context.Reference<O.Option<string>> = Co
  * ```ts
  * import { layerFallowFeedbackAllowedRoot } from "@beep/repo-cli/commands/Yeet/internal/FallowFeedback"
  * const OutputRoot = layerFallowFeedbackAllowedRoot("/tmp/fallow-output")
- * console.log(OutputRoot)
+ * console.log(OutputRoot) // example value
  * ```
  * @category guards
  * @since 0.0.0

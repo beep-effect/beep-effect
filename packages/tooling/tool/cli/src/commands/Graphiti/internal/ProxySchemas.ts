@@ -112,7 +112,7 @@ export const ProxyLane = LiteralKit(["queued", "fast"]).pipe(
  * import type { ProxyLane } from "@beep/repo-cli/commands/Graphiti/internal/ProxySchemas"
  *
  * const lane: ProxyLane = "queued"
- * console.log(lane)
+ * console.log(lane) // example value
  * ```
  * @category type-level
  * @since 0.0.0

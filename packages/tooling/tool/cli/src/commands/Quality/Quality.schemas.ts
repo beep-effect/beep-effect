@@ -41,7 +41,7 @@ export const QualityTaskName = LiteralKit(["build", "check", "test", "lint", "au
  * import type { QualityTaskName } from "@beep/repo-cli/commands/Quality"
  *
  * const task: QualityTaskName = "check"
- * console.log(task)
+ * console.log(task) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -126,7 +126,7 @@ export const RootAuditMode = LiteralKit(["packages", "github"]).pipe(
  * import type { RootAuditMode } from "@beep/repo-cli/test/Quality"
  *
  * const mode: RootAuditMode = "packages"
- * console.log(mode)
+ * console.log(mode) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -243,8 +243,10 @@ export class PackageJsonDocument extends S.Class<PackageJsonDocument>($I`Package
  * @example
  * ```ts
  * import { decodePackageJsonDocument } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
  *
- * console.log(decodePackageJsonDocument)
+ * const program = Effect.succeed(decodePackageJsonDocument)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category decoding
  * @since 0.0.0
@@ -277,7 +279,7 @@ export const QualityHardwareProfile = LiteralKit(["current", "workstation", "ci"
  * import type { QualityHardwareProfile } from "@beep/repo-cli/commands/Quality"
  *
  * const profile: QualityHardwareProfile = "current"
- * console.log(profile)
+ * console.log(profile) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -403,7 +405,7 @@ export const GithubCheckMode = GithubCheckModeSchema;
  * import type { GithubCheckMode } from "@beep/repo-cli/commands/Quality"
  *
  * const mode: GithubCheckMode = "quality"
- * console.log(mode)
+ * console.log(mode) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -463,7 +465,7 @@ export const FallowQualityFeatureFamily = LiteralKit([
  * import type { FallowQualityFeatureFamily } from "@beep/repo-cli/test/Quality"
  *
  * const family: FallowQualityFeatureFamily = "security"
- * console.log(family)
+ * console.log(family) // example value
  * ```
  * @category type-level
  * @since 0.0.0
@@ -573,8 +575,10 @@ export class GithubChecksFallowFeatureMatrix extends S.Class<GithubChecksFallowF
  * @example
  * ```ts
  * import { decodeGithubChecksFallowFeatureMatrix } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
  *
- * console.log(decodeGithubChecksFallowFeatureMatrix)
+ * const program = Effect.succeed(decodeGithubChecksFallowFeatureMatrix)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category decoding
  * @since 0.0.0
@@ -607,7 +611,7 @@ export const GithubCheckLaneStage = LiteralKit(["repo-quality", "repo-sanity", "
  * import type { GithubCheckLaneStage } from "@beep/repo-cli/commands/Quality"
  *
  * const stage: GithubCheckLaneStage = "repo-quality"
- * console.log(stage)
+ * console.log(stage) // example value
  * ```
  * @category type-level
  * @since 0.0.0

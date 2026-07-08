@@ -68,7 +68,7 @@ export const KnipFindingKind = LiteralKit([
  * ```ts
  * import type { KnipFindingKind } from "@beep/repo-cli/test/Quality"
  * const kind: KnipFindingKind = "exports"
- * console.log(kind)
+ * console.log(kind) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -482,7 +482,7 @@ const enforceComparison = Effect.fn("KnipRatchet.enforceComparison")(function* (
  * ```ts
  * import type { RunKnipRatchetOptions } from "@beep/repo-cli/test/Quality"
  * const options: RunKnipRatchetOptions = { baselinePath: "standards/knip.regression-baseline.jsonc", writeBaseline: false }
- * console.log(options)
+ * console.log(options) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -506,7 +506,7 @@ export class RunKnipRatchetOptions extends S.Class<RunKnipRatchetOptions>($I`Run
  * ```ts
  * import { runKnipRatchet } from "@beep/repo-cli/test/Quality"
  * const program = runKnipRatchet({ baselinePath: "standards/knip.regression-baseline.jsonc", writeBaseline: false })
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category use-cases
  * @since 0.0.0

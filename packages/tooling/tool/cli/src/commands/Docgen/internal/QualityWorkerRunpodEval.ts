@@ -1260,7 +1260,7 @@ export const runDocgenQualityWorkerRunpodEval = Effect.fn(
  *     Effect.map((json) => json.includes("\"recommendation\""))
  *   )
  * )
- * console.log(hasRecommendation)
+ * console.log(hasRecommendation) // example value
  * ```
  * @category formatting
  * @since 0.0.0

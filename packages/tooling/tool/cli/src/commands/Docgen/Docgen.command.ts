@@ -1007,7 +1007,7 @@ const docgenQualityWorkerRunpodEvalCommand = Command.make(
  * const qualityArgs = ["quality", "-p", "packages/tooling/tool/cli", "--json", "--score", "codex"]
  * const program = runDocgen(qualityArgs)
  * console.log(qualityArgs.join(" "))
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category cli-commands
  * @since 0.0.0

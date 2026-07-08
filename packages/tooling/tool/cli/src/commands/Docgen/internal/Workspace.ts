@@ -103,7 +103,7 @@ const formatOrphanDocgenConfigMessage = (paths: ReadonlyArray<string>): string =
  *   Effect.map((paths) => paths.length)
  * )
  *
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category utilities
  * @since 0.0.0
@@ -157,7 +157,7 @@ export const discoverOrphanDocgenConfigPaths: (
  *
  * const program = assertNoOrphanDocgenConfigPaths()
  *
- * console.log(program)
+ * console.log(program) // example value
  * ```
  * @category utilities
  * @since 0.0.0

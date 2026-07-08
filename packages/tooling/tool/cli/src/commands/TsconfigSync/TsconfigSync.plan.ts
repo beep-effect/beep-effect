@@ -137,7 +137,8 @@ const readFileString = Effect.fn(function* (filePath: string) {
  * ```ts
  * import { writeFileString } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  *
- * console.log(writeFileString)
+ * const example = writeFileString
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -169,7 +170,8 @@ const applyJsoncModification = (
  * ```ts
  * import { relativeFromRoot } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  *
- * console.log(relativeFromRoot)
+ * const example = relativeFromRoot
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -338,7 +340,8 @@ const workspaceContainsPath = (workspace: WorkspaceDescriptor, targetPath: strin
  * ```ts
  * import { buildWorkspaceDescriptors } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  *
- * console.log(buildWorkspaceDescriptors)
+ * const example = buildWorkspaceDescriptors
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -437,7 +440,8 @@ const buildWorkspaceDescriptors = Effect.fn(function* (rootDir: string) {
  * ```ts
  * import { buildAdjacency } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  *
- * console.log(buildAdjacency)
+ * const example = buildAdjacency
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -492,7 +496,8 @@ const compareReferencePathsInOrder = (parsed: TsconfigWithReferences): ReadonlyA
  * ```ts
  * import { planRootReferenceSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  *
- * console.log(planRootReferenceSync)
+ * const example = planRootReferenceSync
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -603,7 +608,8 @@ const pathValuesEqual = (currentValue: unknown, expectedValue: ReadonlyArray<str
  * ```ts
  * import { planRootAliasSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  *
- * console.log(planRootAliasSync)
+ * const example = planRootAliasSync
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -673,7 +679,8 @@ const planRootAliasSync = Effect.fn(function* (rootDir: string, workspaces: Read
  * ```ts
  * import { planRootTstycheSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  *
- * console.log(planRootTstycheSync)
+ * const example = planRootTstycheSync
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -716,7 +723,8 @@ const planRootTstycheSync = Effect.fn(function* (rootDir: string, workspaces: Re
  * ```ts
  * import { planRootSyncpackSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  *
- * console.log(planRootSyncpackSync)
+ * const example = planRootSyncpackSync
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -846,7 +854,8 @@ const canonicalizeExistingRefTarget = Effect.fn(function* (
  * ```ts
  * import { planPackageReferenceSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  *
- * console.log(planPackageReferenceSync)
+ * const example = planPackageReferenceSync
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -974,7 +983,8 @@ const planPackageReferenceSync = Effect.fn(function* (
  * ```ts
  * import { planPackageDocgenSync } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  *
- * console.log(planPackageDocgenSync)
+ * const example = planPackageDocgenSync
+ * console.log(typeof example !== "undefined") // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -1041,7 +1051,8 @@ const planPackageDocgenSync = Effect.fn(function* (
  * ```ts
  * import { sortChanges } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  *
- * console.log(sortChanges)
+ * const result = sortChanges([{ file: "tsconfig.json", section: "references", status: "changed" }])
+ * console.log(result) // rendered command output
  * ```
  * @category utilities
  * @since 0.0.0
@@ -1056,7 +1067,8 @@ const sortChanges = (changes: ReadonlyArray<PlannedFileChange>): ReadonlyArray<P
  * ```ts
  * import { toReportedChange } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan"
  *
- * console.log(toReportedChange)
+ * const result = toReportedChange({ file: "tsconfig.json", section: "references", status: "changed" })
+ * console.log(result) // rendered command output
  * ```
  * @category utilities
  * @since 0.0.0

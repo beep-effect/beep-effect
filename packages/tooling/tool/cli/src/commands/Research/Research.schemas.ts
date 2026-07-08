@@ -40,7 +40,7 @@ export const CardSourceType = LiteralKit(["repo", "article", "x-post", "link"]).
  * import type { CardSourceType } from "@beep/repo-cli/commands/Research"
  *
  * const sourceType: CardSourceType = "article"
- * console.log(sourceType)
+ * console.log(sourceType) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -75,7 +75,7 @@ export const CardStatus = LiteralKit(["inbox", "triaged", "integrated"]).pipe(
  * import type { CardStatus } from "@beep/repo-cli/commands/Research"
  *
  * const status: CardStatus = "inbox"
- * console.log(status)
+ * console.log(status) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -110,7 +110,7 @@ export const CardVia = LiteralKit(["history-sift", "capture", "repo-card", "noti
  * import type { CardVia } from "@beep/repo-cli/commands/Research"
  *
  * const via: CardVia = "capture"
- * console.log(via)
+ * console.log(via) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -192,7 +192,7 @@ export const BrowserKind = LiteralKit(["brave", "chrome", "all"]).pipe(
  * import type { BrowserKind } from "@beep/repo-cli/commands/Research"
  *
  * const browser: BrowserKind = "brave"
- * console.log(browser)
+ * console.log(browser) // example value
  * ```
  * @category models
  * @since 0.0.0

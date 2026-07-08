@@ -127,7 +127,11 @@ const imageExtractFramesDirCommand = Command.make(
  * @example
  * ```ts
  * import { imageCommand } from "@beep/repo-cli"
- * console.log(imageCommand)
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
+ *
+ * const run = Command.run(imageCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category use-cases
  * @since 0.0.0

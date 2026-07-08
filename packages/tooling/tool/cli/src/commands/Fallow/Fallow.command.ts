@@ -519,8 +519,11 @@ const boundariesCommand = Command.make(
  * @example
  * ```ts
  * import { fallowCommand } from "@beep/repo-cli/commands/Fallow"
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
  *
- * console.log(fallowCommand)
+ * const run = Command.run(fallowCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category cli-commands
  * @since 0.0.0

@@ -78,7 +78,10 @@ const templateDirCandidates = (baseDir: string, path: Path.Path): ReadonlyArray<
  * @example
  * ```ts
  * import { resolveCreatePackageTemplateDir } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(resolveCreatePackageTemplateDir)
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.succeed(resolveCreatePackageTemplateDir)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -520,7 +523,10 @@ const fileGenerationPlanService = createFileGenerationPlanService();
  * @example
  * ```ts
  * import { TemplateContext } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(TemplateContext)
+ * import * as S from "effect/Schema"
+ *
+ * const candidate = { domain: "foundation", family: "modeling", name: "example", packageName: "@beep/example" }
+ * console.log(S.is(TemplateContext)(candidate)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -758,7 +764,11 @@ const refreshBunLockfile = Effect.fn("CreatePackage.refreshBunLockfile")(functio
  * @example
  * ```ts
  * import { createPackageCommand } from "@beep/repo-cli/commands/CreatePackage"
- * console.log(createPackageCommand)
+ * import { Command } from "effect/unstable/cli"
+ * import { Effect } from "effect"
+ *
+ * const run = Command.run(createPackageCommand, { version: "0.0.0" })
+ * console.log(Effect.isEffect(run)) // true
  * ```
  * @category use-cases
  * @since 0.0.0

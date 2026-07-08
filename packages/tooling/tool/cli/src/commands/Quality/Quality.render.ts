@@ -47,8 +47,17 @@ export const renderQualityProfileConfigLines = (config: QualityProfileConfig): R
  * @example
  * ```ts
  * import { printQualityProfileConfig } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
  *
- * console.log(printQualityProfileConfig)
+ * const program = printQualityProfileConfig({
+ *   docgenParallel: 3,
+ *   fullProofSlots: 1,
+ *   notes: ["local laptop"],
+ *   profile: "current",
+ *   reviewFixSlots: 1,
+ *   turboConcurrency: 3
+ * }, false)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category rendering
  * @since 0.0.0
@@ -73,8 +82,22 @@ export const printQualityProfileConfig: {
  * @example
  * ```ts
  * import { printQualityProfileDetection } from "@beep/repo-cli/test/Quality"
+ * import { Effect } from "effect"
  *
- * console.log(printQualityProfileDetection)
+ * const program = printQualityProfileDetection({
+ *   config: {
+ *     docgenParallel: 3,
+ *     fullProofSlots: 1,
+ *     notes: [],
+ *     profile: "current",
+ *     reviewFixSlots: 1,
+ *     turboConcurrency: 3
+ *   },
+ *   cpuCount: 12,
+ *   memoryGiB: 64,
+ *   profile: "current"
+ * }, false)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category rendering
  * @since 0.0.0

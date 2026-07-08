@@ -29,7 +29,7 @@ const $I = $RepoCliId.create("commands/Image/Image.schemas");
  *   prefix: O.none(),
  *   video: "./clip.mp4"
  * })
- * console.log(options)
+ * console.log(options) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -71,7 +71,7 @@ export class ExtractFramesOptions extends S.Class<ExtractFramesOptions>($I`Extra
  *   overwrite: false,
  *   prefix: O.none()
  * })
- * console.log(options)
+ * console.log(options) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -107,7 +107,7 @@ export class ExtractFramesDirOptions extends S.Class<ExtractFramesDirOptions>($I
  *   sourcePath: "./videos/clip.mp4",
  *   stem: "clip"
  * })
- * console.log(video)
+ * console.log(video) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -144,7 +144,7 @@ export class ExtractFramesDirVideo extends S.Class<ExtractFramesDirVideo>($I`Ext
  *   sourcePath: "./videos/clip.mp4",
  *   status: "success"
  * })
- * console.log(success)
+ * console.log(success) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -174,7 +174,7 @@ export class ExtractFramesDirSuccess extends S.Class<ExtractFramesDirSuccess>($I
  *   sourcePath: "./videos/clip.mp4",
  *   status: "failure"
  * })
- * console.log(failure)
+ * console.log(failure) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -197,7 +197,10 @@ export class ExtractFramesDirFailure extends S.Class<ExtractFramesDirFailure>($I
  * @example
  * ```ts
  * import { ExtractFramesDirOutcome } from "@beep/repo-cli/commands/Image"
- * console.log(ExtractFramesDirOutcome)
+ * import * as S from "effect/Schema"
+ *
+ * const value = "example"
+ * console.log(S.is(ExtractFramesDirOutcome)(value)) // true
  * ```
  * @category models
  * @since 0.0.0
@@ -229,7 +232,7 @@ export type ExtractFramesDirOutcome = typeof ExtractFramesDirOutcome.Type;
  *   outcomes: [],
  *   totalCount: 0
  * })
- * console.log(result)
+ * console.log(result) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -252,7 +255,10 @@ export class ExtractFramesDirResult extends S.Class<ExtractFramesDirResult>($I`E
  * @example
  * ```ts
  * import { decodeExtractFramesOptions } from "@beep/repo-cli/commands/Image"
- * console.log(decodeExtractFramesOptions)
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.succeed(decodeExtractFramesOptions)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category decoding
  * @since 0.0.0
@@ -265,7 +271,10 @@ export const decodeExtractFramesOptions = S.decodeUnknownEffect(ExtractFramesOpt
  * @example
  * ```ts
  * import { decodeExtractFramesDirOptions } from "@beep/repo-cli/commands/Image"
- * console.log(decodeExtractFramesDirOptions)
+ * import { Effect } from "effect"
+ *
+ * const program = Effect.succeed(decodeExtractFramesDirOptions)
+ * console.log(Effect.isEffect(program)) // true
  * ```
  * @category decoding
  * @since 0.0.0

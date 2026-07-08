@@ -32,7 +32,9 @@ const messageWithCause = (message: string, cause: unknown): string => `${message
  * @example
  * ```ts
  * import { VersionSyncError } from "@beep/repo-cli/commands/VersionSync"
- * console.log(VersionSyncError)
+ *
+ * const error = VersionSyncError.make({ file: "package.json", message: "Repository quality check failed" })
+ * console.log(error.message.includes("failed")) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -81,7 +83,9 @@ export class VersionSyncError extends TaggedErrorClass<VersionSyncError>($I`Vers
  * @example
  * ```ts
  * import { NetworkUnavailableError } from "@beep/repo-cli/commands/VersionSync"
- * console.log(NetworkUnavailableError)
+ *
+ * const error = NetworkUnavailableError.make({ message: "Repository quality check failed" })
+ * console.log(error.message.includes("failed")) // true
  * ```
  * @category utilities
  * @since 0.0.0
@@ -107,7 +111,9 @@ export class NetworkUnavailableError extends TaggedErrorClass<NetworkUnavailable
  * @example
  * ```ts
  * import { VersionSyncDriftError } from "@beep/repo-cli/commands/VersionSync"
- * console.log(VersionSyncDriftError)
+ *
+ * const error = VersionSyncDriftError.make({ driftCount: 2, message: "Repository quality check failed" })
+ * console.log(error.message.includes("failed")) // true
  * ```
  * @category utilities
  * @since 0.0.0

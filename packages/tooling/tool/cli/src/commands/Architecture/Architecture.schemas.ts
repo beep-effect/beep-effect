@@ -139,7 +139,7 @@ export const ArchitecturePackageRole = LiteralKit([
  * import type { ArchitecturePackageRole } from "@beep/repo-cli/commands/Architecture/index"
  *
  * const role: ArchitecturePackageRole = "domain"
- * console.log(role)
+ * console.log(role) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -178,7 +178,7 @@ export const ArchitectureOperationKind = LiteralKit([
  * import type { ArchitectureOperationKind } from "@beep/repo-cli/commands/Architecture/index"
  *
  * const kind: ArchitectureOperationKind = "ensure-file"
- * console.log(kind)
+ * console.log(kind) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -243,7 +243,7 @@ export const ArchitectureOperationWriteMode = LiteralKit([
  * import type { ArchitectureOperationWriteMode } from "@beep/repo-cli/commands/Architecture/index"
  *
  * const mode: ArchitectureOperationWriteMode = "ensure-present"
- * console.log(mode)
+ * console.log(mode) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -281,7 +281,7 @@ export const ArchitectureOperationConflictPolicy = LiteralKit([
  * import type { ArchitectureOperationConflictPolicy } from "@beep/repo-cli/commands/Architecture/index"
  *
  * const policy: ArchitectureOperationConflictPolicy = "require-present"
- * console.log(policy)
+ * console.log(policy) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -320,7 +320,7 @@ export const ArchitectureOperationSource = LiteralKit([
  * import type { ArchitectureOperationSource } from "@beep/repo-cli/commands/Architecture/index"
  *
  * const source: ArchitectureOperationSource = "package-shell"
- * console.log(source)
+ * console.log(source) // example value
  * ```
  * @category models
  * @since 0.0.0
@@ -360,7 +360,7 @@ export const ArchitectureOperationCheckStatus = LiteralKit([
  * import type { ArchitectureOperationCheckStatus } from "@beep/repo-cli/commands/Architecture/index"
  *
  * const status: ArchitectureOperationCheckStatus = "absent"
- * console.log(status)
+ * console.log(status) // example value
  * ```
  * @category models
  * @since 0.0.0

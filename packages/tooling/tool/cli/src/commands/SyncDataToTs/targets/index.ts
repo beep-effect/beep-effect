@@ -17,7 +17,9 @@ import { iso4217Target } from "./Iso4217.js";
  * @example
  * ```ts
  * import { syncDataTargets } from "@beep/repo-cli/commands/SyncDataToTs"
- * console.log(syncDataTargets)
+ *
+ * const result = syncDataTargets.map((target) => target.id)
+ * console.log(result) // rendered command output
  * ```
  * @category configuration
  * @since 0.0.0

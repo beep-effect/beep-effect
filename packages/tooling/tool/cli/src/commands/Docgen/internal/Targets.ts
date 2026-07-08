@@ -145,7 +145,7 @@ export const includePatternsFromFlag: (include: O.Option<string>) => ReadonlyArr
  *   summary: { failures: 0, warnings: 1 },
  *   packages: [{ status: "completed" }]
  * })
- * console.log(blocking)
+ * console.log(blocking) // example value
  * ```
  * @category validation
  * @since 0.0.0
@@ -204,8 +204,8 @@ export const verifyDocgenCheckProofManifests = Effect.fn("Docgen.verifyDocgenChe
  * const currentDataLast = targetHasCurrentDocgenProofManifest({ absolutePath: "/repo/packages/a" })([
  *   { packagePath: "/repo/packages/a", status: "current" }
  * ])
- * console.log(current)
- * console.log(currentDataLast)
+ * console.log(current) // example value
+ * console.log(currentDataLast) // example value
  * ```
  * @category validation
  * @since 0.0.0
