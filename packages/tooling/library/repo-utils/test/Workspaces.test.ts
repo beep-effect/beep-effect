@@ -1,5 +1,10 @@
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
-import { getWorkspaceDir, resolveWorkspaceDirs } from "@beep/repo-utils/Workspaces";
+import {
+  getWorkspaceDir,
+  resolveWorkspaceDirs,
+  resolveWorkspacePackages,
+  workspaceGlobsFrom,
+} from "@beep/repo-utils/Workspaces";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, expect, layer } from "@effect/vitest";
@@ -186,6 +191,41 @@ layer(TestLayer)("Workspaces", (it) => {
       Effect.fn(function* () {
         const dir = yield* getWorkspaceDir(MOCK_ROOT, "@mock/nonexistent");
         expect(O.isNone(dir)).toBe(true);
+      })
+    );
+  });
+
+  describe("resolveWorkspacePackages", () => {
+    it.effect(
+      "should resolve each package with its dir, decoded manifest, and scripts",
+      Effect.fn(function* () {
+        const packages = yield* resolveWorkspacePackages(MOCK_ROOT);
+        expect(HashMap.size(packages)).toBe(3);
+
+        const pkgA = HashMap.get(packages, "@mock/pkg-a");
+        expect(O.isSome(pkgA)).toBe(true);
+        if (O.isSome(pkgA)) {
+          expect(pkgA.value.dir).toContain("packages/pkg-a");
+          expect(pkgA.value.manifest.name).toBe("@mock/pkg-a");
+          // The mock manifest declares no scripts, so the flattened record is empty.
+          expect(pkgA.value.scripts).toEqual({});
+        }
+      })
+    );
+  });
+
+  describe("workspaceGlobsFrom", () => {
+    it.effect(
+      "should return the array form of workspace globs unchanged",
+      Effect.fn(function* () {
+        expect(workspaceGlobsFrom(O.some(["packages/*", "apps/*"]))).toEqual(["packages/*", "apps/*"]);
+      })
+    );
+
+    it.effect(
+      "should return an empty array when workspaces is None",
+      Effect.fn(function* () {
+        expect(workspaceGlobsFrom(O.none())).toEqual([]);
       })
     );
   });

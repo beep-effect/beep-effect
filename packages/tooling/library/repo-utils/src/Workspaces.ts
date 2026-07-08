@@ -7,6 +7,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { $RepoUtilsId } from "@beep/identity/packages";
 import { normalizePath } from "@beep/schema";
 import { A, Str, thunkEffectSucceedNull } from "@beep/utils";
 import { Effect, HashMap, pipe } from "effect";
@@ -14,11 +15,15 @@ import * as Eq from "effect/Equal";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import { DomainError } from "./errors/index.js";
 import { FsUtils } from "./FsUtils.js";
-import { decodePackageJsonEffect } from "./schemas/PackageJson.js";
+import { decodePackageJsonEffect, PackageJson, readPackageJsonFile } from "./schemas/PackageJson.js";
+import type { FileSystem } from "effect";
 import type { NoSuchFileError } from "./errors/index.js";
-import type { PackageJson, Workspaces as PackageJsonWorkspaces } from "./schemas/PackageJson.js";
+import type { Workspaces as PackageJsonWorkspaces } from "./schemas/PackageJson.js";
+
+const $I = $RepoUtilsId.create("Workspaces");
 
 /**
  * Directories to exclude when scanning workspace globs.
@@ -31,7 +36,26 @@ const absoluteWorkspacePattern = /^(?:[A-Za-z]:\/|\/\/|\/)/;
 
 const isWorkspacePatternArray = (value: PackageJsonWorkspaces): value is ReadonlyArray<string> => A.isArray(value);
 
-const workspaceGlobsFrom = (workspaces: PackageJson["workspaces"]): ReadonlyArray<string> => {
+/**
+ * Extract the workspace glob patterns declared in a `package.json` `workspaces`
+ * field, normalizing the array and Yarn-object forms to a flat pattern list.
+ *
+ * @remarks
+ * Returns an empty array when `workspaces` is absent or `None`. The Yarn-style
+ * object form contributes its `packages` entry (or nothing when it is absent);
+ * the array form is returned as-is.
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { workspaceGlobsFrom } from "@beep/repo-utils/Workspaces"
+ *
+ * const globs = workspaceGlobsFrom(O.some(["packages/*", "apps/*"]))
+ * console.log(globs) // ["packages/*", "apps/*"]
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+export const workspaceGlobsFrom = (workspaces: PackageJson["workspaces"]): ReadonlyArray<string> => {
   if (P.isUndefined(workspaces) || O.isNone(workspaces)) {
     return [];
   }
@@ -194,3 +218,79 @@ export const getWorkspaceDir: {
     return HashMap.get(workspaces, name);
   })
 );
+
+/**
+ * A resolved workspace package: its absolute directory, decoded manifest, and a
+ * flattened scripts record.
+ *
+ * @remarks
+ * `scripts` is the manifest's `scripts` field unwrapped to a plain record (empty
+ * when the manifest declares no scripts), provided as a convenience so callers
+ * need not re-open the `Option` on `manifest.scripts`.
+ * @example
+ * ```ts
+ * import * as R from "effect/Record"
+ * import type { WorkspacePackage } from "@beep/repo-utils/Workspaces"
+ *
+ * const hasCheckScript = (workspace: WorkspacePackage): boolean =>
+ *   R.has(workspace.scripts, "check")
+ * console.log(hasCheckScript)
+ * ```
+ * @category models
+ * @since 0.0.0
+ */
+export class WorkspacePackage extends S.Class<WorkspacePackage>($I`WorkspacePackage`)(
+  {
+    dir: S.String.annotateKey({ description: "Absolute, canonical directory of the workspace package." }),
+    manifest: S.instanceOf(PackageJson).annotateKey({ description: "The package's strictly decoded manifest." }),
+    scripts: S.Record(S.String, S.String).annotateKey({
+      description: "The manifest's scripts field flattened to a plain record.",
+    }),
+  },
+  $I.annote("WorkspacePackage", {
+    description:
+      "A resolved workspace package: its absolute directory, strictly decoded manifest, and flattened scripts record.",
+  })
+) {}
+
+/**
+ * Resolve every workspace package declared by the root `package.json` into a map
+ * from package name to its directory, decoded manifest, and scripts.
+ *
+ * @remarks
+ * A superset of {@link resolveWorkspaceDirs} that additionally reads and decodes
+ * each package's manifest via {@link readPackageJsonFile}. Directories without a
+ * `package.json` are already excluded by {@link resolveWorkspaceDirs}, so every
+ * entry carries a valid manifest. Fails with {@link DomainError} for unsafe or
+ * escaping workspace globs, and with `S.SchemaError` when a manifest is malformed.
+ * @example
+ * ```ts
+ * import { Effect } from "effect"
+ * import * as HashMap from "effect/HashMap"
+ * import { resolveWorkspacePackages } from "@beep/repo-utils/Workspaces"
+ *
+ * const program = resolveWorkspacePackages(".")
+ * const count = Effect.map(program, HashMap.size)
+ * console.log(count)
+ * ```
+ * @category utilities
+ * @since 0.0.0
+ */
+export const resolveWorkspacePackages: (
+  rootDir: string
+) => Effect.Effect<
+  HashMap.HashMap<string, WorkspacePackage>,
+  NoSuchFileError | DomainError | S.SchemaError,
+  FsUtils | FileSystem.FileSystem
+> = Effect.fn(function* (rootDir) {
+  const dirs = yield* resolveWorkspaceDirs(rootDir);
+  let result = HashMap.empty<string, WorkspacePackage>();
+
+  for (const [name, dir] of dirs) {
+    const manifest = yield* readPackageJsonFile(`${dir}/package.json`);
+    const scripts = O.getOrElse(manifest.scripts, (): Record<string, string> => ({}));
+    result = HashMap.set(result, name, WorkspacePackage.make({ dir, manifest, scripts }));
+  }
+
+  return result;
+});

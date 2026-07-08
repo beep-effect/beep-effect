@@ -10,7 +10,7 @@
   },
   "mission": "Modularize the ~92k-LOC repo CLI: split the 27 files >=1000 LOC along natural seams into canonical role files, extract a shared internal substrate (subprocess, git, JSON/JSONC, ratchet, gh, schema kits), bring touched command groups to full topology compliance, and raise JSDoc on touched files to the .patterns rubric.",
   "currentSourceOfTruth": "SPEC.md",
-  "currentTargetPhase": "P2",
+  "currentTargetPhase": "P3",
   "package": {
     "name": "@beep/repo-cli",
     "path": "packages/tooling/tool/cli",
@@ -66,7 +66,7 @@
     {
       "id": "P2",
       "name": "Cross-package seeds and contracts",
-      "status": "pending",
+      "status": "completed",
       "exitCriteriaSummary": "repo-utils/ai-metrics extensions, ratchet engine, wire contract, gh plumbing, JSONC/env kits landed; emitted formats unchanged."
     },
     {

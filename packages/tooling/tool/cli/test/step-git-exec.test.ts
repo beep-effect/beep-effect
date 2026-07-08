@@ -1,8 +1,10 @@
 import {
+  BoundedOutput,
   boundedChunkReducer,
   collectBoundedText,
   emptyBoundedOutput,
   formatCommandLine,
+  OutputBound,
   qualityStepOutputBound,
   repoRunOutputBound,
 } from "@beep/repo-cli/test/Process";
@@ -21,19 +23,21 @@ import { describe, expect, it } from "vitest";
 const encode = (value: string): Uint8Array => new TextEncoder().encode(value);
 
 describe("StepExec bounded output fold", () => {
-  const bound = { maxChars: 4, truncatedNotice: "!" };
+  const bound = OutputBound.make({ maxChars: 4, truncatedNotice: "!" });
   const reduce = boundedChunkReducer(bound);
 
   it("appends a chunk that fits within the bound", () => {
-    expect(reduce(emptyBoundedOutput, "ab")).toEqual({ text: "ab", truncated: false });
+    expect(reduce(emptyBoundedOutput, "ab")).toEqual(BoundedOutput.make({ text: "ab", truncated: false }));
   });
 
   it("truncates a chunk that overflows the bound, slicing to the remaining budget", () => {
-    expect(reduce(emptyBoundedOutput, "abcdef")).toEqual({ text: "abcd!", truncated: true });
+    expect(reduce(emptyBoundedOutput, "abcdef")).toEqual(BoundedOutput.make({ text: "abcd!", truncated: true }));
   });
 
   it("appends only the truncation notice when the text is already at the cap", () => {
-    expect(reduce({ text: "abcd", truncated: false }, "e")).toEqual({ text: "abcd!", truncated: true });
+    expect(reduce(BoundedOutput.make({ text: "abcd", truncated: false }), "e")).toEqual(
+      BoundedOutput.make({ text: "abcd!", truncated: true })
+    );
   });
 
   it("is idempotent once truncated", () => {
@@ -45,12 +49,12 @@ describe("StepExec bounded output fold", () => {
     const result = await Effect.runPromise(
       collectBoundedText(bound)(Stream.fromIterable([encode("ab"), encode("cdef")]))
     );
-    expect(result).toEqual({ text: "abcd!", truncated: true });
+    expect(result).toEqual(BoundedOutput.make({ text: "abcd!", truncated: true }));
   });
 
   it("folds a short byte stream without truncating", async () => {
     const result = await Effect.runPromise(collectBoundedText(bound)(Stream.fromIterable([encode("hi")])));
-    expect(result).toEqual({ text: "hi", truncated: false });
+    expect(result).toEqual(BoundedOutput.make({ text: "hi", truncated: false }));
   });
 
   it("exposes the divergent repo-run and quality bounds", () => {

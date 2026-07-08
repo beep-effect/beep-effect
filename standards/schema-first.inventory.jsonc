@@ -1,11 +1,7 @@
 {
   "version": 1,
-  "generatedOn": "2026-07-07",
-  "scope": [
-    "apps/**/*.{ts,tsx}",
-    "packages/**/*.{ts,tsx}",
-    "infra/**/*.ts"
-  ],
+  "generatedOn": "2026-07-08",
+  "scope": ["apps/**/*.{ts,tsx}", "packages/**/*.{ts,tsx}", "infra/**/*.ts"],
   "entries": [
     {
       "file": "apps/oip-web/src/components/HeroVideo.tsx",
@@ -2152,6 +2148,14 @@
       "reason": "Interface contains non-schema signals such as function members or runtime handles."
     },
     {
+      "file": "packages/tooling/library/repo-utils/src/FsUtils.ts",
+      "symbol": "WalkFilesOptions",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-utils",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
       "file": "packages/tooling/library/repo-utils/src/TSMorph/TSMorph.model.ts",
       "symbol": "makeProjectCacheKey",
       "kind": "schema-policy-advisory",
@@ -2676,6 +2680,78 @@
       "line": 265,
       "owner": "@beep/repo-cli",
       "reason": "Exception: internal verdict assembler from already schema-modeled RepoRun and Yeet pieces; YeetVerdict is the durable schema boundary, while this input bag is construction glue."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+      "symbol": "PreflightOverwritableFileOptions",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+      "symbol": "RenameOrFailOptions",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+      "symbol": "ValidateDirectoryErrors",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/FsGuards.ts",
+      "symbol": "ValidatePathSegmentOptions",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/cli/Progress.ts",
+      "symbol": "ProgressBarOptions",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Interface contains non-schema signals such as function members or runtime handles."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/github/GhCommand.ts",
+      "symbol": "GhGraphqlPageOptions",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/github/GhCommand.ts",
+      "symbol": "GhOutputOptions",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts",
+      "symbol": "GitCommandErrorAdapter",
+      "kind": "exported-type-literal",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Generic type alias requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/schema/JsonCodec.ts",
+      "symbol": "JsonStringCodec",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-cli",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
     },
     {
       "file": "packages/tooling/tool/cli/test/tsconfig-sync.test.ts",

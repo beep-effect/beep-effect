@@ -22,15 +22,19 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import { thunkEmptyStr } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, pipe, Stream } from "effect";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ChildProcess } from "effect/unstable/process";
 import type * as PlatformError from "effect/PlatformError";
 import type { ChildProcessSpawner } from "effect/unstable/process";
+
+const $I = $RepoCliId.create("internal/process/StepExec");
 
 /**
  * Stdin disposition understood by the step runner.
@@ -60,53 +64,94 @@ export type CaptureSource = "all" | "merge" | "stdout";
  *
  * @example
  * ```ts
- * import type { OutputBound } from "@beep/repo-cli/internal/process"
+ * import { OutputBound } from "@beep/repo-cli/internal/process"
  *
- * const bound: OutputBound = { maxChars: 4096, truncatedNotice: "\n[cli] truncated" }
+ * const bound = OutputBound.make({ maxChars: 4096, truncatedNotice: "\n[cli] truncated" })
  * console.log(bound.maxChars)
  * ```
  * @category models
  * @since 0.0.0
  */
-export type OutputBound = {
-  readonly maxChars: number;
-  readonly truncatedNotice: string;
-};
+export class OutputBound extends S.Class<OutputBound>($I`OutputBound`)(
+  {
+    maxChars: S.Finite,
+    truncatedNotice: S.String,
+  },
+  $I.annote("OutputBound", {
+    description: "Character cap and the notice appended once captured subprocess output overflows it.",
+  })
+) {}
 
 /**
  * Accumulator produced by the bounded output fold.
  *
+ * @example
+ * ```ts
+ * import { BoundedOutput } from "@beep/repo-cli/internal/process"
+ *
+ * const state = BoundedOutput.make({ text: "captured", truncated: false })
+ * console.log(state.truncated)
+ * ```
  * @category models
  * @since 0.0.0
  */
-export type BoundedOutput = {
-  readonly text: string;
-  readonly truncated: boolean;
-};
+export class BoundedOutput extends S.Class<BoundedOutput>($I`BoundedOutput`)(
+  {
+    text: S.String,
+    truncated: S.Boolean,
+  },
+  $I.annote("BoundedOutput", {
+    description: "Accumulator produced by the bounded subprocess output fold.",
+  })
+) {}
 
 /**
  * Combined captured subprocess result.
  *
+ * @example
+ * ```ts
+ * import { CapturedStep } from "@beep/repo-cli/internal/process"
+ *
+ * const result = CapturedStep.make({ exitCode: 0, output: "ok", truncated: false })
+ * console.log(result.exitCode)
+ * ```
  * @category models
  * @since 0.0.0
  */
-export type CapturedStep = {
-  readonly exitCode: number;
-  readonly output: string;
-  readonly truncated: boolean;
-};
+export class CapturedStep extends S.Class<CapturedStep>($I`CapturedStep`)(
+  {
+    exitCode: S.Finite,
+    output: S.String,
+    truncated: S.Boolean,
+  },
+  $I.annote("CapturedStep", {
+    description: "Combined captured subprocess result: exit code, folded output, and truncation flag.",
+  })
+) {}
 
 /**
  * Captured subprocess result with stdout and stderr kept separate.
  *
+ * @example
+ * ```ts
+ * import { CapturedStreams } from "@beep/repo-cli/internal/process"
+ *
+ * const result = CapturedStreams.make({ exitCode: 0, stdout: "out", stderr: "" })
+ * console.log(result.stdout)
+ * ```
  * @category models
  * @since 0.0.0
  */
-export type CapturedStreams = {
-  readonly exitCode: number;
-  readonly stdout: string;
-  readonly stderr: string;
-};
+export class CapturedStreams extends S.Class<CapturedStreams>($I`CapturedStreams`)(
+  {
+    exitCode: S.Finite,
+    stdout: S.String,
+    stderr: S.String,
+  },
+  $I.annote("CapturedStreams", {
+    description: "Captured subprocess result with stdout and stderr kept separate.",
+  })
+) {}
 
 /**
  * Empty bounded-output accumulator seed.
@@ -120,10 +165,10 @@ export type CapturedStreams = {
  * @category constructors
  * @since 0.0.0
  */
-export const emptyBoundedOutput: BoundedOutput = {
+export const emptyBoundedOutput = BoundedOutput.make({
   text: "",
   truncated: false,
-};
+});
 
 /**
  * The 512 KiB repo-run output bound, matching the shared run executor.
@@ -137,10 +182,10 @@ export const emptyBoundedOutput: BoundedOutput = {
  * @category configuration
  * @since 0.0.0
  */
-export const repoRunOutputBound: OutputBound = {
+export const repoRunOutputBound = OutputBound.make({
   maxChars: 512 * 1024,
   truncatedNotice: `\n[repo-run] output truncated after ${512 * 1024} characters`,
-};
+});
 
 /**
  * The 256 KiB grouped-step output bound, matching the quality task runner.
@@ -154,10 +199,10 @@ export const repoRunOutputBound: OutputBound = {
  * @category configuration
  * @since 0.0.0
  */
-export const qualityStepOutputBound: OutputBound = {
+export const qualityStepOutputBound = OutputBound.make({
   maxChars: 256 * 1024,
   truncatedNotice: `\n[beep-cli] output truncated after ${256 * 1024} characters`,
-};
+});
 
 /**
  * Reducer that appends a decoded chunk while enforcing an output bound.
@@ -170,9 +215,9 @@ export const qualityStepOutputBound: OutputBound = {
  * @returns A fold step over `(state, chunk)`.
  * @example
  * ```ts
- * import { boundedChunkReducer, emptyBoundedOutput } from "@beep/repo-cli/internal/process"
+ * import { boundedChunkReducer, emptyBoundedOutput, OutputBound } from "@beep/repo-cli/internal/process"
  *
- * const step = boundedChunkReducer({ maxChars: 4, truncatedNotice: "!" })
+ * const step = boundedChunkReducer(OutputBound.make({ maxChars: 4, truncatedNotice: "!" }))
  * console.log(step(emptyBoundedOutput, "abcdef"))
  * ```
  * @category folding
@@ -187,23 +232,23 @@ export const boundedChunkReducer =
 
     const remaining = bound.maxChars - Str.length(state.text);
     if (remaining <= 0) {
-      return {
+      return BoundedOutput.make({
         text: `${state.text}${bound.truncatedNotice}`,
         truncated: true,
-      };
+      });
     }
 
     if (Str.length(chunk) <= remaining) {
-      return {
+      return BoundedOutput.make({
         text: `${state.text}${chunk}`,
         truncated: false,
-      };
+      });
     }
 
-    return {
+    return BoundedOutput.make({
       text: `${state.text}${Str.slice(0, remaining)(chunk)}${bound.truncatedNotice}`,
       truncated: true,
-    };
+    });
   };
 
 /**
@@ -333,7 +378,7 @@ const foldDecodedText = <E>(
       }
       return `${acc}${chunk}`;
     }),
-    Effect.map((text) => ({ text, truncated: false }))
+    Effect.map((text) => BoundedOutput.make({ text, truncated: false }))
   );
 };
 
@@ -394,11 +439,11 @@ export const runCaptured = Effect.fn("StepExec.runCaptured")(function* (
         [foldDecodedText(captureTextStream(handle, source), options.bound, options.tee ?? false), handle.exitCode],
         { concurrency: "unbounded" }
       );
-      return {
+      return CapturedStep.make({
         exitCode,
         output: options.trim === true ? Str.trim(captured.text) : captured.text,
         truncated: captured.truncated,
-      };
+      });
     })
   );
 });
@@ -457,11 +502,11 @@ export const runCapturedStreams = Effect.fn("StepExec.runCapturedStreams")(funct
         ],
         { concurrency: "unbounded" }
       );
-      return {
+      return CapturedStreams.make({
         exitCode,
         stdout: options.trim === true ? Str.trim(stdout.text) : stdout.text,
         stderr: options.trim === true ? Str.trim(stderr.text) : stderr.text,
-      };
+      });
     })
   );
 });

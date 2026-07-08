@@ -5,12 +5,12 @@
  * @since 0.0.0
  */
 
-import { DuckDb, DuckDbConnectionOptions } from "@beep/duckdb";
+import { DuckDb } from "@beep/duckdb";
 import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { LiteralKit, TaggedErrorClass } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
-import { Clock, Effect, FileSystem, flow, Layer, Order, Path, pipe } from "effect";
+import { Clock, Effect, FileSystem, flow, Order, Path, pipe } from "effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -25,6 +25,7 @@ import {
   AiMetricsDerivedTranscriptRecord,
   writeAiMetricsDerivedStorage,
 } from "./derived-storage.ts";
+import { aiMetricsDerivedDuckDbPath, DEFAULT_AI_METRICS_DATA_ROOT, withAiMetricsDuckDb } from "./duckdb.ts";
 import { summarizeTranscriptText } from "./ingest.ts";
 import { AiMetricsInstallInput, makeAiMetricsInstallSpec } from "./install.ts";
 import { AiMetricsDeployTarget, AiMetricsTranscriptSource, ConfigSnapshot } from "./models.ts";
@@ -32,7 +33,6 @@ import { hashPrivateIdentifier, hashPublicTextSha256, makeAiMetricsPrivacyCheckR
 
 const $I = $RepoAiMetricsId.create("retention");
 
-const defaultLocalDataRoot = ".beep/ai-metrics";
 const retentionSchemaVersion = "beep.ai_metrics.retention_inventory.v1";
 const retentionMutationSchemaVersion = "beep.ai_metrics.retention_mutation.v1";
 const retentionEnforcementSchemaVersion = "beep.ai_metrics.retention_enforcement.v1";
@@ -95,8 +95,6 @@ const retentionFailure = (message: string, cause: unknown): AiMetricsRetentionEr
     cause,
     message,
   });
-
-const childPath = (root: string, child: string): string => `${root}/${child}`;
 
 const numberValue = (value: unknown): number => {
   const parsed = globalThis.Number(value);
@@ -226,8 +224,8 @@ export class AiMetricsRetentionSelector extends S.Class<AiMetricsRetentionSelect
   {
     beforeEpochMillis: S.optionalKey(S.Finite),
     dataRoot: S.String.pipe(
-      S.withConstructorDefault(Effect.succeed(defaultLocalDataRoot)),
-      S.withDecodingDefaultKey(Effect.succeed(defaultLocalDataRoot))
+      S.withConstructorDefault(Effect.succeed(DEFAULT_AI_METRICS_DATA_ROOT)),
+      S.withDecodingDefaultKey(Effect.succeed(DEFAULT_AI_METRICS_DATA_ROOT))
     ),
     sinceEpochMillis: S.optionalKey(S.Finite),
     untilEpochMillis: S.optionalKey(S.Finite),
@@ -409,8 +407,8 @@ export class AiMetricsRetentionEnforcementPolicy extends S.Class<AiMetricsRetent
 )(
   {
     dataRoot: S.String.pipe(
-      S.withConstructorDefault(Effect.succeed(defaultLocalDataRoot)),
-      S.withDecodingDefaultKey(Effect.succeed(defaultLocalDataRoot))
+      S.withConstructorDefault(Effect.succeed(DEFAULT_AI_METRICS_DATA_ROOT)),
+      S.withDecodingDefaultKey(Effect.succeed(DEFAULT_AI_METRICS_DATA_ROOT))
     ),
     dryRun: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(true)),
@@ -762,12 +760,10 @@ const planToInventory = (input: AiMetricsRetentionSelector, plan: RetentionPlan)
 export const listAiMetricsRetentionInventory = Effect.fn("AiMetrics.listAiMetricsRetentionInventory")(function* (
   input: AiMetricsRetentionSelector
 ) {
-  const duckDbPath = childPath(input.dataRoot, "derived/ai-metrics.duckdb");
-  const plan = yield* Effect.scoped(
-    Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))).pipe(
-      Effect.flatMap((context) => readRetentionPlan(input).pipe(Effect.provide(context)))
-    )
-  ).pipe(Effect.mapError((cause) => retentionFailure("Failed to read AI metrics retention inventory.", cause)));
+  const duckDbPath = aiMetricsDerivedDuckDbPath(input.dataRoot);
+  const plan = yield* withAiMetricsDuckDb(readRetentionPlan(input), duckDbPath).pipe(
+    Effect.mapError((cause) => retentionFailure("Failed to read AI metrics retention inventory.", cause))
+  );
   return planToInventory(input, plan);
 });
 
@@ -982,12 +978,10 @@ const runRetentionMutation = Effect.fn("AiMetrics.retention.runMutation")(functi
   readonly input: AiMetricsRetentionSelector;
   readonly mode: "compact" | "delete";
 }) {
-  const duckDbPath = childPath(input.dataRoot, "derived/ai-metrics.duckdb");
-  const plan = yield* Effect.scoped(
-    Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))).pipe(
-      Effect.flatMap((context) => readRetentionPlan(input).pipe(Effect.provide(context)))
-    )
-  ).pipe(Effect.mapError((cause) => retentionFailure("Failed to read AI metrics retention mutation plan.", cause)));
+  const duckDbPath = aiMetricsDerivedDuckDbPath(input.dataRoot);
+  const plan = yield* withAiMetricsDuckDb(readRetentionPlan(input), duckDbPath).pipe(
+    Effect.mapError((cause) => retentionFailure("Failed to read AI metrics retention mutation plan.", cause))
+  );
 
   if (!dryRun && !hasBoundedMutationWindow(input)) {
     return yield* retentionFailure(
@@ -1008,11 +1002,9 @@ const runRetentionMutation = Effect.fn("AiMetrics.retention.runMutation")(functi
     yield* removePlanPaths(plan.reportItems);
     if (mode === "delete") {
       yield* removeRawArchivePaths(input.dataRoot, plan.rawArchiveItems);
-      yield* Effect.scoped(
-        Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))).pipe(
-          Effect.flatMap((context) => deleteRowsForPlan(plan).pipe(Effect.provide(context)))
-        )
-      ).pipe(Effect.mapError((cause) => retentionFailure("Failed to delete selected AI metrics derived rows.", cause)));
+      yield* withAiMetricsDuckDb(deleteRowsForPlan(plan), duckDbPath).pipe(
+        Effect.mapError((cause) => retentionFailure("Failed to delete selected AI metrics derived rows.", cause))
+      );
     }
   }
 
@@ -1145,12 +1137,10 @@ export const runAiMetricsRetentionRestoreDrill = Effect.fn("AiMetrics.runAiMetri
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const sourceDuckDbPath = childPath(input.selector.dataRoot, "derived/ai-metrics.duckdb");
-  const plan = yield* Effect.scoped(
-    Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: sourceDuckDbPath }))).pipe(
-      Effect.flatMap((context) => readRetentionPlan(input.selector).pipe(Effect.provide(context)))
-    )
-  ).pipe(Effect.mapError((cause) => retentionFailure("Failed to select archive objects for restore drill.", cause)));
+  const sourceDuckDbPath = aiMetricsDerivedDuckDbPath(input.selector.dataRoot);
+  const plan = yield* withAiMetricsDuckDb(readRetentionPlan(input.selector), sourceDuckDbPath).pipe(
+    Effect.mapError((cause) => retentionFailure("Failed to select archive objects for restore drill.", cause))
+  );
   const selected = pipe(plan.rawArchiveItems, A.take(input.maxObjects));
   if (A.isReadonlyArrayEmpty(selected)) {
     return yield* retentionFailure(
@@ -1240,22 +1230,19 @@ export const runAiMetricsRetentionRestoreDrill = Effect.fn("AiMetrics.runAiMetri
     );
   }
 
-  yield* Effect.scoped(
-    Layer.build(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: spec.storage.duckDbPath }))).pipe(
-      Effect.flatMap((context) =>
-        writeAiMetricsDerivedStorage(
-          AiMetricsDerivedStorageWriteInput.make({
-            configSnapshot,
-            ingestRunId: `restore-drill-${startedAtEpochMillis}`,
-            records,
-            repoRootHash,
-            startedAtEpochMillis,
-            storage: spec.storage,
-            target: AiMetricsDeployTarget.Enum.local,
-          })
-        ).pipe(Effect.provide(context))
-      )
-    )
+  yield* withAiMetricsDuckDb(
+    writeAiMetricsDerivedStorage(
+      AiMetricsDerivedStorageWriteInput.make({
+        configSnapshot,
+        ingestRunId: `restore-drill-${startedAtEpochMillis}`,
+        records,
+        repoRootHash,
+        startedAtEpochMillis,
+        storage: spec.storage,
+        target: AiMetricsDeployTarget.Enum.local,
+      })
+    ),
+    spec.storage.duckDbPath
   ).pipe(Effect.mapError((cause) => retentionFailure("Failed to write restore drill derived storage.", cause)));
 
   return AiMetricsRetentionRestoreDrillResult.make({

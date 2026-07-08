@@ -29,16 +29,14 @@ const decodeSha256FromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const isSafePathSegment = (value: string): boolean =>
   value !== "." && value !== ".." && !pipe(value, Str.includes("/")) && !pipe(value, Str.includes("\\"));
 
-/**
- * Result of a unique-name allocation: the free name and the updated used set.
- *
- * @category models
- * @since 0.0.0
- */
-export interface UniqueNameAllocation {
+// Result of a unique-name allocation: the free name and the updated used set.
+// Kept module-local (not an exported schema) because `usedTargetNames` is a
+// live `HashSet` accumulator threaded through allocation, not a decodable data
+// model — effect/Schema has no `HashSet` combinator to model it faithfully.
+type UniqueNameAllocation = {
   readonly targetName: string;
   readonly usedTargetNames: HashSet.HashSet<string>;
-}
+};
 
 /**
  * Error constructor bundle for {@link validateDirectory}.

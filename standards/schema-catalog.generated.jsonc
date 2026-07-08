@@ -18360,6 +18360,14 @@
       "description": "Sorted runtime and development dependency names aggregated across the monorepo."
     },
     {
+      "file": "packages/tooling/library/repo-utils/src/Workspaces.ts",
+      "symbol": "WorkspacePackage",
+      "kind": "schema-class",
+      "owner": "@beep/repo-utils",
+      "identity": "WorkspacePackage",
+      "description": "A resolved workspace package: its absolute directory, strictly decoded manifest, and flattened scripts record."
+    },
+    {
       "file": "packages/tooling/library/repo-utils/src/errors/CyclicDependencyError.ts",
       "symbol": "CyclicDependencyError",
       "kind": "tagged-error",
@@ -22740,6 +22748,14 @@
       "description": "One planned yeet lane with its execution status and repair command."
     },
     {
+      "file": "packages/tooling/tool/cli/src/internal/cli/EnvConfig.ts",
+      "symbol": "LocalEnvStep",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "LocalEnvStep",
+      "description": "A subprocess step recognized by the local-env op-run wrapper."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/internal/cli/ExitCodeError.ts",
       "symbol": "CliReportedExit",
       "kind": "tagged-error",
@@ -22748,12 +22764,124 @@
       "description": "Silent non-zero process exit requested after command output was rendered."
     },
     {
+      "file": "packages/tooling/tool/cli/src/internal/cli/Jsonc.ts",
+      "symbol": "JsoncModification",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "JsoncModification",
+      "description": "A comment-preserving JSONC modification request (content, JSON path, value, array-insertion flag)."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/internal/cli/RunMode.ts",
       "symbol": "RunMode",
       "kind": "literal-kit",
       "owner": "@beep/repo-cli",
       "identity": "RunMode",
       "description": "Command execution mode: check, write, or dry-run."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/github/GhSchema.ts",
+      "symbol": "GhActor",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhActor",
+      "description": "GitHub actor metadata returned by gh."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/github/GhSchema.ts",
+      "symbol": "GhComment",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhComment",
+      "description": "Pull request comment returned by GitHub GraphQL."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/github/GhSchema.ts",
+      "symbol": "GhPageInfo",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhPageInfo",
+      "description": "GitHub GraphQL connection pagination metadata."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/github/GhSchema.ts",
+      "symbol": "GhPrView",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "GhPrView",
+      "description": "Unified gh pr view metadata decoding both the monitor and closeout --json field sets."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "symbol": "BoundedOutput",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "BoundedOutput",
+      "description": "Accumulator produced by the bounded subprocess output fold."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "symbol": "CapturedStep",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CapturedStep",
+      "description": "Combined captured subprocess result: exit code, folded output, and truncation flag."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "symbol": "CapturedStreams",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "CapturedStreams",
+      "description": "Captured subprocess result with stdout and stderr kept separate."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/process/StepExec.ts",
+      "symbol": "OutputBound",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "OutputBound",
+      "description": "Character cap and the notice appended once captured subprocess output overflows it."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/quality/SchemaFirstPolicyFinding.ts",
+      "symbol": "SchemaFirstPolicyFinding",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "SchemaFirstPolicyFinding",
+      "description": "Machine-readable schema-first policy finding shared by the lint emitter and its consumers."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/quality/SchemaFirstPolicyFinding.ts",
+      "symbol": "SchemaFirstPolicySeverity",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "SchemaFirstPolicySeverity",
+      "description": "Severity levels for schema-first policy findings; retains both the emitter 'warning' and law 'warn' spellings."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/ratchet/RatchetDiff.ts",
+      "symbol": "DiffTotalsInput",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DiffTotalsInput",
+      "description": "Current and committed baseline numeric totals keyed by metric name."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/ratchet/RatchetDiff.ts",
+      "symbol": "RatchetTotalDelta",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RatchetTotalDelta",
+      "description": "Difference for one tracked numeric ratchet total."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/ratchet/RatchetDiff.ts",
+      "symbol": "RatchetTotalsDiff",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "RatchetTotalsDiff",
+      "description": "Difference between current numeric totals and the committed baseline totals."
     },
     {
       "file": "packages/tooling/tool/cli/src/internal/repo-run/RepoRun.models.ts",
@@ -22874,6 +23002,12 @@
       "owner": "@beep/repo-cli",
       "identity": "RepoProofSurface",
       "description": "Named repository proof surface backed by a GitHub checks mode."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/internal/schema/JsonCodec.ts",
+      "symbol": "decodeOrFail",
+      "kind": "codec",
+      "owner": "@beep/repo-cli"
     },
     {
       "file": "packages/tooling/tool/docgen/src/Configuration.ts",

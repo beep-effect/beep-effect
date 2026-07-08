@@ -74,18 +74,18 @@ Purely additive modules inside `@beep/repo-cli`; no group files move.
 
 ## Phase 2 - Cross-Package Seeds & Contracts (Wave 2)
 
-- [ ] `@beep/repo-utils`: `walkFiles`, infallible `exists`, workspace-discovery
+- [x] `@beep/repo-utils`: `walkFiles`, infallible `exists`, workspace-discovery
   extensions (existing-owner adoption; own changeset + tests).
-- [ ] `@beep/repo-ai-metrics`: `withAiMetricsDuckDb`, data-root constants;
+- [x] `@beep/repo-ai-metrics`: `withAiMetricsDuckDb`, data-root constants;
   commands adopt its existing `shellQuote`.
-- [ ] `internal/ratchet/` + `internal/artifacts/ArtifactIo.ts` +
+- [x] `internal/ratchet/` + `internal/artifacts/ArtifactIo.ts` +
   `GeneratedFileDrift.ts`: generic fail-on-growth lifecycle parameterized by
   finding schema/key/renderers/tag.
-- [ ] `internal/quality/SchemaFirstPolicyFinding.ts` (+ severity kit):
+- [x] `internal/quality/SchemaFirstPolicyFinding.ts` (+ severity kit):
   single wire contract for the `[schema-first:issue]` lines (3 diverged copies
   today); divergent optionality reconciled via explicit schema, emitted format
   unchanged.
-- [ ] `internal/github/`: gh plumbing; `internal/cli/Jsonc.ts`,
+- [x] `internal/github/`: gh plumbing; `internal/cli/Jsonc.ts`,
   `EnvConfig.ts` (absorbs `Quality/internal/Config.ts`), `GlobPattern.ts`.
 
 ## Phase 3 - Pilot Groups: Files + Docgen (Wave 3)
