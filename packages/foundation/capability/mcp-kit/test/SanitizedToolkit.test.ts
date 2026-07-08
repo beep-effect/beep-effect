@@ -21,10 +21,24 @@ const FixtureTool = Tool.make("fixture_tool", {
   success: S.String,
 });
 
+class RefParameters extends S.Class<RefParameters>("RefParameters")({
+  secret: S.String,
+}) {}
+
+const RefTool = Tool.make("ref_tool", {
+  parameters: RefParameters,
+  success: S.String,
+});
+
 const FixtureToolkit = Toolkit.make(FixtureTool);
+const RefToolkit = Toolkit.make(RefTool);
 
 const FixtureHandlersLive = FixtureToolkit.toLayer({
   fixture_tool: (params: { readonly secret: string }) => Effect.succeed(`ok:${params.secret}`),
+});
+
+const RefHandlersLive = RefToolkit.toLayer({
+  ref_tool: (params: RefParameters) => Effect.succeed(`ok:${params.secret}`),
 });
 
 interface RecordedAttribute {
@@ -50,6 +64,8 @@ const makeRecordingTracer = (): { readonly tracer: Tracer.Tracer; readonly captu
 
 const registrationLayer = sanitizedToolkit(FixtureToolkit).pipe(Layer.provide(FixtureHandlersLive));
 const fullLayer = Layer.mergeAll(McpServer.McpServer.layer, registrationLayer);
+const refRegistrationLayer = sanitizedToolkit(RefToolkit).pipe(Layer.provide(RefHandlersLive));
+const refFullLayer = Layer.mergeAll(McpServer.McpServer.layer, refRegistrationLayer);
 
 describe("sanitizedToolkit", () => {
   layer(fullLayer)("with the fixture toolkit registered via sanitizedToolkit", (it) => {
@@ -86,6 +102,20 @@ describe("sanitizedToolkit", () => {
         const [first] = result.content;
         assert.strictEqual(first?.type, "text");
         assert.strictEqual((first as { readonly text: string }).text, '"ok:value"');
+      })
+    );
+  });
+
+  layer(refFullLayer)("with a named schema parameter toolkit registered via sanitizedToolkit", (it) => {
+    it.effect("adds a top-level object type to ref-backed input schemas for strict MCP clients", () =>
+      Effect.gen(function* () {
+        const server = yield* McpServer.McpServer;
+        const registered = server.tools.find(({ tool }) => tool.name === "ref_tool");
+
+        assert.isDefined(registered);
+        const inputSchema = registered?.tool.inputSchema as { readonly $ref?: unknown; readonly type?: unknown };
+        assert.strictEqual(inputSchema.type, "object");
+        assert.strictEqual(inputSchema.$ref, "#/$defs/RefParameters");
       })
     );
   });

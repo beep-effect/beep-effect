@@ -185,6 +185,30 @@ export const withSanitizedToolSpan: {
     )
 );
 
+type JsonObject = Readonly<Record<string, unknown>>;
+
+const localDefsRefPrefix = "#/$defs/";
+
+const isJsonObject = (value: unknown): value is JsonObject => P.isObject(value) && !A.isArray(value);
+
+const decodeJsonPointerSegment = (segment: string): string => segment.replaceAll("~1", "/").replaceAll("~0", "~");
+
+const localDefsRefKey = (ref: unknown): O.Option<string> =>
+  P.isString(ref) && ref.startsWith(localDefsRefPrefix)
+    ? O.some(decodeJsonPointerSegment(ref.slice(localDefsRefPrefix.length)))
+    : O.none();
+
+const localDefsRefTarget = (schema: JsonObject): O.Option<JsonObject> =>
+  O.flatMap(localDefsRefKey(schema.$ref), (key) => {
+    const defs = schema.$defs;
+    return isJsonObject(defs) && isJsonObject(defs[key]) ? O.some(defs[key]) : O.none();
+  });
+
+const withTopLevelObjectInputSchema = (schema: JsonObject): JsonObject =>
+  schema.type === "object" || !O.exists(localDefsRefTarget(schema), (target) => target.type === "object")
+    ? schema
+    : { type: "object", ...schema };
+
 const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Record<string, AiTool.Any>>(
   toolkit: Toolkit.Toolkit<Tools>
 ) {
@@ -201,7 +225,7 @@ const registerSanitizedToolkit = Effect.fnUntraced(function* <Tools extends Reco
     const wireTool = WireTool.make({
       name: tool.name,
       description: AiTool.getDescription(tool),
-      inputSchema: AiTool.getJsonSchema(tool),
+      inputSchema: withTopLevelObjectInputSchema(AiTool.getJsonSchema(tool)),
       annotations: {
         ...Context.getOption(annotations, AiTool.Title).pipe(
           O.map((title) => ({ title })),
