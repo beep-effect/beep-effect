@@ -74,8 +74,10 @@ jobs:
           git reset --hard HEAD
 
       - name: Create or update release pull request
+        id: changesets-release
         if: steps.release-diff.outputs.has_release_diff == 'true'
         uses: changesets/action@v1
+        continue-on-error: true
         with:
           version: bun run changeset:version
           commit: "chore(release): version packages"
@@ -84,6 +86,25 @@ jobs:
           LEFTHOOK: "0"
           # Auto-provisioned by GitHub Actions; requires permissions above.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Validate release branch fallback
+        if: >-
+          steps.release-diff.outputs.has_release_diff == 'true' &&
+          steps.changesets-release.outcome == 'failure'
+        shell: bash
+        run: |
+          set -euo pipefail
+          branch="changeset-release/main"
+          git ls-remote --exit-code origin "refs/heads/${branch}" >/dev/null
+          {
+            echo "### Release PR fallback"
+            echo
+            echo "Changesets produced and pushed \`${branch}\`, but this"
+            echo "organization does not allow GitHub Actions to create pull"
+            echo "requests. Open or update the release PR manually:"
+            echo
+            echo "https://github.com/beep-effect/beep-effect/compare/main...${branch}?expand=1"
+          } >> "$GITHUB_STEP_SUMMARY"
 
   publish:
     name: Publish (Manual Approval Required)

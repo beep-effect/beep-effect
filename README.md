@@ -253,6 +253,8 @@ All changes must keep the repo quality commands green and follow the non-negotia
   required checks, merge.
 - Never commit `saving`, `wip`, or temporary checkpoint work to shared branches.
   `main` is PR-only and protected by required hosted checks.
+- Keep GitHub merge/squash commit messages conventional too; their bodies are
+  server-side commitlint input, including the 100-character line limit.
 - Run the quality gates (`bun run beep yeet verify`, targeted
   `bun run beep ci lane <name>`, etc.) and keep them green.
 - Treat hosted PR checks as the final merge gate. Local
