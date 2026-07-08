@@ -887,7 +887,9 @@ const resolveExtendsClauseTargetText = (clause: import("ts-morph").ExpressionWit
 const extendsSchemaInfrastructureBase = (
   extendsClauses: ReadonlyArray<import("ts-morph").ExpressionWithTypeArguments>
 ): boolean =>
-  A.some(extendsClauses, (clause) => SCHEMA_INFRASTRUCTURE_EXTENDS_PATTERN.test(resolveExtendsClauseTargetText(clause)));
+  A.some(extendsClauses, (clause) =>
+    SCHEMA_INFRASTRUCTURE_EXTENDS_PATTERN.test(resolveExtendsClauseTargetText(clause))
+  );
 
 // R7: compose the interface's own members with the OWN (non-transitive)
 // members of every extends target that resolves to a repo-local
@@ -1152,7 +1154,8 @@ const PERMANENT_SCHEMA_FIRST_EXCLUSIONS: ReadonlyArray<PermanentSchemaFirstExclu
   {
     file: "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.definition.ts",
     symbol: "ClassInput",
-    reason: "Same DSL-input-descriptor shape as AssignedEntityParts: compile-time builder plumbing, no schema instance backing it.",
+    reason:
+      "Same DSL-input-descriptor shape as AssignedEntityParts: compile-time builder plumbing, no schema instance backing it.",
   },
   {
     file: "packages/foundation/modeling/schema/src/EntitySchema/EntitySchema.persist.ts",
@@ -1214,13 +1217,14 @@ const PERMANENT_SCHEMA_FIRST_EXCLUSIONS: ReadonlyArray<PermanentSchemaFirstExclu
   {
     file: "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
     symbol: "makeEncodedStruct",
-    reason: "Same generic-Fields/StructWithRest.ast blockers as makeTypeStruct — same factory, same reproduced failures.",
+    reason:
+      "Same generic-Fields/StructWithRest.ast blockers as makeTypeStruct — same factory, same reproduced failures.",
   },
   {
     file: "packages/tooling/library/repo-utils/src/schemas/TSConfig.ts",
     symbol: "strict",
     reason:
-      "Inside makeLooseJsonObject: both a class-extends form (TS2509, generic Fields base unresolvable) and a non-extends S.Class<Self>(id)(fields) form (same \"Missing Self generic\" failure as makeTypeStruct) were reproduced via tsgo and reverted; strict is a leaf S.decodeUnknownEffect/S.encodeEffect use with no StructWithRest composition, so only the generic-Self limitation blocks it.",
+      'Inside makeLooseJsonObject: both a class-extends form (TS2509, generic Fields base unresolvable) and a non-extends S.Class<Self>(id)(fields) form (same "Missing Self generic" failure as makeTypeStruct) were reproduced via tsgo and reverted; strict is a leaf S.decodeUnknownEffect/S.encodeEffect use with no StructWithRest composition, so only the generic-Self limitation blocks it.',
   },
 ] as const;
 
@@ -1789,7 +1793,10 @@ export const fnSchemaEntryFromFunctionLike: {
   (node: FunctionLikeDeclarationNode, location: SchemaFirstDetectorLocation): O.Option<SchemaFirstInventoryEntry>;
 } = dual(
   2,
-  (node: FunctionLikeDeclarationNode, { file, owner }: SchemaFirstDetectorLocation): O.Option<SchemaFirstInventoryEntry> => {
+  (
+    node: FunctionLikeDeclarationNode,
+    { file, owner }: SchemaFirstDetectorLocation
+  ): O.Option<SchemaFirstInventoryEntry> => {
     if (node.getTypeParameters().length > 0) {
       return O.none();
     }
@@ -1841,7 +1848,10 @@ export const nullReturnEntryFromFunctionLike: {
   (node: FunctionLikeDeclarationNode, location: SchemaFirstDetectorLocation): O.Option<SchemaFirstInventoryEntry>;
 } = dual(
   2,
-  (node: FunctionLikeDeclarationNode, { file, owner }: SchemaFirstDetectorLocation): O.Option<SchemaFirstInventoryEntry> => {
+  (
+    node: FunctionLikeDeclarationNode,
+    { file, owner }: SchemaFirstDetectorLocation
+  ): O.Option<SchemaFirstInventoryEntry> => {
     if (node.getTypeParameters().length > 0) {
       return O.none();
     }

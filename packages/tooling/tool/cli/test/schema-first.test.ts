@@ -848,9 +848,11 @@ describe("R15-1: S.Codec/S.Union/VariantSchema.Overridable join the schema-infra
     const project = new Project({ useInMemoryFileSystem: true });
     const sourceFile = project.createSourceFile(
       "fixture.ts",
-      ["export interface FooOverridable<S> extends VariantSchema.Overridable<S> {", "  readonly Rebuild: this;", "}"].join(
-        "\n"
-      )
+      [
+        "export interface FooOverridable<S> extends VariantSchema.Overridable<S> {",
+        "  readonly Rebuild: this;",
+        "}",
+      ].join("\n")
     );
     const [declaration] = sourceFile.getInterfaces();
 
