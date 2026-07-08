@@ -115,6 +115,16 @@ export const GeneratedByApp = <S extends S.Top>(schema: S): GeneratedByApp<S> =>
  * Interface for an application-generated insert-only field present in `select`,
  * `insert`, and `json` variants.
  *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import * as Model from "@beep/schema/Model"
+ *
+ * type PublicIdField = Model.GeneratedByAppOnInsert<typeof S.String>
+ * const field: PublicIdField = Model.GeneratedByAppOnInsert(S.String)
+ * console.log(S.isSchema(field.schemas.insert))
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */

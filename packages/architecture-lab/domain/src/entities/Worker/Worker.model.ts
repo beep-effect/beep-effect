@@ -252,6 +252,8 @@ const systemPrincipal = {
   kind: "System",
 } as const;
 
+const publicIdFor = (id: WorkerId): string => `${WorkerId.tableName}_a${id}`;
+
 /**
  * Create a new active Worker entity.
  *
@@ -284,6 +286,7 @@ export const create = (input: CreateWorkerInput): Worker =>
     entityType: WorkerId.entityType,
     id: input.id,
     orgId: input.organizationId,
+    publicId: publicIdFor(input.id),
     rowVersion: 1,
     schemaVersion: "0.1.0",
     source: "Application",

@@ -1,5 +1,10 @@
 import { Md } from "@beep/md";
-import { renderPlainTextBlocks } from "@beep/md/Md.behavior";
+import {
+  renderPlainTextBlock,
+  renderPlainTextBlocks,
+  renderPlainTextInline,
+  segmentInlineRuns,
+} from "@beep/md/Md.behavior";
 import {
   BrowserSafeUrlPolicy,
   escapeHtmlUrlAttribute,
@@ -50,6 +55,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
 import type { EffectRenderAdapter, PureRenderAdapter, RenderError } from "@beep/md/Md.render";
+import type { JsonObject } from "@beep/schema";
 
 const InlineArbitrary = S.toArbitrary(Inline);
 const BlockArbitrary = S.toArbitrary(Block);
@@ -58,6 +64,32 @@ const DocumentArbitrary = S.toArbitrary(Document);
 const markdownHtmlDoc = (): Document => Md.make([Md.h1("Hello"), Md.p("World")]);
 const encodeJsonResult = S.encodeUnknownResult(S.UnknownFromJsonString);
 const decodeDocumentJsonResult = S.decodeUnknownResult(S.fromJsonString(Document));
+
+const isJsonObject = (value: S.Json): value is JsonObject =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const normalizeJsonBoundaryObject = (value: JsonObject): JsonObject =>
+  Object.fromEntries(Object.entries(value).map(([key, item]) => [key, normalizeJsonBoundaryValue(item)] as const));
+
+const normalizeJsonBoundaryValue = (value: S.Json): S.Json => {
+  if (typeof value === "number") {
+    return Object.is(value, -0) ? 0 : value;
+  }
+  if (Array.isArray(value)) {
+    return value.map(normalizeJsonBoundaryValue);
+  }
+  if (isJsonObject(value)) {
+    return normalizeJsonBoundaryObject(value);
+  }
+  return value;
+};
+
+const normalizeDocumentForJsonBoundary = (document: Document): Document =>
+  O.match(document.frontmatter, {
+    onNone: () => document,
+    onSome: (frontmatter) =>
+      Document.make({ children: document.children, frontmatter: O.some(normalizeJsonBoundaryObject(frontmatter)) }),
+  });
 
 const expectRenderFailure = <Output>(
   result: Result.Result<Output, RenderError>,
@@ -210,7 +242,9 @@ https://www.youtube.com/watch?v=dQw4w9WgXcQ
         const encoded = Result.getOrThrow(S.encodeResult(Document)(document));
         const json = Result.getOrThrow(encodeJsonResult(encoded));
 
-        expect(Result.getOrThrow(decodeDocumentJsonResult(json))).toEqual(document);
+        // JavaScript JSON stringification normalizes -0 to 0, so compare against
+        // the exact document value representable after the JSON boundary.
+        expect(Result.getOrThrow(decodeDocumentJsonResult(json))).toEqual(normalizeDocumentForJsonBoundary(document));
       }),
       fcRuns(50)
     ));
@@ -378,6 +412,79 @@ ${Md.h3("Inside")}
     expect(renderHtmlBlock(Md.pre("<x>", { language: "ts bad" }))).toBe("<pre><code>&lt;x&gt;</code></pre>");
     expect(renderHtmlBlock(Md.pre("<x>"))).toBe("<pre><code>&lt;x&gt;</code></pre>");
     expect(renderHtmlBlock(Md.hr)).toBe("<hr />");
+  });
+
+  it("projects inline and block nodes to escaping-free plain text", () => {
+    expect(renderPlainTextInline(Md.text("Text"))).toBe("Text");
+    expect(renderPlainTextInline(Md.rawMarkdown("**Raw**"))).toBe("**Raw**");
+    expect(renderPlainTextInline(Md.rawHtml("<b>Raw</b>"))).toBe("<b>Raw</b>");
+    expect(renderPlainTextInline(Md.strong([Md.text("Strong"), Md.em("Em")]))).toBe("StrongEm");
+    expect(renderPlainTextInline(Md.em("Em"))).toBe("Em");
+    expect(renderPlainTextInline(Md.del("Del"))).toBe("Del");
+    expect(renderPlainTextInline(Md.code("code"))).toBe("code");
+    expect(renderPlainTextInline(Md.a("https://example.com", [Md.text("Example"), Md.code("1")]))).toBe("Example1");
+    expect(renderPlainTextInline(Md.img("/img.png", "Alt"))).toBe("");
+    expect(renderPlainTextInline(Md.br)).toBe("");
+    expect(renderPlainTextInline(Md.inlineMath("a+b"))).toBe("a+b");
+    expect(renderPlainTextInline(Md.footnoteRef("note"))).toBe("note");
+
+    expect(
+      segmentInlineRuns([Md.text("a"), Md.code("b"), Md.p("block"), Md.em("c")], {
+        isInline: Inline.is,
+        renderInlineRun: (run) => `inline:${run.length}`,
+        renderBlock: (block) => `block:${block._tag}`,
+      })
+    ).toEqual(["inline:2", "block:p", "inline:1"]);
+    expect(
+      segmentInlineRuns({
+        isInline: (value): value is string => typeof value === "string",
+        renderInlineRun: (run) => run.join(""),
+        renderBlock: (value: number) => `#${value}`,
+      })([])
+    ).toEqual([]);
+
+    const table = Md.table(
+      [
+        ["Name", "Value"],
+        ["Language", Md.code("ts")],
+      ],
+      { headerRow: true }
+    );
+    const blocks = [
+      Md.h1("Heading"),
+      Md.p([Md.text("Paragraph"), Md.br, Md.text("Text")]),
+      Md.blockquote([Md.p("Quoted"), Md.ul(["Nested"])]),
+      Md.pre("const x = 1"),
+      Md.ul([Md.li([Md.text("Inline"), Md.p("Block")])]),
+      Md.ol(["First", "Second"]),
+      Md.taskList([{ text: "Done", checked: true }, "Todo"]),
+      table,
+      Md.youtubeUnsafe("dQw4w9WgXcQ"),
+      Md.mathBlock("a=b"),
+      Md.footnoteDef("note", [Md.p("Footnote")]),
+      Md.admonition("tip", [Md.p("Admonition")]),
+      Md.embed("video", "https://example.com/demo", { title: "Demo" }),
+      Md.embed("video", "https://example.com/fallback"),
+      Md.hr,
+    ];
+
+    expect(blocks.map(renderPlainTextBlock)).toEqual([
+      "Heading",
+      "ParagraphText",
+      "Quoted\nNested",
+      "const x = 1",
+      "Inline\nBlock",
+      "First\nSecond",
+      "Done\nTodo",
+      "Name\tValue\nLanguage\tts",
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      "a=b",
+      "Footnote",
+      "Admonition",
+      "Demo",
+      "https://example.com/fallback",
+      "",
+    ]);
   });
 
   it("renders core parity, rich extension, frontmatter, and URL policy additions", () => {

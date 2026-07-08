@@ -1065,6 +1065,14 @@
     },
     {
       "file": "packages/foundation/modeling/schema/src/Model/Model.fields.ts",
+      "symbol": "GeneratedByAppOnInsert",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic interface requires manual modeling and is tracked as an exception."
+    },
+    {
+      "file": "packages/foundation/modeling/schema/src/Model/Model.fields.ts",
       "symbol": "Sensitive",
       "kind": "exported-interface",
       "status": "exception",

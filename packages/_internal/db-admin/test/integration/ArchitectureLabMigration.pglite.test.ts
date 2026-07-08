@@ -33,6 +33,7 @@ if (!shouldRunPgliteIntegration) {
               created_at,
               created_by_principal,
               org_id,
+              public_id,
               row_version,
               schema_version,
               source,
@@ -47,6 +48,7 @@ if (!shouldRunPgliteIntegration) {
               0,
               '{"kind":"System","component":"ArchitectureLab"}'::jsonb,
               1,
+              'architecture_lab_worker_a1',
               1,
               '0.1.0',
               'Application',
@@ -74,6 +76,7 @@ if (!shouldRunPgliteIntegration) {
               created_at,
               created_by_principal,
               org_id,
+              public_id,
               row_version,
               schema_version,
               source,
@@ -88,6 +91,7 @@ if (!shouldRunPgliteIntegration) {
               0,
               '{"kind":"System","component":"WorkspaceThreadDomain"}'::jsonb,
               1,
+              'workspace_thread_a10',
               1,
               '0.1.0',
               'Application',
@@ -104,6 +108,7 @@ if (!shouldRunPgliteIntegration) {
               created_at,
               created_by_principal,
               org_id,
+              public_id,
               row_version,
               schema_version,
               source,
@@ -120,6 +125,7 @@ if (!shouldRunPgliteIntegration) {
               0,
               '{"kind":"System","component":"WorkspaceThreadDomain"}'::jsonb,
               1,
+              'workspace_turn_a11',
               1,
               '0.1.0',
               'Application',
@@ -136,6 +142,7 @@ if (!shouldRunPgliteIntegration) {
               1,
               '{"kind":"System","component":"WorkspaceThreadDomain"}'::jsonb,
               1,
+              'workspace_turn_a12',
               1,
               '0.1.0',
               'Application',
@@ -154,6 +161,7 @@ if (!shouldRunPgliteIntegration) {
               created_at,
               created_by_principal,
               org_id,
+              public_id,
               row_version,
               schema_version,
               source,
@@ -170,6 +178,7 @@ if (!shouldRunPgliteIntegration) {
               0,
               '{"kind":"System","component":"WorkspaceThreadDomain"}'::jsonb,
               1,
+              'workspace_message_a20',
               1,
               '0.1.0',
               'Application',
@@ -186,6 +195,7 @@ if (!shouldRunPgliteIntegration) {
               1,
               '{"kind":"System","component":"WorkspaceThreadDomain"}'::jsonb,
               1,
+              'workspace_message_a21',
               1,
               '0.1.0',
               'Application',
@@ -204,6 +214,62 @@ if (!shouldRunPgliteIntegration) {
           `;
           const messageRows = yield* sql<{ readonly role: string }>`
             SELECT role FROM workspace_message ORDER BY id ASC
+          `;
+
+          yield* sql`
+            INSERT INTO epistemic_usage_record (
+              created_at,
+              created_by_principal,
+              org_id,
+              public_id,
+              row_version,
+              schema_version,
+              source,
+              updated_at,
+              updated_by_principal,
+              activity_id,
+              actor,
+              cost_usd_approx_micros,
+              credential_reference,
+              input_tokens,
+              latency_millis,
+              metadata,
+              model,
+              output_tokens,
+              provider,
+              total_tokens,
+              unit_count,
+              entity_type,
+              id
+            )
+            VALUES (
+              0,
+              '{"kind":"System","component":"UsageRecordMigration"}'::jsonb,
+              1,
+              'epistemic_usage_record_a30',
+              1,
+              '0.1.0',
+              'System',
+              0,
+              '{"kind":"System","component":"UsageRecordMigration"}'::jsonb,
+              1,
+              '{"kind":"System","component":"UsageRecordMigration"}'::jsonb,
+              NULL,
+              NULL,
+              12,
+              NULL,
+              '{"trace":"migration-proof"}'::jsonb,
+              'fixture-model',
+              34,
+              'fixture',
+              46,
+              NULL,
+              'EpistemicUsageRecord',
+              30
+            )
+          `;
+          const usageRows = yield* sql<{ readonly public_id: string; readonly provider: string }>`
+            SELECT public_id, provider FROM epistemic_usage_record ORDER BY id ASC
           `;
 
           expect(
@@ -228,6 +294,7 @@ if (!shouldRunPgliteIntegration) {
               A.map((row) => row.role)
             )
           ).toEqual(["user", "assistant"]);
+          expect(usageRows).toEqual([{ public_id: "epistemic_usage_record_a30", provider: "fixture" }]);
         }),
         120_000
       );

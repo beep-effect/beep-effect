@@ -62,6 +62,14 @@ const UnsafeUrlProtocolDestination = S.String.check(
  * An empty `allowedProtocols` list preserves compatibility behavior: active
  * script/data protocols are blocked, but other absolute protocols pass through.
  *
+ * @example
+ * ```ts
+ * import { UrlPolicy } from "@beep/md/Md.escape"
+ *
+ * const policy = UrlPolicy.make({ allowedProtocols: ["https:"], allowRelative: false })
+ * console.log(policy.allowedProtocols[0]) // "https:"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -88,6 +96,13 @@ export class UrlPolicy extends S.Class<UrlPolicy>($I`UrlPolicy`)(
 /**
  * Compatibility URL policy matching the historical `@beep/md` sanitizer.
  *
+ * @example
+ * ```ts
+ * import { CompatUrlPolicy } from "@beep/md/Md.escape"
+ *
+ * console.log(CompatUrlPolicy.allowRelative) // true
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -95,6 +110,13 @@ export const CompatUrlPolicy = UrlPolicy.make({});
 
 /**
  * Browser anchor/image URL policy for HTML sinks.
+ *
+ * @example
+ * ```ts
+ * import { BrowserSafeUrlPolicy } from "@beep/md/Md.escape"
+ *
+ * console.log(BrowserSafeUrlPolicy.allowedProtocols.includes("artifact:")) // true
+ * ```
  *
  * @category utilities
  * @since 0.0.0
@@ -107,6 +129,13 @@ export const BrowserSafeUrlPolicy = UrlPolicy.make({
 
 /**
  * Strict web URL policy for product-agnostic web output.
+ *
+ * @example
+ * ```ts
+ * import { StrictWebUrlPolicy } from "@beep/md/Md.escape"
+ *
+ * console.log(StrictWebUrlPolicy.allowedProtocols.includes("artifact:")) // false
+ * ```
  *
  * @category utilities
  * @since 0.0.0
@@ -389,6 +418,13 @@ export const escapeMarkdownDestinationWithPolicy: {
  * Escapes Markdown link or image destination delimiters with the compatibility
  * URL policy.
  *
+ * @example
+ * ```ts
+ * import { escapeMarkdownDestination } from "@beep/md/Md.escape"
+ *
+ * console.log(escapeMarkdownDestination("https://example.com/a)b")) // "https://example.com/a\\)b"
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -420,6 +456,13 @@ export const escapeHtmlUrlAttributeWithPolicy: {
 
 /**
  * Escapes a URL for an HTML attribute using the browser-safe URL policy.
+ *
+ * @example
+ * ```ts
+ * import { escapeHtmlUrlAttribute } from "@beep/md/Md.escape"
+ *
+ * console.log(escapeHtmlUrlAttribute("https://example.com?a=1&b=2")) // "https://example.com?a=1&amp;b=2"
+ * ```
  *
  * @category utilities
  * @since 0.0.0

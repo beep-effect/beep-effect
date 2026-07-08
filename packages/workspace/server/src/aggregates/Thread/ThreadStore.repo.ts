@@ -10,7 +10,7 @@ import { Document } from "@beep/md/Md.model";
 import { PostgresDrizzle } from "@beep/postgres";
 import { NonNegativeInt, PosInt } from "@beep/schema/Int";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
-import { A } from "@beep/utils";
+import { A, N } from "@beep/utils";
 import { Message } from "@beep/workspace-domain/entities/Message";
 import { Thread } from "@beep/workspace-domain/entities/Thread";
 import { Turn } from "@beep/workspace-domain/entities/Turn";
@@ -40,6 +40,9 @@ const encodeDocument = S.encodeSync(Document);
 const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
 const publicIdFor = (entityType: string, id: PosInt): string =>
   `${entityType.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase()}_a${id}`;
+
+const nextEntityId = (rows: ReadonlyArray<{ readonly id: number }>): PosInt =>
+  PosInt.make(A.reduce(rows, 0, (max, row) => N.max(max, row.id)) + 1);
 
 /**
  * Build the encoded BaseEntity audit prefix shared by every workspace row.
@@ -300,7 +303,11 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
   return ThreadStoreServer.Thread.ThreadStore.of({
     createThread: Effect.fn("Workspace.ThreadStore.drizzleCreateThread")(function* (input) {
       const workspaceId = PosInt.make(Number(encodeWorkspaceId(input.workspaceId)));
-      const seed = makeThreadEntity({ id: PosInt.make(1), title: input.title, workspaceId });
+      const existingThreads = yield* db
+        .select()
+        .from(threadTable)
+        .pipe(repositoryUnavailable("list Thread", THREAD_TABLE_NAME));
+      const seed = makeThreadEntity({ id: nextEntityId(existingThreads), title: input.title, workspaceId });
       const rows = yield* db
         .insert(threadTable)
         .values(toThreadInsert(seed))
@@ -363,21 +370,25 @@ export const makeDrizzleThreadStore = Effect.fn("Workspace.ThreadStore.makeDrizz
         .transaction(
           Effect.fnUntraced(function* (tx) {
             const existingTurns = yield* tx.select().from(turnTable).where(eq(turnTable.threadId, threadId));
+            const existingTurnRows = yield* tx.select().from(turnTable);
+            const existingMessages = yield* tx.select().from(messageTable);
             const turnIndex = NonNegativeInt.make(existingTurns.length);
+            const nextTurnId = nextEntityId(existingTurnRows);
+            const nextMessageId = nextEntityId(existingMessages);
 
             const messageSeed = makeMessageEntity({
-              id: PosInt.make(1),
+              id: nextMessageId,
               threadId,
-              turnId: PosInt.make(1),
+              turnId: nextTurnId,
               role: input.role,
               content: input.content,
             });
             const turnSeed = makeTurnEntity({
-              id: PosInt.make(1),
+              id: nextTurnId,
               threadId,
               parentTurnId,
               turnIndex,
-              messageId: PosInt.make(1),
+              messageId: nextMessageId,
             });
 
             const turnRows = yield* tx.insert(turnTable).values(toTurnInsert(turnSeed)).returning();

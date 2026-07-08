@@ -35,6 +35,15 @@ export type Brand<EntityType extends string> = `${EntityType}PublicId`;
 /**
  * Public id brand derived from an entity-id schema.
  *
+ * @example
+ * ```ts
+ * import type { BrandFor } from "@beep/shared-domain/entity/PublicEntityId"
+ * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
+ *
+ * const brand: BrandFor<typeof OrganizationId> = "SharedOrganizationPublicId"
+ * console.log(brand)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -42,6 +51,15 @@ export type BrandFor<Entity extends EntityId.Any> = Brand<Entity["entityType"]>;
 
 /**
  * Public id prefix derived from an entity-id schema.
+ *
+ * @example
+ * ```ts
+ * import type { PrefixFor } from "@beep/shared-domain/entity/PublicEntityId"
+ * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
+ *
+ * const prefix: PrefixFor<typeof OrganizationId> = "shared_organization"
+ * console.log(prefix)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -53,9 +71,15 @@ export type PrefixFor<Entity extends EntityId.Any> = Entity["tableName"];
  *
  * @example
  * ```ts
+ * import { Cuid } from "@beep/schema/Cuid"
  * import type { PublicEntityIdValueFor } from "@beep/shared-domain/entity/PublicEntityId"
+ * import { fromCuid } from "@beep/shared-domain/entity/PublicEntityId"
+ * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
  *
- * declare const id: PublicEntityIdValueFor<"shared_organization", "SharedOrganizationPublicId">
+ * const id: PublicEntityIdValueFor<"shared_organization", "SharedOrganizationPublicId"> = fromCuid(
+ *   OrganizationId,
+ *   Cuid.fromUnknown("a123")
+ * )
  * console.log(id)
  * ```
  *
@@ -69,6 +93,17 @@ export type PublicEntityIdValueFor<Prefix extends string, TBrand extends string>
 
 /**
  * Public id value narrowed to a concrete entity-id schema.
+ *
+ * @example
+ * ```ts
+ * import { Cuid } from "@beep/schema/Cuid"
+ * import type { PublicEntityIdFor } from "@beep/shared-domain/entity/PublicEntityId"
+ * import { fromCuid } from "@beep/shared-domain/entity/PublicEntityId"
+ * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
+ *
+ * const id: PublicEntityIdFor<typeof OrganizationId> = fromCuid(OrganizationId, Cuid.fromUnknown("a123"))
+ * console.log(id)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -100,6 +135,16 @@ type PublicEntityIdStatics<
 /**
  * Branded schema for a concrete entity's public id.
  *
+ * @example
+ * ```ts
+ * import type { PublicEntityId } from "@beep/shared-domain/entity/PublicEntityId"
+ * import { factory } from "@beep/shared-domain/entity/PublicEntityId"
+ * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
+ *
+ * const schema: PublicEntityId<typeof OrganizationId> = factory(OrganizationId)
+ * console.log(schema.prefix)
+ * ```
+ *
  * @since 0.0.0
  * @category models
  */
@@ -115,6 +160,16 @@ type PublicEntityIdEquivalence<Prefix extends string, TBrand extends string> = {
 
 /**
  * Any public entity id schema produced by {@link factory}.
+ *
+ * @example
+ * ```ts
+ * import type { Any } from "@beep/shared-domain/entity/PublicEntityId"
+ * import { factory } from "@beep/shared-domain/entity/PublicEntityId"
+ * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
+ *
+ * const schema: Any = factory(OrganizationId)
+ * console.log(schema.entityType)
+ * ```
  *
  * @since 0.0.0
  * @category models
@@ -177,6 +232,16 @@ export const factory = <const Entity extends EntityId.Any>(
 /**
  * Build a public entity id from an entity schema and CUID value.
  *
+ * @example
+ * ```ts
+ * import { Cuid } from "@beep/schema/Cuid"
+ * import { fromCuid } from "@beep/shared-domain/entity/PublicEntityId"
+ * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
+ *
+ * const id = fromCuid(OrganizationId, Cuid.fromUnknown("a123"))
+ * console.log(id)
+ * ```
+ *
  * @since 0.0.0
  * @category constructors
  */
@@ -185,6 +250,15 @@ export const fromCuid = <const Entity extends EntityId.Any>(entityId: Entity, id
 
 /**
  * Generate a public entity id for an entity schema.
+ *
+ * @example
+ * ```ts
+ * import { generate } from "@beep/shared-domain/entity/PublicEntityId"
+ * import { OrganizationId } from "@beep/shared-domain/identity/Shared"
+ *
+ * const program = generate(OrganizationId)
+ * console.log(program)
+ * ```
  *
  * @effects
  * Uses the existing `@beep/schema/Cuid` generator and therefore requires

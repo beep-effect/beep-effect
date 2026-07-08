@@ -1,5 +1,5 @@
 import { $SharedDomainId } from "@beep/identity/packages";
-import { Cuid } from "@beep/schema/Cuid";
+import { Cuid, CuidState } from "@beep/schema/Cuid";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import * as DomainBarrel from "@beep/shared-domain";
 import * as EntityBarrel from "@beep/shared-domain/entity";
@@ -13,7 +13,7 @@ import * as SourceKind from "@beep/shared-domain/entity/SourceKind";
 import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { assert, describe, expect, it } from "@effect/vitest";
-import { Effect, Exit, Order } from "effect";
+import { Crypto, Effect, Exit, Layer, Order } from "effect";
 import { cast } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -33,6 +33,18 @@ const CustomDocumentId = makeSharedId("document", {
 });
 
 const decodeEffect = <Schema extends S.Top>(schema: Schema) => S.decodeUnknownEffect(schema);
+const TestCryptoLayer = Layer.succeed(
+  Crypto.Crypto,
+  Crypto.make({
+    digest: (_algorithm, data) => Effect.succeed(data),
+    randomBytes: (size) => new Uint8Array(size).fill(1),
+  })
+);
+const CuidTestLayer = CuidState.Default.pipe(Layer.provideMerge(TestCryptoLayer));
+const provideScopedLayer =
+  <ROut, E2, RIn>(layer: Layer.Layer<ROut, E2, RIn>) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E | E2, RIn | Exclude<R, ROut>> =>
+    Effect.scoped(Layer.build(layer).pipe(Effect.flatMap((context) => effect.pipe(Effect.provide(context)))));
 const expectFailure = Effect.fn("expectFailure")(function* <A, E>(effect: Effect.Effect<A, E, never>) {
   const exit = yield* Effect.exit(effect);
   assert.strictEqual(Exit.isFailure(exit), true);
@@ -147,6 +159,15 @@ describe("PublicEntityId", () => {
       yield* expectFailure(decode("shared_user_a123"));
       yield* expectFailure(decode("shared_document_123"));
     })
+  );
+
+  it.effect("generates public ids with the entity prefix", () =>
+    Effect.gen(function* () {
+      const publicId = yield* PublicEntityId.generate(DocumentId);
+
+      expect(DocumentPublicId.is(publicId)).toBe(true);
+      expect(publicId.startsWith(`${DocumentId.tableName}_`)).toBe(true);
+    }).pipe(provideScopedLayer(CuidTestLayer))
   );
 });
 

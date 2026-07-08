@@ -102,6 +102,14 @@ export const YouTubeVideoId = S.String.check(
 /**
  * Safe Markdown footnote identifier.
  *
+ * @example
+ * ```ts
+ * import { FootnoteIdentifier } from "@beep/md/Md.model"
+ *
+ * const identifier = FootnoteIdentifier.fromUnknown("note-1")
+ * console.log(identifier)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -123,6 +131,15 @@ export const FootnoteIdentifier = S.NonEmptyString.check(
 /**
  * Type for {@link FootnoteIdentifier}.
  *
+ * @example
+ * ```ts
+ * import type { FootnoteIdentifier as FootnoteIdentifierValue } from "@beep/md/Md.model"
+ * import { FootnoteIdentifier } from "@beep/md/Md.model"
+ *
+ * const identifier: FootnoteIdentifierValue = FootnoteIdentifier.fromUnknown("note-1")
+ * console.log(identifier)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -130,6 +147,15 @@ export type FootnoteIdentifier = typeof FootnoteIdentifier.Type;
 
 /**
  * Markdown table column alignment.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TableAlignment } from "@beep/md/Md.model"
+ *
+ * const alignment = S.decodeUnknownSync(TableAlignment)("center")
+ * console.log(alignment)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -143,6 +169,14 @@ export const TableAlignment = LiteralKit(["none", "left", "center", "right"]).pi
 /**
  * Type for {@link TableAlignment}.
  *
+ * @example
+ * ```ts
+ * import type { TableAlignment } from "@beep/md/Md.model"
+ *
+ * const alignment: TableAlignment = "right"
+ * console.log(alignment)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -150,6 +184,15 @@ export type TableAlignment = typeof TableAlignment.Type;
 
 /**
  * Common typed admonition kinds.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { AdmonitionKind } from "@beep/md/Md.model"
+ *
+ * const kind = S.decodeUnknownSync(AdmonitionKind)("warning")
+ * console.log(kind)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -163,6 +206,14 @@ export const AdmonitionKind = LiteralKit(["note", "tip", "important", "warning",
 /**
  * Type for {@link AdmonitionKind}.
  *
+ * @example
+ * ```ts
+ * import type { AdmonitionKind } from "@beep/md/Md.model"
+ *
+ * const kind: AdmonitionKind = "tip"
+ * console.log(kind)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -170,6 +221,15 @@ export type AdmonitionKind = typeof AdmonitionKind.Type;
 
 /**
  * Generic block embed kind.
+ *
+ * @example
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { EmbedKind } from "@beep/md/Md.model"
+ *
+ * const kind = S.decodeUnknownSync(EmbedKind)("video")
+ * console.log(kind)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -182,6 +242,14 @@ export const EmbedKind = LiteralKit(["link", "image", "video", "audio", "unknown
 
 /**
  * Type for {@link EmbedKind}.
+ *
+ * @example
+ * ```ts
+ * import type { EmbedKind } from "@beep/md/Md.model"
+ *
+ * const kind: EmbedKind = "image"
+ * console.log(kind)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -867,6 +935,14 @@ export class InlineMath extends S.TaggedClass<InlineMath>($I`InlineMath`)(
 /**
  * Companion namespace for {@link InlineMath}.
  *
+ * @example
+ * ```ts
+ * import type { InlineMath } from "@beep/md/Md.model"
+ *
+ * const encoded: InlineMath.Encoded = { _tag: "inlineMath", value: "a+b" }
+ * console.log(encoded._tag)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -913,6 +989,14 @@ export class FootnoteReference extends S.TaggedClass<FootnoteReference>($I`Footn
 
 /**
  * Companion namespace for {@link FootnoteReference}.
+ *
+ * @example
+ * ```ts
+ * import type { FootnoteReference } from "@beep/md/Md.model"
+ *
+ * const encoded: FootnoteReference.Encoded = { _tag: "footnoteReference", identifier: "note-1" }
+ * console.log(encoded.identifier)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -2269,6 +2353,14 @@ export class MathBlock extends S.TaggedClass<MathBlock>($I`MathBlock`)(
 /**
  * Companion namespace for {@link MathBlock}.
  *
+ * @example
+ * ```ts
+ * import type { MathBlock } from "@beep/md/Md.model"
+ *
+ * const encoded: MathBlock.Encoded = { _tag: "mathBlock", value: "a=b" }
+ * console.log(encoded._tag)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2321,6 +2413,18 @@ export class FootnoteDefinition extends S.TaggedClass<FootnoteDefinition>($I`Foo
 
 /**
  * Companion namespace for {@link FootnoteDefinition}.
+ *
+ * @example
+ * ```ts
+ * import type { FootnoteDefinition } from "@beep/md/Md.model"
+ *
+ * const encoded: FootnoteDefinition.Encoded = {
+ *   _tag: "footnoteDefinition",
+ *   identifier: "note-1",
+ *   children: [],
+ * }
+ * console.log(encoded.identifier)
+ * ```
  *
  * @category models
  * @since 0.0.0
@@ -2385,6 +2489,14 @@ export class Admonition extends S.TaggedClass<Admonition>($I`Admonition`)(
 /**
  * Companion namespace for {@link Admonition}.
  *
+ * @example
+ * ```ts
+ * import type { Admonition } from "@beep/md/Md.model"
+ *
+ * const encoded: Admonition.Encoded = { _tag: "admonition", kind: "tip", children: [] }
+ * console.log(encoded.kind)
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -2447,6 +2559,14 @@ export class Embed extends S.TaggedClass<Embed>($I`Embed`)(
 
 /**
  * Companion namespace for {@link Embed}.
+ *
+ * @example
+ * ```ts
+ * import type { Embed } from "@beep/md/Md.model"
+ *
+ * const encoded: Embed.Encoded = { _tag: "embed", kind: "video", src: "https://example.com/demo" }
+ * console.log(encoded.src)
+ * ```
  *
  * @category models
  * @since 0.0.0

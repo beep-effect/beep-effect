@@ -25,9 +25,9 @@ import {
   renderFencedCode,
   renderInlineCode,
   sanitizeUrlDestinationWithPolicy,
+  UrlPolicy,
 } from "./Md.escape.ts";
 import { Document as DocumentSchema, HeadingLevel, Inline as InlineSchema, TableCell, TableRow } from "./Md.model.ts";
-import type { UrlPolicy } from "./Md.escape.ts";
 import type {
   Block,
   Document,
@@ -78,6 +78,14 @@ const isJsonArray = (value: S.Json): value is ReadonlyArray<S.Json> => A.isArray
 
 const isJsonRecord = (value: S.Json): value is JsonRecord => P.isObject(value) && !P.isNull(value) && !A.isArray(value);
 
+const renderJsonRecord: (record: JsonRecord) => string = flow(
+  R.toEntries,
+  A.sort(byRecordEntryKeyAscending<S.Json>()),
+  A.map(([key, item]) => `${renderJsonString(key)}:${renderJson(item)}`),
+  A.join(","),
+  (body) => `{${body}}`
+);
+
 const renderJson = (value: S.Json): string =>
   Match.value(value).pipe(
     Match.when(P.isNull, () => "null"),
@@ -85,26 +93,15 @@ const renderJson = (value: S.Json): string =>
     Match.when(P.isNumber, (number) => `${number}`),
     Match.when(P.isBoolean, (boolean) => (boolean ? "true" : "false")),
     Match.when(isJsonArray, (array) => `[${pipe(array, A.map(renderJson), A.join(","))}]`),
-    Match.when(isJsonRecord, (record) =>
-      pipe(
-        record,
-        R.toEntries,
-        A.sort(byRecordEntryKeyAscending()),
-        A.map(([key, item]) => `${renderJsonString(key)}:${renderJson(item)}`),
-        A.join(","),
-        (body) => `{${body}}`
-      )
-    ),
+    Match.when(isJsonRecord, renderJsonRecord),
     Match.exhaustive
   );
 
-const renderJsonFrontmatter = (frontmatter: O.Option<JsonRecord>): string =>
-  pipe(
-    frontmatter,
-    O.filter((metadata) => A.isReadonlyArrayNonEmpty(R.toEntries(metadata))),
-    O.map((metadata) => `---json\n${renderJson(metadata)}\n---`),
-    O.getOrElse(thunkEmptyStr)
-  );
+const renderJsonFrontmatter: (frontmatter: O.Option<JsonRecord>) => string = flow(
+  O.filter((metadata) => A.isReadonlyArrayNonEmpty(R.toEntries(metadata))),
+  O.map((metadata) => `---json\n${renderJson(metadata)}\n---`),
+  O.getOrElse(thunkEmptyStr)
+);
 
 /**
  * Error raised when a render adapter fails while producing output.
@@ -237,12 +234,10 @@ const escapeMarkdownTitle = flow(
   Str.replace(markdownTitleEscapePattern, "\\$&")
 );
 
-const renderMarkdownTitle = (title: O.Option<string>): string =>
-  pipe(
-    title,
-    O.map((value) => ` "${escapeMarkdownTitle(value)}"`),
-    O.getOrElse(thunkEmptyStr)
-  );
+const renderMarkdownTitle: (title: O.Option<string>) => string = flow(
+  O.map((value) => ` "${escapeMarkdownTitle(value)}"`),
+  O.getOrElse(thunkEmptyStr)
+);
 
 const renderMarkdownDestinationWithTitle = (destination: string, title: O.Option<string>, policy: UrlPolicy): string =>
   `${escapeMarkdownDestinationWithPolicy(destination, policy)}${renderMarkdownTitle(title)}`;
@@ -399,12 +394,10 @@ const embedTitle = (block: { readonly src: string; readonly title: O.Option<stri
     O.getOrElse(() => block.src)
   );
 
-const embedDescriptionMarkdown = (description: O.Option<string>): string =>
-  pipe(
-    description,
-    O.map((value) => `\n\n${escapeMarkdownText(value)}`),
-    O.getOrElse(thunkEmptyStr)
-  );
+const embedDescriptionMarkdown: (description: O.Option<string>) => string = flow(
+  O.map((value) => `\n\n${escapeMarkdownText(value)}`),
+  O.getOrElse(thunkEmptyStr)
+);
 
 const renderMarkdownEmbed = (block: {
   readonly kind: string;
@@ -929,17 +922,28 @@ export const renderEffectWith: {
 /**
  * URL policy options accepted by built-in render adapter factories.
  *
+ * @example
+ * ```ts
+ * import { BrowserSafeUrlPolicy } from "@beep/md/Md.escape"
+ * import { UrlRenderOptions } from "@beep/md/Md.render"
+ *
+ * const options = UrlRenderOptions.make({ urlPolicy: BrowserSafeUrlPolicy })
+ * console.log(options.urlPolicy?.allowedProtocols.includes("https:")) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export interface UrlRenderOptions {
-  /**
-   * URL policy applied to URL-bearing AST fields before rendering.
-   *
-   * @since 0.0.0
-   */
-  readonly urlPolicy?: UrlPolicy;
-}
+export class UrlRenderOptions extends S.Class<UrlRenderOptions>($I`UrlRenderOptions`)(
+  {
+    urlPolicy: S.optionalKey(UrlPolicy).annotateKey({
+      description: "URL policy applied to URL-bearing AST fields before rendering.",
+    }),
+  },
+  $I.annote("UrlRenderOptions", {
+    description: "URL policy options accepted by built-in render adapter factories.",
+  })
+) {}
 
 const renderPolicy = (options: UrlRenderOptions, fallback: UrlPolicy): UrlPolicy =>
   pipe(
@@ -1034,6 +1038,16 @@ const renderHtmlDocumentWithPolicy = (policy: UrlPolicy, document: Document): Ht
 /**
  * Creates a Markdown render adapter with an optional URL sink policy.
  *
+ * @example
+ * ```ts
+ * import { Md } from "@beep/md"
+ * import { BrowserSafeUrlPolicy } from "@beep/md/Md.escape"
+ * import { makeMarkdownAdapter, renderWithUnsafe } from "@beep/md/Md.render"
+ *
+ * const adapter = makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicy })
+ * console.log(renderWithUnsafe(adapter, Md.make([Md.p(Md.a("file:///tmp/a", "File"))]))) // "[File](#)"
+ * ```
+ *
  * @category utilities
  * @since 0.0.0
  */
@@ -1048,6 +1062,16 @@ export const makeMarkdownAdapter = (options: UrlRenderOptions = {}): PureRenderA
 
 /**
  * Creates an HTML fragment render adapter with an optional URL sink policy.
+ *
+ * @example
+ * ```ts
+ * import { Md } from "@beep/md"
+ * import { StrictWebUrlPolicy } from "@beep/md/Md.escape"
+ * import { makeHtmlFragmentAdapter, renderWithUnsafe } from "@beep/md/Md.render"
+ *
+ * const adapter = makeHtmlFragmentAdapter({ urlPolicy: StrictWebUrlPolicy })
+ * console.log(renderWithUnsafe(adapter, Md.make([Md.p(Md.a("artifact:abc", "Artifact"))])))
+ * ```
  *
  * @category utilities
  * @since 0.0.0
