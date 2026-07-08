@@ -1458,6 +1458,9 @@ const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
     "semgrep/semgrep",
     "semgrep",
     "scan",
+    // Fail the lane on findings. Without this, `semgrep scan` exits 0 even on
+    // blocking findings, so every rule below is advisory-only.
+    "--error",
     "--config",
     "p/typescript",
     "--config",
@@ -1466,6 +1469,10 @@ const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
     "p/security-audit",
     "--config",
     "p/secrets",
+    // Vendored, offline first-party rules — keep CI and the local replay
+    // verdict-identical without registry auth. See .semgrep/first-party.yml.
+    "--config",
+    "/src/.semgrep/first-party.yml",
     "--disable-version-check",
     "--timeout",
     "20",
