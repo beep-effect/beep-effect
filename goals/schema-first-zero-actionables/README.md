@@ -13,6 +13,12 @@ exception ledger is taken to zero *entries* by the successor packet
 [`goals/standards-remediation`](../standards-remediation/README.md), which
 supersedes this packet's residual scope.
 
+> Cross-close (2026-07-08): the successor `goals/standards-remediation` merged
+> via PR #326 (squash `705647b8d0`) — schema-first now holds 4 driver-verified
+> exceptions with the gate green, and the full standards-inventory ledger
+> (dual-arity/schema-first/jsdoc/knip/allowlist) is at zero actionables. This
+> packet's residual scope is fully discharged.
+
 ## Mission
 
 Drive repo schema-first governance to zero actionable findings and publish the
