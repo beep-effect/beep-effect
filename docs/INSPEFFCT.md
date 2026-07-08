@@ -5,7 +5,9 @@
 ## Commands
 
 Use the root scripts so every capture and inspection command reads the same
-local SQLite database at `.beep/inspeffct.db`.
+repository-root SQLite database at `.beep/inspeffct.db`. The helper scripts
+create `.beep/` before calling the CLI, so capture commands work from a fresh
+checkout and still use the same database when launched from a nested directory.
 
 ```bash
 bun run inspeffct -- --help
