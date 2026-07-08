@@ -1484,11 +1484,13 @@
       {
         "from": "@beep/lint-rules",
         "allow": [
+          "@beep/identity",
           "@beep/lint-rules",
           "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/identity",
           "@beep/lint-rules",
           "@beep/test-utils",
           "@beep/utils"

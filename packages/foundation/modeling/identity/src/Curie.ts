@@ -19,6 +19,22 @@ import type { Curie, Expand, Predicate, VocabShape } from "./Vocab.ts";
 
 const $I = $IdentityId.create("Curie");
 
+// Internal invariant guard for the literal-preserving `expand`/`contract`
+// overloads: the CURIE/IRI is asserted registered by its literal type, so the
+// unresolved branch is type-level unreachable. Modeled as a TaggedErrorClass
+// (not a native Error) to satisfy the native-runtime law without an allowlist
+// entry; intentionally not exported (never a caught public failure).
+class CurieCodecInvariantError extends S.TaggedErrorClass<CurieCodecInvariantError>(
+  "@beep/identity/errors/CurieCodecInvariantError"
+)(
+  "CurieCodecInvariantError",
+  { value: S.String },
+  $I.annote("@beep/identity/errors/CurieCodecInvariantError", {
+    description:
+      "A CURIE/IRI asserted registered by its literal type failed to resolve (type-level-unreachable invariant).",
+  })
+) {}
+
 type CoreCurie = Curie<typeof CoreVocab>;
 type CoreIri = Expand<CoreCurie, typeof CoreVocab>;
 type Contract<I extends string, V extends VocabShape> = {
@@ -222,7 +238,7 @@ export function expand(curie: string, vocab: VocabShape = CoreVocab): string {
   return pipe(
     expandOption(curie, vocab),
     O.getOrElse(() => {
-      throw new Error(`Unreachable: CURIE "${curie}" is asserted registered by its literal type but failed to expand.`);
+      throw CurieCodecInvariantError.make({ value: curie });
     })
   );
 }
@@ -252,7 +268,7 @@ export function contract(iri: string, vocab: VocabShape = CoreVocab): string {
   return pipe(
     contractOption(iri, vocab),
     O.getOrElse(() => {
-      throw new Error(`Unreachable: IRI "${iri}" is asserted registered by its literal type but failed to contract.`);
+      throw CurieCodecInvariantError.make({ value: iri });
     })
   );
 }

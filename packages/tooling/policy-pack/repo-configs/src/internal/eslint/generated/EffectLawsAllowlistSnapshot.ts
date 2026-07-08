@@ -27,6 +27,30 @@ export const ALLOWLIST_SNAPSHOT = {
       "reason": "WeakSet is per-call (nothing retained; prior GC rationale was incorrect). True constraint: effect Hash/MutableHashSet use deep structural equality for plain objects lacking Equal/Hash, replacing O(1) identity checks with O(subtree) hashing — measured 8.8x-31.1x traversal slowdown at depths 200-2000 (goals/standards-remediation/ops/reports/AL-1/al-1a.md).",
       "owner": "@beep/modeling-rdf",
       "issue": "RDF-SCHEMA-METADATA-WEAKSET-TRAVERSAL"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/ui-system/ui/src/components/banner.tsx",
+      "kind": "object-method",
+      "reason": "shadcn compound-component idiom: Object.assign attaches namespace sub-components (Content/Description/Dismiss/...) onto the callable Banner component; object spread would discard the callable function. Not domain logic.",
+      "owner": "@beep/ui",
+      "issue": "UI-COMPOUND-COMPONENT-BANNER"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/ui-system/ui/src/components/dialog.tsx",
+      "kind": "object-method",
+      "reason": "shadcn compound-component idiom: Object.assign attaches namespace sub-components onto the callable Dialog component; object spread would discard the callable function. Not domain logic.",
+      "owner": "@beep/ui",
+      "issue": "UI-COMPOUND-COMPONENT-DIALOG"
+    },
+    {
+      "rule": "beep-laws/no-native-runtime",
+      "file": "packages/foundation/ui-system/ui/src/components/dropdown-menu.tsx",
+      "kind": "object-method",
+      "reason": "shadcn compound-component idiom: Object.assign attaches namespace sub-components onto the callable DropdownMenu component; object spread would discard the callable function. Not domain logic.",
+      "owner": "@beep/ui",
+      "issue": "UI-COMPOUND-COMPONENT-DROPDOWN"
     }
   ],
   "diagnostics": []

@@ -16,9 +16,8 @@
  * `biome check --write` over the output for deterministic formatting).
  */
 
-import { Match } from "effect";
+import { Match, MutableHashSet } from "effect";
 import * as A from "effect/Array";
-import * as MutableHashSet from "effect/MutableHashSet";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 

@@ -125,8 +125,8 @@ const config: ViteUserConfig = {
     // Deep property sweeps (BEEP_FC_NUM_RUNS raises fast-check run counts
     // 8-20x for the property lane and nightly sweep) scale test wall time
     // the same way instrumentation does; give them the same generous cap.
-    testTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 180_000 : 30_000,
-    hookTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 180_000 : 10_000,
+    testTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 30_000,
+    hookTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 300_000 : 10_000,
     // Baseline generation/regeneration must tolerate test-less packages;
     // the ratchet compare, not vitest, decides coverage outcomes.
     passWithNoTests: vitestCoverageRunActive,
