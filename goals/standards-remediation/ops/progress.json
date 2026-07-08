@@ -331,10 +331,36 @@
         ],
         "note": "neither caught by ci local --fast \u2014 lane-parity gap (fallow audit --check + changeset:status not in fast battery); record for one-round-loop",
         "resolution": "changeset written; all 7 fallow introduced findings extracted (audit exits 0, introduced=0); readExistingRepoFile orElseSucceed behavior change driver-reviewed and accepted"
+      },
+      {
+        "round": 2,
+        "failures": [
+          "repo-sanity: mixed changeset (ignored @beep/repo-cli listed alongside non-ignored)"
+        ],
+        "resolution": "changeset fixed (drop ignored, add uspto-mcp), verified locally, pushed 521cedbb7f",
+        "lesson": "run `bun run changeset:status:since-main` locally after authoring any changeset \u2014 fully reproducible pre-push"
+      },
+      {
+        "round": 3,
+        "failures": [
+          "lint: @beep/box useImportType (biome) \u2014 turbo-cache false-green locally"
+        ],
+        "resolution": "biome --write fix pushed",
+        "lesson": "TURBO_FORCE=1 bun run lint (or at least lint --filter on all touched packages with TURBO_FORCE) belongs in the pre-push battery \u2014 matches the existing verify-lint-with-turbo-force memory"
+      },
+      {
+        "round": 4,
+        "failures": [
+          "lint: @beep/repo-cli biome format x2 (fail-fast hid it behind box round 3)",
+          "test-integration: Postgres.pglite hook timeout \u2014 KNOWN flake class per crispening reflection, package untouched by any lane; re-rolled by this push"
+        ],
+        "resolution": "biome --write + full TURBO_FORCE lint verified green across 98 packages before push"
       }
     ]
   },
   "landingChecklist": [
-    "bun run beep lint schema-catalog --write (new S.Class exports from SF-1 lanes)"
+    "bun run beep lint schema-catalog --write (new S.Class exports from SF-1 lanes)",
+    "bun run changeset:status:since-main (pre-push, after any changeset edit)",
+    "TURBO_FORCE=1 lint on touched packages pre-push"
   ]
 }
