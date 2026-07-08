@@ -10,6 +10,7 @@ import {
   PandocMappingIssue,
   profileFromIssues,
 } from "@beep/pandoc-ast/Pandoc.report";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
 import { describe, expect, it } from "@effect/vitest";
@@ -234,7 +235,7 @@ describe("Pandoc.mapping", () => {
         expect(issue.pointer).toBe(jsonPointerFromPath(path));
         expect(issue.severity).toBe("unsupported");
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it("generates only non-negative numeric JSON path segments", () =>
@@ -245,7 +246,7 @@ describe("Pandoc.mapping", () => {
           expect(segment).toBeGreaterThanOrEqual(0);
         }
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it("preserves mapping report invariants for schema-derived documents", () =>
@@ -254,7 +255,7 @@ describe("Pandoc.mapping", () => {
         expectReportInvariants(Effect.runSync(pandocToDocument(pandoc)).report);
         expectReportInvariants(Effect.runSync(documentToPandoc(document)).report);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     ));
 
   it("degrades @beep/md tables and YouTube embeds to Pandoc with recorded lossiness", () =>

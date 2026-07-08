@@ -19,6 +19,7 @@ import {
   toColumnarEnvelope,
 } from "@beep/mcp-kit";
 import { NonNegativeInt } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { assert, describe, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -53,7 +54,7 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, n
     fc.property(arbitrary, (value) => {
       assert.isTrue(equals(decode(encode(value)), value));
     }),
-    { numRuns: 50 }
+    fcRuns(50)
   );
 };
 

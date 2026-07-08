@@ -9,6 +9,9 @@
   },
   "references": [
     {
+      "path": "../../../tooling/test-kit/test-utils/tsconfig.json"
+    },
+    {
       "path": "../identity/tsconfig.json"
     },
     {

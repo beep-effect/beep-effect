@@ -9,6 +9,7 @@ import {
   DiscordMessageProof,
 } from "@beep/discord";
 import { decodeJsonString } from "@beep/schema/Json";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Context, Effect, Layer, pipe, Redacted, Ref, Result } from "effect";
 import * as A from "effect/Array";
@@ -245,7 +246,7 @@ describe("@beep/discord", () => {
           expectDecodedSelf(DiscordErrorReason, errorReason);
         }
       ),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   layer(makeLayer())((it) => {

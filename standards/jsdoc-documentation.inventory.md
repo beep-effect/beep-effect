@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-07T22:43:42.401Z
+Generated: 2026-07-08T07:23:30.560Z
 
 ## Scope
 
@@ -14,11 +14,11 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 19 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 78 |
-| publicModules | 1617 |
-| publicExports | 14468 |
+| publicModules | 1618 |
+| publicExports | 14473 |
 | openModules | 129 |
-| openExports | 2206 |
-| missingExportExamples | 2012 |
+| openExports | 2207 |
+| missingExportExamples | 2013 |
 | missingExportCategories | 91 |
 | missingExportSince | 91 |
 | forbiddenTagFindings | 2 |
@@ -81,7 +81,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 38 | `@beep/chalk` | `packages/foundation/capability/chalk` | clean | 1 | 35 | 0 | 0 |
 | 39 | `@beep/uspto` | `packages/drivers/uspto` | needs-remediation | 5 | 24 | 0 | 9 |
 | 40 | `@beep/phoenix` | `packages/drivers/phoenix` | needs-remediation | 5 | 50 | 0 | 10 |
-| 41 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 5 | 32 | 0 | 8 |
+| 41 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 6 | 37 | 0 | 9 |
 | 42 | `@beep/types` | `packages/foundation/primitive/types` | clean | 5 | 10 | 0 | 0 |
 | 43 | `@beep/oip-web` | `apps/oip-web` | needs-remediation | 31 | 84 | 1 | 11 |
 | 44 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
@@ -918,9 +918,10 @@ Export findings:
 - `src/SqlTest.ts:430` `PgliteSqlTestLayerOptions` (interface) - 1 unsafe example violation(s)
 - `src/SqlTest.ts:643` `PgliteTestcontainerResource` (interface) - 1 unsafe example violation(s)
 - `src/index.ts:16` `export * from "./Entity.js";` (re-export) - missing @example
-- `src/index.ts:23` `export * from "./Layer.js";` (re-export) - missing @example
-- `src/index.ts:30` `export * from "./Schema.js";` (re-export) - missing @example
-- `src/index.ts:37` `export * from "./SqlTest.js";` (re-export) - missing @example
+- `src/index.ts:23` `export * from "./FastCheckRuns.js";` (re-export) - missing @example
+- `src/index.ts:30` `export * from "./Layer.js";` (re-export) - missing @example
+- `src/index.ts:37` `export * from "./Schema.js";` (re-export) - missing @example
+- `src/index.ts:44` `export * from "./SqlTest.js";` (re-export) - missing @example
 
 ### @beep/oip-web
 

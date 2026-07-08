@@ -1,4 +1,5 @@
 import { EmailString, NonNegativeInt } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { Button } from "@beep/ui/components/ui/button";
 import { A } from "@beep/utils";
 import { useAtom } from "@effect/atom-react";
@@ -245,7 +246,7 @@ describe("@beep/oip-web", { concurrent: false }, () => {
           );
         }
       ),
-      { numRuns: 100 }
+      fcRuns(100)
     );
   });
 

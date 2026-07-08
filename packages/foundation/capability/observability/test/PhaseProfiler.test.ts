@@ -1,5 +1,6 @@
 import { PhaseProfile, profilePhase } from "@beep/observability";
 import { NonNegativeInt, TaggedErrorClass } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { Effect, Equal, Metric } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -17,7 +18,7 @@ describe("PhaseProfiler", () => {
         const decoded = O.flatMap(S.encodeOption(PhaseProfile)(profile), S.decodeUnknownOption(PhaseProfile));
         expect(O.exists(decoded, (value) => Equal.equals(value, profile))).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 

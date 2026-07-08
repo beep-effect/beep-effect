@@ -6,7 +6,7 @@ import * as WorkPriority from "@beep/architecture-lab-domain/values/WorkPriority
 import { makeDrizzleWorkItemRepository } from "@beep/architecture-lab-server/aggregates/WorkItem";
 import { makeDrizzleWorkerRepository } from "@beep/architecture-lab-server/entities/Worker";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
-import { makePgliteIntegrationGate, TestDatabaseInfo } from "@beep/test-utils";
+import { fcRuns, makePgliteIntegrationGate, TestDatabaseInfo } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, Layer, pipe } from "effect";
@@ -72,7 +72,7 @@ it("round-trips schema-derived repository identity values through domain schemas
         expect(Effect.runSync(encodeOrganizationId(decodedOrganizationId))).toBe(encodedOrganizationId);
       }
     ),
-    { numRuns: 25 }
+    fcRuns(25)
   ));
 
 if (!shouldRunPgliteIntegration) {

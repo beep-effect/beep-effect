@@ -8,6 +8,7 @@ import {
   summarizeCause,
 } from "@beep/observability";
 import { NonNegativeInt } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Cause, Effect, Equal } from "effect";
 import * as O from "effect/Option";
@@ -102,7 +103,7 @@ describe("CauseRedaction", () => {
         );
         expect(O.exists(decoded, (value) => Equal.equals(value, options))).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 
@@ -125,7 +126,7 @@ describe("CauseRedaction", () => {
           expect(O.exists(safe.detail, (detail) => detail.length <= options.detailLimit + 3)).toBe(true);
         }
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });

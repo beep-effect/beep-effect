@@ -5,7 +5,7 @@ import {
   OfficeActionReviewInput,
 } from "@beep/law-practice-use-cases/OfficeActionReview";
 import { EntityInput } from "@beep/law-practice-use-cases/test";
-import { assertSchemaArbitraryDecodesToSelf } from "@beep/test-utils";
+import { assertSchemaArbitraryDecodesToSelf, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -24,9 +24,7 @@ const assertSchemaEncodeDecodeRoundTrip = <Schema extends S.Codec<unknown>>(
 
   fc.assert(
     fc.property(arbitrary, (value) => equivalent(decode(encode(value)), value)),
-    {
-      numRuns: options?.numRuns ?? 50,
-    }
+    fcRuns(options?.numRuns ?? 50)
   );
 };
 

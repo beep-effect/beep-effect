@@ -1,5 +1,6 @@
 import { Document, P, Text } from "@beep/md";
 import * as WorkspaceIdentity from "@beep/shared-domain/identity/Workspace";
+import { fcRuns } from "@beep/test-utils";
 import {
   ApprovalDecision,
   ApprovalGate,
@@ -66,7 +67,7 @@ const assertSchemaArbitraryRoundTrips = <Schema extends S.Codec<unknown>>(schema
     fc.property(arbitrary, (value) => {
       expect(equivalent(decode(encode(value)), value)).toBe(true);
     }),
-    { numRuns: 10 }
+    fcRuns(10)
   );
 };
 
@@ -86,7 +87,7 @@ describe("@beep/workspace-domain", () => {
         expect(encoded).toBe(role);
         expect(["system", "user", "assistant", "agent", "tool"].includes(decoded)).toBe(true);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     ));
 
   it("wires Workspace to the workspace BaseEntity identity", () => {

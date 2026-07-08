@@ -9,6 +9,7 @@
     "build": "bun run beep:build",
     "check": "bun run beep:check",
     "test": "bun run beep:test",
+    "test:property": "bun run beep:test",
     "coverage": "bunx vitest run --coverage",
     "docgen": "bun run ../../../../packages/tooling/tool/docgen/src/bin.ts",
     "lint": "bun run beep:lint",
@@ -71,6 +72,7 @@
     "vaul": "catalog:"
   },
   "devDependencies": {
+    "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@storybook/react-vite": "catalog:",
     "@tailwindcss/postcss": "catalog:",

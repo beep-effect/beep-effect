@@ -607,12 +607,14 @@
           "@beep/acp",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/acp",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -624,6 +626,7 @@
           "@beep/agents-use-cases",
           "@beep/md",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -632,6 +635,7 @@
           "@beep/agents-use-cases",
           "@beep/md",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -688,6 +692,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-domain",
           "@beep/workspace-use-cases"
@@ -699,6 +704,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-utils",
           "@beep/utils",
           "@beep/workspace-domain",
           "@beep/workspace-use-cases"
@@ -709,12 +715,14 @@
         "allow": [
           "@beep/ai-provider-cli",
           "@beep/identity",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/ai-provider-cli",
           "@beep/identity",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ]
       },
       {
@@ -723,6 +731,7 @@
           "@beep/ai-sync",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/types",
           "@beep/utils"
         ],
@@ -730,6 +739,7 @@
           "@beep/ai-sync",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/types",
           "@beep/utils"
         ]
@@ -739,12 +749,14 @@
         "allow": [
           "@beep/anthropic",
           "@beep/identity",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/anthropic",
           "@beep/identity",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ]
       },
       {
@@ -752,11 +764,13 @@
         "allow": [
           "@beep/api-transport",
           "@beep/identity",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/api-transport",
           "@beep/identity",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -780,12 +794,14 @@
         "allow": [
           "@beep/architecture-lab-config",
           "@beep/identity",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/architecture-lab-config",
           "@beep/identity",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ]
       },
       {
@@ -811,7 +827,8 @@
           "@beep/architecture-lab-proof",
           "@beep/architecture-lab-server",
           "@beep/architecture-lab-ui",
-          "@beep/architecture-lab-use-cases"
+          "@beep/architecture-lab-use-cases",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/architecture-lab-config",
@@ -819,7 +836,8 @@
           "@beep/architecture-lab-proof",
           "@beep/architecture-lab-server",
           "@beep/architecture-lab-ui",
-          "@beep/architecture-lab-use-cases"
+          "@beep/architecture-lab-use-cases",
+          "@beep/test-utils"
         ]
       },
       {
@@ -854,12 +872,14 @@
         "allow": [
           "@beep/architecture-lab-domain",
           "@beep/architecture-lab-tables",
-          "@beep/drizzle"
+          "@beep/drizzle",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/architecture-lab-domain",
           "@beep/architecture-lab-tables",
-          "@beep/drizzle"
+          "@beep/drizzle",
+          "@beep/test-utils"
         ]
       },
       {
@@ -870,6 +890,7 @@
           "@beep/architecture-lab-ui",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -878,6 +899,7 @@
           "@beep/architecture-lab-ui",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -888,6 +910,7 @@
           "@beep/architecture-lab-use-cases",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -895,6 +918,7 @@
           "@beep/architecture-lab-use-cases",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -903,12 +927,14 @@
         "allow": [
           "@beep/box",
           "@beep/identity",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/box",
           "@beep/identity",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ]
       },
       {
@@ -917,12 +943,14 @@
           "@beep/chalk",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/chalk",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -987,12 +1015,14 @@
         "allow": [
           "@beep/discord",
           "@beep/identity",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/discord",
           "@beep/identity",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ]
       },
       {
@@ -1027,12 +1057,14 @@
           "@beep/duckdb",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/duckdb",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1043,6 +1075,7 @@
           "@beep/ecfr",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1050,6 +1083,7 @@
           "@beep/ecfr",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1148,12 +1182,14 @@
           "@beep/face-detection",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/face-detection",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1173,6 +1209,7 @@
           "@beep/file-processing",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1180,6 +1217,7 @@
           "@beep/file-processing",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1189,12 +1227,14 @@
           "@beep/file-processing",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/file-processing",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1204,12 +1244,14 @@
           "@beep/firecrawl",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/firecrawl",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1219,12 +1261,14 @@
           "@beep/form",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/ui"
         ],
         "allowTypeOnly": [
           "@beep/form",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/ui"
         ]
       },
@@ -1235,6 +1279,7 @@
           "@beep/govinfo",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1242,6 +1287,7 @@
           "@beep/govinfo",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1251,12 +1297,14 @@
           "@beep/html",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/html",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1266,12 +1314,14 @@
           "@beep/hubspot",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/hubspot",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1312,6 +1362,7 @@
           "@beep/langextract",
           "@beep/nlp",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1319,6 +1370,7 @@
           "@beep/langextract",
           "@beep/nlp",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1400,6 +1452,7 @@
           "@beep/lexical-schema",
           "@beep/md",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1407,6 +1460,7 @@
           "@beep/lexical-schema",
           "@beep/md",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1431,10 +1485,12 @@
         "from": "@beep/lint-rules",
         "allow": [
           "@beep/lint-rules",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/lint-rules",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1444,12 +1500,14 @@
           "@beep/identity",
           "@beep/m365",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/m365",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1460,14 +1518,16 @@
           "@beep/m365",
           "@beep/m365-mcp",
           "@beep/mcp-kit",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/m365",
           "@beep/m365-mcp",
           "@beep/mcp-kit",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ]
       },
       {
@@ -1475,12 +1535,14 @@
         "allow": [
           "@beep/identity",
           "@beep/mcp-kit",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/mcp-kit",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ]
       },
       {
@@ -1489,12 +1551,14 @@
           "@beep/identity",
           "@beep/md",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/md",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1524,6 +1588,7 @@
           "@beep/nlp-mcp",
           "@beep/nlp-processing",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils",
           "@beep/wink"
         ],
@@ -1534,6 +1599,7 @@
           "@beep/nlp-mcp",
           "@beep/nlp-processing",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils",
           "@beep/wink"
         ]
@@ -1566,6 +1632,7 @@
           "@beep/identity",
           "@beep/observability",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1573,6 +1640,7 @@
           "@beep/identity",
           "@beep/observability",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1586,6 +1654,7 @@
           "@beep/repo-utils",
           "@beep/sanity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/ui",
           "@beep/utils"
         ],
@@ -1597,6 +1666,7 @@
           "@beep/repo-utils",
           "@beep/sanity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/ui",
           "@beep/utils"
         ]
@@ -1608,6 +1678,7 @@
           "@beep/onepassword-cli",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1615,16 +1686,19 @@
           "@beep/onepassword-cli",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
       {
         "from": "@beep/ontology",
         "allow": [
-          "@beep/ontology"
+          "@beep/ontology",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
-          "@beep/ontology"
+          "@beep/ontology",
+          "@beep/test-utils"
         ]
       },
       {
@@ -1633,12 +1707,14 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1664,6 +1740,7 @@
           "@beep/md",
           "@beep/pandoc-ast",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1671,6 +1748,7 @@
           "@beep/md",
           "@beep/pandoc-ast",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1694,12 +1772,14 @@
         "allow": [
           "@beep/identity",
           "@beep/phoenix",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/phoenix",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ]
       },
       {
@@ -1773,12 +1853,14 @@
         "allow": [
           "@beep/identity",
           "@beep/provenance",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/provenance",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ]
       },
       {
@@ -1787,12 +1869,14 @@
           "@beep/identity",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1824,6 +1908,7 @@
           "@beep/phoenix",
           "@beep/repo-ai-metrics",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1833,6 +1918,7 @@
           "@beep/phoenix",
           "@beep/repo-ai-metrics",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1931,12 +2017,14 @@
           "@beep/identity",
           "@beep/repo-utils",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/repo-utils",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1946,12 +2034,14 @@
           "@beep/identity",
           "@beep/runpod",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/runpod",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1961,12 +2051,14 @@
           "@beep/identity",
           "@beep/sanity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/sanity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -2119,11 +2211,13 @@
         "from": "@beep/ui",
         "allow": [
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/ui",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/ui",
           "@beep/utils"
         ]
@@ -2183,6 +2277,7 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils",
           "@beep/venice-ai"
         ],
@@ -2190,6 +2285,7 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils",
           "@beep/venice-ai"
         ]
@@ -2202,6 +2298,7 @@
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils",
           "@beep/wink"
         ],
@@ -2211,6 +2308,7 @@
           "@beep/nlp-processing",
           "@beep/observability",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils",
           "@beep/wink"
         ]
@@ -2222,6 +2320,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-utils",
           "@beep/workspace-domain"
         ],
         "allowTypeOnly": [
@@ -2229,6 +2328,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-utils",
           "@beep/workspace-domain"
         ]
       },
@@ -2279,6 +2379,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-utils",
           "@beep/workspace-domain",
           "@beep/workspace-use-cases"
         ],
@@ -2287,6 +2388,7 @@
           "@beep/md",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/test-utils",
           "@beep/workspace-domain",
           "@beep/workspace-use-cases"
         ]
@@ -2297,6 +2399,7 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils",
           "@beep/xai"
         ],
@@ -2304,6 +2407,7 @@
           "@beep/identity",
           "@beep/openai-compat",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils",
           "@beep/xai"
         ]

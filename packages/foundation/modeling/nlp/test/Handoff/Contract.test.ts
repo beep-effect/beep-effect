@@ -6,6 +6,7 @@
 
 import { Contract } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
@@ -89,7 +90,7 @@ describe("AnnotatedDocument round-trip", () => {
 
         expect(decoded).toEqual(document);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 });

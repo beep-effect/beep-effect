@@ -1,5 +1,6 @@
 import { inspect } from "node:util";
 import { encodeJsonString } from "@beep/schema/Json";
+import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import {
   XAI_API_URL,
@@ -420,7 +421,7 @@ describe("@beep/xai", () => {
           expectRoundTrip(XAiWebSocketEvent, websocketEvent);
         }
       ),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 

@@ -28,6 +28,7 @@ import {
   validateRepoConfig,
 } from "@beep/ai-sync";
 import { renderGeneratedSchemas } from "@beep/ai-sync/generator";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { expect, layer } from "@effect/vitest";
 import { Effect, Exit, FileSystem, Path } from "effect";
@@ -47,7 +48,7 @@ const expectSchemaRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema):
     fc.property(S.toArbitrary(schema), (value) => {
       expect(Equal.equals(S.decodeUnknownSync(schema)(S.encodeSync(schema)(value)), value)).toBe(true);
     }),
-    { numRuns: 25 }
+    fcRuns(25)
   );
 };
 
@@ -57,7 +58,7 @@ const expectEncodedRoundTrip = <Schema extends S.Codec<unknown>>(schema: Schema)
       const encoded = S.encodeSync(schema)(value);
       expect(S.encodeSync(schema)(S.decodeUnknownSync(schema)(encoded))).toEqual(encoded);
     }),
-    { numRuns: 25 }
+    fcRuns(25)
   );
 };
 

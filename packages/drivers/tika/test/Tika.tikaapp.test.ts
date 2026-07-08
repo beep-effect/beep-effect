@@ -3,7 +3,7 @@ import { ExtractFileOperation } from "@beep/file-processing/Operation";
 import { decodeTestOperationIdentifiers } from "@beep/file-processing/test";
 import { NonNegativeInt, PosInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
-import { provideScopedLayer } from "@beep/test-utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
 import { makeTikaAppFileProcessingEngine, TikaAppEngineConfig, TikaContentText } from "@beep/tika";
 import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -94,7 +94,7 @@ describe("makeTikaAppFileProcessingEngine", () => {
         expectRoundTrip(TikaAppEngineConfig, config);
         expectRoundTrip(TikaContentText, contentText);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     ));
 
   it.effect("extracts trimmed text and stringified metadata via tika-app", () =>

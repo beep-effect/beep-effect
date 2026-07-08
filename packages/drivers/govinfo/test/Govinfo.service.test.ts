@@ -20,6 +20,7 @@ import {
 } from "@beep/govinfo";
 import { $GovinfoId } from "@beep/identity";
 import { PosInt, URLStr } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Context, Effect, Equal, Layer, pipe, Redacted, Ref, Result } from "effect";
 import * as O from "effect/Option";
@@ -85,7 +86,7 @@ const assertSchemaRoundTrip = <Codec extends S.Codec<unknown, unknown>>(
     fc.property(arbitrary, (value) => {
       expectRoundTrip(schema, value);
     }),
-    { numRuns: 25 }
+    fcRuns(25)
   );
 };
 
@@ -285,7 +286,7 @@ describe("@beep/govinfo", () => {
       fc.property(S.toArbitrary(GovinfoHttpStatus), (status) => {
         expectRoundTrip(GovinfoHttpStatus, status);
       }),
-      { numRuns: 25 }
+      fcRuns(25)
     );
 
     assertSchemaRoundTrip(GovinfoConfigInput, GovinfoConfigInputArbitrary);

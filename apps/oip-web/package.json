@@ -29,7 +29,8 @@
     "coverage": "bunx vitest run --coverage",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
-    "test": "bun run beep:test"
+    "test": "bun run beep:test",
+    "test:property": "bun run beep:test"
   },
   "dependencies": {
     "@beep/hubspot": "workspace:^",
@@ -56,6 +57,7 @@
   },
   "devDependencies": {
     "@beep/repo-utils": "workspace:^",
+    "@beep/test-utils": "workspace:^",
     "@effect/vitest": "catalog:",
     "@mdx-js/loader": "catalog:",
     "@tailwindcss/postcss": "catalog:",

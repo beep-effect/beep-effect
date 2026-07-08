@@ -8,6 +8,7 @@ import * as EntityRef from "@beep/shared-domain/entity/EntityRef";
 import * as Principal from "@beep/shared-domain/entity/Principal";
 import * as primitives from "@beep/shared-domain/entity/primitives";
 import * as SourceKind from "@beep/shared-domain/entity/SourceKind";
+import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { assert, describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, Order } from "effect";
@@ -212,7 +213,7 @@ describe("EntityRef and shared entity primitives", () => {
         expect(DocumentId.equivalence(cast(decodedRef.id), cast(id))).toBe(true);
         expect(Result.isSuccess(EntityRef.makeResult(DocumentId, id))).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it.effect(

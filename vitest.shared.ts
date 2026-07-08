@@ -28,6 +28,17 @@ export const vitestCoverageRunActive =
   vitestCoverageReportOnly ||
   configStringEqualsSync("VITEST_COVERAGE_RATCHET", "1") ||
   process.argv.includes("--coverage");
+
+// one-round-loop P1: an active BEEP_FC_NUM_RUNS floor marks a deep
+// property sweep (PR lane at 400, nightly at 1000+). Read via Config
+// like the coverage flags above (boot-snapshot semantics are exactly
+// what the lane wants — CI exports the floor before vitest starts).
+const parsedFcNumRuns = pipe(
+  Effect.runSync(Config.option(Config.string("BEEP_FC_NUM_RUNS"))),
+  O.map(Number),
+  O.getOrElse(() => 0)
+);
+const fcDeepSweepActive = Number.isInteger(parsedFcNumRuns) && parsedFcNumRuns > 0;
 // Fixed global coverage floors are retired (quality-gate-ratchets, 2026-07-06):
 // the committed per-package baseline compare (standards/coverage.regression-baseline.jsonc,
 // fail-on-drop) is the sole coverage judge. Package-local floors (e.g.
@@ -111,8 +122,11 @@ const config: ViteUserConfig = {
     // Coverage instrumentation (v8 under node) slows heavy schema decodes
     // 10x+ on small CI runners; instrumented runs get generous timeouts —
     // the coverage ratchet judges coverage, not latency.
-    testTimeout: vitestCoverageRunActive ? 180_000 : 30_000,
-    hookTimeout: vitestCoverageRunActive ? 180_000 : 10_000,
+    // Deep property sweeps (BEEP_FC_NUM_RUNS raises fast-check run counts
+    // 8-20x for the property lane and nightly sweep) scale test wall time
+    // the same way instrumentation does; give them the same generous cap.
+    testTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 180_000 : 30_000,
+    hookTimeout: vitestCoverageRunActive || fcDeepSweepActive ? 180_000 : 10_000,
     // Baseline generation/regeneration must tolerate test-less packages;
     // the ratchet compare, not vitest, decides coverage outcomes.
     passWithNoTests: vitestCoverageRunActive,

@@ -4,7 +4,7 @@ import * as ClaimLifecycleUC from "@beep/epistemic-use-cases/ClaimLifecycle";
 import { ClaimProjection, projectClaims } from "@beep/epistemic-use-cases/ClaimProjection";
 import { ShaclValidationServiceLive } from "@beep/semantic-web/adapters/shacl-engine";
 import { ShaclValidationService } from "@beep/semantic-web/services/shacl-validation";
-import { baseEntityFixtureInput } from "@beep/test-utils";
+import { baseEntityFixtureInput, fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect } from "effect";
 import * as A from "effect/Array";
@@ -125,6 +125,6 @@ describe("@beep/epistemic-use-cases", () => {
         }
         expect(sameClaimProjectionView(decoded, view)).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 });

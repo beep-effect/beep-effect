@@ -1,4 +1,5 @@
 import { Agent as AcpAgent, Schema as AcpSchema } from "@beep/acp";
+import { fcRuns } from "@beep/test-utils";
 import { assert, it } from "@effect/vitest";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
@@ -47,7 +48,7 @@ it("round-trips schema-derived agent JSON-RPC responses and notifications throug
         );
       }
     ),
-    { numRuns: 25 }
+    fcRuns(25)
   ));
 
 it.effect(

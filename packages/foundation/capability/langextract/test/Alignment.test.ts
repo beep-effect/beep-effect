@@ -2,6 +2,7 @@ import { alignCandidate, alignCandidates } from "@beep/langextract/Alignment";
 import { ExtractionCandidate, LangExtractOptions } from "@beep/langextract/Extraction";
 import { UnitInterval } from "@beep/nlp/Handoff";
 import { NonNegativeInt } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -97,7 +98,7 @@ describe("alignCandidate", () => {
           expect(extraction.matchedText).toBe(sourceText.slice(extraction.span.start, extraction.span.end));
         }
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it("honors maxExtractions for schema-derived candidates", () =>
@@ -116,6 +117,6 @@ describe("alignCandidate", () => {
           expect(aligned.length).toBeLessThanOrEqual(candidates.length);
         }
       ),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 });

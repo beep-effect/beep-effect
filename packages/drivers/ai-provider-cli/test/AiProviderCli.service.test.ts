@@ -7,6 +7,7 @@ import {
   AiProviderCliProcessResult,
   AiProviderCliProvider,
 } from "@beep/ai-provider-cli";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { Effect, Result } from "effect";
 import * as A from "effect/Array";
@@ -150,7 +151,7 @@ describe("@beep/ai-provider-cli", () => {
           ).toBe(true);
         }
       ),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   layer(AiProviderCli.makeLayerFromRunner(runner))((it) => {

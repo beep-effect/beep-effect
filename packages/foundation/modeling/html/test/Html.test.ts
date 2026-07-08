@@ -13,6 +13,7 @@ import {
   Span,
   Text,
 } from "@beep/html";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Result } from "effect";
 import * as Eq from "effect/Equal";
@@ -194,7 +195,7 @@ describe("HtmlNode AST — schema laws", () => {
           expectRoundTrip(HtmlElementMeta, meta);
         }
       ),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 });
 

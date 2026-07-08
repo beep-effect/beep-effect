@@ -32,6 +32,7 @@ import {
   JsonLdStreamSerializeRequest,
   JsonLdStreamSerializeService,
 } from "@beep/semantic-web/services/jsonld-stream-serialize";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, pipe } from "effect";
@@ -178,7 +179,7 @@ describe("JSON-LD", () => {
           expect(reencodedFrame).toEqual(encodedFrame);
         }
       ),
-      { numRuns: 25 }
+      fcRuns(25)
     ));
 
   it("keeps optional JSON-LD service fields absent in encoded wire shapes when omitted", () => {
@@ -248,7 +249,7 @@ describe("JSON-LD", () => {
 
         expect(S.encodeSync(JsonLdStreamSerializeRequest)(decoded)).toEqual(encoded);
       }),
-      { numRuns: 5 }
+      fcRuns(5)
     )
   );
 

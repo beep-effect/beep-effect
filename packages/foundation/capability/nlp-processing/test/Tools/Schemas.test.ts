@@ -36,6 +36,7 @@ import { Sentences } from "@beep/nlp-processing/Tools/Sentences";
 import { Stem } from "@beep/nlp-processing/Tools/Stem";
 import { Tokenize } from "@beep/nlp-processing/Tools/Tokenize";
 import { WordCount } from "@beep/nlp-processing/Tools/WordCount";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
@@ -50,7 +51,7 @@ const assertSchemaRoundTrip = <Schema extends S.Codec<unknown, unknown, never, n
     fc.property(arbitrary, (value) => {
       expect(equals(decode(encode(value)), value)).toBe(true);
     }),
-    { numRuns: 50 }
+    fcRuns(50)
   );
 };
 

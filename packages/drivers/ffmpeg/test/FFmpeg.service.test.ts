@@ -21,6 +21,7 @@ import {
   VideoDimension,
   VideoProbe,
 } from "@beep/ffmpeg";
+import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -48,7 +49,7 @@ const assertRoundTrip = <Schema extends S.Codec<unknown, unknown>>(schema: Schem
     fc.property(S.toArbitrary(schema), (value) => {
       expect(Equal.equals(decode(encode(value)), value)).toBe(true);
     }),
-    { numRuns: 25 }
+    fcRuns(25)
   );
 };
 
@@ -164,7 +165,7 @@ describe("@beep/ffmpeg", () => {
           expect(Equal.equals(decodeErrorOptions(encodeErrorOptions(options)), options)).toBe(true);
         }
       ),
-      { numRuns: 25 }
+      fcRuns(25)
     );
   });
 

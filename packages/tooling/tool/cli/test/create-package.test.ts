@@ -1,5 +1,6 @@
 import { createPackageCommand } from "@beep/repo-cli/commands/CreatePackage";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
+import { fcRuns } from "@beep/test-utils";
 import { A, Str } from "@beep/utils";
 import { NodeChildProcessSpawner, NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Layer, Path } from "effect";
@@ -437,7 +438,7 @@ describe("create-package", { concurrent: false }, () => {
           storiesDirectory
         );
       }),
-      { numRuns: 16 }
+      fcRuns(16)
     );
   });
 

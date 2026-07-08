@@ -7,6 +7,7 @@
 
 import * as S from "effect/Schema";
 import { FastCheck as fc } from "effect/testing";
+import { fcRuns } from "./FastCheckRuns.js";
 
 /**
  * Assert that a schema-derived arbitrary only emits values accepted by the same schema without transformation.
@@ -39,6 +40,6 @@ export const assertSchemaArbitraryDecodesToSelf = <Schema extends S.Codec<unknow
 
   fc.assert(
     fc.property(arbitrary, (value) => isValue(value) && equivalent(decode(value), value)),
-    { numRuns: options?.numRuns ?? 50 }
+    fcRuns(options?.numRuns ?? 50)
   );
 };

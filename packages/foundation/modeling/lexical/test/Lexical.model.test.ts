@@ -10,6 +10,7 @@ import {
   TextFormatMask,
 } from "@beep/lexical-schema";
 import { sanitizeUrl } from "@beep/lexical-schema/Lexical.normalize";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -242,7 +243,7 @@ describe("Lexical.model", () => {
         expect(S.decodeUnknownSync(SerializedEditorState)(S.encodeSync(SerializedEditorState)(state))).toEqual(state);
         expect(SerializedEditorState.decodeOption(S.encodeSync(SerializedEditorState)(state))).toEqual(O.some(state));
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 
@@ -258,7 +259,7 @@ describe("Lexical.model", () => {
         expect(sanitizeUrl(url)).toBe(url);
         expect(S.decodeUnknownSync(SafeUrl)(S.encodeSync(SafeUrl)(url))).toBe(url);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 

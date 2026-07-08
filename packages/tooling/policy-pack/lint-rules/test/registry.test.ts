@@ -1,4 +1,5 @@
 import { RULE_NAMES, RULES, RuleRegistrySchema, rulePath, rulesDir } from "@beep/lint-rules";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { Effect, FileSystem, Path } from "effect";
 import * as O from "effect/Option";
@@ -102,7 +103,7 @@ describe("rule registry", () => {
       fc.property(RuleRegistryArbitrary, (registry) => {
         expect(decodeRuleRegistry(encodeRuleRegistry(registry))).toEqual(registry);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 

@@ -13,6 +13,7 @@
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
     "test": "bun run beep:test",
+    "test:property": "bun run beep:test",
     "coverage": "bunx vitest run --coverage",
     "dtslint": "bunx tstyche dtslint/NextConfig.tst.ts",
     "type-test": "bun run dtslint",

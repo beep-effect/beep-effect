@@ -1,5 +1,6 @@
 import * as DomainWorker from "@beep/architecture-lab-domain/entities/Worker";
 import { fromWorkerRow, toWorkerInsert, workerTable } from "@beep/architecture-lab-tables/entities/Worker";
+import { fcRuns } from "@beep/test-utils";
 import { describe, expect, it } from "@effect/vitest";
 import { getColumns, getTableName } from "drizzle-orm";
 import { Effect } from "effect";
@@ -43,6 +44,6 @@ describe("Worker table", () => {
 
         expect(WorkerEquivalence(decoded, worker)).toBe(true);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 });

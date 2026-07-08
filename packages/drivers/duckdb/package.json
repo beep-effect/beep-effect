@@ -29,7 +29,8 @@
     "docgen": "bun run ../../../packages/tooling/tool/docgen/src/bin.ts",
     "lint": "bun run beep:lint",
     "lint:fix": "bun run beep:lint:fix",
-    "test": "bun run beep:test"
+    "test": "bun run beep:test",
+    "test:property": "bun run beep:test"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -59,6 +60,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
+    "@beep/test-utils": "workspace:^",
     "@effect/platform-node": "catalog:",
     "@effect/vitest": "catalog:",
     "@types/node": "catalog:",

@@ -111,6 +111,7 @@ import {
 } from "@beep/rdf/Vocab/Skos";
 import { XSD_ANY_URI, XSD_BOOLEAN, XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { NonNegativeInt } from "@beep/schema";
+import { fcRuns } from "@beep/test-utils";
 import { A } from "@beep/utils";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Equal, pipe, Result } from "effect";
@@ -648,7 +649,7 @@ describe("@beep/rdf semantic metadata", () => {
       fc.property(arbitrary, (metadata) => {
         expect(decode(encode(metadata))).toEqual(metadata);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 });

@@ -25,6 +25,7 @@ import { extractFile, makeFileProcessingServiceLayer, processFile } from "@beep/
 import { TestFileProcessingEngine } from "@beep/file-processing/test";
 import { NonNegativeInt } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer } from "effect";
@@ -151,7 +152,7 @@ describe("@beep/file-processing", () => {
           expect(decodedProcess.operationKind).toBe("process");
         }
       ),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it("round-trips TextSpan through its encoded shape and generated invariant", () =>
@@ -167,7 +168,7 @@ describe("@beep/file-processing", () => {
         expect(span.startOffset).toBeGreaterThanOrEqual(0);
         expect(span.endOffset).toBeGreaterThanOrEqual(span.startOffset);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it.effect("rejects invalid TextSpan offsets at decode", () =>
@@ -185,35 +186,35 @@ describe("@beep/file-processing", () => {
       fc.property(ProcessRunManifestArbitrary, (manifest) => {
         assertJsonRoundTrip(manifest, encodeProcessRunManifestJson, decodeProcessRunManifestJson);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
 
     fc.assert(
       fc.property(FileProcessingCoverageSummaryArbitrary, (summary) => {
         assertJsonRoundTrip(summary, encodeFileProcessingCoverageSummaryJson, decodeFileProcessingCoverageSummaryJson);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
 
     fc.assert(
       fc.property(SourceProcessingRecordArbitrary, (record) => {
         assertJsonRoundTrip(record, encodeSourceProcessingRecordJson, decodeSourceProcessingRecordJson);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
 
     fc.assert(
       fc.property(FileProcessingFailureRecordArbitrary, (record) => {
         assertJsonRoundTrip(record, encodeFileProcessingFailureRecordJson, decodeFileProcessingFailureRecordJson);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
 
     fc.assert(
       fc.property(ChildArtifactRecordArbitrary, (record) => {
         assertJsonRoundTrip(record, encodeChildArtifactRecordJson, decodeChildArtifactRecordJson);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     );
   });
 
@@ -229,7 +230,7 @@ describe("@beep/file-processing", () => {
         expect(isPathWithinRoot(root, `/srv/${rootName}-evil/${leafName}`)).toBe(false);
         expect(isPathWithinRoot(root, `${root}/../${rootName}/${leafName}`)).toBe(false);
       }),
-      { numRuns: 50 }
+      fcRuns(50)
     ));
 
   it.effect("extracts synthetic text through the service contract", () =>

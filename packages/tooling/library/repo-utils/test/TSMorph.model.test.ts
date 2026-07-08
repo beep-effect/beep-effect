@@ -51,6 +51,7 @@ import {
   InternalTsMorphProject,
   InternalTsMorphSourceFile,
 } from "@beep/repo-utils/TSMorph/TSMorph.model";
+import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Option as O } from "effect";
@@ -266,7 +267,7 @@ describe("TSMorph model taxonomy", () => {
           expect(decoded).toBe(symbolId);
           expect(decodeSymbolIdParts(symbolId)).toEqual([...decodeSymbolIdParts(decoded)]);
         }),
-        { numRuns: 50 }
+        fcRuns(50)
       );
     });
 
