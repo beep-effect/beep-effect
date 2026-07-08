@@ -1512,6 +1512,14 @@
       "reason": "Generic interface requires manual modeling and is tracked as an exception."
     },
     {
+      "file": "packages/foundation/modeling/schema/src/TaggedErrorClass/TaggedErrorClass.errors.ts",
+      "symbol": "fieldsStruct",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/schema",
+      "reason": "Generic TaggedErrorClass factory builds a Struct from its dynamic fields argument (a fields record or Struct) solely to derive a stack-independent field equivalence for S.toEquivalence; the fields are a runtime parameter, so no plain object literal is possible."
+    },
+    {
       "file": "packages/foundation/modeling/schema/src/VariantSchema/VariantSchema.core.ts",
       "symbol": "Class",
       "kind": "exported-interface",
