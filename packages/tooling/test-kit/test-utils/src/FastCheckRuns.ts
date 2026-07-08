@@ -11,7 +11,7 @@
  * @since 0.0.0
  */
 
-import { Config, Effect } from "effect";
+import { Config, Effect, pipe } from "effect";
 import * as O from "effect/Option";
 
 /**
@@ -58,6 +58,11 @@ const parsePositiveInteger = (raw: string): O.Option<number> => {
   return Number.isInteger(parsed) && parsed > 0 ? O.some(parsed) : O.none();
 };
 
+// Effect's default ConfigProvider snapshots the environment at process
+// boot — exactly the lane semantics (CI exports BEEP_FC_NUM_RUNS before
+// vitest starts). Runtime mutation is deliberately NOT observed.
+const fcNumRunsConfig = Config.option(Config.string("BEEP_FC_NUM_RUNS"));
+
 /**
  * Read the `BEEP_FC_NUM_RUNS` environment floor.
  *
@@ -75,12 +80,8 @@ const parsePositiveInteger = (raw: string): O.Option<number> => {
  * @category testing
  * @since 0.0.0
  */
-// Effect's default ConfigProvider snapshots the environment at process
-// boot — exactly the lane semantics (CI exports BEEP_FC_NUM_RUNS before
-// vitest starts). Runtime mutation is deliberately NOT observed.
-const fcNumRunsConfig = Config.option(Config.string("BEEP_FC_NUM_RUNS"));
-
-export const envFcNumRunsFloor = (): number => parseFcNumRunsFloor(O.getOrUndefined(Effect.runSync(fcNumRunsConfig)));
+export const envFcNumRunsFloor = (): number =>
+  pipe(Effect.runSync(fcNumRunsConfig), O.getOrUndefined, parseFcNumRunsFloor);
 
 /**
  * Build fast-check run options whose effective `numRuns` is

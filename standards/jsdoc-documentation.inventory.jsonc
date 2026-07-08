@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-07-08T02:22:53.170Z",
+  "generatedAt": "2026-07-08T03:14:25.350Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 78,
     "publicModules": 1618,
-    "publicExports": 14472,
+    "publicExports": 14473,
     "openModules": 129,
     "openExports": 2207,
     "missingExportExamples": 2013,
@@ -58619,7 +58619,7 @@
         "srcDir": "src",
         "sourceFileCount": 6,
         "publicModuleCount": 6,
-        "publicExportCount": 36
+        "publicExportCount": 37
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -58680,7 +58680,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 3,
+          "exportCount": 4,
           "remediationStatus": "resolved"
         },
         {
@@ -58820,9 +58820,33 @@
           "exportKind": "const",
           "filePath": "src/FastCheckRuns.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/FastCheckRuns.ts",
-          "line": 28,
-          "anchor": "packages-tooling-test-kit-test-utils-src-fastcheckruns-ts-28-default-fc-num-runs",
+          "line": 29,
+          "anchor": "packages-tooling-test-kit-test-utils-src-fastcheckruns-ts-29-default-fc-num-runs",
           "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "parseFcNumRunsFloor",
+          "exportKind": "const",
+          "filePath": "src/FastCheckRuns.ts",
+          "repoPath": "packages/tooling/test-kit/test-utils/src/FastCheckRuns.ts",
+          "line": 50,
+          "anchor": "packages-tooling-test-kit-test-utils-src-fastcheckruns-ts-50-parsefcnumrunsfloor",
+          "currentTags": [
+            "@param",
+            "@returns",
             "@example",
             "@category",
             "@since"
@@ -58842,8 +58866,8 @@
           "exportKind": "const",
           "filePath": "src/FastCheckRuns.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/FastCheckRuns.ts",
-          "line": 52,
-          "anchor": "packages-tooling-test-kit-test-utils-src-fastcheckruns-ts-52-envfcnumrunsfloor",
+          "line": 83,
+          "anchor": "packages-tooling-test-kit-test-utils-src-fastcheckruns-ts-83-envfcnumrunsfloor",
           "currentTags": [
             "@returns",
             "@example",
@@ -58865,8 +58889,8 @@
           "exportKind": "const",
           "filePath": "src/FastCheckRuns.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/FastCheckRuns.ts",
-          "line": 79,
-          "anchor": "packages-tooling-test-kit-test-utils-src-fastcheckruns-ts-79-fcruns",
+          "line": 107,
+          "anchor": "packages-tooling-test-kit-test-utils-src-fastcheckruns-ts-107-fcruns",
           "currentTags": [
             "@param",
             "@returns",
@@ -59448,8 +59472,8 @@
           "exportKind": "const",
           "filePath": "src/SqlTest.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-          "line": 1444,
-          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1444-makepgliteintegrationgate",
+          "line": 1446,
+          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1446-makepgliteintegrationgate",
           "currentTags": [
             "@returns",
             "@example",
@@ -59471,8 +59495,8 @@
           "exportKind": "const",
           "filePath": "src/SqlTest.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-          "line": 1503,
-          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1503-makepglitesqltestlayer",
+          "line": 1510,
+          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1510-makepglitesqltestlayer",
           "currentTags": [
             "@param",
             "@returns",

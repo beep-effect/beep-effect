@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-08T02:22:53.170Z
+Generated: 2026-07-08T03:14:25.350Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 78 |
 | publicModules | 1618 |
-| publicExports | 14472 |
+| publicExports | 14473 |
 | openModules | 129 |
 | openExports | 2207 |
 | missingExportExamples | 2013 |
@@ -81,7 +81,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 38 | `@beep/chalk` | `packages/foundation/capability/chalk` | clean | 1 | 35 | 0 | 0 |
 | 39 | `@beep/uspto` | `packages/drivers/uspto` | needs-remediation | 5 | 24 | 0 | 9 |
 | 40 | `@beep/phoenix` | `packages/drivers/phoenix` | needs-remediation | 5 | 50 | 0 | 10 |
-| 41 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 6 | 36 | 0 | 9 |
+| 41 | `@beep/test-utils` | `packages/tooling/test-kit/test-utils` | needs-remediation | 6 | 37 | 0 | 9 |
 | 42 | `@beep/types` | `packages/foundation/primitive/types` | clean | 5 | 10 | 0 | 0 |
 | 43 | `@beep/oip-web` | `apps/oip-web` | needs-remediation | 31 | 84 | 1 | 11 |
 | 44 | `@beep/storybook` | `apps/storybook` | no-public-src-surface | 0 | 0 | 0 | 0 |
