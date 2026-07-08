@@ -101,13 +101,13 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
   const pushEntry = (
     file: string,
     symbol: string,
-    kind: typeof SchemaFirstEntryKind.Type,
-    status: typeof SchemaFirstEntryStatus.Type,
+    kind: SchemaFirstEntryKind,
+    status: SchemaFirstEntryStatus,
     reason: string,
     owner: string,
     options: {
       readonly line?: number;
-      readonly ruleId?: typeof SchemaFirstPolicyRuleId.Type;
+      readonly ruleId?: SchemaFirstPolicyRuleId;
     } = {}
   ) =>
     void A.appendInPlace(

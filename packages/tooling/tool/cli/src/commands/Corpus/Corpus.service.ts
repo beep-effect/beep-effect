@@ -64,8 +64,8 @@ type CorpusCommandServiceRequirements =
  * ```ts
  * import type { CorpusCommandServiceShape } from "@beep/repo-cli/commands/Corpus"
  *
- * const service = {} as CorpusCommandServiceShape
- * console.log(service) // example value
+ * const methodNames: ReadonlyArray<keyof CorpusCommandServiceShape> = ["catalogCorpus", "salvageCorpus"]
+ * console.log(methodNames.length) // 2
  * ```
  * @category services
  * @since 0.0.0

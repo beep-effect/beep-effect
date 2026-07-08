@@ -97,9 +97,17 @@ class SkillOptTaskWeights extends S.Class<SkillOptTaskWeights>($I`SkillOptTaskWe
  *
  * @example
  * ```ts
- * import type { SkillOptTaskManifest } from "@beep/repo-cli/commands/AgentEffectiveness"
+ * import { SkillOptTaskManifest } from "@beep/repo-cli/commands/AgentEffectiveness"
  *
- * declare const task: SkillOptTaskManifest
+ * const task = SkillOptTaskManifest.make({
+ *   completion: { requiredExports: ["Contact"], requiredPatterns: [], forbiddenPatterns: [] },
+ *   derivedFrom: [],
+ *   entrypoint: "src/index.ts",
+ *   fixture: "fixtures/contact",
+ *   id: "contact-model",
+ *   prompt: "Create a contact model.",
+ *   ruleIds: []
+ * })
  * console.log(task.id)
  * ```
  * @category models
@@ -164,6 +172,12 @@ export class AgentEffectivenessEvalViolation extends S.Class<AgentEffectivenessE
 /**
  * Fixed scorer output breakdown.
  *
+ * @example
+ * ```ts
+ * import { AgentEffectivenessEvalScoreBreakdown } from "@beep/repo-cli/commands/AgentEffectiveness/AgentEffectiveness.schemas"
+ *
+ * console.log(typeof AgentEffectivenessEvalScoreBreakdown !== "undefined") // true
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -186,9 +200,14 @@ export class AgentEffectivenessEvalScoreBreakdown extends S.Class<AgentEffective
  *
  * @example
  * ```ts
- * import type { AgentEffectivenessEvalScoreReport } from "@beep/repo-cli/commands/AgentEffectiveness"
+ * import { AgentEffectivenessEvalScoreBreakdown, AgentEffectivenessEvalScoreReport } from "@beep/repo-cli/commands/AgentEffectiveness"
  *
- * declare const report: AgentEffectivenessEvalScoreReport
+ * const report = AgentEffectivenessEvalScoreReport.make({
+ *   breakdown: AgentEffectivenessEvalScoreBreakdown.make({ biome: 1, completion: 1, schemaFirst: 1, tsgo: 1 }),
+ *   score: 1,
+ *   taskId: "contact-model",
+ *   violations: []
+ * })
  * console.log(report.score)
  * ```
  * @category models
@@ -211,6 +230,12 @@ export class AgentEffectivenessEvalScoreReport extends S.Class<AgentEffectivenes
 /**
  * Result of recording a scorer report in ai-metrics.
  *
+ * @example
+ * ```ts
+ * import { AgentEffectivenessEvalRecordResult } from "@beep/repo-cli/commands/AgentEffectiveness/AgentEffectiveness.schemas"
+ *
+ * console.log(typeof AgentEffectivenessEvalRecordResult !== "undefined") // true
+ * ```
  * @category models
  * @since 0.0.0
  */

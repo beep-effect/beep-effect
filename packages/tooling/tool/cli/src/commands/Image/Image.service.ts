@@ -46,8 +46,9 @@ type ImageCommandServiceRequirements =
  * @example
  * ```ts
  * import type { ImageCommandServiceShape } from "@beep/repo-cli/commands/Image"
- * const value = {} as ImageCommandServiceShape
- * console.log(value) // example value
+ *
+ * const methodNames: ReadonlyArray<keyof ImageCommandServiceShape> = ["extractFrames", "extractFramesDir"]
+ * console.log(methodNames.length) // 2
  * ```
  * @category services
  * @since 0.0.0

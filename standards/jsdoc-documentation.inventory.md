@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-07-08T16:51:58.891Z
+Generated: 2026-07-08T20:44:55.792Z
 
 ## Scope
 
@@ -14,8 +14,8 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | cleanPackages | 98 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 0 |
-| publicModules | 1622 |
-| publicExports | 14547 |
+| publicModules | 1654 |
+| publicExports | 14672 |
 | openModules | 0 |
 | openExports | 0 |
 | missingExportExamples | 0 |
@@ -57,7 +57,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 14 | `@beep/discord` | `packages/drivers/discord` | clean | 4 | 15 | 0 | 0 |
 | 15 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 33 | 0 | 0 |
 | 16 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | clean | 3 | 7 | 0 | 0 |
-| 17 | `@beep/repo-cli` | `packages/tooling/tool/cli` | clean | 101 | 684 | 0 | 0 |
+| 17 | `@beep/repo-cli` | `packages/tooling/tool/cli` | clean | 132 | 794 | 0 | 0 |
 | 18 | `@beep/pglite` | `packages/drivers/pglite` | clean | 4 | 11 | 0 | 0 |
 | 19 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 20 | `@beep/agents-server` | `packages/agents/server` | clean | 7 | 27 | 0 | 0 |
@@ -90,7 +90,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 47 | `@beep/workspace-domain` | `packages/workspace/domain` | clean | 27 | 60 | 0 | 0 |
 | 48 | `@beep/semantic-web` | `packages/foundation/capability/semantic-web` | clean | 28 | 119 | 0 | 0 |
 | 49 | `@beep/utils` | `packages/foundation/modeling/utils` | clean | 26 | 198 | 0 | 0 |
-| 50 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 17 | 258 | 0 | 0 |
+| 50 | `@beep/repo-ai-metrics` | `packages/tooling/library/ai-metrics` | clean | 18 | 262 | 0 | 0 |
 | 51 | `@beep/architecture-lab-tables` | `packages/architecture-lab/tables` | clean | 7 | 21 | 0 | 0 |
 | 52 | `@beep/tika` | `packages/drivers/tika` | clean | 4 | 16 | 0 | 0 |
 | 53 | `@beep/libpff` | `packages/drivers/libpff` | clean | 4 | 19 | 0 | 0 |
@@ -113,7 +113,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 70 | `@beep/infra` | `infra` | clean | 5 | 34 | 0 | 0 |
 | 71 | `@beep/runpod` | `packages/drivers/runpod` | clean | 6 | 179 | 0 | 0 |
 | 72 | `@beep/fc-runs` | `packages/tooling/test-kit/fc-runs` | clean | 2 | 5 | 0 | 0 |
-| 73 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | clean | 63 | 666 | 0 | 0 |
+| 73 | `@beep/repo-utils` | `packages/tooling/library/repo-utils` | clean | 63 | 677 | 0 | 0 |
 | 74 | `@beep/schema` | `packages/foundation/modeling/schema` | clean | 241 | 1567 | 0 | 0 |
 | 75 | `@beep/epistemic-server` | `packages/epistemic/server` | clean | 2 | 3 | 0 | 0 |
 | 76 | `@beep/rdf` | `packages/foundation/modeling/rdf` | clean | 17 | 208 | 0 | 0 |

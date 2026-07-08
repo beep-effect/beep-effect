@@ -35,6 +35,13 @@ export const ArchitectureDomainKind = LiteralKit(["aggregates", "entities", "val
 /**
  * Canonical architecture domain-kind folder.
  *
+ * @example
+ * ```ts
+ * import type { ArchitectureDomainKind } from "@beep/repo-cli/commands/Architecture/Architecture.schemas"
+ *
+ * const example: ArchitectureDomainKind | undefined = undefined
+ * console.log(example === undefined) // true
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -62,6 +69,13 @@ export const ArchitecturePlanStage = LiteralKit(["core", "persistence", "protoco
 /**
  * Staged architecture proof target.
  *
+ * @example
+ * ```ts
+ * import type { ArchitecturePlanStage } from "@beep/repo-cli/commands/Architecture/Architecture.schemas"
+ *
+ * const example: ArchitecturePlanStage | undefined = undefined
+ * console.log(example === undefined) // true
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -99,6 +113,13 @@ export const ArchitectureSliceRole = LiteralKit([
 /**
  * Canonical architecture slice role.
  *
+ * @example
+ * ```ts
+ * import type { ArchitectureSliceRole } from "@beep/repo-cli/commands/Architecture/Architecture.schemas"
+ *
+ * const example: ArchitectureSliceRole | undefined = undefined
+ * console.log(example === undefined) // true
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -207,6 +228,13 @@ export const ArchitectureWriterKind = LiteralKit(["template", "json", "jsonc", "
 /**
  * Writer family selected from normalized architecture operations.
  *
+ * @example
+ * ```ts
+ * import type { ArchitectureWriterKind } from "@beep/repo-cli/commands/Architecture/Architecture.schemas"
+ *
+ * const example: ArchitectureWriterKind | undefined = undefined
+ * console.log(example === undefined) // true
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -636,11 +664,22 @@ export const ArchitectureOperation = S.Union([
   WritePackageJsonOperation,
   EnsureFileOperation,
   EnsureAbsentPathOperation,
-]);
+]).pipe(
+  $I.annoteSchema("ArchitectureOperation", {
+    description: "Canonical operation-plan operation.",
+  })
+);
 
 /**
  * Canonical operation-plan operation.
  *
+ * @example
+ * ```ts
+ * import type { ArchitectureOperation } from "@beep/repo-cli/commands/Architecture"
+ *
+ * const operation: ArchitectureOperation | undefined = undefined
+ * console.log(operation === undefined) // true
+ * ```
  * @category models
  * @since 0.0.0
  */

@@ -53,6 +53,13 @@ export class AgentEffectivenessEvalScorerError extends TaggedErrorClass<AgentEff
 /**
  * Namespace containing option types for {@link AgentEffectivenessEvalScorerError}.
  *
+ * @example
+ * ```ts
+ * import { AgentEffectivenessEvalScorerError } from "@beep/repo-cli/commands/AgentEffectiveness/AgentEffectiveness.errors"
+ *
+ * const options: AgentEffectivenessEvalScorerError.Options = { file: "fixtures/task" }
+ * console.log(options.file) // "fixtures/task"
+ * ```
  * @category errors
  * @since 0.0.0
  */

@@ -17,6 +17,12 @@ const $I = $RepoCliId.create("commands/TsconfigSync/TsconfigSync.schemas");
 /**
  * Filename for package-local docgen configuration files.
  *
+ * @example
+ * ```ts
+ * import { DOCGEN_CONFIG_FILENAME } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ *
+ * console.log(typeof DOCGEN_CONFIG_FILENAME !== "undefined") // true
+ * ```
  * @category utilities
  * @since 0.0.0
  */
@@ -24,6 +30,12 @@ export const DOCGEN_CONFIG_FILENAME = "docgen.json" as const;
 /**
  * Root tstyche tsconfig path managed by tsconfig-sync.
  *
+ * @example
+ * ```ts
+ * import { ROOT_TSTYCHE_TSCONFIG } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ *
+ * console.log(typeof ROOT_TSTYCHE_TSCONFIG !== "undefined") // true
+ * ```
  * @category utilities
  * @since 0.0.0
  */
@@ -32,6 +44,12 @@ export const ROOT_TSTYCHE_TSCONFIG = "./tsconfig.dtslint.json" as const;
 /**
  * Synthetic root key in repo-utils dependency maps.
  *
+ * @example
+ * ```ts
+ * import { ROOT_DEP_INDEX_KEY } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ *
+ * console.log(typeof ROOT_DEP_INDEX_KEY !== "undefined") // true
+ * ```
  * @category configuration
  * @since 0.0.0
  */
@@ -55,6 +73,21 @@ export const RootDepIndexKey = S.Literal(ROOT_DEP_INDEX_KEY).pipe(
     description: "Synthetic root dependency index key from repo-utils dependency maps.",
   })
 );
+
+/**
+ * Synthetic root dependency-index key.
+ *
+ * @example
+ * ```ts
+ * import type { RootDepIndexKey } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ *
+ * const key: RootDepIndexKey = "@beep/root"
+ * console.log(key) // "@beep/root"
+ * ```
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RootDepIndexKey = typeof RootDepIndexKey.Type;
 
 /**
  * Canonical alias key matcher managed by this command.
@@ -130,6 +163,21 @@ export const StringArray = S.Array(S.String).pipe(
     description: "Reusable schema for arrays of strings.",
   })
 );
+
+/**
+ * Reusable string-array type for parsed config fields.
+ *
+ * @example
+ * ```ts
+ * import type { StringArray } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ *
+ * const values: StringArray = ["docgen.json"]
+ * console.log(values.length) // 1
+ * ```
+ * @category type-level
+ * @since 0.0.0
+ */
+export type StringArray = typeof StringArray.Type;
 
 /**
  * Predicate derived from the canonical alias-key schema.
@@ -449,6 +497,13 @@ export const TsconfigSyncRunOptions = TsconfigSyncMode.mapMembers(
 /**
  * Runtime options for executing tsconfig sync at a repo root.
  *
+ * @example
+ * ```ts
+ * import type { TsconfigSyncRunOptions } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ *
+ * const example: TsconfigSyncRunOptions | undefined = undefined
+ * console.log(example === undefined) // true
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -484,6 +539,13 @@ export const TsconfigSyncSection = LiteralKit([
 /**
  * Sync change section categories.
  *
+ * @example
+ * ```ts
+ * import type { TsconfigSyncSection } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ *
+ * const example: TsconfigSyncSection | undefined = undefined
+ * console.log(example === undefined) // true
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -589,6 +651,13 @@ export const TsconfigSyncChange = TsconfigSyncSection.mapMembers(
 /**
  * A single planned file change.
  *
+ * @example
+ * ```ts
+ * import type { TsconfigSyncChange } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ *
+ * const example: TsconfigSyncChange | undefined = undefined
+ * console.log(example === undefined) // true
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -706,6 +775,13 @@ export const PlannedFileChange = TsconfigSyncSection.mapMembers(
 /**
  * A planned file change with transformed file content.
  *
+ * @example
+ * ```ts
+ * import type { PlannedFileChange } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ *
+ * const example: PlannedFileChange | undefined = undefined
+ * console.log(example === undefined) // true
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -771,6 +847,13 @@ export const TsconfigSyncResult = TsconfigSyncMode.mapMembers(
 /**
  * Result emitted after a sync run.
  *
+ * @example
+ * ```ts
+ * import type { TsconfigSyncResult } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ *
+ * const example: TsconfigSyncResult | undefined = undefined
+ * console.log(example === undefined) // true
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -831,6 +914,21 @@ export const JsonObject = S.Record(S.String, S.Unknown).pipe(
     description: "Generic JSON object document used for parsed docgen configs.",
   })
 );
+
+/**
+ * Generic JSON object document used for parsed docgen configs.
+ *
+ * @example
+ * ```ts
+ * import type { JsonObject } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.schemas"
+ *
+ * const value: JsonObject = { compilerOptions: {} }
+ * console.log("compilerOptions" in value) // true
+ * ```
+ * @category type-level
+ * @since 0.0.0
+ */
+export type JsonObject = typeof JsonObject.Type;
 
 class TsconfigReferenceEntry extends S.Class<TsconfigReferenceEntry>($I`TsconfigReferenceEntry`)(
   {

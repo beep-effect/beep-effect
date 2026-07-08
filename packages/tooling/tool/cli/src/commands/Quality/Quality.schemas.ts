@@ -74,6 +74,21 @@ export const QualityTaskBypassArgName = LiteralKit([
 );
 
 /**
+ * Root CLI flag name that bypasses the quality task fast path.
+ *
+ * @example
+ * ```ts
+ * import type { QualityTaskBypassArgName } from "@beep/repo-cli/commands/Quality/Quality.schemas"
+ *
+ * const flag: QualityTaskBypassArgName = "--help"
+ * console.log(flag) // "--help"
+ * ```
+ * @category type-level
+ * @since 0.0.0
+ */
+export type QualityTaskBypassArgName = typeof QualityTaskBypassArgName.Type;
+
+/**
  * Lint policy subcommands owned by the full command tree.
  *
  * @example
@@ -99,6 +114,21 @@ export const LintPolicySubcommand = LiteralKit([
     description: "Lint policy subcommands that remain owned by the full command tree.",
   })
 );
+
+/**
+ * Lint policy subcommand owned by the full command tree.
+ *
+ * @example
+ * ```ts
+ * import type { LintPolicySubcommand } from "@beep/repo-cli/commands/Quality/Quality.schemas"
+ *
+ * const subcommand: LintPolicySubcommand = "schema-first"
+ * console.log(subcommand) // "schema-first"
+ * ```
+ * @category type-level
+ * @since 0.0.0
+ */
+export type LintPolicySubcommand = typeof LintPolicySubcommand.Type;
 
 /**
  * Root audit mode names supported by the quality task adapter.
@@ -491,6 +521,21 @@ export const FallowQualityCiMode = LiteralKit(["none", "advisory-artifact", "war
 );
 
 /**
+ * CI posture for a Fallow feature-family matrix row.
+ *
+ * @example
+ * ```ts
+ * import type { FallowQualityCiMode } from "@beep/repo-cli/commands/Quality/Quality.schemas"
+ *
+ * const mode: FallowQualityCiMode = "blocking-check"
+ * console.log(mode) // "blocking-check"
+ * ```
+ * @category type-level
+ * @since 0.0.0
+ */
+export type FallowQualityCiMode = typeof FallowQualityCiMode.Type;
+
+/**
  * Promotion posture for a Fallow feature-family matrix row.
  *
  * @example
@@ -514,6 +559,21 @@ export const FallowQualityPromotionStatus = LiteralKit([
     description: "Promotion posture for a Fallow feature-family matrix row.",
   })
 );
+
+/**
+ * Promotion posture for a Fallow feature-family matrix row.
+ *
+ * @example
+ * ```ts
+ * import type { FallowQualityPromotionStatus } from "@beep/repo-cli/commands/Quality/Quality.schemas"
+ *
+ * const status: FallowQualityPromotionStatus = "blocking"
+ * console.log(status) // "blocking"
+ * ```
+ * @category type-level
+ * @since 0.0.0
+ */
+export type FallowQualityPromotionStatus = typeof FallowQualityPromotionStatus.Type;
 
 /**
  * Minimal Fallow feature-matrix row used by GitHub check plan validation.

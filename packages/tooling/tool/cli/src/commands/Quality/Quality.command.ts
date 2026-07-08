@@ -98,6 +98,13 @@ export {
 /**
  * Host facts used when selecting a quality profile.
  *
+ * @example
+ * ```ts
+ * import type { QualityProfileDetectionInput } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * const example: QualityProfileDetectionInput | undefined = undefined
+ * console.log(example === undefined) // true
+ * ```
  * @category models
  * @since 0.0.0
  */
@@ -106,6 +113,12 @@ export type QualityProfileDetectionInput = QualityProfileDetectionInputType;
 /**
  * Return the static GitHub check collector lanes for a mode.
  *
+ * @example
+ * ```ts
+ * import { githubCheckLanesForModeForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof githubCheckLanesForModeForTesting !== "undefined") // true
+ * ```
  * @category testing
  * @since 0.0.0
  */
@@ -114,6 +127,12 @@ export const githubCheckLanesForModeForTesting = githubCheckLanesForModeForTesti
 /**
  * Build the external pre-push diagnostic lanes used by GitHub check collectors.
  *
+ * @example
+ * ```ts
+ * import { githubCheckPrePushExternalLanesForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof githubCheckPrePushExternalLanesForTesting !== "undefined") // true
+ * ```
  * @category testing
  * @since 0.0.0
  */
@@ -122,6 +141,12 @@ export const githubCheckPrePushExternalLanesForTesting = githubCheckPrePushExter
 /**
  * Compare promoted Fallow matrix rows against static GitHub check lanes.
  *
+ * @example
+ * ```ts
+ * import { githubCheckPromotedFallowLaneDiagnosticsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof githubCheckPromotedFallowLaneDiagnosticsForTesting !== "undefined") // true
+ * ```
  * @category testing
  * @since 0.0.0
  */
@@ -131,6 +156,12 @@ export const githubCheckPromotedFallowLaneDiagnosticsForTesting =
 /**
  * Build the repo-quality diagnostic lanes used by GitHub check collectors.
  *
+ * @example
+ * ```ts
+ * import { githubCheckQualityLanesForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof githubCheckQualityLanesForTesting !== "undefined") // true
+ * ```
  * @category testing
  * @since 0.0.0
  */
@@ -139,6 +170,12 @@ export const githubCheckQualityLanesForTesting = githubCheckQualityLanesForTesti
 /**
  * Build the repo-sanity diagnostic lanes used by GitHub check collectors.
  *
+ * @example
+ * ```ts
+ * import { githubCheckRepoSanityLanesForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof githubCheckRepoSanityLanesForTesting !== "undefined") // true
+ * ```
  * @category testing
  * @since 0.0.0
  */
@@ -147,6 +184,12 @@ export const githubCheckRepoSanityLanesForTesting = githubCheckRepoSanityLanesFo
 /**
  * Derive GitHub check lane ids required by promoted Fallow matrix rows.
  *
+ * @example
+ * ```ts
+ * import { promotedFallowGithubCheckLaneIdsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof promotedFallowGithubCheckLaneIdsForTesting !== "undefined") // true
+ * ```
  * @category testing
  * @since 0.0.0
  */
@@ -155,6 +198,12 @@ export const promotedFallowGithubCheckLaneIdsForTesting = promotedFallowGithubCh
 /**
  * Detect the quality hardware profile from host facts.
  *
+ * @example
+ * ```ts
+ * import { detectQualityProfileForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof detectQualityProfileForTesting !== "undefined") // true
+ * ```
  * @category configuration
  * @since 0.0.0
  */
@@ -163,6 +212,12 @@ export const detectQualityProfileForTesting = detectQualityProfileForTestingImpl
 /**
  * Return static quality scheduling settings for a hardware profile.
  *
+ * @example
+ * ```ts
+ * import { qualityProfileConfigForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof qualityProfileConfigForTesting !== "undefined") // true
+ * ```
  * @category configuration
  * @since 0.0.0
  */
@@ -171,6 +226,12 @@ export const qualityProfileConfigForTesting = qualityProfileConfigForTestingImpl
 /**
  * Select OSV advisory ids that may still be suppressed at a given time.
  *
+ * @example
+ * ```ts
+ * import { activeOsvIgnoreIdsForTesting } from "@beep/repo-cli/commands/Quality/Quality.command"
+ *
+ * console.log(typeof activeOsvIgnoreIdsForTesting !== "undefined") // true
+ * ```
  * @category testing
  * @since 0.0.0
  */

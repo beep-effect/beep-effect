@@ -76,6 +76,12 @@ export const SchemaFirstSourceFileGlobs: ReadonlyArray<string> = A.fromIterable(
  * Stable schema-first policy rule identifiers emitted for lint and Yeet issue routing.
  *
  * @internal
+ * @example
+ * ```ts
+ * import { SchemaFirstPolicyRuleId } from "@beep/repo-cli/commands/Lint/Lint.schemas"
+ *
+ * console.log(typeof SchemaFirstPolicyRuleId !== "undefined") // true
+ * ```
  * @category schema
  * @since 0.0.0
  */
@@ -100,9 +106,30 @@ export const SchemaFirstPolicyRuleId = LiteralKit([
 );
 
 /**
+ * Stable schema-first policy rule identifier emitted for lint and Yeet issue routing.
+ *
+ * @example
+ * ```ts
+ * import type { SchemaFirstPolicyRuleId } from "@beep/repo-cli/commands/Lint/Lint.schemas"
+ *
+ * const ruleId: SchemaFirstPolicyRuleId = "schema-first-inventory"
+ * console.log(ruleId) // "schema-first-inventory"
+ * ```
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SchemaFirstPolicyRuleId = typeof SchemaFirstPolicyRuleId.Type;
+
+/**
  * Kinds of schema-first inventory findings.
  *
  * @internal
+ * @example
+ * ```ts
+ * import { SchemaFirstEntryKind } from "@beep/repo-cli/commands/Lint/Lint.schemas"
+ *
+ * console.log(typeof SchemaFirstEntryKind !== "undefined") // true
+ * ```
  * @category schema
  * @since 0.0.0
  */
@@ -118,9 +145,30 @@ export const SchemaFirstEntryKind = LiteralKit([
 );
 
 /**
+ * Kind of schema-first inventory finding.
+ *
+ * @example
+ * ```ts
+ * import type { SchemaFirstEntryKind } from "@beep/repo-cli/commands/Lint/Lint.schemas"
+ *
+ * const kind: SchemaFirstEntryKind = "exported-interface"
+ * console.log(kind) // "exported-interface"
+ * ```
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SchemaFirstEntryKind = typeof SchemaFirstEntryKind.Type;
+
+/**
  * Tracked status for a schema-first inventory finding.
  *
  * @internal
+ * @example
+ * ```ts
+ * import { SchemaFirstEntryStatus } from "@beep/repo-cli/commands/Lint/Lint.schemas"
+ *
+ * console.log(typeof SchemaFirstEntryStatus !== "undefined") // true
+ * ```
  * @category schema
  * @since 0.0.0
  */
@@ -129,6 +177,21 @@ export const SchemaFirstEntryStatus = LiteralKit(["candidate", "exception", "adv
     description: "Tracked status for a schema-first inventory finding.",
   })
 );
+
+/**
+ * Tracked status for a schema-first inventory finding.
+ *
+ * @example
+ * ```ts
+ * import type { SchemaFirstEntryStatus } from "@beep/repo-cli/commands/Lint/Lint.schemas"
+ *
+ * const status: SchemaFirstEntryStatus = "advisory"
+ * console.log(status) // "advisory"
+ * ```
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SchemaFirstEntryStatus = typeof SchemaFirstEntryStatus.Type;
 
 /**
  * Single tracked schema-first inventory finding for a source file symbol.
@@ -298,6 +361,12 @@ export class SchemaFirstLintSummary extends S.Class<SchemaFirstLintSummary>($I`S
  * by path prefix.
  *
  * @internal
+ * @example
+ * ```ts
+ * import { SchemaCrispeningFamily } from "@beep/repo-cli/commands/Lint/Lint.schemas"
+ *
+ * console.log(typeof SchemaCrispeningFamily !== "undefined") // true
+ * ```
  * @category schema
  * @since 0.0.0
  */
@@ -306,6 +375,21 @@ export const SchemaCrispeningFamily = LiteralKit(["foundation", "drivers", "tool
     description: "Wave-family keys used to resolve the schema-crispening policy blocking flag by path prefix.",
   })
 );
+
+/**
+ * Wave-family key used to resolve the schema-crispening policy blocking flag by path prefix.
+ *
+ * @example
+ * ```ts
+ * import type { SchemaCrispeningFamily } from "@beep/repo-cli/commands/Lint/Lint.schemas"
+ *
+ * const family: SchemaCrispeningFamily = "tooling"
+ * console.log(family) // "tooling"
+ * ```
+ * @category type-level
+ * @since 0.0.0
+ */
+export type SchemaCrispeningFamily = typeof SchemaCrispeningFamily.Type;
 
 /**
  * Blocking flag for a schema-crispening wave family or per-owner policy override.
@@ -499,6 +583,6 @@ export const sortSchemaFirstEntries: (
  * @since 0.0.0
  */
 export const isActiveSchemaFirstRuleAdvisory =
-  (ruleId: typeof SchemaFirstPolicyRuleId.Type) =>
+  (ruleId: SchemaFirstPolicyRuleId) =>
   (entry: SchemaFirstInventoryEntry): boolean =>
     entry.ruleId === ruleId && entry.status === "advisory";

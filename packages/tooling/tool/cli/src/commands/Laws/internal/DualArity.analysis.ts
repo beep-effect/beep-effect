@@ -61,7 +61,7 @@ type DualCallInfo = {
 type PublicApiCandidate = {
   readonly file: string;
   readonly qualifiedName: string;
-  readonly kind: typeof DualArityEntryKind.Type;
+  readonly kind: DualArityEntryKind;
   readonly owner: string;
   readonly line: number;
   readonly column: number;
@@ -457,10 +457,8 @@ const hasObviousWrongFirstParameter = (
       A.some(restParameters, isPipeableParameter)
   );
 
-const collectCandidateDiagnostics = (
-  candidate: PublicApiCandidate
-): ReadonlyArray<typeof DualArityDiagnosticKind.Type> => {
-  let diagnostics = A.empty<typeof DualArityDiagnosticKind.Type>();
+const collectCandidateDiagnostics = (candidate: PublicApiCandidate): ReadonlyArray<DualArityDiagnosticKind> => {
+  let diagnostics = A.empty<DualArityDiagnosticKind>();
   const dualCall = candidate.dualCall;
   const dualArity = pipe(
     dualCall,
@@ -857,7 +855,7 @@ const isPermanentlyExcludedCandidate = (file: string, qualifiedName: string): bo
 
 const makeInventoryEntry = (
   candidate: PublicApiCandidate,
-  diagnostics: ReadonlyArray<typeof DualArityDiagnosticKind.Type>
+  diagnostics: ReadonlyArray<DualArityDiagnosticKind>
 ): O.Option<DualArityInventoryEntry> => {
   if (A.isReadonlyArrayEmpty(diagnostics) || isPermanentlyExcludedCandidate(candidate.file, candidate.qualifiedName)) {
     return O.none();

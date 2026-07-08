@@ -110,7 +110,27 @@ export const AiMetricsProgramError = S.Union([
   AiMetricsScorecardError,
   AiMetricsSourceDiscoveryError,
   AiMetricsStatusExit,
-]).pipe(S.toTaggedUnion("_tag"));
+]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("AiMetricsProgramError", {
+    description: "Unified typed failure channel for AI metrics command programs.",
+  })
+);
+
+/**
+ * Unified typed failure channel for AI metrics command programs.
+ *
+ * @example
+ * ```ts
+ * import type { AiMetricsProgramError } from "@beep/repo-cli/commands/AIMetrics/AIMetrics.errors"
+ *
+ * const error: AiMetricsProgramError | undefined = undefined
+ * console.log(error === undefined) // true
+ * ```
+ * @category errors
+ * @since 0.0.0
+ */
+export type AiMetricsProgramError = typeof AiMetricsProgramError.Type;
 
 /**
  * Adapt an AI metrics command program to the CLI command runtime shape.
@@ -129,5 +149,5 @@ export const AiMetricsProgramError = S.Union([
  * @since 0.0.0
  */
 export const runAiMetricsProgram = <A, R>(
-  effect: Effect.Effect<A, typeof AiMetricsProgramError.Type, R>
-): Effect.Effect<void, typeof AiMetricsProgramError.Type, R> => effect.pipe(Effect.asVoid);
+  effect: Effect.Effect<A, AiMetricsProgramError, R>
+): Effect.Effect<void, AiMetricsProgramError, R> => effect.pipe(Effect.asVoid);

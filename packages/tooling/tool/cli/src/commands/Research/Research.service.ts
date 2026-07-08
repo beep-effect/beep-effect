@@ -64,6 +64,13 @@ export type ResearchCommandServiceRequirements =
 /**
  * Service contract for research knowledge-vault operations.
  *
+ * @example
+ * ```ts
+ * import type { ResearchCommandServiceShape } from "@beep/repo-cli/commands/Research/Research.service"
+ *
+ * const example: ResearchCommandServiceShape | undefined = undefined
+ * console.log(example === undefined) // true
+ * ```
  * @category services
  * @since 0.0.0
  */

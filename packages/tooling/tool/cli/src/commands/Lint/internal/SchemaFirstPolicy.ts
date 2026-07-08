@@ -59,7 +59,7 @@ export const missingEntryRemediation = (entry: SchemaFirstInventoryEntry): strin
     O.getOrElse(() => DEFAULT_MISSING_ENTRY_REMEDIATION)
   );
 
-const SCHEMA_CRISPENING_FAMILY_PREFIXES: ReadonlyArray<readonly [string, typeof SchemaCrispeningFamily.Type]> = [
+const SCHEMA_CRISPENING_FAMILY_PREFIXES: ReadonlyArray<readonly [string, SchemaCrispeningFamily]> = [
   ["packages/foundation/", "foundation"],
   ["packages/drivers/", "drivers"],
   ["packages/tooling/", "tooling"],
@@ -87,7 +87,7 @@ const SCHEMA_CRISPENING_FAMILY_PREFIXES: ReadonlyArray<readonly [string, typeof 
  * @category utilities
  * @since 0.0.0
  */
-export const schemaCrispeningFamilyForFile = (file: string): O.Option<typeof SchemaCrispeningFamily.Type> =>
+export const schemaCrispeningFamilyForFile = (file: string): O.Option<SchemaCrispeningFamily> =>
   pipe(
     A.findFirst(SCHEMA_CRISPENING_FAMILY_PREFIXES, ([prefix]) => Str.startsWith(prefix)(file)),
     O.map(([, family]) => family)

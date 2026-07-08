@@ -15,7 +15,7 @@ import type {
   DualArityRulesOptions,
 } from "../Laws.schemas.js";
 
-const diagnosticMessage = (diagnostic: typeof DualArityDiagnosticKind.Type): string =>
+const diagnosticMessage = (diagnostic: DualArityDiagnosticKind): string =>
   Match.value(diagnostic).pipe(
     Match.when(
       "missing-dual",
@@ -42,7 +42,7 @@ const diagnosticMessage = (diagnostic: typeof DualArityDiagnosticKind.Type): str
     Match.exhaustive
   );
 
-const makeReason = (diagnostics: ReadonlyArray<typeof DualArityDiagnosticKind.Type>): string =>
+const makeReason = (diagnostics: ReadonlyArray<DualArityDiagnosticKind>): string =>
   A.join(A.map(diagnostics, diagnosticMessage), " ");
 
 const makeMissingDiagnostics = (entries: ReadonlyArray<DualArityInventoryEntry>): ReadonlyArray<string> =>

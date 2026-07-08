@@ -68,6 +68,12 @@ export const DualArityEnforcedRoots: ReadonlyArray<string> = [
  * Public helper API shapes tracked by the dual-arity law.
  *
  * @internal
+ * @example
+ * ```ts
+ * import { DualArityEntryKind } from "@beep/repo-cli/commands/Laws/Laws.schemas"
+ *
+ * console.log(typeof DualArityEntryKind !== "undefined") // true
+ * ```
  * @category schema
  * @since 0.0.0
  */
@@ -83,9 +89,30 @@ export const DualArityEntryKind = LiteralKit([
 );
 
 /**
+ * Public helper API shape tracked by the dual-arity law.
+ *
+ * @example
+ * ```ts
+ * import type { DualArityEntryKind } from "@beep/repo-cli/commands/Laws/Laws.schemas"
+ *
+ * const kind: DualArityEntryKind = "exported-function"
+ * console.log(kind) // "exported-function"
+ * ```
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DualArityEntryKind = typeof DualArityEntryKind.Type;
+
+/**
  * Tracked status for a dual-arity inventory entry.
  *
  * @internal
+ * @example
+ * ```ts
+ * import { DualArityEntryStatus } from "@beep/repo-cli/commands/Laws/Laws.schemas"
+ *
+ * console.log(typeof DualArityEntryStatus !== "undefined") // true
+ * ```
  * @category schema
  * @since 0.0.0
  */
@@ -96,9 +123,30 @@ export const DualArityEntryStatus = LiteralKit(["candidate", "exception"]).pipe(
 );
 
 /**
+ * Tracked status for a dual-arity inventory entry.
+ *
+ * @example
+ * ```ts
+ * import type { DualArityEntryStatus } from "@beep/repo-cli/commands/Laws/Laws.schemas"
+ *
+ * const status: DualArityEntryStatus = "exception"
+ * console.log(status) // "exception"
+ * ```
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DualArityEntryStatus = typeof DualArityEntryStatus.Type;
+
+/**
  * Diagnostic kinds emitted by the public API dual-arity law.
  *
  * @internal
+ * @example
+ * ```ts
+ * import { DualArityDiagnosticKind } from "@beep/repo-cli/commands/Laws/Laws.schemas"
+ *
+ * console.log(typeof DualArityDiagnosticKind !== "undefined") // true
+ * ```
  * @category schema
  * @since 0.0.0
  */
@@ -115,6 +163,21 @@ export const DualArityDiagnosticKind = LiteralKit([
     description: "Diagnostic kinds emitted by the public API dual-arity law.",
   })
 );
+
+/**
+ * Diagnostic kind emitted by the public API dual-arity law.
+ *
+ * @example
+ * ```ts
+ * import type { DualArityDiagnosticKind } from "@beep/repo-cli/commands/Laws/Laws.schemas"
+ *
+ * const kind: DualArityDiagnosticKind = "missing-dual"
+ * console.log(kind) // "missing-dual"
+ * ```
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DualArityDiagnosticKind = typeof DualArityDiagnosticKind.Type;
 
 /**
  * Single tracked public API dual-arity finding.
