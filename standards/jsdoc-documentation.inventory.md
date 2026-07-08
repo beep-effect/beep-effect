@@ -11,11 +11,11 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | Metric | Count |
 |---|---:|
 | packages | 104 |
-| cleanPackages | 19 |
+| cleanPackages | 20 |
 | packagesWithoutPublicSrcSurface | 3 |
 | packagesNeedingRemediation | 78 |
-| publicModules | 1618 |
-| publicExports | 14483 |
+| publicModules | 1620 |
+| publicExports | 14484 |
 | openModules | 129 |
 | openExports | 2207 |
 | missingExportExamples | 2013 |
@@ -62,7 +62,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 19 | `@beep/face-detection` | `packages/drivers/face-detection` | clean | 4 | 33 | 0 | 0 |
 | 20 | `@beep/architecture-lab-client` | `packages/architecture-lab/client` | needs-remediation | 3 | 7 | 0 | 2 |
 | 21 | `@beep/repo-cli` | `packages/tooling/tool/cli` | needs-remediation | 101 | 676 | 0 | 141 |
-| 22 | `@beep/pglite` | `packages/drivers/pglite` | needs-remediation | 4 | 11 | 0 | 3 |
+| 22 | `@beep/pglite` | `packages/drivers/pglite` | clean | 4 | 11 | 0 | 0 |
 | 23 | `@beep/ai-sync` | `packages/tooling/library/ai-sync` | clean | 10 | 83 | 0 | 0 |
 | 24 | `@beep/agents-server` | `packages/agents/server` | needs-remediation | 7 | 27 | 0 | 6 |
 | 25 | `@beep/courtlistener` | `packages/drivers/courtlistener` | clean | 1 | 1 | 0 | 0 |
@@ -126,7 +126,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 83 | `@beep/data` | `packages/foundation/primitive/data` | needs-remediation | 12 | 144 | 0 | 36 |
 | 84 | `@beep/xai` | `packages/drivers/xai` | clean | 7 | 70 | 0 | 0 |
 | 85 | `@beep/architecture-lab-server` | `packages/architecture-lab/server` | needs-remediation | 13 | 34 | 0 | 12 |
-| 86 | `@beep/duckdb` | `packages/drivers/duckdb` | needs-remediation | 4 | 17 | 0 | 3 |
+| 86 | `@beep/duckdb` | `packages/drivers/duckdb` | needs-remediation | 6 | 28 | 0 | 6 |
 | 87 | `@beep/ffmpeg` | `packages/drivers/ffmpeg` | needs-remediation | 4 | 54 | 0 | 6 |
 | 88 | `@beep/agents-client` | `packages/agents/client` | needs-remediation | 3 | 24 | 0 | 3 |
 | 89 | `@beep/uspto-mcp` | `packages/drivers/uspto-mcp` | needs-remediation | 7 | 30 | 0 | 15 |
@@ -623,15 +623,6 @@ Export findings:
    */
   yeetCommand,
 } from "./commands/Yeet/index.js";` (re-export) - missing @example
-
-### @beep/pglite
-
-Path: `packages/drivers/pglite`
-
-Export findings:
-- `src/index.ts:33` `export * from "./Pglite.errors.ts";` (re-export) - missing @example
-- `src/index.ts:40` `export * from "./Pglite.test-layer.ts";` (re-export) - missing @example
-- `src/index.ts:47` `export * from "./PgliteClient.service.ts";` (re-export) - missing @example
 
 ### @beep/agents-server
 
@@ -1355,11 +1346,11 @@ Export findings:
 - `src/runtime/Layer.ts:97` `RuntimeTest` (const) - missing @example
 - `src/runtime/Migrations.ts:269` `SidecarReadyMarker` (const) - missing @example
 - `src/runtime/Observability.ts:97` `ObservabilityLive` (const) - missing @example
-- `src/runtime/Pglite.ts:72` `ChatDbCompatibilityMarker` (const) - missing @example
-- `src/runtime/Pglite.ts:112` `markCompatibleChatDbDataDir` (const) - missing @example
-- `src/runtime/Pglite.ts:172` `ensureCompatibleChatDbDataDir` (const) - missing @example
-- `src/runtime/Pglite.ts:252` `makeBundledPgliteLayer` (const) - missing @example
-- `src/runtime/Pglite.ts:266` `PgliteDrizzleLive` (const) - missing @example
+- `src/runtime/Pglite.ts:73` `ChatDbCompatibilityMarker` (const) - missing @example
+- `src/runtime/Pglite.ts:113` `markCompatibleChatDbDataDir` (const) - missing @example
+- `src/runtime/Pglite.ts:173` `ensureCompatibleChatDbDataDir` (const) - missing @example
+- `src/runtime/Pglite.ts:255` `makeBundledPgliteLayer` (const) - missing @example
+- `src/runtime/Pglite.ts:276` `PgliteDrizzleLive` (const) - missing @example
 
 ### @beep/architecture-lab-use-cases
 
@@ -2715,9 +2706,12 @@ Export findings:
 Path: `packages/drivers/duckdb`
 
 Export findings:
+- `src/DuckDbNative.ts:24` `ignoreNativeClose` (const) - missing @example
+- `src/DuckDbNative.ts:39` `releaseNativeConnection` (const) - missing @example
 - `src/index.ts:20` `export * from "./DuckDb.errors.ts";` (re-export) - missing @example
 - `src/index.ts:27` `export * from "./DuckDb.models.ts";` (re-export) - missing @example
 - `src/index.ts:34` `export * from "./DuckDb.service.ts";` (re-export) - missing @example
+- `src/index.ts:41` `export * from "./DuckDbSqlClient.service.ts";` (re-export) - missing @example
 
 ### @beep/ffmpeg
 

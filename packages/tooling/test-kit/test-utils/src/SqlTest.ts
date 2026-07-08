@@ -756,16 +756,16 @@ const loadPgClientModule = (
       toHarnessError(driver, "provision", "Failed to load PostgreSQL client support for SQL tests.", cause),
   }).pipe(Effect.withSpan(`SqlTest.${driver}.loadPgClient`));
 
-const loadBeepPgliteModule = Effect.tryPromise({
-  try: () => import("@beep/pglite"),
+const loadPgliteClientModule = Effect.tryPromise({
+  try: () => import("@effect/sql-pglite/PgliteClient"),
   catch: (cause) =>
     toHarnessError(
       "pglite-inprocess",
       "provision",
-      "Failed to load @beep/pglite in-process driver support for SQL tests.",
+      "Failed to load @effect/sql-pglite in-process driver support for SQL tests.",
       cause
     ),
-}).pipe(Effect.withSpan("SqlTest.PgliteInProcess.loadPglite"));
+}).pipe(Effect.withSpan("SqlTest.PgliteInProcess.loadPgliteClient"));
 
 const loadPgModule = Effect.tryPromise({
   try: () => import("pg"),
@@ -1268,7 +1268,7 @@ export const PgliteTestcontainersTestDriver: SqlTestDriver<
 
 const buildPgliteInProcessLayer = Effect.fn("SqlTest.PgliteInProcessTestDriver.build")(
   function* () {
-    const Pglite = yield* loadBeepPgliteModule;
+    const PgliteClient = yield* loadPgliteClientModule;
     const Pg = yield* loadPgClientModule("pglite-inprocess");
     const { path, tempDir } = yield* makeNodeTempDirectory(
       "pglite-inprocess",
@@ -1279,11 +1279,7 @@ const buildPgliteInProcessLayer = Effect.fn("SqlTest.PgliteInProcessTestDriver.b
 
     return Layer.effectContext(
       Effect.gen(function* () {
-        // The in-process @beep/pglite layer exposes the embedded database under
-        // the PgliteClient, generic SqlClient, AND @effect/sql-pg PgClient tags
-        // (via the tag-shim). Re-expose only the PgClient/SqlClient/info surface
-        // the harness contracts on, dropping the PGlite-specific tag.
-        const pgliteContext = yield* Layer.build(Pglite.makeLayer({ dataDir, relaxedDurability: true })).pipe(
+        const pgliteContext = yield* Layer.build(PgliteClient.layer({ dataDir, relaxedDurability: true })).pipe(
           Effect.mapError((cause) =>
             toHarnessError(
               "pglite-inprocess",
@@ -1293,10 +1289,11 @@ const buildPgliteInProcessLayer = Effect.fn("SqlTest.PgliteInProcessTestDriver.b
             )
           )
         );
-        const client = Context.get(pgliteContext, Pg.PgClient.PgClient);
+        const client = Context.get(pgliteContext, PgliteClient.PgliteClient);
+        const pgClient = client as unknown as PgClient.PgClient;
 
-        return Context.make(Pg.PgClient.PgClient, client).pipe(
-          Context.add(SqlClient.SqlClient, client),
+        return Context.make(Pg.PgClient.PgClient, pgClient).pipe(
+          Context.add(SqlClient.SqlClient, pgClient),
           Context.add(TestDatabaseInfo, makeInProcessPgliteInfo(dataDir, tempDir))
         );
       })
@@ -1316,7 +1313,7 @@ const buildPgliteInProcessLayer = Effect.fn("SqlTest.PgliteInProcessTestDriver.b
 );
 
 /**
- * Docker-free in-process PGLite integration-test driver backed by `@beep/pglite`.
+ * Docker-free in-process PGLite integration-test driver backed by `@effect/sql-pglite`.
  *
  * Runs PGlite (embedded PostgreSQL) in-process against a scoped temporary data
  * directory via `@effect/sql-pglite` and aliases it under the `@effect/sql-pg`

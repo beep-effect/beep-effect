@@ -1814,7 +1814,6 @@
           "@beep/identity",
           "@beep/lexical-schema",
           "@beep/md",
-          "@beep/pglite",
           "@beep/postgres",
           "@beep/professional-desktop",
           "@beep/shared-domain",
@@ -1836,7 +1835,6 @@
           "@beep/identity",
           "@beep/lexical-schema",
           "@beep/md",
-          "@beep/pglite",
           "@beep/postgres",
           "@beep/professional-desktop",
           "@beep/shared-domain",
@@ -2166,14 +2164,12 @@
         "from": "@beep/test-utils",
         "allow": [
           "@beep/identity",
-          "@beep/pglite",
           "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
-          "@beep/pglite",
           "@beep/schema",
           "@beep/test-utils",
           "@beep/utils"

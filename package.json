@@ -18,6 +18,7 @@
     "@better-auth/sso": "^1.7.0-beta.10",
     "@better-auth/stripe": "^1.7.0-beta.10",
     "@biomejs/biome": "^2.5.2",
+
     "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.31.0",
     "@clack/prompts": "^1.7.0",
@@ -173,6 +174,7 @@
     "fast-xml-validator": "^1.1.1",
     "framer-motion": "^12.42.2",
     "frimousse": "0.3.0",
+    "@better-auth/infra": "^0.3.5",
     "handlebars": "^4.7.9",
     "i18next": "^26.3.4",
     "image-size": "^2.0.2",

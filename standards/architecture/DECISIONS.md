@@ -577,6 +577,38 @@ boundary and make shared/server look like an infrastructure runtime. Specific
 driver names keep imports honest, make error translation explicit, and let the
 first real repositories drive any helper extraction with evidence.
 
+## 2026-07-08: Use Upstream PGlite Without A Repo Driver Wrapper
+
+- **Status:** Active
+- **Amends:** 2026-04-27 Split Postgres And Drizzle Drivers From Product Repositories
+
+Decision:
+
+The repo does not publish or maintain an `@beep/pglite` driver package. PGlite
+runtime composition uses upstream `@effect/sql-pglite` directly at the boundary
+that owns the runtime:
+
+- app-local runtime helpers may compose file-backed PGlite for an executable app
+  such as Professional Desktop;
+- `@beep/test-utils` may compose in-process PGlite for reusable SQL test
+  harnesses;
+- any `@effect/sql-pg/PgClient` compatibility shim required by
+  `drizzle-orm/effect-postgres` stays private to the app/test composition
+  boundary.
+
+This narrows the earlier "PGLite remains only as a test-harness implementation"
+wording. PGlite may be a concrete app-local runtime dependency when an app owns
+the storage contract, but it still must not become a repo-level `drivers/*`
+package or a reusable production database abstraction.
+
+Rationale:
+
+Effect now ships `@effect/sql-pglite`, so a Beep wrapper around the same client
+would mostly preserve a compatibility cast and duplicate upstream lifecycle,
+transaction, SQL error, LISTEN/NOTIFY, and data-dir helpers. Keeping upstream
+PGlite composition at the consuming boundary preserves driver doctrine while
+allowing Professional Desktop to keep its local-first file-backed database.
+
 ## 2026-04-27: Keep Shared Entity Metadata In The Shared Kernel
 
 - **Status:** Active

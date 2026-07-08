@@ -12,11 +12,12 @@
  */
 
 import { make } from "@beep/identity";
-import { A, O, thunkUndefined } from "@beep/utils";
+import { A, O } from "@beep/utils";
 import { DuckDBInstance, quotedIdentifier, quotedString } from "@duckdb/node-api";
 import { Context, Effect, Exit, Layer, Scope, Semaphore } from "effect";
 import { DuckDbError } from "./DuckDb.errors.ts";
 import { DuckDbRows } from "./DuckDb.models.ts";
+import { ignoreNativeClose, releaseNativeConnection } from "./DuckDbNative.ts";
 import type { DuckDBConnection, DuckDBValue } from "@duckdb/node-api";
 import type { DuckDbOperation } from "./DuckDb.errors.ts";
 import type { DuckDbConnectionOptions, DuckDbParquetExport } from "./DuckDb.models.ts";
@@ -187,17 +188,6 @@ const connectionFailure =
       }),
     });
 
-const releaseConnection = Effect.fn("DuckDb.releaseConnection")(
-  ({ connection, instance }: NativeConnection): Effect.Effect<void> =>
-    Effect.try({
-      try: () => {
-        connection.closeSync();
-        instance.closeSync();
-      },
-      catch: thunkUndefined,
-    }).pipe(Effect.ignore)
-);
-
 const runOnConnection = Effect.fn("DuckDb.runOnConnection")(
   (
     operation: DuckDbOperation,
@@ -206,10 +196,12 @@ const runOnConnection = Effect.fn("DuckDb.runOnConnection")(
     statement: string,
     parameters?: DuckDbQueryParameters | undefined
   ): Effect.Effect<void, DuckDbError> =>
-    Effect.tryPromise({
-      try: () => connection.run(statement, parameters),
-      catch: connectionFailure(operation, options, statement),
-    }).pipe(Effect.asVoid)
+    Effect.uninterruptible(
+      Effect.tryPromise({
+        try: () => connection.run(statement, parameters),
+        catch: connectionFailure(operation, options, statement),
+      })
+    ).pipe(Effect.asVoid)
 );
 
 const queryOnConnection = Effect.fn("DuckDb.queryOnConnection")(function* (
@@ -218,10 +210,12 @@ const queryOnConnection = Effect.fn("DuckDb.queryOnConnection")(function* (
   statement: string,
   parameters?: DuckDbQueryParameters | undefined
 ) {
-  const rows = yield* Effect.tryPromise({
-    try: () => connection.runAndReadAll(statement, parameters).then((reader) => reader.getRowObjectsJson()),
-    catch: connectionFailure("query", options, statement),
-  });
+  const rows = yield* Effect.uninterruptible(
+    Effect.tryPromise({
+      try: () => connection.runAndReadAll(statement, parameters).then((reader) => reader.getRowObjectsJson()),
+      catch: connectionFailure("query", options, statement),
+    })
+  );
   return yield* DuckDbRows.decodeEffect(rows).pipe(
     Effect.mapError((cause) =>
       DuckDbError.fromUnknown("query", cause, {
@@ -241,7 +235,15 @@ const acquireSharedConnection = (options: DuckDbConnectionOptions) => {
       Effect.tryPromise({
         try: () => {
           nativePromise ??= DuckDBInstance.create(options.databasePath, options.databaseOptions)
-            .then((instance) => instance.connect().then((connection) => ({ connection, instance })))
+            .then((instance) =>
+              instance.connect().then(
+                (connection) => ({ connection, instance }),
+                (cause) => {
+                  ignoreNativeClose(() => instance.closeSync());
+                  throw cause;
+                }
+              )
+            )
             .catch((cause) => {
               nativePromise = undefined;
               throw cause;
@@ -258,12 +260,16 @@ const acquireScopedSharedConnection = (options: DuckDbConnectionOptions, scope: 
   let finalizerRegistered = false;
 
   return Effect.fn("DuckDb.acquireScopedSharedConnection")(function* (operation: DuckDbOperation) {
-    const native = yield* getConnection(operation);
-    if (!finalizerRegistered) {
-      finalizerRegistered = true;
-      yield* Scope.addFinalizer(scope, releaseConnection(native));
-    }
-    return native;
+    return yield* Effect.uninterruptible(
+      Effect.gen(function* () {
+        const native = yield* getConnection(operation);
+        if (!finalizerRegistered) {
+          finalizerRegistered = true;
+          yield* Scope.addFinalizer(scope, releaseNativeConnection(native));
+        }
+        return native;
+      })
+    );
   });
 };
 
@@ -332,7 +338,7 @@ const makeConnectionClient = (
       ? use(client)
       : useConnection(
           "withTransaction",
-          Effect.fn("DuckDb.withTransactionOnConnection")(function* (connection: DuckDBConnection) {
+          Effect.fn("DuckDb.withTransactionOnConnection")((connection: DuckDBConnection) => {
             const transaction = makeConnectionClient(
               options,
               Effect.fn("DuckDb.useTransactionConnection")(function* <A, R>(
@@ -343,16 +349,31 @@ const makeConnectionClient = (
               }),
               true
             );
-            yield* runOnConnection("withTransaction", options, connection, "BEGIN TRANSACTION");
-            const exit = yield* Effect.exit(use(transaction));
-            if (Exit.isSuccess(exit)) {
-              return yield* runOnConnection("withTransaction", options, connection, "COMMIT").pipe(
-                Effect.as(exit.value)
+            return Effect.suspend(() => {
+              let began = false;
+              let closed = false;
+              const rollbackIfOpen = Effect.suspend(() =>
+                began && !closed
+                  ? runOnConnection("withTransaction", options, connection, "ROLLBACK").pipe(Effect.ignore)
+                  : Effect.void
               );
-            }
+              return Effect.uninterruptibleMask((restore) =>
+                Effect.gen(function* () {
+                  yield* runOnConnection("withTransaction", options, connection, "BEGIN TRANSACTION");
+                  began = true;
+                  const exit = yield* Effect.exit(restore(use(transaction)));
+                  if (Exit.isSuccess(exit)) {
+                    yield* runOnConnection("withTransaction", options, connection, "COMMIT");
+                    closed = true;
+                    return exit.value;
+                  }
 
-            yield* runOnConnection("withTransaction", options, connection, "ROLLBACK").pipe(Effect.ignore);
-            return yield* Effect.failCause(exit.cause);
+                  yield* runOnConnection("withTransaction", options, connection, "ROLLBACK").pipe(Effect.ignore);
+                  closed = true;
+                  return yield* Effect.failCause(exit.cause);
+                }).pipe(Effect.ensuring(rollbackIfOpen))
+              );
+            });
           })
         ).pipe(
           Effect.withSpan("db.transaction", {

@@ -62,11 +62,11 @@
   },
   "totals": {
     "packages": 104,
-    "cleanPackages": 19,
+    "cleanPackages": 20,
     "packagesWithoutPublicSrcSurface": 3,
     "packagesNeedingRemediation": 78,
-    "publicModules": 1618,
-    "publicExports": 14483,
+    "publicModules": 1620,
+    "publicExports": 14484,
     "openModules": 129,
     "openExports": 2207,
     "missingExportExamples": 2013,
@@ -33724,7 +33724,7 @@
       "packageName": "@beep/pglite",
       "packagePath": "packages/drivers/pglite",
       "topoOrder": 22,
-      "status": "needs-remediation",
+      "status": "clean",
       "sourceCoverage": {
         "srcDir": "src",
         "sourceFileCount": 4,
@@ -33739,8 +33739,8 @@
       },
       "counts": {
         "openModules": 0,
-        "openExports": 3,
-        "missingExportExamples": 3,
+        "openExports": 0,
+        "missingExportExamples": 0,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
@@ -33996,15 +33996,14 @@
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/pglite/src/index.ts",
-          "line": 33,
-          "anchor": "packages-drivers-pglite-src-index-ts-33-export-from-pglite-errors-ts",
+          "line": 41,
+          "anchor": "packages-drivers-pglite-src-index-ts-41-export-from-pglite-errors-ts",
           "currentTags": [
+            "@example",
             "@since",
             "@category"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -34012,22 +34011,21 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./Pglite.test-layer.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/pglite/src/index.ts",
-          "line": 40,
-          "anchor": "packages-drivers-pglite-src-index-ts-40-export-from-pglite-test-layer-ts",
+          "line": 55,
+          "anchor": "packages-drivers-pglite-src-index-ts-55-export-from-pglite-test-layer-ts",
           "currentTags": [
+            "@example",
             "@since",
             "@category"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -34035,22 +34033,21 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "export * from \"./PgliteClient.service.ts\";",
           "exportKind": "re-export",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/pglite/src/index.ts",
-          "line": 47,
-          "anchor": "packages-drivers-pglite-src-index-ts-47-export-from-pgliteclient-service-ts",
+          "line": 70,
+          "anchor": "packages-drivers-pglite-src-index-ts-70-export-from-pgliteclient-service-ts",
           "currentTags": [
+            "@example",
             "@since",
             "@category"
           ],
-          "missingRequiredTags": [
-            "@example"
-          ],
+          "missingRequiredTags": [],
           "forbiddenTags": [],
           "missingSummary": false,
           "malformedConditionalTags": [],
@@ -34058,7 +34055,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "remediationStatus": "open"
+          "remediationStatus": "resolved"
         },
         {
           "symbolName": "VERSION",
@@ -59428,8 +59425,8 @@
           "exportKind": "const",
           "filePath": "src/SqlTest.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-          "line": 1336,
-          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1336-pgliteinprocesstestdriver",
+          "line": 1333,
+          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1333-pgliteinprocesstestdriver",
           "currentTags": [
             "@example",
             "@category",
@@ -59450,8 +59447,8 @@
           "exportKind": "const",
           "filePath": "src/SqlTest.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-          "line": 1358,
-          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1358-pgexternaltestdriver",
+          "line": 1355,
+          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1355-pgexternaltestdriver",
           "currentTags": [
             "@example",
             "@category",
@@ -59472,8 +59469,8 @@
           "exportKind": "const",
           "filePath": "src/SqlTest.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-          "line": 1449,
-          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1449-makepgliteintegrationgate",
+          "line": 1446,
+          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1446-makepgliteintegrationgate",
           "currentTags": [
             "@param",
             "@returns",
@@ -59496,8 +59493,8 @@
           "exportKind": "const",
           "filePath": "src/SqlTest.ts",
           "repoPath": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
-          "line": 1519,
-          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1519-makepglitesqltestlayer",
+          "line": 1516,
+          "anchor": "packages-tooling-test-kit-test-utils-src-sqltest-ts-1516-makepglitesqltestlayer",
           "currentTags": [
             "@param",
             "@returns",
@@ -211333,8 +211330,8 @@
           "exportKind": "const",
           "filePath": "src/runtime/Pglite.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Pglite.ts",
-          "line": 72,
-          "anchor": "apps-professional-desktop-src-runtime-pglite-ts-72-chatdbcompatibilitymarker",
+          "line": 73,
+          "anchor": "apps-professional-desktop-src-runtime-pglite-ts-73-chatdbcompatibilitymarker",
           "currentTags": [
             "@category",
             "@since"
@@ -211356,8 +211353,8 @@
           "exportKind": "const",
           "filePath": "src/runtime/Pglite.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Pglite.ts",
-          "line": 112,
-          "anchor": "apps-professional-desktop-src-runtime-pglite-ts-112-markcompatiblechatdbdatadir",
+          "line": 113,
+          "anchor": "apps-professional-desktop-src-runtime-pglite-ts-113-markcompatiblechatdbdatadir",
           "currentTags": [
             "@category",
             "@since"
@@ -211379,8 +211376,8 @@
           "exportKind": "const",
           "filePath": "src/runtime/Pglite.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Pglite.ts",
-          "line": 172,
-          "anchor": "apps-professional-desktop-src-runtime-pglite-ts-172-ensurecompatiblechatdbdatadir",
+          "line": 173,
+          "anchor": "apps-professional-desktop-src-runtime-pglite-ts-173-ensurecompatiblechatdbdatadir",
           "currentTags": [
             "@category",
             "@since"
@@ -211402,8 +211399,8 @@
           "exportKind": "const",
           "filePath": "src/runtime/Pglite.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Pglite.ts",
-          "line": 252,
-          "anchor": "apps-professional-desktop-src-runtime-pglite-ts-252-makebundledpglitelayer",
+          "line": 255,
+          "anchor": "apps-professional-desktop-src-runtime-pglite-ts-255-makebundledpglitelayer",
           "currentTags": [
             "@category",
             "@since"
@@ -211425,8 +211422,8 @@
           "exportKind": "const",
           "filePath": "src/runtime/Pglite.ts",
           "repoPath": "apps/professional-desktop/src/runtime/Pglite.ts",
-          "line": 266,
-          "anchor": "apps-professional-desktop-src-runtime-pglite-ts-266-pglitedrizzlelive",
+          "line": 276,
+          "anchor": "apps-professional-desktop-src-runtime-pglite-ts-276-pglitedrizzlelive",
           "currentTags": [
             "@category",
             "@since"
@@ -315485,9 +315482,9 @@
       "status": "needs-remediation",
       "sourceCoverage": {
         "srcDir": "src",
-        "sourceFileCount": 4,
-        "publicModuleCount": 4,
-        "publicExportCount": 17
+        "sourceFileCount": 6,
+        "publicModuleCount": 6,
+        "publicExportCount": 28
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -315497,8 +315494,8 @@
       },
       "counts": {
         "openModules": 0,
-        "openExports": 3,
-        "missingExportExamples": 3,
+        "openExports": 6,
+        "missingExportExamples": 6,
         "missingExportCategories": 0,
         "missingExportSince": 0,
         "missingExportSummaries": 0,
@@ -315577,6 +315574,49 @@
         },
         {
           "docKind": "packageDocumentation",
+          "filePath": "src/DuckDbNative.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbNative.ts",
+          "line": 1,
+          "anchor": "packages-drivers-duckdb-src-duckdbnative-ts-1-module",
+          "currentTags": [
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 2,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
+          "filePath": "src/DuckDbSqlClient.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbSqlClient.service.ts",
+          "line": 1,
+          "anchor": "packages-drivers-duckdb-src-duckdbsqlclient-service-ts-1-module",
+          "currentTags": [
+            "@remarks",
+            "@packageDocumentation",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "exportCount": 8,
+          "remediationStatus": "resolved"
+        },
+        {
+          "docKind": "packageDocumentation",
           "filePath": "src/index.ts",
           "repoPath": "packages/drivers/duckdb/src/index.ts",
           "line": 1,
@@ -315594,7 +315634,7 @@
           "unsafeExampleViolations": [],
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
-          "exportCount": 3,
+          "exportCount": 4,
           "remediationStatus": "resolved"
         }
       ],
@@ -315830,8 +315870,8 @@
           "exportKind": "type",
           "filePath": "src/DuckDb.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDb.service.ts",
-          "line": 43,
-          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-43-duckdbqueryparameters",
+          "line": 44,
+          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-44-duckdbqueryparameters",
           "currentTags": [
             "@example",
             "@category",
@@ -315852,8 +315892,8 @@
           "exportKind": "interface",
           "filePath": "src/DuckDb.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDb.service.ts",
-          "line": 78,
-          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-78-duckdbclient",
+          "line": 79,
+          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-79-duckdbclient",
           "currentTags": [
             "@remarks",
             "@example",
@@ -315875,8 +315915,8 @@
           "exportKind": "interface",
           "filePath": "src/DuckDb.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDb.service.ts",
-          "line": 165,
-          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-165-duckdbshape",
+          "line": 166,
+          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-166-duckdbshape",
           "currentTags": [
             "@remarks",
             "@example",
@@ -315898,10 +315938,236 @@
           "exportKind": "class",
           "filePath": "src/DuckDb.service.ts",
           "repoPath": "packages/drivers/duckdb/src/DuckDb.service.ts",
-          "line": 447,
-          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-447-duckdb",
+          "line": 468,
+          "anchor": "packages-drivers-duckdb-src-duckdb-service-ts-468-duckdb",
           "currentTags": [
             "@remarks",
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "ignoreNativeClose",
+          "exportKind": "const",
+          "filePath": "src/DuckDbNative.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbNative.ts",
+          "line": 24,
+          "anchor": "packages-drivers-duckdb-src-duckdbnative-ts-24-ignorenativeclose",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [
+            "@example"
+          ],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "releaseNativeConnection",
+          "exportKind": "const",
+          "filePath": "src/DuckDbNative.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbNative.ts",
+          "line": 39,
+          "anchor": "packages-drivers-duckdb-src-duckdbnative-ts-39-releasenativeconnection",
+          "currentTags": [
+            "@internal",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [
+            "@example"
+          ],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "DuckDbSqlClientTypeId",
+          "exportKind": "const",
+          "filePath": "src/DuckDbSqlClient.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbSqlClient.service.ts",
+          "line": 60,
+          "anchor": "packages-drivers-duckdb-src-duckdbsqlclient-service-ts-60-duckdbsqlclienttypeid",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DuckDbSqlClientTypeId",
+          "exportKind": "type",
+          "filePath": "src/DuckDbSqlClient.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbSqlClient.service.ts",
+          "line": 76,
+          "anchor": "packages-drivers-duckdb-src-duckdbsqlclient-service-ts-76-duckdbsqlclienttypeid",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DuckDbSqlClientOptions",
+          "exportKind": "type",
+          "filePath": "src/DuckDbSqlClient.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbSqlClient.service.ts",
+          "line": 92,
+          "anchor": "packages-drivers-duckdb-src-duckdbsqlclient-service-ts-92-duckdbsqlclientoptions",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DuckDbSqlClientValue",
+          "exportKind": "type",
+          "filePath": "src/DuckDbSqlClient.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbSqlClient.service.ts",
+          "line": 114,
+          "anchor": "packages-drivers-duckdb-src-duckdbsqlclient-service-ts-114-duckdbsqlclientvalue",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "fromClient",
+          "exportKind": "const",
+          "filePath": "src/DuckDbSqlClient.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbSqlClient.service.ts",
+          "line": 363,
+          "anchor": "packages-drivers-duckdb-src-duckdbsqlclient-service-ts-363-fromclient",
+          "currentTags": [
+            "@example",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "make",
+          "exportKind": "const",
+          "filePath": "src/DuckDbSqlClient.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbSqlClient.service.ts",
+          "line": 387,
+          "anchor": "packages-drivers-duckdb-src-duckdbsqlclient-service-ts-387-make",
+          "currentTags": [
+            "@example",
+            "@effects",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "makeLayer",
+          "exportKind": "const",
+          "filePath": "src/DuckDbSqlClient.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbSqlClient.service.ts",
+          "line": 408,
+          "anchor": "packages-drivers-duckdb-src-duckdbsqlclient-service-ts-408-makelayer",
+          "currentTags": [
+            "@example",
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "DuckDbSqlClient",
+          "exportKind": "class",
+          "filePath": "src/DuckDbSqlClient.service.ts",
+          "repoPath": "packages/drivers/duckdb/src/DuckDbSqlClient.service.ts",
+          "line": 431,
+          "anchor": "packages-drivers-duckdb-src-duckdbsqlclient-service-ts-431-duckdbsqlclient",
+          "currentTags": [
             "@example",
             "@category",
             "@since"
@@ -315969,6 +316235,29 @@
           "repoPath": "packages/drivers/duckdb/src/index.ts",
           "line": 34,
           "anchor": "packages-drivers-duckdb-src-index-ts-34-export-from-duckdb-service-ts",
+          "currentTags": [
+            "@since",
+            "@category"
+          ],
+          "missingRequiredTags": [
+            "@example"
+          ],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "remediationStatus": "open"
+        },
+        {
+          "symbolName": "export * from \"./DuckDbSqlClient.service.ts\";",
+          "exportKind": "re-export",
+          "filePath": "src/index.ts",
+          "repoPath": "packages/drivers/duckdb/src/index.ts",
+          "line": 41,
+          "anchor": "packages-drivers-duckdb-src-index-ts-41-export-from-duckdbsqlclient-service-ts",
           "currentTags": [
             "@since",
             "@category"

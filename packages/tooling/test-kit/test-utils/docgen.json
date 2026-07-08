@@ -44,8 +44,6 @@
       "@beep/identity/packages": [
         "../../../../packages/foundation/modeling/identity/src/packages.ts"
       ],
-      "@beep/pglite": ["../../../../packages/drivers/pglite/src/index.ts"],
-      "@beep/pglite/*": ["../../../../packages/drivers/pglite/src/*.ts"],
       "@beep/schema": [
         "../../../../packages/foundation/modeling/schema/src/index.ts"
       ],

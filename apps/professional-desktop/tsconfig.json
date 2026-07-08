@@ -107,9 +107,6 @@
       "path": "../../packages/agents/use-cases/tsconfig.json"
     },
     {
-      "path": "../../packages/drivers/pglite/tsconfig.json"
-    },
-    {
       "path": "../../packages/drivers/postgres/tsconfig.json"
     },
     {

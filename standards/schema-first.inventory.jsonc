@@ -2353,7 +2353,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 1449,
+      "line": 1446,
       "owner": "@beep/test-utils",
       "reason": "Test-harness factory: the optional env override is a two-field selection bag ({ databaseUrl?, databaseDriver? }) passed only by the gate-branch test to exercise each driver branch without mutating the process environment; real usage omits it and reads via Config. An Fn/S.Class schema is disproportionate for an internal test-harness parameter. Added by one-round-loop P1."
     },

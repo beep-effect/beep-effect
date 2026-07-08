@@ -449,13 +449,6 @@
       "branches": 0,
       "functions": 0
     },
-    "@beep/pglite": {
-      "path": "packages/drivers/pglite",
-      "lines": 0,
-      "statements": 0,
-      "branches": 0,
-      "functions": 0
-    },
     "@beep/phoenix": {
       "path": "packages/drivers/phoenix",
       "lines": 0,
