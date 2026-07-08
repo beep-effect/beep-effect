@@ -2,7 +2,7 @@
 
 ## Status
 
-**ACTIVE - Discovery complete, waves not started**
+**COMPLETE - final reconciliation verified; PR closeout in progress**
 
 ## Owner
 
@@ -11,7 +11,7 @@
 ## Created / Updated
 
 - **Created:** 2026-07-07
-- **Updated:** 2026-07-07
+- **Updated:** 2026-07-08
 
 ## Purpose
 
@@ -28,6 +28,19 @@ comprehension: split monoliths along natural seams into canonical role files,
 extract a shared internal substrate, bring touched groups to full topology
 compliance, and raise JSDoc on touched files to the
 `.patterns/jsdoc-documentation.md` rubric.
+
+## Closeout Evidence
+
+- Waves P0-P9 landed on `repo-cli-modularization`; the original PR #339 was
+  closed after #326 rewrote the same standards surfaces on `main`.
+- The final reconciliation kept `origin/main` as source of truth, removed stale
+  inventory/allowlist state, fixed the remaining repo-cli quality blockers, and
+  preserved the behavior-preserving campaign boundary.
+- `bun run beep yeet verify` passed end-to-end on 2026-07-08 after the
+  reconciliation: build, check, knip, jsdoc, lint, full docgen, unit tests,
+  type tests, integration tests, fallow, repo sanity, secrets, security, SAST,
+  and Nix.
+- Closeout reflection: `history/reflections/2026-07-08-codex.md`.
 
 ## Reading Order
 

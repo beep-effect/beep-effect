@@ -73,6 +73,12 @@ type PublicApiCandidate = {
   readonly callableType: Type;
 };
 
+type PermanentDualArityExclusion = {
+  readonly file: string;
+  readonly qualifiedName: string;
+  readonly reason: string;
+};
+
 const isExcludedPublicApiName = (filePath: string, qualifiedName: string): boolean => {
   const name = pipe(
     Str.split(".")(qualifiedName),
@@ -251,6 +257,8 @@ const isSchemaCallableValueFactory = (initializer: import("ts-morph").Node): boo
 
 const isNonHelperCallableValue = (initializer: import("ts-morph").Node, callableType: Type): boolean =>
   isOrderValueType(callableType) || isSchemaCallableValueFactory(initializer);
+
+const isCallableType = (type: Type): boolean => !A.isReadonlyArrayEmpty(type.getCallSignatures());
 
 const getTypeSignatureParameterCount = (type: Type): O.Option<number> => {
   const signatures = getNonTemplateCallSignatures(type);
@@ -462,6 +470,11 @@ const collectCandidateDiagnostics = (
     O.isSome(dualCall) && O.isNone(dualArity) && hasDualSignatures(candidate.callableType, candidate.parameterCount);
   const hasMatchingDualArity =
     O.exists(dualArity, (arity) => arity === candidate.parameterCount) || hasPredicateDualWithPublicDualShape;
+  const hasValidDualWithCallableThirdParameter =
+    O.isSome(dualCall) &&
+    dualCall.value.validSource &&
+    hasMatchingDualArity &&
+    pipe(candidate.thirdParameterType, O.exists(isCallableType));
 
   if (candidate.parameterCount > 3) {
     diagnostics = A.append(diagnostics, "too-many-positional-params");
@@ -491,7 +504,11 @@ const collectCandidateDiagnostics = (
     diagnostics = A.append(diagnostics, "invalid-dual-arity");
   }
 
-  if (candidate.parameterCount === 3 && !pipe(candidate.thirdParameterType, O.exists(isStrictObjectLikeType))) {
+  if (
+    candidate.parameterCount === 3 &&
+    !pipe(candidate.thirdParameterType, O.exists(isStrictObjectLikeType)) &&
+    !hasValidDualWithCallableThirdParameter
+  ) {
     diagnostics = A.append(diagnostics, "third-param-not-object-like");
   }
 
@@ -826,11 +843,23 @@ const collectCandidatesForSourceFile = (
   return { candidates, excludedLegitimate };
 };
 
+const PERMANENT_EXCLUSIONS: ReadonlyArray<PermanentDualArityExclusion> = [
+  {
+    file: "packages/agents/server/src/AssistantTurn/ScanState.ts",
+    qualifiedName: "scanChunk",
+    reason:
+      "Fold-step consumed by reference as Stream.mapAccum(() => initialScanState, scanChunk); dual wrapping breaks the higher-order call-site signature.",
+  },
+] as const;
+
+const isPermanentlyExcludedCandidate = (file: string, qualifiedName: string): boolean =>
+  A.some(PERMANENT_EXCLUSIONS, (exclusion) => exclusion.file === file && exclusion.qualifiedName === qualifiedName);
+
 const makeInventoryEntry = (
   candidate: PublicApiCandidate,
   diagnostics: ReadonlyArray<typeof DualArityDiagnosticKind.Type>
 ): O.Option<DualArityInventoryEntry> => {
-  if (A.isReadonlyArrayEmpty(diagnostics)) {
+  if (A.isReadonlyArrayEmpty(diagnostics) || isPermanentlyExcludedCandidate(candidate.file, candidate.qualifiedName)) {
     return O.none();
   }
 

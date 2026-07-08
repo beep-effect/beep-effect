@@ -438,6 +438,8 @@ const sourceHasFnSchemaSignal = (sourceFile: import("ts-morph").SourceFile): boo
   return SCHEMA_FIELDS_CALL_PATTERN.test(text) || FN_CALL_SIGNAL_PATTERN.test(text);
 };
 
+const isFnSchemaEligibleFilePath = (filePath: string): boolean => !Str.endsWith(".tsx")(filePath);
+
 /**
  * Detect an exported function or arrow function whose parameter or return
  * contract is an inline object type literal rather than a schema, within a
@@ -788,6 +790,7 @@ export const SchemaFirstDetectors = {
   fnSchemaEntryFromFunctionLike,
   getsomesStructEntryFromCallExpression,
   inferStructSymbol,
+  isFnSchemaEligibleFilePath,
   isJsonParseCallExpression,
   isNullReturnEligibleFilePath,
   normalizationEntryFromCallExpression,

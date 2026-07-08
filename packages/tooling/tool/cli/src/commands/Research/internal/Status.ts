@@ -56,8 +56,6 @@ export const statusImpl = Effect.fn("Research.statusImpl")(function* (
   }
 
   const summary = yield* runWithResearchDb(
-    databasePath,
-    `Failed querying catalog status at "${databasePath}".`,
     Effect.gen(function* () {
       const db = yield* DuckDb;
       const totalCards = yield* db
@@ -83,7 +81,11 @@ export const statusImpl = Effect.fn("Research.statusImpl")(function* (
         seenUrls,
         totalCards,
       }).pipe(ResearchCommandError.mapError("Catalog status summary failed schema validation."));
-    })
+    }),
+    {
+      databasePath,
+      message: `Failed querying catalog status at "${databasePath}".`,
+    }
   );
 
   const perType = A.map(summary.bySourceType, (row) => `${row.sourceType}=${row.cards}`);

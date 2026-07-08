@@ -30,6 +30,16 @@ const PgExternalClientEndTimeout = Duration.seconds(5);
 const PgExternalSchemaDropTimeout = Duration.seconds(10);
 let pgliteImageBuild = O.none<Promise<GenericContainer>>();
 
+class PgliteIntegrationGateEnv extends S.Class<PgliteIntegrationGateEnv>($I`PgliteIntegrationGateEnv`)(
+  {
+    databaseDriver: S.optionalKey(S.String.pipe(S.UndefinedOr)),
+    databaseUrl: S.optionalKey(S.String.pipe(S.UndefinedOr)),
+  },
+  $I.annote("PgliteIntegrationGateEnv", {
+    description: "Optional environment override for reusable PGLite integration-test gate selection.",
+  })
+) {}
+
 const SqlTestHarnessPhase = LiteralKit(["provision", "migrate", "seed", "teardown"]).pipe(
   $I.annoteSchema("SqlTestHarnessPhase", {
     description: "Lifecycle phases for reusable SQL integration-test harness failures.",
@@ -1448,10 +1458,7 @@ const makeConfiguredSqlTestLayer = <Config, Services, SqlService extends Service
  * @category constructors
  * @since 0.0.0
  */
-export const makePgliteIntegrationGate = (env?: {
-  readonly databaseUrl?: string | undefined;
-  readonly databaseDriver?: string | undefined;
-}) => {
+export const makePgliteIntegrationGate = (env?: PgliteIntegrationGateEnv) => {
   // Real usage reads the selection from the environment via Config (Node-safe,
   // law-clean; CI exports these before the process starts, so the boot snapshot
   // is exactly right). Tests pass `env` explicitly to exercise each branch

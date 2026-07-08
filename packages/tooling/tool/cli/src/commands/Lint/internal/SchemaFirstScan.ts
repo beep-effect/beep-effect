@@ -231,10 +231,11 @@ const scanSchemaFirstInventory = Effect.fn(function* () {
       ...SchemaFirstDetectors.sourceExportedArrowFunctions(sourceFile),
     ];
     const hasFnSchemaSignal = SchemaFirstDetectors.sourceHasFnSchemaSignal(sourceFile);
+    const isFnSchemaEligible = SchemaFirstDetectors.isFnSchemaEligibleFilePath(filePath);
     const isNullReturnEligible = SchemaFirstDetectors.isNullReturnEligibleFilePath(filePath);
 
     for (const functionLike of functionLikeCandidates) {
-      if (hasFnSchemaSignal) {
+      if (hasFnSchemaSignal && isFnSchemaEligible) {
         const fnSchemaEntry = SchemaFirstDetectors.fnSchemaEntryFromFunctionLike(functionLike, filePath, owner);
         if (O.isSome(fnSchemaEntry)) {
           A.appendInPlace(entries, fnSchemaEntry.value);

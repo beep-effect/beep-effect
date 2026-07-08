@@ -67,8 +67,6 @@ export const digestImpl = Effect.fn("Research.digestImpl")(function* (
   const cutoffIso = DateTime.formatIso(DateTime.subtract(now, { hours: 24 }));
 
   const { backlogRows, inboxBacklog, newRows, pendingCognify } = yield* runWithResearchDb(
-    databasePath,
-    `Failed querying digest data from "${databasePath}".`,
     Effect.gen(function* () {
       const db = yield* DuckDb;
       const newRows = yield* db.query(
@@ -87,7 +85,11 @@ export const digestImpl = Effect.fn("Research.digestImpl")(function* (
         .query("SELECT COUNT(*)::DOUBLE AS total FROM research_cards WHERE cognified_at IS NULL")
         .pipe(Effect.flatMap((rows) => singleCount(rows, "pending cognify")));
       return { backlogRows, inboxBacklog, newRows, pendingCognify };
-    })
+    }),
+    {
+      databasePath,
+      message: `Failed querying digest data from "${databasePath}".`,
+    }
   );
   const newCards = yield* decodeDigestCardRows(newRows).pipe(
     ResearchCommandError.mapError("Digest new-card rows failed schema validation.")

@@ -112,8 +112,6 @@ export const persistCards = Effect.fn("Research.persistCards")(function* (
     yield* writeCard(vaultRoot, card.relativePath, renderCard(card.frontmatter, card.body));
   }
   yield* runWithResearchDb(
-    databasePath,
-    `Failed recording ${subcommand} cards in "${databasePath}".`,
     Effect.gen(function* () {
       const db = yield* DuckDb;
       for (const card of cards) {
@@ -134,7 +132,11 @@ export const persistCards = Effect.fn("Research.persistCards")(function* (
         ]);
       }
       yield* db.run(INSERT_CAPTURE_LOG, [now, subcommand, `${A.length(cards)} cards`, "written"]);
-    })
+    }),
+    {
+      databasePath,
+      message: `Failed recording ${subcommand} cards in "${databasePath}".`,
+    }
   );
 });
 
@@ -165,12 +167,14 @@ export const loadSeenUrls = Effect.fn("Research.loadSeenUrls")(function* (
   databasePath: string
 ): Effect.fn.Return<MutableHashSet.MutableHashSet<string>, ResearchCommandError> {
   const rows = yield* runWithResearchDb(
-    databasePath,
-    `Failed loading seen URLs from "${databasePath}".`,
     Effect.gen(function* () {
       const db = yield* DuckDb;
       return yield* db.query('SELECT url_norm AS "urlNorm" FROM research_seen_urls');
-    })
+    }),
+    {
+      databasePath,
+      message: `Failed loading seen URLs from "${databasePath}".`,
+    }
   );
   const decoded = yield* decodeSeenUrlRows(rows).pipe(
     ResearchCommandError.mapError("Seen-URL rows failed schema validation.")

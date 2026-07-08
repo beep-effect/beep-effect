@@ -1,16 +1,14 @@
 # @beep/repo-cli Modularization Plan
 
-> **SHELVED (2026-07-08).** Waves P0–P9 landed and were `yeet verify`-green on
-> branch `repo-cli-modularization`, and PR #339 was opened. While it was open,
-> `main` merged #326 ("drive all standards inventories to zero") — a
-> comprehensive independent rewrite of **all 15** repo-cli command groups this
-> campaign restructured. It collides catastrophically with 11 of them (adopting
-> main's version of any split file, e.g. `Research.service.ts`, breaks that
-> group's whole `internal/` split at compile time), so reconciling would revert
-> well over half the campaign for a largely-redundant result against a `main`
-> actively rewriting this exact surface. PR #339 was closed in favor of #326;
-> the branch and this packet are preserved for reference. No history was
-> force-pushed.
+> **CLOSEOUT (2026-07-08).** Waves P0-P9 landed on branch
+> `repo-cli-modularization`, and PR #339 was opened. While it was open, `main`
+> merged #326 ("drive all standards inventories to zero"), which superseded a
+> large portion of the same repo-cli standards surface and closed PR #339. The
+> final reconciliation kept `origin/main` authoritative, retained the viable
+> campaign work that still mattered, removed stale generated inventory and
+> allowlist state, fixed the remaining quality blockers, and restored a full
+> `bun run beep yeet verify` pass. The branch now carries this closeout packet,
+> the reconciliation fixes, and the final reflection for PR closeout.
 
 ## Status
 
@@ -191,9 +189,9 @@ goes after its dependencies are battle-tested.
 - [~] Closing sweep: schema-primitives adoption (`withKeyDefaults`, `ISOStr`,
   `NonNegativeInt`, path normalization) — opt-in per SPEC; deferred, not
   pursued this campaign (behavior-preserving scope kept tight).
-- [ ] Final: full `bun run beep yeet verify`, changeset review,
+- [x] Final: full `bun run beep yeet verify`, changeset review,
   `bun run beep yeet publish --message`, PR monitor to mergeable.
-- [ ] `/reflect repo-cli-modularization`.
+- [x] `/reflect repo-cli-modularization`.
 
 ## Per-Wave Verification (every wave)
 

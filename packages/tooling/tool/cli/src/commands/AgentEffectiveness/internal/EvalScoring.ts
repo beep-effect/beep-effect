@@ -20,6 +20,12 @@ import type { SkillOptTaskManifest } from "../AgentEffectiveness.schemas.js";
 const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalScoring");
 const SCORE_FORMAT_DIGITS = 6;
 
+interface LawComponentScores {
+  readonly biome: number;
+  readonly schemaFirst: number;
+  readonly tsgo: number;
+}
+
 /**
  * Completion-lane score for one eval task: the fraction of required skill
  * steps satisfied, paired with the violations that reduced it.
@@ -165,14 +171,12 @@ export const lawComponentScore = (violationCount: number): number => roundScore(
  * {@link lawComponentScore}; `law_frac` is the deterministic arithmetic mean
  * of those three component scores.
  *
- * @param schemaFirst - Schema-first lint component score.
- * @param tsgo - tsgo diagnostics component score.
- * @param biome - Biome diagnostics component score.
+ * @param scores - Schema-first, tsgo, and Biome component scores.
  * @returns Mean law fraction in `[0, 1]`.
  * @category scoring
  * @since 0.0.0
  */
-const aggregateLawFraction = (schemaFirst: number, tsgo: number, biome: number): number =>
+const aggregateLawFraction = ({ biome, schemaFirst, tsgo }: LawComponentScores): number =>
   roundScore((schemaFirst + tsgo + biome) / 3);
 
 /**
@@ -197,7 +201,7 @@ const buildAgentEffectivenessEvalScoreReport = (
   const schemaFirst = lawComponentScore(A.length(law.schemaFirst));
   const tsgo = lawComponentScore(A.length(law.tsgo));
   const biome = lawComponentScore(A.length(law.biome));
-  const lawFraction = aggregateLawFraction(schemaFirst, tsgo, biome);
+  const lawFraction = aggregateLawFraction({ biome, schemaFirst, tsgo });
   const violations = sortViolations([...completion.violations, ...law.schemaFirst, ...law.tsgo, ...law.biome]);
   return AgentEffectivenessEvalScoreReport.make({
     taskId: task.id,
@@ -219,7 +223,7 @@ const buildAgentEffectivenessEvalScoreReport = (
  * ```ts
  * import { EvalScoring } from "@beep/repo-cli/commands/AgentEffectiveness/internal/EvalScoring"
  *
- * console.log(EvalScoring.aggregateLawFraction(1, 0.5, 0.25)) // 0.583333
+ * console.log(EvalScoring.aggregateLawFraction({ schemaFirst: 1, tsgo: 0.5, biome: 0.25 })) // 0.583333
  * ```
  * @category scoring
  * @since 0.0.0

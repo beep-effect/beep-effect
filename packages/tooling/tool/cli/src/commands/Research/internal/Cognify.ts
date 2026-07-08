@@ -67,15 +67,17 @@ export const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
   const databasePath = yield* catalogDbPath(options.vaultRoot);
 
   const pendingRows = yield* runWithResearchDb(
-    databasePath,
-    `Failed loading pending cards from "${databasePath}".`,
     Effect.gen(function* () {
       const db = yield* DuckDb;
       return yield* db.query(
         `SELECT id AS "id", path AS "path", source_type AS "sourceType"
          FROM research_cards WHERE cognified_at IS NULL ORDER BY source_type, path`
       );
-    })
+    }),
+    {
+      databasePath,
+      message: `Failed loading pending cards from "${databasePath}".`,
+    }
   );
   const pending = yield* decodePendingCardRows(pendingRows).pipe(
     ResearchCommandError.mapError("Pending-card rows failed schema validation.")
@@ -126,8 +128,6 @@ export const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
 
   const now = DateTime.formatIso(yield* DateTime.now);
   yield* runWithResearchDb(
-    databasePath,
-    `Failed stamping cognified cards in "${databasePath}".`,
     Effect.gen(function* () {
       const db = yield* DuckDb;
       for (const uploads of MutableHashMap.values(byDataset)) {
@@ -141,7 +141,11 @@ export const cognifyImpl = Effect.fn("Research.cognifyImpl")(function* (
         `${cardsPushed} cards -> ${A.join(datasets, ", ")}`,
         "pushed",
       ]);
-    })
+    }),
+    {
+      databasePath,
+      message: `Failed stamping cognified cards in "${databasePath}".`,
+    }
   );
 
   yield* postResearchEpisode(

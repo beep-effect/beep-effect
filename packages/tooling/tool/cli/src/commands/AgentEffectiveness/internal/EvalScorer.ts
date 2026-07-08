@@ -31,21 +31,19 @@ const $I = $RepoCliId.create("commands/AgentEffectiveness/internal/EvalScorer");
 /**
  * Aggregate law components by arithmetic mean.
  *
- * @param schemaFirst - Schema-first lint component score.
- * @param tsgo - tsgo diagnostics component score.
- * @param biome - Biome diagnostics component score.
+ * @param scores - Schema-first, tsgo, and Biome component scores.
  * @returns Mean law fraction in `[0, 1]`.
  * @example
  * ```ts
  * import { aggregateLawFraction } from "@beep/repo-cli/test/AgentEffectiveness"
  *
- * console.log(aggregateLawFraction(1, 0.5, 0.25)) // 0.583333
+ * console.log(aggregateLawFraction({ schemaFirst: 1, tsgo: 0.5, biome: 0.25 })) // 0.583333
  * ```
  * @category scoring
  * @since 0.0.0
  */
-export const aggregateLawFraction = (schemaFirst: number, tsgo: number, biome: number): number =>
-  EvalScoring.aggregateLawFraction(schemaFirst, tsgo, biome);
+export const aggregateLawFraction = (scores: Parameters<typeof EvalScoring.aggregateLawFraction>[0]): number =>
+  EvalScoring.aggregateLawFraction(scores);
 
 /**
  * Build the final score report from completion and law evaluations.

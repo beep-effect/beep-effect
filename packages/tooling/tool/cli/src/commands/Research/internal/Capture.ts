@@ -88,13 +88,15 @@ export const captureUrlImpl = Effect.fn("Research.captureUrlImpl")(function* (
   const databasePath = yield* catalogDbPath(options.vaultRoot);
 
   const alreadySeen = yield* runWithResearchDb(
-    databasePath,
-    `Failed checking seen URLs in "${databasePath}".`,
     Effect.gen(function* () {
       const db = yield* DuckDb;
       const rows = yield* db.query(SELECT_SEEN_URL, [urlNorm]);
       return yield* singleCount(rows, "seen URLs");
-    })
+    }),
+    {
+      databasePath,
+      message: `Failed checking seen URLs in "${databasePath}".`,
+    }
   );
   if (alreadySeen > 0) {
     yield* Console.log(`research capture: already captured "${urlNorm}" (use the vault card; no re-scrape).`);
@@ -129,8 +131,6 @@ export const captureUrlImpl = Effect.fn("Research.captureUrlImpl")(function* (
   yield* writeCard(options.vaultRoot, cardRelativePath, renderCard(frontmatter, body));
 
   yield* runWithResearchDb(
-    databasePath,
-    `Failed recording capture in "${databasePath}".`,
     Effect.gen(function* () {
       const db = yield* DuckDb;
       yield* db.run(INSERT_SEEN_URL, [urlNorm, now, "capture"]);
@@ -146,7 +146,11 @@ export const captureUrlImpl = Effect.fn("Research.captureUrlImpl")(function* (
         title,
       ]);
       yield* db.run(INSERT_CAPTURE_LOG, [now, "capture", urlNorm, "captured"]);
-    })
+    }),
+    {
+      databasePath,
+      message: `Failed recording capture in "${databasePath}".`,
+    }
   );
 
   yield* Console.log(`research capture: wrote "${cardRelativePath}" (${id}).`);

@@ -5,10 +5,12 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
 import { findRepoRoot } from "@beep/repo-utils";
 import { Console, DateTime, Effect, FileSystem, Path, pipe, Ref } from "effect";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { printCommandJson } from "../../../internal/cli/Json.js";
 import { RepoRunContext, sortedUniquePaths } from "../../../internal/repo-run/index.js";
@@ -38,7 +40,13 @@ import {
   writeIssueArtifacts,
   writeTextFile,
 } from "./IssueArtifacts.js";
-import { buildYeetRunPlanWithMode, emptyTurboPlanSnapshot, YeetRunMode, YeetRunPlanModeOptions } from "./Planner.js";
+import {
+  buildYeetRunPlanWithMode,
+  emptyTurboPlanSnapshot,
+  YeetProofTier,
+  YeetRunMode,
+  YeetRunPlanModeOptions,
+} from "./Planner.js";
 import {
   acquireFullProofLock,
   assertReusableVerifiedState,
@@ -67,10 +75,11 @@ import { buildYeetVerdict, YeetExecutedStep } from "./Verdict.js";
 import type { ChildProcessSpawner } from "effect/unstable/process";
 import type { RepoPlanStep, RepoRunPlan, RepoStepRunResult } from "../../../internal/repo-run/index.js";
 import type { YeetRunOptions, YeetRunResult } from "../Yeet.schemas.js";
-import type { YeetProofTier } from "./Planner.js";
 import type { YeetBaseFreshness, YeetStashState } from "./Verdict.js";
 
 export { defaultYeetRunOptions } from "../Yeet.schemas.js";
+
+const $I = $RepoCliId.create("commands/Yeet/internal/Handler");
 
 /**
  * Hydrate a shared yeet run context from repository state.

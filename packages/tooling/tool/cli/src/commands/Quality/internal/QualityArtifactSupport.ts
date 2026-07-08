@@ -3,7 +3,7 @@ import { resolvePathWithinRoot } from "@beep/file-processing/PathSafety";
 import { $RepoCliId } from "@beep/identity/packages";
 import { TaggedErrorClass } from "@beep/schema";
 import { decodeJsoncTextAs } from "@beep/schema/Jsonc";
-import { A, Err, Str, thunkFalse } from "@beep/utils";
+import { A, Err, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import { Effect, FileSystem, MutableHashMap, MutableHashSet, Order, Path, Result } from "effect";
 import { dual } from "effect/Function";

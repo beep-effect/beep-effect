@@ -3,11 +3,14 @@
   "initiative": {
     "id": "repo-cli-modularization",
     "title": "@beep/repo-cli Modularization",
-    "status": "shelved",
+    "status": "complete",
     "created": "2026-07-07",
     "updated": "2026-07-08",
     "packetAnchorDocument": "SPEC.md"
   },
+  "packetPath": "goals/repo-cli-modularization",
+  "lifecycle": "completed-retained",
+  "reflectionRequired": true,
   "mission": "Modularize the ~92k-LOC repo CLI: split the 27 files >=1000 LOC along natural seams into canonical role files, extract a shared internal substrate (subprocess, git, JSON/JSONC, ratchet, gh, schema kits), bring touched command groups to full topology compliance, and raise JSDoc on touched files to the .patterns rubric.",
   "currentSourceOfTruth": "SPEC.md",
   "currentTargetPhase": "P9",
@@ -108,8 +111,8 @@
     {
       "id": "P9",
       "name": "Long tail + closing sweep",
-      "status": "in_progress",
-      "exitCriteriaSummary": "Splits landed; JSDoc quality sweep complete; campaign quality debt closed (yeet verify green: check, tests, docgen, effect-laws, schema-first, knip, changeset). Remaining: schema-primitives sweep deferred (opt-in); PR published, driven mergeable, and merged; reflection recorded."
+      "status": "completed",
+      "exitCriteriaSummary": "Splits landed; JSDoc quality sweep complete; schema-primitives sweep explicitly deferred as opt-in; final main reconciliation closed stale inventory and allowlist drift; yeet verify green across build, check, knip, jsdoc, lint, docgen, tests, type-tests, integration, fallow, repo sanity, secrets, security, SAST, and Nix; reflection recorded."
     }
   ],
   "verification": [
