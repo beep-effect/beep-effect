@@ -107,6 +107,20 @@ export * as EntityRef from "./entity/EntityRef.ts";
  */
 export * as Principal from "./entity/Principal.ts";
 /**
+ * URL-safe public entity identifier constructor namespace.
+ *
+ * @example
+ * ```ts
+ * import { PublicEntityId } from "@beep/shared-domain"
+ *
+ * console.log(PublicEntityId.factory)
+ * ```
+ *
+ * @since 0.0.0
+ * @category identifiers
+ */
+export * as PublicEntityId from "./entity/PublicEntityId.ts";
+/**
  * Canonical source-kind namespace.
  *
  * @example

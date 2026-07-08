@@ -38,6 +38,8 @@ const encodeMessageId = S.encodeSync(WorkspaceIdentity.MessageId);
 const encodeDocument = S.encodeSync(Document);
 
 const SYSTEM_PRINCIPAL = { component: "Runtime", kind: "System" } as const;
+const publicIdFor = (entityType: string, id: PosInt): string =>
+  `${entityType.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase()}_a${id}`;
 
 /**
  * Build the encoded BaseEntity audit prefix shared by every workspace row.
@@ -52,6 +54,7 @@ const baseEntityRecord = (entityType: string, id: PosInt) => ({
   entityType,
   id,
   orgId: 1,
+  publicId: publicIdFor(entityType, id),
   rowVersion: 1,
   schemaVersion: "0.0.0",
   source: "System",

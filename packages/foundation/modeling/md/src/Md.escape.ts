@@ -25,6 +25,7 @@ const trimBlock = Str.replace(/^\n+|\n+$/g, "");
 // file:, blob:, and filesystem: are intentionally not treated as execution sinks in this boundary.
 const unsafeUrlProtocolPattern = /^(?:javascript|vbscript|data):/i;
 const urlProtocolDetectionIgnoredPattern = /[\u0000-\u001f\u007f\s]+/g;
+const urlSchemePrefixPattern = /^([A-Za-z][A-Za-z0-9+.-]*):/u;
 const htmlCharacterReferencePattern = /&(?:#(\d+);?|#x([\da-f]+);?|(colon|tab|newline);?)/gi;
 const percentEncodedBytePattern = /%([0-9a-f]{2})/gi;
 const percentEncodedOctetPattern = /%25([0-9a-f]{2})/gi;
@@ -54,6 +55,67 @@ const UnsafeUrlProtocolDestination = S.String.check(
   }),
   SchemaUtils.withCodecStatics
 );
+
+/**
+ * URL destination policy for a rendering sink.
+ *
+ * An empty `allowedProtocols` list preserves compatibility behavior: active
+ * script/data protocols are blocked, but other absolute protocols pass through.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UrlPolicy extends S.Class<UrlPolicy>($I`UrlPolicy`)(
+  {
+    allowedProtocols: S.Array(S.String).pipe(SchemaUtils.withEmptyArrayDefaults<string>()).annotateKey({
+      description: "Lowercase URL protocols accepted by this sink. Empty means compatibility mode.",
+    }),
+    allowRelative: SchemaUtils.BoolKeyDefaultTrue.annotateKey({
+      description: "Whether relative URL destinations are accepted.",
+    }),
+    allowProtocolRelative: SchemaUtils.BoolKeyDefaultTrue.annotateKey({
+      description: "Whether protocol-relative destinations such as //example.com are accepted.",
+    }),
+    allowBackslashRelative: SchemaUtils.BoolKeyDefaultTrue.annotateKey({
+      description: "Whether relative destinations containing backslashes are accepted.",
+    }),
+  },
+  $I.annote("UrlPolicy", {
+    description: "URL destination policy for a rendering sink.",
+  })
+) {}
+
+/**
+ * Compatibility URL policy matching the historical `@beep/md` sanitizer.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const CompatUrlPolicy = UrlPolicy.make({});
+
+/**
+ * Browser anchor/image URL policy for HTML sinks.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const BrowserSafeUrlPolicy = UrlPolicy.make({
+  allowedProtocols: ["http:", "https:", "mailto:", "artifact:"],
+  allowProtocolRelative: false,
+  allowBackslashRelative: false,
+});
+
+/**
+ * Strict web URL policy for product-agnostic web output.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const StrictWebUrlPolicy = UrlPolicy.make({
+  allowedProtocols: ["http:", "https:", "mailto:"],
+  allowProtocolRelative: false,
+  allowBackslashRelative: false,
+});
 
 const isValidCodePoint = (codePoint: number): boolean => codePoint >= 0 && codePoint <= maxUnicodeCodePoint;
 const parseCodePoint: {
@@ -154,6 +216,32 @@ const normalizeUrlProtocolCandidate = flow(
   Str.toLowerCase
 );
 
+const destinationProtocol = (destination: string): O.Option<string> =>
+  pipe(
+    Str.trim(destination),
+    Str.match(urlSchemePrefixPattern),
+    O.flatMap(A.get(1)),
+    O.map((protocol) => `${Str.toLowerCase(protocol)}:`)
+  );
+
+const hasAllowedProtocol = (policy: UrlPolicy, protocol: string): boolean =>
+  !A.isReadonlyArrayNonEmpty(policy.allowedProtocols) ||
+  A.contains(pipe(policy.allowedProtocols, A.map(Str.toLowerCase)), protocol);
+
+const isAllowedRelativeDestination = (policy: UrlPolicy, destination: string): boolean =>
+  policy.allowRelative &&
+  (policy.allowProtocolRelative || !Str.startsWith("//")(destination)) &&
+  (policy.allowBackslashRelative || !Str.includes("\\")(destination));
+
+const isAllowedByPolicy = (policy: UrlPolicy, destination: string): boolean =>
+  pipe(
+    destinationProtocol(destination),
+    O.match({
+      onNone: () => isAllowedRelativeDestination(policy, Str.trim(destination)),
+      onSome: (protocol) => hasAllowedProtocol(policy, protocol),
+    })
+  );
+
 const encodeUrlDestination = flow(
   Str.replace(invalidSurrogatePattern, "\uFFFD"),
   encodeURI,
@@ -232,7 +320,10 @@ export const escapeMarkdownText = Str.replace(/([\\`*_{}[\]()#+\-.|<>~])/g, "\\$
  * @category utilities
  * @since 0.0.0
  */
-export const sanitizeUrlDestination = (destination: string): string => {
+export const sanitizeUrlDestinationWithPolicy: {
+  (destination: string, policy: UrlPolicy): string;
+  (policy: UrlPolicy): (destination: string) => string;
+} = dual(2, (destination: string, policy: UrlPolicy): string => {
   const decodedHtml = decodeHtmlCharacterReferences(destination);
   const decodedPercent = decodePercentEncodedBytes(destination);
   const decodedHtmlAndPercent = decodePercentEncodedBytes(decodedHtml);
@@ -248,10 +339,30 @@ export const sanitizeUrlDestination = (destination: string): string => {
   ];
 
   // Evaluate normalized/decoded candidates, but preserve the original destination when safe.
-  return pipe(candidates, A.map(normalizeUrlProtocolCandidate), A.some(UnsafeUrlProtocolDestination.is))
-    ? "#"
-    : destination;
-};
+  const hasUnsafeProtocol = pipe(
+    candidates,
+    A.map(normalizeUrlProtocolCandidate),
+    A.some(UnsafeUrlProtocolDestination.is)
+  );
+  return hasUnsafeProtocol || !isAllowedByPolicy(policy, destination) ? "#" : destination;
+});
+
+/**
+ * Normalizes URL-like destinations before rendering Markdown or HTML output.
+ *
+ * Unsafe active protocols are replaced with a harmless fragment destination.
+ *
+ * @example
+ * ```ts
+ * import { sanitizeUrlDestination } from "@beep/md/Md.escape"
+ *
+ * console.log(sanitizeUrlDestination("javascript:alert(1)")) // "#"
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const sanitizeUrlDestination = sanitizeUrlDestinationWithPolicy(CompatUrlPolicy);
 
 /**
  * Escapes Markdown link or image destination delimiters.
@@ -267,8 +378,22 @@ export const sanitizeUrlDestination = (destination: string): string => {
  * @category utilities
  * @since 0.0.0
  */
+export const escapeMarkdownDestinationWithPolicy: {
+  (destination: string, policy: UrlPolicy): string;
+  (policy: UrlPolicy): (destination: string) => string;
+} = dual(2, (destination: string, policy: UrlPolicy): string =>
+  pipe(sanitizeUrlDestinationWithPolicy(destination, policy), encodeUrlDestination, Str.replace(/[\\()]/g, "\\$&"))
+);
+
+/**
+ * Escapes Markdown link or image destination delimiters with the compatibility
+ * URL policy.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
 export const escapeMarkdownDestination = flow(
-  sanitizeUrlDestination,
+  sanitizeUrlDestinationWithPolicy(CompatUrlPolicy),
   encodeUrlDestination,
   Str.replace(/[\\()]/g, "\\$&")
 );
@@ -286,7 +411,24 @@ export const escapeMarkdownDestination = flow(
  * @category utilities
  * @since 0.0.0
  */
-export const escapeHtmlUrlAttribute = flow(sanitizeUrlDestination, encodeUrlDestination, Html.escapeHtml);
+export const escapeHtmlUrlAttributeWithPolicy: {
+  (destination: string, policy: UrlPolicy): string;
+  (policy: UrlPolicy): (destination: string) => string;
+} = dual(2, (destination: string, policy: UrlPolicy): string =>
+  pipe(sanitizeUrlDestinationWithPolicy(destination, policy), encodeUrlDestination, Html.escapeHtml)
+);
+
+/**
+ * Escapes a URL for an HTML attribute using the browser-safe URL policy.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const escapeHtmlUrlAttribute = flow(
+  sanitizeUrlDestinationWithPolicy(BrowserSafeUrlPolicy),
+  encodeUrlDestination,
+  Html.escapeHtml
+);
 
 /**
  * Returns the length of the longest contiguous backtick run in text.

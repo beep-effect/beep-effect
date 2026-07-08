@@ -269,9 +269,11 @@ export type VariantFieldFor<
           : Descriptor["storageKind"] extends "timestampDate"
             ? Model.DateTimeUpdateFromDate
             : Model.GeneratedByApp<Field>
-        : Descriptor["valueStrategy"] extends "providedByContext" | "derived" | "computedByService"
-          ? Model.GeneratedByApp<Field>
-          : Field;
+        : Descriptor["valueStrategy"] extends "computedByServiceOnInsert"
+          ? Model.GeneratedByAppOnInsert<Field>
+          : Descriptor["valueStrategy"] extends "providedByContext" | "derived" | "computedByService"
+            ? Model.GeneratedByApp<Field>
+            : Field;
 
 /**
  * Variant field schema selected for a field input and persisted descriptor.

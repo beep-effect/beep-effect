@@ -7,29 +7,104 @@
 
 import { $MdId } from "@beep/identity";
 import { HtmlFragment, Markdown, TaggedErrorClass } from "@beep/schema";
-import { A, Html, Str, thunkEmptyStr } from "@beep/utils";
-import { Effect, flow, identity, Match, Number as N, Result, SchemaGetter, SchemaIssue } from "effect";
+import { A, Html, R, Str, thunkEmptyStr } from "@beep/utils";
+import { Effect, flow, identity, Match, Number as N, Order, Result, SchemaGetter, SchemaIssue } from "effect";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { renderPlainTextBlocks, segmentInlineRuns } from "./Md.behavior.ts";
 import {
+  BrowserSafeUrlPolicy,
+  CompatUrlPolicy,
   escapeHtmlUrlAttribute,
-  escapeMarkdownDestination,
+  escapeMarkdownDestinationWithPolicy,
   escapeMarkdownText,
   joinBlocks,
   prefixLines,
   renderFencedCode,
   renderInlineCode,
+  sanitizeUrlDestinationWithPolicy,
 } from "./Md.escape.ts";
 import { Document as DocumentSchema, HeadingLevel, Inline as InlineSchema, TableCell, TableRow } from "./Md.model.ts";
-import type { Block, Document, Heading, Inline, Li, ListItemChild, Table, TaskItem } from "./Md.model.ts";
+import type { UrlPolicy } from "./Md.escape.ts";
+import type {
+  Block,
+  Document,
+  Heading,
+  Inline,
+  Li,
+  ListItemChild,
+  Table,
+  TableAlignment,
+  TaskItem,
+} from "./Md.model.ts";
 
 const $I = $MdId.create("Md.render");
 const joinEmpty = A.join("");
 const lineSeparatorPattern = /\r\n?|\n/;
 const lineSeparatorGlobalPattern = /\r\n?|\n/g;
+const markdownTitleEscapePattern = /["\\]/g;
+const jsonStringEscapePattern = /["\\\u0000-\u001f]/g;
+const mathFencePattern = /\$\$/g;
+const mathDelimiterPattern = /\$/g;
+
+type JsonRecord = Readonly<Record<string, S.Json>>;
+
+const byRecordEntryKeyAscending = <Value>(): Order.Order<readonly [string, Value]> =>
+  Order.mapInput(Order.String, ([key]) => key);
+
+const jsonControlEscape = (value: string): string => {
+  const hex = value.charCodeAt(0).toString(16).padStart(4, "0");
+  return `\\u${hex}`;
+};
+
+const escapeJsonCharacter = (value: string): string =>
+  Match.value(value).pipe(
+    Match.when('"', () => '\\"'),
+    Match.when("\\", () => "\\\\"),
+    Match.when("\b", () => "\\b"),
+    Match.when("\f", () => "\\f"),
+    Match.when("\n", () => "\\n"),
+    Match.when("\r", () => "\\r"),
+    Match.when("\t", () => "\\t"),
+    Match.orElse(jsonControlEscape)
+  );
+
+const renderJsonString = (value: string): string =>
+  `"${pipe(value, Str.replaceAllWith(jsonStringEscapePattern, escapeJsonCharacter))}"`;
+
+const isJsonArray = (value: S.Json): value is ReadonlyArray<S.Json> => A.isArray(value);
+
+const isJsonRecord = (value: S.Json): value is JsonRecord => P.isObject(value) && !P.isNull(value) && !A.isArray(value);
+
+const renderJson = (value: S.Json): string =>
+  Match.value(value).pipe(
+    Match.when(P.isNull, () => "null"),
+    Match.when(P.isString, renderJsonString),
+    Match.when(P.isNumber, (number) => `${number}`),
+    Match.when(P.isBoolean, (boolean) => (boolean ? "true" : "false")),
+    Match.when(isJsonArray, (array) => `[${pipe(array, A.map(renderJson), A.join(","))}]`),
+    Match.when(isJsonRecord, (record) =>
+      pipe(
+        record,
+        R.toEntries,
+        A.sort(byRecordEntryKeyAscending()),
+        A.map(([key, item]) => `${renderJsonString(key)}:${renderJson(item)}`),
+        A.join(","),
+        (body) => `{${body}}`
+      )
+    ),
+    Match.exhaustive
+  );
+
+const renderJsonFrontmatter = (frontmatter: O.Option<JsonRecord>): string =>
+  pipe(
+    frontmatter,
+    O.filter((metadata) => A.isReadonlyArrayNonEmpty(R.toEntries(metadata))),
+    O.map((metadata) => `---json\n${renderJson(metadata)}\n---`),
+    O.getOrElse(thunkEmptyStr)
+  );
 
 /**
  * Error raised when a render adapter fails while producing output.
@@ -157,15 +232,44 @@ const renderMarkdownTableCell = (cell: TableCell): string =>
 
 const renderMarkdownTableFence = (cells: string): string => `| ${cells} |`;
 
+const escapeMarkdownTitle = flow(
+  Str.replace(lineSeparatorGlobalPattern, " "),
+  Str.replace(markdownTitleEscapePattern, "\\$&")
+);
+
+const renderMarkdownTitle = (title: O.Option<string>): string =>
+  pipe(
+    title,
+    O.map((value) => ` "${escapeMarkdownTitle(value)}"`),
+    O.getOrElse(thunkEmptyStr)
+  );
+
+const renderMarkdownDestinationWithTitle = (destination: string, title: O.Option<string>, policy: UrlPolicy): string =>
+  `${escapeMarkdownDestinationWithPolicy(destination, policy)}${renderMarkdownTitle(title)}`;
+
+const tableAlignmentAt = (align: ReadonlyArray<TableAlignment>, index: number): TableAlignment =>
+  pipe(
+    A.get(align, index),
+    O.getOrElse(() => "none" as const)
+  );
+
 const tableRowColumnCount = (row: TableRow): number => A.length(row.children);
 
 const tableColumnCount: (rows: ReadonlyArray<TableRow>) => number = A.reduce(0, (max, row) =>
   N.max(max, tableRowColumnCount(row))
 );
 
-const renderMarkdownTableSeparator = (columns: number): string =>
+const markdownTableSeparatorCell = (align: TableAlignment): string =>
+  Match.value(align).pipe(
+    Match.when("left", () => ":---"),
+    Match.when("center", () => ":---:"),
+    Match.when("right", () => "---:"),
+    Match.orElse(() => "---")
+  );
+
+const renderMarkdownTableSeparator = (columns: number, align: ReadonlyArray<TableAlignment>): string =>
   pipe(
-    A.makeBy(columns, () => "---"),
+    A.makeBy(columns, (index) => markdownTableSeparatorCell(tableAlignmentAt(align, index))),
     A.join(" | "),
     renderMarkdownTableFence
   );
@@ -193,7 +297,7 @@ const renderMarkdownTable = (block: Table): string => {
 
   if (block.headerRow) {
     return pipe(paddedRows, A.map(renderMarkdownTableRow), ([header, ...body]) =>
-      A.join([header, renderMarkdownTableSeparator(columns), ...body], "\n")
+      A.join([header, renderMarkdownTableSeparator(columns, block.align), ...body], "\n")
     );
   }
 
@@ -204,24 +308,31 @@ const renderMarkdownTable = (block: Table): string => {
   );
 
   return pipe(paddedRows, A.map(renderMarkdownTableRow), (rows) =>
-    A.join([emptyHeader, renderMarkdownTableSeparator(columns), ...rows], "\n")
+    A.join([emptyHeader, renderMarkdownTableSeparator(columns, block.align), ...rows], "\n")
   );
 };
 
 const renderHtmlTableCell =
-  (tag: "td" | "th") =>
-  (cell: TableCell): string =>
-    `<${tag}>${renderHtmlInlines(cell.children)}</${tag}>`;
+  (tag: "td" | "th", align: TableAlignment) =>
+  (cell: TableCell): string => {
+    const style = align === "none" ? "" : ` style="text-align:${align}"`;
+
+    return `<${tag}${style}>${renderHtmlInlines(cell.children)}</${tag}>`;
+  };
 
 const renderHtmlTableRow =
-  (tag: "td" | "th") =>
+  (tag: "td" | "th", align: ReadonlyArray<TableAlignment>) =>
   (row: TableRow): string =>
-    `<tr>${pipe(row.children, A.map(renderHtmlTableCell(tag)), joinEmpty)}</tr>`;
+    `<tr>${pipe(
+      row.children,
+      A.map((cell, index) => renderHtmlTableCell(tag, tableAlignmentAt(align, index))(cell)),
+      joinEmpty
+    )}</tr>`;
 
 const renderHtmlTable = (block: Table): string => {
   if (block.headerRow) {
-    const header = pipe(block.children, A.head, O.map(renderHtmlTableRow("th")));
-    const body = pipe(block.children, A.drop(1), A.map(renderHtmlTableRow("td")), joinEmpty);
+    const header = pipe(block.children, A.head, O.map(renderHtmlTableRow("th", block.align)));
+    const body = pipe(block.children, A.drop(1), A.map(renderHtmlTableRow("td", block.align)), joinEmpty);
 
     return `<table>${pipe(
       header,
@@ -230,7 +341,7 @@ const renderHtmlTable = (block: Table): string => {
     )}<tbody>${body}</tbody></table>`;
   }
 
-  return `<table><tbody>${pipe(block.children, A.map(renderHtmlTableRow("td")), joinEmpty)}</tbody></table>`;
+  return `<table><tbody>${pipe(block.children, A.map(renderHtmlTableRow("td", block.align)), joinEmpty)}</tbody></table>`;
 };
 
 const youtubeWatchUrl = (videoId: string): string => `https://www.youtube.com/watch?v=${videoId}`;
@@ -246,6 +357,104 @@ const renderMarkdownHeading = (block: Heading): string =>
 const renderHtmlHeading = (block: Heading): string => {
   const tag = S.is(HeadingLevel)(block.level) ? `h${block.level}` : "h6";
   return `<${tag}>${renderHtmlInlines(block.children)}</${tag}>`;
+};
+
+const escapeInlineMath = flow(Str.replace(lineSeparatorGlobalPattern, " "), Str.replace(mathDelimiterPattern, "\\$"));
+
+const escapeBlockMath = Str.replace(mathFencePattern, "\\$\\$");
+
+const renderMarkdownMathBlock = (block: { readonly value: string }): string =>
+  `$$\n${escapeBlockMath(block.value)}\n$$`;
+
+const renderMarkdownFootnoteDefinition = (block: {
+  readonly identifier: string;
+  readonly children: ReadonlyArray<Block>;
+}): string => {
+  const body = renderMarkdownBlocks(block.children);
+
+  return Str.isEmpty(body)
+    ? `[^${block.identifier}]:`
+    : `[^${block.identifier}]: ${indentContinuationLines(body, "    ")}`;
+};
+
+const renderMarkdownAdmonition = (block: {
+  readonly kind: string;
+  readonly title: O.Option<string>;
+  readonly children: ReadonlyArray<Block>;
+}): string => {
+  const title = pipe(
+    block.title,
+    O.map((value) => ` ${escapeMarkdownText(value)}`),
+    O.getOrElse(thunkEmptyStr)
+  );
+  const header = `> [!${Str.toUpperCase(block.kind)}]${title}`;
+  const body = renderMarkdownBlocks(block.children);
+
+  return Str.isEmpty(body) ? header : `${header}\n${prefixLines(body, "> ")}`;
+};
+
+const embedTitle = (block: { readonly src: string; readonly title: O.Option<string> }): string =>
+  pipe(
+    block.title,
+    O.getOrElse(() => block.src)
+  );
+
+const embedDescriptionMarkdown = (description: O.Option<string>): string =>
+  pipe(
+    description,
+    O.map((value) => `\n\n${escapeMarkdownText(value)}`),
+    O.getOrElse(thunkEmptyStr)
+  );
+
+const renderMarkdownEmbed = (block: {
+  readonly kind: string;
+  readonly src: string;
+  readonly title: O.Option<string>;
+  readonly description: O.Option<string>;
+}): string => {
+  const title = embedTitle(block);
+  const destination = renderMarkdownDestinationWithTitle(block.src, block.title, CompatUrlPolicy);
+  const rendered = Match.value(block.kind).pipe(
+    Match.when("image", () => `![${escapeMarkdownText(title)}](${destination})`),
+    Match.orElse(() => `[${escapeMarkdownText(title)}](${destination})`)
+  );
+
+  return `${rendered}${embedDescriptionMarkdown(block.description)}`;
+};
+
+const renderHtmlFootnoteDefinition = (block: {
+  readonly identifier: string;
+  readonly children: ReadonlyArray<Block>;
+}): string =>
+  `<section id="fn-${Html.escapeHtml(block.identifier)}" class="footnote-definition"><sup>${Html.escapeHtml(block.identifier)}</sup>${renderHtmlBlocks(block.children)}</section>`;
+
+const renderHtmlAdmonition = (block: {
+  readonly kind: string;
+  readonly title: O.Option<string>;
+  readonly children: ReadonlyArray<Block>;
+}): string => {
+  const title = pipe(
+    block.title,
+    O.map((value) => `<p class="admonition-title">${Html.escapeHtml(value)}</p>`),
+    O.getOrElse(thunkEmptyStr)
+  );
+
+  return `<aside class="admonition admonition-${Html.escapeHtml(block.kind)}">${title}${renderHtmlBlocks(block.children)}</aside>`;
+};
+
+const renderHtmlEmbed = (block: {
+  readonly kind: string;
+  readonly src: string;
+  readonly title: O.Option<string>;
+  readonly description: O.Option<string>;
+}): string => {
+  const caption = pipe(
+    block.description,
+    O.map((value) => `<figcaption>${Html.escapeHtml(value)}</figcaption>`),
+    O.getOrElse(thunkEmptyStr)
+  );
+
+  return `<figure data-embed-kind="${Html.escapeHtml(block.kind)}"><a href="${escapeHtmlUrlAttribute(block.src)}">${Html.escapeHtml(embedTitle(block))}</a>${caption}</figure>`;
 };
 
 const indentContinuationLines = (text: string, indent: string): string =>
@@ -301,7 +510,8 @@ const adapterName = (adapter: { readonly name: string }): string =>
     () => "unknown"
   );
 
-const renderMarkdownDocumentUnsafe = (document: Document): Markdown => renderMarkdownBlocks(document.children);
+const renderMarkdownDocumentUnsafe = (document: Document): Markdown =>
+  joinBlocks([renderJsonFrontmatter(document.frontmatter), renderMarkdownBlocks(document.children)]);
 
 const renderHtmlDocumentUnsafe = (document: Document): HtmlFragment => renderHtmlBlocks(document.children);
 
@@ -310,7 +520,8 @@ const renderHtmlDocumentUnsafe = (document: Document): HtmlFragment => renderHtm
 // single factory parameterizes both.
 const makeMarkdownInlineMatcher = (
   renderInlines: (children: ReadonlyArray<Inline>) => string,
-  renderRawMarkdown: (node: { readonly value: string }) => string
+  renderRawMarkdown: (node: { readonly value: string }) => string,
+  urlPolicy: UrlPolicy
 ) =>
   Match.type<Inline>().pipe(
     Match.tagsExhaustive({
@@ -321,16 +532,26 @@ const makeMarkdownInlineMatcher = (
       em: ({ children }) => `*${renderInlines(children)}*`,
       del: ({ children }) => `~~${renderInlines(children)}~~`,
       code: ({ value }) => renderInlineCode(value),
-      a: ({ href, children }) => `[${renderMarkdownLinkLabelInlines(children)}](${escapeMarkdownDestination(href)})`,
-      img: ({ src, alt }) => `![${escapeMarkdownText(alt)}](${escapeMarkdownDestination(src)})`,
+      a: ({ href, children, title }) =>
+        `[${renderMarkdownLinkLabelInlines(children)}](${renderMarkdownDestinationWithTitle(href, title, urlPolicy)})`,
+      img: ({ src, alt, title }) =>
+        `![${escapeMarkdownText(alt)}](${renderMarkdownDestinationWithTitle(src, title, urlPolicy)})`,
       br: () => "<br/>",
+      inlineMath: ({ value }) => `$${escapeInlineMath(value)}$`,
+      footnoteReference: ({ identifier }) => `[^${identifier}]`,
     })
   );
 
-const renderMarkdownInlineMatcher = makeMarkdownInlineMatcher(renderMarkdownInlines, ({ value }) => value);
+const renderMarkdownInlineMatcher = makeMarkdownInlineMatcher(
+  renderMarkdownInlines,
+  ({ value }) => value,
+  CompatUrlPolicy
+);
 
-const renderMarkdownInlineForLinkLabelMatcher = makeMarkdownInlineMatcher(renderMarkdownLinkLabelInlines, ({ value }) =>
-  escapeMarkdownText(value)
+const renderMarkdownInlineForLinkLabelMatcher = makeMarkdownInlineMatcher(
+  renderMarkdownLinkLabelInlines,
+  ({ value }) => escapeMarkdownText(value),
+  CompatUrlPolicy
 );
 
 function renderMarkdownInlineForLinkLabel(inline: Inline): string {
@@ -355,6 +576,13 @@ export function renderMarkdownInline(inline: Inline): string {
   return renderMarkdownInlineMatcher(inline);
 }
 
+const renderHtmlOptionalAttribute = (name: string, value: O.Option<string>): string =>
+  pipe(
+    value,
+    O.map((attributeValue) => ` ${name}="${Html.escapeHtml(attributeValue)}"`),
+    O.getOrElse(thunkEmptyStr)
+  );
+
 /**
  * Renders an inline node as an HTML fragment.
  *
@@ -378,9 +606,14 @@ const renderHtmlInlineMatcher = Match.type<Inline>().pipe(
     em: ({ children }) => `<em>${renderHtmlInlines(children)}</em>`,
     del: ({ children }) => `<del>${renderHtmlInlines(children)}</del>`,
     code: ({ value }) => `<code>${Html.escapeHtml(value)}</code>`,
-    a: ({ href, children }) => `<a href="${escapeHtmlUrlAttribute(href)}">${renderHtmlInlines(children)}</a>`,
-    img: ({ src, alt }) => `<img src="${escapeHtmlUrlAttribute(src)}" alt="${Html.escapeHtml(alt)}" />`,
+    a: ({ href, children, title }) =>
+      `<a href="${escapeHtmlUrlAttribute(href)}"${renderHtmlOptionalAttribute("title", title)}>${renderHtmlInlines(children)}</a>`,
+    img: ({ src, alt, title }) =>
+      `<img src="${escapeHtmlUrlAttribute(src)}" alt="${Html.escapeHtml(alt)}"${renderHtmlOptionalAttribute("title", title)} />`,
     br: () => "<br />",
+    inlineMath: ({ value }) => `<span class="math math-inline">${Html.escapeHtml(value)}</span>`,
+    footnoteReference: ({ identifier }) =>
+      `<sup id="fnref-${Html.escapeHtml(identifier)}"><a href="#fn-${Html.escapeHtml(identifier)}">${Html.escapeHtml(identifier)}</a></sup>`,
   })
 );
 
@@ -432,7 +665,7 @@ export const renderMarkdownBlock: (block: Block) => string = Match.type<Block>()
       pipe(
         block.children,
         A.map((item, index) => {
-          const marker = `${index + 1}. `;
+          const marker = `${index + block.start}. `;
 
           return renderMarkdownMarkedItem(marker, renderMarkdownListItem(item));
         }),
@@ -448,6 +681,10 @@ export const renderMarkdownBlock: (block: Block) => string = Match.type<Block>()
       ),
     table: renderMarkdownTable,
     youtube: (block) => youtubeWatchUrl(block.videoId),
+    mathBlock: renderMarkdownMathBlock,
+    footnoteDefinition: renderMarkdownFootnoteDefinition,
+    admonition: renderMarkdownAdmonition,
+    embed: renderMarkdownEmbed,
     hr: () => "---",
   })
 );
@@ -473,12 +710,17 @@ export const renderHtmlBlock: (block: Block) => string = Match.type<Block>().pip
     blockquote: (block) => `<blockquote>${renderHtmlBlocks(block.children)}</blockquote>`,
     pre: (block) => `<pre><code${languageToHtmlClass(block.language)}>${Html.escapeHtml(block.value)}</code></pre>`,
     ul: (block) => `<ul>${pipe(block.children, A.map(renderHtmlListItem), joinEmpty)}</ul>`,
-    ol: (block) => `<ol>${pipe(block.children, A.map(renderHtmlListItem), joinEmpty)}</ol>`,
+    ol: (block) =>
+      `<ol${block.start === 1 ? "" : ` start="${block.start}"`}>${pipe(block.children, A.map(renderHtmlListItem), joinEmpty)}</ol>`,
     taskList: (block) =>
       `<ul class="contains-task-list">${pipe(block.children, A.map(renderHtmlTaskItem), joinEmpty)}</ul>`,
     table: renderHtmlTable,
     youtube: (block) =>
       `<iframe src="${escapeHtmlUrlAttribute(youtubeEmbedUrl(block.videoId))}" title="YouTube video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`,
+    mathBlock: (block) => `<div class="math math-display">${Html.escapeHtml(block.value)}</div>`,
+    footnoteDefinition: renderHtmlFootnoteDefinition,
+    admonition: renderHtmlAdmonition,
+    embed: renderHtmlEmbed,
     hr: () => "<hr />",
   })
 );
@@ -685,6 +927,141 @@ export const renderEffectWith: {
 );
 
 /**
+ * URL policy options accepted by built-in render adapter factories.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface UrlRenderOptions {
+  /**
+   * URL policy applied to URL-bearing AST fields before rendering.
+   *
+   * @since 0.0.0
+   */
+  readonly urlPolicy?: UrlPolicy;
+}
+
+const renderPolicy = (options: UrlRenderOptions, fallback: UrlPolicy): UrlPolicy =>
+  pipe(
+    O.fromUndefinedOr(options.urlPolicy),
+    O.getOrElse(() => fallback)
+  );
+
+const makeSanitizeInlineUrlsMatcher = (policy: UrlPolicy): ((inline: Inline) => Inline) =>
+  Match.type<Inline>().pipe(
+    Match.tagsExhaustive({
+      text: (node) => node,
+      rawMarkdown: (node) => node,
+      rawHtml: (node) => node,
+      strong: (node) => ({ ...node, children: A.map(node.children, sanitizeInlineUrls(policy)) }),
+      em: (node) => ({ ...node, children: A.map(node.children, sanitizeInlineUrls(policy)) }),
+      del: (node) => ({ ...node, children: A.map(node.children, sanitizeInlineUrls(policy)) }),
+      code: (node) => node,
+      a: (node) => ({
+        ...node,
+        href: sanitizeUrlDestinationWithPolicy(node.href, policy),
+        children: A.map(node.children, sanitizeInlineUrls(policy)),
+      }),
+      img: (node) => ({ ...node, src: sanitizeUrlDestinationWithPolicy(node.src, policy) }),
+      br: (node) => node,
+      inlineMath: (node) => node,
+      footnoteReference: (node) => node,
+    })
+  );
+
+const sanitizeInlineUrls =
+  (policy: UrlPolicy): ((inline: Inline) => Inline) =>
+  (inline) =>
+    makeSanitizeInlineUrlsMatcher(policy)(inline);
+
+const sanitizeListItemChildUrls =
+  (policy: UrlPolicy): ((child: ListItemChild) => ListItemChild) =>
+  (child) =>
+    InlineSchema.is(child) ? sanitizeInlineUrls(policy)(child) : sanitizeBlockUrls(policy)(child);
+
+const sanitizeListItemUrls =
+  (policy: UrlPolicy): ((item: Li) => Li) =>
+  (item) => ({ ...item, children: A.map(item.children, sanitizeListItemChildUrls(policy)) });
+
+const sanitizeTaskItemUrls =
+  (policy: UrlPolicy): ((item: TaskItem) => TaskItem) =>
+  (item) => ({ ...item, children: A.map(item.children, sanitizeListItemChildUrls(policy)) });
+
+const sanitizeTableUrls = (policy: UrlPolicy, table: Table): Table => ({
+  ...table,
+  children: A.map(table.children, (row) => ({
+    ...row,
+    children: A.map(row.children, (cell) => ({ ...cell, children: A.map(cell.children, sanitizeInlineUrls(policy)) })),
+  })),
+});
+
+const makeSanitizeBlockUrlsMatcher = (policy: UrlPolicy): ((block: Block) => Block) =>
+  Match.type<Block>().pipe(
+    Match.tagsExhaustive({
+      heading: (node) => ({ ...node, children: A.map(node.children, sanitizeInlineUrls(policy)) }),
+      p: (node) => ({ ...node, children: A.map(node.children, sanitizeInlineUrls(policy)) }),
+      blockquote: (node) => ({ ...node, children: A.map(node.children, sanitizeBlockUrls(policy)) }),
+      pre: (node) => node,
+      ul: (node) => ({ ...node, children: A.map(node.children, sanitizeListItemUrls(policy)) }),
+      ol: (node) => ({ ...node, children: A.map(node.children, sanitizeListItemUrls(policy)) }),
+      taskList: (node) => ({ ...node, children: A.map(node.children, sanitizeTaskItemUrls(policy)) }),
+      table: (node) => sanitizeTableUrls(policy, node),
+      youtube: (node) => node,
+      mathBlock: (node) => node,
+      footnoteDefinition: (node) => ({ ...node, children: A.map(node.children, sanitizeBlockUrls(policy)) }),
+      admonition: (node) => ({ ...node, children: A.map(node.children, sanitizeBlockUrls(policy)) }),
+      embed: (node) => ({ ...node, src: sanitizeUrlDestinationWithPolicy(node.src, policy) }),
+      hr: (node) => node,
+    })
+  );
+
+const sanitizeBlockUrls =
+  (policy: UrlPolicy): ((block: Block) => Block) =>
+  (block) =>
+    makeSanitizeBlockUrlsMatcher(policy)(block);
+
+const sanitizeDocumentUrls = (policy: UrlPolicy, document: Document): Document => ({
+  ...document,
+  children: A.map(document.children, sanitizeBlockUrls(policy)),
+});
+
+const renderMarkdownDocumentWithPolicy = (policy: UrlPolicy, document: Document): Markdown =>
+  renderMarkdownDocumentUnsafe(sanitizeDocumentUrls(policy, document));
+
+const renderHtmlDocumentWithPolicy = (policy: UrlPolicy, document: Document): HtmlFragment =>
+  renderHtmlDocumentUnsafe(sanitizeDocumentUrls(policy, document));
+
+/**
+ * Creates a Markdown render adapter with an optional URL sink policy.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const makeMarkdownAdapter = (options: UrlRenderOptions = {}): PureRenderAdapter<Markdown> => {
+  const urlPolicy = renderPolicy(options, CompatUrlPolicy);
+
+  return {
+    name: "markdown",
+    render: (document) => renderMarkdownDocumentWithPolicy(urlPolicy, document),
+  };
+};
+
+/**
+ * Creates an HTML fragment render adapter with an optional URL sink policy.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const makeHtmlFragmentAdapter = (options: UrlRenderOptions = {}): PureRenderAdapter<HtmlFragment> => {
+  const urlPolicy = renderPolicy(options, BrowserSafeUrlPolicy);
+
+  return {
+    name: "html-fragment",
+    render: (document) => renderHtmlDocumentWithPolicy(urlPolicy, document),
+  };
+};
+
+/**
  * Built-in Markdown render adapter.
  *
  * @example
@@ -699,8 +1076,7 @@ export const renderEffectWith: {
  * @since 0.0.0
  */
 export const MarkdownAdapter: PureRenderAdapter<Markdown> = {
-  name: "markdown",
-  render: renderMarkdownDocumentUnsafe,
+  ...makeMarkdownAdapter(),
 };
 
 /**
@@ -721,8 +1097,7 @@ export const MarkdownAdapter: PureRenderAdapter<Markdown> = {
  * @since 0.0.0
  */
 export const HtmlFragmentAdapter: PureRenderAdapter<HtmlFragment> = {
-  name: "html-fragment",
-  render: renderHtmlDocumentUnsafe,
+  ...makeHtmlFragmentAdapter(),
 };
 
 /**

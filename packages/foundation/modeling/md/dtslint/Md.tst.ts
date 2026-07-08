@@ -1,7 +1,8 @@
-import { Md } from "@beep/md";
+import { BrowserSafeUrlPolicy, Md, makeHtmlFragmentAdapter, makeMarkdownAdapter } from "@beep/md";
 import { Effect } from "effect";
 import { describe, expect, it } from "tstyche";
 import type {
+  Admonition,
   Block,
   BlockContent,
   BlockContentBuilder,
@@ -15,24 +16,32 @@ import type {
   DocumentToPlainText,
   EffectRenderAdapter,
   Em,
+  Embed,
+  FootnoteDefinition,
+  FootnoteReference,
   Heading,
   Inline,
   InlineContent,
   InlineContentBuilder,
   InlineInput,
+  InlineMath,
   Li,
   ListItemChildInput,
   ListItemContent,
   ListItemContentBuilder,
   ListItemInput,
+  MathBlock,
+  Ol,
   P,
   PureRenderAdapter,
   RenderError,
   Strong,
+  Table,
   TaskItem,
   TaskList,
   TaskListItemInput,
   Ul,
+  UrlRenderOptions,
   YouTube,
 } from "@beep/md";
 import type { HtmlFragment, Markdown } from "@beep/schema";
@@ -68,6 +77,15 @@ describe("@beep/md", () => {
     expect(Md.taskItem("Done", { checked: true })).type.toBe<TaskItem>();
     expect(Md.taskList(["Todo", { text: "Done", checked: true }, Md.taskItem("Maybe")])).type.toBe<TaskList>();
     expect(Md.taskList([{ children: [Md.p("Parent"), Md.ul(["Child"])], checked: true }])).type.toBe<TaskList>();
+    expect(Md.inlineMath("a^2")).type.toBe<InlineMath>();
+    expect(Md.footnoteRef("note-1")).type.toBe<FootnoteReference>();
+    expect(Md.ol(["Three"], { start: 3 })).type.toBe<Ol>();
+    expect(Md.table([["A"]], { headerRow: true, align: ["left"] })).type.toBe<Table>();
+    expect(Md.mathBlock("a=b")).type.toBe<MathBlock>();
+    expect(Md.footnoteDef("note-1", "Body")).type.toBe<FootnoteDefinition>();
+    expect(Md.admonition("warning", "Body", { title: "Careful" })).type.toBe<Admonition>();
+    expect(Md.embed("video", "https://example.com", { title: "Demo" })).type.toBe<Embed>();
+    expect(Md.make([Md.p("Body")], { frontmatter: { title: "Doc" } })).type.toBe<Document>();
     expect(Md.youtube("dQw4w9WgXcQ")).type.toBe<Result.Result<YouTube, S.SchemaError>>();
     expect(Md.youtubeEffect("dQw4w9WgXcQ")).type.toBe<Effect.Effect<YouTube, S.SchemaError>>();
     expect(Md.youtubeUnsafe("dQw4w9WgXcQ")).type.toBe<YouTube>();
@@ -128,6 +146,11 @@ describe("@beep/md", () => {
     expect(Md.MarkdownAdapter).type.toBe<PureRenderAdapter<Markdown>>();
     expect(Md.HtmlFragmentAdapter).type.toBe<PureRenderAdapter<HtmlFragment>>();
     expect(Md.PlainTextAdapter).type.toBe<PureRenderAdapter<string>>();
+    const renderOptions: UrlRenderOptions = { urlPolicy: BrowserSafeUrlPolicy };
+    expect(renderOptions).type.toBe<UrlRenderOptions>();
+    expect(makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicy })).type.toBe<PureRenderAdapter<Markdown>>();
+    expect(makeHtmlFragmentAdapter({ urlPolicy: BrowserSafeUrlPolicy })).type.toBe<PureRenderAdapter<HtmlFragment>>();
+    expect(Md.makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicy })).type.toBe<PureRenderAdapter<Markdown>>();
 
     const bytesAdapter: EffectRenderAdapter<Uint8Array, "pdf-error", "fonts"> = {
       name: "bytes",

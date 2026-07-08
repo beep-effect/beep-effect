@@ -6,7 +6,7 @@
  */
 
 import { $MdId } from "@beep/identity";
-import { LiteralKit, SchemaUtils } from "@beep/schema";
+import { JsonObject, LiteralKit, PosInt, SchemaUtils } from "@beep/schema";
 import { SchemaGetter } from "effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -15,6 +15,7 @@ const $I = $MdId.create("Md.model");
 
 const codeFenceLanguagePattern = /^[A-Za-z0-9][A-Za-z0-9_+.-]*$/u;
 const youtubeVideoIdPattern = /^[A-Za-z0-9_-]{11}$/u;
+const footnoteIdentifierPattern = /^[A-Za-z0-9][A-Za-z0-9_.:-]*$/u;
 
 /**
  * Single safe Markdown fenced-code info-string token.
@@ -97,6 +98,95 @@ export const YouTubeVideoId = S.String.check(
   }),
   SchemaUtils.withCodecStatics
 );
+
+/**
+ * Safe Markdown footnote identifier.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const FootnoteIdentifier = S.NonEmptyString.check(
+  S.isPattern(footnoteIdentifierPattern, {
+    identifier: $I`FootnoteIdentifierPatternCheck`,
+    title: "Footnote Identifier",
+    description: "Checks that a footnote identifier can be rendered inside Markdown footnote brackets.",
+    message:
+      "Footnote identifier must start with an alphanumeric character and contain only letters, digits, _, ., :, or -.",
+  })
+).pipe(
+  $I.annoteSchema("FootnoteIdentifier", {
+    description: "Safe Markdown footnote identifier.",
+  }),
+  SchemaUtils.withCodecStatics
+);
+
+/**
+ * Type for {@link FootnoteIdentifier}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type FootnoteIdentifier = typeof FootnoteIdentifier.Type;
+
+/**
+ * Markdown table column alignment.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const TableAlignment = LiteralKit(["none", "left", "center", "right"]).pipe(
+  $I.annoteSchema("TableAlignment", {
+    description: "Markdown table column alignment.",
+  })
+);
+
+/**
+ * Type for {@link TableAlignment}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type TableAlignment = typeof TableAlignment.Type;
+
+/**
+ * Common typed admonition kinds.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmonitionKind = LiteralKit(["note", "tip", "important", "warning", "caution"]).pipe(
+  $I.annoteSchema("AdmonitionKind", {
+    description: "Common typed Markdown admonition kind.",
+  })
+);
+
+/**
+ * Type for {@link AdmonitionKind}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmonitionKind = typeof AdmonitionKind.Type;
+
+/**
+ * Generic block embed kind.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const EmbedKind = LiteralKit(["link", "image", "video", "audio", "unknown"]).pipe(
+  $I.annoteSchema("EmbedKind", {
+    description: "Generic Markdown block embed kind.",
+  })
+);
+
+/**
+ * Type for {@link EmbedKind}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EmbedKind = typeof EmbedKind.Type;
 
 /**
  * Recursive inline child list used by inline containers and text-bearing block
@@ -585,6 +675,9 @@ export class A extends S.TaggedClass<A>($I`A`)(
     href: S.String.annotateKey({
       description: "Markdown link destination or URL.",
     }),
+    title: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional link title rendered when present.",
+    }),
   },
   $I.annote("A", {
     description: "Inline hyperlink.",
@@ -613,6 +706,7 @@ export declare namespace A {
     readonly _tag: "a";
     readonly children: InlineChildren.Type;
     readonly href: string;
+    readonly title: O.Option<string>;
   }
 
   /**
@@ -622,6 +716,7 @@ export declare namespace A {
     readonly _tag: "a";
     readonly children: InlineChildren.Encoded;
     readonly href: string;
+    readonly title?: string;
   }
 }
 
@@ -647,6 +742,9 @@ export class Img extends S.TaggedClass<Img>($I`Img`)(
     }),
     src: S.String.annotateKey({
       description: "Image source URL or path.",
+    }),
+    title: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional image title rendered when present.",
     }),
   },
   $I.annote("Img", {
@@ -676,12 +774,18 @@ export declare namespace Img {
     readonly _tag: "img";
     readonly alt: string;
     readonly src: string;
+    readonly title: O.Option<string>;
   }
 
   /**
    * @since 0.0.0
    */
-  export interface Encoded extends Type {}
+  export interface Encoded {
+    readonly _tag: "img";
+    readonly alt: string;
+    readonly src: string;
+    readonly title?: string;
+  }
 }
 
 /**
@@ -735,6 +839,103 @@ export declare namespace Br {
 }
 
 /**
+ * Inline TeX math content.
+ *
+ * @example
+ * ```ts
+ * import { InlineMath } from "@beep/md/Md.model"
+ *
+ * const node = InlineMath.make({ value: "a^2 + b^2" })
+ * console.log(node._tag) // "inlineMath"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class InlineMath extends S.TaggedClass<InlineMath>($I`InlineMath`)(
+  "inlineMath",
+  {
+    value: S.String.annotateKey({
+      description: "TeX math source rendered as inert inline math content.",
+    }),
+  },
+  $I.annote("InlineMath", {
+    description: "Inline TeX math content.",
+  })
+) {}
+
+/**
+ * Companion namespace for {@link InlineMath}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace InlineMath {
+  /**
+   * @since 0.0.0
+   */
+  export interface Type {
+    readonly _tag: "inlineMath";
+    readonly value: string;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface Encoded extends Type {}
+}
+
+/**
+ * Inline footnote reference.
+ *
+ * @example
+ * ```ts
+ * import { FootnoteReference } from "@beep/md/Md.model"
+ *
+ * const node = FootnoteReference.make({ identifier: "note-1" })
+ * console.log(node._tag) // "footnoteReference"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FootnoteReference extends S.TaggedClass<FootnoteReference>($I`FootnoteReference`)(
+  "footnoteReference",
+  {
+    identifier: FootnoteIdentifier.annotateKey({
+      description: "Footnote identifier referenced from inline content.",
+    }),
+  },
+  $I.annote("FootnoteReference", {
+    description: "Inline footnote reference.",
+  })
+) {}
+
+/**
+ * Companion namespace for {@link FootnoteReference}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace FootnoteReference {
+  /**
+   * @since 0.0.0
+   */
+  export interface Type {
+    readonly _tag: "footnoteReference";
+    readonly identifier: FootnoteIdentifier;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly _tag: "footnoteReference";
+    readonly identifier: string;
+  }
+}
+
+/**
  * Discriminated union of inline Markdown AST nodes.
  *
  * @example
@@ -751,7 +952,20 @@ export declare namespace Br {
  * @category models
  * @since 0.0.0
  */
-export const Inline = S.Union([Text, RawMarkdown, RawHtml, Strong, Em, Del, Code, A, Img, Br]).pipe(
+export const Inline = S.Union([
+  Text,
+  RawMarkdown,
+  RawHtml,
+  Strong,
+  Em,
+  Del,
+  Code,
+  A,
+  Img,
+  Br,
+  InlineMath,
+  FootnoteReference,
+]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("Inline", {
     description: "Discriminated union of inline Markdown AST nodes.",
@@ -805,7 +1019,9 @@ export declare namespace Inline {
     | Code.Type
     | A.Type
     | Img.Type
-    | Br.Type;
+    | Br.Type
+    | InlineMath.Type
+    | FootnoteReference.Type;
 
   /**
    * @since 0.0.0
@@ -820,7 +1036,9 @@ export declare namespace Inline {
     | Code.Encoded
     | A.Encoded
     | Img.Encoded
-    | Br.Encoded;
+    | Br.Encoded
+    | InlineMath.Encoded
+    | FootnoteReference.Encoded;
 }
 
 /**
@@ -1397,6 +1615,9 @@ export class Ol extends S.TaggedClass<Ol>($I`Ol`)(
     children: ListChildren.annotateKey({
       description: "List items rendered as an ordered list.",
     }),
+    start: PosInt.pipe(SchemaUtils.withKeyDefaults(PosInt.make(1))).annotateKey({
+      description: "First ordinal used by the ordered list. Defaults to one.",
+    }),
   },
   $I.annote("Ol", {
     description: "Ordered list block.",
@@ -1424,6 +1645,7 @@ export declare namespace Ol {
   export interface Type {
     readonly _tag: "ol";
     readonly children: ListChildren.Type;
+    readonly start: PosInt;
   }
 
   /**
@@ -1432,6 +1654,7 @@ export declare namespace Ol {
   export interface Encoded {
     readonly _tag: "ol";
     readonly children: ListChildren.Encoded;
+    readonly start?: number;
   }
 }
 
@@ -1908,6 +2131,9 @@ export declare namespace TableRow {
 export class Table extends S.TaggedClass<Table>($I`Table`)(
   "table",
   {
+    align: S.Array(TableAlignment).pipe(SchemaUtils.withEmptyArrayDefaults<TableAlignment>()).annotateKey({
+      description: "Column alignment values in display order. Missing entries render as unaligned columns.",
+    }),
     headerRow: SchemaUtils.BoolKeyDefaultFalse.annotateKey({
       description: "Whether the first row renders as a table header. Defaults to false on construction and decode.",
     }),
@@ -1943,6 +2169,7 @@ export declare namespace Table {
    */
   export interface Type {
     readonly _tag: "table";
+    readonly align: ReadonlyArray<TableAlignment>;
     readonly children: ReadonlyArray<TableRow.Type>;
     readonly headerRow: boolean;
   }
@@ -1952,6 +2179,7 @@ export declare namespace Table {
    */
   export interface Encoded {
     readonly _tag: "table";
+    readonly align?: ReadonlyArray<TableAlignment> | undefined;
     readonly children: ReadonlyArray<TableRow.Encoded>;
     readonly headerRow?: boolean;
   }
@@ -2010,6 +2238,241 @@ export declare namespace YouTube {
    * @since 0.0.0
    */
   export interface Encoded extends Type {}
+}
+
+/**
+ * Display TeX math block.
+ *
+ * @example
+ * ```ts
+ * import { MathBlock } from "@beep/md/Md.model"
+ *
+ * const node = MathBlock.make({ value: "a^2 + b^2 = c^2" })
+ * console.log(node._tag) // "mathBlock"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class MathBlock extends S.TaggedClass<MathBlock>($I`MathBlock`)(
+  "mathBlock",
+  {
+    value: S.String.annotateKey({
+      description: "TeX math source rendered as inert display math content.",
+    }),
+  },
+  $I.annote("MathBlock", {
+    description: "Display TeX math block.",
+  })
+) {}
+
+/**
+ * Companion namespace for {@link MathBlock}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace MathBlock {
+  /**
+   * @since 0.0.0
+   */
+  export interface Type {
+    readonly _tag: "mathBlock";
+    readonly value: string;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface Encoded extends Type {}
+}
+
+/**
+ * Footnote definition block.
+ *
+ * @example
+ * ```ts
+ * import { FootnoteDefinition, P, Text } from "@beep/md/Md.model"
+ *
+ * const node = FootnoteDefinition.make({
+ *   identifier: "note-1",
+ *   children: [P.make({ children: [Text.make({ value: "Body" })] })],
+ * })
+ * console.log(node._tag) // "footnoteDefinition"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FootnoteDefinition extends S.TaggedClass<FootnoteDefinition>($I`FootnoteDefinition`)(
+  "footnoteDefinition",
+  {
+    identifier: FootnoteIdentifier.annotateKey({
+      description: "Footnote identifier defined by this block.",
+    }),
+    children: BlockChildren.annotateKey({
+      description: "Footnote body blocks.",
+    }),
+  },
+  $I.annote("FootnoteDefinition", {
+    description: "Footnote definition block.",
+  })
+) {}
+
+/**
+ * Companion namespace for {@link FootnoteDefinition}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace FootnoteDefinition {
+  /**
+   * @since 0.0.0
+   */
+  export interface Type {
+    readonly _tag: "footnoteDefinition";
+    readonly children: BlockChildren.Type;
+    readonly identifier: FootnoteIdentifier;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly _tag: "footnoteDefinition";
+    readonly children: BlockChildren.Encoded;
+    readonly identifier: string;
+  }
+}
+
+/**
+ * Typed admonition block.
+ *
+ * @example
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { Admonition, P, Text } from "@beep/md/Md.model"
+ *
+ * const node = Admonition.make({
+ *   kind: "note",
+ *   title: O.none(),
+ *   children: [P.make({ children: [Text.make({ value: "Body" })] })],
+ * })
+ * console.log(node._tag) // "admonition"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class Admonition extends S.TaggedClass<Admonition>($I`Admonition`)(
+  "admonition",
+  {
+    kind: AdmonitionKind.annotateKey({
+      description: "Admonition kind.",
+    }),
+    title: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional admonition title.",
+    }),
+    children: BlockChildren.annotateKey({
+      description: "Admonition body blocks.",
+    }),
+  },
+  $I.annote("Admonition", {
+    description: "Typed admonition block.",
+  })
+) {}
+
+/**
+ * Companion namespace for {@link Admonition}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace Admonition {
+  /**
+   * @since 0.0.0
+   */
+  export interface Type {
+    readonly _tag: "admonition";
+    readonly children: BlockChildren.Type;
+    readonly kind: AdmonitionKind;
+    readonly title: O.Option<string>;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly _tag: "admonition";
+    readonly children: BlockChildren.Encoded;
+    readonly kind: AdmonitionKind;
+    readonly title?: string;
+  }
+}
+
+/**
+ * Safe generalized block embed.
+ *
+ * @example
+ * ```ts
+ * import { Embed } from "@beep/md/Md.model"
+ *
+ * const node = Embed.make({ kind: "video", src: "https://example.com/video" })
+ * console.log(node._tag) // "embed"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class Embed extends S.TaggedClass<Embed>($I`Embed`)(
+  "embed",
+  {
+    kind: EmbedKind.annotateKey({
+      description: "Generic embed kind.",
+    }),
+    src: S.String.annotateKey({
+      description: "Embed source URL or identifier.",
+    }),
+    title: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional embed title.",
+    }),
+    description: S.OptionFromOptionalKey(S.String).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional embed description.",
+    }),
+  },
+  $I.annote("Embed", {
+    description: "Safe generalized block embed rendered by built-in adapters as inert link or figure content.",
+  })
+) {}
+
+/**
+ * Companion namespace for {@link Embed}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace Embed {
+  /**
+   * @since 0.0.0
+   */
+  export interface Type {
+    readonly _tag: "embed";
+    readonly description: O.Option<string>;
+    readonly kind: EmbedKind;
+    readonly src: string;
+    readonly title: O.Option<string>;
+  }
+
+  /**
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly _tag: "embed";
+    readonly description?: string;
+    readonly kind: EmbedKind;
+    readonly src: string;
+    readonly title?: string;
+  }
 }
 
 /**
@@ -2079,7 +2542,22 @@ export declare namespace Hr {
  * @category models
  * @since 0.0.0
  */
-export const Block = S.Union([Heading, P, BlockQuote, Pre, Ul, Ol, TaskList, Table, YouTube, Hr]).pipe(
+export const Block = S.Union([
+  Heading,
+  P,
+  BlockQuote,
+  Pre,
+  Ul,
+  Ol,
+  TaskList,
+  Table,
+  YouTube,
+  MathBlock,
+  FootnoteDefinition,
+  Admonition,
+  Embed,
+  Hr,
+]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("Block", {
     description: "Discriminated union of block Markdown AST nodes.",
@@ -2133,6 +2611,10 @@ export declare namespace Block {
     | TaskList.Type
     | Table.Type
     | YouTube.Type
+    | MathBlock.Type
+    | FootnoteDefinition.Type
+    | Admonition.Type
+    | Embed.Type
     | Hr.Type;
 
   /**
@@ -2148,6 +2630,10 @@ export declare namespace Block {
     | TaskList.Encoded
     | Table.Encoded
     | YouTube.Encoded
+    | MathBlock.Encoded
+    | FootnoteDefinition.Encoded
+    | Admonition.Encoded
+    | Embed.Encoded
     | Hr.Encoded;
 }
 
@@ -2168,6 +2654,9 @@ export declare namespace Block {
 export class Document extends S.TaggedClass<Document>($I`Document`)(
   "document",
   {
+    frontmatter: S.OptionFromOptionalKey(JsonObject).pipe(SchemaUtils.withNoneDefault).annotateKey({
+      description: "Optional JSON-compatible document metadata rendered as deterministic frontmatter.",
+    }),
     children: BlockChildren.annotateKey({
       description: "Top-level block children in document order.",
     }),
@@ -2198,6 +2687,7 @@ export declare namespace Document {
   export interface Type {
     readonly _tag: "document";
     readonly children: BlockChildren.Type;
+    readonly frontmatter: O.Option<JsonObject>;
   }
 
   /**
@@ -2206,5 +2696,6 @@ export declare namespace Document {
   export interface Encoded {
     readonly _tag: "document";
     readonly children: BlockChildren.Encoded;
+    readonly frontmatter?: JsonObject;
   }
 }

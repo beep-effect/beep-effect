@@ -1,4 +1,5 @@
 import { $SharedDomainId } from "@beep/identity/packages";
+import { Cuid } from "@beep/schema/Cuid";
 import * as EntitySchema from "@beep/schema/EntitySchema";
 import * as DomainBarrel from "@beep/shared-domain";
 import * as EntityBarrel from "@beep/shared-domain/entity";
@@ -6,6 +7,7 @@ import * as BaseEntity from "@beep/shared-domain/entity/BaseEntity";
 import * as EntityId from "@beep/shared-domain/entity/EntityId";
 import * as EntityRef from "@beep/shared-domain/entity/EntityRef";
 import * as Principal from "@beep/shared-domain/entity/Principal";
+import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
 import * as primitives from "@beep/shared-domain/entity/primitives";
 import * as SourceKind from "@beep/shared-domain/entity/SourceKind";
 import { fcRuns } from "@beep/test-utils";
@@ -21,6 +23,7 @@ import { FastCheck as fc } from "effect/testing";
 const $I = $SharedDomainId.create("entity/test/EntityKernel");
 const makeSharedId = EntityId.factory("shared", $I);
 const DocumentId = makeSharedId("document");
+const DocumentPublicId = PublicEntityId.factory(DocumentId);
 const CustomDocumentId = makeSharedId("document", {
   brand: "CustomDocumentId",
   description: "Custom document id.",
@@ -75,6 +78,7 @@ const documentInput = {
   payload: {
     fixture: true,
   },
+  publicId: "shared_document_a123",
   rowVersion: 1,
   schemaVersion: "0.0.0",
   source: "Application",
@@ -128,6 +132,24 @@ describe("EntityId", () => {
   });
 });
 
+describe("PublicEntityId", () => {
+  it.effect(
+    "derives URL-safe public ids from entity metadata",
+    Effect.fnUntraced(function* () {
+      const decode = S.decodeUnknownEffect(DocumentPublicId);
+      const publicId = yield* decode("shared_document_a123");
+
+      expect(DocumentPublicId.prefix).toBe("shared_document");
+      expect(DocumentPublicId.brand).toBe("SharedDocumentPublicId");
+      expect(DocumentPublicId.sourceEntityId).toBe(DocumentId);
+      expect(PublicEntityId.fromCuid(DocumentId, Cuid.make("a123"))).toBe(publicId);
+      expect(DocumentPublicId.equivalence(publicId, publicId)).toBe(true);
+      yield* expectFailure(decode("shared_user_a123"));
+      yield* expectFailure(decode("shared_document_123"));
+    })
+  );
+});
+
 describe("BaseEntity", () => {
   it("exports invariant fields and persistence descriptors", () => {
     const orgIdIndexHints = BaseEntity.BaseEntity.definition.persisted.orgId.indexHints;
@@ -152,6 +174,8 @@ describe("BaseEntity", () => {
       expect(Document.definition.tableName).toBe("shared_document");
       expect(Document.definition.persisted.id.valueStrategy).toBe("generatedOnInsert");
       expect(Document.definition.persisted.entityType.columnName).toBe("entity_type");
+      expect(Document.definition.persisted.publicId.columnName).toBe("public_id");
+      expect(Document.definition.persisted.publicId.valueStrategy).toBe("computedByServiceOnInsert");
       expect(Document.definition.persisted.note.storageKind).toBe("text");
       expect(Document.definition.persisted.optionalNote.indexHints?.[0]?.kind).toBe("lookup");
       expect(Document.definition.persisted.payload.storageKind).toBe("jsonb");
@@ -167,8 +191,11 @@ describe("BaseEntity", () => {
     expect(A.sort(Object.keys(Document.fields), Order.String)).toContain("id");
     expect(Object.keys(Document.insert.fields)).not.toContain("id");
     expect(Object.keys(Document.insert.fields)).toContain("entityType");
+    expect(Object.keys(Document.insert.fields)).toContain("publicId");
+    expect(Object.keys(Document.update.fields)).not.toContain("publicId");
     expect(Object.keys(Document.insert.fields)).toContain("note");
     expect(Object.keys(Document.jsonCreate.fields)).not.toContain("createdAt");
+    expect(Object.keys(Document.jsonCreate.fields)).not.toContain("publicId");
     expect(Object.keys(Document.jsonCreate.fields)).toContain("note");
   });
 });
@@ -256,10 +283,12 @@ describe("EntityRef and shared entity primitives", () => {
       expect(EntityBarrel.BaseEntity.BaseEntity).toBe(BaseEntity.BaseEntity);
       expect(EntityBarrel.EntityId.EntityIdValue).toBe(EntityId.EntityIdValue);
       expect(EntityBarrel.EntityRef.EntityRef).toBe(EntityRef.EntityRef);
+      expect(EntityBarrel.PublicEntityId.factory).toBe(PublicEntityId.factory);
       expect(EntityBarrel.Principal.Principal).toBe(Principal.Principal);
       expect(EntityBarrel.primitives.VectorClock).toBe(primitives.VectorClock);
       expect(EntityBarrel.SourceKind.SourceKind).toBe(SourceKind.SourceKind);
       expect(DomainBarrel.BaseEntity.BaseEntity).toBe(BaseEntity.BaseEntity);
+      expect(DomainBarrel.PublicEntityId.factory).toBe(PublicEntityId.factory);
     })
   );
 });

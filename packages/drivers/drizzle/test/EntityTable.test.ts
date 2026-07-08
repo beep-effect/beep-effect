@@ -34,6 +34,7 @@ const Fixture = EntitySchema.ClassFactory($I`Fixture`)(
       name: S.String,
       optionalName: S.String.pipe(S.OptionFromNullOr),
       payload: S.Record(S.String, S.Unknown),
+      publicId: S.String,
       rowVersion: EntitySchema.int,
     },
     persisted: {
@@ -52,6 +53,11 @@ const Fixture = EntitySchema.ClassFactory($I`Fixture`)(
       }),
       payload: EntitySchema.persist.jsonb({
         indexHints: [EntitySchema.IndexHint.gin],
+      }),
+      publicId: EntitySchema.persist.text({
+        columnName: "public_id",
+        indexHints: [EntitySchema.IndexHint.unique],
+        valueStrategy: "computedByServiceOnInsert",
       }),
       rowVersion: EntitySchema.persist.int({
         columnName: "row_version",
@@ -126,6 +132,10 @@ describe("EntityTable", () => {
     expect(columns.optionalName.name).toBe("optional_name");
     expect(columns.optionalName.notNull).toBe(false);
     expect(columns.payload.columnType).toBe("PgJsonb");
+    expect(columns.publicId.name).toBe("public_id");
+    expect(columns.publicId.columnType).toBe("PgText");
+    expect(columns.publicId.notNull).toBe(true);
+    expect(columns.publicId.primary).toBe(false);
     expect(columns.rowVersion.name).toBe("row_version");
     expect(columns.rowVersion.columnType).toBe("PgInteger");
   });
@@ -148,6 +158,7 @@ describe("EntityTable", () => {
     const activeBtree = indexConfigNamed("fixture_is_active_btree_idx");
     const nameUnique = indexConfigNamed("fixture_name_unique_idx");
     const payloadGin = indexConfigNamed("fixture_payload_gin_idx");
+    const publicIdUnique = indexConfigNamed("fixture_public_id_unique_idx");
 
     expect(O.getOrThrow(activeBtree).config.method).toBe("btree");
     expect(O.getOrThrow(activeBtree).config.columns[0]).toMatchObject({ name: "is_active" });
@@ -155,5 +166,7 @@ describe("EntityTable", () => {
     expect(O.getOrThrow(nameUnique).config.columns[0]).toMatchObject({ name: "name" });
     expect(O.getOrThrow(payloadGin).config.method).toBe("gin");
     expect(O.getOrThrow(payloadGin).config.columns[0]).toMatchObject({ name: "payload" });
+    expect(O.getOrThrow(publicIdUnique).config.unique).toBe(true);
+    expect(O.getOrThrow(publicIdUnique).config.columns[0]).toMatchObject({ name: "public_id" });
   });
 });

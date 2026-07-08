@@ -1,8 +1,11 @@
 import { Md } from "@beep/md";
 import { renderPlainTextBlocks } from "@beep/md/Md.behavior";
 import {
+  BrowserSafeUrlPolicy,
   escapeHtmlUrlAttribute,
+  escapeHtmlUrlAttributeWithPolicy,
   escapeMarkdownDestination,
+  escapeMarkdownDestinationWithPolicy,
   escapeMarkdownText,
   isStringArray,
   joinBlocks,
@@ -10,7 +13,9 @@ import {
   prefixLines,
   renderFencedCode,
   renderInlineCode,
+  StrictWebUrlPolicy,
   sanitizeUrlDestination,
+  sanitizeUrlDestinationWithPolicy,
 } from "@beep/md/Md.escape";
 import { Block, CodeFenceLanguage, Document, Inline, Pre, Table, TableCell, TableRow, Text } from "@beep/md/Md.model";
 import {
@@ -19,6 +24,8 @@ import {
   DocumentToPlainText,
   HtmlFragmentAdapter,
   MarkdownAdapter,
+  makeHtmlFragmentAdapter,
+  makeMarkdownAdapter,
   PlainTextAdapter,
   renderEffectWith,
   renderEffectWithUnsafe,
@@ -371,6 +378,101 @@ ${Md.h3("Inside")}
     expect(renderHtmlBlock(Md.pre("<x>", { language: "ts bad" }))).toBe("<pre><code>&lt;x&gt;</code></pre>");
     expect(renderHtmlBlock(Md.pre("<x>"))).toBe("<pre><code>&lt;x&gt;</code></pre>");
     expect(renderHtmlBlock(Md.hr)).toBe("<hr />");
+  });
+
+  it("renders core parity, rich extension, frontmatter, and URL policy additions", () => {
+    const richDocument = Md.make(
+      [
+        Md.h1("Rich"),
+        Md.p(["Formula ", Md.inlineMath("a^2"), Md.footnoteRef("eq")]),
+        Md.ol(["Three", "Four"], { start: 3 }),
+        Md.table(
+          [
+            ["Left", "Center", "Right"],
+            ["A", "B", "C"],
+          ],
+          { headerRow: true, align: ["left", "center", "right"] }
+        ),
+        Md.mathBlock("a=b"),
+        Md.footnoteDef("eq", "Equation note"),
+        Md.admonition("warning", "Body", { title: "Pay attention" }),
+        Md.embed("video", "https://example.com/demo", { title: "Demo", description: "Demo video" }),
+      ],
+      { frontmatter: { z: false, title: "Doc", count: 2, nested: { b: "bee", a: [1, null] } } }
+    );
+
+    expect(renderUnsafe(richDocument)).toBe(`---json
+{"count":2,"nested":{"a":[1,null],"b":"bee"},"title":"Doc","z":false}
+---
+
+# Rich
+
+Formula $a^2$[^eq]
+
+3. Three
+4. Four
+
+| Left | Center | Right |
+| :--- | :---: | ---: |
+| A | B | C |
+
+$$
+a=b
+$$
+
+[^eq]: Equation note
+
+> [!WARNING] Pay attention
+> Body
+
+[Demo](https://example.com/demo "Demo")
+
+Demo video`);
+
+    expect(renderHtmlInline(Md.a("https://example.com", "Example", { title: '"Title"' }))).toBe(
+      '<a href="https://example.com" title="&quot;Title&quot;">Example</a>'
+    );
+    expect(renderMarkdownInline(Md.img("/logo.png", "Logo", { title: '"Logo"' }))).toBe(
+      '![Logo](/logo.png "\\"Logo\\"")'
+    );
+    expect(renderHtmlBlock(Md.ol(["Three"], { start: 3 }))).toBe('<ol start="3"><li>Three</li></ol>');
+    expect(renderHtmlBlock(Md.mathBlock("<x>"))).toBe('<div class="math math-display">&lt;x&gt;</div>');
+    expect(renderHtmlBlock(Md.admonition("note", "Body"))).toBe(
+      '<aside class="admonition admonition-note"><p>Body</p></aside>'
+    );
+    expect(renderHtmlBlock(Md.embed("video", "https://example.com/demo", { title: "Demo" }))).toBe(
+      '<figure data-embed-kind="video"><a href="https://example.com/demo">Demo</a></figure>'
+    );
+
+    expect(sanitizeUrlDestination("file:///tmp/a")).toBe("file:///tmp/a");
+    expect(sanitizeUrlDestinationWithPolicy("file:///tmp/a", BrowserSafeUrlPolicy)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("artifact:abc", BrowserSafeUrlPolicy)).toBe("artifact:abc");
+    expect(sanitizeUrlDestinationWithPolicy("artifact:abc", StrictWebUrlPolicy)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("//example.com", BrowserSafeUrlPolicy)).toBe("#");
+    expect(sanitizeUrlDestinationWithPolicy("\\relative", BrowserSafeUrlPolicy)).toBe("#");
+    expect(escapeMarkdownDestinationWithPolicy("file:///tmp/a", BrowserSafeUrlPolicy)).toBe("#");
+    expect(escapeHtmlUrlAttributeWithPolicy("artifact:abc", StrictWebUrlPolicy)).toBe("#");
+    expect(escapeHtmlUrlAttribute("file:///tmp/a")).toBe("#");
+
+    const markdownAdapter = makeMarkdownAdapter({ urlPolicy: BrowserSafeUrlPolicy });
+    expect(Result.getOrThrow(renderWith(markdownAdapter, Md.make([Md.p(Md.a("file:///tmp/a", "File"))])))).toBe(
+      "[File](#)"
+    );
+
+    const htmlAdapter = makeHtmlFragmentAdapter({ urlPolicy: StrictWebUrlPolicy });
+    expect(Result.getOrThrow(renderWith(htmlAdapter, Md.make([Md.p(Md.a("artifact:abc", "Artifact"))])))).toBe(
+      '<p><a href="#">Artifact</a></p>'
+    );
+
+    const markedInspiredEvasions = [
+      "java\u0000script:alert(1)",
+      "jav&#x61;%73cript:alert(1)",
+      "%26%23x6a%3Bavascript:alert(1)",
+    ];
+    for (const destination of markedInspiredEvasions) {
+      expect(sanitizeUrlDestination(destination)).toBe("#");
+      expect(sanitizeUrlDestinationWithPolicy(destination, BrowserSafeUrlPolicy)).toBe("#");
+    }
   });
 
   it("renders later table rows when the first row has no cells", () => {

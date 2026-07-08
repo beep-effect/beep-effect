@@ -150,6 +150,8 @@ const mdInlineText = Match.type<Md.Inline>().pipe(
     a: (node) => mdInlinesText(node.children),
     img: (node) => node.alt,
     br: () => "\n",
+    inlineMath: (node) => node.value,
+    footnoteReference: (node) => node.identifier,
   })
 );
 
@@ -191,6 +193,14 @@ const mdBlockText = (block: Md.Block): string =>
           "\n"
         ),
       youtube: (node) => `https://www.youtube.com/watch?v=${node.videoId}`,
+      mathBlock: (node) => node.value,
+      footnoteDefinition: (node) => `[^${node.identifier}]: ${A.join(A.map(node.children, mdBlockText), "\n")}`,
+      admonition: (node) => A.join(A.map(node.children, mdBlockText), "\n"),
+      embed: (node) =>
+        pipe(
+          node.title,
+          O.getOrElse(() => node.src)
+        ),
       hr: () => "---",
     })
   );
@@ -229,6 +239,8 @@ const inlineToLexical = (
           Effect.map(LinkNode.makeEffect({ url: node.src, children: [alt] }), A.of<LexicalNode>)
         ),
       br: () => Effect.map(lineBreak(), A.of<LexicalNode>),
+      inlineMath: (node) => Effect.map(textLeaf(node.value, format), A.of<LexicalNode>),
+      footnoteReference: (node) => Effect.map(textLeaf(`[^${node.identifier}]`, format), A.of<LexicalNode>),
     })
   );
 
@@ -236,11 +248,16 @@ const listItemsToLexical = (
   items: ReadonlyArray<{
     readonly children: ReadonlyArray<Md.ListItemChild>;
     readonly checked?: boolean;
-  }>
+  }>,
+  start: PosInt = firstOrdinal
 ): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
   Effect.forEach(items, (item, index) =>
     Effect.flatMap(listItemChildrenToLexical(item.children), (children) =>
-      ListItemNode.makeEffect({ checked: O.fromUndefinedOr(item.checked), value: PosInt.make(index + 1), children })
+      ListItemNode.makeEffect({
+        checked: O.fromUndefinedOr(item.checked),
+        value: PosInt.make(index + start),
+        children,
+      })
     )
   );
 
@@ -255,6 +272,11 @@ const quoteChildToInlines = (block: Md.Block): Effect.Effect<ReadonlyArray<Lexic
   P.isTagged("p")(block)
     ? inlinesToLexical(block.children, emptyTextFormat)
     : Effect.map(textLeaf(mdBlockText(block), emptyTextFormat), A.of<LexicalNode>);
+
+const blockTextParagraph = (block: Md.Block): Effect.Effect<ParagraphNode, S.SchemaError> =>
+  Effect.flatMap(textLeaf(mdBlockText(block), emptyTextFormat), (text) =>
+    ParagraphNode.makeEffect({ children: [text] })
+  );
 
 type ArtifactRef = {
   readonly artifactId: ArtifactRefId;
@@ -357,8 +379,8 @@ export const blockToLexical = Match.type<Md.Block>().pipe(
         ListNode.makeEffect({ listType: "bullet", start: firstOrdinal, tag: "ul", children })
       ),
     ol: (node) =>
-      Effect.flatMap(listItemsToLexical(node.children), (children) =>
-        ListNode.makeEffect({ listType: "number", start: firstOrdinal, tag: "ol", children })
+      Effect.flatMap(listItemsToLexical(node.children, node.start), (children) =>
+        ListNode.makeEffect({ listType: "number", start: node.start, tag: "ol", children })
       ),
     taskList: (node) =>
       Effect.flatMap(
@@ -369,6 +391,10 @@ export const blockToLexical = Match.type<Md.Block>().pipe(
     // "---" paragraph (README "Lossiness profile").
     hr: () =>
       Effect.flatMap(textLeaf("---", emptyTextFormat), (text) => ParagraphNode.makeEffect({ children: [text] })),
+    mathBlock: blockTextParagraph,
+    footnoteDefinition: blockTextParagraph,
+    admonition: blockTextParagraph,
+    embed: blockTextParagraph,
   })
 );
 
@@ -496,7 +522,8 @@ const listToBlock = (node: ListNode): Md.Block => {
           Md.TaskItem.make({ ...O.getSomesStruct({ checked: item.checked }), children: item.inlines })
         ),
       }),
-    number: () => Md.Ol.make({ children: A.map(items, (item) => Md.Li.make({ children: item.inlines })) }),
+    number: () =>
+      Md.Ol.make({ children: A.map(items, (item) => Md.Li.make({ children: item.inlines })), start: node.start }),
     bullet: () => Md.Ul.make({ children: A.map(items, (item) => Md.Li.make({ children: item.inlines })) }),
   });
 };

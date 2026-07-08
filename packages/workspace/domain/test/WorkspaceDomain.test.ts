@@ -26,6 +26,8 @@ import { FastCheck as fc } from "effect/testing";
 
 const systemPrincipal = { kind: "System", component: "Runtime" } as const;
 const MessageRoleArbitrary = S.toArbitrary(MessageRole);
+const publicIdFor = (entityType: string, id: number) =>
+  `${entityType.replace(/([a-z0-9])([A-Z])/g, "$1_$2").toLowerCase()}_a${id}`;
 const schemaLawCases: ReadonlyArray<readonly [string, S.Codec<unknown>]> = [
   ["ApprovalDecision", ApprovalDecision],
   ["CandidateLifecycle", CandidateLifecycle],
@@ -50,6 +52,7 @@ const baseEntityInput = (entityType: string, id: number) => ({
   entityType,
   id,
   orgId: 1,
+  publicId: publicIdFor(entityType, id),
   rowVersion: 1,
   schemaVersion: "0.0.0",
   source: "System",

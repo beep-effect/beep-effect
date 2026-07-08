@@ -84,6 +84,7 @@ const explicitFields = {
   createdAt: Model.DateTimeInsertFromNumber,
   generatedValue: Model.Generated(S.String),
   happenedAt: Model.DateTimeInsertFromDate,
+  insertCode: Model.GeneratedByAppOnInsert(S.String),
   optionalName: Model.FieldOption(S.String),
   payloadText: Model.JsonFromString(
     S.Struct({
@@ -109,6 +110,9 @@ const explicitPersisted = {
   }),
   happenedAt: EntitySchema.persist.timestampDate({
     valueStrategy: "defaultedOnInsert",
+  }),
+  insertCode: EntitySchema.persist.text({
+    valueStrategy: "computedByServiceOnInsert",
   }),
   optionalName: EntitySchema.persist.text(),
   payloadText: EntitySchema.persist.text(),
@@ -233,6 +237,10 @@ describe("EntitySchema types", () => {
     expect<EntitySchema.EncodedShape<typeof explicitFields>["optionalName"]>().type.toBe<string | null>();
     expect<EntitySchema.EncodedShape<typeof explicitFields>["payloadText"]>().type.toBe<string>();
     expect<EntitySchema.EncodedShape<typeof explicitFields>["happenedAt"]>().type.toBe<Date>();
+    expect<"insertCode">().type.toBeAssignableTo<keyof S.Schema.Type<typeof ExplicitFixture.insert>>();
+    expect<"insertCode">().type.not.toBeAssignableTo<keyof S.Schema.Type<typeof ExplicitFixture.update>>();
+    expect<"insertCode">().type.toBeAssignableTo<keyof S.Schema.Type<typeof ExplicitFixture.json>>();
+    expect<"insertCode">().type.not.toBeAssignableTo<keyof S.Schema.Type<typeof ExplicitFixture.jsonCreate>>();
     expect<"secret">().type.not.toBeAssignableTo<keyof S.Schema.Type<typeof ExplicitFixture.json>>();
     expect<"appCode">().type.not.toBeAssignableTo<keyof S.Schema.Type<typeof ExplicitFixture.jsonCreate>>();
     expect<"payloadText">().type.toBeAssignableTo<keyof S.Schema.Type<typeof ExplicitFixture.jsonCreate>>();

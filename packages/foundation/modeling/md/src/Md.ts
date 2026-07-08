@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { PosInt } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { Effect, Match } from "effect";
 import { pipe } from "effect/Function";
@@ -12,6 +13,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import {
+  Admonition,
   A as ANode,
   BlockQuote,
   Block as BlockSchema,
@@ -21,10 +23,16 @@ import {
   Del,
   Document,
   Em,
+  Embed,
+  FootnoteDefinition,
+  FootnoteIdentifier,
+  FootnoteReference,
   Heading,
   Hr,
   Img,
+  InlineMath,
   Li,
+  MathBlock,
   Ol,
   P as PNode,
   Pre,
@@ -43,6 +51,8 @@ import {
 import {
   HtmlFragmentAdapter,
   MarkdownAdapter,
+  makeHtmlFragmentAdapter,
+  makeMarkdownAdapter,
   PlainTextAdapter,
   render,
   renderEffectWith,
@@ -55,8 +65,9 @@ import {
   renderWith,
   renderWithUnsafe,
 } from "./Md.render.ts";
+import type { JsonObject } from "@beep/schema";
 import type { Result } from "effect";
-import type { Block, Inline, ListItemChild } from "./Md.model.ts";
+import type { AdmonitionKind, Block, EmbedKind, Inline, ListItemChild, TableAlignment } from "./Md.model.ts";
 
 /**
  * Inline constructor input accepted by text-oriented builders.
@@ -632,8 +643,8 @@ export const code = (value: string): Code => Code.make({ value });
  * @category constructors
  * @since 0.0.0
  */
-export const a = (href: string, children: InlineContent): ANode =>
-  ANode.make({ href, children: asInlineArray(children) });
+export const a = (href: string, children: InlineContent, options: { readonly title?: string } = {}): ANode =>
+  ANode.make({ href, children: asInlineArray(children), title: O.fromUndefinedOr(options.title) });
 
 /**
  * Creates an inline image.
@@ -649,7 +660,8 @@ export const a = (href: string, children: InlineContent): ANode =>
  * @category constructors
  * @since 0.0.0
  */
-export const img = (src: string, alt = ""): Img => Img.make({ src, alt });
+export const img = (src: string, alt = "", options: { readonly title?: string } = {}): Img =>
+  Img.make({ src, alt, title: O.fromUndefinedOr(options.title) });
 
 /**
  * Creates an inline line break.
@@ -665,6 +677,39 @@ export const img = (src: string, alt = ""): Img => Img.make({ src, alt });
  * @since 0.0.0
  */
 export const br: Br = Br.make({});
+
+/**
+ * Creates inline TeX math content.
+ *
+ * @example
+ * ```ts
+ * import { Md } from "@beep/md"
+ *
+ * const node = Md.inlineMath("a^2")
+ * console.log(node._tag) // "inlineMath"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const inlineMath = (value: string): InlineMath => InlineMath.make({ value });
+
+/**
+ * Creates an inline footnote reference.
+ *
+ * @example
+ * ```ts
+ * import { Md } from "@beep/md"
+ *
+ * const node = Md.footnoteRef("note-1")
+ * console.log(node._tag) // "footnoteReference"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const footnoteRef = (identifier: string): FootnoteReference =>
+  FootnoteReference.make({ identifier: FootnoteIdentifier.make(identifier) });
 
 /**
  * Creates a level-one heading block.
@@ -824,7 +869,11 @@ export const ul = (children: ReadonlyArray<ListItemInput>): Ul => Ul.make({ chil
  * @category constructors
  * @since 0.0.0
  */
-export const ol = (children: ReadonlyArray<ListItemInput>): Ol => Ol.make({ children: A.map(children, asListItem) });
+export const ol = (children: ReadonlyArray<ListItemInput>, options: { readonly start?: number } = {}): Ol =>
+  Ol.make({
+    children: A.map(children, asListItem),
+    ...(P.isNumber(options.start) ? { start: PosInt.make(options.start) } : {}),
+  });
 
 /**
  * Creates a GFM task list item.
@@ -943,10 +992,93 @@ export const tableRow = (children: ReadonlyArray<TableCellInput>): TableRow =>
  * @category constructors
  * @since 0.0.0
  */
-export const table = (children: ReadonlyArray<TableRowInput>, options: { readonly headerRow?: boolean } = {}): Table =>
+export const table = (
+  children: ReadonlyArray<TableRowInput>,
+  options: { readonly headerRow?: boolean; readonly align?: ReadonlyArray<TableAlignment> } = {}
+): Table =>
   Table.make({
     children: A.map(children, asTableRow),
+    align: options.align ?? [],
     ...(P.isBoolean(options.headerRow) ? { headerRow: options.headerRow } : {}),
+  });
+
+/**
+ * Creates a display TeX math block.
+ *
+ * @example
+ * ```ts
+ * import { Md } from "@beep/md"
+ *
+ * const node = Md.mathBlock("a^2 + b^2 = c^2")
+ * console.log(node._tag) // "mathBlock"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const mathBlock = (value: string): MathBlock => MathBlock.make({ value });
+
+/**
+ * Creates a footnote definition block.
+ *
+ * @example
+ * ```ts
+ * import { Md } from "@beep/md"
+ *
+ * const node = Md.footnoteDef("note-1", "Body")
+ * console.log(node._tag) // "footnoteDefinition"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const footnoteDef = (identifier: string, children: BlockContent): FootnoteDefinition =>
+  FootnoteDefinition.make({ identifier: FootnoteIdentifier.make(identifier), children: asBlockArray(children) });
+
+/**
+ * Creates a typed admonition block.
+ *
+ * @example
+ * ```ts
+ * import { Md } from "@beep/md"
+ *
+ * const node = Md.admonition("warning", "Careful")
+ * console.log(node._tag) // "admonition"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const admonition = (
+  kind: AdmonitionKind,
+  children: BlockContent,
+  options: { readonly title?: string } = {}
+): Admonition => Admonition.make({ kind, title: O.fromUndefinedOr(options.title), children: asBlockArray(children) });
+
+/**
+ * Creates a safe generalized block embed.
+ *
+ * @example
+ * ```ts
+ * import { Md } from "@beep/md"
+ *
+ * const node = Md.embed("video", "https://example.com/video", { title: "Demo" })
+ * console.log(node._tag) // "embed"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const embed = (
+  kind: EmbedKind,
+  src: string,
+  options: { readonly title?: string; readonly description?: string } = {}
+): Embed =>
+  Embed.make({
+    kind,
+    src,
+    title: O.fromUndefinedOr(options.title),
+    description: O.fromUndefinedOr(options.description),
   });
 
 /**
@@ -1049,7 +1181,10 @@ export const hr: Hr = Hr.make({});
  * @category constructors
  * @since 0.0.0
  */
-export const make = (children: ReadonlyArray<Block>): Document => Document.make({ children });
+export const make = (children: ReadonlyArray<Block>, options: { readonly frontmatter?: JsonObject } = {}): Document =>
+  P.isUndefined(options.frontmatter)
+    ? Document.make({ children })
+    : Document.make({ children, frontmatter: O.some(options.frontmatter) });
 
 /**
  * Namespace-style public Markdown DSL.
@@ -1076,11 +1211,15 @@ export const Md = {
   HtmlFragmentAdapter,
   PlainTextAdapter,
   a,
+  admonition,
   blockquote,
   br,
   code,
   del,
+  embed,
   em,
+  footnoteDef,
+  footnoteRef,
   h1,
   h2,
   h3,
@@ -1089,8 +1228,12 @@ export const Md = {
   h6,
   hr,
   img,
+  inlineMath,
   li,
+  makeHtmlFragmentAdapter,
+  makeMarkdownAdapter,
   make,
+  mathBlock,
   ol,
   p,
   pre,

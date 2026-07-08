@@ -8,6 +8,7 @@
 
 import { $PandocAstId } from "@beep/identity";
 import * as Md from "@beep/md/Md.model";
+import { PosInt } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { Effect, Match } from "effect";
 import * as S from "effect/Schema";
@@ -16,15 +17,18 @@ import {
   BulletList,
   Code,
   CodeBlock,
+  Div,
   Emph,
   Header,
   HorizontalRule,
   Image,
   LineBreak,
   Link,
+  Note,
   OrderedList,
   PandocAttr,
   PandocDocument,
+  Math as PandocMath,
   PandocTarget,
   Para,
   Plain,
@@ -60,9 +64,9 @@ const hasCodeBlockDroppedAttr = (attr: PandocAttr.Type): boolean =>
   attr.id.length > 0 || attr.classes.length > 1 || attr.keyValues.length > 0;
 
 const hasOrderedListMarkerLoss = (node: OrderedList.Type): boolean =>
-  node.start !== 1 || node.style !== "DefaultStyle" || node.delimiter !== "DefaultDelim";
+  node.style !== "DefaultStyle" || node.delimiter !== "DefaultDelim";
 
-const hasTargetTitle = (target: PandocTarget.Type): boolean => target.title.length > 0;
+const optionalNonEmpty = (value: string): O.Option<string> => (value.length === 0 ? O.none() : O.some(value));
 
 const appendIndex = (path: JsonPath, key: string, index: number): JsonPath => [...path, key, index];
 
@@ -95,6 +99,8 @@ const mdInlineText: (inline: Md.Inline) => string = Match.type<Md.Inline>().pipe
     a: (inline) => mdInlinesText(inline.children),
     img: (inline) => inline.alt,
     br: () => "\n",
+    inlineMath: (inline) => inline.value,
+    footnoteReference: (inline) => inline.identifier,
   })
 );
 
@@ -197,37 +203,43 @@ const pandocInlineToMd = (
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues: [
             ...issues,
-            ...(PandocAttr.isNonEmpty(node.attr) || hasTargetTitle(node.target)
+            ...(PandocAttr.isNonEmpty(node.attr)
               ? [
                   issue({
                     construct: "Link",
                     direction: "pandoc-to-md",
-                    message: "Pandoc link attributes or title are outside Md-core link shape.",
+                    message: "Pandoc link attributes are outside the Md link shape.",
                     path,
                     severity: "lossy",
                   }),
                 ]
               : []),
           ],
-          value: [Md.A.make({ children: value, href: node.target.url })],
+          value: [Md.A.make({ children: value, href: node.target.url, title: optionalNonEmpty(node.target.title) })],
         })),
       image: (node) =>
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
           issues: [
             ...issues,
-            ...(PandocAttr.isNonEmpty(node.attr) || hasTargetTitle(node.target)
+            ...(PandocAttr.isNonEmpty(node.attr)
               ? [
                   issue({
                     construct: "Image",
                     direction: "pandoc-to-md",
-                    message: "Pandoc image attributes or title are outside Md-core image shape.",
+                    message: "Pandoc image attributes are outside the Md image shape.",
                     path,
                     severity: "lossy",
                   }),
                 ]
               : []),
           ],
-          value: [Md.Img.make({ alt: mdInlinesText(value), src: node.target.url })],
+          value: [
+            Md.Img.make({
+              alt: mdInlinesText(value),
+              src: node.target.url,
+              title: optionalNonEmpty(node.target.title),
+            }),
+          ],
         })),
       span: (node) =>
         Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => ({
@@ -260,15 +272,19 @@ const pandocInlineToMd = (
         }),
       math: (node) =>
         Effect.succeed({
-          issues: [
-            issue({
-              construct: "Math",
-              direction: "pandoc-to-md",
-              message: "Pandoc math is outside Md-core and is degraded to plain text.",
-              path,
-            }),
-          ],
-          value: [mdText(node.text)],
+          issues:
+            node.mathType === "DisplayMath"
+              ? [
+                  issue({
+                    construct: "Math",
+                    direction: "pandoc-to-md",
+                    message: "Pandoc display math appeared in inline position and is kept as Md inline math.",
+                    path,
+                    severity: "lossy",
+                  }),
+                ]
+              : [],
+          value: [Md.InlineMath.make({ value: node.text })],
         }),
       unknownInline: (node) =>
         Effect.succeed({
@@ -476,6 +492,9 @@ const mdTableText = (block: Md.Table): string =>
     "\n"
   );
 
+const mdEmbedText = (block: Md.Embed): string =>
+  O.match({ onNone: () => block.src, onSome: (title: string) => title })(block.title);
+
 const mdBlockText: (block: Md.Block) => string = Match.type<Md.Block>().pipe(
   Match.tagsExhaustive({
     heading: (block) => mdInlinesText(block.children),
@@ -487,6 +506,10 @@ const mdBlockText: (block: Md.Block) => string = Match.type<Md.Block>().pipe(
     taskList: (block) => mdListText(block.children),
     table: (block) => mdTableText(block),
     youtube: (block) => youtubeWatchUrl(block.videoId),
+    mathBlock: (block) => block.value,
+    footnoteDefinition: (block) => A.join(A.map(block.children, mdBlockText), "\n"),
+    admonition: (block) => A.join(A.map(block.children, mdBlockText), "\n"),
+    embed: mdEmbedText,
     hr: () => "",
   })
 );
@@ -591,14 +614,25 @@ const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect
                   issue({
                     construct: "OrderedList",
                     direction: "pandoc-to-md",
-                    message: "Pandoc ordered-list start, style, or delimiter metadata has no Md-core equivalent.",
+                    message: "Pandoc ordered-list style or delimiter metadata has no Md equivalent.",
+                    path,
+                    severity: "lossy",
+                  }),
+                ]
+              : []),
+            ...(node.start < 1
+              ? [
+                  issue({
+                    construct: "OrderedList",
+                    direction: "pandoc-to-md",
+                    message: "Pandoc ordered-list start below one is clamped to the first ordinal.",
                     path,
                     severity: "lossy",
                   }),
                 ]
               : []),
           ],
-          value: Md.Ol.make({ children: value }),
+          value: Md.Ol.make({ children: value, start: PosInt.make(node.start < 1 ? 1 : node.start) }),
         })),
       horizontalrule: () => Effect.succeed(emptyProjection(Md.Hr.make({}))),
       div: (node) =>
@@ -702,7 +736,10 @@ const mdInlineToPandoc = (
             Link.make({
               attr: PandocAttr.empty,
               children: value,
-              target: PandocTarget.make({ title: "", url: node.href }),
+              target: PandocTarget.make({
+                title: O.match({ onNone: () => "", onSome: (title: string) => title })(node.title),
+                url: node.href,
+              }),
             }),
           ],
         })),
@@ -712,11 +749,30 @@ const mdInlineToPandoc = (
             Image.make({
               attr: PandocAttr.empty,
               children: [Str.make({ text: node.alt })],
-              target: PandocTarget.make({ title: "", url: node.src }),
+              target: PandocTarget.make({
+                title: O.match({ onNone: () => "", onSome: (title: string) => title })(node.title),
+                url: node.src,
+              }),
             }),
           ])
         ),
       br: () => Effect.succeed(emptyProjection([LineBreak.make({})])),
+      inlineMath: (node) =>
+        Effect.succeed(emptyProjection([PandocMath.make({ mathType: "InlineMath", text: node.value })])),
+      footnoteReference: (node) =>
+        Effect.succeed({
+          issues: [
+            issue({
+              construct: "FootnoteReference",
+              direction: "md-to-pandoc",
+              message:
+                "Named Md footnote references have no standalone Pandoc-core equivalent and are emitted as text.",
+              path,
+              severity: "lossy",
+            }),
+          ],
+          value: [Str.make({ text: `[^${node.identifier}]` })],
+        }),
     })
   );
 
@@ -798,7 +854,7 @@ const mdBlockToPandoc = (block: Md.Block, path: JsonPath): Effect.Effect<Project
           value: OrderedList.make({
             delimiter: "DefaultDelim",
             items: value,
-            start: 1,
+            start: node.start,
             style: "DefaultStyle",
           }),
         })),
@@ -854,6 +910,78 @@ const mdBlockToPandoc = (block: Md.Block, path: JsonPath): Effect.Effect<Project
               }),
             ],
           }),
+        });
+      },
+      mathBlock: (node) =>
+        Effect.succeed(
+          emptyProjection(Para.make({ children: [PandocMath.make({ mathType: "DisplayMath", text: node.value })] }))
+        ),
+      footnoteDefinition: (node) =>
+        Effect.map(
+          Effect.forEach(node.children, (child, index) => mdBlockToPandoc(child, appendIndex(path, "children", index))),
+          (children) => ({
+            issues: [
+              issue({
+                construct: "FootnoteDefinition",
+                direction: "md-to-pandoc",
+                message: "Named Md footnote definitions are emitted as anonymous Pandoc notes.",
+                path,
+                severity: "lossy",
+              }),
+              ...mergeIssues(children),
+            ],
+            value: Para.make({ children: [Note.make({ blocks: A.map(children, (child) => child.value) })] }),
+          })
+        ),
+      admonition: (node) =>
+        Effect.map(
+          Effect.forEach(node.children, (child, index) => mdBlockToPandoc(child, appendIndex(path, "children", index))),
+          (children) => ({
+            issues: [
+              issue({
+                construct: "Admonition",
+                direction: "md-to-pandoc",
+                message: "Md admonitions are emitted as attributed Pandoc divs.",
+                path,
+                severity: "lossy",
+              }),
+              ...mergeIssues(children),
+            ],
+            value: Div.make({
+              attr: PandocAttr.make({
+                classes: ["admonition", node.kind],
+                id: "",
+                keyValues: O.match({
+                  onNone: () => [],
+                  onSome: (title: string) => [["title", title] as const],
+                })(node.title),
+              }),
+              children: A.map(children, (child) => child.value),
+            }),
+          })
+        ),
+      embed: (node) => {
+        const title = O.match({ onNone: () => "", onSome: (value: string) => value })(node.title);
+        const label = title.length === 0 ? node.src : title;
+        const target = PandocTarget.make({ title, url: node.src });
+        const child = Match.value(node.kind).pipe(
+          Match.when("image", () =>
+            Image.make({ attr: PandocAttr.empty, children: [Str.make({ text: label })], target })
+          ),
+          Match.orElse(() => Link.make({ attr: PandocAttr.empty, children: [Str.make({ text: label })], target }))
+        );
+
+        return Effect.succeed({
+          issues: [
+            issue({
+              construct: "Embed",
+              direction: "md-to-pandoc",
+              message: "Generic Md embeds are emitted as inert Pandoc image or link nodes.",
+              path,
+              severity: "lossy",
+            }),
+          ],
+          value: Para.make({ children: [child] }),
         });
       },
       hr: () => Effect.succeed(emptyProjection(HorizontalRule.make({}))),

@@ -62,6 +62,20 @@ export * as EntityRef from "./EntityRef.ts";
  */
 export * as Principal from "./Principal.ts";
 /**
+ * URL-safe public entity identifier constructor namespace.
+ *
+ * @example
+ * ```ts
+ * import { PublicEntityId } from "@beep/shared-domain/entity"
+ *
+ * console.log(PublicEntityId.factory)
+ * ```
+ *
+ * @since 0.0.0
+ * @category identifiers
+ */
+export * as PublicEntityId from "./PublicEntityId.ts";
+/**
  * Shared entity primitives namespace.
  *
  * @example

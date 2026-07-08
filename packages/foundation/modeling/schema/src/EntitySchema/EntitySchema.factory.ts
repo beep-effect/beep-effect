@@ -110,6 +110,7 @@ type ExplicitVariantCompatibility =
   | { readonly _tag: "GeneratedOnInsertConflict" }
   | { readonly _tag: "IncrementedOnWriteConflict" }
   | { readonly _tag: "DefaultedOnInsertConflict" }
+  | { readonly _tag: "ComputedByServiceOnInsertConflict" }
   | { readonly _tag: "UpdatedOnWriteConflict" }
   | { readonly _tag: "ServerSideValueConflict"; readonly valueStrategy: ServerSideValueStrategy };
 
@@ -189,6 +190,11 @@ const explicitVariantCompatibilityFor = (
       Match.when("defaultedOnInsert", () =>
         !insert || jsonCreate ? { _tag: "DefaultedOnInsertConflict" } : explicitVariantCompatible
       ),
+      Match.when("computedByServiceOnInsert", () =>
+        !insert || update || jsonCreate || jsonUpdate
+          ? { _tag: "ComputedByServiceOnInsertConflict" }
+          : explicitVariantCompatible
+      ),
       Match.when("updatedOnWrite", () =>
         !insert || !update || jsonCreate || jsonUpdate ? { _tag: "UpdatedOnWriteConflict" } : explicitVariantCompatible
       ),
@@ -224,6 +230,11 @@ const assertExplicitVariantCompatibilityForKey = (
         failEntityFieldInput(
           key,
           `Entity field '${key}' uses valueStrategy 'defaultedOnInsert' and must define insert while omitting jsonCreate.`
+        ),
+      ComputedByServiceOnInsertConflict: () =>
+        failEntityFieldInput(
+          key,
+          `Entity field '${key}' uses valueStrategy 'computedByServiceOnInsert' and must define insert while omitting update/jsonCreate/jsonUpdate.`
         ),
       UpdatedOnWriteConflict: () =>
         failEntityFieldInput(
@@ -355,11 +366,15 @@ const matchVariantFieldDescriptor = <const Field extends S.Top>(
     Match.when(
       (self) =>
         self.valueStrategy === "defaultedOnInsert" ||
+        self.valueStrategy === "computedByServiceOnInsert" ||
         self.valueStrategy === "updatedOnWrite" ||
         self.valueStrategy === "providedByContext" ||
         self.valueStrategy === "derived" ||
         self.valueStrategy === "computedByService",
-      () => Model.GeneratedByApp(field)
+      (self) =>
+        self.valueStrategy === "computedByServiceOnInsert"
+          ? Model.GeneratedByAppOnInsert(field)
+          : Model.GeneratedByApp(field)
     ),
     Match.orElse(() => field)
   );
