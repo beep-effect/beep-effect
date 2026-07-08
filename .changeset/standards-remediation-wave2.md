@@ -1,6 +1,6 @@
 ---
-"@beep/repo-cli": patch
 "@beep/nlp": patch
+"@beep/uspto-mcp": patch
 "@beep/nlp-processing": patch
 "@beep/wink": patch
 "@beep/utils": patch
