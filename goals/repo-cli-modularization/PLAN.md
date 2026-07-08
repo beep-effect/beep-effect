@@ -120,15 +120,15 @@ Largest offender (13k LOC, four 1000+ files) and the package dependency hub.
 
 ## Phase 5 - Lint + Laws (Wave 5)
 
-- [ ] Extract ts-morph analysis kit (`internal/tsmorph/`) from SchemaFirst /
+- [x] Extract ts-morph analysis kit (`internal/tsmorph/`) from SchemaFirst /
   DualArity / JSDoc inventory sources.
-- [ ] `Lint/SchemaFirst.ts` (2169) split (schemas/render + internal detectors,
+- [x] `Lint/SchemaFirst.ts` (2169) split (schemas/render + internal detectors,
   store, scan); adopts wire contract + ratchet engine; fix the silent
   JSONC parse-swallow by adopting `decodeJsoncTextAs` (behavior-visible: record
   in commit message).
-- [ ] Lint topology: rule modules under `internal/`, `SchemaCatalog` command
+- [x] Lint topology: rule modules under `internal/`, `SchemaCatalog` command
   consolidation.
-- [ ] `Laws/DualArity.ts` (1504) split + Laws role files; severity literal
+- [x] `Laws/DualArity.ts` (1504) split + Laws role files; severity literal
   divergence (`warn` vs `warning`) preserved via kit parameters, unification
   proposed explicitly.
 

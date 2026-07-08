@@ -1,4 +1,4 @@
-import { generateSchemaCatalogDocument, lintCommand } from "@beep/repo-cli/commands/Lint";
+import { generateSchemaCatalogDocument, lintCommand } from "@beep/repo-cli/test/Lint";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { A } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";

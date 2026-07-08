@@ -19,6 +19,25 @@ export * from "./Lint.command.js";
  */
 export * from "./Lint.errors.js";
 /**
+ * Schema-first lint schema-role utilities.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export {
+  encodeSchemaFirstInventoryDocument,
+  isActiveSchemaFirstRuleAdvisory,
+  LiteralKitConstAssertionViolation,
+  makeSchemaFirstEntryKey,
+  SchemaCrispeningPolicyPath,
+  SchemaFirstInventoryDocument,
+  SchemaFirstInventoryPath,
+  SchemaFirstLintOptions,
+  SchemaFirstLintSummary,
+  schemaFirstEntryOrder,
+  sortSchemaFirstEntries,
+} from "./Lint.schemas.ts";
+/**
  * Schema catalog generation utilities.
  *
  * @category cli-commands
@@ -46,11 +65,13 @@ export {
   fnSchemaEntryFromFunctionLike,
   getsomesStructEntryFromCallExpression,
   isSchemaCrispeningPolicyExempt,
+  lintSchemaFirstCommand,
   literalMemberEquals,
   makeSchemaFirstOwnerResolver,
   makeSchemaFirstProject,
   normalizationEntryFromCallExpression,
   nullReturnEntryFromFunctionLike,
+  runSchemaFirstLint,
   SchemaCrispeningFamilyPolicy,
   SchemaCrispeningPolicyDocument,
   SchemaFirstIncludedGlobs,

@@ -2515,7 +2515,7 @@
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/FallowQuality.command.ts",
-      "symbol": "anonymous@319",
+      "symbol": "anonymous@322",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/repo-cli",
@@ -2527,13 +2527,13 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-normalization",
-      "line": 413,
+      "line": 407,
       "owner": "@beep/repo-cli",
       "reason": "Exception: ts-morph initializer text parser for generated JSDoc inventory; trim is local AST-source inspection before regex classification, not schema data normalization."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Quality/internal/KnipRatchet.ts",
-      "symbol": "anonymous@200",
+      "symbol": "anonymous@201",
       "kind": "object-struct-schema",
       "status": "exception",
       "owner": "@beep/repo-cli",

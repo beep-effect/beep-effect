@@ -94,3 +94,35 @@ export class LintFileDiscoveryError extends TaggedErrorClass<LintFileDiscoveryEr
       )
   );
 }
+
+/**
+ * Failure raised when the schema-first inventory cannot be read or decoded.
+ *
+ * @example
+ * ```ts
+ * import { SchemaFirstInventoryReadError } from "@beep/repo-cli/commands/Lint/Lint.errors"
+ *
+ * const error = SchemaFirstInventoryReadError.new("Could not read standards/schema-first.inventory.jsonc.")
+ * console.log(error.message)
+ * ```
+ * @category errors
+ * @since 0.0.0
+ */
+export class SchemaFirstInventoryReadError extends TaggedErrorClass<SchemaFirstInventoryReadError>(
+  $I`SchemaFirstInventoryReadError`
+)(
+  "SchemaFirstInventoryReadError",
+  {
+    message: S.String,
+  },
+  $I.annote("SchemaFirstInventoryReadError", {
+    description: "Raised when the committed schema-first inventory cannot be parsed or decoded.",
+  })
+) {
+  static readonly new = (message: string): SchemaFirstInventoryReadError =>
+    SchemaFirstInventoryReadError.make({ message });
+
+  static readonly mapError = Err.mapCauseError<SchemaFirstInventoryReadError, [message: string]>((cause, message) =>
+    SchemaFirstInventoryReadError.new(messageWithCause(message, cause))
+  );
+}

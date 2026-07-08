@@ -1,4 +1,11 @@
 import {
+  createFileGenerationPlanService,
+  FileGenerationPlanInput,
+  GenerationAction,
+  PlannedFile,
+  PlannedSymlink,
+} from "@beep/repo-cli/test/CreatePackage";
+import {
   fnSchemaEntryFromFunctionLike,
   getsomesStructEntryFromCallExpression,
   isSchemaCrispeningPolicyExempt,
@@ -8,14 +15,7 @@ import {
   SchemaFirstInventoryEntry,
   schemaCrispeningFamilyForFile,
   sourceTextHasSchemaArbitraryPropertyCoverage,
-} from "@beep/repo-cli/commands/Lint";
-import {
-  createFileGenerationPlanService,
-  FileGenerationPlanInput,
-  GenerationAction,
-  PlannedFile,
-  PlannedSymlink,
-} from "@beep/repo-cli/test/CreatePackage";
+} from "@beep/repo-cli/test/Lint";
 import { VersionSyncOptions } from "@beep/repo-cli/test/VersionSync";
 import { isExcludedTypeScriptSourcePath } from "@beep/repo-utils/schemas/TypeScriptSourceExclusions";
 import { A } from "@beep/utils";

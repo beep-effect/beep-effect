@@ -21150,22 +21150,6 @@
       "description": "Summary of effect laws allowlist integrity diagnostics."
     },
     {
-      "file": "packages/tooling/tool/cli/src/commands/Laws/DualArity.ts",
-      "symbol": "DualArityRulesOptions",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DualArityRulesOptions",
-      "description": "Runtime options for public API dual-arity enforcement."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Laws/DualArity.ts",
-      "symbol": "DualArityRulesSummary",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "DualArityRulesSummary",
-      "description": "Summary of public API dual-arity inventory verification."
-    },
-    {
       "file": "packages/tooling/tool/cli/src/commands/Laws/EffectFn.ts",
       "symbol": "EffectFnDiagnostic",
       "kind": "schema-class",
@@ -21238,6 +21222,62 @@
       "description": "Terse Effect rule updates could not be persisted to disk."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.schemas.ts",
+      "symbol": "DualArityDiagnosticKind",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DualArityDiagnosticKind",
+      "description": "Diagnostic kinds emitted by the public API dual-arity law."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.schemas.ts",
+      "symbol": "DualArityEntryKind",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DualArityEntryKind",
+      "description": "Kinds of public helper APIs tracked by the dual-arity law."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.schemas.ts",
+      "symbol": "DualArityEntryStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "DualArityEntryStatus",
+      "description": "Tracked status for a dual-arity inventory entry."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.schemas.ts",
+      "symbol": "DualArityInventoryDocument",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DualArityInventoryDocument",
+      "description": "Committed public API dual-arity inventory baseline for repo-wide Effect governance."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.schemas.ts",
+      "symbol": "DualArityInventoryEntry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DualArityInventoryEntry",
+      "description": "Single tracked public API dual-arity finding."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.schemas.ts",
+      "symbol": "DualArityRulesOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DualArityRulesOptions",
+      "description": "Runtime options for public API dual-arity enforcement."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Laws/Laws.schemas.ts",
+      "symbol": "DualArityRulesSummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "DualArityRulesSummary",
+      "description": "Summary of public API dual-arity inventory verification."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts",
       "symbol": "NativeRuntimeViolationKeyOptions",
       "kind": "schema-class",
@@ -21302,6 +21342,102 @@
       "description": "TypeScript file discovery failed for a lint root."
     },
     {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.errors.ts",
+      "symbol": "SchemaFirstInventoryReadError",
+      "kind": "tagged-error",
+      "owner": "@beep/repo-cli",
+      "identity": "SchemaFirstInventoryReadError",
+      "description": "Raised when the committed schema-first inventory cannot be parsed or decoded."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+      "symbol": "LiteralKitConstAssertionViolation",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "LiteralKitConstAssertionViolation",
+      "description": "Direct LiteralKit call argument that redundantly asserts an inline array as const."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+      "symbol": "SchemaCrispeningFamily",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "SchemaCrispeningFamily",
+      "description": "Wave-family keys used to resolve the schema-crispening policy blocking flag by path prefix."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+      "symbol": "SchemaCrispeningFamilyPolicy",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "SchemaCrispeningFamilyPolicy",
+      "description": "Blocking flag for a schema-crispening wave family or per-owner override."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+      "symbol": "SchemaCrispeningPolicyDocument",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "SchemaCrispeningPolicyDocument",
+      "description": "Schema-crispening policy ratchet: novel lint cards and per-family/per-owner blocking flags."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+      "symbol": "SchemaFirstEntryKind",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "SchemaFirstEntryKind",
+      "description": "Kinds of schema-first inventory findings."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+      "symbol": "SchemaFirstEntryStatus",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "SchemaFirstEntryStatus",
+      "description": "Tracked status for a schema-first inventory finding."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+      "symbol": "SchemaFirstInventoryDocument",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "SchemaFirstInventoryDocument",
+      "description": "Committed schema-first inventory baseline for repo-wide lint enforcement."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+      "symbol": "SchemaFirstInventoryEntry",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "SchemaFirstInventoryEntry",
+      "description": "Single tracked schema-first finding for a source file symbol."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+      "symbol": "SchemaFirstLintOptions",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "SchemaFirstLintOptions",
+      "description": "CLI options for schema-first inventory verification."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+      "symbol": "SchemaFirstLintSummary",
+      "kind": "schema-class",
+      "owner": "@beep/repo-cli",
+      "identity": "SchemaFirstLintSummary",
+      "description": "Summary of schema-first inventory verification results."
+    },
+    {
+      "file": "packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts",
+      "symbol": "SchemaFirstPolicyRuleId",
+      "kind": "literal-kit",
+      "owner": "@beep/repo-cli",
+      "identity": "SchemaFirstPolicyRuleId",
+      "description": "Stable schema-first policy rule identifiers emitted for lint and Yeet issue routing."
+    },
+    {
       "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaCatalog.ts",
       "symbol": "SchemaCatalogDocument",
       "kind": "schema-class",
@@ -21340,62 +21476,6 @@
       "owner": "@beep/repo-cli",
       "identity": "SchemaCatalogSummary",
       "description": "Summary emitted after a schema catalog run."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-      "symbol": "SchemaCrispeningFamily",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "SchemaCrispeningFamily",
-      "description": "Wave-family keys used to resolve the schema-crispening policy blocking flag by path prefix."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-      "symbol": "SchemaCrispeningFamilyPolicy",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "SchemaCrispeningFamilyPolicy",
-      "description": "Blocking flag for a schema-crispening wave family or per-owner override."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-      "symbol": "SchemaCrispeningPolicyDocument",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "SchemaCrispeningPolicyDocument",
-      "description": "Schema-crispening policy ratchet: novel lint cards and per-family/per-owner blocking flags."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-      "symbol": "SchemaFirstEntryKind",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "SchemaFirstEntryKind",
-      "description": "Kinds of schema-first inventory findings."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-      "symbol": "SchemaFirstEntryStatus",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "SchemaFirstEntryStatus",
-      "description": "Tracked status for a schema-first inventory finding."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-      "symbol": "SchemaFirstInventoryEntry",
-      "kind": "schema-class",
-      "owner": "@beep/repo-cli",
-      "identity": "SchemaFirstInventoryEntry",
-      "description": "Single tracked schema-first finding for a source file symbol."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaFirst.ts",
-      "symbol": "SchemaFirstPolicyRuleId",
-      "kind": "literal-kit",
-      "owner": "@beep/repo-cli",
-      "identity": "SchemaFirstPolicyRuleId",
-      "description": "Stable schema-first policy rule identifiers emitted for lint and Yeet issue routing."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Lint/SchemaTopology.ts",
